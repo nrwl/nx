@@ -1,0 +1,231 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "cypress",
+  "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
+  "root": "/packages/cypress",
+  "source": "/packages/cypress/src",
+  "generators": [
+    {
+      "name": "init",
+      "factory": "./src/generators/init/init#cypressInitGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxCypressInit",
+        "cli": "nx",
+        "title": "Add Cypress Configuration to the workspace",
+        "description": "Add Cypress Configuration to the workspace.",
+        "type": "object",
+        "properties": {
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          }
+        },
+        "presets": []
+      },
+      "description": "Initialize the `@nrwl/cypress` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true,
+      "implementation": "/packages/cypress/src/generators/init/init#cypressInitGenerator.ts",
+      "path": "/packages/cypress/src/generators/init/schema.json"
+    },
+    {
+      "name": "cypress-project",
+      "factory": "./src/generators/cypress-project/cypress-project#cypressProjectGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxCypressProjectGeneratorSchema",
+        "cli": "nx",
+        "title": "Create Cypress Configuration for the workspace",
+        "description": "Create Cypress Configuration for the workspace.",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the frontend project to test.",
+            "$default": { "$source": "projectName" }
+          },
+          "baseUrl": {
+            "type": "string",
+            "description": "The address (with the port) which your application is running on."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the E2E Project.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the e2e project?"
+          },
+          "directory": {
+            "type": "string",
+            "description": "A directory where the project is placed."
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint", "none"],
+            "default": "eslint"
+          },
+          "js": {
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside workspace.json.",
+            "type": "boolean"
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Add a Cypress E2E Project.",
+      "hidden": true,
+      "implementation": "/packages/cypress/src/generators/cypress-project/cypress-project#cypressProjectGenerator.ts",
+      "aliases": [],
+      "path": "/packages/cypress/src/generators/cypress-project/schema.json"
+    }
+  ],
+  "executors": [
+    {
+      "name": "cypress",
+      "implementation": "/packages/cypress/src/executors/cypress/cypress.impl.ts",
+      "schema": {
+        "title": "Cypress Target",
+        "description": "Cypress target option for Build Facade.",
+        "type": "object",
+        "outputCapture": "pipe",
+        "cli": "nx",
+        "properties": {
+          "cypressConfig": {
+            "type": "string",
+            "description": "The path of the Cypress configuration json file."
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Recompile and run tests when files change.",
+            "default": false
+          },
+          "tsConfig": {
+            "type": "string",
+            "description": "The path of the Cypress tsconfig configuration json file."
+          },
+          "devServerTarget": {
+            "type": "string",
+            "description": "Dev server target to run tests against."
+          },
+          "headed": {
+            "type": "boolean",
+            "description": "Displays the browser instead of running headlessly. Set this to `true` if your run depends on a Chrome extension being loaded.",
+            "default": false
+          },
+          "headless": {
+            "type": "boolean",
+            "description": "Hide the browser instead of running headed (default for cypress run).",
+            "default": false,
+            "x-deprecated": true
+          },
+          "exit": {
+            "type": "boolean",
+            "description": "Whether or not the Cypress Test Runner will stay open after running tests in a spec file.",
+            "default": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The key cypress should use to run tests in parallel/record the run (CI only)."
+          },
+          "record": {
+            "type": "boolean",
+            "description": "Whether or not Cypress should record the results of the tests.",
+            "default": false
+          },
+          "parallel": {
+            "type": "boolean",
+            "description": "Whether or not Cypress should run its tests in parallel (CI only).",
+            "default": false
+          },
+          "baseUrl": {
+            "type": "string",
+            "description": "The address (with the port) which your application is running on."
+          },
+          "browser": {
+            "type": "string",
+            "description": "The browser to run tests in."
+          },
+          "env": {
+            "type": "object",
+            "description": "A key-value Pair of environment variables to pass to Cypress runner."
+          },
+          "spec": {
+            "type": "string",
+            "description": "A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. `**examples/**,**actions.spec**`."
+          },
+          "copyFiles": {
+            "type": "string",
+            "description": "A regex string that is used to choose what additional integration files to copy to the dist folder.",
+            "x-deprecated": true
+          },
+          "ciBuildId": {
+            "oneOf": [{ "type": "string" }, { "type": "number" }],
+            "description": "A unique identifier for a run to enable grouping or parallelization."
+          },
+          "group": {
+            "type": "string",
+            "description": "A named group for recorded runs in the Cypress dashboard."
+          },
+          "ignoreTestFiles": {
+            "type": "string",
+            "description": "A String or Array of glob patterns used to ignore test files that would otherwise be shown in your list of tests. Cypress uses minimatch with the options: `{dot: true, matchBase: true}`. We suggest using https://globster.xyz to test what files would match."
+          },
+          "reporter": {
+            "type": "string",
+            "description": "The reporter used during cypress run."
+          },
+          "reporterOptions": {
+            "type": "string",
+            "description": "The reporter options used. Supported options depend on the reporter."
+          },
+          "skipServe": {
+            "type": "boolean",
+            "description": "Skip dev-server build.",
+            "default": false
+          },
+          "testingType": {
+            "type": "string",
+            "description": "Specify the type of tests to execute.",
+            "enum": ["component", "e2e"],
+            "default": "e2e"
+          },
+          "tag": {
+            "type": "string",
+            "description": "A comma delimited list to identify a run with.",
+            "aliases": ["t"]
+          }
+        },
+        "additionalProperties": true,
+        "required": ["cypressConfig"],
+        "presets": []
+      },
+      "hasher": "./src/executors/cypress/hasher",
+      "description": "Run Cypress E2E tests.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/cypress/src/executors/cypress/schema.json"
+    }
+  ]
+}

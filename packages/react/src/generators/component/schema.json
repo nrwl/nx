@@ -2,16 +2,17 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxReactComponent",
-  "title": "Create a React Component for Nx",
+  "title": "Create a React Component",
+  "description": "Create a React Component for Nx.",
   "type": "object",
   "examples": [
     {
-      "command": "g component my-component --project=mylib",
-      "description": "Generate a component in the mylib library"
+      "command": "nx g component my-component --project=mylib",
+      "description": "Generate a component in the `mylib` library"
     },
     {
-      "command": "g component my-component --project=mylib --classComponent",
-      "description": "Generate a class component in the mylib library"
+      "command": "nx g component my-component --project=mylib --classComponent",
+      "description": "Generate a class component in the `mylib` library"
     }
   ],
   "properties": {
@@ -81,7 +82,7 @@
     },
     "skipTests": {
       "type": "boolean",
-      "description": "When true, does not create \"spec.ts\" test files for the new component.",
+      "description": "When true, does not create `spec.ts` test files for the new component.",
       "default": false
     },
     "directory": {
@@ -96,20 +97,20 @@
     },
     "export": {
       "type": "boolean",
-      "description": "When true, the component is exported from the project index.ts (if it exists).",
+      "description": "When true, the component is exported from the project `index.ts` (if it exists).",
       "alias": "e",
       "default": false,
       "x-prompt": "Should this component be exported in the project?"
     },
     "pascalCaseFiles": {
       "type": "boolean",
-      "description": "Use pascal case component file name (e.g. App.tsx).",
+      "description": "Use pascal case component file name (e.g. `App.tsx`).",
       "alias": "P",
       "default": false
     },
     "pascalCaseDirectory": {
       "type": "boolean",
-      "description": "Use pascal case directory name (e.g. App/App.tsx).",
+      "description": "Use pascal case directory name (e.g. `App/App.tsx`).",
       "alias": "R",
       "default": false
     },
@@ -125,7 +126,7 @@
     },
     "globalCss": {
       "type": "boolean",
-      "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss",
+      "description": "Default is `false`. When `true`, the component is generated with `*.css`/`*.scss` instead of `*.module.css`/`*.module.scss`.",
       "default": false
     },
     "fileName": {

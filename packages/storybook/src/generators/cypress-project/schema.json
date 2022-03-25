@@ -2,11 +2,13 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "$id": "cypress-configure",
+  "title": "Cypress Configuration",
+  "description": "Add cypress E2E app to test a ui library that is set up for Storybook.",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Library or application name",
+      "description": "Library or application name.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -14,12 +16,12 @@
     },
     "js": {
       "type": "boolean",
-      "description": "Generate JavaScript files rather than TypeScript files",
+      "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the project is placed"
+      "description": "A directory where the project is placed."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -28,7 +30,7 @@
       "default": "eslint"
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     }
   },

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestInitGenerator",
   "title": "Init Nest Plugin",
+  "description": "Init Nest Plugin.",
   "cli": "nx",
   "type": "object",
   "properties": {

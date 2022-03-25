@@ -1,6 +1,6 @@
 {
   "title": "Node Application Build Target",
-  "description": "Node application build target options for Build Facade",
+  "description": "Node application build target options for Build Facade.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -56,12 +56,12 @@
           }
         }
       ],
-      "description": "Dependencies to keep external to the bundle. (\"all\" (default), \"none\", or an array of module names)",
+      "description": "Dependencies to keep external to the bundle. (`all` (default), `none`, or an array of module names)",
       "default": "all"
     },
     "statsJson": {
       "type": "boolean",
-      "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.",
+      "description": "Generates a `stats.json` file which can be analyzed using tools such as: `webpack-bundle-analyzer` or `<https://webpack.github.io/analyse>`.",
       "default": false
     },
     "verbose": {
@@ -81,11 +81,12 @@
     },
     "maxWorkers": {
       "type": "number",
-      "description": "Number of workers to use for type checking. (defaults to # of CPUS - 2)"
+      "description": "Number of workers to use for type checking. (defaults to # of CPUS)"
     },
     "memoryLimit": {
       "type": "number",
-      "description": "Memory limit for type checking service process in MB. (defaults to 2048)"
+      "description": "Memory limit for type checking service process in MB. (defaults to `2048`)",
+      "default": 2048
     },
     "fileReplacements": {
       "description": "Replace files with other files in the build.",
@@ -119,7 +120,7 @@
           "type": "string"
         }
       ],
-      "description": "Path to a function which takes a webpack config, context and returns the resulting webpack config"
+      "description": "Path to a function which takes a webpack config, context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack"
     },
     "buildLibsFromSource": {
       "type": "boolean",
@@ -128,7 +129,7 @@
     },
     "generatePackageJson": {
       "type": "boolean",
-      "description": "Generates a package.json file with the project's node_module dependencies populated for installing in a container. If a package.json exists in the project's directory, it will be reused with dependencies populated.",
+      "description": "Generates a `package.json` file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
       "default": false
     },
     "transformers": {
@@ -147,18 +148,18 @@
         "properties": {
           "entryName": {
             "type": "string",
-            "description": "Name of the additional entry file"
+            "description": "Name of the additional entry file."
           },
           "entryPath": {
             "type": "string",
-            "description": "Path to the additional entry file"
+            "description": "Path to the additional entry file."
           }
         }
       }
     },
     "outputFileName": {
       "type": "string",
-      "description": "Name of the main output file. (defaults to 'main.js')",
+      "description": "Name of the main output file. (defaults to `main.js`)",
       "default": "main.js"
     }
   },
@@ -175,7 +176,7 @@
             },
             "input": {
               "type": "string",
-              "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+              "description": "The input directory path in which to apply `glob`. Defaults to the project root."
             },
             "ignore": {
               "description": "An array of globs to ignore.",

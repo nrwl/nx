@@ -7,7 +7,7 @@ describe('opt-out-testbed-teardown migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace(2);
-    jest.doMock('nx/src/utils/app-root', () => ({ appRootPath: '' }));
+    jest.doMock('@nrwl/devkit', () => ({ appRootPath: '' }));
   });
 
   it('should warn when the jestConfig property is not configured', async () => {

@@ -9,7 +9,7 @@
     "swc": {
       "implementation": "./src/executors/swc/swc.impl",
       "schema": "./src/executors/swc/schema.json",
-      "description": "Build a project using SWC"
+      "description": "Build a project using SWC."
     }
   },
   "builders": {
@@ -21,7 +21,7 @@
     "swc": {
       "implementation": "./src/executors/swc/compat",
       "schema": "./src/executors/swc/schema.json",
-      "description": "Build a project using SWC"
+      "description": "Build a project using SWC."
     }
   }
 }

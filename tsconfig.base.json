@@ -39,8 +39,20 @@
       "@nrwl/next": ["./packages/next"],
       "@nrwl/node": ["./packages/node"],
       "@nrwl/node/*": ["./packages/node/*"],
+      "@nrwl/nx-dev-feature-package-schema-viewer": [
+        "./nx-dev/feature-package-schema-viewer/src/index.ts"
+      ],
       "@nrwl/nx-dev/data-access-documents": [
         "./nx-dev/data-access-documents/src/index.ts"
+      ],
+      "@nrwl/nx-dev/data-access-documents/node-only": [
+        "./nx-dev/data-access-documents/src/node.index.ts"
+      ],
+      "@nrwl/nx-dev/data-access-packages": [
+        "nx-dev/data-access-packages/src/index.ts"
+      ],
+      "@nrwl/nx-dev/data-access-packages/node-only": [
+        "nx-dev/data-access-packages/src/node.index.ts"
       ],
       "@nrwl/nx-dev/feature-analytics": [
         "./nx-dev/feature-analytics/src/index.ts"
@@ -57,6 +69,9 @@
       "@nrwl/nx-dev/feature-versions-and-flavors": [
         "./nx-dev/feature-versions-and-flavors/src/index.ts"
       ],
+      "@nrwl/nx-dev/models-document": ["nx-dev/models-document/src/index.ts"],
+      "@nrwl/nx-dev/models-menu": ["nx-dev/models-menu/src/index.ts"],
+      "@nrwl/nx-dev/models-package": ["nx-dev/models-package/src/index.ts"],
       "@nrwl/nx-dev/ui-commands": ["./nx-dev/ui-commands/src/index.ts"],
       "@nrwl/nx-dev/ui-common": ["./nx-dev/ui-common/src/index.ts"],
       "@nrwl/nx-dev/ui-community": ["nx-dev/ui-community/src/index.ts"],

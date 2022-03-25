@@ -1,6 +1,6 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { writeJsonFile } from '@nrwl/devkit';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import { createPackageJson as generatePackageJson } from '@nrwl/workspace/src/utilities/create-package-json';
 import type { NextBuildBuilderOptions } from '../../../utils/types';
 

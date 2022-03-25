@@ -196,11 +196,14 @@ function showHelp() {
     cli                       CLI to power the Nx workspace (options: "nx", "angular")
 
     style                     Default style option to be used when a non-empty preset is selected
-                              options: ("css", "scss", "less") plus ("styl") for all non-Angular and ("styled-components", "@emotion/styled", "styled-jsx") for React, Next.js 
+                              options: ("css", "scss", "less") plus ("styl") for all non-Angular and ("styled-components", "@emotion/styled", "styled-jsx") for React, Next.js
 
     interactive               Enable interactive mode when using presets (boolean)
 
-    packageManager            Package manager to use (npm, yarn, pnpm)
+    packageManager            Package manager to use (alias: "pm")
+                              options: ("npm", "yarn", "pnpm")
+
+    defaultBase               Name of the main branch (default: "main")
 
     nx-cloud                  Use Nx Cloud (boolean)
 `);
@@ -659,7 +662,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/getting-started/nx-core`],
+        bodyLines: [`https://nx.dev/core-tutorial/01-create-blog`],
       });
       break;
 

@@ -3,11 +3,12 @@
   "cli": "nx",
   "$id": "NxPluginMigration",
   "title": "Create a Migration for an Nx Plugin",
+  "description": "Create a Migration for an Nx Plugin.",
   "type": "object",
   "examples": [
     {
-      "command": "g migration my-migration --project=my-plugin --version=1.0.0",
-      "description": "Generate libs/my-plugin/src/migrations/my-migration"
+      "command": "nx g migration my-migration --project=my-plugin --version=1.0.0",
+      "description": "Generate `libs/my-plugin/src/migrations/my-migration`"
     }
   ],
   "properties": {
@@ -22,7 +23,7 @@
     },
     "name": {
       "type": "string",
-      "description": "Migration name",
+      "description": "Migration name.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -30,22 +31,22 @@
     },
     "description": {
       "type": "string",
-      "description": "Migration description",
+      "description": "Migration description.",
       "alias": "d"
     },
-    "version": {
+    "packageVersion": {
       "type": "string",
-      "description": "Version to use for the migration",
+      "description": "Version to use for the migration.",
       "alias": "v",
       "x-prompt": "What version would you like to use for the migration?"
     },
     "packageJsonUpdates": {
       "type": "boolean",
-      "description": "Whether or not to include package.json updates",
+      "description": "Whether or not to include `package.json` updates.",
       "alias": "p",
       "default": false
     }
   },
-  "required": ["project", "version"],
+  "required": ["project", "packageVersion"],
   "additionalProperties": false
 }

@@ -1,5 +1,5 @@
 import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import { readJson, readProjectConfiguration } from '@nrwl/devkit';
+import { readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { setupMfe } from './setup-mfe';
@@ -23,7 +23,7 @@ describe('Init MFE', () => {
     ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
-    'should create webpack configs correctly',
+    'should create webpack and mfe configs correctly',
     async (app, type: 'host' | 'remote') => {
       // ACT
       await setupMfe(host, {
@@ -32,33 +32,7 @@ describe('Init MFE', () => {
       });
 
       // ASSERT
-      expect(host.exists(`apps/${app}/webpack.config.js`)).toBeTruthy();
-      expect(host.exists(`apps/${app}/webpack.prod.config.js`)).toBeTruthy();
-
-      const webpackContetnts = host.read(
-        `apps/${app}/webpack.config.js`,
-        'utf-8'
-      );
-      expect(webpackContetnts).toMatchSnapshot();
-    }
-  );
-
-  test.each([
-    ['app1', 'host'],
-    ['remote1', 'remote'],
-  ])(
-    'should support a root tsconfig.json instead of tsconfig.base.json',
-    async (app, type: 'host' | 'remote') => {
-      // ARRANGE
-      host.rename('tsconfig.base.json', 'tsconfig.json');
-
-      // ACT
-      await setupMfe(host, {
-        appName: app,
-        mfeType: type,
-      });
-
-      // ASSERT
+      expect(host.exists(`apps/${app}/mfe.config.js`)).toBeTruthy();
       expect(host.exists(`apps/${app}/webpack.config.js`)).toBeTruthy();
       expect(host.exists(`apps/${app}/webpack.prod.config.js`)).toBeTruthy();
 
@@ -66,9 +40,10 @@ describe('Init MFE', () => {
         `apps/${app}/webpack.config.js`,
         'utf-8'
       );
-      expect(webpackContents).toContain(
-        "const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? path.join(__dirname, '../../tsconfig.json');"
-      );
+      expect(webpackContents).toMatchSnapshot();
+
+      const mfeConfigContents = host.read(`apps/${app}/mfe.config.js`, 'utf-8');
+      expect(mfeConfigContents).toMatchSnapshot();
     }
   );
 
@@ -147,27 +122,6 @@ describe('Init MFE', () => {
     }
   );
 
-  test.each([
-    ['app1', 'host'],
-    ['remote1', 'remote'],
-  ])(
-    'should install @angular-architects/module-federation in the monorepo',
-    async (app, type: 'host' | 'remote') => {
-      // ACT
-      await setupMfe(host, {
-        appName: app,
-        mfeType: type,
-      });
-
-      // ASSERT
-      const { dependencies } = readJson(host, 'package.json');
-
-      expect(
-        dependencies['@angular-architects/module-federation']
-      ).toBeTruthy();
-    }
-  );
-
   it('should add the remote config to the host when --remotes flag supplied', async () => {
     // ACT
     await setupMfe(host, {
@@ -177,11 +131,9 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const webpackContents = host.read(`apps/app1/webpack.config.js`, 'utf-8');
+    const mfeConfigContents = host.read(`apps/app1/mfe.config.js`, 'utf-8');
 
-    expect(webpackContents).toContain(
-      '"remote1": "http://localhost:4200/remoteEntry.js"'
-    );
+    expect(mfeConfigContents).toContain(`'remote1'`);
   });
   it('should update the implicit dependencies of the host when --remotes flag supplied', async () => {
     // ACT
@@ -215,8 +167,8 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const hostWebpackConfig = host.read('apps/app1/webpack.config.js', 'utf-8');
-    expect(hostWebpackConfig).toMatchSnapshot();
+    const hostMfeConfig = host.read('apps/app1/mfe.config.js', 'utf-8');
+    expect(hostMfeConfig).toMatchSnapshot();
   });
 
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
@@ -246,8 +198,8 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const hostWebpackConfig = host.read('apps/app1/webpack.config.js', 'utf-8');
-    expect(hostWebpackConfig).toMatchSnapshot();
+    const hostMfeConfig = host.read('apps/app1/mfe.config.js', 'utf-8');
+    expect(hostMfeConfig).toMatchSnapshot();
   });
 
   it('should add a remote application and add it to a specified host applications router config', async () => {

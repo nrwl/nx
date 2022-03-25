@@ -23,6 +23,14 @@ It only uses language primitives and immutable objects
 
 - [ProjectGraphBuilder](../../nx-devkit/index#projectgraphbuilder)
 
+### Utils Classes
+
+- [Hasher](../../nx-devkit/index#hasher)
+
+### Workspace Classes
+
+- [Workspaces](../../nx-devkit/index#workspaces)
+
 ### Commands Interfaces
 
 - [Target](../../nx-devkit/index#target)
@@ -49,8 +57,11 @@ It only uses language primitives and immutable objects
 
 ### Utils Interfaces
 
+- [DefaultTasksRunnerOptions](../../nx-devkit/index#defaulttasksrunneroptions)
+- [Hash](../../nx-devkit/index#hash)
 - [JsonParseOptions](../../nx-devkit/index#jsonparseoptions)
 - [JsonSerializeOptions](../../nx-devkit/index#jsonserializeoptions)
+- [RemoteCache](../../nx-devkit/index#remotecache)
 - [StringDeletion](../../nx-devkit/index#stringdeletion)
 - [StringInsertion](../../nx-devkit/index#stringinsertion)
 
@@ -102,6 +113,13 @@ It only uses language primitives and immutable objects
 
 - [logger](../../nx-devkit/index#logger)
 
+### Utils Variables
+
+- [appRootPath](../../nx-devkit/index#approotpath)
+- [cacheDir](../../nx-devkit/index#cachedir)
+- [output](../../nx-devkit/index#output)
+- [workspaceRoot](../../nx-devkit/index#workspaceroot)
+
 ### Functions
 
 - [addDependenciesToPackageJson](../../nx-devkit/index#adddependenciestopackagejson)
@@ -109,9 +127,12 @@ It only uses language primitives and immutable objects
 - [applyChangesToString](../../nx-devkit/index#applychangestostring)
 - [convertNxExecutor](../../nx-devkit/index#convertnxexecutor)
 - [convertNxGenerator](../../nx-devkit/index#convertnxgenerator)
+- [createProjectGraphAsync](../../nx-devkit/index#createprojectgraphasync)
+- [defaultTasksRunner](../../nx-devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../nx-devkit/index#detectpackagemanager)
 - [formatFiles](../../nx-devkit/index#formatfiles)
 - [generateFiles](../../nx-devkit/index#generatefiles)
+- [getOutputsForTargetAndConfiguration](../../nx-devkit/index#getoutputsfortargetandconfiguration)
 - [getPackageManagerCommand](../../nx-devkit/index#getpackagemanagercommand)
 - [getPackageManagerVersion](../../nx-devkit/index#getpackagemanagerversion)
 - [getProjects](../../nx-devkit/index#getprojects)
@@ -126,13 +147,16 @@ It only uses language primitives and immutable objects
 - [offsetFromRoot](../../nx-devkit/index#offsetfromroot)
 - [parseJson](../../nx-devkit/index#parsejson)
 - [parseTargetString](../../nx-devkit/index#parsetargetstring)
+- [readCachedProjectGraph](../../nx-devkit/index#readcachedprojectgraph)
 - [readJson](../../nx-devkit/index#readjson)
 - [readJsonFile](../../nx-devkit/index#readjsonfile)
+- [readNxJson](../../nx-devkit/index#readnxjson)
 - [readProjectConfiguration](../../nx-devkit/index#readprojectconfiguration)
 - [readTargetOptions](../../nx-devkit/index#readtargetoptions)
 - [readWorkspaceConfiguration](../../nx-devkit/index#readworkspaceconfiguration)
 - [removeDependenciesFromPackageJson](../../nx-devkit/index#removedependenciesfrompackagejson)
 - [removeProjectConfiguration](../../nx-devkit/index#removeprojectconfiguration)
+- [reverse](../../nx-devkit/index#reverse)
 - [runExecutor](../../nx-devkit/index#runexecutor)
 - [serializeJson](../../nx-devkit/index#serializejson)
 - [stripIndents](../../nx-devkit/index#stripindents)
@@ -144,6 +168,7 @@ It only uses language primitives and immutable objects
 - [updateTsConfigsToJs](../../nx-devkit/index#updatetsconfigstojs)
 - [updateWorkspaceConfiguration](../../nx-devkit/index#updateworkspaceconfiguration)
 - [visitNotIgnoredFiles](../../nx-devkit/index#visitnotignoredfiles)
+- [workspaceLayout](../../nx-devkit/index#workspacelayout)
 - [writeJson](../../nx-devkit/index#writejson)
 - [writeJsonFile](../../nx-devkit/index#writejsonfile)
 
@@ -166,6 +191,22 @@ It only uses language primitives and immutable objects
 ### ProjectGraphBuilder
 
 • **ProjectGraphBuilder**: `Object`
+
+---
+
+## Utils Classes
+
+### Hasher
+
+• **Hasher**: `Object`
+
+---
+
+## Workspace Classes
+
+### Workspaces
+
+• **Workspaces**: `Object`
 
 ## Commands Interfaces
 
@@ -269,6 +310,18 @@ A plugin for Nx
 
 ## Utils Interfaces
 
+### DefaultTasksRunnerOptions
+
+• **DefaultTasksRunnerOptions**: `Object`
+
+---
+
+### Hash
+
+• **Hash**: `Object`
+
+---
+
 ### JsonParseOptions
 
 • **JsonParseOptions**: `Object`
@@ -278,6 +331,12 @@ A plugin for Nx
 ### JsonSerializeOptions
 
 • **JsonSerializeOptions**: `Object`
+
+---
+
+### RemoteCache
+
+• **RemoteCache**: `Object`
 
 ---
 
@@ -581,6 +640,32 @@ Implementation of a target of a project that handles multiple projects to be bat
 | `log`   | (...`s`: `any`[]) => `void` |
 | `warn`  | (`s`: `any`) => `void`      |
 
+---
+
+## Utils Variables
+
+### appRootPath
+
+• **appRootPath**: `string`
+
+---
+
+### cacheDir
+
+• **cacheDir**: `string`
+
+---
+
+### output
+
+• **output**: `CLIOutput`
+
+---
+
+### workspaceRoot
+
+• **workspaceRoot**: `string` = `appRootPath`
+
 ## Functions
 
 ### addDependenciesToPackageJson
@@ -754,6 +839,60 @@ Convert an Nx Generator into an Angular Devkit Schematic
 
 ---
 
+### createProjectGraphAsync
+
+▸ **createProjectGraphAsync**(): `Promise`<[`ProjectGraph`](../../nx-devkit/index#projectgraph)\>
+
+Computes and returns a ProjectGraph.
+
+Nx will compute the graph either in a daemon process or in the current process.
+
+Nx will compute it in the current process if:
+
+- The process is running in CI (CI env variable is to true or other common variables used by CI providers are set).
+- It is running in the docker container.
+- The daemon process is disabled because of the previous error when starting the daemon.
+- `NX_DAEMON` is set to `false`.
+- `useDaemon` is set to false in `nx.json`
+
+`NX_DAEMON` env variable takes precedence:
+
+- If it is set to true, the daemon will always be used.
+- If it is set to false, the graph will always be computed in the current process.
+
+Tip: If you want to debug project graph creation, run your command with NX_DAEMON=false.
+
+Nx uses two layers of caching: the information about explicit dependencies stored on the disk and the information
+stored in the daemon process. To reset both run: `nx reset`.
+
+#### Returns
+
+`Promise`<[`ProjectGraph`](../../nx-devkit/index#projectgraph)\>
+
+---
+
+### defaultTasksRunner
+
+▸ `Const` **defaultTasksRunner**(`tasks`, `options`, `context?`): `Observable`<`AffectedEvent`\> \| `Promise`<`Object`\>
+
+#### Parameters
+
+| Name                         | Type                                                                                     |
+| :--------------------------- | :--------------------------------------------------------------------------------------- |
+| `tasks`                      | [`Task`](../../nx-devkit/index#task)[]                                                   |
+| `options`                    | [`DefaultTasksRunnerOptions`](../../nx-devkit/index#defaulttasksrunneroptions)           |
+| `context?`                   | `Object`                                                                                 |
+| `context.initiatingProject?` | `string`                                                                                 |
+| `context.nxJson`             | [`NxJsonConfiguration`](../../nx-devkit/index#nxjsonconfiguration)<`string`[] \| `"*"`\> |
+| `context.projectGraph`       | [`ProjectGraph`](../../nx-devkit/index#projectgraph)<`any`\>                             |
+| `context.target?`            | `string`                                                                                 |
+
+#### Returns
+
+`Observable`<`AffectedEvent`\> \| `Promise`<`Object`\>
+
+---
+
 ### detectPackageManager
 
 ▸ **detectPackageManager**(`dir?`): [`PackageManager`](../../nx-devkit/index#packagemanager)
@@ -828,6 +967,25 @@ doesn't get confused about incorrect TypeScript files.
 #### Returns
 
 `void`
+
+---
+
+### getOutputsForTargetAndConfiguration
+
+▸ **getOutputsForTargetAndConfiguration**(`task`, `node`): `any`
+
+Returns the list of outputs that will be cached.
+
+#### Parameters
+
+| Name   | Type                                                                               | Description                                               |
+| :----- | :--------------------------------------------------------------------------------- | :-------------------------------------------------------- |
+| `task` | `Pick`<[`Task`](../../nx-devkit/index#task), `"target"` \| `"overrides"`\>         | target + overrides                                        |
+| `node` | [`ProjectGraphProjectNode`](../../nx-devkit/index#projectgraphprojectnode)<`any`\> | ProjectGraphProjectNode object that the task runs against |
+
+#### Returns
+
+`any`
 
 ---
 
@@ -1008,6 +1166,8 @@ Normalized path fragments and joins them
 
 ▸ **moveFilesToNewDirectory**(`tree`, `oldDir`, `newDir`): `void`
 
+Analogous to cp -r oldDir newDir
+
 #### Parameters
 
 | Name     | Type                                 |
@@ -1151,6 +1311,20 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ---
 
+### readCachedProjectGraph
+
+▸ **readCachedProjectGraph**(): [`ProjectGraph`](../../nx-devkit/index#projectgraph)
+
+Synchronously reads the latest cached copy of the workspace's ProjectGraph.
+
+**`throws`** {Error} if there is no cached ProjectGraph to read from
+
+#### Returns
+
+[`ProjectGraph`](../../nx-devkit/index#projectgraph)
+
+---
+
 ### readJson
 
 ▸ **readJson**<`T`\>(`tree`, `path`, `options?`): `T`
@@ -1201,6 +1375,26 @@ Reads a JSON file and returns the object the JSON content represents.
 `T`
 
 Object the JSON content of the file represents
+
+---
+
+### readNxJson
+
+▸ **readNxJson**(`path?`): [`NxJsonConfiguration`](../../nx-devkit/index#nxjsonconfiguration)
+
+Returns the contents of nx.json.
+
+If nx.json extends another config file, it will be inlined here.
+
+#### Parameters
+
+| Name   | Type     |
+| :----- | :------- |
+| `path` | `string` |
+
+#### Returns
+
+[`NxJsonConfiguration`](../../nx-devkit/index#nxjsonconfiguration)
 
 ---
 
@@ -1325,6 +1519,27 @@ The utility will update either file.
 #### Returns
 
 `void`
+
+---
+
+### reverse
+
+▸ **reverse**(`graph`): [`ProjectGraph`](../../nx-devkit/index#projectgraph)
+
+Returns a new project graph where all the edges are reversed.
+
+For instance, if project A depends on B, in the reversed graph
+B will depend on A.
+
+#### Parameters
+
+| Name    | Type                                                         |
+| :------ | :----------------------------------------------------------- |
+| `graph` | [`ProjectGraph`](../../nx-devkit/index#projectgraph)<`any`\> |
+
+#### Returns
+
+[`ProjectGraph`](../../nx-devkit/index#projectgraph)
 
 ---
 
@@ -1604,6 +1819,23 @@ Utility to act on all files in a tree that are not ignored by git.
 #### Returns
 
 `void`
+
+---
+
+### workspaceLayout
+
+▸ **workspaceLayout**(): `Object`
+
+Returns information about where apps and libs will be created.
+
+#### Returns
+
+`Object`
+
+| Name      | Type     |
+| :-------- | :------- |
+| `appsDir` | `string` |
+| `libsDir` | `string` |
 
 ---
 

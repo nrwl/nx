@@ -143,8 +143,7 @@ describe('js e2e', () => {
 
     expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
       'peerDependencies.tslib',
-      rootPackageJson.dependencies.tslib ??
-        rootPackageJson.devDependencies.tslib
+      rootPackageJson.dependencies.tslib
     );
 
     updateJson(`libs/${lib}/tsconfig.json`, (json) => {

@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/js",
   "version": "0.0.1",
-  "description": "JavaScript Plugin for Nx",
+  "description": "The Nx plugin that provides the best experience for developing JavaScript and TypeScript projects.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -37,7 +37,7 @@
     "@nrwl/linter": "*",
     "@parcel/watcher": "2.0.4",
     "chalk": "4.1.0",
-    "fast-glob": "^3.2.7",
+    "fast-glob": "3.2.7",
     "fs-extra": "^9.1.0",
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",

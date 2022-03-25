@@ -3,11 +3,12 @@
   "cli": "nx",
   "$id": "NxPluginExecutor",
   "title": "Create a Executor for an Nx Plugin",
+  "description": "Create a Executor for an Nx Plugin.",
   "type": "object",
   "examples": [
     {
-      "command": "g executor my-executor --project=my-plugin",
-      "description": "Generate libs/my-plugin/src/executors/my-executor"
+      "command": "nx g executor my-executor --project=my-plugin",
+      "description": "Generate `libs/my-plugin/src/executors/my-executor`"
     }
   ],
   "properties": {
@@ -22,7 +23,7 @@
     },
     "name": {
       "type": "string",
-      "description": "Executor name",
+      "description": "Executor name.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -31,13 +32,13 @@
     },
     "description": {
       "type": "string",
-      "description": "Executor description",
+      "description": "Executor description.",
       "alias": "d"
     },
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests",
+      "description": "Test runner to use for unit tests.",
       "default": "jest"
     }
   },

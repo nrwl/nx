@@ -1,7 +1,7 @@
 {
   "cli": "nx",
   "title": "Next Export",
-  "description": "Export a Next.js app. The exported application is located at dist/$outputPath/exported.",
+  "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
   "type": "object",
   "properties": {
     "buildTarget": {
@@ -10,7 +10,7 @@
     },
     "silent": {
       "type": "boolean",
-      "description": "Hide progress or not (default is false)",
+      "description": "Hide progress or not (default is `false`)",
       "default": false
     },
     "threads": {

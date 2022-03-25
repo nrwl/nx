@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestResolverGenerator",
-  "title": "Nest Resolver Options Schema.",
+  "title": "Nest Resolver Options Schema",
+  "description": "Nest Resolver Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {

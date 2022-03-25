@@ -1,6 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxAngularStorybookConfigurationGenerator",
+  "title": "Adds Storybook configuration to a project.",
+  "description": "Adds Storybook configuration to a project to be able to use and create stories.",
   "cli": "nx",
   "type": "object",
   "properties": {

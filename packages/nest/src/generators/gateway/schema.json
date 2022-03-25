@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestGatewayGenerator",
-  "title": "Nest Gateway Options Schema.",
+  "title": "Nest Gateway Options Schema",
+  "description": "Nest Gateway Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {

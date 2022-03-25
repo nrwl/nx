@@ -11,7 +11,7 @@ export const GlobalStateProvider = (props) => {
   const depGraphService = getDepGraphService();
 
   return (
-    <GlobalStateContext.Provider value={depGraphService}>
+    <GlobalStateContext.Provider value={depGraphService as any}>
       {props.children}
     </GlobalStateContext.Provider>
   );

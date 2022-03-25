@@ -1,0 +1,9 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "tao",
+  "description": "CLI for generating code and running commands",
+  "root": "/packages/tao",
+  "source": "/packages/tao/src",
+  "generators": [],
+  "executors": []
+}

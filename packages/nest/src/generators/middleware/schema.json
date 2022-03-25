@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestMiddlewareGenerator",
-  "title": "Nest Middleware Options Schema.",
+  "title": "Nest Middleware Options Schema",
+  "description": "Nest Middleware Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {

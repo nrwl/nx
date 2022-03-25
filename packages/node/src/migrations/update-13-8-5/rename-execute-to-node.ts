@@ -1,20 +1,21 @@
 import {
   formatFiles,
-  getProjects,
+  readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
-export default async function update(host: Tree) {
-  const projects = getProjects(host);
+export default async function update(tree: Tree) {
+  forEachExecutorOptions(
+    tree,
+    '@nrwl/node:execute',
+    (_, projectName, targetName) => {
+      const projectConfiguration = readProjectConfiguration(tree, projectName);
+      projectConfiguration.targets[targetName].executor = '@nrwl/node:node';
+      updateProjectConfiguration(tree, projectName, projectConfiguration);
+    }
+  );
 
-  for (const [name, config] of projects.entries()) {
-    if (config?.targets?.serve?.executor !== '@nrwl/node:execute') continue;
-
-    config.targets.serve.executor = '@nrwl/node:node';
-
-    updateProjectConfiguration(host, name, config);
-  }
-
-  await formatFiles(host);
+  await formatFiles(tree);
 }

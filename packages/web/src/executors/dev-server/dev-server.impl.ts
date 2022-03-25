@@ -16,7 +16,7 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { readCachedProjectGraph } from '@nrwl/devkit';
 import { getEmittedFiles, runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 
@@ -90,7 +90,7 @@ export default async function* devServerExecutor(
   return yield* eachValueFrom(
     runWebpackDevServer(webpackConfig, webpack, WebpackDevServer).pipe(
       tap(({ stats }) => {
-        console.info(stats.toString(webpackConfig.stats));
+        console.info(stats.toString((webpackConfig as any).stats));
       }),
       map(({ baseUrl, stats }) => {
         return {

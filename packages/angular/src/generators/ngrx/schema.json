@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNgrxGenerator",
   "title": "Add NgRx support to an application or library.",
+  "description": "Adds NgRx support to an application or library.",
   "cli": "nx",
   "type": "object",
   "properties": {

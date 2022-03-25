@@ -182,8 +182,10 @@ export function addCacheableOperation(tree: Tree) {
   if (
     !workspace.tasksRunnerOptions ||
     !workspace.tasksRunnerOptions.default ||
-    workspace.tasksRunnerOptions.default.runner !==
-      '@nrwl/workspace/tasks-runners/default'
+    (workspace.tasksRunnerOptions.default.runner !==
+      '@nrwl/workspace/tasks-runners/default' &&
+      workspace.tasksRunnerOptions.default.runner !==
+        'nx/tasks-runners/default')
   ) {
     return;
   }

@@ -1,7 +1,17 @@
 import * as path from 'path';
 import { statSync } from 'fs';
 
+/**
+ * The root of the workspace.
+ *
+ * @deprecated use workspaceRoot instead
+ */
 export const appRootPath = pathInner(__dirname);
+
+/**
+ * The root of the workspace
+ */
+export const workspaceRoot = appRootPath;
 
 function pathInner(dir: string): string {
   if (process.env.NX_WORKSPACE_ROOT_PATH)

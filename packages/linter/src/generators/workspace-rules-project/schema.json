@@ -3,11 +3,11 @@
   "$id": "NxWorkspaceRulesProject",
   "cli": "nx",
   "title": "Create the Workspace Lint Rules Project",
-  "description": "Create the Workspace Lint Rules Project",
+  "description": "Create the Workspace Lint Rules Project.",
   "type": "object",
   "examples": [
     {
-      "command": "g @nrwl/linter:workspace-rules-project",
+      "command": "nx g @nrwl/linter:workspace-rules-project",
       "description": "Create the Workspace Lint Rules Project"
     }
   ],

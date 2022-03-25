@@ -10,7 +10,7 @@ import {
 } from './utils';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
 
-import { examples } from '../../packages/workspace/src/command-line/examples';
+import { examples } from '../../packages/nx/src/command-line/examples';
 
 const importFresh = require('import-fresh');
 
@@ -33,6 +33,7 @@ interface ParsedCommandOption {
 
 interface ParsedCommand {
   name: string;
+  commandString: string;
   description: string;
   options?: Array<ParsedCommandOption>;
 }
@@ -53,7 +54,7 @@ export async function generateCLIDocumentation() {
   console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
 
   const { commandsObject } = importFresh(
-    '../../packages/workspace/src/command-line/nx-commands'
+    '../../packages/nx/src/command-line/nx-commands'
   );
 
   const commandsOutputDirectory = join(
@@ -80,7 +81,11 @@ export async function generateCLIDocumentation() {
         command.builder.apply
       )
     ) {
-      return { name, description: command.description };
+      return {
+        name,
+        commandString: command.original,
+        description: command.description,
+      };
     }
     // Show all the options we can get from yargs
     const builder = await command.builder(
@@ -92,6 +97,7 @@ export async function generateCLIDocumentation() {
     return {
       name,
       description: command.description,
+      commandString: command.original,
       options:
         Object.keys(builderDescriptions).map((key) => ({
           name: key,
@@ -117,7 +123,7 @@ ${command.description}
 ## Usage
 
 \`\`\`bash
-nx ${command.name}
+nx ${command.commandString}
 \`\`\`
 
 [Install \`nx\` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using \`nx\`, or use \`npx nx\`, \`yarn nx\`, or \`pnpx nx\`.\n`;
@@ -168,6 +174,7 @@ nx ${command.name}
   await Promise.all(
     Object.keys(nxCommands)
       .filter((name) => !sharedCommands.includes(name))
+      .filter((name) => nxCommands[name].description)
       .map((name) => parseCommandInstance(name, nxCommands[name]))
       .map(async (command) => generateMarkdown(await command))
       .map(async (templateObject) =>

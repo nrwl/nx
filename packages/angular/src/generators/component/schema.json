@@ -61,14 +61,14 @@
       "alias": "c"
     },
     "style": {
-      "description": "The file extension or preprocessor to use for style files, or 'none' to skip generating the style file.",
+      "description": "The file extension or preprocessor to use for style files, or `none` to skip generating the style file.",
       "type": "string",
       "default": "css",
       "enum": ["css", "scss", "sass", "less", "none"]
     },
     "skipTests": {
       "type": "boolean",
-      "description": "Do not create \"spec.ts\" test files for the new component.",
+      "description": "Do not create `spec.ts` test files for the new component.",
       "default": false
     },
     "flat": {
@@ -88,12 +88,12 @@
     },
     "type": {
       "type": "string",
-      "description": "Adds a developer-defined type to the filename, in the format \"name.type.ts\".",
+      "description": "Adds a developer-defined type to the filename, in the format `name.type.ts`.",
       "default": "component"
     },
     "export": {
       "type": "boolean",
-      "description": "Specifies if the component should be exported in the declaring NgModule. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`).",
+      "description": "Specifies if the component should be exported in the declaring `NgModule`. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`).",
       "default": false
     }
   },

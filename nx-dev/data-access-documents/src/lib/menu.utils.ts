@@ -1,5 +1,5 @@
-import { DocumentMetadata } from '@nrwl/nx-dev/data-access-documents';
-import { MenuItem, MenuSection } from './menu.models';
+import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import { MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
 
 export function createMenuItems(root: DocumentMetadata): MenuItem[] {
   const items = root?.itemList;
@@ -7,8 +7,7 @@ export function createMenuItems(root: DocumentMetadata): MenuItem[] {
   const createPathMetadata = (g: DocumentMetadata, parentId = ''): MenuItem => {
     const pathData = {
       ...g,
-      path: `/${parentId}/${g.id}`,
-      url: `/${parentId}/${g.id}`,
+      path: g['path'] ?? `/${parentId}/${g.id}`,
     };
 
     if (Array.isArray(g.itemList)) {

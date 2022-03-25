@@ -5,28 +5,28 @@
     "init": {
       "factory": "./src/generators/init/init#cypressInitSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/cypress plugin",
+      "description": "Initialize the `@nrwl/cypress` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "cypress-project": {
       "factory": "./src/generators/cypress-project/cypress-project#cypressProjectSchematic",
       "schema": "./src/generators/cypress-project/schema.json",
-      "description": "Add a Cypress E2E Project"
+      "description": "Add a Cypress E2E Project."
     }
   },
   "generators": {
     "init": {
       "factory": "./src/generators/init/init#cypressInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/cypress plugin",
+      "description": "Initialize the `@nrwl/cypress` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "cypress-project": {
       "factory": "./src/generators/cypress-project/cypress-project#cypressProjectGenerator",
       "schema": "./src/generators/cypress-project/schema.json",
-      "description": "Add a Cypress E2E Project",
+      "description": "Add a Cypress E2E Project.",
       "hidden": true
     }
   }

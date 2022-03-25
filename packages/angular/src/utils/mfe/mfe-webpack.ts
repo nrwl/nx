@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import { NormalModuleReplacementPlugin } from 'webpack';
-import { appRootPath as rootPath } from 'nx/src/utils/app-root';
-import { normalizePath, joinPathFragments } from '@nrwl/devkit';
+import { normalizePath, joinPathFragments, appRootPath } from '@nrwl/devkit';
 import { dirname } from 'path';
 import { ParsedCommandLine } from 'typescript';
 import {
@@ -41,7 +40,7 @@ export function shareWorkspaceLibraries(
   const pathMappings: { name: string; path: string }[] = [];
   for (const [key, paths] of Object.entries(tsconfigPathAliases)) {
     if (libraries && libraries.includes(key)) {
-      const pathToLib = normalizePath(joinPathFragments(rootPath, paths[0]));
+      const pathToLib = normalizePath(joinPathFragments(appRootPath, paths[0]));
       pathMappings.push({
         name: key,
         path: pathToLib,
@@ -85,7 +84,7 @@ export function shareWorkspaceLibraries(
 export function sharePackages(
   packages: string[]
 ): Record<string, SharedLibraryConfig> {
-  const pkgJsonPath = joinPathFragments(rootPath, 'package.json');
+  const pkgJsonPath = joinPathFragments(appRootPath, 'package.json');
   if (!existsSync(pkgJsonPath)) {
     throw new Error(
       'NX MFE: Could not find root package.json to determine dependency versions.'

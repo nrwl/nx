@@ -3,7 +3,7 @@
   "$id": "NxReactNativeBundle",
   "$schema": "http://json-schema.org/schema",
   "title": "Offline JS Bundle for React Native",
-  "description": "JS Bundle target options",
+  "description": "JS Bundle target options.",
   "type": "object",
   "properties": {
     "dev": {
@@ -28,7 +28,7 @@
       "description": "Whether source maps should be generated or not."
     },
     "platform": {
-      "description": "Platform to build for (ios, android).",
+      "description": "Platform to build for (`ios`, `android`).",
       "type": "string"
     }
   },

@@ -2,9 +2,15 @@ import type { Tree } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
-export function getMfeProjects(tree: Tree) {
+export function getMfeProjects(
+  tree: Tree,
+  { legacy }: { legacy: boolean } = { legacy: false }
+) {
   const NRWL_WEBPACK_BROWSER_BUILDER = '@nrwl/angular:webpack-browser';
   const CUSTOM_WEBPACK_OPTION = 'customWebpackConfig';
+  const MODULE_FEDERATION_IDENTIFIER = legacy
+    ? 'Identifier[name=ModuleFederationPlugin]'
+    : 'Identifier[name=withModuleFederation]';
 
   const projects: string[] = [];
   forEachExecutorOptions(
@@ -19,7 +25,7 @@ export function getMfeProjects(tree: Tree) {
       const ast = tsquery.ast(webpackConfig);
       const moduleFederationWebpackConfig = tsquery(
         ast,
-        'Identifier[name=ModuleFederationPlugin]',
+        MODULE_FEDERATION_IDENTIFIER,
         {
           visitAllChildren: true,
         }

@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "title": "Create Detox Configuration for the workspace",
+  "description": "Create Detox Configuration for the workspace.",
   "type": "object",
   "properties": {
     "project": {
@@ -13,16 +14,16 @@
     },
     "name": {
       "type": "string",
-      "description": "Name of the E2E Project",
+      "description": "Name of the E2E Project.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the e2e project?"
+      "x-prompt": "What name would you like to use for the E2E project?"
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the project is placed"
+      "description": "A directory where the project is placed."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -31,18 +32,18 @@
       "default": "eslint"
     },
     "js": {
-      "description": "Generate JavaScript files rather than TypeScript files",
+      "description": "Generate JavaScript files rather than TypeScript files.",
       "type": "boolean",
       "default": false
     },
     "skipFormat": {
-      "description": "Skip formatting files",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     }
   },

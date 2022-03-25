@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestResourceGenerator",
-  "title": "Nest Resource Options Schema.",
+  "title": "Nest Resource Options Schema",
+  "description": "Nest Resource Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -12,7 +13,7 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for this resource (plural, e.g., \"users\")?"
+      "x-prompt": "What name would you like to use for this resource (plural, e.g., `users`)?"
     },
     "project": {
       "description": "The Nest project to target.",

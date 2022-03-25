@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestClassGenerator",
-  "title": "Nest Class Options Schema.",
+  "title": "Nest Class Options Schema",
+  "description": "Nest Class Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {

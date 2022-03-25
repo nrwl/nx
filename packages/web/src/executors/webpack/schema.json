@@ -6,7 +6,7 @@
   "properties": {
     "crossOrigin": {
       "type": "string",
-      "description": "The crossorigin attribute to use for generated javascript script tags.  One of 'none' | 'anonymous' | 'use-credentials'"
+      "description": "The `crossorigin` attribute to use for generated javascript script tags.  One of 'none' | 'anonymous' | 'use-credentials'."
     },
     "main": {
       "type": "string",
@@ -18,7 +18,7 @@
     },
     "compiler": {
       "type": "string",
-      "description": "The compiler to use",
+      "description": "The compiler to use.",
       "enum": ["babel", "swc"],
       "default": "babel"
     },
@@ -86,11 +86,11 @@
     },
     "index": {
       "type": "string",
-      "description": "HTML File which will be contain the application"
+      "description": "HTML File which will be contain the application."
     },
     "scripts": {
       "type": "array",
-      "description": "External Scripts which will be included before the main application entry",
+      "description": "External Scripts which will be included before the main application entry.",
       "items": {
         "$ref": "#/definitions/extraEntryPoint"
       },
@@ -114,7 +114,7 @@
     },
     "namedChunks": {
       "type": "boolean",
-      "description": "Names the produced bundles according to their entry file",
+      "description": "Names the produced bundles according to their entry file.",
       "default": true
     },
     "outputHashing": {
@@ -164,11 +164,11 @@
     },
     "extractCss": {
       "type": "boolean",
-      "description": "Extract css into a .css file",
+      "description": "Extract CSS into a `.css` file.",
       "default": false
     },
     "es2015Polyfills": {
-      "description": "Conditional polyfills loaded in browsers which do not support ES2015.",
+      "description": "Conditional polyfills loaded in browsers which do not support `ES2015`.",
       "type": "string"
     },
     "subresourceIntegrity": {
@@ -187,7 +187,7 @@
     },
     "statsJson": {
       "type": "boolean",
-      "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.",
+      "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`.",
       "default": false
     },
     "extractLicenses": {
@@ -197,11 +197,13 @@
     },
     "memoryLimit": {
       "type": "number",
-      "description": "Memory limit for type checking service process in MB. (defaults to 2048)"
+      "description": "Memory limit for type checking service process in `MB`.",
+      "default": 2048
     },
     "maxWorkers": {
       "type": "number",
-      "description": "Number of workers to use for type checking. (defaults to # of CPUS - 2)"
+      "description": "Number of workers to use for type checking.",
+      "default": 2
     },
     "fileReplacements": {
       "description": "Replace files with other files in the build.",
@@ -230,16 +232,16 @@
     },
     "generateIndexHtml": {
       "type": "boolean",
-      "description": "Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`",
+      "description": "Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`.",
       "default": true
     },
     "postcssConfig": {
       "type": "string",
-      "description": "Set a path to PostCSS config that applies to the app and all libs. Defaults to `undefined`, which auto-detects postcss.config.js files in each app/lib directory."
+      "description": "Set a path to PostCSS config that applies to the app and all libs. Defaults to `undefined`, which auto-detects postcss.config.js files in each `app`/`lib` directory."
     },
     "webpackConfig": {
       "type": "string",
-      "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config"
+      "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack"
     }
   },
   "required": ["tsConfig", "main", "index"],

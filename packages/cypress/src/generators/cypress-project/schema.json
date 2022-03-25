@@ -3,6 +3,7 @@
   "$id": "NxCypressProjectGeneratorSchema",
   "cli": "nx",
   "title": "Create Cypress Configuration for the workspace",
+  "description": "Create Cypress Configuration for the workspace.",
   "type": "object",
   "properties": {
     "project": {
@@ -14,11 +15,11 @@
     },
     "baseUrl": {
       "type": "string",
-      "description": "The address (with the port) which your application is running on"
+      "description": "The address (with the port) which your application is running on."
     },
     "name": {
       "type": "string",
-      "description": "Name of the E2E Project",
+      "description": "Name of the E2E Project.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -27,7 +28,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the project is placed"
+      "description": "A directory where the project is placed."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -36,22 +37,22 @@
       "default": "eslint"
     },
     "js": {
-      "description": "Generate JavaScript files rather than TypeScript files",
+      "description": "Generate JavaScript files rather than TypeScript files.",
       "type": "boolean",
       "default": false
     },
     "skipFormat": {
-      "description": "Skip formatting files",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside workspace.json.",
       "type": "boolean"
     },
     "skipPackageJson": {

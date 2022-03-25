@@ -1,0 +1,23 @@
+{
+  "root": "nx-dev/models-menu",
+  "sourceRoot": "nx-dev/models-menu/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["nx-dev/models-menu/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/nx-dev/models-menu"],
+      "options": {
+        "jestConfig": "nx-dev/models-menu/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

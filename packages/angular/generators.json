@@ -30,7 +30,7 @@
     "component-story": {
       "factory": "./src/generators/component-story/compat",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Creates a stories.ts file for a component.",
+      "description": "Creates a `stories.ts` file for a component.",
       "hidden": true
     },
     "convert-tslint-to-eslint": {
@@ -46,7 +46,7 @@
     "init": {
       "factory": "./src/generators/init/init.compat#initSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initializes the @nrwl/angular plugin.",
+      "description": "Initializes the `@nrwl/angular` plugin.",
       "hidden": true
     },
     "karma": {
@@ -83,6 +83,11 @@
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+    },
+    "convert-to-with-mf": {
+      "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf.compat",
+      "schema": "./src/generators/convert-to-with-mf/schema.json",
+      "description": "Converts an old micro frontend configuration to use the new `withModuleFederation` helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_"
     },
     "mfe-host": {
       "factory": "./src/generators/mfe-host/mfe-host.compat",
@@ -139,12 +144,12 @@
     "storybook-migrate-defaults-5-to-6": {
       "factory": "./src/generators/storybook-migrate-defaults-5-to-6/compat",
       "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
-      "description": "Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x."
+      "description": "Generates default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`."
     },
     "storybook-migrate-stories-to-6-2": {
       "factory": "./src/generators/storybook-migrate-stories-to-6-2/compat",
       "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
-      "description": "Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export."
+      "description": "Migrates stories to match the new syntax in `v6.2` where the component declaration should be in the default export."
     },
     "upgrade-module": {
       "factory": "./src/generators/upgrade-module/compat",
@@ -201,7 +206,7 @@
     "init": {
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initializes the @nrwl/angular plugin.",
+      "description": "Initializes the `@nrwl/angular` plugin.",
       "hidden": true
     },
     "karma": {
@@ -238,6 +243,11 @@
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+    },
+    "convert-to-with-mf": {
+      "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
+      "schema": "./src/generators/convert-to-with-mf/schema.json",
+      "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_"
     },
     "mfe-host": {
       "factory": "./src/generators/mfe-host/mfe-host",
@@ -294,12 +304,12 @@
     "storybook-migrate-defaults-5-to-6": {
       "factory": "./src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6",
       "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
-      "description": "Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x."
+      "description": "Generates default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`."
     },
     "storybook-migrate-stories-to-6-2": {
       "factory": "./src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2",
       "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
-      "description": "Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export."
+      "description": "Migrates stories to match the new syntax in `v6.2` where the component declaration should be in the default export."
     },
     "upgrade-module": {
       "factory": "./src/generators/upgrade-module/upgrade-module",

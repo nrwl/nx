@@ -1,20 +1,13 @@
 import {
+  createReadStream,
   createWriteStream,
   existsSync,
   mkdirSync,
-  statSync,
-  createReadStream,
-  writeFileSync,
   renameSync as fsRenameSync,
+  statSync,
 } from 'fs';
-import { ensureDirSync } from 'fs-extra';
-import { basename, dirname, resolve as pathResolve } from 'path';
+import { basename, resolve as pathResolve } from 'path';
 import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
-
-export function writeToFile(filePath: string, str: string) {
-  ensureDirSync(dirname(filePath));
-  writeFileSync(filePath, str);
-}
 
 /**
  * This method is specifically for updating a JSON file using the filesystem
@@ -95,5 +88,3 @@ export function isRelativePath(path: string): boolean {
     path.startsWith('../')
   );
 }
-
-export const resolve = require.resolve;

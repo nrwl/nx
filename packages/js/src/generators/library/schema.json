@@ -3,17 +3,18 @@
   "$id": "NxTypescriptLibrary",
   "cli": "nx",
   "title": "Create a TypeScript Library",
+  "description": "Create a TypeScript Library.",
   "type": "object",
   "examples": [
     {
-      "command": "g lib mylib --directory=myapp",
+      "command": "nx g lib mylib --directory=myapp",
       "description": "Generate libs/myapp/mylib"
     }
   ],
   "properties": {
     "name": {
       "type": "string",
-      "description": "Library name",
+      "description": "Library name.",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -23,7 +24,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the lib is placed"
+      "description": "A directory where the lib is placed."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -34,15 +35,15 @@
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests",
+      "description": "Test runner to use for unit tests.",
       "default": "jest"
     },
     "tags": {
       "type": "string",
-      "description": "Add tags to the library (used for linting)"
+      "description": "Add tags to the library (used for linting)."
     },
     "skipFormat": {
-      "description": "Skip formatting files",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     },
@@ -54,12 +55,12 @@
     "testEnvironment": {
       "type": "string",
       "enum": ["jsdom", "node"],
-      "description": "The test environment to use if unitTestRunner is set to jest",
+      "description": "The test environment to use if unitTestRunner is set to jest.",
       "default": "jsdom"
     },
     "importPath": {
       "type": "string",
-      "description": "The library name used to import it, like @myorg/my-awesome-lib"
+      "description": "The library name used to import it, like @myorg/my-awesome-lib."
     },
     "pascalCaseFiles": {
       "type": "boolean",
@@ -69,7 +70,7 @@
     },
     "js": {
       "type": "boolean",
-      "description": "Generate JavaScript files rather than TypeScript files",
+      "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
     },
     "strict": {
@@ -89,14 +90,14 @@
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
     "config": {
       "type": "string",
       "enum": ["workspace", "project", "npm-scripts"],
       "default": "project",
-      "description": "Determines whether the project's executors should be configured in workspace.json, project.json or as npm scripts"
+      "description": "Determines whether the project's executors should be configured in `workspace.json`, `project.json` or as npm scripts."
     },
     "compiler": {
       "type": "string",

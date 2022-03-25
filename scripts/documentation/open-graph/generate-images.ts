@@ -1,8 +1,13 @@
 import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
-import { ensureDir, readFile, writeFileSync } from 'fs-extra';
+import { readJSONSync, ensureDir, readFile, writeFileSync } from 'fs-extra';
 import { resolve } from 'path';
 
-const documents: any[] = require('../../../docs/map.json')[0]['itemList'];
+const documents: any[] = readJSONSync('./docs/map.json', 'utf8')[0]['itemList'];
+const packages: {
+  name: string;
+  path: string;
+  schemas: { executors: string[]; generators: string[] };
+}[] = readJSONSync('./docs/packages.json');
 const targetFolder: string = resolve(
   __dirname,
   '../../../',
@@ -18,6 +23,27 @@ documents.map((category) => {
       filename: [category.id, item.id].join('-'),
     })
   );
+});
+packages.map((pkg) => {
+  data.push({
+    title: 'Package details',
+    content: `@nrwl/${pkg.name}`,
+    filename: ['packages', pkg.name].join('-'),
+  });
+  pkg.schemas.executors.map((schema) => {
+    data.push({
+      title: 'Executor details',
+      content: `@nrwl/${pkg.name}:${schema}`,
+      filename: ['packages', pkg.name, 'executors', schema].join('-'),
+    });
+  });
+  pkg.schemas.generators.map((schema) => {
+    data.push({
+      title: 'Generator details',
+      content: `@nrwl/${pkg.name}:${schema}`,
+      filename: ['packages', pkg.name, 'generators', schema].join('-'),
+    });
+  });
 });
 
 function createOpenGraphImage(

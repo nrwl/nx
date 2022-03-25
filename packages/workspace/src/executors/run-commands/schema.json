@@ -1,13 +1,27 @@
 {
   "title": "Run Commands",
-  "description": "Run any custom commands with Nx",
+  "description": "Run any custom commands with Nx.",
   "type": "object",
   "cli": "nx",
   "outputCapture": "pipe",
+  "presets": [
+    {
+      "name": "Arguments forwarding",
+      "keys": ["commands"]
+    },
+    {
+      "name": "Custom done conditions",
+      "keys": ["commands", "readyWhen"]
+    },
+    {
+      "name": "Setting the cwd",
+      "keys": ["commands", "cwd"]
+    }
+  ],
   "properties": {
     "commands": {
       "type": "array",
-      "description": "Commands to run in child process ",
+      "description": "Commands to run in child process.",
       "items": {
         "oneOf": [
           {
@@ -15,15 +29,15 @@
             "properties": {
               "command": {
                 "type": "string",
-                "description": "Command to run in child process"
+                "description": "Command to run in child process."
               },
               "forwardAllArgs": {
                 "type": "boolean",
-                "description": "Whether arguments should be forwarded when interpolation is not present"
+                "description": "Whether arguments should be forwarded when interpolation is not present."
               },
               "description": {
                 "type": "string",
-                "description": "An optional description useful for inline documentation purposes. It is not used as part of the execution of the command"
+                "description": "An optional description useful for inline documentation purposes. It is not used as part of the execution of the command."
               }
             },
             "additionalProperties": false,
@@ -37,11 +51,11 @@
     },
     "command": {
       "type": "string",
-      "description": "Command to run in child process"
+      "description": "Command to run in child process."
     },
     "parallel": {
       "type": "boolean",
-      "description": "Run commands in parallel",
+      "description": "Run commands in parallel.",
       "default": true
     },
     "readyWhen": {
@@ -54,11 +68,11 @@
     },
     "envFile": {
       "type": "string",
-      "description": "You may specify a custom .env file path"
+      "description": "You may specify a custom .env file path."
     },
     "color": {
       "type": "boolean",
-      "description": "Use colors when showing output of command",
+      "description": "Use colors when showing output of command.",
       "default": false
     },
     "outputPath": {

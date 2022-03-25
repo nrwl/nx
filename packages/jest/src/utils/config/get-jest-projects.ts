@@ -1,6 +1,6 @@
-import { readWorkspaceConfig } from '@nrwl/workspace/src/core/file-utils';
 import { dirname, join } from 'path';
 import type { WorkspaceJsonConfiguration } from '@nrwl/devkit';
+import { readWorkspaceConfig } from 'nx/src/core/file-utils';
 
 const JEST_RUNNER_TOKEN = '@nrwl/jest:jest';
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { output } from '@nrwl/workspace/src/utilities/output';
 import { execSync } from 'child_process';
 import {
   copySync,
@@ -18,6 +17,7 @@ import { readNameFromPackageJson } from './read-name-from-package-json';
 import { setupTsConfig } from './tsconfig-setup';
 import { writeCracoConfig } from './write-craco-config';
 import { cleanUpFiles } from './clean-up-files';
+import { output } from '@nrwl/devkit';
 
 let packageManager: string;
 function checkPackageManager() {
@@ -181,7 +181,7 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
       `npx nx build ${reactAppName}`,
       `npx nx test ${reactAppName}`,
       ` `,
-      `https://nx.dev/latest/react/migration/migration-cra#10-try-the-commands`,
+      `https://nx.dev/getting-started/intro#10-try-the-commands`,
     ],
   });
 }

@@ -3,22 +3,28 @@
   "$id": "NxReactNativeRunAndroid",
   "$schema": "http://json-schema.org/schema",
   "title": "Run Android application",
-  "description": "Run Android target options",
+  "description": "Run Android target options.",
   "type": "object",
+  "presets": [
+    {
+      "name": "Run Android without cache",
+      "keys": ["variant", "sync", "port", "packager", "resetCache"]
+    }
+  ],
   "properties": {
     "variant": {
       "type": "string",
-      "description": "Specify your app's build variant (e.g. debug, release).",
+      "description": "Specify your app's build variant (e.g. `debug`, `release`).",
       "default": "debug",
       "examples": ["debug", "release"]
     },
     "appId": {
       "type": "string",
-      "description": "Specify an applicationId to launch after build. If not specified, 'package' from AndroidManifest.xml will be used."
+      "description": "Specify an `applicationId` to launch after build. If not specified, `package` from `AndroidManifest.xml` will be used."
     },
     "appIdSuffix": {
       "type": "string",
-      "description": "Specify an applicationIdSuffix to launch after build."
+      "description": "Specify an `applicationIdSuffix` to launch after build."
     },
     "mainActivity": {
       "type": "string",
@@ -27,20 +33,20 @@
     },
     "deviceId": {
       "type": "string",
-      "description": "Builds your app and starts it on a specific device/simulator with the given device id (listed by running \"adb devices\" on the command line)."
+      "description": "Builds your app and starts it on a specific device/simulator with the given device id (listed by running `adb devices` on the command line)."
     },
     "tasks": {
       "type": "string",
-      "description": "Run custom gradle tasks. If this argument is provided, then --variant option is ignored. Example: yarn react-native run-android --tasks clean,installDebug."
+      "description": "Run custom Gradle tasks. If this argument is provided, then `--variant` option is ignored. Example: `yarn react-native run-android --tasks clean,installDebug`."
     },
     "jetifier": {
       "type": "boolean",
-      "description": "Run jetifier – the AndroidX transition tool. By default it runs before Gradle to ease working with libraries that don't support AndroidX yet.",
+      "description": "Run Jetifier – the AndroidX transition tool. By default it runs before Gradle to ease working with libraries that don't support AndroidX yet.",
       "default": true
     },
     "sync": {
       "type": "boolean",
-      "description": "Syncs npm dependencies to package.json (for React Native autolink).",
+      "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
       "default": true
     },
     "port": {

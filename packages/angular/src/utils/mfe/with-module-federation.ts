@@ -4,19 +4,19 @@ import {
   shareWorkspaceLibraries,
 } from './mfe-webpack';
 import {
+  workspaceRoot,
   createProjectGraphAsync,
+  ProjectGraph,
   readCachedProjectGraph,
-} from '@nrwl/workspace/src/core/project-graph';
-import { readWorkspaceJson } from '@nrwl/workspace/src/core/file-utils';
-import { joinPathFragments, ProjectGraph } from '@nrwl/devkit';
-import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
-import { Workspaces } from 'nx/src/shared/workspace';
-import { appRootPath } from 'nx/src/utils/app-root';
+  Workspaces,
+} from '@nrwl/devkit';
 import {
   getRootTsConfigPath,
   readTsConfig,
 } from '@nrwl/workspace/src/utilities/typescript';
 import { ParsedCommandLine } from 'typescript';
+import { readWorkspaceJson } from 'nx/src/core/file-utils';
+import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 export type MFERemotes = string[] | [remoteName: string, remoteUrl: string][];
 
@@ -61,7 +61,10 @@ function recursivelyResolveWorkspaceDependents(
 }
 
 function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
-  const { projects } = new Workspaces(appRootPath).readWorkspaceConfiguration();
+  const { projects } = new Workspaces(
+    workspaceRoot
+  ).readWorkspaceConfiguration();
+
   const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath();
   const tsConfig: ParsedCommandLine = readTsConfig(tsConfigPath);
 
@@ -148,7 +151,9 @@ function determineRemoteUrl(remote: string) {
       You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
     );
   }
-  return joinPathFragments(publicHost, 'remoteEntry.mjs');
+  return `${
+    publicHost.endsWith('/') ? publicHost.slice(0, -1) : publicHost
+  }/remoteEntry.mjs`;
 }
 
 function mapRemotes(remotes: MFERemotes) {
@@ -156,7 +161,12 @@ function mapRemotes(remotes: MFERemotes) {
 
   for (const remote of remotes) {
     if (Array.isArray(remote)) {
-      mappedRemotes[remote[0]] = remote[1];
+      const remoteLocation = remote[1].match(/remoteEntry\.(js|mjs)/)
+        ? remote[1]
+        : `${
+            remote[1].endsWith('/') ? remote[1].slice(0, -1) : remote[1]
+          }/remoteEntry.mjs`;
+      mappedRemotes[remote[0]] = remoteLocation;
     } else if (typeof remote === 'string') {
       mappedRemotes[remote] = determineRemoteUrl(remote);
     }

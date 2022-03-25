@@ -1,6 +1,6 @@
 {
   "title": "Nx Plugin Playground Target",
-  "description": "Creates a playground for a Nx Plugin",
+  "description": "Creates a playground for a Nx Plugin.",
   "cli": "nx",
   "type": "object",
   "properties": {

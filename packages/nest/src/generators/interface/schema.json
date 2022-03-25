@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxNestInterfaceGenerator",
-  "title": "Nest Interface Options Schema.",
+  "title": "Nest Interface Options Schema",
+  "description": "Nest Interface Options Schema.",
   "cli": "nx",
   "type": "object",
   "properties": {

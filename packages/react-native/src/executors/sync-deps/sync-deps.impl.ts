@@ -8,7 +8,7 @@ import {
   writeJsonFile,
 } from '@nrwl/devkit';
 import { ReactNativeSyncDepsOptions } from './schema';
-import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/devkit';
 
 export interface ReactNativeSyncDepsOutput {
   success: boolean;

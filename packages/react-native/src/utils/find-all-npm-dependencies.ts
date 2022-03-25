@@ -1,4 +1,4 @@
-import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { ProjectGraph } from '@nrwl/devkit';
 
 export function findAllNpmDependencies(
   graph: ProjectGraph,

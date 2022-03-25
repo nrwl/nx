@@ -1,8 +1,5 @@
 import { formatFiles, getProjects, Tree, writeJson } from '@nrwl/devkit';
-import {
-  createProjectGraphAsync,
-  reverse,
-} from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync, reverse } from '@nrwl/devkit';
 import { hasDependentAppUsingWebBuild } from './utils';
 
 export async function createBabelrcForWorkspaceLibs(host: Tree) {

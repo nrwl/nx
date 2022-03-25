@@ -53,7 +53,7 @@ function updatePackageJson(tree) {
       'update:check': 'ng update',
       lint: 'nx workspace-lint && ng lint',
       graph: 'nx graph',
-      'workspace-schematic': 'nx workspace-schematic',
+      'workspace-generator': 'nx workspace-generator',
       help: 'nx help',
     };
     packageJson.devDependencies = packageJson.devDependencies ?? {};
@@ -748,7 +748,7 @@ function createNxJson(host: Tree) {
     },
     tasksRunnerOptions: {
       default: {
-        runner: '@nrwl/workspace/tasks-runners/default',
+        runner: 'nx/tasks-runners/default',
         options: {
           cacheableOperations: ['build', 'lint', 'test', 'e2e'],
         },

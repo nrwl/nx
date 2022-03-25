@@ -1,4 +1,3 @@
-import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import libraryGenerator from '../library/library';
@@ -12,12 +11,12 @@ describe('react:storybook-configuration', () => {
   let appTree;
 
   beforeEach(async () => {
-    jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
-      devDependencies: {
-        '@storybook/addon-essentials': '^6.0.21',
-        '@storybook/react': '^6.0.21',
-      },
-    });
+    // jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
+    //   devDependencies: {
+    //     '@storybook/addon-essentials': '^6.0.21',
+    //     '@storybook/react': '^6.0.21',
+    //   },
+    // });
 
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});

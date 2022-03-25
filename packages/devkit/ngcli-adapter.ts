@@ -6,4 +6,4 @@ export {
   overrideCollectionResolutionForTesting,
   mockSchematicsForTesting,
   NxScopedHost,
-} from 'nx/src/commands/ngcli-adapter';
+} from 'nx/src/adapter/ngcli-adapter';

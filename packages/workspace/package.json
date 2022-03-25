@@ -1,10 +1,7 @@
 {
   "name": "@nrwl/workspace",
   "version": "0.0.1",
-  "description": "Smart, Fast and Extensible Build System",
-  "scripts": {
-    "postinstall": "node ./src/init/init"
-  },
+  "description": "Smart, Fast and Extensible Build System.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",

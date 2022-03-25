@@ -1,4 +1,3 @@
-import { packagesWeCareAbout } from '@nrwl/workspace/src/command-line/report';
 import { renameSync } from 'fs';
 import {
   newProject,
@@ -11,6 +10,7 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { packagesWeCareAbout } from 'nx/src/command-line/report';
 
 describe('Cli', () => {
   beforeEach(() => newProject());
@@ -156,7 +156,7 @@ describe('list', () => {
 describe('migrate', () => {
   beforeEach(() => newProject());
 
-  it('should run migrations', () => {
+  it('clear-cacheshould run migrations', () => {
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
       JSON.stringify({
@@ -210,7 +210,7 @@ describe('migrate', () => {
       })
     );
 
-    updateFile('./node_modules/nx/src/commands/migrate.js', (content) => {
+    updateFile('./node_modules/nx/src/command-line/migrate.js', (content) => {
       const start = content.indexOf('// testing-fetch-start');
       const end = content.indexOf('// testing-fetch-end');
 

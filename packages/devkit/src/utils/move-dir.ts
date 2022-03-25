@@ -1,8 +1,11 @@
 import { Tree } from 'nx/src/shared/tree';
 import { relative } from 'path';
 import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
-import { normalizePath } from './path';
+import { normalizePath } from 'nx/src/utils/path';
 
+/**
+ * Analogous to cp -r oldDir newDir
+ */
 export function moveFilesToNewDirectory(
   tree: Tree,
   oldDir: string,
