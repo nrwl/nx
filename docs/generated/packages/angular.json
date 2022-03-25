@@ -1838,11 +1838,12 @@
         "presets": [
           {
             "name": "Buildable Library with Tailwind",
-            "keys": ["tailwindConfig"]
+            "keys": ["project", "tailwindConfig"]
           },
           {
             "name": "Updating Project Dependencies for Buildable Library",
             "keys": [
+              "project",
               "updateBuildableProjectDepsInPackageJson",
               "buildableProjectDepsInPackageJsonType"
             ]
@@ -1898,11 +1899,12 @@
         "presets": [
           {
             "name": "Publishable Library with Tailwind",
-            "keys": ["tailwindConfig"]
+            "keys": ["project", "tailwindConfig"]
           },
           {
             "name": "Updating Project Dependencies for Publishable Library",
             "keys": [
+              "project",
               "updateBuildableProjectDepsInPackageJson",
               "buildableProjectDepsInPackageJsonType"
             ]
