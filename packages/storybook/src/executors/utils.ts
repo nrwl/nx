@@ -156,8 +156,8 @@ function webpackFinalPropertyCheck(options: CommonNxStorybookConfig) {
   Consider switching to the "webpackFinal" property declared in "main.js" instead.
   ${
     options.uiFramework === '@storybook/react'
-      ? 'https://nx.dev/latest/react/storybook/migrate-webpack-final'
-      : 'https://nx.dev/latest/angular/storybook/migrate-webpack-final'
+      ? 'https://nx.dev/storybook/migrate-webpack-final-react'
+      : 'https://nx.dev/storybook/migrate-webpack-final-angular'
   }
     `
     );

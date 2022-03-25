@@ -181,7 +181,7 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
       `npx nx build ${reactAppName}`,
       `npx nx test ${reactAppName}`,
       ` `,
-      `https://nx.dev/latest/react/migration/migration-cra#10-try-the-commands`,
+      `https://nx.dev/getting-started/intro#10-try-the-commands`,
     ],
   });
 }
