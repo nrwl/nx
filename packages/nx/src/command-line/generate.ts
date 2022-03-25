@@ -47,8 +47,8 @@ function convertToGenerateOptions(
     const separatorIndex = generatorDescriptor.lastIndexOf(':');
 
     if (separatorIndex > 0) {
-      collectionName = generatorDescriptor.substr(0, separatorIndex);
-      generatorName = generatorDescriptor.substr(separatorIndex + 1);
+      collectionName = generatorDescriptor.slice(0, separatorIndex);
+      generatorName = generatorDescriptor.slice(separatorIndex + 1);
     } else {
       collectionName = defaultCollectionName;
       generatorName = generatorDescriptor;

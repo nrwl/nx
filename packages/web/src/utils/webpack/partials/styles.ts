@@ -39,7 +39,7 @@ export function getStylesConfig(
       plugins: [
         postcssImports({
           addModulesDirectories: includePaths,
-          resolve: (url: string) => (url.startsWith('~') ? url.substr(1) : url),
+          resolve: (url: string) => (url.startsWith('~') ? url.slice(1) : url),
         }),
         PostcssCliResources({
           baseHref: buildOptions.baseHref,

@@ -20,7 +20,7 @@ export function updateTsconfig(
   const { appsDir, libsDir, npmScope } = getWorkspaceLayout(tree);
 
   const tsConfigPath = getRootTsConfigPathInTree(tree);
-  const defaultImportPath = `@${npmScope}/${project.root.substr(
+  const defaultImportPath = `@${npmScope}/${project.root.slice(
     project.projectType === 'application'
       ? appsDir.length + 1
       : libsDir.length + 1

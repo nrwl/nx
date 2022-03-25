@@ -10,7 +10,7 @@ export function buildImplicitProjectDependencies(
     if (p.implicitDependencies && p.implicitDependencies.length > 0) {
       p.implicitDependencies.forEach((target) => {
         if (target.startsWith('!')) {
-          builder.removeDependency(source, target.substr(1));
+          builder.removeDependency(source, target.slice(1));
         } else {
           builder.addImplicitDependency(source, target);
         }
