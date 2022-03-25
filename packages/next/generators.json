@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#nextInitSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/next plugin",
+      "description": "Initialize the `@nrwl/next` plugin.",
       "hidden": true
     },
     "application": {
@@ -14,24 +14,24 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create a Next.js application"
+      "description": "Create a Next.js application."
     },
     "page": {
       "factory": "./src/generators/page/page#pageSchematic",
       "schema": "./src/generators/page/schema.json",
-      "description": "Create a Next.js page component"
+      "description": "Create a Next.js page component."
     },
     "component": {
       "factory": "./src/generators/component/component#componentSchematic",
       "schema": "./src/generators/component/schema.json",
-      "description": "Create a React component"
+      "description": "Create a React component."
     }
   },
   "generators": {
     "init": {
       "factory": "./src/generators/init/init#nextInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/next plugin",
+      "description": "Initialize the `@nrwl/next` plugin.",
       "hidden": true
     },
     "application": {
@@ -39,24 +39,24 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an application"
+      "description": "Create an application."
     },
     "page": {
       "factory": "./src/generators/page/page#pageGenerator",
       "schema": "./src/generators/page/schema.json",
-      "description": "Create a page"
+      "description": "Create a page."
     },
     "component": {
       "factory": "./src/generators/component/component#componentGenerator",
       "schema": "./src/generators/component/schema.json",
-      "description": "Create a component"
+      "description": "Create a component."
     },
     "library": {
       "factory": "./src/generators/library/library#libraryGenerator",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library"
+      "description": "Create a library."
     }
   }
 }
