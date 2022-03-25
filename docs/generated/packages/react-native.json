@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "react-native",
-  "description": "React Native Plugin for Nx",
+  "description": "React Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.\n\nThe Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Detox, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
   "root": "/packages/react-native",
   "source": "/packages/react-native/src",
   "generators": [
@@ -37,7 +37,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Initialize the @nrwl/react-native plugin",
+      "description": "Initialize the `@nrwl/react-native` plugin.",
       "hidden": true,
       "implementation": "/packages/react-native/src/generators/init/init#reactNativeInitGenerator.ts",
       "aliases": [],
@@ -123,7 +123,7 @@
       },
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create a React Native application",
+      "description": "Create a React Native application.",
       "implementation": "/packages/react-native/src/generators/application/application#reactNativeApplicationGenerator.ts",
       "hidden": false,
       "path": "/packages/react-native/src/generators/application/schema.json"
@@ -229,7 +229,7 @@
       },
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a React Native library",
+      "description": "Create a React Native library.",
       "implementation": "/packages/react-native/src/generators/library/library#reactNativeLibraryGenerator.ts",
       "hidden": false,
       "path": "/packages/react-native/src/generators/library/schema.json"
@@ -311,7 +311,7 @@
         "required": ["name", "project"],
         "presets": []
       },
-      "description": "Create a React Native component",
+      "description": "Create a React Native component.",
       "aliases": ["c"],
       "implementation": "/packages/react-native/src/generators/component/component#reactNativeComponentGenerator.ts",
       "hidden": false,
@@ -358,7 +358,7 @@
         "required": ["name"],
         "presets": []
       },
-      "description": "Set up storybook for a react-native app or library",
+      "description": "Set up Storybook for a React-native application or library.",
       "hidden": false,
       "implementation": "/packages/react-native/src/generators/storybook-configuration/configuration#storybookConfigurationGenerator.ts",
       "aliases": [],
@@ -392,7 +392,7 @@
         "required": ["project", "componentPath"],
         "presets": []
       },
-      "description": "Generate storybook story for a react-native component",
+      "description": "Generate Storybook story for a React-native component.",
       "hidden": false,
       "implementation": "/packages/react-native/src/generators/component-story/component-story#componentStoryGenerator.ts",
       "aliases": [],
@@ -419,7 +419,7 @@
         "required": ["project"],
         "presets": []
       },
-      "description": "Create stories/specs for all components declared in an app or library",
+      "description": "Create stories/specs for all components declared in an application or library.",
       "hidden": false,
       "implementation": "/packages/react-native/src/generators/stories/stories#storiesGenerator.ts",
       "aliases": [],
@@ -722,7 +722,7 @@
         },
         "presets": []
       },
-      "description": "Syncs dependencies to package.json (required for autolinking).",
+      "description": "Syncs dependencies to `package.json` (required for autolinking).",
       "aliases": [],
       "hidden": false,
       "path": "/packages/react-native/src/executors/sync-deps/schema.json"
@@ -740,7 +740,7 @@
         "properties": {},
         "presets": []
       },
-      "description": "Ensure workspace node_modules is symlink under app's node_modules folder.",
+      "description": "Ensure workspace `node_modules` is symlink under app's `node_modules` folder.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/react-native/src/executors/ensure-symlink/schema.json"
@@ -777,7 +777,7 @@
         "required": ["searchDir", "outputFile", "pattern"],
         "presets": []
       },
-      "description": "Serve React Native Storybook",
+      "description": "Serve React Native Storybook.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/react-native/src/executors/storybook/schema.json"
