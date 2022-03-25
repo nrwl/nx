@@ -2,36 +2,26 @@
 
 exports[`app --mfe should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
-  name: 'app1',
-  remotes: ['remote1','remote2',]
-});"
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);"
 `;
 
 exports[`app --mfe should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
-  name: 'app1',
-  remotes: ['remote1',]
-});"
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);"
 `;
 
 exports[`app --mfe should generate a Module Federation correctly for a each app 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
-  name: 'my-app',
-  remotes: []
-});"
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);"
 `;
 
 exports[`app --mfe should generate a Module Federation correctly for a each app 2`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-module.exports = withModuleFederation({
-  name: 'my-app',
-  exposes: {
-    './Module': 'apps/my-app/src/app/remote-entry/entry.module.ts',
-  },
-});"
+const config = require('./mfe.config');
+module.exports = withModuleFederation(config);"
 `;
 
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;

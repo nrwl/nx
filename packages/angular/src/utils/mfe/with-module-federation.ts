@@ -161,7 +161,12 @@ function mapRemotes(remotes: MFERemotes) {
 
   for (const remote of remotes) {
     if (Array.isArray(remote)) {
-      mappedRemotes[remote[0]] = remote[1];
+      const remoteLocation = remote[1].match(/remoteEntry\.(js|mjs)/)
+        ? remote[1]
+        : `${
+            remote[1].endsWith('/') ? remote[1].slice(0, -1) : remote[1]
+          }/remoteEntry.mjs`;
+      mappedRemotes[remote[0]] = remoteLocation;
     } else if (typeof remote === 'string') {
       mappedRemotes[remote] = determineRemoteUrl(remote);
     }
