@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#webInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Add @nrwl/web to a project",
+      "description": "Add `@nrwl/web` to a project.",
       "hidden": true
     },
     "application": {
@@ -14,14 +14,14 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an application"
+      "description": "Create an web application."
     }
   },
   "schematics": {
     "init": {
       "factory": "./src/generators/init/init#webInitSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Add @nrwl/web to a project",
+      "description": "Add `@nrwl/web` to a project.",
       "hidden": true
     },
     "application": {
@@ -29,7 +29,7 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an application"
+      "description": "Create an web application."
     }
   }
 }

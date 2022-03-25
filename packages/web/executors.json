@@ -3,44 +3,44 @@
     "webpack": {
       "implementation": "./src/executors/webpack/compat",
       "schema": "./src/executors/webpack/schema.json",
-      "description": "Build an application using webpack"
+      "description": "Build an application using Webpack."
     },
     "rollup": {
       "implementation": "./src/executors/rollup/compat",
       "schema": "./src/executors/rollup/schema.json",
-      "description": "Package a library using rollup"
+      "description": "Package a library using Rollup."
     },
     "dev-server": {
       "implementation": "./src/executors/dev-server/compat",
       "schema": "./src/executors/dev-server/schema.json",
-      "description": "Serve a web application"
+      "description": "Serve a web application."
     },
     "file-server": {
       "implementation": "./src/executors/file-server/compat",
       "schema": "./src/executors/file-server/schema.json",
-      "description": "Serve a web application from a folder"
+      "description": "Serve a web application from a folder."
     }
   },
   "executors": {
     "webpack": {
       "implementation": "./src/executors/webpack/webpack.impl",
       "schema": "./src/executors/webpack/schema.json",
-      "description": "Build an application using webpack"
+      "description": "Build an application using Webpack."
     },
     "rollup": {
       "implementation": "./src/executors/rollup/rollup.impl",
       "schema": "./src/executors/rollup/schema.json",
-      "description": "Package a library using rollup"
+      "description": "Package a library using Rollup."
     },
     "dev-server": {
       "implementation": "./src/executors/dev-server/dev-server.impl",
       "schema": "./src/executors/dev-server/schema.json",
-      "description": "Serve a web application"
+      "description": "Serve a web application."
     },
     "file-server": {
       "implementation": "./src/executors/file-server/file-server.impl",
       "schema": "./src/executors/file-server/schema.json",
-      "description": "Serve a web application from a folder"
+      "description": "Serve a web application from a folder."
     }
   }
 }
