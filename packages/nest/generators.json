@@ -18,7 +18,7 @@
     "init": {
       "factory": "./src/generators/init/init#initSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/nest plugin.",
+      "description": "Initialize the `@nrwl/nest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
@@ -121,7 +121,7 @@
     "init": {
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/nest plugin.",
+      "description": "Initialize the `@nrwl/nest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },

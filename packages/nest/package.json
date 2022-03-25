@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/nest",
   "version": "0.0.1",
-  "description": "Nest Plugin for Nx",
+  "description": "The Nx Plugin for Nest that contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
