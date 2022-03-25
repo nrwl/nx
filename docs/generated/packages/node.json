@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "node",
-  "description": "Node Plugin for Nx",
+  "description": "The Node Plugin contains generators and executors to manage Node applications within an Nx workspace.",
   "root": "/packages/node",
   "source": "/packages/node/src",
   "generators": [
@@ -31,7 +31,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Initialize the @nrwl/node plugin",
+      "description": "Initialize the `@nrwl/node` plugin.",
       "aliases": ["ng-add"],
       "hidden": true,
       "implementation": "/packages/node/src/generators/init/init.ts",
@@ -119,7 +119,7 @@
       },
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create a node application",
+      "description": "Create a node application.",
       "implementation": "/packages/node/src/generators/application/application.ts",
       "hidden": false,
       "path": "/packages/node/src/generators/application/schema.json"
@@ -250,7 +250,7 @@
       },
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library",
+      "description": "Create a node library.",
       "implementation": "/packages/node/src/generators/library/library.ts",
       "hidden": false,
       "path": "/packages/node/src/generators/library/schema.json"
@@ -498,7 +498,7 @@
         },
         "presets": []
       },
-      "description": "Build a Node application using webpack",
+      "description": "Build a Node application using Webpack.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/node/src/executors/webpack/schema.json"
@@ -568,7 +568,7 @@
         "required": ["buildTarget"],
         "presets": []
       },
-      "description": "Execute a Node application",
+      "description": "Execute a Node application.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/node/src/executors/node/schema.json"

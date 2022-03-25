@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/node",
   "version": "0.0.1",
-  "description": "Node Plugin for Nx",
+  "description": "The Node Plugin contains generators and executors to manage Node applications within an Nx workspace.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
