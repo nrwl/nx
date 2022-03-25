@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "linter",
-  "description": "Lint Plugin for Nx",
+  "description": "The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
   "root": "/packages/linter",
   "source": "/packages/linter/src",
   "generators": [
@@ -25,7 +25,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Create the Workspace Lint Rules Project",
+      "description": "Create the Workspace Lint Rules Project.",
       "hidden": true,
       "implementation": "/packages/linter/src/generators/workspace-rules-project/workspace-rules-project#lintWorkspaceRulesProjectGenerator.ts",
       "aliases": [],
@@ -67,7 +67,7 @@
         "required": ["name", "directory"],
         "presets": []
       },
-      "description": "Create a new workspace ESLint rule",
+      "description": "Create a new Workspace ESLint rule.",
       "implementation": "/packages/linter/src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleGenerator.ts",
       "aliases": [],
       "hidden": false,
@@ -182,7 +182,7 @@
         "required": ["linter"],
         "presets": []
       },
-      "description": "**[DEPRECATED]**: Please use the eslint builder instead, an automated migration was provided in v10.3.0",
+      "description": "**[DEPRECATED]**: Please use the eslint builder instead, an automated migration was provided in `v10.3.0`.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/linter/src/executors/lint/schema.json"
@@ -289,7 +289,7 @@
         "presets": []
       },
       "hasher": "./src/executors/eslint/hasher",
-      "description": "Run ESLint on a project",
+      "description": "Run ESLint on a project.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/linter/src/executors/eslint/schema.json"
