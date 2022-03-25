@@ -13,7 +13,7 @@
       "default": "jest"
     },
     "e2eTestRunner": {
-      "description": "Adds the specified e2e test runner.",
+      "description": "Adds the specified E2E test runner.",
       "type": "string",
       "enum": ["cypress", "none"],
       "default": "cypress"
