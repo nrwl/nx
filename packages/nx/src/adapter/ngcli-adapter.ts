@@ -1230,7 +1230,7 @@ const getTargetLogger = (
             `TSLint's support is discontinued and the @angular-devkit/build-angular:tslint executor is deprecated.\n` +
             'To start using a modern linter tool, please consider replacing TSLint with ESLint. ' +
             'You can use the "@nrwl/angular:convert-tslint-to-eslint" generator to automatically convert your projects.\n' +
-            'For more info, visit https://nx.dev/latest/angular/angular/convert-tslint-to-eslint.';
+            'For more info, visit https://nx.dev/packages/angular/generators/convert-tslint-to-eslint.';
         }
         return chalk.bold(chalk.yellow(s));
       },
