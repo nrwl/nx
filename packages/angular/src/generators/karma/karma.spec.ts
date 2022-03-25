@@ -9,7 +9,21 @@ describe('karma', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should do nothing when karma is already installed', () => {
+  it('should do nothing when karma is already installed and karma.conf.js exists', () => {
+    jest.spyOn(devkit, 'generateFiles');
+    jest.spyOn(devkit, 'addDependenciesToPackageJson');
+    devkit.updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { karma: '~5.0.0' };
+      return json;
+    });
+    tree.write('karma.conf.js', '');
+    karmaGenerator(tree, {});
+
+    expect(devkit.generateFiles).not.toHaveBeenCalled();
+    expect(devkit.addDependenciesToPackageJson).not.toHaveBeenCalled();
+  });
+
+  it('should create karma.conf.js when karma is installed', () => {
     jest.spyOn(devkit, 'generateFiles');
     jest.spyOn(devkit, 'addDependenciesToPackageJson');
     devkit.updateJson(tree, 'package.json', (json) => {
@@ -19,7 +33,7 @@ describe('karma', () => {
 
     karmaGenerator(tree, {});
 
-    expect(devkit.generateFiles).not.toHaveBeenCalled();
+    expect(devkit.generateFiles).toHaveBeenCalled();
     expect(devkit.addDependenciesToPackageJson).not.toHaveBeenCalled();
   });
 
