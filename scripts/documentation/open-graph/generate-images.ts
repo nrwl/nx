@@ -25,6 +25,11 @@ documents.map((category) => {
   );
 });
 packages.map((pkg) => {
+  data.push({
+    title: 'Package details',
+    content: `@nrwl/${pkg.name}`,
+    filename: ['packages', pkg.name].join('-'),
+  });
   pkg.schemas.executors.map((schema) => {
     data.push({
       title: 'Executor details',
