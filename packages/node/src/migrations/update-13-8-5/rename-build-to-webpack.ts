@@ -1,20 +1,21 @@
 import {
   formatFiles,
-  getProjects,
+  readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
 export default async function update(host: Tree) {
-  const projects = getProjects(host);
-
-  for (const [name, config] of projects.entries()) {
-    if (config?.targets?.build?.executor !== '@nrwl/node:build') continue;
-
-    config.targets.build.executor = '@nrwl/node:webpack';
-
-    updateProjectConfiguration(host, name, config);
-  }
+  forEachExecutorOptions(
+    host,
+    '@nrwl/node:build',
+    (_, projectName, targetName) => {
+      const projectConfiguration = readProjectConfiguration(host, projectName);
+      projectConfiguration.targets[targetName].executor = '@nrwl/node:webpack';
+      updateProjectConfiguration(host, projectName, projectConfiguration);
+    }
+  );
 
   await formatFiles(host);
 }

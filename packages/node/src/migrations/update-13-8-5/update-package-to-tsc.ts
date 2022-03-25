@@ -2,29 +2,36 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   getProjects,
+  readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { nxVersion } from '@nrwl/workspace/src/utils/versions';
 
 export default async function update(host: Tree) {
-  const projects = getProjects(host);
   let installNeeded = false;
 
-  for (const [name, config] of projects.entries()) {
-    if (config?.targets?.build?.executor !== '@nrwl/node:package') continue;
+  forEachExecutorOptions(
+    host,
+    '@nrwl/node:package',
+    (_, projectName, targetName) => {
+      installNeeded = true;
+      const projectConfiguration = readProjectConfiguration(host, projectName);
 
-    config.targets.build.executor = '@nrwl/js:tsc';
+      projectConfiguration.targets[targetName].executor = '@nrwl/js:tsc';
 
-    const transformers = config.targets.build.options?.tsPlugins;
-    if (transformers) {
-      delete config.targets.build.options.tsPlugins;
-      config.targets.build.options.transformers = transformers;
+      const transformers =
+        projectConfiguration.targets[targetName].options?.tsPlugins;
+      if (transformers) {
+        delete projectConfiguration.targets[targetName].options.tsPlugins;
+        projectConfiguration.targets[targetName].options.transformers =
+          transformers;
+      }
+
+      updateProjectConfiguration(host, projectName, projectConfiguration);
     }
-
-    installNeeded = true;
-    updateProjectConfiguration(host, name, config);
-  }
+  );
 
   const task = installNeeded
     ? addDependenciesToPackageJson(
