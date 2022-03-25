@@ -21,4 +21,29 @@ module.exports = (config, context) => {
 };
 ```
 
+## Add a Loader
+
+To add the `css-loader` to your config, install it and add the rule.
+
+```bash
+npm install -save-dev css-loader
+```
+
+```typescript
+const { merge } = require('webpack-merge');
+
+module.exports = (config, context) => {
+  return merge(config, {
+    module: {
+      rules: [
+        {
+          test: /\.css$/i,
+          use: ['style-loader', 'css-loader'],
+        },
+      ],
+    },
+  });
+};
+```
+
 Reference the [webpack documentation](https://webpack.js.org/configuration/) for details on the structure of the webpack config object.
