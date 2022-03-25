@@ -3,24 +3,24 @@
     "storybook": {
       "implementation": "./src/executors/storybook/compat",
       "schema": "./src/executors/storybook/schema.json",
-      "description": "Serve Storybook"
+      "description": "Serve Storybook."
     },
     "build": {
       "implementation": "./src/executors/build-storybook/compat",
       "schema": "./src/executors/build-storybook/schema.json",
-      "description": "Build Storybook"
+      "description": "Build Storybook."
     }
   },
   "executors": {
     "storybook": {
       "implementation": "./src/executors/storybook/storybook.impl",
       "schema": "./src/executors/storybook/schema.json",
-      "description": "Serve Storybook"
+      "description": "Serve Storybook."
     },
     "build": {
       "implementation": "./src/executors/build-storybook/build-storybook.impl",
       "schema": "./src/executors/build-storybook/schema.json",
-      "description": "Build Storybook"
+      "description": "Build Storybook."
     }
   }
 }

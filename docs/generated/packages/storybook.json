@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "storybook",
-  "description": "Storybook plugin for Nx",
+  "description": "The Nx Plugin for Storybook that contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
   "root": "/packages/storybook",
   "source": "/packages/storybook/src",
   "generators": [
@@ -33,7 +33,7 @@
         },
         "presets": []
       },
-      "description": "Add storybook configuration to the workspace",
+      "description": "Add Storybook configuration to the workspace.",
       "aliases": ["ng-add"],
       "hidden": true,
       "implementation": "/packages/storybook/src/generators/init/init.ts",
@@ -89,7 +89,7 @@
         "required": ["name"],
         "presets": []
       },
-      "description": "Add storybook configuration to a ui library or an application",
+      "description": "Add Storybook configuration to a UI library or an application.",
       "hidden": false,
       "implementation": "/packages/storybook/src/generators/configuration/configuration.ts",
       "aliases": [],
@@ -134,7 +134,7 @@
         "required": ["name"],
         "presets": []
       },
-      "description": "Add cypress e2e app to test a ui library that is set up for storybook",
+      "description": "Add cypress e2e app to test a UI library that is set up for Storybook.",
       "hidden": false,
       "implementation": "/packages/storybook/src/generators/cypress-project/cypress-project.ts",
       "aliases": [],
@@ -170,7 +170,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "description": "Generate default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
       "hidden": false,
       "implementation": "/packages/storybook/src/generators/migrate-defaults-5-to-6/migrate-defaults-5-to-6.ts",
       "aliases": [],
@@ -190,7 +190,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "description": "Generate default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
       "hidden": false,
       "implementation": "/packages/storybook/src/generators/migrate-stories-to-6-2/migrate-stories-to-6-2.ts",
       "aliases": [],
@@ -359,7 +359,7 @@
         "required": ["uiFramework", "config"],
         "presets": []
       },
-      "description": "Serve Storybook",
+      "description": "Serve Storybook.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/storybook/src/executors/storybook/schema.json"
@@ -486,7 +486,7 @@
         "required": ["uiFramework", "config"],
         "presets": []
       },
-      "description": "Build Storybook",
+      "description": "Build Storybook.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/storybook/src/executors/build-storybook/schema.json"
