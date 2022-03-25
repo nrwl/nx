@@ -26,7 +26,7 @@ export default async function (tree: Tree) {
       This workspace uses Storybook ${storybookVersion} which does not support Webpack 5.
       Storybook 6.2+ is required to support Webpack 5.
       See our documentation on migrating to Storybook 6:
-      https://nx.dev/latest/angular/storybook/overview#upgrading-to-storybook-6-using-the-nx-migration-generator
+      https://nx.dev/storybook/overview-angular#upgrading-to-storybook-6-using-the-nx-migration-generator
     `);
     throw new Error('Could not migrate to Angular 12');
   }
