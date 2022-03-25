@@ -31,13 +31,6 @@ export default function Document() {
           href="/images/safari-pinned-tab.svg"
           color="#5bbad5"
         />
-        {/* Workaround for https://github.com/suren-atoyan/monaco-react/issues/272 */}
-        <link
-          rel="stylesheet"
-          type="text/css"
-          data-name="vs/editor/editor.main"
-          href="https://cdn.jsdelivr.net/npm/monaco-editor@0.25.2/min/vs/editor/editor.main.css"
-        ></link>
       </Head>
       <body>
         <Main />
