@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import ReactMarkdown from 'react-markdown';
 import autolinkHeadings from 'rehype-autolink-headings';
 import slug from 'rehype-slug';
@@ -5,7 +6,13 @@ import gfm from 'remark-gfm';
 import { CodeBlock } from './code-block';
 import { renderIframes } from './renderers/render-iframe';
 
-export const Markdown = ({ content }: { content: string }) => (
+export const Markdown = ({
+  content,
+  classes = '',
+}: {
+  content: string;
+  classes?: string;
+}) => (
   <ReactMarkdown
     remarkPlugins={[gfm]}
     rehypePlugins={[
@@ -20,7 +27,7 @@ export const Markdown = ({ content }: { content: string }) => (
       renderIframes,
     ]}
     children={content}
-    className="prose max-w-none"
+    className={classNames('prose max-w-none', classes)}
     components={components({
       code: {
         callback: () => void 0,
