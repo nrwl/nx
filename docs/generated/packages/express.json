@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "express",
-  "description": "Express Plugin for Nx",
+  "description": "The Nx Plugin for Express that contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
   "root": "/packages/express",
   "source": "/packages/express/src",
   "generators": [
@@ -31,7 +31,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Initialize the @nrwl/express plugin",
+      "description": "Initialize the `@nrwl/express` plugin.",
       "aliases": ["ng-add"],
       "hidden": true,
       "implementation": "/packages/express/src/generators/init/init#initGenerator.ts",
@@ -120,7 +120,7 @@
       },
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an express application",
+      "description": "Create an Express application.",
       "implementation": "/packages/express/src/generators/application/application#applicationGenerator.ts",
       "hidden": false,
       "path": "/packages/express/src/generators/application/schema.json"
