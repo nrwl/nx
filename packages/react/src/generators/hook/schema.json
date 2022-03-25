@@ -8,7 +8,7 @@
   "examples": [
     {
       "command": "nx g hook my-hook --project=mylib",
-      "description": "Generate a hook in the mylib library"
+      "description": "Generate a hook in the `mylib` library"
     }
   ],
   "properties": {
