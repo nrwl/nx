@@ -3,7 +3,7 @@
     "jest": {
       "implementation": "./src/executors/jest/compat",
       "schema": "./src/executors/jest/schema.json",
-      "description": "Run Jest unit tests"
+      "description": "Run Jest unit tests."
     }
   },
   "executors": {
@@ -12,7 +12,7 @@
       "batchImplementation": "./src/executors/jest/jest.impl#batchJest",
       "schema": "./src/executors/jest/schema.json",
       "hasher": "./src/executors/jest/hasher",
-      "description": "Run Jest unit tests"
+      "description": "Run Jest unit tests."
     }
   }
 }
