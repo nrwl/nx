@@ -118,7 +118,7 @@ export function PackageSchemaList({
                       role="img"
                     />
                     <div className="ml-3">
-                      <p className="text-sm font-medium capitalize text-gray-900">
+                      <p className="text-sm font-medium text-gray-900">
                         <Link
                           href={`/packages/${pkg.name}/executors/${executors.name}`}
                         >
@@ -153,7 +153,7 @@ export function PackageSchemaList({
                       role="img"
                     />
                     <div className="ml-3">
-                      <p className="text-sm font-medium capitalize text-gray-900">
+                      <p className="text-sm font-medium text-gray-900">
                         <Link
                           href={`/packages/${pkg.name}/generators/${generators.name}`}
                         >
