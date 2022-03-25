@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "jest",
-  "description": "Jest plugin for Nx",
+  "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
   "root": "/packages/jest",
   "source": "/packages/jest/src",
   "generators": [
@@ -31,7 +31,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Initialize the @nrwl/jest plugin",
+      "description": "Initialize the `@nrwl/jest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true,
       "implementation": "/packages/jest/src/generators/init/init#jestInitGenerator.ts",
@@ -108,7 +108,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Add Jest configuration to a project",
+      "description": "Add Jest configuration to a project.",
       "hidden": true,
       "implementation": "/packages/jest/src/generators/jest-project/jest-project#jestProjectGenerator.ts",
       "aliases": [],
@@ -299,7 +299,7 @@
         "presets": []
       },
       "hasher": "./src/executors/jest/hasher",
-      "description": "Run Jest unit tests",
+      "description": "Run Jest unit tests.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/jest/src/executors/jest/schema.json"
