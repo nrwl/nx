@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "nest",
-  "description": "Nest Plugin for Nx",
+  "description": "The Nx Plugin for Nest that contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
   "root": "/packages/nest",
   "source": "/packages/nest/src",
   "generators": [
@@ -154,7 +154,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Initialize the @nrwl/nest plugin.",
+      "description": "Initialize the `@nrwl/nest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true,
       "implementation": "/packages/nest/src/generators/init/init.ts",
