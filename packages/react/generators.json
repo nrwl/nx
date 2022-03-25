@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#reactInitSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/react plugin",
+      "description": "Initialize the `@nrwl/react` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
@@ -16,7 +16,7 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create a React application"
+      "description": "Create a React application."
     },
 
     "library": {
@@ -24,27 +24,27 @@
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a React library"
+      "description": "Create a React library."
     },
 
     "component": {
       "factory": "./src/generators/component/component#componentSchematic",
       "schema": "./src/generators/component/schema.json",
-      "description": "Create a React component",
+      "description": "Create a React component.",
       "aliases": "c"
     },
 
     "redux": {
       "factory": "./src/generators/redux/redux#reduxSchematic",
       "schema": "./src/generators/redux/schema.json",
-      "description": "Create a redux slice for a project",
+      "description": "Create a Redux slice for a project.",
       "aliases": ["slice"]
     },
 
     "storybook-configuration": {
       "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationSchematic",
       "schema": "./src/generators/storybook-configuration/schema.json",
-      "description": "Set up storybook for a react app or library",
+      "description": "Set up storybook for a React app or library",
       "hidden": false
     },
 
@@ -58,7 +58,7 @@
     "component-story": {
       "factory": "./src/generators/component-story/component-story#componentStorySchematic",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Generate storybook story for a react component",
+      "description": "Generate storybook story for a React component",
       "hidden": false
     },
 
@@ -72,14 +72,14 @@
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/component-cypress-spec#componentCypressSchematic",
       "schema": "./src/generators/component-cypress-spec/schema.json",
-      "description": "Create a cypress spec for a ui component that has a story",
+      "description": "Create a Cypress spec for a UI component that has a story",
       "hidden": false
     },
 
     "hook": {
       "factory": "./src/generators/hook/hook#chookSchematic",
       "schema": "./src/generators/hook/schema.json",
-      "description": "Create a hook",
+      "description": "Create a hook.",
       "aliases": "h"
     }
   },
@@ -87,7 +87,7 @@
     "init": {
       "factory": "./src/generators/init/init#reactInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/react plugin",
+      "description": "Initialize the `@nrwl/react` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
@@ -97,7 +97,7 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create a React application"
+      "description": "Create a React application."
     },
 
     "library": {
@@ -105,62 +105,62 @@
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a React library"
+      "description": "Create a React library."
     },
 
     "component": {
       "factory": "./src/generators/component/component#componentGenerator",
       "schema": "./src/generators/component/schema.json",
-      "description": "Create a React component",
+      "description": "Create a React component.",
       "aliases": "c"
     },
 
     "redux": {
       "factory": "./src/generators/redux/redux#reduxGenerator",
       "schema": "./src/generators/redux/schema.json",
-      "description": "Create a redux slice for a project",
+      "description": "Create a Redux slice for a project.",
       "aliases": ["slice"]
     },
 
     "storybook-configuration": {
       "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
       "schema": "./src/generators/storybook-configuration/schema.json",
-      "description": "Set up storybook for a react app or library",
+      "description": "Set up storybook for a React app or library.",
       "hidden": false
     },
 
     "storybook-migrate-defaults-5-to-6": {
       "factory": "./src/generators/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6#storybookMigration5to6Generator",
       "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
-      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "description": "Generate default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
       "hidden": false
     },
 
     "component-story": {
       "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Generate storybook story for a react component",
+      "description": "Generate storybook story for a React component",
       "hidden": false
     },
 
     "stories": {
       "factory": "./src/generators/stories/stories#storiesGenerator",
       "schema": "./src/generators/stories/schema.json",
-      "description": "Create stories/specs for all components declared in an app or library",
+      "description": "Create stories/specs for all components declared in an app or library.",
       "hidden": false
     },
 
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/component-cypress-spec#componentCypressGenerator",
       "schema": "./src/generators/component-cypress-spec/schema.json",
-      "description": "Create a cypress spec for a ui component that has a story",
+      "description": "Create a Cypress spec for a UI component that has a story.",
       "hidden": false
     },
 
     "hook": {
       "factory": "./src/generators/hook/hook#hookGenerator",
       "schema": "./src/generators/hook/schema.json",
-      "description": "Create a hook",
+      "description": "Create a hook.",
       "aliases": "c"
     }
   }

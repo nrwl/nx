@@ -7,7 +7,7 @@
   "examples": [
     {
       "command": "nx g app myapp --directory=myorg",
-      "description": "Generate apps/myorg/myapp and apps/myorg/myapp-e2e"
+      "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
     },
     {
       "command": "nx g app myapp --classComponent",

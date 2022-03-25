@@ -8,11 +8,11 @@
   "examples": [
     {
       "command": "nx g component my-component --project=mylib",
-      "description": "Generate a component in the mylib library"
+      "description": "Generate a component in the `mylib` library"
     },
     {
       "command": "nx g component my-component --project=mylib --classComponent",
-      "description": "Generate a class component in the mylib library"
+      "description": "Generate a class component in the `mylib` library"
     }
   ],
   "properties": {
