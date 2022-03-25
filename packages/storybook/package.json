@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/storybook",
   "version": "0.0.1",
-  "description": "Storybook plugin for Nx",
+  "description": "The Nx Plugin for Storybook that contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
