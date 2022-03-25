@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/angular",
   "version": "0.0.1",
-  "description": "Angular Plugin for Nx",
+  "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n-Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, Karma, and Protractor. \n-Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n-Upgrading AngularJS applications \n-Single Component Application Modules (SCAMs) \n-NgRx helpers. \n-Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",

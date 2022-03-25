@@ -1,7 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "angular",
-  "description": "Angular Plugin for Nx",
+  "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n-Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, Karma, and Protractor. \n-Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n-Upgrading AngularJS applications \n-Single Component Application Modules (SCAMs) \n-NgRx helpers. \n-Utilities for automatic workspace refactoring.",
   "root": "/packages/angular",
   "source": "/packages/angular/src",
   "generators": [
@@ -608,7 +608,7 @@
         "additionalProperties": false,
         "presets": []
       },
-      "description": "Initializes the @nrwl/angular plugin.",
+      "description": "Initializes the `@nrwl/angular` plugin.",
       "hidden": true,
       "implementation": "/packages/angular/src/generators/init/init.ts",
       "aliases": [],
@@ -1658,7 +1658,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "description": "Generates default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
       "implementation": "/packages/angular/src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6.ts",
       "aliases": [],
       "hidden": false,
@@ -1679,7 +1679,7 @@
         "required": [],
         "presets": []
       },
-      "description": "Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export.",
+      "description": "Migrates stories to match the new syntax in `v6.2` where the component declaration should be in the default export.",
       "implementation": "/packages/angular/src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2.ts",
       "aliases": [],
       "hidden": false,
@@ -2655,7 +2655,7 @@
           }
         }
       },
-      "description": "The webpack-browser executor is very similar to the standard browser builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
+      "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/builders/webpack-browser/schema.json"
@@ -2766,7 +2766,7 @@
         "additionalProperties": false,
         "required": ["browserTarget"]
       },
-      "description": "The webpack-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+      "description": "The `webpack-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/builders/webpack-server/schema.json"
