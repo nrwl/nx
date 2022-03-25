@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ReactComponentElement } from 'react';
 import { Heading1, Heading2 } from './ui/headings';
+import { Markdown } from './ui/markdown/markdown';
 
 export function PackageSchemaList({
   pkg,
@@ -97,7 +98,9 @@ export function PackageSchemaList({
               </div>
 
               <Heading1 title={vm.pkg.name} />
-              <p className="mb-4">{vm.pkg.description}</p>
+
+              <Markdown content={vm.pkg.description} classes="mb-4" />
+
               <p className="mb-16">
                 Here is a list of all the executors and generators available
                 from this package.
@@ -128,9 +131,10 @@ export function PackageSchemaList({
                           </a>
                         </Link>
                       </p>
-                      <p className="text-sm text-gray-500">
-                        {executors.description}
-                      </p>
+                      <Markdown
+                        content={executors.description}
+                        classes="prose-sm"
+                      />
                     </div>
                   </li>
                 ))}
@@ -162,9 +166,10 @@ export function PackageSchemaList({
                           </a>
                         </Link>
                       </p>
-                      <p className="text-sm text-gray-500">
-                        {generators.description}
-                      </p>
+                      <Markdown
+                        content={generators.description}
+                        classes="prose-sm"
+                      />
                     </div>
                   </li>
                 ))}
