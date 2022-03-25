@@ -36,8 +36,7 @@ export function PackageSchemaList({
     },
     seo: {
       title: `@nrwl/${pkg.name} | Nx`,
-      description:
-        'An overview of the powerful integrations Nx is providing you for this specific technology.',
+      description: pkg.description,
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath
         .replace('/', '')
         .replace(/\//gi, '-')}.jpg`,
