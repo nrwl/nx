@@ -7,4 +7,5 @@ export * from './fix-bootstrap';
 export * from './generate-config';
 export * from './get-remotes-with-ports';
 export * from './set-tsconfig-target';
+export * from './setup-host-if-dynamic';
 export * from './setup-serve-target';

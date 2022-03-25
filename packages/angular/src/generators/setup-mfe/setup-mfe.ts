@@ -13,30 +13,35 @@ import {
   generateWebpackConfig,
   getRemotesWithPorts,
   setupServeTarget,
+  setupHostIfDynamic,
   updateTsConfigTarget,
 } from './lib';
 
-export async function setupMfe(host: Tree, options: Schema) {
-  const projectConfig = readProjectConfiguration(host, options.appName);
+export async function setupMfe(tree: Tree, options: Schema) {
+  const projectConfig = readProjectConfiguration(tree, options.appName);
 
-  const remotesWithPorts = getRemotesWithPorts(host, options);
-  addRemoteToHost(host, options);
+  options.federationType = options.federationType ?? 'static';
 
-  generateWebpackConfig(host, options, projectConfig.root, remotesWithPorts);
+  setupHostIfDynamic(tree, options);
 
-  addEntryModule(host, options, projectConfig.root);
-  addImplicitDeps(host, options);
-  changeBuildTarget(host, options);
-  updateTsConfigTarget(host, options);
-  setupServeTarget(host, options);
+  const remotesWithPorts = getRemotesWithPorts(tree, options);
+  addRemoteToHost(tree, options);
 
-  fixBootstrap(host, projectConfig.root);
+  generateWebpackConfig(tree, options, projectConfig.root, remotesWithPorts);
 
-  addCypressOnErrorWorkaround(host, options);
+  addEntryModule(tree, options, projectConfig.root);
+  addImplicitDeps(tree, options);
+  changeBuildTarget(tree, options);
+  updateTsConfigTarget(tree, options);
+  setupServeTarget(tree, options);
+
+  fixBootstrap(tree, projectConfig.root, options);
+
+  addCypressOnErrorWorkaround(tree, options);
 
   // format files
   if (!options.skipFormat) {
-    await formatFiles(host);
+    await formatFiles(tree);
   }
 }
 

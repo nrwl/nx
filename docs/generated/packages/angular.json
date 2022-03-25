@@ -191,6 +191,12 @@
             "description": "Type of application to generate the Module Federation configuration for.",
             "default": "remote"
           },
+          "federationType": {
+            "type": "string",
+            "enum": ["static", "dynamic"],
+            "description": "Use either Static or Dynamic Module Federation pattern for the application.",
+            "default": "static"
+          },
           "port": {
             "type": "number",
             "description": "The port at which the remote application should be served."
@@ -1004,6 +1010,11 @@
           "port": {
             "type": "number",
             "description": "The port on which this app should be served."
+          },
+          "dynamic": {
+            "type": "boolean",
+            "description": "Should the host app use dynamic federation?",
+            "default": false
           }
         },
         "required": ["name"],
@@ -1453,6 +1464,12 @@
             "enum": ["host", "remote"],
             "description": "Type of application to generate the Module Federation configuration for.",
             "default": "remote"
+          },
+          "federationType": {
+            "type": "string",
+            "enum": ["static", "dynamic"],
+            "description": "Use either Static or Dynamic Module Federation pattern for the application.",
+            "default": "static"
           },
           "port": {
             "type": "number",

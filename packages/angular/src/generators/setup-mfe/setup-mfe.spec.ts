@@ -1,19 +1,19 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import { ProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { setupMfe } from './setup-mfe';
 import applicationGenerator from '../application/application';
 describe('Init MFE', () => {
-  let host: Tree;
+  let tree: Tree;
 
   beforeEach(async () => {
-    host = createTreeWithEmptyWorkspace();
-    await applicationGenerator(host, {
+    tree = createTreeWithEmptyWorkspace();
+    await applicationGenerator(tree, {
       name: 'app1',
       routing: true,
     });
-    await applicationGenerator(host, {
+    await applicationGenerator(tree, {
       name: 'remote1',
       routing: true,
     });
@@ -26,23 +26,23 @@ describe('Init MFE', () => {
     'should create webpack and mfe configs correctly',
     async (app, type: 'host' | 'remote') => {
       // ACT
-      await setupMfe(host, {
+      await setupMfe(tree, {
         appName: app,
         mfeType: type,
       });
 
       // ASSERT
-      expect(host.exists(`apps/${app}/mfe.config.js`)).toBeTruthy();
-      expect(host.exists(`apps/${app}/webpack.config.js`)).toBeTruthy();
-      expect(host.exists(`apps/${app}/webpack.prod.config.js`)).toBeTruthy();
+      expect(tree.exists(`apps/${app}/mfe.config.js`)).toBeTruthy();
+      expect(tree.exists(`apps/${app}/webpack.config.js`)).toBeTruthy();
+      expect(tree.exists(`apps/${app}/webpack.prod.config.js`)).toBeTruthy();
 
-      const webpackContents = host.read(
+      const webpackContents = tree.read(
         `apps/${app}/webpack.config.js`,
         'utf-8'
       );
       expect(webpackContents).toMatchSnapshot();
 
-      const mfeConfigContents = host.read(`apps/${app}/mfe.config.js`, 'utf-8');
+      const mfeConfigContents = tree.read(`apps/${app}/mfe.config.js`, 'utf-8');
       expect(mfeConfigContents).toMatchSnapshot();
     }
   );
@@ -54,20 +54,20 @@ describe('Init MFE', () => {
     'create bootstrap file with the contents of main.ts',
     async (app, type: 'host' | 'remote') => {
       // ARRANGE
-      const mainContents = host.read(`apps/${app}/src/main.ts`, 'utf-8');
+      const mainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
 
       // ACT
-      await setupMfe(host, {
+      await setupMfe(tree, {
         appName: app,
         mfeType: type,
       });
 
       // ASSERT
-      const bootstrapContents = host.read(
+      const bootstrapContents = tree.read(
         `apps/${app}/src/bootstrap.ts`,
         'utf-8'
       );
-      const updatedMainContents = host.read(`apps/${app}/src/main.ts`, 'utf-8');
+      const updatedMainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
 
       expect(bootstrapContents).toEqual(mainContents);
       expect(updatedMainContents).not.toEqual(mainContents);
@@ -81,19 +81,19 @@ describe('Init MFE', () => {
     'should alter main.ts to import the bootstrap file dynamically',
     async (app, type: 'host' | 'remote') => {
       // ARRANGE
-      const mainContents = host.read(`apps/${app}/src/main.ts`, 'utf-8');
+      const mainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
 
       // ACT
-      await setupMfe(host, {
+      await setupMfe(tree, {
         appName: app,
         mfeType: type,
       });
 
       // ASSERT
-      const updatedMainContents = host.read(`apps/${app}/src/main.ts`, 'utf-8');
+      const updatedMainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
 
       expect(updatedMainContents).toEqual(
-        `import('./bootstrap').catch(err => console.error(err));`
+        `import('./bootstrap').catch(err => console.error(err))`
       );
       expect(updatedMainContents).not.toEqual(mainContents);
     }
@@ -106,13 +106,13 @@ describe('Init MFE', () => {
     'should change the build and serve target and set correct path to webpack config',
     async (app, type: 'host' | 'remote') => {
       // ACT
-      await setupMfe(host, {
+      await setupMfe(tree, {
         appName: app,
         mfeType: type,
       });
 
       // ASSERT
-      const { build, serve } = readProjectConfiguration(host, app).targets;
+      const { build, serve } = readProjectConfiguration(tree, app).targets;
 
       expect(serve.executor).toEqual('@nrwl/angular:webpack-server');
       expect(build.executor).toEqual('@nrwl/angular:webpack-browser');
@@ -124,20 +124,20 @@ describe('Init MFE', () => {
 
   it('should add the remote config to the host when --remotes flag supplied', async () => {
     // ACT
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'app1',
       mfeType: 'host',
       remotes: ['remote1'],
     });
 
     // ASSERT
-    const mfeConfigContents = host.read(`apps/app1/mfe.config.js`, 'utf-8');
+    const mfeConfigContents = tree.read(`apps/app1/mfe.config.js`, 'utf-8');
 
     expect(mfeConfigContents).toContain(`'remote1'`);
   });
   it('should update the implicit dependencies of the host when --remotes flag supplied', async () => {
     // ACT
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'app1',
       mfeType: 'host',
       remotes: ['remote1'],
@@ -145,7 +145,7 @@ describe('Init MFE', () => {
 
     // ASSERT
     const projectConfig: ProjectConfiguration = readProjectConfiguration(
-      host,
+      tree,
       'app1'
     );
 
@@ -154,35 +154,35 @@ describe('Init MFE', () => {
 
   it('should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it', async () => {
     // ARRANGE
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'app1',
       mfeType: 'host',
     });
 
     // ACT
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'remote1',
       mfeType: 'remote',
       host: 'app1',
     });
 
     // ASSERT
-    const hostMfeConfig = host.read('apps/app1/mfe.config.js', 'utf-8');
+    const hostMfeConfig = tree.read('apps/app1/mfe.config.js', 'utf-8');
     expect(hostMfeConfig).toMatchSnapshot();
   });
 
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
     // ARRANGE
-    await applicationGenerator(host, {
+    await applicationGenerator(tree, {
       name: 'remote2',
     });
 
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'app1',
       mfeType: 'host',
     });
 
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'remote1',
       mfeType: 'remote',
       host: 'app1',
@@ -190,7 +190,7 @@ describe('Init MFE', () => {
     });
 
     // ACT
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'remote2',
       mfeType: 'remote',
       host: 'app1',
@@ -198,24 +198,24 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const hostMfeConfig = host.read('apps/app1/mfe.config.js', 'utf-8');
+    const hostMfeConfig = tree.read('apps/app1/mfe.config.js', 'utf-8');
     expect(hostMfeConfig).toMatchSnapshot();
   });
 
   it('should add a remote application and add it to a specified host applications router config', async () => {
     // ARRANGE
-    await applicationGenerator(host, {
+    await applicationGenerator(tree, {
       name: 'remote2',
       routing: true,
     });
 
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'app1',
       mfeType: 'host',
       routing: true,
     });
 
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'remote1',
       mfeType: 'remote',
       host: 'app1',
@@ -224,7 +224,7 @@ describe('Init MFE', () => {
     });
 
     // ACT
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'remote2',
       mfeType: 'remote',
       host: 'app1',
@@ -233,24 +233,24 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const hostAppModule = host.read('apps/app1/src/app/app.module.ts', 'utf-8');
+    const hostAppModule = tree.read('apps/app1/src/app/app.module.ts', 'utf-8');
     expect(hostAppModule).toMatchSnapshot();
   });
 
   it('should add a remote application and add it to a specified host applications serve-mfe target', async () => {
     // ARRANGE
-    await applicationGenerator(host, {
+    await applicationGenerator(tree, {
       name: 'remote2',
       routing: true,
     });
 
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'app1',
       mfeType: 'host',
       routing: true,
     });
 
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'remote1',
       mfeType: 'remote',
       host: 'app1',
@@ -259,7 +259,7 @@ describe('Init MFE', () => {
     });
 
     // ACT
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'remote2',
       mfeType: 'remote',
       host: 'app1',
@@ -268,7 +268,7 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const hostAppConfig = readProjectConfiguration(host, 'app1');
+    const hostAppConfig = readProjectConfiguration(tree, 'app1');
     const serveMfe = hostAppConfig.targets['serve-mfe'];
 
     expect(serveMfe.options.commands).toContain('nx serve remote1');
@@ -278,25 +278,76 @@ describe('Init MFE', () => {
 
   it('should modify the associated cypress project to add the workaround correctly', async () => {
     // ARRANGE
-    await applicationGenerator(host, {
+    await applicationGenerator(tree, {
       name: 'testApp',
       routing: true,
     });
 
     // ACT
-    await setupMfe(host, {
+    await setupMfe(tree, {
       appName: 'test-app',
       mfeType: 'host',
       routing: true,
     });
 
     // ASSERT
-    const cypressCommands = host.read(
+    const cypressCommands = tree.read(
       'apps/test-app-e2e/src/support/index.ts',
       'utf-8'
     );
     expect(cypressCommands).toContain(
       "Cannot use 'import.meta' outside a module"
     );
+  });
+
+  describe('--federationType=dynamic', () => {
+    it('should create a host with the correct configurations', async () => {
+      // ARRANGE & ACT
+      await setupMfe(tree, {
+        appName: 'app1',
+        mfeType: 'host',
+        routing: true,
+        federationType: 'dynamic',
+      });
+
+      // ASSERT
+      expect(tree.read('apps/app1/mfe.config.js', 'utf-8')).toContain(
+        'remotes: []'
+      );
+      expect(
+        tree.exists('apps/app1/src/assets/mfe.manifest.json')
+      ).toBeTruthy();
+      expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchSnapshot();
+    });
+  });
+
+  it('should add a remote to dynamic host correctly', async () => {
+    // ARRANGE
+    await setupMfe(tree, {
+      appName: 'app1',
+      mfeType: 'host',
+      routing: true,
+      federationType: 'dynamic',
+    });
+
+    // ACT
+    await setupMfe(tree, {
+      appName: 'remote1',
+      mfeType: 'remote',
+      port: 4201,
+      host: 'app1',
+      routing: true,
+    });
+
+    // ASSERT
+    expect(tree.read('apps/app1/mfe.config.js', 'utf-8')).toContain(
+      'remotes: []'
+    );
+    expect(readJson(tree, 'apps/app1/src/assets/mfe.manifest.json')).toEqual({
+      remote1: 'http://localhost:4201',
+    });
+    expect(
+      tree.read('apps/app1/src/app/app.module.ts', 'utf-8')
+    ).toMatchSnapshot();
   });
 });
