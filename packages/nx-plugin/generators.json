@@ -6,56 +6,56 @@
     "plugin": {
       "factory": "./src/generators/plugin/plugin",
       "schema": "./src/generators/plugin/schema.json",
-      "description": "Create a Nx Plugin"
+      "description": "Create a Nx Plugin."
     },
     "e2e-project": {
       "factory": "./src/generators/e2e-project/e2e",
       "schema": "./src/generators/e2e-project/schema.json",
-      "description": "Create a e2e application for a Nx Plugin",
+      "description": "Create a E2E application for a Nx Plugin.",
       "hidden": true
     },
     "migration": {
       "factory": "./src/generators/migration/migration",
       "schema": "./src/generators/migration/schema.json",
-      "description": "Create a migration for an Nx Plugin"
+      "description": "Create a migration for an Nx Plugin."
     },
     "generator": {
       "factory": "./src/generators/generator/generator",
       "schema": "./src/generators/generator/schema.json",
-      "description": "Create a generator for an Nx Plugin"
+      "description": "Create a generator for an Nx Plugin."
     },
     "executor": {
       "factory": "./src/generators/executor/executor",
       "schema": "./src/generators/executor/schema.json",
-      "description": "Create a executor for an Nx Plugin"
+      "description": "Create a executor for an Nx Plugin."
     }
   },
   "schematics": {
     "plugin": {
       "factory": "./src/generators/plugin/plugin#pluginSchematic",
       "schema": "./src/generators/plugin/schema.json",
-      "description": "Create a Nx Plugin"
+      "description": "Create a Nx Plugin."
     },
     "e2e-project": {
       "factory": "./src/generators/e2e-project/e2e#e2eProjectSchematic",
       "schema": "./src/generators/e2e-project/schema.json",
-      "description": "Create a e2e application for a Nx Plugin",
+      "description": "Create a E2E application for a Nx Plugin.",
       "hidden": true
     },
     "migration": {
       "factory": "./src/generators/migration/migration#migrationSchematic",
       "schema": "./src/generators/migration/schema.json",
-      "description": "Create a migration for an Nx Plugin"
+      "description": "Create a migration for an Nx Plugin."
     },
     "generator": {
       "factory": "./src/generators/generator/generator#generatorSchematic",
       "schema": "./src/generators/generator/schema.json",
-      "description": "Create a generator for an Nx Plugin"
+      "description": "Create a generator for an Nx Plugin."
     },
     "executor": {
       "factory": "./src/generators/executor/executor#executorSchematic",
       "schema": "./src/generators/executor/schema.json",
-      "description": "Create a executor for an Nx Plugin"
+      "description": "Create a executor for an Nx Plugin."
     }
   }
 }

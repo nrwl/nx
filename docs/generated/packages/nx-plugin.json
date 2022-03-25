@@ -84,7 +84,7 @@
         "additionalProperties": false,
         "presets": []
       },
-      "description": "Create a Nx Plugin",
+      "description": "Create a Nx Plugin.",
       "implementation": "/packages/nx-plugin/src/generators/plugin/plugin.ts",
       "aliases": [],
       "hidden": false,
@@ -135,7 +135,7 @@
         "additionalProperties": false,
         "presets": []
       },
-      "description": "Create a e2e application for a Nx Plugin",
+      "description": "Create a E2E application for a Nx Plugin.",
       "hidden": true,
       "implementation": "/packages/nx-plugin/src/generators/e2e-project/e2e.ts",
       "aliases": [],
@@ -192,7 +192,7 @@
         "additionalProperties": false,
         "presets": []
       },
-      "description": "Create a migration for an Nx Plugin",
+      "description": "Create a migration for an Nx Plugin.",
       "implementation": "/packages/nx-plugin/src/generators/migration/migration.ts",
       "aliases": [],
       "hidden": false,
@@ -244,7 +244,7 @@
         "additionalProperties": false,
         "presets": []
       },
-      "description": "Create a generator for an Nx Plugin",
+      "description": "Create a generator for an Nx Plugin.",
       "implementation": "/packages/nx-plugin/src/generators/generator/generator.ts",
       "aliases": [],
       "hidden": false,
@@ -296,7 +296,7 @@
         "additionalProperties": false,
         "presets": []
       },
-      "description": "Create a executor for an Nx Plugin",
+      "description": "Create a executor for an Nx Plugin.",
       "implementation": "/packages/nx-plugin/src/generators/executor/executor.ts",
       "aliases": [],
       "hidden": false,
@@ -331,7 +331,7 @@
         "required": ["target", "jestConfig"],
         "presets": []
       },
-      "description": "Creates and runs the e2e tests for an Nx Plugin.",
+      "description": "Creates and runs the E2E tests for an Nx Plugin.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/nx-plugin/src/executors/e2e/schema.json"
