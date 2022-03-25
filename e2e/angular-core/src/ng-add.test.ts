@@ -1,5 +1,3 @@
-import { PackageManager } from 'nx/src/utils/package-manager';
-
 process.env.SELECTED_CLI = 'angular';
 
 import {
@@ -15,6 +13,7 @@ import {
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
+import { PackageManager } from 'nx/src/utils/package-manager';
 
 describe('convert Angular CLI workspace to an Nx workspace', () => {
   let project: string;
@@ -53,9 +52,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   }
 
   function addCypress() {
-    runCommand(
-      'npx ng add @cypress/schematic --skip-confirmation --e2e-update'
-    );
+    runNgAdd('@cypress/schematic', '--e2e-update', 'latest');
   }
 
   beforeEach(() => {
@@ -101,7 +98,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(packageJson.devDependencies['@nrwl/workspace']).not.toBeDefined();
 
     // run ng add
-    runNgAdd('--npm-scope projscope --default-base main');
+    runNgAdd('@nrwl/angular', '--npm-scope projscope --default-base main');
 
     // check that prettier config exits and that files have been moved
     checkFilesExist(
@@ -299,7 +296,9 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     // Remove e2e directory
     runCommand('mv e2e e2e-bak');
-    expect(() => runNgAdd('--npm-scope projscope --skip-install')).toThrow(
+    expect(() =>
+      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
+    ).toThrow(
       'An e2e project with Protractor was found but "e2e/protractor.conf.js" could not be found.'
     );
     // Restore e2e directory
@@ -308,7 +307,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // TODO: this functionality is currently broken, this validation doesn't exist
     // // Remove src
     // runCommand('mv src src-bak');
-    // expect(() => runNgAdd('--npm-scope projscope --skip-install')).toThrow(
+    // expect(() => runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')).toThrow(
     //   'Path: src does not exist'
     // );
 
@@ -321,7 +320,9 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     // Remove cypress.json
     runCommand('mv cypress.json cypress.json.bak');
-    expect(() => runNgAdd('--npm-scope projscope --skip-install')).toThrow(
+    expect(() =>
+      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
+    ).toThrow(
       'An e2e project with Cypress was found but "cypress.json" could not be found.'
     );
     // Restore cypress.json
@@ -329,7 +330,9 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     // Remove cypress directory
     runCommand('mv cypress cypress-bak');
-    expect(() => runNgAdd('--npm-scope projscope --skip-install')).toThrow(
+    expect(() =>
+      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
+    ).toThrow(
       'An e2e project with Cypress was found but the "cypress" directory could not be found.'
     );
     // Restore cypress.json
@@ -339,7 +342,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   it('should handle a workspace with cypress', () => {
     addCypress();
 
-    runNgAdd('--npm-scope projscope --skip-install');
+    runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install');
 
     const e2eProject = `${project}-e2e`;
     //check e2e project files
@@ -405,7 +408,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   });
 
   it('should support preserveAngularCliLayout', () => {
-    runNgAdd('--preserve-angular-cli-layout');
+    runNgAdd('@nrwl/angular', '--preserve-angular-cli-layout');
 
     const updatedAngularCLIJson = readJson('angular.json');
     expect(updatedAngularCLIJson.projects[project].root).toEqual('');
