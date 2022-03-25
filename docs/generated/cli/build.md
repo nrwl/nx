@@ -185,7 +185,7 @@ Options to pass to style preprocessors.
 
 ### webpackConfig
 
-Path to a function which takes a webpack config, some context and returns the resulting webpack config
+Path to a function which takes a webpack config, some context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack
 
 ## Angular Options
 

@@ -241,7 +241,7 @@
     },
     "webpackConfig": {
       "type": "string",
-      "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config."
+      "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack"
     }
   },
   "required": ["tsConfig", "main", "index"],
