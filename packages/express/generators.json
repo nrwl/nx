@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#initGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/express plugin",
+      "description": "Initialize the `@nrwl/express` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
@@ -16,14 +16,14 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an express application"
+      "description": "Create an Express application."
     }
   },
   "schematics": {
     "init": {
       "factory": "./src/generators/init/init#initSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/express plugin",
+      "description": "Initialize the `@nrwl/express` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
@@ -33,7 +33,7 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
-      "description": "Create an express application"
+      "description": "Create an Express application."
     }
   }
 }
