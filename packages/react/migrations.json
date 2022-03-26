@@ -252,6 +252,31 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "13.10.0": {
+      "version": "13.10.0-beta.1",
+      "packages": {
+        "@types/react": {
+          "version": "17.0.43",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "17.0.14",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-components": {
+          "version": "5.3.5",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-jsx": {
+          "version": "5.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.29.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
