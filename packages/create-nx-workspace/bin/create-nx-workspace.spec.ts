@@ -1,15 +1,24 @@
-import { render, configure, getDefaultNormalizer } from 'cli-testing-library';
+import 'cli-testing-library/extend-expect';
+
+import {
+  render,
+  configure,
+  getDefaultNormalizer,
+  fireEvent,
+  TestInstance,
+} from 'cli-testing-library';
 import { resolve, join } from 'path';
 
 describe('create-nx-workspace', () => {
+  const cwd = join(__dirname, '../../..');
+  const cnw_path = resolve(__dirname, './create-nx-workspace.ts');
+
   it('should show options on --help', async () => {
-    configure({ renderAwaitTime: 2000 });
-    const { getByText, debug, queryByText } = await render(
+    configure({ renderAwaitTime: 3000 });
+    const { queryByText, debug } = await render(
       'npx',
-      ['ts-node', resolve(__dirname, './create-nx-workspace.ts'), '--help'],
-      {
-        cwd: join(__dirname, '../../..'),
-      }
+      ['ts-node', cnw_path, '--help'],
+      { cwd }
     );
 
     const expectText = (text) =>
@@ -19,13 +28,9 @@ describe('create-nx-workspace', () => {
         })
       );
 
-    debug();
-
     // Should show Usage command
-    expect(
-      getByText(
-        'Usage: create-nx-workspace <name> [options] [new workspace options]'
-      )
+    expectText(
+      'Usage: create-nx-workspace <name> [options] [new workspace options]'
     ).toBeInTheConsole();
 
     // Should show options
@@ -58,5 +63,45 @@ describe('create-nx-workspace', () => {
     expectText(/cli.*"nx", "angular"/).toBeInTheConsole();
     // Should show supported package managers
     expectText(/packageManager.*\n.*"npm", "yarn", "pnpm"/).toBeInTheConsole();
+  });
+
+  it('should show workspace name if not provided', async () => {
+    configure({ renderAwaitTime: 2000 });
+    const { debug, findByText } = await render('npx', ['ts-node', cnw_path], {
+      cwd,
+    });
+
+    const findTextInstance = async (text) =>
+      (await findByText(text, {
+        normalizer: getDefaultNormalizer({ collapseWhitespace: false }),
+      })) as Promise<TestInstance>;
+
+    // Should show name prompt
+    const instance = await findTextInstance('Workspace name (e.g., org name)');
+
+    expect(instance).toBeInTheConsole();
+
+    await fireEvent.sigterm(instance);
+  });
+
+  it('should not show workspace name if provided', async () => {
+    configure({ renderAwaitTime: 2000 });
+    const { findByText } = await render(
+      'npx',
+      ['ts-node', cnw_path, 'some-name'],
+      { cwd }
+    );
+
+    const findTextInstance = async (text) =>
+      (await findByText(text, {
+        normalizer: getDefaultNormalizer({ collapseWhitespace: false }),
+      })) as Promise<TestInstance>;
+
+    await expect(
+      (async () =>
+        expect(
+          await findTextInstance('Workspace name (e.g., org name)')
+        ).toBeInTheConsole())()
+    ).rejects.toThrow();
   });
 });
