@@ -58,7 +58,7 @@ export function Content({
       return [
         {
           name: schemaViewModel.packageName,
-          href: pathCleaner(router.asPath),
+          href: schemaViewModel.packageUrl,
           current: false,
         },
         {
