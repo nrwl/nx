@@ -207,7 +207,7 @@ export function runNgNew(
 }
 
 export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
-  return process.env.SELECTED_PM as 'npm' | 'yarn' | 'pnpm';
+  return (process.env.SELECTED_PM as 'npm' | 'yarn' | 'pnpm') || 'npm';
 }
 
 /**
