@@ -1,4 +1,4 @@
-import { NormalizedSchema } from '@nrwl/react/src/generators/application/schema';
+import { NormalizedSchema } from '../schema';
 import { generateFiles, names } from '@nrwl/devkit';
 import { join } from 'path';
 

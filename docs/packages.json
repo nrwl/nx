@@ -192,7 +192,7 @@
     "name": "react",
     "path": "generated/packages/react.json",
     "schemas": {
-      "executors": [],
+      "executors": ["mfe-dev-server"],
       "generators": [
         "init",
         "application",
@@ -204,7 +204,9 @@
         "component-story",
         "stories",
         "component-cypress-spec",
-        "hook"
+        "hook",
+        "mfe-host",
+        "mfe-remote"
       ]
     }
   },

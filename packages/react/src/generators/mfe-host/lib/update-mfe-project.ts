@@ -1,5 +1,5 @@
 import { Tree } from 'nx/src/shared/tree';
-import { NormalizedSchema } from '@nrwl/react/src/generators/application/schema';
+import { NormalizedSchema } from '../schema';
 import {
   readProjectConfiguration,
   updateProjectConfiguration,

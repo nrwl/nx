@@ -1,5 +1,6 @@
-import { SupportedStyles } from '@nrwl/react';
 import { Linter } from '@nrwl/linter';
+
+import { SupportedStyles } from '../../../typings';
 
 export interface Schema {
   name: string;
