@@ -33,7 +33,7 @@
     "nx": "*",
     "semver": "7.3.4",
     "tmp": "~0.2.1",
-    "yargs": "15.4.1",
-    "yargs-parser": "20.0.0"
+    "yargs": "^17.4.0",
+    "yargs-parser": "21.0.1"
   }
 }
