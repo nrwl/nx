@@ -15,6 +15,8 @@ import {
 } from '../config/workspace-json-project-json';
 import { findMatchingProjectForPath } from './target-project-locator';
 
+import { NxPluginOption } from '../config/nx-json';
+
 export type ProjectTargetConfigurator = (
   file: string
 ) => Record<string, TargetConfiguration>;
@@ -40,12 +42,14 @@ export interface NxPlugin {
 // executing resolution mulitple times.
 let nxPluginCache: NxPlugin[] = null;
 export function loadNxPlugins(
-  plugins?: string[],
+  plugins?: NxPluginOption[],
   paths = [workspaceRoot]
 ): NxPlugin[] {
   return plugins?.length
     ? nxPluginCache ||
-        (nxPluginCache = plugins.map((moduleName) => {
+        (nxPluginCache = plugins.map((nxPlugin) => {
+          const moduleName =
+            typeof nxPlugin === 'string' ? nxPlugin : nxPlugin.plugin;
           let pluginPath: string;
           try {
             pluginPath = require.resolve(moduleName, {
@@ -70,7 +74,16 @@ export function loadNxPlugins(
               : { name: path.basename(pluginPath) }; // use the name of the file we point to
           const plugin = require(pluginPath) as NxPlugin;
           plugin.name = name;
-
+          if (typeof nxPlugin === 'object') {
+            Object.entries(nxPlugin).forEach(([key, value]) => {
+              if (key === 'plugin') {
+                return;
+              }
+              if (value === false) {
+                delete plugin[key];
+              }
+            });
+          }
           return plugin;
         }))
     : [];

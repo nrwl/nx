@@ -1,3 +1,4 @@
+import { NxPlugin } from '../utils/nx-plugin';
 import { PackageManager } from '../utils/package-manager';
 import { TargetDependencyConfig } from './workspace-json-project-json';
 
@@ -15,6 +16,12 @@ export interface NxAffectedConfig {
    */
   defaultBase?: string;
 }
+
+export type NxPluginOption =
+  | string
+  | ({
+      [key in keyof Omit<NxPlugin, 'name'>]: boolean;
+    } & { plugin: string });
 
 /**
  * Nx.json configuration
@@ -90,9 +97,13 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     defaultProjectName?: string;
   };
   /**
-   * Plugins for extending the project graph
+   * Plugins for extending the project graph.
+   * Should be either a string used to resolve the plugin, or an options block.
+   *
+   * @example ["@acme/my-plugin"]
+   * @example [{"plugin": "@acme/my-plugin", "registerProjectTargets": false}]
    */
-  plugins?: string[];
+  plugins?: NxPluginOption[];
 
   /**
    * Configuration for Nx Plugins

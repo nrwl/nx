@@ -80,10 +80,10 @@ export function createCache(
   projectGraph: ProjectGraph,
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
 ) {
-  const nxJsonPlugins = (nxJson.plugins || []).map((p) => ({
-    name: p,
-    version: packageJsonDeps[p],
-  }));
+  const nxJsonPlugins = (nxJson.plugins || []).map((p) => {
+    const plugin = typeof p === 'string' ? p : p.plugin;
+    return { name: plugin, version: packageJsonDeps[plugin] };
+  });
   const newValue: ProjectGraphCache = {
     version: projectGraph.version || '5.0',
     deps: packageJsonDeps,
@@ -154,9 +154,12 @@ export function shouldRecomputeWholeGraph(
   // a plugin has changed
   if (
     (nxJson.plugins || []).some((t) => {
-      const matchingPlugin = cache.nxJsonPlugins.find((p) => p.name === t);
+      const pluginName = typeof t === 'string' ? t : t.plugin;
+      const matchingPlugin = cache.nxJsonPlugins.find(
+        (p) => p.name === pluginName
+      );
       if (!matchingPlugin) return true;
-      return matchingPlugin.version !== packageJsonDeps[t];
+      return matchingPlugin.version !== packageJsonDeps[pluginName];
     })
   ) {
     return true;

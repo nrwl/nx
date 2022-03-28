@@ -14,6 +14,7 @@ import {
   readFile,
   removeFile,
 } from '@nrwl/e2e/utils';
+import type { NxJsonConfiguration } from 'nx/src/config/nx-json';
 
 describe('Nx Plugin', () => {
   let npmScope: string;
@@ -181,11 +182,11 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     beforeEach(() => {
       runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
+      removeFile('workspace.json'); // some tests in this block test inference capabilities, which require no workspace.json
     });
 
     it('should be able to infer projects and targets', async () => {
       // Cache workspace json, to test inference and restore afterwards
-      const workspaceJsonContents = readFile('workspace.json');
       removeFile('workspace.json');
 
       // Setup project inference + target inference
@@ -225,9 +226,6 @@ describe('Nx Plugin', () => {
       expect(runCLI(`build ${inferredProject}`)).toContain(
         'custom registered target'
       );
-
-      // Restore workspace.json
-      createFile('workspace.json', workspaceJsonContents);
     });
 
     it('should be able to use local generators and executors', async () => {
@@ -243,6 +241,54 @@ describe('Nx Plugin', () => {
       );
       expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
       expect(() => runCLI(`build ${generatedProject}`)).not.toThrow();
+    });
+
+    it('should be able to disable specific features of a plugin', async () => {
+      // Setup plugin for target inference
+      updateFile(
+        `libs/${plugin}/src/index.ts`,
+        `export function registerProjectTargets(f) {
+          return {
+            build: {
+              executor: "@nrwl/workspace:run-commands",
+              options: {
+                command: "echo 'custom registered target'"
+              }
+            }
+          }
+        }
+        
+        export const projectFilePatterns = ['my-project-file'];
+        `
+      );
+
+      // Register plugin in nx.json (required for inference)
+      updateFile(`nx.json`, (nxJson) => {
+        const nx = JSON.parse(nxJson);
+        nx.plugins = [`@${npmScope}/${plugin}`];
+        return JSON.stringify(nx, null, 2);
+      });
+
+      // Create project that should be inferred by Nx
+      const inferredProject = uniq('inferred');
+      createFile(`libs/${inferredProject}/my-project-file`);
+
+      // Attempt to use inferred project w/ Nx
+      expect(runCLI(`build ${inferredProject}`)).toContain(
+        'custom registered target'
+      );
+
+      // Turn off target inference
+      updateFile(`nx.json`, (nxJson) => {
+        const nx: NxJsonConfiguration = JSON.parse(nxJson);
+        nx.plugins = [
+          { plugin: `@${npmScope}/${plugin}`, registerProjectTargets: false },
+        ];
+        return JSON.stringify(nx, null, 2);
+      });
+
+      // Attempt to use inferred project w/ Nx
+      expect(() => runCLI(`build ${inferredProject}`)).toThrow();
     });
   });
 
