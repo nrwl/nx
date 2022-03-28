@@ -1,4 +1,9 @@
-import { Tree, updateJson } from '@nrwl/devkit';
+import {
+  getPackageManagerCommand,
+  logger,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 
 export function replaceTaoWithNx(host: Tree) {
   updateJson(host, 'package.json', (json: any) => {
@@ -11,6 +16,10 @@ export function replaceTaoWithNx(host: Tree) {
     removeTao(json.devDependencies);
     return json;
   });
+  const pmc = getPackageManagerCommand();
+  logger.info(
+    `Please run ${pmc.install} to ensure the correct version of Nx is installed.`
+  );
 }
 
 function removeTao(json: any) {
