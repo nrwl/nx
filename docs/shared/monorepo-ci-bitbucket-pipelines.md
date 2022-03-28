@@ -26,7 +26,7 @@ pipelines:
           name: "Build and test affected apps on Pull Requests"
           caches: # optional
           - node
-          script: 
+          script:
             - npm i
             - npx nx affected --target=build --base=origin/master --head=HEAD --parallel  --max-parallel=3
             - npx nx affected --target=test --base=origin/master --head=HEAD --parallel --max-parallel=2
@@ -52,4 +52,3 @@ A computation cache is created on your local machine to make the developer exper
 Nx Cloud allows this cache to be shared across your entire organization, meaning that any cacheable operation completed on your workspace only needs to be run once. Nx Cloud also allows you to distribute your CI across multiple machines to make sure the CI is fast even for very large repos.
 
 Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.
-

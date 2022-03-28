@@ -18,4 +18,4 @@ The following guides cover optimizing your CI/CD environments with affected comm
 - [Setting up CI using CircleCI](/ci/monorepo-ci-circle-ci)
 - [Setting up CI using Azure Pipelines](/ci/monorepo-ci-azure)
 - [Setting up CI using Jenkins](/ci/monorepo-ci-jenkins)
-- [Setting up CI using Bitbucket Pipelines](/ci/monorepo-ci-bitbucket-pipelines)
+- [Setting up CI using Bitbucket Pipelines](/ci/monorepo-ci-bitbucket-pipeline)
