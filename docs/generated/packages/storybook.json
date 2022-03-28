@@ -206,6 +206,23 @@
         "cli": "nx",
         "description": "Serve up storybook in development mode.",
         "type": "object",
+        "presets": [
+          {
+            "name": "Default minimum setup",
+            "keys": ["uiFramework", "port", "projectBuildConfig", "config"]
+          },
+          {
+            "name": "Angular setup with styles",
+            "keys": [
+              "uiFramework",
+              "port",
+              "projectBuildConfig",
+              "config",
+              "styles",
+              "stylePreprocessorOptions"
+            ]
+          }
+        ],
         "properties": {
           "uiFramework": {
             "type": "string",
@@ -262,7 +279,7 @@
           },
           "styles": {
             "type": "array",
-            "description": "Global styles to be included in the build. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.",
+            "description": "Global styles to be included in the build. This is for Angular projects only. It will be ignored in non-Angular projects.",
             "items": {
               "oneOf": [
                 {
@@ -290,10 +307,16 @@
               ]
             }
           },
-          "stylePreprocessorOptions.includePaths": {
-            "description": "Options to pass to style preprocessors. The paths to include. Paths will be resolved to workspace root. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.",
-            "type": "array",
-            "items": { "type": "string" }
+          "stylePreprocessorOptions": {
+            "type": "object",
+            "description": "Options to pass to style preprocessors.",
+            "properties": {
+              "includePaths": {
+                "type": "array",
+                "description": "The paths to include. Paths will be resolved to workspace root. This is for Angular projects only. It will be ignored in non-Angular projects.",
+                "items": { "type": "string" }
+              }
+            }
           },
           "config": {
             "type": "object",
@@ -356,8 +379,7 @@
             ]
           }
         },
-        "required": ["uiFramework", "config"],
-        "presets": []
+        "required": ["uiFramework", "config"]
       },
       "description": "Serve Storybook.",
       "aliases": [],
@@ -372,6 +394,28 @@
         "cli": "nx",
         "description": "Build storybook in production mode.",
         "type": "object",
+        "presets": [
+          {
+            "name": "Default minimum setup",
+            "keys": [
+              "uiFramework",
+              "outputPath",
+              "projectBuildConfig",
+              "config"
+            ]
+          },
+          {
+            "name": "Angular setup with styles",
+            "keys": [
+              "uiFramework",
+              "outputPath",
+              "projectBuildConfig",
+              "config",
+              "styles",
+              "stylePreprocessorOptions"
+            ]
+          }
+        ],
         "properties": {
           "uiFramework": {
             "type": "string",
@@ -389,7 +433,7 @@
           },
           "styles": {
             "type": "array",
-            "description": "Global styles to be included in the build. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.",
+            "description": "Global styles to be included in the build. This is for Angular projects only. It will be ignored in non-Angular projects.",
             "items": {
               "oneOf": [
                 {
@@ -417,10 +461,16 @@
               ]
             }
           },
-          "stylePreprocessorOptions.includePaths": {
-            "description": "Options to pass to style preprocessors. The paths to include. Paths will be resolved to workspace root. This is for Angular projects only, as an option for the Storybook/Angular builder. It will be ignored in non-Angular projects.",
-            "type": "array",
-            "items": { "type": "string" }
+          "stylePreprocessorOptions": {
+            "type": "object",
+            "description": "Options to pass to style preprocessors.",
+            "properties": {
+              "includePaths": {
+                "type": "array",
+                "description": "The paths to include. Paths will be resolved to workspace root. This is for Angular projects only. It will be ignored in non-Angular projects.",
+                "items": { "type": "string" }
+              }
+            }
           },
           "config": {
             "type": "object",
@@ -483,8 +533,7 @@
             ]
           }
         },
-        "required": ["uiFramework", "config"],
-        "presets": []
+        "required": ["uiFramework", "config"]
       },
       "description": "Build Storybook.",
       "aliases": [],
