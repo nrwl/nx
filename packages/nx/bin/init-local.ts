@@ -58,7 +58,10 @@ function wrapIntoQuotesIfNeeded(arg: string) {
 function isKnownCommand() {
   const commands = [
     ...Object.keys(
-      (commandsObject as any).getCommandInstance().getCommandHandlers()
+      (commandsObject as any)
+        .getInternalMethods()
+        .getCommandInstance()
+        .getCommandHandlers()
     ),
     'g',
     'dep-graph',

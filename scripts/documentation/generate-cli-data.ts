@@ -66,7 +66,10 @@ export async function generateCLIDocumentation() {
   removeSync(commandsOutputDirectory);
 
   function getCommands(command) {
-    return command.getCommandInstance().getCommandHandlers();
+    return command
+      .getInternalMethods()
+      .getCommandInstance()
+      .getCommandHandlers();
   }
   async function parseCommandInstance(
     name: string,
@@ -89,9 +92,12 @@ export async function generateCLIDocumentation() {
     }
     // Show all the options we can get from yargs
     const builder = await command.builder(
-      importFresh('yargs')().resetOptions()
+      importFresh('yargs')().getInternalMethods().reset()
     );
-    const builderDescriptions = builder.getUsageInstance().getDescriptions();
+    const builderDescriptions = builder
+      .getInternalMethods()
+      .getUsageInstance()
+      .getDescriptions();
     const builderDefaultOptions = builder.getOptions().default;
     const builderDeprecatedOptions = builder.getDeprecatedOptions();
     return {

@@ -131,9 +131,7 @@ function listGenerators(collectionFile: string) {
     });
   } catch (error) {
     logger.fatal(error.message);
-    return 1;
   }
-  return 0;
 }
 
 function parseOptions(
