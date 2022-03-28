@@ -249,8 +249,8 @@ function configureTsSolutionConfig(
   const tsConfigContent = readJson<TsConfig>(tree, tsConfigPath);
 
   if (
-    !tsConfigContent.references
-      .map((reference) => reference.path)
+    !tsConfigContent?.references
+      ?.map((reference) => reference.path)
       .includes('./.storybook/tsconfig.json')
   ) {
     tsConfigContent.references = [
