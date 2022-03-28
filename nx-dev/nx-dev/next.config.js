@@ -100,7 +100,7 @@ module.exports = withNx({
 
     // Generic, catch-all
     rules.push({
-      source: '/(l|p)/(a|r|n)/:path*',
+      source: '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*',
       destination: '/:path*',
       permanent: true,
     });
