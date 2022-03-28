@@ -37,6 +37,8 @@ export function ConfPage(): ReactComponentElement<any> {
       />
       <Header useDarkBackground={true} />
       <main
+        id="main"
+        role="main"
         style={{
           background: 'linear-gradient(180deg, #143055 0%, #0b1a2d 100%)',
         }}

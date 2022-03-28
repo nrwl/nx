@@ -48,6 +48,14 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
         <meta name="theme-color" content="#ffffff" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+      <a
+        id="skip-to-content-link"
+        href="#main"
+        tabIndex={0}
+        className="bg-green-nx-base absolute top-3 left-8 -translate-y-24 rounded-md px-4 py-2 text-white transition focus:translate-y-0"
+      >
+        Skip to content
+      </a>
       <div className="documentation-app bg-white text-gray-700 antialiased">
         <Component {...pageProps} />
       </div>
