@@ -2,7 +2,7 @@
   "root": "nx-dev/ui-community",
   "sourceRoot": "nx-dev/ui-community/src",
   "projectType": "library",
-  "tags": ["scope:nx-dev", "tag:ui"],
+  "tags": ["scope:nx-dev", "type:ui"],
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",

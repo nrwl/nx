@@ -2,7 +2,7 @@
   "root": "nx-dev/ui-sponsor-card",
   "sourceRoot": "nx-dev/ui-sponsor-card/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["scope:nx-dev", "type:ui"],
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
