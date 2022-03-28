@@ -19,6 +19,7 @@ import {
 import { validateNpmPackage } from './validate-npm-package';
 import { deduceDefaultBase } from './default-base';
 import { stringifyCollection } from './utils';
+import { yargsDecorator } from './decorator';
 
 type Arguments = {
   name: string;
@@ -190,6 +191,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     [getConfiguration]
   )
   .help('help')
+  .updateLocale(yargsDecorator)
   .version(nxVersion);
 
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
