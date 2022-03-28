@@ -104,6 +104,11 @@ module.exports = withNx({
       destination: '/:path*',
       permanent: true,
     });
+    rules.push({
+      source: '/(l|latest|p|previous)/:path*',
+      destination: '/:path*',
+      permanent: true,
+    });
     return rules;
   },
 });
