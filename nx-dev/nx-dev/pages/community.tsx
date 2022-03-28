@@ -190,7 +190,7 @@ export function Community(props: CommunityProps): ReactComponentElement<any> {
         }}
       />
       <Header useDarkBackground={false} />
-      <main>
+      <main id="main" role="main">
         <div className="w-full">
           <article
             id="getting-started"
