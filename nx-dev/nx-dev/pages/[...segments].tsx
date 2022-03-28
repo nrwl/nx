@@ -85,7 +85,7 @@ export default function DocumentationPage({
   return (
     <>
       <Header isDocViewer={true} />
-      <main>
+      <main id="main" role="main">
         {vm.entryComponent}
         <button
           type="button"

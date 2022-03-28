@@ -51,7 +51,7 @@ export function Index(): ReactComponentElement<any> {
       />
       <h1 className="sr-only">Next generation monorepo tool</h1>
       <Header useDarkBackground={false} />
-      <main role="main">
+      <main id="main" role="main">
         <div className="w-full">
           {/*INTRO COMPONENT*/}
           <header
