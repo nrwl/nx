@@ -1,6 +1,7 @@
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import { generateCLIDocumentation } from './generate-cli-data';
+import { generateCNWocumentation } from './generate-cnw-documentation';
 import { generateDevkitDocumentation } from './generate-devkit-documentation';
 import { generatePackageSchemas } from './package-schemas/generatePackageSchemas';
 
@@ -9,6 +10,7 @@ async function generate() {
     console.log(`${chalk.blue('i')} Generating Documentation`);
     generatePackageSchemas();
     generateDevkitDocumentation();
+    await generateCNWocumentation();
     await generateCLIDocumentation();
 
     console.log(`\n${chalk.green('✓')} Generated Documentation\n`);

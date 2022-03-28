@@ -19,7 +19,7 @@
     "CLI"
   ],
   "bin": {
-    "create-nx-workspace": "./bin/create-nx-workspace.js"
+    "create-nx-workspace": "./bin/index.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -29,7 +29,7 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "tmp": "~0.2.1",
-    "yargs-parser": "21.0.1",
+    "yargs": "^17.4.0",
     "enquirer": "~2.3.6",
     "flat": "^5.0.2",
     "chalk": "4.1.0",

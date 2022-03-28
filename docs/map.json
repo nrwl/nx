@@ -361,6 +361,11 @@
         "id": "cli",
         "itemList": [
           {
+            "name": "create-nx-workspace",
+            "id": "create-nx-workspace",
+            "file": "generated/cli/create-nx-workspace"
+          },
+          {
             "name": "generate",
             "id": "generate",
             "file": "generated/cli/generate"

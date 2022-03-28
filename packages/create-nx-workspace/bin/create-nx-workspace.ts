@@ -27,7 +27,7 @@ type Arguments = {
   cli: string;
   style: string;
   nxCloud: boolean;
-  all: boolean;
+  allPrompts: boolean;
   packageManager: string;
   defaultBase: string;
 };
@@ -115,9 +115,7 @@ const cliVersion = 'NX_VERSION';
 const nxVersion = 'NX_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
-export const commandsObject: yargs.Argv<Arguments> = yargs(
-  process.argv.slice(2)
-)
+export const commandsObject: yargs.Argv<Arguments> = yargs
   .wrap(yargs.terminalWidth())
   .parserConfiguration({
     'strip-dashed': true,
@@ -125,8 +123,9 @@ export const commandsObject: yargs.Argv<Arguments> = yargs(
   })
   .strict()
   .command(
+    // this is the default and only command
     '$0 [name] [options]',
-    '✨ Create a new Nx workspace ✨',
+    'Create a new Nx workspace',
     (yargs) =>
       yargs
         .positional('name', {
@@ -161,7 +160,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs(
           defaultDescription: 'true',
           type: 'boolean',
         })
-        .option('all', {
+        .option('allPrompts', {
           alias: 'a',
           describe: `Show all prompts`,
           type: 'boolean',
@@ -190,10 +189,8 @@ export const commandsObject: yargs.Argv<Arguments> = yargs(
     },
     [getConfiguration]
   )
-  .help('help', 'Show this help')
+  .help('help')
   .version(nxVersion);
-
-commandsObject.argv;
 
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   const {
@@ -328,7 +325,7 @@ async function determinePackageManager(
     process.exit(1);
   }
 
-  if (parsedArgs.all) {
+  if (parsedArgs.allPrompts) {
     return enquirer
       .prompt([
         {
@@ -355,7 +352,7 @@ async function determineDefaultBase(
   if (parsedArgs.defaultBase) {
     return Promise.resolve(parsedArgs.defaultBase);
   }
-  if (parsedArgs.all) {
+  if (parsedArgs.allPrompts) {
     return enquirer
       .prompt([
         {
