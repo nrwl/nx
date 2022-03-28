@@ -370,7 +370,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
                 index === projectList.length - 1
                   ? 'rounded-br-lg rounded-bl-none'
                   : '',
-                'group focus-within:ring-blue-nx-base relative w-full bg-white p-6 focus-within:ring-2 focus-within:ring-inset'
+                'focus-within:ring-blue-nx-base group relative w-full bg-white p-6 focus-within:ring-2 focus-within:ring-inset'
               )}
             >
               <div>
