@@ -19,5 +19,5 @@
       }
     }
   },
-  "tags": []
+  "tags": ["scope:nx-dev", "type:util"]
 }
