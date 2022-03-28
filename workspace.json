@@ -52,7 +52,6 @@
     "nx-dev-feature-doc-viewer": "nx-dev/feature-doc-viewer",
     "nx-dev-feature-package-schema-viewer": "nx-dev/feature-package-schema-viewer",
     "nx-dev-feature-search": "nx-dev/feature-search",
-    "nx-dev-feature-storage": "nx-dev/feature-storage",
     "nx-dev-models-document": "nx-dev/models-document",
     "nx-dev-models-menu": "nx-dev/models-menu",
     "nx-dev-models-package": "nx-dev/models-package",
