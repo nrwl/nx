@@ -276,6 +276,10 @@
             "aliases": ["skip-format"],
             "description": "Skip formatting files.",
             "default": false
+          },
+          "importPath": {
+            "type": "string",
+            "description": "The library name used at creation time"
           }
         },
         "required": ["projectName"],
