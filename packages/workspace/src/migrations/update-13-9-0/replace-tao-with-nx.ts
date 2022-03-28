@@ -1,4 +1,4 @@
-import { Tree, updateJson } from '@nrwl/devkit';
+import { installPackagesTask, Tree, updateJson } from '@nrwl/devkit';
 
 export function replaceTaoWithNx(host: Tree) {
   updateJson(host, 'package.json', (json: any) => {
@@ -11,6 +11,10 @@ export function replaceTaoWithNx(host: Tree) {
     removeTao(json.devDependencies);
     return json;
   });
+
+  return () => {
+    installPackagesTask(host);
+  };
 }
 
 function removeTao(json: any) {
