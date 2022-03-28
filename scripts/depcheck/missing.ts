@@ -87,6 +87,7 @@ const IGNORE_MATCHES = {
     '@storybook/addon-knobs',
     '@storybook/addon-essentials',
     '@storybook/core',
+    '@storybook/core-server',
     'rxjs',
   ],
   nx: [

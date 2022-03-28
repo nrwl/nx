@@ -11,6 +11,7 @@ Object {
     "@storybook/addon-essentials": "~6.4.12",
     "@storybook/angular": "~6.4.12",
     "@storybook/builder-webpack5": "~6.4.12",
+    "@storybook/core-server": "~6.4.12",
     "@storybook/manager-webpack5": "~6.4.12",
     "existing": "1.0.0",
     "webpack": "^5.64.0",
