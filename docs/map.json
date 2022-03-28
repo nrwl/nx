@@ -1398,6 +1398,11 @@
             "file": "shared/monorepo-ci-gitlab"
           },
           {
+            "name": "Setting up Bitbucket",
+            "id": "monorepo-ci-bitbucket-pipelines",
+            "file": "shared/monorepo-ci-bitbucket-pipelines"
+          },
+          {
             "name": "Distributed CI",
             "id": "distributed-builds",
             "file": "shared/distributed-builds"
