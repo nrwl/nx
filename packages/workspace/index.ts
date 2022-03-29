@@ -7,6 +7,8 @@ export {
   createDirectory,
 } from './src/utilities/fileutils';
 
+export { names } from '@nrwl/devkit';
+
 export {
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig,
