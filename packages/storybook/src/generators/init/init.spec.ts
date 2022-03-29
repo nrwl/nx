@@ -40,6 +40,9 @@ describe('@nrwl/storybook:init', () => {
       expect(
         packageJson.devDependencies['@storybook/addon-essentials']
       ).toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/core-server']
+      ).toBeDefined();
 
       // angular specific
       expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();

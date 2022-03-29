@@ -1,5 +1,5 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
-import { buildDevStandalone } from '@storybook/core/server';
+import { buildDevStandalone } from '@storybook/core-server';
 import 'dotenv/config';
 import { showStorybookV5Warning } from '../../utils/utilities';
 import { CommonNxStorybookConfig } from '../models';

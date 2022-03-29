@@ -38,6 +38,13 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
    */
 
   if (
+    !packageJson.dependencies['@storybook/core-server'] &&
+    !packageJson.devDependencies['@storybook/core-server']
+  ) {
+    devDependencies['@storybook/core-server'] = storybookVersion;
+  }
+
+  if (
     !packageJson.dependencies['@storybook/addon-essentials'] &&
     !packageJson.devDependencies['@storybook/addon-essentials']
   ) {

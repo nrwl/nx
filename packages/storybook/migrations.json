@@ -81,6 +81,15 @@
     }
   },
   "packageJsonUpdates": {
+    "13.10.0": {
+      "version": "13.10.0-beta.0",
+      "packages": {
+        "@storybook/core-server": {
+          "version": "~6.4.12",
+          "alwaysAddToPackageJson": true
+        }
+      }
+    },
     "13.4.5": {
       "version": "13.4.5-beta.1",
       "packages": {
