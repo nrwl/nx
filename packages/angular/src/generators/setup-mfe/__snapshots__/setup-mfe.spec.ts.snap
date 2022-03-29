@@ -1,5 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Init MFE --federationType=dynamic should create a host with the correct configurations 1`] = `
+"import { setRemoteDefinitions } from '@nrwl/angular/mfe';
+
+  fetch('/assets/mfe.manifest.json')
+  .then((res) => res.json())
+  .then(definitions => setRemoteDefinitions(definitions))
+  .then(() => import('./bootstrap').catch(err => console.error(err)))"
+`;
+
 exports[`Init MFE should add a remote application and add it to a specified host applications router config 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
@@ -42,6 +51,34 @@ exports[`Init MFE should add a remote application and add it to a specified host
   name: 'app1',
   remotes: ['remote1',]
 }"
+`;
+
+exports[`Init MFE should add a remote to dynamic host correctly 1`] = `
+"import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterModule } from '@angular/router';
+import { loadRemoteModule } from '@nrwl/angular/mfe';
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    NxWelcomeComponent
+  ],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot([{
+         path: 'remote1', 
+         loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+     }], {initialNavigation: 'enabledBlocking'})
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+"
 `;
 
 exports[`Init MFE should create webpack and mfe configs correctly 1`] = `

@@ -1,1 +1,5 @@
-export { setRemoteUrlResolver, loadRemoteModule } from './mfe';
+export {
+  setRemoteUrlResolver,
+  setRemoteDefinitions,
+  loadRemoteModule,
+} from './mfe';

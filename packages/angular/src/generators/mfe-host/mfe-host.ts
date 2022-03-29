@@ -24,6 +24,7 @@ export default async function mfeHost(tree: Tree, options: Schema) {
     routing: true,
     remotes: options.remotes ?? [],
     port: 4200,
+    federationType: options.dynamic ? 'dynamic' : 'static',
   });
 
   return installTask;
