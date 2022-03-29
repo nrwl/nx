@@ -83,13 +83,13 @@ Full E2Es are supported (and recommended) and will run everything on the file sy
 
 ## Testing your plugin
 
-One of the biggest benefits that the Nx Plugin package provides is support for E2E testing.
+One of the biggest benefits that the Nx Plugin package provides is support for E2E and unit testing.
 
 When the E2E app runs, a temporary E2E directory is created in the root of the workspace. This directory is a blank Nx workspace, and will have the plugin's built package installed locally.
 
 ### E2E Testing file
 
-When the plugin is generated, a test file is created in the `my-plugin-e2e` app. Inside this test file, there are already tests for making sure that the executor ran, checking if directories are created with the `--directory` option, and checking if tags are added to `nx.json`.
+When the plugin is generated, a test file is created in the `my-plugin-e2e` app. Inside this test file, there are already tests for making sure that the executor ran, checking if directories are created with the `--directory` option, and checking if tags are added to the project configuration.
 
 We'll go over a few parts of a test file below:
 
@@ -145,9 +145,13 @@ To make sure that assets are copied to the dist folder, open the plugin's `proje
 }
 ```
 
+## Using your Nx Plugin
+
+To use your plugin, simply list it in `nx.json` or use its generators and executors as you would for any other plugin. This could look like `nx g @my-org/my-plugin:lib` for generators or `"executor": "@my-org/my-plugin:build"` for executors. It should be usable in all of the same ways as published plugins in your local workspace immediately after generating it. This includes setting it up as the default collection in `nx.json`, which would allow you to run `nx g lib` and hit your plugin's generator.
+
 ## Publishing your Nx Plugin
 
-To publish your plugin follow these steps:
+In order to use your plugin in other workspaces or share it with the community, you will need to publish it to an npm registry. To publish your plugin follow these steps:
 
 1. Build your plugin with the command `nx run my-plugin:build`
 1. `npm publish ./dist/package/my-plugin` and follow the prompts from npm.
