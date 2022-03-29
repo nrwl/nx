@@ -5,6 +5,7 @@ import { join } from 'path';
 import {
   formatDeprecated,
   generateMarkdownFile,
+  generateOptionsMarkdown,
   getCommands,
   parseCommand,
   ParsedCommand,
@@ -77,25 +78,7 @@ nx ${command.commandString}
       });
     }
 
-    if (Array.isArray(command.options) && !!command.options.length) {
-      template += '\n## Options';
-
-      command.options
-        .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
-        .forEach((option) => {
-          template += dedent`
-                ### ${option.deprecated ? `~~${option.name}~~` : option.name}
-                ${
-                  option.default === undefined || option.default === ''
-                    ? ''
-                    : `Default: \`${option.default}\`\n`
-                }
-              `;
-          template += dedent`
-                ${formatDeprecated(option.description, option.deprecated)}
-              `;
-        });
-    }
+    template += generateOptionsMarkdown(command);
 
     return {
       name: command.name

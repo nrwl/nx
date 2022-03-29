@@ -7,6 +7,7 @@ import {
   ParsedCommand,
   sortAlphabeticallyFunction,
   formatDeprecated,
+  generateOptionsMarkdown,
 } from './utils';
 const importFresh = require('import-fresh');
 
@@ -55,31 +56,10 @@ function generateMarkdown(command: ParsedCommand) {
 
   Install \`create-nx-workspace\` globally to invoke the command directly, or use \`npx create-nx-workspace\`, \`yarn create nx-workspace\`, or \`pnpx create-nx-workspace\`.\n`;
 
-  if (Array.isArray(command.options) && !!command.options.length) {
-    template += '\n## Options';
-
-    command.options
-      .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
-      .forEach((option) => {
-        template += dedent`
-              ### ${option.deprecated ? `~~${option.name}~~` : option.name}
-              ${
-                option.default === undefined || option.default === ''
-                  ? ''
-                  : `Default: \`${option.default}\`\n`
-              }
-  `;
-        template += dedent`
-              ${formatDeprecated(option.description, option.deprecated)}
-  `;
-      });
-  }
+  template += generateOptionsMarkdown(command);
 
   return {
-    name: command.name
-      .replace(':', '-')
-      .replace(' ', '-')
-      .replace(/[\]\[.]+/gm, ''),
+    name: command.name,
     template,
   };
 }

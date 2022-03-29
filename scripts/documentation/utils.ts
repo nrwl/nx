@@ -155,6 +155,7 @@ export async function parseCommand(
   const builderDefaultOptions = builder.getOptions().default;
   const builderAutomatedOptions = builder.getOptions().defaultDescription;
   const builderDeprecatedOptions = builder.getDeprecatedOptions();
+  const builderOptionsChoices = builder.getOptions().choices;
 
   return {
     name,
@@ -167,7 +168,39 @@ export async function parseCommand(
           ? builderDescriptions[key].replace('__yargsString__:', '')
           : '',
         default: builderDefaultOptions[key] ?? builderAutomatedOptions[key],
+        choices: builderOptionsChoices[key],
         deprecated: builderDeprecatedOptions[key],
       })) || null,
   };
+}
+
+export function generateOptionsMarkdown(command): string {
+  let response = '';
+  if (Array.isArray(command.options) && !!command.options.length) {
+    response += '\n## Options';
+
+    command.options
+      .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .forEach((option) => {
+        response += dedent`
+              ### ${option.deprecated ? `~~${option.name}~~` : option.name}
+              ${
+                option.default === undefined || option.default === ''
+                  ? ''
+                  : `Default: \`${option.default}\`\n`
+              }`;
+        response += dedent`
+          ${
+            option.choices === undefined
+              ? ''
+              : `Choices: \`[${option.choices
+                  .map((c) => `"${c}"`)
+                  .join(', ')}]\`\n`
+          }`;
+        response += dedent`
+              ${formatDeprecated(option.description, option.deprecated)}
+            `;
+      });
+  }
+  return response;
 }

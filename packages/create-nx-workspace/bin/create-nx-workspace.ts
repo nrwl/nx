@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { exec } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as enquirer from 'enquirer';
@@ -168,7 +166,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         .option('packageManager', {
           alias: 'pm',
           describe: `Package manager to use`,
-          choices: packageManagerList,
+          choices: [...packageManagerList].sort(),
           defaultDescription: 'npm',
           type: 'string',
         })
