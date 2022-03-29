@@ -1,7 +1,9 @@
 import { outputFileSync, readJsonSync } from 'fs-extra';
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
+import { dedent } from 'tslint/lib/utils';
 const stripAnsi = require('strip-ansi');
+const importFresh = require('import-fresh');
 
 export function sortAlphabeticallyFunction(a: string, b: string): number {
   const nameA = a.toUpperCase(); // ignore upper and lowercase
@@ -99,7 +101,73 @@ export function formatDeprecated(
     ? `**Deprecated:** ${description}`
     : `
     **Deprecated:** ${deprecated}
-    
+
     ${description}
     `;
+}
+
+export function getCommands(command) {
+  return command.getInternalMethods().getCommandInstance().getCommandHandlers();
+}
+
+export interface ParsedCommandOption {
+  name: string;
+  description: string;
+  default: string;
+  deprecated: boolean | string;
+}
+
+export interface ParsedCommand {
+  name: string;
+  commandString: string;
+  description: string;
+  options?: Array<ParsedCommandOption>;
+}
+
+export async function parseCommand(
+  name: string,
+  command: any
+): Promise<ParsedCommand> {
+  // It is not a function return a strip down version of the command
+  if (
+    !(
+      command.builder &&
+      command.builder.constructor &&
+      command.builder.call &&
+      command.builder.apply
+    )
+  ) {
+    return {
+      name,
+      commandString: command.original,
+      description: command.description,
+    };
+  }
+
+  // Show all the options we can get from yargs
+  const builder = await command.builder(
+    importFresh('yargs')().getInternalMethods().reset()
+  );
+  const builderDescriptions = builder
+    .getInternalMethods()
+    .getUsageInstance()
+    .getDescriptions();
+  const builderDefaultOptions = builder.getOptions().default;
+  const builderAutomatedOptions = builder.getOptions().defaultDescription;
+  const builderDeprecatedOptions = builder.getDeprecatedOptions();
+
+  return {
+    name,
+    description: command.description,
+    commandString: command.original.replace('$0', name),
+    options:
+      Object.keys(builderDescriptions).map((key) => ({
+        name: key,
+        description: builderDescriptions[key]
+          ? builderDescriptions[key].replace('__yargsString__:', '')
+          : '',
+        default: builderDefaultOptions[key] ?? builderAutomatedOptions[key],
+        deprecated: builderDeprecatedOptions[key],
+      })) || null,
+  };
 }

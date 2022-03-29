@@ -1,4 +1,6 @@
 import { execSync } from 'child_process';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 /*
  * Because we don't want to depend on @nrwl/workspace (to speed up the workspace creation)
@@ -8,6 +10,14 @@ import { execSync } from 'child_process';
 export const packageManagerList = ['npm', 'yarn', 'pnpm'] as const;
 
 export type PackageManager = typeof packageManagerList[number];
+
+export function detectPackageManager(dir: string = ''): PackageManager {
+  return existsSync(join(dir, 'yarn.lock'))
+    ? 'yarn'
+    : existsSync(join(dir, 'pnpm-lock.yaml'))
+    ? 'pnpm'
+    : 'npm';
+}
 
 /**
  * Returns commands for the package manager used in the workspace.
@@ -22,7 +32,7 @@ export type PackageManager = typeof packageManagerList[number];
  *
  */
 export function getPackageManagerCommand(
-  packageManager: PackageManager = 'npm'
+  packageManager: PackageManager = detectPackageManager()
 ): {
   install: string;
   add: string;

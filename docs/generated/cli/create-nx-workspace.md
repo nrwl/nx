@@ -19,6 +19,8 @@ Install `create-nx-workspace` globally to invoke the command directly, or use `n
 
 ### allPrompts
 
+Default: `false`
+
 Show all prompts
 
 ### appName

@@ -122,17 +122,15 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     'strip-dashed': true,
     'dot-notation': false,
   })
-  .strict()
   .command(
     // this is the default and only command
     '$0 [name] [options]',
     'Create a new Nx workspace',
     (yargs) =>
       yargs
-        .positional('name', {
+        .option('name', {
           describe: `Workspace name (e.g. org name)`,
           type: 'string',
-          demandOption: true,
         })
         .option('preset', {
           describe: `Customizes the initial content of your workspace. To build your own see https://nx.dev/nx-plugin/overview#preset`,
@@ -179,7 +177,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           describe: `Default base to use for new projects`,
           type: 'string',
         }),
-    async (argv) => {
+    async (argv: yargs.ArgumentsCamelCase<Arguments>) => {
       await main(argv).catch((error) => {
         const { version } = require('../package.json');
         output.error({
@@ -192,7 +190,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
   )
   .help('help')
   .updateLocale(yargsDecorator)
-  .version(nxVersion);
+  .version(nxVersion) as yargs.Argv<Arguments>;
 
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   const {
@@ -242,7 +240,9 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   }
 }
 
-async function getConfiguration(argv: yargs.Arguments<Arguments>) {
+async function getConfiguration(
+  argv: yargs.Arguments<Arguments>
+): Promise<void> {
   try {
     let style, appName;
 
@@ -260,7 +260,7 @@ async function getConfiguration(argv: yargs.Arguments<Arguments>) {
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
 
-    return {
+    Object.assign(argv, {
       name,
       preset,
       appName,
@@ -269,7 +269,7 @@ async function getConfiguration(argv: yargs.Arguments<Arguments>) {
       nxCloud,
       packageManager,
       defaultBase,
-    };
+    });
   } catch (e) {
     console.error(e);
     process.exit(1);
@@ -751,7 +751,7 @@ function execAndWait(command: string, cwd: string) {
   });
 }
 
-async function determineNxCloud(parsedArgs: any) {
+async function determineNxCloud(parsedArgs: yargs.Arguments<Arguments>) {
   if (parsedArgs.nxCloud === undefined) {
     return enquirer
       .prompt([

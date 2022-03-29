@@ -1,14 +1,16 @@
 import * as chalk from 'chalk';
-import { join } from 'path';
 import { dedent } from 'tslint/lib/utils';
 import {
-  formatDeprecated,
-  sortAlphabeticallyFunction,
   generateMarkdownFile,
+  getCommands,
+  parseCommand,
+  ParsedCommand,
+  sortAlphabeticallyFunction,
+  formatDeprecated,
 } from './utils';
 const importFresh = require('import-fresh');
 
-export async function generateCNWocumentation() {
+export async function generateCNWocumentation(commandsOutputDirectory: string) {
   process.env.NX_GENERATE_DOCS_PROCESS = 'true';
 
   console.log(
@@ -21,17 +23,8 @@ export async function generateCNWocumentation() {
     '../../packages/create-nx-workspace/bin/create-nx-workspace'
   );
 
-  const commandsOutputDirectory = join(
-    __dirname,
-    '../../docs/',
-    'generated',
-    'cli'
-  );
-
-  const command = commandsObject.getCommandInstance().getCommandHandlers()[
-    '$0'
-  ];
-  const parsedCommand = await parseCommand(command);
+  const command = getCommands(commandsObject)['$0'];
+  const parsedCommand = await parseCommand('create-nx-workspace', command);
   const markdown = generateMarkdown(parsedCommand);
   generateMarkdownFile(commandsOutputDirectory, markdown);
 
@@ -44,48 +37,13 @@ export async function generateCNWocumentation() {
   );
 }
 
-interface ParsedCommandOption {
-  name: string;
-  description: string;
-  default: string;
-  deprecated: boolean | string;
-}
-
-interface ParsedCommand {
-  commandString: string;
-  description: string;
-  options?: Array<ParsedCommandOption>;
-}
-
-async function parseCommand(command: any): Promise<ParsedCommand> {
-  const builder = await command.builder(importFresh('yargs')().resetOptions());
-  const builderDescriptions = builder.getUsageInstance().getDescriptions();
-  const builderDefaultOptions = builder.getOptions().default;
-  const builderAutomatedOptions = builder.getOptions().defaultDescription;
-  const builderDeprecatedOptions = builder.getDeprecatedOptions();
-
-  return {
-    description: command.description,
-    commandString: command.original.replace('$0', 'create-nx-workspace'),
-    options:
-      Object.keys(builderDescriptions).map((key) => ({
-        name: key,
-        description: builderDescriptions[key]
-          ? builderDescriptions[key].replace('__yargsString__:', '')
-          : '',
-        default: builderDefaultOptions[key] || builderAutomatedOptions[key],
-        deprecated: builderDeprecatedOptions[key],
-      })) || null,
-  };
-}
-
 function generateMarkdown(command: ParsedCommand) {
   let template = dedent`
   ---
-  title: "create-nx-workspace - CLI command"
+  title: "${command.name} - CLI command"
   description: "${command.description}"
   ---
-  # create-nx-workspace
+  # ${command.name}
 
   ${command.description}
 
@@ -97,25 +55,31 @@ function generateMarkdown(command: ParsedCommand) {
 
   Install \`create-nx-workspace\` globally to invoke the command directly, or use \`npx create-nx-workspace\`, \`yarn create nx-workspace\`, or \`pnpx create-nx-workspace\`.\n`;
 
-  template += '\n## Options';
-  command.options
-    .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
-    .forEach((option) => {
-      template += dedent`
-          ### ${option.deprecated ? `~~${option.name}~~` : option.name}
-          ${
-            option.default === undefined || option.default === ''
-              ? ''
-              : `Default: \`${option.default}\`\n`
-          }
-        `;
-      template += dedent`
-          ${formatDeprecated(option.description, option.deprecated)}
-        `;
-    });
+  if (Array.isArray(command.options) && !!command.options.length) {
+    template += '\n## Options';
+
+    command.options
+      .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .forEach((option) => {
+        template += dedent`
+              ### ${option.deprecated ? `~~${option.name}~~` : option.name}
+              ${
+                option.default === undefined || option.default === ''
+                  ? ''
+                  : `Default: \`${option.default}\`\n`
+              }
+  `;
+        template += dedent`
+              ${formatDeprecated(option.description, option.deprecated)}
+  `;
+      });
+  }
 
   return {
-    name: 'create-nx-workspace',
+    name: command.name
+      .replace(':', '-')
+      .replace(' ', '-')
+      .replace(/[\]\[.]+/gm, ''),
     template,
   };
 }
