@@ -7,7 +7,10 @@ import { TargetProjectLocator } from 'nx/src/core/target-project-locator';
 import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('nx/src/utils/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('nx/src/utils/app-root', () => ({
+  appRootPath: '/root',
+  workspaceRoot: '/root',
+}));
 
 const tsconfig = {
   compilerOptions: {

@@ -5,6 +5,7 @@ import { join } from 'path';
 
 jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '',
+  workspaceRoot: '',
 }));
 
 jest.mock('../utils/fileutils', () => ({

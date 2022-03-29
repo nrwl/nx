@@ -1,8 +1,8 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { performance } from 'perf_hooks';
 import { defaultHashing } from './hashing-impl';
 import { FileData } from 'nx/src/shared/project-graph';
-import { joinPathFragments } from 'nx/src/utils/path';
+import { joinPathFragments, normalizePath } from 'nx/src/utils/path';
 
 export abstract class FileHasherBase {
   protected fileHashes: Map<string, string>;
@@ -61,16 +61,18 @@ export abstract class FileHasherBase {
     if (!this.fileHashes) {
       throw new Error('FileHasher is invoked before being initialized');
     }
-    const relativePath = path.startsWith(appRootPath)
-      ? path.substr(appRootPath.length + 1)
-      : path;
+    const relativePath = normalizePath(
+      path.startsWith(workspaceRoot)
+        ? path.substring(workspaceRoot.length + 1)
+        : path
+    );
     if (this.fileHashes.has(relativePath)) {
       return this.fileHashes.get(relativePath);
     } else {
       try {
         // this has to be absolute to avoid issues with cwd
         return defaultHashing.hashFile(
-          joinPathFragments(appRootPath, relativePath)
+          joinPathFragments(workspaceRoot, relativePath)
         );
       } catch {
         return '';
