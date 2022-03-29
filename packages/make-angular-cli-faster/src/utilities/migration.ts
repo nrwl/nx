@@ -1,7 +1,11 @@
-import { getPackageManagerCommand, output, readJsonFile } from '@nrwl/devkit';
+import {
+  getPackageManagerCommand,
+  output,
+  readJsonFile,
+  workspaceRoot,
+} from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
-import { appRootPath } from 'nx/src/utils/app-root';
 import { lt, lte, major, satisfies } from 'semver';
 import { resolvePackageVersion } from './package-manager';
 import { MigrationDefinition } from './types';
@@ -168,7 +172,7 @@ async function promptForVersion(version: string): Promise<boolean> {
 
 function getInstalledAngularVersion(): string {
   const packageJsonPath = require.resolve('@angular/core/package.json', {
-    paths: [appRootPath],
+    paths: [workspaceRoot],
   });
   return readJsonFile(packageJsonPath).version;
 }

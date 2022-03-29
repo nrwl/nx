@@ -1,18 +1,24 @@
 import { execSync } from 'child_process';
-import { copyFileSync, existsSync, removeSync } from 'fs-extra';
+import { copyFileSync, removeSync } from 'fs-extra';
 import { dirname, join } from 'path';
 import { gt, lte } from 'semver';
 import { dirSync } from 'tmp';
-import { logger } from '../utils/logger';
-import { handleErrors } from '../utils/params';
-import { getPackageManagerCommand } from '../utils/package-manager';
+import { NxJsonConfiguration } from '../shared/nx';
 import { flushChanges, FsTree } from '../shared/tree';
 import {
+  extractFileFromTarball,
   JsonReadOptions,
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
-import { NxJsonConfiguration } from '../shared/nx';
+import { logger } from '../utils/logger';
+import {
+  checkForNPMRC,
+  detectPackageManager,
+  getPackageManagerCommand,
+  resolvePackageVersionUsingRegistry,
+} from '../utils/package-manager';
+import { handleErrors } from '../utils/params';
 
 type Dependencies = 'dependencies' | 'devDependencies';
 
@@ -437,55 +443,206 @@ function createFetcher() {
     packageName: string,
     packageVersion: string
   ): Promise<MigrationsJson> {
-    if (!cache[`${packageName}-${packageVersion}`]) {
-      const dir = dirSync().name;
-      const npmrc = checkForNPMRC();
-      if (npmrc) {
-        // Creating a package.json is needed for .npmrc to resolve
-        writeJsonFile(`${dir}/package.json`, {});
-        // Copy npmrc if it exists, so that npm still follows it.
-        copyFileSync(npmrc, `${dir}/.npmrc`);
+    if (cache[`${packageName}-${packageVersion}`]) {
+      return cache[`${packageName}-${packageVersion}`];
+    }
+
+    let resolvedVersion: string;
+    let migrations: any;
+
+    try {
+      resolvedVersion = resolvePackageVersionUsingRegistry(
+        packageName,
+        packageVersion
+      );
+
+      if (cache[`${packageName}-${resolvedVersion}`]) {
+        return cache[`${packageName}-${resolvedVersion}`];
       }
 
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      const pmc = getPackageManagerCommand();
-      execSync(`${pmc.add} ${packageName}@${packageVersion}`, {
-        stdio: [],
-        cwd: dir,
-      });
-
-      const migrationsFilePath = packageToMigrationsFilePath(packageName, dir);
-      const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-        paths: [dir],
-      });
-      const json = readJsonFile(packageJsonPath);
-      // packageVersion can be a tag, resolvedVersion works with semver
-      const resolvedVersion = json.version;
-
-      if (migrationsFilePath) {
-        const json = readJsonFile(migrationsFilePath);
-        cache[`${packageName}-${packageVersion}`] = {
-          version: resolvedVersion,
-          generators: json.generators || json.schematics,
-          packageJsonUpdates: json.packageJsonUpdates,
-        };
-      } else {
-        cache[`${packageName}-${packageVersion}`] = {
-          version: resolvedVersion,
-        };
-      }
-
-      try {
-        removeSync(dir);
-      } catch {
-        // It's okay if this fails, the OS will clean it up eventually
-      }
+      migrations = await getPackageMigrations(packageName, resolvedVersion);
+    } catch {
+      logger.info(`Fetching ${packageName}@${packageVersion}`);
+      const result = await installPackageAndGetVersionAngMigrations(
+        packageName,
+        packageVersion
+      );
+      resolvedVersion = result.resolvedVersion;
+      migrations = result.migrations;
     }
+
+    if (migrations) {
+      cache[`${packageName}-${packageVersion}`] = cache[
+        `${packageName}-${resolvedVersion}`
+      ] = {
+        version: resolvedVersion,
+        generators: migrations.generators ?? migrations.schematics,
+        packageJsonUpdates: migrations.packageJsonUpdates,
+      };
+    } else {
+      cache[`${packageName}-${packageVersion}`] = cache[
+        `${packageName}-${resolvedVersion}`
+      ] = {
+        version: resolvedVersion,
+      };
+    }
+
     return cache[`${packageName}-${packageVersion}`];
   };
 }
 
 // testing-fetch-end
+
+async function getPackageMigrations(
+  packageName: string,
+  packageVersion: string
+) {
+  try {
+    // check if there are migrations in the packages by looking at the
+    // registry directly
+    const migrationsPath = getPackageMigrationsPathFromRegistry(
+      packageName,
+      packageVersion
+    );
+    if (!migrationsPath) {
+      return null;
+    }
+
+    // try to obtain the migrations from the registry directly
+    return await getPackageMigrationsUsingRegistry(
+      packageName,
+      packageVersion,
+      migrationsPath
+    );
+  } catch {
+    // fall back to installing the package
+    const { migrations } = await installPackageAndGetVersionAngMigrations(
+      packageName,
+      packageVersion
+    );
+    return migrations;
+  }
+}
+
+function getPackageMigrationsPathFromRegistry(
+  packageName: string,
+  packageVersion: string
+): string | null {
+  let pm = detectPackageManager();
+  if (pm === 'yarn') {
+    pm = 'npm';
+  }
+  const result = execSync(
+    `${pm} view ${packageName}@${packageVersion} nx-migrations ng-update --json`,
+    {
+      stdio: [],
+    }
+  )
+    .toString()
+    .trim();
+
+  if (!result) {
+    return null;
+  }
+
+  const json = JSON.parse(result);
+  let migrationsFilePath = json['nx-migrations'] ?? json['ng-update'] ?? json;
+  if (typeof json === 'object') {
+    migrationsFilePath = migrationsFilePath.migrations;
+  }
+
+  return migrationsFilePath;
+}
+
+async function getPackageMigrationsUsingRegistry(
+  packageName: string,
+  packageVersion: string,
+  migrationsFilePath: string
+) {
+  const dir = dirSync().name;
+  createNPMRC(dir);
+
+  let pm = detectPackageManager();
+  if (pm === 'yarn') {
+    pm = 'npm';
+  }
+
+  const tarballPath = execSync(`${pm} pack ${packageName}@${packageVersion}`, {
+    cwd: dir,
+    stdio: [],
+  })
+    .toString()
+    .trim();
+
+  let migrations = null;
+  migrationsFilePath = join('package', migrationsFilePath);
+  const migrationDestinationPath = join(dir, migrationsFilePath);
+  try {
+    await extractFileFromTarball(
+      join(dir, tarballPath),
+      migrationsFilePath,
+      migrationDestinationPath
+    );
+
+    migrations = readJsonFile(migrationDestinationPath);
+  } catch {
+    throw new Error(
+      `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
+    );
+  }
+
+  try {
+    removeSync(dir);
+  } catch {
+    // It's okay if this fails, the OS will clean it up eventually
+  }
+
+  return migrations;
+}
+
+async function installPackageAndGetVersionAngMigrations(
+  packageName: string,
+  packageVersion: string
+) {
+  const dir = dirSync().name;
+  createNPMRC(dir);
+
+  const pmc = getPackageManagerCommand();
+  execSync(`${pmc.add} ${packageName}@${packageVersion}`, {
+    stdio: [],
+    cwd: dir,
+  });
+
+  const packageJsonPath = require.resolve(`${packageName}/package.json`, {
+    paths: [dir],
+  });
+  const { version: resolvedVersion } = readJsonFile(packageJsonPath);
+
+  const migrationsFilePath = packageToMigrationsFilePath(packageName, dir);
+  let migrations = null;
+  if (migrationsFilePath) {
+    migrations = readJsonFile(migrationsFilePath);
+  }
+
+  try {
+    removeSync(dir);
+  } catch {
+    // It's okay if this fails, the OS will clean it up eventually
+  }
+
+  return { migrations, resolvedVersion };
+}
+
+function createNPMRC(dir: string): void {
+  // A package.json is needed for pnpm pack and for .npmrc to resolve
+  writeJsonFile(`${dir}/package.json`, {});
+  const npmrc = checkForNPMRC();
+  if (npmrc) {
+    // Copy npmrc if it exists, so that npm still follows it.
+    copyFileSync(npmrc, `${dir}/.npmrc`);
+  }
+}
 
 function packageToMigrationsFilePath(packageName: string, dir: string) {
   const packageJsonPath = require.resolve(`${packageName}/package.json`, {
@@ -703,17 +860,4 @@ export async function migrate(root: string, args: { [k: string]: any }) {
       await runMigrations(root, opts, args['verbose']);
     }
   });
-}
-
-/**
- * Checks for a project level npmrc file by crawling up the file tree until
- * hitting a package.json file, as this is how npm finds them as well.
- */
-function checkForNPMRC(): string | null {
-  let directory = process.cwd();
-  while (!existsSync(join(directory, 'package.json'))) {
-    directory = dirname(directory);
-  }
-  const path = join(directory, '.npmrc');
-  return existsSync(path) ? path : null;
 }

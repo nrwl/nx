@@ -1,10 +1,17 @@
 import { parseJson, serializeJson } from './json';
 import type { JsonParseOptions, JsonSerializeOptions } from './json';
-import { readFileSync, writeFileSync } from 'fs';
+import {
+  createReadStream,
+  createWriteStream,
+  readFileSync,
+  writeFileSync,
+} from 'fs';
 import { dirname } from 'path';
 import { ensureDirSync } from 'fs-extra';
 import { mkdirSync, statSync } from 'fs';
 import { resolve as pathResolve } from 'path';
+import * as tar from 'tar-stream';
+import { createGunzip } from 'zlib';
 
 export interface JsonReadOptions extends JsonParseOptions {
   /**
@@ -98,4 +105,48 @@ export function isRelativePath(path: string): boolean {
     path.startsWith('./') ||
     path.startsWith('../')
   );
+}
+
+/**
+ * Extracts a file from a given tarball to the specified destination.
+ * @param tarballPath The path to the tarball from where the file should be extracted.
+ * @param file The path to the file inside the tarball.
+ * @param destinationFilePath The destination file path.
+ * @returns True if the file was extracted successfully, false otherwise.
+ */
+export async function extractFileFromTarball(
+  tarballPath: string,
+  file: string,
+  destinationFilePath: string
+) {
+  return new Promise<void>((resolve, reject) => {
+    ensureDirSync(dirname(destinationFilePath));
+    var tarExtractStream = tar.extract();
+    const destinationFileStream = createWriteStream(destinationFilePath);
+
+    let isFileExtracted = false;
+    tarExtractStream.on('entry', function (header, stream, next) {
+      if (header.name === file) {
+        stream.pipe(destinationFileStream);
+        stream.on('end', () => {
+          isFileExtracted = true;
+          resolve();
+        });
+      }
+
+      stream.on('end', function () {
+        next();
+      });
+
+      stream.resume();
+    });
+
+    tarExtractStream.on('finish', function () {
+      if (!isFileExtracted) {
+        reject();
+      }
+    });
+
+    createReadStream(tarballPath).pipe(createGunzip()).pipe(tarExtractStream);
+  });
 }
