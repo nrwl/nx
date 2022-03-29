@@ -1,4 +1,4 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { performance } from 'perf_hooks';
 import { FileData } from 'nx/src/shared/project-graph';
 import { join, relative } from 'path';
@@ -6,6 +6,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
 import { stripIndents } from '../../utils/strip-indents';
 import ignore from 'ignore';
+import { normalizePath } from 'nx/src/utils/path';
 
 export class NodeBasedFileHasher extends FileHasherBase {
   ignoredGlobs = getIgnoredGlobs();
@@ -14,7 +15,7 @@ export class NodeBasedFileHasher extends FileHasherBase {
     performance.mark('init hashing:start');
     this.clear();
 
-    this.allFilesInDir(appRootPath, true);
+    this.allFilesInDir(workspaceRoot, true);
 
     performance.mark('init hashing:end');
     performance.measure(
@@ -36,21 +37,24 @@ export class NodeBasedFileHasher extends FileHasherBase {
     absoluteDirName: string,
     recurse: boolean = true
   ): FileData[] {
-    const relDirName = relative(appRootPath, absoluteDirName);
+    const relDirName = relative(workspaceRoot, absoluteDirName);
     if (relDirName && this.ignoredGlobs.ignores(relDirName)) {
       return;
     }
     try {
       readdirSync(absoluteDirName).forEach((c) => {
         const absoluteChild = join(absoluteDirName, c);
-        const relChild = relative(appRootPath, absoluteChild);
+        const relChild = relative(workspaceRoot, absoluteChild);
         if (this.ignoredGlobs.ignores(relChild)) {
           return;
         }
         try {
           const s = statSync(absoluteChild);
           if (!s.isDirectory()) {
-            this.fileHashes.set(relChild, this.hashFile(relChild));
+            this.fileHashes.set(
+              normalizePath(relChild),
+              this.hashFile(relChild)
+            );
           } else if (s.isDirectory() && recurse) {
             this.allFilesInDir(absoluteChild, true);
           }
@@ -62,8 +66,8 @@ export class NodeBasedFileHasher extends FileHasherBase {
 
 function getIgnoredGlobs() {
   const ig = ignore();
-  ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
-  ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));
+  ig.add(readFileIfExisting(`${workspaceRoot}/.gitignore`));
+  ig.add(readFileIfExisting(`${workspaceRoot}/.nxignore`));
   ig.add(stripIndents`
       node_modules
       tmp

@@ -14,10 +14,12 @@ jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/devkit', () => ({
   ...jest.requireActual<any>('@nrwl/devkit'),
   appRootPath: '/root',
+  workspaceRoot: '/root',
 }));
 
 jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '/root',
+  workspaceRoot: '/root',
 }));
 
 const tsconfig = {
