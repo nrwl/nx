@@ -19,21 +19,6 @@
         "scripts",
         "customWebpackConfig"
       ]
-    },
-    {
-      "name": "Incremental Builds",
-      "keys": [
-        "outputs",
-        "buildLibsFromSource",
-        "outputPath",
-        "index",
-        "main",
-        "polyfills",
-        "tsConfig",
-        "assets",
-        "styles",
-        "scripts"
-      ]
     }
   ],
   "properties": {
