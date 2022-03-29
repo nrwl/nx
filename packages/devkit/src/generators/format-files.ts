@@ -32,7 +32,7 @@ export async function formatFiles(tree: Tree): Promise<void> {
   await Promise.all(
     Array.from(files).map(async (file) => {
       const systemPath = path.join(tree.root, file.path);
-      let options: Prettier.Options = {
+      let options: any = {
         filepath: systemPath,
       };
 
@@ -47,7 +47,7 @@ export async function formatFiles(tree: Tree): Promise<void> {
         ...resolvedOptions,
       };
 
-      const support = await prettier.getFileInfo(systemPath);
+      const support = await prettier.getFileInfo(systemPath, options);
       if (support.ignored || !support.inferredParser) {
         return;
       }
