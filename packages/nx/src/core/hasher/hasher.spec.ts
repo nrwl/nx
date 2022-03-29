@@ -4,6 +4,7 @@ import { DependencyType } from 'nx/src/shared/project-graph';
 jest.doMock('../../utils/app-root', () => {
   return {
     appRootPath: '',
+    workspaceRoot: '',
   };
 });
 

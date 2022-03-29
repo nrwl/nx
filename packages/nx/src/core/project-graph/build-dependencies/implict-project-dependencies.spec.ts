@@ -5,6 +5,7 @@ import { buildImplicitProjectDependencies } from './implicit-project-dependencie
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('nx/src/utils/app-root', () => ({
   appRootPath: '/root',
+  workspaceRoot: '/root',
 }));
 
 describe('explicit project dependencies', () => {
