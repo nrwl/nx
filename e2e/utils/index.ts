@@ -10,6 +10,7 @@ import {
   copySync,
   createFileSync,
   ensureDirSync,
+  existsSync,
   moveSync,
   readdirSync,
   readFileSync,
@@ -28,7 +29,15 @@ import chalk = require('chalk');
 import isCI = require('is-ci');
 import treeKill = require('tree-kill');
 import { Workspaces } from '../../packages/nx/src/shared/workspace';
-import { detectPackageManager } from '../../packages/create-nx-workspace/bin/package-manager';
+import { PackageManager } from 'nx/src/utils/package-manager';
+
+export function detectPackageManager(dir: string = ''): PackageManager {
+  return existsSync(join(dir, 'yarn.lock'))
+    ? 'yarn'
+    : existsSync(join(dir, 'pnpm-lock.yaml'))
+    ? 'pnpm'
+    : 'npm';
+}
 
 const kill = require('kill-port');
 export const isWindows = require('is-windows');

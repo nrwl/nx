@@ -1,6 +1,9 @@
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
+import { removeSync } from 'fs-extra';
+import { join } from 'path';
 import { generateCLIDocumentation } from './generate-cli-data';
+import { generateCNWocumentation } from './generate-cnw-documentation';
 import { generateDevkitDocumentation } from './generate-devkit-documentation';
 import { generatePackageSchemas } from './package-schemas/generatePackageSchemas';
 
@@ -9,7 +12,16 @@ async function generate() {
     console.log(`${chalk.blue('i')} Generating Documentation`);
     generatePackageSchemas();
     generateDevkitDocumentation();
-    await generateCLIDocumentation();
+
+    const commandsOutputDirectory = join(
+      __dirname,
+      '../../docs/',
+      'generated',
+      'cli'
+    );
+    removeSync(commandsOutputDirectory);
+    await generateCNWocumentation(commandsOutputDirectory);
+    await generateCLIDocumentation(commandsOutputDirectory);
 
     console.log(`\n${chalk.green('✓')} Generated Documentation\n`);
   } catch (e) {
