@@ -27,6 +27,11 @@
     "port": {
       "type": "number",
       "description": "The port on which this app should be served."
+    },
+    "dynamic": {
+      "type": "boolean",
+      "description": "Should the host app use dynamic federation?",
+      "default": false
     }
   },
   "required": ["name"]

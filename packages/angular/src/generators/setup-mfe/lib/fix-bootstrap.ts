@@ -1,14 +1,26 @@
 import type { Tree } from '@nrwl/devkit';
+import type { Schema } from '../schema';
 
 import { joinPathFragments } from '@nrwl/devkit';
 
-export function fixBootstrap(host: Tree, appRoot: string) {
+export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
   const mainFilePath = joinPathFragments(appRoot, 'src/main.ts');
-  const bootstrapCode = host.read(mainFilePath, 'utf-8');
-  host.write(joinPathFragments(appRoot, 'src/bootstrap.ts'), bootstrapCode);
+  const bootstrapCode = tree.read(mainFilePath, 'utf-8');
+  tree.write(joinPathFragments(appRoot, 'src/bootstrap.ts'), bootstrapCode);
 
-  host.write(
+  const bootstrapImportCode = `import('./bootstrap').catch(err => console.error(err))`;
+
+  const fetchMfeManifestCode = `import { setRemoteDefinitions } from '@nrwl/angular/mfe';
+
+  fetch('/assets/mfe.manifest.json')
+  .then((res) => res.json())
+  .then(definitions => setRemoteDefinitions(definitions))
+  .then(() => ${bootstrapImportCode})`;
+
+  tree.write(
     mainFilePath,
-    `import('./bootstrap').catch(err => console.error(err));`
+    options.mfeType === 'host' && options.federationType === 'dynamic'
+      ? fetchMfeManifestCode
+      : bootstrapImportCode
   );
 }
