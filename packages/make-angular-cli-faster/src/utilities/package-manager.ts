@@ -1,15 +1,17 @@
 import {
   getPackageManagerCommand,
   readJsonFile,
-  writeJsonFile,
+  workspaceRoot,
 } from '@nrwl/devkit';
 import { execSync } from 'child_process';
-import { copyFileSync, existsSync, unlinkSync, writeFileSync } from 'fs';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { writeFileSync } from 'fs';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
-import { dirname, join } from 'path';
+import {
+  resolvePackageVersionUsingInstallation,
+  resolvePackageVersionUsingRegistry,
+} from 'nx/src/utils/package-manager';
+import { join } from 'path';
 import { gte, major } from 'semver';
-import { dirSync } from 'tmp';
 import { MigrationDefinition } from './types';
 
 // version when the Nx CLI changed from @nrwl/tao & @nrwl/cli to nx
@@ -19,7 +21,7 @@ export function installDependencies(
   { packageName, version }: MigrationDefinition,
   useNxCloud: boolean
 ): void {
-  const json = readJsonFile(join(appRootPath, 'package.json'));
+  const json = readJsonFile(join(workspaceRoot, 'package.json'));
 
   json.devDependencies ??= {};
   json.devDependencies['@nrwl/workspace'] = version;
@@ -57,37 +59,9 @@ export function resolvePackageVersion(
   packageName: string,
   version: string
 ): string {
-  const dir = dirSync().name;
-  const npmrc = checkForNPMRC();
-  if (npmrc) {
-    // Creating a package.json is needed for .npmrc to resolve
-    writeJsonFile(`${dir}/package.json`, {});
-    // Copy npmrc if it exists, so that npm still follows it.
-    copyFileSync(npmrc, `${dir}/.npmrc`);
-  }
-
-  const pmc = getPackageManagerCommand();
-  execSync(`${pmc.add} ${packageName}@${version}`, { stdio: [], cwd: dir });
-
-  const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-    paths: [dir],
-  });
-  const { version: resolvedVersion } = readJsonFile(packageJsonPath);
-
   try {
-    unlinkSync(dir);
+    return resolvePackageVersionUsingRegistry(packageName, version);
   } catch {
-    // It's okay if this fails, the OS will clean it up eventually
+    return resolvePackageVersionUsingInstallation(packageName, version);
   }
-
-  return resolvedVersion;
-}
-
-function checkForNPMRC(): string | null {
-  let directory = process.cwd();
-  while (!existsSync(join(directory, 'package.json'))) {
-    directory = dirname(directory);
-  }
-  const path = join(directory, '.npmrc');
-  return existsSync(path) ? path : null;
 }

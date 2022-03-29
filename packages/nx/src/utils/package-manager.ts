@@ -1,6 +1,8 @@
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { copyFileSync, existsSync, unlinkSync } from 'fs';
+import { dirname, join } from 'path';
+import { dirSync } from 'tmp';
+import { readJsonFile, writeJsonFile } from './fileutils';
 
 export type PackageManager = 'yarn' | 'pnpm' | 'npm';
 
@@ -96,4 +98,91 @@ export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager()
 ): string {
   return execSync(`${packageManager} --version`).toString('utf-8').trim();
+}
+
+/**
+ * Checks for a project level npmrc file by crawling up the file tree until
+ * hitting a package.json file, as this is how npm finds them as well.
+ */
+export function checkForNPMRC(
+  directory: string = process.cwd()
+): string | null {
+  while (!existsSync(join(directory, 'package.json'))) {
+    directory = dirname(directory);
+  }
+  const path = join(directory, '.npmrc');
+  return existsSync(path) ? path : null;
+}
+
+/**
+ * Returns the resolved version for a given package and version tag using the
+ * NPM registry (when using Yarn it will fall back to NPM to fetch the info).
+ */
+export function resolvePackageVersionUsingRegistry(
+  packageName: string,
+  version: string
+): string {
+  let pm = detectPackageManager();
+  if (pm === 'yarn') {
+    pm = 'npm';
+  }
+
+  try {
+    const result = execSync(`${pm} view ${packageName}@${version} version`, {
+      stdio: [],
+    })
+      .toString()
+      .trim();
+
+    if (!result) {
+      throw new Error(`Unable to resolve version ${packageName}@${version}.`);
+    }
+
+    // get the last line of the output, strip the package version and quotes
+    const resolvedVersion = result
+      .split('\n')
+      .pop()
+      .split(' ')
+      .pop()
+      .replace(/'/g, '');
+
+    return resolvedVersion;
+  } catch {
+    throw new Error(`Unable to resolve version ${packageName}@${version}.`);
+  }
+}
+
+/**
+ * Return the resolved version for a given package and version tag using by
+ * installing it in a temporary directory and fetching the version from the
+ * package.json.
+ */
+export function resolvePackageVersionUsingInstallation(
+  packageName: string,
+  version: string
+): string {
+  const dir = dirSync().name;
+  const npmrc = checkForNPMRC();
+
+  writeJsonFile(`${dir}/package.json`, {});
+  if (npmrc) {
+    // Copy npmrc if it exists, so that npm still follows it.
+    copyFileSync(npmrc, `${dir}/.npmrc`);
+  }
+
+  const pmc = getPackageManagerCommand();
+  execSync(`${pmc.add} ${packageName}@${version}`, { stdio: [], cwd: dir });
+
+  const packageJsonPath = require.resolve(`${packageName}/package.json`, {
+    paths: [dir],
+  });
+  const { version: resolvedVersion } = readJsonFile(packageJsonPath);
+
+  try {
+    unlinkSync(dir);
+  } catch {
+    // It's okay if this fails, the OS will clean it up eventually
+  }
+
+  return resolvedVersion;
 }
