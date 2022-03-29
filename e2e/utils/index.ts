@@ -429,7 +429,7 @@ export function runNgAdd(
   try {
     const pmc = getPackageManagerCommand();
     packageInstall(packageName, null, version);
-    return execSync(`${pmc.run} ng g ${packageName}:ng-add ${command}`, {
+    return execSync(pmc.run(`ng g ${packageName}:ng-add`, command), {
       cwd: tmpProjPath(),
       env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
       encoding: 'utf-8',
@@ -734,7 +734,7 @@ export function getPackageManagerCommand({
   packageManager = detectPackageManager(path),
 } = {}): {
   createWorkspace: string;
-  run: string;
+  run: (script: string, args: string) => string;
   runNx: string;
   runNxSilent: string;
   runUninstalledPackage?: string | undefined;
@@ -748,7 +748,7 @@ export function getPackageManagerCommand({
       createWorkspace: `npx ${
         +npmMajorVersion >= 7 ? '--yes' : ''
       } create-nx-workspace@${publishedVersion}`,
-      run: 'npm run',
+      run: (script: string, args: string) => `npm run ${script} -- ${args}`,
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
       runUninstalledPackage: `npx`,
@@ -758,7 +758,7 @@ export function getPackageManagerCommand({
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
       createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
-      run: 'yarn',
+      run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       runUninstalledPackage: 'npx',
@@ -768,7 +768,7 @@ export function getPackageManagerCommand({
     // Pnpm 3.5+ adds nx to
     pnpm: {
       createWorkspace: `pnpx --yes create-nx-workspace@${publishedVersion}`,
-      run: 'pnpm run',
+      run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
       runNx: `pnpx nx`,
       runNxSilent: `pnpx nx`,
       runUninstalledPackage: 'pnpx --yes',
