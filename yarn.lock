@@ -3803,7 +3803,7 @@
   dependencies:
     core-js "^3.8.2"
 
-"@storybook/core-server@6.4.19":
+"@storybook/core-server@6.4.19", "@storybook/core-server@^6.4.19":
   version "6.4.19"
   resolved "https://registry.yarnpkg.com/@storybook/core-server/-/core-server-6.4.19.tgz#0d1b4b2094749b8bce03e3d01422e14e5fef8e66"
   integrity sha512-bKsUB9f7hl5ya2JXxpIrErmbDQjoH39FVbzYZWjMo4t/b7+Xyi6vYadwyWcqlpUQmis09ZaSMv8L/Tw0TuwLAA==
