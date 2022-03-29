@@ -1529,7 +1529,7 @@
             "file": "shared/guides/nx-devkit-angular-devkit"
           },
           {
-            "name": "Setup MFE with Angular and Nx",
+            "name": "Setup Micro Frontends with Angular and Nx",
             "id": "setup-mfe-with-angular",
             "file": "shared/guides/setup-mfe-with-angular"
           }
