@@ -9,10 +9,10 @@ Therefore, using Nx it can be fairly straightforward to scaffold and build a Mic
 
 In this guide, we'll show you to how setup a Micro Frontend Architecture with Nx and Angular.
 
-_NOTE: When serving MFEs in dev mode locally, there'll be an error output to the console, `import.meta` cannot be used outside of a module, and the script that is coming from is `styles.js`. It's a known error output, but it doesn't actually cause any breakages from as far as our testing has shown. It's because the Angular compiler attaches the `styles.js` file to the `index.html` in a `<script>` tag with `defer`.  
+_NOTE: When serving Micro-Frontends (\_MFEs_) in dev mode locally, there'll be an error output to the console, `import.meta` cannot be used outside of a module, and the script that is coming from is `styles.js`. It's a known error output, but it doesn't actually cause any breakages from as far as our testing has shown. It's because the Angular compiler attaches the `styles.js` file to the `index.html` in a `<script>` tag with `defer`.  
 It needs to be attached with `type=module`, but doing so breaks HMR. There is no way of hooking into that process for us to patch it ourselves.  
 The good news is that the error doesn't propagate to production, because styles are compiled to a CSS file, so there's no erroneous JS to log an error.
-It's worth reiterating that there's been no actual errors or breakages noted from our tests._
+It's worth reiterating that there's been no actual errors or breakages noted from our tests.\_
 
 ## What we'll build
 
@@ -70,7 +70,7 @@ Simple! You are now able to use Nx Generators to scaffold Angular applications a
 
 We need to generate two applications. We also need to tell Nx that we want these applications to support Module Federation.
 
-We'll start with the Admin Dashboard application which will act as a host application for the MFE:
+We'll start with the Admin Dashboard application which will act as a host application for the Micro-Frontends (_MFEs_):
 
 ```bash
 # Npm
