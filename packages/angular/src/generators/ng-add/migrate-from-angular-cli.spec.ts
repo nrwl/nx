@@ -5,7 +5,6 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTree } from '@nrwl/devkit/testing';
-
 import { migrateFromAngularCli } from './migrate-from-angular-cli';
 
 describe('workspace', () => {
@@ -76,24 +75,20 @@ describe('workspace', () => {
     describe('for invalid workspaces', () => {
       it('should error if no package.json is present', async () => {
         tree.delete('package.json');
-        try {
-          await migrateFromAngularCli(tree, { name: 'myApp' });
-          fail('should throw');
-        } catch (e) {
-          expect(e.message).toContain('Cannot find package.json');
-        }
+
+        await expect(
+          migrateFromAngularCli(tree, { name: 'myApp' })
+        ).rejects.toThrow('Cannot find package.json');
       });
 
       it('should error if no e2e/protractor.conf.js is present', async () => {
         tree.delete('/e2e/protractor.conf.js');
 
-        try {
-          await migrateFromAngularCli(tree, { name: 'proj1' });
-        } catch (e) {
-          expect(e.message).toContain(
-            'An e2e project with Protractor was found but "e2e/protractor.conf.js" could not be found.'
-          );
-        }
+        await expect(
+          migrateFromAngularCli(tree, { name: 'proj1' })
+        ).rejects.toThrow(
+          'An e2e project with Protractor was found but "e2e/protractor.conf.js" could not be found.'
+        );
       });
 
       it('should error when using cypress and cypress.json is not found', async () => {
@@ -151,12 +146,11 @@ describe('workspace', () => {
       });
 
       it('should error if no angular.json is present', async () => {
-        try {
-          tree.delete('angular.json');
-          await migrateFromAngularCli(tree, { name: 'myApp' });
-        } catch (e) {
-          expect(e.message).toContain('Cannot find angular.json');
-        }
+        tree.delete('angular.json');
+
+        await expect(
+          migrateFromAngularCli(tree, { name: 'myApp' })
+        ).rejects.toThrow('Cannot find angular.json');
       });
 
       it('should error if the angular.json specifies more than one app', async () => {
@@ -171,11 +165,10 @@ describe('workspace', () => {
             },
           })
         );
-        try {
-          await migrateFromAngularCli(tree, { name: 'myApp' });
-        } catch (e) {
-          expect(e.message).toContain('Can only convert projects with one app');
-        }
+
+        await expect(
+          migrateFromAngularCli(tree, { name: 'myApp' })
+        ).rejects.toThrow('Can only convert projects with one app');
       });
     });
 
@@ -190,11 +183,10 @@ describe('workspace', () => {
           },
         })
       );
-      try {
-        await migrateFromAngularCli(tree, { name: 'myApp' });
-      } catch (e) {
-        expect(e.message).toContain('Can only convert projects with one app');
-      }
+
+      await expect(
+        migrateFromAngularCli(tree, { name: 'myApp' })
+      ).rejects.toThrow('Can only convert projects with one app');
     });
 
     it('should remove the newProjectRoot key from configuration', async () => {
@@ -598,7 +590,6 @@ describe('workspace', () => {
 
     it('should update package.json', async () => {
       await migrateFromAngularCli(tree, {
-        name: 'myApp',
         preserveAngularCliLayout: true,
       });
 
@@ -609,17 +600,16 @@ describe('workspace', () => {
 
     it('should create nx.json', async () => {
       await migrateFromAngularCli(tree, {
-        name: 'myApp',
         preserveAngularCliLayout: true,
       });
 
       const nxJson = readJson(tree, '/nx.json');
       expect(nxJson.npmScope).toEqual('myproj');
+      expect(nxJson.workspaceLayout).toBeTruthy();
     });
 
     it('should create decorate-angular-cli.js', async () => {
       await migrateFromAngularCli(tree, {
-        name: 'myApp',
         preserveAngularCliLayout: true,
       });
       const s = readJson(tree, '/package.json').scripts;

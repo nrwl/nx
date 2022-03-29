@@ -2,7 +2,7 @@ import { Linter } from '@nrwl/linter';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import type { Styles } from '../utils/types';
 
-export interface Schema {
+export interface GeneratorOptions {
   name?: string;
   skipInstall?: boolean;
   npmScope?: string;
