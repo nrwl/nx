@@ -47,7 +47,10 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
 
       try {
         for (const asset of ngPackage.assets) {
-          let assetFullPath = path.join(ngPackage.src, asset);
+          let assetFullPath = path.join(
+            ngPackage.src,
+            asset.valueOf() as string
+          );
 
           try {
             const stats = await stat(assetFullPath);

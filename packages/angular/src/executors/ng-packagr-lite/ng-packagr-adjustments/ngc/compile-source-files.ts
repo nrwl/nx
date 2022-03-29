@@ -23,6 +23,7 @@ import { ngccTransformCompilerHost } from 'ng-packagr/lib/ts/ngcc-transform-comp
 import * as log from 'ng-packagr/lib/utils/log';
 import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import * as ts from 'typescript';
+import { InlineStyleLanguage } from '../../../package/ng-packagr-adjustments/styles/stylesheet-processor';
 import { StylesheetProcessor } from '../styles/stylesheet-processor';
 import { cacheCompilerHost } from '../ts/cache-compiler-host';
 
@@ -51,7 +52,7 @@ export async function compileSourceFiles(
     tsConfigOptions,
     moduleResolutionCache,
     stylesheetProcessor,
-    inlineStyleLanguage
+    InlineStyleLanguage.css
   );
 
   if (ngccProcessor) {
