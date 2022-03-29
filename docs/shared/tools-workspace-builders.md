@@ -1,3 +1,5 @@
+> In Nx 13.10+, local nx plugins can contain executors that are used in the workspace. When creating a custom executor for your workspace, look into the [nx-plugin guide](/nx-plugin/overview) to simplify the build process.
+
 # Creating Custom Executors
 
 Creating Executors for your workspace standardizes scripts that are run during your development/building/deploying tasks in order to enable Nx's `affected` command and caching capabilities.
