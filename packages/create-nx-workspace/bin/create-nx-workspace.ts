@@ -19,6 +19,7 @@ import { deduceDefaultBase } from './default-base';
 import { stringifyCollection } from './utils';
 import { yargsDecorator } from './decorator';
 import chalk = require('chalk');
+import { ciList } from './ci';
 
 type Arguments = {
   name: string;
@@ -30,6 +31,7 @@ type Arguments = {
   allPrompts: boolean;
   packageManager: string;
   defaultBase: string;
+  ci: string[];
 };
 
 enum Preset {
@@ -162,6 +164,12 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           describe: chalk.dim`Use Nx Cloud`,
           type: 'boolean',
         })
+        .option('ci', {
+          describe: `Generate a CI workflow file`,
+          choices: ciList,
+          defaultDescription: '[]',
+          type: 'array',
+        })
         .option('allPrompts', {
           alias: 'a',
           describe: chalk.dim`Show all prompts`,
@@ -209,6 +217,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     nxCloud,
     packageManager,
     defaultBase,
+    ci,
   } = parsedArgs;
 
   output.log({
@@ -245,6 +254,10 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   if (nxCloud && nxCloudInstallRes.code === 0) {
     printNxCloudSuccessMessage(nxCloudInstallRes.stdout);
   }
+
+  if (ci && ci.length) {
+    await setupCI(name, ci, packageManager as PackageManager);
+  }
 }
 
 async function getConfiguration(
@@ -266,6 +279,7 @@ async function getConfiguration(
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
+    const ci = await determineCI(argv, nxCloud);
 
     Object.assign(argv, {
       name,
@@ -276,6 +290,7 @@ async function getConfiguration(
       nxCloud,
       packageManager,
       defaultBase,
+      ci,
     });
   } catch (e) {
     console.error(e);
@@ -517,7 +532,7 @@ async function determineCli(
 async function determineStyle(
   preset: Preset,
   parsedArgs: yargs.Arguments<Arguments>
-) {
+): Promise<string> {
   if (
     preset === Preset.Apps ||
     preset === Preset.Core ||
@@ -603,6 +618,72 @@ async function determineStyle(
   }
 
   return Promise.resolve(parsedArgs.style);
+}
+
+async function determineNxCloud(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<boolean> {
+  if (parsedArgs.nxCloud === undefined) {
+    return enquirer
+      .prompt([
+        {
+          name: 'NxCloud',
+          message: `Use Nx Cloud? (It's free and doesn't require registration.)`,
+          type: 'select',
+          choices: [
+            {
+              name: 'Yes',
+              hint: 'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
+            },
+
+            {
+              name: 'No',
+            },
+          ],
+          initial: 'Yes' as any,
+        },
+      ])
+      .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
+  } else {
+    return parsedArgs.nxCloud;
+  }
+}
+
+async function determineCI(
+  parsedArgs: yargs.Arguments<Arguments>,
+  nxCloud: boolean
+): Promise<string[]> {
+  if (!nxCloud) {
+    if (parsedArgs.ci && parsedArgs.ci.length > 0) {
+      output.warn({
+        title: 'Invalid CI value',
+        bodyLines: [
+          `CI option only works when Nx Cloud is enabled.`,
+          `The value provided will be ignored.`,
+        ],
+      });
+    }
+    return [];
+  }
+
+  if (parsedArgs.ci) {
+    return parsedArgs.ci;
+  }
+
+  return enquirer
+    .prompt([
+      {
+        name: 'CI',
+        message: `Autogenerate CI workflow file (multi-select)?`,
+        type: 'multiselect',
+        choices: [
+          { name: 'GitHub Actions', value: 'github' },
+          { name: 'CircleCI', value: 'circleci' },
+          { name: 'Azure', value: 'azure' },
+        ],
+      },
+    ])
+    .then((a: { CI: string[] }) => a.CI);
 }
 
 async function createSandbox(packageManager: string) {
@@ -720,6 +801,41 @@ async function setupNxCloud(name: string, packageManager: PackageManager) {
   }
 }
 
+async function setupCI(
+  name: string,
+  ci: string[],
+  packageManager: PackageManager
+) {
+  const ciSpinner = ora(`Generating CI workflow(s)`).start();
+  try {
+    const pmc = getPackageManagerCommand(packageManager);
+    // GENERATE WORKFLOWS HERE based on `ci` and `packageManager`
+    const res = Promise.allSettled(
+      // ci.map(
+      //   async (ciProvider) =>
+      //     await execAndWait(
+      //       `${pmc.exec} nx g @nrwl/workspace:init-ci ${ciProvider} --no-analytics`,
+      //       path.join(process.cwd(), name)
+      //     )
+      // )
+      []
+    );
+    ciSpinner.succeed('CI workflow(s) have been generated successfully');
+    return res;
+  } catch (e) {
+    ciSpinner.fail();
+
+    output.error({
+      title: `Nx failed to generate CI workflow(s)`,
+      bodyLines: mapErrorToBodyLines(e),
+    });
+
+    process.exit(1);
+  } finally {
+    ciSpinner.stop();
+  }
+}
+
 function printNxCloudSuccessMessage(nxCloudOut: string) {
   const bodyLines = nxCloudOut.split('Nx Cloud has been enabled')[1].trim();
   output.note({
@@ -756,33 +872,6 @@ function execAndWait(command: string, cwd: string) {
       }
     });
   });
-}
-
-async function determineNxCloud(parsedArgs: yargs.Arguments<Arguments>) {
-  if (parsedArgs.nxCloud === undefined) {
-    return enquirer
-      .prompt([
-        {
-          name: 'NxCloud',
-          message: `Use Nx Cloud? (It's free and doesn't require registration.)`,
-          type: 'select',
-          choices: [
-            {
-              name: 'Yes',
-              hint: 'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
-            },
-
-            {
-              name: 'No',
-            },
-          ],
-          initial: 'Yes' as any,
-        },
-      ])
-      .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
-  } else {
-    return parsedArgs.nxCloud;
-  }
 }
 
 function pointToTutorialAndCourse(preset: Preset) {

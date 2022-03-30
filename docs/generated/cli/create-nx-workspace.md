@@ -31,6 +31,14 @@ Type: string
 
 The name of the application when a preset with pregenerated app is selected
 
+### ci
+
+Default: `[]`
+
+Choices: `["github", "circleci", "azure"]`
+
+Generate a CI workflow file
+
 ### cli
 
 Type: string
