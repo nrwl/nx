@@ -1,5 +1,5 @@
 import { offsetFromRoot, Tree } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/devkit';
+import { workspaceRoot } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
@@ -8,7 +8,7 @@ export type { TypeScriptCompilationOptions } from './typescript/compilation';
 export { findNodes } from './typescript/find-nodes';
 export { getSourceNodes } from './typescript/get-source-nodes';
 
-const normalizedAppRoot = appRootPath.replace(/\\/g, '/');
+const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
 let tsModule: typeof import('typescript');
 
@@ -90,7 +90,7 @@ function getCompilerHost(tsConfigPath: string) {
   const options = readTsConfigOptions(tsConfigPath);
   const host = tsModule.createCompilerHost(options, true);
   const moduleResolutionCache = tsModule.createModuleResolutionCache(
-    appRootPath,
+    workspaceRoot,
     host.getCanonicalFileName
   );
   return { options, host, moduleResolutionCache };
@@ -115,7 +115,7 @@ export function getRelativePathToRootTsConfig(
 
 export function getRootTsConfigFileName(): string | null {
   for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
-    const tsConfigPath = join(appRootPath, tsConfigName);
+    const tsConfigPath = join(workspaceRoot, tsConfigName);
     if (existsSync(tsConfigPath)) {
       return tsConfigName;
     }
@@ -127,5 +127,5 @@ export function getRootTsConfigFileName(): string | null {
 export function getRootTsConfigPath(): string | null {
   const tsConfigFileName = getRootTsConfigFileName();
 
-  return tsConfigFileName ? join(appRootPath, tsConfigFileName) : null;
+  return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
 }

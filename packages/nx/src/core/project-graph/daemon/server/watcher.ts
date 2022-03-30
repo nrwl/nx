@@ -5,7 +5,7 @@
  *
  * See https://github.com/parcel-bundler/watcher for more details.
  */
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import type { AsyncSubscription, Event } from '@parcel/watcher';
 import { readFileSync } from 'fs';
 import { join, relative } from 'path';
@@ -28,16 +28,16 @@ import { normalizePath } from 'nx/src/utils/path';
  * https://github.com/parcel-bundler/watcher/issues/64
  */
 const ALWAYS_IGNORE = [
-  join(appRootPath, 'node_modules'),
-  join(appRootPath, '.git'),
+  join(workspaceRoot, 'node_modules'),
+  join(workspaceRoot, '.git'),
   FULL_OS_SOCKET_PATH,
 ];
 
 function getIgnoredGlobs() {
   return [
     ...ALWAYS_IGNORE,
-    ...getIgnoredGlobsFromFile(join(appRootPath, '.nxignore')),
-    ...getIgnoredGlobsFromFile(join(appRootPath, '.gitignore')),
+    ...getIgnoredGlobsFromFile(join(workspaceRoot, '.nxignore')),
+    ...getIgnoredGlobsFromFile(join(workspaceRoot, '.gitignore')),
   ];
 }
 
@@ -47,7 +47,7 @@ function getIgnoredGlobsFromFile(file: string): string[] {
       .split('\n')
       .map((i) => i.trim())
       .filter((i) => !!i && !i.startsWith('#'))
-      .map((i) => (i.startsWith('/') ? join(appRootPath, i) : i));
+      .map((i) => (i.startsWith('/') ? join(workspaceRoot, i) : i));
   } catch (e) {
     return [];
   }
@@ -62,10 +62,10 @@ export type SubscribeToWorkspaceChangesCallback = (
 function configureIgnoreObject() {
   const ig = ignore();
   try {
-    ig.add(readFileSync(`${appRootPath}/.gitignore`, 'utf-8'));
+    ig.add(readFileSync(`${workspaceRoot}/.gitignore`, 'utf-8'));
   } catch {}
   try {
-    ig.add(readFileSync(`${appRootPath}/.nxignore`, 'utf-8'));
+    ig.add(readFileSync(`${workspaceRoot}/.nxignore`, 'utf-8'));
   } catch {}
   return ig;
 }
@@ -83,7 +83,7 @@ export async function subscribeToWorkspaceChanges(
   const ignoreObj = configureIgnoreObject();
 
   const subscription = await watcher.subscribe(
-    appRootPath,
+    workspaceRoot,
     (err, events) => {
       // Let the consumer handle any errors
       if (err) {
@@ -97,7 +97,7 @@ export async function subscribeToWorkspaceChanges(
       for (const event of events) {
         const workspaceRelativeEvent: Event = {
           type: event.type,
-          path: normalizePath(relative(appRootPath, event.path)),
+          path: normalizePath(relative(workspaceRoot, event.path)),
         };
         if (
           workspaceRelativeEvent.path === '.gitignore' ||

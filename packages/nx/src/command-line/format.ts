@@ -16,7 +16,7 @@ import {
   workspaceConfigName,
   WorkspaceJsonConfiguration,
 } from 'nx/src/shared/workspace';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import * as prettier from 'prettier';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 import {
@@ -43,7 +43,7 @@ export async function format(
 
   switch (command) {
     case 'write':
-      const workspaceJsonPath = workspaceConfigName(appRootPath);
+      const workspaceJsonPath = workspaceConfigName(workspaceRoot);
       if (workspaceJsonPath) {
         updateWorkspaceJsonToMatchFormatVersion(workspaceJsonPath);
         sortWorkspaceJson(workspaceJsonPath);

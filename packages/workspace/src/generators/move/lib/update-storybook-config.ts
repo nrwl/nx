@@ -1,5 +1,5 @@
 import { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/devkit';
+import { workspaceRoot } from '@nrwl/devkit';
 import * as path from 'path';
 import { join } from 'path';
 import { NormalizedSchema } from '../schema';
@@ -15,13 +15,19 @@ export function updateStorybookConfig(
   project: ProjectConfiguration
 ) {
   const oldRelativeRoot = path
-    .relative(path.join(appRootPath, `${project.root}/.storybook`), appRootPath)
+    .relative(
+      path.join(workspaceRoot, `${project.root}/.storybook`),
+      workspaceRoot
+    )
     .split(path.sep)
     .join('/');
   const newRelativeRoot = path
     .relative(
-      path.join(appRootPath, `${schema.relativeToRootDestination}/.storybook`),
-      appRootPath
+      path.join(
+        workspaceRoot,
+        `${schema.relativeToRootDestination}/.storybook`
+      ),
+      workspaceRoot
     )
     .split(path.sep)
     .join('/');

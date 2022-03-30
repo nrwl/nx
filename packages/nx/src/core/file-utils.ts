@@ -7,7 +7,7 @@ import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
 import type { NxArgs } from '../command-line/utils';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { fileExists } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
 import type { Environment } from './shared-interfaces';
@@ -38,8 +38,8 @@ export function readFileIfExisting(path: string) {
 
 function getIgnoredGlobs() {
   const ig = ignore();
-  ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
-  ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));
+  ig.add(readFileIfExisting(`${workspaceRoot}/.gitignore`));
+  ig.add(readFileIfExisting(`${workspaceRoot}/.nxignore`));
   return ig;
 }
 
@@ -97,7 +97,7 @@ function defaultReadFileAtRevision(
   revision: void | string
 ): string {
   try {
-    const fileFullPath = `${appRootPath}${sep}${file}`;
+    const fileFullPath = `${workspaceRoot}${sep}${file}`;
     const gitRepositoryPath = execSync('git rev-parse --show-toplevel')
       .toString()
       .trim();
@@ -119,7 +119,7 @@ function defaultReadFileAtRevision(
 export function readWorkspaceJson(): WorkspaceJsonConfiguration {
   return readWorkspaceConfig({
     format: 'nx',
-    path: appRootPath,
+    path: workspaceRoot,
   });
 }
 
@@ -138,7 +138,7 @@ export function readWorkspaceConfig(opts: {
 }
 
 export function workspaceFileName() {
-  if (fileExists(`${appRootPath}/angular.json`)) {
+  if (fileExists(`${workspaceRoot}/angular.json`)) {
     return 'angular.json';
   } else {
     return 'workspace.json';
@@ -146,11 +146,11 @@ export function workspaceFileName() {
 }
 
 export function defaultFileRead(filePath: string): string | null {
-  return readFileSync(join(appRootPath, filePath), 'utf-8');
+  return readFileSync(join(workspaceRoot, filePath), 'utf-8');
 }
 
 export function readPackageJson(): any {
-  return readJsonFile(`${appRootPath}/package.json`);
+  return readJsonFile(`${workspaceRoot}/package.json`);
 }
 
 /**
@@ -159,7 +159,7 @@ export function readPackageJson(): any {
  * If nx.json extends another config file, it will be inlined here.
  */
 export function readNxJson(
-  path: string = `${appRootPath}/nx.json`
+  path: string = `${workspaceRoot}/nx.json`
 ): NxJsonConfiguration {
   let config = readJsonFile<NxJsonConfiguration>(path);
   if (!config.npmScope) {

@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,
@@ -16,7 +16,7 @@ export function buildWorkspaceProjectNodes(
   const toAdd = [];
   Object.keys(ctx.workspace.projects).forEach((key) => {
     const p = ctx.workspace.projects[key];
-    const projectRoot = join(appRootPath, p.root);
+    const projectRoot = join(workspaceRoot, p.root);
     if (existsSync(join(projectRoot, 'package.json'))) {
       p.targets = mergeNpmScriptsWithTargets(projectRoot, p.targets);
     }

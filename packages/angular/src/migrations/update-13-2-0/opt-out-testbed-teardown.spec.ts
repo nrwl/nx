@@ -7,7 +7,7 @@ describe('opt-out-testbed-teardown migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace(2);
-    jest.doMock('@nrwl/devkit', () => ({ appRootPath: '' }));
+    jest.doMock('@nrwl/devkit', () => ({ workspaceRoot: '' }));
   });
 
   it('should warn when the jestConfig property is not configured', async () => {
@@ -668,7 +668,7 @@ describe('opt-out-testbed-teardown migration', () => {
             await TestBed.configureTestingModule({
               declarations: [AppComponent],
             }).compileComponents();
-          
+
             expect(true).toBe(true);
           });
         });
@@ -728,7 +728,7 @@ describe('opt-out-testbed-teardown migration', () => {
             await TestBed.configureTestingModule({
               declarations: [AppComponent],
             }).compileComponents();
-          
+
             expect(true).toBe(true);
           });
         });

@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/devkit';
+import { workspaceRoot } from '@nrwl/devkit';
 
 /**
  * This configuration is intended to be applied to ALL .ts and .tsx files
@@ -12,7 +12,7 @@ export default {
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
-    tsconfigRootDir: appRootPath,
+    tsconfigRootDir: workspaceRoot,
   },
   plugins: ['@typescript-eslint'],
   extends: [

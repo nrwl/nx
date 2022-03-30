@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
+import { workspaceRoot } from '@nrwl/workspace/src/utils/app-root';
 import { getResolveRequest } from './metro-resolver';
 
 interface WithNxOptions {
@@ -12,7 +12,7 @@ export function withNxMetro(config: any, opts: WithNxOptions = {}) {
   if (opts.extensions) extensions.push(...opts.extensions);
 
   // Set the root to workspace root so we can resolve modules and assets
-  config.projectRoot = appRootPath;
+  config.projectRoot = workspaceRoot;
 
   // Add support for paths specified by tsconfig
   config.resolver = {

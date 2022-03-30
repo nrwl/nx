@@ -5,7 +5,7 @@ import * as yargs from 'yargs';
 import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/generate-help-output';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 
@@ -731,7 +731,7 @@ function nxCliPath() {
 
     // Set NODE_PATH so that these modules can be used for module resolution
     addToNodePath(path.join(tmpDir, 'node_modules'));
-    addToNodePath(path.join(appRootPath, 'node_modules'));
+    addToNodePath(path.join(workspaceRoot, 'node_modules'));
 
     return path.join(tmpDir, `node_modules`, '.bin', 'nx');
   } catch (e) {

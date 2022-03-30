@@ -1,6 +1,6 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { join } from 'path';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { logger, stripIndent } from 'nx/src/utils/logger';
 import { Environment } from '../core/shared-interfaces';
 import { NxArgs } from '../command-line/utils';
@@ -497,7 +497,7 @@ export function getRunner(
     let tasksRunner;
     if (modulePath) {
       if (isRelativePath(modulePath)) {
-        modulePath = join(appRootPath, modulePath);
+        modulePath = join(workspaceRoot, modulePath);
       }
 
       tasksRunner = require(modulePath);

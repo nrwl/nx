@@ -1,5 +1,5 @@
 import { joinPathFragments } from '@nrwl/devkit';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { relative, resolve } from 'path';
 import { readCachedProjectGraph } from 'nx/src/core/project-graph/project-graph';
 import {
@@ -16,7 +16,7 @@ export function createGlobPatternsForDependencies(
   dirPath: string,
   fileGlobPattern: string
 ): string[] {
-  const filenameRelativeToWorkspaceRoot = relative(appRootPath, dirPath);
+  const filenameRelativeToWorkspaceRoot = relative(workspaceRoot, dirPath);
   const projectGraph = readCachedProjectGraph();
 
   // find the project
@@ -40,7 +40,7 @@ export function createGlobPatternsForDependencies(
     );
 
     return projectDirs.map((sourceDir) =>
-      resolve(appRootPath, joinPathFragments(sourceDir, fileGlobPattern))
+      resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
     );
   } catch (e) {
     throw new Error(

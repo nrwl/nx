@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/devkit';
+import { workspaceRoot } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   readJsonFile,
@@ -31,7 +31,7 @@ export function patchPackageJsonForPlugin(
 ) {
   const path = tmpProjPath('package.json');
   const json = readJsonFile(path);
-  json.devDependencies[npmPackageName] = `file:${appRootPath}/${distPath}`;
+  json.devDependencies[npmPackageName] = `file:${workspaceRoot}/${distPath}`;
   writeJsonFile(path, json);
 }
 
