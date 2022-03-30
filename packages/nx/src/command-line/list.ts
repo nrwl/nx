@@ -1,4 +1,4 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { output } from '../utils/output';
 import {
   fetchCommunityPlugins,
@@ -38,7 +38,7 @@ export async function listHandler(args: ListArgs): Promise<void> {
     });
 
     const installedPlugins = getInstalledPluginsFromPackageJson(
-      appRootPath,
+      workspaceRoot,
       corePlugins,
       communityPlugins
     );

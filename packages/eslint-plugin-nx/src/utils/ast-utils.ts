@@ -5,11 +5,11 @@ import { existsSync, readFileSync } from 'fs';
 import { dirname } from 'path';
 import ts = require('typescript');
 import { logger } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/devkit';
+import { workspaceRoot } from '@nrwl/devkit';
 
 function tryReadBaseJson() {
   try {
-    return readJsonFile(joinPathFragments(appRootPath, 'tsconfig.base.json'));
+    return readJsonFile(joinPathFragments(workspaceRoot, 'tsconfig.base.json'));
   } catch (e) {
     logger.warn(`Error reading "tsconfig.base.json": \n${JSON.stringify(e)}`);
     return null;

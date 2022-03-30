@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { output } from '../utils/output';
 import { join } from 'path';
 import {
@@ -81,7 +81,7 @@ export function reportHandler() {
 export function readPackageJson(p: string) {
   try {
     const packageJsonPath = require.resolve(`${p}/package.json`, {
-      paths: [appRootPath],
+      paths: [workspaceRoot],
     });
     return readJsonFile(packageJsonPath);
   } catch {
@@ -98,7 +98,7 @@ export function findInstalledCommunityPlugins(): {
   version: string;
 }[] {
   const { dependencies, devDependencies } = readJsonFile(
-    join(appRootPath, 'package.json')
+    join(workspaceRoot, 'package.json')
   );
   const deps = [
     Object.keys(dependencies || {}),

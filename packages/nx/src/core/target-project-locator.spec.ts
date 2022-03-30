@@ -7,7 +7,6 @@ import {
 } from 'nx/src/shared/project-graph';
 
 jest.mock('nx/src/utils/app-root', () => ({
-  appRootPath: '/root',
   workspaceRoot: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);

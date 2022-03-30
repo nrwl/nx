@@ -1,4 +1,4 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import type { Server } from 'net';
 import { serverLogger } from './logger';
 import type { WatcherSubscription } from './watcher';
@@ -21,7 +21,7 @@ export async function handleServerProcessTermination({
     if (watcherSubscription) {
       await watcherSubscription.unsubscribe();
       serverLogger.watcherLog(
-        `Unsubscribed from changes within: ${appRootPath}`
+        `Unsubscribed from changes within: ${workspaceRoot}`
       );
     }
     serverLogger.log(`Server stopped because: "${reason}"`);

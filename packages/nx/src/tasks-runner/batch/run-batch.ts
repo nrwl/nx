@@ -4,25 +4,25 @@ import {
   BatchMessageType,
 } from './batch-messages';
 import { ExecutorContext, Workspaces } from 'nx/src/shared/workspace';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { combineOptionsForExecutor } from 'nx/src/utils/params';
 import { TaskGraph } from 'nx/src/shared/tasks';
 
 function getBatchExecutor(executorName: string) {
-  const workspace = new Workspaces(appRootPath);
+  const workspace = new Workspaces(workspaceRoot);
   const [nodeModule, exportName] = executorName.split(':');
   return workspace.readExecutor(nodeModule, exportName);
 }
 
 async function runTasks(executorName: string, taskGraph: TaskGraph) {
   const input: Record<string, any> = {};
-  const workspace = new Workspaces(appRootPath);
+  const workspace = new Workspaces(workspaceRoot);
   const workspaceConfig = workspace.readWorkspaceConfiguration();
 
   const batchExecutor = getBatchExecutor(executorName);
   const tasks = Object.values(taskGraph.tasks);
   const context: ExecutorContext = {
-    root: appRootPath,
+    root: workspaceRoot,
     cwd: process.cwd(),
     workspace: workspaceConfig,
     isVerbose: false,

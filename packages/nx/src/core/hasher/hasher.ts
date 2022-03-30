@@ -8,7 +8,7 @@ import * as minimatch from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { getRootTsConfigFileName } from '../../utils/typescript';
-import { appRootPath } from '../../utils/app-root';
+import { workspaceRoot } from '../../utils/app-root';
 import { workspaceFileName } from '../file-utils';
 import { defaultHashing, HashingImpl } from './hashing-impl';
 import { ProjectGraph } from 'nx/src/shared/project-graph';
@@ -248,9 +248,9 @@ export class Hasher {
       const fileHashes = [
         ...fileNames
           .map((maybeRelativePath) => {
-            // Normalize the path to always be absolute and starting with appRootPath so we can check it exists
-            if (!maybeRelativePath.startsWith(appRootPath)) {
-              return join(appRootPath, maybeRelativePath);
+            // Normalize the path to always be absolute and starting with workspaceRoot so we can check it exists
+            if (!maybeRelativePath.startsWith(workspaceRoot)) {
+              return join(workspaceRoot, maybeRelativePath);
             }
             return maybeRelativePath;
           })
@@ -284,7 +284,7 @@ export class Hasher {
   }
 
   private hashNxJson() {
-    const nxJsonPath = join(appRootPath, 'nx.json');
+    const nxJsonPath = join(workspaceRoot, 'nx.json');
     if (!existsSync(nxJsonPath)) {
       return [];
     }

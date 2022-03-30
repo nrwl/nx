@@ -1,12 +1,12 @@
 import { GitBasedFileHasher } from './git-based-file-hasher';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { NodeBasedFileHasher } from './node-based-file-hasher';
 import { FileHasherBase } from './file-hasher-base';
 import { execSync } from 'child_process';
 
 function createFileHasher(): FileHasherBase {
   // special case for unit tests
-  if (appRootPath === '/root') {
+  if (workspaceRoot === '/root') {
     return new NodeBasedFileHasher();
   }
   try {

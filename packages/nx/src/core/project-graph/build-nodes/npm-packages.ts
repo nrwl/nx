@@ -1,10 +1,10 @@
 import { join } from 'path';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { readJsonFile } from 'nx/src/utils/fileutils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 
 export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {
-  const packageJson = readJsonFile(join(appRootPath, 'package.json'));
+  const packageJson = readJsonFile(join(workspaceRoot, 'package.json'));
   const deps = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,

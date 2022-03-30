@@ -1,5 +1,5 @@
 import { logger } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/devkit';
+import { workspaceRoot } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import * as postcssImport from 'postcss-import';
@@ -27,7 +27,7 @@ export function getTailwindSetup(
   if (!tailwindConfigPath) {
     // Try to find TailwindCSS configuration file in the project or workspace root.
     const tailwindConfigFile = 'tailwind.config.js';
-    for (const path of [basePath, appRootPath]) {
+    for (const path of [basePath, workspaceRoot]) {
       const fullPath = join(path, tailwindConfigFile);
       if (existsSync(fullPath)) {
         tailwindConfigPath = fullPath;
@@ -46,7 +46,7 @@ export function getTailwindSetup(
     tailwindPackagePath = require.resolve('tailwindcss');
   } catch {
     const relativeTailwindConfigPath = relative(
-      appRootPath,
+      workspaceRoot,
       tailwindConfigPath
     );
     logger.warn(

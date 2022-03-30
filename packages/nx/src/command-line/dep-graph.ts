@@ -1,4 +1,4 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { watch } from 'chokidar';
 import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
@@ -211,7 +211,7 @@ export async function generateGraph(
   graph = filterGraph(graph, args.focus || null, args.exclude || []);
 
   if (args.file) {
-    const workspaceFolder = appRootPath;
+    const workspaceFolder = workspaceRoot;
     const ext = extname(args.file);
     const fullFilePath = isAbsolute(args.file)
       ? args.file
@@ -420,7 +420,7 @@ function getIgnoredGlobs(root: string) {
 }
 
 function startWatcher() {
-  createFileWatcher(appRootPath, async () => {
+  createFileWatcher(workspaceRoot, async () => {
     output.note({ title: 'Recalculating project graph...' });
 
     const newGraphClientResponse = await createDepGraphClientResponse();

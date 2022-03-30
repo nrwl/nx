@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree, updateJson } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/devkit';
+import { workspaceRoot } from '@nrwl/devkit';
 import { getNewProjectName } from '@nrwl/workspace/src/generators/move/lib/utils';
 import { join, relative } from 'path';
 import { Schema } from '../schema';
@@ -17,7 +17,7 @@ export function updateNgPackage(tree: Tree, schema: Schema): void {
     return;
   }
 
-  const rootOffset = relative(join(appRootPath, project.root), appRootPath);
+  const rootOffset = relative(join(workspaceRoot, project.root), workspaceRoot);
   let output = `dist/${project.root}`;
   if (project.targets?.build?.outputs?.length > 0) {
     output = project.targets.build.outputs[0];

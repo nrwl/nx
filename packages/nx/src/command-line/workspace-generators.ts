@@ -4,7 +4,7 @@ import { readdirSync, existsSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { fileExists } from '../utils/fileutils';
 import { output } from '../utils/output';
 import type { CompilerOptions } from 'typescript';
@@ -14,7 +14,7 @@ import { logger } from 'nx/src/utils/logger';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { normalizePath } from '../utils/path';
 
-const rootDirectory = appRootPath;
+const rootDirectory = workspaceRoot;
 const toolsDir = path.join(rootDirectory, 'tools');
 const generatorsDir = path.join(toolsDir, 'generators');
 const toolsTsConfigPath = path.join(toolsDir, 'tsconfig.tools.json');

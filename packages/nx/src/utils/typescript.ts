@@ -1,9 +1,9 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
 
-const normalizedAppRoot = appRootPath.replace(/\\/g, '/');
+const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
 let tsModule: any;
 
@@ -82,7 +82,7 @@ function getCompilerHost(tsConfigPath: string) {
   const options = readTsConfigOptions(tsConfigPath);
   const host = tsModule.createCompilerHost(options, true);
   const moduleResolutionCache = tsModule.createModuleResolutionCache(
-    appRootPath,
+    workspaceRoot,
     host.getCanonicalFileName
   );
   return { options, host, moduleResolutionCache };
@@ -90,7 +90,7 @@ function getCompilerHost(tsConfigPath: string) {
 
 export function getRootTsConfigFileName(): string | null {
   for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
-    const tsConfigPath = join(appRootPath, tsConfigName);
+    const tsConfigPath = join(workspaceRoot, tsConfigName);
     if (existsSync(tsConfigPath)) {
       return tsConfigName;
     }
@@ -102,5 +102,5 @@ export function getRootTsConfigFileName(): string | null {
 export function getRootTsConfigPath(): string | null {
   const tsConfigFileName = getRootTsConfigFileName();
 
-  return tsConfigFileName ? join(appRootPath, tsConfigFileName) : null;
+  return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
 }

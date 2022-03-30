@@ -1,4 +1,4 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import {
   copy,
   mkdir,
@@ -27,7 +27,7 @@ export type CachedResult = {
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
 export class Cache {
-  root = appRootPath;
+  root = workspaceRoot;
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
   latestOutputsHashesDir = this.ensureLatestOutputsHashesDir();

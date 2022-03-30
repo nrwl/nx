@@ -1,4 +1,4 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
@@ -129,7 +129,7 @@ export async function buildProjectGraphUsingProjectFileMap(
 }
 
 function readCombinedDeps() {
-  const json = readJsonFile(join(appRootPath, 'package.json'));
+  const json = readJsonFile(join(workspaceRoot, 'package.json'));
   return { ...json.dependencies, ...json.devDependencies };
 }
 

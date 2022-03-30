@@ -9,7 +9,7 @@ import {
   Workspaces,
 } from '../shared/workspace';
 
-import { appRootPath } from '../utils/app-root';
+import { workspaceRoot } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
 import { PackageJson } from './package-json';
 import { registerTsProject } from 'nx/src/utils/register';
@@ -40,7 +40,7 @@ export interface NxPlugin {
 let nxPluginCache: NxPlugin[] = null;
 export function loadNxPlugins(
   plugins?: string[],
-  paths = [appRootPath]
+  paths = [workspaceRoot]
 ): NxPlugin[] {
   return plugins?.length
     ? nxPluginCache ||
@@ -56,7 +56,7 @@ export function loadNxPlugins(
               const main = readPluginMainFromProjectConfiguration(
                 plugin.projectConfig
               );
-              pluginPath = main ? path.join(appRootPath, main) : plugin.path;
+              pluginPath = main ? path.join(workspaceRoot, main) : plugin.path;
             } else {
               throw e;
             }
@@ -87,7 +87,7 @@ export function mergePluginTargetsWithNxTargets(
     }
 
     const projectFiles = sync(`+(${plugin.projectFilePatterns.join('|')})`, {
-      cwd: path.join(appRootPath, projectRoot),
+      cwd: path.join(workspaceRoot, projectRoot),
     });
     for (const projectFile of projectFiles) {
       newTargets = {
@@ -101,7 +101,7 @@ export function mergePluginTargetsWithNxTargets(
 
 export function readPluginPackageJson(
   pluginName: string,
-  paths = [appRootPath]
+  paths = [workspaceRoot]
 ): {
   path: string;
   json: PackageJson;
@@ -141,7 +141,7 @@ const localPluginCache: Record<
 > = {};
 export function resolveLocalNxPlugin(
   importPath: string,
-  root = appRootPath
+  root = workspaceRoot
 ): { path: string; projectConfig: ProjectConfiguration } | null {
   localPluginCache[importPath] ??= lookupLocalPlugin(importPath, root);
   return localPluginCache[importPath];
@@ -150,12 +150,12 @@ export function resolveLocalNxPlugin(
 let tsNodeAndPathsRegistered = false;
 function registerTSTranspiler() {
   if (!tsNodeAndPathsRegistered) {
-    registerTsProject(appRootPath, 'tsconfig.base.json');
+    registerTsProject(workspaceRoot, 'tsconfig.base.json');
   }
   tsNodeAndPathsRegistered = true;
 }
 
-function lookupLocalPlugin(importPath: string, root = appRootPath) {
+function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
   const workspace = new Workspaces(root).readWorkspaceConfiguration({
     _ignorePluginInference: true,
   });
@@ -175,7 +175,7 @@ function lookupLocalPlugin(importPath: string, root = appRootPath) {
 function findNxProjectForImportPath(
   importPath: string,
   workspace: WorkspaceJsonConfiguration,
-  root = appRootPath
+  root = workspaceRoot
 ): string | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
   const possiblePaths = tsConfigPaths[importPath]?.map((p) =>
@@ -208,7 +208,7 @@ function findNxProjectForImportPath(
 }
 
 let tsconfigPaths: Record<string, string[]>;
-function readTsConfigPaths(root: string = appRootPath) {
+function readTsConfigPaths(root: string = workspaceRoot) {
   if (!tsconfigPaths) {
     const tsconfigPath: string | null = ['tsconfig.base.json', 'tsconfig.json']
       .map((x) => path.join(root, x))
