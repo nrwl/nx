@@ -670,20 +670,23 @@ async function determineCI(
     return parsedArgs.ci;
   }
 
-  return enquirer
-    .prompt([
-      {
-        name: 'CI',
-        message: `Autogenerate CI workflow file (multi-select)?`,
-        type: 'multiselect',
-        choices: [
-          { name: 'GitHub Actions', value: 'github' },
-          { name: 'CircleCI', value: 'circleci' },
-          { name: 'Azure', value: 'azure' },
-        ],
-      },
-    ])
-    .then((a: { CI: string[] }) => a.CI);
+  if (parsedArgs.allPrompts) {
+    return enquirer
+      .prompt([
+        {
+          name: 'CI',
+          message: `Autogenerate CI workflow file (multi-select)?`,
+          type: 'multiselect',
+          choices: [
+            { name: 'GitHub Actions', value: 'github' },
+            { name: 'CircleCI', value: 'circleci' },
+            { name: 'Azure', value: 'azure' },
+          ],
+        },
+      ])
+      .then((a: { CI: string[] }) => a.CI);
+  }
+  return [];
 }
 
 async function createSandbox(packageManager: string) {
