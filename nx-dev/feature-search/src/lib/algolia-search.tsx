@@ -96,16 +96,16 @@ export function AlgoliaSearch() {
       {isOpen &&
         createPortal(
           <DocSearchModal
-            // searchParameters={{
-            //   facetFilters: ['language:en'],
-            // }}
+            searchParameters={{
+              facetFilters: ['language:en'],
+            }}
             initialQuery={initialQuery}
             placeholder="Search documentation"
             initialScrollY={window.scrollY}
             onClose={handleClose}
-            indexName="nx"
-            apiKey="0c9c3fb22624056e7475eddcbcbfbe91"
-            appId="BH4D9OD16A"
+            indexName="nx-production"
+            apiKey="f49a1eb671385f0472a7285556168930"
+            appId="PCTGM1JTQL"
             navigator={{
               navigate({ itemUrl }) {
                 setIsOpen(false);

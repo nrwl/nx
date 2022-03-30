@@ -156,11 +156,12 @@
 }
 
 .DocSearch-Hit-source {
-  line-height: 1.5rem;
-  font-weight: bold;
   color: theme('colors.gray.600');
+  font-weight: bold;
+  line-height: 1.5rem;
   margin-top: 1.5rem;
   margin-bottom: 1rem;
+  text-transform: capitalize;
 }
 
 .DocSearch-Hit-Container {
