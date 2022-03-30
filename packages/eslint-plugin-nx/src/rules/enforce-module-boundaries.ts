@@ -1,5 +1,5 @@
 import {
-  appRootPath,
+  workspaceRoot,
   joinPathFragments,
   normalizePath,
   ProjectGraphExternalNode,
@@ -146,7 +146,7 @@ export default createESLintRule<Options, MessageIds>({
      * Globally cached info about workspace
      */
     const projectPath = normalizePath(
-      (global as any).projectPath || appRootPath
+      (global as any).projectPath || workspaceRoot
     );
     /**
      * Only reuse graph when running from terminal

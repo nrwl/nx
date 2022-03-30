@@ -10,7 +10,6 @@ import { stripIndents } from '../../utils/strip-indents';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('nx/src/utils/app-root', () => ({
-  appRootPath: '/root',
   workspaceRoot: '/root',
 }));
 

@@ -1,5 +1,5 @@
 import { join, isAbsolute } from 'path';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { readJsonFile } from 'nx/src/utils/fileutils';
 import { NxJsonConfiguration } from 'nx/src/shared/nx';
 
@@ -32,6 +32,6 @@ function cacheDirectory(root: string, cacheDirectory: string) {
  * Path to the directory where Nx stores its cache and daemon-related files.
  */
 export const cacheDir = cacheDirectory(
-  appRootPath,
-  readCacheDirectoryProperty(appRootPath)
+  workspaceRoot,
+  readCacheDirectoryProperty(workspaceRoot)
 );

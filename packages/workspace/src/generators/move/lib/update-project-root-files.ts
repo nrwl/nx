@@ -1,5 +1,5 @@
 import { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/devkit';
+import { workspaceRoot } from '@nrwl/devkit';
 import * as path from 'path';
 import { extname, join } from 'path';
 import { NormalizedSchema } from '../schema';
@@ -18,13 +18,13 @@ export function updateProjectRootFiles(
 ) {
   const newRelativeRoot = path
     .relative(
-      path.join(appRootPath, schema.relativeToRootDestination),
-      appRootPath
+      path.join(workspaceRoot, schema.relativeToRootDestination),
+      workspaceRoot
     )
     .split(path.sep)
     .join('/');
   const oldRelativeRoot = path
-    .relative(path.join(appRootPath, project.root), appRootPath)
+    .relative(path.join(workspaceRoot, project.root), workspaceRoot)
     .split(path.sep)
     .join('/');
 

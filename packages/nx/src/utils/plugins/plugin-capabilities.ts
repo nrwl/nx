@@ -1,4 +1,4 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import * as chalk from 'chalk';
 import { dirname, join } from 'path';
 import { output } from '../output';
@@ -52,7 +52,7 @@ export function getPluginCapabilities(
 }
 
 export function listPluginCapabilities(pluginName: string) {
-  const plugin = getPluginCapabilities(appRootPath, pluginName);
+  const plugin = getPluginCapabilities(workspaceRoot, pluginName);
 
   if (!plugin) {
     const pmc = getPackageManagerCommand();

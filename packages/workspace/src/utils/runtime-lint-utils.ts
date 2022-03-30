@@ -11,7 +11,7 @@ import {
   FileData,
 } from '@nrwl/devkit';
 import { join } from 'path';
-import { appRootPath } from './app-root';
+import { workspaceRoot } from './app-root';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/core/file-utils';
@@ -236,7 +236,7 @@ export function hasBannedImport(
 
 export function isDirectDependency(target: ProjectGraphExternalNode): boolean {
   const fileName = 'package.json';
-  const content = readFileIfExisting(join(appRootPath, fileName));
+  const content = readFileIfExisting(join(workspaceRoot, fileName));
   if (content) {
     const { dependencies, devDependencies, peerDependencies } =
       parseJson(content);

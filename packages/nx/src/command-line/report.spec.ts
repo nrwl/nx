@@ -1,10 +1,7 @@
-import { findInstalledCommunityPlugins } from './report';
 // import * as devkit from '@nrwl/devkit';
 import * as fileUtils from '../utils/fileutils';
-import { join } from 'path';
 
 jest.mock('nx/src/utils/app-root', () => ({
-  appRootPath: '',
   workspaceRoot: '',
 }));
 

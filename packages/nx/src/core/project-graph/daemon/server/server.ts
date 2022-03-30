@@ -1,4 +1,4 @@
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { performance, PerformanceObserver } from 'perf_hooks';
@@ -76,7 +76,7 @@ const server = createServer(async (socket) => {
     if (watcherError) {
       await respondWithErrorAndExit(
         socket,
-        `File watcher error in the workspace '${appRootPath}'.`,
+        `File watcher error in the workspace '${workspaceRoot}'.`,
         watcherError
       );
     }
@@ -193,9 +193,9 @@ let existingLockHash: string | undefined;
 function lockFileChanged(): boolean {
   const hash = new HashingImpl();
   const lockHashes = [
-    join(appRootPath, 'package-lock.json'),
-    join(appRootPath, 'yarn.lock'),
-    join(appRootPath, 'pnpm-lock.yaml'),
+    join(workspaceRoot, 'package-lock.json'),
+    join(workspaceRoot, 'yarn.lock'),
+    join(workspaceRoot, 'pnpm-lock.yaml'),
   ]
     .filter((file) => existsSync(file))
     .map((file) => hash.hashFile(file));
@@ -253,7 +253,7 @@ const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = async (
         deletedFiles.push(event.path);
       } else {
         try {
-          const s = statSync(join(appRootPath, event.path));
+          const s = statSync(join(workspaceRoot, event.path));
           if (!s.isDirectory()) {
             filesToHash.push(event.path);
           }
@@ -290,7 +290,7 @@ export async function startServer(): Promise<Server> {
               handleWorkspaceChanges
             );
             serverLogger.watcherLog(
-              `Subscribed to changes within: ${appRootPath}`
+              `Subscribed to changes within: ${workspaceRoot}`
             );
           }
           return resolve(server);

@@ -45,7 +45,7 @@ exports[`opt-out-testbed-teardown migration update configureTestingModule in tes
     declarations: [AppComponent],
     teardown: { destroyAfterEach: false }
 }).compileComponents();
-          
+
             expect(true).toBe(true);
           });
         });
@@ -121,7 +121,7 @@ exports[`opt-out-testbed-teardown migration update configureTestingModule in tes
     declarations: [AppComponent],
     teardown: { destroyAfterEach: false }
 }).compileComponents();
-          
+
             expect(true).toBe(true);
           });
         });

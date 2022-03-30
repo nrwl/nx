@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as dotenv from 'dotenv';
 import { ChildProcess, fork } from 'child_process';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
 import {
@@ -22,7 +22,7 @@ import { Task } from '../shared/tasks';
 const workerPath = join(__dirname, './batch/run-batch.js');
 
 export class ForkedProcessTaskRunner {
-  workspaceRoot = appRootPath;
+  workspaceRoot = workspaceRoot;
   cliPath = getCliPath(this.workspaceRoot);
 
   private processes = new Set<ChildProcess>();
@@ -209,9 +209,9 @@ export class ForkedProcessTaskRunner {
             console.log(stripIndents`
               Unable to print terminal output for Task "${task.id}".
               Task failed with Exit Code ${code} and Signal "${signal}".
-              
-              Received error message: 
-              ${e.message} 
+
+              Received error message:
+              ${e.message}
             `);
           }
           res({

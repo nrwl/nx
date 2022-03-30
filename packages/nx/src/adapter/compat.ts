@@ -4,7 +4,7 @@ import {
   workspaceConfigName,
   Workspaces,
 } from '../shared/workspace';
-import { appRootPath } from '../utils/app-root';
+import { workspaceRoot } from '../utils/app-root';
 
 /* eslint-disable */
 const Module = require('module');
@@ -24,7 +24,7 @@ if (!patched) {
       core._test_addWorkspaceFile('workspace.json', core.WorkspaceFormat.JSON);
       const originalReadWorkspace = core.readWorkspace;
       core.readWorkspace = (path, ...rest) => {
-        const configFile = workspaceConfigName(appRootPath);
+        const configFile = workspaceConfigName(workspaceRoot);
         if (!configFile) {
           path = 'workspace.json';
         }
@@ -32,7 +32,7 @@ if (!patched) {
       };
       const originalWriteWorkspace = core.writeWorkspace;
       core.writeWorkspace = (...args) => {
-        const configFile = workspaceConfigName(appRootPath);
+        const configFile = workspaceConfigName(workspaceRoot);
         if (!loggedWriteWorkspaceWarning) {
           if (configFile) {
             logger.warn(
@@ -68,7 +68,7 @@ if (!patched) {
           logger.debug(
             '[NX] Angular devkit readJsonWorkspace fell back to Nx workspaces logic'
           );
-          const w = new Workspaces(appRootPath);
+          const w = new Workspaces(workspaceRoot);
 
           // Read our v1 workspace schema
           const workspaceConfiguration = resolveOldFormatWithInlineProjects(

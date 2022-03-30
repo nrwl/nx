@@ -5,7 +5,7 @@ import type {
   NxJsonConfiguration,
   ProjectGraphExternalNode,
 } from '@nrwl/devkit';
-import { appRootPath } from '@nrwl/devkit';
+import { workspaceRoot } from '@nrwl/devkit';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -46,7 +46,7 @@ export class Rule extends Lint.Rules.AbstractRule {
     super(options);
 
     if (!projectPath) {
-      this.projectPath = normalize(appRootPath);
+      this.projectPath = normalize(workspaceRoot);
       if (!(global as any).projectGraph) {
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;

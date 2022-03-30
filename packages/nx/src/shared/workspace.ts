@@ -5,7 +5,7 @@ import * as path from 'path';
 import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 
-import { appRootPath } from '../utils/app-root';
+import { workspaceRoot } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
 import { logger } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
@@ -604,7 +604,7 @@ export function toOldFormatOrNull(w: any) {
 
 export function resolveOldFormatWithInlineProjects(
   w: any,
-  root: string = appRootPath
+  root: string = workspaceRoot
 ) {
   const inlined = inlineProjectConfigurations(w, root);
   const formatted = toOldFormatOrNull(inlined);
@@ -613,12 +613,12 @@ export function resolveOldFormatWithInlineProjects(
 
 export function resolveNewFormatWithInlineProjects(
   w: any,
-  root: string = appRootPath
+  root: string = workspaceRoot
 ) {
   return toNewFormat(inlineProjectConfigurations(w, root));
 }
 
-function inlineProjectConfigurations(w: any, root: string = appRootPath) {
+function inlineProjectConfigurations(w: any, root: string = workspaceRoot) {
   Object.entries(w.projects || {}).forEach(
     ([project, config]: [string, any]) => {
       if (typeof config === 'string') {

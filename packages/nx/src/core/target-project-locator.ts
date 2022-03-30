@@ -4,7 +4,7 @@ import {
 } from '../utils/typescript';
 import { isRelativePath } from '../utils/fileutils';
 import { dirname, join, posix } from 'path';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { readFileSync } from 'fs';
 import {
   ProjectGraphExternalNode,
@@ -168,7 +168,7 @@ export class TargetProjectLocator {
   }
 
   private getAbsolutePath(path: string) {
-    return join(appRootPath, path);
+    return join(workspaceRoot, path);
   }
 
   private getRootTsConfig() {

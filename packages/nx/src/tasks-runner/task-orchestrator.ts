@@ -2,7 +2,7 @@ import { Workspaces } from 'nx/src/shared/workspace';
 import { performance } from 'perf_hooks';
 import { Hasher } from '../core/hasher/hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { appRootPath } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/app-root';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
@@ -21,7 +21,7 @@ import { Task, TaskGraph } from '../shared/tasks';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);
-  private workspace = new Workspaces(appRootPath);
+  private workspace = new Workspaces(workspaceRoot);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
   private tasksSchedule = new TasksSchedule(
     this.hasher,
