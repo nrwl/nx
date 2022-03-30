@@ -679,8 +679,8 @@ async function determineCI(
           type: 'multiselect',
           choices: [
             { name: 'GitHub Actions', value: 'github' },
-            { name: 'CircleCI', value: 'circleci' },
-            { name: 'Azure', value: 'azure' },
+            { name: 'Circle CI', value: 'circleci' },
+            { name: 'Azure DevOps', value: 'azure' },
           ],
         },
       ])

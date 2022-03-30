@@ -269,7 +269,8 @@
         "workspace-generator",
         "run-commands",
         "convert-to-nx-project",
-        "npm-package"
+        "npm-package",
+        "ci-workflow"
       ]
     }
   }
