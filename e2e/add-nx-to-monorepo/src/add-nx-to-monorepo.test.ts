@@ -7,7 +7,7 @@ import {
   getPackageManagerCommand,
   getSelectedPackageManager,
 } from '@nrwl/e2e/utils';
-import { Workspaces } from 'nx/src/shared/workspace';
+import { Workspaces } from 'nx/src/config/workspaces';
 
 describe('add-nx-to-monorepo', () => {
   const packageManagerCommand = getPackageManagerCommand({

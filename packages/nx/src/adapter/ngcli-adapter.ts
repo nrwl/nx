@@ -15,18 +15,15 @@ import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import { Stats } from 'fs';
 import { detectPackageManager } from '../utils/package-manager';
 import { GenerateOptions } from '../command-line/generate';
-import { FileChange, Tree } from '../shared/tree';
+import { FileChange, Tree } from '../config/tree';
 import {
   buildWorkspaceConfigurationFromGlobs,
   globForProjectFiles,
-  ProjectConfiguration,
-  RawWorkspaceJsonConfiguration,
   toNewFormat,
   toNewFormatOrNull,
   toOldFormatOrNull,
   workspaceConfigName,
-  WorkspaceJsonConfiguration,
-} from '../shared/workspace';
+} from '../config/workspaces';
 import { dirname, extname, resolve, join, basename } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import type { Architect } from '@angular-devkit/architect';
@@ -35,7 +32,12 @@ import { catchError, map, switchMap, toArray, tap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../utils/logger';
 import { readJsonFile } from '../utils/fileutils';
 import { parseJson, serializeJson } from '../utils/json';
-import { NxJsonConfiguration } from '../shared/nx';
+import { NxJsonConfiguration } from '../config/nx-json';
+import {
+  ProjectConfiguration,
+  RawWorkspaceJsonConfiguration,
+  WorkspaceJsonConfiguration,
+} from '../config/workspace-json-project-json';
 
 export async function scheduleTarget(
   root: string,
@@ -758,50 +760,6 @@ function isWorkspaceConfigPath(p: Path | string) {
     p === 'workspace.json' ||
     p === '/workspace.json'
   );
-}
-
-function processConfigWhenReading(content: ArrayBuffer) {
-  try {
-    const json = parseJson(Buffer.from(content).toString());
-    Object.values(json.projects).forEach((p: any) => {
-      try {
-        Object.values(p.architect || p.targets).forEach((e: any) => {
-          if (
-            (e.builder === '@nrwl/jest:jest' ||
-              e.executor === '@nrwl/jest:jest') &&
-            !e.options.tsConfig
-          ) {
-            e.options.tsConfig = `${p.root}/tsconfig.spec.json`;
-          }
-        });
-      } catch (e) {}
-    });
-    return Buffer.from(serializeJson(json));
-  } catch (e) {
-    return content;
-  }
-}
-
-function processConfigWhenWriting(content: ArrayBuffer) {
-  try {
-    const json = parseJson(Buffer.from(content).toString());
-    Object.values(json.projects).forEach((p: any) => {
-      try {
-        Object.values(p.architect || p.targets).forEach((e: any) => {
-          if (
-            (e.builder === '@nrwl/jest:jest' ||
-              e.executor === '@nrwl/jest:jest') &&
-            e.options.tsConfig
-          ) {
-            delete e.options.tsConfig;
-          }
-        });
-      } catch (e) {}
-    });
-    return Buffer.from(serializeJson(json));
-  } catch (e) {
-    return content;
-  }
 }
 
 export async function generate(

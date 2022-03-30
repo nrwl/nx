@@ -1,16 +1,17 @@
 import { flatten } from 'flat';
 import { output } from '../utils/output';
-import { TargetDependencyConfig, Workspaces } from 'nx/src/shared/workspace';
+import { Workspaces } from '../config/workspaces';
 import { mergeNpmScriptsWithTargets } from '../utils/project-graph-utils';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,
-} from 'nx/src/utils/nx-plugin';
-import { Task, TaskGraph } from '../shared/tasks';
+} from '../utils/nx-plugin';
+import { Task, TaskGraph } from '../config/task-graph';
 import { getPackageManagerCommand } from '../utils/package-manager';
-import { ProjectGraph, ProjectGraphProjectNode } from '../shared/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 
 export function getCommandAsString(task: Task) {
   const execCommand = getPackageManagerCommand().exec;

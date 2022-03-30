@@ -42,7 +42,7 @@ describe('workspace-generator', () => {
     const workspace = uniq('workspace');
 
     updateFile(
-      'tools/utils/utils.ts',
+      'tools/utils/command-line-utils.ts',
       `
         export const noop = () => {}
         `

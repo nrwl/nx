@@ -1,10 +1,10 @@
 import type { Arguments } from 'yargs';
-import { DAEMON_OUTPUT_LOG_FILE } from '../core/project-graph/daemon/tmp-dir';
+import { DAEMON_OUTPUT_LOG_FILE } from '../daemon/tmp-dir';
 import { output } from '../utils/output';
 
 export async function daemonHandler(args: Arguments) {
   const { startInBackground, startInCurrentProcess } = await import(
-    '../core/project-graph/daemon/client/client'
+    '../daemon/client/client'
   );
   if (!args.background) {
     return startInCurrentProcess();

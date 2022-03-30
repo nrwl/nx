@@ -1,10 +1,10 @@
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from '../app-root';
 import * as chalk from 'chalk';
 import { dirname, join } from 'path';
 import { output } from '../output';
 import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
-import { readJsonFile } from 'nx/src/utils/fileutils';
+import { readJsonFile } from '../fileutils';
 import { getPackageManagerCommand } from '../package-manager';
 
 function tryGetCollection<T extends object>(

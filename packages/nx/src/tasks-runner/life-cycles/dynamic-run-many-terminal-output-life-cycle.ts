@@ -5,7 +5,7 @@ import * as readline from 'readline';
 import { output } from '../../utils/output';
 import type { LifeCycle } from '../life-cycle';
 import type { TaskStatus } from '../tasks-runner';
-import { Task } from '../../shared/tasks';
+import { Task } from '../../config/task-graph';
 import { prettyTime } from './pretty-time';
 
 /**

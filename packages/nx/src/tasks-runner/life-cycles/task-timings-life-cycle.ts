@@ -1,4 +1,4 @@
-import { Task } from 'nx/src/shared/tasks';
+import { Task } from '../../config/task-graph';
 import { LifeCycle } from '../life-cycle';
 import { TaskStatus } from '../tasks-runner';
 

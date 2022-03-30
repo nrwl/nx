@@ -2,11 +2,11 @@ import { TasksRunner, TaskStatus } from './tasks-runner';
 import { TaskOrchestrator } from './task-orchestrator';
 import { performance } from 'perf_hooks';
 import { TaskGraphCreator } from './task-graph-creator';
-import { Hasher } from '../core/hasher/hasher';
+import { Hasher } from '../hasher/hasher';
 import { LifeCycle } from './life-cycle';
-import { ProjectGraph } from '../shared/project-graph';
-import { NxJsonConfiguration } from '../shared/nx';
-import { Task } from '../shared/tasks';
+import { ProjectGraph } from '../config/project-graph';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { Task } from '../config/task-graph';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;

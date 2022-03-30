@@ -6,7 +6,7 @@ import { vol } from 'memfs';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
-import { TargetProjectLocator } from 'nx/src/core/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);

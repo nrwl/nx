@@ -5,27 +5,29 @@ import {
   NxArgs,
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
-} from './utils';
+} from '../utils/command-line-utils';
 import { fileExists } from '../utils/fileutils';
-import { filterAffected } from '../core/affected-project-graph';
-import { calculateFileChanges, FileData } from '../core/file-utils';
+import { calculateFileChanges, FileData } from '../project-graph/file-utils';
 import * as yargs from 'yargs';
 import {
-  ProjectConfiguration,
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
-  WorkspaceJsonConfiguration,
-} from 'nx/src/shared/workspace';
-import { workspaceRoot } from 'nx/src/utils/app-root';
+} from '../config/workspaces';
+import { workspaceRoot } from '../utils/app-root';
 import * as prettier from 'prettier';
-import { sortObjectByKeys } from 'nx/src/utils/object-sort';
+import { sortObjectByKeys } from '../utils/object-sort';
 import {
   getRootTsConfigFileName,
   getRootTsConfigPath,
 } from '../utils/typescript';
-import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
-import { NxJsonConfiguration } from 'nx/src/shared/nx';
-import { createProjectGraphAsync } from '../core/project-graph/project-graph';
+import { readJsonFile, writeJsonFile } from '../utils/fileutils';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { createProjectGraphAsync } from '../project-graph/project-graph';
+import { filterAffected } from '../project-graph/affected/affected-project-graph';
+import {
+  ProjectConfiguration,
+  WorkspaceJsonConfiguration,
+} from '../config/workspace-json-project-json';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 

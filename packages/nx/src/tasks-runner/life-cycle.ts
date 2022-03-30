@@ -1,5 +1,5 @@
 import { TaskStatus } from './tasks-runner';
-import { Task } from '../shared/tasks';
+import { Task } from '../config/task-graph';
 
 export interface TaskResult {
   task: Task;

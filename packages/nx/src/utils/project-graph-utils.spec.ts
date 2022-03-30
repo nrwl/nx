@@ -1,5 +1,5 @@
-import { PackageJson } from 'nx/src/utils/package-json';
-import { ProjectGraph } from '../shared/project-graph';
+import { PackageJson } from './package-json';
+import { ProjectGraph } from '../config/project-graph';
 import {
   getProjectNameFromDirPath,
   getSourceDirOfDependentProjects,

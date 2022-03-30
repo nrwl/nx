@@ -1,7 +1,7 @@
 import { TasksSchedule } from './tasks-schedule';
-import { Workspaces } from 'nx/src/shared/workspace';
-import { removeTasksFromTaskGraph } from 'nx/src/tasks-runner/utils';
-import { Task, TaskGraph } from '../shared/tasks';
+import { Workspaces } from '../config/workspaces';
+import { removeTasksFromTaskGraph } from './utils';
+import { Task, TaskGraph } from '../config/task-graph';
 
 function createMockTask(id: string): Task {
   const [project, target] = id.split(':');

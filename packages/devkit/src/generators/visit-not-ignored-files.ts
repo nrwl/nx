@@ -1,4 +1,4 @@
-import type { Tree } from 'nx/src/shared/tree';
+import type { Tree } from 'nx/src/config/tree';
 import ignore, { Ignore } from 'ignore';
 import { join, relative, sep } from 'path';
 

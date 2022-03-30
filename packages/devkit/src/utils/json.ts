@@ -1,4 +1,4 @@
-import type { Tree } from 'nx/src/shared/tree';
+import type { Tree } from 'nx/src/config/tree';
 import { parseJson, serializeJson } from 'nx/src/utils/json';
 import type { JsonParseOptions, JsonSerializeOptions } from 'nx/src/utils/json';
 

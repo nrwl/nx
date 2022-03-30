@@ -1,8 +1,5 @@
-import {
-  getOutputsForTargetAndConfiguration,
-  unparse,
-} from 'nx/src/tasks-runner/utils';
-import { ProjectGraphProjectNode } from '../shared/project-graph';
+import { getOutputsForTargetAndConfiguration, unparse } from './utils';
+import { ProjectGraphProjectNode } from '../config/project-graph';
 
 describe('utils', () => {
   describe('getOutputsForTargetAndConfiguration', () => {

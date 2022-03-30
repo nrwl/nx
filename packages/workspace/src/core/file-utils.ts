@@ -1,1 +1,1 @@
-export * from 'nx/src/core/file-utils';
+export * from 'nx/src/project-graph/file-utils';

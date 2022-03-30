@@ -1,1 +1,1 @@
-export * from 'nx/src/shared/tree';
+export * from 'nx/src/config/tree';

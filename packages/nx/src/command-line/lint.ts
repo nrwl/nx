@@ -1,9 +1,9 @@
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
-import { FileData, workspaceLayout } from '../core/file-utils';
+import { FileData, workspaceLayout } from '../project-graph/file-utils';
 import { output } from '../utils/output';
 import * as path from 'path';
-import { createProjectGraphAsync } from '../core/project-graph/project-graph';
-import { pruneExternalNodes } from '../core/project-graph/operators';
+import { createProjectGraphAsync } from '../project-graph/project-graph';
+import { pruneExternalNodes } from '../project-graph/operators';
 
 export async function workspaceLint(): Promise<void> {
   const graph = await createProjectGraphAsync();

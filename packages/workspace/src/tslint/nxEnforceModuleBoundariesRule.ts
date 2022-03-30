@@ -26,7 +26,7 @@ import {
   isAngularSecondaryEntrypoint,
 } from '../utils/runtime-lint-utils';
 import { normalize } from 'path';
-import { TargetProjectLocator } from 'nx/src/core/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import {
   checkCircularPath,
   findFilesInCircularPath,

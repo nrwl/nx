@@ -1,18 +1,22 @@
 import * as yargs from 'yargs';
-import { filterAffected } from '../core/affected-project-graph';
-import { calculateFileChanges, readEnvironment } from '../core/file-utils';
+import { calculateFileChanges } from '../project-graph/file-utils';
 import { runCommand } from '../tasks-runner/run-command';
 import { output } from '../utils/output';
 import { generateGraph } from './dep-graph';
 import { printAffected } from './print-affected';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
-import type { NxArgs, RawNxArgs } from './utils';
-import { parseFiles, splitArgsIntoNxArgsAndOverrides } from './utils';
+import type { NxArgs, RawNxArgs } from '../utils/command-line-utils';
+import {
+  parseFiles,
+  splitArgsIntoNxArgsAndOverrides,
+} from '../utils/command-line-utils';
 import { performance } from 'perf_hooks';
-import { createProjectGraphAsync } from 'nx/src/core/project-graph/project-graph';
-import { withDeps } from 'nx/src/core/project-graph/operators';
-import { ProjectGraph, ProjectGraphProjectNode } from '../shared/project-graph';
+import { createProjectGraphAsync } from '../project-graph/project-graph';
+import { withDeps } from '../project-graph/operators';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { projectHasTarget } from '../utils/project-graph-utils';
+import { filterAffected } from '../project-graph/affected/affected-project-graph';
+import { readEnvironment } from './read-environment';
 
 export async function affected(
   command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',

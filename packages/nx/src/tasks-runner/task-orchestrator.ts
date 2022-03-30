@@ -1,8 +1,8 @@
-import { Workspaces } from 'nx/src/shared/workspace';
+import { Workspaces } from '../config/workspaces';
 import { performance } from 'perf_hooks';
-import { Hasher } from '../core/hasher/hasher';
+import { Hasher } from '../hasher/hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from '../utils/app-root';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
@@ -16,8 +16,8 @@ import {
 } from './utils';
 import { Batch, TasksSchedule } from './tasks-schedule';
 import { TaskMetadata } from './life-cycle';
-import { ProjectGraph } from '../shared/project-graph';
-import { Task, TaskGraph } from '../shared/tasks';
+import { ProjectGraph } from '../config/project-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);

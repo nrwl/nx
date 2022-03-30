@@ -1,6 +1,6 @@
 import type { Target } from 'nx/src/command-line/run';
-import type { ExecutorContext } from 'nx/src/shared/workspace';
-import { Workspaces } from 'nx/src/shared/workspace';
+import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import { Workspaces } from 'nx/src/config/workspaces';
 import { combineOptionsForExecutor } from 'nx/src/utils/params';
 
 /**

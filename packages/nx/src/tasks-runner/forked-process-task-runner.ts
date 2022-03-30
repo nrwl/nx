@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as dotenv from 'dotenv';
 import { ChildProcess, fork } from 'child_process';
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from '../utils/app-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
 import {
@@ -17,7 +17,7 @@ import {
   BatchResults,
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
-import { Task } from '../shared/tasks';
+import { Task } from '../config/task-graph';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
 

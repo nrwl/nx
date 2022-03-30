@@ -3,7 +3,7 @@ import {
   resolveOldFormatWithInlineProjects,
   workspaceConfigName,
   Workspaces,
-} from '../shared/workspace';
+} from '../config/workspaces';
 import { workspaceRoot } from '../utils/app-root';
 
 /* eslint-disable */

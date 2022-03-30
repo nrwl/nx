@@ -1,10 +1,9 @@
-import type { Arguments } from 'yargs-parser';
+import { logger } from './logger';
+import { NxJsonConfiguration } from '../config/nx-json';
 import {
   TargetConfiguration,
   WorkspaceJsonConfiguration,
-} from '../shared/workspace';
-import { logger } from './logger';
-import { NxJsonConfiguration } from '../shared/nx';
+} from '../config/workspace-json-project-json';
 
 type PropertyDescription = {
   type?: string | string[];
