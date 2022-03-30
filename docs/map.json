@@ -1527,11 +1527,22 @@
             "name": "Nx Devkit and Angular Devkit",
             "id": "nx-devkit-angular-devkit",
             "file": "shared/guides/nx-devkit-angular-devkit"
-          },
+          }
+        ]
+      },
+      {
+        "name": "Micro Frontends",
+        "id": "micro-frontends",
+        "itemList": [
           {
             "name": "Setup Micro Frontends with Angular and Nx",
             "id": "setup-mfe-with-angular",
             "file": "shared/guides/setup-mfe-with-angular"
+          },
+          {
+            "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+            "id": "dynamic-module-federation-with-angular",
+            "file": "shared/guides/dynamic-mfe-angular"
           }
         ]
       },
