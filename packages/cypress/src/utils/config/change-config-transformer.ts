@@ -25,21 +25,23 @@ import {
   visitNode,
   Visitor,
 } from 'typescript';
+import { InternalResolvedConfigOptions } from './cypress-config.model';
 import {
-  CypressConfig,
   CypressConfigPropertyPath,
   isBooleanLiteral,
   Overwrite,
 } from './transformer.helper';
 
-export type ModifiedCypressConfig = Overwrite<
-  CypressConfig,
-  {
-    component?: Overwrite<
-      CypressConfig['component'],
-      { devServer?: { tsConfig: string; compiler: string } }
-    >;
-  }
+export type ModifiedCypressConfig = Partial<
+  Overwrite<
+    InternalResolvedConfigOptions,
+    {
+      component?: Overwrite<
+        InternalResolvedConfigOptions['component'],
+        { devServer?: { tsConfig: string; compiler: string } }
+      >;
+    }
+  >
 >;
 
 type PrimitiveValue = string | number | boolean;

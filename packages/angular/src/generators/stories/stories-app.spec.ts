@@ -58,7 +58,7 @@ describe('angularStories generator: applications', () => {
     });
 
     expect(
-      tree.exists(`apps/${appName}-e2e/src/integration/app.component.spec.ts`)
+      tree.exists(`apps/${appName}-e2e/src/e2e/app.component.cy.ts`)
     ).toBeTruthy();
   });
 });

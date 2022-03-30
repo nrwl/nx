@@ -1,11 +1,12 @@
+import { stripIndents } from '@nrwl/devkit';
 import * as path from 'path';
+import { installedCypressVersion } from '../../utils/cypress-version';
 import cypressExecutor, { CypressExecutorOptions } from './cypress.impl';
 
 jest.mock('@nrwl/devkit');
 let devkit = require('@nrwl/devkit');
 
 jest.mock('../../utils/cypress-version');
-import { installedCypressVersion } from '../../utils/cypress-version';
 
 const Cypress = require('cypress');
 
@@ -148,8 +149,15 @@ describe('Cypress builder', () => {
       },
       mockContext
     );
+    const deprecatedMessage = stripIndents`
+NOTE:
+Support for Cypress versions < 10 is deprecated. Please upgrade to at least Cypress version 10. 
+A generator to migrate from v9 to v10 is provided. See https://nx.dev/cypress
+`;
 
-    expect(devkit.logger.warn).not.toHaveBeenCalled();
+    // expect the warning about the using < v10 but should not also warn about headless
+    expect(devkit.logger.warn).toHaveBeenCalledTimes(1);
+    expect(devkit.logger.warn).toHaveBeenCalledWith(deprecatedMessage);
   });
 
   it('should call `Cypress.run` with provided baseUrl', async () => {

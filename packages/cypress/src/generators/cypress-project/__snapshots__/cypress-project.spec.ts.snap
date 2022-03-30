@@ -44,6 +44,7 @@ Object {
     "options": Object {
       "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
       "devServerTarget": "my-dir-my-app:serve",
+      "testingType": "e2e",
       "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.json",
     },
   },
@@ -90,6 +91,7 @@ Object {
     "options": Object {
       "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
       "devServerTarget": "my-dir-my-app:serve",
+      "testingType": "e2e",
       "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.json",
     },
   },
@@ -115,6 +117,7 @@ Object {
     "options": Object {
       "baseUrl": "http://localhost:3000",
       "cypressConfig": "apps/my-app-e2e/cypress.json",
+      "testingType": "e2e",
       "tsConfig": "apps/my-app-e2e/tsconfig.json",
     },
   },
@@ -145,6 +148,7 @@ Object {
     "options": Object {
       "cypressConfig": "apps/my-app-e2e/cypress.json",
       "devServerTarget": "my-app:serve",
+      "testingType": "e2e",
       "tsConfig": "apps/my-app-e2e/tsconfig.json",
     },
   },
@@ -175,6 +179,7 @@ Object {
     "options": Object {
       "cypressConfig": "apps/my-app-e2e/cypress.json",
       "devServerTarget": "my-app:serve:development",
+      "testingType": "e2e",
       "tsConfig": "apps/my-app-e2e/tsconfig.json",
     },
   },
@@ -199,10 +204,10 @@ exports[`Cypress Project > v10 nested should set right path names in \`cypress.c
 export default defineConfig({
   e2e: {
     fileServerFolder: '.',
-    fixturesFolder: './src/fixtures',
-    integrationFolder: './src/e2e',
-    supportFile: './src/support/e2e.ts',
-    specPattern: './src/**/*.cy.{js, ts}',
+    fixturesFolder: 'src/fixtures',
+    integrationFolder: 'src/e2e',
+    supportFile: 'src/support/e2e.ts',
+    specPattern: 'src/**/*.cy.{js,ts}',
     pluginsFile: false,
     video: true,
     videosFolder: '../../../dist/cypress/apps/my-dir/my-app-e2e/videos',
@@ -253,10 +258,10 @@ exports[`Cypress Project > v10 should set right path names in \`cypress.config.t
 export default defineConfig({
   e2e: {
     fileServerFolder: '.',
-    fixturesFolder: './src/fixtures',
-    integrationFolder: './src/e2e',
-    supportFile: './src/support/e2e.ts',
-    specPattern: './src/**/*.cy.{js, ts}',
+    fixturesFolder: 'src/fixtures',
+    integrationFolder: 'src/e2e',
+    supportFile: 'src/support/e2e.ts',
+    specPattern: 'src/**/*.cy.{js,ts}',
     pluginsFile: false,
     video: true,
     videosFolder: '../../dist/cypress/apps/my-app-e2e/videos',

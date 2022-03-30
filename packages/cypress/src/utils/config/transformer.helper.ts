@@ -1,13 +1,13 @@
-// TODO(caleb): this feels wrong? but unsure how else to use cypress types
-//  without causing issues in testing types from jest
-/// <reference types="cypress" />
-import {Node, SyntaxKind} from 'typescript';
+import { Node, SyntaxKind } from 'typescript';
+import { InternalResolvedConfigOptions } from './cypress-config.model';
 
-export type CypressConfig = Cypress.ConfigOptions;
-type CypressComponentProperties = keyof CypressConfig['component'];
-type CypressE2EProperties = keyof CypressConfig['e2e'];
-type CypressTopLevelProperties = Exclude<keyof CypressConfig,
-  'component' | 'e2e'>;
+type CypressComponentProperties =
+  keyof InternalResolvedConfigOptions['component'];
+type CypressE2EProperties = keyof InternalResolvedConfigOptions['e2e'];
+type CypressTopLevelProperties = Exclude<
+  keyof InternalResolvedConfigOptions,
+  'component' | 'e2e'
+>;
 
 export type CypressConfigPropertyPath =
   | `component.${CypressComponentProperties}`

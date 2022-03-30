@@ -131,7 +131,8 @@ function warnDeprecatedCypressVersion() {
   if (installedCypressVersion() < 10) {
     logger.warn(stripIndents`
 NOTE:
-Support for Cypress versions < 10 is deperated. Please upgrade to at least Cypress version 10. A generator to migrate from v9 to v10 is provided. See https://nx.dev/cypress
+Support for Cypress versions < 10 is deprecated. Please upgrade to at least Cypress version 10. 
+A generator to migrate from v9 to v10 is provided. See https://nx.dev/cypress
 `);
   }
 }

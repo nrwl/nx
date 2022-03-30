@@ -1,10 +1,9 @@
-import { Tree } from '@nrwl/devkit';
+import { logger, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import libraryGenerator from '../library/library';
 import { Linter } from '@nrwl/linter';
-import { logger } from '@nrwl/devkit';
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
+import libraryGenerator from '../library/library';
 import storybookConfigurationGenerator from './configuration';
 
 describe('react:storybook-configuration', () => {
@@ -38,7 +37,9 @@ describe('react:storybook-configuration', () => {
     expect(
       appTree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();
-    expect(appTree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeTruthy();
+    expect(
+      appTree.exists('apps/test-ui-lib-e2e/cypress.config.ts')
+    ).toBeTruthy();
   });
 
   it('should generate stories for components', async () => {
@@ -147,14 +148,14 @@ describe('react:storybook-configuration', () => {
       standaloneConfig: false,
     });
     [
-      'apps/one/two/test-ui-lib-e2e/cypress.json',
+      'apps/one/two/test-ui-lib-e2e/cypress.config.ts',
       'apps/one/two/test-ui-lib-e2e/src/fixtures/example.json',
       'apps/one/two/test-ui-lib-e2e/src/support/commands.ts',
-      'apps/one/two/test-ui-lib-e2e/src/support/index.ts',
+      'apps/one/two/test-ui-lib-e2e/src/support/e2e.ts',
       'apps/one/two/test-ui-lib-e2e/tsconfig.json',
       'apps/one/two/test-ui-lib-e2e/.eslintrc.json',
-      'apps/one/two/test-ui-lib-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts',
-      'apps/one/two/test-ui-lib-e2e/src/integration/my-component/my-component.spec.ts',
+      'apps/one/two/test-ui-lib-e2e/src/e2e/test-ui-lib/test-ui-lib.cy.ts',
+      'apps/one/two/test-ui-lib-e2e/src/e2e/my-component/my-component.cy.ts',
     ].forEach((file) => {
       expect(appTree.exists(file)).toBeTruthy();
     });

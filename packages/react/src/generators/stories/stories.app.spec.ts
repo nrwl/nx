@@ -1,8 +1,8 @@
 import { Tree } from '@nrwl/devkit';
-import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import applicationGenerator from '../application/application';
 import { Linter } from '@nrwl/linter';
+import applicationGenerator from '../application/application';
+import storiesGenerator from './stories';
 
 describe('react:stories for applications', () => {
   let appTree: Tree;
@@ -58,11 +58,11 @@ describe('react:stories for applications', () => {
     });
 
     expect(
-      appTree.exists('apps/test-ui-app-e2e/src/integration/app.spec.ts')
+      appTree.exists('apps/test-ui-app-e2e/src/e2e/app.cy.ts')
     ).toBeTruthy();
     expect(
       appTree.exists(
-        'apps/test-ui-app-e2e/src/integration/another-cmp/another-cmp.spec.ts'
+        'apps/test-ui-app-e2e/src/e2e/another-cmp/another-cmp.cy.ts'
       )
     ).toBeTruthy();
   });

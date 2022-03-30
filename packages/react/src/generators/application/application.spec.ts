@@ -5,9 +5,9 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Linter } from '@nrwl/linter';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
-import { Linter } from '@nrwl/linter';
 
 describe('app', () => {
   let appTree: Tree;
@@ -108,7 +108,7 @@ describe('app', () => {
         '../../.eslintrc.json',
       ]);
 
-      expect(appTree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
+      expect(appTree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(appTree, 'apps/my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchInlineSnapshot(`
 Object {

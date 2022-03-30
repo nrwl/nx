@@ -72,10 +72,15 @@ export async function cypressProjectGenerator(
 }
 
 function removeUnneededFiles(tree: Tree, projectName: string, js: boolean) {
-  const { sourceRoot } = readProjectConfiguration(tree, projectName);
+  const { sourceRoot, root } = readProjectConfiguration(tree, projectName);
   const fileType = js ? 'js' : 'ts';
-  safeFileDelete(tree, `${sourceRoot}/integration/app.spec.${fileType}`);
-  safeFileDelete(tree, `${sourceRoot}/support/app.po.${fileType}`);
+  if (tree.exists(join(root, 'cypress.config.ts'))) {
+    safeFileDelete(tree, `${sourceRoot}/e2e/app.cy.${fileType}`);
+    safeFileDelete(tree, `${sourceRoot}/support/app.po.${fileType}`);
+  } else {
+    safeFileDelete(tree, `${sourceRoot}/integration/app.spec.${fileType}`);
+    safeFileDelete(tree, `${sourceRoot}/support/app.po.${fileType}`);
+  }
 }
 
 function addBaseUrlToCypressConfig(tree: Tree, projectName: string) {
