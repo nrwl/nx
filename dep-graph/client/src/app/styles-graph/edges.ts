@@ -5,15 +5,17 @@ import { NrwlPalette } from './palette';
 const allEdges: Stylesheet = {
   selector: 'edge',
   style: {
-    width: '2px',
-    'line-color': selectDynamically(NrwlPalette.gray, NrwlPalette.darkGray),
+    width: selectDynamically('2px', '1px'),
+    'line-color': selectDynamically(NrwlPalette.gray, NrwlPalette.black),
+    'text-outline-color': selectDynamically(NrwlPalette.black, 'none'),
+    'text-outline-width': selectDynamically('1px', '0px'),
+    'color': selectDynamically(NrwlPalette.white, NrwlPalette.black),
     'curve-style': 'unbundled-bezier',
     'target-arrow-shape': 'triangle',
-    'arrow-scale': 2,
     'target-arrow-fill': 'filled',
     'target-arrow-color': selectDynamically(
       NrwlPalette.gray,
-      NrwlPalette.darkGray
+      NrwlPalette.black
     ),
   },
 };
@@ -31,17 +33,15 @@ const implicitEdges: Stylesheet = {
   selector: 'edge.implicit',
   style: {
     label: 'implicit',
-    'font-size': '18px',
+    'font-size': '16px',
     'curve-style': 'unbundled-bezier',
     'text-rotation': 'autorotate',
-    'text-background-padding': '5px',
-    'text-background-color': selectDynamically(
-      NrwlPalette.lightBlue,
-      NrwlPalette.blue
-    ),
-    'text-background-opacity': selectDynamically(0.7, 0.1),
-    color: selectDynamically(NrwlPalette.gray, NrwlPalette.black),
   },
+};
+
+const transparentEdges: Stylesheet = {
+  selector: 'edge.transparent',
+  style: { opacity: 0.2 },
 };
 
 const dynamicEdges: Stylesheet = {
@@ -58,4 +58,5 @@ export const edgeStyles: Stylesheet[] = [
   affectedEdges,
   implicitEdges,
   dynamicEdges,
+  transparentEdges,
 ];

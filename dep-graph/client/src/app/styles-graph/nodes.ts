@@ -2,6 +2,7 @@ import { Stylesheet } from 'cytoscape';
 import { selectDynamically } from '../theme-resolver';
 import { FONTS } from './fonts';
 import { NrwlPalette } from './palette';
+import * as cy from "cytoscape";
 
 const allNodes: Stylesheet = {
   selector: 'node',
@@ -10,19 +11,14 @@ const allNodes: Stylesheet = {
     'font-family': FONTS,
     'border-style': 'solid',
     'border-color': selectDynamically(NrwlPalette.gray, NrwlPalette.darkGray),
-    'border-width': '2px',
+    'border-width': selectDynamically('2px', '1px'),
     'text-halign': 'center',
     'text-valign': 'center',
     'padding-left': '16px',
     color: selectDynamically(NrwlPalette.white, NrwlPalette.black),
     label: 'data(id)',
-    /*
-    TODO: with no longer supports 'label' as value, it's deprecated.
-    I did a bit of digging and this is the solution I found:
-    https://stackoverflow.com/questions/68399821/cytoscape-js-warning-the-style-value-of-label-is-deprecated-for-width-whe
-    */
-    width: 'label',
-    backgroundColor: selectDynamically(NrwlPalette.stone, NrwlPalette.white),
+    'width': (node) =>  node.data('id').length * 16,
+    backgroundColor: selectDynamically(NrwlPalette.black, NrwlPalette.white),
     'transition-property':
       'background-color, border-color, line-color, target-arrow-color',
     'transition-duration': 250,
@@ -106,15 +102,6 @@ const transparentParentNodes: Stylesheet = {
   },
 };
 
-const highlightedEdges: Stylesheet = {
-  selector: 'edge.highlight',
-  style: { 'mid-target-arrow-color': NrwlPalette.blue },
-};
-
-const transparentEdges: Stylesheet = {
-  selector: 'edge.transparent',
-  style: { opacity: 0.2 },
-};
 
 export const nodeStyles = [
   allNodes,
@@ -127,6 +114,5 @@ export const nodeStyles = [
   highlightedNodes,
   transparentProjectNodes,
   transparentParentNodes,
-  highlightedEdges,
-  transparentEdges,
+
 ];
