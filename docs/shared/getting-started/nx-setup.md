@@ -13,7 +13,7 @@ When creating a workspace, you will have to choose a preset, which will preconfi
 
 ```bash
 # create an empty workspace set up for building applications
-npx create-nx-workspace --preset=empty
+npx create-nx-workspace --preset=apps
 
 # create an empty workspace set up for building packages
 npx create-nx-workspace --preset=core
@@ -29,6 +29,8 @@ npx create-nx-workspace --preset=react
 npx create-nx-workspace --preset=react-native
 npx create-nx-workspace --preset=angular
 ```
+
+For more information about possible options see the [create-nx-workspace command](/cli/create-nx-workspace).
 
 ## Add Nx to an Existing Project
 
