@@ -196,7 +196,7 @@ export function generateOptionsMarkdown(command): string {
         ### ${option.deprecated ? `~~${option.name}~~` : option.name}
         `;
         if (option.type !== undefined && option.type !== '') {
-          response += `*${option.type}*\n`;
+          response += `Type: ${option.type}\n`;
         }
         if (option.choices !== undefined) {
           response += dedent`

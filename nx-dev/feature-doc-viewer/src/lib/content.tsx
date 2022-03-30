@@ -36,9 +36,6 @@ const components: any = (config: ComponentsConfig) => ({
       </code>
     );
   },
-  em({ children }) {
-    return <div className="mb-1 text-green-600">{children}</div>;
-  },
   pre({ children }) {
     return <>{children}</>;
   },

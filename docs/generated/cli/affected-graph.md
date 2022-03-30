@@ -57,25 +57,25 @@ nx affected:graph --exclude=project-one,project-two
 
 ### all
 
-_boolean_
+Type: boolean
 
 All projects
 
 ### base
 
-_string_
+Type: string
 
 Base of the current branch (usually main)
 
 ### configuration
 
-_string_
+Type: string
 
 This is the configuration to use when performing tasks on projects
 
 ### exclude
 
-_array_
+Type: array
 
 Default:
 
@@ -83,49 +83,49 @@ Exclude certain projects from being processed
 
 ### file
 
-_string_
+Type: string
 
 Output file (e.g. --file=output.json or --file=dep-graph.html)
 
 ### files
 
-_array_
+Type: array
 
 Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
 
 ### focus
 
-_string_
+Type: string
 
 Use to show the project graph for a particular project and every node that is either an ancestor or a descendant.
 
 ### groupByFolder
 
-_boolean_
+Type: boolean
 
 Group projects by folder in the project graph
 
 ### head
 
-_string_
+Type: string
 
 Latest commit of the current branch (usually HEAD)
 
 ### help
 
-_boolean_
+Type: boolean
 
 Show help
 
 ### host
 
-_string_
+Type: string
 
 Bind the project graph server to a specific ip address.
 
 ### ~~only-failed~~
 
-_boolean_
+Type: boolean
 
 Default: false
 
@@ -135,7 +135,7 @@ Isolate projects which previously failed
 
 ### open
 
-_boolean_
+Type: boolean
 
 Default: true
 
@@ -143,19 +143,19 @@ Open the project graph in the browser.
 
 ### port
 
-_number_
+Type: number
 
 Bind the project graph server to a specific port.
 
 ### runner
 
-_string_
+Type: string
 
 This is the name of the tasks runner configured in nx.json
 
 ### skip-nx-cache
 
-_boolean_
+Type: boolean
 
 Default: false
 
@@ -163,13 +163,13 @@ Rerun the tasks even when the results are available in the cache
 
 ### uncommitted
 
-_boolean_
+Type: boolean
 
 Uncommitted changes
 
 ### untracked
 
-_boolean_
+Type: boolean
 
 Untracked changes
 
@@ -179,13 +179,13 @@ Print additional error stack trace on failure
 
 ### version
 
-_boolean_
+Type: boolean
 
 Show version number
 
 ### watch
 
-_boolean_
+Type: boolean
 
 Default: false
 

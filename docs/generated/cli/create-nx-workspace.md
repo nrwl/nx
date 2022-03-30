@@ -19,7 +19,7 @@ Install `create-nx-workspace` globally to invoke the command directly, or use `n
 
 ### allPrompts
 
-_boolean_
+Type: boolean
 
 Default: false
 
@@ -27,13 +27,13 @@ Show all prompts
 
 ### appName
 
-_string_
+Type: string
 
 The name of the application when a preset with pregenerated app is selected
 
 ### cli
 
-_string_
+Type: string
 
 Choices: ["nx", "angular"]
 
@@ -41,7 +41,7 @@ CLI to power the Nx workspace
 
 ### defaultBase
 
-_string_
+Type: string
 
 Default: main
 
@@ -49,25 +49,25 @@ Default base to use for new projects
 
 ### help
 
-_boolean_
+Type: boolean
 
 Show help
 
 ### interactive
 
-_boolean_
+Type: boolean
 
 Enable interactive mode with presets
 
 ### name
 
-_string_
+Type: string
 
 Workspace name (e.g. org name)
 
 ### nxCloud
 
-_boolean_
+Type: boolean
 
 Default: true
 
@@ -75,7 +75,7 @@ Use Nx Cloud
 
 ### packageManager
 
-_string_
+Type: string
 
 Choices: ["npm", "pnpm", "yarn"]
 
@@ -85,7 +85,7 @@ Package manager to use
 
 ### preset
 
-_string_
+Type: string
 
 Choices: ["apps", "empty", "core", "npm", "ts", "web-components", "angular", "angular-nest", "react", "react-express", "react-native", "next", "nest", "express"]
 
@@ -93,12 +93,12 @@ Customizes the initial content of your workspace. To build your own see https://
 
 ### style
 
-_string_
+Type: string
 
 Style option to be used when a preset with pregenerated app is selected
 
 ### version
 
-_boolean_
+Type: boolean
 
 Show version number

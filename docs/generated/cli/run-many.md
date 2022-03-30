@@ -39,19 +39,19 @@ nx run-many --target=test --projects=proj1,proj2 --parallel=2
 
 ### all
 
-_boolean_
+Type: boolean
 
 Run the target on all projects in the workspace
 
 ### configuration
 
-_string_
+Type: string
 
 This is the configuration to use when performing tasks on projects
 
 ### exclude
 
-_array_
+Type: array
 
 Default:
 
@@ -59,13 +59,13 @@ Exclude certain projects from being processed
 
 ### help
 
-_boolean_
+Type: boolean
 
 Show help
 
 ### ~~only-failed~~
 
-_boolean_
+Type: boolean
 
 Default: false
 
@@ -75,25 +75,25 @@ Only run the target on projects which previously failed
 
 ### parallel
 
-_string_
+Type: string
 
 Max number of parallel processes [default is 3]
 
 ### projects
 
-_string_
+Type: string
 
 Projects to run (comma delimited)
 
 ### runner
 
-_string_
+Type: string
 
 Override the tasks runner in `nx.json`
 
 ### skip-nx-cache
 
-_boolean_
+Type: boolean
 
 Default: false
 
@@ -101,7 +101,7 @@ Rerun the tasks even when the results are available in the cache
 
 ### target
 
-_string_
+Type: string
 
 Task to run for affected projects
 
@@ -111,13 +111,13 @@ Print additional error stack trace on failure
 
 ### version
 
-_boolean_
+Type: boolean
 
 Show version number
 
 ### ~~with-deps~~
 
-_boolean_
+Type: boolean
 
 Default: false
 

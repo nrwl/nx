@@ -63,36 +63,36 @@ nx migrate --run-migrations=migrations.json
 
 ### from
 
-_string_
+Type: string
 
 Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react:12.0.0,@nrwl/js:12.0.0")
 
 ### help
 
-_boolean_
+Type: boolean
 
 Show help
 
 ### packageAndVersion
 
-_string_
+Type: string
 
 The target package and version (e.g, @nrwl/workspace@13.0.0)
 
 ### runMigrations
 
-_string_
+Type: string
 
 Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json)
 
 ### to
 
-_string_
+Type: string
 
 Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react:12.0.0,@nrwl/js:12.0.0")
 
 ### version
 
-_boolean_
+Type: boolean
 
 Show version number

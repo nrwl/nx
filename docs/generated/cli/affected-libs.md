@@ -39,25 +39,25 @@ nx affected:libs --base=main~1 --head=main
 
 ### all
 
-_boolean_
+Type: boolean
 
 All projects
 
 ### base
 
-_string_
+Type: string
 
 Base of the current branch (usually main)
 
 ### configuration
 
-_string_
+Type: string
 
 This is the configuration to use when performing tasks on projects
 
 ### exclude
 
-_array_
+Type: array
 
 Default:
 
@@ -65,25 +65,25 @@ Exclude certain projects from being processed
 
 ### files
 
-_array_
+Type: array
 
 Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
 
 ### head
 
-_string_
+Type: string
 
 Latest commit of the current branch (usually HEAD)
 
 ### help
 
-_boolean_
+Type: boolean
 
 Show help
 
 ### ~~only-failed~~
 
-_boolean_
+Type: boolean
 
 Default: false
 
@@ -97,13 +97,13 @@ Produces a plain output for affected:apps and affected:libs
 
 ### runner
 
-_string_
+Type: string
 
 This is the name of the tasks runner configured in nx.json
 
 ### skip-nx-cache
 
-_boolean_
+Type: boolean
 
 Default: false
 
@@ -111,13 +111,13 @@ Rerun the tasks even when the results are available in the cache
 
 ### uncommitted
 
-_boolean_
+Type: boolean
 
 Uncommitted changes
 
 ### untracked
 
-_boolean_
+Type: boolean
 
 Untracked changes
 
@@ -127,6 +127,6 @@ Print additional error stack trace on failure
 
 ### version
 
-_boolean_
+Type: boolean
 
 Show version number

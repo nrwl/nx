@@ -69,43 +69,43 @@ nx graph --watch
 
 ### exclude
 
-_array_
+Type: array
 
 List of projects delimited by commas to exclude from the project graph.
 
 ### file
 
-_string_
+Type: string
 
 Output file (e.g. --file=output.json or --file=dep-graph.html)
 
 ### focus
 
-_string_
+Type: string
 
 Use to show the project graph for a particular project and every node that is either an ancestor or a descendant.
 
 ### groupByFolder
 
-_boolean_
+Type: boolean
 
 Group projects by folder in the project graph
 
 ### help
 
-_boolean_
+Type: boolean
 
 Show help
 
 ### host
 
-_string_
+Type: string
 
 Bind the project graph server to a specific ip address.
 
 ### open
 
-_boolean_
+Type: boolean
 
 Default: true
 
@@ -113,19 +113,19 @@ Open the project graph in the browser.
 
 ### port
 
-_number_
+Type: number
 
 Bind the project graph server to a specific port.
 
 ### version
 
-_boolean_
+Type: boolean
 
 Show version number
 
 ### watch
 
-_boolean_
+Type: boolean
 
 Default: false
 
