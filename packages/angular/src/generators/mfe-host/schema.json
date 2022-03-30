@@ -2,35 +2,31 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxMFEHost",
   "cli": "nx",
-  "title": "Nx MFE Host App",
+  "title": "Nx MFE Host Application",
   "description": "Create an Angular Host Micro Frontend Application",
   "type": "object",
   "examples": [
     {
       "command": "nx g @nrwl/angular:mfe-host appName --remotes=remote1",
-      "description": "Create an Angular app with configuration in place for MFE. If remotes is provided, attach the remote app to this app's configuration."
+      "description": "Create an Angular application with configuration in place for MFE. If the `remotes` option is provided, attach the remote application to this application's configuration"
     }
   ],
   "properties": {
     "name": {
       "type": "string",
-      "description": "The name to give to the host Angular app.",
+      "description": "The name to give to the host Angular application.",
       "$default": {
         "$source": "argv",
         "index": 0
       }
     },
-    "host": {
-      "type": "string",
-      "description": "The name of the host app to attach this host app to."
-    },
-    "port": {
-      "type": "number",
-      "description": "The port on which this app should be served."
+    "remotes": {
+      "type": "array",
+      "description": "The names of the remote applications to add to the host."
     },
     "dynamic": {
       "type": "boolean",
-      "description": "Should the host app use dynamic federation?",
+      "description": "Should the host application use dynamic federation?",
       "default": false
     }
   },
