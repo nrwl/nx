@@ -161,21 +161,12 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/pages/index.tsx`,
       `
-        import React, { useEffect, useState } from 'react';
-
-        export const Index = () => {
-          const [greeting, setGreeting] = useState('');
-
-          useEffect(() => {
-            fetch('/external-api/hello')
-              .then(r => r.text())
-              .then(setGreeting);
-          }, []);
-
-          return <>
-            <h1>{greeting}</h1>
-            <h2>{process.env.NX_CUSTOM_VAR}</h2>
-          </>;
+        import React from 'react';
+        
+        export const Index = ({ greeting }: any) => {
+          return (
+            <p>{process.env.NX_CUSTOM_VAR}</p>
+          );
         };
         export default Index;
       `
@@ -185,7 +176,7 @@ describe('Next.js Applications', () => {
       `apps/${appName}/pages/api/hello.js`,
       `
         export default (_req, res) => {
-          res.status(200).send('Welcome to ${appName}');
+          res.status(200).send('Welcome');
         };
       `
     );
@@ -198,9 +189,10 @@ describe('Next.js Applications', () => {
       }
     );
 
-    const data = await getData(port);
-    expect(data).toContain(`Welcome to ${appName}`);
-    expect(data).toContain(`test value from a file`);
+    const apiData = await getData(port, '/external-api/hello');
+    const pageData = await getData(port, '/');
+    expect(apiData).toContain(`Welcome`);
+    expect(pageData).toContain(`test value from a file`);
 
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
@@ -356,7 +348,7 @@ describe('Next.js Applications', () => {
     );
 
     const data = await getData(port);
-    expect(data).toContain(`Welcome to ${appName}`);
+    expect(data).toContain(`Welcome`);
 
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
@@ -419,9 +411,9 @@ describe('Next.js Applications', () => {
   }, 300000);
 });
 
-function getData(port: number): Promise<any> {
+function getData(port: number, path = ''): Promise<any> {
   return new Promise((resolve) => {
-    http.get(`http://localhost:${port}`, (res) => {
+    http.get(`http://localhost:${port}${path}`, (res) => {
       expect(res.statusCode).toEqual(200);
       let data = '';
       res.on('data', (chunk) => {
