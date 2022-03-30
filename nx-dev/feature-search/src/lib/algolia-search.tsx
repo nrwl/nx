@@ -9,10 +9,9 @@ import { createPortal } from 'react-dom';
 const ACTION_KEY_DEFAULT = ['Ctrl ', 'Control'];
 const ACTION_KEY_APPLE = ['⌘', 'Command'];
 
-// TODO@ben: remove replace pattern when Algolia is updated
 function Hit({ hit, children }) {
   return (
-    <Link href={hit.url.replace(/\/(p|l)\/(a|r|n)/, '')}>
+    <Link href={hit.url}>
       <a>{children}</a>
     </Link>
   );
@@ -22,7 +21,7 @@ export function AlgoliaSearch() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
-  const [initialQuery, setInitialQuery] = useState(null);
+  const [initialQuery, setInitialQuery] = useState('');
   const [browserDetected, setBrowserDetected] = useState(false);
   const [actionKey, setActionKey] = useState(ACTION_KEY_DEFAULT);
 
@@ -97,27 +96,36 @@ export function AlgoliaSearch() {
       {isOpen &&
         createPortal(
           <DocSearchModal
+            // searchParameters={{
+            //   facetFilters: ['language:en'],
+            // }}
             initialQuery={initialQuery}
+            placeholder="Search documentation"
             initialScrollY={window.scrollY}
             onClose={handleClose}
             indexName="nx"
             apiKey="0c9c3fb22624056e7475eddcbcbfbe91"
             appId="BH4D9OD16A"
             navigator={{
-              navigate({ suggestionUrl }) {
+              navigate({ itemUrl }) {
                 setIsOpen(false);
-                router.push(suggestionUrl);
+                router.push(itemUrl);
               },
             }}
             hitComponent={Hit}
             transformItems={(items) => {
-              return items.map((item) => {
-                // We transform the absolute URL into a relative URL to
-                // leverage Next's preloading.
+              return items.map((item, index) => {
                 const a = document.createElement('a');
                 a.href = item.url;
 
                 const hash = a.hash === '#content-wrapper' ? '' : a.hash;
+
+                if (item.hierarchy?.lvl0) {
+                  item.hierarchy.lvl0 = item.hierarchy.lvl0.replace(
+                    /&amp;/g,
+                    '&'
+                  );
+                }
 
                 return {
                   ...item,

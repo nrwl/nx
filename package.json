@@ -269,7 +269,7 @@
     }
   },
   "dependencies": {
-    "@docsearch/react": "1.0.0-alpha.27",
+    "@docsearch/react": "3.0.0",
     "@headlessui/react": "^1.1.1",
     "@heroicons/react": "^1.0.1",
     "@monaco-editor/react": "^4.3.1",
