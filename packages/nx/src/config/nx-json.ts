@@ -86,7 +86,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   cli?: {
     packageManager?: PackageManager;
-    defaultCollection?: string;
+    defaultCollection?: string | string[];
     defaultProjectName?: string;
   };
   /**

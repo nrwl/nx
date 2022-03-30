@@ -261,7 +261,11 @@ export class Workspaces {
         `Cannot find generator '${generator}' in ${generatorsFilePath}.`
       );
     }
-    return { generatorsFilePath, generatorsJson, normalizedGeneratorName };
+    return {
+      generatorsFilePath,
+      generatorsJson,
+      normalizedGeneratorName,
+    };
   }
 
   private resolvePaths() {
@@ -428,6 +432,50 @@ function readNxJson(nxJson: string): NxJsonConfiguration {
     nxJsonConfig = { ...baseNxJson, ...nxJsonConfig };
   }
   return nxJsonConfig;
+}
+
+export function collectionContainsGenerator(
+  collectionName: string,
+  generator: string
+) {
+  const { collection } = readGeneratorCollection(collectionName);
+  const normalizedGeneratorName =
+    findFullGeneratorName(generator, collection.generators) ||
+    findFullGeneratorName(generator, collection.schematics);
+  const generatorConfig =
+    collection.generators?.[normalizedGeneratorName] ||
+    collection.schematics?.[normalizedGeneratorName];
+  return !!generatorConfig;
+}
+
+export function readGeneratorCollection(
+  collectionName: string,
+  resolvePaths: string[] = [workspaceRoot, __dirname]
+): { generatorsFilePath: string; collection: GeneratorsJson } {
+  let generatorsFilePath: string;
+  if (collectionName.endsWith('.json')) {
+    generatorsFilePath = require.resolve(collectionName, {
+      paths: resolvePaths,
+    });
+  } else {
+    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
+      collectionName,
+      resolvePaths
+    );
+    const generatorsFile = packageJson.generators ?? packageJson.schematics;
+
+    if (!generatorsFile) {
+      throw new Error(
+        `The "${collectionName}" package does not support Nx generators.`
+      );
+    }
+
+    generatorsFilePath = require.resolve(
+      path.join(path.dirname(packageJsonPath), generatorsFile)
+    );
+  }
+  const collection: GeneratorsJson = readJsonFile(generatorsFilePath);
+  return { generatorsFilePath, collection };
 }
 
 /**

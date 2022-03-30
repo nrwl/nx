@@ -4,7 +4,10 @@ import {
   Options,
   Schema,
 } from '../utils/params';
-import { Workspaces } from '../config/workspaces';
+import {
+  collectionContainsGenerator,
+  Workspaces,
+} from '../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../config/tree';
 import { logger } from '../utils/logger';
 import * as chalk from 'chalk';
@@ -36,7 +39,7 @@ function printChanges(fileChanges: FileChange[]) {
 
 function convertToGenerateOptions(
   generatorOptions: { [k: string]: any },
-  defaultCollectionName: string,
+  fallbackCollections: string[],
   mode: 'generate' | 'new'
 ): GenerateOptions {
   let collectionName: string | null = null;
@@ -47,11 +50,16 @@ function convertToGenerateOptions(
     const separatorIndex = generatorDescriptor.lastIndexOf(':');
 
     if (separatorIndex > 0) {
-      collectionName = generatorDescriptor.slice(0, separatorIndex);
-      generatorName = generatorDescriptor.slice(separatorIndex + 1);
+      collectionName = generatorDescriptor.substring(0, separatorIndex);
+      generatorName = generatorDescriptor.substring(separatorIndex + 1);
     } else {
-      collectionName = defaultCollectionName;
-      generatorName = generatorDescriptor;
+      for (const collection of fallbackCollections) {
+        if (collectionContainsGenerator(collection, generatorDescriptor)) {
+          collectionName = collection;
+          generatorName = generatorDescriptor;
+          break;
+        }
+      }
     }
   } else {
     collectionName = generatorOptions.collection as string;
@@ -92,7 +100,8 @@ function throwInvalidInvocation() {
 }
 
 function readDefaultCollection(nxConfig: NxJsonConfiguration) {
-  return nxConfig.cli ? nxConfig.cli.defaultCollection : null;
+  const configured = nxConfig.cli ? nxConfig.cli.defaultCollection : null;
+  return typeof configured === 'string' ? [configured] : configured;
 }
 
 export function printGenHelp(opts: GenerateOptions, schema: Schema) {
