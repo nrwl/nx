@@ -623,7 +623,7 @@ async function withWorkspaceGeneratorOptions(yargs: yargs.Argv) {
     })
     .positional('name', {
       type: 'string',
-      describe: 'The name of your generator`',
+      describe: 'The name of your generator',
     });
 
   /**
