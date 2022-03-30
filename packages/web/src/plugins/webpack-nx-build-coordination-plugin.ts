@@ -8,7 +8,7 @@ import { readFileSync } from 'fs';
 export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
 
-  constructor(private readonly buildCmd: string) {
+  constructor(private readonly buildCmd: string | (() => string)) {
     this.buildChangedProjects();
     this.startWatchingBuildableLibs();
   }
@@ -40,7 +40,10 @@ export class WebpackNxBuildCoordinationPlugin {
     }
     this.currentlyRunning = 'nx-build';
     try {
-      execSync(this.buildCmd, { stdio: [0, 1, 2] });
+      execSync(
+        typeof this.buildCmd === 'function' ? this.buildCmd() : this.buildCmd,
+        { stdio: [0, 1, 2] }
+      );
       // eslint-disable-next-line no-empty
     } catch (e) {}
     this.currentlyRunning = 'none';
