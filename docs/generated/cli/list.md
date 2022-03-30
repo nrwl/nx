@@ -33,12 +33,18 @@ nx list @nrwl/web
 
 ### help
 
+_boolean_
+
 Show help
 
 ### plugin
 
+_string_
+
 The name of an installed plugin to query
 
 ### version
+
+_boolean_
 
 Show version number

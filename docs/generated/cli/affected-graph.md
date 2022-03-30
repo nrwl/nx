@@ -57,53 +57,77 @@ nx affected:graph --exclude=project-one,project-two
 
 ### all
 
+_boolean_
+
 All projects
 
 ### base
+
+_string_
 
 Base of the current branch (usually main)
 
 ### configuration
 
+_string_
+
 This is the configuration to use when performing tasks on projects
 
 ### exclude
 
-Default: ``
+_array_
+
+Default:
 
 Exclude certain projects from being processed
 
 ### file
 
+_string_
+
 Output file (e.g. --file=output.json or --file=dep-graph.html)
 
 ### files
+
+_array_
 
 Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
 
 ### focus
 
+_string_
+
 Use to show the project graph for a particular project and every node that is either an ancestor or a descendant.
 
 ### groupByFolder
+
+_boolean_
 
 Group projects by folder in the project graph
 
 ### head
 
+_string_
+
 Latest commit of the current branch (usually HEAD)
 
 ### help
+
+_boolean_
 
 Show help
 
 ### host
 
+_string_
+
 Bind the project graph server to a specific ip address.
 
 ### ~~only-failed~~
 
-Default: `false`
+_boolean_
+
+Default: false
 
 **Deprecated:** The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.
 
@@ -111,29 +135,41 @@ Isolate projects which previously failed
 
 ### open
 
-Default: `true`
+_boolean_
+
+Default: true
 
 Open the project graph in the browser.
 
 ### port
 
+_number_
+
 Bind the project graph server to a specific port.
 
 ### runner
+
+_string_
 
 This is the name of the tasks runner configured in nx.json
 
 ### skip-nx-cache
 
-Default: `false`
+_boolean_
+
+Default: false
 
 Rerun the tasks even when the results are available in the cache
 
 ### uncommitted
 
+_boolean_
+
 Uncommitted changes
 
 ### untracked
+
+_boolean_
 
 Untracked changes
 
@@ -143,10 +179,14 @@ Print additional error stack trace on failure
 
 ### version
 
+_boolean_
+
 Show version number
 
 ### watch
 
-Default: `false`
+_boolean_
+
+Default: false
 
 Watch for changes to project graph and update in-browser

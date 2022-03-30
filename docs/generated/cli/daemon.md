@@ -19,12 +19,18 @@ nx daemon
 
 ### background
 
-Default: `true`
+_boolean_
+
+Default: true
 
 ### help
+
+_boolean_
 
 Show help
 
 ### version
+
+_boolean_
 
 Show version number

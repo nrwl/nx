@@ -19,16 +19,24 @@ nx workspace-generator [name]
 
 ### help
 
+_boolean_
+
 Show help
 
 ### list-generators
+
+_boolean_
 
 List the available workspace-generators
 
 ### name
 
+_string_
+
 The name of your generator
 
 ### version
+
+_boolean_
 
 Show version number
