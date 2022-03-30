@@ -30,8 +30,7 @@
     "component-story": {
       "factory": "./src/generators/component-story/compat",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Creates a `stories.ts` file for a component.",
-      "hidden": true
+      "description": "Creates a `stories.ts` file for a component."
     },
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
@@ -190,8 +189,7 @@
     "component-story": {
       "factory": "./src/generators/component-story/component-story",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Creates a stories.ts file for a component.",
-      "hidden": true
+      "description": "Creates a stories.ts file for a component."
     },
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",

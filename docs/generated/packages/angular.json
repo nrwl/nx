@@ -432,9 +432,9 @@
         "presets": []
       },
       "description": "Creates a stories.ts file for a component.",
-      "hidden": true,
       "implementation": "/packages/angular/src/generators/component-story/component-story.ts",
       "aliases": [],
+      "hidden": false,
       "path": "/packages/angular/src/generators/component-story/schema.json"
     },
     {
