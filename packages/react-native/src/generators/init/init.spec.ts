@@ -1,3 +1,4 @@
+import { logger } from '@nrwl/devkit';
 import { Tree, readJson, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { reactNativeInitGenerator } from './init';
@@ -33,6 +34,31 @@ describe('init', () => {
     expect(content).toMatch(/# React Native/);
     expect(content).toMatch(/# Nested node_modules/);
   });
+
+  it.each`
+    version
+    ${'18.0.0'}
+    ${'~18.0.0'}
+    ${'^18.0.0'}
+  `(
+    'should warn if React v18 is already installed in workspace',
+    async ({ version }) => {
+      const spy = jest.spyOn(logger, 'warn');
+      spy.mockImplementation(() => {});
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          react: version,
+        };
+        return json;
+      });
+
+      await reactNativeInitGenerator(tree, { e2eTestRunner: 'none' });
+
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining('incompatible'));
+
+      spy.mockRestore();
+    }
+  );
 
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
