@@ -291,7 +291,6 @@
           },
           "testTimeout": {
             "description": "Default timeout of a test in milliseconds. Default value: `5000`. (https://jestjs.io/docs/cli#--testtimeoutnumber)",
-            "default": 5000,
             "type": "number"
           }
         },
