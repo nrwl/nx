@@ -27,7 +27,7 @@ List the available workspace-generators
 
 ### name
 
-The name of your generator`
+The name of your generator
 
 ### version
 
