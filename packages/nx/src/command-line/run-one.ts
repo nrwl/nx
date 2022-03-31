@@ -153,8 +153,6 @@ function calculateDefaultProjectName(
   }
   return (
     (workspaceConfiguration.cli as { defaultProjectName: string })
-      ?.defaultProjectName ||
-    workspaceConfiguration.defaultProject ||
-    workspaceConfiguration.defaultProject
+      ?.defaultProjectName || workspaceConfiguration.defaultProject
   );
 }
