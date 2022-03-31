@@ -14,7 +14,7 @@ import {
   projectIsSelectedSelector,
 } from './machines/selectors';
 import Sidebar from './sidebar/sidebar';
-import { selectStatically } from './theme-resolver';
+import { selectValueByThemeStatic } from './theme-resolver';
 
 export function Shell() {
   const depGraphService = useDepGraphService();
@@ -138,7 +138,7 @@ export function Shell() {
           <Tippy
             content="Download Graph as PNG"
             placement="right"
-            theme={selectStatically('dark-nx', 'nx')}
+            theme={selectValueByThemeStatic('dark-nx', 'nx')}
           >
             <button
               type="button"

@@ -1,15 +1,11 @@
-import {useEnvironmentConfig} from './hooks/use-environment-config';
+import { useEnvironmentConfig } from './hooks/use-environment-config';
 
 function ExperimentalFeature(props) {
-    const environment = useEnvironmentConfig();
-    const showExperimentalFeatures =
-        environment.appConfig.showExperimentalFeatures;
+  const environment = useEnvironmentConfig();
+  const showExperimentalFeatures =
+    environment.appConfig.showExperimentalFeatures;
 
-    return showExperimentalFeatures ?
-
-        props.children
-
-     : null;
+  return showExperimentalFeatures ? props.children : null;
 }
 
 export default ExperimentalFeature;

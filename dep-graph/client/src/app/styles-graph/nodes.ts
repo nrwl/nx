@@ -1,8 +1,8 @@
 import { Stylesheet } from 'cytoscape';
-import { selectDynamically } from '../theme-resolver';
+import { selectValueByThemeDynamic } from '../theme-resolver';
 import { FONTS } from './fonts';
 import { NrwlPalette } from './palette';
-import * as cy from "cytoscape";
+import * as cy from 'cytoscape';
 
 const allNodes: Stylesheet = {
   selector: 'node',
@@ -10,15 +10,21 @@ const allNodes: Stylesheet = {
     'font-size': '32px',
     'font-family': FONTS,
     'border-style': 'solid',
-    'border-color': selectDynamically(NrwlPalette.gray, NrwlPalette.darkGray),
-    'border-width': selectDynamically('2px', '1px'),
+    'border-color': selectValueByThemeDynamic(
+      NrwlPalette.gray,
+      NrwlPalette.darkGray
+    ),
+    'border-width': selectValueByThemeDynamic('2px', '1px'),
     'text-halign': 'center',
     'text-valign': 'center',
     'padding-left': '16px',
-    color: selectDynamically(NrwlPalette.white, NrwlPalette.black),
+    color: selectValueByThemeDynamic(NrwlPalette.white, NrwlPalette.black),
     label: 'data(id)',
-    'width': (node) =>  node.data('id').length * 16,
-    backgroundColor: selectDynamically(NrwlPalette.black, NrwlPalette.white),
+    width: (node) => node.data('id').length * 16,
+    backgroundColor: selectValueByThemeDynamic(
+      NrwlPalette.black,
+      NrwlPalette.white
+    ),
     'transition-property':
       'background-color, border-color, line-color, target-arrow-color',
     'transition-duration': 250,
@@ -102,7 +108,6 @@ const transparentParentNodes: Stylesheet = {
   },
 };
 
-
 export const nodeStyles = [
   allNodes,
   appNodes,
@@ -114,5 +119,4 @@ export const nodeStyles = [
   highlightedNodes,
   transparentProjectNodes,
   transparentParentNodes,
-
 ];

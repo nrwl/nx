@@ -1,19 +1,22 @@
 import { Stylesheet } from 'cytoscape';
-import { selectDynamically } from '../theme-resolver';
+import { selectValueByThemeDynamic } from '../theme-resolver';
 import { NrwlPalette } from './palette';
 
 const allEdges: Stylesheet = {
   selector: 'edge',
   style: {
-    width: selectDynamically('2px', '1px'),
-    'line-color': selectDynamically(NrwlPalette.gray, NrwlPalette.black),
-    'text-outline-color': selectDynamically(NrwlPalette.black, 'none'),
-    'text-outline-width': selectDynamically('1px', '0px'),
-    'color': selectDynamically(NrwlPalette.white, NrwlPalette.black),
+    width: selectValueByThemeDynamic('2px', '1px'),
+    'line-color': selectValueByThemeDynamic(
+      NrwlPalette.gray,
+      NrwlPalette.black
+    ),
+    'text-outline-color': NrwlPalette.black,
+    'text-outline-width': selectValueByThemeDynamic('1px', '0px'),
+    color: selectValueByThemeDynamic(NrwlPalette.white, NrwlPalette.black),
     'curve-style': 'unbundled-bezier',
     'target-arrow-shape': 'triangle',
     'target-arrow-fill': 'filled',
-    'target-arrow-color': selectDynamically(
+    'target-arrow-color': selectValueByThemeDynamic(
       NrwlPalette.gray,
       NrwlPalette.black
     ),

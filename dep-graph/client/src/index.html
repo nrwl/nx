@@ -13,9 +13,10 @@
     <!-- Theming -->
     <script>
       // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+
       if (
-        localStorage.theme === 'dark' ||
-        (!('theme' in localStorage) &&
+        localStorage.getItem('nx-dep-graph-theme') === 'dark' ||
+        (localStorage.getItem('nx-dep-graph-theme') === null &&
           window.matchMedia('(prefers-color-scheme: dark)').matches)
       ) {
         document.documentElement.classList.add('dark');

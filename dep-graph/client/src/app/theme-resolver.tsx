@@ -1,16 +1,16 @@
 import { getGraphService } from './machines/graph.service';
-import {getEnvironmentConfig, useEnvironmentConfig} from "./hooks/use-environment-config";
+import { getEnvironmentConfig } from './hooks/use-environment-config';
 
 const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
 const htmlEl = document.documentElement;
-const localStorageThemeKey = 'nx-dep-graph-theme';
+export const localStorageThemeKey = 'nx-dep-graph-theme';
 export type Theme = 'light' | 'dark' | 'system';
 export let currentTheme: Theme;
 
 function mediaListener(ev: MediaQueryListEvent) {
   const environment = getEnvironmentConfig();
 
-  if(!environment.appConfig.showExperimentalFeatures) {
+  if (!environment.appConfig.showExperimentalFeatures) {
     currentTheme = 'light';
     htmlEl.className = 'light';
     return;
@@ -22,14 +22,15 @@ function mediaListener(ev: MediaQueryListEvent) {
 }
 
 export function themeInit() {
-  const theme = localStorage.getItem(localStorageThemeKey) as Theme ?? 'system';
+  const theme =
+    (localStorage.getItem(localStorageThemeKey) as Theme) ?? 'system';
   themeResolver(theme);
 }
 
 export function themeResolver(theme: Theme) {
   const environment = getEnvironmentConfig();
 
-  if(!environment.appConfig.showExperimentalFeatures) {
+  if (!environment.appConfig.showExperimentalFeatures) {
     htmlEl.className = 'light';
     currentTheme = 'light';
     return;
@@ -51,16 +52,16 @@ export function themeResolver(theme: Theme) {
   getGraphService().evaluateStyles();
 }
 
-export function selectDynamically<T>(
+export function selectValueByThemeDynamic<T>(
   darkModeSetting: T,
   lightModeSetting: T
 ): () => T {
-  return () => selectStatically(darkModeSetting, lightModeSetting);
+  return () => selectValueByThemeStatic(darkModeSetting, lightModeSetting);
 }
 
 // The function exists because some places do not support selectDynamically
 // It also prevents the dynamic change of theme for certain elements like tippy
-export function selectStatically<T>(
+export function selectValueByThemeStatic<T>(
   darkModeSetting: T,
   lightModeSetting: T
 ): T {

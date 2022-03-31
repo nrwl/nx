@@ -18,7 +18,7 @@ import {
   ProjectNode,
 } from '../util-cytoscape';
 import { GraphRenderEvents, GraphPerfReport } from './interfaces';
-import { selectStatically } from '../theme-resolver';
+import { selectValueByThemeStatic } from '../theme-resolver';
 
 export class GraphService {
   private traversalGraph: cy.Core;
@@ -558,7 +558,7 @@ export class GraphService {
   }
 
   getImage() {
-    const bg = selectStatically('#262626', '#fff');
+    const bg = selectValueByThemeStatic('#262626', '#fff');
     return this.renderGraph.png({ bg, full: true });
   }
 

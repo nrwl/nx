@@ -14,15 +14,27 @@ export default function Modal({ toggle, setDefaultTheme }) {
                     rounded-lg text-stone-200 shadow-xl
                     "
     >
-      <button className={btnStyles} onClick={() => toggleTheme('dark')}>
+      <button
+        data-cy="dark-theme-button"
+        className={btnStyles}
+        onClick={() => toggleTheme('dark')}
+      >
         <Moon className="h-5 w-5" />
       </button>
 
-      <button className={btnStyles} onClick={() => toggleTheme('light')}>
+      <button
+        data-cy="light-theme-button"
+        className={btnStyles}
+        onClick={() => toggleTheme('light')}
+      >
         <Sun className="h-5 w-5" />
       </button>
 
-      <button className={btnStyles} onClick={() => toggleTheme('system')}>
+      <button
+        data-cy="system-theme-button"
+        className={btnStyles}
+        onClick={() => toggleTheme('system')}
+      >
         <System className="h-5 w-5" />
       </button>
     </div>

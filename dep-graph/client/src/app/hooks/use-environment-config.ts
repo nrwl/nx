@@ -26,5 +26,5 @@ export function getEnvironmentConfig() {
     environment: window.environment,
     appConfig: window.appConfig,
     useXstateInspect: window.useXstateInspect,
-  }
+  };
 }
