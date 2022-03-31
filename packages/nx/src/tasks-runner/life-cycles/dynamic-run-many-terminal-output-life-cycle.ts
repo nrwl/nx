@@ -66,6 +66,7 @@ export async function createRunManyDynamicOutputRenderer({
     };
   });
 
+  const failedTasks = new Set();
   const tasksToTerminalOutputs: Record<string, string> = {};
   const tasksToProcessStartTimes: Record<
     string,
@@ -231,14 +232,6 @@ export async function createRunManyDynamicOutputRenderer({
       additionalFooterRows.push('');
     }
 
-    if (totalFailedTasks > 0) {
-      additionalFooterRows.push(
-        `   ${output.colors.red(
-          figures.cross
-        )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`
-      );
-    }
-
     if (totalSuccessfulTasks > 0) {
       additionalFooterRows.push(
         `   ${output.colors.green(
@@ -246,6 +239,14 @@ export async function createRunManyDynamicOutputRenderer({
         )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
           `[${totalCachedTasks} read from cache]`
         )}`
+      );
+    }
+
+    if (totalFailedTasks > 0) {
+      additionalFooterRows.push(
+        `   ${output.colors.red(
+          figures.cross
+        )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`
       );
     }
 
@@ -376,25 +377,46 @@ export async function createRunManyDynamicOutputRenderer({
           .forEach((arg) => taskOverridesRows.push(arg));
       }
 
-      renderPinnedFooter(
-        [
-          output.applyNxPrefix(
-            'red',
-            output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
-          ),
-          ...taskOverridesRows,
-          '',
-          `   ${output.colors.red(
-            figures.cross
-          )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
+      const numFailedToPrint = 5;
+      const failedTasksForPrinting = Array.from(failedTasks).slice(
+        0,
+        numFailedToPrint
+      );
+      const failureSummaryRows = [
+        output.applyNxPrefix(
+          'red',
+          output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
+        ),
+        ...taskOverridesRows,
+        '',
+        output.dim(
           `   ${output.dim(
             figures.tick
           )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
-          )}`,
-        ],
-        'red'
-      );
+          )}`
+        ),
+        '',
+        `   ${output.colors.red(
+          figures.cross
+        )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
+        `${failedTasksForPrinting
+          .map(
+            (t) =>
+              `        ${output.colors.red('-')} ${output.dim('nx run')} ${t}`
+          )
+          .join('\n ')}`,
+      ];
+
+      if (failedTasks.size > numFailedToPrint) {
+        failureSummaryRows.push(
+          output.dim(
+            `        ...and ${failedTasks.size - numFailedToPrint} more...`
+          )
+        );
+      }
+
+      renderPinnedFooter(failureSummaryRows, 'red');
     }
     resolveRenderIsDonePromise();
   };
@@ -443,6 +465,7 @@ export async function createRunManyDynamicOutputRenderer({
           break;
         case 'failure':
           totalFailedTasks++;
+          failedTasks.add(t.task.id);
           break;
       }
       printTaskResult(t.task, t.status);
