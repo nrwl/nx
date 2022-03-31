@@ -57,7 +57,7 @@ describe('preset', () => {
     expect(
       readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
     ).toBe('@nrwl/angular');
-  });
+  }, 10000);
 
   it(`should create files (preset = ${Preset.WebComponents})`, async () => {
     await presetGenerator(tree, {
