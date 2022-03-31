@@ -13,7 +13,7 @@ import { workspaceRoot } from '@nrwl/devkit';
 import {
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
-} from 'nx/src/shared/workspace';
+} from 'nx/src/config/workspaces';
 import { parseJson, serializeJson } from '@nrwl/devkit';
 
 export function formatFiles(

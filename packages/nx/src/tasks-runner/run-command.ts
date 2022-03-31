@@ -1,9 +1,8 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { join } from 'path';
-import { workspaceRoot } from 'nx/src/utils/app-root';
-import { logger, stripIndent } from 'nx/src/utils/logger';
-import { Environment } from '../core/shared-interfaces';
-import { NxArgs } from '../command-line/utils';
+import { workspaceRoot } from '../utils/app-root';
+import { logger, stripIndent } from '../utils/logger';
+import { NxArgs } from '../utils/command-line-utils';
 import { isRelativePath } from '../utils/fileutils';
 import {
   projectHasTarget,
@@ -20,13 +19,13 @@ import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-ma
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
 import { isCI } from '../utils/is-ci';
 import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
-import { ProjectGraph, ProjectGraphProjectNode } from '../shared/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { Task } from '../config/task-graph';
 import {
   ProjectConfiguration,
   TargetDependencyConfig,
-} from '../shared/workspace';
-import { NxJsonConfiguration } from '../shared/nx';
-import { Task } from '../shared/tasks';
+} from '../config/workspace-json-project-json';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -94,7 +93,7 @@ async function getTerminalOutputLifeCycle(
 export async function runCommand(
   projectsToRun: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
-  { nxJson }: Environment,
+  { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
   overrides: any,
   terminalOutputStrategy: 'default' | 'hide-cached-output' | 'run-one',

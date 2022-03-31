@@ -9,18 +9,18 @@ import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL, URLSearchParams } from 'url';
-import { workspaceLayout } from '../core/file-utils';
-import { defaultFileHasher } from '../core/hasher/file-hasher';
+import { workspaceLayout } from '../project-graph/file-utils';
+import { defaultFileHasher } from '../hasher/file-hasher';
 import { output } from '../utils/output';
-import { writeJsonFile } from 'nx/src/utils/fileutils';
-import { joinPathFragments } from 'nx/src/utils/path';
+import { writeJsonFile } from '../utils/fileutils';
+import { joinPathFragments } from '../utils/path';
 import {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
-} from 'nx/src/shared/project-graph';
-import { pruneExternalNodes } from 'nx/src/core/project-graph/operators';
-import { createProjectGraphAsync } from 'nx/src/core/project-graph/project-graph';
+} from '../config/project-graph';
+import { pruneExternalNodes } from '../project-graph/operators';
+import { createProjectGraphAsync } from '../project-graph/project-graph';
 
 export interface DepGraphClientResponse {
   hash: string;

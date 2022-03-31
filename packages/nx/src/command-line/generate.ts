@@ -4,13 +4,13 @@ import {
   Options,
   Schema,
 } from '../utils/params';
-import { Workspaces } from '../shared/workspace';
-import { FileChange, flushChanges, FsTree } from '../shared/tree';
+import { Workspaces } from '../config/workspaces';
+import { FileChange, flushChanges, FsTree } from '../config/tree';
 import { logger } from '../utils/logger';
 import * as chalk from 'chalk';
-import { workspaceRoot } from 'nx/src/utils/app-root';
-import { NxJsonConfiguration } from 'nx/src/shared/nx';
-import { printHelp } from 'nx/src/utils/print-help';
+import { workspaceRoot } from '../utils/app-root';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { printHelp } from '../utils/print-help';
 
 export interface GenerateOptions {
   collectionName: string;

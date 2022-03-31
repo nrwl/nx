@@ -1,9 +1,9 @@
-import { RawWorkspaceJsonConfiguration } from 'nx/src/shared/workspace';
+import { RawWorkspaceJsonConfiguration } from 'nx/src/config/workspace-json-project-json';
 
 import { readNxJson } from '../generators/project-configuration';
 import { readJson } from './json';
 
-import type { Tree } from 'nx/src/shared/tree';
+import type { Tree } from 'nx/src/config/tree';
 
 /**
  * Returns workspace defaults. It includes defaults folders for apps and libs,

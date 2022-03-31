@@ -3,10 +3,11 @@ import {
   BatchMessage,
   BatchMessageType,
 } from './batch-messages';
-import { ExecutorContext, Workspaces } from 'nx/src/shared/workspace';
-import { workspaceRoot } from 'nx/src/utils/app-root';
-import { combineOptionsForExecutor } from 'nx/src/utils/params';
-import { TaskGraph } from 'nx/src/shared/tasks';
+import { Workspaces } from '../../config/workspaces';
+import { workspaceRoot } from '../../utils/app-root';
+import { combineOptionsForExecutor } from '../../utils/params';
+import { TaskGraph } from '../../config/task-graph';
+import { ExecutorContext } from '../../config/misc-interfaces';
 
 function getBatchExecutor(executorName: string) {
   const workspace = new Workspaces(workspaceRoot);

@@ -1,4 +1,4 @@
-import { TargetConfiguration } from '../shared/workspace';
+import { TargetConfiguration } from '../config/workspace-json-project-json';
 
 export type PackageJsonTargetConfiguration = Omit<
   TargetConfiguration,

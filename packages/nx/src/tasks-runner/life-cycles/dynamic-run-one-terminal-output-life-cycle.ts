@@ -5,7 +5,7 @@ import * as readline from 'readline';
 import { output } from '../../utils/output';
 import type { LifeCycle } from '../life-cycle';
 import { prettyTime } from './pretty-time';
-import { Task } from 'nx/src/shared/tasks';
+import { Task } from '../../config/task-graph';
 
 /**
  * As tasks are completed the overall state moves from:

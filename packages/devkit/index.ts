@@ -12,7 +12,7 @@
 /**
  * @category Tree
  */
-export type { Tree, FileChange } from 'nx/src/shared/tree';
+export type { Tree, FileChange } from 'nx/src/config/tree';
 
 /**
  * @category Workspace
@@ -23,18 +23,24 @@ export type {
   TargetConfiguration,
   ProjectConfiguration,
   ProjectType,
+  Workspace,
+} from 'nx/src/config/workspace-json-project-json';
+
+/**
+ * @category Workspace
+ */
+export type {
   Generator,
   GeneratorCallback,
   Executor,
   ExecutorContext,
   TaskGraphExecutor,
-  Workspace,
-} from 'nx/src/shared/workspace';
+} from 'nx/src/config/misc-interfaces';
 
 /**
  * @category Workspace
  */
-export { Workspaces } from 'nx/src/shared/workspace';
+export { Workspaces } from 'nx/src/config/workspaces';
 
 export type {
   NxPlugin,
@@ -44,7 +50,7 @@ export type {
 /**
  * @category Workspace
  */
-export type { Task, TaskGraph } from 'nx/src/shared/tasks';
+export type { Task, TaskGraph } from 'nx/src/config/task-graph';
 
 /**
  * @category Workspace
@@ -55,7 +61,7 @@ export type {
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
   NxAffectedConfig,
-} from 'nx/src/shared/nx';
+} from 'nx/src/config/nx-json';
 
 /**
  * @category Logger
@@ -160,17 +166,17 @@ export type {
   ProjectGraphProjectNode,
   ProjectGraphExternalNode,
   ProjectGraphProcessorContext,
-} from 'nx/src/shared/project-graph';
+} from 'nx/src/config/project-graph';
 
 /**
  * @category Project Graph
  */
-export { DependencyType } from 'nx/src/shared/project-graph';
+export { DependencyType } from 'nx/src/config/project-graph';
 
 /**
  * @category Project Graph
  */
-export { ProjectGraphBuilder } from 'nx/src/core/project-graph/project-graph-builder';
+export { ProjectGraphBuilder } from 'nx/src/project-graph/project-graph-builder';
 
 /**
  * @category Utils
@@ -270,19 +276,19 @@ export { workspaceRoot, appRootPath } from 'nx/src/utils/app-root';
 /**
  * @category Utils
  */
-export { reverse } from 'nx/src/core/project-graph/operators';
+export { reverse } from 'nx/src/project-graph/operators';
 /**
  * @category Utils
  */
 export {
   createProjectGraphAsync,
   readCachedProjectGraph,
-} from 'nx/src/core/project-graph/project-graph';
+} from 'nx/src/project-graph/project-graph';
 
 /**
  * @category Utils
  */
-export { readNxJson, workspaceLayout } from 'nx/src/core/file-utils';
+export { readNxJson, workspaceLayout } from 'nx/src/project-graph/file-utils';
 
 /**
  * @category Utils
@@ -301,7 +307,7 @@ export {
 /**
  * @category Utils
  */
-export { Hash, Hasher } from 'nx/src/core/hasher/hasher';
+export { Hash, Hasher } from 'nx/src/hasher/hasher';
 
 /**
  * @category Utils

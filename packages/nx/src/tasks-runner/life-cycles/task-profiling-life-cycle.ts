@@ -3,8 +3,8 @@ import { TaskStatus } from '../tasks-runner';
 
 import { performance } from 'perf_hooks';
 import { join } from 'path';
-import { Task } from 'nx/src/shared/tasks';
-import { writeJsonFile } from 'nx/src/utils/fileutils';
+import { Task } from '../../config/task-graph';
+import { writeJsonFile } from '../../utils/fileutils';
 
 export class TaskProfilingLifeCycle implements LifeCycle {
   private timings: {

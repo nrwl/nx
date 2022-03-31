@@ -2,12 +2,9 @@ import {
   buildWorkspaceConfigurationFromGlobs,
   deduplicateProjectFiles,
   globForProjectFiles,
-  ProjectConfiguration,
-  RawWorkspaceJsonConfiguration,
   reformattedWorkspaceJsonOrNull,
   toNewFormat,
-  WorkspaceJsonConfiguration,
-} from 'nx/src/shared/workspace';
+} from 'nx/src/config/workspaces';
 import { basename, dirname, relative } from 'path';
 
 import {
@@ -16,9 +13,14 @@ import {
 } from '../utils/get-workspace-layout';
 import { readJson, updateJson, writeJson } from '../utils/json';
 
-import type { Tree } from 'nx/src/shared/tree';
-import type { NxJsonConfiguration } from 'nx/src/shared/nx';
+import type { Tree } from 'nx/src/config/tree';
+import type { NxJsonConfiguration } from 'nx/src/config/nx-json';
 import { joinPathFragments } from 'nx/src/utils/path';
+import {
+  ProjectConfiguration,
+  RawWorkspaceJsonConfiguration,
+  WorkspaceJsonConfiguration,
+} from 'nx/src/config/workspace-json-project-json';
 
 export type WorkspaceConfiguration = Omit<
   WorkspaceJsonConfiguration,

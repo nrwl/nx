@@ -1,14 +1,14 @@
 import * as yargs from 'yargs';
 import { runCommand } from '../tasks-runner/run-command';
-import type { NxArgs, RawNxArgs } from './utils';
-import { splitArgsIntoNxArgsAndOverrides } from './utils';
-import { readEnvironment } from '../core/file-utils';
+import type { NxArgs, RawNxArgs } from '../utils/command-line-utils';
+import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { output } from '../utils/output';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
-import { ProjectGraph, ProjectGraphProjectNode } from '../shared/project-graph';
-import { createProjectGraphAsync } from '../core/project-graph/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { createProjectGraphAsync } from '../project-graph/project-graph';
+import { readEnvironment } from './read-environment';
 
 export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
   performance.mark('command-execution-begins');

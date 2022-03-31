@@ -1,4 +1,4 @@
-import { DependencyType, ProjectGraph } from '../shared/project-graph';
+import { DependencyType, ProjectGraph } from '../config/project-graph';
 import { createTasksForProjectToRun } from './run-command';
 import { TaskGraphCreator } from './task-graph-creator';
 

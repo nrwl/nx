@@ -5,9 +5,9 @@ import {
 import { TaskStatus } from './tasks-runner';
 import { Subject } from 'rxjs/internal/Subject';
 import type { Observable } from 'rxjs';
-import { ProjectGraph } from '../shared/project-graph';
-import { NxJsonConfiguration } from '../shared/nx';
-import { Task } from '../shared/tasks';
+import { ProjectGraph } from '../config/project-graph';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { Task } from '../config/task-graph';
 
 export { DefaultTasksRunnerOptions, RemoteCache } from './default-tasks-runner';
 

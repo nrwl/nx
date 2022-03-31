@@ -9,7 +9,7 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import { toNewFormat } from 'nx/src/shared/workspace';
+import { toNewFormat } from 'nx/src/config/workspaces';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {

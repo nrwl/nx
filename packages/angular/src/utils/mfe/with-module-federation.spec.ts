@@ -1,11 +1,10 @@
 jest.mock('fs');
 jest.mock('@nrwl/devkit');
 jest.mock('@nrwl/workspace/src/utilities/typescript');
-jest.mock('nx/src/core/file-utils');
-jest.mock('nx/src/shared/workspace');
+jest.mock('nx/src/project-graph/file-utils');
 import * as graph from '@nrwl/devkit';
 import * as typescriptUtils from '@nrwl/workspace/src/utilities/typescript';
-import * as workspace from 'nx/src/core/file-utils';
+import * as workspace from 'nx/src/project-graph/file-utils';
 import * as fs from 'fs';
 
 import { withModuleFederation } from './with-module-federation';

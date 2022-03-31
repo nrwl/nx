@@ -1,8 +1,8 @@
 import { TasksRunner } from './tasks-runner';
 import defaultTaskRunner from './default-tasks-runner';
 import { createTasksForProjectToRun, getRunner } from './run-command';
-import { DependencyType, ProjectGraph } from '../shared/project-graph';
-import { NxJsonConfiguration } from 'nx/src/shared/nx';
+import { DependencyType, ProjectGraph } from '../config/project-graph';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 describe('createTasksForProjectToRun', () => {
   let projectGraph: ProjectGraph;

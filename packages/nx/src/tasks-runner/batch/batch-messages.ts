@@ -1,4 +1,4 @@
-import { TaskGraph } from 'nx/src/shared/tasks';
+import { TaskGraph } from '../../config/task-graph';
 
 export enum BatchMessageType {
   Tasks,

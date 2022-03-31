@@ -1,4 +1,4 @@
-import type { Tree } from 'nx/src/shared/tree';
+import type { Tree } from 'nx/src/config/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';

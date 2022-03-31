@@ -1,7 +1,7 @@
-import { ProjectGraph } from '../shared/project-graph';
-import { Task, TaskGraph } from '../shared/tasks';
-import { TargetDependencyConfig } from '../shared/workspace';
+import { ProjectGraph } from '../config/project-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 import { getDependencyConfigs } from './utils';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 
 export class TaskGraphCreator {
   constructor(

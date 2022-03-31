@@ -13,7 +13,7 @@ import {
   validateOptsAgainstSchema,
   warnDeprecations,
 } from './params';
-import { TargetConfiguration } from '../shared/workspace';
+import { TargetConfiguration } from '../config/workspace-json-project-json';
 
 describe('params', () => {
   describe('combineOptionsForExecutor', () => {

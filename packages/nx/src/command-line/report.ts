@@ -1,12 +1,12 @@
 import * as chalk from 'chalk';
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from '../utils/app-root';
 import { output } from '../utils/output';
 import { join } from 'path';
 import {
   detectPackageManager,
   getPackageManagerVersion,
-} from 'nx/src/utils/package-manager';
-import { readJsonFile } from 'nx/src/utils/fileutils';
+} from '../utils/package-manager';
+import { readJsonFile } from '../utils/fileutils';
 
 export const packagesWeCareAbout = [
   'nx',

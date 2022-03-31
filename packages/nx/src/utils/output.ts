@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import { EOL } from 'os';
 import { isCI } from './is-ci';
-import { TaskStatus } from 'nx/src/tasks-runner/tasks-runner';
+import { TaskStatus } from '../tasks-runner/tasks-runner';
 
 export interface CLIErrorMessageConfig {
   title: string;

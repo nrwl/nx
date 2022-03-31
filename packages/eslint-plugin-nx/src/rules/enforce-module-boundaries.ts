@@ -34,7 +34,7 @@ import {
   TSESTree,
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
-import { TargetProjectLocator } from 'nx/src/core/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import {
   checkCircularPath,
   findFilesInCircularPath,

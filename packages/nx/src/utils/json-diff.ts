@@ -1,4 +1,4 @@
-import { Change } from '../core/file-utils';
+import { Change } from '../project-graph/file-utils';
 
 export enum DiffType {
   Deleted = 'JsonPropertyDeleted',
