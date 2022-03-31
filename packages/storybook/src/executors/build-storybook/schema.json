@@ -61,7 +61,7 @@
       "properties": {
         "configFolder": {
           "type": "string",
-          "description": "Directory where to load Storybook configurations from"
+          "description": "Directory where to load Storybook configurations from."
         },
         "pluginPath": {
           "type": "string",

@@ -23,7 +23,7 @@
   "properties": {
     "uiFramework": {
       "type": "string",
-      "description": "Storybook framework npm package",
+      "description": "Storybook framework npm package.",
       "enum": [
         "@storybook/angular",
         "@storybook/react",
@@ -61,12 +61,12 @@
     },
     "watch": {
       "type": "boolean",
-      "description": "Watches for changes and rebuilds application",
+      "description": "Watches for changes and rebuilds application.",
       "default": true
     },
     "staticDir": {
       "type": "array",
-      "description": "Directory where to load static files from, array of strings",
+      "description": "Directory where to load static files from, array of strings.",
       "items": {
         "type": "string"
       },
@@ -74,7 +74,7 @@
     },
     "projectBuildConfig": {
       "type": "string",
-      "description": "Workspace project where Storybook reads the Webpack config from"
+      "description": "Workspace project where Storybook reads the Webpack config from."
     },
     "styles": {
       "type": "array",
@@ -98,11 +98,11 @@
     },
     "config": {
       "type": "object",
-      "description": ".storybook configuration",
+      "description": ".storybook configuration.",
       "properties": {
         "configFolder": {
           "type": "string",
-          "description": "Directory where to load Storybook configurations from"
+          "description": "Directory where to load Storybook configurations from."
         },
         "pluginPath": {
           "type": "string",
