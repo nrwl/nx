@@ -49,9 +49,7 @@ Replace `your-app-name` with the app's name as defined in your `workspace.json` 
 
 Simply run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
-By default, Cypress will run in “headed” mode (you will see the tests executing in a new browser window). You will have the result of all the tests and errors (if any) in your terminal.
-
-Screenshots and videos will be accessible in `dist/apps/frontend/screenshots` and `dist/apps/frontend/videos`.
+By default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your terminal. Screenshots and videos will be accessible in `dist/apps/frontend/screenshots` and `dist/apps/frontend/videos`.
 
 ### Watching for Changes
 
@@ -63,7 +61,7 @@ Cypress doesn't currently re-run your tests after changes are made to applicatio
 
 ### Using Cypress in the Headed Mode
 
-Cypress runs in headless mode by default (the `headless` option is deprecated). In order to run the Cypress in Headed mode, you can set `browser` option to select the specific browser to be used or set `headed` option to run tests using the default browser.
+You can run Cypress in headed mode to see your app being tested. To do this, pass in the `--watch` option. E.g: `nx frontend-e2e --watch`
 
 ### Testing Against Prod Build
 
