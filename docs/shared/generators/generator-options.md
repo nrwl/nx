@@ -900,6 +900,6 @@ In this example, `value` requires the value to be at most 10 characters long.
 
 ### More information
 
-[The current configurable options (and its parse method) can be found here](https://github.com/nrwl/nx/blob/master/packages/tao/src/shared/params.ts). You would need a basic knowledge of TypeScript to read this.
+[The current configurable options (and its parse method) can be found here](https://github.com/nrwl/nx/blob/master/packages/nx/src/utils/params.ts). You would need a basic knowledge of TypeScript to read this.
 
 Most examples are referenced from the codebase of Nx. Thanks to everyone who have ever contributed to Nx!
