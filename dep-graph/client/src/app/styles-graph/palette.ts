@@ -7,4 +7,5 @@ export enum NrwlPalette {
   black = 'hsla(220, 9%, 46%, 1)',
   red = 'hsla(347, 92%, 65%, 1)',
   white = '#fff',
+  stone = '#1c1917',
 }

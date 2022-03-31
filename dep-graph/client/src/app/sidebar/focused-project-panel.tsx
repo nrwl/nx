@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { DarkClasses } from '../dark-theme-styles';
 
 export interface FocusedProjectPanelProps {
   focusedProject: string;
@@ -31,7 +32,9 @@ export const FocusedProjectPanel = memo(
             </svg>
             <span id="focused-project-name">Focused on {focusedProject}</span>
           </p>
-          <div className="absolute right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-500 transition-all transition duration-200 ease-in-out group-hover:translate-x-0">
+          <div
+            className={`absolute right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-500 transition-all duration-200 ease-in-out group-hover:translate-x-0 ${DarkClasses.button}`}
+          >
             Reset
             <span className="rounded-md p-1">
               <svg

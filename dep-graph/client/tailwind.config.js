@@ -1,12 +1,11 @@
 const path = require('path');
 
 module.exports = {
-  mode: 'jit',
-  purge: [
+  content: [
     path.join(__dirname, 'src/**/*.{js,ts,jsx,tsx,html}'),
     // ...createGlobPatternsForDependencies(__dirname),
   ],
-  darkMode: false, // or 'media' or 'class'
+  darkMode: 'class', // or 'media' or 'class'
   theme: {
     extend: {
       colors: {
@@ -17,6 +16,18 @@ module.exports = {
         },
         green: {
           'nx-base': 'hsla(162, 47%, 50%, 1)',
+        },
+        sidebar: {
+          dark: '#27272a',
+          'border-dark': '#52525b',
+          'btn-dark': '#1c1917',
+          'title-dark': '#f4f4f5',
+          'text-dark': '#cbd5e1',
+          'subtitle-dark': '#94a3b8',
+        },
+        graph: {
+          dark: '#262626',
+          'text-dark': '#cbd5e1',
         },
       },
       typography: {

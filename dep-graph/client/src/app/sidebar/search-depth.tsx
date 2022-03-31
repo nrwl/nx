@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { DarkClasses } from '../dark-theme-styles';
 
 export interface SearchDepthProps {
   searchDepth: number;
@@ -35,11 +36,11 @@ export const SearchDepth = memo(
           <div className="ml-3 text-sm">
             <label
               htmlFor="depthFilter"
-              className="cursor-pointer font-medium text-gray-700"
+              className="dark:text-sidebar-subtitle-dark cursor-pointer font-medium text-gray-700"
             >
               Activate proximity
             </label>
-            <p className="text-gray-500">
+            <p className="dark:text-sidebar-text-dark text-gray-500">
               Explore connected libraries step by step.
             </p>
           </div>
@@ -48,7 +49,7 @@ export const SearchDepth = memo(
           <div className="flex rounded-md text-gray-500 shadow-sm">
             <button
               title="Remove ancestor level"
-              className="inline-flex items-center rounded-l-md border border-gray-300 bg-gray-50 py-2 px-4 text-gray-500 hover:bg-gray-100"
+              className={`inline-flex items-center rounded-l-md border border-gray-300 bg-gray-50 py-2 px-4 text-gray-500 hover:bg-gray-100 ${DarkClasses.button}`}
               onClick={decrementDepthFilter}
             >
               <svg
@@ -68,13 +69,13 @@ export const SearchDepth = memo(
             </button>
             <span
               id="depthFilterValue"
-              className="block w-full flex-1 rounded-none border-t border-b border-gray-300 bg-white p-1.5 text-center font-mono"
+              className={`block w-full flex-1 rounded-none border-t border-b border-gray-300 bg-white p-1.5 text-center font-mono ${DarkClasses.input}`}
             >
               {searchDepth}
             </span>
             <button
               title="Add ancestor level"
-              className="inline-flex items-center rounded-r-md border border-gray-300 bg-gray-50 py-2 px-4 text-gray-500 hover:bg-gray-100"
+              className={`inline-flex items-center rounded-r-md border border-gray-300 bg-gray-50 py-2 px-4 text-gray-500 hover:bg-gray-100 ${DarkClasses.button}`}
               onClick={incrementDepthFilter}
             >
               <svg

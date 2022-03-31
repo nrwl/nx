@@ -1,12 +1,10 @@
 // nx-ignore-next-line
-import type {
-  ProjectGraphDependency,
-  ProjectGraphProjectNode,
-} from '@nrwl/devkit';
+import type { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
+import './match-media-mock.spec';
 import { depGraphMachine } from './dep-graph.machine';
 import { interpret } from 'xstate';
 
-export const mockProjects: ProjectGraphProjectNode[] = [
+export const mockProjects: ProjectGraphNode[] = [
   {
     name: 'app1',
     type: 'app',

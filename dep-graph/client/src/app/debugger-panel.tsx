@@ -1,6 +1,7 @@
 import { ProjectGraphList } from './interfaces';
 import { GraphPerfReport } from './machines/interfaces';
 import { memo } from 'react';
+import { DarkClasses } from './dark-theme-styles';
 
 export interface DebuggerPanelProps {
   projectGraphs: ProjectGraphList[];
@@ -20,19 +21,26 @@ export const DebuggerPanel = memo(function ({
       data-cy="debugger-panel"
       className="
           flex-column
+          flex-column
+          dark:bg-sidebar-dark
+          dark:border-sidebar-border-dark flex
           flex
-          w-auto
-          items-center justify-items-center
+          w-auto items-center
+          items-center
+          justify-items-center
+          justify-items-center gap-4
           gap-4
-          border-b border-gray-200
+          border-b
+          border-gray-200
           bg-gray-50
-          p-4
-          text-gray-700
+          p-4 transition-all
         "
     >
-      <h4 className="mr-4 text-lg font-bold">Debugger</h4>
+      <h4 className="dark:text-sidebar-title-dark mr-4 text-lg font-bold">
+        Debugger
+      </h4>
       <select
-        className="flex w-auto items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700"
+        className={`flex w-auto items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 ${DarkClasses.button}`}
         data-cy="project-select"
         onChange={(event) => projectGraphChange(event.target.value)}
         value={selectedProjectGraph}
@@ -45,7 +53,7 @@ export const DebuggerPanel = memo(function ({
           );
         })}
       </select>
-      <p className="text-sm">
+      <p className="dark:text-sidebar-subtitle-dark text-sm">
         Last render took {lastPerfReport.renderTime}ms:{' '}
         <b className="text-medium font-mono">{lastPerfReport.numNodes} nodes</b>{' '}
         |{' '}
