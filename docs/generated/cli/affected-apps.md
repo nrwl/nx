@@ -39,37 +39,53 @@ nx affected:apps --base=main~1 --head=main
 
 ### all
 
+Type: boolean
+
 All projects
 
 ### base
+
+Type: string
 
 Base of the current branch (usually main)
 
 ### configuration
 
+Type: string
+
 This is the configuration to use when performing tasks on projects
 
 ### exclude
 
-Default: ``
+Type: array
+
+Default:
 
 Exclude certain projects from being processed
 
 ### files
 
+Type: array
+
 Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
 
 ### head
+
+Type: string
 
 Latest commit of the current branch (usually HEAD)
 
 ### help
 
+Type: boolean
+
 Show help
 
 ### ~~only-failed~~
 
-Default: `false`
+Type: boolean
+
+Default: false
 
 **Deprecated:** The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.
 
@@ -81,19 +97,27 @@ Produces a plain output for affected:apps and affected:libs
 
 ### runner
 
+Type: string
+
 This is the name of the tasks runner configured in nx.json
 
 ### skip-nx-cache
 
-Default: `false`
+Type: boolean
+
+Default: false
 
 Rerun the tasks even when the results are available in the cache
 
 ### uncommitted
 
+Type: boolean
+
 Uncommitted changes
 
 ### untracked
+
+Type: boolean
 
 Untracked changes
 
@@ -102,5 +126,7 @@ Untracked changes
 Print additional error stack trace on failure
 
 ### version
+
+Type: boolean
 
 Show version number

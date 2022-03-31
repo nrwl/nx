@@ -124,6 +124,8 @@ export interface ParsedCommand {
   options?: Array<ParsedCommandOption>;
 }
 
+const YargsTypes = ['array', 'count', 'string', 'boolean', 'number'];
+
 export async function parseCommand(
   name: string,
   command: any
@@ -152,10 +154,17 @@ export async function parseCommand(
     .getInternalMethods()
     .getUsageInstance()
     .getDescriptions();
-  const builderDefaultOptions = builder.getOptions().default;
-  const builderAutomatedOptions = builder.getOptions().defaultDescription;
+  const builderOptions = builder.getOptions();
+  const builderDefaultOptions = builderOptions.default;
+  const builderAutomatedOptions = builderOptions.defaultDescription;
   const builderDeprecatedOptions = builder.getDeprecatedOptions();
-  const builderOptionsChoices = builder.getOptions().choices;
+  const builderOptionsChoices = builderOptions.choices;
+  const builderOptionTypes = YargsTypes.reduce((acc, type) => {
+    builderOptions[type].forEach(
+      (option) => (acc = { ...acc, [option]: type })
+    );
+    return acc;
+  }, {});
 
   return {
     name,
@@ -168,6 +177,7 @@ export async function parseCommand(
           ? builderDescriptions[key].replace('__yargsString__:', '')
           : '',
         default: builderDefaultOptions[key] ?? builderAutomatedOptions[key],
+        type: builderOptionTypes[key],
         choices: builderOptionsChoices[key],
         deprecated: builderDeprecatedOptions[key],
       })) || null,
@@ -177,26 +187,25 @@ export async function parseCommand(
 export function generateOptionsMarkdown(command): string {
   let response = '';
   if (Array.isArray(command.options) && !!command.options.length) {
-    response += '\n## Options';
+    response += '\n## Options\n';
 
     command.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
       .forEach((option) => {
         response += dedent`
-              ### ${option.deprecated ? `~~${option.name}~~` : option.name}
-              ${
-                option.default === undefined || option.default === ''
-                  ? ''
-                  : `Default: \`${option.default}\`\n`
-              }`;
-        response += dedent`
-          ${
-            option.choices === undefined
-              ? ''
-              : `Choices: \`[${option.choices
-                  .map((c) => `"${c}"`)
-                  .join(', ')}]\`\n`
-          }`;
+        ### ${option.deprecated ? `~~${option.name}~~` : option.name}
+        `;
+        if (option.type !== undefined && option.type !== '') {
+          response += `Type: ${option.type}\n`;
+        }
+        if (option.choices !== undefined) {
+          response += dedent`
+          Choices: [${option.choices.map((c) => `"${c}"`).join(', ')}]\n`;
+        }
+        if (option.default !== undefined && option.default !== '') {
+          response += dedent`
+          Default: ${option.default}\n`;
+        }
         response += dedent`
               ${formatDeprecated(option.description, option.deprecated)}
             `;

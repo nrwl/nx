@@ -19,8 +19,12 @@ nx connect-to-nx-cloud
 
 ### help
 
+Type: boolean
+
 Show help
 
 ### version
+
+Type: boolean
 
 Show version number
