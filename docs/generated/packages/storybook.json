@@ -226,7 +226,7 @@
         "properties": {
           "uiFramework": {
             "type": "string",
-            "description": "Storybook framework npm package",
+            "description": "Storybook framework npm package.",
             "enum": [
               "@storybook/angular",
               "@storybook/react",
@@ -264,18 +264,18 @@
           },
           "watch": {
             "type": "boolean",
-            "description": "Watches for changes and rebuilds application",
+            "description": "Watches for changes and rebuilds application.",
             "default": true
           },
           "staticDir": {
             "type": "array",
-            "description": "Directory where to load static files from, array of strings",
+            "description": "Directory where to load static files from, array of strings.",
             "items": { "type": "string" },
             "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
           },
           "projectBuildConfig": {
             "type": "string",
-            "description": "Workspace project where Storybook reads the Webpack config from"
+            "description": "Workspace project where Storybook reads the Webpack config from."
           },
           "styles": {
             "type": "array",
@@ -320,11 +320,11 @@
           },
           "config": {
             "type": "object",
-            "description": ".storybook configuration",
+            "description": ".storybook configuration.",
             "properties": {
               "configFolder": {
                 "type": "string",
-                "description": "Directory where to load Storybook configurations from"
+                "description": "Directory where to load Storybook configurations from."
               },
               "pluginPath": {
                 "type": "string",
@@ -478,7 +478,7 @@
             "properties": {
               "configFolder": {
                 "type": "string",
-                "description": "Directory where to load Storybook configurations from"
+                "description": "Directory where to load Storybook configurations from."
               },
               "pluginPath": {
                 "type": "string",
