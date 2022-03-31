@@ -144,6 +144,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     offsetFromRoot: rootOffset,
     rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
     hasUnitTestRunner: options.unitTestRunner !== 'none',
+    hasLinter: options.linter !== 'none',
   });
 
   if (options.unitTestRunner === 'none') {
