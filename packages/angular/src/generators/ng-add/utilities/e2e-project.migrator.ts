@@ -128,9 +128,14 @@ export class E2eProjectMigrator extends ProjectMigrator {
       implicitDependencies: [this.appName],
       tags: [],
     };
-    addProjectConfiguration(this.tree, this.project.name, {
-      ...this.projectConfig,
-    });
+    addProjectConfiguration(
+      this.tree,
+      this.project.name,
+      {
+        ...this.projectConfig,
+      },
+      true
+    );
 
     // remove e2e target from the app config
     delete this.appConfig.targets.e2e;
@@ -221,9 +226,14 @@ export class E2eProjectMigrator extends ProjectMigrator {
       );
     }
 
-    addProjectConfiguration(this.tree, this.project.name, {
-      ...this.projectConfig,
-    });
+    addProjectConfiguration(
+      this.tree,
+      this.project.name,
+      {
+        ...this.projectConfig,
+      },
+      true
+    );
 
     delete this.appConfig.targets['cypress-run'];
     delete this.appConfig.targets['cypress-open'];

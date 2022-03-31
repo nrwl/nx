@@ -197,6 +197,35 @@ Object {
 }
 `;
 
+exports[`workspace move to nx layout should update project configuration 1`] = `
+Object {
+  "root": "apps/myApp",
+  "sourceRoot": "apps/myApp/src",
+  "targets": Object {
+    "build": Object {
+      "configurations": Object {},
+      "options": Object {
+        "tsConfig": "apps/myApp/tsconfig.app.json",
+      },
+    },
+    "lint": Object {
+      "options": Object {
+        "tsConfig": Array [
+          "apps/myApp/tsconfig.app.json",
+          "apps/myApp/tsconfig.spec.json",
+        ],
+      },
+    },
+    "test": Object {
+      "options": Object {
+        "karmaConfig": "apps/myApp/karma.conf.js",
+        "tsConfig": "apps/myApp/tsconfig.spec.json",
+      },
+    },
+  },
+}
+`;
+
 exports[`workspace move to nx layout should update tsconfig.base.json if present 1`] = `
 Object {
   "compilerOptions": Object {
@@ -204,6 +233,10 @@ Object {
     "paths": Object {},
     "rootDir": ".",
   },
+  "exclude": Array [
+    "node_modules",
+    "tmp",
+  ],
 }
 `;
 
@@ -214,5 +247,9 @@ Object {
     "paths": Object {},
     "rootDir": ".",
   },
+  "exclude": Array [
+    "node_modules",
+    "tmp",
+  ],
 }
 `;

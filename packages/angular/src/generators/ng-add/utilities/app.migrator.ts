@@ -5,6 +5,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { GeneratorOptions } from '../schema';
 import { E2eProjectMigrator } from './e2e-project.migrator';
@@ -25,10 +26,10 @@ export class AppMigrator extends ProjectMigrator {
   }
 
   async migrate(): Promise<void> {
-    this.e2eMigrator.migrate();
+    await this.e2eMigrator.migrate();
 
     this.moveProjectFiles();
-    this.updateProjectConfiguration();
+    await this.updateProjectConfiguration();
     this.updateTsConfigs();
     // TODO: check later if it's still needed
     this.updateProjectTsLint();
@@ -77,7 +78,7 @@ export class AppMigrator extends ProjectMigrator {
     this.moveDir(this.project.oldSourceRoot, this.project.newSourceRoot);
   }
 
-  private updateProjectConfiguration(): void {
+  private async updateProjectConfiguration(): Promise<void> {
     this.projectConfig.root = this.project.newRoot;
     this.projectConfig.sourceRoot = this.project.newSourceRoot;
 
@@ -128,6 +129,11 @@ export class AppMigrator extends ProjectMigrator {
 
     updateProjectConfiguration(this.tree, this.project.name, {
       ...this.projectConfig,
+    });
+
+    await convertToNxProjectGenerator(this.tree, {
+      project: this.project.name,
+      skipFormat: true,
     });
   }
 
