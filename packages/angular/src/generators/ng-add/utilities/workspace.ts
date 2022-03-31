@@ -7,7 +7,6 @@ import {
   Tree,
   updateJson,
   updateWorkspaceConfiguration,
-  workspaceRoot,
   writeJson,
 } from '@nrwl/devkit';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '@nrwl/workspace/src/generators/workspace/workspace';
@@ -188,11 +187,15 @@ export function updateWorkspaceConfigDefaults(tree: Tree): void {
 }
 
 export function updateRootTsConfig(tree: Tree): void {
-  writeJson(
-    tree,
-    'tsconfig.base.json',
-    setUpCompilerOptions(readJson(tree, getRootTsConfigPathInTree(tree)))
+  const tsconfig = readJson(tree, getRootTsConfigPathInTree(tree));
+  tsconfig.compilerOptions.paths ??= {};
+  tsconfig.compilerOptions.baseUrl = '.';
+  tsconfig.compilerOptions.rootDir = '.';
+  tsconfig.exclude = Array.from(
+    new Set([...(tsconfig.exclude ?? []), 'node_modules', 'tmp'])
   );
+  writeJson(tree, 'tsconfig.base.json', tsconfig);
+
   if (tree.exists('tsconfig.json')) {
     tree.delete('tsconfig.json');
   }
@@ -200,33 +203,15 @@ export function updateRootTsConfig(tree: Tree): void {
 
 export function updatePackageJson(tree: Tree): void {
   updateJson(tree, 'package.json', (packageJson) => {
-    packageJson.scripts = packageJson.scripts || {};
-    packageJson.scripts = {
-      ...packageJson.scripts,
-      nx: 'nx',
-      'affected:apps': 'nx affected:apps',
-      'affected:libs': 'nx affected:libs',
-      'affected:build': 'nx affected:build',
-      'affected:e2e': 'nx affected:e2e',
-      'affected:test': 'nx affected:test',
-      'affected:lint': 'nx affected:lint',
-      'affected:graph': 'nx affected:graph',
-      affected: 'nx affected',
-      format: 'nx format:write',
-      'format:write': 'nx format:write',
-      'format:check': 'nx format:check',
-      update: 'ng update @nrwl/workspace',
-      'update:check': 'ng update',
-      lint: 'nx workspace-lint && ng lint',
-      graph: 'nx graph',
-      'workspace-generator': 'nx workspace-generator',
-      help: 'nx help',
-    };
+    packageJson.scripts = packageJson.scripts ?? {};
+    Object.keys(packageJson.scripts).forEach((script) => {
+      packageJson.scripts[script] = packageJson.scripts[script]
+        .replace(/^ng /, 'nx ')
+        .replace(/ ng /, ' nx ');
+    });
+
     packageJson.devDependencies = packageJson.devDependencies ?? {};
     packageJson.dependencies = packageJson.dependencies ?? {};
-    if (!packageJson.dependencies['@nrwl/angular']) {
-      packageJson.dependencies['@nrwl/angular'] = nxVersion;
-    }
     if (!packageJson.devDependencies['@angular/cli']) {
       packageJson.devDependencies['@angular/cli'] = angularDevkitVersion;
     }
@@ -337,14 +322,4 @@ async function updatePrettierConfig(tree: Tree): Promise<void> {
       { tmpl: '', dot: '.' }
     );
   }
-}
-
-function setUpCompilerOptions(tsconfig: any) {
-  if (!tsconfig.compilerOptions.paths) {
-    tsconfig.compilerOptions.paths = {};
-  }
-  tsconfig.compilerOptions.baseUrl = '.';
-  tsconfig.compilerOptions.rootDir = '.';
-
-  return tsconfig;
 }

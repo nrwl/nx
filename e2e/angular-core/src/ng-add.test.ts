@@ -121,28 +121,10 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(updatedPackageJson.description).toEqual('some description');
     expect(updatedPackageJson.scripts).toEqual({
       ng: 'nx',
-      start: 'ng serve',
-      build: 'ng build',
-      watch: 'ng build --watch --configuration development',
-      test: 'ng test',
-      nx: 'nx',
-      'affected:apps': 'nx affected:apps',
-      'affected:libs': 'nx affected:libs',
-      'affected:build': 'nx affected:build',
-      'affected:e2e': 'nx affected:e2e',
-      'affected:test': 'nx affected:test',
-      'affected:lint': 'nx affected:lint',
-      'affected:graph': 'nx affected:graph',
-      affected: 'nx affected',
-      format: 'nx format:write',
-      'format:write': 'nx format:write',
-      'format:check': 'nx format:check',
-      update: 'ng update @nrwl/workspace',
-      'update:check': 'ng update',
-      lint: 'nx workspace-lint && ng lint',
-      graph: 'nx graph',
-      'workspace-generator': 'nx workspace-generator',
-      help: 'nx help',
+      start: 'nx serve',
+      build: 'nx build',
+      watch: 'nx build --watch --configuration development',
+      test: 'nx test',
       postinstall: 'node ./decorate-angular-cli.js',
     });
     expect(updatedPackageJson.devDependencies['@nrwl/workspace']).toBeDefined();
@@ -186,15 +168,20 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     });
 
     // check angular.json
-    const updatedAngularCLIJson = readJson('angular.json');
-    expect(updatedAngularCLIJson.projects[project].root).toEqual(
-      `apps/${project}`
-    );
-    expect(updatedAngularCLIJson.projects[project].sourceRoot).toEqual(
-      `apps/${project}/src`
-    );
-    expect(updatedAngularCLIJson.projects[project].architect.build).toEqual({
-      builder: '@angular-devkit/build-angular:browser',
+    expect(readJson('angular.json')).toStrictEqual({
+      version: 2,
+      projects: {
+        [project]: `apps/${project}`,
+        [`${project}-e2e`]: `apps/${project}-e2e`,
+      },
+    });
+
+    // check project configuration
+    const projectConfig = readJson(`apps/${project}/project.json`);
+    expect(projectConfig.root).toEqual(`apps/${project}`);
+    expect(projectConfig.sourceRoot).toEqual(`apps/${project}/src`);
+    expect(projectConfig.targets.build).toEqual({
+      executor: '@angular-devkit/build-angular:browser',
       options: {
         outputPath: `dist/apps/${project}`,
         index: `apps/${project}/src/index.html`,
@@ -241,16 +228,16 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
       defaultConfiguration: 'production',
     });
-    expect(updatedAngularCLIJson.projects[project].architect.serve).toEqual({
-      builder: '@angular-devkit/build-angular:dev-server',
+    expect(projectConfig.targets.serve).toEqual({
+      executor: '@angular-devkit/build-angular:dev-server',
       configurations: {
         production: { browserTarget: `${project}:build:production` },
         development: { browserTarget: `${project}:build:development` },
       },
       defaultConfiguration: 'development',
     });
-    expect(updatedAngularCLIJson.projects[project].architect.test).toEqual({
-      builder: '@angular-devkit/build-angular:karma',
+    expect(projectConfig.targets.test).toEqual({
+      executor: '@angular-devkit/build-angular:karma',
       options: {
         main: `apps/${project}/src/test.ts`,
         polyfills: `apps/${project}/src/polyfills.ts`,
@@ -264,18 +251,13 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         scripts: [`apps/${project}/src/scripts.ts`],
       },
     });
+    expect(projectConfig.targets.e2e).toBeUndefined();
 
     // check e2e project config
-    expect(
-      updatedAngularCLIJson.projects[project].architect.e2e
-    ).toBeUndefined();
-    expect(updatedAngularCLIJson.projects[`${project}-e2e`].root).toEqual(
-      `apps/${project}-e2e`
-    );
-    expect(
-      updatedAngularCLIJson.projects[`${project}-e2e`].architect.e2e
-    ).toEqual({
-      builder: '@angular-devkit/build-angular:protractor',
+    const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
+    expect(e2eProjectConfig.root).toEqual(`apps/${project}-e2e`);
+    expect(e2eProjectConfig.targets.e2e).toEqual({
+      executor: '@angular-devkit/build-angular:protractor',
       options: {
         protractorConfig: `apps/${project}-e2e/protractor.conf.js`,
         devServerTarget: `${project}:serve`,
@@ -363,18 +345,16 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       `apps/${e2eProject}/src/support/index.ts`
     );
 
-    const angularJson = readJson('angular.json');
+    const projectConfig = readJson(`apps/${project}/project.json`);
+    expect(projectConfig.targets['cypress-run']).toBeUndefined();
+    expect(projectConfig.targets['cypress-open']).toBeUndefined();
+    expect(projectConfig.targets.e2e).toBeUndefined();
+
     // check e2e project config
-    expect(
-      angularJson.projects[project].architect['cypress-run']
-    ).toBeUndefined();
-    expect(
-      angularJson.projects[project].architect['cypress-open']
-    ).toBeUndefined();
-    expect(angularJson.projects[project].architect.e2e).toBeUndefined();
-    expect(angularJson.projects[e2eProject].root).toEqual(`apps/${e2eProject}`);
-    expect(angularJson.projects[e2eProject].architect['cypress-run']).toEqual({
-      builder: '@nrwl/cypress:cypress',
+    const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
+    expect(e2eProjectConfig.root).toEqual(`apps/${e2eProject}`);
+    expect(e2eProjectConfig.targets['cypress-run']).toEqual({
+      executor: '@nrwl/cypress:cypress',
       options: {
         devServerTarget: `${project}:serve`,
         cypressConfig: `apps/${e2eProject}/cypress.json`,
@@ -385,15 +365,15 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         },
       },
     });
-    expect(angularJson.projects[e2eProject].architect['cypress-open']).toEqual({
-      builder: '@nrwl/cypress:cypress',
+    expect(e2eProjectConfig.targets['cypress-open']).toEqual({
+      executor: '@nrwl/cypress:cypress',
       options: {
         watch: true,
         cypressConfig: `apps/${e2eProject}/cypress.json`,
       },
     });
-    expect(angularJson.projects[e2eProject].architect.e2e).toEqual({
-      builder: '@nrwl/cypress:cypress',
+    expect(e2eProjectConfig.targets.e2e).toEqual({
+      executor: '@nrwl/cypress:cypress',
       options: {
         devServerTarget: `${project}:serve`,
         watch: true,
