@@ -1,6 +1,8 @@
 import { Stylesheet } from 'cytoscape';
+import { selectValueByThemeDynamic } from '../theme-resolver';
 import { FONTS } from './fonts';
 import { NrwlPalette } from './palette';
+import * as cy from 'cytoscape';
 
 const allNodes: Stylesheet = {
   selector: 'node',
@@ -8,15 +10,21 @@ const allNodes: Stylesheet = {
     'font-size': '32px',
     'font-family': FONTS,
     'border-style': 'solid',
-    'border-color': NrwlPalette.darkGray,
-    'border-width': '1px',
+    'border-color': selectValueByThemeDynamic(
+      NrwlPalette.gray,
+      NrwlPalette.darkGray
+    ),
+    'border-width': selectValueByThemeDynamic('2px', '1px'),
     'text-halign': 'center',
     'text-valign': 'center',
     'padding-left': '16px',
-    color: NrwlPalette.black,
+    color: selectValueByThemeDynamic(NrwlPalette.white, NrwlPalette.black),
     label: 'data(id)',
-    width: 'label',
-    backgroundColor: NrwlPalette.white,
+    width: (node) => node.data('id').length * 16,
+    backgroundColor: selectValueByThemeDynamic(
+      NrwlPalette.black,
+      NrwlPalette.white
+    ),
     'transition-property':
       'background-color, border-color, line-color, target-arrow-color',
     'transition-duration': 250,
@@ -100,16 +108,6 @@ const transparentParentNodes: Stylesheet = {
   },
 };
 
-const highlightedEdges: Stylesheet = {
-  selector: 'edge.highlight',
-  style: { 'mid-target-arrow-color': NrwlPalette.blue },
-};
-
-const transparentEdges: Stylesheet = {
-  selector: 'edge.transparent',
-  style: { opacity: 0.2 },
-};
-
 export const nodeStyles = [
   allNodes,
   appNodes,
@@ -121,6 +119,4 @@ export const nodeStyles = [
   highlightedNodes,
   transparentProjectNodes,
   transparentParentNodes,
-  highlightedEdges,
-  transparentEdges,
 ];

@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { DarkClasses } from '../dark-theme-styles';
 
 export interface ShowHideAllProjectsProps {
   showAllProjects: () => void;
@@ -19,7 +20,7 @@ export const ShowHideAllProjects = memo(
         <button
           onClick={showAllProjects}
           type="button"
-          className="flex w-full items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+          className={`flex w-full items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 ${DarkClasses.button}`}
           data-cy="selectAllButton"
         >
           <svg
@@ -49,7 +50,7 @@ export const ShowHideAllProjects = memo(
           <button
             onClick={showAffectedProjects}
             type="button"
-            className="mt-3 flex w-full items-center rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-500 shadow-sm hover:bg-red-50"
+            className={`mt-3 flex w-full items-center rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-500 shadow-sm hover:bg-red-50 ${DarkClasses.buttonAffected}`}
             data-cy="affectedButton"
           >
             <svg
@@ -73,7 +74,7 @@ export const ShowHideAllProjects = memo(
         <button
           onClick={hideAllProjects}
           type="button"
-          className="mt-3 flex w-full items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+          className={`mt-3 flex w-full items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 ${DarkClasses.button}`}
           data-cy="deselectAllButton"
         >
           <svg

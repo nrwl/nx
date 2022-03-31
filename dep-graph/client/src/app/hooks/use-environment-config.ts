@@ -12,7 +12,13 @@ export function useEnvironmentConfig(): {
   appConfig: AppConfig;
   useXstateInspect: boolean;
 } {
-  const environmentConfig = useRef({
+  const environmentConfig = useRef(getEnvironmentConfig());
+
+  return environmentConfig.current;
+}
+
+export function getEnvironmentConfig() {
+  return {
     exclude: window.exclude,
     watch: window.watch,
     localMode: window.localMode,
@@ -20,7 +26,5 @@ export function useEnvironmentConfig(): {
     environment: window.environment,
     appConfig: window.appConfig,
     useXstateInspect: window.useXstateInspect,
-  });
-
-  return environmentConfig.current;
+  };
 }

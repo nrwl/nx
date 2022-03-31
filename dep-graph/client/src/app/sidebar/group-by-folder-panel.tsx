@@ -24,11 +24,11 @@ export const GroupByFolderPanel = memo(
           <div className="ml-3 text-sm">
             <label
               htmlFor="displayOptions"
-              className="cursor-pointer font-medium text-gray-700"
+              className="dark:text-sidebar-subtitle-dark cursor-pointer font-medium text-gray-700"
             >
               Group by folder
             </label>
-            <p className="text-gray-500">
+            <p className="dark:text-sidebar-text-dark text-gray-500">
               Visually arrange libraries by folders with different colors.
             </p>
           </div>

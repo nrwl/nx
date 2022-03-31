@@ -18,6 +18,7 @@ import {
   ProjectNode,
 } from '../util-cytoscape';
 import { GraphRenderEvents, GraphPerfReport } from './interfaces';
+import { selectValueByThemeStatic } from '../theme-resolver';
 
 export class GraphService {
   private traversalGraph: cy.Core;
@@ -557,6 +558,16 @@ export class GraphService {
   }
 
   getImage() {
-    return this.renderGraph.png({ bg: '#fff', full: true });
+    const bg = selectValueByThemeStatic('#262626', '#fff');
+    return this.renderGraph.png({ bg, full: true });
+  }
+
+  evaluateStyles() {
+    if (this.renderGraph) {
+      const container = this.renderGraph.container();
+      this.renderGraph.unmount();
+
+      this.renderGraph.mount(container);
+    }
   }
 }

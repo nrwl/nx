@@ -266,3 +266,47 @@ describe('loading dep-graph client with url params', () => {
     getCheckedProjectItems().should('have.length', 53);
   });
 });
+
+describe('theme preferences', () => {
+  let systemTheme: string;
+  beforeEach(() => {
+    cy.visit('/');
+    systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  });
+  it('should initialize localstorage with default theme', () => {
+    expect(localStorage.getItem('nx-dep-graph-theme')).eq('system');
+  });
+
+  it('has system default theme', () => {
+    cy.log('system theme is:', systemTheme);
+    cy.get('html').should('have.class', systemTheme);
+  });
+
+  describe('dark theme is set as prefered', () => {
+    before(() => {
+      cy.get('[data-cy="theme-open-modal-button"]').click();
+      cy.get('[data-cy="dark-theme-button"]').click();
+    });
+
+    it('should set dark theme', () => {
+      cy.log('Localstorage is: ', localStorage.getItem('nx-dep-graph-theme'));
+      expect(localStorage.getItem('nx-dep-graph-theme')).eq('dark');
+      cy.get('html').should('have.class', 'dark');
+    });
+  });
+
+  describe('light theme is set as preferred', () => {
+    before(() => {
+      cy.get('[data-cy="theme-open-modal-button"]').click();
+      cy.get('[data-cy="light-theme-button"]').click();
+    });
+
+    it('should set light theme', () => {
+      cy.log('Localstorage is: ', localStorage.getItem('nx-dep-graph-theme'));
+      expect(localStorage.getItem('nx-dep-graph-theme')).eq('light');
+      cy.get('html').should('have.class', 'light');
+    });
+  });
+});

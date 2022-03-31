@@ -1,15 +1,25 @@
 import { Stylesheet } from 'cytoscape';
+import { selectValueByThemeDynamic } from '../theme-resolver';
 import { NrwlPalette } from './palette';
 
 const allEdges: Stylesheet = {
   selector: 'edge',
   style: {
-    width: '1px',
-    'line-color': NrwlPalette.black,
+    width: selectValueByThemeDynamic('2px', '1px'),
+    'line-color': selectValueByThemeDynamic(
+      NrwlPalette.gray,
+      NrwlPalette.black
+    ),
+    'text-outline-color': NrwlPalette.black,
+    'text-outline-width': selectValueByThemeDynamic('1px', '0px'),
+    color: selectValueByThemeDynamic(NrwlPalette.white, NrwlPalette.black),
     'curve-style': 'unbundled-bezier',
     'target-arrow-shape': 'triangle',
     'target-arrow-fill': 'filled',
-    'target-arrow-color': NrwlPalette.black,
+    'target-arrow-color': selectValueByThemeDynamic(
+      NrwlPalette.gray,
+      NrwlPalette.black
+    ),
   },
 };
 
@@ -27,9 +37,14 @@ const implicitEdges: Stylesheet = {
   style: {
     label: 'implicit',
     'font-size': '16px',
-    'edge-text-rotation': 'autorotate',
     'curve-style': 'unbundled-bezier',
+    'text-rotation': 'autorotate',
   },
+};
+
+const transparentEdges: Stylesheet = {
+  selector: 'edge.transparent',
+  style: { opacity: 0.2 },
 };
 
 const dynamicEdges: Stylesheet = {
@@ -46,4 +61,5 @@ export const edgeStyles: Stylesheet[] = [
   affectedEdges,
   implicitEdges,
   dynamicEdges,
+  transparentEdges,
 ];

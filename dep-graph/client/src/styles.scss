@@ -5,6 +5,9 @@
 @tailwind utilities;
 
 $gray: rgba(209, 213, 219, 1);
+$bgDarkPrimary: #292524;
+$bgDarkSecondary: #171717;
+$textDark: #cbd5e1;
 
 #app,
 body,
@@ -38,7 +41,8 @@ canvas {
   cursor: pointer;
 }
 
-.tippy-box[data-theme~='nx'] {
+.tippy-box,
+[data-theme~='nx'] {
   box-sizing: border-box;
   border-style: solid;
   border-radius: 0.375rem;
@@ -106,5 +110,20 @@ canvas {
 
   &:hover {
     background-color: rgba(243, 244, 246, 1);
+  }
+}
+
+.tippy-box[data-theme~='dark-nx'] {
+  @extend .tippy-box, [data-theme~='nx'];
+  background-color: $bgDarkPrimary;
+  color: $textDark;
+
+  button {
+    background-color: $bgDarkSecondary;
+    color: $textDark;
+
+    &:hover {
+      background-color: rgba($bgDarkSecondary, $alpha: 0.3);
+    }
   }
 }

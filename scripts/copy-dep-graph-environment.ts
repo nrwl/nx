@@ -1,12 +1,15 @@
 import { copyFileSync } from 'fs';
-import { argv } from 'yargs';
 
 type Mode = 'dev' | 'watch' | 'release';
-const mode = argv._[0];
+const mode = process.argv[2];
 
 console.log(`Setting up graph for ${mode}`);
 
-copyFileSync(
-  `dep-graph/client/src/assets/environment.${mode}.js`,
-  `dep-graph/client/src/assets/environment.js`
-);
+try {
+  copyFileSync(
+    `dep-graph/client/src/assets/environment.${mode}.js`,
+    `dep-graph/client/src/assets/environment.js`
+  );
+} catch (e) {
+  console.error(e);
+}
