@@ -120,7 +120,37 @@ function withNx(nextConfig = {} as WithNxOptions) {
       }
 
       /**
-       * 5. Add env variables prefixed with NX_
+       * 5. Allow importing global CSS from libs
+       */
+      const globalRule = nextCssLoaders.oneOf.find(
+        (r) =>
+          Array.isArray(r.test) &&
+          r.use &&
+          r.use.loader === 'error-loader' &&
+          r.use.options.reason.includes(
+            'Global CSS \x1B[1mcannot\x1B[22m be imported from files other than your \x1B[1mCustom <App>\x1B[22m'
+          )
+      );
+
+      if (globalRule) {
+        globalRule.exclude = includes;
+
+        const sassRule = nextCssLoaders.oneOf.find(
+          (r) =>
+            r.sideEffects === true &&
+            !Array.isArray(r.test) &&
+            regexEqual(r.test, /(?<!\.module)\.(scss|sass)$/)
+        );
+
+        sassRule.issuer.or = sassRule.issuer.and
+          ? sassRule.issuer.and.concat(includes)
+          : includes;
+
+        delete sassRule.issuer.and;
+      }
+
+      /**
+       * 6. Add env variables prefixed with NX_
        */
       addNxEnvVariables(config);
 
