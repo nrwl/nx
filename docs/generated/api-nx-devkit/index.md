@@ -792,9 +792,9 @@ Use this to expose a compatible Angular Builder
 
 ### convertNxGenerator
 
-▸ **convertNxGenerator**<`T`\>(`generator`): (`options`: `T`) => (`tree`: `any`, `context`: `any`) => `Promise`<`any`\>
+▸ **convertNxGenerator**<`T`\>(`generator`, `skipWritingConfigInOldFormat?`): (`generatorOptions`: `T`) => (`tree`: `any`, `context`: `any`) => `Promise`<`any`\>
 
-Convert an Nx Generator into an Angular Devkit Schematic
+Convert an Nx Generator into an Angular Devkit Schematic.
 
 #### Type parameters
 
@@ -804,21 +804,22 @@ Convert an Nx Generator into an Angular Devkit Schematic
 
 #### Parameters
 
-| Name        | Type                                                 |
-| :---------- | :--------------------------------------------------- |
-| `generator` | [`Generator`](../../nx-devkit/index#generator)<`T`\> |
+| Name                           | Type                                                 | Default value | Description                                                                                       |
+| :----------------------------- | :--------------------------------------------------- | :------------ | :------------------------------------------------------------------------------------------------ |
+| `generator`                    | [`Generator`](../../nx-devkit/index#generator)<`T`\> | `undefined`   | The Nx generator to convert to an Angular Devkit Schematic.                                       |
+| `skipWritingConfigInOldFormat` | `boolean`                                            | `false`       | Whether to skip writing the configuration in the old format (the one used by the Angular DevKit). |
 
 #### Returns
 
 `fn`
 
-▸ (`options`): (`tree`: `any`, `context`: `any`) => `Promise`<`any`\>
+▸ (`generatorOptions`): (`tree`: `any`, `context`: `any`) => `Promise`<`any`\>
 
 ##### Parameters
 
-| Name      | Type |
-| :-------- | :--- |
-| `options` | `T`  |
+| Name               | Type |
+| :----------------- | :--- |
+| `generatorOptions` | `T`  |
 
 ##### Returns
 

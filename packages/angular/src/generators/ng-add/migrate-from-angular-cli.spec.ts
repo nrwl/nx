@@ -189,6 +189,57 @@ describe('workspace', () => {
       ).rejects.toThrow('Can only convert projects with one app');
     });
 
+    it('should update project configuration', async () => {
+      await migrateFromAngularCli(tree, { name: 'myApp' });
+
+      const angularJson = readJson(tree, 'angular.json');
+      expect(angularJson.projects.myApp).toBe('apps/myApp');
+      expect(readJson(tree, 'apps/myApp/project.json')).toMatchSnapshot();
+    });
+
+    it('should update the npm scripts', async () => {
+      tree.write(
+        'package.json',
+        JSON.stringify({
+          scripts: {
+            ng: 'ng',
+            start: 'ng serve',
+            build: 'ng build',
+            watch: 'ng build --watch --configuration development',
+            test: 'ng test',
+          },
+        })
+      );
+
+      await migrateFromAngularCli(tree, { name: 'myApp' });
+
+      expect(readJson(tree, 'package.json').scripts).toStrictEqual({
+        ng: 'nx',
+        start: 'nx serve',
+        build: 'nx build',
+        watch: 'nx build --watch --configuration development',
+        test: 'nx test',
+        postinstall: 'node ./decorate-angular-cli.js',
+      });
+    });
+
+    it('should handle existing postinstall script', async () => {
+      tree.write(
+        'package.json',
+        JSON.stringify({
+          scripts: {
+            postinstall: 'node some-awesome-script.js',
+          },
+        })
+      );
+
+      await migrateFromAngularCli(tree, { name: 'myApp' });
+
+      expect(readJson(tree, 'package.json').scripts.postinstall).toEqual(
+        'node some-awesome-script.js && node ./decorate-angular-cli.js'
+      );
+    });
+
     it('should remove the newProjectRoot key from configuration', async () => {
       tree.write(
         '/angular.json',

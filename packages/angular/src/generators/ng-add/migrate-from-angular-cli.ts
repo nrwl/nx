@@ -3,6 +3,7 @@ import {
   formatFiles,
   installPackagesTask,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
 import { nxVersion } from '../../utils/versions';
 import type { GeneratorOptions } from './schema';
@@ -52,6 +53,11 @@ export async function migrateFromAngularCli(
     // multiple projects are supported
 
     // create and update root files and configurations
+    updateJson(tree, 'angular.json', (json) => ({
+      ...json,
+      version: 2,
+      $schema: undefined,
+    }));
     createNxJson(tree, options);
     updateWorkspaceConfigDefaults(tree);
     updateRootTsConfig(tree);

@@ -35,17 +35,31 @@ function createRunCallbackTask() {
 }
 
 /**
- * Convert an Nx Generator into an Angular Devkit Schematic
+ * Convert an Nx Generator into an Angular Devkit Schematic.
+ * @param generator The Nx generator to convert to an Angular Devkit Schematic.
+ * @param skipWritingConfigInOldFormat Whether to skip writing the configuration in the old format (the one used by the Angular DevKit).
  */
-export function convertNxGenerator<T = any>(generator: Generator<T>) {
+export function convertNxGenerator<T = any>(
+  generator: Generator<T>,
+  skipWritingConfigInOldFormat: boolean = false
+) {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  return (options: T) => invokeNxGenerator(generator, options);
+  return (generatorOptions: T) =>
+    invokeNxGenerator(
+      generator,
+      generatorOptions,
+      skipWritingConfigInOldFormat
+    );
 }
 
 /**
  * Create a Rule to invoke an Nx Generator
  */
-function invokeNxGenerator<T = any>(generator: Generator<T>, options: T) {
+function invokeNxGenerator<T = any>(
+  generator: Generator<T>,
+  options: T,
+  skipWritingConfigInOldFormat?: boolean
+) {
   return async (tree, context) => {
     if (context.engine.workflow) {
       const engineHost = (context.engine.workflow as any).engineHost;
@@ -57,7 +71,11 @@ function invokeNxGenerator<T = any>(generator: Generator<T>, options: T) {
         ? context.engine.workflow.engineHost.paths[1]
         : tree.root.path;
 
-    const adapterTree = new DevkitTreeFromAngularDevkitTree(tree, root);
+    const adapterTree = new DevkitTreeFromAngularDevkitTree(
+      tree,
+      root,
+      skipWritingConfigInOldFormat
+    );
     const result = await generator(adapterTree, options);
 
     if (!result) {
@@ -80,7 +98,11 @@ const actionToFileChangeMap = {
 class DevkitTreeFromAngularDevkitTree implements Tree {
   private configFileName: string;
 
-  constructor(private tree, private _root: string) {}
+  constructor(
+    private tree,
+    private _root: string,
+    private skipWritingConfigInOldFormat?: boolean
+  ) {}
 
   get root(): string {
     return this._root;
@@ -170,7 +192,7 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
       this.warnUnsupportedFilePermissionsChange(filePath, options.mode);
     }
 
-    if (isWorkspaceJsonChange(filePath)) {
+    if (!this.skipWritingConfigInOldFormat && isWorkspaceJsonChange(filePath)) {
       const w = parseJson(content.toString());
       for (const [project, configuration] of Object.entries(w.projects)) {
         if (typeof configuration === 'string') {
