@@ -11,7 +11,7 @@ import {
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';
-import { isNpmProject } from 'nx/src/core/project-graph/operators';
+import { isNpmProject } from 'nx/src/project-graph/operators';
 
 function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   return (

@@ -1,4 +1,4 @@
-import { createProjectGraphAsync } from '../src/core/project-graph/project-graph';
+import { createProjectGraphAsync } from '../src/project-graph/project-graph';
 
 (async () => {
   try {

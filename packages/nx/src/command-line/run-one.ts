@@ -1,15 +1,15 @@
 import { runCommand } from '../tasks-runner/run-command';
-import { readEnvironment, readNxJson } from '../core/file-utils';
-import { splitArgsIntoNxArgsAndOverrides } from './utils';
+import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
-import { createProjectGraphAsync } from '../core/project-graph/project-graph';
-import { ProjectGraph } from '../shared/project-graph';
-import { WorkspaceJsonConfiguration } from 'nx/src/shared/workspace';
-import { NxJsonConfiguration } from 'nx/src/shared/nx';
-import { workspaceRoot } from 'nx/src/utils/app-root';
-import { splitTarget } from 'nx/src/utils/split-target';
-import { output } from 'nx/src/utils/output';
+import { createProjectGraphAsync } from '../project-graph/project-graph';
+import { ProjectGraph } from '../config/project-graph';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { workspaceRoot } from '../utils/app-root';
+import { splitTarget } from '../utils/split-target';
+import { output } from '../utils/output';
+import { readEnvironment } from './read-environment';
+import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
 
 export async function runOne(
   cwd: string,

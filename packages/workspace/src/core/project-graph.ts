@@ -1,1 +1,1 @@
-export * from 'nx/src/core/project-graph/project-graph';
+export * from 'nx/src/project-graph/project-graph';

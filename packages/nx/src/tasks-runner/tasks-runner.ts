@@ -1,7 +1,7 @@
 import type { Observable } from 'rxjs';
-import { NxJsonConfiguration } from '../shared/nx';
-import { ProjectGraph } from '../shared/project-graph';
-import { Task } from '../shared/tasks';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { ProjectGraph } from '../config/project-graph';
+import { Task } from '../config/task-graph';
 
 export type TaskStatus =
   | 'success'

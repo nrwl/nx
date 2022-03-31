@@ -15,7 +15,7 @@ import {
   readTsConfig,
 } from '@nrwl/workspace/src/utilities/typescript';
 import { ParsedCommandLine } from 'typescript';
-import { readWorkspaceJson } from 'nx/src/core/file-utils';
+import { readWorkspaceJson } from 'nx/src/project-graph/file-utils';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 export type MFERemotes = string[] | [remoteName: string, remoteUrl: string][];

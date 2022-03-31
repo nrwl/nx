@@ -26,12 +26,12 @@ function allFilesInDir(dirName) {
 
 function check() {
   const exceptions = [
-    'packages/create-nx-workspace/bin/create-nx-workspace.ts',
+    'packages/create-nx-workspace/bin/create-nx-workspaces.ts',
     'packages/create-nx-plugin/bin/create-nx-plugin.ts',
     'packages/workspace/src/command-line/affected.ts',
     'packages/workspace/src/command-line/report.ts',
     'packages/workspace/src/command-line/report.spec.ts',
-    'packages/workspace/src/core/file-utils.ts',
+    'packages/workspace/src/core/file-command-line-utils.ts',
     'packages/workspace/src/generators/preset/preset.ts',
     'packages/workspace/src/generators/init/init.ts',
     'packages/workspace/src/utils/update-task.ts',

@@ -1,1 +1,1 @@
-export * from 'nx/src/shared/workspace';
+export * from 'nx/src/config/workspaces';

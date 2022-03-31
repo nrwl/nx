@@ -1,7 +1,7 @@
 import { joinPathFragments } from '@nrwl/devkit';
 import { workspaceRoot } from 'nx/src/utils/app-root';
 import { relative, resolve } from 'path';
-import { readCachedProjectGraph } from 'nx/src/core/project-graph/project-graph';
+import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
 import {
   getProjectNameFromDirPath,
   getSourceDirOfDependentProjects,

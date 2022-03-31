@@ -2,7 +2,7 @@ import { output } from '../../utils/output';
 import { TaskStatus } from '../tasks-runner';
 import { getPrintableCommandArgsForTask } from '../utils';
 import type { LifeCycle } from '../life-cycle';
-import { Task } from 'nx/src/shared/tasks';
+import { Task } from '../../config/task-graph';
 
 /**
  * The following life cycle's outputs are static, meaning no previous content

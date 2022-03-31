@@ -1,4 +1,4 @@
-import { Workspaces } from 'nx/src/shared/workspace';
+import { Workspaces } from '../config/workspaces';
 
 import {
   calculateReverseDeps,
@@ -8,9 +8,9 @@ import {
   removeTasksFromTaskGraph,
 } from './utils';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { Hasher } from 'nx/src/core/hasher/hasher';
-import { Task, TaskGraph } from '../shared/tasks';
-import { ProjectGraph } from 'nx/src/shared/project-graph';
+import { Hasher } from '../hasher/hasher';
+import { Task, TaskGraph } from '../config/task-graph';
+import { ProjectGraph } from '../config/project-graph';
 
 export interface Batch {
   executorName: string;

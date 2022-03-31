@@ -1,4 +1,4 @@
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from '../utils/app-root';
 import { output } from '../utils/output';
 import {
   fetchCommunityPlugins,

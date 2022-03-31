@@ -45,7 +45,7 @@ describe('react-native:stories for libraries', () => {
     });
     // create another component
     appTree.write(
-      'libs/test-ui-lib/src/lib/some-utils.ts',
+      'libs/test-ui-lib/src/lib/some-command-line-utils.ts',
       `export const add = (a: number, b: number) => a + b;`
     );
 

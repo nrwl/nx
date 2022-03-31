@@ -14,8 +14,8 @@ import { join } from 'path';
 import { workspaceRoot } from './app-root';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
-import { readFileIfExisting } from 'nx/src/core/file-utils';
-import { TargetProjectLocator } from 'nx/src/core/target-project-locator';
+import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 
 export type MappedProjectGraphNode<T = any> = ProjectGraphProjectNode<T> & {
   data: {

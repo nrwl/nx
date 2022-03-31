@@ -1,18 +1,18 @@
 import { sync } from 'fast-glob';
 import { existsSync } from 'fs';
 import * as path from 'path';
-import { ProjectGraphProcessor } from '../shared/project-graph';
-import {
-  ProjectConfiguration,
-  TargetConfiguration,
-  WorkspaceJsonConfiguration,
-  Workspaces,
-} from '../shared/workspace';
+import { ProjectGraphProcessor } from '../config/project-graph';
+import { Workspaces } from '../config/workspaces';
 
 import { workspaceRoot } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
 import { PackageJson } from './package-json';
-import { registerTsProject } from 'nx/src/utils/register';
+import { registerTsProject } from './register';
+import {
+  ProjectConfiguration,
+  TargetConfiguration,
+  WorkspaceJsonConfiguration,
+} from '../config/workspace-json-project-json';
 
 export type ProjectTargetConfigurator = (
   file: string

@@ -1,10 +1,10 @@
-import { buildTargetFromScript, PackageJson } from 'nx/src/utils/package-json';
+import { buildTargetFromScript, PackageJson } from './package-json';
 import { join, relative } from 'path';
-import { ProjectGraph, ProjectGraphProjectNode } from '../shared/project-graph';
-import { TargetConfiguration } from '../shared/workspace';
-import { readJsonFile } from 'nx/src/utils/fileutils';
-import { normalizePath } from 'nx/src/utils/path';
-import { readCachedProjectGraph } from '../core/project-graph/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { readJsonFile } from './fileutils';
+import { normalizePath } from './path';
+import { readCachedProjectGraph } from '../project-graph/project-graph';
+import { TargetConfiguration } from '../config/workspace-json-project-json';
 
 export function projectHasTarget(
   project: ProjectGraphProjectNode,

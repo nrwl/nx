@@ -1,13 +1,10 @@
-import type { Environment } from '../core/shared-interfaces';
 import { createTask } from '../tasks-runner/run-command';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
-import type { NxArgs } from './utils';
-import {
-  ProjectGraph,
-  ProjectGraphProjectNode,
-} from 'nx/src/shared/project-graph';
-import { Task } from 'nx/src/shared/tasks';
+import type { NxArgs } from '../utils/command-line-utils';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { Task } from '../config/task-graph';
+import { Environment } from './read-environment';
 
 export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],

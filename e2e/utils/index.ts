@@ -28,7 +28,7 @@ import { promisify } from 'util';
 import chalk = require('chalk');
 import isCI = require('is-ci');
 import treeKill = require('tree-kill');
-import { Workspaces } from '../../packages/nx/src/shared/workspace';
+import { Workspaces } from '../../packages/nx/src/config/workspaces';
 import { PackageManager } from 'nx/src/utils/package-manager';
 
 export function detectPackageManager(dir: string = ''): PackageManager {

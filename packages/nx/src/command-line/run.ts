@@ -4,15 +4,8 @@ import {
   Schema,
 } from '../utils/params';
 import { printHelp } from '../utils/print-help';
-import {
-  Executor,
-  ExecutorContext,
-  ProjectConfiguration,
-  TargetConfiguration,
-  WorkspaceJsonConfiguration,
-  Workspaces,
-} from '../shared/workspace';
-import { NxJsonConfiguration } from '../shared/nx';
+import { Workspaces } from '../config/workspaces';
+import { NxJsonConfiguration } from '../config/nx-json';
 import { readJsonFile } from '../utils/fileutils';
 import { buildTargetFromScript, PackageJson } from '../utils/package-json';
 import { join } from 'path';
@@ -21,6 +14,12 @@ import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,
 } from '../utils/nx-plugin';
+import {
+  ProjectConfiguration,
+  TargetConfiguration,
+  WorkspaceJsonConfiguration,
+} from '../config/workspace-json-project-json';
+import { Executor, ExecutorContext } from '../config/misc-interfaces';
 
 export interface Target {
   project: string;

@@ -21,8 +21,8 @@ export {
   readNxJson,
   readWorkspaceConfig,
   readPackageJson,
-} from 'nx/src/core/file-utils';
-export { ProjectGraphCache } from 'nx/src/core/nx-deps/nx-deps-cache';
+} from 'nx/src/project-graph/file-utils';
+export { ProjectGraphCache } from 'nx/src/project-graph/nx-deps-cache';
 export {
   readJsonInTree,
   updateJsonInTree,

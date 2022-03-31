@@ -3,7 +3,7 @@ import { RuleFailure } from 'tslint';
 import * as ts from 'typescript';
 import { Rule } from './nxEnforceModuleBoundariesRule';
 import { DependencyType, FileData, ProjectGraph } from '@nrwl/devkit';
-import { TargetProjectLocator } from 'nx/src/core/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);

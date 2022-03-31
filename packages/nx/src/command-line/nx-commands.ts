@@ -2,12 +2,12 @@ import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as yargs from 'yargs';
-import { generateDaemonHelpOutput } from '../core/project-graph/daemon/client/generate-help-output';
+import { generateDaemonHelpOutput } from '../daemon/client/generate-help-output';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from '../utils/app-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
-import { writeJsonFile } from 'nx/src/utils/fileutils';
+import { writeJsonFile } from '../utils/fileutils';
 
 const isGenerateDocsProcess = process.env.NX_GENERATE_DOCS_PROCESS === 'true';
 const daemonHelpOutput = generateDaemonHelpOutput(isGenerateDocsProcess);

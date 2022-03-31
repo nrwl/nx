@@ -3,7 +3,7 @@ import { Tree } from '@angular-devkit/schematics';
 
 import * as prettier from 'prettier';
 import * as path from 'path';
-import * as nxWorkspace from 'nx/src/shared/workspace';
+import * as nxWorkspace from 'nx/src/config/workspaces';
 
 import { formatFiles } from './format-files';
 import { workspaceRoot } from '@nrwl/devkit';

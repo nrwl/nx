@@ -1,7 +1,7 @@
 import { output } from '../utils/output';
 import type { CLIErrorMessageConfig } from '../utils/output';
-import { workspaceFileName } from '../core/file-utils';
-import { ProjectGraph } from 'nx/src/shared/project-graph';
+import { workspaceFileName } from '../project-graph/file-utils';
+import { ProjectGraph } from '../config/project-graph';
 
 export class WorkspaceIntegrityChecks {
   constructor(private projectGraph: ProjectGraph, private files: string[]) {}

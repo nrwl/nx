@@ -1,4 +1,4 @@
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from '../utils/app-root';
 import {
   copy,
   mkdir,
@@ -16,7 +16,7 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn, execFile } from 'child_process';
 import { cacheDir } from '../utils/cache-directory';
 import { platform } from 'os';
-import { Task } from '../shared/tasks';
+import { Task } from '../config/task-graph';
 
 export type CachedResult = {
   terminalOutput: string;

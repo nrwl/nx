@@ -3,7 +3,7 @@ import { output } from '../output';
 import type { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
 import { getPluginCapabilities } from './plugin-capabilities';
 import { hasElements } from './shared';
-import { readJsonFile } from 'nx/src/utils/fileutils';
+import { readJsonFile } from '../fileutils';
 
 export function getInstalledPluginsFromPackageJson(
   workspaceRoot: string,

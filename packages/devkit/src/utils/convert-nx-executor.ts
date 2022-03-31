@@ -1,6 +1,6 @@
 import type { Observable } from 'rxjs';
-import type { Executor, ExecutorContext } from 'nx/src/shared/workspace';
-import { Workspaces } from 'nx/src/shared/workspace';
+import { Workspaces } from 'nx/src/config/workspaces';
+import { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder

@@ -1,4 +1,4 @@
-import { readNxJson } from '../core/file-utils';
+import { readNxJson } from '../project-graph/file-utils';
 import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { execSync } from 'child_process';

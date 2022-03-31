@@ -6,7 +6,7 @@ import {
 import * as chalk from 'chalk';
 import { initLocal } from './init-local';
 import { detectPackageManager } from '../src/utils/package-manager';
-import { output } from 'nx/src/utils/output';
+import { output } from '../src/utils/output';
 
 // new is a special case because there is no local workspace to load
 if (process.argv[2] === 'new' || process.argv[2] === '_migrate') {

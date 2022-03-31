@@ -1,4 +1,4 @@
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from './app-root';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';

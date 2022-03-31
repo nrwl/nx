@@ -3,8 +3,8 @@ import { copyFileSync, removeSync } from 'fs-extra';
 import { dirname, join } from 'path';
 import { gt, lte } from 'semver';
 import { dirSync } from 'tmp';
-import { NxJsonConfiguration } from '../shared/nx';
-import { flushChanges, FsTree } from '../shared/tree';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { flushChanges, FsTree } from '../config/tree';
 import {
   extractFileFromTarball,
   JsonReadOptions,
