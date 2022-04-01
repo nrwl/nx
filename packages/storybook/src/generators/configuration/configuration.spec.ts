@@ -225,6 +225,46 @@ describe('@nrwl/storybook:configuration', () => {
     });
   });
 
+  it('should update workspace file for angular buildable libs', async () => {
+    // Setup a new lib
+    await libraryGenerator(tree, {
+      name: 'test-ui-lib-5',
+      standaloneConfig: false,
+      buildable: true,
+    });
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib-5',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+    });
+    const project = readProjectConfiguration(tree, 'test-ui-lib-5');
+
+    expect(project.targets.storybook).toEqual({
+      executor: '@nrwl/storybook:storybook',
+      configurations: {
+        ci: {
+          quiet: true,
+        },
+      },
+      options: {
+        port: 4400,
+        projectBuildConfig: 'test-ui-lib-5:build-storybook',
+        uiFramework: '@storybook/angular',
+        config: {
+          configFolder: 'libs/test-ui-lib-5/.storybook',
+        },
+      },
+    });
+
+    expect(project.targets.lint).toEqual({
+      executor: '@nrwl/linter:eslint',
+      outputs: ['{options.outputFile}'],
+      options: {
+        lintFilePatterns: ['libs/test-ui-lib-5/**/*.ts'],
+      },
+    });
+  });
+
   it('should update `tsconfig.lib.json` file', async () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
