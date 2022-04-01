@@ -21,6 +21,20 @@ module.exports = (config, context) => {
 };
 ```
 
+Also supports promises
+
+```typescript
+// Utility function for sleeping
+const sleep = (n) => new Promise((resolve) => setTimeout(resolve, n));
+
+module.exports = async (config, context) => {
+  await sleep(10);
+  return merge(config, {
+    // overwrite values here
+  });
+};
+```
+
 ## Add a Loader
 
 To add the `css-loader` to your config, install it and add the rule.
