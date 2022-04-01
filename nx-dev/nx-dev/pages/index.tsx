@@ -23,9 +23,35 @@ import {
 } from '@nrwl/nx-dev/ui-home';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
-import { ReactComponentElement } from 'react';
+import { ReactComponentElement, useEffect, useState } from 'react';
 
 export function Index(): ReactComponentElement<any> {
+  /**
+   * Detects whether we should use a background fallback or not.
+   * `false` by default
+   */
+  function useHeroBackgroundFallback(): boolean {
+    const [useFallback, setUseFallback] = useState<boolean>(false);
+
+    useEffect(() => {
+      function handleResize(): void {
+        // Firefox has a hard time rendering SVG for high resolutions
+        if (navigator.userAgent.search(/firefox/gi) !== -1) {
+          if (window.innerWidth > 1460) {
+            return setUseFallback(true);
+          }
+        }
+        return setUseFallback(false);
+      }
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      return (): void => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    return useFallback;
+  }
+  const showBackgroundFallback = useHeroBackgroundFallback();
+
   return (
     <>
       <NextSeo
@@ -58,7 +84,9 @@ export function Index(): ReactComponentElement<any> {
             id="animated-background"
             className="bg-blue-nx-base transform-gpu bg-clip-border bg-right bg-no-repeat bg-origin-border text-white lg:bg-cover"
             style={{
-              backgroundImage: 'url(/images/background/hero-bg-large.svg)',
+              backgroundImage: showBackgroundFallback
+                ? 'url(/images/background/hero-bg.jpg)'
+                : 'url(/images/background/hero-bg-large.svg)',
             }}
           >
             <div className="md:py-18 mx-auto max-w-screen-lg px-4 py-4 xl:max-w-screen-xl">
