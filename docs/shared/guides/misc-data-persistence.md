@@ -192,7 +192,7 @@ class TodoEffects {
     )
   );
 
-  constructor(private action$: Actions, private backend: Backend) {}
+  constructor(private actions$: Actions, private backend: Backend) {}
 }
 ```
 
