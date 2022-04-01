@@ -321,10 +321,17 @@ export function findStorybookAndBuildTargets(targets: {
     if (targetConfig.executor === '@nrwl/storybook:build') {
       returnObject.storybookBuildTarget = target;
     }
-    if (
-      targetConfig.executor === '@angular-devkit/build-angular:browser' ||
-      targetConfig.executor === '@nrwl/angular:ng-packagr-lite'
-    ) {
+    /**
+     * Not looking for '@nrwl/angular:ng-packagr-lite', only
+     * looking for '@angular-devkit/build-angular:browser'
+     * because the '@nrwl/angular:ng-packagr-lite' executor
+     * does not support styles and extra options, so the user
+     * will be forced to switch to build-storybook to add extra options.
+     *
+     * So we might as well use the build-storybook by default to
+     * avoid any errors.
+     */
+    if (targetConfig.executor === '@angular-devkit/build-angular:browser') {
       returnObject.buildTarget = target;
     }
   });
