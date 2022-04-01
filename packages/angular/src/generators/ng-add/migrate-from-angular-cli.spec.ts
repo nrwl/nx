@@ -632,41 +632,102 @@ describe('workspace', () => {
     });
   });
 
-  describe('preserve angular cli layout', () => {
+  describe('--preserve-angular-cli-layout', () => {
     beforeEach(() => {
-      tree.write('/package.json', JSON.stringify({ devDependencies: {} }));
-      tree.write('/angular.json', JSON.stringify({ projects: { myproj: {} } }));
-      tree.write('/tsconfig.json', '{"compilerOptions": {}}');
+      tree.write(
+        'package.json',
+        JSON.stringify({ name: 'my-scope', devDependencies: {} })
+      );
+      tree.write('angular.json', JSON.stringify({ projects: { myproj: {} } }));
+      tree.write('tsconfig.json', '{"compilerOptions": {}}');
     });
 
     it('should update package.json', async () => {
-      await migrateFromAngularCli(tree, {
-        preserveAngularCliLayout: true,
-      });
+      await migrateFromAngularCli(tree, { preserveAngularCliLayout: true });
 
-      const d = readJson(tree, '/package.json').devDependencies;
-      expect(d['@nrwl/workspace']).toBeDefined();
-      expect(d['@nrwl/angular']).not.toBeDefined();
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['@nrwl/workspace']).toBeDefined();
+      expect(devDependencies['nx']).toBeDefined();
     });
 
     it('should create nx.json', async () => {
-      await migrateFromAngularCli(tree, {
-        preserveAngularCliLayout: true,
-      });
+      await migrateFromAngularCli(tree, { preserveAngularCliLayout: true });
 
-      const nxJson = readJson(tree, '/nx.json');
-      expect(nxJson.npmScope).toEqual('myproj');
-      expect(nxJson.workspaceLayout).toBeTruthy();
+      expect(readJson(tree, 'nx.json')).toMatchSnapshot();
     });
 
     it('should create decorate-angular-cli.js', async () => {
-      await migrateFromAngularCli(tree, {
-        preserveAngularCliLayout: true,
-      });
-      const s = readJson(tree, '/package.json').scripts;
+      await migrateFromAngularCli(tree, { preserveAngularCliLayout: true });
 
-      expect(tree.read('/decorate-angular-cli.js')).not.toBe(null);
-      expect(s.postinstall).toEqual('node ./decorate-angular-cli.js');
+      expect(tree.exists('/decorate-angular-cli.js')).toBe(true);
+      const { scripts } = readJson(tree, 'package.json');
+      expect(scripts.postinstall).toBe('node ./decorate-angular-cli.js');
+    });
+
+    it('should support multiple projects', async () => {
+      const angularJson = {
+        $schema: './node_modules/@angular/cli/lib/config/schema.json',
+        version: 1,
+        defaultProject: 'app1',
+        newProjectRoot: 'projects',
+        projects: {
+          app1: {
+            root: '',
+            sourceRoot: 'src',
+            architect: {
+              build: {
+                options: { tsConfig: 'tsconfig.app.json' },
+              },
+              test: {
+                options: { tsConfig: 'tsconfig.spec.json' },
+              },
+              e2e: {
+                builder: '@angular-devkit/build-angular:protractor',
+                options: { protractorConfig: 'e2e/protractor.conf.js' },
+              },
+            },
+          },
+          app2: {
+            root: 'projects/app2',
+            sourceRoot: 'projects/app2/src',
+            architect: {
+              build: {
+                options: { tsConfig: 'projects/app2/tsconfig.app.json' },
+              },
+              test: {
+                options: { tsConfig: 'projects/app2/tsconfig.spec.json' },
+              },
+              e2e: {
+                builder: '@angular-devkit/build-angular:protractor',
+                options: {
+                  protractorConfig: 'projects/app2/e2e/protractor.conf.js',
+                },
+              },
+            },
+          },
+          lib1: {
+            root: 'projects/lib1',
+            sourceRoot: 'projects/lib1/src',
+            architect: {
+              build: {
+                options: { tsConfig: 'projects/lib1/tsconfig.lib.json' },
+              },
+              test: {
+                options: { tsConfig: 'projects/lib1/tsconfig.spec.json' },
+              },
+            },
+          },
+        },
+      };
+      tree.write('/angular.json', JSON.stringify(angularJson));
+
+      await migrateFromAngularCli(tree, { preserveAngularCliLayout: true });
+
+      expect(readJson(tree, 'angular.json')).toStrictEqual(angularJson);
+      expect(tree.exists('/decorate-angular-cli.js')).toBe(true);
+      const { scripts } = readJson(tree, 'package.json');
+      expect(scripts.postinstall).toBe('node ./decorate-angular-cli.js');
+      expect(readJson(tree, 'nx.json')).toMatchSnapshot();
     });
   });
 });
