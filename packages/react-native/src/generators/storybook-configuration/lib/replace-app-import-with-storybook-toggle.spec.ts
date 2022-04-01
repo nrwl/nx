@@ -34,7 +34,7 @@ describe('replaceAppImportWithStorybookToggle', () => {
     const mainFile = tree.read('apps/products/src/main.tsx', 'utf-8');
     expect(formatFile`${mainFile}`).toEqual(
       formatFile`import { AppRegistry } from 'react-native';
-      import App from '../.storybook/toggle-storybook';
+      import App from './storybook/toggle-storybook';
       
       AppRegistry.registerComponent('main', () => App);`
     );
@@ -57,7 +57,7 @@ describe('replaceAppImportWithStorybookToggle', () => {
     const mainFile = tree.read('apps/products/src/main.tsx', 'utf-8');
     expect(formatFile`${mainFile}`).toEqual(
       formatFile`import { AppRegistry } from 'react-native';
-      import App from '../.storybook/toggle-storybook';
+      import App from './storybook/toggle-storybook';
       
       AppRegistry.registerComponent('main', () => App);`
     );

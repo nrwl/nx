@@ -19,7 +19,6 @@ const props <% if ( propsTypeName ) { %>:<%= propsTypeName %><% } %> = {<% for (
 <% } %>};
 
 storiesOf('<%= componentName %>', module)
-  .addDecorator((getStory) => <>{getStory()}</>)
   .add('Primary', () => (
     <<%= componentName %> {...props} <% if (hasActions) { %> {...actions} <% } %>/>
   ));

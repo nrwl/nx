@@ -66,8 +66,8 @@ describe('react native', () => {
     expect(() =>
       checkFilesExist(
         `.storybook/story-loader.js`,
-        `apps/${appName}/.storybook/storybook.ts`,
-        `apps/${appName}/.storybook/toggle-storybook.tsx`,
+        `apps/${appName}/src/storybook/storybook.ts`,
+        `apps/${appName}/src/storybook/toggle-storybook.tsx`,
         `apps/${appName}/src/app/App.stories.tsx`
       )
     ).not.toThrow();

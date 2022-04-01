@@ -1,6 +1,6 @@
 import { configure, getStorybookUI } from '@storybook/react-native';
 
-import { loadStories } from '../../../.storybook/story-loader';
+import { loadStories } from '../../../../.storybook/story-loader';
 
 configure(loadStories(), module, false);
 
