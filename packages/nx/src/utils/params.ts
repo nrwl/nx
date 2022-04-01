@@ -645,10 +645,7 @@ function getGeneratorDefaults(
 ) {
   let defaults = {};
   if (wc?.generators) {
-    if (
-      wc.generators[collectionName] &&
-      wc.generators[collectionName][generatorName]
-    ) {
+    if (wc.generators[collectionName]?.[generatorName]) {
       defaults = {
         ...defaults,
         ...wc.generators[collectionName][generatorName],
@@ -661,12 +658,7 @@ function getGeneratorDefaults(
       };
     }
   }
-  if (
-    projectName &&
-    wc &&
-    wc.projects[projectName] &&
-    wc.projects[projectName].generators
-  ) {
+  if (projectName && wc?.projects[projectName]?.generators) {
     const g = wc.projects[projectName].generators;
     if (g[collectionName] && g[collectionName][generatorName]) {
       defaults = { ...defaults, ...g[collectionName][generatorName] };
