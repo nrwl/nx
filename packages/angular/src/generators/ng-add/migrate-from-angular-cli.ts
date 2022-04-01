@@ -28,7 +28,7 @@ export async function migrateFromAngularCli(
   rawOptions: GeneratorOptions
 ) {
   const projects = getAllProjects(tree);
-  const options = normalizeOptions(rawOptions, projects);
+  const options = normalizeOptions(tree, rawOptions, projects);
 
   if (options.preserveAngularCliLayout) {
     addDependenciesToPackageJson(

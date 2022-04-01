@@ -1,5 +1,87 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`workspace --preserve-angular-cli-layout should create nx.json 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "implicitDependencies": Object {
+    ".eslintrc.json": "*",
+    "package.json": Object {
+      "dependencies": "*",
+      "devDependencies": "*",
+    },
+  },
+  "npmScope": "my-scope",
+  "targetDependencies": Object {
+    "build": Array [
+      Object {
+        "projects": "dependencies",
+        "target": "build",
+      },
+    ],
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+  "workspaceLayout": Object {
+    "appsDir": "",
+    "libsDir": "",
+  },
+}
+`;
+
+exports[`workspace --preserve-angular-cli-layout should support multiple projects 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "implicitDependencies": Object {
+    ".eslintrc.json": "*",
+    "package.json": Object {
+      "dependencies": "*",
+      "devDependencies": "*",
+    },
+  },
+  "npmScope": "my-scope",
+  "targetDependencies": Object {
+    "build": Array [
+      Object {
+        "projects": "dependencies",
+        "target": "build",
+      },
+    ],
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+  "workspaceLayout": Object {
+    "appsDir": "projects",
+    "libsDir": "projects",
+  },
+}
+`;
+
 exports[`workspace move to nx layout cypress should handle project configuration without cypress-run or cypress-open 1`] = `
 Object {
   "implicitDependencies": Array [
