@@ -40,17 +40,19 @@
     "@nrwl/web": "*",
     "@nrwl/workspace": "*",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
+    "@storybook/node-logger": "6.1.20",
     "@svgr/webpack": "^6.1.2",
+    "@swc/helpers": "~0.3.3",
     "chalk": "4.1.0",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-react": "7.28.0",
     "eslint-plugin-react-hooks": "^4.3.0",
     "react-refresh": "^0.10.0",
+    "semver": "7.3.4",
     "url-loader": "^4.1.1",
     "webpack": "^5.58.1",
-    "webpack-merge": "^5.8.0",
-    "@storybook/node-logger": "6.1.20",
-    "semver": "7.3.4"
-  }
+    "webpack-merge": "^5.8.0"
+  },
+  "devDependencies": {}
 }

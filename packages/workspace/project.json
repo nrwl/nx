@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/workspace"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/workspace",
         "tsConfig": "packages/workspace/tsconfig.lib.json",

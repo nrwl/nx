@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/angular"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/angular",
         "tsConfig": "packages/angular/tsconfig.lib.json",

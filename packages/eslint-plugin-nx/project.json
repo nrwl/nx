@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/eslint-plugin-nx"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/eslint-plugin-nx",
         "tsConfig": "packages/eslint-plugin-nx/tsconfig.lib.json",

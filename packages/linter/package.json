@@ -33,9 +33,10 @@
     "eslint": "^8.0.0"
   },
   "dependencies": {
-    "@phenomnomnominal/tsquery": "4.1.1",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
+    "@phenomnomnominal/tsquery": "4.1.1",
+    "@swc/helpers": "~0.3.3",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0"
   },
@@ -43,5 +44,6 @@
     "eslint": {
       "optional": true
     }
-  }
+  },
+  "devDependencies": {}
 }

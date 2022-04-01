@@ -34,8 +34,10 @@
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/workspace": "*",
+    "@swc/helpers": "~0.3.3",
     "@typescript-eslint/experimental-utils": "~5.10.0",
     "chalk": "4.1.0",
     "confusing-browser-globals": "^1.0.9"
-  }
+  },
+  "devDependencies": {}
 }

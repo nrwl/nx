@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/devkit"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/devkit",
         "tsConfig": "packages/devkit/tsconfig.lib.json",

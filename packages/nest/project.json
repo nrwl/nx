@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/nest"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/nest",
         "tsConfig": "packages/nest/tsconfig.lib.json",

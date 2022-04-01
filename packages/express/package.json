@@ -31,7 +31,8 @@
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/node": "*",
-    "@nrwl/workspace": "*"
+    "@nrwl/workspace": "*",
+    "@swc/helpers": "~0.3.3"
   },
   "peerDependencies": {
     "express": "4.17.2"
@@ -40,5 +41,6 @@
     "express": {
       "optional": true
     }
-  }
+  },
+  "devDependencies": {}
 }

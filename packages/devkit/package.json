@@ -27,11 +27,13 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "nx": "*",
+    "@swc/helpers": "~0.3.3",
     "ejs": "^3.1.5",
     "ignore": "^5.0.4",
+    "nx": "*",
     "rxjs": "^6.5.4",
     "semver": "7.3.4",
     "tslib": "^2.3.0"
-  }
+  },
+  "devDependencies": {}
 }

@@ -29,10 +29,12 @@
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
-    "@nrwl/linter": "*",
     "@nrwl/js": "*",
+    "@nrwl/linter": "*",
+    "@swc/helpers": "~0.3.3",
     "fs-extra": "^9.1.0",
     "rxjs": "^6.5.4",
     "tslib": "^2.3.0"
-  }
+  },
+  "devDependencies": {}
 }

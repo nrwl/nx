@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/express"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/express",
         "tsConfig": "packages/express/tsconfig.lib.json",

@@ -29,11 +29,13 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "@nestjs/schematics": "^8.0.0",
     "@nrwl/devkit": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/js": "*",
     "@nrwl/linter": "*",
     "@nrwl/node": "*",
-    "@nrwl/js": "*",
-    "@nrwl/jest": "*",
-    "@nestjs/schematics": "^8.0.0"
-  }
+    "@swc/helpers": "~0.3.3"
+  },
+  "devDependencies": {}
 }

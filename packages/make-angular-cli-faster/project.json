@@ -5,7 +5,7 @@
   "generators": {},
   "targets": {
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/make-angular-cli-faster",
         "tsConfig": "packages/make-angular-cli-faster/tsconfig.lib.json",

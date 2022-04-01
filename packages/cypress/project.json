@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/cypress"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/cypress",
         "tsConfig": "packages/cypress/tsconfig.lib.json",

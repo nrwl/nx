@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/linter"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/linter",
         "tsConfig": "packages/linter/tsconfig.lib.json",

@@ -19,7 +19,7 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/js",
         "tsConfig": "packages/js/tsconfig.lib.json",

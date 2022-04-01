@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/cli"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/cli",
         "tsConfig": "packages/cli/tsconfig.lib.json",

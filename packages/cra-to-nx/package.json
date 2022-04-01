@@ -21,11 +21,13 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "tslib": "^2.3.0",
-    "@nrwl/workspace": "*",
     "@nrwl/devkit": "*",
-    "nx": "*",
+    "@nrwl/workspace": "*",
+    "@swc/helpers": "~0.3.3",
     "fs-extra": "^9.1.0",
+    "nx": "*",
+    "tslib": "^2.3.0",
     "yargs-parser": "21.0.1"
-  }
+  },
+  "devDependencies": {}
 }

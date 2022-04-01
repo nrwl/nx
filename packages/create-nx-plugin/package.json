@@ -28,11 +28,13 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "nx": "*",
     "@nrwl/devkit": "*",
+    "@swc/helpers": "~0.3.3",
     "enquirer": "~2.3.6",
     "fs-extra": "^9.1.0",
+    "nx": "*",
     "tmp": "~0.2.1",
     "yargs-parser": "21.0.1"
-  }
+  },
+  "devDependencies": {}
 }

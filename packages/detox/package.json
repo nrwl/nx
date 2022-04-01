@@ -29,6 +29,7 @@
     "@nrwl/linter": "*",
     "@nrwl/react": "*",
     "@nrwl/workspace": "*",
+    "@swc/helpers": "~0.3.3",
     "chalk": "^4.1.0"
   },
   "peerDependencies": {
@@ -39,5 +40,6 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "schematics": "./generators.json"
+  "schematics": "./generators.json",
+  "devDependencies": {}
 }

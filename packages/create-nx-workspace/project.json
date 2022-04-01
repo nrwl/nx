@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/create-nx-workspace"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/create-nx-workspace",
         "tsConfig": "packages/create-nx-workspace/tsconfig.lib.json",

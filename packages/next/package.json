@@ -34,20 +34,22 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.14.5",
-    "@nrwl/react": "*",
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
+    "@nrwl/react": "*",
     "@nrwl/web": "*",
     "@nrwl/workspace": "*",
     "@svgr/webpack": "^6.1.2",
+    "@swc/helpers": "~0.3.3",
     "chalk": "4.1.0",
     "eslint-config-next": "^12.1.0",
     "fs-extra": "^9.1.0",
-    "url-loader": "^4.1.1",
-    "tsconfig-paths": "^3.9.0",
     "ts-node": "~9.1.1",
+    "tsconfig-paths": "^3.9.0",
+    "url-loader": "^4.1.1",
     "webpack-merge": "^5.8.0"
-  }
+  },
+  "devDependencies": {}
 }

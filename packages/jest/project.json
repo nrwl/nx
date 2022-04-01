@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/jest"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/jest",
         "tsConfig": "packages/jest/tsconfig.lib.json",

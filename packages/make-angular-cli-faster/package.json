@@ -29,11 +29,13 @@
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/workspace": "*",
+    "@swc/helpers": "~0.3.3",
     "enquirer": "^2.3.6",
     "nx": "*",
     "semver": "7.3.4",
     "tmp": "~0.2.1",
     "yargs": "^17.4.0",
     "yargs-parser": "21.0.1"
-  }
+  },
+  "devDependencies": {}
 }

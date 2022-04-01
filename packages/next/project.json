@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/next"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/next",
         "tsConfig": "packages/next/tsconfig.lib.json",

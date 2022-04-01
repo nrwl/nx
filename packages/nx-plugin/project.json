@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/nx-plugin"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/nx-plugin",
         "tsConfig": "packages/nx-plugin/tsconfig.lib.json",

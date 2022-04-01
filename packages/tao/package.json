@@ -30,6 +30,8 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
+    "@swc/helpers": "~0.3.3",
     "nx": "*"
-  }
+  },
+  "devDependencies": {}
 }

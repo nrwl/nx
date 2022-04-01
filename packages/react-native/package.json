@@ -28,9 +28,10 @@
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
-    "@nrwl/storybook": "*",
     "@nrwl/react": "*",
+    "@nrwl/storybook": "*",
     "@nrwl/workspace": "*",
+    "@swc/helpers": "~0.3.3",
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^9.1.0",
@@ -47,5 +48,6 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "schematics": "./generators.json"
+  "schematics": "./generators.json",
+  "devDependencies": {}
 }

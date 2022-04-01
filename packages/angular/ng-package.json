@@ -9,6 +9,7 @@
     "@angular-eslint/",
     "@schematics",
     "@phenomnomnominal/tsquery",
+    "@swc/helpers",
     "ignore",
     "jasmine-marbles",
     "rxjs-for-await",

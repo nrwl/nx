@@ -12,7 +12,7 @@
       "outputs": ["coverage/packages/tao"]
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nrwl/js:swc",
       "options": {
         "outputPath": "build/packages/tao",
         "tsConfig": "packages/tao/tsconfig.lib.json",
