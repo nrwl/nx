@@ -224,6 +224,7 @@ export class Migrator {
         packages: [
           'nx',
           '@nrwl/angular',
+          '@nrwl/cli',
           '@nrwl/cypress',
           '@nrwl/devkit',
           '@nrwl/eslint-plugin-nx',
