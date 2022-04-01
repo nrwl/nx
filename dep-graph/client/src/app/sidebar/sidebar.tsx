@@ -184,12 +184,14 @@ export function Sidebar() {
         ></FocusedProjectPanel>
       ) : null}
 
-      <TracingPanel
-        start={tracingInfo.start}
-        end={tracingInfo.end}
-        resetStart={resetTraceStart}
-        resetEnd={resetTraceEnd}
-      ></TracingPanel>
+      <ExperimentalFeature>
+        <TracingPanel
+          start={tracingInfo.start}
+          end={tracingInfo.end}
+          resetStart={resetTraceStart}
+          resetEnd={resetTraceEnd}
+        ></TracingPanel>
+      </ExperimentalFeature>
 
       <TextFilterPanel
         includePath={includePath}
