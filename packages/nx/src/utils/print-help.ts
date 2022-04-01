@@ -8,7 +8,7 @@ function formatOption(
   maxPropertyNameLength: number
 ) {
   const lengthOfKey = Math.max(maxPropertyNameLength + 4, 22);
-  return `  --${`${name}                                                 `.substr(
+  return `  --${`${name}                                                 `.slice(
     0,
     lengthOfKey
   )}${description}`;

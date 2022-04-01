@@ -71,9 +71,7 @@ function updateImports(host: Tree) {
         isStringLiteral(statement.moduleSpecifier)
       ) {
         const nodeText = statement.moduleSpecifier.getText(sourceFile);
-        const modulePath = statement.moduleSpecifier
-          .getText(sourceFile)
-          .substr(1, nodeText.length - 2);
+        const modulePath = nodeText.slice(1, -1);
         if (modulePath === 'type-graphql') {
           changes.push(
             new ReplaceChange(

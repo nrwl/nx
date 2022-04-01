@@ -9,7 +9,7 @@ export function normalizeSchema(
   projectConfiguration: ProjectConfiguration
 ): NormalizedSchema {
   const destination = schema.destination.startsWith('/')
-    ? normalizeSlashes(schema.destination.substr(1))
+    ? normalizeSlashes(schema.destination.slice(1))
     : schema.destination;
   const newProjectName = getNewProjectName(destination);
   const { npmScope } = getWorkspaceLayout(tree);

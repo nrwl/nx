@@ -156,6 +156,6 @@ export class TypeScriptImportLocator {
   }
 
   private getStringLiteralValue(node: ts.Node): string {
-    return node.getText().substr(1, node.getText().length - 2);
+    return node.getText().slice(1, -1);
   }
 }

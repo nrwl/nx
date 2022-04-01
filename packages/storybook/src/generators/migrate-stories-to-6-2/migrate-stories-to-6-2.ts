@@ -167,7 +167,7 @@ function findAllComponentsWithStoriesForSpecificProject(
     const imports = file.statements?.filter(
       (statement) => statement.kind === SyntaxKind.ImportDeclaration
     );
-    const modulePath = moduleFilePath.substr(
+    const modulePath = moduleFilePath.slice(
       0,
       moduleFilePath?.lastIndexOf('/')
     );

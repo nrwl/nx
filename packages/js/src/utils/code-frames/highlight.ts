@@ -50,7 +50,7 @@ function getTokenType(match) {
 
     if (
       JSX_TAG.test(token.value) &&
-      (text[offset - 1] === '<' || text.substr(offset - 2, 2) == '</')
+      (text[offset - 1] === '<' || text.slice(offset - 2, 2) == '</')
     ) {
       return 'jsx_tag';
     }
