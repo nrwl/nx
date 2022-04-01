@@ -43,6 +43,12 @@ export function validateWorkspace(
       throw new Error('Cannot find angular.json');
     }
 
+    // TODO: this restrictions will be removed when support for multiple
+    // projects is added
+    if (projects.apps.length > 2 || projects.libs.length > 0) {
+      throw new Error('Can only convert projects with one app');
+    }
+
     const e2eKey = getE2eKey(projects);
     const e2eApp = getE2eProject(projects);
 
@@ -97,19 +103,7 @@ export function createNxJson(
   options: GeneratorOptions,
   setWorkspaceLayoutAsNewProjectRoot: boolean = false
 ): void {
-  const { projects = {}, newProjectRoot = '' } = readJson(tree, 'angular.json');
-  // TODO: temporarily leaving this here because it's the old behavior for a
-  // minimal migration, will be removed in a later PR
-  const hasLibraries = Object.keys(projects).find(
-    (project) =>
-      projects[project].projectType &&
-      projects[project].projectType !== 'application'
-  );
-  if (Object.keys(projects).length !== 1 || hasLibraries) {
-    throw new Error(
-      `The schematic can only be used with Angular CLI workspaces with a single application.`
-    );
-  }
+  const { newProjectRoot = '' } = readJson(tree, 'angular.json');
 
   writeJson<NxJsonConfiguration>(tree, 'nx.json', {
     npmScope: options.npmScope,
