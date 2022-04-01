@@ -606,7 +606,7 @@ describe('workspace', () => {
       });
 
       const nxJson = readJson(tree, '/nx.json');
-      expect(nxJson.npmScope).toEqual('myproj');
+      expect(nxJson.npmScope).toEqual('my-app');
     });
 
     it('should create decorate-angular-cli.js', async () => {
