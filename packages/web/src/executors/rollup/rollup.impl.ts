@@ -63,7 +63,7 @@ export default async function* rollupExecutor(
 
   const npmDeps = (projectGraph.dependencies[context.projectName] ?? [])
     .filter((d) => d.target.startsWith('npm:'))
-    .map((d) => d.target.substr(4));
+    .map((d) => d.target.slice(4));
 
   const rollupOptions = createRollupOptions(
     options,

@@ -63,7 +63,7 @@ export abstract class FileHasherBase {
     }
     const relativePath = normalizePath(
       path.startsWith(workspaceRoot)
-        ? path.substring(workspaceRoot.length + 1)
+        ? path.slice(workspaceRoot.length + 1)
         : path
     );
     if (this.fileHashes.has(relativePath)) {
