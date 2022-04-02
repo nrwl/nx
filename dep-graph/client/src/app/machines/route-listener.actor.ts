@@ -30,6 +30,15 @@ function parseSearchParamsToEvents(searchParams: string): DepGraphUIEvents[] {
           searchDepth: parseInt(value),
         });
         break;
+      case 'traceStart':
+        events.push({
+          type: 'setTracingStart',
+          projectName: value,
+        });
+        break;
+      case 'traceEnd':
+        events.push({ type: 'setTracingEnd', projectName: value });
+        break;
     }
   });
   return events;

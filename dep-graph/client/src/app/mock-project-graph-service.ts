@@ -21,6 +21,13 @@ export class MockProjectGraphService implements ProjectGraphService {
         data: {
           root: 'apps/app1',
           tags: [],
+          files: [
+            {
+              file: 'some/file.ts',
+              hash: 'ecccd8481d2e5eae0e59928be1bc4c2d071729d7',
+              deps: ['existing-lib-1'],
+            },
+          ],
         },
       },
       {
@@ -29,6 +36,7 @@ export class MockProjectGraphService implements ProjectGraphService {
         data: {
           root: 'libs/lib1',
           tags: [],
+          files: [],
         },
       },
     ],
@@ -37,7 +45,7 @@ export class MockProjectGraphService implements ProjectGraphService {
         {
           source: 'existing-app-1',
           target: 'existing-lib-1',
-          type: 'statis',
+          type: 'static',
         },
       ],
       'existing-lib-1': [],
@@ -70,6 +78,7 @@ export class MockProjectGraphService implements ProjectGraphService {
       data: {
         root: type === 'app' ? `apps/${name}` : `libs/${name}`,
         tags: [],
+        files: [],
       },
     };
   }

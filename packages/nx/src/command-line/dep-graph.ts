@@ -490,7 +490,7 @@ async function createDepGraphClientResponse(
         data: {
           tags: project.data.tags,
           root: project.data.root,
-          files: [],
+          files: project.data.files,
         },
       } as ProjectGraphProjectNode)
   );

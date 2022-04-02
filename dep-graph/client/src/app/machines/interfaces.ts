@@ -13,6 +13,7 @@ export interface DepGraphSchema {
     focused: {};
     textFiltered: {};
     customSelected: {};
+    tracing: {};
   };
 }
 
@@ -35,6 +36,10 @@ export type DepGraphUIEvents =
   | { type: 'deselectAll' }
   | { type: 'selectAffected' }
   | { type: 'setGroupByFolder'; groupByFolder: boolean }
+  | { type: 'setTracingStart'; projectName: string }
+  | { type: 'setTracingEnd'; projectName: string }
+  | { type: 'clearTraceStart' }
+  | { type: 'clearTraceEnd' }
   | { type: 'setCollapseEdges'; collapseEdges: boolean }
   | { type: 'setIncludeProjectsByPath'; includeProjectsByPath: boolean }
   | { type: 'incrementSearchDepth' }
@@ -116,6 +121,11 @@ export type GraphRenderEvents =
       search: string;
       includeProjectsByPath: boolean;
       searchDepth: number;
+    }
+  | {
+      type: 'notifyGraphTracing';
+      start: string;
+      end: string;
     };
 
 export type RouteEvents =
@@ -145,7 +155,8 @@ export type RouteEvents =
   | {
       type: 'notifyRouteSelectAffected';
     }
-  | { type: 'notifyRouteClearSelect' };
+  | { type: 'notifyRouteClearSelect' }
+  | { type: 'notifyRouteTracing'; start: string; end: string };
 
 export type AllEvents = DepGraphUIEvents | GraphRenderEvents | RouteEvents;
 
@@ -170,6 +181,10 @@ export interface DepGraphContext {
   routeSetterActor: ActorRef<RouteEvents>;
   routeListenerActor: ActorRef<DepGraphUIEvents>;
   lastPerfReport: GraphPerfReport;
+  tracing: {
+    start: string;
+    end: string;
+  };
 }
 
 export type DepGraphStateNodeConfig = StateNodeConfig<

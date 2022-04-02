@@ -55,12 +55,12 @@ describe('dep-graph-client', () => {
 
     it('should filter projects', () => {
       getTextFilterInput().type('nx-dev');
-      getCheckedProjectItems().should('have.length', 9);
+      getCheckedProjectItems().should('have.length', 15);
     });
 
     it('should clear selection on reset', () => {
       getTextFilterInput().type('nx-dev');
-      getCheckedProjectItems().should('have.length', 9);
+      getCheckedProjectItems().should('have.length', 15);
       getTextFilterReset().click();
       getCheckedProjectItems().should('have.length', 0);
     });
@@ -68,7 +68,7 @@ describe('dep-graph-client', () => {
 
   describe('selecting a different project', () => {
     it('should change the available projects', () => {
-      getProjectItems().should('have.length', 53);
+      getProjectItems().should('have.length', 62);
       cy.get('[data-cy=project-select]').select('Ocean', { force: true });
       getProjectItems().should('have.length', 124);
     });
@@ -77,14 +77,14 @@ describe('dep-graph-client', () => {
   describe('select all button', () => {
     it('should check all project items', () => {
       getSelectAllButton().scrollIntoView().click({ force: true });
-      getCheckedProjectItems().should('have.length', 53);
+      getCheckedProjectItems().should('have.length', 62);
     });
   });
 
   describe('deselect all button', () => {
     it('should uncheck all project items', () => {
       getDeselectAllButton().click();
-      getUncheckedProjectItems().should('have.length', 53);
+      getUncheckedProjectItems().should('have.length', 62);
       getSelectProjectsMessage().should('be.visible');
     });
   });
@@ -147,7 +147,7 @@ describe('dep-graph-client', () => {
       cy.contains('nx-dev').scrollIntoView().should('be.visible');
       cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
 
-      getCheckedProjectItems().should('have.length', 10);
+      getCheckedProjectItems().should('have.length', 15);
     });
   });
 
@@ -156,7 +156,7 @@ describe('dep-graph-client', () => {
       cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
       getUnfocusProjectButton().click();
 
-      getUncheckedProjectItems().should('have.length', 53);
+      getUncheckedProjectItems().should('have.length', 62);
     });
   });
 
@@ -164,14 +164,14 @@ describe('dep-graph-client', () => {
     it('should filter projects by text when pressing enter', () => {
       getTextFilterInput().type('nx-dev{enter}');
 
-      getCheckedProjectItems().should('have.length', 9);
+      getCheckedProjectItems().should('have.length', 15);
     });
 
     it('should include projects in path when option is checked', () => {
       getTextFilterInput().type('nx-dev');
       getIncludeProjectsInPathButton().click();
 
-      getCheckedProjectItems().should('have.length', 17);
+      getCheckedProjectItems().should('have.length', 24);
     });
   });
 
@@ -229,7 +229,7 @@ describe('loading dep-graph client with url params', () => {
     // wait for first graph to finish loading
     cy.wait('@getGraph');
 
-    getCheckedProjectItems().should('have.length', 10);
+    getCheckedProjectItems().should('have.length', 15);
   });
 
   it('should focus projects with search depth', () => {
@@ -240,7 +240,7 @@ describe('loading dep-graph client with url params', () => {
     // wait for first graph to finish loading
     cy.wait('@getGraph');
 
-    getCheckedProjectItems().should('have.length', 8);
+    getCheckedProjectItems().should('have.length', 11);
     getSearchDepthCheckbox().should('exist');
   });
 
@@ -263,7 +263,7 @@ describe('loading dep-graph client with url params', () => {
     // wait for first graph to finish loading
     cy.wait('@getGraph');
 
-    getCheckedProjectItems().should('have.length', 53);
+    getCheckedProjectItems().should('have.length', 62);
   });
 });
 

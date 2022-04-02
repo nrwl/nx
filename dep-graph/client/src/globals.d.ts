@@ -28,6 +28,10 @@ declare module 'cytoscape' {
     pannable: () => boolean;
   }
 
+  interface EdgeSingular {
+    popperRef: Function;
+  }
+
   namespace Css {
     interface EdgeLine {
       'edge-text-rotation'?: string;
