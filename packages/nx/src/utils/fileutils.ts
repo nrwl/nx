@@ -119,7 +119,7 @@ export async function extractFileFromTarball(
   file: string,
   destinationFilePath: string
 ) {
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     ensureDirSync(dirname(destinationFilePath));
     var tarExtractStream = tar.extract();
     const destinationFileStream = createWriteStream(destinationFilePath);
@@ -130,7 +130,7 @@ export async function extractFileFromTarball(
         stream.pipe(destinationFileStream);
         stream.on('end', () => {
           isFileExtracted = true;
-          resolve();
+          resolve(destinationFilePath);
         });
       }
 

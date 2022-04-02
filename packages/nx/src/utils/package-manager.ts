@@ -1,8 +1,12 @@
-import { execSync } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { copyFileSync, existsSync, unlinkSync } from 'fs';
 import { dirname, join } from 'path';
 import { dirSync } from 'tmp';
+import { promisify } from 'util';
 import { readJsonFile, writeJsonFile } from './fileutils';
+import { PackageJson } from './package-json';
+
+const execAsync = promisify(exec);
 
 export type PackageManager = 'yarn' | 'pnpm' | 'npm';
 
@@ -14,6 +18,8 @@ export interface PackageManagerCommands {
   rm: string;
   exec: string;
   list: string;
+  pack: string;
+  view: string;
   run: (script: string, args: string) => string;
 }
 
@@ -52,6 +58,8 @@ export function getPackageManagerCommand(
       exec: 'yarn',
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       list: 'yarn list',
+      pack: 'npm pack',
+      view: 'npm view',
     }),
     pnpm: () => {
       const [major, minor] = getPackageManagerVersion('pnpm').split('.');
@@ -68,6 +76,8 @@ export function getPackageManagerCommand(
         exec: useExec ? 'pnpm exec' : 'pnpx',
         run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
         list: 'pnpm ls --depth 100',
+        pack: 'pnpm pack',
+        view: 'pnpm view',
       };
     },
     npm: () => {
@@ -82,6 +92,8 @@ export function getPackageManagerCommand(
         exec: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
+        pack: 'npm pack',
+        view: 'npm view',
       };
     },
   };
@@ -114,25 +126,36 @@ export function checkForNPMRC(
   return existsSync(path) ? path : null;
 }
 
+export function createTempNpmDirectory(): string {
+  const dir = dirSync().name;
+
+  // A package.json is needed for pnpm pack and for .npmrc to resolve
+  writeJsonFile(`${dir}/package.json`, {});
+  const npmrc = checkForNPMRC();
+  if (npmrc) {
+    // Copy npmrc if it exists, so that npm still follows it.
+    copyFileSync(npmrc, `${dir}/.npmrc`);
+  }
+
+  return dir;
+}
+
 /**
  * Returns the resolved version for a given package and version tag using the
  * NPM registry (when using Yarn it will fall back to NPM to fetch the info).
  */
-export function resolvePackageVersionUsingRegistry(
+export async function resolvePackageVersionUsingRegistry(
   packageName: string,
   version: string
-): string {
-  let pm = detectPackageManager();
-  if (pm === 'yarn') {
-    pm = 'npm';
-  }
-
+): Promise<string> {
   try {
-    const result = execSync(`${pm} view ${packageName}@${version} version`, {
-      stdio: [],
-    })
-      .toString()
-      .trim();
+    const pmc = getPackageManagerCommand();
+
+    const { stdout } = await execAsync(
+      `${pmc.view} ${packageName}@${version} version`
+    );
+
+    const result = stdout.trim();
 
     if (!result) {
       throw new Error(`Unable to resolve version ${packageName}@${version}.`);
@@ -161,14 +184,7 @@ export function resolvePackageVersionUsingInstallation(
   packageName: string,
   version: string
 ): string {
-  const dir = dirSync().name;
-  const npmrc = checkForNPMRC();
-
-  writeJsonFile(`${dir}/package.json`, {});
-  if (npmrc) {
-    // Copy npmrc if it exists, so that npm still follows it.
-    copyFileSync(npmrc, `${dir}/.npmrc`);
-  }
+  const dir = createTempNpmDirectory();
 
   const pmc = getPackageManagerCommand();
   execSync(`${pmc.add} ${packageName}@${version}`, { stdio: [], cwd: dir });
@@ -176,7 +192,8 @@ export function resolvePackageVersionUsingInstallation(
   const packageJsonPath = require.resolve(`${packageName}/package.json`, {
     paths: [dir],
   });
-  const { version: resolvedVersion } = readJsonFile(packageJsonPath);
+  const { version: resolvedVersion } =
+    readJsonFile<PackageJson>(packageJsonPath);
 
   try {
     unlinkSync(dir);
