@@ -9,16 +9,12 @@ describe('Migration', () => {
         fetch: (_p, _v) => {
           throw new Error('cannot fetch');
         },
-        from: {},
         to: {},
       });
 
-      try {
-        await migrator.updatePackageJson('mypackage', 'myversion');
-        throw new Error('fail');
-      } catch (e) {
-        expect(e.message).toEqual(`cannot fetch`);
-      }
+      await expect(
+        migrator.updatePackageJson('mypackage', 'myversion')
+      ).rejects.toThrowError(/cannot fetch/);
     });
 
     it('should return a patch to the new version', async () => {
@@ -26,7 +22,6 @@ describe('Migration', () => {
         packageJson: {},
         versions: () => '1.0.0',
         fetch: (_p, _v) => Promise.resolve({ version: '2.0.0' }),
-        from: {},
         to: {},
       });
 
@@ -68,7 +63,6 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
-        from: {},
         to: {},
       });
 
@@ -108,7 +102,6 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
-        from: {},
         to: {},
       });
 
@@ -157,7 +150,6 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
-        from: {},
         to: {},
       });
 
@@ -225,7 +217,6 @@ describe('Migration', () => {
             return Promise.resolve({ version: '4.0.0' });
           }
         },
-        from: {},
         to: {},
       });
 
@@ -275,7 +266,6 @@ describe('Migration', () => {
             return Promise.resolve({ version: '2.0.0' });
           }
         },
-        from: {},
         to: {},
       });
 
@@ -318,7 +308,6 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
-        from: {},
         to: {},
       });
 
@@ -359,7 +348,6 @@ describe('Migration', () => {
         },
         versions: () => '1.0.0',
         fetch: (_p, _v) => Promise.resolve({ version: '2.0.0' }),
-        from: {},
         to: {},
       });
 
@@ -402,7 +390,6 @@ describe('Migration', () => {
             version: '2.0.0',
             packageJsonUpdates: { one: { version: '2.0.0', packages: {} } },
           }),
-        from: {},
         to: {},
       });
       await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
@@ -421,7 +408,6 @@ describe('Migration', () => {
             packageJsonUpdates: { one: { version: '2.0.0', packages: {} } },
           });
         },
-        from: {},
         to: {},
       });
       await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
@@ -455,7 +441,6 @@ describe('Migration', () => {
             throw new Error('Boom');
           }
         },
-        from: {},
         to: {},
       });
 
@@ -518,7 +503,6 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
-        from: {},
         to: {},
       });
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
@@ -599,7 +583,6 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
-        from: {},
         to: {},
       });
 
