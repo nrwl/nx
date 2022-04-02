@@ -1,5 +1,6 @@
 import { exec, execSync } from 'child_process';
-import { copyFileSync, existsSync, unlinkSync } from 'fs';
+import { copyFileSync, existsSync } from 'fs';
+import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
@@ -180,26 +181,26 @@ export async function resolvePackageVersionUsingRegistry(
  * installing it in a temporary directory and fetching the version from the
  * package.json.
  */
-export function resolvePackageVersionUsingInstallation(
+export async function resolvePackageVersionUsingInstallation(
   packageName: string,
   version: string
-): string {
+): Promise<string> {
   const dir = createTempNpmDirectory();
 
-  const pmc = getPackageManagerCommand();
-  execSync(`${pmc.add} ${packageName}@${version}`, { stdio: [], cwd: dir });
-
-  const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-    paths: [dir],
-  });
-  const { version: resolvedVersion } =
-    readJsonFile<PackageJson>(packageJsonPath);
-
   try {
-    unlinkSync(dir);
-  } catch {
-    // It's okay if this fails, the OS will clean it up eventually
-  }
+    const pmc = getPackageManagerCommand();
+    await execAsync(`${pmc.add} ${packageName}@${version}`, { cwd: dir });
 
-  return resolvedVersion;
+    const packageJsonPath = require.resolve(`${packageName}/package.json`, {
+      paths: [dir],
+    });
+
+    return readJsonFile<PackageJson>(packageJsonPath).version;
+  } finally {
+    try {
+      await remove(dir);
+    } catch {
+      // It's okay if this fails, the OS will clean it up eventually
+    }
+  }
 }
