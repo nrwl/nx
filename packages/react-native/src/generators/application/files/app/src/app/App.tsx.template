@@ -8,10 +8,8 @@ import {
   Text,
   StatusBar,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
-
-// @ts-ignore
-import openURLInBrowser from 'react-native/Libraries/Core/Devtools/openURLInBrowser';
 
 import Checkmark from './icons/checkmark.svg';
 import Book from './icons/book.svg';
@@ -82,7 +80,7 @@ export const App = () => {
               <TouchableOpacity
                 style={[styles.listItem, styles.learning]}
                 onPress={() =>
-                  openURLInBrowser(
+                  Linking.openURL(
                     'https://nx.dev/getting-started/intro?utm_source=nx-project'
                   )
                 }
@@ -99,7 +97,7 @@ export const App = () => {
               <TouchableOpacity
                 style={[styles.listItem, styles.learning]}
                 onPress={() =>
-                  openURLInBrowser(
+                  Linking.openURL(
                     'https://blog.nrwl.io/?utm_source=nx-project'
                   )
                 }
@@ -116,7 +114,7 @@ export const App = () => {
               <TouchableOpacity
                 style={[styles.listItem, styles.learning]}
                 onPress={() =>
-                  openURLInBrowser(
+                  Linking.openURL(
                     'https://www.youtube.com/c/Nrwl_io/videos?utm_source=nx-project'
                   )
                 }
@@ -133,7 +131,7 @@ export const App = () => {
               <TouchableOpacity
                 style={[styles.listItem, styles.learning]}
                 onPress={() =>
-                  openURLInBrowser(
+                  Linking.openURL(
                     'https://nx.dev/tutorial/01-create-application?utm_source=nx-project'
                   )
                 }
@@ -150,7 +148,7 @@ export const App = () => {
               <TouchableOpacity
                 style={[styles.listItem, styles.learning]}
                 onPress={() =>
-                  openURLInBrowser(
+                  Linking.openURL(
                     'https://nxplaybook.com/?utm_source=nx-project'
                   )
                 }
@@ -169,7 +167,7 @@ export const App = () => {
           <View style={styles.section}>
             <TouchableOpacity
               onPress={() =>
-                openURLInBrowser(
+                Linking.openURL(
                   'https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console&utm_source=nx-project'
                 )
               }
@@ -196,7 +194,7 @@ export const App = () => {
           <View style={styles.section}>
             <TouchableOpacity
               onPress={() =>
-                openURLInBrowser('https://nx.app/?utm_source=nx-project')
+                Linking.openURL('https://nx.app/?utm_source=nx-project')
               }
             >
               <View style={styles.shadowBox}>
@@ -226,7 +224,7 @@ export const App = () => {
           <View style={styles.section}>
             <TouchableOpacity
               onPress={() =>
-                openURLInBrowser('https://nx.app/?utm_source=nx-project')
+                Linking.openURL('https://nx.app/?utm_source=nx-project')
               }
             >
               <View style={[styles.listItem, styles.shadowBox]}>
