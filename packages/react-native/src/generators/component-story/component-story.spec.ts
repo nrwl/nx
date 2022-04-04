@@ -60,8 +60,7 @@ describe('react-native:component-story', () => {
           import React from 'react';
           import { TestUiLib, TestUiLibProps } from './test-ui-lib';
           const props: TestUiLibProps = {};
-          storiesOf('TestUiLib', module)
-            .addDecorator((getStory) => <>{getStory()}</>)
+          storiesOf('TestUiLib', module)            
             .add('Primary', () => <TestUiLib {...props} />);
           `);
       });
@@ -110,7 +109,6 @@ describe('react-native:component-story', () => {
     const props = {};
 
     storiesOf('Test', module)
-      .addDecorator((getStory) => <>{getStory()}</>)
       .add('Primary', () => <Test {...props} />);
           `);
       });
@@ -149,7 +147,6 @@ describe('react-native:component-story', () => {
           import { Test } from './test-ui-lib';
           const props = {};
           storiesOf('Test', module)
-            .addDecorator((getStory) => <>{getStory()}</>)
             .add('Primary', () => <Test {...props} />);
           `);
       });
@@ -172,7 +169,6 @@ describe('react-native:component-story', () => {
           import { TestUiLib, TestUiLibProps } from './test-ui-lib';
           const props: TestUiLibProps = {};
           storiesOf('TestUiLib', module)
-            .addDecorator((getStory) => <>{getStory()}</>)
             .add('Primary', () => <TestUiLib {...props} />);
           `);
       });
@@ -223,7 +219,6 @@ describe('react-native:component-story', () => {
         const actions = { someAction: action('someAction executed!') };
         const props: TestProps = { name: '', displayAge: false };
         storiesOf('Test', module)
-          .addDecorator((getStory) => <>{getStory()}</>)
           .add('Primary', () => <Test {...props} {...actions} />);
           `);
       });
@@ -372,7 +367,6 @@ describe('react-native:component-story', () => {
       displayAge: false,
     };
     storiesOf('Test', module)
-      .addDecorator((getStory) => <>{getStory()}</>)
       .add('Primary', () => <Test {...props} />);
           `);
         });
@@ -404,7 +398,6 @@ describe('react-native:component-story', () => {
         const props: TestUiLibProps = {};
 
         storiesOf('TestUiLib', module)
-          .addDecorator((getStory) => <>{getStory()}</>)
           .add('Primary', () => <TestUiLib {...props} />);
         `);
     });

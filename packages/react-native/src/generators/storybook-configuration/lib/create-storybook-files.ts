@@ -53,7 +53,7 @@ export async function createStorybookFiles(
   generateFiles(
     host,
     join(__dirname, '../files/app'),
-    join(root, '.storybook'),
+    join(root, 'src', 'storybook'),
     {
       tmpl: '',
       offsetFromRoot: offsetFromRoot(sourceRoot),

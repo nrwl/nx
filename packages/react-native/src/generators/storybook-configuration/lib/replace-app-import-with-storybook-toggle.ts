@@ -20,7 +20,7 @@ export function replaceAppImportWithStorybookToggle(
 
   const mainFilePath = join(sourceRoot, schema.js ? 'main.js' : 'main.tsx');
   const appImportImport = `import App from './app/App';`;
-  const storybookeToggleImport = `import App from '../.storybook/toggle-storybook';`;
+  const storybookeToggleImport = `import App from './storybook/toggle-storybook';`;
 
   try {
     logger.debug(`Updating import for ${mainFilePath}`);

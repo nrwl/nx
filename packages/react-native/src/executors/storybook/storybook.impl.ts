@@ -1,5 +1,6 @@
 import { join } from 'path';
 import { ExecutorContext, logger } from '@nrwl/devkit';
+import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
 import * as chalk from 'chalk';
 
 import { ReactNativeStorybookOptions } from './schema';
@@ -23,15 +24,17 @@ export default async function* reactNatievStorybookExecutor(
   );
 
   // add storybook addons to app's package.json
-  displayNewlyAddedDepsMessage(
-    context.projectName,
-    await syncDeps(
+  const packageJsonPath = join(context.root, projectRoot, 'package.json');
+  if (fileExists(packageJsonPath))
+    displayNewlyAddedDepsMessage(
       context.projectName,
-      projectRoot,
-      context.root,
-      '@storybook/addon-ondevice-actions,@storybook/addon-ondevice-backgrounds,@storybook/addon-ondevice-controls,@storybook/addon-ondevice-notes'
-    )
-  );
+      await syncDeps(
+        context.projectName,
+        projectRoot,
+        context.root,
+        '@storybook/addon-ondevice-actions,@storybook/addon-ondevice-backgrounds,@storybook/addon-ondevice-controls,@storybook/addon-ondevice-notes'
+      )
+    );
 
   try {
     await runCliStorybook(context.root, projectRoot, options);
