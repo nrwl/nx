@@ -17,6 +17,7 @@
   "module": {
     "type": "commonjs",
     "strict": true,
+    "strictMode": false,
     "noInterop": true
   },
   "sourceMaps": true,
