@@ -165,7 +165,7 @@ export async function prepareConfig(
   const userWebpack = config.webpack;
   const userNextConfig = getConfigEnhancer(options.nextConfig, context.root);
   // Yes, these do have different capitalisation...
-  config.outdir = `${offsetFromRoot(options.root)}${options.outputPath}`;
+  config.outdir = options.outputPath;
   config.distDir =
     config.distDir && config.distDir !== '.next'
       ? config.distDir
