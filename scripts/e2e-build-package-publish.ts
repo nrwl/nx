@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { readFileSync, writeFileSync, remove } from 'fs-extra';
+import { readFileSync, remove, writeFileSync } from 'fs-extra';
 import { existsSync, readdirSync } from 'fs';
 import {
   prettierVersion,
@@ -206,6 +206,7 @@ function build(nxVersion: string) {
         /exports.nxVersion = '\*'/g,
         `exports.nxVersion = '${nxVersion}'`
       )
+      .replace(/const nxVersion = '\*'/g, `const nxVersion = '${nxVersion}'`)
       .replace(/NX_VERSION/g, nxVersion)
       .replace(/TYPESCRIPT_VERSION/g, typescriptVersion)
       .replace(/PRETTIER_VERSION/g, prettierVersion);

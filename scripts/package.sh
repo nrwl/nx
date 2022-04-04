@@ -18,6 +18,7 @@ npx nx run-many --target=build --all --parallel || { echo 'Build failed' ; exit 
 cd build/packages
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i "" "s|const nxVersion = '\*';|const nxVersion = '$NX_VERSION';|g" {nx,react,next,web,jest,node,linter,express,nest,cypress,storybook,angular,workspace,nx-plugin,react-native,detox,js}/src/utils/versions.js
     sed -i "" "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" {nx,react,next,web,jest,node,linter,express,nest,cypress,storybook,angular,workspace,nx-plugin,react-native,detox,js}/src/utils/versions.js
     sed -i "" "s|\*|$NX_VERSION|g" {nx,react,next,web,jest,node,express,nest,cypress,storybook,angular,workspace,cli,linter,tao,devkit,eslint-plugin-nx,create-nx-workspace,create-nx-plugin,nx-plugin,react-native,detox,js,add-nx-to-monorepo,cra-to-nx,make-angular-cli-faster}/package.json
     sed -i "" "s|NX_VERSION|$NX_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
@@ -30,6 +31,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i "" "s|PRETTIER_VERSION|$PRETTIER_VERSION|g" create-nx-plugin/bin/create-nx-plugin.js
     sed -i "" "s|NX_VERSION|$NX_VERSION|g" add-nx-to-monorepo/src/add-nx-to-monorepo.js
 else
+    sed -i "s|const nxVersion = '\*';|const nxVersion = '$NX_VERSION';|g" {nx,react,next,web,jest,node,linter,express,nest,cypress,storybook,angular,workspace,nx-plugin,react-native,detox,js}/src/utils/versions.js
     sed -i "s|exports.nxVersion = '\*';|exports.nxVersion = '$NX_VERSION';|g" {nx,react,next,web,jest,node,linter,express,nest,cypress,storybook,angular,workspace,nx-plugin,react-native,detox,js}/src/utils/versions.js
     sed -i "s|\*|$NX_VERSION|g" {nx,react,next,web,jest,node,express,nest,cypress,storybook,angular,workspace,cli,linter,tao,devkit,eslint-plugin-nx,create-nx-workspace,create-nx-plugin,nx-plugin,react-native,detox,js,add-nx-to-monorepo,cra-to-nx,make-angular-cli-faster}/package.json
     sed -i "s|NX_VERSION|$NX_VERSION|g" create-nx-workspace/bin/create-nx-workspace.js
