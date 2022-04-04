@@ -1638,6 +1638,10 @@
             "type": "string",
             "enum": ["eslint", "none"],
             "default": "eslint"
+          },
+          "projectBuildConfig": {
+            "description": "Provide a custom projectBuildConfig for the Angular executor. If left blank, Nx will use the default.",
+            "type": "string"
           }
         },
         "additionalProperties": false,

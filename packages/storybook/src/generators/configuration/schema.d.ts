@@ -11,4 +11,5 @@ export interface StorybookConfigureSchema {
   js?: boolean;
   cypressDirectory?: string;
   standaloneConfig?: boolean;
+  projectBuildConfig?: string;
 }

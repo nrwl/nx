@@ -76,6 +76,10 @@
             "enum": ["eslint", "tslint", "none"],
             "default": "eslint"
           },
+          "projectBuildConfig": {
+            "description": "Provide a custom projectBuildConfig for the Angular executor. If left blank, Nx will use the default.",
+            "type": "string"
+          },
           "js": {
             "type": "boolean",
             "description": "Generate JavaScript files rather than TypeScript files.",

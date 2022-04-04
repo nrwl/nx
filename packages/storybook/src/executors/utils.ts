@@ -3,8 +3,10 @@ import {
   joinPathFragments,
   logger,
   parseTargetString,
+  readProjectConfiguration,
   readTargetOptions,
   TargetConfiguration,
+  Tree,
 } from '@nrwl/devkit';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import 'dotenv/config';
@@ -300,6 +302,40 @@ export function isStorybookLT6() {
     checkAndCleanWithSemver('@storybook/core', storybookVersion),
     '6.0.0'
   );
+}
+
+export function customProjectBuildConfigIsValid(
+  tree: Tree,
+  projectBuildConfig: string
+): boolean {
+  if (projectBuildConfig.includes(':')) {
+    const { project, target } = parseTargetString(projectBuildConfig);
+    const projectConfig = readProjectConfiguration(tree, project);
+    if (projectConfig?.targets?.[target]) {
+      return true;
+    } else {
+      logger.warn(`
+      The projectBuildConfig you provided is not valid.   
+      ${!projectConfig ? 'The project ' + project + ' does not exist.' : ''}   
+      ${
+        projectConfig &&
+        !projectConfig.targets?.[target] &&
+        `The project ${project} does not have the target ${target}.`
+      }  
+      The default projectBuildConfig is going to be used.       
+      `);
+    }
+  } else {
+    try {
+      return Boolean(readProjectConfiguration(tree, projectBuildConfig));
+    } catch (e) {
+      logger.warn(`
+      The projectBuildConfig you provided is not valid. 
+      The project ${projectBuildConfig} does not exist.
+      The default projectBuildConfig is going to be used.
+      `);
+    }
+  }
 }
 
 export function findStorybookAndBuildTargets(targets: {

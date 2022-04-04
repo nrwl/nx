@@ -47,6 +47,10 @@
       "enum": ["eslint", "tslint"],
       "default": "eslint"
     },
+    "projectBuildConfig": {
+      "description": "Provide a custom projectBuildConfig for the Angular executor. If left blank, Nx will use the default.",
+      "type": "string"
+    },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
