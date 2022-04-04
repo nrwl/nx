@@ -149,29 +149,6 @@ export function createTempNpmDirectory(): string {
 }
 
 /**
- * Creates a temp directory using {@link createTempNpmDirectory} and ensures it is cleaned-up properly.
- */
-export async function withTempNpmDirectory<T>(
-  action: (dir: string) => Promise<T>
-): Promise<T> {
-  const dir = createTempNpmDirectory();
-
-  let result: T;
-
-  try {
-    result = await action(dir);
-  } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
-  }
-
-  return result;
-}
-
-/**
  * Returns the resolved version for a given package and version tag using the
  * NPM registry (when using Yarn it will fall back to NPM to fetch the info).
  */

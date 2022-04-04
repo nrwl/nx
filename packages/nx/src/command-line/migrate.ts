@@ -1,4 +1,5 @@
 import { exec, execSync } from 'child_process';
+import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
 import { gt, lte, parse as parseSemver } from 'semver';
 import { promisify } from 'util';
@@ -13,9 +14,9 @@ import {
 import { logger } from '../utils/logger';
 import { NxMigrationsConfiguration, PackageJson } from '../utils/package-json';
 import {
+  createTempNpmDirectory,
   getPackageManagerCommand,
   resolvePackageVersionUsingRegistry,
-  withTempNpmDirectory,
 } from '../utils/package-manager';
 import { handleErrors } from '../utils/params';
 
@@ -588,37 +589,51 @@ async function downloadPackageMigrationsFromRegistry(
   packageVersion: string,
   { migrations: migrationsFilePath, packageGroup }: NxMigrationsConfiguration
 ): Promise<ResolvedMigrationConfiguration> {
-  return await withTempNpmDirectory(async (dir) => {
+  const dir = createTempNpmDirectory();
+
+  let result: ResolvedMigrationConfiguration;
+
+  try {
+    const pmc = getPackageManagerCommand();
+
+    const { stdout } = await execAsync(
+      `${pmc.pack} ${packageName}@${packageVersion}`,
+      { cwd: dir }
+    );
+
+    const tarballPath = stdout.trim();
+
+    const migrations = await extractFileFromTarball(
+      join(dir, tarballPath),
+      join('package', migrationsFilePath),
+      join(dir, migrationsFilePath)
+    ).then((path) => readJsonFile<MigrationsJson>(path));
+
+    result = { ...migrations, packageGroup, version: packageVersion };
+  } catch {
+    throw new Error(
+      `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
+    );
+  } finally {
     try {
-      const pmc = getPackageManagerCommand();
-
-      const { stdout } = await execAsync(
-        `${pmc.pack} ${packageName}@${packageVersion}`,
-        { cwd: dir }
-      );
-
-      const tarballPath = stdout.trim();
-
-      const migrations = await extractFileFromTarball(
-        join(dir, tarballPath),
-        join('package', migrationsFilePath),
-        join(dir, migrationsFilePath)
-      ).then((path) => readJsonFile<MigrationsJson>(path));
-
-      return { ...migrations, packageGroup, version: packageVersion };
+      await remove(dir);
     } catch {
-      throw new Error(
-        `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
-      );
+      // It's okay if this fails, the OS will clean it up eventually
     }
-  });
+  }
+
+  return result;
 }
 
 async function getPackageMigrationsUsingInstall(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
-  return await withTempNpmDirectory(async (dir) => {
+  const dir = createTempNpmDirectory();
+
+  let result: ResolvedMigrationConfiguration;
+
+  try {
     const pmc = getPackageManagerCommand();
 
     await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
@@ -636,8 +651,16 @@ async function getPackageMigrationsUsingInstall(
       migrations = readJsonFile<MigrationsJson>(migrationsFilePath);
     }
 
-    return { ...migrations, packageGroup, version: packageJson.version };
-  });
+    result = { ...migrations, packageGroup, version: packageJson.version };
+  } finally {
+    try {
+      await remove(dir);
+    } catch {
+      // It's okay if this fails, the OS will clean it up eventually
+    }
+  }
+
+  return result;
 }
 
 interface PackageMigrationConfig extends NxMigrationsConfiguration {
