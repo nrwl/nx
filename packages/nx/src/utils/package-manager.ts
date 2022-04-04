@@ -127,6 +127,13 @@ export function checkForNPMRC(
   return existsSync(path) ? path : null;
 }
 
+/**
+ * Creates a temporary directory where you can run package manager commands safely.
+ *
+ * For cases where you'd want to install packages that require an `.npmrc` set up,
+ * this function looks up for the nearest `.npmrc` (if exists) and copies it over to the
+ * temp directory.
+ */
 export function createTempNpmDirectory(): string {
   const dir = dirSync().name;
 
@@ -139,6 +146,29 @@ export function createTempNpmDirectory(): string {
   }
 
   return dir;
+}
+
+/**
+ * Creates a temp directory using {@link createTempNpmDirectory} and ensures it is cleaned-up properly.
+ */
+export async function withTempNpmDirectory<T>(
+  action: (dir: string) => Promise<T>
+): Promise<T> {
+  const dir = createTempNpmDirectory();
+
+  let result: T;
+
+  try {
+    result = await action(dir);
+  } finally {
+    try {
+      await remove(dir);
+    } catch {
+      // It's okay if this fails, the OS will clean it up eventually
+    }
+  }
+
+  return result;
 }
 
 /**

@@ -1,7 +1,6 @@
 import { exec, execSync } from 'child_process';
-import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
-import { gt, lte } from 'semver';
+import { gt, lte, parse as parseSemver } from 'semver';
 import { promisify } from 'util';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { flushChanges, FsTree } from '../config/tree';
@@ -14,9 +13,9 @@ import {
 import { logger } from '../utils/logger';
 import { NxMigrationsConfiguration, PackageJson } from '../utils/package-json';
 import {
-  createTempNpmDirectory,
   getPackageManagerCommand,
   resolvePackageVersionUsingRegistry,
+  withTempNpmDirectory,
 } from '../utils/package-manager';
 import { handleErrors } from '../utils/params';
 
@@ -61,8 +60,12 @@ export interface ResolvedMigrationConfiguration extends MigrationsJson {
 const execAsync = promisify(exec);
 
 export function normalizeVersion(version: string) {
-  const [semver, prereleaseTag] = version.split('-');
-  const [major, minor, patch] = semver.split('.');
+  const {
+    major,
+    minor,
+    patch,
+    prerelease: [prereleaseTag],
+  } = parseSemver(version);
 
   const newSemver = `${major || 0}.${minor || 0}.${patch || 0}`;
 
@@ -144,7 +147,7 @@ export class Migrator {
 
         return Object.entries(generators)
           .filter(
-            ([_, migration]) =>
+            ([, migration]) =>
               migration.version &&
               this.gt(migration.version, currentVersion) &&
               this.lte(migration.version, version)
@@ -201,7 +204,7 @@ export class Migrator {
 
     const childPackageMigrations = await Promise.all(
       Object.keys(packages)
-        .filter(([packageName]) => {
+        .filter((packageName) => {
           return (
             !collectedVersions[packageName] ||
             this.gt(
@@ -585,45 +588,37 @@ async function downloadPackageMigrationsFromRegistry(
   packageVersion: string,
   { migrations: migrationsFilePath, packageGroup }: NxMigrationsConfiguration
 ): Promise<ResolvedMigrationConfiguration> {
-  const dir = createTempNpmDirectory();
-
-  const pmc = getPackageManagerCommand();
-
-  const { stdout } = await execAsync(
-    `${pmc.pack} ${packageName}@${packageVersion}`,
-    { cwd: dir }
-  );
-
-  const tarballPath = stdout.trim();
-
-  try {
-    const migrations = await extractFileFromTarball(
-      join(dir, tarballPath),
-      join('package', migrationsFilePath),
-      join(dir, migrationsFilePath)
-    ).then((path) => readJsonFile<MigrationsJson>(path));
-
-    return { ...migrations, packageGroup, version: packageVersion };
-  } catch {
-    throw new Error(
-      `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
-    );
-  } finally {
+  return await withTempNpmDirectory(async (dir) => {
     try {
-      await remove(dir);
+      const pmc = getPackageManagerCommand();
+
+      const { stdout } = await execAsync(
+        `${pmc.pack} ${packageName}@${packageVersion}`,
+        { cwd: dir }
+      );
+
+      const tarballPath = stdout.trim();
+
+      const migrations = await extractFileFromTarball(
+        join(dir, tarballPath),
+        join('package', migrationsFilePath),
+        join(dir, migrationsFilePath)
+      ).then((path) => readJsonFile<MigrationsJson>(path));
+
+      return { ...migrations, packageGroup, version: packageVersion };
     } catch {
-      // It's okay if this fails, the OS will clean it up eventually
+      throw new Error(
+        `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
+      );
     }
-  }
+  });
 }
 
 async function getPackageMigrationsUsingInstall(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
-  const dir = createTempNpmDirectory();
-
-  try {
+  return await withTempNpmDirectory(async (dir) => {
     const pmc = getPackageManagerCommand();
 
     await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
@@ -642,13 +637,7 @@ async function getPackageMigrationsUsingInstall(
     }
 
     return { ...migrations, packageGroup, version: packageJson.version };
-  } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
-  }
+  });
 }
 
 interface PackageMigrationConfig extends NxMigrationsConfiguration {
