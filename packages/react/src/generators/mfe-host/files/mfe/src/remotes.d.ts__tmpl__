@@ -1,0 +1,4 @@
+ // Declare your remote Modules here
+ // Example declare module 'about/Module';
+
+ <% remotes.forEach(function(r) { %>declare module '<%= r.fileName %>/Module';<% }); %>

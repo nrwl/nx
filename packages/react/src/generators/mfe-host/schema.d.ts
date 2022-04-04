@@ -1,5 +1,5 @@
 import { Linter } from '@nrwl/linter';
-import { SupportedStyles } from '../../../typings/style';
+import { SupportedStyles } from '../../../typings';
 
 export interface Schema {
   name: string;
@@ -8,15 +8,10 @@ export interface Schema {
   directory?: string;
   tags?: string;
   unitTestRunner: 'jest' | 'none';
-  /**
-   * @deprecated
-   */
-  babelJest?: boolean;
   e2eTestRunner: 'cypress' | 'none';
   linter: Linter;
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
-  routing?: boolean;
   skipWorkspaceJson?: boolean;
   js?: boolean;
   globalCss?: boolean;
@@ -24,16 +19,10 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
   compiler?: 'babel' | 'swc';
-  remotes?: string[];
   devServerPort?: number;
+  remotes?: string[];
 }
 
 export interface NormalizedSchema extends Schema {
-  projectName: string;
   appProjectRoot: string;
-  e2eProjectName: string;
-  parsedTags: string[];
-  fileName: string;
-  styledModule: null | SupportedStyles;
-  hasStyles: boolean;
 }

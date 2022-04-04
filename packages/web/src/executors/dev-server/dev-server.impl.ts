@@ -76,10 +76,14 @@ export default async function* devServerExecutor(
   );
 
   if (buildOptions.webpackConfig) {
-    const customWebpack = resolveCustomWebpackConfig(
+    let customWebpack = resolveCustomWebpackConfig(
       buildOptions.webpackConfig,
       buildOptions.tsConfig
     );
+
+    if (typeof customWebpack.then === 'function') {
+      customWebpack = await customWebpack;
+    }
 
     webpackConfig = customWebpack(webpackConfig, {
       buildOptions,
