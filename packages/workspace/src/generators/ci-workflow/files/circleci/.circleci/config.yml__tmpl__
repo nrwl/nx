@@ -1,0 +1,65 @@
+version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.3.0
+
+jobs:
+  agent:
+    docker:
+      - image: cimg/node:lts-browsers
+    parameters:
+      ordinal:
+        type: integer
+    steps:
+      - run:
+          name: Set dynamic nx run variable
+          command: |
+            echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+      - checkout
+      - run:
+          name: Install dependencies
+          command: <%= packageManagerInstall %>
+      - run:
+          name: Start the agent << parameters.ordinal >>
+          command: <%= packageManagerPrefix %> nx-cloud start-agent
+          no_output_timeout: 60m
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+    steps:
+      - run:
+          name: Set dynamic nx run variable
+          command: |
+            echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+      - checkout
+      - run:
+          name: Install dependencies
+          command: <%= packageManagerInstall %>
+      - nx/set-shas:
+          main-branch-name: '<%= mainBranch %>'
+      - run:
+          name: Initialize the Nx Cloud distributed CI run
+          command: <%= packageManagerPrefix %> nx-cloud start-ci-run
+      - run:
+          name: Run lint
+          command: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
+      - run:
+          name: Run build
+          command: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+      - run:
+          name: Run test
+          command: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=2
+      - run:
+          name: Stop all agents
+          command: <%= packageManagerPrefix %> nx-cloud stop-all-agents
+
+workflows:
+  <%= workflowName %>:
+    jobs:
+      - agent:
+          matrix:
+            parameters:
+              ordinal: [1, 2, 3]
+      - main

@@ -1,0 +1,55 @@
+name: <%= workflowName %>
+
+trigger:
+  - <%= mainBranch %>
+pr:
+  - <%= mainBranch %>
+
+variables:
+  - name: NX_CLOUD_DISTRIBUTED_EXECUTION
+    value: 'true'
+  - name: NX_BRANCH
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(System.PullRequest.PullRequestNumber)
+    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(Build.SourceBranchName)
+  - name: TARGET_BRANCH
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+  - name: BASE_SHA
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(git merge-base $(TARGET_BRANCH) HEAD)
+    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(git rev-parse HEAD~1)
+
+jobs:
+  - job: agents
+    strategy:
+      matrix:
+        agent: [1, 2, 3]
+    displayName: 'Agent $(imageName)'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - script: <%= packageManagerInstall %>
+        displayName: NPM Install Dependencies
+      - script: npx nx-cloud start-agent
+        displayName: 'Start Nx-Cloud agent $(imageName)'
+
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - script: <%= packageManagerInstall %>
+        displayName: NPM Install Dependencies
+      - script: <%= packageManagerPrefix %> nx-cloud start-ci-run
+        displayName: Start CI run
+      - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --target=lint --parallel=3
+        displayName: Run lint
+      - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --target=build --parallel=3
+        displayName: Run build
+      - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --target=test --parallel=2
+        displayName: Run test
+      - script: <%= packageManagerPrefix %> nx-cloud stop-all-agents
+        condition: always()
+        displayName: Stop all Nx-Cloud agents
