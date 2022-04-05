@@ -21,6 +21,7 @@ import {
   TaskGraphExecutor,
   Generator,
 } from './misc-interfaces';
+import { PackageJson } from '../utils/package-json';
 
 export function workspaceConfigName(root: string) {
   if (existsSync(path.join(root, 'angular.json'))) {
@@ -471,10 +472,14 @@ function getGlobPatternsFromPlugins(nxJson: NxJsonConfiguration): string[] {
 function getGlobPatternsFromPackageManagerWorkspaces(root: string): string[] {
   // TODO: add support for pnpm
   try {
-    const { workspaces } = readJsonFile(join(root, 'package.json'));
-
+    const { workspaces } = readJsonFile<PackageJson>(
+      join(root, 'package.json')
+    );
+    const packages = Array.isArray(workspaces)
+      ? workspaces
+      : workspaces?.packages;
     return (
-      workspaces?.map((pattern) => pattern + '/package.json') ?? [
+      packages?.map((pattern) => pattern + '/package.json') ?? [
         '**/package.json',
       ]
     );
