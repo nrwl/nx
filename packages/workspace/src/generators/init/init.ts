@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
   formatFiles,
@@ -748,30 +747,18 @@ function checkCanConvertToWorkspace(host: Tree) {
   }
 }
 
-function createNxJson(host: Tree) {
-  const json = JSON.parse(host.read('angular.json').toString());
-  const projects = json.projects || {};
-  const hasLibraries = Object.keys(projects).find(
-    (project) =>
-      projects[project].projectType &&
-      projects[project].projectType !== 'application'
-  );
-
-  if (Object.keys(projects).length !== 1 || hasLibraries) {
-    throw new Error(
-      `The schematic can only be used with Angular CLI workspaces with a single application.`
-    );
-  }
-  const name = Object.keys(projects)[0];
-  const tsConfigPath = getRootTsConfigPathInTree(host);
+function createNxJson(host: Tree, options: Schema) {
+  const { newProjectRoot = '' } = readJson(host, 'angular.json');
   writeJson<NxJsonConfiguration>(host, 'nx.json', {
-    npmScope: name,
+    npmScope: options.npmScope,
+    affected: {
+      defaultBase: options.defaultBase ?? deduceDefaultBase(),
+    },
     implicitDependencies: {
       'package.json': {
         dependencies: '*',
         devDependencies: '*',
       },
-      [tsConfigPath]: '*',
       '.eslintrc.json': '*',
     },
     tasksRunnerOptions: {
@@ -782,6 +769,15 @@ function createNxJson(host: Tree) {
         },
       },
     },
+    targetDependencies: {
+      build: [
+        {
+          target: 'build',
+          projects: 'dependencies',
+        },
+      ],
+    },
+    workspaceLayout: { appsDir: newProjectRoot, libsDir: newProjectRoot },
   });
 }
 
@@ -857,21 +853,51 @@ function renameDirSyncInTree(tree: Tree, from: string, to: string) {
   });
 }
 
+function resolveNpmScope(tree: Tree, options: Schema): string {
+  let npmScope = options.npmScope ?? options.name;
+  if (npmScope) {
+    return names(npmScope).fileName;
+  }
+
+  // try get the scope from any library that have one
+  const projects = getProjects(tree);
+  for (const [, project] of projects) {
+    if (
+      project.projectType === 'application' ||
+      !tree.exists(joinPathFragments(project.root, 'package.json'))
+    ) {
+      continue;
+    }
+
+    const { name } = readJson(
+      tree,
+      joinPathFragments(project.root, 'package.json')
+    );
+    if (name.startsWith('@')) {
+      return name.split('/')[0].substring(1);
+    }
+  }
+
+  // use the name (scope if exists) in the root package.json
+  const { name } = readJson(tree, 'package.json');
+  return name.startsWith('@') ? name.split('/')[0].substring(1) : name;
+}
+
 export async function initGenerator(tree: Tree, schema: Schema) {
+  const options = { ...schema, npmScope: resolveNpmScope(tree, schema) };
+
   if (schema.preserveAngularCliLayout) {
     updateJson(tree, 'package.json', (json) => {
       delete json.dependencies?.['@nrwl/workspace'];
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@nrwl/workspace': nxVersion,
+      };
       return json;
     });
-    addDependenciesToPackageJson(tree, {}, { '@nrwl/workspace': nxVersion });
-    createNxJson(tree);
+    createNxJson(tree, options);
     decorateAngularClI(tree);
   } else {
-    const options = {
-      ...schema,
-      npmScope: names(schema.npmScope || schema.name).fileName,
-    };
-
     checkCanConvertToWorkspace(tree);
     moveExistingFiles(tree, options);
     addFiles(tree);
