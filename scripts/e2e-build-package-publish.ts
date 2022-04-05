@@ -133,7 +133,7 @@ function build(nxVersion: string) {
       `npx nx run-many --target=build --all --parallel=8 --exclude=${projectsToExclude}`,
       {
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, NX_INVOKED_BY_RUNNER: 'false' },
+        env: { ...process.env, NX_CLOUD: 'true' },
       }
     );
     const a = new Date();
