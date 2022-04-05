@@ -62,7 +62,7 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
   const isCRA5 = /^[^~]?5/.test(deps['react-scripts']);
 
   execSync(
-    `npx -y create-nx-workspace@latest temp-workspace --appName=${reactAppName} --preset=react --style=css --nx-cloud --packageManager=${packageManager}`,
+    `npx -y create-nx-workspace@latest temp-workspace --appName=${reactAppName} --preset=react --style=css --packageManager=${packageManager}`,
     { stdio: [0, 1, 2] }
   );
 
