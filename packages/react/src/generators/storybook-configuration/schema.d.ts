@@ -9,4 +9,5 @@ export interface StorybookConfigureSchema {
   linter?: Linter;
   cypressDirectory?: string;
   standaloneConfig?: boolean;
+  projectBuildConfig?: string;
 }

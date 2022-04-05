@@ -30,7 +30,10 @@ import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { gte } from 'semver';
-import { findStorybookAndBuildTargets } from '../../executors/utils';
+import {
+  customProjectBuildConfigIsValid,
+  findStorybookAndBuildTargets,
+} from '../../executors/utils';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
 export async function configurationGenerator(
@@ -63,7 +66,13 @@ export async function configurationGenerator(
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
-  addStorybookTask(tree, schema.name, schema.uiFramework, buildTarget);
+  addStorybookTask(
+    tree,
+    schema.name,
+    schema.uiFramework,
+    buildTarget,
+    schema.projectBuildConfig
+  );
   if (schema.configureCypress) {
     if (projectType !== 'application') {
       const cypressTask = await cypressProjectGenerator(tree, {
@@ -326,7 +335,8 @@ function addStorybookTask(
   tree: Tree,
   projectName: string,
   uiFramework: string,
-  buildTargetForAngularProjects: string
+  buildTargetForAngularProjects: string,
+  customProjectBuildConfig?: string
 ) {
   if (uiFramework === '@storybook/react-native') {
     return;
@@ -342,7 +352,10 @@ function addStorybookTask(
       },
       projectBuildConfig:
         uiFramework === '@storybook/angular'
-          ? buildTargetForAngularProjects
+          ? customProjectBuildConfig &&
+            customProjectBuildConfigIsValid(tree, customProjectBuildConfig)
+            ? customProjectBuildConfig
+            : buildTargetForAngularProjects
             ? projectName
             : `${projectName}:build-storybook`
           : undefined,
@@ -364,7 +377,10 @@ function addStorybookTask(
       },
       projectBuildConfig:
         uiFramework === '@storybook/angular'
-          ? buildTargetForAngularProjects
+          ? customProjectBuildConfig &&
+            customProjectBuildConfigIsValid(tree, customProjectBuildConfig)
+            ? customProjectBuildConfig
+            : buildTargetForAngularProjects
             ? projectName
             : `${projectName}:build-storybook`
           : undefined,
