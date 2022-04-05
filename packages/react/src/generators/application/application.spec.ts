@@ -399,6 +399,16 @@ Object {
       expect(appTree.exists('apps/my-app/src/app/App.spec.tsx')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/app/App.module.css')).toBeTruthy();
     });
+
+    it(`should use the correct case for file import in the spec file`, async () => {
+      await applicationGenerator(appTree, { ...schema, pascalCaseFiles: true });
+
+      const appSpecContent = appTree
+        .read('apps/my-app/src/app/App.spec.tsx')
+        .toString();
+
+      expect(appSpecContent).toMatch(/import App from '.\/App'/);
+    });
   });
 
   it('should generate functional components by default', async () => {
@@ -407,6 +417,16 @@ Object {
     const appContent = appTree.read('apps/my-app/src/app/app.tsx').toString();
 
     expect(appContent).not.toMatch(/extends Component/);
+  });
+
+  it(`should use the correct case for file import in the spec file`, async () => {
+    await applicationGenerator(appTree, { ...schema });
+
+    const appSpecContent = appTree
+      .read('apps/my-app/src/app/app.spec.tsx')
+      .toString();
+
+    expect(appSpecContent).toMatch(/import App from '.\/app'/);
   });
 
   it('should add .eslintrc.json and dependencies', async () => {
