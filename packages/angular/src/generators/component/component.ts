@@ -7,7 +7,6 @@ import {
   readProjectConfiguration,
   normalizePath,
 } from '@nrwl/devkit';
-import { normalize } from 'path';
 import { pathStartsWith } from '../utils/path';
 
 export async function componentGenerator(tree: Tree, schema: Schema) {
@@ -19,7 +18,6 @@ export async function componentGenerator(tree: Tree, schema: Schema) {
   );
   await angularComponentSchematic(tree, {
     ...schema,
-    skipImport: true,
   });
 
   exportComponent(tree, schema);

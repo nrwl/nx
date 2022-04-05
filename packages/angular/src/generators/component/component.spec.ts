@@ -11,6 +11,17 @@ describe('component Generator', () => {
       sourceRoot: 'libs/lib1/src',
       root: 'libs/lib1',
     });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
     tree.write('libs/lib1/src/index.ts', '');
 
     // ACT
@@ -39,6 +50,17 @@ describe('component Generator', () => {
       sourceRoot: 'libs/lib1/src',
       root: 'libs/lib1',
     });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
     tree.write('libs/lib1/src/index.ts', '');
 
     // ACT
@@ -69,6 +91,17 @@ describe('component Generator', () => {
       sourceRoot: 'libs/lib1/src',
       root: 'libs/lib1',
     });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
 
     // ACT
     await componentGenerator(tree, {
@@ -97,6 +130,17 @@ describe('component Generator', () => {
         sourceRoot: 'libs/lib1/src',
         root: 'libs/lib1',
       });
+      tree.write(
+        'libs/lib1/src/lib/lib.module.ts',
+        `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+      );
       tree.write('libs/lib1/src/index.ts', '');
 
       // ACT
@@ -126,6 +170,17 @@ describe('component Generator', () => {
         sourceRoot: 'libs/lib1/src',
         root: 'libs/lib1',
       });
+      tree.write(
+        'libs/lib1/src/lib/lib.module.ts',
+        `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+      );
       tree.write('libs/lib1/src/index.ts', '');
 
       // ACT
@@ -159,6 +214,17 @@ describe('component Generator', () => {
         sourceRoot: 'libs/lib1/src',
         root: 'libs/lib1',
       });
+      tree.write(
+        'libs/lib1/src/lib/lib.module.ts',
+        `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+      );
       tree.write('libs/lib1/src/index.ts', '');
 
       // ACT
@@ -190,6 +256,17 @@ describe('component Generator', () => {
         sourceRoot: 'libs/lib1/src',
         root: 'libs/lib1',
       });
+      tree.write(
+        'libs/lib1/src/lib/lib.module.ts',
+        `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+      );
       tree.write('libs/lib1/src/index.ts', '');
 
       // ACT & ASSERT

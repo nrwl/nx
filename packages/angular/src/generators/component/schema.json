@@ -60,6 +60,11 @@
       "default": "Default",
       "alias": "c"
     },
+    "module": {
+      "type": "string",
+      "description": "The filename or path to the NgModule that will declare this component.",
+      "alias": "m"
+    },
     "style": {
       "description": "The file extension or preprocessor to use for style files, or `none` to skip generating the style file.",
       "type": "string",
