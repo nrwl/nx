@@ -18,38 +18,10 @@ export function ConfSpeakers(): JSX.Element {
     },
     {
       description:
-        'From the faraway lands of Scotland (but without the Scottish accent), Rares works at Nrwl on NxCloud, helping teams speed up and scale their development. He enjoys learning by teaching and has Egghead.io courses on TypeScript and Reactive Programming.',
-      imageUrl: '/images/conf/rares-matei.webp',
-      name: 'Rares Matei',
-      twitter: '__rares',
-    },
-    {
-      description:
-        "Trainer, consultant and programming architect with focus on Angular. Google Developer Expert (GDE) and Trusted Collaborator in the Angular team who writes for O'Reilly, the German Java Magazine, and windows.developer. Regularly speaks at conferences.",
-      imageUrl: '/images/conf/manfred-steyer.webp',
-      name: 'Manfred Steyer',
-      twitter: 'ManfredSteyer',
-    },
-    {
-      description:
-        'James leverages his expert knowledge of Nx to help the biggest enterprises on the planet provide maximum value to their customers. He is a prolific open-source contributor, ESLint Core Team Alum, and has worked on a number of projects alongside the TypeScript Team.',
-      imageUrl: '/images/conf/james-henry.webp',
-      name: 'James Henry',
-      twitter: 'MrJamesHenry',
-    },
-    {
-      description:
-        'Yvonne Allen is an Angular GDE and who has a passion for speaking on what she calls "the topics in the in between" at Conferences and meetups. Yvonne is a co-organizer for GDG Atlanta and a member of Women Who Code. She also has a passion for advising and mentoring new developers and is an open source contributor.',
-      imageUrl: '/images/conf/yvonne-allen.webp',
-      name: 'Yvonne Allen',
-      twitter: 'yallen011',
-    },
-    {
-      description:
-        'Nathan Walker has enjoyed the opportunity to work in the web/mobile app development arena for over 15 years. His varied background rooted in the world of design and the arts provides him a unique approach to problem solving. In 2017, he co-founded nStudio to help work with others to achieve their creative ideas.',
-      imageUrl: '/images/conf/nathan-walker.webp',
-      name: 'Nathan Walker',
-      twitter: 'wwwalkerrun',
+        "Colum Ferry is a Senior Software Engineer at Nrwl, working on the Angular Plugin for Nx. He's interested in architectural patterns with Angular and, more particularly, in achieving a Micro Frontend Architecture with Angular. Colum is a married father of two rambunctious kids and he's lately turned into a huge Formula 1 fan!",
+      imageUrl: '/images/conf/colum-ferry.webp',
+      name: 'Colum Ferry',
+      twitter: 'FerryColum',
     },
     {
       description:
@@ -59,17 +31,11 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'juristr',
     },
     {
-      description: 'Kirils is a Software Engineer at Nrwl, working on Nx.',
-      imageUrl: '/images/conf/kirils-ladovs.webp',
-      name: 'Kirils Ladovs',
-      twitter: 'kirjai',
-    },
-    {
       description:
-        'Based in Atlanta, GA, Altan is an engineer on the Nx Cloud team. He enjoys web tech, mechanical keyboards, and drone photography.',
-      imageUrl: '/images/conf/altan-stalker.webp',
-      name: 'Altan Stalker',
-      twitter: 'StalkAltan',
+        'Based in Montreal, Ben is an architect at Nrwl and a part of the Nx Core Team. He works with Fortune 500 companies across different industries to enable them to develop like Google, Microsoft, and Facebook. Astrophysics enthusiast.',
+      imageUrl: '/images/conf/benjamin-cabanes.webp',
+      name: 'Benjamin Cabanes',
+      twitter: 'bencabanes',
     },
     {
       description:
@@ -80,24 +46,10 @@ export function ConfSpeakers(): JSX.Element {
     },
     {
       description:
-        'Software Engineer at Nrwl, Nx core team, GDE for Angular/Web Technologies/Google Maps platform, AngularAthens meetup and RevApp co-founder. Mentoring women into tech, speaking about the cool things I do, climbing mountains and serving cats for life.',
-      imageUrl: '/images/conf/katerina-skroumpelou.webp',
-      name: 'Katerina Skroumpelou',
-      twitter: 'psybercity',
-    },
-    {
-      description:
-        'Zack is a Senior Engineer and Engineering Manager at Nrwl, as well as a Google Developer Expert for Angular. When not in front of a computer screen, Zack enjoys a robust family life at scale, with his wife and 6 kids in San Tan Valley, AZ.',
-      imageUrl: '/images/conf/zack-derose.webp',
-      name: 'Zack DeRose',
-      twitter: 'zackderose',
-    },
-    {
-      description:
-        'Jason is an architect at Nrwl and a part of the Nx Core Team. He works with Fortune 500 companies across different industries to enable them to develop like Google, Microsoft, and Facebook. Jason is also an enthusiast of board games and mechanical keyboards.',
-      imageUrl: '/images/conf/jason-jeans.webp',
-      name: 'Jason Jean',
-      twitter: 'frozenpandaz',
+        'Jo Hanna is a senior software engineer, problem-solver and science groupie. She has a firm belief that people are always the most interesting component of any system, and a fascination with how we learn and why we often tend to guard too closely the information we acquire.',
+      imageUrl: '/images/conf/jo-hanna-pearce.webp',
+      name: 'Jo Hanna Pearce',
+      twitter: 'jhannapearce',
     },
     {
       description:
