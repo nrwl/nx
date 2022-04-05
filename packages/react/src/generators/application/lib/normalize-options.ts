@@ -1,6 +1,7 @@
 import { NormalizedSchema, Schema } from '../schema';
 import { assertValidStyle } from '../../../utils/assertion';
-import { names, Tree, normalizePath, getWorkspaceLayout } from '@nrwl/devkit';
+import { getWorkspaceLayout, names, normalizePath, Tree } from '@nrwl/devkit';
+import { findFreePort } from './find-free-port';
 
 export function normalizeOptions(
   host: Tree,
@@ -34,6 +35,7 @@ export function normalizeOptions(
   options.unitTestRunner = options.unitTestRunner ?? 'jest';
   options.e2eTestRunner = options.e2eTestRunner ?? 'cypress';
   options.compiler = options.compiler ?? 'babel';
+  options.devServerPort ??= findFreePort(host);
 
   return {
     ...options,
@@ -45,6 +47,5 @@ export function normalizeOptions(
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
-    devServerPort: options.devServerPort ?? 4200,
   };
 }
