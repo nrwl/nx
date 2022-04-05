@@ -68,7 +68,7 @@ commands:
     steps:
       - run:
           name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g pnpm@6.9.1
+          command: npm install --prefix=$HOME/.local -g pnpm@6.32.4
 
   setup:
     parameters:
