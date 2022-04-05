@@ -22,7 +22,7 @@ Below is an example of a Circle CI setup for an Nx workspace only building and t
 ```yaml
 version: 2.1
 orbs:
-  nx: nrwl/nx@1.2.0
+  nx: nrwl/nx@1.4.0
 jobs:
   main:
     steps:
