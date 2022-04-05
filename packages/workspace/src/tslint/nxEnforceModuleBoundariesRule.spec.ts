@@ -1194,7 +1194,6 @@ function runRule(
   const rule = new Rule(
     options,
     `${process.cwd()}/proj`,
-    'mycompany',
     mappedProjectGraph,
     new TargetProjectLocator(
       mappedProjectGraph.nodes,

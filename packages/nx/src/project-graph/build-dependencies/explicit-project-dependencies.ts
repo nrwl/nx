@@ -25,8 +25,7 @@ export function buildExplicitTypeScriptDependencies(
         (importExpr: string, filePath: string, type: DependencyType) => {
           const target = targetProjectLocator.findProjectWithImport(
             importExpr,
-            f.file,
-            workspace.npmScope
+            f.file
           );
           if (target) {
             res.push({

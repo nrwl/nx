@@ -154,7 +154,6 @@ export default createESLintRule<Options, MessageIds>({
      */
     if (!(global as any).projectGraph || !isTerminalRun()) {
       const nxJson = readNxJson();
-      (global as any).npmScope = nxJson.npmScope;
       (global as any).workspaceLayout = nxJson.workspaceLayout;
 
       /**
@@ -181,7 +180,6 @@ export default createESLintRule<Options, MessageIds>({
       return {};
     }
 
-    const npmScope = (global as any).npmScope;
     const workspaceLayout = (global as any).workspaceLayout;
     const projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
@@ -245,9 +243,6 @@ export default createESLintRule<Options, MessageIds>({
         context.report({
           node,
           messageId: 'noRelativeOrAbsoluteImportsAcrossLibraries',
-          data: {
-            npmScope,
-          },
           fix(fixer) {
             if (targetProject) {
               const indexTsPaths = getBarrelEntryPointProjectNode(
@@ -301,8 +296,7 @@ export default createESLintRule<Options, MessageIds>({
           projectGraph,
           targetProjectLocator,
           sourceFilePath,
-          imp,
-          npmScope
+          imp
         );
 
       // If target is not part of an nx workspace, return.
