@@ -174,14 +174,9 @@ export function findProjectUsingImport(
   projectGraph: MappedProjectGraph,
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
-  imp: string,
-  npmScope: string
+  imp: string
 ): MappedProjectGraphNode | ProjectGraphExternalNode {
-  const target = targetProjectLocator.findProjectWithImport(
-    imp,
-    filePath,
-    npmScope
-  );
+  const target = targetProjectLocator.findProjectWithImport(imp, filePath);
   return projectGraph.nodes[target] || projectGraph.externalNodes?.[target];
 }
 

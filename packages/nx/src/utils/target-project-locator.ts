@@ -29,17 +29,8 @@ export class TargetProjectLocator {
    *
    * @param importExpr
    * @param filePath
-   * @param npmScope
-   *  Npm scope shouldn't be used finding a project, but, to improve backward
-   *  compatibility, we fallback to checking the scope.
-   *  This happens in cases where someone has the dist output in their tsconfigs
-   *  and typescript will find the dist before the src.
    */
-  findProjectWithImport(
-    importExpr: string,
-    filePath: string,
-    npmScope: string
-  ): string {
+  findProjectWithImport(importExpr: string, filePath: string): string {
     const normalizedImportExpr = importExpr.split('#')[0];
     if (isRelativePath(normalizedImportExpr)) {
       const resolvedModule = posix.join(
