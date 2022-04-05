@@ -27,9 +27,6 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
   ) {}
 
   startCommand(): void {
-    if (process.env.NX_INVOKED_BY_RUNNER) {
-      return;
-    }
     const numberOfDeps = this.tasks.length - 1;
 
     if (numberOfDeps > 0) {
@@ -46,10 +43,6 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
   }
 
   endCommand(): void {
-    // Silent for a single task
-    if (process.env.NX_INVOKED_BY_RUNNER) {
-      return;
-    }
     output.addNewline();
 
     if (this.failedTasks.length === 0) {
