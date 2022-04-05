@@ -70,7 +70,7 @@
     },
 
     "hook": {
-      "factory": "./src/generators/hook/hook#chookSchematic",
+      "factory": "./src/generators/hook/hook#hookSchematic",
       "schema": "./src/generators/hook/schema.json",
       "description": "Create a hook.",
       "aliases": ["h"]

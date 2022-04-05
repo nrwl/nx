@@ -315,6 +315,31 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/nx-plugin/src/generators/executor/schema.json"
+    },
+    {
+      "name": "plugin-lint-checks",
+      "factory": "./src/generators/plugin-lint-checks/generator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "PluginLint",
+        "title": "",
+        "type": "object",
+        "description": "Adds linting configuration to validate common json files for nx plugins.",
+        "properties": {
+          "projectName": {
+            "type": "string",
+            "description": "Which project should be the target be added to?"
+          }
+        },
+        "required": ["projectName"],
+        "presets": []
+      },
+      "description": "Adds linting configuration to validate common json files for nx plugins.",
+      "implementation": "/packages/nx-plugin/src/generators/plugin-lint-checks/generator.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/nx-plugin/src/generators/plugin-lint-checks/schema.json"
     }
   ],
   "executors": [

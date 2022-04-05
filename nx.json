@@ -20,6 +20,7 @@
           "build-base",
           "test",
           "lint",
+          "lint-base",
           "e2e",
           "sitemap"
         ],
@@ -44,6 +45,12 @@
       {
         "target": "build-base",
         "projects": "dependencies"
+      }
+    ],
+    "lint": [
+      {
+        "target": "lint-base",
+        "projects": "self"
       }
     ]
   },

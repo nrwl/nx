@@ -38,6 +38,7 @@ It only uses language primitives and immutable objects
 ### Other Interfaces
 
 - [NxPlugin](../../devkit/index#nxplugin)
+- [PackageJson](../../devkit/index#packagejson)
 
 ### Project Graph Interfaces
 
@@ -229,6 +230,12 @@ It only uses language primitives and immutable objects
 • **NxPlugin**: `Object`
 
 A plugin for Nx
+
+---
+
+### PackageJson
+
+• **PackageJson**: `Object`
 
 ---
 

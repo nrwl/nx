@@ -188,7 +188,8 @@
         "e2e-project",
         "migration",
         "generator",
-        "executor"
+        "executor",
+        "plugin-lint-checks"
       ]
     }
   },
