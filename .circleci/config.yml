@@ -4,7 +4,7 @@ version: 2.1
 #        ORBS
 # -------------------------
 orbs:
-  nx: nrwl/nx@1.1.3
+  nx: nrwl/nx@1.4.0
 
 # -------------------------
 #        DEFAULTS
@@ -34,7 +34,7 @@ executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/node:16.13-browsers
+      - image: cimg/node:lts-browsers
 
   macos:
     <<: *defaults
