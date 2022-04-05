@@ -9,10 +9,6 @@ export interface Schema {
   directory?: string;
   tags?: string;
   unitTestRunner: 'jest' | 'none';
-  /**
-   * @deprecated
-   */
-  babelJest?: boolean;
   e2eTestRunner: 'cypress' | 'none';
   linter: Linter;
   pascalCaseFiles?: boolean;

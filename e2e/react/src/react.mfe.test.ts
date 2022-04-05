@@ -22,12 +22,16 @@ describe('React MFE', () => {
     const remote3 = uniq('remote3');
 
     runCLI(
-      `generate @nrwl/react:mfe-host ${shell} --style=css --remotes=${remote1},${remote2},${remote3} --no-interactive`
+      `generate @nrwl/react:mfe-host ${shell} --style=css --remotes=${remote1},${remote2} --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/react:mfe-remote ${remote3} --style=css --host=${shell} --no-interactive`
     );
 
     checkFilesExist(`apps/${shell}/mfe.config.js`);
     checkFilesExist(`apps/${remote1}/mfe.config.js`);
     checkFilesExist(`apps/${remote2}/mfe.config.js`);
+    checkFilesExist(`apps/${remote3}/mfe.config.js`);
 
     await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
       combinedOutput: expect.stringContaining('Test Suites: 1 passed, 1 total'),

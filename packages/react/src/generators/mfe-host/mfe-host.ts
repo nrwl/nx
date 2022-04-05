@@ -42,3 +42,5 @@ export async function mfeHostGenerator(host: Tree, schema: Schema) {
 
   return initTask;
 }
+
+export default mfeHostGenerator;
