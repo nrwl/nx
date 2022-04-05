@@ -16,6 +16,8 @@ import { NxMigrationsConfiguration, PackageJson } from '../utils/package-json';
 import {
   createTempNpmDirectory,
   getPackageManagerCommand,
+  packageRegistryPack,
+  packageRegistryView,
   resolvePackageVersionUsingRegistry,
 } from '../utils/package-manager';
 import { handleErrors } from '../utils/params';
@@ -565,13 +567,11 @@ async function getPackageMigrationsConfigFromRegistry(
   packageName: string,
   packageVersion: string
 ): Promise<NxMigrationsConfiguration> {
-  const pmc = getPackageManagerCommand();
-
-  const { stdout } = await execAsync(
-    `${pmc.view} ${packageName}@${packageVersion} nx-migrations ng-update --json`
+  const result = await packageRegistryView(
+    packageName,
+    packageVersion,
+    'nx-migrations ng-update --json'
   );
-
-  const result = stdout.toString().trim();
 
   if (!result) {
     return null;
@@ -590,14 +590,11 @@ async function downloadPackageMigrationsFromRegistry(
   let result: ResolvedMigrationConfiguration;
 
   try {
-    const pmc = getPackageManagerCommand();
-
-    const { stdout } = await execAsync(
-      `${pmc.pack} ${packageName}@${packageVersion}`,
-      { cwd: dir }
+    const { tarballPath } = await packageRegistryPack(
+      dir,
+      packageName,
+      packageVersion
     );
-
-    const tarballPath = stdout.trim();
 
     const migrations = await extractFileFromTarball(
       join(dir, tarballPath),

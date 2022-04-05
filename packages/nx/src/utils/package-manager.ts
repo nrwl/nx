@@ -19,8 +19,6 @@ export interface PackageManagerCommands {
   rm: string;
   exec: string;
   list: string;
-  pack: string;
-  view: string;
   run: (script: string, args: string) => string;
 }
 
@@ -59,8 +57,6 @@ export function getPackageManagerCommand(
       exec: 'yarn',
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       list: 'yarn list',
-      pack: 'npm pack',
-      view: 'npm view',
     }),
     pnpm: () => {
       const [major, minor] = getPackageManagerVersion('pnpm').split('.');
@@ -77,8 +73,6 @@ export function getPackageManagerCommand(
         exec: useExec ? 'pnpm exec' : 'pnpx',
         run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
         list: 'pnpm ls --depth 100',
-        pack: 'pnpm pack',
-        view: 'pnpm view',
       };
     },
     npm: () => {
@@ -93,8 +87,6 @@ export function getPackageManagerCommand(
         exec: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
-        pack: 'npm pack',
-        view: 'npm view',
       };
     },
   };
@@ -157,13 +149,7 @@ export async function resolvePackageVersionUsingRegistry(
   version: string
 ): Promise<string> {
   try {
-    const pmc = getPackageManagerCommand();
-
-    const { stdout } = await execAsync(
-      `${pmc.view} ${packageName}@${version} version`
-    );
-
-    const result = stdout.trim();
+    const result = await packageRegistryView(packageName, version, 'version');
 
     if (!result) {
       throw new Error(`Unable to resolve version ${packageName}@${version}.`);
@@ -210,4 +196,47 @@ export async function resolvePackageVersionUsingInstallation(
       // It's okay if this fails, the OS will clean it up eventually
     }
   }
+}
+
+export async function packageRegistryView(
+  pkg: string,
+  version: string,
+  args: string
+): Promise<string> {
+  let pm = detectPackageManager();
+  if (pm === 'yarn') {
+    /**
+     * yarn has `yarn info` but it behaves differently than (p)npm,
+     * which makes it's usage unreliable
+     *
+     * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+     */
+    pm = 'npm';
+  }
+
+  const { stdout } = await execAsync(`${pm} view ${pkg}@${version} ${args}`);
+  return stdout.toString().trim();
+}
+
+export async function packageRegistryPack(
+  cwd: string,
+  pkg: string,
+  version: string
+): Promise<{ tarballPath: string }> {
+  let pm = detectPackageManager();
+  if (pm === 'yarn') {
+    /**
+     * `(p)npm pack` will download a tarball of the specified version,
+     * whereas `yarn` pack creates a tarball of the active workspace, so it
+     * does not work for getting the content of a library.
+     *
+     * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+     */
+    pm = 'npm';
+  }
+
+  const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, { cwd });
+
+  const tarballPath = stdout.trim();
+  return { tarballPath };
 }
