@@ -308,6 +308,7 @@
   "resolutions": {
     "ng-packagr/rxjs": "6.6.7",
     "**/xmlhttprequest-ssl": "~1.6.2",
-    "immer": "~9.0.6"
+    "immer": "~9.0.6",
+    "minimist": "^1.2.6"
   }
 }
