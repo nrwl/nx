@@ -776,11 +776,11 @@ export function getPackageManagerCommand({
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
-      createWorkspace: `pnpx --yes create-nx-workspace@${publishedVersion}`,
+      createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
-      runNx: `pnpx nx`,
-      runNxSilent: `pnpx nx`,
-      runUninstalledPackage: 'pnpx --yes',
+      runNx: `pnpm exec nx`,
+      runNxSilent: `pnpm exec nx`,
+      runUninstalledPackage: 'pnpm dlx',
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },
