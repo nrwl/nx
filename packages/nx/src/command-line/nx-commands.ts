@@ -59,8 +59,7 @@ ${daemonHelpOutput}
     You can also use the infix notation to run a target:
     (e.g., nx serve myapp --configuration=production)
 
-    You can skip the use of Nx cache by using the --skip-nx-cache option.
-    `,
+    You can skip the use of Nx cache by using the --skip-nx-cache option.`,
     builder: (yargs) => withRunOneOptions(yargs),
     handler: async (args) =>
       (await import('./run-one')).runOne(process.cwd(), { ...args }),
@@ -168,8 +167,7 @@ ${daemonHelpOutput}
   })
   .command({
     command: 'affected:graph',
-    describe:
-      'Graph dependencies affected by changes. Alias: affected:dep-graph',
+    describe: 'Graph dependencies affected by changes',
     aliases: ['affected:dep-graph'],
     builder: (yargs) =>
       linkToNxDevAndExamples(
@@ -205,7 +203,7 @@ ${daemonHelpOutput}
 
   .command({
     command: 'graph',
-    describe: 'Graph dependencies within workspace. Alias: dep-graph',
+    describe: 'Graph dependencies within workspace',
     aliases: ['dep-graph'],
     builder: (yargs) =>
       linkToNxDevAndExamples(withDepGraphOptions(yargs), 'dep-graph'),
@@ -252,8 +250,7 @@ ${daemonHelpOutput}
     command: 'migrate [packageAndVersion]',
     describe: `Creates a migrations file or runs migrations from the migrations file.
 - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
-- Run migrations (e.g., nx migrate --run-migrations=migrations.json)
-`,
+- Run migrations (e.g., nx migrate --run-migrations=migrations.json)`,
     builder: (yargs) =>
       linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
     handler: () => runMigration(),
