@@ -107,6 +107,7 @@ describe('project graph utils', () => {
   describe('mergeNpmScriptsWithTargets', () => {
     const packageJson: PackageJson = {
       name: 'my-app',
+      version: '0.0.0',
       scripts: {
         build: 'echo 1',
       },

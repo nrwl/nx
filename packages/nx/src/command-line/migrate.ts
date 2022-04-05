@@ -1,7 +1,7 @@
 import { exec, execSync } from 'child_process';
 import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
-import { gt, lte, parse as parseSemver } from 'semver';
+import { gt, lte } from 'semver';
 import { promisify } from 'util';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { flushChanges, FsTree } from '../config/tree';
@@ -61,12 +61,8 @@ export interface ResolvedMigrationConfiguration extends MigrationsJson {
 const execAsync = promisify(exec);
 
 export function normalizeVersion(version: string) {
-  const {
-    major,
-    minor,
-    patch,
-    prerelease: [prereleaseTag],
-  } = parseSemver(version);
+  const [semver, prereleaseTag] = version.split('-');
+  const [major, minor, patch] = semver.split('.');
 
   const newSemver = `${major || 0}.${minor || 0}.${patch || 0}`;
 
@@ -100,7 +96,7 @@ function normalizeSlashes(packageName: string): string {
 }
 
 export interface MigratorOptions {
-  packageJson: any;
+  packageJson: PackageJson;
   versions: (pkg: string) => string;
   fetch: (
     pkg: string,

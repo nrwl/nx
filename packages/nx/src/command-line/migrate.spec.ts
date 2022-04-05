@@ -1,10 +1,19 @@
+import { PackageJson } from '../utils/package-json';
 import { Migrator, normalizeVersion, parseMigrationsOptions } from './migrate';
+
+const createPackageJson = (
+  overrides: Partial<PackageJson> = {}
+): PackageJson => ({
+  name: 'some-workspace',
+  version: '0.0.0',
+  ...overrides,
+});
 
 describe('Migration', () => {
   describe('packageJson patch', () => {
     it('should throw an error when the target package is not available', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: createPackageJson(),
         versions: () => '1.0',
         fetch: (_p, _v) => {
           throw new Error('cannot fetch');
@@ -19,7 +28,7 @@ describe('Migration', () => {
 
     it('should return a patch to the new version', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: createPackageJson(),
         versions: () => '1.0.0',
         fetch: (_p, _v) => Promise.resolve({ version: '2.0.0' }),
         to: {},
@@ -35,7 +44,7 @@ describe('Migration', () => {
 
     it('should collect the information recursively from upserts', async () => {
       const migrator = new Migrator({
-        packageJson: { dependencies: { child: '1.0.0' } },
+        packageJson: createPackageJson({ dependencies: { child: '1.0.0' } }),
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -78,7 +87,7 @@ describe('Migration', () => {
 
     it('should support the deprecated "alwaysAddToPackageJson" option', async () => {
       const migrator = new Migrator({
-        packageJson: { dependencies: { child1: '1.0.0' } },
+        packageJson: createPackageJson({ dependencies: { child1: '1.0.0' } }),
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'mypackage') {
@@ -117,7 +126,7 @@ describe('Migration', () => {
 
     it('should stop recursive calls when exact version', async () => {
       const migrator = new Migrator({
-        packageJson: { dependencies: { child: '1.0.0' } },
+        packageJson: createPackageJson({ dependencies: { child: '1.0.0' } }),
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -164,13 +173,13 @@ describe('Migration', () => {
 
     it('should set the version of a dependency to the newest', async () => {
       const migrator = new Migrator({
-        packageJson: {
+        packageJson: createPackageJson({
           dependencies: {
             child1: '1.0.0',
             child2: '1.0.0',
             grandchild: '1.0.0',
           },
-        },
+        }),
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -233,7 +242,9 @@ describe('Migration', () => {
 
     it('should skip the versions <= currently installed', async () => {
       const migrator = new Migrator({
-        packageJson: { dependencies: { child: '1.0.0', grandchild: '2.0.0' } },
+        packageJson: createPackageJson({
+          dependencies: { child: '1.0.0', grandchild: '2.0.0' },
+        }),
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -280,7 +291,9 @@ describe('Migration', () => {
 
     it('should conditionally process packages if they are installed', async () => {
       const migrator = new Migrator({
-        packageJson: { dependencies: { child1: '1.0.0', child2: '1.0.0' } },
+        packageJson: createPackageJson({
+          dependencies: { child1: '1.0.0', child2: '1.0.0' },
+        }),
         versions: (p) => (p !== 'not-installed' ? '1.0.0' : null),
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -320,70 +333,62 @@ describe('Migration', () => {
       });
     });
 
-    // this is temporary. if nx gets used by other projects,
-    // we will extract the special casing
-    it('should special case @nrwl/workspace', async () => {
+    it('should migrate related libraries using packageGroup', async () => {
       const migrator = new Migrator({
         packageJson: {
+          name: 'some-workspace',
+          version: '0.0.0',
+
           devDependencies: {
-            '@nrwl/workspace': '0.9.0',
-            '@nrwl/cli': '0.9.0',
-            '@nrwl/angular': '0.9.0',
-            '@nrwl/cypress': '0.9.0',
-            '@nrwl/devkit': '0.9.0',
-            '@nrwl/eslint-plugin-nx': '0.9.0',
-            '@nrwl/express': '0.9.0',
-            '@nrwl/jest': '0.9.0',
-            '@nrwl/js': '0.9.0',
-            '@nrwl/linter': '0.9.0',
-            '@nrwl/nest': '0.9.0',
-            '@nrwl/next': '0.9.0',
-            '@nrwl/node': '0.9.0',
-            '@nrwl/nx-cloud': '0.9.0',
-            '@nrwl/nx-plugin': '0.9.0',
-            '@nrwl/react': '0.9.0',
-            '@nrwl/storybook': '0.9.0',
-            '@nrwl/web': '0.9.0',
+            '@my-company/nx-workspace': '0.9.0',
+            '@my-company/lib-1': '0.9.0',
+            '@my-company/lib-2': '0.9.0',
+            '@my-company/lib-3': '0.9.0',
+            '@my-company/lib-4': '0.9.0',
+            '@my-company/lib-5': '0.9.0',
           },
         },
         versions: () => '1.0.0',
-        fetch: (_p, _v) => Promise.resolve({ version: '2.0.0' }),
+        fetch: async (pkg, version) => {
+          if (pkg === '@my-company/nx-workspace') {
+            return {
+              version: '2.0.0',
+              packageGroup: [
+                '@my-company/lib-1',
+                '@my-company/lib-2',
+                '@my-company/lib-3',
+                { package: '@my-company/lib-4', version: 'latest' },
+              ],
+            };
+          }
+          if (version === 'latest') {
+            return { version: '2.0.1' };
+          }
+          return { version: '2.0.0' };
+        },
         to: {},
       });
 
       expect(
-        await migrator.updatePackageJson('@nrwl/workspace', '2.0.0')
+        await migrator.updatePackageJson('@my-company/nx-workspace', '2.0.0')
       ).toEqual({
         migrations: [],
         packageJson: {
-          '@nrwl/workspace': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/angular': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/cypress': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/devkit': { addToPackageJson: false, version: '2.0.0' },
-          '@nrwl/eslint-plugin-nx': {
+          '@my-company/nx-workspace': {
             version: '2.0.0',
             addToPackageJson: false,
           },
-          '@nrwl/express': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/jest': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/js': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/linter': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/nest': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/next': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/node': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/nx-cloud': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/nx-plugin': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/react': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/storybook': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/web': { version: '2.0.0', addToPackageJson: false },
-          '@nrwl/cli': { version: '2.0.0', addToPackageJson: false },
+          '@my-company/lib-1': { version: '2.0.0', addToPackageJson: false },
+          '@my-company/lib-2': { version: '2.0.0', addToPackageJson: false },
+          '@my-company/lib-3': { version: '2.0.0', addToPackageJson: false },
+          '@my-company/lib-4': { version: '2.0.1', addToPackageJson: false },
         },
       });
     });
 
     it('should not throw when packages are missing', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: createPackageJson(),
         versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
         fetch: (_p, _v) =>
           Promise.resolve({
@@ -397,7 +402,7 @@ describe('Migration', () => {
 
     it('should only fetch packages that are installed', async () => {
       const migrator = new Migrator({
-        packageJson: {},
+        packageJson: createPackageJson(),
         versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
         fetch: (p, _v) => {
           if (p === '@nrwl/nest') {
@@ -415,7 +420,9 @@ describe('Migration', () => {
 
     it('should only fetch packages that are top-level deps', async () => {
       const migrator = new Migrator({
-        packageJson: { devDependencies: { parent: '1.0.0', child1: '1.0.0' } },
+        packageJson: createPackageJson({
+          devDependencies: { parent: '1.0.0', child1: '1.0.0' },
+        }),
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -451,7 +458,9 @@ describe('Migration', () => {
   describe('migrations', () => {
     it('should create a list of migrations to run', async () => {
       const migrator = new Migrator({
-        packageJson: { dependencies: { child: '1.0.0', newChild: '1.0.0' } },
+        packageJson: createPackageJson({
+          dependencies: { child: '1.0.0', newChild: '1.0.0' },
+        }),
         versions: (p) => {
           if (p === 'parent') return '1.0.0';
           if (p === 'child') return '1.0.0';
@@ -530,7 +539,7 @@ describe('Migration', () => {
 
     it('should not generate migrations for non top-level packages', async () => {
       const migrator = new Migrator({
-        packageJson: { dependencies: { child: '1.0.0' } },
+        packageJson: createPackageJson({ dependencies: { child: '1.0.0' } }),
         versions: (p) => {
           if (p === 'parent') return '1.0.0';
           if (p === 'child') return '1.0.0';
