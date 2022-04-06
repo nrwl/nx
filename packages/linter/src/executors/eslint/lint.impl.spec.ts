@@ -315,6 +315,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
           warningCount: 4,
           results: [],
           usedDeprecatedRules: [],
+          suppressedMessages: [],
           messages: [
             {
               ruleId: 'mock',
@@ -348,6 +349,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
           warningCount: 6,
           results: [],
           usedDeprecatedRules: [],
+          suppressedMessages: [],
           messages: [
             {
               ruleId: 'mock',
