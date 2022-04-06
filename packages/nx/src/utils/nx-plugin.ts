@@ -13,6 +13,7 @@ import {
   TargetConfiguration,
   WorkspaceJsonConfiguration,
 } from '../config/workspace-json-project-json';
+import { findMatchingProjectForPath } from './target-project-locator';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -181,17 +182,15 @@ function findNxProjectForImportPath(
   const possiblePaths = tsConfigPaths[importPath]?.map((p) =>
     path.resolve(root, p)
   );
-  if (tsConfigPaths[importPath]) {
-    const projectRootMappings = Object.entries(workspace.projects).reduce(
-      (m, [project, config]) => {
-        m[path.resolve(root, config.root)] = project;
-        return m;
-      },
-      {}
-    );
-    for (const root of Object.keys(projectRootMappings)) {
-      if (possiblePaths.some((p) => p.startsWith(root))) {
-        return projectRootMappings[root];
+  if (possiblePaths?.length) {
+    const projectRootMappings = buildProjectRootMap(workspace.projects, root);
+    for (const tsConfigPath of possiblePaths) {
+      const nxProject = findMatchingProjectForPath(
+        tsConfigPath,
+        projectRootMappings
+      );
+      if (nxProject) {
+        return nxProject;
       }
     }
     if (process.env.NX_VERBOSE_LOGGING) {
@@ -205,6 +204,16 @@ function findNxProjectForImportPath(
       'Unable to resolve local plugin with import path ' + importPath
     );
   }
+}
+
+function buildProjectRootMap(
+  projects: Record<string, ProjectConfiguration>,
+  root: string
+) {
+  return Object.entries(projects).reduce((m, [project, config]) => {
+    m.set(path.resolve(root, config.root), project);
+    return m;
+  }, new Map<string, string>());
 }
 
 let tsconfigPaths: Record<string, string[]>;
