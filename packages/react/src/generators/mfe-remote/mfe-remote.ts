@@ -2,12 +2,12 @@ import { join } from 'path';
 import { formatFiles, generateFiles, names, Tree } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
-import { Schema } from './schema';
 import { normalizeOptions } from '../application/lib/normalize-options';
 import applicationGenerator from '../application/application';
-import { updateMfeProject } from '../mfe-host/lib/update-mfe-project';
 import { NormalizedSchema } from '../application/schema';
-import { updateHostWithRemote } from '../mfe-host/lib/update-host-with-remote';
+import { updateHostWithRemote } from './lib/update-host-with-remote';
+import { updateMfeProject } from '../../rules/update-mfe-project';
+import { Schema } from './schema';
 
 export function addMfeFiles(host: Tree, options: NormalizedSchema) {
   const templateVariables = {
