@@ -18,6 +18,7 @@ import { validateNpmPackage } from './validate-npm-package';
 import { deduceDefaultBase } from './default-base';
 import { stringifyCollection } from './utils';
 import { yargsDecorator } from './decorator';
+import chalk = require('chalk');
 
 type Arguments = {
   name: string;
@@ -127,52 +128,52 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     (yargs) =>
       yargs
         .option('name', {
-          describe: `Workspace name (e.g. org name)`,
+          describe: chalk.dim`Workspace name (e.g. org name)`,
           type: 'string',
         })
         .option('preset', {
-          describe: `Customizes the initial content of your workspace. To build your own see https://nx.dev/nx-plugin/overview#preset`,
+          describe: chalk.dim`Customizes the initial content of your workspace. To build your own see https://nx.dev/nx-plugin/overview#preset`,
           choices: Object.values(Preset),
           type: 'string',
         })
         .option('appName', {
-          describe: `The name of the application when a preset with pregenerated app is selected`,
+          describe: chalk.dim`The name of the application when a preset with pregenerated app is selected`,
           type: 'string',
         })
         .option('interactive', {
-          describe: `Enable interactive mode with presets`,
+          describe: chalk.dim`Enable interactive mode with presets`,
           type: 'boolean',
         })
         .option('cli', {
-          describe: `CLI to power the Nx workspace`,
+          describe: chalk.dim`CLI to power the Nx workspace`,
           choices: ['nx', 'angular'],
           type: 'string',
         })
         .option('style', {
-          describe: `Style option to be used when a preset with pregenerated app is selected`,
+          describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
           type: 'string',
         })
         .option('nxCloud', {
-          describe: `Use Nx Cloud`,
+          describe: chalk.dim`Use Nx Cloud`,
           defaultDescription: 'true',
           type: 'boolean',
         })
         .option('allPrompts', {
           alias: 'a',
-          describe: `Show all prompts`,
+          describe: chalk.dim`Show all prompts`,
           type: 'boolean',
           default: false,
         })
         .option('packageManager', {
           alias: 'pm',
-          describe: `Package manager to use`,
+          describe: chalk.dim`Package manager to use`,
           choices: [...packageManagerList].sort(),
           defaultDescription: 'npm',
           type: 'string',
         })
         .option('defaultBase', {
           defaultDescription: 'main',
-          describe: `Default base to use for new projects`,
+          describe: chalk.dim`Default base to use for new projects`,
           type: 'string',
         }),
     async (argv: yargs.ArgumentsCamelCase<Arguments>) => {
@@ -186,9 +187,13 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     },
     [getConfiguration]
   )
-  .help('help')
+  .help('help', chalk.dim`Show help`)
   .updateLocale(yargsDecorator)
-  .version(nxVersion) as yargs.Argv<Arguments>;
+  .version(
+    'version',
+    chalk.dim`Show version`,
+    nxVersion
+  ) as yargs.Argv<Arguments>;
 
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   const {
