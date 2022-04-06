@@ -280,7 +280,7 @@ function normalizeTargetString(
   appName: string,
   defaultTarget: string = 'build'
 ) {
-  if (appName.includes(':')) {
+  if (appName?.includes(':')) {
     return appName;
   }
   return `${appName}:${defaultTarget}`;
@@ -308,7 +308,7 @@ export function customProjectBuildConfigIsValid(
   tree: Tree,
   projectBuildConfig: string
 ): boolean {
-  if (projectBuildConfig.includes(':')) {
+  if (projectBuildConfig?.includes(':')) {
     const { project, target } = parseTargetString(projectBuildConfig);
     const projectConfig = readProjectConfiguration(tree, project);
     if (projectConfig?.targets?.[target]) {
