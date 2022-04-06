@@ -25,7 +25,6 @@ export interface InternalResolvedConfigOptions<ComponentDevServerOpts = any> {
   integrationFolder: string;
   downloadsFolder: string;
   nodeVersion: 'system' | 'bundled';
-  pluginsFile: string | false;
   redirectionLimit: number;
   resolvedNodePath: string;
   resolvedNodeVersion: string;

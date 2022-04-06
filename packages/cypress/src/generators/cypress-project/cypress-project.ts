@@ -63,7 +63,10 @@ function createFiles(
   );
 
   if (!cypressVersion || cypressVersion >= 7) {
-    tree.delete(join(options.projectRoot, 'src/plugins/index.js'));
+    const pluginPath = join(options.projectRoot, 'src/plugins/index.js');
+    if (tree.exists(pluginPath)) {
+      tree.delete(pluginPath);
+    }
   } else {
     // this will always be cypress v7 or lower
     updateJson(tree, join(options.projectRoot, 'cypress.json'), (json) => {
