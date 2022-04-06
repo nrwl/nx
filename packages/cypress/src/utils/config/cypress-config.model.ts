@@ -47,9 +47,6 @@ export interface InternalResolvedConfigOptions<ComponentDevServerOpts = any> {
   experimentalInteractiveRunEvents: boolean;
   experimentalSourceRewriting: boolean;
   experimentalStudio: boolean;
-  retries: Nullable<
-    number | { runMode?: Nullable<number>; openMode?: Nullable<number> }
-  >;
   includeShadowDom: boolean;
   blockHosts: null | string | string[];
   componentFolder: false | string;

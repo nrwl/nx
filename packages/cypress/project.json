@@ -50,11 +50,6 @@
             "input": "",
             "glob": "LICENSE",
             "output": "/"
-          },
-          {
-            "input": "packages/cypress",
-            "glob": "plugins/**/*.html",
-            "output": "/"
           }
         ]
       },

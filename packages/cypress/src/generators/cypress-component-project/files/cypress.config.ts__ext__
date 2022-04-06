@@ -1,16 +1,6 @@
 import { defineConfig } from 'cypress';
-import { componentDevServer} from '@nrwl/cypress/plugins/<%= componentType %>';
+import { nxComponentTestingPreset } from '@nrwl/<%= componentType %>/plugins/component-testing';
 
 export default defineConfig({
-  component: {
-    <% if (componentType === 'next') { %>devServer: componentDevServer(),<% }%><% if (componentType === 'react') { %>devServer: componentDevServer('tsconfig.cy.json', '<%= compiler %>'),<% } %>
-    pluginsFile: false,
-    video: true,
-    chromeWebSecurity: false,
-    fixturesFolder: 'cypress/fixtures',
-    specPattern: '**/*.cy.{js,jsx,ts,tsx}',
-    supportFile: 'cypress/support/component.ts',
-    videosFolder: "<%= offsetFromRoot %>dist/cypress/<%= projectRoot %>/videos",
-    screenshotsFolder: "<%= offsetFromRoot %>dist/cypress/<%= projectRoot %>/screenshots",
-  },
+  component: nxComponentTestingPreset(__dirname)
 });

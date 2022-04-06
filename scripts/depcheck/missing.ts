@@ -51,21 +51,6 @@ const IGNORE_MATCHES = {
     '@nrwl/cypress',
     // migration utilities
     '@phenomnomnominal/tsquery',
-    // installed dynamically
-    '@cypress/webpack-dev-server',
-    '@cypress/react',
-    // deps for cypress component testing devserver plugins deps
-    'css-loader',
-    'less-loader',
-    'loader-utils',
-    'babel-loader',
-    'swc-loader',
-    'next',
-    'sass',
-    'sass-loader',
-    'style-loader',
-    'stylus-loader',
-    'webpack',
   ],
   devkit: ['@angular-devkit/architect', 'rxjs'],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
@@ -93,6 +78,9 @@ const IGNORE_MATCHES = {
     'rxjs',
     'tsconfig-paths-webpack-plugin',
     'webpack',
+    // cypress component testing plugin utils, installed dynamically
+    '@cypress/react',
+    '@cypress/webpack-dev-server',
   ],
   react: [
     'babel-plugin-emotion',
@@ -103,8 +91,19 @@ const IGNORE_MATCHES = {
     'babel-jest',
     '@angular-devkit/core',
     '@angular-devkit/schematics',
-    '@swc/jest',
-    'babel-jest',
+    // cypress component testing plugin utils, installed dynamically
+    '@cypress/webpack-dev-server',
+    // TODO(caleb): remove when refactoring plugin to use @nrwl/web
+    // webpack plugins for cypress component testing dev server
+    'babel-loader',
+    'css-loader',
+    'less-loader',
+    'sass',
+    'sass-loader',
+    'style-loader',
+    'stylus-loader',
+    'swc-loader',
+    'tsconfig-paths-webpack-plugin',
   ],
   storybook: [
     '@angular-devkit/architect',

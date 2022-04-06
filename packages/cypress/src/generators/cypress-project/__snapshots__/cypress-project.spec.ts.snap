@@ -200,21 +200,10 @@ Object {
 
 exports[`Cypress Project > v10 nested should set right path names in \`cypress.config.ts\` 1`] = `
 "import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 export default defineConfig({
-  e2e: {
-    fileServerFolder: '.',
-    fixturesFolder: 'src/fixtures',
-    integrationFolder: 'src/e2e',
-    supportFile: 'src/support/e2e.ts',
-    specPattern: 'src/**/*.cy.{js,ts}',
-    pluginsFile: false,
-    video: true,
-    videosFolder: '../../../dist/cypress/apps/my-dir/my-app-e2e/videos',
-    screenshotsFolder:
-      '../../../dist/cypress/apps/my-dir/my-app-e2e/screenshots',
-    chromeWebSecurity: false,
-  },
+  e2e: nxE2EPreset(__dirname)
 });
 "
 `;
@@ -254,21 +243,10 @@ Object {
 
 exports[`Cypress Project > v10 should set right path names in \`cypress.config.ts\` 1`] = `
 "import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 export default defineConfig({
-  e2e: {
-    fileServerFolder: '.',
-    fixturesFolder: 'src/fixtures',
-    integrationFolder: 'src/e2e',
-    supportFile: 'src/support/e2e.ts',
-    specPattern: 'src/**/*.cy.{js,ts}',
-    pluginsFile: false,
-    video: true,
-    videosFolder: '../../dist/cypress/apps/my-app-e2e/videos',
-    screenshotsFolder:
-      '../../dist/cypress/apps/my-app-e2e/screenshots',
-    chromeWebSecurity: false,
-  },
+  e2e: nxE2EPreset(__dirname)
 });
 "
 `;

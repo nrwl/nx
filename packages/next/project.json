@@ -52,6 +52,11 @@
             "output": "/"
           },
           {
+            "input": "packages/next",
+            "glob": "plugins/**/*.html",
+            "output": "/"
+          },
+          {
             "input": "",
             "glob": "LICENSE",
             "output": "/"

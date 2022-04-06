@@ -1,8 +1,33 @@
+import { nxBaseCypressPreset } from '@nrwl/cypress/plugins/cypress-preset';
 import { workspaceLayout } from 'nx/src/project-graph/file-utils';
 import { workspaceRoot } from 'nx/src/utils/app-root';
 import { join, resolve } from 'path';
 // doesn't like ESM imports
 const findNextWebpackConfig = require('@cypress/react/plugins/next/findNextWebpackConfig');
+
+/**
+ * nx Component Testing Preset for Cypress
+ * @description
+ * this preset contains the base configuration
+ * for your component tests that nx recommends.
+ * including a devServer that supports nx workspaces.
+ * you can easily extend this within your cypress config via spreading the preset
+ * @example
+ * export default defineConfig({
+ *   component: {
+ *     ...nxComponentTestingPreset(__dirname)
+ *     // add your own config here
+ *   }
+ * })
+ *
+ * @param pathToConfig will be used to construct the output paths for videos and screenshots
+ */
+export function nxComponentTestingPreset(pathToConfig: string) {
+  return {
+    ...nxBaseCypressPreset(pathToConfig),
+    devServer: componentDevServer(),
+  };
+}
 
 /**
  * Start the devserver for Cypress component tests with a NextJS project.

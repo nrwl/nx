@@ -2,19 +2,11 @@
 
 exports[`@nrwl/storybook:cypress-project should generate files 1`] = `
 "import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 export default defineConfig({
-    baseUrl: 'http://localhost:4400',
     e2e: {
-        fileServerFolder: '.',
-        fixturesFolder: 'src/fixtures',
-        integrationFolder: 'src/e2e',
-        supportFile: 'src/support/e2e.ts',
-        specPattern: 'src/**/*.cy.{js,ts}',
-        pluginsFile: false,
-        video: true,
-        videosFolder: '../../dist/cypress/apps/test-ui-lib-e2e/videos',
-        screenshotsFolder: '../../dist/cypress/apps/test-ui-lib-e2e/screenshots',
-        chromeWebSecurity: false
+        ... nxE2EPreset(__dirname),
+        baseUrl: 'http://localhost:4400'
     }
 });
 "
