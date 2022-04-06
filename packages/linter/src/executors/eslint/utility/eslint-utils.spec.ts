@@ -22,6 +22,7 @@ describe('eslint-utils', () => {
       fix: true,
       cache: true,
       cacheLocation: '/root/cache',
+      cacheStrategy: 'content',
     }).catch(() => {});
 
     expect(ESLint).toHaveBeenCalledWith({
@@ -29,8 +30,11 @@ describe('eslint-utils', () => {
       fix: true,
       cache: true,
       cacheLocation: '/root/cache',
+      cacheStrategy: 'content',
       ignorePath: undefined,
       useEslintrc: true,
+      resolvePluginsRelativeTo: undefined,
+      rulePaths: [],
       errorOnUnmatchedPattern: false,
     });
   });
@@ -40,6 +44,7 @@ describe('eslint-utils', () => {
       fix: true,
       cache: true,
       cacheLocation: '/root/cache',
+      cacheStrategy: 'content',
     }).catch(() => {});
 
     expect(ESLint).toHaveBeenCalledWith({
@@ -47,8 +52,11 @@ describe('eslint-utils', () => {
       fix: true,
       cache: true,
       cacheLocation: '/root/cache',
+      cacheStrategy: 'content',
       ignorePath: undefined,
       useEslintrc: true,
+      resolvePluginsRelativeTo: undefined,
+      rulePaths: [],
       errorOnUnmatchedPattern: false,
     });
   });
@@ -67,8 +75,62 @@ describe('eslint-utils', () => {
         fix: true,
         cache: true,
         cacheLocation: '/root/cache',
+        cacheStrategy: undefined,
         ignorePath: undefined,
         useEslintrc: false,
+        resolvePluginsRelativeTo: undefined,
+        rulePaths: [],
+        errorOnUnmatchedPattern: false,
+      });
+    });
+  });
+
+  describe('rulesdir', () => {
+    it('should create the ESLint instance with "rulePaths" set to the given value for rulesdir', async () => {
+      const extraRuleDirectories = ['./some-rules', '../some-more-rules'];
+      await lint(undefined, {
+        fix: true,
+        cache: true,
+        cacheLocation: '/root/cache',
+        cacheStrategy: 'content',
+        rulesdir: extraRuleDirectories,
+      }).catch(() => {});
+
+      expect(ESLint).toHaveBeenCalledWith({
+        overrideConfigFile: undefined,
+        fix: true,
+        cache: true,
+        cacheLocation: '/root/cache',
+        cacheStrategy: 'content',
+        ignorePath: undefined,
+        useEslintrc: true,
+        resolvePluginsRelativeTo: undefined,
+        rulePaths: extraRuleDirectories,
+        errorOnUnmatchedPattern: false,
+      });
+    });
+  });
+
+  describe('resolvePluginsRelativeTo', () => {
+    it('should create the ESLint instance with "resolvePluginsRelativeTo" set to the given value for resolvePluginsRelativeTo', async () => {
+      await lint(undefined, {
+        fix: true,
+        cache: true,
+        cacheLocation: '/root/cache',
+        cacheStrategy: 'content',
+        resolvePluginsRelativeTo: './some-path',
+      }).catch(() => {});
+
+      expect(ESLint).toHaveBeenCalledWith({
+        overrideConfigFile: undefined,
+        fix: true,
+        cache: true,
+        cacheLocation: '/root/cache',
+        cacheStrategy: 'content',
+        ignorePath: undefined,
+        useEslintrc: true,
+        resolvePluginsRelativeTo: './some-path',
+        rulePaths: [],
         errorOnUnmatchedPattern: false,
       });
     });

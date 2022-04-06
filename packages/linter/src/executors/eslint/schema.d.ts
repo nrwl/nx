@@ -15,6 +15,9 @@ export interface Schema extends JsonObject {
   quiet: boolean;
   ignorePath: string | null;
   hasTypeAwareRules: boolean;
+  cacheStrategy: 'content' | 'metadata' | null;
+  rulesdir: string[];
+  resolvePluginsRelativeTo: string | null;
 }
 
 type Formatter =

@@ -45,6 +45,7 @@ function createValidRunBuilderOptions(
     fix: true,
     cache: true,
     cacheLocation: 'cacheLocation1',
+    cacheStrategy: 'content',
     format: 'stylish',
     force: false,
     silent: false,
@@ -54,6 +55,8 @@ function createValidRunBuilderOptions(
     noEslintrc: false,
     quiet: false,
     hasTypeAwareRules: false,
+    rulesdir: [],
+    resolvePluginsRelativeTo: null,
     ...additionalOptions,
   };
 }
@@ -137,6 +140,7 @@ describe('Linter Builder', () => {
       fix: true,
       cache: true,
       cacheLocation: 'cacheLocation1',
+      cacheStrategy: 'content',
       format: 'stylish',
       force: false,
       silent: false,
@@ -145,6 +149,8 @@ describe('Linter Builder', () => {
       outputFile: null,
       quiet: false,
       noEslintrc: false,
+      rulesdir: [],
+      resolvePluginsRelativeTo: null,
     });
   });
 
