@@ -14,7 +14,7 @@ export function ConfScheduleShort(): JSX.Element {
       time: '',
       title: 'Keynote',
       description: '',
-      speakers: ['Jeff Cross', 'Victor Savkin'],
+      speakers: ['Juri Strumpflohner', 'Victor Savkin'],
       videoUrl: '',
     },
     // {
