@@ -203,7 +203,7 @@ export function addCacheableOperation(tree: Tree) {
   workspace.tasksRunnerOptions.default.options.cacheableOperations =
     workspace.tasksRunnerOptions.default.options.cacheableOperations || [];
   if (
-    !workspace.tasksRunnerOptions.default.options.cacheableOperations.includes(
+    !workspace.tasksRunnerOptions.default.options.cacheableOperations?.includes(
       'build-storybook'
     )
   ) {

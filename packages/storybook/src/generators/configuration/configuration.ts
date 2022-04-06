@@ -231,8 +231,8 @@ function configureTsProjectConfig(
   }
 
   if (
-    !tsConfigContent.exclude.includes('**/*.stories.ts') &&
-    !tsConfigContent.exclude.includes('**/*.stories.js')
+    !tsConfigContent?.exclude?.includes('**/*.stories.ts') &&
+    !tsConfigContent?.exclude?.includes('**/*.stories.js')
   ) {
     tsConfigContent.exclude = [
       ...(tsConfigContent.exclude || []),
@@ -260,7 +260,7 @@ function configureTsSolutionConfig(
   if (
     !tsConfigContent?.references
       ?.map((reference) => reference.path)
-      .includes('./.storybook/tsconfig.json')
+      ?.includes('./.storybook/tsconfig.json')
   ) {
     tsConfigContent.references = [
       ...(tsConfigContent.references || []),
