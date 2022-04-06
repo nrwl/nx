@@ -409,13 +409,13 @@ When you click this button, we’ll run [a script](https://github.com/nrwl/add-n
 
 The script will make the following changes:
 
-- Installs the `@nrwl/cli`, `@nrwl/tao`, and `@nrwl/workspace` packages (`@nrwl/nx-cloud` will be installed only if you opted into Nx Cloud).
+- Installs the `@nrwl/workspace` and `nx` packages.
+  - If you opted into Nx Cloud, `@nrwl/nx-cloud` will be installed as well.
+  - If your project's Angular version is greater than or equal to version 13, then the `@nrwl/angular` package will be installed as well.
 - Creates an `nx.json` file in the root of your workspace.
 - Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/using-nx/caching).
 
-Note that the `@nrwl/angular` package is not installed, only the core pieces of Nx to enable this capability.
-
-By running this command, you’re not buying whole-sale into Nx, yet (see the sections above for more on that migration)- but Nx distributed caching is now enabled.
+By running this command and accepting Nx Cloud, Nx distributed caching is now enabled.
 
 Once the script has run, commit the changes. Reverting these changes will effectively undo the changes made.
 
