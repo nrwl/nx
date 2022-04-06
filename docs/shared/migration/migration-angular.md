@@ -401,7 +401,7 @@ Learn more about the advantages of Nx in the following guides:
 
 ## From Nx Console
 
-<iframe loading="lazy" width="750" height="420" src="https://www.youtube.com/embed/FjiOXyd827A?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+<iframe loading="lazy" width="750" height="420" src="https://www.youtube.com/embed/vRj9SNVYKrE?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 As of Nx Console version 17.15.0, Angular CLI users will receive a notice periodically when running commands via Nx Console, asking if they want to use Nx to make their Angular commands faster.
 
