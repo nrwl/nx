@@ -190,7 +190,7 @@ function findNxProjectForImportPath(
       {}
     );
     for (const root of Object.keys(projectRootMappings)) {
-      if (possiblePaths.some((p) => p.startsWith(root))) {
+      if (possiblePaths.some((p) => !path.relative(root, p).startsWith('..'))) {
         return projectRootMappings[root];
       }
     }
