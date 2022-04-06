@@ -2,12 +2,19 @@ import { NormalizedSchema } from '../schema';
 import { generateFiles, names } from '@nrwl/devkit';
 import { join } from 'path';
 
-export function addMFEFiles(host, options: NormalizedSchema) {
+export function addMfeFiles(
+  host,
+  options: NormalizedSchema,
+  defaultRemoteManifest: { name: string; port: number }[]
+) {
   const templateVariables = {
     ...names(options.name),
     ...options,
     tmpl: '',
-    remotes: options.remotes.map((r) => names(r)),
+    remotes: defaultRemoteManifest.map(({ name, port }) => ({
+      ...names(name),
+      port,
+    })),
   };
 
   // Module federation requires bootstrap code to be dynamically imported.

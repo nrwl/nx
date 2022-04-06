@@ -19,6 +19,7 @@ the boilerplate. However, the vast majority of the features will work the same w
 - [Using Nx without plugins](/getting-started/nx-core) will help you understand the core of Nx.
 - [Adding Nx to an existing monorepo](/migration/adding-to-monorepo) will show how to add Nx to an existing monorepo.
 - [Mental model](/using-nx/mental-model) is a good starting point for those who like to understand things theoretically first.
+- [Nx core tutorial](/core-tutorial/01-create-blog) to start learning how to use Nx.
 
 If you want to use Nx plugins to really level up your productivity, pick one of the following guides:
 

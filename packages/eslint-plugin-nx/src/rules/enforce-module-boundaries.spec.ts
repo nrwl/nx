@@ -1836,7 +1836,6 @@ function runRule(
   projectGraph: ProjectGraph
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
-  (global as any).npmScope = 'mycompany';
   (global as any).projectGraph = mapProjectGraphFiles(projectGraph);
   (global as any).targetProjectLocator = new TargetProjectLocator(
     projectGraph.nodes,

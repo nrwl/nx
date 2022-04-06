@@ -354,7 +354,6 @@ export function runCommandAsync(
         env: {
           ...(opts.env || process.env),
           FORCE_COLOR: 'false',
-          NX_INVOKED_BY_RUNNER: undefined,
         },
         encoding: 'utf-8',
       },
@@ -382,7 +381,6 @@ export function runCommandUntil(
     env: {
       ...process.env,
       FORCE_COLOR: 'false',
-      NX_INVOKED_BY_RUNNER: undefined,
     },
     encoding: 'utf-8',
   });
@@ -440,7 +438,7 @@ export function runNgAdd(
     packageInstall(packageName, null, version);
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command), {
       cwd: tmpProjPath(),
-      env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+      env: { ...(opts.env || process.env) },
       encoding: 'utf-8',
     })
       .toString()
@@ -473,7 +471,7 @@ export function runCLI(
     let r = stripConsoleColors(
       execSync(`${pm.runNx} ${command}`, {
         cwd: opts.cwd || tmpProjPath(),
-        env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+        env: { ...(opts.env || process.env) },
         encoding: 'utf-8',
         maxBuffer: 50 * 1024 * 1024,
       })
@@ -529,7 +527,6 @@ export function runCommand(
       env: {
         ...process.env,
         FORCE_COLOR: 'false',
-        NX_INVOKED_BY_RUNNER: undefined,
       },
       encoding: 'utf-8',
       ...options,
@@ -776,11 +773,11 @@ export function getPackageManagerCommand({
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
-      createWorkspace: `pnpx --yes create-nx-workspace@${publishedVersion}`,
+      createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
-      runNx: `pnpx nx`,
-      runNxSilent: `pnpx nx`,
-      runUninstalledPackage: 'pnpx --yes',
+      runNx: `pnpm exec nx`,
+      runNxSilent: `pnpm exec nx`,
+      runUninstalledPackage: 'pnpm dlx',
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },

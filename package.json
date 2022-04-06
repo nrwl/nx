@@ -67,7 +67,7 @@
     "@nrwl/linter": "13.10.0-beta.9",
     "@nrwl/next": "13.10.0-beta.9",
     "@nrwl/node": "13.10.0-beta.9",
-    "@nrwl/nx-cloud": "13.2.1",
+    "@nrwl/nx-cloud": "13.3.0-beta.0",
     "@nrwl/react": "13.10.0-beta.9",
     "@nrwl/web": "13.10.0-beta.9",
     "@nrwl/workspace": "13.10.0-beta.9",
@@ -308,6 +308,7 @@
   "resolutions": {
     "ng-packagr/rxjs": "6.6.7",
     "**/xmlhttprequest-ssl": "~1.6.2",
-    "immer": "~9.0.6"
+    "immer": "~9.0.6",
+    "minimist": "^1.2.6"
   }
 }

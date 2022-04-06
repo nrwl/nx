@@ -12,6 +12,7 @@ export interface Schema {
   type?: string;
   flat?: boolean;
   selector?: string;
+  module?: string;
   skipSelector?: boolean;
   export?: boolean;
 }

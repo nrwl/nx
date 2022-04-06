@@ -47,7 +47,7 @@ the benefits of both. If you want to use Yarn Workspaces to dedupe `node_modules
 Many companies do.
 
 What often happens though is when folks adopt Nx, they have better affordances for implementing a single-version
-policy (why this is a good idea is beyond the scope of this post, but you can read more about why Google does here). But
+policy (why this is a good idea is beyond the scope of this post, but you can read more about why Google does [here](https://cacm.acm.org/magazines/2016/7/204032-why-google-stores-billions-of-lines-of-code-in-a-single-repository/fulltext)). But
 it's important to stress that this isn't required by Nx. It's simply something that Nx can enable you to do at scale.
 
 ### Misconception: Nx is only for apps

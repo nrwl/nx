@@ -1,11 +1,11 @@
 ---
 title: 'graph - CLI command'
-description: 'Graph dependencies within workspace. Alias: dep-graph'
+description: 'Graph dependencies within workspace'
 ---
 
 # graph
 
-Graph dependencies within workspace. Alias: dep-graph
+Graph dependencies within workspace
 
 ## Usage
 

@@ -276,7 +276,6 @@ export class ForkedProcessTaskRunner {
   ) {
     const env: NodeJS.ProcessEnv = {
       FORCE_COLOR: forceColor,
-      NX_INVOKED_BY_RUNNER: 'true',
       NX_WORKSPACE_ROOT: this.workspaceRoot,
       NX_SKIP_NX_CACHE: this.options.skipNxCache ? 'true' : undefined,
     };

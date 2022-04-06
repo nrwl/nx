@@ -398,3 +398,28 @@ Learn more about the advantages of Nx in the following guides:
 [Using Cypress for e2e tests](/cypress/overview) \
 [Using Jest for unit tests](/jest/overview) \
 [Rebuilding and Retesting What is Affected](/using-nx/affected)
+
+## From Nx Console
+
+<iframe loading="lazy" width="750" height="420" src="https://www.youtube.com/embed/FjiOXyd827A?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+
+As of Nx Console version 17.15.0, Angular CLI users will receive a notice periodically when running commands via Nx Console, asking if they want to use Nx to make their Angular commands faster.
+
+When you click this button, we’ll run [a script](https://github.com/nrwl/add-nx/tree/master/projects/gitmake-angular-cli-faster) to decorate your Angular workspace with Nx, allowing for cached builds, and for you to share this cache with your teammates via Nx Cloud.
+
+The script will make the following changes:
+
+- Installs the `@nrwl/cli`, `@nrwl/tao`, and `@nrwl/workspace` packages (`@nrwl/nx-cloud` will be installed only if you opted into Nx Cloud).
+- Creates an `nx.json` file in the root of your workspace.
+- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/using-nx/caching).
+
+Note that the `@nrwl/angular` package is not installed, only the core pieces of Nx to enable this capability.
+
+By running this command, you’re not buying whole-sale into Nx, yet (see the sections above for more on that migration)- but Nx distributed caching is now enabled.
+
+Once the script has run, commit the changes. Reverting these changes will effectively undo the changes made.
+
+If you're not ready to make the change yet, you can come back to this later:
+
+- If you're using Nx Console: open the Vs Code command pallet and start typing "make angular faster".
+- Regardless of using Nx Console (or your IDE): run `npx make-angular-cli-faster` from the root of your project.

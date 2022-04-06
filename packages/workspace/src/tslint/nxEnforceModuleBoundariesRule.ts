@@ -38,7 +38,6 @@ export class Rule extends Lint.Rules.AbstractRule {
   constructor(
     options: IOptions,
     private readonly projectPath?: string,
-    private readonly npmScope?: string,
     private readonly projectGraph?: MappedProjectGraph,
     private readonly targetProjectLocator?: TargetProjectLocator,
     private readonly workspaceLayout?: NxJsonConfiguration['workspaceLayout']
@@ -49,7 +48,6 @@ export class Rule extends Lint.Rules.AbstractRule {
       this.projectPath = normalize(workspaceRoot);
       if (!(global as any).projectGraph) {
         const nxJson = readNxJson();
-        (global as any).npmScope = nxJson.npmScope;
         (global as any).workspaceLayout = nxJson.workspaceLayout;
 
         /**
@@ -62,7 +60,6 @@ export class Rule extends Lint.Rules.AbstractRule {
           );
         } catch {}
       }
-      this.npmScope = (global as any).npmScope;
       this.workspaceLayout = (global as any).workspaceLayout;
       this.projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
@@ -83,7 +80,6 @@ export class Rule extends Lint.Rules.AbstractRule {
         sourceFile,
         this.getOptions(),
         this.projectPath,
-        this.npmScope,
         this.projectGraph,
         this.targetProjectLocator,
         this.workspaceLayout
@@ -102,7 +98,6 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     sourceFile: ts.SourceFile,
     options: IOptions,
     private readonly projectPath: string,
-    private readonly npmScope: string,
     private readonly projectGraph: MappedProjectGraph,
     private readonly targetProjectLocator: TargetProjectLocator,
     private readonly workspaceLayout: NxJsonConfiguration['workspaceLayout']
@@ -171,8 +166,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
         this.projectGraph,
         this.targetProjectLocator,
         filePath,
-        imp,
-        this.npmScope
+        imp
       );
 
     // If source or target are not part of an nx workspace, return.

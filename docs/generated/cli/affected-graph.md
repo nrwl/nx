@@ -1,11 +1,11 @@
 ---
 title: 'affected:graph - CLI command'
-description: 'Graph dependencies affected by changes. Alias: affected:dep-graph'
+description: 'Graph dependencies affected by changes'
 ---
 
 # affected:graph
 
-Graph dependencies affected by changes. Alias: affected:dep-graph
+Graph dependencies affected by changes
 
 ## Usage
 
