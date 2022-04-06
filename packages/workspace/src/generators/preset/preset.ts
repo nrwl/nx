@@ -184,6 +184,9 @@ async function createPreset(tree: Tree, options: Schema) {
     setDefaultCollection(tree, '@nrwl/react-native');
   } else if (options.preset === Preset.Core || options.preset === Preset.NPM) {
     setupPackageManagerWorkspaces(tree, options);
+    if (options.preset === Preset.Core) {
+      tree.delete('workspace.json');
+    }
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }
