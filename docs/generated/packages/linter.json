@@ -282,6 +282,22 @@
           "hasTypeAwareRules": {
             "type": "boolean",
             "description": "When set to `true`, the linter will invalidate its cache when any of its dependencies changes."
+          },
+          "cacheStrategy": {
+            "type": "string",
+            "description": "Strategy to use for detecting changed files in the cache.",
+            "default": "metadata",
+            "enum": ["metadata", "content"]
+          },
+          "rulesdir": {
+            "type": "array",
+            "description": "The equivalent of the `--rulesdir` flag on the ESLint CLI.",
+            "default": [],
+            "items": { "type": "string" }
+          },
+          "resolvePluginsRelativeTo": {
+            "type": "string",
+            "description": "The equivalent of the `--resolve-plugins-relative-to` flag on the ESLint CLI."
           }
         },
         "additionalProperties": false,
