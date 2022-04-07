@@ -204,30 +204,3 @@ function createStorybookConfig(
   );
   return tmpFolder;
 }
-
-export function showStorybookV5Warning(
-  uiFramework:
-    | '@storybook/angular'
-    | '@storybook/react'
-    | '@storybook/html'
-    | '@storybook/web-components'
-    | '@storybook/vue'
-    | '@storybook/vue3'
-    | '@storybook/svelte'
-    | '@storybook/react-native'
-) {
-  logger.warn(
-    `It looks like you're using Storybook version 5.
-    Please note that starting with version 14, Nx will drop support for Storybook version 5.
-    Before upgrading to Nx 14, please make sure you have migrated your Storybook configurations
-    to the latest version of Storybook.
-
-    For more information, please take a look at our upgrade guide:
-    ${
-      uiFramework === '@storybook/angular'
-        ? 'https://nx.dev/storybook/upgrade-storybook-v6-angular'
-        : 'https://nx.dev/storybook/upgrade-storybook-v6-react'
-    }
-    `
-  );
-}

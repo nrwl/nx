@@ -676,16 +676,6 @@
             "path": "/packages/angular/generators/storybook-configuration"
           },
           {
-            "name": "storybook-migrate-defaults-5-to-6 generator",
-            "id": "storybook-migrate-defaults-5-to-6",
-            "path": "/packages/angular/generators/storybook-migrate-defaults-5-to-6"
-          },
-          {
-            "name": "storybook-migrate-stories-to-6-2 generator",
-            "id": "storybook-migrate-stories-to-6-2",
-            "path": "/packages/angular/generators/storybook-migrate-stories-to-6-2"
-          },
-          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "path": "/packages/angular/generators/upgrade-module"
@@ -770,11 +760,6 @@
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
             "path": "/packages/react/generators/storybook-configuration"
-          },
-          {
-            "name": "storybook-migrate-defaults-5-to-6 generator",
-            "id": "storybook-migrate-defaults-5-to-6",
-            "path": "/packages/react/generators/storybook-migrate-defaults-5-to-6"
           },
           {
             "name": "hook generator",
@@ -868,16 +853,6 @@
             "name": "cypress-project generator",
             "id": "cypress-project",
             "path": "/packages/storybook/generators/cypress-project"
-          },
-          {
-            "name": "migrate-defaults-5-to-6 generator",
-            "id": "migrate-defaults-5-to-6",
-            "path": "/packages/storybook/generators/migrate-defaults-5-to-6"
-          },
-          {
-            "name": "migrate-stories-to-6-2 generator",
-            "id": "migrate-stories-to-6-2",
-            "path": "/packages/storybook/generators/migrate-stories-to-6-2"
           },
           {
             "name": "Executors: Build",

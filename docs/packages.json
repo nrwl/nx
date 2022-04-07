@@ -41,8 +41,6 @@
         "setup-tailwind",
         "stories",
         "storybook-configuration",
-        "storybook-migrate-defaults-5-to-6",
-        "storybook-migrate-stories-to-6-2",
         "upgrade-module",
         "web-worker"
       ]
@@ -200,7 +198,6 @@
         "component",
         "redux",
         "storybook-configuration",
-        "storybook-migrate-defaults-5-to-6",
         "component-story",
         "stories",
         "component-cypress-spec",
@@ -240,13 +237,7 @@
     "path": "generated/packages/storybook.json",
     "schemas": {
       "executors": ["storybook", "build"],
-      "generators": [
-        "init",
-        "configuration",
-        "cypress-project",
-        "migrate-defaults-5-to-6",
-        "migrate-stories-to-6-2"
-      ]
+      "generators": ["init", "configuration", "cypress-project"]
     }
   },
   {

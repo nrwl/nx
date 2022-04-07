@@ -22,7 +22,6 @@ import { join } from 'path';
 import {
   isFramework,
   readCurrentWorkspaceStorybookVersionFromGenerator,
-  showStorybookV5Warning,
   TsConfig,
 } from '../../utils/utilities';
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
@@ -44,8 +43,6 @@ export async function configurationGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const workspaceStorybookVersion = getCurrentWorkspaceStorybookVersion(tree);
-
   const { projectType, targets } = readProjectConfiguration(tree, schema.name);
 
   const { buildTarget } = findStorybookAndBuildTargets(targets);
@@ -55,14 +52,8 @@ export async function configurationGenerator(
   });
   tasks.push(initTask);
 
-  createRootStorybookDir(tree, schema.js, workspaceStorybookVersion);
-  createProjectStorybookDir(
-    tree,
-    schema.name,
-    schema.uiFramework,
-    schema.js,
-    workspaceStorybookVersion
-  );
+  createRootStorybookDir(tree, schema.js);
+  createProjectStorybookDir(tree, schema.name, schema.uiFramework, schema.js);
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
@@ -88,10 +79,6 @@ export async function configurationGenerator(
     }
   }
 
-  if (workspaceStorybookVersion !== '6') {
-    showStorybookV5Warning(rawSchema.uiFramework);
-  }
-
   await formatFiles(tree);
 
   return runTasksInSerial(...tasks);
@@ -111,26 +98,16 @@ function normalizeSchema(
   };
 }
 
-function createRootStorybookDir(
-  tree: Tree,
-  js: boolean,
-  workspaceStorybookVersion: string
-) {
+function createRootStorybookDir(tree: Tree, js: boolean) {
   if (tree.exists('.storybook')) {
     logger.warn(
       `.storybook folder already exists at root! Skipping generating files in it.`
     );
     return;
   }
-  logger.debug(
-    `adding .storybook folder to the root directory - 
-     based on the Storybook version installed (v${workspaceStorybookVersion}), we'll bootstrap a scaffold for that particular version.`
-  );
+  logger.debug(`adding .storybook folder to the root directory`);
 
-  const templatePath = join(
-    __dirname,
-    workspaceStorybookVersion === '6' ? './root-files' : './root-files-5'
-  );
+  const templatePath = join(__dirname, './root-files');
   generateFiles(tree, templatePath, '', {
     rootTsConfigPath: getRootTsConfigPathInTree(tree),
   });
@@ -144,16 +121,8 @@ function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
   uiFramework: StorybookConfigureSchema['uiFramework'],
-  js: boolean,
-  workspaceStorybookVersion: string
+  js: boolean
 ) {
-  /**
-   * Here, same as above
-   * Check storybook version
-   * and use the correct folder
-   * lib-files-5 or lib-files-6
-   */
-
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   const projectDirectory = projectType === 'application' ? 'app' : 'lib';
 
@@ -166,13 +135,8 @@ function createProjectStorybookDir(
     return;
   }
 
-  logger.debug(
-    `adding .storybook folder to ${projectDirectory} - using Storybook version ${workspaceStorybookVersion}`
-  );
-  const templatePath = join(
-    __dirname,
-    workspaceStorybookVersion === '6' ? './project-files' : './project-files-5'
-  );
+  logger.debug(`adding .storybook folder to ${projectDirectory}`);
+  const templatePath = join(__dirname, './project-files');
 
   generateFiles(tree, templatePath, root, {
     tmpl: '',

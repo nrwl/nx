@@ -31,48 +31,14 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
   // base deps
   devDependencies['@nrwl/storybook'] = nxVersion;
-
-  /**
-   * If Storybook already exists, do NOT update it to the latest version.
-   * Leave it alone.
-   */
-
-  if (
-    !packageJson.dependencies['@storybook/core-server'] &&
-    !packageJson.devDependencies['@storybook/core-server']
-  ) {
-    devDependencies['@storybook/core-server'] = storybookVersion;
-  }
-
-  if (
-    !packageJson.dependencies['@storybook/addon-essentials'] &&
-    !packageJson.devDependencies['@storybook/addon-essentials']
-  ) {
-    devDependencies['@storybook/addon-essentials'] = storybookVersion;
-  }
+  devDependencies['@storybook/core-server'] = storybookVersion;
+  devDependencies['@storybook/addon-essentials'] = storybookVersion;
 
   if (isFramework('angular', schema)) {
-    if (
-      !packageJson.dependencies['@storybook/angular'] &&
-      !packageJson.devDependencies['@storybook/angular']
-    ) {
-      devDependencies['@storybook/angular'] = storybookVersion;
-    }
-
-    if (
-      !packageJson.dependencies['@storybook/builder-webpack5'] &&
-      !packageJson.devDependencies['@storybook/builder-webpack5']
-    ) {
-      devDependencies['@storybook/builder-webpack5'] = storybookVersion;
-    }
-
-    if (
-      !packageJson.dependencies['@storybook/manager-webpack5'] &&
-      !packageJson.devDependencies['@storybook/manager-webpack5']
-    ) {
-      devDependencies['@storybook/manager-webpack5'] = storybookVersion;
-      devDependencies['webpack'] = webpack5Version;
-    }
+    devDependencies['@storybook/angular'] = storybookVersion;
+    devDependencies['@storybook/builder-webpack5'] = storybookVersion;
+    devDependencies['@storybook/manager-webpack5'] = storybookVersion;
+    devDependencies['webpack'] = webpack5Version;
 
     if (
       !packageJson.dependencies['@angular/forms'] &&
@@ -89,27 +55,9 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     devDependencies['babel-loader'] = babelLoaderVersion;
     devDependencies['@babel/core'] = babelCoreVersion;
     devDependencies['@babel/preset-typescript'] = babelPresetTypescriptVersion;
-
-    if (
-      !packageJson.dependencies['@storybook/react'] &&
-      !packageJson.devDependencies['@storybook/react']
-    ) {
-      devDependencies['@storybook/react'] = storybookVersion;
-    }
-
-    if (
-      !packageJson.dependencies['@storybook/builder-webpack5'] &&
-      !packageJson.devDependencies['@storybook/builder-webpack5']
-    ) {
-      devDependencies['@storybook/builder-webpack5'] = storybookVersion;
-    }
-
-    if (
-      !packageJson.dependencies['@storybook/manager-webpack5'] &&
-      !packageJson.devDependencies['@storybook/manager-webpack5']
-    ) {
-      devDependencies['@storybook/manager-webpack5'] = storybookVersion;
-    }
+    devDependencies['@storybook/react'] = storybookVersion;
+    devDependencies['@storybook/builder-webpack5'] = storybookVersion;
+    devDependencies['@storybook/manager-webpack5'] = storybookVersion;
   }
 
   if (isFramework('html', schema)) {
@@ -133,52 +81,17 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   }
 
   if (isFramework('react-native', schema)) {
-    if (
-      !packageJson.dependencies['@storybook/react-native'] &&
-      !packageJson.devDependencies['@storybook/react-native']
-    ) {
-      devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
-    }
-
-    if (
-      !packageJson.dependencies['@storybook/addon-ondevice-actions'] &&
-      !packageJson.devDependencies['@storybook/addon-ondevice-actions']
-    ) {
-      devDependencies['@storybook/addon-ondevice-actions'] =
-        storybookReactNativeVersion;
-    }
-
-    if (
-      !packageJson.dependencies['@storybook/addon-ondevice-backgrounds'] &&
-      !packageJson.devDependencies['@storybook/addon-ondevice-backgrounds']
-    ) {
-      devDependencies['@storybook/addon-ondevice-backgrounds'] =
-        storybookReactNativeVersion;
-    }
-
-    if (
-      !packageJson.dependencies['@storybook/addon-ondevice-controls'] &&
-      !packageJson.devDependencies['@storybook/addon-ondevice-controls']
-    ) {
-      devDependencies['@storybook/addon-ondevice-controls'] =
-        storybookReactNativeVersion;
-    }
-
-    if (
-      !packageJson.dependencies['@storybook/addon-ondevice-notes'] &&
-      !packageJson.devDependencies['@storybook/addon-ondevice-notes']
-    ) {
-      devDependencies['@storybook/addon-ondevice-notes'] =
-        storybookReactNativeVersion;
-    }
-
-    if (
-      !packageJson.dependencies['react-native-storybook-loader'] &&
-      !packageJson.devDependencies['react-native-storybook-loader']
-    ) {
-      devDependencies['react-native-storybook-loader'] =
-        reactNativeStorybookLoader;
-    }
+    devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
+    devDependencies['@storybook/addon-ondevice-actions'] =
+      storybookReactNativeVersion;
+    devDependencies['@storybook/addon-ondevice-backgrounds'] =
+      storybookReactNativeVersion;
+    devDependencies['@storybook/addon-ondevice-controls'] =
+      storybookReactNativeVersion;
+    devDependencies['@storybook/addon-ondevice-notes'] =
+      storybookReactNativeVersion;
+    devDependencies['react-native-storybook-loader'] =
+      reactNativeStorybookLoader;
   }
 
   return addDependenciesToPackageJson(host, dependencies, devDependencies);

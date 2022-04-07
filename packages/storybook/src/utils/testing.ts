@@ -1,8 +1,13 @@
 import { join } from 'path';
 import { externalSchematic, Rule, Tree } from '@angular-devkit/schematics';
+import { Tree as NrwlTree } from '@nrwl/devkit';
+
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import libraryGenerator from '@nrwl/workspace/src/generators/library/library';
+import { Linter } from '@nrwl/linter';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/storybook',
@@ -44,6 +49,22 @@ export function runMigration(migrationName: string, options: any, tree: Tree) {
   return migrationRunner
     .runSchematicAsync(migrationName, options, tree)
     .toPromise();
+}
+
+export async function createTestUILibNoNgDevkit(
+  appTree: NrwlTree,
+  libName: string
+): Promise<NrwlTree> {
+  await libraryGenerator(appTree, {
+    linter: Linter.EsLint,
+    skipFormat: true,
+    skipTsConfig: false,
+    unitTestRunner: 'none',
+    name: libName,
+    standaloneConfig: false,
+  });
+
+  return appTree;
 }
 
 export async function createTestUILib(
@@ -119,4 +140,30 @@ export class TestButtonComponent implements OnInit {
       `<button [attr.type]="type" [ngClass]="style"></button>`
     );
   }
+}
+
+export function deleteNewConfigurationAndCreateNew(
+  appTree: NrwlTree,
+  projectStorybookRoot: string
+): NrwlTree {
+  // Remove new Storybook configuration
+  appTree.delete(`.storybook/main.js`);
+  appTree.delete(`.storybook/tsconfig.json`);
+  appTree.delete(`${projectStorybookRoot}/main.js`);
+  appTree.delete(`${projectStorybookRoot}/preview.js`);
+  appTree.delete(`${projectStorybookRoot}/tsconfig.json`);
+
+  // Create old Storybook configuration
+  appTree.write(`.storybook/addons.js`, 'console.log("hello")');
+  appTree.write(`.storybook/webpack.config.js`, 'console.log("hello")');
+  appTree.write(`.storybook/tsconfig.json`, '{"test": "hello"}');
+  appTree.write(`${projectStorybookRoot}/config.js`, 'console.log("hello")');
+  appTree.write(`${projectStorybookRoot}/addons.js`, 'console.log("hello")');
+  appTree.write(
+    `${projectStorybookRoot}/webpack.config.js`,
+    'console.log("hello")'
+  );
+  appTree.write(`${projectStorybookRoot}/tsconfig.json`, '{"test": "hello"}');
+
+  return appTree;
 }

@@ -45,10 +45,6 @@ const schemaUrls = {
   '/angular/stories': '/packages/angular/generators/stories',
   '/angular/storybook-configuration':
     '/packages/angular/generators/storybook-configuration',
-  '/angular/storybook-migrate-defaults-5-to-6':
-    '/packages/angular/generators/storybook-migrate-defaults-5-to-6',
-  '/angular/storybook-migrate-stories-to-6-2':
-    '/packages/angular/generators/storybook-migrate-stories-to-6-2',
   '/angular/upgrade-module': '/packages/angular/generators/upgrade-module',
   '/angular/web-worker': '/packages/angular/generators/web-worker',
   '/angular/delegate-build': '/packages/angular/executors/delegate-build',
@@ -66,8 +62,6 @@ const schemaUrls = {
   '/react/stories': '/packages/react/generators/stories',
   '/react/storybook-configuration':
     '/packages/react/generators/storybook-configuration',
-  '/react/storybook-migrate-defaults-5-to-6':
-    '/packages/react/generators/storybook-migrate-defaults-5-to-6',
   '/react/hook': '/packages/react/generators/hook',
   '/jest/jest': '/packages/jest/executors/jest',
   '/cypress/cypress': '/packages/cypress/executors/cypress',
