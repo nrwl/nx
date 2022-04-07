@@ -258,7 +258,7 @@ function addTasksForProjectTarget(
   projectGraph: ProjectGraph,
   originalTargetExecutor: string,
   tasksMap: Map<string, Task>,
-  path: string[],
+  path: { targetIdentifier: string; hasTarget: boolean }[],
   seenSet: Set<string>
 ) {
   const task = createTask({
@@ -356,7 +356,7 @@ function addTasksForProjectDependencyConfig(
   projectGraph: ProjectGraph,
   originalTargetExecutor: string,
   tasksMap: Map<string, Task>,
-  path: string[],
+  path: { targetIdentifier: string; hasTarget: boolean }[],
   seenSet: Set<string>
 ) {
   const targetIdentifier = getId({
@@ -364,15 +364,14 @@ function addTasksForProjectDependencyConfig(
     target,
     configuration,
   });
-  seenSet.add(project.name);
 
-  if (path.includes(targetIdentifier)) {
-    output.error({
-      title: `Could not execute ${path[0]} because it has a circular dependency`,
-      bodyLines: [`${[...path, targetIdentifier].join(' --> ')}`],
-    });
-    process.exit(1);
-  }
+  const pathFragment = {
+    targetIdentifier,
+    hasTarget: projectHasTarget(project, target),
+  };
+
+  const newPath = [...path, pathFragment];
+  seenSet.add(project.name);
 
   if (tasksMap.has(targetIdentifier)) {
     return;
@@ -385,10 +384,21 @@ function addTasksForProjectDependencyConfig(
         const depProject = projectGraph.nodes[
           dep.target
         ] as ProjectGraphProjectNode;
+
         if (
           depProject &&
           projectHasTarget(depProject, dependencyConfig.target)
         ) {
+          const depTargetId = getId({
+            project: depProject.name,
+            target,
+            configuration: configuration,
+          });
+          exitOnCircularDep(newPath, depTargetId);
+          if (seenSet.has(dep.target)) {
+            continue;
+          }
+
           addTasksForProjectTarget(
             {
               project: depProject,
@@ -401,17 +411,26 @@ function addTasksForProjectDependencyConfig(
             projectGraph,
             originalTargetExecutor,
             tasksMap,
-            [...path, targetIdentifier],
+            newPath,
             seenSet
           );
         } else {
-          if (seenSet.has(dep.target)) {
-            continue;
-          }
           if (!depProject) {
             seenSet.add(dep.target);
             continue;
           }
+          const depTargetId = getId({
+            project: depProject.name,
+            target,
+            configuration: configuration,
+          });
+
+          exitOnCircularDep(newPath, depTargetId);
+
+          if (seenSet.has(dep.target)) {
+            continue;
+          }
+
           addTasksForProjectDependencyConfig(
             depProject,
             { target, configuration, overrides },
@@ -420,7 +439,7 @@ function addTasksForProjectDependencyConfig(
             projectGraph,
             originalTargetExecutor,
             tasksMap,
-            path,
+            newPath,
             seenSet
           );
         }
@@ -439,9 +458,27 @@ function addTasksForProjectDependencyConfig(
       projectGraph,
       originalTargetExecutor,
       tasksMap,
-      [...path, targetIdentifier],
+      newPath,
       seenSet
     );
+  }
+}
+
+function exitOnCircularDep(
+  path: { targetIdentifier: string; hasTarget: boolean }[],
+  targetIdentifier: string
+) {
+  if (
+    path.length > 0 &&
+    path[path.length - 1].hasTarget &&
+    path.filter((p) => p.targetIdentifier === targetIdentifier).length > 0
+  ) {
+    const identifiers = path.map((p) => p.targetIdentifier);
+    output.error({
+      title: `Could not execute ${identifiers[0]} because it has a circular dependency`,
+      bodyLines: [`${[...identifiers, targetIdentifier].join(' --> ')}`],
+    });
+    process.exit(1);
   }
 }
 

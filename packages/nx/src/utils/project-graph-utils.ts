@@ -10,7 +10,11 @@ export function projectHasTarget(
   project: ProjectGraphProjectNode,
   target: string
 ) {
-  return project.data && project.data.targets && project.data.targets[target];
+  return !!(
+    project.data &&
+    project.data.targets &&
+    project.data.targets[target]
+  );
 }
 
 export function projectHasTargetAndConfiguration(

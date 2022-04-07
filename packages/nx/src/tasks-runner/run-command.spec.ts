@@ -458,83 +458,8 @@ describe('createTasksForProjectToRun', () => {
     });
   });
 
-  it('should handle circular dependencies between projects', () => {
-    // App 1 depends on builds of its dependencies
-    projectGraph.nodes.app1.data.targets.build.dependsOn = [
-      {
-        target: 'build',
-        projects: 'dependencies',
-      },
-    ];
-
-    // App 1 depends on Lib 1
-    projectGraph.dependencies.app1.push({
-      type: DependencyType.static,
-      source: 'app1',
-      target: 'lib1',
-    });
-
-    // Lib 1 does not have build but depends on Lib 2
-    delete projectGraph.nodes.lib1.data.targets.build;
-    projectGraph.dependencies.lib1.push(
-      {
-        type: DependencyType.static,
-        source: 'lib1',
-        target: 'app1',
-      },
-      {
-        type: DependencyType.static,
-        source: 'lib1',
-        target: 'lib2',
-      }
-    );
-
-    // Lib 2 has a build
-    projectGraph.nodes.lib2 = {
-      name: 'lib2',
-      type: 'lib',
-      data: {
-        root: 'lib2-root',
-        files: [],
-        targets: {
-          build: {},
-        },
-      },
-    };
-    projectGraph.dependencies.lib2 = [
-      {
-        type: DependencyType.static,
-        source: 'lib2',
-        target: 'lib1',
-      },
-    ];
-
-    const tasks = createTasksForProjectToRun(
-      [projectGraph.nodes.app1],
-      {
-        target: 'build',
-        configuration: undefined,
-        overrides: {},
-      },
-      projectGraph,
-      projectGraph.nodes.app1.name
-    );
-
-    expect(tasks).toContainEqual({
-      id: 'app1:build',
-      target: { project: 'app1', target: 'build' },
-      projectRoot: 'app1-root',
-      overrides: {},
-    });
-    expect(tasks).toContainEqual({
-      id: 'lib2:build',
-      target: { project: 'lib2', target: 'build' },
-      projectRoot: 'lib2-root',
-      overrides: {},
-    });
-  });
-
-  it('should handle circular dependencies between projects with no tasks', () => {
+  it('should handle APP1 <=> LIB1(no build) => LIB2', () => {
+    // APP1 <=> LIB1 => LIB2
     // App 1 depends on builds of its dependencies
     projectGraph.nodes.app1.data.targets.build.dependsOn = [
       {
@@ -603,6 +528,92 @@ describe('createTasksForProjectToRun', () => {
       overrides: {},
     });
   });
+
+  it('should error when APP1 <=> LIB1(no build) <=> LIB2', () => {
+    jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error();
+    });
+
+    // Define Lib 2 with a build
+    projectGraph.nodes.lib2 = {
+      name: 'lib2',
+      type: 'lib',
+      data: {
+        root: 'lib2-root',
+        files: [],
+        targets: {
+          build: {},
+        },
+      },
+    };
+
+    // Lib 1 does not have "build"
+    delete projectGraph.nodes.lib1.data.targets.build;
+
+    // APP1 <=> LIB1 <=> LIB2
+    projectGraph.nodes.app1.data.targets.build.dependsOn = [
+      {
+        target: 'build',
+        projects: 'dependencies',
+      },
+    ];
+
+    projectGraph.nodes.lib2.data.targets.build.dependsOn = [
+      {
+        target: 'build',
+        projects: 'dependencies',
+      },
+    ];
+
+    // App 1 depends on Lib 1
+    projectGraph.dependencies.app1.push({
+      type: DependencyType.static,
+      source: 'app1',
+      target: 'lib1',
+    });
+
+    projectGraph.dependencies.lib1.push(
+      {
+        type: DependencyType.static,
+        source: 'lib1',
+        target: 'app1',
+      },
+      {
+        type: DependencyType.static,
+        source: 'lib1',
+        target: 'lib2',
+      }
+    );
+
+    projectGraph.dependencies.lib2 = [
+      {
+        type: DependencyType.static,
+        source: 'lib2',
+        target: 'lib1',
+      },
+    ];
+
+    try {
+      createTasksForProjectToRun(
+        [projectGraph.nodes.app1],
+        {
+          target: 'build',
+          configuration: undefined,
+          overrides: {},
+        },
+        projectGraph,
+        projectGraph.nodes.app1.name
+      );
+      fail();
+    } catch (e) {
+      expect(process.exit).toHaveBeenCalledWith(1);
+    }
+  });
+
+  // Technically, this could work but it creates a lot of problems in the implementation,
+  // so instead we error saying that the circular dependency cannot be handled.
+  // xit('should handle APP1 => LIB1(no build) <=> LIB2', () => {
+  // });
 
   it('should throw an error for an invalid target', () => {
     jest.spyOn(process, 'exit').mockImplementation(() => {
