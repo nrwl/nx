@@ -64,7 +64,7 @@ export type Unmatched = {
 
 export type Options = {
   '--'?: Unmatched[];
-  [k: string]: string | number | boolean | string[] | Unmatched[];
+  [k: string]: string | number | boolean | string[] | Unmatched[] | undefined;
 };
 
 export async function handleErrors(isVerbose: boolean, fn: Function) {
