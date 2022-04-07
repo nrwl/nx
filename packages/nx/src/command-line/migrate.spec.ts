@@ -344,6 +344,7 @@ describe('Migration', () => {
             '@my-company/lib-1': '0.9.0',
             '@my-company/lib-2': '0.9.0',
             '@my-company/lib-3': '0.9.0',
+            '@my-company/lib-3-child': '0.9.0',
             '@my-company/lib-4': '0.9.0',
             '@my-company/lib-5': '0.9.0',
           },
@@ -359,6 +360,12 @@ describe('Migration', () => {
                 '@my-company/lib-3',
                 { package: '@my-company/lib-4', version: 'latest' },
               ],
+            };
+          }
+          if (pkg === '@my-company/lib-3') {
+            return {
+              version: '2.0.0',
+              packageGroup: ['@my-company/lib-3-child'],
             };
           }
           if (version === 'latest') {
@@ -381,6 +388,10 @@ describe('Migration', () => {
           '@my-company/lib-1': { version: '2.0.0', addToPackageJson: false },
           '@my-company/lib-2': { version: '2.0.0', addToPackageJson: false },
           '@my-company/lib-3': { version: '2.0.0', addToPackageJson: false },
+          '@my-company/lib-3-child': {
+            version: '2.0.0',
+            addToPackageJson: false,
+          },
           '@my-company/lib-4': { version: '2.0.1', addToPackageJson: false },
         },
       });
