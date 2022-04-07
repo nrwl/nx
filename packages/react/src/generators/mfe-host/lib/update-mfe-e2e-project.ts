@@ -1,6 +1,6 @@
-import { Tree } from 'nx/src/shared/tree';
 import { NormalizedSchema } from '../schema';
 import {
+  Tree,
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
