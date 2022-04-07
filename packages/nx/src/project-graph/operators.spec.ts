@@ -13,7 +13,24 @@ const graph: ProjectGraph = {
     lib2: { name: 'lib2', type: 'lib', data: null },
     lib3: { name: 'lib3', type: 'lib', data: null },
   },
-  externalNodes: {},
+  externalNodes: {
+    'npm:foo': {
+      type: 'npm',
+      name: 'npm:foo',
+      data: {
+        version: '~1.0.0',
+        packageName: 'foo',
+      },
+    },
+    'npm:@bar/baz': {
+      type: 'npm',
+      name: 'npm:@bar/baz',
+      data: {
+        version: '^0.0.2',
+        packageName: '@bar/baz',
+      },
+    },
+  },
   dependencies: {
     'app1-e2e': [
       {
@@ -47,8 +64,19 @@ const graph: ProjectGraph = {
         source: 'lib2',
         target: 'lib3',
       },
+      {
+        type: DependencyType.static,
+        source: 'lib2',
+        target: 'npm:foo',
+      },
     ],
-    lib3: [],
+    lib3: [
+      {
+        type: DependencyType.static,
+        source: 'lib3',
+        target: 'npm:@bar/baz',
+      },
+    ],
   },
 };
 
@@ -63,7 +91,24 @@ describe('reverse', () => {
         lib2: { name: 'lib2', type: 'lib', data: null },
         lib3: { name: 'lib3', type: 'lib', data: null },
       },
-      externalNodes: {},
+      externalNodes: {
+        'npm:foo': {
+          type: 'npm',
+          name: 'npm:foo',
+          data: {
+            version: '~1.0.0',
+            packageName: 'foo',
+          },
+        },
+        'npm:@bar/baz': {
+          type: 'npm',
+          name: 'npm:@bar/baz',
+          data: {
+            version: '^0.0.2',
+            packageName: '@bar/baz',
+          },
+        },
+      },
       dependencies: {
         app1: [
           {
@@ -96,6 +141,20 @@ describe('reverse', () => {
           {
             type: DependencyType.static,
             source: 'lib3',
+            target: 'lib2',
+          },
+        ],
+        'npm:@bar/baz': [
+          {
+            type: DependencyType.static,
+            source: 'npm:@bar/baz',
+            target: 'lib3',
+          },
+        ],
+        'npm:foo': [
+          {
+            type: DependencyType.static,
+            source: 'npm:foo',
             target: 'lib2',
           },
         ],
