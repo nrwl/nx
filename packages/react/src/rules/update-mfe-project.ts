@@ -1,5 +1,5 @@
-import { Tree } from 'nx/src/shared/tree';
 import {
+  Tree,
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
