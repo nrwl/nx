@@ -45,7 +45,6 @@ export async function addNxToMonorepo() {
   }
 
   createNxJsonFile(repoRoot);
-  createTsConfigIfMissing(repoRoot);
 
   addDepsToPackageJson(repoRoot, useCloud);
 
@@ -264,42 +263,12 @@ function deduceDefaultBase() {
   }
 }
 
-function createTsConfigIfMissing(repoRoot: string) {
-  if (!hasRootTsConfig(repoRoot)) {
-    fs.writeFileSync(
-      'tsconfig.base.json',
-      JSON.stringify({ compilerOptions: {} }, null, 2)
-    );
-  }
-}
-
-function hasRootTsConfig(repoRoot: string) {
-  try {
-    readJsonFile(repoRoot, `tsconfig.base.json`);
-    return true;
-  } catch (e) {
-    try {
-      readJsonFile(repoRoot, `tsconfig.json`);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-}
-
 // add dependencies
 function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
   const json = readJsonFile(repoRoot, `package.json`);
   if (!json.devDependencies) json.devDependencies = {};
   json.devDependencies['@nrwl/workspace'] = 'NX_VERSION';
-  json.devDependencies['@nrwl/cli'] = 'NX_VERSION';
   json.devDependencies['nx'] = 'NX_VERSION';
-  if (
-    !(json.dependencies && json.dependencies['typescript']) &&
-    !json.devDependencies['typescript']
-  ) {
-    json.devDependencies['typescript'] = '4.2.4';
-  }
   if (useCloud) {
     json.devDependencies['@nrwl/nx-cloud'] = 'latest';
   }
@@ -365,12 +334,4 @@ function printFinalMessage(repoRoot) {
       `- Learn more at https://nx.dev/migration/adding-to-monorepo`,
     ],
   });
-}
-
-function removeWindowsDriveLetter(osSpecificPath: string): string {
-  return osSpecificPath.replace(/^[A-Z]:/, '');
-}
-
-function normalizePath(osSpecificPath: string): string {
-  return removeWindowsDriveLetter(osSpecificPath).split(path.sep).join('/');
 }
