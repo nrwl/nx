@@ -347,6 +347,7 @@ describe('Migration', () => {
             '@my-company/lib-3-child': '0.9.0',
             '@my-company/lib-4': '0.9.0',
             '@my-company/lib-5': '0.9.0',
+            '@my-company/lib-6': '0.9.0',
           },
         },
         versions: () => '1.0.0',
@@ -360,6 +361,12 @@ describe('Migration', () => {
                 '@my-company/lib-3',
                 { package: '@my-company/lib-4', version: 'latest' },
               ],
+            };
+          }
+          if (pkg === '@my-company/lib-6') {
+            return {
+              version: '2.0.0',
+              packageGroup: ['@my-company/nx-workspace'],
             };
           }
           if (pkg === '@my-company/lib-3') {
@@ -378,7 +385,7 @@ describe('Migration', () => {
 
       expect(
         await migrator.updatePackageJson('@my-company/nx-workspace', '2.0.0')
-      ).toEqual({
+      ).toStrictEqual({
         migrations: [],
         packageJson: {
           '@my-company/nx-workspace': {
@@ -393,6 +400,75 @@ describe('Migration', () => {
             addToPackageJson: false,
           },
           '@my-company/lib-4': { version: '2.0.1', addToPackageJson: false },
+        },
+      });
+    });
+
+    it('should properly handle cyclic dependency in nested packageGroup', async () => {
+      const migrator = new Migrator({
+        packageJson: {
+          name: 'some-workspace',
+          version: '0.0.0',
+
+          devDependencies: {
+            '@my-company/nx-workspace': '0.9.0',
+            '@my-company/lib-1': '0.9.0',
+            '@my-company/lib-2': '0.9.0',
+          },
+        },
+        versions: () => '1.0.0',
+        fetch: async (pkg, version) => {
+          if (pkg === '@my-company/nx-workspace' && version === '2.0.0') {
+            return {
+              version: '2.0.0',
+              packageGroup: [
+                { package: '@my-company/lib-1', version: 'latest' },
+              ],
+            };
+          }
+          if (pkg === '@my-company/nx-workspace' && version === '3.0.0') {
+            return {
+              version: '3.0.0',
+              packageGroup: ['@my-company/lib-1', '@my-company/lib-2'],
+            };
+          }
+          if (pkg === '@my-company/lib-1' && version === 'latest') {
+            return {
+              version: '3.0.0',
+              packageGroup: ['@my-company/nx-workspace'],
+            };
+          }
+          if (pkg === '@my-company/lib-1' && version === '3.0.0') {
+            return {
+              version: '3.0.0',
+              packageGroup: ['@my-company/nx-workspace'],
+            };
+          }
+          if (pkg === '@my-company/lib-2' && version === '3.0.0') {
+            return {
+              version: '3.0.0',
+              packageGroup: [
+                // this should be ignored because it's a smaller version
+                { package: '@my-company/nx-workspace', version: '2.99.0' },
+              ],
+            };
+          }
+          throw new Error(`Should not call fetch for ${pkg}@${version}`);
+        },
+        to: {},
+      });
+
+      expect(
+        await migrator.updatePackageJson('@my-company/nx-workspace', '2.0.0')
+      ).toStrictEqual({
+        migrations: [],
+        packageJson: {
+          '@my-company/nx-workspace': {
+            version: '3.0.0',
+            addToPackageJson: false,
+          },
+          '@my-company/lib-1': { version: '3.0.0', addToPackageJson: false },
+          '@my-company/lib-2': { version: '3.0.0', addToPackageJson: false },
         },
       });
     });
