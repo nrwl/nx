@@ -140,7 +140,7 @@ function collectDependentProjectNodesNames(
     }
 
     // skip dependencies already added (avoid circular dependencies)
-    if(dependencyNodeNames.has(dependencyName)) {
+    if (dependencyNodeNames.has(dependencyName)) {
       continue;
     }
 
