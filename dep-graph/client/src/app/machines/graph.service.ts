@@ -1,5 +1,5 @@
-import { GraphService } from './graph';
 import { GraphTooltipService } from '../tooltip-service';
+import { GraphService } from './graph';
 
 let graphService: GraphService;
 

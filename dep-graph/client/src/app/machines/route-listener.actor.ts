@@ -1,6 +1,6 @@
+import { createBrowserHistory } from 'history';
 import { InvokeCallback } from 'xstate';
 import { DepGraphUIEvents } from './interfaces';
-import { createBrowserHistory } from 'history';
 
 function parseSearchParamsToEvents(searchParams: string): DepGraphUIEvents[] {
   const events: DepGraphUIEvents[] = [];

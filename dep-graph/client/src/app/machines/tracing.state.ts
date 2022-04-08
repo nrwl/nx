@@ -1,5 +1,4 @@
 import { assign } from '@xstate/immer';
-import { send, actions } from 'xstate';
 import { DepGraphStateNodeConfig } from './interfaces';
 
 export const tracingStateConfig: DepGraphStateNodeConfig = {

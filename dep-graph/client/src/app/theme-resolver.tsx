@@ -1,7 +1,6 @@
-import { getGraphService } from './machines/graph.service';
 import { getEnvironmentConfig } from './hooks/use-environment-config';
+import { getGraphService } from './machines/graph.service';
 
-const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
 const htmlEl = document.documentElement;
 export const localStorageThemeKey = 'nx-dep-graph-theme';
 export type Theme = 'light' | 'dark' | 'system';
@@ -28,6 +27,12 @@ export function themeInit() {
 }
 
 export function themeResolver(theme: Theme) {
+  if (!('window' in global)) {
+    return;
+  }
+  if (!('matchMedia' in global.window)) {
+    return;
+  }
   const environment = getEnvironmentConfig();
 
   if (!environment.appConfig.showExperimentalFeatures) {
@@ -36,6 +41,7 @@ export function themeResolver(theme: Theme) {
     return;
   }
 
+  const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
   if (theme !== 'system') {
     darkMedia.removeEventListener('change', mediaListener);
     htmlEl.className = theme;

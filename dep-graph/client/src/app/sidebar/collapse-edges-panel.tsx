@@ -16,7 +16,7 @@ export const CollapseEdgesPanel = memo(
               name="collapseEdges"
               value="collapseEdges"
               type="checkbox"
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-slate-400 dark:border-slate-300"
               onChange={(event) => collapseEdgesChanged(event.target.checked)}
               checked={collapseEdges}
             ></input>
@@ -24,11 +24,11 @@ export const CollapseEdgesPanel = memo(
           <div className="ml-3 text-sm">
             <label
               htmlFor="collapseEdges"
-              className="cursor-pointer font-medium text-gray-700"
+              className="cursor-pointer font-medium text-slate-600 dark:text-slate-400"
             >
               Collapse edges
             </label>
-            <p className="text-gray-500">
+            <p className="text-slate-400 dark:text-slate-500">
               Display edges between groups rather than libraries
             </p>
           </div>

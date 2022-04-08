@@ -1,5 +1,5 @@
-import { getDepGraphService } from './machines/dep-graph.service';
 import ExperimentalFeature from './experimental-feature';
+import { getDepGraphService } from './machines/dep-graph.service';
 
 export interface ProjectNodeToolTipProps {
   type: 'app' | 'lib' | 'e2e';
@@ -57,7 +57,7 @@ function ProjectNodeToolTip({ type, id, tags }: ProjectNodeToolTipProps) {
           <button className="flex flex-row items-center" onClick={onStartTrace}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="mr-2 h-5 w-5 text-gray-500"
+              className="mr-2 h-5 w-5 text-slate-500"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -72,7 +72,7 @@ function ProjectNodeToolTip({ type, id, tags }: ProjectNodeToolTipProps) {
           <button className="flex flex-row items-center" onClick={onEndTrace}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="mr-2 h-5 w-5 text-gray-500"
+              className="mr-2 h-5 w-5 text-slate-500"
               viewBox="0 0 20 20"
               fill="currentColor"
             >

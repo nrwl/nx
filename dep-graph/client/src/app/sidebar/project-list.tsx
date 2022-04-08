@@ -1,3 +1,4 @@
+import { DocumentSearchIcon } from '@heroicons/react/solid';
 // nx-ignore-next-line
 import type { ProjectGraphNode } from '@nrwl/devkit';
 import { useDepGraphService } from '../hooks/use-dep-graph';
@@ -62,11 +63,7 @@ function ProjectListItem({
   focusProject: (projectId: string) => void;
 }) {
   return (
-    <li
-      className="dark:text-sidebar-subtitle-dark relative block cursor-default select-none py-1 pl-3 pr-9 text-xs
-    text-gray-600
-    "
-    >
+    <li className="relative block cursor-default select-none py-1 pl-3 pr-9 text-xs text-slate-600 dark:text-slate-400">
       <div className="flex items-center">
         <button
           type="button"
@@ -74,29 +71,12 @@ function ProjectListItem({
           title="Focus on this library"
           onClick={() => focusProject(project.projectGraphNode.name)}
         >
-          <span
-            className="dark:bg-sidebar-btn-dark flex items-center rounded-md bg-white p-1 font-medium shadow-sm ring-1 ring-gray-200 transition 
-          hover:bg-gray-50 dark:ring-stone-700"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2h-1.528A6 6 0 004 9.528V4z" />
-              <path
-                fillRule="evenodd"
-                d="M8 10a4 4 0 00-3.446 6.032l-1.261 1.26a1 1 0 101.414 1.415l1.261-1.261A4 4 0 108 10zm-2 4a2 2 0 114 0 2 2 0 01-4 0z"
-                clipRule="evenodd"
-              />
-            </svg>
+          <span className="flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700">
+            <DocumentSearchIcon className="h-5 w-5" />
           </span>
         </button>
         <label
-          className="hover:dark:bg-sidebar-btn-dark/[0.5] dark:text-sidebar-text-dark ml-3 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal
-          transition hover:bg-gray-50
-          "
+          className="ml-3 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
           data-project={project.projectGraphNode.name}
           data-active={project.isSelected.toString()}
           onClick={() =>
@@ -169,7 +149,7 @@ function SubProjectList({
 
   return (
     <>
-      <h3 className="dark:text-sidebar-subtitle-dark mt-4 cursor-text py-2 text-sm font-semibold uppercase tracking-wide text-gray-900 lg:text-xs">
+      <h3 className="mt-4 cursor-text py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs">
         {headerText}
       </h3>
       <ul className="mt-2 -ml-3">
@@ -232,8 +212,8 @@ export function ProjectList() {
   const sortedE2EDirectories = Object.keys(e2eDirectoryGroups).sort();
 
   return (
-    <div id="project-lists" className="mt-8 border-t border-gray-200 px-4">
-      <h2 className="dark:text-sidebar-title-dark mt-8 border-b border-solid border-gray-50 text-lg font-bold">
+    <div id="project-lists" className="mt-8 border-t border-slate-400/10 px-4">
+      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
         app projects
       </h2>
 
@@ -250,7 +230,7 @@ export function ProjectList() {
         );
       })}
 
-      <h2 className="dark:text-sidebar-title-dark mt-8 border-b border-solid border-gray-50 text-lg font-bold">
+      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light">
         e2e projects
       </h2>
 
@@ -267,7 +247,7 @@ export function ProjectList() {
         );
       })}
 
-      <h2 className="dark:text-sidebar-title-dark mt-8 border-b border-solid border-gray-50 text-lg font-bold">
+      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light">
         lib projects
       </h2>
 
