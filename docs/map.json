@@ -90,11 +90,6 @@
             "file": "shared/using-nx/affected"
           },
           {
-            "name": "Nx Plugins and Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit-and-nx-plugins"
-          },
-          {
             "name": "CI Setup",
             "id": "ci-overview",
             "file": "shared/ci-overview"
@@ -111,9 +106,19 @@
         "id": "extending-nx",
         "itemList": [
           {
+            "name": "Nx Plugins and Devkit",
+            "id": "nx-devkit",
+            "file": "shared/extending-nx/devkit-and-nx-plugins"
+          },
+          {
             "name": "Project Inference Plugins",
             "id": "project-inference-plugins",
             "file": "shared/extending-nx/project-inference-plugins"
+          },
+          {
+            "name": "Project Graph Plugins",
+            "id": "project-graph-plugins",
+            "file": "shared/extending-nx/project-graph-plugins"
           }
         ]
       },
@@ -1355,7 +1360,7 @@
           {
             "name": "Extending the Project Graph",
             "id": "project-graph-plugins",
-            "file": "shared/workspace/project-graph-plugins"
+            "file": "shared/extending-nx/project-graph-plugins"
           }
         ]
       },

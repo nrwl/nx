@@ -151,6 +151,8 @@ const guideUrls = {
   '/core-extended/affected': '/using-nx/affected',
   '/core-extended/computation-caching': '/using-nx/caching',
   '/guides/nextjs': '/next/overview',
+  '/using-nx/nx-devkit': '/extending-nx/nx-devkit',
+  '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
 };
 
 /**
