@@ -72,6 +72,9 @@ describe('Node Build Executor', () => {
 
     expect(runWebpack).toHaveBeenCalledWith(
       expect.objectContaining({
+        entry: expect.objectContaining({
+          index: ['/root/apps/wibble/src/main.ts'],
+        }),
         output: expect.objectContaining({
           filename: 'index.js',
           libraryTarget: 'commonjs',

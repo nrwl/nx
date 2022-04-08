@@ -76,7 +76,7 @@ function hasTag(proj: ProjectGraphProjectNode, tag: string) {
   return tag === '*' || (proj.data.tags || []).indexOf(tag) > -1;
 }
 
-function removeExt(file: string): string {
+export function removeExt(file: string): string {
   return file.replace(/(?<!(^|\/))\.[^/.]+$/, '');
 }
 
