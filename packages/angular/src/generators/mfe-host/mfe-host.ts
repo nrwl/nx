@@ -18,7 +18,7 @@ export default async function mfeHost(tree: Tree, options: Schema) {
   }
 
   const installTask = await applicationGenerator(tree, {
-    name: options.name,
+    ...options,
     mfe: true,
     mfeType: 'host',
     routing: true,
