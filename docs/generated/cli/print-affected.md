@@ -71,7 +71,7 @@ This is the configuration to use when performing tasks on projects
 
 Type: array
 
-Default:
+Default: []
 
 Exclude certain projects from being processed
 

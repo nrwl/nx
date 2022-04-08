@@ -35,7 +35,7 @@ The name of the application when a preset with pregenerated app is selected
 
 Type: string
 
-Choices: ["nx", "angular"]
+Choices: [nx, angular]
 
 CLI to power the Nx workspace
 
@@ -75,7 +75,7 @@ Use Nx Cloud
 
 Type: string
 
-Choices: ["npm", "pnpm", "yarn"]
+Choices: [npm, pnpm, yarn]
 
 Default: npm
 
@@ -85,7 +85,7 @@ Package manager to use
 
 Type: string
 
-Choices: ["apps", "empty", "core", "npm", "ts", "web-components", "angular", "angular-nest", "react", "react-express", "react-native", "next", "nest", "express"]
+Choices: [apps, empty, core, npm, ts, web-components, angular, angular-nest, react, react-express, react-native, next, nest, express]
 
 Customizes the initial content of your workspace. To build your own see https://nx.dev/nx-plugin/overview#preset
 
