@@ -155,7 +155,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         })
         .option('nxCloud', {
           describe: chalk.dim`Use Nx Cloud`,
-          defaultDescription: 'true',
           type: 'boolean',
         })
         .option('allPrompts', {
