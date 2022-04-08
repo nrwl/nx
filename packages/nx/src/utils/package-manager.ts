@@ -1,8 +1,13 @@
-import { execSync } from 'child_process';
-import { copyFileSync, existsSync, unlinkSync } from 'fs';
+import { exec, execSync } from 'child_process';
+import { copyFileSync, existsSync } from 'fs';
+import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
 import { dirSync } from 'tmp';
+import { promisify } from 'util';
 import { readJsonFile, writeJsonFile } from './fileutils';
+import { PackageJson } from './package-json';
+
+const execAsync = promisify(exec);
 
 export type PackageManager = 'yarn' | 'pnpm' | 'npm';
 
@@ -115,24 +120,36 @@ export function checkForNPMRC(
 }
 
 /**
+ * Creates a temporary directory where you can run package manager commands safely.
+ *
+ * For cases where you'd want to install packages that require an `.npmrc` set up,
+ * this function looks up for the nearest `.npmrc` (if exists) and copies it over to the
+ * temp directory.
+ */
+export function createTempNpmDirectory(): string {
+  const dir = dirSync().name;
+
+  // A package.json is needed for pnpm pack and for .npmrc to resolve
+  writeJsonFile(`${dir}/package.json`, {});
+  const npmrc = checkForNPMRC();
+  if (npmrc) {
+    // Copy npmrc if it exists, so that npm still follows it.
+    copyFileSync(npmrc, `${dir}/.npmrc`);
+  }
+
+  return dir;
+}
+
+/**
  * Returns the resolved version for a given package and version tag using the
  * NPM registry (when using Yarn it will fall back to NPM to fetch the info).
  */
-export function resolvePackageVersionUsingRegistry(
+export async function resolvePackageVersionUsingRegistry(
   packageName: string,
   version: string
-): string {
-  let pm = detectPackageManager();
-  if (pm === 'yarn') {
-    pm = 'npm';
-  }
-
+): Promise<string> {
   try {
-    const result = execSync(`${pm} view ${packageName}@${version} version`, {
-      stdio: [],
-    })
-      .toString()
-      .trim();
+    const result = await packageRegistryView(packageName, version, 'version');
 
     if (!result) {
       throw new Error(`Unable to resolve version ${packageName}@${version}.`);
@@ -157,32 +174,69 @@ export function resolvePackageVersionUsingRegistry(
  * installing it in a temporary directory and fetching the version from the
  * package.json.
  */
-export function resolvePackageVersionUsingInstallation(
+export async function resolvePackageVersionUsingInstallation(
   packageName: string,
   version: string
-): string {
-  const dir = dirSync().name;
-  const npmrc = checkForNPMRC();
-
-  writeJsonFile(`${dir}/package.json`, {});
-  if (npmrc) {
-    // Copy npmrc if it exists, so that npm still follows it.
-    copyFileSync(npmrc, `${dir}/.npmrc`);
-  }
-
-  const pmc = getPackageManagerCommand();
-  execSync(`${pmc.add} ${packageName}@${version}`, { stdio: [], cwd: dir });
-
-  const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-    paths: [dir],
-  });
-  const { version: resolvedVersion } = readJsonFile(packageJsonPath);
+): Promise<string> {
+  const dir = createTempNpmDirectory();
 
   try {
-    unlinkSync(dir);
-  } catch {
-    // It's okay if this fails, the OS will clean it up eventually
+    const pmc = getPackageManagerCommand();
+    await execAsync(`${pmc.add} ${packageName}@${version}`, { cwd: dir });
+
+    const packageJsonPath = require.resolve(`${packageName}/package.json`, {
+      paths: [dir],
+    });
+
+    return readJsonFile<PackageJson>(packageJsonPath).version;
+  } finally {
+    try {
+      await remove(dir);
+    } catch {
+      // It's okay if this fails, the OS will clean it up eventually
+    }
+  }
+}
+
+export async function packageRegistryView(
+  pkg: string,
+  version: string,
+  args: string
+): Promise<string> {
+  let pm = detectPackageManager();
+  if (pm === 'yarn') {
+    /**
+     * yarn has `yarn info` but it behaves differently than (p)npm,
+     * which makes it's usage unreliable
+     *
+     * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+     */
+    pm = 'npm';
   }
 
-  return resolvedVersion;
+  const { stdout } = await execAsync(`${pm} view ${pkg}@${version} ${args}`);
+  return stdout.toString().trim();
+}
+
+export async function packageRegistryPack(
+  cwd: string,
+  pkg: string,
+  version: string
+): Promise<{ tarballPath: string }> {
+  let pm = detectPackageManager();
+  if (pm === 'yarn') {
+    /**
+     * `(p)npm pack` will download a tarball of the specified version,
+     * whereas `yarn` pack creates a tarball of the active workspace, so it
+     * does not work for getting the content of a library.
+     *
+     * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+     */
+    pm = 'npm';
+  }
+
+  const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, { cwd });
+
+  const tarballPath = stdout.trim();
+  return { tarballPath };
 }

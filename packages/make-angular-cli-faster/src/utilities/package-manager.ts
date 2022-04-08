@@ -55,13 +55,13 @@ export function installDependencies(
   });
 }
 
-export function resolvePackageVersion(
+export async function resolvePackageVersion(
   packageName: string,
   version: string
-): string {
+): Promise<string> {
   try {
-    return resolvePackageVersionUsingRegistry(packageName, version);
+    return await resolvePackageVersionUsingRegistry(packageName, version);
   } catch {
-    return resolvePackageVersionUsingInstallation(packageName, version);
+    return await resolvePackageVersionUsingInstallation(packageName, version);
   }
 }

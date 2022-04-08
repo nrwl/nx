@@ -47,7 +47,12 @@
       "@nrwl/nx-plugin",
       "@nrwl/react",
       "@nrwl/storybook",
-      "@nrwl/web"
+      "@nrwl/web",
+      "@nrwl/js",
+      "@nrwl/cli",
+      "@nrwl/nx-cloud",
+      "@nrwl/react-native",
+      "@nrwl/detox"
     ]
   },
   "peerDependencies": {
@@ -82,6 +87,32 @@
     "tslib": "^2.3.0"
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "packageGroup": [
+      "@nrwl/workspace",
+      "@nrwl/angular",
+      "nx",
+      "@nrwl/cypress",
+      "@nrwl/devkit",
+      "@nrwl/eslint-plugin-nx",
+      "@nrwl/express",
+      "@nrwl/jest",
+      "@nrwl/linter",
+      "@nrwl/nest",
+      "@nrwl/next",
+      "@nrwl/node",
+      "@nrwl/nx-plugin",
+      "@nrwl/react",
+      "@nrwl/storybook",
+      "@nrwl/web",
+      "@nrwl/js",
+      "@nrwl/cli",
+      "@nrwl/react-native",
+      "@nrwl/detox",
+      {
+        "package": "@nrwl/nx-cloud",
+        "version": "latest"
+      }
+    ]
   }
 }

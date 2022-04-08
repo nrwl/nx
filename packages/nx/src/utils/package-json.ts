@@ -9,9 +9,15 @@ export interface NxProjectPackageJsonConfiguration {
   targets?: Record<string, PackageJsonTargetConfiguration>;
 }
 
+export interface NxMigrationsConfiguration {
+  migrations?: string;
+  packageGroup?: (string | { package: string; version: string })[];
+}
+
 export interface PackageJson {
   // Generic Package.Json Configuration
   name: string;
+  version: string;
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -30,7 +36,8 @@ export interface PackageJson {
   schematics?: string;
   builders?: string;
   executors?: string;
-  'nx-migrations'?: string;
+  'nx-migrations'?: string | NxMigrationsConfiguration;
+  'ng-update'?: string | NxMigrationsConfiguration;
 }
 
 export function buildTargetFromScript(

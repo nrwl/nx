@@ -32,13 +32,13 @@ export async function determineMigration(
 ): Promise<MigrationDefinition> {
   const angularVersion = getInstalledAngularVersion();
   const majorAngularVersion = major(angularVersion);
-  latestWorkspaceVersionWithMigration = resolvePackageVersion(
+  latestWorkspaceVersionWithMigration = await resolvePackageVersion(
     '@nrwl/angular',
     latestWorkspaceRangeVersionWithMigration
   );
 
   if (version) {
-    const normalizedVersion = normalizeVersion(version);
+    const normalizedVersion = await normalizeVersion(version);
     if (lte(normalizedVersion, latestWorkspaceVersionWithMigration)) {
       // specified version should use @nrwl/workspace:ng-add
       return { packageName: '@nrwl/workspace', version: normalizedVersion };
@@ -66,10 +66,11 @@ export async function determineMigration(
     );
   }
 
-  const latestNxCompatibleVersion = getNxVersionBasedOnInstalledAngularVersion(
-    angularVersion,
-    majorAngularVersion
-  );
+  const latestNxCompatibleVersion =
+    await getNxVersionBasedOnInstalledAngularVersion(
+      angularVersion,
+      majorAngularVersion
+    );
 
   // should use @nrwl/workspace:ng-add if the version is less than the
   // latest workspace version that has the migration, otherwise use
@@ -105,10 +106,11 @@ async function findAndSuggestVersionToUse(
   majorAngularVersion: number,
   userSpecifiedVersion: string
 ): Promise<MigrationDefinition> {
-  const latestNxCompatibleVersion = getNxVersionBasedOnInstalledAngularVersion(
-    angularVersion,
-    majorAngularVersion
-  );
+  const latestNxCompatibleVersion =
+    await getNxVersionBasedOnInstalledAngularVersion(
+      angularVersion,
+      majorAngularVersion
+    );
   const useSuggestedVersion = await promptForVersion(latestNxCompatibleVersion);
   if (useSuggestedVersion) {
     // should use @nrwl/workspace:ng-add if the version is less than the
@@ -134,10 +136,10 @@ async function findAndSuggestVersionToUse(
   process.exit(1);
 }
 
-function getNxVersionBasedOnInstalledAngularVersion(
+async function getNxVersionBasedOnInstalledAngularVersion(
   angularVersion: string,
   majorAngularVersion: number
-): string {
+): Promise<string> {
   if (lt(angularVersion, '13.0.0')) {
     // the @nrwl/angular:ng-add generator is only available for versions supporting
     // Angular >= 13.0.0, fall back to @nrwl/workspace:ng-add
@@ -154,7 +156,7 @@ function getNxVersionBasedOnInstalledAngularVersion(
   }
 
   // use latest, only the last version in the map should not contain a max
-  return resolvePackageVersion('@nrwl/angular', 'latest');
+  return await resolvePackageVersion('@nrwl/angular', 'latest');
 }
 
 async function promptForVersion(version: string): Promise<boolean> {
@@ -177,13 +179,13 @@ function getInstalledAngularVersion(): string {
   return readJsonFile(packageJsonPath).version;
 }
 
-function normalizeVersion(version: string): string {
+async function normalizeVersion(version: string): Promise<string> {
   if (
     version.startsWith('^') ||
     version.startsWith('~') ||
     version.split('.').length < 3
   ) {
-    return resolvePackageVersion('@nrwl/angular', version);
+    return await resolvePackageVersion('@nrwl/angular', version);
   }
 
   return version;

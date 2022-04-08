@@ -15,7 +15,7 @@ import { packagesWeCareAbout } from 'nx/src/command-line/report';
 describe('Cli', () => {
   beforeEach(() => newProject());
 
-  it('vvvshould execute long running tasks', async () => {
+  it('should execute long running tasks', async () => {
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
     updateProjectConfig(myapp, (c) => {
@@ -156,7 +156,7 @@ describe('list', () => {
 describe('migrate', () => {
   beforeEach(() => newProject());
 
-  it('clear-cacheshould run migrations', () => {
+  it('should run migrations', () => {
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
       JSON.stringify({
