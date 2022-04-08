@@ -8,6 +8,7 @@ import { loadTsTransformers } from './load-ts-transformers';
 import { BuildBuilderOptions } from './types';
 import CopyWebpackPlugin = require('copy-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import { removeExt } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 
 export const OUT_FILENAME_TEMPLATE = '[name].js';
 
@@ -33,9 +34,12 @@ export function getBaseWebpackPartial(
       }),
       {} as { [entryName: string]: string }
     ) ?? {};
+  const mainEntry = options.outputFileName
+    ? removeExt(options.outputFileName)
+    : 'main';
   const webpackConfig: Configuration = {
     entry: {
-      main: [options.main],
+      [mainEntry]: [options.main],
       ...additionalEntryPoints,
     },
     devtool: options.sourceMap ? 'source-map' : false,
