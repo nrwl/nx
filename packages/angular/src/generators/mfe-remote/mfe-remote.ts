@@ -28,7 +28,7 @@ export default async function mfeRemote(tree: Tree, options: Schema) {
   }
 
   const installTask = await applicationGenerator(tree, {
-    name: options.name,
+    ...options,
     mfe: true,
     mfeType: 'remote',
     routing: true,
