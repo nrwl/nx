@@ -1019,6 +1019,7 @@
           }
         },
         "required": ["name"],
+        "additionalProperties": false,
         "presets": []
       },
       "aliases": ["host"],

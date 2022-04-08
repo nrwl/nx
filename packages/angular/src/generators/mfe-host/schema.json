@@ -30,5 +30,6 @@
       "default": false
     }
   },
-  "required": ["name"]
+  "required": ["name"],
+  "additionalProperties": false
 }

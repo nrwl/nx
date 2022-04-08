@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import { readWorkspaceConfiguration, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 
 import { getProjects } from '@nrwl/devkit';
@@ -17,7 +17,28 @@ export default async function mfeHost(tree: Tree, options: Schema) {
     });
   }
 
+  // check the workspace for default values for certain angular properties
+  let defaults = {};
+  const workspaceConfig = readWorkspaceConfiguration(tree);
+  if (workspaceConfig.generators) {
+    const applicationGeneratorName = [
+      '@nrwl/angular:application',
+      '@nrwl/angular:app',
+    ];
+    const applicationGeneratorKey =
+      applicationGeneratorName[0] in workspaceConfig.generators
+        ? applicationGeneratorName[0]
+        : applicationGeneratorName[1] in workspaceConfig.generators
+        ? applicationGeneratorName[1]
+        : undefined;
+
+    defaults = applicationGeneratorKey
+      ? workspaceConfig.generators[applicationGeneratorKey]
+      : {};
+  }
+
   const installTask = await applicationGenerator(tree, {
+    ...defaults,
     name: options.name,
     mfe: true,
     mfeType: 'host',
