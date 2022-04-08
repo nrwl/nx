@@ -69,8 +69,6 @@ Workspace name (e.g. org name)
 
 Type: boolean
 
-Default: true
-
 Use Nx Cloud
 
 ### packageManager
