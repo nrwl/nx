@@ -18,7 +18,7 @@ export function getParameterMetadata(schema: JsonSchema): ParameterMetadata[] {
     return {
       name,
       key: slugify(name),
-      value: String(value),
+      value: JSON.stringify(value).replace(/"/g, ''),
     };
   }
 

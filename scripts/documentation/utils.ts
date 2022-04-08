@@ -200,11 +200,13 @@ export function generateOptionsMarkdown(command): string {
         }
         if (option.choices !== undefined) {
           response += dedent`
-          Choices: [${option.choices.map((c) => `"${c}"`).join(', ')}]\n`;
+          Choices: [${option.choices
+            .map((c) => JSON.stringify(c).replace(/"/g, ''))
+            .join(', ')}]\n`;
         }
         if (option.default !== undefined && option.default !== '') {
           response += dedent`
-          Default: ${option.default}\n`;
+          Default: ${JSON.stringify(option.default).replace(/"/g, '')}\n`;
         }
         response += dedent`
               ${formatDeprecated(option.description, option.deprecated)}

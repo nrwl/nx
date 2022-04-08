@@ -96,7 +96,7 @@ function ParameterEnums({
       Accepted values:{' '}
       {potentialEnums.map((e, i) => (
         <span key={'enums-' + e}>
-          <code>{e}</code>
+          <code>{JSON.stringify(e).replace(/"/g, '')}</code>
           {potentialEnums.length === i + 1 ? null : ', '}
         </span>
       ))}
