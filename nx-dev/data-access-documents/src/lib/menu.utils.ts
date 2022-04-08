@@ -65,6 +65,7 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
         (m) =>
           m.id === 'workspace-concepts' ||
           m.id === 'structure' ||
+          m.id === 'extending-nx' ||
           m.id === 'generators' ||
           m.id === 'executors' ||
           m.id === 'ci' ||
