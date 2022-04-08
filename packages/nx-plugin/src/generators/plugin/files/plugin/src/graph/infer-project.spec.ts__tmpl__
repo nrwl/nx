@@ -1,0 +1,8 @@
+import { registerProjectTargets } from './infer-project';
+
+describe('register project targets', () => {
+  it('should register a "hello" target', () => {
+    const { hello } = registerProjectTargets('libs/package-a/project.json');
+    expect(hello).toBeDefined();
+  });
+});

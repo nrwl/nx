@@ -1,0 +1,24 @@
+import { NxPlugin } from '@nrwl/devkit';
+
+import { registerProjectTargets, projectFilePatterns } from './graph/infer-project';
+import { processProjectGraph } from './graph/process-project-graph';
+
+/**
+ * These plugin capabilities require registering the plugin 
+ * in the `nx.json` file of the consuming workspace. 
+ * Some example code has been written for the methods, which 
+ * should be replaced with your code or removed if the functionality
+ * is not desired.
+ */
+const plugin: NxPlugin = {
+  name: '<%=npmPackageName%>',
+  projectFilePatterns,
+  processProjectGraph,
+  registerProjectTargets
+};
+
+/**
+ * If your plugin doesn't use any of the above functionality, and
+ * only uses generators / executors, you don't have to export anything.
+ */
+export = plugin

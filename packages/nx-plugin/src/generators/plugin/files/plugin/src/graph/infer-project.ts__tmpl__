@@ -1,0 +1,29 @@
+import { ProjectTargetConfigurator } from '@nrwl/devkit';
+import { basename, dirname } from 'path';
+
+/**
+ * Nx uses this array for two purposes:
+ * - If `workspace.json` doesn't exist, these are used in a glob search to infer projects.
+ * - Targets are only inferred by registerProjectTargets for project files that match these patterns.
+ */
+export const projectFilePatterns = ['my-project-file', 'project.json'];
+
+/**
+ * This function is used by Nx to infer project targets which are not explicitly listed in
+ * project.json (i.e. package.json scripts). Inferred targets are **always** overwritten
+ * by explicit targets, so if a target is listed in project.json it will not be inferred
+ * from here.
+ *
+ * @param projectFilePath The path to a project definition file
+ * @returns Record<string, targetDefinition>, defining new targets for that project.
+ */
+export const registerProjectTargets: ProjectTargetConfigurator = (
+  projectFilePath
+) => ({
+  hello: {
+    executor: '@nrwl/workspace:run-commands',
+    options: {
+      command: `echo "hello ${basename(dirname(projectFilePath))}`,
+    },
+  },
+});

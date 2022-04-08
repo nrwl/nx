@@ -1,0 +1,44 @@
+import { ProjectGraph, ProjectGraphProcessorContext } from '@nrwl/devkit';
+import { processProjectGraph } from './process-project-graph';
+
+describe('process project graph', () => {
+  let mockGraph: ProjectGraph;
+  let mockContext: ProjectGraphProcessorContext;
+
+  beforeEach(() => {
+    mockGraph = {
+      nodes: {
+        'project-a': {
+          name: 'project-a',
+          data: {},
+          type: 'lib',
+        },
+      },
+      dependencies: {
+        'project-a': []
+      },
+    };
+    mockContext = {
+      workspace: {
+        npmScope: 'acme',
+        projects: {
+          'project-a': {
+            root: 'libs/project-a',
+            projectType: 'library',
+          },
+        },
+        version: 2,
+      },
+      fileMap: {
+        'project-a': [{ file: 'libs/project-a/source-file', hash: '0001' }],
+      },
+      filesToProcess: {
+        'project-a': [{ file: 'libs/project-a/source-file', hash: '0001' }],
+      },
+    };
+  });
+
+  it('should return the project graph', () => {
+    expect(processProjectGraph(mockGraph, mockContext)).toEqual(mockGraph);
+  });
+});
