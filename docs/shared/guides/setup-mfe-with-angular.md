@@ -392,4 +392,4 @@ In this tutorial, we exposed a single module that was consumed dynamically as an
 ## References and Further Reading
 
 - Module Federation: https://webpack.js.org/concepts/module-federation/
-- Mirco Frontend Revolution Article Series: https://www.angulararchitects.io/aktuelles/the-microfrontend-revolution-module-federation-in-webpack-5/
+- Micro Frontend Revolution Article Series: https://www.angulararchitects.io/aktuelles/the-microfrontend-revolution-module-federation-in-webpack-5/
