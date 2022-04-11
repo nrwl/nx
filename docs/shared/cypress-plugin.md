@@ -83,6 +83,109 @@ nx e2e frontend-e2e --baseUrl=https://frontend.com
 
 If you need to fine tune your Cypress setup, you can do so by modifying `cypress.json` in the e2e project. For instance, you can easily add your `projectId` to save all the screenshots and videos into your Cypress dashboard. The complete configuration is documented on [the official website](https://docs.cypress.io/guides/references/configuration.html#Options).
 
+## Code coverage
+1. instrument cypress of your `frontend-e2e` and your frontend framework to use code coverage as described on the official cypress documentation. See below how to insctruct angular. You may also need to check if the setting `pluginsFile` of `frontend-e2e/cypress.json` needs to be updated.
+
+2. Add a `nyc` example configuration (you can adjust the configuration later on according to your needs) to your e2e-app (in this example in the file `apps/frontend-e2e/.nycrc`):
+```json
+{
+  "temp-dir": "../../.nyc_output",
+  "report-dir": "../../.coverage",
+  "reporter": ["html"],
+  "clean": true
+}
+```
+Most probably you will want to ignore `.nyc_output` and `.coverage` adding them to `.gitignore`.
+
+3. Add a `nyc` example configuration (you can adjust this later on according tou your needs) to the file `.nycrc` to make a report in the root directory:
+```json
+{ 
+  "reporter": ["html"],
+  "skip-full": true,
+  "per-file": true
+}
+```
+
+4. Install `nyc` as a development dependency if not yet done.
+5. Now run the e2e test for `frontend-e2e` as usual.
+6. Execute the reporter for quick info in the terminal like this:
+```bash
+npx nyc report -r text-summary
+```
+7. In `.coverage` you will also find the html report.
+
+Amongst others you can also check the coverage and throw error when it is not hight enough using `nyc`. See the official documentation of nyc.
+
+### For Angular developers
+instrument angular to use code coverage as following:
+
+1. Install `@jsdevtools/coverage-istanbul-loader`
+```bash
+yarn add --dev @jsdevtools/coverage-istanbul-loader
+```
+```bash
+npm install --save-dev @jsdevtools/coverage-istanbul-loader
+```
+
+2. Create a custom webpack file `coverage.webpack.js` with the following content:
+
+```javascript
+const path = require('path');
+
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.(js|ts|html)$/,
+        loader: '@jsdevtools/coverage-istanbul-loader',
+        options: { esModules: true },
+        enforce: 'post',
+        exclude: [
+          /\.(e2e|spec)\.ts$/,
+          /node_modules/,
+          /(ngfactory|ngstyle)\.js/,
+        ],
+      },
+    ],
+  },
+};
+```
+
+3. Add [custom webpack support](guides/customize-webpack) in the `angular.json` or as probably the case may be in `apps/example-app-e2e/project.json` using `coverage.webpack.js` above. To complete this create a new target `serve-coverage` by copying the `serve` target. Then use the webpack file above with the appropriate executor (currently `ngx-build-plus:dev-server`).
+
+```json
+  "serve-coverage": {
+    "executor": "ngx-build-plus:dev-server",
+    "options": {
+      ...
+      "extraWebpackConfig": "./coverage.webpack.js"
+    },
+    ...
+  },
+```
+
+4. Replace the e2e target for `frontend-e2e` in the `angular.json` or as probably the case may be in `apps/frontend-e2e/project.json`:
+```json
+    "frontend-e2e": {
+      "root": "apps/frontend-e2e",
+      "sourceRoot": "apps/frontend-e2e/src",
+      "projectType": "application",
+      "targets": {
+        "e2e": {
+          "executor": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "apps/frontend-e2e/cypress.json",
+            "devServerTarget": "frontend-e2e:serve-coverage:development"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "frontend-e2e:serve-coverage:production"
+            }
+          }
+        },
+      ...
+    },
+```
 ## More Documentation
 
 React Nx Tutorial
