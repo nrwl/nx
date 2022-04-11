@@ -394,3 +394,7 @@ Another common example is ensuring that util libraries stay framework-free by ba
   // ... more ESLint config here
 }
 ```
+
+## Further reading
+
+- [Article: Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)
