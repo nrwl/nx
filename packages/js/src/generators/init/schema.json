@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxTypescriptInit",
+  "cli": "nx",
+  "title": "Init nrwl/js",
+  "description": "Init generator placeholder for nrwl/js"
+}
