@@ -51,7 +51,11 @@ export function updateImports(
     from:
       fromPath ||
       normalizeSlashes(
-        `@${npmScope}/${project.root.slice(libsDir.length + 1)}`
+        `@${npmScope}/${
+          project.root.slice(libsDir.length).startsWith('/')
+            ? project.root.slice(libsDir.length + 1)
+            : project.root.slice(libsDir.length)
+        }`
       ),
     to: schema.importPath,
   };
@@ -77,7 +81,9 @@ export function updateImports(
   }
 
   const projectRoot = {
-    from: project.root.slice(libsDir.length + 1),
+    from: project.root.slice(libsDir.length).startsWith('/')
+      ? project.root.slice(libsDir.length + 1)
+      : project.root.slice(libsDir.length),
     to: schema.destination,
   };
 
