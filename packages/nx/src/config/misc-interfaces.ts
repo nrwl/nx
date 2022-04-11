@@ -17,6 +17,69 @@ export type Generator<T = unknown> = (
   schema: T
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 
+export interface GeneratorsJsonEntry {
+  schema: string;
+  implementation?: string;
+  factory?: string;
+  description?: string;
+  aliases?: string[];
+  cli?: 'nx';
+  'x-type'?: 'library' | 'application';
+}
+
+export interface ExecutorsJsonEntry {
+  schema: string;
+  implementation: string;
+  batchImplementation?: string;
+  description?: string;
+  hasher?: string;
+}
+
+export type Dependencies = 'dependencies' | 'devDependencies';
+
+export interface PackageJsonUpdateForPackage {
+  version: string;
+  ifPackageInstalled?: string;
+  alwaysAddToPackageJson?: boolean | Dependencies;
+  addToPackageJson?: boolean | Dependencies;
+}
+
+export type PackageJsonUpdates = {
+  [name: string]: {
+    version: string;
+    packages: {
+      [packageName: string]: PackageJsonUpdateForPackage;
+    };
+  };
+};
+
+export interface MigrationsJsonEntry {
+  version: string;
+  description?: string;
+  cli?: string;
+  implementation?: string;
+  factory?: string;
+}
+
+export interface MigrationsJson {
+  version: string;
+  collection?: string;
+  generators?: { [name: string]: MigrationsJsonEntry };
+  schematics?: { [name: string]: MigrationsJsonEntry };
+  packageJsonUpdates?: PackageJsonUpdates;
+}
+
+export interface GeneratorsJson {
+  extends?: string;
+  schematics?: Record<string, GeneratorsJsonEntry>;
+  generators?: Record<string, GeneratorsJsonEntry>;
+}
+
+export interface ExecutorsJson {
+  executors?: Record<string, ExecutorsJsonEntry>;
+  builders?: Record<string, ExecutorsJsonEntry>;
+}
+
 export interface ExecutorConfig {
   schema: any;
   hasherFactory?: () => any;
