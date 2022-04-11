@@ -13,6 +13,8 @@ import {
   Tree,
   updateJson,
   ProjectConfiguration,
+  stripIndents,
+  logger,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
@@ -82,8 +84,15 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
     };
   } else if (options.project) {
     const project = readProjectConfiguration(tree, options.project);
+
+    if (!project.targets) {
+      logger.warn(stripIndents`
+      NOTE: Project, "${options.project}", does not have any targets defined and a baseUrl was not provided. Nx will use  
+      "${options.project}:serve" as the devServerTarget. But you may need to define this target within the project, "${options.project}".
+      `);
+    }
     const devServerTarget =
-      project.targets.serve && project.targets.serve.defaultConfiguration
+      project.targets?.serve && project.targets?.serve?.defaultConfiguration
         ? `${options.project}:serve:${project.targets.serve.defaultConfiguration}`
         : `${options.project}:serve`;
     e2eProjectConfig = {
