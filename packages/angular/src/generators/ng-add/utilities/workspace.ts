@@ -9,6 +9,7 @@ import {
   updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
+import { Linter, lintInitGenerator } from '@nrwl/linter';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '@nrwl/workspace/src/generators/workspace/workspace';
 import { deduceDefaultBase } from '@nrwl/workspace/src/utilities/default-base';
 import { resolveUserExistingPrettierConfig } from '@nrwl/workspace/src/utilities/prettier';
@@ -18,18 +19,8 @@ import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import { GeneratorOptions } from '../schema';
-import {
-  getCypressConfigFile,
-  getE2eKey,
-  getE2eProject,
-  isCypressE2eProject,
-  isProtractorE2eProject,
-} from './e2e-utils';
-import { WorkspaceProjects } from './types';
+import { WorkspaceCapabilities, WorkspaceProjects } from './types';
 
-// TODO: most of the validation here will be moved to the app migrator when
-// support for multiple apps is added. This will only contain workspace-wide
-// validation.
 export function validateWorkspace(
   tree: Tree,
   projects: WorkspaceProjects
@@ -48,47 +39,6 @@ export function validateWorkspace(
     if (projects.apps.length > 2 || projects.libs.length > 0) {
       throw new Error('Can only convert projects with one app');
     }
-
-    const e2eKey = getE2eKey(projects);
-    const e2eApp = getE2eProject(projects);
-
-    if (!e2eApp) {
-      return;
-    }
-
-    if (isProtractorE2eProject(e2eApp.config)) {
-      if (tree.exists(e2eApp.config.targets.e2e.options.protractorConfig)) {
-        return;
-      }
-
-      console.info(
-        `Make sure the "${e2eKey}.architect.e2e.options.protractorConfig" is valid or the "${e2eKey}" project is removed from "angular.json".`
-      );
-      throw new Error(
-        `An e2e project with Protractor was found but "${e2eApp.config.targets.e2e.options.protractorConfig}" could not be found.`
-      );
-    }
-
-    if (isCypressE2eProject(e2eApp.config)) {
-      const configFile = getCypressConfigFile(e2eApp.config);
-      if (configFile && !tree.exists(configFile)) {
-        throw new Error(
-          `An e2e project with Cypress was found but "${configFile}" could not be found.`
-        );
-      }
-
-      if (!tree.exists('cypress')) {
-        throw new Error(
-          `An e2e project with Cypress was found but the "cypress" directory could not be found.`
-        );
-      }
-
-      return;
-    }
-
-    throw new Error(
-      `An e2e project was found but it's using an unsupported executor "${e2eApp.config.targets.e2e.executor}".`
-    );
   } catch (e) {
     console.error(e.message);
     console.error(
@@ -223,31 +173,77 @@ export function updatePackageJson(tree: Tree): void {
   });
 }
 
-export function updateTsLint(tree: Tree): void {
-  if (!tree.exists(`tslint.json`)) {
+export function updateRootEsLintConfig(
+  tree: Tree,
+  existingEsLintConfig: any | undefined
+): void {
+  if (tree.exists('.eslintrc.json')) {
+    /**
+     * If it still exists it means that there was no project at the root of the
+     * workspace, so it was not moved. In that case, we remove the file so the
+     * init generator do its work. We still receive the content of the file,
+     * so we update it after the init generator has run.
+     */
+    tree.delete('.eslintrc.json');
+  }
+
+  lintInitGenerator(tree, { linter: Linter.EsLint });
+
+  if (!existingEsLintConfig) {
+    // There was no eslint config in the root, so we keep the generated one as-is.
     return;
   }
 
-  updateJson(tree, 'tslint.json', (tslintJson) => {
-    [
-      'no-trailing-whitespace',
-      'one-line',
-      'quotemark',
-      'typedef-whitespace',
-      'whitespace',
-    ].forEach((key) => {
-      tslintJson[key] = undefined;
-    });
-    tslintJson.rulesDirectory = tslintJson.rulesDirectory ?? [];
-    tslintJson.rulesDirectory.push('node_modules/@nrwl/workspace/src/tslint');
-    tslintJson.rules['nx-enforce-module-boundaries'] = [
-      true,
-      {
-        allow: [],
-        depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }],
+  existingEsLintConfig.ignorePatterns = ['**/*'];
+  existingEsLintConfig.plugins = Array.from(
+    new Set([...(existingEsLintConfig.plugins ?? []), '@nrwl/nx'])
+  );
+  existingEsLintConfig.overrides?.forEach((override) => {
+    if (!override.parserOptions?.project) {
+      return;
+    }
+
+    delete override.parserOptions.project;
+  });
+  // add the @nrwl/nx/enforce-module-boundaries rule
+  existingEsLintConfig.overrides = [
+    ...(existingEsLintConfig.overrides ?? []),
+    {
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      rules: {
+        '@nrwl/nx/enforce-module-boundaries': [
+          'error',
+          {
+            enforceBuildableLibDependency: true,
+            allow: [],
+            depConstraints: [
+              { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
+            ],
+          },
+        ],
       },
-    ];
-    return tslintJson;
+    },
+  ];
+
+  writeJson(tree, '.eslintrc.json', existingEsLintConfig);
+}
+
+export function cleanupEsLintPackages(tree: Tree): void {
+  updateJson(tree, 'package.json', (json) => {
+    if (json.devDependencies?.['@angular-eslint/builder']) {
+      delete json.devDependencies['@angular-eslint/builder'];
+    }
+    if (json.dependencies?.['@angular-eslint/builder']) {
+      delete json.dependencies['@angular-eslint/builder'];
+    }
+    if (json.devDependencies?.['@angular-eslint/schematics']) {
+      delete json.devDependencies['@angular-eslint/schematics'];
+    }
+    if (json.dependencies?.['@angular-eslint/schematics']) {
+      delete json.dependencies['@angular-eslint/schematics'];
+    }
+
+    return json;
   });
 }
 
@@ -271,6 +267,47 @@ export function createRootKarmaConfig(tree: Tree): void {
       tmpl: '',
     }
   );
+}
+
+export function getWorkspaceCapabilities(
+  tree: Tree,
+  projects: WorkspaceProjects
+): WorkspaceCapabilities {
+  const capabilities: WorkspaceCapabilities = { eslint: false, karma: false };
+
+  if (tree.exists('.eslintrc.json')) {
+    capabilities.eslint = true;
+  }
+  if (tree.exists('karma.conf.js')) {
+    capabilities.karma = true;
+  }
+
+  if (capabilities.eslint && capabilities.karma) {
+    return capabilities;
+  }
+
+  for (const project of [...projects.apps, ...projects.libs]) {
+    if (
+      !capabilities.eslint &&
+      (project.config.targets?.lint ||
+        tree.exists(`${project.config.root}/.eslintrc.json`))
+    ) {
+      capabilities.eslint = true;
+    }
+    if (
+      !capabilities.karma &&
+      (project.config.targets?.test ||
+        tree.exists(`${project.config.root}/karma.conf.js`))
+    ) {
+      capabilities.karma = true;
+    }
+
+    if (capabilities.eslint && capabilities.karma) {
+      return capabilities;
+    }
+  }
+
+  return capabilities;
 }
 
 function updateVsCodeRecommendedExtensions(tree: Tree): void {

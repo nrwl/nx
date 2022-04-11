@@ -55,6 +55,10 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     runNgAdd('@cypress/schematic', '--e2e-update', 'latest');
   }
 
+  function addEsLint() {
+    runNgAdd('@angular-eslint/schematics', undefined, 'latest');
+  }
+
   beforeEach(() => {
     project = uniq('proj');
     packageManager = getSelectedPackageManager();
@@ -385,6 +389,44 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         },
       },
     });
+  });
+
+  // TODO(leo): The current Verdaccio setup fails to resolve older versions
+  // of @nrwl/* packages, the @angular-eslint/builder package depends on an
+  // older version of @nrwl/devkit so we skip this test for now.
+  it.skip('should handle a workspace with ESLint', () => {
+    addEsLint();
+
+    runNgAdd('@nrwl/angular', '--npm-scope projscope');
+
+    checkFilesExist(`apps/${project}/.eslintrc.json`, `.eslintrc.json`);
+
+    const projectConfig = readJson(`apps/${project}/project.json`);
+    expect(projectConfig.targets.lint).toStrictEqual({
+      executor: '@nrwl/linter:eslint',
+      options: {
+        lintFilePatterns: [
+          `apps/${project}/src/**/*.ts`,
+          `apps/${project}/src/**/*.html`,
+        ],
+      },
+    });
+
+    let output = runCLI(`lint ${project}`);
+    expect(output).toContain(`> nx run ${project}:lint`);
+    expect(output).toContain('All files pass linting.');
+    expect(output).toContain(
+      `Successfully ran target lint for project ${project}`
+    );
+
+    output = runCLI(`lint ${project}`);
+    expect(output).toContain(
+      `> nx run ${project}:lint  [existing outputs match the cache, left as is]`
+    );
+    expect(output).toContain('All files pass linting.');
+    expect(output).toContain(
+      `Successfully ran target lint for project ${project}`
+    );
   });
 
   it('should support --preserve-angular-cli-layout', () => {
