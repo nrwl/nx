@@ -118,6 +118,23 @@ By default, coverage reports will be generated in the `coverage/` directory unde
 
 > `coverageDirectory` and `coverageReporters` are configurable via the project configuration file as well.
 
+### Global setup/teardown with nx libraries
+
+In order to use Jest's global setup/teardown functions that reference nx libraries, you'll need to register the TS path for jest to resolve the libraries.
+Nx provides a helper function that you can import within your setup/teardown file.
+
+```ts
+import { registerTsProject } from 'nx/src/utils/register';
+const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
+
+import { yourFancyFunction } from '@some-org/my-util-library';
+export default async function () {
+  yourFancyFunction();
+}
+// make sure to run the clean up!
+cleanupRegisteredPaths();
+```
+
 ## Debugging Failing Tests
 
 If your code editor doesn't provide a way to debug your tests, you can leverage the Chrome DevTools to debug your tests with the `--inspect-brk` flag for node.
