@@ -60,6 +60,15 @@ export function ConfScheduleShort(): JSX.Element {
       speakers: ['Jo Hanna Pearce'],
       videoUrl: '',
     },
+    {
+      type: 'event',
+      time: '',
+      title: 'Nx / NxCloud team panel discussion',
+      description:
+        'A Q&A panel with Nx and NxCloud teams ready to answer all your burning questions!',
+      speakers: ['Nx / NxCloud teams'],
+      videoUrl: '',
+    },
   ];
 
   return (
