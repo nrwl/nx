@@ -129,6 +129,24 @@
       "path": "/packages/js/src/generators/library/schema.json"
     },
     {
+      "name": "init",
+      "factory": "./src/generators/init/init#initGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxTypescriptInit",
+        "cli": "nx",
+        "title": "Init nrwl/js",
+        "description": "Init generator placeholder for nrwl/js",
+        "presets": []
+      },
+      "aliases": ["lib"],
+      "x-type": "init",
+      "description": "Init placeholder.",
+      "implementation": "/packages/js/src/generators/init/init#initGenerator.ts",
+      "hidden": false,
+      "path": "/packages/js/src/generators/init/schema.json"
+    },
+    {
       "name": "convert-to-swc",
       "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcGenerator",
       "schema": {

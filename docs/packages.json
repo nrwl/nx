@@ -109,7 +109,7 @@
     "path": "generated/packages/js.json",
     "schemas": {
       "executors": ["tsc", "swc"],
-      "generators": ["library", "convert-to-swc"]
+      "generators": ["library", "init", "convert-to-swc"]
     }
   },
   {
