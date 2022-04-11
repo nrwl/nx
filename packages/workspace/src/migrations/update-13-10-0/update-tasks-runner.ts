@@ -9,9 +9,9 @@ export function updateTasksRunner(host: Tree) {
   if (
     config?.tasksRunnerOptions['default'] &&
     config?.tasksRunnerOptions['default'].runner ==
-      '@nrwl/workspace/tasks-runner/default'
+      '@nrwl/workspace/tasks-runners/default'
   ) {
-    config.tasksRunnerOptions['default'].runner = 'nx/tasks-runner/default';
+    config.tasksRunnerOptions['default'].runner = 'nx/tasks-runners/default';
   }
   updateWorkspaceConfiguration(host, config);
 }
