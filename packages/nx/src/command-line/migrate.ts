@@ -1,7 +1,7 @@
 import { exec, execSync } from 'child_process';
 import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
-import { gt, lte } from 'semver';
+import { gt, lt, lte } from 'semver';
 import { promisify } from 'util';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { flushChanges, FsTree } from '../config/tree';
@@ -12,7 +12,11 @@ import {
   writeJsonFile,
 } from '../utils/fileutils';
 import { logger } from '../utils/logger';
-import { NxMigrationsConfiguration, PackageJson } from '../utils/package-json';
+import {
+  NxMigrationsConfiguration,
+  PackageGroup,
+  PackageJson,
+} from '../utils/package-json';
 import {
   createTempNpmDirectory,
   getPackageManagerCommand,
@@ -121,11 +125,10 @@ export class Migrator {
   }
 
   async updatePackageJson(targetPackage: string, targetVersion: string) {
-    const packageJson = await this._updatePackageJson(
-      targetPackage,
-      { version: targetVersion, addToPackageJson: false },
-      {}
-    );
+    const packageJson = await this._updatePackageJson(targetPackage, {
+      version: targetVersion,
+      addToPackageJson: false,
+    });
 
     const migrations = await this._createMigrateJson(packageJson);
     return { packageJson, migrations };
@@ -162,10 +165,11 @@ export class Migrator {
     return migrations.flat();
   }
 
+  private collectedVersions: Record<string, string> = {};
+
   private async _updatePackageJson(
     targetPackage: string,
-    target: PackageJsonUpdateForPackage,
-    collectedVersions: Record<string, PackageJsonUpdateForPackage>
+    target: PackageJsonUpdateForPackage
   ): Promise<Record<string, PackageJsonUpdateForPackage>> {
     let targetVersion = target.version;
     if (this.to[targetPackage]) {
@@ -185,6 +189,7 @@ export class Migrator {
     try {
       migrationsJson = await this.fetch(targetPackage, targetVersion);
       targetVersion = migrationsJson.version;
+      this.collectedVersions[targetPackage] = targetVersion;
     } catch (e) {
       if (e?.message?.includes('No matching version')) {
         throw new Error(
@@ -203,20 +208,16 @@ export class Migrator {
 
     const childPackageMigrations = await Promise.all(
       Object.keys(packages)
-        .filter((packageName) => {
-          return (
-            !collectedVersions[packageName] ||
+        .filter(
+          (packageName) =>
+            !this.collectedVersions[packageName] ||
             this.gt(
               packages[packageName].version,
-              collectedVersions[packageName].version
+              this.collectedVersions[packageName]
             )
-          );
-        })
+        )
         .map((packageName) =>
-          this._updatePackageJson(packageName, packages[packageName], {
-            ...collectedVersions,
-            [targetPackage]: target,
-          })
+          this._updatePackageJson(packageName, packages[packageName])
         )
     );
 
@@ -252,11 +253,24 @@ export class Migrator {
     // this should be used to know what version to include
     // we should use from everywhere we use versions
 
+    // Support Migrating to older versions of Nx
+    // Use the packageGroup of the latest version of Nx instead of the one from the target version which could be older.
+    if (
+      packageName === '@nrwl/workspace' &&
+      lt(targetVersion, '14.0.0-beta.0')
+    ) {
+      migration.packageGroup =
+        require('../../package.json')['ng-update'].packageGroup;
+    }
+
     if (migration.packageGroup) {
       migration.packageJsonUpdates ??= {};
-      migration.packageJsonUpdates[`${targetVersion}-defaultPackages`] = {
+
+      const packageGroup = normalizePackageGroup(migration.packageGroup);
+
+      migration.packageJsonUpdates[targetVersion + '--PackageGroup'] = {
         version: targetVersion,
-        packages: migration.packageGroup.reduce((acc, packageConfig) => {
+        packages: packageGroup.reduce((acc, packageConfig) => {
           const { package: pkg, version } =
             typeof packageConfig === 'string'
               ? { package: packageConfig, version: targetVersion }
@@ -320,6 +334,18 @@ export class Migrator {
   private lte(v1: string, v2: string) {
     return lte(normalizeVersion(v1), normalizeVersion(v2));
   }
+}
+
+function normalizePackageGroup(
+  packageGroup: PackageGroup
+): (string | { package: string; version: string })[] {
+  if (!Array.isArray(packageGroup)) {
+    return Object.entries(packageGroup).map(([pkg, version]) => ({
+      package: pkg,
+      version,
+    }));
+  }
+  return packageGroup;
 }
 
 function normalizeVersionWithTagCheck(version: string) {
@@ -457,58 +483,74 @@ function versions(root: string, from: Record<string, string>) {
 
 // testing-fetch-start
 function createFetcher() {
-  const cache: Record<string, ResolvedMigrationConfiguration> = {};
+  const migrationsCache: Record<
+    string,
+    Promise<ResolvedMigrationConfiguration>
+  > = {};
+  const resolvedVersionCache: Record<string, Promise<string>> = {};
 
-  return async function nxMigrateFetcher(
+  function fetchMigrations(
+    packageName,
+    packageVersion,
+    setCache: (packageName: string, packageVersion: string) => void
+  ): Promise<ResolvedMigrationConfiguration> {
+    const cacheKey = packageName + '-' + packageVersion;
+    return Promise.resolve(resolvedVersionCache[cacheKey])
+      .then((cachedResolvedVersion) => {
+        if (cachedResolvedVersion) {
+          return cachedResolvedVersion;
+        }
+
+        resolvedVersionCache[cacheKey] = resolvePackageVersionUsingRegistry(
+          packageName,
+          packageVersion
+        );
+        return resolvedVersionCache[cacheKey];
+      })
+      .then((resolvedVersion) => {
+        if (
+          resolvedVersion !== packageVersion &&
+          migrationsCache[`${packageName}-${resolvedVersion}`]
+        ) {
+          return migrationsCache[`${packageName}-${resolvedVersion}`];
+        }
+        setCache(packageName, resolvedVersion);
+        return getPackageMigrationsUsingRegistry(packageName, resolvedVersion);
+      })
+      .catch(() => {
+        logger.info(`Fetching ${packageName}@${packageVersion}`);
+
+        return getPackageMigrationsUsingInstall(packageName, packageVersion);
+      });
+  }
+
+  return function nxMigrateFetcher(
     packageName: string,
     packageVersion: string
   ): Promise<ResolvedMigrationConfiguration> {
-    if (cache[`${packageName}-${packageVersion}`]) {
-      return cache[`${packageName}-${packageVersion}`];
+    if (migrationsCache[`${packageName}-${packageVersion}`]) {
+      return migrationsCache[`${packageName}-${packageVersion}`];
     }
 
     let resolvedVersion: string = packageVersion;
-    let resolvedMigrationConfiguration: ResolvedMigrationConfiguration;
-
-    try {
-      resolvedVersion = await resolvePackageVersionUsingRegistry(
-        packageName,
-        packageVersion
-      );
-
-      if (cache[`${packageName}-${resolvedVersion}`]) {
-        return cache[`${packageName}-${resolvedVersion}`];
-      }
-
-      logger.info(`Fetching ${packageName}@${packageVersion}`);
-
-      resolvedMigrationConfiguration = await getPackageMigrationsUsingRegistry(
-        packageName,
-        resolvedVersion
-      );
-    } catch {
-      logger.info(`Fetching ${packageName}@${packageVersion}`);
-
-      resolvedMigrationConfiguration = await getPackageMigrationsUsingInstall(
-        packageName,
-        packageVersion
-      );
-
-      resolvedVersion = resolvedMigrationConfiguration.version;
+    let migrations: Promise<ResolvedMigrationConfiguration>;
+    function setCache(packageName: string, packageVersion: string) {
+      migrationsCache[packageName + '-' + packageVersion] = migrations;
     }
+    migrations = fetchMigrations(packageName, packageVersion, setCache).then(
+      (result) => {
+        if (result.schematics) {
+          result.generators = result.schematics;
+          delete result.schematics;
+        }
+        resolvedVersion = result.version;
+        return result;
+      }
+    );
 
-    resolvedMigrationConfiguration = {
-      ...resolvedMigrationConfiguration,
-      generators:
-        resolvedMigrationConfiguration.generators ??
-        resolvedMigrationConfiguration.schematics,
-    };
+    setCache(packageName, packageVersion);
 
-    cache[`${packageName}-${packageVersion}`] = cache[
-      `${packageName}-${resolvedVersion}`
-    ] = resolvedMigrationConfiguration;
-
-    return resolvedMigrationConfiguration;
+    return migrations;
   };
 }
 // testing-fetch-end
@@ -524,12 +566,20 @@ async function getPackageMigrationsUsingRegistry(
     packageVersion
   );
 
+  if (!migrationsConfig) {
+    return {
+      version: packageVersion,
+    };
+  }
+
   if (!migrationsConfig.migrations) {
     return {
       version: packageVersion,
       packageGroup: migrationsConfig.packageGroup,
     };
   }
+
+  logger.info(`Fetching ${packageName}@${packageVersion}`);
 
   // try to obtain the migrations from the registry directly
   return await downloadPackageMigrationsFromRegistry(
@@ -541,8 +591,11 @@ async function getPackageMigrationsUsingRegistry(
 
 function resolveNxMigrationConfig(json: Partial<PackageJson>) {
   const parseNxMigrationsConfig = (
-    fromJson: string | NxMigrationsConfiguration
+    fromJson?: string | NxMigrationsConfiguration
   ): NxMigrationsConfiguration => {
+    if (!fromJson) {
+      return {};
+    }
     if (typeof fromJson === 'string') {
       return { migrations: fromJson, packageGroup: [] };
     }

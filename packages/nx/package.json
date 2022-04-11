@@ -60,5 +60,30 @@
     "minimatch": "3.0.4",
     "enquirer": "~2.3.6",
     "tslib": "^2.3.0"
+  },
+  "ng-update": {
+    "requirements": {},
+    "packageGroup": {
+      "@nrwl/workspace": "*",
+      "@nrwl/angular": "*",
+      "@nrwl/cypress": "*",
+      "@nrwl/devkit": "*",
+      "@nrwl/eslint-plugin-nx": "*",
+      "@nrwl/express": "*",
+      "@nrwl/jest": "*",
+      "@nrwl/linter": "*",
+      "@nrwl/nest": "*",
+      "@nrwl/next": "*",
+      "@nrwl/node": "*",
+      "@nrwl/nx-plugin": "*",
+      "@nrwl/react": "*",
+      "@nrwl/storybook": "*",
+      "@nrwl/web": "*",
+      "@nrwl/js": "*",
+      "@nrwl/cli": "*",
+      "@nrwl/nx-cloud": "latest",
+      "@nrwl/react-native": "*",
+      "@nrwl/detox": "*"
+    }
   }
 }
