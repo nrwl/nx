@@ -68,7 +68,10 @@ It only uses language primitives and immutable objects
 ### Workspace Interfaces
 
 - [ExecutorContext](../../nx-devkit/index#executorcontext)
+- [ExecutorsJson](../../nx-devkit/index#executorsjson)
+- [GeneratorsJson](../../nx-devkit/index#generatorsjson)
 - [ImplicitJsonSubsetDependency](../../nx-devkit/index#implicitjsonsubsetdependency)
+- [MigrationsJson](../../nx-devkit/index#migrationsjson)
 - [NxAffectedConfig](../../nx-devkit/index#nxaffectedconfig)
 - [NxJsonConfiguration](../../nx-devkit/index#nxjsonconfiguration)
 - [NxJsonProjectConfiguration](../../nx-devkit/index#nxjsonprojectconfiguration)
@@ -360,6 +363,18 @@ A plugin for Nx
 
 ---
 
+### ExecutorsJson
+
+• **ExecutorsJson**: `Object`
+
+---
+
+### GeneratorsJson
+
+• **GeneratorsJson**: `Object`
+
+---
+
 ### ImplicitJsonSubsetDependency
 
 • **ImplicitJsonSubsetDependency**<`T`\>: `Object`
@@ -369,6 +384,12 @@ A plugin for Nx
 | Name | Type                |
 | :--- | :------------------ |
 | `T`  | `"*"` \| `string`[] |
+
+---
+
+### MigrationsJson
+
+• **MigrationsJson**: `Object`
 
 ---
 

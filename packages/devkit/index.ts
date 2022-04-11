@@ -35,6 +35,9 @@ export type {
   Executor,
   ExecutorContext,
   TaskGraphExecutor,
+  GeneratorsJson,
+  ExecutorsJson,
+  MigrationsJson,
 } from 'nx/src/config/misc-interfaces';
 
 /**

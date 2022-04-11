@@ -20,6 +20,8 @@ import {
   ExecutorConfig,
   TaskGraphExecutor,
   Generator,
+  GeneratorsJson,
+  ExecutorsJson,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
 
@@ -198,7 +200,7 @@ export class Workspaces {
     const executorsFilePath = require.resolve(
       path.join(path.dirname(packageJsonPath), executorsFile)
     );
-    const executorsJson = readJsonFile(executorsFilePath);
+    const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
     const executorConfig: {
       implementation: string;
       batchImplementation?: string;
@@ -219,7 +221,7 @@ export class Workspaces {
     generator: string
   ): {
     generatorsFilePath: string;
-    generatorsJson: any;
+    generatorsJson: GeneratorsJson;
     normalizedGeneratorName: string;
   } {
     let generatorsFilePath;
@@ -242,7 +244,7 @@ export class Workspaces {
         path.join(path.dirname(packageJsonPath), generatorsFile)
       );
     }
-    const generatorsJson = readJsonFile(generatorsFilePath);
+    const generatorsJson = readJsonFile<GeneratorsJson>(generatorsFilePath);
 
     let normalizedGeneratorName =
       findFullGeneratorName(generator, generatorsJson.generators) ||

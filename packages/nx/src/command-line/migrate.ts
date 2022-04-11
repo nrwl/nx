@@ -3,6 +3,10 @@ import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
 import { gt, lte } from 'semver';
 import { promisify } from 'util';
+import {
+  MigrationsJson,
+  PackageJsonUpdateForPackage,
+} from '../config/misc-interfaces';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { flushChanges, FsTree } from '../config/tree';
 import {
@@ -21,40 +25,6 @@ import {
   resolvePackageVersionUsingRegistry,
 } from '../utils/package-manager';
 import { handleErrors } from '../utils/params';
-
-export type Dependencies = 'dependencies' | 'devDependencies';
-
-export interface PackageJsonUpdateForPackage {
-  version: string;
-  ifPackageInstalled?: string;
-  alwaysAddToPackageJson?: boolean | Dependencies;
-  addToPackageJson?: boolean | Dependencies;
-}
-
-export type PackageJsonUpdates = {
-  [name: string]: {
-    version: string;
-    packages: {
-      [packageName: string]: PackageJsonUpdateForPackage;
-    };
-  };
-};
-
-export interface GeneratorMigration {
-  version: string;
-  description?: string;
-  cli?: string;
-  implementation?: string;
-  factory?: string;
-}
-
-export interface MigrationsJson {
-  version: string;
-  collection?: string;
-  generators?: { [name: string]: GeneratorMigration };
-  schematics?: { [name: string]: GeneratorMigration };
-  packageJsonUpdates?: PackageJsonUpdates;
-}
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: NxMigrationsConfiguration['packageGroup'];
