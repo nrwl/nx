@@ -38,7 +38,7 @@ export function ConfScheduleShort(): JSX.Element {
       time: '',
       title: 'Superpowered Micro Frontends with Monorepos',
       description:
-        'Micro Frontends are awesome, but they can be difficult to set up, maintain and scale. Learn how Nx and Monorepos not only embrace Mirco Frontends, but provide amazing benefits that improves reliability, developer experience and maintainability and also encourages strategic collaboration while reducing the risk of running into classic Micro Frontend problems such as Micro Frontend anarchy, framework version mismatch and out-of-sync shared packages.',
+        'Micro Frontends are awesome, but they can be difficult to set up, maintain and scale. Learn how Nx and Monorepos not only embrace Micro Frontends, but provide amazing benefits that improves reliability, developer experience and maintainability and also encourages strategic collaboration while reducing the risk of running into classic Micro Frontend problems such as Micro Frontend anarchy, framework version mismatch and out-of-sync shared packages.',
       speakers: ['Colum Ferry'],
       videoUrl: '',
     },
