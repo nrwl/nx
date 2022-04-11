@@ -41,11 +41,15 @@ export function getComponentProps(
   const props = getInputPropertyDeclarations(tree, componentPath).map(
     (node) => {
       const decoratorContent = findNodes(
-        findNodes(node, SyntaxKind.Decorator)[0],
+        findNodes(node, SyntaxKind.Decorator).find((n) =>
+          n.getText().startsWith('@Input')
+        ),
         SyntaxKind.StringLiteral
       );
       const name = decoratorContent.length
-        ? decoratorContent[0].getText().slice(1, -1)
+        ? !decoratorContent[0].getText().includes('.')
+          ? decoratorContent[0].getText().slice(1, -1)
+          : node.name.getText()
         : node.name.getText();
 
       const type = getKnobType(node);
