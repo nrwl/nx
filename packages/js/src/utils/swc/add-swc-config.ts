@@ -4,11 +4,11 @@ import { Tree } from '@nrwl/devkit';
 import { join } from 'path';
 
 export const defaultExclude = [
-  './src/**/.*.spec.ts$',
-  './**/.*.spec.ts$',
-  './src/**/jest-setup.ts$',
+  '.*.spec.tsx?$',
+  '.*.test.tsx?$',
+  './src/jest-setup.ts$',
   './**/jest-setup.ts$',
-  './**/.*.js$',
+  '.*.js$',
 ];
 
 const swcOptionsString = () => `{
