@@ -2,6 +2,7 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTree } from '@nrwl/devkit/testing';
@@ -39,8 +40,9 @@ describe('workspace', () => {
                   },
                 },
                 lint: {
+                  builder: '@angular-eslint/builder:lint',
                   options: {
-                    tsConfig: 'tsconfig.app.json',
+                    lintFilePatterns: ['src/**/*.ts', 'src/**/*.html'],
                   },
                 },
                 e2e: {
@@ -67,7 +69,41 @@ describe('workspace', () => {
         '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
       tree.write('/tsconfig.json', '{"compilerOptions": {}}');
-      tree.write('/tslint.json', '{"rules": {}}');
+      tree.write(
+        '.eslintrc.json',
+        JSON.stringify({
+          root: true,
+          ignorePatterns: ['projects/**/*'],
+          overrides: [
+            {
+              files: ['*.ts'],
+              parserOptions: {
+                project: ['tsconfig.json', 'e2e/tsconfig.json'],
+                createDefaultProgram: true,
+              },
+              extends: [
+                'plugin:@angular-eslint/recommended',
+                'plugin:@angular-eslint/template/process-inline-templates',
+              ],
+              rules: {
+                '@angular-eslint/directive-selector': [
+                  'error',
+                  { type: 'attribute', prefix: 'app', style: 'camelCase' },
+                ],
+                '@angular-eslint/component-selector': [
+                  'error',
+                  { type: 'element', prefix: 'app', style: 'kebab-case' },
+                ],
+              },
+            },
+            {
+              files: ['*.html'],
+              extends: ['plugin:@angular-eslint/template/recommended'],
+              rules: {},
+            },
+          ],
+        })
+      );
       tree.write('/e2e/protractor.conf.js', '// content');
       tree.write('/src/app/app.module.ts', '// content');
     });
@@ -142,6 +178,18 @@ describe('workspace', () => {
           migrateFromAngularCli(tree, { name: 'myApp' })
         ).rejects.toThrow(
           `An e2e project was found but it's using an unsupported executor "@my-org/my-package:my-executor".`
+        );
+      });
+
+      it('should error when having a lint target using an unknown executor', async () => {
+        const project = readProjectConfiguration(tree, 'myApp');
+        project.targets.lint.executor = '@my-org/my-package:my-executor';
+        updateProjectConfiguration(tree, 'myApp', project);
+
+        await expect(
+          migrateFromAngularCli(tree, { name: 'myApp' })
+        ).rejects.toThrow(
+          `The "myApp" project is using an unsupported executor "@my-org/my-package:my-executor".`
         );
       });
 
@@ -264,10 +312,11 @@ describe('workspace', () => {
                   },
                 },
                 lint: {
+                  builder: '@angular-eslint/builder:lint',
                   options: {
-                    tsConfig: [
-                      'projects/myApp/tslint.json',
-                      'projects/myApp/tsconfig.app.json',
+                    lintFilePatterns: [
+                      'projects/myApp/src/**/*.ts',
+                      'projects/myApp/src/**/*.html',
                     ],
                   },
                 },
@@ -283,7 +332,7 @@ describe('workspace', () => {
         })
       );
 
-      tree.write('/projects/myApp/tslint.json', '{"rules": {}}');
+      tree.write('/projects/myApp/.eslintrc.json', '{}');
       tree.write('/projects/myApp/tsconfig.app.json', '{}');
       tree.write('/projects/myApp/tsconfig.spec.json', '{}');
       tree.write('/projects/myApp/e2e/tsconfig.json', '{}');
@@ -347,6 +396,7 @@ describe('workspace', () => {
                   },
                 },
                 lint: {
+                  builder: '@angular-eslint/builder:lint',
                   options: {
                     tsConfig: 'src/tsconfig.app.json',
                   },
@@ -400,10 +450,11 @@ describe('workspace', () => {
                   },
                 },
                 lint: {
+                  builder: '@angular-eslint/builder:lint',
                   options: {
-                    tsConfig: [
-                      'projects/myApp/tslint.json',
-                      'projects/myApp/tsconfig.app.json',
+                    lintFilePatterns: [
+                      'projects/myApp/src/**/*.ts',
+                      'projects/myApp/src/**/*.html',
                     ],
                   },
                 },
@@ -418,7 +469,7 @@ describe('workspace', () => {
           },
         })
       );
-      tree.write('/projects/myApp/tslint.json', '{"rules": {}}');
+      tree.write('/projects/myApp/.eslintrc.json', '{}');
       tree.write('/projects/myApp/tsconfig.app.json', '{}');
       tree.write('/projects/myApp/tsconfig.spec.json', '{}');
       tree.write('/projects/myApp/e2e/tsconfig.json', '{}');
@@ -427,7 +478,7 @@ describe('workspace', () => {
 
       await migrateFromAngularCli(tree, { name: 'myApp' });
 
-      expect(tree.exists('/tslint.json')).toBe(true);
+      expect(tree.exists('/.eslintrc.json')).toBe(true);
       expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
       expect(tree.exists('/apps/myApp-e2e/protractor.conf.js')).toBe(true);
       expect(tree.exists('/apps/myApp/src/app/app.module.ts')).toBe(true);
@@ -435,7 +486,7 @@ describe('workspace', () => {
 
     it('should work with missing e2e, lint, or test targets', async () => {
       tree.write(
-        '/angular.json',
+        'angular.json',
         JSON.stringify({
           version: 1,
           defaultProject: 'myApp',
@@ -455,14 +506,16 @@ describe('workspace', () => {
           },
         })
       );
-      tree.write('/karma.conf.js', '// content');
+      tree.write('karma.conf.js', '// content');
 
       await migrateFromAngularCli(tree, { name: 'myApp' });
 
-      expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
-      expect(tree.exists('/apps/myApp/karma.conf.js')).toBe(true);
-
-      expect(tree.exists('/karma.conf.js')).toBe(true);
+      expect(tree.exists('apps/myApp/tsconfig.app.json')).toBe(true);
+      expect(tree.exists('apps/myApp/karma.conf.js')).toBe(true);
+      expect(tree.exists('apps/myApp/.eslintrc.json')).toBe(true);
+      expect(tree.exists('tsconfig.base.json')).toBe(true);
+      expect(tree.exists('karma.conf.js')).toBe(true);
+      expect(tree.exists('.eslintrc.json')).toBe(true);
     });
 
     it('should work with existing .prettierignore file', async () => {
@@ -481,11 +534,39 @@ describe('workspace', () => {
       expect(prettierIgnore).toBe('# existing ignore rules');
     });
 
-    it('should work with no root tslint.json', async () => {
-      tree.delete('/tslint.json');
+    it('should move the project eslint config', async () => {
       await migrateFromAngularCli(tree, { name: 'myApp' });
 
-      expect(tree.exists('/tslint.json')).toBe(false);
+      expect(readJson(tree, 'apps/myApp/.eslintrc.json')).toMatchSnapshot();
+    });
+
+    it('should create a root eslint config', async () => {
+      await migrateFromAngularCli(tree, { name: 'myApp' });
+
+      expect(readJson(tree, '.eslintrc.json')).toMatchSnapshot();
+    });
+
+    it('should work when eslint is not being used', async () => {
+      tree.delete('.eslintrc.json');
+      updateJson(tree, 'angular.json', (json) => {
+        delete json.projects.myApp.architect.lint;
+        return json;
+      });
+
+      await migrateFromAngularCli(tree, { name: 'myApp' });
+
+      expect(tree.exists('.eslintrc.json')).toBe(false);
+    });
+
+    describe('protractor', () => {
+      it('should migrate e2e tests correctly', async () => {
+        await migrateFromAngularCli(tree, { name: 'myApp' });
+
+        expect(tree.exists('e2e')).toBe(false);
+        expect(tree.exists('apps/myApp-e2e/protractor.conf.js')).toBe(true);
+        expect(tree.exists('apps/myApp-e2e/tsconfig.json')).toBe(true);
+        expect(tree.exists('apps/myApp-e2e/.eslintrc.json')).toBe(true);
+      });
     });
 
     describe('cypress', () => {
@@ -581,6 +662,10 @@ describe('workspace', () => {
         expect(
           readJson(tree, '/apps/myApp-e2e/cypress.json')
         ).toMatchSnapshot();
+        expect(tree.exists('/apps/myApp-e2e/.eslintrc.json')).toBe(true);
+        expect(
+          readJson(tree, '/apps/myApp-e2e/.eslintrc.json')
+        ).toMatchSnapshot();
         expect(tree.exists('/apps/myApp-e2e/src/fixtures/example.json')).toBe(
           true
         );
@@ -607,10 +692,21 @@ describe('workspace', () => {
         expect(tree.exists('cypress')).toBe(false);
         expect(tree.exists('/apps/myApp-e2e/tsconfig.json')).toBe(true);
         expect(tree.exists('/apps/myApp-e2e/cypress.json')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/.eslintrc.json')).toBe(true);
         expect(
           readJson(tree, '/apps/myApp-e2e/cypress.json')
         ).toMatchSnapshot();
-        expect(tree.exists('/apps/myApp-e2e/src')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/src/fixtures/example.json')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/integration/spec.ts')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/plugins/index.ts')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/src/support/commands.ts')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/support/index.ts')).toBe(true);
         expect(readProjectConfiguration(tree, 'myApp-e2e')).toMatchSnapshot();
       });
 
@@ -626,8 +722,48 @@ describe('workspace', () => {
         expect(tree.exists('cypress')).toBe(false);
         expect(tree.exists('/apps/myApp-e2e/tsconfig.json')).toBe(true);
         expect(tree.exists('/apps/myApp-e2e/cypress.json')).toBe(true);
-        expect(tree.exists('/apps/myApp-e2e/src')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/.eslintrc.json')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/src/fixtures/example.json')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/integration/spec.ts')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/plugins/index.ts')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/src/support/commands.ts')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/support/index.ts')).toBe(true);
         expect(readProjectConfiguration(tree, 'myApp-e2e')).toMatchSnapshot();
+      });
+
+      it('should work when eslint is not being used', async () => {
+        tree.delete('.eslintrc.json');
+        updateJson(tree, 'angular.json', (json) => {
+          delete json.projects.myApp.architect.lint;
+          return json;
+        });
+
+        await migrateFromAngularCli(tree, { name: 'myApp' });
+
+        expect(tree.exists('/apps/myApp-e2e/.eslintrc.json')).toBe(false);
+        expect(tree.exists('cypress.json')).toBe(false);
+        expect(tree.exists('cypress')).toBe(false);
+        expect(tree.exists('/apps/myApp-e2e/tsconfig.json')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/cypress.json')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/src/fixtures/example.json')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/integration/spec.ts')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/plugins/index.ts')).toBe(true);
+        expect(tree.exists('/apps/myApp-e2e/src/support/commands.ts')).toBe(
+          true
+        );
+        expect(tree.exists('/apps/myApp-e2e/src/support/index.ts')).toBe(true);
+        const project = readProjectConfiguration(tree, 'myApp-e2e');
+        expect(project.targets.lint).toBeUndefined();
       });
     });
   });

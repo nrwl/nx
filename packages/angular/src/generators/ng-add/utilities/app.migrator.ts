@@ -1,12 +1,15 @@
 import {
   joinPathFragments,
   offsetFromRoot,
+  readJson,
   Tree,
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { hasRulesRequiringTypeChecking } from '@nrwl/linter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import { basename } from 'path';
 import { GeneratorOptions } from '../schema';
 import { E2eProjectMigrator } from './e2e-project.migrator';
 import { ProjectMigrator } from './project.migrator';
@@ -31,12 +34,26 @@ export class AppMigrator extends ProjectMigrator {
     this.moveProjectFiles();
     await this.updateProjectConfiguration();
     this.updateTsConfigs();
-    // TODO: check later if it's still needed
-    this.updateProjectTsLint();
+    this.updateEsLintConfig();
   }
 
   validate(): ValidationResult {
-    // TODO: implement validation when multiple apps are supported
+    // TODO: properly return the validation results once we support multiple projects
+    if (
+      this.projectConfig.targets.lint &&
+      this.projectConfig.targets.lint.executor !==
+        '@angular-eslint/builder:lint'
+    ) {
+      throw new Error(
+        `The "${this.project.name}" project is using an unsupported executor "${this.projectConfig.targets.lint.executor}".`
+      );
+    }
+
+    const result = this.e2eMigrator.validate();
+    if (result) {
+      throw new Error(result);
+    }
+
     return null;
   }
 
@@ -63,9 +80,15 @@ export class AppMigrator extends ProjectMigrator {
     } else {
       // there could still be a karma.conf.js file in the root
       // so move to new location
-      if (this.tree.exists('karma.conf.js')) {
-        console.info('No test configuration, but root Karma config file found');
-        this.moveProjectRootFile('karma.conf.js');
+      const karmaConfig = joinPathFragments(
+        this.project.oldRoot,
+        'karma.conf.js'
+      );
+      if (this.tree.exists(karmaConfig)) {
+        this.logger.info(
+          'No "test" target was found, but a root Karma config file was found in the project root. The file will be moved to the new location.'
+        );
+        this.moveProjectRootFile(karmaConfig);
       }
     }
 
@@ -73,6 +96,26 @@ export class AppMigrator extends ProjectMigrator {
       this.moveProjectRootFile(
         this.projectConfig.targets.server.options.tsConfig
       );
+    }
+
+    if (this.projectConfig.targets.lint) {
+      this.moveProjectRootFile(
+        this.projectConfig.targets.lint.options.eslintConfig ??
+          joinPathFragments(this.project.oldRoot, '.eslintrc.json')
+      );
+    } else {
+      // there could still be a .eslintrc.json file in the root
+      // so move to new location
+      const eslintConfig = joinPathFragments(
+        this.project.oldRoot,
+        '.eslintrc.json'
+      );
+      if (this.tree.exists(eslintConfig)) {
+        this.logger.info(
+          'No "lint" target was found, but an ESLint config file was found in the project root. The file will be moved to the new location.'
+        );
+        this.moveProjectRootFile(eslintConfig);
+      }
     }
 
     this.moveDir(this.project.oldSourceRoot, this.project.newSourceRoot);
@@ -113,10 +156,27 @@ export class AppMigrator extends ProjectMigrator {
     }
 
     if (this.projectConfig.targets.lint) {
-      this.projectConfig.targets.lint.options.tsConfig = [
-        joinPathFragments(this.project.newRoot, 'tsconfig.app.json'),
-        joinPathFragments(this.project.newRoot, 'tsconfig.spec.json'),
-      ];
+      this.projectConfig.targets.lint.executor = '@nrwl/linter:eslint';
+      const lintOptions = this.projectConfig.targets.lint.options;
+      lintOptions.eslintConfig =
+        lintOptions.eslintConfig &&
+        joinPathFragments(
+          this.project.newRoot,
+          basename(lintOptions.eslintConfig)
+        );
+      lintOptions.lintFilePatterns =
+        lintOptions.lintFilePatterns &&
+        lintOptions.lintFilePatterns.map((pattern) =>
+          this.convertAsset(pattern)
+        );
+
+      const eslintConfigPath =
+        lintOptions.eslintConfig ??
+        joinPathFragments(this.project.newRoot, '.eslintrc.json');
+      const eslintConfig = readJson(this.tree, eslintConfigPath);
+      if (hasRulesRequiringTypeChecking(eslintConfig)) {
+        lintOptions.hasTypeAwareRules = true;
+      }
     }
 
     if (this.projectConfig.targets.server) {
@@ -179,13 +239,61 @@ export class AppMigrator extends ProjectMigrator {
     }
   }
 
-  private updateProjectTsLint(): void {
-    if (this.tree.exists(`${this.project.newRoot}/tslint.json`)) {
-      updateJson(this.tree, `${this.project.newRoot}/tslint.json`, (json) => {
-        json.extends = '../../tslint.json';
-        return json;
-      });
+  private updateEsLintConfig(): void {
+    const eslintConfigPath =
+      this.projectConfig.targets.lint?.options?.eslintConfig ??
+      joinPathFragments(this.project.newRoot, '.eslintrc.json');
+
+    if (!this.tree.exists(eslintConfigPath)) {
+      return;
     }
+
+    updateJson(this.tree, eslintConfigPath, (json) => {
+      delete json.root;
+      json.ignorePatterns = ['!**/*'];
+
+      const rootEsLintConfigRelativePath = joinPathFragments(
+        offsetFromRoot(this.projectConfig.root),
+        '.eslintrc.json'
+      );
+      if (Array.isArray(json.extends)) {
+        json.extends = json.extends.map((extend: string) =>
+          this.convertEsLintConfigExtendToNewPath(extend)
+        );
+
+        // it might have not been extending from the root config, make sure it does
+        if (!json.extends.includes(rootEsLintConfigRelativePath)) {
+          json.extends.push(rootEsLintConfigRelativePath);
+        }
+      } else {
+        json.extends = rootEsLintConfigRelativePath;
+      }
+
+      json.overrides?.forEach((override) => {
+        if (!override.parserOptions?.project) {
+          return;
+        }
+
+        override.parserOptions.project = [
+          `${this.projectConfig.root}/tsconfig.*?.json`,
+        ];
+      });
+
+      return json;
+    });
+  }
+
+  private convertEsLintConfigExtendToNewPath(pathToFile: string): string {
+    if (!pathToFile.startsWith('..')) {
+      // we only need to adjust paths that are on a different directory,
+      // files in the same directory should be moved together
+      return pathToFile;
+    }
+
+    return joinPathFragments(
+      offsetFromRoot(this.projectConfig.root),
+      basename(pathToFile)
+    );
   }
 
   private convertBuildOptions(buildOptions: any): void {

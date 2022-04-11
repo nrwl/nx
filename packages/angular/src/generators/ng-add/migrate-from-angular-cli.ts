@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
+  readJson,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
@@ -12,13 +13,15 @@ import { getAllProjects } from './utilities/get-all-projects';
 import { normalizeOptions } from './utilities/normalize-options';
 import { ProjectMigrator } from './utilities/project.migrator';
 import {
-  createWorkspaceFiles,
+  cleanupEsLintPackages,
   createNxJson,
   createRootKarmaConfig,
+  createWorkspaceFiles,
   decorateAngularCli,
+  getWorkspaceCapabilities,
   updatePackageJson,
+  updateRootEsLintConfig,
   updateRootTsConfig,
-  updateTsLint,
   updateWorkspaceConfigDefaults,
   validateWorkspace,
 } from './utilities/workspace';
@@ -49,8 +52,24 @@ export async function migrateFromAngularCli(
       // TODO: add libraries migrator when support for libs is added
     ];
 
-    // TODO: validate all projects and collect errors before migrating when
-    // multiple projects are supported
+    // validate all projects
+    for (const migrator of migrators) {
+      // TODO: validator will throw on their own until multiple project are supported
+      migrator.validate();
+    }
+
+    const workspaceCapabilities = getWorkspaceCapabilities(tree, projects);
+
+    /**
+     * Keep a copy of the root eslint config to restore it later. We need to
+     * do this because the root config can also be the config for the app at
+     * the root of the Angular CLI workspace and it will be moved as part of
+     * the app migration.
+     */
+    let eslintConfig =
+      workspaceCapabilities.eslint && tree.exists('.eslintrc.json')
+        ? readJson(tree, '.eslintrc.json')
+        : undefined;
 
     // create and update root files and configurations
     updateJson(tree, 'angular.json', (json) => ({
@@ -63,8 +82,6 @@ export async function migrateFromAngularCli(
     updateRootTsConfig(tree);
     updatePackageJson(tree);
     decorateAngularCli(tree);
-    // TODO: check later if it's still needed
-    updateTsLint(tree);
     await createWorkspaceFiles(tree);
 
     // migrate all projects
@@ -72,10 +89,18 @@ export async function migrateFromAngularCli(
       await migrator.migrate();
     }
 
-    // needs to be done last because the Angular CLI workspace can have one
-    // in the root for the root application, so we wait until that root Karma
-    // config is moved when the projects are migrated before creating this one
-    createRootKarmaConfig(tree);
+    /**
+     * This needs to be done last because the Angular CLI workspace can have
+     * these files in the root for the root application, so we wait until
+     * those root config files are moved when the projects are migrated.
+     */
+    if (workspaceCapabilities.karma) {
+      createRootKarmaConfig(tree);
+    }
+    if (workspaceCapabilities.eslint) {
+      updateRootEsLintConfig(tree, eslintConfig);
+      cleanupEsLintPackages(tree);
+    }
 
     await formatFiles(tree);
   }

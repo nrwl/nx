@@ -436,7 +436,7 @@ export function runNgAdd(
   try {
     const pmc = getPackageManagerCommand();
     packageInstall(packageName, null, version);
-    return execSync(pmc.run(`ng g ${packageName}:ng-add`, command), {
+    return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
       env: { ...(opts.env || process.env) },
       encoding: 'utf-8',

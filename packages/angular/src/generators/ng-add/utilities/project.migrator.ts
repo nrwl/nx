@@ -6,6 +6,7 @@ import {
 } from '@nrwl/devkit';
 import { basename } from 'path';
 import { GeneratorOptions } from '../schema';
+import { Logger } from './logger';
 import { MigrationProjectConfiguration, ValidationResult } from './types';
 
 export abstract class ProjectMigrator {
@@ -17,6 +18,7 @@ export abstract class ProjectMigrator {
     newRoot: string;
     newSourceRoot: string;
   };
+  protected logger: Logger;
 
   constructor(
     protected readonly tree: Tree,
@@ -33,6 +35,8 @@ export abstract class ProjectMigrator {
       newRoot: `${rootDir}/${project.name}`,
       newSourceRoot: `${rootDir}/${project.name}/src`,
     };
+
+    this.logger = new Logger(this.project.name);
   }
 
   abstract migrate(): Promise<void>;

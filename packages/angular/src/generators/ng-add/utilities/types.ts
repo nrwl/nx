@@ -10,4 +10,9 @@ export type WorkspaceProjects = {
   libs: MigrationProjectConfiguration[];
 };
 
+export type WorkspaceCapabilities = {
+  karma: boolean;
+  eslint: boolean;
+};
+
 export type ValidationResult = string | null;

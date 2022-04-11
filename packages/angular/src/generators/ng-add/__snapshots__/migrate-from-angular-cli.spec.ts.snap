@@ -105,6 +105,17 @@ Object {
         "watch": true,
       },
     },
+    "lint": Object {
+      "executor": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/myApp-e2e/**/*.{js,ts}",
+        ],
+      },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
+    },
   },
 }
 `;
@@ -132,6 +143,29 @@ Object {
 `;
 
 exports[`workspace move to nx layout cypress should migrate e2e tests correctly 3`] = `
+Object {
+  "extends": Array [
+    "plugin:cypress/recommended",
+    "../../.eslintrc.json",
+  ],
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+  ],
+}
+`;
+
+exports[`workspace move to nx layout cypress should migrate e2e tests correctly 4`] = `
 Object {
   "implicitDependencies": Array [
     "myApp",
@@ -172,6 +206,17 @@ Object {
         "devServerTarget": "ng-cypress:serve",
         "watch": true,
       },
+    },
+    "lint": Object {
+      "executor": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/myApp-e2e/**/*.{js,ts}",
+        ],
+      },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
   },
 }
@@ -234,7 +279,96 @@ Object {
         "watch": true,
       },
     },
+    "lint": Object {
+      "executor": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/myApp-e2e/**/*.{js,ts}",
+        ],
+      },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
+    },
   },
+}
+`;
+
+exports[`workspace move to nx layout should create a root eslint config 1`] = `
+Object {
+  "ignorePatterns": Array [
+    "**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "extends": Array [
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": Array [
+        "*.ts",
+      ],
+      "parserOptions": Object {
+        "createDefaultProgram": true,
+      },
+      "rules": Object {
+        "@angular-eslint/component-selector": Array [
+          "error",
+          Object {
+            "prefix": "app",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": Array [
+          "error",
+          Object {
+            "prefix": "app",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@angular-eslint/template/recommended",
+      ],
+      "files": Array [
+        "*.html",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {
+        "@nrwl/nx/enforce-module-boundaries": Array [
+          "error",
+          Object {
+            "allow": Array [],
+            "depConstraints": Array [
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "*",
+                ],
+                "sourceTag": "*",
+              },
+            ],
+            "enforceBuildableLibDependency": true,
+          },
+        ],
+      },
+    },
+  ],
+  "plugins": Array [
+    "@nrwl/nx",
+  ],
+  "root": true,
 }
 `;
 
@@ -279,6 +413,59 @@ Object {
 }
 `;
 
+exports[`workspace move to nx layout should move the project eslint config 1`] = `
+Object {
+  "extends": "../../.eslintrc.json",
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "extends": Array [
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": Array [
+        "*.ts",
+      ],
+      "parserOptions": Object {
+        "createDefaultProgram": true,
+        "project": Array [
+          "apps/myApp/tsconfig.*?.json",
+        ],
+      },
+      "rules": Object {
+        "@angular-eslint/component-selector": Array [
+          "error",
+          Object {
+            "prefix": "app",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": Array [
+          "error",
+          Object {
+            "prefix": "app",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@angular-eslint/template/recommended",
+      ],
+      "files": Array [
+        "*.html",
+      ],
+      "rules": Object {},
+    },
+  ],
+}
+`;
+
 exports[`workspace move to nx layout should update project configuration 1`] = `
 Object {
   "root": "apps/myApp",
@@ -291,10 +478,11 @@ Object {
       },
     },
     "lint": Object {
+      "executor": "@nrwl/linter:eslint",
       "options": Object {
-        "tsConfig": Array [
-          "apps/myApp/tsconfig.app.json",
-          "apps/myApp/tsconfig.spec.json",
+        "lintFilePatterns": Array [
+          "apps/myApp/src/**/*.ts",
+          "apps/myApp/src/**/*.html",
         ],
       },
     },
