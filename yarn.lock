@@ -2806,10 +2806,10 @@
     url-loader "^4.1.1"
     webpack-merge "^5.8.0"
 
-"@nrwl/nx-cloud@13.2.2":
-  version "13.2.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-13.2.2.tgz#9eee1e9ea0b0c3a3a805208405fb6341a02123b4"
-  integrity sha512-ryGE3JBkSGie0Oy+hFHfiYVNt1BQlNGa3Q7RjeZjILFyNFXkSFzufWYCt1gIRiGlQ7+Q48t1m6gLi2afElNGmg==
+"@nrwl/nx-cloud@13.3.0-beta.1":
+  version "13.3.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-13.3.0-beta.1.tgz#f977df1c47f791ac9c80f9b088dcb53cf98867e6"
+  integrity sha512-77xnG7y/f0qgdHzOXvyi0FUjO54sv/nYmbMqgCc6zVUBxhRGFhpeE8fI4Unurr0iUf1FRrMGjaGWzzmugUVG7w==
   dependencies:
     axios "^0.21.1"
     chalk "4.1.0"

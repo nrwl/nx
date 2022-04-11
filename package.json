@@ -63,7 +63,7 @@
     "@nrwl/eslint-plugin-nx": "13.10.0",
     "@nrwl/jest": "13.10.0",
     "@nrwl/next": "13.10.0",
-    "@nrwl/nx-cloud": "13.2.2",
+    "@nrwl/nx-cloud": "13.3.0-beta.1",
     "@nrwl/react": "13.10.0",
     "@nrwl/web": "13.10.0",
     "@parcel/watcher": "2.0.4",
