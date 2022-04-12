@@ -1,6 +1,7 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import {
   DevServerBuilderOptions,
+  DevServerBuilderOutput,
   serveWebpackBrowser,
 } from '@angular-devkit/build-angular/src/builders/dev-server';
 import { JsonObject } from '@angular-devkit/core';
@@ -8,6 +9,7 @@ import {
   joinPathFragments,
   parseTargetString,
   readAllWorkspaceConfiguration,
+  readCachedProjectGraph,
   Workspaces,
 } from '@nrwl/devkit';
 import { existsSync } from 'fs';
@@ -15,6 +17,15 @@ import { merge } from 'webpack-merge';
 import { resolveCustomWebpackConfig } from '../utilities/webpack';
 import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
+import {
+  calculateProjectDependencies,
+  checkDependentProjectsHaveBeenBuilt,
+  createTmpTsConfig,
+  DependentBuildableProjectNode,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { join } from 'path';
+import { Observable, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 export function executeWebpackServerBuilder(
   schema: Schema,
@@ -40,9 +51,47 @@ export function executeWebpackServerBuilder(
     ? buildTarget.configurations[buildTarget.defaultConfiguration]
     : buildTarget.options;
 
+  const buildLibsFromSource: boolean =
+    selectedConfiguration.buildLibsFromSource ??
+    buildTarget.options.buildLibsFromSource ??
+    true;
+
+  let dependencies: DependentBuildableProjectNode[];
+
+  if (!buildLibsFromSource) {
+    const result = calculateProjectDependencies(
+      readCachedProjectGraph(),
+      context.workspaceRoot,
+      context.target.project,
+      context.target.target,
+      context.target.configuration
+    );
+    dependencies = result.dependencies;
+
+    buildTarget.options.tsConfig = createTmpTsConfig(
+      join(context.workspaceRoot, buildTarget.options.tsConfig),
+      context.workspaceRoot,
+      result.target.data.root,
+      dependencies
+    );
+    process.env.NX_TSCONFIG_PATH = buildTarget.options.tsConfig;
+
+    const originalGetTargetOptions = context.getTargetOptions;
+
+    context.getTargetOptions = async (target) => {
+      const options = await originalGetTargetOptions(target);
+
+      options.tsConfig = buildTarget.options.tsConfig;
+
+      return options;
+    };
+  }
+
   const customWebpackConfig: { path: string } =
     selectedConfiguration.customWebpackConfig ??
     buildTarget.options.customWebpackConfig;
+
+  let webpackBrowser$: Observable<DevServerBuilderOutput>;
 
   if (customWebpackConfig && customWebpackConfig.path) {
     const pathToWebpackConfig = joinPathFragments(
@@ -51,9 +100,9 @@ export function executeWebpackServerBuilder(
     );
 
     if (existsSync(pathToWebpackConfig)) {
-      return serveWebpackBrowser(
+      webpackBrowser$ = serveWebpackBrowser(
         options as DevServerBuilderOptions,
-        context as any,
+        context,
         {
           webpackConfiguration: async (baseWebpackConfig) => {
             const customWebpackConfiguration = resolveCustomWebpackConfig(
@@ -84,11 +133,31 @@ export function executeWebpackServerBuilder(
         `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
       );
     }
+  } else {
+    webpackBrowser$ = serveWebpackBrowser(
+      options as DevServerBuilderOptions,
+      context
+    );
   }
 
-  return serveWebpackBrowser(
-    options as DevServerBuilderOptions,
-    context as any
+  return of(
+    !buildLibsFromSource
+      ? checkDependentProjectsHaveBeenBuilt(
+          context.workspaceRoot,
+          context.target.project,
+          context.target.target,
+          dependencies
+        )
+      : true
+  ).pipe(
+    switchMap((result) => {
+      if (result) {
+        return webpackBrowser$;
+      } else {
+        // just pass on the result
+        return of({ success: false });
+      }
+    })
   );
 }
 
