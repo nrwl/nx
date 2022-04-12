@@ -1,21 +1,21 @@
 {
-  "root": "nx-dev/feature-conf",
-  "sourceRoot": "nx-dev/feature-conf/src",
+  "root": "nx-dev/ui-conference",
+  "sourceRoot": "nx-dev/ui-conference/src",
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:feature"],
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
-        "lintFilePatterns": ["nx-dev/feature-conf/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["nx-dev/ui-conference/**/*.{ts,tsx,js,jsx}"]
       },
       "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/feature-conf"],
+      "outputs": ["coverage/nx-dev/ui-conference"],
       "options": {
-        "jestConfig": "nx-dev/feature-conf/jest.config.js",
+        "jestConfig": "nx-dev/ui-conference/jest.config.js",
         "passWithNoTests": true
       }
     }

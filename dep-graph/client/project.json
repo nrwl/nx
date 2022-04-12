@@ -15,7 +15,6 @@
         "styles": ["dep-graph/client/src/styles.scss"],
         "scripts": [],
         "assets": [],
-
         "webpackConfig": "dep-graph/client/webpack.config.js"
       },
       "configurations": {
