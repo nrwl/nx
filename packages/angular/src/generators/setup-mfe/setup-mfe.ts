@@ -6,7 +6,6 @@ import { readProjectConfiguration, formatFiles } from '@nrwl/devkit';
 import {
   addCypressOnErrorWorkaround,
   addEntryModule,
-  addImplicitDeps,
   addRemoteToHost,
   changeBuildTarget,
   fixBootstrap,
@@ -30,7 +29,6 @@ export async function setupMfe(tree: Tree, options: Schema) {
   generateWebpackConfig(tree, options, projectConfig.root, remotesWithPorts);
 
   addEntryModule(tree, options, projectConfig.root);
-  addImplicitDeps(tree, options);
   changeBuildTarget(tree, options);
   updateTsConfigTarget(tree, options);
   setupServeTarget(tree, options);
