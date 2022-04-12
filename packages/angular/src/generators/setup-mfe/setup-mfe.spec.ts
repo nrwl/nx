@@ -135,22 +135,6 @@ describe('Init MFE', () => {
 
     expect(mfeConfigContents).toContain(`'remote1'`);
   });
-  it('should update the implicit dependencies of the host when --remotes flag supplied', async () => {
-    // ACT
-    await setupMfe(tree, {
-      appName: 'app1',
-      mfeType: 'host',
-      remotes: ['remote1'],
-    });
-
-    // ASSERT
-    const projectConfig: ProjectConfiguration = readProjectConfiguration(
-      tree,
-      'app1'
-    );
-
-    expect(projectConfig.implicitDependencies).toContain('remote1');
-  });
 
   it('should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it', async () => {
     // ARRANGE
