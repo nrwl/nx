@@ -413,6 +413,23 @@ describe('schematic:cypress-project', () => {
           expect(projectConfig.tags).toEqual([]);
         });
       });
+
+      it('should not throw an error when --project does not have targets', async () => {
+        const projectConf = readProjectConfiguration(tree, 'my-app');
+        delete projectConf.targets;
+
+        updateProjectConfiguration(tree, 'my-app', projectConf);
+        await cypressProjectGenerator(tree, {
+          name: 'my-app-e2e',
+          project: 'my-app',
+          linter: Linter.EsLint,
+        });
+
+        const projectConfig = readProjectConfiguration(tree, 'my-app-e2e');
+        expect(projectConfig.targets['e2e'].options.devServerTarget).toEqual(
+          'my-app:serve'
+        );
+      });
     });
 
     describe('--linter', () => {
