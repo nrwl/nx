@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   GeneratorCallback,
+  removeDependenciesFromPackageJson,
   stripIndents,
   Tree,
   updateJson,
@@ -22,16 +23,6 @@ interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 const schemaDefaults = {
   compiler: 'tsc',
 } as const;
-
-function removeNrwlJestFromDeps(host: Tree) {
-  updateJson(host, 'package.json', (json) => {
-    // check whether updating the package.json is necessary
-    if (json.dependencies && json.dependencies['@nrwl/jest']) {
-      delete json.dependencies['@nrwl/jest'];
-    }
-    return json;
-  });
-}
 
 function createJestConfig(host: Tree) {
   if (!host.exists('jest.config.js')) {
@@ -103,8 +94,8 @@ export function jestInitGenerator(tree: Tree, schema: JestInitSchema) {
 
   let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {
+    removeDependenciesFromPackageJson(tree, ['@nrwl/jest'], []);
     installTask = updateDependencies(tree, options);
-    removeNrwlJestFromDeps(tree);
   }
 
   updateExtensions(tree);

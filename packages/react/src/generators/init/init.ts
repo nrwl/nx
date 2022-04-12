@@ -1,28 +1,28 @@
-import { InitSchema } from './schema';
+import { cypressInitGenerator } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   GeneratorCallback,
   readWorkspaceConfiguration,
+  removeDependenciesFromPackageJson,
   Tree,
-  updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
-import { cypressInitGenerator } from '@nrwl/cypress';
 import { webInitGenerator } from '@nrwl/web';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import {
   nxVersion,
   reactDomVersion,
+  reactTestRendererVersion,
   reactVersion,
+  testingLibraryReactHooksVersion,
   testingLibraryReactVersion,
   typesReactDomVersion,
   typesReactVersion,
-  testingLibraryReactHooksVersion,
-  reactTestRendererVersion,
 } from '../../utils/versions';
+import { InitSchema } from './schema';
 
 function setDefault(host: Tree) {
   const workspace = readWorkspaceConfiguration(host);
@@ -45,12 +45,7 @@ function setDefault(host: Tree) {
 }
 
 function updateDependencies(host: Tree) {
-  updateJson(host, 'package.json', (json) => {
-    if (json.dependencies && json.dependencies['@nrwl/react']) {
-      delete json.dependencies['@nrwl/react'];
-    }
-    return json;
-  });
+  removeDependenciesFromPackageJson(host, ['@nrwl/react'], []);
 
   return addDependenciesToPackageJson(
     host,

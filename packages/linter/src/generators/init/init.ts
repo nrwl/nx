@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  removeDependenciesFromPackageJson,
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
@@ -169,13 +170,7 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
   }
 
   if (!options.skipPackageJson) {
-    updateJson(tree, 'package.json', (json) => {
-      json.dependencies ||= {};
-
-      delete json.dependencies['@nrwl/linter'];
-
-      return json;
-    });
+    removeDependenciesFromPackageJson(tree, ['@nrwl/linter'], []);
   }
 
   writeJson(tree, '.eslintrc.json', globalEsLintConfiguration);
