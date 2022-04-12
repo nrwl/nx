@@ -72,11 +72,13 @@ describe('Cli', () => {
 
     const genHelp = runCLI(`g @nrwl/web:app --help`);
     expect(genHelp).toContain(
-      'The file extension to be used for style files. (default: css)'
+      'Find more information and examples at: https://nx.dev/packages/web/generators/application'
     );
 
     const buildHelp = runCLI(`build ${myapp} --help`);
-    expect(buildHelp).toContain('The name of the main entry-point file.');
+    expect(buildHelp).toContain(
+      'Find more information and examples at: https://nx.dev/packages/web/executors/webpack'
+    );
 
     const affectedHelp = runCLI(`affected --help`);
     expect(affectedHelp).toContain('Run target for affected projects');
