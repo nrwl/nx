@@ -14,7 +14,7 @@ export function SponsorCard(data: Sponsor) {
           className="cursor-pointer"
           href={data.linkTarget}
           target="_blank"
-          rel="nofollow"
+          rel="noreferrer"
         >
           <Image src={data.imageUrl} alt={data.name} width={130} height={130} />
         </a>

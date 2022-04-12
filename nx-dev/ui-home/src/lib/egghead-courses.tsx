@@ -46,7 +46,7 @@ export function EggheadCourses(): ReactComponentElement<any> {
             <Link href="https://egghead.io/playlists/scale-react-development-with-nx-4038?utm_source=nx.dev">
               <a
                 title="Start learning how to create React application that scale with Nx"
-                rel="nofollow"
+                rel="noreferrer"
                 target="_blank"
                 className="text-blue-nx-base mt-8 inline-flex items-center rounded-md border border-transparent bg-white px-5 py-3 text-base font-medium shadow hover:bg-gray-100"
               >
