@@ -3,6 +3,7 @@
   "$id": "NxAngularComponentStoryGenerator",
   "type": "object",
   "cli": "nx",
+  "description": "Creates a `stories.ts` file for an Angular component.",
   "properties": {
     "projectPath": {
       "type": "string",

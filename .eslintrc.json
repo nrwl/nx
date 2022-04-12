@@ -5,10 +5,18 @@
     "node": true
   },
   "ignorePatterns": ["**/*.ts"],
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "@nrwl/nx"],
   "extends": [],
   "rules": {
     "@typescript-eslint/explicit-module-boundary-types": "off"
   },
-  "overrides": []
+  "overrides": [
+    {
+      "files": ["**/executors/**/schema.json", "**/generators/**/schema.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nrwl/nx/workspace/valid-schema-description": "error"
+      }
+    }
+  ]
 }

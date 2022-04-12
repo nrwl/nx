@@ -3,6 +3,7 @@
   "$id": "NxWebInit",
   "cli": "nx",
   "title": "Init Web Plugin",
+  "description": "Init Web Plugin.",
   "type": "object",
   "properties": {
     "unitTestRunner": {

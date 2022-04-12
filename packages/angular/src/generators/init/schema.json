@@ -3,7 +3,7 @@
   "$id": "SchematicsAngularModuleInit",
   "cli": "nx",
   "title": "Init Angular Plugin",
-  "description": "Initializes the `@nrwl/angular` plugin. NOTE: Does not work in the `--dry-run` mode",
+  "description": "Initializes the `@nrwl/angular` plugin. NOTE: Does not work in the `--dry-run` mode.",
   "type": "object",
   "properties": {
     "unitTestRunner": {

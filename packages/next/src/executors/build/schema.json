@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "title": "Next Build",
-  "description": "Build a Next.js app",
+  "description": "Build a Next.js app.",
   "type": "object",
   "properties": {
     "root": {

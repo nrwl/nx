@@ -12,7 +12,9 @@
           "packages/react-native/**/*.spec.tsx",
           "packages/react-native/**/*.spec.js",
           "packages/react-native/**/*.spec.jsx",
-          "packages/react-native/**/*.d.ts"
+          "packages/react-native/**/*.d.ts",
+          "packages/react-native/**/executors/**/schema.json",
+          "packages/react-native/**/generators/**/schema.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

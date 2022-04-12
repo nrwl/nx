@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxAngularAddLintingGenerator",
   "title": "Add linting to an Angular project.",
+  "description": "Adds linting configuration to an Angular project.",
   "cli": "nx",
   "type": "object",
   "properties": {

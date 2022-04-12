@@ -4,7 +4,7 @@
   "title": "Angular Component Schema",
   "cli": "nx",
   "type": "object",
-  "description": "Creates a new, generic component definition in the given or default project.",
+  "description": "Creates a new, generic Angular component definition in the given or default project.",
   "additionalProperties": false,
   "properties": {
     "path": {

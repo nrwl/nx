@@ -71,7 +71,9 @@
           "packages/cypress/**/*.spec.tsx",
           "packages/cypress/**/*.spec.js",
           "packages/cypress/**/*.spec.jsx",
-          "packages/cypress/**/*.d.ts"
+          "packages/cypress/**/*.d.ts",
+          "packages/cypress/**/executors/**/schema.json",
+          "packages/cypress/**/generators/**/schema.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

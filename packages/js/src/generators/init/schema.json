@@ -3,5 +3,5 @@
   "$id": "NxTypescriptInit",
   "cli": "nx",
   "title": "Init nrwl/js",
-  "description": "Init generator placeholder for nrwl/js"
+  "description": "Init generator placeholder for nrwl/js."
 }

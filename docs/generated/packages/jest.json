@@ -45,7 +45,7 @@
         "$id": "NxJestProject",
         "cli": "nx",
         "title": "Add Jest Configuration to a project",
-        "description": "Add Jest Configuration to a project",
+        "description": "Add Jest Configuration to a project.",
         "type": "object",
         "properties": {
           "project": {

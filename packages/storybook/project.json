@@ -82,7 +82,9 @@
           "packages/storybook/**/*.spec.tsx",
           "packages/storybook/**/*.spec.js",
           "packages/storybook/**/*.spec.jsx",
-          "packages/storybook/**/*.d.ts"
+          "packages/storybook/**/*.d.ts",
+          "packages/storybook/**/executors/**/schema.json",
+          "packages/storybook/**/generators/**/schema.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

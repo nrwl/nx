@@ -205,7 +205,6 @@
           },
           "rootDir": {
             "type": "string",
-            "alias": "srcRootForCompilationRoot",
             "description": "Sets the `rootDir` for TypeScript compilation. When not defined, it uses the project's root property, or `srcRootForCompilationRoot` if it is defined."
           },
           "testEnvironment": {

@@ -3,7 +3,7 @@
   "cli": "nx",
   "$id": "NxReactLibrary",
   "title": "Create a React Library",
-  "description": "Create a React Library for an Nx workspace",
+  "description": "Create a React Library for an Nx workspace.",
   "type": "object",
   "examples": [
     {

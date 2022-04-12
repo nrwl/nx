@@ -3,7 +3,7 @@
   "$id": "NxAngularConvertTSLintToESLintGenerator",
   "cli": "nx",
   "title": "Convert an Angular project from TSLint to ESLint",
-  "description": "Convert an Angular project from TSLint to ESLint. NOTE: Does not work in `--dry-run mode`",
+  "description": "Convert an Angular project from TSLint to ESLint. NOTE: Does not work in `--dry-run mode`.",
   "examples": [
     {
       "command": "nx g convert-tslint-to-eslint myapp",

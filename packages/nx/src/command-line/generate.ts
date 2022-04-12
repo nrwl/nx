@@ -95,9 +95,14 @@ function readDefaultCollection(nxConfig: NxJsonConfiguration) {
   return nxConfig.cli ? nxConfig.cli.defaultCollection : null;
 }
 
-export function printGenHelp(opts: GenerateOptions, schema: Schema) {
+export function printGenHelp(
+  opts: GenerateOptions,
+  schema: Schema,
+  normalizedGeneratorName: string,
+  aliases: string[]
+) {
   printHelp(
-    `nx generate ${opts.collectionName}:${opts.generatorName}`,
+    `generate ${opts.collectionName}:${normalizedGeneratorName}`,
     {
       ...schema,
       properties: schema.properties,
@@ -105,7 +110,8 @@ export function printGenHelp(opts: GenerateOptions, schema: Schema) {
     {
       mode: 'generate',
       plugin: opts.collectionName,
-      entity: opts.generatorName,
+      entity: normalizedGeneratorName,
+      aliases,
     }
   );
 }
@@ -170,11 +176,11 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       readDefaultCollection(workspaceDefinition),
       'generate'
     );
-    const { normalizedGeneratorName, schema, implementationFactory } =
+    const { normalizedGeneratorName, schema, implementationFactory, aliases } =
       ws.readGenerator(opts.collectionName, opts.generatorName);
 
     if (opts.help) {
-      printGenHelp(opts, schema);
+      printGenHelp(opts, schema, normalizedGeneratorName, aliases);
       return 0;
     }
 

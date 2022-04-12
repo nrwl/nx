@@ -3,6 +3,7 @@
   "cli": "nx",
   "$id": "NxNextApp",
   "title": "Create a Next.js Application for Nx",
+  "description": "Create a Next.js Application for Nx.",
   "examples": [
     {
       "command": "nx g app myapp --directory=myorg",

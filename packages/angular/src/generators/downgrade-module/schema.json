@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxDowngradeModuleGenerator",
   "title": "Generates downgradeModule setup.",
-  "description": "Sets up a Downgrade Module.",
+  "description": "Sets up a Downgrade Module for using AngularJS and Angular.",
   "cli": "nx",
   "type": "object",
   "properties": {

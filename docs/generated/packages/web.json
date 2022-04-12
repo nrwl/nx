@@ -13,6 +13,7 @@
         "$id": "NxWebInit",
         "cli": "nx",
         "title": "Init Web Plugin",
+        "description": "Init Web Plugin.",
         "type": "object",
         "properties": {
           "unitTestRunner": {
@@ -148,7 +149,7 @@
       "implementation": "/packages/web/src/executors/webpack/webpack.impl.ts",
       "schema": {
         "title": "Webpack Executor",
-        "description": "Builds web applications using webpack",
+        "description": "Builds web applications using webpack.",
         "cli": "nx",
         "type": "object",
         "properties": {

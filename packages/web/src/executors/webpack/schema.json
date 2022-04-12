@@ -1,6 +1,6 @@
 {
   "title": "Webpack Executor",
-  "description": "Builds web applications using webpack",
+  "description": "Builds web applications using webpack.",
   "cli": "nx",
   "type": "object",
   "properties": {

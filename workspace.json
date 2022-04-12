@@ -34,6 +34,7 @@
     "e2e-workspace-create": "e2e/workspace-create",
     "e2e-workspace-integrations": "e2e/workspace-integrations",
     "eslint-plugin-nx": "packages/eslint-plugin-nx",
+    "eslint-rules": "tools/eslint-rules",
     "express": "packages/express",
     "jest": "packages/jest",
     "js": "packages/js",

@@ -12,6 +12,7 @@
         "$schema": "http://json-schema.org/schema",
         "$id": "NxAngularAddLintingGenerator",
         "title": "Add linting to an Angular project.",
+        "description": "Adds linting configuration to an Angular project.",
         "cli": "nx",
         "type": "object",
         "properties": {
@@ -61,6 +62,7 @@
         "$schema": "http://json-schema.org/schema",
         "$id": "GeneratorNxApp",
         "title": "Creates an Angular application.",
+        "description": "Creates an Angular application.",
         "type": "object",
         "cli": "nx",
         "properties": {
@@ -245,7 +247,7 @@
         "title": "Angular Component Schema",
         "cli": "nx",
         "type": "object",
-        "description": "Creates a new, generic component definition in the given or default project.",
+        "description": "Creates a new, generic Angular component definition in the given or default project.",
         "additionalProperties": false,
         "properties": {
           "path": {
@@ -355,6 +357,7 @@
         "$id": "NxAngularComponentCypressSpecGenerator",
         "type": "object",
         "cli": "nx",
+        "description": "Creates a Cypress spec for a UI component that has a story.",
         "properties": {
           "projectName": {
             "type": "string",
@@ -410,6 +413,7 @@
         "$id": "NxAngularComponentStoryGenerator",
         "type": "object",
         "cli": "nx",
+        "description": "Creates a `stories.ts` file for an Angular component.",
         "properties": {
           "projectPath": {
             "type": "string",
@@ -455,7 +459,7 @@
         "$id": "NxAngularConvertTSLintToESLintGenerator",
         "cli": "nx",
         "title": "Convert an Angular project from TSLint to ESLint",
-        "description": "Convert an Angular project from TSLint to ESLint. NOTE: Does not work in `--dry-run mode`",
+        "description": "Convert an Angular project from TSLint to ESLint. NOTE: Does not work in `--dry-run mode`.",
         "examples": [
           {
             "command": "nx g convert-tslint-to-eslint myapp",
@@ -513,7 +517,7 @@
         "$schema": "http://json-schema.org/schema",
         "$id": "NxDowngradeModuleGenerator",
         "title": "Generates downgradeModule setup.",
-        "description": "Sets up a Downgrade Module.",
+        "description": "Sets up a Downgrade Module for using AngularJS and Angular.",
         "cli": "nx",
         "type": "object",
         "properties": {
@@ -559,7 +563,7 @@
         "$id": "SchematicsAngularModuleInit",
         "cli": "nx",
         "title": "Init Angular Plugin",
-        "description": "Initializes the `@nrwl/angular` plugin. NOTE: Does not work in the `--dry-run` mode",
+        "description": "Initializes the `@nrwl/angular` plugin. NOTE: Does not work in the `--dry-run` mode.",
         "type": "object",
         "properties": {
           "unitTestRunner": {
@@ -1087,7 +1091,7 @@
         "cli": "nx",
         "title": "Convert to withModuleFederation Generator Options Schema",
         "type": "object",
-        "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_",
+        "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_.",
         "additionalProperties": false,
         "properties": {
           "project": {
@@ -1113,7 +1117,7 @@
         "$id": "NxMFEHost",
         "cli": "nx",
         "title": "Nx MFE Host Application",
-        "description": "Create an Angular Host Micro Frontend Application",
+        "description": "Create an Angular Host Micro Frontend Application.",
         "type": "object",
         "examples": [
           {
@@ -1433,7 +1437,7 @@
         "cli": "nx",
         "title": "SCAM Generator Options Schema",
         "type": "object",
-        "description": "Creates a new, generic component definition in the given or default project.",
+        "description": "Creates a new, generic Angular component definition in the given or default project.",
         "additionalProperties": false,
         "properties": {
           "path": {
@@ -1553,7 +1557,7 @@
         "cli": "nx",
         "title": "SCAM Directive Generator Options Schema",
         "type": "object",
-        "description": "Creates a new, generic directive definition in the given or default project.",
+        "description": "Creates a new, generic Angular directive definition in the given or default project.",
         "additionalProperties": false,
         "properties": {
           "path": {
@@ -1626,7 +1630,7 @@
         "cli": "nx",
         "title": "SCAM Pipe Generator Options Schema",
         "type": "object",
-        "description": "Creates a new, generic pipe definition in the given or default project.",
+        "description": "Creates a new, generic Angular pipe definition in the given or default project.",
         "additionalProperties": false,
         "properties": {
           "path": {
@@ -1798,7 +1802,7 @@
         "$schema": "http://json-schema.org/schema",
         "$id": "NxAngularStorybookStoriesGenerator",
         "title": "Create Storybook stories/specs",
-        "description": "Creates Storybook stories/specs for all components declared in a project.",
+        "description": "Creates Storybook stories/specs for all Angular components declared in a project.",
         "cli": "nx",
         "type": "object",
         "properties": {

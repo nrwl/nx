@@ -4,7 +4,7 @@
   "cli": "nx",
   "title": "SCAM Directive Generator Options Schema",
   "type": "object",
-  "description": "Creates a new, generic directive definition in the given or default project.",
+  "description": "Creates a new, generic Angular directive definition in the given or default project.",
   "additionalProperties": false,
   "properties": {
     "path": {

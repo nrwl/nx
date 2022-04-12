@@ -97,7 +97,9 @@
           "packages/workspace/**/*.spec.tsx",
           "packages/workspace/**/*.spec.js",
           "packages/workspace/**/*.spec.jsx",
-          "packages/workspace/**/*.d.ts"
+          "packages/workspace/**/*.d.ts",
+          "packages/workspace/**/executors/**/schema.json",
+          "packages/workspace/**/generators/**/schema.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

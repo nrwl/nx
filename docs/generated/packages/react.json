@@ -12,7 +12,7 @@
         "$schema": "http://json-schema.org/schema",
         "$id": "NxReactNgInit",
         "title": "Init React Plugin",
-        "description": "Initialize a React Plugin",
+        "description": "Initialize a React Plugin.",
         "cli": "nx",
         "type": "object",
         "properties": {
@@ -218,7 +218,7 @@
         "cli": "nx",
         "$id": "NxReactLibrary",
         "title": "Create a React Library",
-        "description": "Create a React Library for an Nx workspace",
+        "description": "Create a React Library for an Nx workspace.",
         "type": "object",
         "examples": [
           {

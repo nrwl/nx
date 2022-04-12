@@ -3,7 +3,7 @@
   "$id": "NxMFEHost",
   "cli": "nx",
   "title": "Nx MFE Host Application",
-  "description": "Create an Angular Host Micro Frontend Application",
+  "description": "Create an Angular Host Micro Frontend Application.",
   "type": "object",
   "examples": [
     {

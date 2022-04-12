@@ -72,7 +72,9 @@
           "packages/linter/**/*.spec.tsx",
           "packages/linter/**/*.spec.js",
           "packages/linter/**/*.spec.jsx",
-          "packages/linter/**/*.d.ts"
+          "packages/linter/**/*.d.ts",
+          "packages/linter/**/executors/**/schema.json",
+          "packages/linter/**/generators/**/schema.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

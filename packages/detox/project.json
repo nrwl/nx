@@ -12,7 +12,9 @@
           "packages/detox/**/*.spec.tsx",
           "packages/detox/**/*.spec.js",
           "packages/detox/**/*.spec.jsx",
-          "packages/detox/**/*.d.ts"
+          "packages/detox/**/*.d.ts",
+          "packages/detox/**/executors/**/schema.json",
+          "packages/detox/**/generators/**/schema.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

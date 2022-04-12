@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxAngularStorybookStoriesGenerator",
   "title": "Create Storybook stories/specs",
-  "description": "Creates Storybook stories/specs for all components declared in a project.",
+  "description": "Creates Storybook stories/specs for all Angular components declared in a project.",
   "cli": "nx",
   "type": "object",
   "properties": {

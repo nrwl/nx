@@ -164,7 +164,12 @@ export class Workspaces {
         generatorConfig.implementation,
         generatorsDir
       );
-      return { normalizedGeneratorName, schema, implementationFactory };
+      return {
+        normalizedGeneratorName,
+        schema,
+        implementationFactory,
+        aliases: generatorConfig.aliases || [],
+      };
     } catch (e) {
       throw new Error(
         `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
