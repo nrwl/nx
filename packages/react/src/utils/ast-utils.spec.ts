@@ -219,11 +219,30 @@ describe('findMainRenderStatement', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should return render(...)', () => {
+  it('should return ReactDOM.render(...)', () => {
     const sourceCode = `
 import React from 'react';
 import ReactDOM from 'react-dom';
 ReactDOM.render(<div/>, document.getElementById('root'));
+      `;
+    tree.write('/main.tsx', sourceCode);
+    const source = ts.createSourceFile(
+      '/main.tsx',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const node = utils.findMainRenderStatement(source);
+    expect(node).toBeTruthy();
+  });
+
+  it('should return root.render(...)', () => {
+    const sourceCode = `
+import React from 'react';
+import ReactDOMClient from 'react-dom/client';
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<div/>);
       `;
     tree.write('/main.tsx', sourceCode);
     const source = ts.createSourceFile(
