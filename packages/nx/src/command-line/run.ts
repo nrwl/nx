@@ -32,7 +32,7 @@ export function printRunHelp(
   schema: Schema,
   plugin: { plugin: string; entity: string }
 ) {
-  printHelp(`nx run ${opts.project}:${opts.target}`, schema, {
+  printHelp(`run ${opts.project}:${opts.target}`, schema, {
     mode: 'run',
     ...plugin,
   });

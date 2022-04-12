@@ -55,6 +55,7 @@ export type Schema = {
   description?: string;
   definitions?: Properties;
   additionalProperties?: boolean;
+  examples?: { command: string; description?: string }[];
 };
 
 export type Unmatched = {
