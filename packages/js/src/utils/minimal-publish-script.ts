@@ -21,14 +21,18 @@ const [, , name, version, tag = 'next'] = process.argv;
 // A simple SemVer validation to validate the version 
 const validVersion = /^\\d+\\.\\d+\\.\\d(-\\w+\\.\\d+)?/;
 if (!version || !validVersion.test(version)) {
-console.error(chalk.red(\`Invalid version\`));
-process.exit(1);
+  console.error(chalk.bold.red(\`No version provided or version did not match Semantic Versioning, expected: #.#.#-tag, got \${version}\`));
+  process.exit(1);
 }
 
 // Updating the version in "package.json" before publishing
-const json = JSON.parse(readFileSync(\`package.json\`).toString());
-json.version = version;
-writeFileSync(\`package.json\`, JSON.stringify(json, null, 2));
+try {
+  const json = JSON.parse(readFileSync(\`package.json\`).toString());
+  json.version = version;
+  writeFileSync(\`package.json\`, JSON.stringify(json, null, 2));
+} catch (e) {
+  console.error(chalk.bold.red(\`Error reading package.json file from library build output.\`))
+}
 
 // Execute "npm publish" to publish
 execSync(\`npm publish --access public\`);
@@ -36,6 +40,7 @@ execSync(\`npm publish --access public\`);
 
 export function addMinimalPublishScript(tree: Tree) {
   const publishScriptPath = 'tools/scripts/publish.mjs';
+
   if (!tree.exists(publishScriptPath)) {
     tree.write(publishScriptPath, publishScriptContent);
   }
