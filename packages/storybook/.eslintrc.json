@@ -8,11 +8,7 @@
     },
     {
       "files": ["**/*.ts"],
-      "excludedFiles": [
-        "./src/migrations/**",
-        "./src/generators/migrate-defaults-5-to-6/*.spec.ts",
-        "./src/utils/testing.ts"
-      ],
+      "excludedFiles": ["./src/migrations/**", "./src/utils/testing.ts"],
       "rules": {
         "no-restricted-imports": [
           "error",

@@ -15,6 +15,5 @@ export { reactInitGenerator } from './src/generators/init/init';
 export { reduxGenerator } from './src/generators/redux/redux';
 export { storiesGenerator } from './src/generators/stories/stories';
 export { storybookConfigurationGenerator } from './src/generators/storybook-configuration/configuration';
-export { storybookMigration5to6Generator } from './src/generators/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6';
 export { mfeHostGenerator } from './src/generators/mfe-host/mfe-host';
 export type { SupportedStyles } from './typings/style';

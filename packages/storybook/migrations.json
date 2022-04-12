@@ -78,6 +78,12 @@
       "cli": "nx",
       "description": "Add projectBuildConfig option to project's Storybook config.",
       "factory": "./src/migrations/update-13-4-6/set-project-build-config"
+    },
+    "update-14.0.0": {
+      "version": "14.0.0",
+      "cli": "nx",
+      "description": "Migrate Storybook to v6",
+      "factory": "./src/migrations/update-14-0-0/migrate-to-storybook-6"
     }
   },
   "packageJsonUpdates": {

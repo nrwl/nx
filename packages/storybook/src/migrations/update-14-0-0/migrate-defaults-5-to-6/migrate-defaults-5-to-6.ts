@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   generateFiles,
   GeneratorCallback,
   getProjects,
@@ -12,69 +11,19 @@ import {
   offsetFromRoot,
 } from '@nrwl/devkit';
 import { lte } from 'semver';
-import { StorybookMigrateDefault5to6Schema } from './schema';
-import { storybookVersion } from '../../utils/versions';
+import { storybookVersion } from '../../../utils/versions';
 import { join } from 'path';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
-export function migrateDefaultsGenerator(
-  tree: Tree,
-  schema: StorybookMigrateDefault5to6Schema
-) {
-  if (schema.all === undefined) {
-    schema.all = true;
-  }
-  if (schema.keepOld === undefined) {
-    schema.keepOld = true;
-  }
+export function migrateDefaultsGenerator(tree: Tree) {
+  migrateAllStorybookInstances(tree);
 
-  /**
-   * The "all" flag - or the absense of "name"
-   * should indicate that all Storybook instances everywhere in the
-   * project should be migrated.
-   *
-   * Not running a migration for "all" does NOT make
-   * sense, since everything links back to the root .storybook
-   * directory, which will get migrated.
-   * However, someone may want to do it step by step. But all should be migrated
-   * eventually.
-   */
-  let configFolder: string;
-  let uiFramework: string;
-  const runAll = schema.all && !schema.name;
-
-  if (!runAll && schema.name) {
-    const projectConfig = readProjectConfiguration(tree, schema.name);
-    if (projectConfig.targets && projectConfig.targets.storybook) {
-      configFolder =
-        projectConfig.targets.storybook.options.config.configFolder;
-      uiFramework = projectConfig.targets.storybook.options.uiFramework;
-    }
-    if (projectConfig.targets && projectConfig.targets.storybook) {
-      configFolder =
-        projectConfig.targets.storybook.options.config.configFolder;
-      uiFramework = projectConfig.targets.storybook.options.uiFramework;
-    }
-  }
-  if (!runAll && configFolder) {
-    migrateStorybookInstance(
-      tree,
-      schema.keepOld,
-      schema.name,
-      uiFramework,
-      configFolder
-    );
-  } else {
-    migrateAllStorybookInstances(tree, schema.keepOld);
-  }
-  if (runAll) {
-    migrateRootLevelStorybookInstance(tree, schema.keepOld);
-    return upgradeStorybookPackagesInPackageJson(tree);
-  }
+  migrateRootLevelStorybookInstance(tree);
+  return upgradeStorybookPackagesInPackageJson(tree);
 }
 
-export function migrateAllStorybookInstances(tree: Tree, keepOld: boolean) {
+export function migrateAllStorybookInstances(tree: Tree) {
   logger.debug('adding .storybook folder to project');
   const projects = getProjects(tree);
   const projectsThatHaveStorybookConfiguration: {
@@ -100,7 +49,6 @@ export function migrateAllStorybookInstances(tree: Tree, keepOld: boolean) {
   for (const projectWithStorybook of projectsThatHaveStorybookConfiguration) {
     migrateStorybookInstance(
       tree,
-      keepOld,
       projectWithStorybook.name,
       projectWithStorybook.uiFramework,
       projectWithStorybook.configFolder
@@ -110,14 +58,12 @@ export function migrateAllStorybookInstances(tree: Tree, keepOld: boolean) {
 
 export function migrateStorybookInstance(
   tree: Tree,
-  keepOld: boolean,
   projectName: string,
   uiFramework: string,
   configFolder?: string
 ) {
   migrateProjectLevelStorybookInstance(
     tree,
-    keepOld,
     projectName,
     uiFramework,
     configFolder
@@ -189,27 +135,16 @@ function upgradeStorybookPackagesInPackageJson(tree: Tree) {
   return maybeUpdateVersion(tree);
 }
 
-function deleteOldFiles(tree: Tree, configFolderDir: string) {
-  visitNotIgnoredFiles(tree, configFolderDir, (file) => {
-    if (file.includes('addons.js') || file.includes('config.js')) {
-      tree.delete(file);
-    }
-  });
-  // tree.delete(configFolderDir);
-}
-
 function moveOldFiles(tree: Tree, configFolderDir: string) {
   moveDirectory(
     tree,
     configFolderDir,
     configFolderDir.replace('.storybook', '.old_storybook')
   );
-  // tree.delete(configFolderDir);
 }
 
 function migrateProjectLevelStorybookInstance(
   tree: Tree,
-  keepOld: boolean,
   projectName: string,
   uiFramework: string,
   configFolder: string
@@ -220,21 +155,22 @@ function migrateProjectLevelStorybookInstance(
     configFolder.replace('.storybook', '.old_storybook')
   );
   const new_config_exists_already = tree.exists(`${configFolder}/main.js`);
+
   if (old_folder_exists_already || new_config_exists_already) {
     return;
   }
 
-  if (keepOld) {
-    moveOldFiles(tree, configFolder);
-  } else {
-    deleteOldFiles(tree, configFolder);
-  }
+  moveOldFiles(tree, configFolder);
+
   if (tree.exists(configFolder)) {
     return;
   }
   generateFiles(
     tree,
-    join(__dirname, '../configuration/project-files/.storybook'),
+    join(
+      __dirname,
+      '../../../generators/configuration/project-files/.storybook'
+    ),
     configFolder,
     {
       tmpl: '',
@@ -248,22 +184,19 @@ function migrateProjectLevelStorybookInstance(
   );
 }
 
-function migrateRootLevelStorybookInstance(tree: Tree, keepOld: boolean) {
+function migrateRootLevelStorybookInstance(tree: Tree) {
   const old_folder_exists_already = tree.exists('.old_storybook');
   const new_config_exists_already = tree.exists(`.storybook/main.js`);
+
   if (old_folder_exists_already || new_config_exists_already) {
     return;
   }
 
-  if (keepOld) {
-    moveOldFiles(tree, '.storybook');
-  } else {
-    deleteOldFiles(tree, '.storybook');
-  }
+  moveOldFiles(tree, '.storybook');
 
   generateFiles(
     tree,
-    join(__dirname, '../configuration/root-files/.storybook'),
+    join(__dirname, '../../../generators/configuration/root-files/.storybook'),
     '.storybook',
     { rootTsConfigPath: getRootTsConfigPathInTree(tree) }
   );
@@ -274,8 +207,3 @@ export function moveDirectory(tree: Tree, from: string, to: string) {
     tree.rename(file, file.replace(from, to));
   });
 }
-
-export default migrateDefaultsGenerator;
-export const migrateDefaultsSchematic = convertNxGenerator(
-  migrateDefaultsGenerator
-);

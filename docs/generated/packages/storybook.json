@@ -143,62 +143,6 @@
       "implementation": "/packages/storybook/src/generators/cypress-project/cypress-project.ts",
       "aliases": [],
       "path": "/packages/storybook/src/generators/cypress-project/schema.json"
-    },
-    {
-      "name": "migrate-defaults-5-to-6",
-      "factory": "./src/generators/migrate-defaults-5-to-6/migrate-defaults-5-to-6",
-      "schema": {
-        "$schema": "http://json-schema.org/schema",
-        "cli": "nx",
-        "$id": "migrate-defaults-5-to-6",
-        "title": "Migrate defaults 5 to 6",
-        "description": "Generate default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
-        "type": "object",
-        "properties": {
-          "all": {
-            "type": "boolean",
-            "description": "Generate new Storybook configurations for all Storybook instances across all apps and libs.",
-            "default": true
-          },
-          "keepOld": {
-            "type": "boolean",
-            "description": "Keep the old configuration files - put them in a folder called `.old_storybook`.",
-            "default": true
-          },
-          "name": {
-            "type": "string",
-            "description": "Leave empty to upgrade all Storybook instances. Only use this if you want to do a gradual migration. Library or application name for which you want to generate the new Storybook configuration.",
-            "$default": { "$source": "argv", "index": 0 }
-          }
-        },
-        "required": [],
-        "presets": []
-      },
-      "description": "Generate default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
-      "hidden": false,
-      "implementation": "/packages/storybook/src/generators/migrate-defaults-5-to-6/migrate-defaults-5-to-6.ts",
-      "aliases": [],
-      "path": "/packages/storybook/src/generators/migrate-defaults-5-to-6/schema.json"
-    },
-    {
-      "name": "migrate-stories-to-6-2",
-      "factory": "./src/generators/migrate-stories-to-6-2/migrate-stories-to-6-2",
-      "schema": {
-        "$schema": "http://json-schema.org/schema",
-        "cli": "nx",
-        "$id": "migrate-stories-to-6-2",
-        "title": "Migrate stories to 6.2",
-        "description": "Migrate stories syntax to `6.2`.",
-        "type": "object",
-        "properties": {},
-        "required": [],
-        "presets": []
-      },
-      "description": "Generate default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
-      "hidden": false,
-      "implementation": "/packages/storybook/src/generators/migrate-stories-to-6-2/migrate-stories-to-6-2.ts",
-      "aliases": [],
-      "path": "/packages/storybook/src/generators/migrate-stories-to-6-2/schema.json"
     }
   ],
   "executors": [
