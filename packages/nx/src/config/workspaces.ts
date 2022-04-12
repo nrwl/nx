@@ -342,10 +342,10 @@ export function toNewFormatOrNull(w: any) {
     renamePropertyWithStableKeys(w, 'schematics', 'generators');
     formatted = true;
   }
-  if (w.cli?.schematicCollection) {
+  if (w.cli?.schematicCollections) {
     renamePropertyWithStableKeys(
       w.cli,
-      'schematicCollection',
+      'schematicCollections',
       'generatorCollections'
     );
     formatted = true;
@@ -390,7 +390,7 @@ export function toOldFormatOrNull(w: any) {
     renamePropertyWithStableKeys(
       w.cli,
       'generatorCollections',
-      'schematicCollection'
+      'schematicCollections'
     );
   }
   if (w.version !== 1) {

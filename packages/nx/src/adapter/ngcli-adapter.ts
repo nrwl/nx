@@ -213,7 +213,7 @@ type AngularJsonConfiguration = WorkspaceJsonConfiguration &
   Pick<NxJsonConfiguration, 'cli' | 'defaultProject' | 'generators'> & {
     schematics?: NxJsonConfiguration['generators'];
     cli?: {
-      schematicCollection?: string[];
+      schematicCollections?: string[];
     };
   };
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
