@@ -9,9 +9,13 @@ export interface NxProjectPackageJsonConfiguration {
   targets?: Record<string, PackageJsonTargetConfiguration>;
 }
 
+export type PackageGroup =
+  | (string | { package: string; version: string })[]
+  | Record<string, string>;
+
 export interface NxMigrationsConfiguration {
   migrations?: string;
-  packageGroup?: (string | { package: string; version: string })[];
+  packageGroup?: PackageGroup;
 }
 
 export interface PackageJson {

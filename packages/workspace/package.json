@@ -31,29 +31,28 @@
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json",
-    "packageGroup": [
-      "@nrwl/workspace",
-      "@nrwl/angular",
-      "nx",
-      "@nrwl/cypress",
-      "@nrwl/devkit",
-      "@nrwl/eslint-plugin-nx",
-      "@nrwl/express",
-      "@nrwl/jest",
-      "@nrwl/linter",
-      "@nrwl/nest",
-      "@nrwl/next",
-      "@nrwl/node",
-      "@nrwl/nx-plugin",
-      "@nrwl/react",
-      "@nrwl/storybook",
-      "@nrwl/web",
-      "@nrwl/js",
-      "@nrwl/cli",
-      "@nrwl/nx-cloud",
-      "@nrwl/react-native",
-      "@nrwl/detox"
-    ]
+    "packageGroup": {
+      "@nrwl/angular": "*",
+      "@nrwl/cypress": "*",
+      "@nrwl/devkit": "*",
+      "@nrwl/eslint-plugin-nx": "*",
+      "@nrwl/express": "*",
+      "@nrwl/jest": "*",
+      "@nrwl/linter": "*",
+      "@nrwl/nest": "*",
+      "@nrwl/next": "*",
+      "@nrwl/node": "*",
+      "@nrwl/nx-plugin": "*",
+      "@nrwl/react": "*",
+      "@nrwl/storybook": "*",
+      "@nrwl/web": "*",
+      "@nrwl/js": "*",
+      "@nrwl/cli": "*",
+      "@nrwl/nx-cloud": "latest",
+      "@nrwl/react-native": "*",
+      "@nrwl/detox": "*",
+      "nx": "*"
+    }
   },
   "peerDependencies": {
     "prettier": "^2.5.1"
@@ -85,34 +84,5 @@
     "minimatch": "3.0.4",
     "enquirer": "~2.3.6",
     "tslib": "^2.3.0"
-  },
-  "nx-migrations": {
-    "migrations": "./migrations.json",
-    "packageGroup": [
-      "@nrwl/workspace",
-      "@nrwl/angular",
-      "nx",
-      "@nrwl/cypress",
-      "@nrwl/devkit",
-      "@nrwl/eslint-plugin-nx",
-      "@nrwl/express",
-      "@nrwl/jest",
-      "@nrwl/linter",
-      "@nrwl/nest",
-      "@nrwl/next",
-      "@nrwl/node",
-      "@nrwl/nx-plugin",
-      "@nrwl/react",
-      "@nrwl/storybook",
-      "@nrwl/web",
-      "@nrwl/js",
-      "@nrwl/cli",
-      "@nrwl/react-native",
-      "@nrwl/detox",
-      {
-        "package": "@nrwl/nx-cloud",
-        "version": "latest"
-      }
-    ]
   }
 }
