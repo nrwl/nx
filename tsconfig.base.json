@@ -49,15 +49,14 @@
         "./nx-dev/data-access-documents/src/node.index.ts"
       ],
       "@nrwl/nx-dev/data-access-packages": [
-        "nx-dev/data-access-packages/src/index.ts"
+        "./nx-dev/data-access-packages/src/index.ts"
       ],
       "@nrwl/nx-dev/data-access-packages/node-only": [
-        "nx-dev/data-access-packages/src/node.index.ts"
+        "./nx-dev/data-access-packages/src/node.index.ts"
       ],
       "@nrwl/nx-dev/feature-analytics": [
         "./nx-dev/feature-analytics/src/index.ts"
       ],
-      "@nrwl/nx-dev/feature-conf": ["./nx-dev/feature-conf/src/index.ts"],
       "@nrwl/nx-dev/feature-doc-viewer": [
         "./nx-dev/feature-doc-viewer/src/index.ts"
       ],
@@ -69,12 +68,13 @@
       "@nrwl/nx-dev/feature-versions-and-flavors": [
         "./nx-dev/feature-versions-and-flavors/src/index.ts"
       ],
-      "@nrwl/nx-dev/models-document": ["nx-dev/models-document/src/index.ts"],
-      "@nrwl/nx-dev/models-menu": ["nx-dev/models-menu/src/index.ts"],
-      "@nrwl/nx-dev/models-package": ["nx-dev/models-package/src/index.ts"],
+      "@nrwl/nx-dev/models-document": ["./nx-dev/models-document/src/index.ts"],
+      "@nrwl/nx-dev/models-menu": ["./nx-dev/models-menu/src/index.ts"],
+      "@nrwl/nx-dev/models-package": ["./nx-dev/models-package/src/index.ts"],
       "@nrwl/nx-dev/ui-commands": ["./nx-dev/ui-commands/src/index.ts"],
       "@nrwl/nx-dev/ui-common": ["./nx-dev/ui-common/src/index.ts"],
-      "@nrwl/nx-dev/ui-community": ["nx-dev/ui-community/src/index.ts"],
+      "@nrwl/nx-dev/ui-community": ["./nx-dev/ui-community/src/index.ts"],
+      "@nrwl/nx-dev/ui-conference": ["./nx-dev/ui-conference/src/index.ts"],
       "@nrwl/nx-dev/ui-home": ["./nx-dev/ui-home/src/index.ts"],
       "@nrwl/nx-dev/ui-member-card": ["./nx-dev/ui-member-card/src/index.ts"],
       "@nrwl/nx-dev/ui-sponsor-card": ["./nx-dev/ui-sponsor-card/src/index.ts"],
