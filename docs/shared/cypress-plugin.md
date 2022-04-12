@@ -151,20 +151,19 @@ module.exports = {
 };
 ```
 
-3. Add [custom webpack support](guides/customize-webpack) in the `angular.json` or as probably the case may be in `apps/example-app-e2e/project.json` using `coverage.webpack.js` above. To complete this create a new target `serve-coverage` by copying the `serve` target. Then use the webpack file above with the appropriate executor (currently `ngx-build-plus:dev-server`).
+3. Add [custom webpack support](guides/customize-webpack) in the `angular.json` or as probably the case may be in `apps/example-app-e2e/project.json` using `coverage.webpack.js` above. To complete this create a new target `serve-coverage` by copying the `serve` target. Then use the webpack file above with the appropriate executor (currently `ngx-build-plus:dev-server`). The snippet with affected lines would then look like this:
 
 ```json
   "serve-coverage": {
     "executor": "ngx-build-plus:dev-server",
     "options": {
-      ...
-      "extraWebpackConfig": "./coverage.webpack.js"
-    },
-    ...
+       "extraWebpackConfig": "./coverage.webpack.js"
+    }    
   },
 ```
 
-4. Replace the e2e target for `frontend-e2e` in the `angular.json` or as probably the case may be in `apps/frontend-e2e/project.json`:
+4. Replace the e2e target for `frontend-e2e` in the `angular.json` or as probably the case may be in `apps/frontend-e2e/project.json`. The 
+snippet with affected lines would then look like this:
 ```json
     "frontend-e2e": {
       "root": "apps/frontend-e2e",
@@ -182,9 +181,8 @@ module.exports = {
               "devServerTarget": "frontend-e2e:serve-coverage:production"
             }
           }
-        },
-      ...
-    },
+        }
+      }
 ```
 ## More Documentation
 
