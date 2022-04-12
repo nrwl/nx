@@ -21,7 +21,7 @@ const [, , name, version, tag = 'next'] = process.argv;
 // A simple SemVer validation to validate the version 
 const validVersion = /^\\d+\\.\\d+\\.\\d(-\\w+\\.\\d+)?/;
 if (!version || !validVersion.test(version)) {
-  console.error(chalk.bold.red(\`No version provided or version did not match Semantic Versioning, expected: #.#.#-tag, got \${version}\`));
+  console.error(chalk.bold.red(\`No version provided or version did not match Semantic Versioning, expected: #.#.#-tag.# or #.#.#, got \${version}\`));
   process.exit(1);
 }
 
