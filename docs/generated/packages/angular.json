@@ -183,19 +183,22 @@
           "mfe": {
             "description": "Generate a Module Federation configuration for the application",
             "type": "boolean",
-            "default": false
+            "default": false,
+            "x-deprecated": "Use the `mfe-host` or `mfe-remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
           },
           "mfeType": {
             "type": "string",
             "enum": ["host", "remote"],
             "description": "Type of application to generate the Module Federation configuration for.",
-            "default": "remote"
+            "default": "remote",
+            "x-deprecated": "Use the `mfe-host` or `mfe-remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
           },
           "federationType": {
             "type": "string",
             "enum": ["static", "dynamic"],
             "description": "Use either Static or Dynamic Module Federation pattern for the application.",
-            "default": "static"
+            "default": "static",
+            "x-deprecated": "Use the `mfe-host` or `mfe-remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
           },
           "port": {
             "type": "number",
@@ -203,11 +206,13 @@
           },
           "remotes": {
             "type": "array",
-            "description": "A list of remote application names that the host application should consume."
+            "description": "A list of remote application names that the host application should consume.",
+            "x-deprecated": "Use the `mfe-host` or `mfe-remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
           },
           "host": {
             "type": "string",
-            "description": "The name of the host application that the remote application will be consumed by."
+            "description": "The name of the host application that the remote application will be consumed by.",
+            "x-deprecated": "Use the `mfe-host` or `mfe-remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
           },
           "setParserOptionsProject": {
             "type": "boolean",
