@@ -21,6 +21,7 @@ import {
   getRootTsConfigPathInTree,
 } from '@nrwl/workspace/src/utilities/typescript';
 import { join } from 'path';
+import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
@@ -91,12 +92,13 @@ function addProject(
     tags: options.parsedTags,
   };
 
-  if (options.buildable && options.config != 'npm-scripts') {
+  if (options.buildable && options.config !== 'npm-scripts') {
+    const outputPath = `dist/${destinationDir}/${options.projectDirectory}`;
     projectConfiguration.targets.build = {
       executor: `@nrwl/js:${options.compiler}`,
       outputs: ['{options.outputPath}'],
       options: {
-        outputPath: `dist/${destinationDir}/${options.projectDirectory}`,
+        outputPath,
         main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
         assets: [`${options.projectRoot}/*.md`],
@@ -105,6 +107,19 @@ function addProject(
 
     if (options.compiler === 'swc' && options.skipTypeCheck) {
       projectConfiguration.targets.build.options.skipTypeCheck = true;
+    }
+
+    if (options.publishable) {
+      const publishScriptPath = addMinimalPublishScript(tree);
+
+      projectConfiguration.targets.publish = {
+        executor: '@nrwl/workspace:run-commands',
+        options: {
+          command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
+          cwd: outputPath,
+        },
+        dependsOn: [{ projects: 'self', target: 'build' }],
+      };
     }
   }
 
