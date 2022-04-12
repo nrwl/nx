@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "GeneratorNxApp",
   "title": "Creates an Angular application.",
+  "description": "Creates an Angular application.",
   "type": "object",
   "cli": "nx",
   "properties": {

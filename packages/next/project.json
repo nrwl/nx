@@ -77,7 +77,9 @@
           "packages/next/**/*.spec.tsx",
           "packages/next/**/*.spec.js",
           "packages/next/**/*.spec.jsx",
-          "packages/next/**/*.d.ts"
+          "packages/next/**/*.d.ts",
+          "packages/next/**/executors/**/schema.json",
+          "packages/next/**/generators/**/schema.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

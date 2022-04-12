@@ -4,7 +4,7 @@
   "cli": "nx",
   "title": "SCAM Pipe Generator Options Schema",
   "type": "object",
-  "description": "Creates a new, generic pipe definition in the given or default project.",
+  "description": "Creates a new, generic Angular pipe definition in the given or default project.",
   "additionalProperties": false,
   "properties": {
     "path": {

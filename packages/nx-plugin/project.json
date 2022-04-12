@@ -72,7 +72,9 @@
           "packages/nx-plugin/**/*.spec.tsx",
           "packages/nx-plugin/**/*.spec.js",
           "packages/nx-plugin/**/*.spec.jsx",
-          "packages/nx-plugin/**/*.d.ts"
+          "packages/nx-plugin/**/*.d.ts",
+          "packages/nx-plugin/**/executors/**/schema.json",
+          "packages/nx-plugin/**/generators/**/schema.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

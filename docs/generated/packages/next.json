@@ -51,6 +51,7 @@
         "cli": "nx",
         "$id": "NxNextApp",
         "title": "Create a Next.js Application for Nx",
+        "description": "Create a Next.js Application for Nx.",
         "examples": [
           {
             "command": "nx g app myapp --directory=myorg",
@@ -287,6 +288,7 @@
         "cli": "nx",
         "$id": "NxNextReactComponent",
         "title": "Create a React Component for Next",
+        "description": "Create a React Component for Next.",
         "type": "object",
         "examples": [
           {
@@ -560,7 +562,7 @@
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
         "title": "Next Build",
-        "description": "Build a Next.js app",
+        "description": "Build a Next.js app.",
         "type": "object",
         "properties": {
           "root": { "description": "The source root", "type": "string" },
@@ -612,7 +614,7 @@
       "schema": {
         "cli": "nx",
         "title": "Next Serve",
-        "description": "Serve a Next.js app",
+        "description": "Serve a Next.js app.",
         "type": "object",
         "properties": {
           "dev": {

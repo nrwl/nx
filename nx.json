@@ -3,7 +3,8 @@
     "package.json": "*",
     ".eslintrc.json": "*",
     "scripts/vercel/*": ["nx-dev"],
-    ".circleci/config.yml": "*"
+    ".circleci/config.yml": "*",
+    "tools/eslint-rules/**/*": "*"
   },
   "affected": {
     "defaultBase": "master"

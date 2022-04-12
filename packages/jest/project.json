@@ -71,7 +71,9 @@
           "packages/jest/**/*.spec.tsx",
           "packages/jest/**/*.spec.js",
           "packages/jest/**/*.spec.jsx",
-          "packages/jest/**/*.d.ts"
+          "packages/jest/**/*.d.ts",
+          "packages/jest/**/executors/**/schema.json",
+          "packages/jest/**/generators/**/schema.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

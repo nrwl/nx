@@ -77,7 +77,9 @@
           "packages/web/**/*.spec.tsx",
           "packages/web/**/*.spec.js",
           "packages/web/**/*.spec.jsx",
-          "packages/web/**/*.d.ts"
+          "packages/web/**/*.d.ts",
+          "packages/web/**/executors/**/schema.json",
+          "packages/web/**/generators/**/schema.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

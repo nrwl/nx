@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxStorybookMigrateDefaults5To6Generator",
   "title": "Storybook migrate default 5 to 6",
-  "description": "Generates default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x.`",
+  "description": "Generates default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x.`.",
   "cli": "nx",
   "type": "object",
   "properties": {

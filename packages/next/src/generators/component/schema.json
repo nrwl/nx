@@ -3,6 +3,7 @@
   "cli": "nx",
   "$id": "NxNextReactComponent",
   "title": "Create a React Component for Next",
+  "description": "Create a React Component for Next.",
   "type": "object",
   "examples": [
     {

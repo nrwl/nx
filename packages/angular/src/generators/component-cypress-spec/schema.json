@@ -3,6 +3,7 @@
   "$id": "NxAngularComponentCypressSpecGenerator",
   "type": "object",
   "cli": "nx",
+  "description": "Creates a Cypress spec for a UI component that has a story.",
   "properties": {
     "projectName": {
       "type": "string",

@@ -7,7 +7,11 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/js/**/*.ts"]
+        "lintFilePatterns": [
+          "packages/js/**/*.ts",
+          "packages/js/**/executors/**/schema.json",
+          "packages/js/**/generators/**/schema.json"
+        ]
       }
     },
     "test": {
