@@ -56,7 +56,12 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
               loose: classProperties.loose,
             },
       ],
-      require.resolve('@babel/preset-typescript'),
+      [
+        require.resolve('@babel/preset-typescript'),
+        {
+          allowDeclareFields: true,
+        },
+      ],
     ],
     plugins: [
       !isNxPackage
