@@ -4,7 +4,7 @@
 # Exits with 0 if the build should be skipped, and exits with 1 to continue.
 
 APP=$1
-NX_VERSION=$(node -e "console.log(require('./package.json').devDependencies['@nrwl/workspace'])")
+NX_VERSION=$(node -e "console.log(require('./package.json').version)")
 
 # Need the workspace in order to run affected
 yarn add -D @nrwl/workspace@$NX_VERSION --prefer-offline
