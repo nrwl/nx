@@ -151,7 +151,7 @@ module.exports = {
 };
 ```
 
-3. Add [custom webpack support](guides/customize-webpack) in the `angular.json` or as probably the case may be in `apps/example-app-e2e/project.json` using `coverage.webpack.js` above. To complete this create a new target `serve-coverage` by copying the `serve` target. Then use the webpack file above with the appropriate executor (currently `ngx-build-plus:dev-server`). The snippet with affected lines would then look like this:
+3. Add [custom webpack support](guides/customize-webpack) in the `angular.json` or as probably the case may be in `apps/example-app/project.json` using `coverage.webpack.js` above. To complete this create a new target `serve-coverage` by copying the `serve` target. Then add the webpack file above to the options and replace the executor (currently the executor you need is `ngx-build-plus:dev-server`). In the snippet below you see the changed lines. The rest stays as is:
 
 ```json
   "serve-coverage": {
@@ -162,18 +162,12 @@ module.exports = {
   },
 ```
 
-4. Replace the e2e target for `frontend-e2e` in the `angular.json` or as probably the case may be in `apps/frontend-e2e/project.json`. The 
-snippet with affected lines would then look like this:
+4. Replace the e2e target for `frontend-e2e` in the `angular.json` or as probably the case may be in `apps/frontend-e2e/project.json`. In the snippet below you see the changed lines. The rest stays as is:
 ```json
     "frontend-e2e": {
-      "root": "apps/frontend-e2e",
-      "sourceRoot": "apps/frontend-e2e/src",
-      "projectType": "application",
       "targets": {
-        "e2e": {
-          "executor": "@nrwl/cypress:cypress",
-          "options": {
-            "cypressConfig": "apps/frontend-e2e/cypress.json",
+        "e2e": {          
+          "options": {            
             "devServerTarget": "frontend-e2e:serve-coverage:development"
           },
           "configurations": {
