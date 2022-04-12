@@ -87,29 +87,10 @@ describe('React Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
-    runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+    runCLI(`generate @nrwl/react:app ${appName} --no-interactive --js`);
+    runCLI(`generate @nrwl/react:lib ${libName} --no-interactive --js`);
 
-    renameFile(`apps/${appName}/src/main.tsx`, `apps/${appName}/src/main.jsx`);
-    renameFile(
-      `apps/${appName}/src/app/app.tsx`,
-      `apps/${appName}/src/app/app.jsx`
-    );
-    renameFile(
-      `apps/${appName}/src/app/app.spec.tsx`,
-      `apps/${appName}/src/app/app.spec.jsx`
-    );
-    renameFile(
-      `apps/${appName}/src/polyfills.ts`,
-      `apps/${appName}/src/polyfills.js`
-    );
-    updateProjectConfig(appName, (config) => {
-      config.targets.build.options.main = `apps/${appName}/src/main.jsx`;
-      config.targets.build.options.polyfills = `apps/${appName}/src/polyfills.js`;
-      return config;
-    });
-
-    const mainPath = `apps/${appName}/src/main.jsx`;
+    const mainPath = `apps/${appName}/src/main.js`;
     updateFile(
       mainPath,
       `import '@${proj}/${libName}';\n${readFile(mainPath)}`

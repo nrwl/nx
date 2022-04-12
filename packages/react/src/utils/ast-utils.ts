@@ -43,9 +43,19 @@ export function findMainRenderStatement(
 
   for (const expr of calls) {
     const inner = expr.expression;
+    // React 17 and below
     if (
       ts.isPropertyAccessExpression(inner) &&
       /ReactDOM/i.test(inner.expression.getText()) &&
+      inner.name.getText() === 'render'
+    ) {
+      return expr;
+    }
+
+    // React 18
+    if (
+      ts.isPropertyAccessExpression(inner) &&
+      /root/.test(inner.expression.getText()) &&
       inner.name.getText() === 'render'
     ) {
       return expr;
@@ -358,7 +368,7 @@ export function addReduxStoreToMain(
 ): StringChange[] {
   const renderStmt = findMainRenderStatement(source);
   if (!renderStmt) {
-    logger.warn(`Could not find ReactDOM.render in ${sourcePath}`);
+    logger.warn(`Could not find render(...) in ${sourcePath}`);
     return [];
   }
   const jsx = renderStmt.arguments[0];
