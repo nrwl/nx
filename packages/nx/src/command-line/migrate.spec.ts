@@ -771,8 +771,14 @@ describe('Migration', () => {
       expect(
         parseMigrationsOptions({ packageAndVersion: 'next' })
       ).toMatchObject({
-        targetPackage: '@nrwl/workspace',
+        targetPackage: 'nx',
         targetVersion: 'next',
+      });
+      expect(
+        parseMigrationsOptions({ packageAndVersion: '13.10.0' })
+      ).toMatchObject({
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '13.10.0',
       });
       expect(
         parseMigrationsOptions({ packageAndVersion: '@nrwl/workspace@8.12' })

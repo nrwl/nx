@@ -229,8 +229,28 @@ export class Migrator {
       packageName === '@nrwl/workspace' &&
       lt(targetVersion, '14.0.0-beta.0')
     ) {
-      migration.packageGroup =
-        require('../../package.json')['ng-update'].packageGroup;
+      migration.packageGroup = {
+        '@nrwl/workspace': targetVersion,
+        '@nrwl/angular': targetVersion,
+        '@nrwl/cypress': targetVersion,
+        '@nrwl/devkit': targetVersion,
+        '@nrwl/eslint-plugin-nx': targetVersion,
+        '@nrwl/express': targetVersion,
+        '@nrwl/jest': targetVersion,
+        '@nrwl/linter': targetVersion,
+        '@nrwl/nest': targetVersion,
+        '@nrwl/next': targetVersion,
+        '@nrwl/node': targetVersion,
+        '@nrwl/nx-plugin': targetVersion,
+        '@nrwl/react': targetVersion,
+        '@nrwl/storybook': targetVersion,
+        '@nrwl/web': targetVersion,
+        '@nrwl/js': targetVersion,
+        '@nrwl/cli': targetVersion,
+        '@nrwl/nx-cloud': 'latest',
+        '@nrwl/react-native': targetVersion,
+        '@nrwl/detox': targetVersion,
+      };
     }
 
     if (migration.packageGroup) {
@@ -348,7 +368,7 @@ function versionOverrides(overrides: string, param: string) {
 function parseTargetPackageAndVersion(args: string) {
   if (!args) {
     throw new Error(
-      `Provide the correct package name and version. E.g., @nrwl/workspace@9.0.0.`
+      `Provide the correct package name and version. E.g., my-package@9.0.0.`
     );
   }
 
@@ -363,7 +383,7 @@ function parseTargetPackageAndVersion(args: string) {
       const maybeVersion = args.substring(i + 1);
       if (!targetPackage || !maybeVersion) {
         throw new Error(
-          `Provide the correct package name and version. E.g., @nrwl/workspace@9.0.0.`
+          `Provide the correct package name and version. E.g., my-package@9.0.0.`
         );
       }
       const targetVersion = normalizeVersionWithTagCheck(maybeVersion);
@@ -375,9 +395,16 @@ function parseTargetPackageAndVersion(args: string) {
       args === 'latest' ||
       args === 'next'
     ) {
+      const targetVersion = normalizeVersionWithTagCheck(args);
+      const targetPackage =
+        args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/) &&
+        lt(targetVersion, '14.0.0-beta.0')
+          ? '@nrwl/workspace'
+          : 'nx';
+
       return {
-        targetPackage: '@nrwl/workspace',
-        targetVersion: normalizeVersionWithTagCheck(args),
+        targetPackage,
+        targetVersion,
       };
     } else {
       return {

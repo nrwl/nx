@@ -1,0 +1,16 @@
+{
+  "title": "Run Script",
+  "description": "Run any NPM script of a project in the project's root directory.",
+  "type": "object",
+  "cli": "nx",
+  "outputCapture": "pipe",
+  "properties": {
+    "script": {
+      "type": "string",
+      "description": "An npm script name in the `package.json` file of the project (e.g., `build`)."
+    }
+  },
+  "additionalProperties": true,
+  "required": ["script"],
+  "examplesFile": "../../../docs/run-script-examples.md"
+}

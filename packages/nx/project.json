@@ -49,6 +49,12 @@
       },
       "outputs": ["{options.outputPath}"]
     },
+    "echo": {
+      "executor": "nx:command",
+      "options": {
+        "command": "echo hi"
+      }
+    },
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "outputs": ["build/packages/nx"],

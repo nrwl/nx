@@ -114,7 +114,7 @@ describe('project graph utils', () => {
     };
 
     const packageJsonBuildTarget = {
-      executor: '@nrwl/workspace:run-script',
+      executor: 'nx:run-script',
       options: {
         script: 'build',
       },
@@ -191,7 +191,7 @@ describe('project graph utils', () => {
 
       expect(result).toEqual({
         build: {
-          executor: '@nrwl/workspace:run-script',
+          executor: 'nx:run-script',
           options: {
             script: 'build',
           },
@@ -220,7 +220,7 @@ describe('project graph utils', () => {
           options: { command: 'echo hi' },
         },
         test: {
-          executor: '@nrwl/workspace:run-script',
+          executor: 'nx:run-script',
           options: { script: 'test' },
         },
       });
