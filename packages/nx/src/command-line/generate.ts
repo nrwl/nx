@@ -4,10 +4,7 @@ import {
   Options,
   Schema,
 } from '../utils/params';
-import {
-  collectionContainsGenerator,
-  Workspaces,
-} from '../config/workspaces';
+import { collectionContainsGenerator, Workspaces } from '../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../config/tree';
 import { logger } from '../utils/logger';
 import * as chalk from 'chalk';
@@ -100,7 +97,8 @@ function throwInvalidInvocation() {
 }
 
 function readDefaultCollection(nxConfig: NxJsonConfiguration) {
-  const configured = nxConfig.cli ? nxConfig.cli.defaultCollection : null;
+  const configured =
+    nxConfig.cli?.generatorCollections ?? nxConfig.cli?.defaultCollection;
   return typeof configured === 'string' ? [configured] : configured;
 }
 

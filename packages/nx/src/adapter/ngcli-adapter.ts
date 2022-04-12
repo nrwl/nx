@@ -212,6 +212,9 @@ async function runSchematic(
 type AngularJsonConfiguration = WorkspaceJsonConfiguration &
   Pick<NxJsonConfiguration, 'cli' | 'defaultProject' | 'generators'> & {
     schematics?: NxJsonConfiguration['generators'];
+    cli?: {
+      schematicCollection?: string[];
+    };
   };
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
   protected __nxInMemoryWorkspace: WorkspaceJsonConfiguration | null;
