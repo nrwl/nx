@@ -11,8 +11,6 @@ export * from './src/generators/ngrx/ngrx';
 export * from './src/generators/setup-tailwind/setup-tailwind';
 export * from './src/generators/stories/stories';
 export * from './src/generators/storybook-configuration/storybook-configuration';
-export * from './src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6';
-export * from './src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2';
 export * from './src/generators/upgrade-module/upgrade-module';
 export * from './src/generators/setup-mfe/setup-mfe';
 export * from './src/generators/mfe-host/mfe-host';

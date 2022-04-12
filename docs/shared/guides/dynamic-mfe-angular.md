@@ -10,7 +10,7 @@ This guide will walk through how the concept of “Build once, deploy everywhere
 
 ## Prerequisites
 
-This guide follows the previous Angular Micro Frontend guide. It will use the same workspace that was created in that guide. If you have not completed it, you can find that guide [here](/guides/setup-mfe-with-angular).
+This guide follows the previous Angular Micro Frontend guide. It will use the same workspace that was created in that guide. If you have not completed it, you can find that guide [here](/micro-frontends/setup-mfe-with-angular).
 
 ## Aim
 

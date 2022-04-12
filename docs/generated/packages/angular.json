@@ -185,19 +185,22 @@
           "mfe": {
             "description": "Generate a Module Federation configuration for the application",
             "type": "boolean",
-            "default": false
+            "default": false,
+            "x-deprecated": "Use the `mfe-host` or `mfe-remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
           },
           "mfeType": {
             "type": "string",
             "enum": ["host", "remote"],
             "description": "Type of application to generate the Module Federation configuration for.",
-            "default": "remote"
+            "default": "remote",
+            "x-deprecated": "Use the `mfe-host` or `mfe-remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
           },
           "federationType": {
             "type": "string",
             "enum": ["static", "dynamic"],
             "description": "Use either Static or Dynamic Module Federation pattern for the application.",
-            "default": "static"
+            "default": "static",
+            "x-deprecated": "Use the `mfe-host` or `mfe-remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
           },
           "port": {
             "type": "number",
@@ -205,11 +208,13 @@
           },
           "remotes": {
             "type": "array",
-            "description": "A list of remote application names that the host application should consume."
+            "description": "A list of remote application names that the host application should consume.",
+            "x-deprecated": "Use the `mfe-host` or `mfe-remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
           },
           "host": {
             "type": "string",
-            "description": "The name of the host application that the remote application will be consumed by."
+            "description": "The name of the host application that the remote application will be consumed by.",
+            "x-deprecated": "Use the `mfe-host` or `mfe-remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
           },
           "setParserOptionsProject": {
             "type": "boolean",
@@ -1885,64 +1890,6 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/generators/storybook-configuration/schema.json"
-    },
-    {
-      "name": "storybook-migrate-defaults-5-to-6",
-      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6",
-      "schema": {
-        "$schema": "http://json-schema.org/schema",
-        "$id": "NxStorybookMigrateDefaults5To6Generator",
-        "title": "Storybook migrate default 5 to 6",
-        "description": "Generates default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x.`.",
-        "cli": "nx",
-        "type": "object",
-        "properties": {
-          "all": {
-            "type": "boolean",
-            "description": "Generate new Storybook configurations for all Storybook instances across all applications and libraries.",
-            "default": true
-          },
-          "keepOld": {
-            "type": "boolean",
-            "description": "Keep the old configuration files by placing them in a folder called `.old_storybook`.",
-            "default": true
-          },
-          "name": {
-            "type": "string",
-            "description": "Library or application name for which you want to generate the new Storybook configuration. Leave empty to upgrade all Storybook instances. Only use this if you want to do a gradual migration.",
-            "$default": { "$source": "argv", "index": 0 }
-          }
-        },
-        "additionalProperties": false,
-        "required": [],
-        "presets": []
-      },
-      "description": "Generates default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
-      "implementation": "/packages/angular/src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6.ts",
-      "aliases": [],
-      "hidden": false,
-      "path": "/packages/angular/src/generators/storybook-migrate-defaults-5-to-6/schema.json"
-    },
-    {
-      "name": "storybook-migrate-stories-to-6-2",
-      "factory": "./src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2",
-      "schema": {
-        "$schema": "http://json-schema.org/schema",
-        "$id": "NxAngularStorybookMigrateStoriesTo62Generator",
-        "title": "Storybook migrate stories to 6.2",
-        "description": "Migrates stories to match the new syntax in `v6.2` where the component declaration should be in the default export.",
-        "type": "object",
-        "cli": "nx",
-        "properties": {},
-        "additionalProperties": false,
-        "required": [],
-        "presets": []
-      },
-      "description": "Migrates stories to match the new syntax in `v6.2` where the component declaration should be in the default export.",
-      "implementation": "/packages/angular/src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2.ts",
-      "aliases": [],
-      "hidden": false,
-      "path": "/packages/angular/src/generators/storybook-migrate-stories-to-6-2/schema.json"
     },
     {
       "name": "upgrade-module",

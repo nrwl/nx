@@ -140,16 +140,6 @@
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Adds Storybook configuration to a project."
     },
-    "storybook-migrate-defaults-5-to-6": {
-      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/compat",
-      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
-      "description": "Generates default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`."
-    },
-    "storybook-migrate-stories-to-6-2": {
-      "factory": "./src/generators/storybook-migrate-stories-to-6-2/compat",
-      "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
-      "description": "Migrates stories to match the new syntax in `v6.2` where the component declaration should be in the default export."
-    },
     "upgrade-module": {
       "factory": "./src/generators/upgrade-module/compat",
       "schema": "./src/generators/upgrade-module/schema.json",
@@ -298,16 +288,6 @@
       "factory": "./src/generators/storybook-configuration/storybook-configuration",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Adds Storybook configuration to a project."
-    },
-    "storybook-migrate-defaults-5-to-6": {
-      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6",
-      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
-      "description": "Generates default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`."
-    },
-    "storybook-migrate-stories-to-6-2": {
-      "factory": "./src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2",
-      "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
-      "description": "Migrates stories to match the new syntax in `v6.2` where the component declaration should be in the default export."
     },
     "upgrade-module": {
       "factory": "./src/generators/upgrade-module/upgrade-module",

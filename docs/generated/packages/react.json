@@ -639,42 +639,6 @@
       "path": "/packages/react/src/generators/storybook-configuration/schema.json"
     },
     {
-      "name": "storybook-migrate-defaults-5-to-6",
-      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6#storybookMigration5to6Generator",
-      "schema": {
-        "$schema": "http://json-schema.org/schema",
-        "cli": "nx",
-        "$id": "storybook-migrate-defaults-5-to-6",
-        "title": "Storybook migrate defaults 5 to 6",
-        "description": "Generate default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
-        "type": "object",
-        "properties": {
-          "all": {
-            "type": "boolean",
-            "description": "Generate new Storybook configurations for all Storybook instances across all apps and libs.",
-            "default": true
-          },
-          "keepOld": {
-            "type": "boolean",
-            "description": "Keep the old configuration files - put them in a folder called `.old_storybook`.",
-            "default": true
-          },
-          "name": {
-            "type": "string",
-            "description": "Leave empty to upgrade all Storybook instances. Only use this if you want to do a gradual migration. Library or application name for which you want to generate the new Storybook configuration.",
-            "$default": { "$source": "argv", "index": 0 }
-          }
-        },
-        "required": [],
-        "presets": []
-      },
-      "description": "Generate default Storybook configuration files using Storybook version `>=6.x` specs, for projects that already have Storybook instances and configurations of versions `<6.x`.",
-      "hidden": false,
-      "implementation": "/packages/react/src/generators/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6#storybookMigration5to6Generator.ts",
-      "aliases": [],
-      "path": "/packages/react/src/generators/storybook-migrate-defaults-5-to-6/schema.json"
-    },
-    {
       "name": "component-story",
       "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
       "schema": {

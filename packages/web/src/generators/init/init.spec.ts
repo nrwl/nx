@@ -3,6 +3,7 @@ import {
   NxJsonConfiguration,
   readJson,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
@@ -78,6 +79,20 @@ describe('init', () => {
         unitTestRunner: 'none',
       });
       expect(tree.exists('babel.config.json')).toBe(false);
+    });
+
+    it('should not fail when dependencies is missing from package.json and no other init generators are invoked', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        delete json.dependencies;
+        return json;
+      });
+
+      expect(
+        webInitGenerator(tree, {
+          e2eTestRunner: 'none',
+          unitTestRunner: 'none',
+        })
+      ).resolves.toBeTruthy();
     });
   });
 });

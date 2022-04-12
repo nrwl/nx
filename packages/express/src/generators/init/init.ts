@@ -1,12 +1,12 @@
 import {
   addDependenciesToPackageJson,
-  updateJson,
-  formatFiles,
   convertNxGenerator,
+  formatFiles,
+  removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { initGenerator as nodeInitGenerator } from '@nrwl/node';
+import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import {
   expressTypingsVersion,
   expressVersion,
@@ -15,10 +15,8 @@ import {
 import type { Schema } from './schema';
 
 function updateDependencies(tree: Tree) {
-  updateJson(tree, 'package.json', (json) => {
-    delete json.dependencies['@nrwl/express'];
-    return json;
-  });
+  removeDependenciesFromPackageJson(tree, ['@nrwl/express'], []);
+
   return addDependenciesToPackageJson(
     tree,
     {

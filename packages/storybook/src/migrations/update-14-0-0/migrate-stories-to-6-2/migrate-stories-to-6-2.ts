@@ -1,7 +1,6 @@
 import {
   applyChangesToString,
   ChangeType,
-  convertNxGenerator,
   formatFiles,
   getProjects,
   logger,
@@ -425,8 +424,3 @@ async function changeSyntaxOfStory(tree: Tree, storyFilePath: string) {
 
   await formatFiles(tree);
 }
-
-export default migrateStoriesTo62Generator;
-export const migrateStoriesSchematic = convertNxGenerator(
-  migrateStoriesTo62Generator
-);
