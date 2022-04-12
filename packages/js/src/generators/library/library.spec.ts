@@ -794,5 +794,62 @@ describe('lib', () => {
         expect(tree.exists('libs/my-lib/package.json')).toBeTruthy();
       });
     });
+
+    describe('--publishable', () => {
+      it('should generate the build target', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          publishable: true,
+          importPath: '@proj/my-lib',
+          compiler: 'tsc',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build).toEqual({
+          executor: '@nrwl/js:tsc',
+          options: {
+            assets: ['libs/my-lib/*.md'],
+            main: 'libs/my-lib/src/index.ts',
+            outputPath: 'dist/libs/my-lib',
+            tsConfig: 'libs/my-lib/tsconfig.lib.json',
+          },
+          outputs: ['{options.outputPath}'],
+        });
+      });
+
+      it('should generate the publish target', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          publishable: true,
+          importPath: '@proj/my-lib',
+          compiler: 'tsc',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.publish).toEqual({
+          executor: '@nrwl/workspace:run-commands',
+          options: {
+            command:
+              'node tools/scripts/publish.mjs my-lib {args.ver} {args.tag}',
+            cwd: 'dist/libs/my-lib',
+          },
+          dependsOn: [{ projects: 'self', target: 'build' }],
+        });
+      });
+
+      it('should generate publish script', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          publishable: true,
+          importPath: '@proj/my-lib',
+          compiler: 'tsc',
+        });
+
+        expect(tree.exists('tools/scripts/publish.mjs')).toBeTruthy();
+      });
+    });
   });
 });
