@@ -157,7 +157,7 @@ export function Sidebar() {
       hover:underline
     "
         href="https://nx.dev/structure/dependency-graph"
-        rel="nofollow noreferrer"
+        rel="noreferrer"
         target="_blank"
       >
         <svg

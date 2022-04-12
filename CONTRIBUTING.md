@@ -6,7 +6,7 @@ We would love for you to contribute to Nx! Read this document to see how to do i
 
 Watch this 5-minute video:
 
-<a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank">
+<a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank" rel="noreferrer">
 <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600" alt="Nx - How to contribute"></p>
 </a>
 

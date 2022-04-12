@@ -109,7 +109,7 @@ const scheduleRow = (item: ScheduleItem): JSX.Element => (
         <div className="font-input-mono col-span-2 px-5 md:py-12 md:px-8">
           {item.videoUrl ? (
             <h3 className="mb-4 underline">
-              <a href={item.videoUrl} target="_blank">
+              <a href={item.videoUrl} target="_blank" rel="noreferrer">
                 {item.title}
               </a>
             </h3>
@@ -141,7 +141,7 @@ const breakRow = (item: ScheduleItem): JSX.Element => (
         <div className="px-5 pb-12 md:col-span-4 md:border-l md:border-gray-600 md:py-12 md:px-8">
           {item.videoUrl ? (
             <h3 className="font-input-mono underline">
-              <a href={item.videoUrl} target="_blank">
+              <a href={item.videoUrl} target="_blank" rel="noreferrer">
                 {item.title}
               </a>
             </h3>

@@ -99,7 +99,7 @@ const LinkType = ({
 }): JSX.Element => {
   if (isExternalReference(schema) && schema.$ref !== undefined) {
     return (
-      <a href={schema.$ref} target="_blank">
+      <a href={schema.$ref} target="_blank" rel="noreferrer">
         external reference: {schema.$ref}{' '}
         <ExternalLinkIcon className="inline h-4 w-4" />
       </a>

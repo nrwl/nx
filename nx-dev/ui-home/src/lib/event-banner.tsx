@@ -11,7 +11,7 @@ export function EventBanner(): ReactComponentElement<any> {
               <a
                 href="https://ti.to/nrwl/nx-workshop-12-2021?utm_source=nx.dev"
                 target="_blank"
-                rel="nofollow"
+                rel="noreferrer"
                 className="group font-bold text-white underline"
               >
                 {' '}

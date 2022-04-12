@@ -48,7 +48,7 @@ export function NxPlaybook(): ReactComponentElement<any> {
             <Link href="https://nxplaybook.com/?utm_source=nx.dev">
               <a
                 title="Dedicated carefully created Nx courses to get you up and running in no time"
-                rel="nofollow"
+                rel="noreferrer"
                 target="_blank"
                 className="text-blue-nx-base mt-8 inline-flex items-center rounded-md border border-transparent bg-white px-5 py-3 text-base font-medium shadow hover:bg-gray-100"
               >

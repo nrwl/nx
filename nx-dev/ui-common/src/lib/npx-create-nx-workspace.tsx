@@ -408,7 +408,7 @@ export function NpxCreateNxWorkspaceAnimation({
                     <a
                       href="https://styled-components.com"
                       target="_blank"
-                      rel="nofollow"
+                      rel="noreferrer"
                       className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                     >
                       https://styled-components.com
@@ -440,7 +440,7 @@ export function NpxCreateNxWorkspaceAnimation({
                   <a
                     href="https://sass-lang.com"
                     target="_blank"
-                    rel="nofollow"
+                    rel="noreferrer"
                     className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                   >
                     https://sass-lang.com
@@ -450,7 +450,7 @@ export function NpxCreateNxWorkspaceAnimation({
                   <a
                     href="https://stylus-lang.com"
                     target="_blank"
-                    rel="nofollow"
+                    rel="noreferrer"
                     className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                   >
                     https://stylus-lang.com
@@ -460,7 +460,7 @@ export function NpxCreateNxWorkspaceAnimation({
                   <a
                     href="https://lesscss.org"
                     target="_blank"
-                    rel="nofollow"
+                    rel="noreferrer"
                     className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                   >
                     https://lesscss.org
@@ -474,7 +474,7 @@ export function NpxCreateNxWorkspaceAnimation({
                     <a
                       href="https://styled-components.com"
                       target="_blank"
-                      rel="nofollow"
+                      rel="noreferrer"
                       className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                     >
                       https://styled-components.com
@@ -486,7 +486,7 @@ export function NpxCreateNxWorkspaceAnimation({
                   <a
                     href="https://emotion.sh"
                     target="_blank"
-                    rel="nofollow"
+                    rel="noreferrer"
                     className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                   >
                     https://emotion.sh
@@ -496,7 +496,7 @@ export function NpxCreateNxWorkspaceAnimation({
                   <a
                     href="https://www.npmjs.com/package/styled-jsx"
                     target="_blank"
-                    rel="nofollow"
+                    rel="noreferrer"
                     className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                   >
                     https://www.npmjs.com/package/styled-jsx
@@ -601,7 +601,7 @@ export function NpxCreateNxWorkspaceAnimation({
                     <a
                       href="https://nx.dev/react/tutorial/01-create-application"
                       target="_blank"
-                      rel="nofollow"
+                      rel="noreferrer"
                       className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                     >
                       https://nx.dev/react/tutorial/01-create-application
@@ -613,7 +613,7 @@ export function NpxCreateNxWorkspaceAnimation({
                     <a
                       href="https://egghead.io/playlists/scale-react-development-with-nx-4038"
                       target="_blank"
-                      rel="nofollow"
+                      rel="noreferrer"
                       className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                     >
                       https://egghead.io/playlists/scale-react-development-with-nx-4038

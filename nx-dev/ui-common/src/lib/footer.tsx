@@ -267,7 +267,7 @@ export function Footer({ useDarkBackground }: FooterProps) {
             </svg>{' '}
             by{' '}
             <Link href="https://nrwl.io/?utm_source=nx.dev">
-              <a target="_blank" rel="nofollow">
+              <a target="_blank" rel="noreferrer">
                 <svg
                   className="-mt-0.5 ml-0.5 inline h-auto w-14"
                   role="img"

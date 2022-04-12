@@ -381,7 +381,7 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
                   <Link href={project.href}>
                     <a
                       target="_blank"
-                      rel="nofollow"
+                      rel="noreferrer"
                       className="focus:outline-none"
                     >
                       {/* Extend touch target to entire panel */}
