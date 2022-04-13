@@ -1,7 +1,7 @@
 import {
   addDependenciesToPackageJson,
-  readJson,
   logger,
+  readJson,
   Tree,
 } from '@nrwl/devkit';
 
@@ -24,9 +24,10 @@ export async function updateToReact18(host: Tree) {
         react: '18.0.0',
         'react-dom': '18.0.0',
         'react-is': '18.0.0',
-        'react-test-renderer': '18.0.0',
       },
-      {}
+      {
+        'react-test-renderer': '18.0.0',
+      }
     );
   }
 }
