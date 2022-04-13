@@ -47,12 +47,16 @@ jobs:
         displayName: NPM Install Dependencies
       - script: yarn nx-cloud start-ci-run
         displayName: Start CI run
+      - script: yarn nx workspace-lint
+        displayName: Run workspace lint
+      - script: yarn nx format:check
+        displayName: Check format
       - script: yarn nx affected --base=$(BASE_SHA) --target=lint --parallel=3
         displayName: Run lint
+      - script: yarn nx affected --base=$(BASE_SHA) --target=test --parallel=3 --ci --code-coverage
+        displayName: Run test
       - script: yarn nx affected --base=$(BASE_SHA) --target=build --parallel=3
         displayName: Run build
-      - script: yarn nx affected --base=$(BASE_SHA) --target=test --parallel=2
-        displayName: Run test
       - script: yarn nx-cloud stop-all-agents
         condition: always()
         displayName: Stop all Nx-Cloud agents"
@@ -104,19 +108,27 @@ jobs:
           name: Initialize the Nx Cloud distributed CI run
           command: yarn nx-cloud start-ci-run
       - run:
+          name: Run workspace lint
+          command:  nx workspace-lint
+      - run:
+          name: Check format
+          command:  nx format:check
+      - run:
           name: Run lint
           command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
       - run:
+          name: Run test
+          command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
+      - run:
           name: Run build
           command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
-      - run:
-          name: Run test
-          command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=2
       - run:
           name: Stop all agents
           command: yarn nx-cloud stop-all-agents
 
 workflows:
+  version: 2
+
   build:
     jobs:
       - agent:
@@ -137,50 +149,21 @@ on:
 
 jobs:
   main:
-    runs-on: ubuntu-latest
-    env:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: true
-      NX_BRANCH: \${{ github.event.number || github.ref_name }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Derive appropriate SHAs for base and head for \`nx affected\` commands
-        uses: nrwl/nx-set-shas@v2
-        with:
-          main-branch-name: 'main'
-      - uses: actions/setup-node@v1
-        with:
-          node-version: '16'
-      - name: Install dependencies
-        run: yarn --frozen-lockfile
-      - name: Initialize the Nx Cloud distributed CI run
-        run: yarn nx-cloud start-ci-run
-      - name: Run lint
-        run: yarn nx affected --target=lint --parallel=3
-      - name: Run build
-        run: yarn nx affected --target=build --parallel=3
-      - name: Run test
-        run: yarn nx affected --target=test --parallel=2
-      - name: Stop all running agents for this CI run
-        if: \${{ always() }}
-        run: yarn nx-cloud stop-all-agents
+    name: Nx Cloud - Main Job
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
+    with:
+      parallel-commands: |
+        yarn nx workspace-lint
+        yarn nx format:check
+      parallel-commands-on-agents: |
+        yarn nx affected --target=lint --parallel=3
+        yarn nx affected --target=test --parallel=3 --ci --code-coverage
+        yarn nx affected --target=build --parallel=3
 
   agents:
-    runs-on: ubuntu-latest
-    name: Agent \${{ matrix.agent }}
-    strategy:
-      matrix:
-        agent: [1, 2, 3]
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v1
-        with:
-          node-version: '16'
-      - name: Install dependencies
-        run: yarn --frozen-lockfile
-      - name: Start Nx Agent \${{ matrix.agent }}
-        run: yarn nx-cloud start-agent"
+    name: Nx Cloud - Agents
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.2
+    with:
+      number-of-agents: 3
+"
 `;

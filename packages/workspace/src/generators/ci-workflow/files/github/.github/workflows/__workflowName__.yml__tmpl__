@@ -8,49 +8,19 @@ on:
 
 jobs:
   main:
-    runs-on: ubuntu-latest
-    env:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: true
-      NX_BRANCH: ${{ github.event.number || github.ref_name }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Derive appropriate SHAs for base and head for `nx affected` commands
-        uses: nrwl/nx-set-shas@v2
-        with:
-          main-branch-name: '<%= mainBranch %>'
-      - uses: actions/setup-node@v1
-        with:
-          node-version: '16'
-      - name: Install dependencies
-        run: <%= packageManagerInstall %>
-      - name: Initialize the Nx Cloud distributed CI run
-        run: <%= packageManagerPrefix %> nx-cloud start-ci-run
-      - name: Run lint
-        run: <%= packageManagerPrefix %> nx affected --target=lint --parallel=3
-      - name: Run build
-        run: <%= packageManagerPrefix %> nx affected --target=build --parallel=3
-      - name: Run test
-        run: <%= packageManagerPrefix %> nx affected --target=test --parallel=2
-      - name: Stop all running agents for this CI run
-        if: ${{ always() }}
-        run: <%= packageManagerPrefix %> nx-cloud stop-all-agents
+    name: Nx Cloud - Main Job
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
+    with:
+      parallel-commands: |
+        <%= packageManagerPrefix %> nx workspace-lint
+        <%= packageManagerPrefix %> nx format:check
+      parallel-commands-on-agents: |
+        <%= packageManagerPrefix %> nx affected --target=lint --parallel=3
+        <%= packageManagerPrefix %> nx affected --target=test --parallel=3 --ci --code-coverage
+        <%= packageManagerPrefix %> nx affected --target=build --parallel=3
 
   agents:
-    runs-on: ubuntu-latest
-    name: Agent ${{ matrix.agent }}
-    strategy:
-      matrix:
-        agent: [1, 2, 3]
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v1
-        with:
-          node-version: '16'
-      - name: Install dependencies
-        run: <%= packageManagerInstall %>
-      - name: Start Nx Agent ${{ matrix.agent }}
-        run: <%= packageManagerPrefix %> nx-cloud start-agent
+    name: Nx Cloud - Agents
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.2
+    with:
+      number-of-agents: 3

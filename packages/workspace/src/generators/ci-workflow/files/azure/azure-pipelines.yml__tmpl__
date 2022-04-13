@@ -44,12 +44,16 @@ jobs:
         displayName: NPM Install Dependencies
       - script: <%= packageManagerPrefix %> nx-cloud start-ci-run
         displayName: Start CI run
+      - script: <%= packageManagerPrefix %> nx workspace-lint
+        displayName: Run workspace lint
+      - script: <%= packageManagerPrefix %> nx format:check
+        displayName: Check format
       - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --target=lint --parallel=3
         displayName: Run lint
+      - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --target=test --parallel=3 --ci --code-coverage
+        displayName: Run test
       - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --target=build --parallel=3
         displayName: Run build
-      - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --target=test --parallel=2
-        displayName: Run test
       - script: <%= packageManagerPrefix %> nx-cloud stop-all-agents
         condition: always()
         displayName: Stop all Nx-Cloud agents

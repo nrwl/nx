@@ -35,7 +35,7 @@ The name of the application when a preset with pregenerated app is selected
 
 Type: array
 
-Choices: ["github", "circleci", "azure"]
+Choices: [github, circleci, azure]
 
 Default: []
 

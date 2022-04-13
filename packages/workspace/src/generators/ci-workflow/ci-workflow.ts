@@ -3,7 +3,6 @@ import {
   names,
   generateFiles,
   joinPathFragments,
-  detectPackageManager,
   getPackageManagerCommand,
 } from '@nrwl/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
@@ -18,7 +17,6 @@ export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(schema);
 
   generateFiles(host, joinPathFragments(__dirname, 'files', ci), '', options);
-  // TODO: Implement error handling when file already exists
 }
 
 interface Substitutes {
