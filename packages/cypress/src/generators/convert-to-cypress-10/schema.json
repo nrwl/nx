@@ -3,6 +3,7 @@
   "$id": "NxCypressConvertToTen",
   "cli": "nx",
   "title": "Convert e2e project to Cypress 10",
+  "description": "Convert Cypress e2e project from v8 to Cypress v10.",
   "type": "object",
   "examples": [
     {

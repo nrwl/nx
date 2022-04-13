@@ -1,7 +1,8 @@
 ![Cypress logo](/shared/cypress-logo.png)
 
-Cypress is an e2e test runner built for modern web. It has a lot of great features:
+Cypress is a test runner built for the modern web. It has a lot of great features:
 
+- Component Testing
 - Time travel
 - Real-time reloads
 - Automatic waiting
@@ -10,18 +11,6 @@ Cypress is an e2e test runner built for modern web. It has a lot of great featur
 - Screenshots and videos
 
 ## Setting Up Cypress
-
-### Generating Applications
-
-By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.
-
-```bash
-nx g @nrwl/web:app frontend
-```
-
-### Creating a Cypress E2E project for an existing project
-
-You can create a new Cypress E2E project for an existing project.
 
 If the `@nrwl/cypress` package is not installed, install the version that matches your `@nrwl/workspace` version.
 
@@ -33,39 +22,53 @@ yarn add --dev @nrwl/cypress
 npm install --save-dev @nrwl/cypress
 ```
 
-Next, generate an E2E project based on an existing project.
+## E2E Testing
+
+By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.
+
+```bash
+nx g @nrwl/web:app frontend
+```
+
+### Creating a Cypress E2E project for an existing project
+
+To generate an E2E project based on an existing project, run the following generator
 
 ```bash
 nx g @nrwl/cypress:cypress-project your-app-name-e2e --project=your-app-name
 ```
 
-Replace `your-app-name` with the app's name as defined in your `workspace.json` file.
+Optionally, you can use the `--baseUrl` option if you don't want cypress plugin to serve `your-app-name`.
 
-## Using Cypress
+```bash
+nx g @nrwl/cypress:cypress-project your-app-name-e2e --baseUrl=http://localhost:4200
+```
+
+Replace `your-app-name` with the app's name as defined in your `workspace.json` file.
 
 ### Testing Applications
 
-Simply run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
+Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
-By default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your terminal. Screenshots and videos will be accessible in `dist/apps/frontend/screenshots` and `dist/apps/frontend/videos`.
+You can run your e2e test against a production build with the `--prod` flag
 
-### Watching for Changes
+```bash
+nx e2e frontend-e2e --prod
+```
 
-With, `nx e2e frontend-e2e --watch` Cypress will start in the application mode.
+By default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your
+terminal. Screenshots and videos will be accessible in `dist/apps/frontend/screenshots` and `dist/apps/frontend/videos`.
 
-Running Cypress with `--watch` is a great way to enhance dev workflow - you can build up test files with the application running and Cypress will re-run those tests as you enhance and add to the suite.
+### Watching for Changes (Headed Mode)
 
-Cypress doesn't currently re-run your tests after changes are made to application code when it runs in “headed” mode.
+With, `nx e2e frontend-e2e --watch` Cypress will start in headed mode where you can see your application being tested.
 
-### Using Cypress in the Headed Mode
+Running Cypress with `--watch` is a great way to enhance dev workflow - you can build up test files with the application
+running and Cypress will re-run those tests as you enhance and add to the suite.
 
-You can run Cypress in headed mode to see your app being tested. To do this, pass in the `--watch` option. E.g: `nx frontend-e2e --watch`
-
-### Testing Against Prod Build
-
-You can run your e2e test against a production build like this: `nx e2e frontend-e2e --prod`.
-
-## Configuration
+```bash
+nx e2e frontend-e2e --prod
+```
 
 ### Specifying a Custom Url to Test
 
@@ -75,11 +78,64 @@ The `baseUrl` property provides you the ability to test an application hosted on
 nx e2e frontend-e2e --baseUrl=https://frontend.com
 ```
 
-> If no `baseUrl` and no `devServerTarget` are provided, Cypress will expect to have the `baseUrl` property in the `cypress.json` file, or will error.
+> If no `baseUrl` and no `devServerTarget` are provided, Cypress will expect to have the `baseUrl` property in
+> the `cypress.json` file, or will error.
 
-### Using cypress.json
+### Using cypress.config.ts
 
-If you need to fine tune your Cypress setup, you can do so by modifying `cypress.json` in the e2e project. For instance, you can easily add your `projectId` to save all the screenshots and videos into your Cypress dashboard. The complete configuration is documented on [the official website](https://docs.cypress.io/guides/references/configuration.html#Options).
+If you need to fine tune your Cypress setup, you can do so by modifying `cypress.config.ts` in the e2e project. For
+instance,
+you can easily add your `projectId` to save all the screenshots and videos into your Cypress dashboard. The complete
+configuration is documented
+on [the official website](https://docs.cypress.io/guides/references/configuration.html#Options).
+
+## Component Testing
+
+> Component testing is available on Cypress v10 and above. See
+> our [migration guide for more information](/cypress/cypress-v10-migration).
+
+Unlike E2E testing, component testing does not create a new project. Instead, Cypress component testing is added
+directly to a project.
+
+Use the `--cy` flag to add Cypress component testing to your project when creating a react or next library.
+
+```bash
+nx g @nrwl/react:lib your-react-lib --cy
+```
+
+```bash
+nx g @nrwl/next:lib your-next-lib --cy
+```
+
+Add to an existing project with the component test project generator.
+
+```bash
+nx g @nrwl/cypress:cypress-component-project --project=existing-project-name --component-type=<react|next>
+```
+
+### Testing Applications
+
+# TODO(caleb): update this with the component testing target name
+
+Run `nx comp-test your-lib` to execute the component tests with Cypress.
+
+By default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your
+terminal. Screenshots and videos will be accessible in `dist/libs/your-lib/screenshots` and `dist/libs/your-libvideos`.
+
+### Watching for Changes (Headed Mode)
+
+With, `nx comp-test your-lib --watch` Cypress will start in headed mode. Where you can see your component being tested.
+
+Running Cypress with `--watch` is a great way to enhance dev workflow. You can iterate on the component tests and
+component under test - Cypress will re-run your tests after changes to the component are made.
+
+### Using cypress.config.ts
+
+If you need to fine tune your Cypress setup, you can do so by modifying `cypress.config.ts` in the project root. For
+instance,
+you can easily add your `projectId` to save all the screenshots and videos into your Cypress dashboard. The complete
+configuration is documented
+on [the official website](https://docs.cypress.io/guides/references/configuration.html#Options).
 
 ## More Documentation
 

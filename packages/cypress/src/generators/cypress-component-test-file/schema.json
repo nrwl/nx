@@ -3,6 +3,7 @@
   "$id": "NxCypressComponentTestFileProject",
   "cli": "nx",
   "title": "Add Cypress Component test file to project",
+  "description": "Add Cypress Component test file for a component.",
   "type": "object",
   "examples": [],
   "properties": {

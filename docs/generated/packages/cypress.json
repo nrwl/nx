@@ -117,6 +117,7 @@
         "$id": "NxCypressComponentProject",
         "cli": "nx",
         "title": "Set up Cypress component test for a project",
+        "description": "Set up Cypress component test for a project.",
         "type": "object",
         "examples": [
           {
@@ -171,6 +172,7 @@
         "$id": "NxCypressConvertToTen",
         "cli": "nx",
         "title": "Convert e2e project to Cypress 10",
+        "description": "Convert Cypress e2e project from v8 to Cypress v10.",
         "type": "object",
         "examples": [
           {
@@ -215,6 +217,7 @@
         "$id": "NxCypressComponentTestFileProject",
         "cli": "nx",
         "title": "Add Cypress Component test file to project",
+        "description": "Add Cypress Component test file for a component.",
         "type": "object",
         "examples": [],
         "properties": {
