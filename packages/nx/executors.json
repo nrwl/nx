@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "run-script": {
+      "implementation": "./src/executors/run-script/run-script.impl",
+      "schema": "./src/executors/run-script/schema.json",
+      "description": "Run an NPM script using Nx."
+    }
+  }
+}

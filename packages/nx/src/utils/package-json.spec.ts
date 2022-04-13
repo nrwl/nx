@@ -4,9 +4,9 @@ import {
 } from './package-json';
 
 describe('buildTargetFromScript', () => {
-  it('should use @nrwl/workspace:run-script', () => {
+  it('should use nx:run-script', () => {
     const target = buildTargetFromScript('build', null);
-    expect(target.executor).toEqual('@nrwl/workspace:run-script');
+    expect(target.executor).toEqual('nx:run-script');
   });
 
   it('should use options provided in nx target package json configuration', () => {
@@ -35,6 +35,6 @@ describe('buildTargetFromScript', () => {
     });
 
     expect(target.options.script).toEqual('build');
-    expect(target.executor).toEqual('@nrwl/workspace:run-script');
+    expect(target.executor).toEqual('nx:run-script');
   });
 });

@@ -189,7 +189,7 @@ function detectWorkspaceScope(repoRoot: string) {
 function createNxJsonFile(repoRoot: string) {
   const scope = detectWorkspaceScope(repoRoot);
   const res = {
-    extends: '@nrwl/workspace/presets/npm.json',
+    extends: 'nx/presets/npm.json',
     npmScope: scope,
     tasksRunnerOptions: {
       default: {
@@ -267,7 +267,6 @@ function deduceDefaultBase() {
 function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
   const json = readJsonFile(repoRoot, `package.json`);
   if (!json.devDependencies) json.devDependencies = {};
-  json.devDependencies['@nrwl/workspace'] = 'NX_VERSION';
   json.devDependencies['nx'] = 'NX_VERSION';
   if (useCloud) {
     json.devDependencies['@nrwl/nx-cloud'] = 'latest';

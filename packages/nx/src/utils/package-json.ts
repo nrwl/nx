@@ -52,7 +52,7 @@ export function buildTargetFromScript(
 
   return {
     ...nxTargetConfiguration,
-    executor: '@nrwl/workspace:run-script',
+    executor: 'nx:run-script',
     options: {
       ...(nxTargetConfiguration.options || {}),
       script,
