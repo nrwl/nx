@@ -59,6 +59,12 @@
       "description": "Changes the presets in nx.json to come from the nx package",
       "cli": "nx",
       "implementation": "./src/migrations/update-14-0-0/change-nx-json-presets"
+    },
+    "14-0-0-change-npm-script-executor": {
+      "version": "14.0.0-beta.0",
+      "description": "Migrates from @nrwl/workspace:run-script to nx:run-script",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-14-0-0/change-npm-script-executor"
     }
   },
   "packageJsonUpdates": {
