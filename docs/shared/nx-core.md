@@ -32,10 +32,8 @@ package.json
   "scripts": {},
   "private": true,
   "devDependencies": {
-    "nx": "12.8.0",
-    "@nrwl/workspace": "12.8.0",
-    "@types/node": "14.14.33",
-    "typescript": "~4.3.5"
+    "nx": "14.0.0",
+    "@nrwl/workspace": "14.0.0"
   }
 }
 ```
@@ -44,11 +42,11 @@ package.json
 
 ```json
 {
-  "extends": "@nrwl/workspace/presets/core.json",
+  "extends": "nx/presets/core.json",
   "npmScope": "myorg",
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/workspace/tasks-runners",
+      "runner": "nx/tasks-runners/default",
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"]
       }

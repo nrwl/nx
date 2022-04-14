@@ -18,8 +18,7 @@ Watch this 3-min video to see how the command works and what next steps are:
 
 1. Add Nx to your package.json.
 2. Create `nx.json`, containing all the necessary configuration for Nx.
-3. Set up a `tsconfig` file mapping if needed.
-4. Set up Nx Cloud (if you chose "yes").
+3. Set up Nx Cloud (if you chose "yes").
 
 > If you are familiar with Turborepo, check out [this guide](/guides/turbo-and-nx). At this point, Nx can do anything Turbo can, and much more.
 
@@ -147,7 +146,6 @@ Nx + Lerna:
   },
   "devDependencies": {
     "lerna": "*",
-    "@nrwl/workspace": "*",
     "nx": "*"
   }
 }
@@ -169,16 +167,31 @@ many more. All the plugins are designed to work together and create a cohesive a
 In addition, Nx makes a lot of things much easier, like building large apps incrementally, distributing CI (no point in
 doing caching unless you can do that), enforcing best practices, building design systems.
 
-## Troubleshooting
+## Excluding Sources
 
-The `add-nx-to-monorepo` command does its best to figure out what projects you have in the repo, but you can exclude
-them by creating `.nxignore` file.
+The `add-nx-to-monorepo` command does its best to figure out what projects you have in the repo. Similar to other tools, it looks at the `workspaces` property in the root `package.json` and tries to find all `package.json` files matching the globs. You can change those globs to exclude some projects. You can also exclude files by creating an `.nxignore` file, like this:
 
 ```text
 third_party # nx will ignore everything in the third-party dir
 ```
 
-Nx can add a root tsconfig to your repo with something like this:
+## Enabling JS Analysis
+
+The `add-nx-to-monorepo` command adds the following to the generated `nx.json`. This disables JS analysis, such that Nx only analyzes `package.json` files like Lerna or Turborepo.
+
+```json
+{
+  "pluginsConfig": {
+    "@nrwl/js": {
+      "analyzeSourceFiles": false
+    }
+  }
+}
+```
+
+We do this because most existing Lerna monorepos have implicit dependencies between projects Lerna knows nothing about. By adding `"analyzeSourceFiles": false` we are trying to make sure that Nx sees the same project graph Lerna does, even though the graph is often incorrect.
+
+You can remove the section in the config, which will enable the JS/TS analysis. In this case Nx will consider all import and require statements in your JS/TS files when creating its project graph. If you do that, you can also add the `paths` property to the root `tsconfig.base.json` (if you don't have this file, create it), which will tell Nx how to resolve imports.
 
 ```json
 {
@@ -188,24 +201,6 @@ Nx can add a root tsconfig to your repo with something like this:
       "one/*": ["packages/one/*"],
       "two": ["packages/two/index"],
       "two/*": ["packages/two/*"]
-    }
-  }
-}
-```
-
-This tsconfig isn't used for building or testing. It's only used to teach Nx how to resolve imports, so Nx can do its
-import source code analysis. If the path mappings are deduced incorrectly, feel free to change them.
-
-Lerna only analyses package.json files. Nx does that, but in addition it also analyses all JavaScript/TypeScript files to make
-sure it understands the project graph of your workspace.
-
-If you want to disable the source code analysis, to make Nx match Lerna, add the following to your package.json:
-
-```json
-{
-  "pluginsConfig": {
-    "@nrwl/js": {
-      "analyzeSourceFiles": false
     }
   }
 }
