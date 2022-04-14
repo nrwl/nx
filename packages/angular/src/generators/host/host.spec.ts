@@ -1,14 +1,14 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import mfeHost from './mfe-host';
+import host from './host';
 import applicationGenerator from '../application/application';
 
-describe('MFE Host App Generator', () => {
-  it('should generate a host mfe app with no remotes', async () => {
+describe('Host App Generator', () => {
+  it('should generate a host app with no remotes', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
 
     // ACT
-    await mfeHost(tree, {
+    await host(tree, {
       name: 'test',
     });
 
@@ -16,7 +16,7 @@ describe('MFE Host App Generator', () => {
     expect(tree.read('apps/test/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should generate a host mfe app with a remote', async () => {
+  it('should generate a host app with a remote', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
 
@@ -29,7 +29,7 @@ describe('MFE Host App Generator', () => {
     });
 
     // ACT
-    await mfeHost(tree, {
+    await host(tree, {
       name: 'test',
       remotes: ['remote'],
     });
@@ -47,7 +47,7 @@ describe('MFE Host App Generator', () => {
 
     // ACT
     try {
-      await mfeHost(tree, {
+      await host(tree, {
         name: 'test',
         remotes: ['remote'],
       });

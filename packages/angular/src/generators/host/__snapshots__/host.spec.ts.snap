@@ -1,18 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`MFE Host App Generator should generate a host mfe app with a remote 1`] = `
+exports[`Host App Generator should generate a host app with a remote 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./mfe.config');
 module.exports = withModuleFederation(config);"
 `;
 
-exports[`MFE Host App Generator should generate a host mfe app with a remote 2`] = `
+exports[`Host App Generator should generate a host app with a remote 2`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./mfe.config');
 module.exports = withModuleFederation(config);"
 `;
 
-exports[`MFE Host App Generator should generate a host mfe app with no remotes 1`] = `
+exports[`Host App Generator should generate a host app with no remotes 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./mfe.config');
 module.exports = withModuleFederation(config);"
