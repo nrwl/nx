@@ -24,6 +24,11 @@
       "implementation": "./src/builders/webpack-server/webpack-server.impl",
       "schema": "./src/builders/webpack-server/schema.json",
       "description": "The `webpack-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
+    },
+    "module-federation-dev-server": {
+      "implementation": "./src/builders/module-federation-dev-server/module-federation-dev-server.impl",
+      "schema": "./src/builders/module-federation-dev-server/schema.json",
+      "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host."
     }
   },
   "builders": {
@@ -51,6 +56,11 @@
       "implementation": "./src/builders/webpack-server/webpack-server.impl",
       "schema": "./src/builders/webpack-server/schema.json",
       "description": "The `webpack-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
+    },
+    "module-federation-dev-server": {
+      "implementation": "./src/builders/module-federation-dev-server/module-federation-dev-server.impl",
+      "schema": "./src/builders/module-federation-dev-server/schema.json",
+      "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host."
     }
   }
 }
