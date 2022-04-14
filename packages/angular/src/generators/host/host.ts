@@ -1,18 +1,22 @@
-import type { Tree } from '@nrwl/devkit';
+import { formatFiles, names, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 
 import { getProjects } from '@nrwl/devkit';
 import applicationGenerator from '../application/application';
+import remoteGenerator from '../remote/remote';
 
 export default async function host(tree: Tree, options: Schema) {
   const projects = getProjects(tree);
 
+  const remotesToGenerate: string[] = [];
+  const remotesToIntegrate: string[] = [];
+
   if (options.remotes && options.remotes.length > 0) {
     options.remotes.forEach((remote) => {
       if (!projects.has(remote)) {
-        throw new Error(
-          `Could not find specified remote application (${remote})`
-        );
+        remotesToGenerate.push(remote);
+      } else {
+        remotesToIntegrate.push(remote);
       }
     });
   }
@@ -22,10 +26,26 @@ export default async function host(tree: Tree, options: Schema) {
     mfe: true,
     mfeType: 'host',
     routing: true,
-    remotes: options.remotes ?? [],
+    remotes: remotesToIntegrate ?? [],
     port: 4200,
     federationType: options.dynamic ? 'dynamic' : 'static',
+    skipFormat: true,
   });
+
+  console.log(tree.read('workspace.json', 'utf-8'));
+
+  for (const remote of remotesToGenerate) {
+    await remoteGenerator(tree, {
+      ...options,
+      name: remote,
+      host: names(options.name).fileName,
+      skipFormat: true,
+    });
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return installTask;
 }
