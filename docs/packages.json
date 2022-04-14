@@ -28,7 +28,7 @@
         "karma-project",
         "library",
         "library-secondary-entry-point",
-        "mfe-remote",
+        "remote",
         "move",
         "convert-to-with-mf",
         "mfe-host",

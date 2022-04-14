@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import mfeRemote from './mfe-remote';
+import remote from './remote';
 import applicationGenerator from '../application/application';
 import { readProjectConfiguration } from '@nrwl/devkit';
 
@@ -9,7 +9,7 @@ describe('MFE Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace(2);
 
     // ACT
-    await mfeRemote(tree, {
+    await remote(tree, {
       name: 'test',
       port: 4201,
     });
@@ -30,7 +30,7 @@ describe('MFE Remote App Generator', () => {
     });
 
     // ACT
-    await mfeRemote(tree, {
+    await remote(tree, {
       name: 'test',
       host: 'host',
       port: 4201,
@@ -47,7 +47,7 @@ describe('MFE Remote App Generator', () => {
 
     // ACT
     try {
-      await mfeRemote(tree, {
+      await remote(tree, {
         name: 'test',
         host: 'host',
         port: 4201,
@@ -63,13 +63,13 @@ describe('MFE Remote App Generator', () => {
   it('should generate a remote mfe app and automatically find the next port available', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
-    await mfeRemote(tree, {
+    await remote(tree, {
       name: 'existing',
       port: 4201,
     });
 
     // ACT
-    await mfeRemote(tree, {
+    await remote(tree, {
       name: 'test',
     });
 
@@ -83,7 +83,7 @@ describe('MFE Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace(2);
 
     // ACT
-    await mfeRemote(tree, {
+    await remote(tree, {
       name: 'test',
     });
 

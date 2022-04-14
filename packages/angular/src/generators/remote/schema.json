@@ -1,14 +1,14 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "NxMFERemote",
+  "$id": "NxMFRemote",
   "cli": "nx",
-  "title": "Nx MFE Remote App",
-  "description": "Create an Angular Remote Micro Frontend Application.",
+  "title": "Nx Module Federation Remote App",
+  "description": "Create an Angular Remote Module Federation Application.",
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nrwl/angular:mfe-remote appName --host=host --port=4201",
-      "description": "Create an Angular app with configuration in place for MFE. If host is provided, attach this remote app to host app's configuration."
+      "command": "nx g @nrwl/angular:remote appName --host=host --port=4201",
+      "description": "Create an Angular app with configuration in place for Module Federation. If host is provided, attach this remote app to host app's configuration."
     }
   ],
   "properties": {
