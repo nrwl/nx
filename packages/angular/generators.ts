@@ -21,4 +21,4 @@ export * from './src/generators/add-linting/add-linting';
 export * from './src/generators/component-cypress-spec/component-cypress-spec';
 export * from './src/generators/component-story/component-story';
 export * from './src/generators/web-worker/web-worker';
-export * from './src/generators/mfe-remote/mfe-remote';
+export * from './src/generators/remote/remote';

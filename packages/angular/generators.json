@@ -71,11 +71,10 @@
       "aliases": ["secondary-entry-point", "entry-point"],
       "description": "Creates a secondary entry point for an Angular publishable library."
     },
-    "mfe-remote": {
-      "factory": "./src/generators/mfe-remote/mfe-remote.compat",
-      "schema": "./src/generators/mfe-remote/schema.json",
-      "aliases": ["remote"],
-      "description": "Generate a Remote Angular Micro-Frontend Application."
+    "remote": {
+      "factory": "./src/generators/remote/remote.compat",
+      "schema": "./src/generators/remote/schema.json",
+      "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
       "factory": "./src/generators/move/move#angularMoveSchematic",
@@ -220,11 +219,10 @@
       "aliases": ["secondary-entry-point", "entry-point"],
       "description": "Creates a secondary entry point for an Angular publishable library."
     },
-    "mfe-remote": {
-      "factory": "./src/generators/mfe-remote/mfe-remote",
-      "schema": "./src/generators/mfe-remote/schema.json",
-      "aliases": ["remote"],
-      "description": "Generate a Remote Angular Micro-Frontend Application."
+    "remote": {
+      "factory": "./src/generators/remote/remote",
+      "schema": "./src/generators/remote/schema.json",
+      "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",
