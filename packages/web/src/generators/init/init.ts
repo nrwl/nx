@@ -11,7 +11,7 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, typesNodeVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
 function updateDependencies(tree: Tree) {
@@ -26,6 +26,7 @@ function updateDependencies(tree: Tree) {
     },
     {
       '@nrwl/web': nxVersion,
+      '@types/node': typesNodeVersion,
     }
   );
 }

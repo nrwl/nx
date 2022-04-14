@@ -19,6 +19,7 @@ import {
   reactVersion,
   testingLibraryReactHooksVersion,
   testingLibraryReactVersion,
+  typesNodeVersion,
   typesReactDomVersion,
   typesReactVersion,
 } from '../../utils/versions';
@@ -58,6 +59,7 @@ function updateDependencies(host: Tree) {
     },
     {
       '@nrwl/react': nxVersion,
+      '@types/node': typesNodeVersion,
       '@types/react': typesReactVersion,
       '@types/react-dom': typesReactDomVersion,
       '@testing-library/react': testingLibraryReactVersion,

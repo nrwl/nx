@@ -31,6 +31,7 @@ export function karmaGenerator(tree: Tree, options: GeneratorOptions) {
       'jasmine-core': '~3.10.0',
       'jasmine-spec-reporter': '~5.0.0',
       '@types/jasmine': '~3.5.0',
+      '@types/node': '16.11.7',
     }
   );
 }

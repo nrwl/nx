@@ -8,7 +8,11 @@ import {
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
-import { nxVersion, tslibVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  tslibVersion,
+  typesNodeVersion,
+} from '../../utils/versions';
 import { Schema } from './schema';
 
 function updateDependencies(tree: Tree) {
@@ -19,7 +23,7 @@ function updateDependencies(tree: Tree) {
     {
       tslib: tslibVersion,
     },
-    { '@nrwl/node': nxVersion }
+    { '@nrwl/node': nxVersion, '@types/node': typesNodeVersion }
   );
 }
 

@@ -8,7 +8,6 @@ Object {
   "devDependencies": Object {
     "@nrwl/cli": "*",
     "@nrwl/workspace": "*",
-    "@types/node": "16.11.7",
     "nx": "*",
     "prettier": "^2.5.1",
     "typescript": "~4.6.2",
@@ -31,7 +30,6 @@ Object {
   "devDependencies": Object {
     "@nrwl/cli": "*",
     "@nrwl/workspace": "*",
-    "@types/node": "16.11.7",
     "nx": "*",
     "prettier": "^2.5.1",
     "typescript": "~4.6.2",
@@ -55,7 +53,6 @@ Object {
     "@nrwl/cli": "*",
     "@nrwl/react": "*",
     "@nrwl/workspace": "*",
-    "@types/node": "16.11.7",
     "nx": "*",
     "prettier": "^2.5.1",
     "typescript": "~4.6.2",

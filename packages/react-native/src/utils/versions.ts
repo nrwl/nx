@@ -3,6 +3,8 @@ export const nxVersion = '*';
 export const reactNativeVersion = '0.67.4';
 export const typesReactNativeVersion = '0.67.3';
 
+export const typesNodeVersion = '16.11.7';
+
 export const metroVersion = '0.70.0';
 
 // TODO(jack): Remove this once react-native 0.68.0 is released.

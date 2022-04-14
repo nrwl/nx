@@ -33,6 +33,7 @@ import {
   reactVersion,
   testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
+  typesNodeVersion,
   typesReactNativeVersion,
 } from '../../utils/versions';
 
@@ -80,6 +81,7 @@ export function updateDependencies(host: Tree) {
     },
     {
       '@nrwl/react-native': nxVersion,
+      '@types/node': typesNodeVersion,
       '@types/react': typesReactVersion,
       '@types/react-native': typesReactNativeVersion,
       '@react-native-community/cli': reactNativeCommunityCli,
