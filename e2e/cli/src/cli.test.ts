@@ -1,15 +1,16 @@
-import { renameSync } from 'fs';
 import {
   newProject,
   readFile,
   readJson,
   runCLI,
   runCLIAsync,
+  runCommand,
   tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { renameSync } from 'fs';
 import { packagesWeCareAbout } from 'nx/src/command-line/report';
 
 describe('Cli', () => {
@@ -156,9 +157,9 @@ describe('list', () => {
 });
 
 describe('migrate', () => {
-  beforeEach(() => newProject());
+  beforeEach(() => {
+    newProject();
 
-  it('should run migrations', () => {
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
       JSON.stringify({
@@ -252,7 +253,9 @@ describe('migrate', () => {
 
       return `${before}${newFetch}${after}`;
     });
+  });
 
+  it('should run migrations', () => {
     runCLI(
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
@@ -311,5 +314,69 @@ describe('migrate', () => {
     });
     expect(readFile('file-11')).toEqual('content11');
     expect(readFile('file-20')).toEqual('content20');
+  });
+
+  it('should run migrations and create individual git commits when createCommits is enabled', () => {
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    // updates package.json
+    const packageJson = readJson(`package.json`);
+    expect(packageJson.dependencies['migrate-child-package']).toEqual('9.0.0');
+    expect(
+      packageJson.dependencies['migrate-child-package-2']
+    ).not.toBeDefined();
+    expect(
+      packageJson.dependencies['migrate-child-package-3']
+    ).not.toBeDefined();
+    expect(packageJson.dependencies['migrate-child-package-4']).toEqual(
+      '9.0.0'
+    );
+    expect(packageJson.devDependencies['migrate-child-package-5']).toEqual(
+      '9.0.0'
+    );
+    // should keep new line on package
+    const packageContent = readFile('package.json');
+    expect(packageContent.charCodeAt(packageContent.length - 1)).toEqual(10);
+
+    // creates migrations.json
+    const migrationsJson = readJson(`migrations.json`);
+    expect(migrationsJson).toEqual({
+      migrations: [
+        {
+          package: 'migrate-parent-package',
+          version: '1.1.0',
+          name: 'run11',
+        },
+        {
+          package: 'migrate-parent-package',
+          version: '2.0.0',
+          name: 'run20',
+          cli: 'nx',
+        },
+      ],
+    });
+
+    // runs migrations with createCommits enabled
+    runCLI('migrate --run-migrations=migrations.json --create-commits', {
+      env: {
+        ...process.env,
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+    });
+
+    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+
+    expect(recentCommits).toContain('chore: [nx migration] run11');
+    expect(recentCommits).toContain('chore: [nx migration] run20');
   });
 });

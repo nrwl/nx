@@ -653,6 +653,12 @@ function withMigrationOptions(yargs: yargs.Argv) {
       describe:
         'Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react:12.0.0,@nrwl/js:12.0.0")',
       type: 'string',
+    })
+    .option('createCommits', {
+      describe: 'Automatically create a git commit after each migration runs',
+      type: 'boolean',
+      alias: ['C'],
+      default: false,
     });
 }
 

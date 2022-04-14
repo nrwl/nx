@@ -60,6 +60,14 @@ nx migrate --run-migrations=migrations.json
 
 ## Options
 
+### createCommits
+
+Type: boolean
+
+Default: false
+
+Automatically create a git commit after each migration runs
+
 ### from
 
 Type: string
