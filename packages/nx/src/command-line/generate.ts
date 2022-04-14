@@ -3,6 +3,7 @@ import {
   handleErrors,
   Options,
   Schema,
+  unparse,
 } from '../utils/params';
 import { Workspaces } from '../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../generators/tree';
@@ -13,6 +14,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { printHelp } from '../utils/print-help';
 import { prompt } from 'enquirer';
 import { readJsonFile } from 'nx/src/utils/fileutils';
+import { output } from '../utils/output';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -304,6 +306,12 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       isVerbose
     );
 
+    const printableArgs = getPrintableArgsForGenerate(
+      opts,
+      normalizedGeneratorName
+    );
+    output.logGenerateCommand(printableArgs.join(' '));
+
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
       const host = new FsTree(workspaceRoot, isVerbose);
       const implementation = implementationFactory();
@@ -331,4 +339,24 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       );
     }
   });
+}
+
+function getPrintableArgsForGenerate(
+  options: GenerateOptions,
+  generator: string
+): string[] {
+  const { _: positionalArgs, ...args } = options.generatorOptions;
+
+  if (options.dryRun) {
+    args['dry-run'] = true;
+  }
+  if (!options.interactive) {
+    args.interactive = false;
+  }
+
+  return [
+    `${options.collectionName}:${generator}`,
+    ...(positionalArgs as string[]),
+    ...unparse(args),
+  ];
 }

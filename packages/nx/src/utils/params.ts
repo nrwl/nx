@@ -1,3 +1,4 @@
+import { flatten } from 'flat';
 import { logger } from './logger';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
@@ -801,4 +802,45 @@ function isConvertibleToNumber(value) {
   }
 
   return !isNaN(+value);
+}
+
+export function unparse(options: Object): string[] {
+  const unparsed = [];
+  for (const key of Object.keys(options)) {
+    const value = options[key];
+    unparseOption(key, value, unparsed);
+  }
+
+  return unparsed;
+}
+
+function unparseOption(key: string, value: any, unparsed: string[]): void {
+  if (value === true) {
+    unparsed.push(`--${key}`);
+  } else if (value === false) {
+    unparsed.push(`--no-${key}`);
+  } else if (Array.isArray(value)) {
+    value.forEach((item) => unparseOption(key, item, unparsed));
+  } else if (Object.prototype.toString.call(value) === '[object Object]') {
+    const flattened = flatten<any, any>(value, { safe: true });
+    for (const flattenedKey in flattened) {
+      unparseOption(
+        `${key}.${flattenedKey}`,
+        flattened[flattenedKey],
+        unparsed
+      );
+    }
+  } else if (
+    typeof value === 'string' &&
+    stringShouldBeWrappedIntoQuotes(value)
+  ) {
+    const sanitized = value.replace(/"/g, String.raw`\"`);
+    unparsed.push(`--${key}="${sanitized}"`);
+  } else if (value != null) {
+    unparsed.push(`--${key}=${value}`);
+  }
+}
+
+function stringShouldBeWrappedIntoQuotes(str: string): boolean {
+  return str.includes(' ') || str.includes('{') || str.includes('"');
 }

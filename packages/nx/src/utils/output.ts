@@ -255,6 +255,15 @@ class CLIOutput {
     }
   }
 
+  logGenerateCommand(message: string): void {
+    // normalize the message
+    message = message.replace(/^(nx generate |nx g |generate |g )/, '');
+
+    this.addNewline();
+    this.writeToStdOut(`${chalk.dim('> nx generate')} ${message}`);
+    this.addNewline();
+  }
+
   log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
     this.addNewline();
 

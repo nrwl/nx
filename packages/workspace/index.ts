@@ -57,7 +57,7 @@ export {
   serializeTarget,
 } from './src/utils/cli-config-utils';
 
-export { unparse } from 'nx/src/tasks-runner/utils';
+export { unparse } from 'nx/src/utils/params';
 
 export {
   getWorkspace,
