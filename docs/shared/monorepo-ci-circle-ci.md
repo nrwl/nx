@@ -25,30 +25,22 @@ orbs:
   nx: nrwl/nx@1.4.0
 jobs:
   main:
+    docker:
+      - image: cimg/node:lts-browsers
     steps:
       - checkout
-      - run: npm install
+      - run: npm ci
       - nx/set-shas
-      - run: npx nx affected --base=$NX_BASE --target=build --parallel=3
-      - run: npx nx affected --base=$NX_BASE --target=test --parallel=2
-  pr:
-    steps:
-      - checkout
-      - run: npm install
-      - nx/set-shas
-      - run: npx nx affected --base=$NX_BASE --target=build --parallel=3
-      - run: npx nx affected --base=$NX_BASE --target=test --parallel=2
+
+      - run: npx nx workspace-lint
+      - run: npx nx format:check
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 workflows:
   build:
     jobs:
-      - main:
-          filters:
-            branches:
-              only: main
-      - pr:
-          filters:
-            branches:
-              ignore: main
+      - main
 ```
 
 The `pr` and `main` jobs implement the CI workflow.
@@ -64,5 +56,54 @@ To use the [Nx Orb](https://github.com/nrwl/nx-orb) with a private repository on
 A computation cache is created on your local machine to make the developer experience faster. This allows you to not waste time re-building, re-testing, re-linting, or any number of other actions you might take on code that hasn't changed. Because the cache is stored locally, you are the only member of your team that can take advantage of these instant commands. You can manage and share this cache manually.
 
 Nx Cloud allows this cache to be shared across your entire organization, meaning that any cacheable operation completed on your workspace only needs to be run once. Nx Cloud also allows you to distribute your CI across multiple machines to make sure the CI is fast even for very large repos.
+
+In order to use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`. Once all tasks are finished, we must not forget to cleanup used agents.
+
+```yaml
+version: 2.1
+orbs:
+  nx: nrwl/nx@1.4.0
+jobs:
+  agent:
+    docker:
+      - image: cimg/node:lts-browsers
+    parameters:
+      ordinal:
+        type: integer
+    steps:
+      - run: echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+      - checkout
+      - run: npm ci
+      - run:
+          command: npx nx-cloud start-agent
+          no_output_timeout: 60m
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+    steps:
+      - run: echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+      - checkout
+      - run: npm ci
+      - nx/set-shas
+      - run: npx nx-cloud start-ci-run
+
+      - run: npx nx workspace-lint
+      - run: npx nx format:check
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+
+      - run: npx nx-cloud stop-all-agents
+workflows:
+  build:
+    jobs:
+      - agent:
+          matrix:
+            parameters:
+              ordinal: [1, 2, 3]
+      - main
+```
 
 Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.
