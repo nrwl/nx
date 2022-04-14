@@ -31,15 +31,11 @@ install-dependencies:
   cache:
     key:
       files:
-        - yarn.lock
+        - package-lock.json
     paths:
-      - node_modules
-      - .yarn
-  script:
-    - yarn install --pure-lockfile --cache-folder .yarn
-  artifacts:
-    paths:
-      - node_modules
+      - .npm/
+  before_script:
+    - npm ci --cache .npm --prefer-offline
 
 .distributed:
   interruptible: true
@@ -52,17 +48,35 @@ install-dependencies:
     paths:
       - node_modules/.cache/nx
 
-build:
+workspace-lint:
   stage: test
   extends: .distributed
   script:
-    - yarn nx affected --base=HEAD~1 --target=build --parallel=3
+    - npx nx workspace-lint
+
+format-check:
+  stage: test
+  extends: .distributed
+  script:
+    - npx nx format:check
+
+lint:
+  stage: test
+  extends: .distributed
+  script:
+    - npx nx affected --base=HEAD~1 --target=lint --parallel=3
 
 test:
   stage: test
   extends: .distributed
   script:
-    - yarn nx affected --base=HEAD~1 --target=test --parallel=2
+    - npx nx affected --base=HEAD~1 --target=test --parallel=3 --ci --code-coverage
+
+build:
+  stage: test
+  extends: .distributed
+  script:
+    - npx nx affected --base=HEAD~1 --target=build --parallel=3
 ```
 
 The `build` and `test` jobs implement the CI workflow using `.distributed` as template to keep
