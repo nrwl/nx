@@ -1,15 +1,18 @@
+import * as chalk from 'chalk';
+import { execFileSync, fork } from 'child_process';
+import { watch } from 'chokidar';
+import { copyFileSync, unlinkSync } from 'fs';
+import { createIgnore } from 'nx/src/utils/ignore';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
+import { platform } from 'os';
+import { join, resolve } from 'path';
+
 import {
   ExecutorContext,
   joinPathFragments,
   workspaceLayout,
 } from '@nrwl/devkit';
-import * as chalk from 'chalk';
-import { execFileSync, fork } from 'child_process';
-import { watch } from 'chokidar';
-import { createIgnore } from 'nx/src/utils/ignore';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
-import { platform } from 'os';
-import { resolve } from 'path';
+
 import { Schema } from './schema';
 
 // platform specific command name
@@ -139,6 +142,15 @@ export default async function* fileServerExecutor(
   run();
 
   const outputPath = getBuildTargetOutputPath(options, context);
+
+  if (options.spa) {
+    const src = join(outputPath, 'index.html');
+    const dst = join(outputPath, '404.html');
+
+    // See: https://github.com/http-party/http-server#magic-files
+    copyFileSync(src, dst);
+  }
+
   const args = getHttpServerArgs(options);
 
   const { path: pathToHttpServerPkgJson, packageJson } =
@@ -162,6 +174,10 @@ export default async function* fileServerExecutor(
     serve.kill();
     if (disposeWatch) {
       disposeWatch();
+    }
+
+    if (options.spa) {
+      unlinkSync(join(outputPath, '404.html'));
     }
   };
   process.on('exit', processExitListener);
