@@ -114,7 +114,11 @@ describe('Init MFE', () => {
       // ASSERT
       const { build, serve } = readProjectConfiguration(tree, app).targets;
 
-      expect(serve.executor).toEqual('@nrwl/angular:webpack-server');
+      expect(serve.executor).toEqual(
+        type === 'host'
+          ? '@nrwl/angular:module-federation-dev-server'
+          : '@nrwl/angular:webpack-server'
+      );
       expect(build.executor).toEqual('@nrwl/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
         `apps/${app}/webpack.config.js`
@@ -219,45 +223,6 @@ describe('Init MFE', () => {
     // ASSERT
     const hostAppModule = tree.read('apps/app1/src/app/app.module.ts', 'utf-8');
     expect(hostAppModule).toMatchSnapshot();
-  });
-
-  it('should add a remote application and add it to a specified host applications serve-mfe target', async () => {
-    // ARRANGE
-    await applicationGenerator(tree, {
-      name: 'remote2',
-      routing: true,
-    });
-
-    await setupMfe(tree, {
-      appName: 'app1',
-      mfeType: 'host',
-      routing: true,
-    });
-
-    await setupMfe(tree, {
-      appName: 'remote1',
-      mfeType: 'remote',
-      host: 'app1',
-      port: 4201,
-      routing: true,
-    });
-
-    // ACT
-    await setupMfe(tree, {
-      appName: 'remote2',
-      mfeType: 'remote',
-      host: 'app1',
-      port: 4202,
-      routing: true,
-    });
-
-    // ASSERT
-    const hostAppConfig = readProjectConfiguration(tree, 'app1');
-    const serveMfe = hostAppConfig.targets['serve-mfe'];
-
-    expect(serveMfe.options.commands).toContain('nx serve remote1');
-    expect(serveMfe.options.commands).toContain('nx serve remote2');
-    expect(serveMfe.options.commands).toContain('nx serve app1');
   });
 
   it('should modify the associated cypress project to add the workaround correctly', async () => {
