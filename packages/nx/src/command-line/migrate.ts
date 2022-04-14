@@ -1,7 +1,7 @@
 import { exec, execSync } from 'child_process';
 import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
-import { gt, lt, lte } from 'semver';
+import { gt, lt, lte, major, valid } from 'semver';
 import { promisify } from 'util';
 import {
   MigrationsJson,
@@ -29,6 +29,7 @@ import {
   resolvePackageVersionUsingRegistry,
 } from '../utils/package-manager';
 import { handleErrors } from '../utils/params';
+import { connectToNxCloudCommand } from './connect-to-nx-cloud';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: NxMigrationsConfiguration['packageGroup'];
@@ -793,6 +794,19 @@ function updatePackageJson(
   });
 }
 
+async function isMigratingToNewMajor(from: string, to: string) {
+  from = normalizeVersion(from);
+  to = ['latest', 'next'].includes(to) ? to : normalizeVersion(to);
+  if (!valid(from)) {
+    from = await resolvePackageVersionUsingRegistry('nx', from);
+  }
+  if (!valid(to)) {
+    to = await resolvePackageVersionUsingRegistry('nx', to);
+  }
+  console.log({ from, to });
+  return major(from) < major(to);
+}
+
 async function generateMigrationsJsonAndUpdatePackageJson(
   root: string,
   opts: {
@@ -804,10 +818,27 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 ) {
   const pmc = getPackageManagerCommand();
   try {
+    let originalPackageJson = readJsonFile<PackageJson>(
+      join(root, 'package.json')
+    );
+    if (
+      ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
+      (await isMigratingToNewMajor(
+        originalPackageJson.devDependencies?.['nx'] ??
+          originalPackageJson.devDependencies?.['@nrwl/workspace'],
+        opts.targetVersion
+      ))
+    ) {
+      await connectToNxCloudCommand(
+        'We noticed you are migrating to a new major version, but are not taking advantage of Nx Cloud. Nx Cloud can make your CI up to 10 times faster. Learn more about it here: nx.app. Would you like to add it?'
+      );
+      originalPackageJson = readJsonFile<PackageJson>(
+        join(root, 'package.json')
+      );
+    }
+
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
-
-    const originalPackageJson = readJsonFile(join(root, 'package.json'));
 
     const migrator = new Migrator({
       packageJson: originalPackageJson,

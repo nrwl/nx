@@ -29,7 +29,9 @@ export async function connectToNxCloudUsingScan(scan: boolean): Promise<void> {
   }
 }
 
-export async function connectToNxCloudCommand(): Promise<void> {
+export async function connectToNxCloudCommand(
+  promptOverride?: string
+): Promise<void> {
   const nxJson = readNxJson();
   const nxCloudUsed = Object.values(nxJson.tasksRunnerOptions).find(
     (r) => r.runner == '@nrwl/nx-cloud'
@@ -50,14 +52,16 @@ export async function connectToNxCloudCommand(): Promise<void> {
   });
 }
 
-async function connectToNxCloudPrompt() {
+async function connectToNxCloudPrompt(prompt?: string) {
   return await (
     await import('enquirer')
   )
     .prompt([
       {
         name: 'NxCloud',
-        message: `Connect to Nx Cloud? (It's free and doesn't require registration.)`,
+        message:
+          prompt ??
+          `Connect to Nx Cloud? (It's free and doesn't require registration.)`,
         type: 'select',
         choices: [
           {
