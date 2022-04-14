@@ -49,7 +49,6 @@ export async function buildProjectGraph() {
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   let cache = cacheEnabled ? readCache() : null;
-
   return (
     await buildProjectGraphUsingProjectFileMap(
       workspaceJson,
@@ -292,7 +291,10 @@ function buildExplicitDependenciesUsingWorkers(
   totalNumOfFilesToProcess: number,
   builder: ProjectGraphBuilder
 ) {
-  const numberOfWorkers = getNumberOfWorkers();
+  const numberOfWorkers = Math.min(
+    totalNumOfFilesToProcess,
+    getNumberOfWorkers()
+  );
   const bins = splitFilesIntoBins(
     ctx,
     totalNumOfFilesToProcess,
