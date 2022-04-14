@@ -186,21 +186,21 @@
             "description": "Generate a Module Federation configuration for the application",
             "type": "boolean",
             "default": false,
-            "x-deprecated": "Use the `mfe-host` or `remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
+            "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
           },
           "mfeType": {
             "type": "string",
             "enum": ["host", "remote"],
             "description": "Type of application to generate the Module Federation configuration for.",
             "default": "remote",
-            "x-deprecated": "Use the `mfe-host` or `remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
+            "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
           },
           "federationType": {
             "type": "string",
             "enum": ["static", "dynamic"],
             "description": "Use either Static or Dynamic Module Federation pattern for the application.",
             "default": "static",
-            "x-deprecated": "Use the `mfe-host` or `remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
+            "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
           },
           "port": {
             "type": "number",
@@ -209,12 +209,12 @@
           "remotes": {
             "type": "array",
             "description": "A list of remote application names that the host application should consume.",
-            "x-deprecated": "Use the `mfe-host` or `remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
+            "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
           },
           "host": {
             "type": "string",
             "description": "The name of the host application that the remote application will be consumed by.",
-            "x-deprecated": "Use the `mfe-host` or `remote` generators instead. Support for generating MFE applications using the application generator will be removed in an upcoming version."
+            "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
           },
           "setParserOptionsProject": {
             "type": "boolean",
@@ -1110,19 +1110,19 @@
       "path": "/packages/angular/src/generators/convert-to-with-mf/schema.json"
     },
     {
-      "name": "mfe-host",
-      "factory": "./src/generators/mfe-host/mfe-host",
+      "name": "host",
+      "factory": "./src/generators/host/host",
       "schema": {
         "$schema": "http://json-schema.org/schema",
-        "$id": "NxMFEHost",
+        "$id": "NxMFHost",
         "cli": "nx",
-        "title": "Nx MFE Host Application",
-        "description": "Create an Angular Host Micro Frontend Application.",
+        "title": "Nx Module Federation Host Application",
+        "description": "Create an Angular Host Module Federation Application.",
         "type": "object",
         "examples": [
           {
-            "command": "nx g @nrwl/angular:mfe-host appName --remotes=remote1",
-            "description": "Create an Angular application with configuration in place for MFE. If the `remotes` option is provided, attach the remote application to this application's configuration"
+            "command": "nx g @nrwl/angular:host appName --remotes=remote1",
+            "description": "Create an Angular application with configuration in place for Module Federation. If the `remotes` option is provided, attach the remote application to this application's configuration"
           }
         ],
         "properties": {
@@ -1258,11 +1258,11 @@
         "required": ["name"],
         "presets": []
       },
-      "aliases": ["host"],
-      "description": "Generate a Host Angular Micro Frontend Application.",
-      "implementation": "/packages/angular/src/generators/mfe-host/mfe-host.ts",
+      "description": "Generate a Host Angular Module Federation Application.",
+      "implementation": "/packages/angular/src/generators/host/host.ts",
+      "aliases": [],
       "hidden": false,
-      "path": "/packages/angular/src/generators/mfe-host/schema.json"
+      "path": "/packages/angular/src/generators/host/schema.json"
     },
     {
       "name": "ng-add",

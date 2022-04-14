@@ -4,7 +4,7 @@ import type { Schema } from './schema';
 import { getProjects } from '@nrwl/devkit';
 import applicationGenerator from '../application/application';
 
-export default async function mfeHost(tree: Tree, options: Schema) {
+export default async function host(tree: Tree, options: Schema) {
   const projects = getProjects(tree);
 
   if (options.remotes && options.remotes.length > 0) {
