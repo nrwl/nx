@@ -13,7 +13,8 @@
         "ng-packagr-lite",
         "package",
         "webpack-browser",
-        "webpack-server"
+        "webpack-server",
+        "module-federation-dev-server"
       ],
       "generators": [
         "add-linting",
