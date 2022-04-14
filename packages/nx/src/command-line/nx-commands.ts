@@ -25,7 +25,8 @@ yargs.wrap(yargs.terminalWidth());
 export const commandsObject = yargs
   .parserConfiguration({
     'strip-dashed': true,
-    'dot-notation': false,
+    // allow parsing --env.SOME_ARG for cypress cli env args
+    'dot-notation': true,
   })
   .usage(
     `
