@@ -43,7 +43,7 @@ export class <%= className %> extends Component<<%= className %>Props> {
           <ul>
             <li><Link to="/"><%= name %> root</Link></li>
           </ul>
-          <Route path="/" render={() => <div>This is the <%= name %> root route.</div>} />
+          <Route path="/" element={<div>This is the <%= name %> root route.</div>} />
         <% } %>
       </<%= wrapper %>>
     );
@@ -59,7 +59,7 @@ export function <%= className %>(props: <%= className %>Props) {
         <ul>
           <li><Link to="/"><%= name %> root</Link></li>
         </ul>
-        <Route path="/" render={() => <div>This is the <%= name %> root route.</div>} />
+        <Route path="/" element={<div>This is the <%= name %> root route.</div>} />
       <% } %>
     </<%= wrapper %>>
   );

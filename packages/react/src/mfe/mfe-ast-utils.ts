@@ -109,7 +109,7 @@ export function addRemoteRoute(
     changes.push({
       type: ChangeType.Insert,
       index: firstRoute.end,
-      text: `\n<Route path="/${names.fileName}" render={() => <${names.className} />} />`,
+      text: `\n<Route path="/${names.fileName}" element={<${names.className} />} />`,
     });
 
     if (firstLink) {

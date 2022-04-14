@@ -17,7 +17,6 @@ import {
   reactDomVersion,
   reactTestRendererVersion,
   reactVersion,
-  testingLibraryReactHooksVersion,
   testingLibraryReactVersion,
   typesReactDomVersion,
   typesReactVersion,
@@ -61,7 +60,6 @@ function updateDependencies(host: Tree) {
       '@types/react': typesReactVersion,
       '@types/react-dom': typesReactDomVersion,
       '@testing-library/react': testingLibraryReactVersion,
-      '@testing-library/react-hooks': testingLibraryReactHooksVersion,
       'react-test-renderer': reactTestRendererVersion,
     }
   );

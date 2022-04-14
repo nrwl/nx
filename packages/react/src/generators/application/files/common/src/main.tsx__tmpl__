@@ -1,10 +1,10 @@
 <% if (strict) { %>import { StrictMode } from 'react';<% } %>
-import * as ReactDOMClient from 'react-dom/client';
+import * as ReactDOM from 'react-dom/client';
 <% if (routing) { %>import { BrowserRouter } from 'react-router-dom';<% } %>
 
 import App from './app/<%= fileName %>';
 
-const root = ReactDOMClient.createRoot(document.getElementById('root') as HTMLElement);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
 <% if (strict) { %><StrictMode><% } %><% if (routing) { %><BrowserRouter><% } %><App /><% if (routing) { %></BrowserRouter><% } %><% if (strict) { %></StrictMode><% } %>
 );

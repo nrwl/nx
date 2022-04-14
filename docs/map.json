@@ -1484,6 +1484,11 @@
             "file": "shared/guides/using-tailwind-css-in-react"
           },
           {
+            "name": "React 18 Migration",
+            "id": "react-18",
+            "file": "shared/guides/react-18"
+          },
+          {
             "name": "Using Tailwind CSS with Angular projects",
             "id": "using-tailwind-css-with-angular-projects",
             "file": "shared/guides/using-tailwind-css-with-angular-projects"
