@@ -715,9 +715,11 @@ function nxCliPath() {
 
     const { dirSync } = require('tmp');
     const tmpDir = dirSync().name;
+    const version =
+      process.env.NX_MIGRATE_USE_NEXT === 'true' ? 'next' : 'latest';
     writeJsonFile(path.join(tmpDir, 'package.json'), {
       dependencies: {
-        nx: 'latest',
+        nx: version,
       },
       license: 'MIT',
     });
