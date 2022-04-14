@@ -6,7 +6,7 @@ function createProjectRootMappings(
   projectFileMap: ProjectFileMap
 ) {
   const projectRootMappings = new Map();
-  for (const projectName of Object.keys(workspaceJson.projects)) {
+  for (const projectName of Object.keys(workspaceJson.projects || {})) {
     if (!projectFileMap[projectName]) {
       projectFileMap[projectName] = [];
     }

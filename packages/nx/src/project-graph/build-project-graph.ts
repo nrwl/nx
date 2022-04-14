@@ -76,7 +76,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   assertWorkspaceValidity(workspaceJson, nxJson);
   const normalizedNxJson = normalizeNxJson(
     nxJson,
-    Object.keys(workspaceJson.projects)
+    Object.keys(workspaceJson.projects || {})
   );
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
@@ -357,7 +357,7 @@ function createContext(
   const projects: Record<
     string,
     ProjectConfiguration & NxJsonProjectConfiguration
-  > = Object.keys(workspaceJson.projects).reduce((map, projectName) => {
+  > = Object.keys(workspaceJson.projects || {}).reduce((map, projectName) => {
     map[projectName] = {
       ...workspaceJson.projects[projectName],
     };

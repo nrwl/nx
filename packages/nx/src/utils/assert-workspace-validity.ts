@@ -8,7 +8,7 @@ export function assertWorkspaceValidity(
   workspaceJson,
   nxJson: NxJsonConfiguration
 ) {
-  const workspaceJsonProjects = Object.keys(workspaceJson.projects);
+  const workspaceJsonProjects = Object.keys(workspaceJson.projects || {});
 
   const projects = {
     ...workspaceJson.projects,
@@ -26,7 +26,7 @@ export function assertWorkspaceValidity(
         } else if (typeof value === 'string') {
           // This is invalid because the only valid string is '*'
           throw new Error(stripIndents`
-         Configuration Error 
+         Configuration Error
          nx.json is not configured properly. "${path.join(
            ' > '
          )}" is improperly configured to implicitly depend on "${value}" but should be an array of project names or "*".
