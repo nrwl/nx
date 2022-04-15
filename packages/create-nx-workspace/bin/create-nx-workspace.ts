@@ -132,8 +132,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           type: 'string',
         })
         .option('preset', {
-          describe: chalk.dim`Customizes the initial content of your workspace. To build your own see https://nx.dev/nx-plugin/overview#preset`,
-          choices: Object.values(Preset),
+          describe: chalk.dim`Customizes the initial content of your workspace. Available options are: ${Object.values(
+            Preset
+          ).join(
+            ', '
+          )}. To build your own see https://nx.dev/nx-plugin/overview#preset`,
           type: 'string',
         })
         .option('appName', {
