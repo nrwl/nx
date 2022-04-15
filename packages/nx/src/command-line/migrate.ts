@@ -880,11 +880,14 @@ function runInstall() {
   execSync(pmCommands.install, { stdio: [0, 1, 2] });
 }
 
+const NO_CHANGES = 'NO_CHANGES';
+
 async function runMigrations(
   root: string,
   opts: { runMigrations: string },
   isVerbose: boolean,
-  shouldCreateCommits = false
+  shouldCreateCommits = false,
+  commitPrefix: string
 ) {
   if (!process.env.NX_MIGRATE_SKIP_INSTALL) {
     runInstall();
@@ -915,7 +918,7 @@ async function runMigrations(
     logger.info(`Successfully finished ${m.name}`);
 
     if (shouldCreateCommits) {
-      const commitMessage = `chore: [nx migration] ${m.name}`;
+      const commitMessage = `${commitPrefix}${m.name}`;
       const { sha: committedSha, reasonForNoCommit } =
         commitChangesIfAny(commitMessage);
 
@@ -924,7 +927,7 @@ async function runMigrations(
       } else {
         switch (true) {
           // Isolate the NO_CHANGES case so that we can render it differently to errors
-          case reasonForNoCommit === 'NO_CHANGES':
+          case reasonForNoCommit === NO_CHANGES:
             logger.info(chalk.dim(`- There were no changes to commit`));
             break;
           case typeof reasonForNoCommit === 'string': // Any other string is a specific error we captured
@@ -957,7 +960,7 @@ function commitChangesIfAny(commitMessage: string): {
     ) {
       return {
         sha: null,
-        reasonForNoCommit: 'NO_CHANGES',
+        reasonForNoCommit: NO_CHANGES,
       };
     }
   } catch (err) {
@@ -1034,7 +1037,13 @@ export async function migrate(root: string, args: { [k: string]: any }) {
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
-      await runMigrations(root, opts, args['verbose'], args['createCommits']);
+      await runMigrations(
+        root,
+        opts,
+        args['verbose'],
+        args['createCommits'],
+        args['commitPrefix']
+      );
     }
   });
 }

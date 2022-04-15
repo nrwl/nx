@@ -323,7 +323,12 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'migrate --run-migrations=migrations.json',
       description:
-        'Run migrations from the migrations.json file. You can modify migrations.json and run this command many times',
+        'Run migrations from the provided migrations.json file. You can modify migrations.json and run this command many times',
+    },
+    {
+      command: 'migrate --run-migrations --create-commits',
+      description:
+        'Create a dedicated commit for each successfully completed migration. You can customize the prefix used for each commit by additionally setting --commit-prefix="PREFIX_HERE "',
     },
   ],
 };

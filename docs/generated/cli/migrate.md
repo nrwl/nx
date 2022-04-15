@@ -52,13 +52,27 @@ Update another-package to "12.0.0". This will update other packages and will gen
 nx migrate another-package@12.0.0
 ```
 
-Run migrations from the migrations.json file. You can modify migrations.json and run this command many times:
+Run migrations from the provided migrations.json file. You can modify migrations.json and run this command many times:
 
 ```bash
 nx migrate --run-migrations=migrations.json
 ```
 
+Create a dedicated commit for each successfully completed migration. You can customize the prefix used for each commit by additionally setting --commit-prefix="PREFIX_HERE ":
+
+```bash
+nx migrate --run-migrations --create-commits
+```
+
 ## Options
+
+### commitPrefix
+
+Type: string
+
+Default: chore: [nx migration]
+
+Commit prefix to apply to the commit for each migration, when --create-commits is enabled
 
 ### createCommits
 

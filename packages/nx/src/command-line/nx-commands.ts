@@ -635,6 +635,8 @@ async function withWorkspaceGeneratorOptions(yargs: yargs.Argv) {
 }
 
 function withMigrationOptions(yargs: yargs.Argv) {
+  const defaultCommitPrefix = 'chore: [nx migration] ';
+
   return yargs
     .positional('packageAndVersion', {
       describe: `The target package and version (e.g, @nrwl/workspace@13.0.0)`,
@@ -659,6 +661,20 @@ function withMigrationOptions(yargs: yargs.Argv) {
       type: 'boolean',
       alias: ['C'],
       default: false,
+    })
+    .option('commitPrefix', {
+      describe:
+        'Commit prefix to apply to the commit for each migration, when --create-commits is enabled',
+      type: 'string',
+      default: defaultCommitPrefix,
+    })
+    .check(({ createCommits, commitPrefix }) => {
+      if (!createCommits && commitPrefix !== defaultCommitPrefix) {
+        throw new Error(
+          'Error: Providing a custom commit prefix requires --create-commits to be enabled'
+        );
+      }
+      return true;
     });
 }
 
