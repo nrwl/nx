@@ -25,9 +25,9 @@ const schemaDefaults = {
 } as const;
 
 function createJestConfig(host: Tree) {
-  if (!host.exists('jest.config.js')) {
+  if (!host.exists('jest.config.ts')) {
     host.write(
-      'jest.config.js',
+      'jest.config.ts',
       stripIndents`
   const { getJestProjects } = require('@nrwl/jest');
 
@@ -37,9 +37,9 @@ function createJestConfig(host: Tree) {
     );
   }
 
-  if (!host.exists('jest.preset.js')) {
+  if (!host.exists('jest.preset.ts')) {
     host.write(
-      'jest.preset.js',
+      'jest.preset.ts',
       `
       const nxPreset = require('@nrwl/jest/preset');
      

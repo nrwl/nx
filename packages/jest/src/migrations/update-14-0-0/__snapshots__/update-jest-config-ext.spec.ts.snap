@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.config.ts 1`] = `
+"module.exports = {
+  displayName: 'lib-one',
+  preset: '../../jest.preset.ts',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    }
+  },
+  transform: {
+    '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/lib-one'
+};
+"
+`;
+
+exports[`Jest Migration (v14.0.0) should update jest.config.ts preset to use the jest.preset.ts 1`] = `
+"module.exports = {
+  displayName: 'lib-one',
+  preset: '../../jest.preset.ts',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    }
+  },
+  transform: {
+    '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/lib-one'
+};
+"
+`;

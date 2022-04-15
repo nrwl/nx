@@ -1,4 +1,4 @@
-import { Tree, applyChangesToString, ChangeType } from '@nrwl/devkit';
+import { Tree, applyChangesToString, ChangeType, logger } from '@nrwl/devkit';
 import {
   addOrUpdateProperty,
   jestConfigObjectAst,
@@ -34,12 +34,12 @@ export function addPropertyToJestConfig(
       path
     );
   } catch (e) {
-    console.warn(
+    logger.info(`NX Please manually update ${path}`);
+    logger.warn(
       `Could not automatically add the following property to ${path}:`
     );
-    console.warn(`${propertyName}: ${JSON.stringify(value)}`);
-    console.log(`Please manually update ${path}`);
-    console.warn(`Error: ${e.message}`);
+    logger.warn(`${propertyName}: ${JSON.stringify(value)}`);
+    logger.warn(`Error: ${e.message}`);
   }
 }
 
@@ -79,10 +79,10 @@ export function removePropertyFromJestConfig(
       return;
     }
   } catch (e) {
-    console.warn(
+    logger.info(`NX Please manually update ${path}`);
+    logger.warn(
       `Could not automatically remove the '${propertyName}' property from ${path}:`
     );
-    console.log(`Please manually update ${path}`);
   }
 }
 

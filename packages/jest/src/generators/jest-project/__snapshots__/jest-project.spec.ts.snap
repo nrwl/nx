@@ -64,7 +64,7 @@ exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-
 "
 `;
 
-exports[`jestProject should create a jest.config.js 1`] = `
+exports[`jestProject should create a jest.config.ts 1`] = `
 "module.exports = {
   displayName: 'lib1',
   preset: '../../jest.preset.js',

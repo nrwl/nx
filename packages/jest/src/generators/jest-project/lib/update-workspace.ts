@@ -20,7 +20,7 @@ export function updateWorkspace(tree: Tree, options: JestProjectSchema) {
     options: {
       jestConfig: joinPathFragments(
         normalizePath(projectConfig.root),
-        'jest.config.js'
+        'jest.config.ts'
       ),
       passWithNoTests: true,
     },

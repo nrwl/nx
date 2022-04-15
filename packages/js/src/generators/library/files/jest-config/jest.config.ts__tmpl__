@@ -8,7 +8,7 @@ const { exclude: _, ...swcJestConfig } = JSON.parse(
 
 module.exports = {
   displayName: '<%= project %>',
-  preset: '<%= offsetFromRoot %>jest.preset.js',
+  preset: '<%= offsetFromRoot %>jest.preset.ts',
   transform: {
     '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },

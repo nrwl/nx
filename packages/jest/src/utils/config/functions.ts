@@ -4,6 +4,7 @@ import {
   ExpressionStatement,
   isBinaryExpression,
   isExpressionStatement,
+  isPropertyAssignment,
   SyntaxKind,
 } from 'typescript';
 import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
@@ -23,6 +24,9 @@ function findPropertyAssignment(
   propertyName: string
 ) {
   return object.properties.find((prop) => {
+    if (!isPropertyAssignment(prop)) {
+      return false;
+    }
     const propNameText = prop.name.getText();
     if (propNameText.match(/^["'].+["']$/g)) {
       return JSON.parse(propNameText.replace(/'/g, '"')) === propertyName;
@@ -177,7 +181,7 @@ export function jestConfigObjectAst(
   fileContent: string
 ): ts.ObjectLiteralExpression {
   const sourceFile = ts.createSourceFile(
-    'jest.config.js',
+    'jest.config.ts',
     fileContent,
     ts.ScriptTarget.Latest,
     true

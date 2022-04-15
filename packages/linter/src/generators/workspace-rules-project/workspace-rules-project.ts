@@ -62,10 +62,10 @@ export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
     compiler: 'tsc',
   });
 
-  // Add extra config to the jest.config.js file to allow ESLint 8 exports mapping to work with jest
+  // Add extra config to the jest.config.ts file to allow ESLint 8 exports mapping to work with jest
   addPropertyToJestConfig(
     tree,
-    joinPathFragments(WORKSPACE_PLUGIN_DIR, 'jest.config.js'),
+    joinPathFragments(WORKSPACE_PLUGIN_DIR, 'jest.config.ts'),
     'moduleNameMapper',
     {
       '@eslint/eslintrc': '@eslint/eslintrc/dist/eslintrc-universal.cjs',
