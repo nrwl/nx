@@ -46,7 +46,6 @@ function runInstance(options: StorybookExecutorOptions) {
   process.env.NODE_ENV = env;
   return buildDevStandalone({
     ...options,
-    ci: true,
     configType: env.toUpperCase(),
   } as any).catch((error) => {
     // TODO(juri): find a better cleaner way to handle these. Taken from:
