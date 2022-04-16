@@ -27,12 +27,10 @@ export function themeInit() {
 }
 
 export function themeResolver(theme: Theme) {
-  if (!('window' in global)) {
+  if (!('matchMedia' in window)) {
     return;
   }
-  if (!('matchMedia' in global.window)) {
-    return;
-  }
+
   const environment = getEnvironmentConfig();
 
   if (!environment.appConfig.showExperimentalFeatures) {

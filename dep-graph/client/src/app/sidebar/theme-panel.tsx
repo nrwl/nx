@@ -46,6 +46,7 @@ export default function ThemePanel() {
             <Menu.Item>
               {({ active }) => (
                 <button
+                  data-cy="system-theme-button"
                   className={classNames(
                     theme === 'system' ? 'text-green-nx-base' : '',
                     active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
@@ -64,6 +65,7 @@ export default function ThemePanel() {
             <Menu.Item>
               {({ active }) => (
                 <button
+                  data-cy="light-theme-button"
                   className={classNames(
                     theme === 'light' ? 'text-green-nx-base' : '',
                     active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
@@ -79,6 +81,7 @@ export default function ThemePanel() {
             <Menu.Item>
               {({ active }) => (
                 <button
+                  data-cy="dark-theme-button"
                   className={classNames(
                     theme === 'dark' ? 'text-green-nx-base' : '',
                     active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
