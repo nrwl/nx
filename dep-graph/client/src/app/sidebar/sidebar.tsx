@@ -111,12 +111,7 @@ export function Sidebar() {
       id="sidebar"
     >
       <div className="bg-blue-nx-base border-b border-slate-900/10 dark:border-slate-300/10 dark:bg-transparent">
-        {/*TODO: remove experimental feature flag*/}
-        <div
-          className={`mx-4 my-5 flex items-center ${
-            showExperimentalFeatures ? 'justify-between' : 'justify-start'
-          }`}
-        >
+        <div className="mx-4 my-5 flex items-center justify-between">
           <svg
             className="h-12 w-auto text-white"
             viewBox="0 0 24 24"
@@ -130,9 +125,7 @@ export function Sidebar() {
             {' '}
             Project Graph{' '}
           </span>
-          <ExperimentalFeature>
-            <ThemePanel />
-          </ExperimentalFeature>
+          <ThemePanel />
         </div>
       </div>
 

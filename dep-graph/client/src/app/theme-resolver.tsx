@@ -7,14 +7,6 @@ export type Theme = 'light' | 'dark' | 'system';
 export let currentTheme: Theme;
 
 function mediaListener(ev: MediaQueryListEvent) {
-  const environment = getEnvironmentConfig();
-
-  if (!environment.appConfig.showExperimentalFeatures) {
-    currentTheme = 'light';
-    htmlEl.className = 'light';
-    return;
-  }
-
   const resolver = ev.matches ? 'dark' : 'light';
   htmlEl.className = resolver;
   currentTheme = resolver;
@@ -28,14 +20,6 @@ export function themeInit() {
 
 export function themeResolver(theme: Theme) {
   if (!('matchMedia' in window)) {
-    return;
-  }
-
-  const environment = getEnvironmentConfig();
-
-  if (!environment.appConfig.showExperimentalFeatures) {
-    htmlEl.className = 'light';
-    currentTheme = 'light';
     return;
   }
 
