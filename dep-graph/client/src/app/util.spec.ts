@@ -1,4 +1,4 @@
-import { parseParentDirectoriesFromPilePath } from './util';
+import { parseParentDirectoriesFromFilePath } from './util';
 
 describe('parseParentDirectoriesFromFilePath', () => {
   // path, workspaceRoot, output
@@ -17,12 +17,15 @@ describe('parseParentDirectoriesFromFilePath', () => {
     ['packages/published', 'libs', ['packages']],
     ['libs/trailing/slash/', 'libs', ['trailing']],
     ['libs/trailing/slash', 'libs/', ['trailing']],
+    ['nested-workspace/apps/app1', 'nested-workspace/apps', []],
+    ['nested-workspace/libs/lib1', 'nested-workspace/libs', []],
+    ['nested-workspace/libs/scope/lib1', 'nested-workspace/libs', ['scope']],
   ];
 
   test.each(cases)(
     'given filepath %p and workspaceRoot %p, parent directories are %p',
     (path, workspaceRoot, expected) => {
-      const result = parseParentDirectoriesFromPilePath(path, workspaceRoot);
+      const result = parseParentDirectoriesFromFilePath(path, workspaceRoot);
 
       expect(result).toEqual(expected);
     }

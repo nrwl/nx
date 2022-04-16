@@ -8,7 +8,7 @@ import {
   selectedProjectNamesSelector,
   workspaceLayoutSelector,
 } from '../machines/selectors';
-import { parseParentDirectoriesFromPilePath } from '../util';
+import { parseParentDirectoriesFromFilePath } from '../util';
 
 function getProjectsByType(type: string, projects: ProjectGraphNode[]) {
   return projects
@@ -35,10 +35,11 @@ function groupProjectsByDirectory(
       project.type === 'app' || project.type === 'e2e'
         ? workspaceLayout.appsDir
         : workspaceLayout.libsDir;
-    const directories = parseParentDirectoriesFromPilePath(
+    const directories = parseParentDirectoriesFromFilePath(
       project.data.root,
       workspaceRoot
     );
+
     const directory = directories.join('/');
 
     if (!groups.hasOwnProperty(directory)) {
@@ -122,7 +123,7 @@ function ProjectListItem({
 }
 
 function SubProjectList({
-  headerText,
+  headerText = '',
   projects,
   selectProject,
   deselectProject,
@@ -149,9 +150,11 @@ function SubProjectList({
 
   return (
     <>
-      <h3 className="mt-4 cursor-text py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs">
-        {headerText}
-      </h3>
+      {headerText !== '' ? (
+        <h3 className="mt-4 cursor-text py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs">
+          {headerText}
+        </h3>
+      ) : null}
       <ul className="mt-2 -ml-3">
         {sortedProjects.map((project) => {
           return (
