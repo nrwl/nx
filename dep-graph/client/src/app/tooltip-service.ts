@@ -1,6 +1,6 @@
 import { VirtualElement } from '@popperjs/core';
-import tippy, { Instance, hideAll } from 'tippy.js';
 import * as ReactDOM from 'react-dom';
+import tippy, { hideAll, Instance } from 'tippy.js';
 import { selectValueByThemeStatic } from './theme-resolver';
 
 export class GraphTooltipService {

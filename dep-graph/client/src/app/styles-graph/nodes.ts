@@ -2,7 +2,6 @@ import { Stylesheet } from 'cytoscape';
 import { selectValueByThemeDynamic } from '../theme-resolver';
 import { FONTS } from './fonts';
 import { NrwlPalette } from './palette';
-import * as cy from 'cytoscape';
 
 const allNodes: Stylesheet = {
   selector: 'node',

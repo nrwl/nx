@@ -1,7 +1,7 @@
 import { assign } from '@xstate/immer';
 import { send, spawn } from 'xstate';
-import { routeListener } from './route-listener.actor';
 import { DepGraphStateNodeConfig } from './interfaces';
+import { routeListener } from './route-listener.actor';
 
 export const unselectedStateConfig: DepGraphStateNodeConfig = {
   entry: [

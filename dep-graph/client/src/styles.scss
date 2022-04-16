@@ -4,10 +4,7 @@
 @tailwind base;
 @tailwind utilities;
 
-$gray: rgba(209, 213, 219, 1);
-$bgDarkPrimary: #292524;
-$bgDarkSecondary: #171717;
-$textDark: #cbd5e1;
+$gray: rgb(100, 116, 139, 1);
 
 #app,
 body,
@@ -114,15 +111,15 @@ canvas {
 
 .tippy-box[data-theme~='dark-nx'] {
   @extend .tippy-box, [data-theme~='nx'];
-  background-color: $bgDarkPrimary;
-  color: $textDark;
+  background-color: #0f172a;
+  color: rgba(148, 163, 184, 1);
 
   button {
-    background-color: $bgDarkSecondary;
-    color: $textDark;
-
-    &:hover {
-      background-color: rgba($bgDarkSecondary, $alpha: 0.3);
-    }
+    background-color: #0f172a;
+    border-color: rgb(71, 85, 105, 1);
+    color: rgb(203, 213, 225, 1);
+  }
+  button:hover {
+    background-color: rgb(51, 65, 85, 1);
   }
 }

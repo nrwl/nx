@@ -7,11 +7,11 @@ import type { VirtualElement } from '@popperjs/core';
 import { default as cy } from 'cytoscape';
 import { default as cytoscapeDagre } from 'cytoscape-dagre';
 import { default as popper } from 'cytoscape-popper';
-import path from 'path/posix';
 import type { Instance } from 'tippy.js';
 import EdgeNodeTooltip from '../edge-tooltip';
 import ProjectNodeToolTip from '../project-node-tooltip';
 import { edgeStyles, nodeStyles } from '../styles-graph';
+import { selectValueByThemeStatic } from '../theme-resolver';
 import { GraphTooltipService } from '../tooltip-service';
 import {
   CytoscapeDagreConfig,
@@ -19,8 +19,7 @@ import {
   ProjectEdge,
   ProjectNode,
 } from '../util-cytoscape';
-import { GraphRenderEvents, GraphPerfReport } from './interfaces';
-import { selectValueByThemeStatic } from '../theme-resolver';
+import { GraphPerfReport, GraphRenderEvents } from './interfaces';
 
 export class GraphService {
   private traversalGraph: cy.Core;
@@ -669,7 +668,7 @@ export class GraphService {
   }
 
   getImage() {
-    const bg = selectValueByThemeStatic('#262626', '#fff');
+    const bg = selectValueByThemeStatic('#0F172A', '#FFFFFF');
     return this.renderGraph.png({ bg, full: true });
   }
 

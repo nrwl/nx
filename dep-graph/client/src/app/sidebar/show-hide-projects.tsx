@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import { DarkClasses } from '../dark-theme-styles';
 
 export interface ShowHideAllProjectsProps {
   showAllProjects: () => void;
@@ -20,12 +19,12 @@ export const ShowHideAllProjects = memo(
         <button
           onClick={showAllProjects}
           type="button"
-          className={`flex w-full items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 ${DarkClasses.button}`}
+          className="flex w-full items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
           data-cy="selectAllButton"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="-ml-1 mr-2 h-5 w-5 text-gray-500"
+            className="-ml-1 mr-2 h-5 w-5 text-slate-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -50,7 +49,7 @@ export const ShowHideAllProjects = memo(
           <button
             onClick={showAffectedProjects}
             type="button"
-            className={`mt-3 flex w-full items-center rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-500 shadow-sm hover:bg-red-50 ${DarkClasses.buttonAffected}`}
+            className="mt-3 flex w-full items-center rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-500 shadow-sm hover:bg-red-50 dark:border-red-700 dark:bg-slate-800 hover:dark:bg-slate-700"
             data-cy="affectedButton"
           >
             <svg
@@ -74,12 +73,12 @@ export const ShowHideAllProjects = memo(
         <button
           onClick={hideAllProjects}
           type="button"
-          className={`mt-3 flex w-full items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 ${DarkClasses.button}`}
+          className="mt-3 flex w-full items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
           data-cy="deselectAllButton"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="-ml-1 mr-2 h-5 w-5 text-gray-500"
+            className="-ml-1 mr-2 h-5 w-5 text-slate-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

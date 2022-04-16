@@ -17,13 +17,13 @@ function EdgeNodeTooltip({
         {source} &rarr; {target}
       </h4>
       {type !== 'implicit' ? (
-        <div className="rounded-md border border-gray-200">
-          <div className="rounded-t-md bg-gray-50 px-4 py-2 text-xs font-medium uppercase text-gray-500">
+        <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-800">
+          <div className="bg-slate-50 px-4 py-2 text-xs font-medium uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">
             <span>Files</span>
           </div>
-          <ul className="max-h-[300px] divide-y divide-gray-200 overflow-auto">
+          <ul className="max-h-[300px] divide-y divide-slate-200 overflow-auto dark:divide-slate-800">
             {fileDependencies.map((fileDep) => (
-              <li className="dark:text-sidebar-text-dark whitespace-nowrap px-4 py-2 text-sm font-medium text-gray-900">
+              <li className="whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-300">
                 <span className="block truncate font-normal">
                   {fileDep.fileName}
                 </span>

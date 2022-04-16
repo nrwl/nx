@@ -16,7 +16,7 @@ export const GroupByFolderPanel = memo(
               name="displayOptions"
               value="groupByFolder"
               type="checkbox"
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-slate-300 dark:border-slate-700"
               onChange={(event) => groupByFolderChanged(event.target.checked)}
               checked={groupByFolder}
             ></input>
@@ -24,11 +24,11 @@ export const GroupByFolderPanel = memo(
           <div className="ml-3 text-sm">
             <label
               htmlFor="displayOptions"
-              className="dark:text-sidebar-subtitle-dark cursor-pointer font-medium text-gray-700"
+              className="cursor-pointer font-medium text-slate-600 dark:text-slate-400"
             >
               Group by folder
             </label>
-            <p className="dark:text-sidebar-text-dark text-gray-500">
+            <p className="text-slate-400 dark:text-slate-500">
               Visually arrange libraries by folders with different colors.
             </p>
           </div>

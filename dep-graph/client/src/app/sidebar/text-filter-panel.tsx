@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useDebounce } from '../hooks/use-debounce';
-import { DarkClasses } from '../dark-theme-styles';
 
 export interface TextFilterPanelProps {
   textFilter: string;
@@ -51,12 +50,10 @@ export function TextFilterPanel({
     <div>
       <div className="mt-10 px-4">
         <form
-          className="relative flex rounded-md shadow-sm"
+          className="group relative flex rounded-md shadow-sm"
           onSubmit={(event) => event.preventDefault()}
         >
-          <span
-            className={`inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 p-2 text-gray-500 ${DarkClasses.button}`}
-          >
+          <span className="inline-flex items-center rounded-l-md border border-r-0 border-slate-300 bg-slate-50 p-2 dark:border-slate-900 dark:bg-slate-800">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
@@ -74,7 +71,7 @@ export function TextFilterPanel({
           </span>
           <input
             type="text"
-            className={`block w-full flex-1 rounded-none rounded-r-md border border-gray-300 bg-white p-1.5 text-gray-600 ${DarkClasses.input}`}
+            className={`block w-full flex-1 rounded-none rounded-r-md border border-slate-300 bg-white p-1.5 font-light text-slate-400 placeholder:font-light placeholder:text-slate-400 dark:border-slate-900 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700`}
             placeholder="lib name, other lib name"
             data-cy="textFilterInput"
             name="filter"
@@ -87,7 +84,7 @@ export function TextFilterPanel({
               data-cy="textFilterReset"
               type="reset"
               onClick={resetClicked}
-              className="absolute top-1 right-1 inline-block rounded-md bg-white p-1 text-gray-500"
+              className="absolute top-1 right-1 inline-block rounded-md bg-slate-50 p-1 text-slate-400 dark:bg-slate-800"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -117,7 +114,7 @@ export function TextFilterPanel({
               name="textFilterCheckbox"
               type="checkbox"
               value="includeInPath"
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-slate-300 dark:border-slate-700"
               checked={includePath}
               onChange={toggleIncludeLibsInPathChange}
             ></input>
@@ -125,11 +122,11 @@ export function TextFilterPanel({
           <div className="ml-3 text-sm">
             <label
               htmlFor="includeInPath"
-              className="dark:text-sidebar-subtitle-dark cursor-pointer font-medium text-gray-700"
+              className="cursor-pointer font-medium text-slate-600 dark:text-slate-400"
             >
               Include related libraries
             </label>
-            <p className="dark:text-sidebar-text-dark text-gray-500">
+            <p className="text-slate-400 dark:text-slate-500">
               Show libraries that are related to your search.
             </p>
           </div>

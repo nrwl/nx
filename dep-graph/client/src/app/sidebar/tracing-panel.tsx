@@ -1,7 +1,10 @@
-import { XCircleIcon } from '@heroicons/react/solid';
+import {
+  DotsVerticalIcon,
+  FlagIcon,
+  LocationMarkerIcon,
+  XCircleIcon,
+} from '@heroicons/react/solid';
 import { memo } from 'react';
-import Flag from '../icons/flag';
-import MapMarker from '../icons/map-marker';
 
 export interface TracingPanelProps {
   start: string;
@@ -15,33 +18,22 @@ export const TracingPanel = memo(
     return (
       <div className="mt-10 px-4">
         <div className="transition duration-200 ease-in-out group-hover:opacity-60">
-          <h3 className="cursor-text pb-2 text-sm font-semibold uppercase tracking-wide text-gray-900 lg:text-xs ">
+          <h3 className="cursor-text pb-2 text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs">
             Tracing Path
           </h3>
           <div className="flex flex-row items-center truncate ">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="mr-2 h-5 w-5 text-gray-500"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <LocationMarkerIcon className="mr-2 h-5 w-5 text-slate-500 dark:text-slate-400" />
             {start ? (
               <div
-                className=" group relative flex-1 cursor-pointer flex-col items-center overflow-hidden "
+                className="group relative flex-1 cursor-pointer flex-col items-center overflow-hidden"
                 data-cy="resetTraceButton"
                 onClick={resetStart}
               >
-                <div className="bg-green-nx-base flex-1 truncate rounded-md border border-gray-200 p-2 text-gray-50 shadow-sm transition duration-200 ease-in-out group-hover:opacity-60">
+                <div className="bg-green-nx-base flex-1 truncate rounded-md border border-slate-200 p-2 text-slate-50 shadow-sm transition duration-200 ease-in-out group-hover:opacity-60 dark:border-slate-700">
                   <span>{start}</span>
                 </div>
 
-                <div className="absolute top-2 right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-500 transition-all transition duration-200 ease-in-out group-hover:translate-x-0">
+                <div className="absolute top-2 right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-500 transition-all transition duration-200 ease-in-out group-hover:translate-x-0 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
                   Reset
                   <span className="rounded-md p-1">
                     <XCircleIcon className="h-5 w-5"></XCircleIcon>
@@ -49,16 +41,16 @@ export const TracingPanel = memo(
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-500">Select start project</p>
+              <p className="text-sm text-slate-500">Select start project</p>
             )}
           </div>
 
           <div>
-            <MapMarker className="h-5 w-5 text-gray-500"></MapMarker>
+            <DotsVerticalIcon className="h-5 w-5 text-slate-500 dark:text-slate-400" />
           </div>
 
           <div className="flex flex-row items-center truncate ">
-            <Flag className="mr-2 h-5 w-5 text-gray-500"></Flag>
+            <FlagIcon className="mr-2 h-5 w-5 text-slate-500 dark:text-slate-400" />
 
             {end ? (
               <div
@@ -66,32 +58,19 @@ export const TracingPanel = memo(
                 data-cy="resetTraceButton"
                 onClick={resetEnd}
               >
-                <div className="bg-green-nx-base flex-1 truncate rounded-md border border-gray-200 p-2 text-gray-50 shadow-sm transition duration-200 ease-in-out group-hover:opacity-60">
+                <div className="bg-green-nx-base flex-1 truncate rounded-md border border-slate-200 p-2 text-slate-50 shadow-sm transition duration-200 ease-in-out group-hover:opacity-60 dark:border-slate-700">
                   <span>{end}</span>
                 </div>
 
-                <div className="absolute top-2 right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-500 transition-all transition duration-200 ease-in-out group-hover:translate-x-0">
+                <div className="absolute top-2 right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-500 transition-all transition duration-200 ease-in-out group-hover:translate-x-0 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
                   Reset
                   <span className="rounded-md p-1">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+                    <XCircleIcon className="h-5 w-5" />
                   </span>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-500">Select end project</p>
+              <p className="text-sm text-slate-500">Select end project</p>
             )}
           </div>
         </div>
