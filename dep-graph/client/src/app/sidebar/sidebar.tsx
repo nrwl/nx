@@ -23,6 +23,7 @@ import ShowHideProjects from './show-hide-projects';
 import TextFilterPanel from './text-filter-panel';
 import ThemePanel from './theme-panel';
 import TracingPanel from './tracing-panel';
+import { TracingAlgorithmType } from '../machines/interfaces';
 
 export function Sidebar() {
   const depGraphService = useDepGraphService();
@@ -33,9 +34,8 @@ export function Sidebar() {
   const hasAffectedProjects = useDepGraphSelector(hasAffectedProjectsSelector);
   const groupByFolder = useDepGraphSelector(groupByFolderSelector);
   const collapseEdges = useDepGraphSelector(collapseEdgesSelector);
-  const environment = useEnvironmentConfig();
 
-  const { showExperimentalFeatures } = environment.appConfig;
+  const isTracing = depGraphService.state.matches('tracing');
 
   // const isTracing = depGraphService.state.matches('tracing');
   const tracingInfo = useDepGraphSelector(getTracingInfo);
@@ -98,6 +98,10 @@ export function Sidebar() {
     depGraphService.send({ type: 'clearTraceEnd' });
   }
 
+  function setAlgorithm(algorithm: TracingAlgorithmType) {
+    depGraphService.send({ type: 'setTracingAlgorithm', algorithm: algorithm });
+  }
+
   const updateTextFilter = useCallback(
     (textFilter: string) => {
       depGraphService.send({ type: 'filterByText', search: textFilter });
@@ -153,15 +157,16 @@ export function Sidebar() {
           resetFocus={resetFocus}
         ></FocusedProjectPanel>
       ) : null}
-
-      <ExperimentalFeature>
+      {isTracing ? (
         <TracingPanel
           start={tracingInfo.start}
           end={tracingInfo.end}
+          algorithm={tracingInfo.algorithm}
+          setAlgorithm={setAlgorithm}
           resetStart={resetTraceStart}
           resetEnd={resetTraceEnd}
         ></TracingPanel>
-      </ExperimentalFeature>
+      ) : null}
 
       <TextFilterPanel
         includePath={includePath}

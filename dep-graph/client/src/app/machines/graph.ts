@@ -110,8 +110,11 @@ export class GraphService {
 
       case 'notifyGraphTracing':
         if (event.start && event.end) {
-          this.traceProjects(event.start, event.end);
-          // this.traceAllProjects(event.start, event.end);
+          if (event.algorithm === 'shortest') {
+            this.traceProjects(event.start, event.end);
+          } else {
+            this.traceAllProjects(event.start, event.end);
+          }
         }
         break;
     }
@@ -390,13 +393,6 @@ export class GraphService {
     if (iterations >= 1000) {
       console.log('failsafe triggered!');
     }
-    paths.forEach((currentPath) => {
-      console.log(
-        currentPath
-          .map((path) => path.map((element) => element.id()))
-          .join(' => ')
-      );
-    });
 
     let finalCollection = this.traversalGraph.collection();
 
@@ -413,11 +409,10 @@ export class GraphService {
       }
     });
 
-    console.log(finalCollection.length);
-
     finalCollection.union(finalCollection.ancestors());
-    console.log(finalCollection.map((element) => element.id()));
-    this.transferToRenderGraph(finalCollection);
+    this.transferToRenderGraph(
+      finalCollection.union(finalCollection.ancestors())
+    );
   }
 
   private transferToRenderGraph(elements: cy.Collection) {

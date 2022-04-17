@@ -1,6 +1,7 @@
 import {
   getCheckedProjectItems,
   getDeselectAllButton,
+  getFocusButtonForProject,
   getGroupByFolderCheckbox,
   getImageDownloadButton,
   getIncludeProjectsInPathButton,
@@ -146,7 +147,7 @@ describe('dep-graph-client', () => {
   describe('focusing projects in sidebar', () => {
     it('should select appropriate projects', () => {
       cy.contains('nx-dev').scrollIntoView().should('be.visible');
-      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+      getFocusButtonForProject('nx-dev').click({ force: true });
 
       getCheckedProjectItems().should('have.length', 11);
     });
@@ -154,7 +155,7 @@ describe('dep-graph-client', () => {
 
   describe('unfocus button', () => {
     it('should uncheck all project items', () => {
-      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+      getFocusButtonForProject('nx-dev').click({ force: true });
       getUnfocusProjectButton().click();
 
       getUncheckedProjectItems().should('have.length', 62);
@@ -182,12 +183,12 @@ describe('dep-graph-client', () => {
     });
 
     it('should be shown when a project is selected', () => {
-      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+      cy.get('[data-project="nx-dev"]').click({ force: true });
       getImageDownloadButton().should('not.have.class', 'opacity-0');
     });
 
     it('should be hidden when no more projects are selected', () => {
-      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+      cy.get('[data-project="nx-dev"]').click({ force: true });
       getDeselectAllButton().click();
       getImageDownloadButton().should('have.class', 'opacity-0');
     });
@@ -196,7 +197,7 @@ describe('dep-graph-client', () => {
   describe('setting url params', () => {
     it('should set focused project', () => {
       cy.contains('nx-dev').scrollIntoView().should('be.visible');
-      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+      getFocusButtonForProject('nx-dev').click({ force: true });
 
       cy.url().should('contain', 'focus=nx-dev');
     });

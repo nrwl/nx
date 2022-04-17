@@ -29,3 +29,6 @@ export const getIncludeProjectsInPathButton = () =>
 
 export const getImageDownloadButton = () =>
   cy.get('[data-cy=downloadImageButton]');
+
+export const getFocusButtonForProject = (projectName: string) =>
+  cy.get(`[data-cy="focus-button-${projectName}"]`);

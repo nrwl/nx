@@ -39,6 +39,12 @@ function parseSearchParamsToEvents(searchParams: string): DepGraphUIEvents[] {
           });
         }
         break;
+      case 'traceAlgorithm':
+        if (value === 'shortest' || value === 'all') {
+          // this needs to go before other tracing options or else the default of 'shortest' gets used
+          events.unshift({ type: 'setTracingAlgorithm', algorithm: value });
+        }
+        break;
       case 'traceStart':
         events.push({
           type: 'setTracingStart',
