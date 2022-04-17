@@ -22,7 +22,7 @@ export const initialContext: DepGraphContext = {
   textFilter: '',
   includePath: false,
   searchDepth: 1,
-  searchDepthEnabled: false,
+  searchDepthEnabled: true,
   groupByFolder: false,
   collapseEdges: false,
   workspaceLayout: {

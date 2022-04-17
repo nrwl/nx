@@ -47,6 +47,7 @@ export const SearchDepth = memo(
         <div className="mt-3 px-10">
           <div className="flex rounded-md shadow-sm">
             <button
+              data-cy="decrement-depth-filter"
               title="Remove ancestor level"
               className="inline-flex items-center rounded-l-md border border-slate-300 bg-slate-50 py-2 px-4 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={decrementDepthFilter}
@@ -73,6 +74,7 @@ export const SearchDepth = memo(
               {searchDepth}
             </span>
             <button
+              data-cy="increment-depth-filter"
               title="Add ancestor level"
               className="inline-flex items-center rounded-r-md border border-slate-300 bg-slate-50 py-2 px-4 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={incrementDepthFilter}

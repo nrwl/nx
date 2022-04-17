@@ -270,7 +270,10 @@ describe('dep-graph machine', () => {
         affectedProjects: [],
         workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
       });
-
+      service.send({
+        type: 'setSearchDepthEnabled',
+        searchDepthEnabled: false,
+      });
       service.send({ type: 'focusProject', projectName: 'app1' });
     });
 

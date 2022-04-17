@@ -25,10 +25,19 @@ function parseSearchParamsToEvents(searchParams: string): DepGraphUIEvents[] {
         events.push({ type: 'setCollapseEdges', collapseEdges: true });
         break;
       case 'searchDepth':
-        events.push({
-          type: 'setSearchDepth',
-          searchDepth: parseInt(value),
-        });
+        const parsedValue = parseInt(value, 10);
+
+        if (parsedValue === 0) {
+          events.push({
+            type: 'setSearchDepthEnabled',
+            searchDepthEnabled: false,
+          });
+        } else if (parsedValue > 1) {
+          events.push({
+            type: 'setSearchDepth',
+            searchDepth: parseInt(value),
+          });
+        }
         break;
       case 'traceStart':
         events.push({
