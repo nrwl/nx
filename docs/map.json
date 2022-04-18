@@ -107,6 +107,17 @@
         ]
       },
       {
+        "name": "Extending Nx",
+        "id": "extending-nx",
+        "itemList": [
+          {
+            "name": "Project Inference Plugins",
+            "id": "project-inference-plugins",
+            "file": "shared/extending-nx/project-inference-plugins"
+          }
+        ]
+      },
+      {
         "name": "Migration",
         "id": "migration",
         "itemList": [
