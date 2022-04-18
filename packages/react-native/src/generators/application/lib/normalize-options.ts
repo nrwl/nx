@@ -1,5 +1,5 @@
 import { names, Tree } from '@nrwl/devkit';
-import { join } from 'path';
+import { posix } from 'path';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -35,7 +35,7 @@ export function normalizeOptions(options: Schema): NormalizedSchema {
     : [];
 
   const entryFile = options.js ? '/src/main.js' : '/src/main.tsx';
-  const entryFileRelativeToRoot = join(appProjectRoot, entryFile);
+  const entryFileRelativeToRoot = posix.join(appProjectRoot, entryFile);
 
   /**
    * if options.name is "my-app"
