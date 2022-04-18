@@ -126,7 +126,7 @@ export function checkForNPMRC(
  * this function looks up for the nearest `.npmrc` (if exists) and copies it over to the
  * temp directory.
  */
-export function createTempNpmDirectory(): string {
+export function createTempNpmDirectory() {
   const dir = dirSync().name;
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
@@ -137,7 +137,15 @@ export function createTempNpmDirectory(): string {
     copyFileSync(npmrc, `${dir}/.npmrc`);
   }
 
-  return dir;
+  const cleanup = async () => {
+    try {
+      await remove(dir);
+    } catch {
+      // It's okay if this fails, the OS will clean it up eventually
+    }
+  };
+
+  return { dir, cleanup };
 }
 
 /**
@@ -178,7 +186,7 @@ export async function resolvePackageVersionUsingInstallation(
   packageName: string,
   version: string
 ): Promise<string> {
-  const dir = createTempNpmDirectory();
+  const { dir, cleanup } = createTempNpmDirectory();
 
   try {
     const pmc = getPackageManagerCommand();
@@ -190,11 +198,7 @@ export async function resolvePackageVersionUsingInstallation(
 
     return readJsonFile<PackageJson>(packageJsonPath).version;
   } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
+    await cleanup();
   }
 }
 
