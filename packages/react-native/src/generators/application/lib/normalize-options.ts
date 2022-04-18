@@ -27,8 +27,8 @@ export function normalizeOptions(options: Schema): NormalizedSchema {
   const appProjectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
 
   const appProjectRoot = `apps/${projectDirectory}`;
-  const iosProjectRoot = join(appProjectRoot, 'ios');
-  const androidProjectRoot = join(appProjectRoot, 'android');
+  const iosProjectRoot = posix.join(appProjectRoot, 'ios');
+  const androidProjectRoot = posix.join(appProjectRoot, 'android');
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
