@@ -1,6 +1,6 @@
 # Nx Plugins and Devkit
 
-Nx is a VSCode of build tools. The core of Nx enables project and task graph creation and analysis, orchestration and
+Nx is like the VSCode of build tools. The core of Nx enables project and task graph creation and analysis, orchestration and
 execution of tasks, computation caching, and code generation. [Nx plugins](#nx-plugins) extend this functionality and are built on top of the underlying [Nx Devkit](#nx-devkit).
 
 > Many organizations use Nx without any plugins. If you are mainly interested in making your workspace faster or enabling distributed task execution, then plugins aren't necessary.
