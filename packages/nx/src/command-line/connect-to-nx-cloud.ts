@@ -43,7 +43,7 @@ export async function connectToNxCloudCommand(
     return;
   }
 
-  const res = await connectToNxCloudPrompt();
+  const res = await connectToNxCloudPrompt(promptOverride);
   if (!res) return;
   const pmc = getPackageManagerCommand();
   execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`);
