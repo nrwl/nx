@@ -1,4 +1,4 @@
-import { ProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { readJson, Tree } from '@nrwl/devkit';
 import { readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
@@ -32,7 +32,9 @@ describe('Init MFE', () => {
       });
 
       // ASSERT
-      expect(tree.exists(`apps/${app}/mfe.config.js`)).toBeTruthy();
+      expect(
+        tree.exists(`apps/${app}/module-federation.config.js`)
+      ).toBeTruthy();
       expect(tree.exists(`apps/${app}/webpack.config.js`)).toBeTruthy();
       expect(tree.exists(`apps/${app}/webpack.prod.config.js`)).toBeTruthy();
 
@@ -42,7 +44,10 @@ describe('Init MFE', () => {
       );
       expect(webpackContents).toMatchSnapshot();
 
-      const mfeConfigContents = tree.read(`apps/${app}/mfe.config.js`, 'utf-8');
+      const mfeConfigContents = tree.read(
+        `apps/${app}/module-federation.config.js`,
+        'utf-8'
+      );
       expect(mfeConfigContents).toMatchSnapshot();
     }
   );
@@ -135,7 +140,10 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const mfeConfigContents = tree.read(`apps/app1/mfe.config.js`, 'utf-8');
+    const mfeConfigContents = tree.read(
+      `apps/app1/module-federation.config.js`,
+      'utf-8'
+    );
 
     expect(mfeConfigContents).toContain(`'remote1'`);
   });
@@ -155,7 +163,10 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const hostMfeConfig = tree.read('apps/app1/mfe.config.js', 'utf-8');
+    const hostMfeConfig = tree.read(
+      'apps/app1/module-federation.config.js',
+      'utf-8'
+    );
     expect(hostMfeConfig).toMatchSnapshot();
   });
 
@@ -186,7 +197,10 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    const hostMfeConfig = tree.read('apps/app1/mfe.config.js', 'utf-8');
+    const hostMfeConfig = tree.read(
+      'apps/app1/module-federation.config.js',
+      'utf-8'
+    );
     expect(hostMfeConfig).toMatchSnapshot();
   });
 
@@ -260,11 +274,11 @@ describe('Init MFE', () => {
       });
 
       // ASSERT
-      expect(tree.read('apps/app1/mfe.config.js', 'utf-8')).toContain(
-        'remotes: []'
-      );
       expect(
-        tree.exists('apps/app1/src/assets/mfe.manifest.json')
+        tree.read('apps/app1/module-federation.config.js', 'utf-8')
+      ).toContain('remotes: []');
+      expect(
+        tree.exists('apps/app1/src/assets/module-federation.manifest.json')
       ).toBeTruthy();
       expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchSnapshot();
     });
@@ -289,10 +303,12 @@ describe('Init MFE', () => {
     });
 
     // ASSERT
-    expect(tree.read('apps/app1/mfe.config.js', 'utf-8')).toContain(
-      'remotes: []'
-    );
-    expect(readJson(tree, 'apps/app1/src/assets/mfe.manifest.json')).toEqual({
+    expect(
+      tree.read('apps/app1/module-federation.config.js', 'utf-8')
+    ).toContain('remotes: []');
+    expect(
+      readJson(tree, 'apps/app1/src/assets/module-federation.manifest.json')
+    ).toEqual({
       remote1: 'http://localhost:4201',
     });
     expect(

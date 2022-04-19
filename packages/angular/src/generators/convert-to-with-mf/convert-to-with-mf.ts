@@ -2,7 +2,7 @@ import { joinPathFragments, logger, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 
 import { readProjectConfiguration, formatFiles } from '@nrwl/devkit';
-import { getMfeProjects } from '../../utils/get-mfe-projects';
+import { getMFProjects } from '../../utils/get-mf-projects';
 import {
   checkOutputNameMatchesProjectName,
   checkSharedNpmPackagesMatchExpected,
@@ -13,7 +13,7 @@ import {
 } from './lib';
 
 export default async function convertToWithMF(tree: Tree, schema: Schema) {
-  const projects = new Set(getMfeProjects(tree, { legacy: true }));
+  const projects = new Set(getMFProjects(tree, { legacy: true }));
 
   if (!projects.has(schema.project)) {
     throw new Error(
@@ -43,13 +43,16 @@ export default async function convertToWithMF(tree: Tree, schema: Schema) {
     `This Micro Frontend configuration conversion will overwrite "${schema.project}"'s current webpack config. If you have anything custom that is not related to Micro Frontends, it will be lost. You should be able to see the changes in your version control system.`
   );
 
-  const [updatedWebpackConfig, mfeConfig] = writeNewWebpackConfig(
+  const [updatedWebpackConfig, mfConfig] = writeNewWebpackConfig(
     webpackAst,
     isHostRemoteConfig(webpackAst),
     schema.project
   );
   tree.write(pathToWebpackConfig, updatedWebpackConfig);
-  tree.write(joinPathFragments(project.root, 'mfe.config.js'), mfeConfig);
+  tree.write(
+    joinPathFragments(project.root, 'module-federation.config.js'),
+    mfConfig
+  );
 
   await formatFiles(tree);
 }

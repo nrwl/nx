@@ -2,18 +2,18 @@
 
 exports[`Host App Generator should generate a host app with a remote 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-const config = require('./mfe.config');
+const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
 exports[`Host App Generator should generate a host app with a remote 2`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-const config = require('./mfe.config');
+const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
 exports[`Host App Generator should generate a host app with no remotes 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-const config = require('./mfe.config');
+const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;

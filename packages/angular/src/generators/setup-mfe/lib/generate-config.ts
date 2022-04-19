@@ -9,7 +9,7 @@ export function generateWebpackConfig(
   remotesWithPorts: { remoteName: string; port: number }[]
 ) {
   if (
-    host.exists(`${appRoot}/mfe.config.js`) ||
+    host.exists(`${appRoot}/module-federation.config.js`) ||
     host.exists(`${appRoot}/webpack.config.js`) ||
     host.exists(`${appRoot}/webpack.prod.config.js`)
   ) {

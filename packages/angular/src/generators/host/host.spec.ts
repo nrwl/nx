@@ -56,9 +56,9 @@ describe('Host App Generator', () => {
     // ASSERT
     expect(tree.exists('apps/remote1/project.json')).toBeTruthy();
     expect(tree.exists('apps/remote2/project.json')).toBeTruthy();
-    expect(tree.read('apps/host-app/mfe.config.js', 'utf-8')).toContain(
-      `'remote1','remote2'`
-    );
+    expect(
+      tree.read('apps/host-app/module-federation.config.js', 'utf-8')
+    ).toContain(`'remote1','remote2'`);
   });
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist', async () => {
@@ -78,8 +78,8 @@ describe('Host App Generator', () => {
     expect(tree.exists('apps/remote1/project.json')).toBeTruthy();
     expect(tree.exists('apps/remote2/project.json')).toBeTruthy();
     expect(tree.exists('apps/remote3/project.json')).toBeTruthy();
-    expect(tree.read('apps/host-app/mfe.config.js', 'utf-8')).toContain(
-      `'remote1','remote2','remote3'`
-    );
+    expect(
+      tree.read('apps/host-app/module-federation.config.js', 'utf-8')
+    ).toContain(`'remote1','remote2','remote3'`);
   });
 });

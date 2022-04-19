@@ -11,7 +11,7 @@ export function writeNewWebpackConfig(
   projectName: string
 ) {
   const webpackConfig = `const { withModuleFederation } = require('@nrwl/angular/module-federation');
-  const config = require('./mfe.config');
+  const config = require('./module-federation.config');
   module.exports = withModuleFederation(config);`;
 
   let mfeConfig = '';

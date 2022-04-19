@@ -10,9 +10,9 @@ export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
 
   const bootstrapImportCode = `import('./bootstrap').catch(err => console.error(err))`;
 
-  const fetchMfeManifestCode = `import { setRemoteDefinitions } from '@nrwl/angular/mfe';
+  const fetchMFManifestCode = `import { setRemoteDefinitions } from '@nrwl/angular/mfe';
 
-  fetch('/assets/mfe.manifest.json')
+  fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
   .then(definitions => setRemoteDefinitions(definitions))
   .then(() => ${bootstrapImportCode})`;
@@ -20,7 +20,7 @@ export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
   tree.write(
     mainFilePath,
     options.mfeType === 'host' && options.federationType === 'dynamic'
-      ? fetchMfeManifestCode
+      ? fetchMFManifestCode
       : bootstrapImportCode
   );
 }

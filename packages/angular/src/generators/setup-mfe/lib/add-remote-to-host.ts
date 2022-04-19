@@ -24,19 +24,19 @@ export function checkIsCommaNeeded(mfeRemoteText: string) {
 export function addRemoteToHost(tree: Tree, options: Schema) {
   if (options.mfeType === 'remote' && options.host) {
     const hostProject = readProjectConfiguration(tree, options.host);
-    const pathToMfeManifest = joinPathFragments(
+    const pathToMFManifest = joinPathFragments(
       hostProject.sourceRoot,
-      'assets/mfe.manifest.json'
+      'assets/module-federation.manifest.json'
     );
     const hostFederationType = determineHostFederationType(
       tree,
-      pathToMfeManifest
+      pathToMFManifest
     );
 
     if (hostFederationType === 'static') {
       addRemoteToStaticHost(tree, options, hostProject);
     } else if (hostFederationType === 'dynamic') {
-      addRemoteToDynamicHost(tree, options, pathToMfeManifest);
+      addRemoteToDynamicHost(tree, options, pathToMFManifest);
     }
 
     const declarationFilePath = joinPathFragments(
@@ -66,19 +66,19 @@ function addRemoteToStaticHost(
   options: Schema,
   hostProject: ProjectConfiguration
 ) {
-  const hostMfeConfigPath = joinPathFragments(
+  const hostMFConfigPath = joinPathFragments(
     hostProject.root,
-    'mfe.config.js'
+    'module-federation.config.js'
   );
 
-  if (!hostMfeConfigPath || !tree.exists(hostMfeConfigPath)) {
+  if (!hostMFConfigPath || !tree.exists(hostMFConfigPath)) {
     throw new Error(
-      `The selected host application, ${options.host}, does not contain a mfe.config.js or mfe.manifest.json file. Are you sure it has been set up as a host application?`
+      `The selected host application, ${options.host}, does not contain a module-federation.config.js or module-federation.manifest.json file. Are you sure it has been set up as a host application?`
     );
   }
 
-  const hostMFEConfig = tree.read(hostMfeConfigPath, 'utf-8');
-  const webpackAst = tsquery.ast(hostMFEConfig);
+  const hostMFConfig = tree.read(hostMFConfigPath, 'utf-8');
+  const webpackAst = tsquery.ast(hostMFConfig);
   const mfRemotesNode = tsquery(
     webpackAst,
     'Identifier[name=remotes] ~ ArrayLiteralExpression',
@@ -88,11 +88,11 @@ function addRemoteToStaticHost(
   const endOfPropertiesPos = mfRemotesNode.getEnd() - 1;
   const isCommaNeeded = checkIsCommaNeeded(mfRemotesNode.getText());
 
-  const updatedConfig = `${hostMFEConfig.slice(0, endOfPropertiesPos)}${
+  const updatedConfig = `${hostMFConfig.slice(0, endOfPropertiesPos)}${
     isCommaNeeded ? ',' : ''
-  }'${options.appName}',${hostMFEConfig.slice(endOfPropertiesPos)}`;
+  }'${options.appName}',${hostMFConfig.slice(endOfPropertiesPos)}`;
 
-  tree.write(hostMfeConfigPath, updatedConfig);
+  tree.write(hostMFConfigPath, updatedConfig);
 }
 
 function addRemoteToDynamicHost(

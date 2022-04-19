@@ -4,10 +4,10 @@ import {
   readProjectConfiguration,
   formatFiles,
 } from '@nrwl/devkit';
-import { getMfeProjects } from '../../utils/get-mfe-projects';
+import { getMFProjects } from '../../utils/get-mf-projects';
 
 export default async function (tree: Tree) {
-  const projects = getMfeProjects(tree);
+  const projects = getMFProjects(tree);
 
   for (const project of projects) {
     const e2eProjectName = `${project}-e2e`;
