@@ -31,7 +31,10 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - script: <%= packageManagerInstall %>
+      <% if(packageManagerPrefix == 'pnpm exec'){ %>
+      - script: npm install --prefix=$HOME/.local -g pnpm@6.32.4
+        displayName: Install PNPM
+      <% } %>- script: <%= packageManagerInstall %>
         displayName: NPM Install Dependencies
       - script: npx nx-cloud start-agent
         displayName: 'Start Nx-Cloud agent $(imageName)'
@@ -40,7 +43,10 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - script: <%= packageManagerInstall %>
+      <% if(packageManagerPrefix == 'pnpm exec'){ %>
+      - script: npm install --prefix=$HOME/.local -g pnpm@6.32.4
+        displayName: Install PNPM
+      <% } %>- script: <%= packageManagerInstall %>
         displayName: NPM Install Dependencies
       - script: <%= packageManagerPrefix %> nx-cloud start-ci-run
         displayName: Start CI run

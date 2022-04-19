@@ -16,7 +16,11 @@ jobs:
           command: |
             echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - checkout
+      <% if(packageManagerPrefix == 'pnpm exec'){ %>
       - run:
+          name: Install PNPM
+          command: npm install --prefix=$HOME/.local -g pnpm@6.32.4
+      <% } %>- run:
           name: Install dependencies
           command: <%= packageManagerInstall %>
       - run:
@@ -34,7 +38,11 @@ jobs:
           command: |
             echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - checkout
+      <% if(packageManagerPrefix == 'pnpm exec'){ %>
       - run:
+          name: Install PNPM
+          command: npm install --prefix=$HOME/.local -g pnpm@6.32.4
+      <% } %>- run:
           name: Install dependencies
           command: <%= packageManagerInstall %>
       - nx/set-shas:
