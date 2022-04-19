@@ -15,7 +15,7 @@ export interface DetoxTestOptions {
   recordTimeline?: 'all' | 'none';
   captureViewHierarchy?: 'enabled' | 'disabled';
   retries?: number;
-  resuse?: boolean;
+  reuse: boolean; // default is true
   cleanup?: boolean;
   workers?: number;
   jestReportSpecs?: boolean;
