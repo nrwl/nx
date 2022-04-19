@@ -445,7 +445,7 @@ describe('Move Angular Project', () => {
     // just check the output
     expect(moveOutput).toContain(`DELETE apps/${app1}`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/.browserslistrc`);
-    expect(moveOutput).toContain(`CREATE apps/${newPath}/jest.config.js`);
+    expect(moveOutput).toContain(`CREATE apps/${newPath}/jest.config.ts`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.app.json`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.json`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.spec.json`);

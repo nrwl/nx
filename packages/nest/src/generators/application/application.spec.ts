@@ -52,7 +52,11 @@ describe('application generator', () => {
     );
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
     expect(tsConfig.compilerOptions.target).toBe('es2015');
-    expect(tsConfig.exclude).toEqual(['**/*.spec.ts', '**/*.test.ts']);
+    expect(tsConfig.exclude).toEqual([
+      'jest.config.ts',
+      '**/*.spec.ts',
+      '**/*.test.ts',
+    ]);
   });
 
   describe('--skipFormat', () => {

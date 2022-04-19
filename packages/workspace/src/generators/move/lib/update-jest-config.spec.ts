@@ -32,15 +32,15 @@ describe('updateJestConfig', () => {
   it('should update the name and coverage directory', async () => {
     const jestConfig = `module.exports = {
       name: 'my-source',
-      preset: '../../jest.config.js',
+      preset: '../../jest.config.ts',
       coverageDirectory: '../../coverage/libs/my-source',
       snapshotSerializers: [
         'jest-preset-angular/AngularSnapshotSerializer.js',
         'jest-preset-angular/HTMLCommentSerializer.js'
       ]
     };`;
-    const jestConfigPath = '/libs/my-destination/jest.config.js';
-    const rootJestConfigPath = '/jest.config.js';
+    const jestConfigPath = '/libs/my-destination/jest.config.ts';
+    const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'my-source',
       standaloneConfig: false,
@@ -70,15 +70,15 @@ describe('updateJestConfig', () => {
   it('should update jest configs properly even if project is in many layers of subfolders', async () => {
     const jestConfig = `module.exports = {
       name: 'some-test-dir-my-source',
-      preset: '../../jest.config.js',
+      preset: '../../jest.config.ts',
       coverageDirectory: '../../coverage/libs/some/test/dir/my-source',
       snapshotSerializers: [
         'jest-preset-angular/AngularSnapshotSerializer.js',
         'jest-preset-angular/HTMLCommentSerializer.js'
       ]
     };`;
-    const jestConfigPath = '/libs/other/test/dir/my-destination/jest.config.js';
-    const rootJestConfigPath = '/jest.config.js';
+    const jestConfigPath = '/libs/other/test/dir/my-destination/jest.config.ts';
+    const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
       standaloneConfig: false,
@@ -108,7 +108,7 @@ describe('updateJestConfig', () => {
   });
 
   it('updates the root config if not using `getJestProjects()`', async () => {
-    const rootJestConfigPath = '/jest.config.js';
+    const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
       standaloneConfig: false,
@@ -145,7 +145,7 @@ describe('updateJestConfig', () => {
   });
 
   it('updates the root config if `getJestProjects()` is used but old path exists', async () => {
-    const rootJestConfigPath = '/jest.config.js';
+    const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
       standaloneConfig: false,
@@ -185,7 +185,7 @@ module.exports = {
   });
 
   it('updates the root config if `getJestProjects()` is used with other projects in the array', async () => {
-    const rootJestConfigPath = '/jest.config.js';
+    const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
       standaloneConfig: false,

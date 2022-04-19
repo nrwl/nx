@@ -226,7 +226,7 @@ describe('lib', () => {
       });
 
       expect(appTree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
+      expect(appTree.exists('libs/my-lib/jest.config.ts')).toBeFalsy();
       const workspaceJson = readJson(appTree, 'workspace.json');
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint)

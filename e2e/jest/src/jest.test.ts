@@ -75,7 +75,7 @@ describe('Jest', () => {
     );
 
     updateFile(
-      `libs/${mylib}/jest.config.js`,
+      `libs/${mylib}/jest.config.ts`,
       stripIndents`
           module.exports = {
             testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],

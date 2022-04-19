@@ -35,10 +35,8 @@ export function updateProjectRootFiles(
 
   const dots = /\./g;
   const regex = new RegExp(oldRelativeRoot.replace(dots, '\\.'), 'g');
-
   for (const file of tree.children(schema.relativeToRootDestination)) {
     const ext = extname(file);
-    console.log({file})
     if (!allowedExt.includes(ext)) {
       continue;
     }

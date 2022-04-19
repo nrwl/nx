@@ -24,6 +24,7 @@ exports[`Update .lib.swcrc exclude should update the exclude pattern 1`] = `
   },
   \\"sourceMaps\\": true,
   \\"exclude\\": [
+    \\"jest.config.ts\\",
     \\".*.spec.tsx?$\\",
     \\".*.test.tsx?$\\",
     \\"./src/jest-setup.ts$\\",

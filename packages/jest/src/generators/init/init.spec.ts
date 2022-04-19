@@ -12,8 +12,8 @@ describe('jest', () => {
   it('should generate files', async () => {
     jestInitGenerator(tree, {});
 
-    expect(tree.exists('jest.config.js')).toBeTruthy();
-    expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.exists('jest.config.ts')).toBeTruthy();
+    expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "const { getJestProjects } = require('@nrwl/jest');
       
       module.exports = {
@@ -23,9 +23,9 @@ describe('jest', () => {
   });
 
   it('should not override existing files', async () => {
-    tree.write('jest.config.js', `test`);
+    tree.write('jest.config.ts', `test`);
     jestInitGenerator(tree, {});
-    expect(tree.read('jest.config.js', 'utf-8')).toEqual('test');
+    expect(tree.read('jest.config.ts', 'utf-8')).toEqual('test');
   });
 
   it('should add dependencies', async () => {

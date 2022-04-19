@@ -211,7 +211,7 @@ describe('lib', () => {
           name: 'myLib',
           directory: 'myDir',
         });
-        expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+        expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
         expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
         expect(
           tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
@@ -570,7 +570,7 @@ describe('lib', () => {
           name: 'myLib',
           js: true,
         });
-        expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
+        expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
         expect(tree.exists('libs/my-lib/src/index.js')).toBeTruthy();
         expect(tree.exists('libs/my-lib/src/lib/my-lib.js')).toBeTruthy();
         expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
@@ -617,7 +617,7 @@ describe('lib', () => {
           directory: 'myDir',
           js: true,
         });
-        expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+        expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
         expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
         expect(
           tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.js')
@@ -688,18 +688,18 @@ describe('lib', () => {
       });
 
       expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/jest.config.js')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/jest.config.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
 
       const projectConfig = readProjectConfiguration(tree, 'my-lib');
       expect(projectConfig.targets.test).toBeDefined();
 
-      expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
-      expect(tree.read(`libs/my-lib/jest.config.js`, 'utf-8'))
+      expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.read(`libs/my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',
-          preset: '../../jest.preset.js',
+          preset: '../../jest.preset.ts',
           globals: {
             'ts-jest': {
               tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -779,7 +779,7 @@ describe('lib', () => {
           compiler: 'swc',
         });
 
-        const jestConfig = tree.read('libs/my-lib/jest.config.js').toString();
+        const jestConfig = tree.read('libs/my-lib/jest.config.ts').toString();
         expect(jestConfig).toContain('@swc/jest');
       });
 

@@ -223,7 +223,7 @@ describe('app', () => {
       standaloneConfig: false,
     });
 
-    expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
+    expect(tree.read('apps/my-app/jest.config.ts', 'utf-8')).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
   });
@@ -235,7 +235,7 @@ describe('app', () => {
       standaloneConfig: false,
     });
 
-    expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
+    expect(tree.read('apps/my-app/jest.config.ts', 'utf-8')).toContain(
       `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'`
     );
   });
@@ -302,7 +302,7 @@ describe('app', () => {
         unitTestRunner: 'none',
         standaloneConfig: false,
       });
-      expect(tree.exists('jest.config.js')).toBeFalsy();
+      expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(tree.exists('apps/my-app/specs/index.spec.tsx')).toBeFalsy();
     });
   });

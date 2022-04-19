@@ -140,7 +140,7 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const hasJestConfigFile = host.exists('jest.config.js');
+        const hasJestConfigFile = host.exists('jest.config.ts');
 
         // ASSERT
         expect(hasJestConfigFile).toBeTruthy();

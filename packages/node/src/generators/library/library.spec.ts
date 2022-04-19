@@ -40,7 +40,7 @@ describe('lib', () => {
         builder: '@nrwl/jest:jest',
         outputs: ['coverage/libs/my-lib'],
         options: {
-          jestConfig: 'libs/my-lib/jest.config.js',
+          jestConfig: 'libs/my-lib/jest.config.ts',
           passWithNoTests: true,
         },
       });
@@ -116,12 +116,16 @@ describe('lib', () => {
     it('should exclude test files from tsconfig.lib.json', async () => {
       await libraryGenerator(tree, baseLibraryConfig);
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
-      expect(tsconfigJson.exclude).toEqual(['**/*.spec.ts', '**/*.test.ts']);
+      expect(tsconfigJson.exclude).toEqual([
+        'jest.config.ts',
+        '**/*.spec.ts',
+        '**/*.test.ts',
+      ]);
     });
 
     it('should generate files', async () => {
       await libraryGenerator(tree, baseLibraryConfig);
-      expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
 
       const eslintrc = readJson(tree, 'libs/my-lib/.eslintrc.json');
@@ -199,7 +203,7 @@ describe('lib', () => {
         ...baseLibraryConfig,
         directory: 'myDir',
       });
-      expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
     });
 
@@ -276,7 +280,7 @@ describe('lib', () => {
         directory: 'myDir',
         simpleModuleName: true,
       });
-      expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/lib/my-lib.ts')).toBeTruthy();
       expect(
@@ -320,7 +324,7 @@ describe('lib', () => {
         unitTestRunner: 'none',
       });
       expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/jest.config.ts')).toBeFalsy();
       expect(tree.exists('libs/my-lib/lib/my-lib.spec.ts')).toBeFalsy();
       const workspaceJson = readJson(tree, 'workspace.json');
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
@@ -456,11 +460,11 @@ describe('lib', () => {
         babelJest: true,
       } as Schema);
 
-      expect(tree.read(`libs/my-lib/jest.config.js`, 'utf-8'))
+      expect(tree.read(`libs/my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',
-          preset: '../../jest.preset.js',
+          preset: '../../jest.preset.ts',
           testEnvironment: 'node',
           transform: {
             '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
@@ -494,6 +498,7 @@ describe('lib', () => {
         '**/*.js',
       ]);
       expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').exclude).toEqual([
+        'jest.config.ts',
         '**/*.spec.ts',
         '**/*.test.ts',
         '**/*.spec.js',
