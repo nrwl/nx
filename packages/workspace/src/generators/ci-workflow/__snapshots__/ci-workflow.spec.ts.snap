@@ -24,22 +24,24 @@ variables:
       value: $(git merge-base $(TARGET_BRANCH) HEAD)
     \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
       value: $(git rev-parse HEAD~1)
+  - name: HEAD_SHA
+    value: $(git rev-parse HEAD)
 
 jobs:
   - job: agents
     strategy:
-      matrix:
-        agent: [1, 2, 3]
-    displayName: 'Agent $(imageName)'
+      parallel: 3
+    displayName: 'Nx Cloud Agent'
     pool:
       vmImage: 'ubuntu-latest'
     steps:
       - script: yarn --frozen-lockfile
         displayName: NPM Install Dependencies
       - script: npx nx-cloud start-agent
-        displayName: 'Start Nx-Cloud agent $(imageName)'
+        displayName: 'Start Nx-Cloud agent
 
   - job: main
+    displayName: 'Nx Cloud Main'
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -49,13 +51,13 @@ jobs:
         displayName: Start CI run
       - script: yarn nx workspace-lint
         displayName: Run workspace lint
-      - script: yarn nx format:check
+      - script: yarn nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
         displayName: Check format
-      - script: yarn nx affected --base=$(BASE_SHA) --target=lint --parallel=3
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
         displayName: Run lint
-      - script: yarn nx affected --base=$(BASE_SHA) --target=test --parallel=3 --ci --code-coverage
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --ci --code-coverage
         displayName: Run test
-      - script: yarn nx affected --base=$(BASE_SHA) --target=build --parallel=3
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
         displayName: Run build
       - script: yarn nx-cloud stop-all-agents
         condition: always()
@@ -112,7 +114,7 @@ jobs:
           command: yarn nx workspace-lint
       - run:
           name: Check format
-          command: yarn nx format:check
+          command: yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run:
           name: Run lint
           command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3

@@ -55,7 +55,7 @@ jobs:
           command: <%= packageManagerPrefix %> nx workspace-lint
       - run:
           name: Check format
-          command: <%= packageManagerPrefix %> nx format:check
+          command: <%= packageManagerPrefix %> nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run:
           name: Run lint
           command: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
