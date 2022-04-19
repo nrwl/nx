@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
   moveFilesToNewDirectory,
@@ -10,10 +9,10 @@ import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import init from '../../generators/init/init';
-import { postcssVersion } from '../../utils/versions';
 import addLintingGenerator from '../add-linting/add-linting';
 import karmaProjectGenerator from '../karma-project/karma-project';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
+import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { addModule } from './lib/add-module';
 import {
   enableStrictTypeChecking,
@@ -86,16 +85,7 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   }
 
   if (options.buildable || options.publishable) {
-    addDependenciesToPackageJson(
-      host,
-      {},
-      {
-        postcss: postcssVersion,
-        'postcss-import': '^14.0.2',
-        'postcss-preset-env': '^6.7.0',
-        'postcss-url': '^10.1.1',
-      }
-    );
+    addBuildableLibrariesPostCssDependencies(host);
   }
 
   if (options.standaloneConfig) {

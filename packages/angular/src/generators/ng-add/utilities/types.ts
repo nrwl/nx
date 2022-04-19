@@ -15,4 +15,9 @@ export type WorkspaceCapabilities = {
   eslint: boolean;
 };
 
-export type ValidationResult = string | null;
+export type ValidationError = {
+  message?: string;
+  messageGroup?: { title: string; messages: string[] };
+  hint?: string;
+};
+export type ValidationResult = ValidationError[] | null;

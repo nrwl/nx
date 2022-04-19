@@ -388,7 +388,7 @@ Object {
       "devDependencies": "*",
     },
   },
-  "npmScope": "my-app",
+  "npmScope": "my-org",
   "targetDependencies": Object {
     "build": Array [
       Object {

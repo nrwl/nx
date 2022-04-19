@@ -10,8 +10,10 @@ import { nxVersion } from '../../utils/versions';
 import type { GeneratorOptions } from './schema';
 import { AppMigrator } from './utilities/app.migrator';
 import { getAllProjects } from './utilities/get-all-projects';
+import { LibMigrator } from './utilities/lib.migrator';
 import { normalizeOptions } from './utilities/normalize-options';
 import { ProjectMigrator } from './utilities/project.migrator';
+import { validateProjects } from './utilities/validate-projects';
 import {
   cleanupEsLintPackages,
   createNxJson,
@@ -30,6 +32,7 @@ export async function migrateFromAngularCli(
   tree: Tree,
   rawOptions: GeneratorOptions
 ) {
+  validateWorkspace(tree);
   const projects = getAllProjects(tree);
   const options = normalizeOptions(tree, rawOptions, projects);
 
@@ -45,18 +48,20 @@ export async function migrateFromAngularCli(
     createNxJson(tree, options, true);
     decorateAngularCli(tree);
   } else {
-    validateWorkspace(tree, projects);
+    // TODO(leo): remove when support for multiple apps is added
+    if (projects.apps.length > 2) {
+      throw new Error(
+        'Can not convert workspaces with more than 1 application.'
+      );
+    }
 
     const migrators: ProjectMigrator[] = [
       ...projects.apps.map((app) => new AppMigrator(tree, options, app)),
-      // TODO: add libraries migrator when support for libs is added
+      ...projects.libs.map((lib) => new LibMigrator(tree, options, lib)),
     ];
 
     // validate all projects
-    for (const migrator of migrators) {
-      // TODO: validator will throw on their own until multiple project are supported
-      migrator.validate();
-    }
+    validateProjects(migrators);
 
     const workspaceCapabilities = getWorkspaceCapabilities(tree, projects);
 

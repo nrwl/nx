@@ -3,7 +3,6 @@ import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import type { Styles } from '../utils/types';
 
 export interface GeneratorOptions {
-  name?: string;
   skipInstall?: boolean;
   npmScope?: string;
   preserveAngularCliLayout?: boolean;
