@@ -96,7 +96,7 @@ function throwInvalidInvocation() {
   );
 }
 
-function readDefaultCollection(nxConfig: NxJsonConfiguration) {
+function readDefaultCollections(nxConfig: NxJsonConfiguration) {
   const configured =
     nxConfig.cli?.generatorCollections ?? nxConfig.cli?.defaultCollection;
   return typeof configured === 'string' ? [configured] : configured;
@@ -174,7 +174,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
     const workspaceDefinition = ws.readWorkspaceConfiguration();
     const opts = convertToGenerateOptions(
       args,
-      readDefaultCollection(workspaceDefinition),
+      readDefaultCollections(workspaceDefinition),
       'generate'
     );
     const { normalizedGeneratorName, schema, implementationFactory } =
