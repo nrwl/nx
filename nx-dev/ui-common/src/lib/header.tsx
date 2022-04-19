@@ -72,7 +72,7 @@ export function Header(props: HeaderProps) {
                 Docs
               </a>
             </Link>
-            <Link href="/using-nx/nx-devkit">
+            <Link href="/extending-nx/nx-devkit">
               <a
                 title="Check Nx available plugins"
                 className="hidden px-3 py-2 leading-tight text-white md:inline-flex"
