@@ -22,17 +22,21 @@ export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
 interface Substitutes {
   mainBranch: string;
   workflowName: string;
+  workflowFileName: string;
   packageManagerInstall: string;
   packageManagerPrefix: string;
   tmpl: '';
 }
 
 function normalizeOptions(options: Schema): Substitutes {
-  const { name: workflowName } = names(options.name || 'build');
+  const { name: workflowName, fileName: workflowFileName } = names(
+    options.name || 'build'
+  );
   const { exec: packageManagerPrefix, ciInstall: packageManagerInstall } =
     getPackageManagerCommand();
   return {
     workflowName,
+    workflowFileName,
     packageManagerInstall,
     packageManagerPrefix,
     mainBranch: deduceDefaultBase(),

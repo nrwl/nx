@@ -96,6 +96,7 @@ jobs:
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 
       - run: npx nx-cloud stop-all-agents
+          when: always
 workflows:
   build:
     jobs:

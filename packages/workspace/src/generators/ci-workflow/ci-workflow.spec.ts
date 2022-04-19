@@ -26,4 +26,15 @@ describe('lib', () => {
 
     expect(tree.read('azure-pipelines.yml', 'utf-8')).toMatchSnapshot();
   });
+
+  it('should generate github CI config with custom name', async () => {
+    await ciWorkflowGenerator(tree, {
+      ci: 'github',
+      name: 'My custom-workflow',
+    });
+
+    expect(
+      tree.read('.github/workflows/my-custom-workflow.yml', 'utf-8')
+    ).toMatchSnapshot();
+  });
 });

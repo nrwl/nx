@@ -109,10 +109,10 @@ jobs:
           command: yarn nx-cloud start-ci-run
       - run:
           name: Run workspace lint
-          command:  nx workspace-lint
+          command: yarn nx workspace-lint
       - run:
           name: Check format
-          command:  nx format:check
+          command: yarn nx format:check
       - run:
           name: Run lint
           command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
@@ -125,6 +125,7 @@ jobs:
       - run:
           name: Stop all agents
           command: yarn nx-cloud stop-all-agents
+          when: always
 
 workflows:
   version: 2
@@ -132,14 +133,46 @@ workflows:
   build:
     jobs:
       - agent:
+          name: Nx Cloud Agent << matrix.ordinal >>
           matrix:
             parameters:
               ordinal: [1, 2, 3]
-      - main"
+      - main
+          name: Nx Cloud Main"
 `;
 
 exports[`lib should generate github CI config 1`] = `
 "name: build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  main:
+    name: Nx Cloud - Main Job
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
+    with:
+      parallel-commands: |
+        yarn nx workspace-lint
+        yarn nx format:check
+      parallel-commands-on-agents: |
+        yarn nx affected --target=lint --parallel=3
+        yarn nx affected --target=test --parallel=3 --ci --code-coverage
+        yarn nx affected --target=build --parallel=3
+
+  agents:
+    name: Nx Cloud - Agents
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.2
+    with:
+      number-of-agents: 3
+"
+`;
+
+exports[`lib should generate github CI config with custom name 1`] = `
+"name: My custom-workflow
 
 on:
   push:

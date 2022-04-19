@@ -44,10 +44,10 @@ jobs:
           command: <%= packageManagerPrefix %> nx-cloud start-ci-run
       - run:
           name: Run workspace lint
-          command: <% packageManagerPrefix %> nx workspace-lint
+          command: <%= packageManagerPrefix %> nx workspace-lint
       - run:
           name: Check format
-          command: <% packageManagerPrefix %> nx format:check
+          command: <%= packageManagerPrefix %> nx format:check
       - run:
           name: Run lint
           command: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
@@ -60,14 +60,17 @@ jobs:
       - run:
           name: Stop all agents
           command: <%= packageManagerPrefix %> nx-cloud stop-all-agents
+          when: always
 
 workflows:
   version: 2
 
-  <%= workflowName %>:
+  <%= workflowFileName %>:
     jobs:
       - agent:
+          name: Nx Cloud Agent << matrix.ordinal >>
           matrix:
             parameters:
               ordinal: [1, 2, 3]
       - main
+          name: Nx Cloud Main
