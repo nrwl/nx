@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { NormalModuleReplacementPlugin } from 'webpack';
-import { normalizePath, joinPathFragments, workspaceRoot } from '@nrwl/devkit';
-import { dirname } from 'path';
+import { joinPathFragments, workspaceRoot } from '@nrwl/devkit';
+import { dirname, join, normalize } from 'path';
 import { ParsedCommandLine } from 'typescript';
 import {
   getRootTsConfigPath,
@@ -40,9 +40,7 @@ export function shareWorkspaceLibraries(
   const pathMappings: { name: string; path: string }[] = [];
   for (const [key, paths] of Object.entries(tsconfigPathAliases)) {
     if (libraries && libraries.includes(key)) {
-      const pathToLib = normalizePath(
-        joinPathFragments(workspaceRoot, paths[0])
-      );
+      const pathToLib = normalize(join(workspaceRoot, paths[0]));
       pathMappings.push({
         name: key,
         path: pathToLib,
@@ -71,10 +69,10 @@ export function shareWorkspaceLibraries(
         }
 
         const from = req.context;
-        const to = normalizePath(joinPathFragments(req.context, req.request));
+        const to = normalize(join(req.context, req.request));
 
         for (const library of pathMappings) {
-          const libFolder = normalizePath(dirname(library.path));
+          const libFolder = normalize(dirname(library.path));
           if (!from.startsWith(libFolder) && to.startsWith(libFolder)) {
             req.request = library.name;
           }
