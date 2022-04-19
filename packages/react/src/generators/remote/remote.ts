@@ -6,10 +6,13 @@ import { normalizeOptions } from '../application/lib/normalize-options';
 import applicationGenerator from '../application/application';
 import { NormalizedSchema } from '../application/schema';
 import { updateHostWithRemote } from './lib/update-host-with-remote';
-import { updateMfeProject } from '../../rules/update-mfe-project';
+import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { Schema } from './schema';
 
-export function addMfeFiles(host: Tree, options: NormalizedSchema) {
+export function addModuleFederationFiles(
+  host: Tree,
+  options: NormalizedSchema
+) {
   const templateVariables = {
     ...names(options.name),
     ...options,
@@ -18,13 +21,13 @@ export function addMfeFiles(host: Tree, options: NormalizedSchema) {
 
   generateFiles(
     host,
-    join(__dirname, `./files/mfe`),
+    join(__dirname, `./files/module-federation`),
     options.appProjectRoot,
     templateVariables
   );
 }
 
-export async function mfeRemoteGenerator(host: Tree, schema: Schema) {
+export async function remoteGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
   const initApp = await applicationGenerator(host, options);
 
@@ -40,8 +43,8 @@ export async function mfeRemoteGenerator(host: Tree, schema: Schema) {
     join(options.appProjectRoot, 'src/bootstrap.tsx')
   );
 
-  addMfeFiles(host, options);
-  updateMfeProject(host, options);
+  addModuleFederationFiles(host, options);
+  updateModuleFederationProject(host, options);
 
   if (!options.skipFormat) {
     await formatFiles(host);
@@ -50,4 +53,4 @@ export async function mfeRemoteGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(initApp);
 }
 
-export default mfeRemoteGenerator;
+export default remoteGenerator;

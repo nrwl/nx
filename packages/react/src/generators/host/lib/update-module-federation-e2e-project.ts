@@ -5,7 +5,10 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 
-export function updateMfeE2eProject(host: Tree, options: NormalizedSchema) {
+export function updateModuleFederationE2eProject(
+  host: Tree,
+  options: NormalizedSchema
+) {
   const e2eName = `${options.name}-e2e`;
   try {
     let projectConfig = readProjectConfiguration(host, e2eName);

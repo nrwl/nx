@@ -2,18 +2,18 @@ import { formatFiles, Tree } from '@nrwl/devkit';
 
 import applicationGenerator from '../application/application';
 import { normalizeOptions } from '../application/lib/normalize-options';
-import { mfeRemoteGenerator } from '../mfe-remote/mfe-remote';
-import { updateMfeProject } from '../../rules/update-mfe-project';
-import { addMfeFiles } from './lib/add-mfe-files';
-import { updateMfeE2eProject } from './lib/update-mfe-e2e-project';
+import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
+import { addModuleFederationFiles } from './lib/add-module-federation-files';
+import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
 import { Schema } from './schema';
+import remoteGenerator from '../remote/remote';
 
-export async function mfeHostGenerator(host: Tree, schema: Schema) {
+export async function hostGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
   const initTask = await applicationGenerator(host, {
     ...options,
-    // The target use-case for MFE is loading remotes as child routes, thus always enable routing.
+    // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
   });
 
@@ -23,7 +23,7 @@ export async function mfeHostGenerator(host: Tree, schema: Schema) {
     let remotePort = options.devServerPort + 1;
     for (const remote of schema.remotes) {
       remotesWithPorts.push({ name: remote, port: remotePort });
-      await mfeRemoteGenerator(host, {
+      await remoteGenerator(host, {
         name: remote,
         style: options.style,
         skipFormat: options.skipFormat,
@@ -36,9 +36,9 @@ export async function mfeHostGenerator(host: Tree, schema: Schema) {
     }
   }
 
-  addMfeFiles(host, options, remotesWithPorts);
-  updateMfeProject(host, options);
-  updateMfeE2eProject(host, options);
+  addModuleFederationFiles(host, options, remotesWithPorts);
+  updateModuleFederationProject(host, options);
+  updateModuleFederationE2eProject(host, options);
 
   if (!options.skipFormat) {
     await formatFiles(host);
@@ -47,4 +47,4 @@ export async function mfeHostGenerator(host: Tree, schema: Schema) {
   return initTask;
 }
 
-export default mfeHostGenerator;
+export default hostGenerator;

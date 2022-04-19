@@ -1,5 +1,5 @@
 {
-  "title": "Web Dev Server",
+  "title": "Module Federation Dev Server",
   "description": "Serve a web application.",
   "cli": "nx",
   "type": "object",

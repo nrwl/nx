@@ -21,7 +21,7 @@ export function shareWorkspaceLibraries(
 ) {
   if (!existsSync(tsConfigPath)) {
     throw new Error(
-      `NX MFE: TsConfig Path for workspace libraries does not exist! (${tsConfigPath})`
+      `NX: TsConfig Path for workspace libraries does not exist! (${tsConfigPath})`
     );
   }
 
@@ -87,7 +87,7 @@ export function sharePackages(
   const pkgJsonPath = joinPathFragments(workspaceRoot, 'package.json');
   if (!existsSync(pkgJsonPath)) {
     throw new Error(
-      'NX MFE: Could not find root package.json to determine dependency versions.'
+      'NX: Could not find root package.json to determine dependency versions.'
     );
   }
 

@@ -4,7 +4,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 
-export function updateMfeProject(
+export function updateModuleFederationProject(
   host: Tree,
   options: { name: string; appProjectRoot: string; devServerPort?: number }
 ) {
@@ -18,7 +18,8 @@ export function updateMfeProject(
     ...projectConfig.targets.build.configurations.production,
     webpackConfig: `${options.appProjectRoot}/webpack.config.prod.js`,
   };
-  projectConfig.targets.serve.executor = '@nrwl/react:mfe-dev-server';
+  projectConfig.targets.serve.executor =
+    '@nrwl/react:module-federation-dev-server';
   projectConfig.targets.serve.options.port = options.devServerPort;
   updateProjectConfiguration(host, options.name, projectConfig);
 }

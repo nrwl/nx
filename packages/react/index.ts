@@ -15,5 +15,5 @@ export { reactInitGenerator } from './src/generators/init/init';
 export { reduxGenerator } from './src/generators/redux/redux';
 export { storiesGenerator } from './src/generators/stories/stories';
 export { storybookConfigurationGenerator } from './src/generators/storybook-configuration/configuration';
-export { mfeHostGenerator } from './src/generators/mfe-host/mfe-host';
+export { hostGenerator } from './src/generators/host/host';
 export type { SupportedStyles } from './typings/style';

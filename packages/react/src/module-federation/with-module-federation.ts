@@ -18,14 +18,14 @@ import { ParsedCommandLine } from 'typescript';
 import { readWorkspaceJson } from 'nx/src/project-graph/file-utils';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
-export type MFELibrary = { type: string; name: string };
+export type ModuleFederationLibrary = { type: string; name: string };
 
-export type MFERemotes = string[] | [remoteName: string, remoteUrl: string][];
+export type Remotes = string[] | [remoteName: string, remoteUrl: string][];
 
-export interface MFEConfig {
+export interface ModuleFederationConfig {
   name: string;
   remotes?: string[];
-  library?: MFELibrary;
+  library?: ModuleFederationLibrary;
   exposes?: Record<string, string>;
   shared?: (
     libraryName: string,
@@ -162,7 +162,7 @@ function determineRemoteUrl(remote: string) {
   }:${port}/remoteEntry.js`;
 }
 
-function mapRemotes(remotes: MFERemotes) {
+function mapRemotes(remotes: Remotes) {
   const mappedRemotes = {};
 
   for (const remote of remotes) {
@@ -187,14 +187,14 @@ function mapRemotes(remotes: MFERemotes) {
   return mappedRemotes;
 }
 
-export async function withModuleFederation(options: MFEConfig) {
+export async function withModuleFederation(options: ModuleFederationConfig) {
   const reactWebpackConfig = require('../../plugins/webpack');
   const ws = readWorkspaceJson();
   const project = ws.projects[options.name];
 
   if (!project) {
     throw Error(
-      `Cannot find project "${options.name}". Check that the name is correct in mfe.config.js`
+      `Cannot find project "${options.name}". Check that the name is correct in module-federation.config.js`
     );
   }
 

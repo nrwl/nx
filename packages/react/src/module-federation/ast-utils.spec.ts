@@ -1,9 +1,12 @@
 import * as ts from 'typescript';
 import { applyChangesToString, stripIndents } from '@nrwl/devkit';
-import { addRemoteDefinition, addRemoteToMfeConfig } from './mfe-ast-utils';
-import { addRemoteRoute } from '@nrwl/react/src/mfe/mfe-ast-utils';
+import {
+  addRemoteRoute,
+  addRemoteDefinition,
+  addRemoteToConfig,
+} from './ast-utils';
 
-describe('addRemoteToMfeConfig', () => {
+describe('addRemoteToConfig', () => {
   it('should add to existing remotes array', async () => {
     const sourceCode = stripIndents`
       module.exports = {
@@ -16,7 +19,7 @@ describe('addRemoteToMfeConfig', () => {
     `;
 
     const source = ts.createSourceFile(
-      '/mfe.config.js',
+      '/module-federation.config.js',
       sourceCode,
       ts.ScriptTarget.Latest,
       true
@@ -24,7 +27,7 @@ describe('addRemoteToMfeConfig', () => {
 
     const result = applyChangesToString(
       sourceCode,
-      addRemoteToMfeConfig(source, 'new-app')
+      addRemoteToConfig(source, 'new-app')
     );
 
     expect(result).toEqual(stripIndents`
@@ -47,7 +50,7 @@ describe('addRemoteToMfeConfig', () => {
     `;
 
     const source = ts.createSourceFile(
-      '/mfe.config.js',
+      '/module-federation.config.js',
       sourceCode,
       ts.ScriptTarget.Latest,
       true
@@ -55,7 +58,7 @@ describe('addRemoteToMfeConfig', () => {
 
     const result = applyChangesToString(
       sourceCode,
-      addRemoteToMfeConfig(source, 'new-app')
+      addRemoteToConfig(source, 'new-app')
     );
 
     expect(result).toEqual(stripIndents`
@@ -73,7 +76,7 @@ describe('addRemoteToMfeConfig', () => {
     ${"module.exports = '???';"}
   `('should skip updates if format not as expected', async ({ sourceCode }) => {
     const source = ts.createSourceFile(
-      '/mfe.config.js',
+      '/module-federation.config.js',
       sourceCode,
       ts.ScriptTarget.Latest,
       true
@@ -81,7 +84,7 @@ describe('addRemoteToMfeConfig', () => {
 
     const result = applyChangesToString(
       sourceCode,
-      addRemoteToMfeConfig(source, 'new-app')
+      addRemoteToConfig(source, 'new-app')
     );
 
     expect(result).toEqual(sourceCode);
