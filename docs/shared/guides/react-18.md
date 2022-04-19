@@ -2,7 +2,7 @@
 
 [React 18](https://reactjs.org/blog/2022/03/29/react-v18.html) released with many new features, such as Concurrent React, Suspense, batched updates, and more.
 
-Workspaces that upgrade to Nx 14 will be automatically migrated to React 18. This migration will also include an upgrade to React Router v6, if it is used in the workspace, as well as the removal of the deprecated `@testing-library/react-hook` package. Keep reading for more details.
+Workspaces that upgrade to `@nrwl/react` 14 will be automatically migrated to React 18. This migration will also include an upgrade to React Router v6, if it is used in the workspace, as well as the removal of the deprecated `@testing-library/react-hook` package. Keep reading for more details.
 
 **Note:** If you use npm v7/v8, you will need to use `npm install --force` after running `nx migrate 14.0.0` since `@testing-library/react-hook` does not support React 18. Don't worry, this package will be removed in the migration.
 
