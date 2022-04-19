@@ -9,4 +9,5 @@ module.exports = {
   },
   displayName: 'react-native',
   testEnvironment: 'node',
+  verbose: true,
 };
