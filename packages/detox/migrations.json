@@ -11,6 +11,12 @@
       "cli": "nx",
       "description": "remove deprecated @types/detox from package.json",
       "factory": "./src/migrations/update-13-8-2/remove-types-detox-13-8-2"
+    },
+    "add-verbose-jest-config-13-10-3": {
+      "version": "13.10.3-beta.0",
+      "cli": "nx",
+      "description": "Update jest.config.json under detox project, add key verbsoe: true",
+      "factory": "./src/migrations/update-13-10-3/add-verbose-jest-config-13-10-3"
     }
   },
   "packageJsonUpdates": {
