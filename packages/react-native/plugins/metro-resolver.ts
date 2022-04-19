@@ -26,28 +26,21 @@ export function getResolveRequest(extensions: string[]) {
 
     const { resolveRequest, ...context } = _context;
 
-    let resolvedPath = defaultMetroResolver(context, moduleName, platform);
+    const resolvedPath =
+      defaultMetroResolver(context, moduleName, platform) ||
+      tsconfigPathsResolver(
+        context,
+        extensions,
+        realModuleName,
+        moduleName,
+        platform
+      ) ||
+      pnpmResolver(extensions, context, realModuleName, moduleName);
+
     if (resolvedPath) {
       return resolvedPath;
     }
-
-    resolvedPath = pnpmResolver(
-      extensions,
-      context,
-      realModuleName,
-      moduleName
-    );
-    if (resolvedPath) {
-      return resolvedPath;
-    }
-
-    return tsconfigPathsResolver(
-      context,
-      extensions,
-      realModuleName,
-      moduleName,
-      platform
-    );
+    throw new Error(`Cannot resolve ${chalk.bold(moduleName)}`);
   };
 }
 
@@ -136,7 +129,6 @@ function tsconfigPathsResolver(
         )
       );
     }
-    throw new Error(`Cannot resolve ${chalk.bold(moduleName)}`);
   }
 }
 
