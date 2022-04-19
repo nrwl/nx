@@ -2,10 +2,10 @@ import { joinPathFragments, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 import { getProjects, readProjectConfiguration } from '@nrwl/devkit';
 import applicationGenerator from '../application/application';
-import { getMfeProjects } from '../../utils/get-mfe-projects';
+import { getMFProjects } from '../../utils/get-mf-projects';
 
 function findNextAvailablePort(tree: Tree) {
-  const mfeProjects = getMfeProjects(tree);
+  const mfeProjects = getMFProjects(tree);
 
   const ports = new Set<number>([4200]);
   for (const mfeProject of mfeProjects) {

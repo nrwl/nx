@@ -15,14 +15,18 @@ export function moduleFederationDevServer(
 
   const p = workspaceConfig.projects[context.target.project];
 
-  const mfeConfigPath = join(context.workspaceRoot, p.root, 'mfe.config.js');
+  const mfConfigPath = join(
+    context.workspaceRoot,
+    p.root,
+    'module-federation.config.js'
+  );
 
   let mfeConfig: { remotes: string[] };
   try {
-    mfeConfig = require(mfeConfigPath);
+    mfeConfig = require(mfConfigPath);
   } catch {
     throw new Error(
-      `Could not load ${mfeConfigPath}. Was this project generated with "@nrwl/angular:host"?`
+      `Could not load ${mfConfigPath}. Was this project generated with "@nrwl/angular:host"?`
     );
   }
 

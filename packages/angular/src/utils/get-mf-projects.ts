@@ -2,7 +2,7 @@ import type { Tree } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
-export function getMfeProjects(
+export function getMFProjects(
   tree: Tree,
   { legacy }: { legacy: boolean } = { legacy: false }
 ) {
