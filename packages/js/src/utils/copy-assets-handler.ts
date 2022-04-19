@@ -112,6 +112,7 @@ export class CopyAssetsHandler {
         // fast-glob only supports Unix paths
         const files = await fg(pattern.replace(/\\/g, '/'), {
           cwd: this.rootDir,
+          dot: true, // enable hidden files
         });
 
         this.callback(
