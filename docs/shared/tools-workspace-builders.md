@@ -216,7 +216,7 @@ For other ideas on how to create your own executors, you can always check out Nx
 
 ## Using Custom Hashers
 
-For most executors, the default hashing in Nx makes sense. The output of the executor is dependant on the files in the project that it is being ran for, or that projects dependencies, and nothing else. Changing a misc file at workspace root will not affect that executor, and changing *_any_* file inside of the project may affect the executor. When dealing with targets which only depend on a small subset of the files in a project, or may depend on arbitrary data that is not stored within the project, the default hasher may not make sense anymore. In these cases, the target will either experience more frequent cache misses than necessary or not be able to be cached.
+For most executors, the default hashing in Nx makes sense. The output of the executor is dependant on the files in the project that it is being ran for, or that projects dependencies, and nothing else. Changing a misc file at workspace root will not affect that executor, and changing _*any*_ file inside of the project may affect the executor. When dealing with targets which only depend on a small subset of the files in a project, or may depend on arbitrary data that is not stored within the project, the default hasher may not make sense anymore. In these cases, the target will either experience more frequent cache misses than necessary or not be able to be cached.
 
 Executors can provide a custom hasher that Nx uses when determining if a target run should be a cache hit, or if it must be ran. When generating an executor for a plugin, you can use `nx g @nrwl/nx-plugin:executor my-executor --project my-plugin --includeHasher` to automatically add a custom hasher.
 

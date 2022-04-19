@@ -5,7 +5,6 @@ import {
   TargetConfiguration,
   WorkspaceJsonConfiguration,
 } from './workspace-json-project-json';
-import { Workspaces } from './workspaces';
 
 import type { NxJsonConfiguration } from './nx-json';
 /**
