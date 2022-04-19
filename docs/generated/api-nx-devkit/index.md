@@ -70,6 +70,7 @@ It only uses language primitives and immutable objects
 - [ExecutorContext](../../nx-devkit/index#executorcontext)
 - [ExecutorsJson](../../nx-devkit/index#executorsjson)
 - [GeneratorsJson](../../nx-devkit/index#generatorsjson)
+- [HasherContext](../../nx-devkit/index#hashercontext)
 - [ImplicitJsonSubsetDependency](../../nx-devkit/index#implicitjsonsubsetdependency)
 - [MigrationsJson](../../nx-devkit/index#migrationsjson)
 - [NxAffectedConfig](../../nx-devkit/index#nxaffectedconfig)
@@ -105,6 +106,7 @@ It only uses language primitives and immutable objects
 
 ### Workspace Type aliases
 
+- [CustomHasher](../../nx-devkit/index#customhasher)
 - [Executor](../../nx-devkit/index#executor)
 - [Generator](../../nx-devkit/index#generator)
 - [GeneratorCallback](../../nx-devkit/index#generatorcallback)
@@ -375,6 +377,12 @@ A plugin for Nx
 
 ---
 
+### HasherContext
+
+• **HasherContext**: `Object`
+
+---
+
 ### ImplicitJsonSubsetDependency
 
 • **ImplicitJsonSubsetDependency**<`T`\>: `Object`
@@ -518,6 +526,27 @@ A plugin for Nx
 ---
 
 ## Workspace Type aliases
+
+### CustomHasher
+
+Ƭ **CustomHasher**: (`task`: [`Task`](../../nx-devkit/index#task), `context`: [`HasherContext`](../../nx-devkit/index#hashercontext)) => `Promise`<[`Hash`](../../nx-devkit/index#hash)\>
+
+#### Type declaration
+
+▸ (`task`, `context`): `Promise`<[`Hash`](../../nx-devkit/index#hash)\>
+
+##### Parameters
+
+| Name      | Type                                                   |
+| :-------- | :----------------------------------------------------- |
+| `task`    | [`Task`](../../nx-devkit/index#task)                   |
+| `context` | [`HasherContext`](../../nx-devkit/index#hashercontext) |
+
+##### Returns
+
+`Promise`<[`Hash`](../../nx-devkit/index#hash)\>
+
+---
 
 ### Executor
 

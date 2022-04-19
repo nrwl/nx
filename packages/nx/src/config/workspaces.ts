@@ -22,6 +22,7 @@ import {
   Generator,
   GeneratorsJson,
   ExecutorsJson,
+  CustomHasher,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
 
@@ -126,7 +127,7 @@ export class Workspaces {
         : null;
 
       const hasherFactory = executorConfig.hasher
-        ? this.getImplementationFactory<Function>(
+        ? this.getImplementationFactory<CustomHasher>(
             executorConfig.hasher,
             executorsDir
           )

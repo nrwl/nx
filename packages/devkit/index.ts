@@ -38,6 +38,8 @@ export type {
   GeneratorsJson,
   ExecutorsJson,
   MigrationsJson,
+  CustomHasher,
+  HasherContext,
 } from 'nx/src/config/misc-interfaces';
 
 /**

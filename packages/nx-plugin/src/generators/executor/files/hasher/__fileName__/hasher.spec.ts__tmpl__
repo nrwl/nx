@@ -1,0 +1,13 @@
+import { Hasher, HasherContext } from '@nrwl/devkit';
+
+import { <%=propertyName%>Hasher } from './hasher';
+
+describe('<%=propertyName%>Hasher', () => {
+    it('should generate hash', () => {
+        const mockHasher: Hasher = {
+            hashTaskWithDepsAndContext: jest.fn().mockReturnValue({value: 'hashed-task'})
+        } as unknown as Hasher
+        const hash = <%=propertyName%>Hasher(null, {hasher: mockHasher} as unknown as HasherContext)
+        expect(hash).toEqual({value: 'hashed-task'})
+    })
+})

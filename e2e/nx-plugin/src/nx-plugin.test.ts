@@ -147,7 +147,9 @@ describe('Nx Plugin', () => {
     const executor = uniq('executor');
 
     runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
-    runCLI(`generate @nrwl/nx-plugin:executor ${executor} --project=${plugin}`);
+    runCLI(
+      `generate @nrwl/nx-plugin:executor ${executor} --project=${plugin} --includeHasher`
+    );
 
     const lintResults = runCLI(`lint ${plugin}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -160,16 +162,19 @@ describe('Nx Plugin', () => {
       `libs/${plugin}/src/executors/${executor}/schema.d.ts`,
       `libs/${plugin}/src/executors/${executor}/schema.json`,
       `libs/${plugin}/src/executors/${executor}/executor.ts`,
+      `libs/${plugin}/src/executors/${executor}/hasher.ts`,
       `libs/${plugin}/src/executors/${executor}/executor.spec.ts`,
       `dist/libs/${plugin}/src/executors/${executor}/schema.d.ts`,
       `dist/libs/${plugin}/src/executors/${executor}/schema.json`,
-      `dist/libs/${plugin}/src/executors/${executor}/executor.js`
+      `dist/libs/${plugin}/src/executors/${executor}/executor.js`,
+      `dist/libs/${plugin}/src/executors/${executor}/hasher.js`
     );
     const executorsJson = readJson(`libs/${plugin}/executors.json`);
     expect(executorsJson).toMatchObject({
       executors: expect.objectContaining({
         [executor]: {
           implementation: `./src/executors/${executor}/executor`,
+          hasher: `./src/executors/${executor}/hasher`,
           schema: `./src/executors/${executor}/schema.json`,
           description: `${executor} executor`,
         },

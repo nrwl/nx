@@ -21,6 +21,7 @@ describe('NxPlugin Executor Generator', () => {
       project: projectName,
       name: 'my-executor',
       unitTestRunner: 'jest',
+      includeHasher: false,
     });
 
     expect(
@@ -43,6 +44,7 @@ describe('NxPlugin Executor Generator', () => {
       name: 'my-executor',
       description: 'my-executor description',
       unitTestRunner: 'jest',
+      includeHasher: false,
     });
 
     const executorJson = readJson(tree, 'libs/my-plugin/executors.json');
@@ -63,6 +65,7 @@ describe('NxPlugin Executor Generator', () => {
       project: projectName,
       name: 'my-executor',
       unitTestRunner: 'jest',
+      includeHasher: false,
     });
 
     const executorsJson = readJson(tree, 'libs/my-plugin/executors.json');
@@ -78,6 +81,7 @@ describe('NxPlugin Executor Generator', () => {
       name: 'my-executor',
       description: 'my-executor custom description',
       unitTestRunner: 'jest',
+      includeHasher: false,
     });
 
     const executorsJson = readJson(tree, 'libs/my-plugin/executors.json');
@@ -95,6 +99,7 @@ describe('NxPlugin Executor Generator', () => {
           name: 'my-executor',
           description: 'my-executor description',
           unitTestRunner: 'none',
+          includeHasher: true,
         });
 
         expect(
@@ -102,7 +107,52 @@ describe('NxPlugin Executor Generator', () => {
             'libs/my-plugin/src/executors/my-executor/executor.spec.ts'
           )
         ).toBeFalsy();
+        expect(
+          tree.exists('libs/my-plugin/src/executors/my-executor/hasher.spec.ts')
+        ).toBeFalsy();
       });
+    });
+  });
+
+  describe('--includeHasher', () => {
+    it('should generate hasher files', async () => {
+      await executorGenerator(tree, {
+        project: projectName,
+        name: 'my-executor',
+        includeHasher: true,
+        unitTestRunner: 'jest',
+      });
+      expect(
+        tree.exists('libs/my-plugin/src/executors/my-executor/hasher.spec.ts')
+      ).toBeTruthy();
+      expect(
+        tree
+          .read('libs/my-plugin/src/executors/my-executor/hasher.ts')
+          .toString()
+      ).toMatchInlineSnapshot(`
+        "import { CustomHasher } from '@nrwl/devkit';
+
+        export const myExecutorHasher: CustomHasher = async (task, context) => {
+            return context.hasher.hashTaskWithDepsAndContext(task, context)
+        };
+
+        export default myExecutorHasher;
+        "
+      `);
+    });
+
+    it('should update executors.json', async () => {
+      await executorGenerator(tree, {
+        project: projectName,
+        name: 'my-executor',
+        includeHasher: true,
+        unitTestRunner: 'jest',
+      });
+
+      const executorsJson = readJson(tree, 'libs/my-plugin/executors.json');
+      expect(executorsJson.executors['my-executor'].hasher).toEqual(
+        './src/executors/my-executor/hasher'
+      );
     });
   });
 });
