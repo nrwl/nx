@@ -7,12 +7,20 @@ export function normalizeOptions(
   options: GeneratorOptions,
   projects: WorkspaceProjects
 ): GeneratorOptions {
-  let npmScope = options.npmScope ?? options.name;
+  let npmScope = options.npmScope;
   if (npmScope) {
     npmScope = names(npmScope).fileName;
   } else if (projects.libs.length > 0) {
     // try get the scope from any library that have one
     for (const lib of projects.libs) {
+      const packageJsonPath = joinPathFragments(
+        lib.config.root,
+        'package.json'
+      );
+      if (!tree.exists(packageJsonPath)) {
+        continue;
+      }
+
       const { name } = readJson(
         tree,
         joinPathFragments(lib.config.root, 'package.json')

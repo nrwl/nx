@@ -2,6 +2,7 @@ import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
+  TargetConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -11,7 +12,7 @@ import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { basename } from 'path';
 import { GeneratorOptions } from '../schema';
-import { E2eProjectMigrator } from './e2e-project.migrator';
+import { E2eProjectMigrator } from './e2e.migrator';
 import { ProjectMigrator } from './project.migrator';
 import { MigrationProjectConfiguration, ValidationResult } from './types';
 
@@ -38,23 +39,22 @@ export class AppMigrator extends ProjectMigrator {
   }
 
   validate(): ValidationResult {
-    // TODO: properly return the validation results once we support multiple projects
+    const result: ValidationResult = [];
+
     if (
       this.projectConfig.targets.lint &&
       this.projectConfig.targets.lint.executor !==
         '@angular-eslint/builder:lint'
     ) {
-      throw new Error(
-        `The "${this.project.name}" project is using an unsupported executor "${this.projectConfig.targets.lint.executor}".`
-      );
+      result.push({
+        message: `The "lint" target is using an unsupported builder "${this.projectConfig.targets.lint.executor}".`,
+        hint: `The supported builder is "@angular-eslint/builder:lint".`,
+      });
     }
 
-    const result = this.e2eMigrator.validate();
-    if (result) {
-      throw new Error(result);
-    }
+    result.push(...(this.e2eMigrator.validate() ?? []));
 
-    return null;
+    return result.length ? result : null;
   }
 
   private moveProjectFiles(): void {
@@ -68,14 +68,15 @@ export class AppMigrator extends ProjectMigrator {
       false
     );
 
-    this.moveProjectRootFile(this.projectConfig.targets.build.options.tsConfig);
+    this.moveFilePathsFromTargetToProjectRoot(
+      this.projectConfig.targets.build,
+      ['tsConfig', 'webWorkerTsConfig', 'ngswConfigPath']
+    );
 
     if (this.projectConfig.targets.test) {
-      this.moveProjectRootFile(
-        this.projectConfig.targets.test.options.karmaConfig
-      );
-      this.moveProjectRootFile(
-        this.projectConfig.targets.test.options.tsConfig
+      this.moveFilePathsFromTargetToProjectRoot(
+        this.projectConfig.targets.test,
+        ['karmaConfig', 'tsConfig', 'webWorkerTsConfig']
       );
     } else {
       // there could still be a karma.conf.js file in the root
@@ -126,9 +127,9 @@ export class AppMigrator extends ProjectMigrator {
     this.projectConfig.sourceRoot = this.project.newSourceRoot;
 
     this.convertBuildOptions(this.projectConfig.targets.build.options);
-    Object.values(this.projectConfig.targets.build.configurations).forEach(
-      (config) => this.convertBuildOptions(config)
-    );
+    Object.values(
+      this.projectConfig.targets.build.configurations ?? {}
+    ).forEach((config) => this.convertBuildOptions(config));
 
     if (this.projectConfig.targets.test) {
       const testOptions = this.projectConfig.targets.test.options;
@@ -167,7 +168,7 @@ export class AppMigrator extends ProjectMigrator {
       lintOptions.lintFilePatterns =
         lintOptions.lintFilePatterns &&
         lintOptions.lintFilePatterns.map((pattern) =>
-          this.convertAsset(pattern)
+          this.convertPath(pattern)
         );
 
       const eslintConfigPath =
@@ -198,43 +199,28 @@ export class AppMigrator extends ProjectMigrator {
   }
 
   private updateTsConfigs(): void {
-    const tsConfigPath = getRootTsConfigPathInTree(this.tree);
+    const rootTsConfigFile = getRootTsConfigPathInTree(this.tree);
     const projectOffsetFromRoot = offsetFromRoot(this.projectConfig.root);
 
-    updateJson(
-      this.tree,
+    this.updateTsConfigFile(
       this.projectConfig.targets.build.options.tsConfig,
-      (json) => {
-        json.extends = `${projectOffsetFromRoot}${tsConfigPath}`;
-        json.compilerOptions = json.compilerOptions || {};
-        json.compilerOptions.outDir = `${projectOffsetFromRoot}dist/out-tsc`;
-        return json;
-      }
+      rootTsConfigFile,
+      projectOffsetFromRoot
     );
 
     if (this.projectConfig.targets.test) {
-      updateJson(
-        this.tree,
+      this.updateTsConfigFile(
         this.projectConfig.targets.test.options.tsConfig,
-        (json) => {
-          json.extends = `${projectOffsetFromRoot}${tsConfigPath}`;
-          json.compilerOptions = json.compilerOptions ?? {};
-          json.compilerOptions.outDir = `${projectOffsetFromRoot}dist/out-tsc`;
-          return json;
-        }
+        rootTsConfigFile,
+        projectOffsetFromRoot
       );
     }
 
     if (this.projectConfig.targets.server) {
-      updateJson(
-        this.tree,
+      this.updateTsConfigFile(
         this.projectConfig.targets.server.options.tsConfig,
-        (json) => {
-          json.extends = `${projectOffsetFromRoot}${tsConfigPath}`;
-          json.compilerOptions = json.compilerOptions ?? {};
-          json.compilerOptions.outDir = `${projectOffsetFromRoot}dist/out-tsc`;
-          return json;
-        }
+        rootTsConfigFile,
+        projectOffsetFromRoot
       );
     }
   }
@@ -258,7 +244,7 @@ export class AppMigrator extends ProjectMigrator {
       );
       if (Array.isArray(json.extends)) {
         json.extends = json.extends.map((extend: string) =>
-          this.convertEsLintConfigExtendToNewPath(extend)
+          this.convertEsLintConfigExtendToNewPath(eslintConfigPath, extend)
         );
 
         // it might have not been extending from the root config, make sure it does
@@ -281,19 +267,6 @@ export class AppMigrator extends ProjectMigrator {
 
       return json;
     });
-  }
-
-  private convertEsLintConfigExtendToNewPath(pathToFile: string): string {
-    if (!pathToFile.startsWith('..')) {
-      // we only need to adjust paths that are on a different directory,
-      // files in the same directory should be moved together
-      return pathToFile;
-    }
-
-    return joinPathFragments(
-      offsetFromRoot(this.projectConfig.root),
-      basename(pathToFile)
-    );
   }
 
   private convertBuildOptions(buildOptions: any): void {
@@ -343,20 +316,14 @@ export class AppMigrator extends ProjectMigrator {
       }));
   }
 
-  private convertAsset(asset: string | any): string | any {
-    if (typeof asset === 'string') {
-      return this.convertPath(asset);
-    } else {
-      return { ...asset, input: this.convertPath(asset.input) };
-    }
-  }
-
-  private convertPath(originalPath: string): string {
-    return originalPath?.startsWith(this.project.oldSourceRoot)
-      ? joinPathFragments(
-          this.project.newSourceRoot,
-          originalPath.replace(this.project.oldSourceRoot, '')
-        )
-      : originalPath;
+  private moveFilePathsFromTargetToProjectRoot(
+    target: TargetConfiguration,
+    options: string[]
+  ) {
+    options.forEach((option) => {
+      this.getTargetValuesForOption(target, option).forEach((path) => {
+        this.moveProjectRootFile(path);
+      });
+    });
   }
 }

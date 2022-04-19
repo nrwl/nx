@@ -285,7 +285,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(() =>
       runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
     ).toThrow(
-      'An e2e project with Protractor was found but "e2e/protractor.conf.js" could not be found.'
+      'The "e2e" target is using a Protractor builder but the Protractor config file "e2e/protractor.conf.js" could not be found.'
     );
     // Restore e2e directory
     runCommand('mv e2e-bak e2e');
@@ -309,7 +309,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(() =>
       runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
     ).toThrow(
-      'An e2e project with Cypress was found but "cypress.json" could not be found.'
+      'The "e2e" target is using a Cypress builder but the Cypress config file "cypress.json" could not be found.'
     );
     // Restore cypress.json
     runCommand('mv cypress.json.bak cypress.json');
@@ -319,7 +319,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(() =>
       runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
     ).toThrow(
-      'An e2e project with Cypress was found but the "cypress" directory could not be found.'
+      'The "e2e" target is using a Cypress builder but the "cypress" directory could not be found.'
     );
     // Restore cypress.json
     runCommand('mv cypress-bak cypress');
@@ -426,6 +426,58 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(output).toContain('All files pass linting.');
     expect(output).toContain(
       `Successfully ran target lint for project ${project}`
+    );
+  });
+
+  it('should support a workspace with multiple libraries', () => {
+    // add some libraries
+    const lib1 = uniq('lib1');
+    const lib2 = uniq('lib2');
+    runCommand(`ng g @schematics/angular:library ${lib1}`);
+    runCommand(`ng g @schematics/angular:library ${lib2}`);
+
+    runNgAdd('@nrwl/angular', '--npm-scope projscope');
+
+    // check angular.json
+    expect(readJson('angular.json')).toStrictEqual({
+      version: 2,
+      projects: {
+        [project]: `apps/${project}`,
+        [lib1]: `libs/${lib1}`,
+        [lib2]: `libs/${lib2}`,
+      },
+    });
+
+    // check building lib1
+    let output = runCLI(`build ${lib1}`);
+    expect(output).toContain(`> nx run ${lib1}:build:production`);
+    expect(output).toContain(
+      `Successfully ran target build for project ${lib1}`
+    );
+    checkFilesExist(`dist/${lib1}/package.json`);
+
+    output = runCLI(`build ${lib1}`);
+    expect(output).toContain(
+      `> nx run ${lib1}:build:production  [existing outputs match the cache, left as is]`
+    );
+    expect(output).toContain(
+      `Successfully ran target build for project ${lib1}`
+    );
+
+    // check building lib2
+    output = runCLI(`build ${lib2}`);
+    expect(output).toContain(`> nx run ${lib2}:build:production`);
+    expect(output).toContain(
+      `Successfully ran target build for project ${lib2}`
+    );
+    checkFilesExist(`dist/${lib2}/package.json`);
+
+    output = runCLI(`build ${lib2}`);
+    expect(output).toContain(
+      `> nx run ${lib2}:build:production  [existing outputs match the cache, left as is]`
+    );
+    expect(output).toContain(
+      `Successfully ran target build for project ${lib2}`
     );
   });
 

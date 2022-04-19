@@ -80,27 +80,51 @@ export class E2eProjectMigrator extends ProjectMigrator {
           this.projectConfig.targets.e2e.options.protractorConfig
         )
       ) {
-        return;
+        return null;
       }
 
-      return (
-        `An e2e project with Protractor was found but "${this.projectConfig.targets.e2e.options.protractorConfig}" could not be found.\n` +
-        `Make sure the "${this.appName}.architect.e2e.options.protractorConfig" is valid or the "${this.appName}" project is removed from "angular.json".`
-      );
+      return [
+        {
+          message:
+            `The "e2e" target is using a Protractor builder but the Protractor config file ` +
+            `"${this.projectConfig.targets.e2e.options.protractorConfig}" could not be found.`,
+          hint:
+            `Make sure the "${this.appName}.architect.e2e.options.protractorConfig" is set to a valid path ` +
+            `or remove the "${this.appName}.architect.e2e" target if it is not valid.`,
+        },
+      ];
     } else if (this.isCypressE2eProject()) {
       const configFile = this.getCypressConfigFile();
       if (configFile && !this.tree.exists(configFile)) {
-        return `An e2e project with Cypress was found but "${configFile}" could not be found.`;
+        return [
+          {
+            message: `The "e2e" target is using a Cypress builder but the Cypress config file "${configFile}" could not be found.`,
+            hint:
+              `Make sure the "${this.appName}.architect.e2e.options.configFile" option is set to a valid path, ` +
+              `or that a "cypress.json" file exists in the workspace root, ` +
+              `or remove the "${this.appName}.architect.e2e" target if it its not valid.`,
+          },
+        ];
       }
 
       if (!this.tree.exists('cypress')) {
-        return `An e2e project with Cypress was found but the "cypress" directory could not be found.`;
+        return [
+          {
+            message: `The "e2e" target is using a Cypress builder but the "cypress" directory could not be found.`,
+            hint: 'Make sure the "cypress" directory exists in the workspace root or remove the "e2e" target if it is not valid.',
+          },
+        ];
       }
-    } else {
-      return `An e2e project was found but it's using an unsupported executor "${this.projectConfig.targets.e2e.executor}".`;
+
+      return null;
     }
 
-    return null;
+    return [
+      {
+        message: `The "e2e" target is using an unsupported builder "${this.projectConfig.targets.e2e.executor}".`,
+        hint: `The supported builders are "@cypress/schematic:cypress" and "@angular-devkit/build-angular:protractor".`,
+      },
+    ];
   }
 
   private initialize(): void {
@@ -153,7 +177,7 @@ export class E2eProjectMigrator extends ProjectMigrator {
             ...this.projectConfig.targets.e2e.options,
             protractorConfig: joinPathFragments(
               this.project.newRoot,
-              'protractor.conf.js'
+              basename(this.projectConfig.targets.e2e.options.protractorConfig)
             ),
           },
         },
