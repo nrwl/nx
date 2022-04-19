@@ -32,8 +32,6 @@ export default async function host(tree: Tree, options: Schema) {
     skipFormat: true,
   });
 
-  console.log(tree.read('workspace.json', 'utf-8'));
-
   for (const remote of remotesToGenerate) {
     await remoteGenerator(tree, {
       ...options,
