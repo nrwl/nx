@@ -117,7 +117,7 @@ describe('addRemoteRoute', () => {
   it('should add remote route to host app', async () => {
     const sourceCode = stripIndents`
       import * as React from 'react';
-      import { Link, Route, Switch } from 'react-router-dom';
+      import { Link, Route, Routes } from 'react-router-dom';
 
       const App1 = React.lazy(() => import('app1/Module'));
 
@@ -127,9 +127,9 @@ describe('addRemoteRoute', () => {
             <ul>
               <li><Link to="/app1">App1</Link></li>
             </ul>
-            <Switch>
-              <Route path="/app1" render={() => <App1 />} />
-            </Switch>
+            <Routes>
+              <Route path="/app1" element={<App1 />} />
+            </Routes>
           </React.Suspense>
         );
       }
@@ -152,7 +152,7 @@ describe('addRemoteRoute', () => {
     expect(result).toEqual(
       stripIndents`
       import * as React from 'react';
-      import { Link, Route, Switch } from 'react-router-dom';
+      import { Link, Route, Routes } from 'react-router-dom';
 
       const App2 = React.lazy(() => import('app2/Module'));
       
@@ -165,10 +165,10 @@ describe('addRemoteRoute', () => {
               <li><Link to="/app1">App1</Link></li>
               <li><Link to="/app2">App2</Link></li>
             </ul>
-            <Switch>
-              <Route path="/app1" render={() => <App1 />} />
-              <Route path="/app2" render={() => <App2 />} />
-            </Switch>
+            <Routes>
+              <Route path="/app1" element={<App1 />} />
+              <Route path="/app2" element={<App2 />} />
+            </Routes>
           </React.Suspense>
         );
       }

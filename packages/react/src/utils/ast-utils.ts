@@ -5,6 +5,7 @@ import {
   logger,
   StringChange,
   StringInsertion,
+  stripIndents,
 } from '@nrwl/devkit';
 
 export function addImport(
@@ -257,17 +258,15 @@ export function addInitialRoutes(
     </div>
     <Route
       path="/"
-      exact
-      render={() => (
+      element={
         <div>This is the generated root route. <Link to="/page-2">Click here for page 2.</Link></div>
-      )}
+      }
     />
     <Route
       path="/page-2"
-      exact
-      render={() => (
+      element={
         <div><Link to="/">Click here to go back to root page.</Link></div>
-      )}
+      }
     />
     {/* END: routes */}
     `,
@@ -311,7 +310,7 @@ export function addRoute(
     changes.push({
       type: ChangeType.Insert,
       index: firstRoute.getEnd(),
-      text: `<Route path="${options.routePath}" component={${options.componentName}} />`,
+      text: `<Route path="${options.routePath}" element={<${options.componentName}/>} />`,
     });
 
     if (firstLink) {

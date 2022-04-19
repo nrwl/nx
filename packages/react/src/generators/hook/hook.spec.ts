@@ -30,7 +30,7 @@ describe('hook', () => {
       appTree.exists('libs/my-lib/src/lib/use-form/use-form.ts')
     ).toBeTruthy();
     expect(
-      appTree.exists('libs/my-lib/src/lib/use-form/use-form.spec.ts')
+      appTree.exists('libs/my-lib/src/lib/use-form/use-form.spec.tsx')
     ).toBeTruthy();
   });
 
@@ -44,7 +44,7 @@ describe('hook', () => {
       appTree.exists('apps/my-app/src/app/use-form/use-form.ts')
     ).toBeTruthy();
     expect(
-      appTree.exists('apps/my-app/src/app/use-form/use-form.spec.ts')
+      appTree.exists('apps/my-app/src/app/use-form/use-form.spec.tsx')
     ).toBeTruthy();
   });
 
@@ -59,7 +59,7 @@ describe('hook', () => {
       appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.ts')
     ).toBeTruthy();
     expect(
-      appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.spec.ts')
+      appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.spec.tsx')
     ).toBeFalsy();
   });
 
@@ -73,7 +73,7 @@ describe('hook', () => {
       appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.ts')
     ).toBeTruthy();
     expect(
-      appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.spec.ts')
+      appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.spec.tsx')
     ).toBeFalsy();
   });
 
@@ -114,7 +114,7 @@ describe('hook', () => {
         appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.ts')
       ).toBeTruthy();
       expect(
-        appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.spec.ts')
+        appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.spec.tsx')
       ).toBeFalsy();
     });
   });
@@ -130,7 +130,7 @@ describe('hook', () => {
         appTree.exists('libs/my-lib/src/lib/use-hello/useHello.ts')
       ).toBeTruthy();
       expect(
-        appTree.exists('libs/my-lib/src/lib/use-hello/useHello.spec.ts')
+        appTree.exists('libs/my-lib/src/lib/use-hello/useHello.spec.tsx')
       ).toBeTruthy();
     });
   });
@@ -147,7 +147,7 @@ describe('hook', () => {
         appTree.exists('libs/my-lib/src/lib/useHello/useHello.ts')
       ).toBeTruthy();
       expect(
-        appTree.exists('libs/my-lib/src/lib/useHello/useHello.spec.ts')
+        appTree.exists('libs/my-lib/src/lib/useHello/useHello.spec.tsx')
       ).toBeTruthy();
     });
   });

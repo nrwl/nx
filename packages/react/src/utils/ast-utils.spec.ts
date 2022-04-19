@@ -1,7 +1,7 @@
 import * as utils from './ast-utils';
 import * as ts from 'typescript';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { applyChangesToString, Tree } from '@nrwl/devkit';
+import { applyChangesToString, stripIndents, Tree } from '@nrwl/devkit';
 
 describe('findDefaultExport', () => {
   it('should find exported variable', () => {
@@ -147,7 +147,7 @@ const App = () => (
       </div>
     </header>
     <p>Hello World!</p>
-    <Route path="/" component={Home}/>
+    <Route path="/" element={<Home/>}/>
   </>
 );
 export default App; 
@@ -170,7 +170,7 @@ export default App;
     );
 
     expect(result).toMatch(/<li><Link\s+to="\/about"/);
-    expect(result).toMatch(/<Route\s+path="\/about"\s+component={About}/);
+    expect(result).toMatch(/<Route\s+path="\/about"\s+element={<About\/>}/);
   });
 });
 
@@ -240,7 +240,7 @@ ReactDOM.render(<div/>, document.getElementById('root'));
   it('should return root.render(...)', () => {
     const sourceCode = `
 import React from 'react';
-import ReactDOMClient from 'react-dom/client';
+import ReactDOM from 'react-dom/client';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<div/>);
       `;
@@ -467,7 +467,7 @@ describe('getComponentName', () => {
       testName: 'using a JSX self closing element',
       src: `
       function Test(props: TestProps) {
-        return <img src="something" />;
+        return <img src='something' />;
       };
       export default Test;
       `,
