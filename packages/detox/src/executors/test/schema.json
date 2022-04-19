@@ -92,7 +92,8 @@
     },
     "reuse": {
       "type": "boolean",
-      "description": "Reuse existing installed app (do not delete + reinstall) for a faster run."
+      "description": "Reuse existing installed app (do not delete + reinstall) for a faster run.",
+      "default": true
     },
     "cleanup": {
       "type": "boolean",
