@@ -2,7 +2,7 @@ import { NormalizedSchema } from '../schema';
 import { generateFiles, names } from '@nrwl/devkit';
 import { join } from 'path';
 
-export function addMfeFiles(
+export function addModuleFederationFiles(
   host,
   options: NormalizedSchema,
   defaultRemoteManifest: { name: string; port: number }[]
@@ -28,7 +28,7 @@ export function addMfeFiles(
   // New entry file is created here.
   generateFiles(
     host,
-    join(__dirname, `../files/mfe`),
+    join(__dirname, `../files/module-federation`),
     options.appProjectRoot,
     templateVariables
   );

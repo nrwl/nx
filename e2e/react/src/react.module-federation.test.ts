@@ -10,7 +10,7 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 
-describe('React MFE', () => {
+describe('React Module Federation', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
@@ -22,16 +22,16 @@ describe('React MFE', () => {
     const remote3 = uniq('remote3');
 
     runCLI(
-      `generate @nrwl/react:mfe-host ${shell} --style=css --remotes=${remote1},${remote2} --no-interactive`
+      `generate @nrwl/react:host ${shell} --style=css --remotes=${remote1},${remote2} --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react:mfe-remote ${remote3} --style=css --host=${shell} --no-interactive`
+      `generate @nrwl/react:remote ${remote3} --style=css --host=${shell} --no-interactive`
     );
 
-    checkFilesExist(`apps/${shell}/mfe.config.js`);
-    checkFilesExist(`apps/${remote1}/mfe.config.js`);
-    checkFilesExist(`apps/${remote2}/mfe.config.js`);
-    checkFilesExist(`apps/${remote3}/mfe.config.js`);
+    checkFilesExist(`apps/${shell}/module-federation.config.js`);
+    checkFilesExist(`apps/${remote1}/module-federation.config.js`);
+    checkFilesExist(`apps/${remote2}/module-federation.config.js`);
+    checkFilesExist(`apps/${remote3}/module-federation.config.js`);
 
     await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
       combinedOutput: expect.stringContaining('Test Suites: 1 passed, 1 total'),
@@ -41,10 +41,10 @@ describe('React MFE', () => {
       `apps/${shell}/webpack.config.js`,
       stripIndents`
         const withModuleFederation = require('@nrwl/react/module-federation');
-        const mfeConfig = require('./mfe.config');
+        const moduleFederationConfig = require('./module-federation.config');
 
         module.exports = withModuleFederation({
-          ...mfeConfig,
+          ...moduleFederationConfig,
           remotes: [
             ['${remote1}', '${remote1}@http://localhost:${readPort(
         remote1

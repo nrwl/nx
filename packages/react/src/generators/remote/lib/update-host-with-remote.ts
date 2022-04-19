@@ -9,8 +9,8 @@ import {
 import {
   addRemoteDefinition,
   addRemoteRoute,
-  addRemoteToMfeConfig,
-} from '../../../mfe/mfe-ast-utils';
+  addRemoteToConfig,
+} from '../../../module-federation/ast-utils';
 import * as ts from 'typescript';
 
 export function updateHostWithRemote(
@@ -19,38 +19,41 @@ export function updateHostWithRemote(
   remoteName: string
 ) {
   const hostConfig = readProjectConfiguration(host, hostName);
-  const mfeConfigPath = joinPathFragments(hostConfig.root, 'mfe.config.js');
+  const moduleFederationConfigPath = joinPathFragments(
+    hostConfig.root,
+    'module-federation.config.js'
+  );
   const remoteDefsPath = joinPathFragments(
     hostConfig.sourceRoot,
     'remotes.d.ts'
   );
   const appComponentPath = findAppComponentPath(host, hostConfig.sourceRoot);
 
-  if (host.exists(mfeConfigPath)) {
+  if (host.exists(moduleFederationConfigPath)) {
     // find the host project path
     // Update remotes inside ${host_path}/src/remotes.d.ts
-    let sourceCode = host.read(mfeConfigPath).toString();
+    let sourceCode = host.read(moduleFederationConfigPath).toString();
     const source = ts.createSourceFile(
-      mfeConfigPath,
+      moduleFederationConfigPath,
       sourceCode,
       ts.ScriptTarget.Latest,
       true
     );
     host.write(
-      mfeConfigPath,
-      applyChangesToString(sourceCode, addRemoteToMfeConfig(source, remoteName))
+      moduleFederationConfigPath,
+      applyChangesToString(sourceCode, addRemoteToConfig(source, remoteName))
     );
   } else {
     // TODO(jack): Point to the nx.dev guide when ready.
     logger.warn(
-      `Could not find MFE configuration at ${mfeConfigPath}. Did you generate this project with "@nrwl/react:mfe-host"?`
+      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nrwl/react:host"?`
     );
   }
 
   if (host.exists(remoteDefsPath)) {
     let sourceCode = host.read(remoteDefsPath).toString();
     const source = ts.createSourceFile(
-      mfeConfigPath,
+      moduleFederationConfigPath,
       sourceCode,
       ts.ScriptTarget.Latest,
       true
@@ -61,14 +64,14 @@ export function updateHostWithRemote(
     );
   } else {
     logger.warn(
-      `Could not find remote definitions at ${remoteDefsPath}. Did you generate this project with "@nrwl/react:mfe-host"?`
+      `Could not find remote definitions at ${remoteDefsPath}. Did you generate this project with "@nrwl/react:host"?`
     );
   }
 
   if (host.exists(appComponentPath)) {
     let sourceCode = host.read(appComponentPath).toString();
     const source = ts.createSourceFile(
-      mfeConfigPath,
+      moduleFederationConfigPath,
       sourceCode,
       ts.ScriptTarget.Latest,
       true
@@ -82,7 +85,7 @@ export function updateHostWithRemote(
     );
   } else {
     logger.warn(
-      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nrwl/react:mfe-host"?`
+      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nrwl/react:host"?`
     );
   }
 }

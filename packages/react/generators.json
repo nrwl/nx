@@ -150,18 +150,16 @@
       "aliases": "c"
     },
 
-    "mfe-host": {
-      "factory": "./src/generators/mfe-host/mfe-host#mfeHostGenerator",
-      "schema": "./src/generators/mfe-host/schema.json",
-      "description": "Generate a host react application",
-      "aliases": "host"
+    "host": {
+      "factory": "./src/generators/host/host#hostGenerator",
+      "schema": "./src/generators/host/schema.json",
+      "description": "Generate a host react application"
     },
 
-    "mfe-remote": {
-      "factory": "./src/generators/mfe-remote/mfe-remote#mfeRemoteGenerator",
-      "schema": "./src/generators/mfe-remote/schema.json",
-      "description": "Generate a remote react application",
-      "aliases": "remote"
+    "remote": {
+      "factory": "./src/generators/remote/remote#remoteGenerator",
+      "schema": "./src/generators/remote/schema.json",
+      "description": "Generate a remote react application"
     }
   }
 }

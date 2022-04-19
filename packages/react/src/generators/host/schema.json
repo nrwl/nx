@@ -1,19 +1,19 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "GeneratorReactMFERemote",
+  "$id": "GeneratorReactHost",
   "cli": "nx",
-  "title": "Generate Module Federation Setup for React Remote App",
-  "description": "Create Module Federation configuration files for given React Remote Application.",
+  "title": "Generate Module Federation Setup for React Host App",
+  "description": "Create Module Federation configuration files for given React Host Application.",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
-      "description": "The name of the remote application to generate the Module Federation configuration",
+      "description": "The name of the host application to generate the Module Federation configuration",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use as the remote application?",
+      "x-prompt": "What name would you like to use as the host application?",
       "pattern": "^[a-zA-Z].*$"
     },
     "directory": {
@@ -71,11 +71,6 @@
       "enum": ["eslint", "tslint"],
       "default": "eslint"
     },
-    "routing": {
-      "type": "boolean",
-      "description": "Generate application with routes.",
-      "default": false
-    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
@@ -122,12 +117,12 @@
     },
     "globalCss": {
       "type": "boolean",
-      "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss.",
+      "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss",
       "default": false
     },
     "strict": {
       "type": "boolean",
-      "description": "Creates an application with strict mode and strict type checking.",
+      "description": "Creates an application with strict mode and strict type checking",
       "default": true
     },
     "setParserOptionsProject": {
@@ -141,13 +136,14 @@
     },
     "compiler": {
       "type": "string",
-      "description": "The compiler to use.",
+      "description": "The compiler to use",
       "enum": ["babel", "swc"],
       "default": "babel"
     },
-    "host": {
-      "type": "string",
-      "description": "The host / shell application for this remote."
+    "remotes": {
+      "type": "array",
+      "description": "A list of remote application names that the host application should consume.",
+      "default": []
     },
     "devServerPort": {
       "type": "number",

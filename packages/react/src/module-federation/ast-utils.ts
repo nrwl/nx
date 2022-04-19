@@ -7,7 +7,7 @@ import {
   findElements,
 } from '../utils/ast-utils';
 
-export function addRemoteToMfeConfig(
+export function addRemoteToConfig(
   source: ts.SourceFile,
   app: string
 ): StringChange[] {

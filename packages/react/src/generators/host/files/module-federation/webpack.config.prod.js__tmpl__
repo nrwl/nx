@@ -1,8 +1,8 @@
 const withModuleFederation = require('@nrwl/react/module-federation');
-const mfeConfig = require('./mfe.config');
+const moduleFederationConfig = require('./module-federation.config');
 
 module.exports = withModuleFederation({
-    ...mfeConfig,
+    ...moduleFederationConfig,
     /*
      * Remote overrides for production.
      * Each entry is a pair of an unique name and the URL where it is deployed.

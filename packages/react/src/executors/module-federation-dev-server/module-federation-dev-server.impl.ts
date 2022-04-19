@@ -4,26 +4,30 @@ import devServerExecutor, {
 } from '@nrwl/web/src/executors/dev-server/dev-server.impl';
 import { join } from 'path';
 
-type MFEDevServerOptions = WebDevServerOptions & {
+type ModuleFederationDevServerOptions = WebDevServerOptions & {
   apps?: string[];
 };
 
-export default async function* mfeDevServer(
-  options: MFEDevServerOptions,
+export default async function* moduleFederationDevServer(
+  options: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ) {
   let iter = devServerExecutor(options, context);
   const p = context.workspace.projects[context.projectName];
 
-  const mfeConfigPath = join(context.root, p.root, 'mfe.config.js');
+  const moduleFederationConfigPath = join(
+    context.root,
+    p.root,
+    'module-federation.config.js'
+  );
 
-  let mfeConfig: any;
+  let moduleFederationConfig: any;
   try {
-    mfeConfig = require(mfeConfigPath);
+    moduleFederationConfig = require(moduleFederationConfigPath);
   } catch {
     // TODO(jack): Add a link to guide
     throw new Error(
-      `Could not load ${mfeConfigPath}. Was this project generated with "@nrwl/react:mfe-host"?`
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nrwl/react:host"?`
     );
   }
 
@@ -33,7 +37,7 @@ export default async function* mfeDevServer(
   // remotes: ['app1', 'http://example.com']
   // ```
   // This shouldn't happen for local dev, but we support it regardless.
-  let apps = options.apps ?? mfeConfig.remotes ?? [];
+  let apps = options.apps ?? moduleFederationConfig.remotes ?? [];
   apps = apps.map((a) => (Array.isArray(a) ? a[0] : a));
 
   for (const app of apps) {
