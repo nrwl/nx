@@ -58,6 +58,13 @@ export function ConfSpeakers(): JSX.Element {
       name: 'Craigory Coppola',
       twitter: 'enderagent',
     },
+    {
+      description:
+        'Jason is an architect at Nrwl and a part of the Nx Core Team. He works with Fortune 500 companies across different industries to enable them to develop like Google, Microsoft, and Facebook. Jason is also an enthusiast of board games and mechanical keyboards.',
+      imageUrl: '/images/conf/jason-jeans.webp',
+      name: 'Jason Jean',
+      twitter: 'frozenpandaz',
+    },
   ];
 
   function chunkList<ITEM>(itemList: ITEM[], chunkSize: number): Array<ITEM[]> {
