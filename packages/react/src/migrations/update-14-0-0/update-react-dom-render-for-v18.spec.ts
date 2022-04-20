@@ -8,12 +8,11 @@ import {
 import update from './update-react-dom-render-for-v18';
 
 describe('React update for Nx 14', () => {
-  it('should remove deprecated @testing-library/react-hook package', async () => {
+  it('should remove deprecated @testing-library/react package', async () => {
     const tree = createTreeWithEmptyWorkspace(2);
     writeJson(tree, 'package.json', {
       devDependencies: {
         '@testing-library/react': '0.0.0',
-        '@testing-library/react-hook': '0.0.0',
       },
     });
 
@@ -22,7 +21,6 @@ describe('React update for Nx 14', () => {
     expect(readJson(tree, 'package.json')).toEqual({
       devDependencies: {
         '@testing-library/react': '0.0.0',
-        '@testing-library/react-hook': '0.0.0',
       },
     });
   });

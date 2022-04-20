@@ -58,8 +58,13 @@
         "production": {
           "buildTarget": "nx-dev:build-base:production",
           "dev": false
+        },
+        "development": {
+          "buildTarget": "nx-dev:build:development",
+          "dev": true
         }
-      }
+      },
+      "defaultConfiguration": "development"
     },
     "deploy-build": {
       "executor": "@nrwl/workspace:run-commands",
