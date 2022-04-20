@@ -141,6 +141,12 @@
       "schema": "./src/generators/npm-package/schema.json",
       "description": "Create a minimal NPM package.",
       "x-type": "library"
+    },
+
+    "ci-workflow": {
+      "factory": "./src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator",
+      "schema": "./src/generators/ci-workflow/schema.json",
+      "description": "Generete a CI workflow."
     }
   }
 }

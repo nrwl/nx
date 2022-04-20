@@ -499,6 +499,11 @@
             "path": "/packages/workspace/generators/workspace-generator"
           },
           {
+            "name": "ci-workflow generator",
+            "id": "ci-workflow-generator",
+            "path": "/packages/workspace/generators/ci-workflow"
+          },
+          {
             "name": "convert-to-nx-project generator",
             "id": "convert-to-nx-project-generator",
             "path": "/packages/workspace/generators/convert-to-nx-project"

@@ -71,7 +71,6 @@ jobs:
       ordinal:
         type: integer
     steps:
-      - run: echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - checkout
       - run: npm ci
       - run:
@@ -83,7 +82,6 @@ jobs:
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
     steps:
-      - run: echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - checkout
       - run: npm ci
       - nx/set-shas
@@ -96,6 +94,7 @@ jobs:
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 
       - run: npx nx-cloud stop-all-agents
+          when: always
 workflows:
   build:
     jobs:
@@ -105,5 +104,7 @@ workflows:
               ordinal: [1, 2, 3]
       - main
 ```
+
+You can also use our [ci-workflow generator](https://nx.app/packages/workspace/generators/ci-workflow) to generate the configuration file.
 
 Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.

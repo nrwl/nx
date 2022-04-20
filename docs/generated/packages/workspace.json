@@ -654,6 +654,48 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/workspace/src/generators/npm-package/schema.json"
+    },
+    {
+      "name": "ci-workflow",
+      "factory": "./src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxWorkspaceCIWorkflow",
+        "title": "Generate a CI workflow.",
+        "description": "Generate a CI workflow.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "ci": {
+            "type": "string",
+            "description": "CI provider.",
+            "enum": ["github", "circleci", "azure"],
+            "x-prompt": {
+              "message": "What is your target CI provider?",
+              "type": "list",
+              "items": [
+                { "value": "github", "label": "Github Actions" },
+                { "value": "circleci", "label": "Circle CI" },
+                { "value": "azure", "label": "Azure DevOps" }
+              ]
+            }
+          },
+          "name": {
+            "type": "string",
+            "description": "Workflow name.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "How should we name your workflow?",
+            "pattern": "^[a-zA-Z].*$"
+          }
+        },
+        "required": ["ci"],
+        "presets": []
+      },
+      "description": "Generete a CI workflow.",
+      "implementation": "/packages/workspace/src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/workspace/src/generators/ci-workflow/schema.json"
     }
   ],
   "executors": [

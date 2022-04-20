@@ -13,6 +13,7 @@ export type PackageManager = 'yarn' | 'pnpm' | 'npm';
 
 export interface PackageManagerCommands {
   install: string;
+  ciInstall: string;
   add: string;
   addDev: string;
   addGlobal: string;
@@ -50,6 +51,7 @@ export function getPackageManagerCommand(
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => ({
       install: 'yarn',
+      ciInstall: 'yarn --frozen-lockfile',
       add: 'yarn add -W',
       addDev: 'yarn add -D -W',
       addGlobal: 'yarn global add',
@@ -66,6 +68,7 @@ export function getPackageManagerCommand(
       }
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
+        ciInstall: 'pnpm install --frozen-lockfile',
         add: 'pnpm add',
         addDev: 'pnpm add -D',
         addGlobal: 'pnpm add -g',
@@ -80,6 +83,7 @@ export function getPackageManagerCommand(
 
       return {
         install: 'npm install',
+        ciInstall: 'npm ci',
         add: 'npm install',
         addDev: 'npm install -D',
         addGlobal: 'npm install -g',

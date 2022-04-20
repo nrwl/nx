@@ -1,0 +1,198 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`lib should generate azure CI config 1`] = `
+"name: build
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  - name: NX_CLOUD_DISTRIBUTED_EXECUTION
+    value: 'true'
+  - name: NX_BRANCH
+    \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(System.PullRequest.PullRequestNumber)
+    \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(Build.SourceBranchName)
+  - name: TARGET_BRANCH
+    \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+  - name: BASE_SHA
+    \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(git merge-base $(TARGET_BRANCH) HEAD)
+    \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(git rev-parse HEAD~1)
+  - name: HEAD_SHA
+    value: $(git rev-parse HEAD)
+
+jobs:
+  - job: agents
+    strategy:
+      parallel: 3
+    displayName: 'Nx Cloud Agent'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - script: yarn --frozen-lockfile
+        displayName: NPM Install Dependencies
+      - script: npx nx-cloud start-agent
+        displayName: 'Start Nx-Cloud agent
+
+  - job: main
+    displayName: 'Nx Cloud Main'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - script: yarn --frozen-lockfile
+        displayName: NPM Install Dependencies
+      - script: yarn nx-cloud start-ci-run
+        displayName: Start CI run
+      - script: yarn nx workspace-lint
+        displayName: Run workspace lint
+      - script: yarn nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+        displayName: Check format
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
+        displayName: Run lint
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --ci --code-coverage
+        displayName: Run test
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
+        displayName: Run build
+      - script: yarn nx-cloud stop-all-agents
+        condition: always()
+        displayName: Stop all Nx-Cloud agents
+"
+`;
+
+exports[`lib should generate circleci CI config 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.3.0
+
+jobs:
+  agent:
+    docker:
+      - image: cimg/node:lts-browsers
+    parameters:
+      ordinal:
+        type: integer
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: yarn --frozen-lockfile
+      - run:
+          name: Start the agent << parameters.ordinal >>
+          command: yarn nx-cloud start-agent
+          no_output_timeout: 60m
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: yarn --frozen-lockfile
+      - nx/set-shas:
+          main-branch-name: 'main'
+      - run:
+          name: Initialize the Nx Cloud distributed CI run
+          command: yarn nx-cloud start-ci-run
+      - run:
+          name: Run workspace lint
+          command: yarn nx workspace-lint
+      - run:
+          name: Check format
+          command: yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
+      - run:
+          name: Run lint
+          command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
+      - run:
+          name: Run test
+          command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
+      - run:
+          name: Run build
+          command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+      - run:
+          name: Stop all agents
+          command: yarn nx-cloud stop-all-agents
+          when: always
+
+workflows:
+  version: 2
+
+  build:
+    jobs:
+      - agent:
+          name: Nx Cloud Agent << matrix.ordinal >>
+          matrix:
+            parameters:
+              ordinal: [1, 2, 3]
+      - main
+          name: Nx Cloud Main
+"
+`;
+
+exports[`lib should generate github CI config 1`] = `
+"name: build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  main:
+    name: Nx Cloud - Main Job
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
+    with:
+      parallel-commands: |
+        yarn nx workspace-lint
+        yarn nx format:check
+      parallel-commands-on-agents: |
+        yarn nx affected --target=lint --parallel=3
+        yarn nx affected --target=test --parallel=3 --ci --code-coverage
+        yarn nx affected --target=build --parallel=3
+
+  agents:
+    name: Nx Cloud - Agents
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.2
+    with:
+      number-of-agents: 3
+"
+`;
+
+exports[`lib should generate github CI config with custom name 1`] = `
+"name: My custom-workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  main:
+    name: Nx Cloud - Main Job
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
+    with:
+      parallel-commands: |
+        yarn nx workspace-lint
+        yarn nx format:check
+      parallel-commands-on-agents: |
+        yarn nx affected --target=lint --parallel=3
+        yarn nx affected --target=test --parallel=3 --ci --code-coverage
+        yarn nx affected --target=build --parallel=3
+
+  agents:
+    name: Nx Cloud - Agents
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.2
+    with:
+      number-of-agents: 3
+"
+`;
