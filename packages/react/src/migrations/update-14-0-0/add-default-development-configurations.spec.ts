@@ -45,4 +45,25 @@ describe('React default development configuration', () => {
       buildTarget: `example:build:development`,
     });
   });
+
+  it('should work without targets', async () => {
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(
+      tree,
+      'example',
+      {
+        root: 'apps/example',
+        projectType: 'application',
+      },
+      true
+    );
+
+    await update(tree);
+
+    const config = readProjectConfiguration(tree, 'example');
+    expect(config).toEqual({
+      root: 'apps/example',
+      projectType: 'application',
+    });
+  });
 });
