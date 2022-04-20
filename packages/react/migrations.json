@@ -47,6 +47,12 @@
       "version": "14.0.0-beta.0",
       "description": "Replace deprecated '@testing-library/react-hook' package with `renderHook` from '@testing-library/react'.",
       "factory": "./src/migrations/update-14-0-0/replace-testing-library-react-hook"
+    },
+    "add-default-development-configurations-14.0.0": {
+      "cli": "nx",
+      "version": "14.0.0-beta.0",
+      "description": "Add a default development configuration for build and serve targets.",
+      "factory": "./src/migrations/update-14-0-0/add-default-development-configurations"
     }
   },
   "packageJsonUpdates": {

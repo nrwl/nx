@@ -70,6 +70,12 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
       webpackConfig: '@nrwl/react/plugins/webpack',
     },
     configurations: {
+      development: {
+        extractLicenses: false,
+        optimization: false,
+        sourceMap: true,
+        vendorChunk: true,
+      },
       production: {
         fileReplacements: [
           {
@@ -97,11 +103,15 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
 function createServeTarget(options: NormalizedSchema): TargetConfiguration {
   return {
     executor: '@nrwl/web:dev-server',
+    defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
       hmr: true,
     },
     configurations: {
+      development: {
+        buildTarget: `${options.projectName}:build:development`,
+      },
       production: {
         buildTarget: `${options.projectName}:build:production`,
         hmr: false,

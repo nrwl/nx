@@ -271,6 +271,10 @@ describe('app', () => {
       dev: true,
     });
     expect(architectConfig.serve.configurations).toEqual({
+      development: {
+        buildTarget: 'my-app:build:development',
+        dev: true,
+      },
       production: { dev: false, buildTarget: 'my-app:build:production' },
     });
   });
