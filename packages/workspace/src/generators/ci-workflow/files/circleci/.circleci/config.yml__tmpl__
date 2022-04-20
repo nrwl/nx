@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.3.0
+  nx: nrwl/nx@1.4.0
 
 jobs:
   agent:

@@ -69,7 +69,7 @@ exports[`lib should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.3.0
+  nx: nrwl/nx@1.4.0
 
 jobs:
   agent:
@@ -196,3 +196,5 @@ jobs:
       number-of-agents: 3
 "
 `;
+
+exports[`lib should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
