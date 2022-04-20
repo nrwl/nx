@@ -1,8 +1,4 @@
-import {
-  SharedLibraryConfig,
-  sharePackages,
-  shareWorkspaceLibraries,
-} from './webpack-utils';
+import { sharePackages, shareWorkspaceLibraries } from './webpack-utils';
 import {
   createProjectGraphAsync,
   ProjectGraph,
@@ -17,21 +13,7 @@ import {
 import { ParsedCommandLine } from 'typescript';
 import { readWorkspaceJson } from 'nx/src/project-graph/file-utils';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
-
-export type ModuleFederationLibrary = { type: string; name: string };
-
-export type Remotes = string[] | [remoteName: string, remoteUrl: string][];
-
-export interface ModuleFederationConfig {
-  name: string;
-  remotes?: string[];
-  library?: ModuleFederationLibrary;
-  exposes?: Record<string, string>;
-  shared?: (
-    libraryName: string,
-    library: SharedLibraryConfig
-  ) => undefined | false | SharedLibraryConfig;
-}
+import { ModuleFederationConfig, Remotes } from './models';
 
 function recursivelyResolveWorkspaceDependents(
   projectGraph: ProjectGraph<any>,
