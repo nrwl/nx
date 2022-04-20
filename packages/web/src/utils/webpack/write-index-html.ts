@@ -168,13 +168,13 @@ export function augmentIndexHtml(params: AugmentIndexHtmlOptions): string {
         if (!script.startsWith('polyfills-nomodule-es5')) {
           attrs.push({ name: 'defer', value: null });
         }
-      } else if (isModuleType && !isNoModuleType) {
+      } else if (isModuleType) {
         attrs.push({ name: 'type', value: 'module' });
       } else {
         attrs.push({ name: 'defer', value: null });
       }
     } else {
-      attrs.push({ name: 'defer', value: null });
+      attrs.push({ name: 'type', value: 'module' });
     }
 
     if (params.sri) {

@@ -77,6 +77,8 @@ const IGNORE_MATCHES = {
     'babel-plugin-styled-components',
     'rollup',
     'webpack',
+    '@swc/jest',
+    'babel-jest',
     '@angular-devkit/core',
     '@angular-devkit/schematics',
   ],

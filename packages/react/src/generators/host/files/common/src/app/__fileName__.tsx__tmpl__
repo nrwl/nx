@@ -1,8 +1,8 @@
 import * as React from 'react';
 import NxWelcome from "./nx-welcome";
-<% if (remotes.length > 0) { %>
 import { Link, Route, Routes } from 'react-router-dom';
 
+<% if (remotes.length > 0) { %>
 <% remotes.forEach(function(r) { %>
  const <%= r.className %> = React.lazy(() => import('<%= r.fileName %>/Module'));
  <% }); %>

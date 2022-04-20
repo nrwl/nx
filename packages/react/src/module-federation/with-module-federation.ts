@@ -12,8 +12,8 @@ import {
 } from '@nrwl/workspace/src/utilities/typescript';
 import { ParsedCommandLine } from 'typescript';
 import { readWorkspaceJson } from 'nx/src/project-graph/file-utils';
-import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 import { ModuleFederationConfig, Remotes } from './models';
+import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 function recursivelyResolveWorkspaceDependents(
   projectGraph: ProjectGraph<any>,
@@ -139,7 +139,7 @@ function determineRemoteUrl(remote: string) {
 
   const host = serveTarget.options?.host ?? '//localhost';
   const port = serveTarget.options?.port ?? 4201;
-  return `${remote}@${
+  return `${
     host.endsWith('/') ? host.slice(0, -1) : host
   }:${port}/remoteEntry.js`;
 }
@@ -150,9 +150,6 @@ function mapRemotes(remotes: Remotes) {
   for (const remote of remotes) {
     if (Array.isArray(remote)) {
       let [remoteName, remoteLocation] = remote;
-      if (!remoteLocation.includes('@')) {
-        remoteLocation = `${remoteName}@${remoteLocation}`;
-      }
       if (!remoteLocation.match(/remoteEntry\.(js|mjs)$/)) {
         remoteLocation = `${
           remoteLocation.endsWith('/')
@@ -216,6 +213,11 @@ export async function withModuleFederation(options: ModuleFederationConfig) {
       minimize: false,
     };
 
+    config.experiments = {
+      ...config.experiments,
+      outputModule: true,
+    };
+
     const mappedRemotes =
       !options.remotes || options.remotes.length === 0
         ? {}
@@ -224,6 +226,9 @@ export async function withModuleFederation(options: ModuleFederationConfig) {
     config.plugins.push(
       new ModuleFederationPlugin({
         name: options.name,
+        library: {
+          type: 'module',
+        },
         filename: 'remoteEntry.js',
         exposes: options.exposes,
         remotes: mappedRemotes,

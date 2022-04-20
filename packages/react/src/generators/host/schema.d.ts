@@ -24,5 +24,7 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
+  projectName: string;
   appProjectRoot: string;
+  e2eProjectName: string;
 }

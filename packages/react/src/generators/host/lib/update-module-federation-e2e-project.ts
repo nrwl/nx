@@ -9,14 +9,13 @@ export function updateModuleFederationE2eProject(
   host: Tree,
   options: NormalizedSchema
 ) {
-  const e2eName = `${options.name}-e2e`;
   try {
-    let projectConfig = readProjectConfiguration(host, e2eName);
+    let projectConfig = readProjectConfiguration(host, options.e2eProjectName);
     projectConfig.targets.e2e.options = {
       ...projectConfig.targets.e2e.options,
-      baseUrl: 'http://localhost:4200',
+      baseUrl: `http://localhost:${options.devServerPort}`,
     };
-    updateProjectConfiguration(host, e2eName, projectConfig);
+    updateProjectConfiguration(host, options.e2eProjectName, projectConfig);
   } catch {
     // nothing
   }

@@ -1,7 +1,7 @@
 import { stripIndents } from '@nrwl/devkit';
 import {
   checkFilesExist,
-  killPorts,
+  killPort,
   newProject,
   readProjectConfig,
   runCLI,
@@ -21,8 +21,12 @@ describe('React Module Federation', () => {
     const remote2 = uniq('remote2');
     const remote3 = uniq('remote3');
 
+    runCLI(`generate @nrwl/react:host ${shell} --style=css --no-interactive`);
     runCLI(
-      `generate @nrwl/react:host ${shell} --style=css --remotes=${remote1},${remote2} --no-interactive`
+      `generate @nrwl/react:remote ${remote1} --style=css --host=${shell} --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/react:remote ${remote2} --style=css --host=${shell} --no-interactive`
     );
     runCLI(
       `generate @nrwl/react:remote ${remote3} --style=css --host=${shell} --no-interactive`
@@ -46,9 +50,7 @@ describe('React Module Federation', () => {
         module.exports = withModuleFederation({
           ...moduleFederationConfig,
           remotes: [
-            ['${remote1}', '${remote1}@http://localhost:${readPort(
-        remote1
-      )}/remoteEntry.js'],
+            '${remote1}',
             ['${remote2}', 'http://localhost:${readPort(
         remote2
       )}/remoteEntry.js'],
@@ -89,11 +91,78 @@ describe('React Module Federation', () => {
 
     const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch`);
     expect(e2eResults).toContain('All specs passed!');
-    expect(await killPorts()).toBeTruthy();
+    expect(
+      await killPorts([
+        readPort(shell),
+        readPort(remote1),
+        readPort(remote2),
+        readPort(remote3),
+      ])
+    ).toBeTruthy();
   }, 500_000);
+
+  // TODO(jack): Fix port taken issue in CI then enable test again
+  // it('should support nested directories', async () => {
+  //   const shell = uniq('shell');
+  //   const remote1 = uniq('remote1');
+  //   const remote2 = uniq('remote2');
+  //   const remote3 = uniq('remote3');
+  //
+  //   runCLI(
+  //     `generate @nrwl/react:host ${shell} --style=css --remotes=${remote1},${remote2},${remote3} --directory=test --no-interactive`
+  //   );
+  //
+  //   await expect(runCLIAsync(`test test-${shell}`)).resolves.toMatchObject({
+  //     combinedOutput: expect.stringContaining('Test Suites: 1 passed, 1 total'),
+  //   });
+  //
+  //   updateFile(
+  //     `apps/test/${shell}-e2e/src/integration/app.spec.ts`,
+  //     stripIndents`
+  //       import { getGreeting } from '../support/app.po';
+  //
+  //       describe('shell app', () => {
+  //         it('should display welcome message', () => {
+  //           cy.visit('/')
+  //           getGreeting().contains('Welcome test-${shell}');
+  //         });
+  //
+  //         it('should load remote 1', () => {
+  //           cy.visit('/test-${remote1}')
+  //           getGreeting().contains('Welcome test-${remote1}');
+  //         });
+  //
+  //         it('should load remote 2', () => {
+  //           cy.visit('/test-${remote2}')
+  //           getGreeting().contains('Welcome test-${remote2}');
+  //         });
+  //
+  //         it('should load remote 3', () => {
+  //           cy.visit('/test-${remote3}')
+  //           getGreeting().contains('Welcome test-${remote3}');
+  //         });
+  //       });
+  //     `
+  //   );
+  //
+  //   const e2eResults = runCLI(`e2e test-${shell}-e2e --no-watch`);
+  //   expect(e2eResults).toContain('All specs passed!');
+  //   expect(
+  //     await killPorts([
+  //       readPort(`test-${shell}`),
+  //       readPort(`test-${remote1}`),
+  //       readPort(`test-${remote2}`),
+  //       readPort(`test-${remote3}`),
+  //     ])
+  //   ).toBeTruthy();
+  // }, 500_000);
 
   function readPort(appName: string): number {
     const config = readProjectConfig(appName);
     return config.targets.serve.options.port;
   }
 });
+
+function killPorts(ports: number[]): Promise<boolean[]> {
+  return Promise.all(ports.map((p) => killPort(p)));
+}

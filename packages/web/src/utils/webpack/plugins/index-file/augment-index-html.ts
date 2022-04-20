@@ -109,13 +109,13 @@ export async function augmentIndexHtml(
 
       if (isNoModuleType && !isModuleType) {
         attrs.push('nomodule', 'defer');
-      } else if (isModuleType && !isNoModuleType) {
+      } else if (isModuleType) {
         attrs.push('type="module"');
       } else {
         attrs.push('defer');
       }
     } else {
-      attrs.push('defer');
+      attrs.push('type="module"');
     }
 
     if (sri) {

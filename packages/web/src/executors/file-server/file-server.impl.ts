@@ -14,7 +14,7 @@ import { platform } from 'os';
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
 function getHttpServerArgs(options: Schema) {
-  const args = ['-c-1'];
+  const args = ['-c-1', '--cors'];
   if (options.port) {
     args.push(`-p=${options.port}`);
   }
