@@ -10,6 +10,7 @@
     "@schematics",
     "@phenomnomnominal/tsquery",
     "chalk",
+    "chokidar",
     "ignore",
     "jasmine-marbles",
     "rxjs-for-await",
