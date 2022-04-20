@@ -64,6 +64,51 @@ interface MyButtonProps {
 
 For more information on React 18 migration, please see the [official guide](https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html).
 
+## Changes to Strict Mode
+
+React 18 brings a [change to Strict Mode](https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#updates-to-strict-mode) that requires
+effects to be resilient to mounting and unmounting multiple times.
+
+This change means that in development mode, React will simulate mounting and unmounting an effect, even though the component using the effect
+only mounts once. Note that this _does not_ affect production.
+
+In practice, this change means that if you use an effect without dependencies, such as the following.
+
+```typescript jsx
+useEffect(() => {
+  console.log('running effect');
+  return () => {
+    console.log('clean up');
+  };
+}, []);
+```
+
+Then, in React 18 with Strict Mode, you'll see the following logged:
+
+```text
+running effect
+clean up
+running effect
+```
+
+This behavior is problematic if the effect cannot run twice, say if you fetch data or perform expensive computation. To fix it, you can use a _ref_.
+
+```typescript jsx
+const hasRun = useRef(false);
+
+useEffect(() => {
+  if (!hasRun.current) {
+    hasRun.current = true;
+    console.log('running effect');
+  }
+  return () => {
+    console.log('clean up');
+  };
+}, []);
+```
+
+Alternatively, you can switch Strict Mode off, which might be a good temporary solution until you are able to fix all the problematic effects in your workspace. To turn Strict Mode off, delete the `<Strict>` element the application's `main.tsx`. If you are using Next.js, you can use the [`reactStrictMode`](https://nextjs.org/docs/api-reference/next.config.js/react-strict-mode) setting in your `next.config.js` file.
+
 ## React Router v6
 
 In addition to the React 18 migration, Nx will also update your workspace to React Router v6 -- assuming you use React Router v5 previously.
