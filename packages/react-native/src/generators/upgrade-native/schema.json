@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxReactNativeUpgradeNativeConfigure",
+  "title": "React native upgrade native configuration",
+  "description": "Upgrade native iOS and Android code to latest.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Project name.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "displayName": {
+      "description": "The display name to show in the application. Defaults to name.",
+      "type": "string"
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
+    },
+    "e2eTestRunner": {
+      "description": "Adds the specified e2e test runner.",
+      "type": "string",
+      "enum": ["detox", "none"],
+      "default": "detox"
+    }
+  },
+  "required": ["name"]
+}

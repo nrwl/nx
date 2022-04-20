@@ -230,7 +230,8 @@
         "component",
         "storybook-configuration",
         "component-story",
-        "stories"
+        "stories",
+        "upgrade-native"
       ]
     }
   },
