@@ -5,7 +5,7 @@ import devServerExecutor, {
 import { join } from 'path';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
-  apps?: string[];
+  devRemotes?: string | string[];
 };
 
 export default async function* moduleFederationDevServer(
@@ -31,25 +31,27 @@ export default async function* moduleFederationDevServer(
     );
   }
 
-  // Remotes can be specified with a custom location
-  // e.g.
-  // ```
-  // remotes: ['app1', 'http://example.com']
-  // ```
-  // This shouldn't happen for local dev, but we support it regardless.
-  let apps = options.apps ?? moduleFederationConfig.remotes ?? [];
-  apps = apps.map((a) => (Array.isArray(a) ? a[0] : a));
+  const knownRemotes = moduleFederationConfig.remotes ?? [];
 
-  for (const app of apps) {
+  const devServeApps = !options.devRemotes
+    ? []
+    : Array.isArray(options.devRemotes)
+    ? options.devRemotes
+    : [options.devRemotes];
+
+  for (const app of knownRemotes) {
+    const isDev = devServeApps.includes(app);
     iter = combineAsyncIterators(
       iter,
       await runExecutor(
         {
           project: app,
-          target: 'serve',
+          target: isDev ? 'serve' : 'serve-static',
           configuration: context.configurationName,
         },
-        {},
+        {
+          watch: isDev,
+        },
         context
       )
     );

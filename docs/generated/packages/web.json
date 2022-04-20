@@ -876,12 +876,6 @@
             "type": "string",
             "description": "Target which builds the application."
           },
-          "withDeps": {
-            "type": "boolean",
-            "description": "Build the target and all its deps",
-            "default": false,
-            "x-deprecated": "\"withDeps\" is deprecated and it will be removed in `v14`. Configure target dependencies instead: https://nx.dev/configuration/projectjson."
-          },
           "parallel": {
             "type": "boolean",
             "description": "Build the target in parallel.",
@@ -924,6 +918,11 @@
             "default": {},
             "properties": { "secure": { "type": "boolean", "default": false } },
             "additionalProperties": true
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Watch for file changes.",
+            "default": true
           }
         },
         "additionalProperties": false,

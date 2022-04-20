@@ -91,7 +91,10 @@ function getIgnoredGlobs(root: string) {
   return ig;
 }
 
-function createFileWatcher(root: string, changeHandler: () => void) {
+function createFileWatcher(
+  root: string,
+  changeHandler: () => void
+): () => void {
   const ignoredGlobs = getIgnoredGlobs(root);
   const layout = workspaceLayout();
 
@@ -109,7 +112,7 @@ function createFileWatcher(root: string, changeHandler: () => void) {
     if (ignoredGlobs.ignores(path)) return;
     changeHandler();
   });
-  return { close: () => watcher.close() };
+  return () => watcher.close();
 }
 
 export default async function* fileServerExecutor(
@@ -131,7 +134,10 @@ export default async function* fileServerExecutor(
     }
   };
 
-  const watcher = createFileWatcher(context.root, run);
+  let disposeWatch: () => void;
+  if (options.watch) {
+    disposeWatch = createFileWatcher(context.root, run);
+  }
 
   // perform initial run
   run();
@@ -148,7 +154,9 @@ export default async function* fileServerExecutor(
   });
   const processExitListener = () => {
     serve.kill();
-    watcher.close();
+    if (disposeWatch) {
+      disposeWatch();
+    }
   };
   process.on('exit', processExitListener);
   process.on('SIGTERM', processExitListener);

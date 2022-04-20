@@ -4,6 +4,13 @@
   "cli": "nx",
   "type": "object",
   "properties": {
+    "devRemotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of remote applications to run in development mode (i.e. using serve target)."
+    },
     "buildTarget": {
       "type": "string",
       "description": "Target which builds the application."
@@ -70,13 +77,6 @@
     "baseHref": {
       "type": "string",
       "description": "Base url for the application being built."
-    },
-    "apps": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "List of remote applications to serve in addition to the host application."
     }
   }
 }

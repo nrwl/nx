@@ -7,13 +7,7 @@ import {
   getRootTsConfigPath,
   readTsConfig,
 } from '@nrwl/workspace/src/utilities/typescript';
-
-export interface SharedLibraryConfig {
-  singleton: boolean;
-  strictVersion: boolean;
-  requiredVersion: string;
-  eager: boolean;
-}
+import { SharedLibraryConfig } from './models';
 
 export function shareWorkspaceLibraries(
   libraries: string[],

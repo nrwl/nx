@@ -10,4 +10,5 @@ export interface Schema {
   maxParallel?: number;
   withDeps: boolean;
   proxyOptions?: object;
+  watch?: boolean;
 }
