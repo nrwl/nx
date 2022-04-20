@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "NxWorkspaceNpmPackage",
+  "$id": "NxWorkspaceCIWorkflow"
   "title": "Generate a CI workflow.",
   "description": "Generate a CI workflow.",
   "cli": "nx",
