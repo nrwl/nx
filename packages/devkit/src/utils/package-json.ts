@@ -97,7 +97,10 @@ export function removeDependenciesFromPackageJson(
   };
 }
 
-function sortObjectByKeys(obj: unknown): unknown {
+function sortObjectByKeys<T>(obj: T): T {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+    return obj;
+  }
   return Object.keys(obj)
     .sort()
     .reduce((result, key) => {
@@ -105,7 +108,7 @@ function sortObjectByKeys(obj: unknown): unknown {
         ...result,
         [key]: obj[key],
       };
-    }, {});
+    }, {}) as T;
 }
 
 /**
