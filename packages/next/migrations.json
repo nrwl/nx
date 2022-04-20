@@ -78,6 +78,12 @@
       "version": "13.0.3-beta.1",
       "description": "Fix setup for less stylesheets",
       "factory": "./src/migrations/update-13-0-3/fix-less"
+    },
+    "add-default-development-configurations-14.0.0": {
+      "cli": "nx",
+      "version": "14.0.0-beta.0",
+      "description": "Add a default development configuration for build and serve targets.",
+      "factory": "./src/migrations/update-14-0-0/add-default-development-configurations"
     }
   },
   "packageJsonUpdates": {
@@ -234,6 +240,19 @@
         },
         "sass": {
           "version": "1.49.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.0.0": {
+      "version": "14.0.0-beta.1",
+      "packages": {
+        "next": {
+          "version": "12.1.5",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.1.5",
           "alwaysAddToPackageJson": false
         }
       }
