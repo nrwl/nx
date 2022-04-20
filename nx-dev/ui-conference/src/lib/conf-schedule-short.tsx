@@ -11,7 +11,7 @@ export function ConfScheduleShort(): JSX.Element {
   const scheduleItemsFor16: ScheduleItem[] = [
     {
       type: 'event',
-      time: '',
+      time: '12:00 - 12:30 pm ET',
       title: 'Keynote',
       description: '',
       speakers: ['Juri Strumpflohner', 'Victor Savkin'],
@@ -26,7 +26,7 @@ export function ConfScheduleShort(): JSX.Element {
     // },
     {
       type: 'event',
-      time: '',
+      time: '12:30 - 1:00pm ET',
       title: 'Understanding Monorepos: What you need to know',
       description:
         'Monorepos are hot right now, especially among Web developers. We’re here to help you understand what they are, what problems they solve, and how Nx makes them delightful. You can break down barriers and reclaim the collaboration you’ve been missing.',
@@ -35,34 +35,7 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'event',
-      time: '',
-      title: 'Superpowered Micro Frontends with Monorepos',
-      description:
-        'Micro Frontends are awesome, but they can be difficult to set up, maintain and scale. Learn how Nx and Monorepos not only embrace Micro Frontends, but provide amazing benefits that improves reliability, developer experience and maintainability and also encourages strategic collaboration while reducing the risk of running into classic Micro Frontend problems such as Micro Frontend anarchy, framework version mismatch and out-of-sync shared packages.',
-      speakers: ['Colum Ferry'],
-      videoUrl: '',
-    },
-    {
-      type: 'event',
-      time: '',
-      title: 'Progressively enhance your DX with Nx',
-      description:
-        'Nx gives you tools to level up your productivity and DX. You can start off with a minimal setup and progressively add features by using plugins. Learn how Nx can help projects of any size to thrive.',
-      speakers: ['Craigory Coppola'],
-      videoUrl: '',
-    },
-    {
-      type: 'event',
-      time: '',
-      title: 'Into the (Nx) Clouds',
-      description:
-        "Let's takeoff and create a new monorepo from scratch. We can circle the tools that make your local developer experience more pleasant and cruise over the basic CI configuration you'll need. Then we'll kick in the afterburners and show you what Nx Cloud can really do, how to use some of the lesser known features and how it makes CI even faster with cloud caching and distributed task execution.",
-      speakers: ['Jo Hanna Pearce'],
-      videoUrl: '',
-    },
-    {
-      type: 'event',
-      time: '',
+      time: '1:00 - 1:30pm ET',
       title: 'Build your own Nx Workspace from Scratch',
       description:
         "Nx Plugins are opinionated and generate quite a bit of configuration. But what happens when that doesn't suit your organization? What is actually necessary and what can be altered? To understand the core of Nx and how to configure it exactly to your needs, Jason Jean and Miroslav Jonas will be building an Nx Workspace from scratch!",
@@ -71,7 +44,50 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'event',
-      time: '',
+      time: '1:30 - 1:45pm ET',
+      title: 'Speaker Q&A',
+      description: '',
+      speakers: ['Jason Jean', 'Benjamin Cabanes', 'Philip Fulcher'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '1:45 - 2:15pm ET',
+      title: 'Superpowered Micro Frontends with Monorepos',
+      description:
+        'Micro Frontends are awesome, but they can be difficult to set up, maintain and scale. Learn how Nx and Monorepos not only embrace Micro Frontends, but provide amazing benefits that improves reliability, developer experience and maintainability and also encourages strategic collaboration while reducing the risk of running into classic Micro Frontend problems such as Micro Frontend anarchy, framework version mismatch and out-of-sync shared packages.',
+      speakers: ['Colum Ferry'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '2:15 - 2:45pm ET',
+      title: 'Progressively enhance your DX with Nx',
+      description:
+        'Nx gives you tools to level up your productivity and DX. You can start off with a minimal setup and progressively add features by using plugins. Learn how Nx can help projects of any size to thrive.',
+      speakers: ['Craigory Coppola'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '2:45 - 3:15pm ET',
+      title: 'Into the (Nx) Clouds',
+      description:
+        "Let's takeoff and create a new monorepo from scratch. We can circle the tools that make your local developer experience more pleasant and cruise over the basic CI configuration you'll need. Then we'll kick in the afterburners and show you what Nx Cloud can really do, how to use some of the lesser known features and how it makes CI even faster with cloud caching and distributed task execution.",
+      speakers: ['Jo Hanna Pearce'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '3:15 - 3:30pm ET',
+      title: 'Speaker Q&A',
+      description: '',
+      speakers: ['Colum Ferry', 'Craigory Coppola', 'Jo Hanna Pearce'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '3:30 - 3:45pm ET',
       title: 'Nx / NxCloud team panel discussion',
       description:
         'A Q&A panel with Nx and NxCloud teams ready to answer all your burning questions!',
