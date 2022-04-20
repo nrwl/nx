@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import { NormalModuleReplacementPlugin } from 'webpack';
 import { joinPathFragments, workspaceRoot } from '@nrwl/devkit';
 import { dirname, join, normalize } from 'path';
@@ -81,6 +81,44 @@ export function shareWorkspaceLibraries(
   };
 }
 
+function collectPackageSecondaries(pkgName: string, packages: string[]) {
+  const pathToPackage = join(workspaceRoot, 'node_modules', pkgName);
+  const directories = readdirSync(pathToPackage)
+    .filter((file) => file !== 'node_modules')
+    .map((file) => join(pathToPackage, file))
+    .filter((file) => lstatSync(file).isDirectory());
+
+  const recursivelyCheckSubDirectories = (
+    directories: string[],
+    secondaries: string[]
+  ) => {
+    for (const directory of directories) {
+      if (existsSync(join(directory, 'package.json'))) {
+        secondaries.push(directory);
+      }
+
+      const subDirs = readdirSync(directory)
+        .filter((file) => file !== 'node_modules')
+        .map((file) => join(directory, file))
+        .filter((file) => lstatSync(file).isDirectory());
+      recursivelyCheckSubDirectories(subDirs, secondaries);
+    }
+  };
+
+  const secondaries = [];
+  recursivelyCheckSubDirectories(directories, secondaries);
+
+  for (const secondary of secondaries) {
+    const pathToPkg = join(secondary, 'package.json');
+    const libName = JSON.parse(readFileSync(pathToPkg, 'utf-8')).name;
+    if (!libName) {
+      continue;
+    }
+    packages.push(libName);
+    collectPackageSecondaries(libName, packages);
+  }
+}
+
 export function sharePackages(
   packages: string[]
 ): Record<string, SharedLibraryConfig> {
@@ -93,15 +131,22 @@ export function sharePackages(
 
   const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'));
 
-  return packages.reduce(
-    (shared, pkgName) => ({
+  const allPackages = [...packages];
+  packages.forEach((pkg) => collectPackageSecondaries(pkg, allPackages));
+
+  return allPackages.reduce((shared, pkgName) => {
+    const nameToUseForVersionLookup =
+      pkgName.split('/').length > 2
+        ? pkgName.split('/').slice(0, 2).join('/')
+        : pkgName;
+
+    return {
       ...shared,
       [pkgName]: {
         singleton: true,
         strictVersion: true,
-        requiredVersion: pkgJson.dependencies[pkgName],
+        requiredVersion: pkgJson.dependencies[nameToUseForVersionLookup],
       },
-    }),
-    {}
-  );
+    };
+  }, {});
 }

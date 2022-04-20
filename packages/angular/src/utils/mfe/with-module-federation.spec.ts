@@ -64,6 +64,8 @@ describe('withModuleFederation', () => {
       }),
     });
 
+    (fs.readdirSync as jest.Mock).mockReturnValue([]);
+
     // ACT
     const config = (
       await withModuleFederation({
@@ -114,6 +116,8 @@ describe('withModuleFederation', () => {
         },
       }),
     });
+
+    (fs.readdirSync as jest.Mock).mockReturnValue([]);
 
     // ACT
     const config = (
@@ -171,6 +175,8 @@ describe('withModuleFederation', () => {
       }),
     });
 
+    (fs.readdirSync as jest.Mock).mockReturnValue([]);
+
     // ACT
     const config = (
       await withModuleFederation({
@@ -226,6 +232,8 @@ describe('withModuleFederation', () => {
         },
       }),
     });
+
+    (fs.readdirSync as jest.Mock).mockReturnValue([]);
 
     // ACT
     const config = (
