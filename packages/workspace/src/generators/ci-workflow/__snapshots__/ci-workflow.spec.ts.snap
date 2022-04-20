@@ -61,7 +61,8 @@ jobs:
         displayName: Run build
       - script: yarn nx-cloud stop-all-agents
         condition: always()
-        displayName: Stop all Nx-Cloud agents"
+        displayName: Stop all Nx-Cloud agents
+"
 `;
 
 exports[`lib should generate circleci CI config 1`] = `
@@ -78,10 +79,6 @@ jobs:
       ordinal:
         type: integer
     steps:
-      - run:
-          name: Set dynamic nx run variable
-          command: |
-            echo \\"export NX_RUN_GROUP=\\\\\\"run-group-$CIRCLE_WORKFLOW_ID\\\\\\";\\" >> $BASH_ENV
       - checkout
       - run:
           name: Install dependencies
@@ -96,10 +93,6 @@ jobs:
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
     steps:
-      - run:
-          name: Set dynamic nx run variable
-          command: |
-            echo \\"export NX_RUN_GROUP=\\\\\\"run-group-$CIRCLE_WORKFLOW_ID\\\\\\";\\" >> $BASH_ENV
       - checkout
       - run:
           name: Install dependencies
@@ -140,7 +133,8 @@ workflows:
             parameters:
               ordinal: [1, 2, 3]
       - main
-          name: Nx Cloud Main"
+          name: Nx Cloud Main
+"
 `;
 
 exports[`lib should generate github CI config 1`] = `

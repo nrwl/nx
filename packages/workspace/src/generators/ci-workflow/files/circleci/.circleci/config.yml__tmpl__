@@ -11,10 +11,6 @@ jobs:
       ordinal:
         type: integer
     steps:
-      - run:
-          name: Set dynamic nx run variable
-          command: |
-            echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - checkout
       <% if(packageManagerPrefix == 'pnpm exec'){ %>
       - run:
@@ -33,10 +29,6 @@ jobs:
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
     steps:
-      - run:
-          name: Set dynamic nx run variable
-          command: |
-            echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - checkout
       <% if(packageManagerPrefix == 'pnpm exec'){ %>
       - run:

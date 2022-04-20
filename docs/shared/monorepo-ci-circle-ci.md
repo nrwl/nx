@@ -71,7 +71,6 @@ jobs:
       ordinal:
         type: integer
     steps:
-      - run: echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - checkout
       - run: npm ci
       - run:
@@ -83,7 +82,6 @@ jobs:
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
     steps:
-      - run: echo "export NX_RUN_GROUP=\"run-group-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - checkout
       - run: npm ci
       - nx/set-shas
