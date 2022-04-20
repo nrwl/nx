@@ -38,11 +38,7 @@ function setPresetProperty(tree: Tree, options: Schema) {
       options.preset === Preset.TS ||
       options.preset === Preset.NPM
     ) {
-      addPropertyWithStableKeys(
-        json,
-        'extends',
-        '@nrwl/workspace/presets/core.json'
-      );
+      addPropertyWithStableKeys(json, 'extends', 'nx/presets/core.json');
       delete json.implicitDependencies;
       delete json.targetDependencies;
       delete json.workspaceLayout;

@@ -56,6 +56,7 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
     '@types/jest': jestTypesVersion,
+    '@types/node': '16.11.7',
     // because the default jest-preset uses ts-jest,
     // jest will throw an error if it's not installed
     // even if not using it in overriding transformers

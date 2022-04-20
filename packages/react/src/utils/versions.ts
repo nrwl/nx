@@ -7,6 +7,8 @@ export const typesReactVersion = '18.0.1';
 export const typesReactDomVersion = '18.0.0';
 export const typesReactIsVersion = '17.0.3';
 
+export const typesNodeVersion = '16.11.7';
+
 export const styledComponentsVersion = '5.3.5';
 export const typesStyledComponentsVersion = '5.1.25';
 

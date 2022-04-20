@@ -5,7 +5,7 @@ import {
   removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
-import { jestVersion } from '@nrwl/jest/src/utils/versions';
+import { jestVersion, typesNodeVersion } from '@nrwl/jest/src/utils/versions';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { Schema } from './schema';
 import {
@@ -32,6 +32,7 @@ export function updateDependencies(host: Tree) {
       '@nrwl/detox': nxVersion,
       detox: detoxVersion,
       '@testing-library/jest-dom': testingLibraryJestDom,
+      '@types/node': typesNodeVersion,
       'jest-circus': jestVersion,
     }
   );
