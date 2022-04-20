@@ -1,8 +1,10 @@
 import * as path from 'path';
 import { names } from '@nrwl/devkit';
 
+const JS_SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
+
 module.exports = {
-  process(src, filename) {
+  process(src, filename, options) {
     const assetFilename = JSON.stringify(path.basename(filename));
 
     if (filename.match(/\.svg$/)) {
@@ -28,6 +30,26 @@ module.exports = {
       };`;
     }
 
+    if (JS_SOURCE_EXTENSIONS.includes(path.extname(filename))) {
+      const transformer = getJsTransform();
+      if (transformer) return transformer.process(src, filename, options);
+    }
+
+    // Fallback for unknown extensions
     return `module.exports = ${assetFilename};`;
   },
 };
+
+function getJsTransform() {
+  try {
+    return require('babel-jest').default;
+  } catch {
+    // ignored
+  }
+
+  try {
+    return require('@swc/jest').createTransformer();
+  } catch {
+    // ignored
+  }
+}

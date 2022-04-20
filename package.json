@@ -86,6 +86,7 @@
     "@svgr/webpack": "^6.1.2",
     "@swc-node/register": "^1.4.2",
     "@swc/core": "^1.2.152",
+    "@swc/jest": "^0.2.20",
     "@testing-library/react": "11.2.6",
     "@testing-library/react-hooks": "7.0.1",
     "@tippyjs/react": "^4.2.6",
