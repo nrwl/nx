@@ -97,6 +97,28 @@ describe('Jest Executor', () => {
       );
     });
 
+    it('should send extra options to jestCLI', async () => {
+      await jestExecutor(
+        {
+          ...defaultOptions,
+          jestConfig: './jest.config.js',
+          watch: false,
+          // @ts-ignore
+          group: 'core',
+        },
+        mockContext
+      );
+      expect(runCLI).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _: [],
+          testPathPattern: [],
+          watch: false,
+          group: 'core',
+        }),
+        ['/root/jest.config.js']
+      );
+    });
+
     it('should send appropriate options to jestCLI when testFile is specified', async () => {
       await jestExecutor(
         {

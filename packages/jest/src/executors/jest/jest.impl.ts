@@ -23,6 +23,20 @@ export async function jestExecutor(
   return { success: results.success };
 }
 
+function getExtraArgs(
+  options: JestExecutorOptions,
+  schema: { properties: Record<string, any> }
+) {
+  const extraArgs = {};
+  for (const key of Object.keys(options)) {
+    if (!schema.properties[key]) {
+      extraArgs[key] = options[key];
+    }
+  }
+
+  return extraArgs;
+}
+
 export async function jestConfigParser(
   options: JestExecutorOptions,
   context: ExecutorContext,
@@ -36,7 +50,13 @@ export async function jestConfigParser(
       }
     | undefined;
 
+  // support passing extra args to jest cli supporting 3rd party plugins
+  // like 'jest-runner-groups' --group arg
+  const schema = await import('./schema.json');
+  const extraArgs = getExtraArgs(options, schema);
+
   const config: Config.Argv = {
+    ...extraArgs,
     $0: undefined,
     _: [],
     config: options.config,
