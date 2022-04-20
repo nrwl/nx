@@ -15,7 +15,7 @@ export async function update(tree: Tree) {
 
   projects.forEach((config, name) => {
     const isReactProject =
-      config.targets.build?.executor === '@nrwl/web:webpack' &&
+      config.targets?.build?.executor === '@nrwl/web:webpack' &&
       /main\.(t|j)sx?$/.test(config.targets.build.options.main);
 
     if (isReactProject) {

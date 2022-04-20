@@ -8,7 +8,7 @@ import {
 export async function update(tree: Tree) {
   const projects = getProjects(tree);
   projects.forEach((config) => {
-    if (config.targets.test?.executor !== '@nrwl/jest:jest') return;
+    if (config.targets?.test?.executor !== '@nrwl/jest:jest') return;
 
     visitNotIgnoredFiles(tree, config.sourceRoot, (file) => {
       if (!file.endsWith('.spec.ts')) return;
