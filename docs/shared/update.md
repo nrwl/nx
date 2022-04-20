@@ -32,40 +32,100 @@ This fetches the specified version of the `@nrwl/workspace` package, analyzes th
 
 At this point, no packages have been installed, and no other files have been touched.
 
-Now, you can inspect `package.json` to see if the changes make sense. Sometimes the migration can update some package to the version that is either not allowed or conflicts with another package. Feel free to manually apply the desired adjustments.
+Now, you can inspect `package.json` to see if the changes make sense. Sometimes the migration can update a package to a version that is either not allowed or conflicts with another package. Feel free to manually apply the desired adjustments.
 
-### Step 2: Install the packages
+> At this stage, after inspecting the `package.json`, you may wish to manually run the appropriate install command for your workspace (e.g. `npm install`, `yarn`, or `pnpm install`) but in the next step `nx migrate --run-migrations` will also run this automatically for you.
 
-After inspecting the `package.json`, make sure to install the updated package versions by running `npm install`, `yarn`, or `pnpm install`.
+### Step 2: Running migrations
 
-### Step 3: Running migrations
+The next step in the process involves using the `migrate` CLI in order to apply the migrations that were generated in `migrations.json` in the previous step.
 
-Next, update the repo to match the updated `package.json` and `node_modules`. Every Nx plugin comes with a set of migrations that describe how to update the workspace to make it work with the new version of the plugin. During step one, Nx looked at all of the packages being updated and collected their migrations into `migrations.json`. It's important to note that because Nx knows the from and to versions of every package, the `migrations.json` file only contains the relevant migrations.
+Each Nx plugin is able to provide a set of migrations which are relevant to particular versions of the package, and so `migrations.json` will only contain migrations which are appropriate for the update to you are currently applying.
 
-Each migration in `migrations.json` updates the source code in the repository. To run all the migrations in order, run the following command:
+The common case is that you will simply apply all migrations from the generated JSON file, exactly as they were generated in the previous step, by running:
 
 ```bash
 nx migrate --run-migrations
 ```
 
-To specify a custom migrations file, pass it to the `--run-migrations` option:
+This will update your source code in your workspace in accordance with the implementation of the various migrations which ran and all the changes will be unstaged ready for you to review and commit yourself.
+
+#### Make changes easier to review by committing after each migration runs
+
+Depending on the size of the update (e.g. migrating between major versions is likely to require more significant changes than migrating between feature releases), and the size of the workspace, the overall `nx migrate` process may generate a lot of changes which then need to be reviewed. Particularly if there are then manual changes which need to be made in addition to those made by `nx migrate`, it can make the associated PR harder to review because of not being able to distinguish between what was changed automatically and what was changed manually.
+
+If you pass `--create-commits` to the `--run-migrations` command, Nx will automatically create a dedicated commit for each successfully completed migration, for example:
 
 ```bash
-nx migrate --run-migrations=migrations.json
+nx migrate --run-migrations --create-commits
 ```
 
-For small projects, running all the migrations at once often succeeds without any issues. For large projects, more flexibility is needed:
+Your git history will then look something like the following:
+
+```bash
+git log
+
+commit 8c862c780106ab8736985c01de1477309a403548
+Author: YOUR_GIT_USERNAME <your_git_email@example.com>
+Date:   Thu Apr 14 18:35:44 2022 +0400
+
+    chore: [nx migration] name-of-the-second-migration-which-ran
+
+commit eb83bca97927af26aae731a2cf51ad62cc75efa3
+Author: YOUR_GIT_USERNAME <your_git_email@example.com>
+Date:   Thu Apr 14 18:35:44 2022 +0400
+
+    chore: [nx migration] name-of-the-first-migration-which-ran
+
+etc
+```
+
+By default, nx will apply the prefix of `chore: [nx migration] ` to each commit in order to clearly identify it, but you can also customize this prefix by passing `--commit-prefix` to the command:
+
+```bash
+nx migrate --run-migrations --create-commits --commit-prefix="chore(core): AUTOMATED - "
+```
+
+```bash
+git log
+
+commit 8c862c780106ab8736985c01de1477309a403548
+Author: YOUR_GIT_USERNAME <your_git_email@example.com>
+Date:   Thu Apr 14 18:35:44 2022 +0400
+
+    chore(core): AUTOMATED - name-of-the-second-migration-which-ran
+
+commit eb83bca97927af26aae731a2cf51ad62cc75efa3
+Author: YOUR_GIT_USERNAME <your_git_email@example.com>
+Date:   Thu Apr 14 18:35:44 2022 +0400
+
+    chore(core): AUTOMATED - name-of-the-first-migration-which-ran
+
+etc
+```
+
+#### Customizing which migrations run by altering `migrations.json`
+
+For small projects, running all the migrations at once often succeeds without any issues. For large projects, more flexibility is sometimes needed, and this is where having the separation between generating the migrations to be run, and actually running them, really shines.
+
+All you need to do is amend the JSON file in whatever way makes sense based on your circumstances, for example:
 
 - You may have to skip a migration.
 - You may want to run one migration at a time to address minor issues.
 - You may want to reorder migrations.
 - You may want to run the same migration multiple time if the process takes a long time and you had to rebase.
 
-Because you can run `nx migrate --run-migrations` as many times as you want, you can achieve all of that by commenting out and reordering items in `migrations.json`. The migration process can take a long time, depending on the number of migrations, so it is useful to commit the migrations file with the partially-updated repo.
+Because you can run `nx migrate --run-migrations` as many times as you want, you can achieve all of that by commenting out and reordering items in `migrations.json`. The migration process can take a long time, depending on the number of migrations, so it is useful to commit the migrations file with the partially-updated repo alongside any changes which were created by previously completed migrations.
 
-### Step 4: Cleaning up
+You can even provide a custom location for the migrations file if you wish, you simply pass it to the `--run-migrations` option:
 
-After you run all the migrations, you can remove `migrations.json` and commit the changes.
+```bash
+nx migrate --run-migrations=migrations.json
+```
+
+### Step 3: Cleaning up
+
+After you run all the migrations, you can remove `migrations.json` and commit any outstanding changes.
 
 ## Advanced capabilities & recommendations
 
@@ -76,10 +136,8 @@ Migrating Jest, Cypress, ESLint, React, Angular, Next, and more is a difficult t
 Say you want to migrate from Nx 10.1.0 to Nx 11.0.1. The following steps are more likely to work comparing to `nx migrate 11.0.1`.
 
 - Run `nx migrate 10.4.5` to update the latest version in the 10.x branch.
-- Run `npm install`.
 - Run `nx migrate --run-migrations`.
 - Next, run `nx migrate 11.0.1`.
-- Run `npm install`.
 - Run `nx migrate --run-migrations`.
 
 ### Overriding versions
@@ -106,3 +164,5 @@ If an update fails for any reason, you can revert it as you do any other set of 
 git reset --hard # Reset any changes
 git clean -fd # Delete newly added files and directories
 ```
+
+(NOTE: If using `--create-commits` you will need to first retrieve the SHA of the commit before your first automated migration commit in order to jump back to the point before the migrations ran, e.g. `git reset --hard YOUR_APPROPRIATE_SHA_HERE`)
