@@ -101,6 +101,13 @@
     "poll": {
       "type": "number",
       "description": "Enable and define the file watching poll time period in milliseconds."
+    },
+    "devRemotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of remote applications to run in development mode (i.e. using serve target)."
     }
   },
   "additionalProperties": false,

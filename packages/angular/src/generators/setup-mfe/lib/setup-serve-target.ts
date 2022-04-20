@@ -22,5 +22,25 @@ export function setupServeTarget(host: Tree, options: Schema) {
     },
   };
 
+  if (options.mfeType === 'remote') {
+    appConfig.targets['serve-static'] = {
+      executor: '@nrwl/angular:file-server',
+      defaultConfiguration: 'development',
+      options: {
+        buildTarget: `${options.appName}:build`,
+        port: options.port,
+        cors: '*',
+      },
+      configurations: {
+        development: {
+          buildTarget: `${options.appName}:build:development`,
+        },
+        production: {
+          buildTarget: `${options.appName}:build:production`,
+        },
+      },
+    };
+  }
+
   updateProjectConfiguration(host, options.appName, appConfig);
 }

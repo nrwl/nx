@@ -47,6 +47,7 @@
     "@schematics/angular": "~13.3.0",
     "@phenomnomnominal/tsquery": "4.1.1",
     "chalk": "4.1.0",
+    "chokidar": "^3.5.1",
     "ignore": "^5.0.4",
     "jasmine-marbles": "~0.8.4",
     "rxjs-for-await": "0.0.2",

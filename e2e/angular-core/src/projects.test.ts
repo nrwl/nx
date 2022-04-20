@@ -343,12 +343,15 @@ describe('Angular Projects', () => {
     let process: ChildProcess;
 
     try {
-      process = await runCommandUntil(`serve ${hostApp}`, (output) => {
-        return (
-          output.includes(`listening on localhost:${port2}`) &&
-          output.includes(`listening on localhost:${port1}`)
-        );
-      });
+      process = await runCommandUntil(
+        `serve ${hostApp} --dev-remotes=${remoteApp1}`,
+        (output) => {
+          return (
+            output.includes(`listening on localhost:${port2}`) &&
+            output.includes(`listening on localhost:${port1}`)
+          );
+        }
+      );
     } catch (err) {
       console.error(err);
     }

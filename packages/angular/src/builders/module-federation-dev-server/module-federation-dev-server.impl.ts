@@ -34,12 +34,19 @@ export function moduleFederationDevServer(
   const unparsedRemotes = mfeConfig.remotes.length > 0 ? mfeConfig.remotes : [];
   const remotes = unparsedRemotes.map((a) => (Array.isArray(a) ? a[0] : a));
 
+  const devServeRemotes = !options.devRemotes
+    ? []
+    : Array.isArray(options.devRemotes)
+    ? options.devRemotes
+    : [options.devRemotes];
+
   for (const remote of remotes) {
+    const isDev = devServeRemotes.includes(remote);
     scheduleTarget(
       context.workspaceRoot,
       {
         project: remote,
-        target: 'serve',
+        target: isDev ? 'serve' : 'serve-static',
         configuration: context.target.configuration,
         runOptions: {},
         executor: context.builder.builderName,
