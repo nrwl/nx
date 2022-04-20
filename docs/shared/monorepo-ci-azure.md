@@ -40,6 +40,8 @@ variables:
       value: $(git merge-base $(TARGET_BRANCH) HEAD)
     ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
       value: $(git rev-parse HEAD~1)
+  - name: HEAD_SHA
+    value: $(git rev-parse HEAD)
 
 jobs:
   - job: main
@@ -88,12 +90,13 @@ variables:
       value: $(git merge-base $(TARGET_BRANCH) HEAD)
     ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
       value: $(git rev-parse HEAD~1)
+  - name: HEAD_SHA
+    value: $(git rev-parse HEAD)
 
 jobs:
   - job: agents
     strategy:
-      matrix:
-        agent: [1, 2, 3]
+      parallel: 3
     displayName: 'Agent $(imageName)'
     pool:
       vmImage: 'ubuntu-latest'
@@ -109,13 +112,15 @@ jobs:
       - script: npx nx-cloud start-ci-run
 
       - script: npx nx workspace-lint
-      - script: npx nx format:check
-      - script: npx nx affected --base=$(BASE_SHA) --target=lint --parallel=3
-      - script: npx nx affected --base=$(BASE_SHA) --target=test --parallel=3 --ci --code-coverage
-      - script: npx nx affected --base=$(BASE_SHA) --target=build --parallel=3
+      - script: npx nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --ci --code-coverage
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
 
       - script: npx nx-cloud stop-all-agents
         condition: always()
 ```
+
+You can also use our [ci-workflow generator](https://nx.app/packages/workspace/generators/ci-workflow) to generate the pipeline file.
 
 Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.

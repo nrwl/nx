@@ -107,4 +107,6 @@ workflows:
       - main
 ```
 
+You can also use our [ci-workflow generator](https://nx.app/packages/workspace/generators/ci-workflow) to generate the configuration file.
+
 Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.

@@ -669,8 +669,7 @@
           "ci": {
             "type": "string",
             "description": "CI provider.",
-            "$default": { "$source": "argv", "index": 0 },
-            "default": "github",
+            "enum": ["github", "circleci", "azure"],
             "x-prompt": {
               "message": "What is your target CI provider?",
               "type": "list",
