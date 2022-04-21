@@ -118,9 +118,13 @@ export const createRouteMachine = () => {
         },
         notifyRouteSearchDepth: {
           actions: assign((ctx, event) => {
-            ctx.params.searchDepth = event.searchDepthEnabled
-              ? event.searchDepth.toString()
-              : null;
+            if (event.searchDepthEnabled === false) {
+              ctx.params.searchDepth = '0';
+            } else if (event.searchDepthEnabled && event.searchDepth !== 1) {
+              ctx.params.searchDepth = event.searchDepth.toString();
+            } else {
+              ctx.params.searchDepth = null;
+            }
           }),
         },
         notifyRouteTracing: {
