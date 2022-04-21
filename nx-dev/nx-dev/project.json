@@ -60,7 +60,7 @@
           "dev": false
         },
         "development": {
-          "buildTarget": "nx-dev:build:development",
+          "buildTarget": "nx-dev:build-base:development",
           "dev": true
         }
       },
