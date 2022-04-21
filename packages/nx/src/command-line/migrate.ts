@@ -804,7 +804,6 @@ async function isMigratingToNewMajor(from: string, to: string) {
   if (!valid(to)) {
     to = await resolvePackageVersionUsingRegistry('nx', to);
   }
-  console.log({ from, to });
   return major(from) < major(to);
 }
 
