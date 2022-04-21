@@ -28,7 +28,7 @@ describe('Remove deprecated hook testing package', () => {
 
     tree.write(
       `apps/example/src/lib/use-example.spec.ts`,
-      `import { renderHook } from '@testing-library/react-hook';`
+      `import { renderHook } from '@testing-library/react';`
     );
 
     await update(tree);

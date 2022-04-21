@@ -79,6 +79,8 @@ const IGNORE_MATCHES = {
     'webpack',
     '@angular-devkit/core',
     '@angular-devkit/schematics',
+    '@swc/jest',
+    'babel-jest',
   ],
   storybook: [
     '@angular-devkit/architect',
