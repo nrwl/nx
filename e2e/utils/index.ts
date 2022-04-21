@@ -281,7 +281,7 @@ export function newProject({
 
 const KILL_PORT_DELAY = 5000;
 
-async function killPort(port: number): Promise<boolean> {
+export async function killPort(port: number): Promise<boolean> {
   if (await portCheck(port)) {
     try {
       logInfo(`Attempting to close port ${port}`);

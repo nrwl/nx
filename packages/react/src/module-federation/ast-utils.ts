@@ -24,21 +24,24 @@ export function addRemoteToConfig(
     const arrayExpression =
       remotesAssignment.initializer as ts.ArrayLiteralExpression;
 
-    return arrayExpression.elements
-      ? [
-          {
+    if (!arrayExpression.elements) return [];
+
+    const lastElement =
+      arrayExpression.elements[arrayExpression.elements.length - 1];
+    return [
+      lastElement
+        ? {
             type: ChangeType.Insert,
-            index:
-              arrayExpression.elements[arrayExpression.elements.length - 1].end,
+            index: lastElement.end,
             text: `,`,
-          },
-          {
-            type: ChangeType.Insert,
-            index: remotesAssignment.end - 1,
-            text: `'${app}',\n`,
-          },
-        ]
-      : [];
+          }
+        : null,
+      {
+        type: ChangeType.Insert,
+        index: remotesAssignment.end - 1,
+        text: `'${app}',\n`,
+      },
+    ].filter(Boolean) as StringChange[];
   }
 
   const binaryExpressions = findNodes(

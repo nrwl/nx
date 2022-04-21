@@ -1,14 +1,18 @@
 import {
-  Tree,
   readProjectConfiguration,
+  Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 
 export function updateModuleFederationProject(
   host: Tree,
-  options: { name: string; appProjectRoot: string; devServerPort?: number }
+  options: {
+    projectName: string;
+    appProjectRoot: string;
+    devServerPort?: number;
+  }
 ) {
-  const projectConfig = readProjectConfiguration(host, options.name);
+  const projectConfig = readProjectConfiguration(host, options.projectName);
 
   projectConfig.targets.build.options = {
     ...projectConfig.targets.build.options,
@@ -30,18 +34,18 @@ export function updateModuleFederationProject(
     executor: '@nrwl/web:file-server',
     defaultConfiguration: 'development',
     options: {
-      buildTarget: `${options.name}:build`,
+      buildTarget: `${options.projectName}:build`,
       port: options.devServerPort,
     },
     configurations: {
       development: {
-        buildTarget: `${options.name}:build:development`,
+        buildTarget: `${options.projectName}:build:development`,
       },
       production: {
-        buildTarget: `${options.name}:build:production`,
+        buildTarget: `${options.projectName}:build:production`,
       },
     },
   };
 
-  updateProjectConfiguration(host, options.name, projectConfig);
+  updateProjectConfiguration(host, options.projectName, projectConfig);
 }

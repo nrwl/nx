@@ -1,7 +1,10 @@
 import { formatFiles, Tree } from '@nrwl/devkit';
 
 import applicationGenerator from '../application/application';
-import { normalizeOptions } from '../application/lib/normalize-options';
+import {
+  normalizeOptions,
+  normalizeProjectName,
+} from '../application/lib/normalize-options';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addModuleFederationFiles } from './lib/add-module-federation-files';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
@@ -25,6 +28,7 @@ export async function hostGenerator(host: Tree, schema: Schema) {
       remotesWithPorts.push({ name: remote, port: remotePort });
       await remoteGenerator(host, {
         name: remote,
+        directory: options.directory,
         style: options.style,
         skipFormat: options.skipFormat,
         unitTestRunner: options.unitTestRunner,
