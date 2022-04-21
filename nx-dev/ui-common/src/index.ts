@@ -1,3 +1,4 @@
+export * from './lib/announcement-banner';
 export * from './lib/breadcrumbs';
 export * from './lib/header';
 export * from './lib/footer';
