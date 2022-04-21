@@ -2,6 +2,7 @@ import {
   formatFiles,
   logger,
   offsetFromRoot,
+  ProjectConfiguration,
   readJson,
   readProjectConfiguration,
   stripIndents,
@@ -73,6 +74,19 @@ function isJestConfigValid(tree: Tree, options: JestExecutorOptions) {
   return true;
 }
 
+function updateTsconfigSpec(
+  tree: Tree,
+  projectConfig: ProjectConfiguration,
+  path
+) {
+  updateJson(tree, join(projectConfig.root, path), (json) => {
+    json.include = Array.from(
+      new Set([...(json.include || []), 'jest.config.ts'])
+    );
+    return json;
+  });
+}
+
 export async function updateJestConfigExt(tree: Tree) {
   if (tree.exists('jest.config.js')) {
     tree.rename('jest.config.js', 'jest.config.ts');
@@ -107,6 +121,7 @@ export async function updateJestConfigExt(tree: Tree) {
           if (tsConfig.references) {
             for (const { path } of tsConfig.references) {
               if (path.endsWith('tsconfig.spec.json')) {
+                updateTsconfigSpec(tree, projectConfig, path);
                 continue;
               }
 
