@@ -827,7 +827,7 @@ async function setupCI(
   try {
     const pmc = getPackageManagerCommand(packageManager);
     // GENERATE WORKFLOWS HERE based on `ci` and `packageManager`
-    const res = Promise.allSettled(
+    const res = await Promise.allSettled(
       ci.map(
         async (provider) =>
           await execAndWait(
@@ -836,8 +836,31 @@ async function setupCI(
           )
       )
     );
-    ciSpinner.succeed('CI workflow(s) have been generated successfully');
-    return res;
+    if (res.some((r) => r.status === 'fulfilled')) {
+      if (res.some((r) => r.status === 'rejected')) {
+        // show error message that some failed
+        const failedWorkflows = res
+          .map((r, i) => [r.status, ci[i]])
+          .filter(([r, provider]) => r === 'rejected')
+          .map(([, provider]) => `"${provider}"`)
+          .join(', ');
+        ciSpinner.fail(
+          `Nx failed to generate some CI workflow(s): ${failedWorkflows}`
+        );
+      } else {
+        ciSpinner.succeed('CI workflow(s) have been generated successfully');
+      }
+      return res;
+    } else {
+      ciSpinner.fail();
+
+      output.error({
+        title: `Nx failed to generate CI workflow(s)`,
+        bodyLines: res.map((r: PromiseRejectedResult) => r.reason.message),
+      });
+
+      process.exit(1);
+    }
   } catch (e) {
     ciSpinner.fail();
 

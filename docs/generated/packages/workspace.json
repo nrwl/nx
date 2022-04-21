@@ -684,6 +684,7 @@
             "type": "string",
             "description": "Workflow name.",
             "$default": { "$source": "argv", "index": 0 },
+            "default": "build",
             "x-prompt": "How should we name your workflow?",
             "pattern": "^[a-zA-Z].*$"
           }
