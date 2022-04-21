@@ -1313,8 +1313,8 @@ describe('lib', () => {
             "builder": "@nrwl/linter:eslint",
             "options": Object {
               "lintFilePatterns": Array [
-                "libs/my-lib/src/**/*.ts",
-                "libs/my-lib/src/**/*.html",
+                "libs/my-lib/**/*.ts",
+                "libs/my-lib/**/*.html",
               ],
             },
           }
