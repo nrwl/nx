@@ -82,4 +82,27 @@ describe('Host App Generator', () => {
       tree.read('apps/host-app/module-federation.config.js', 'utf-8')
     ).toContain(`'remote1','remote2','remote3'`);
   });
+
+  it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    await remote(tree, {
+      name: 'remote1',
+    });
+
+    // ACT
+    await host(tree, {
+      name: 'hostApp',
+      directory: 'foo',
+      remotes: ['remote1', 'remote2', 'remote3'],
+    });
+
+    // ASSERT
+    expect(tree.exists('apps/remote1/project.json')).toBeTruthy();
+    expect(tree.exists('apps/foo/remote2/project.json')).toBeTruthy();
+    expect(tree.exists('apps/foo/remote3/project.json')).toBeTruthy();
+    expect(
+      tree.read('apps/foo/host-app/module-federation.config.js', 'utf-8')
+    ).toContain(`'remote1','foo-remote2','foo-remote3'`);
+  });
 });

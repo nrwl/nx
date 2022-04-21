@@ -4,6 +4,7 @@ import type { Schema } from './schema';
 import { getProjects } from '@nrwl/devkit';
 import applicationGenerator from '../application/application';
 import remoteGenerator from '../remote/remote';
+import { normalizeProjectName } from '../utils/project';
 
 export default async function host(tree: Tree, options: Schema) {
   const projects = getProjects(tree);
@@ -36,7 +37,7 @@ export default async function host(tree: Tree, options: Schema) {
     await remoteGenerator(tree, {
       ...options,
       name: remote,
-      host: names(options.name).fileName,
+      host: normalizeProjectName(options.name, options.directory),
       skipFormat: true,
     });
   }
