@@ -1,0 +1,119 @@
+{
+  "hash": "1c2b69586aa096dc5e42eb252d0b5bfb94f20dc969a1e7b6f381a3b13add6928",
+  "layout": {
+    "appsDir": "nested-workspace/apps",
+    "libsDir": "nested-workspace/libs"
+  },
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "root": "nested-workspace/apps/app1"
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "root": "nested-workspace/apps/app2"
+      }
+    },
+    {
+      "name": "lib1",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "nested-workspace/libs/lib1"
+      }
+    },
+    {
+      "name": "lib2",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "nested-workspace/libs/lib2"
+      }
+    },
+    {
+      "name": "lib3",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "nested-workspace/libs/scope/lib3"
+      }
+    },
+    {
+      "name": "lib4",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "nested-workspace/libs/scope/lib4"
+      }
+    },
+    {
+      "name": "lib5",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "nested-workspace/libs/lib5"
+      }
+    }
+  ],
+  "dependencies": {
+    "app1": [
+      {
+        "type": "static",
+        "source": "app1",
+        "target": "lib1"
+      }
+    ],
+    "app2": [
+      {
+        "type": "static",
+        "source": "app2",
+        "target": "lib2"
+      },
+      {
+        "type": "static",
+        "source": "app2",
+        "target": "lib5"
+      }
+    ],
+    "lib1": [
+      {
+        "type": "static",
+        "source": "lib1",
+        "target": "lib3"
+      }
+    ],
+    "lib2": [
+      {
+        "type": "static",
+        "source": "lib2",
+        "target": "lib3"
+      }
+    ],
+    "lib3": [
+      {
+        "type": "static",
+        "source": "lib3",
+        "target": "lib4"
+      }
+    ],
+    "lib4": [],
+    "lib5": [
+      {
+        "type": "static",
+        "source": "lib5",
+        "target": "lib4"
+      }
+    ]
+  },
+  "affected": [],
+  "changes": {
+    "added": []
+  }
+}

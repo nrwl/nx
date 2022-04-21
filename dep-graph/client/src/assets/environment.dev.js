@@ -47,6 +47,11 @@ window.appConfig = {
       label: 'Collapsing Edges',
       url: 'assets/graphs/collapsing-edges-testing.json',
     },
+    {
+      id: 'nested-workspace-layout',
+      label: 'Nested Workspace Layout',
+      url: 'assets/graphs/nested-workspace-layout.json',
+    },
   ],
   defaultProjectGraph: 'nx',
 };
