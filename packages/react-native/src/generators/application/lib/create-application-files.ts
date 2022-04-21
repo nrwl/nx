@@ -6,6 +6,7 @@ import { NormalizedSchema } from './normalize-options';
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   generateFiles(host, join(__dirname, '../files/app'), options.appProjectRoot, {
     ...options,
+    entryFileIos: 'src/main',
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
     rootTsConfigPath: getRelativePathToRootTsConfig(
       host,
