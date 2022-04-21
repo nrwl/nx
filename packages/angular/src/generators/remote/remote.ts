@@ -3,6 +3,7 @@ import type { Schema } from './schema';
 import { getProjects, readProjectConfiguration } from '@nrwl/devkit';
 import applicationGenerator from '../application/application';
 import { getMFProjects } from '../../utils/get-mf-projects';
+import { normalizeProjectName } from '../utils/project';
 
 function findNextAvailablePort(tree: Tree) {
   const mfeProjects = getMFProjects(tree);
@@ -42,7 +43,8 @@ export default async function remote(tree: Tree, options: Schema) {
 }
 
 function removeDeadCode(tree: Tree, options: Schema) {
-  const project = readProjectConfiguration(tree, options.name);
+  const projectName = normalizeProjectName(options.name, options.directory);
+  const project = readProjectConfiguration(tree, projectName);
 
   ['css', 'less', 'scss', 'sass'].forEach((style) => {
     const pathToComponentStyle = joinPathFragments(
