@@ -21,8 +21,7 @@ describe('Normalize Options', () => {
       parsedTags: [],
       projectName: 'my-app',
       linter: Linter.EsLint,
-      entryFile: '/src/main.tsx',
-      entryFileRelativeToRoot: 'apps/my-app/src/main.tsx',
+      entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -44,8 +43,7 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      entryFile: '/src/main.tsx',
-      entryFileRelativeToRoot: 'apps/my-app/src/main.tsx',
+      entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -69,8 +67,7 @@ describe('Normalize Options', () => {
       directory: 'directory',
       parsedTags: [],
       projectName: 'directory-my-app',
-      entryFile: '/src/main.tsx',
-      entryFileRelativeToRoot: 'apps/directory/my-app/src/main.tsx',
+      entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -92,8 +89,7 @@ describe('Normalize Options', () => {
       name: 'directory/my-app',
       parsedTags: [],
       projectName: 'directory-my-app',
-      entryFile: '/src/main.tsx',
-      entryFileRelativeToRoot: 'apps/directory/my-app/src/main.tsx',
+      entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });
@@ -116,8 +112,7 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      entryFile: '/src/main.tsx',
-      entryFileRelativeToRoot: 'apps/my-app/src/main.tsx',
+      entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
     });

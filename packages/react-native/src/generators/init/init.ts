@@ -13,7 +13,10 @@ import { Schema } from './schema';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
-import { typesReactVersion } from '@nrwl/react/src/utils/versions';
+import {
+  reactVersion,
+  typesReactVersion,
+} from '@nrwl/react/src/utils/versions';
 
 import {
   babelRuntimeVersion,
@@ -30,7 +33,6 @@ import {
   reactNativeSvgVersion,
   reactNativeVersion,
   reactTestRendererVersion,
-  reactVersion,
   testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesNodeVersion,
@@ -66,13 +68,6 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
 
 export function updateDependencies(host: Tree) {
   const isPnpm = detectPackageManager(host.root) === 'pnpm';
-  const { dependencies = {} } = readJson(host, 'package.json');
-  // TODO(jack): Remove this once React Native 0.68.0 is out.
-  if (dependencies['react']?.match(/[\^~]?18/)) {
-    logger.warn(
-      `React version ${dependencies['react']} is incompatible with React Native version ${reactNativeVersion}. Nx will downgrade the version to ${reactVersion}.`
-    );
-  }
   return addDependenciesToPackageJson(
     host,
     {
@@ -94,6 +89,7 @@ export function updateDependencies(host: Tree) {
       'jest-react-native': jestReactNativeVersion,
       metro: metroVersion,
       'metro-resolver': metroVersion,
+      'metro-babel-register': metroVersion,
       'react-test-renderer': reactTestRendererVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
