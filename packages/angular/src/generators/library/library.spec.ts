@@ -429,7 +429,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({ name: 'my-lib2' });
 
       // ASSERT
-      expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
 
@@ -444,7 +444,7 @@ describe('lib', () => {
         tree.exists('libs/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
 
-      expect(tree.exists(`libs/my-lib2/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`libs/my-lib2/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('libs/my-lib2/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('libs/my-lib2/src/lib/my-lib2.module.ts')
@@ -544,7 +544,7 @@ describe('lib', () => {
       });
 
       // ASSERT
-      expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
@@ -563,7 +563,7 @@ describe('lib', () => {
         tree.exists('libs/my-dir/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
 
-      expect(tree.exists(`libs/my-dir/my-lib2/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib2/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib2/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('libs/my-dir/my-lib2/src/lib/my-lib2.module.ts')
@@ -740,7 +740,7 @@ describe('lib', () => {
       // Make sure these exist
       [
         'my-dir/my-lib/.browserslistrc',
-        'my-dir/my-lib/jest.config.js',
+        'my-dir/my-lib/jest.config.ts',
         'my-dir/my-lib/ng-package.json',
         'my-dir/my-lib/project.json',
         'my-dir/my-lib/tsconfig.lib.prod.json',
@@ -1192,7 +1192,7 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
       expect(tree.exists('libs/my-lib/src/test.ts')).toBeFalsy();
       expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/jest.config.ts')).toBeFalsy();
       expect(tree.exists('libs/my-lib/karma.conf.js')).toBeFalsy();
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
     });

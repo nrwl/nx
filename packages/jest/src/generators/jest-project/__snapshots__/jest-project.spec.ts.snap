@@ -3,7 +3,7 @@
 exports[`jestProject --babelJest should generate proper jest.transform when --compiler=swc and supportTsx is true 1`] = `
 "module.exports = {
   displayName: 'lib1',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.ts',
   transform: {
     '^.+\\\\\\\\.[tj]sx?$': ['@swc/jest', { jsc: { transform: { react: { runtime: 'automatic' } } } }]
   },
@@ -16,7 +16,7 @@ exports[`jestProject --babelJest should generate proper jest.transform when --co
 exports[`jestProject --babelJest should generate proper jest.transform when babelJest and supportTsx is true 1`] = `
 "module.exports = {
   displayName: 'lib1',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.ts',
   transform: {
     '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
   },
@@ -29,7 +29,7 @@ exports[`jestProject --babelJest should generate proper jest.transform when babe
 exports[`jestProject --babelJest should generate proper jest.transform when babelJest is true 1`] = `
 "module.exports = {
   displayName: 'lib1',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.ts',
   transform: {
     '^.+\\\\\\\\.[tj]s$': 'babel-jest'
   },
@@ -42,7 +42,7 @@ exports[`jestProject --babelJest should generate proper jest.transform when babe
 exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-jest in the jest.config when generated for angular 1`] = `
 "module.exports = {
   displayName: 'lib1',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.ts',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
     'ts-jest': {
@@ -64,10 +64,10 @@ exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-
 "
 `;
 
-exports[`jestProject should create a jest.config.js 1`] = `
+exports[`jestProject should create a jest.config.ts 1`] = `
 "module.exports = {
   displayName: 'lib1',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.ts',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',

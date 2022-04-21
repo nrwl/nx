@@ -803,7 +803,7 @@ export function expectNoAngularDevkit() {
 
 export function expectNoTsJestInJestConfig(appName: string) {
   const jestConfig = readFile(
-    joinPathFragments('apps', appName, 'jest.config.js')
+    joinPathFragments('apps', appName, 'jest.config.ts')
   );
   expect(jestConfig).not.toContain('ts-jest');
 }

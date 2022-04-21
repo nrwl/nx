@@ -4,6 +4,7 @@ import { Tree } from '@nrwl/devkit';
 import { join } from 'path';
 
 export const defaultExclude = [
+  'jest.config.ts',
   '.*.spec.tsx?$',
   '.*.test.tsx?$',
   './src/jest-setup.ts$',

@@ -104,7 +104,7 @@ describe('app', () => {
         name: 'myNodeApp',
         standaloneConfig: false,
       });
-      expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`apps/my-node-app/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('apps/my-node-app/src/main.ts')).toBeTruthy();
 
       const tsconfig = readJson(tree, 'apps/my-node-app/tsconfig.json');
@@ -127,7 +127,11 @@ describe('app', () => {
       const tsconfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
-      expect(tsconfigApp.exclude).toEqual(['**/*.spec.ts', '**/*.test.ts']);
+      expect(tsconfigApp.exclude).toEqual([
+        'jest.config.ts',
+        '**/*.spec.ts',
+        '**/*.test.ts',
+      ]);
       const eslintrc = readJson(tree, 'apps/my-node-app/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
         Object {
@@ -236,7 +240,7 @@ describe('app', () => {
 
       // Make sure these exist
       [
-        `apps/my-dir/my-node-app/jest.config.js`,
+        `apps/my-dir/my-node-app/jest.config.ts`,
         'apps/my-dir/my-node-app/src/main.ts',
       ].forEach((path) => {
         expect(tree.exists(path)).toBeTruthy();
@@ -257,7 +261,7 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-node-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
-          expectedValue: ['**/*.spec.ts', '**/*.test.ts'],
+          expectedValue: ['jest.config.ts', '**/*.spec.ts', '**/*.test.ts'],
         },
         {
           path: 'apps/my-dir/my-node-app/.eslintrc.json',
@@ -275,11 +279,11 @@ describe('app', () => {
         unitTestRunner: 'none',
         standaloneConfig: false,
       });
-      expect(tree.exists('jest.config.js')).toBeFalsy();
+      expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test-setup.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('apps/my-node-app/jest.config.js')).toBeFalsy();
+      expect(tree.exists('apps/my-node-app/jest.config.ts')).toBeFalsy();
       const workspaceJson = readJson(tree, 'workspace.json');
       expect(
         workspaceJson.projects['my-node-app'].architect.test
@@ -368,11 +372,11 @@ describe('app', () => {
         babelJest: true,
       } as Schema);
 
-      expect(tree.read(`apps/my-node-app/jest.config.js`, 'utf-8'))
+      expect(tree.read(`apps/my-node-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-node-app',
-          preset: '../../jest.preset.js',
+          preset: '../../jest.preset.ts',
           testEnvironment: 'node',
           transform: {
             '^.+\\\\\\\\.[tj]s$': 'babel-jest'
@@ -391,7 +395,7 @@ describe('app', () => {
         js: true,
       } as Schema);
 
-      expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`apps/my-node-app/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('apps/my-node-app/src/main.js')).toBeTruthy();
 
       const tsConfig = readJson(tree, 'apps/my-node-app/tsconfig.json');
@@ -402,6 +406,7 @@ describe('app', () => {
       const tsConfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
       expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);
       expect(tsConfigApp.exclude).toEqual([
+        'jest.config.ts',
         '**/*.spec.ts',
         '**/*.test.ts',
         '**/*.spec.js',
@@ -434,7 +439,7 @@ describe('app', () => {
         js: true,
       } as Schema);
       expect(
-        tree.exists(`apps/my-dir/my-node-app/jest.config.js`)
+        tree.exists(`apps/my-dir/my-node-app/jest.config.ts`)
       ).toBeTruthy();
       expect(tree.exists('apps/my-dir/my-node-app/src/main.js')).toBeTruthy();
     });

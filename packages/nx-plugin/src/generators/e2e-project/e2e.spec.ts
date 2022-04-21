@@ -140,11 +140,11 @@ describe('NxPlugin e2e-project Generator', () => {
 
     expect(project.targets.e2e).toMatchObject({
       options: expect.objectContaining({
-        jestConfig: 'apps/my-plugin-e2e/jest.config.js',
+        jestConfig: 'apps/my-plugin-e2e/jest.config.ts',
       }),
     });
 
     expect(tree.exists('apps/my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
-    expect(tree.exists('apps/my-plugin-e2e/jest.config.js')).toBeTruthy();
+    expect(tree.exists('apps/my-plugin-e2e/jest.config.ts')).toBeTruthy();
   });
 });

@@ -1,4 +1,8 @@
-import { Tree } from '@nrwl/devkit';
+import {
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { applicationGenerator } from '../../generators/application/application';
@@ -17,6 +21,20 @@ describe('Migration: enable SWC', () => {
       name: 'demo',
       skipFormat: false,
       swc: false,
+    });
+    // rename jest config to js as that was standard at this version of nx
+    tree.delete('apps/demo/jest.config.ts');
+    updateProjectConfiguration(tree, 'demo', {
+      ...readProjectConfiguration(tree, 'demo'),
+      targets: {
+        test: {
+          executor: '@nrwl/jest:jest',
+          options: {
+            jestConfig: 'apps/demo/jest.config.js',
+            passWithNoTests: true,
+          },
+        },
+      },
     });
 
     // Config that isn't configured properly
@@ -53,7 +71,20 @@ module.exports = {
       skipFormat: false,
       swc: true,
     });
-
+    // rename jest config to js as that was standard at this version of nx
+    tree.delete('apps/demo/jest.config.ts');
+    updateProjectConfiguration(tree, 'demo', {
+      ...readProjectConfiguration(tree, 'demo'),
+      targets: {
+        test: {
+          executor: '@nrwl/jest:jest',
+          options: {
+            jestConfig: 'apps/demo/jest.config.js',
+            passWithNoTests: true,
+          },
+        },
+      },
+    });
     // Config that isn't configured properly
     tree.write(
       'apps/demo/jest.config.js',
@@ -85,7 +116,20 @@ module.exports = {
       skipFormat: false,
       swc: false,
     });
-
+    // rename jest config to js as that was standard at this version of nx
+    tree.rename('apps/demo/jest.config.ts', 'apps/demo/jest.config.js');
+    updateProjectConfiguration(tree, 'demo', {
+      ...readProjectConfiguration(tree, 'demo'),
+      targets: {
+        test: {
+          executor: '@nrwl/jest:jest',
+          options: {
+            jestConfig: 'apps/demo/jest.config.js',
+            passWithNoTests: true,
+          },
+        },
+      },
+    });
     tree.write(
       'apps/demo/.babelrc',
       `{

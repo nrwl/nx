@@ -20,7 +20,7 @@ import {
 import { join } from 'path';
 
 function isUsingUtilityFunction(host: Tree) {
-  return host.read('jest.config.js').toString().includes('getJestProjects()');
+  return host.read('jest.config.ts').toString().includes('getJestProjects()');
 }
 
 /**
@@ -34,16 +34,16 @@ export function updateJestConfig(
   const projectToRemove = schema.projectName;
 
   if (
-    !tree.exists('jest.config.js') ||
-    !tree.exists(join(projectConfig.root, 'jest.config.js')) ||
+    !tree.exists('jest.config.ts') ||
+    !tree.exists(join(projectConfig.root, 'jest.config.ts')) ||
     isUsingUtilityFunction(tree)
   ) {
     return;
   }
 
-  const contents = tree.read('jest.config.js', 'utf-8');
+  const contents = tree.read('jest.config.ts', 'utf-8');
   const sourceFile = createSourceFile(
-    'jest.config.js',
+    'jest.config.ts',
     contents,
     ScriptTarget.Latest
   );
@@ -59,7 +59,7 @@ export function updateJestConfig(
 
   if (!projectsAssignment) {
     throw Error(
-      `Could not remove ${projectToRemove} from projects in /jest.config.js. Please remove ${projectToRemove} from your projects.`
+      `Could not remove ${projectToRemove} from projects in /jest.config.ts. Please remove ${projectToRemove} from your projects.`
     );
   }
   const projectsArray =
@@ -73,7 +73,7 @@ export function updateJestConfig(
 
   if (!project) {
     console.warn(
-      `Could not find ${projectToRemove} in projects in /jest.config.js.`
+      `Could not find ${projectToRemove} in projects in /jest.config.ts.`
     );
     return;
   }
@@ -86,7 +86,7 @@ export function updateJestConfig(
     : project.getStart(sourceFile);
 
   tree.write(
-    'jest.config.js',
+    'jest.config.ts',
     applyChangesToString(contents, [
       {
         type: ChangeType.Delete,

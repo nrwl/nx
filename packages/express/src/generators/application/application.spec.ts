@@ -90,6 +90,7 @@ Object {
     ],
   },
   "exclude": Array [
+    "jest.config.ts",
     "**/*.spec.ts",
     "**/*.test.ts",
   ],
@@ -124,6 +125,7 @@ Object {
       );
       expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);
       expect(tsConfigApp.exclude).toEqual([
+        'jest.config.ts',
         '**/*.spec.ts',
         '**/*.test.ts',
         '**/*.spec.js',

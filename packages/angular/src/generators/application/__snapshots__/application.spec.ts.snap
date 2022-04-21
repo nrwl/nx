@@ -112,7 +112,7 @@ Object {
     "test": Object {
       "builder": "@nrwl/jest:jest",
       "options": Object {
-        "jestConfig": "apps/my-dir/my-app/jest.config.js",
+        "jestConfig": "apps/my-dir/my-app/jest.config.ts",
         "passWithNoTests": true,
       },
       "outputs": Array [
@@ -281,7 +281,7 @@ Object {
     "test": Object {
       "builder": "@nrwl/jest:jest",
       "options": Object {
-        "jestConfig": "apps/my-app/jest.config.js",
+        "jestConfig": "apps/my-app/jest.config.ts",
         "passWithNoTests": true,
       },
       "outputs": Array [

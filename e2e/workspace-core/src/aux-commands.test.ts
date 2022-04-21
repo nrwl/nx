@@ -186,7 +186,7 @@ describe('workspace-lint', () => {
     expect(stdout).toContain(
       'The following file(s) do not belong to any projects:'
     );
-    expect(stdout).toContain(`- apps/${appAfter}/jest.config.js`);
+    expect(stdout).toContain(`- apps/${appAfter}/jest.config.ts`);
     expect(stdout).toContain(`- apps/${appAfter}/src/app/app.component.css`);
     expect(stdout).toContain(`- apps/${appAfter}/src/app/app.component.html`);
     expect(stdout).toContain(
@@ -257,12 +257,12 @@ describe('move project', () => {
     expect(moveOutput).toContain(`CREATE ${readmePath}`);
     checkFilesExist(readmePath);
 
-    const jestConfigPath = `${newPath}/jest.config.js`;
+    const jestConfigPath = `${newPath}/jest.config.ts`;
     expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
     checkFilesExist(jestConfigPath);
     const jestConfig = readFile(jestConfigPath);
     expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
-    expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
+    expect(jestConfig).toContain(`preset: '../../../../jest.preset.ts'`);
     expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
 
     const tsConfigPath = `${newPath}/tsconfig.json`;
@@ -395,12 +395,12 @@ describe('move project', () => {
     expect(moveOutput).toContain(`CREATE ${readmePath}`);
     checkFilesExist(readmePath);
 
-    const jestConfigPath = `${newPath}/jest.config.js`;
+    const jestConfigPath = `${newPath}/jest.config.ts`;
     expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
     checkFilesExist(jestConfigPath);
     const jestConfig = readFile(jestConfigPath);
     expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
-    expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
+    expect(jestConfig).toContain(`preset: '../../../../jest.preset.ts'`);
     expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
 
     const tsConfigPath = `${newPath}/tsconfig.json`;
@@ -528,12 +528,12 @@ describe('move project', () => {
     expect(moveOutput).toContain(`CREATE ${readmePath}`);
     checkFilesExist(readmePath);
 
-    const jestConfigPath = `${newPath}/jest.config.js`;
+    const jestConfigPath = `${newPath}/jest.config.ts`;
     expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
     checkFilesExist(jestConfigPath);
     const jestConfig = readFile(jestConfigPath);
     expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
-    expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
+    expect(jestConfig).toContain(`preset: '../../../../jest.preset.ts'`);
     expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
 
     const tsConfigPath = `${newPath}/tsconfig.json`;
