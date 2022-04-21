@@ -47,30 +47,34 @@ export function loadNxPlugins(
     ? nxPluginCache ||
         (nxPluginCache = plugins.map((moduleName) => {
           let pluginPath: string;
-          try {
-            pluginPath = require.resolve(moduleName, {
-              paths,
-            });
-          } catch (e) {
-            if (e.code === 'MODULE_NOT_FOUND') {
-              const plugin = resolveLocalNxPlugin(moduleName);
+          let pluginName: string;
+          if (['.js', '.ts'].includes(path.extname(moduleName))) {
+            if (
+              path.extname(moduleName) === '.ts' &&
+              !tsNodeAndPathsRegistered
+            ) {
+              registerTSTranspiler();
+            }
+            pluginPath = require.resolve(moduleName, { paths });
+            pluginName = path.basename(moduleName);
+          } else {
+            const localPlugin = resolveLocalNxPlugin(moduleName);
+            pluginName = moduleName;
+            if (localPlugin) {
               const main = readPluginMainFromProjectConfiguration(
-                plugin.projectConfig
+                localPlugin.projectConfig
               );
-              pluginPath = main ? path.join(workspaceRoot, main) : plugin.path;
+              pluginPath = main
+                ? path.join(workspaceRoot, main)
+                : localPlugin.path;
             } else {
-              throw e;
+              pluginPath = require.resolve(moduleName, {
+                paths,
+              });
             }
           }
-          const packageJsonPath = path.join(pluginPath, 'package.json');
-          const { name } =
-            !['.ts', '.js'].some((x) => x === path.extname(pluginPath)) && // Not trying to point to a ts or js file
-            existsSync(packageJsonPath) // plugin has a package.json
-              ? readJsonFile(packageJsonPath) // read name from package.json
-              : { name: path.basename(pluginPath) }; // use the name of the file we point to
           const plugin = require(pluginPath) as NxPlugin;
-          plugin.name = name;
-
+          plugin.name = pluginName;
           return plugin;
         }))
     : [];
@@ -107,27 +111,23 @@ export function readPluginPackageJson(
   path: string;
   json: PackageJson;
 } {
-  let packageJsonPath: string;
-  try {
-    packageJsonPath = require.resolve(`${pluginName}/package.json`, {
-      paths,
-    });
-  } catch (e) {
-    if (e.code === 'MODULE_NOT_FOUND') {
-      const localPluginPath = resolveLocalNxPlugin(pluginName);
-      if (localPluginPath) {
-        const localPluginPackageJson = path.join(
-          localPluginPath.path,
-          'package.json'
-        );
-        return {
-          path: localPluginPackageJson,
-          json: readJsonFile(localPluginPackageJson),
-        };
-      }
-    }
-    throw e;
+  // Check for matching local plugin
+  const localPluginPath = resolveLocalNxPlugin(pluginName);
+  if (localPluginPath) {
+    const localPluginPackageJson = path.join(
+      localPluginPath.path,
+      'package.json'
+    );
+    return {
+      path: localPluginPackageJson,
+      json: readJsonFile(localPluginPackageJson),
+    };
   }
+
+  // Fallback to installed plugins
+  const packageJsonPath = require.resolve(`${pluginName}/package.json`, {
+    paths,
+  });
   return { json: readJsonFile(packageJsonPath), path: packageJsonPath };
 }
 
@@ -223,7 +223,8 @@ function readTsConfigPaths(root: string = workspaceRoot) {
       .map((x) => path.join(root, x))
       .filter((x) => existsSync(x))[0];
     if (!tsconfigPath) {
-      throw new Error('unable to find tsconfig.base.json or tsconfig.json');
+      tsconfigPaths = {};
+      return {};
     }
     const { compilerOptions } = readJsonFile(tsconfigPath);
     tsconfigPaths = compilerOptions?.paths;
