@@ -6,6 +6,7 @@ import {
   GeneratorCallback,
   removeDependenciesFromPackageJson,
   Tree,
+  updateJson,
   writeJson,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
@@ -32,13 +33,26 @@ function updateDependencies(tree: Tree) {
 }
 
 function initRootBabelConfig(tree: Tree) {
-  if (tree.exists('/babel.config.json') || tree.exists('/babel.config.js')) {
+  if (tree.exists('/babel.config.js')) {
     return;
   }
 
-  writeJson(tree, '/babel.config.json', {
-    babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
-  });
+  if (tree.exists('/babel.config.json')) {
+    // make sure we have the babel typescript preset
+    updateJson(tree, '/babel.config.json', (json) => {
+      json.presets = json.presets || [];
+
+      if (!json.presets.includes('@babel/preset-typescript')) {
+        json.presets.push('@babel/preset-typescript');
+      }
+      return json;
+    });
+  } else {
+    writeJson(tree, '/babel.config.json', {
+      babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
+      presets: ['@babel/preset-typescript'],
+    });
+  }
 }
 
 export async function webInitGenerator(tree: Tree, schema: Schema) {
