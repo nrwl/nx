@@ -42,7 +42,7 @@ interface Substitutes {
 
 function normalizeOptions(options: Schema): Substitutes {
   const { name: workflowName, fileName: workflowFileName } = names(
-    options.name || 'build'
+    options.name || 'CI'
   );
   const { exec: packageManagerPrefix, ciInstall: packageManagerInstall } =
     getPackageManagerCommand();

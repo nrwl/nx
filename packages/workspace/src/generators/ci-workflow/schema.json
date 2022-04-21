@@ -27,7 +27,7 @@
         "$source": "argv",
         "index": 0
       },
-      "default": "build",
+      "default": "CI",
       "x-prompt": "How should we name your workflow?",
       "pattern": "^[a-zA-Z].*$"
     }

@@ -27,21 +27,15 @@ pr:
   - main
 
 variables:
-  - name: NX_BRANCH
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(System.PullRequest.PullRequestNumber)
-    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(Build.SourceBranchName)
-  - name: TARGET_BRANCH
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
-  - name: BASE_SHA
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(git merge-base $(TARGET_BRANCH) HEAD)
-    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(git rev-parse HEAD~1)
-  - name: HEAD_SHA
-    value: $(git rev-parse HEAD)
+  CI: 'true'
+  ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
 
 jobs:
   - job: main
@@ -75,29 +69,22 @@ pr:
   - main
 
 variables:
-  - name: NX_CLOUD_DISTRIBUTED_EXECUTION
-    value: 'true'
-  - name: NX_BRANCH
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(System.PullRequest.PullRequestNumber)
-    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(Build.SourceBranchName)
-  - name: TARGET_BRANCH
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
-  - name: BASE_SHA
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(git merge-base $(TARGET_BRANCH) HEAD)
-    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(git rev-parse HEAD~1)
-  - name: HEAD_SHA
-    value: $(git rev-parse HEAD)
+  CI: 'true'
+  NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+  ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
 
 jobs:
   - job: agents
     strategy:
       parallel: 3
-    displayName: 'Agent $(imageName)'
+    displayName: Nx Cloud Agent
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -105,14 +92,15 @@ jobs:
       - script: npx nx-cloud start-agent
 
   - job: main
+    displayName: Nx Cloud Main
     pool:
       vmImage: 'ubuntu-latest'
     steps:
       - script: npm ci
       - script: npx nx-cloud start-ci-run
 
-      - script: npx nx workspace-lint
-      - script: npx nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+      - script: npx nx-cloud record -- npx nx workspace-lint
+      - script: npx nx-cloud record -- npx nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --ci --code-coverage
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3

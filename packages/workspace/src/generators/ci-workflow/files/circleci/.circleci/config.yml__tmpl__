@@ -44,10 +44,10 @@ jobs:
           command: <%= packageManagerPrefix %> nx-cloud start-ci-run
       - run:
           name: Run workspace lint
-          command: <%= packageManagerPrefix %> nx workspace-lint
+          command: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx workspace-lint
       - run:
           name: Check format
-          command: <%= packageManagerPrefix %> nx format:check --base=$NX_BASE --head=$NX_HEAD
+          command: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run:
           name: Run lint
           command: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
@@ -72,5 +72,5 @@ workflows:
           matrix:
             parameters:
               ordinal: [1, 2, 3]
-      - main
+      - main:
           name: Nx Cloud Main
