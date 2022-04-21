@@ -29,7 +29,6 @@ export function setupServeTarget(host: Tree, options: Schema) {
       options: {
         buildTarget: `${options.appName}:build`,
         port: options.port,
-        cors: '*',
       },
       configurations: {
         development: {
