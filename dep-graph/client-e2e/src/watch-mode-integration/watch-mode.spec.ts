@@ -23,8 +23,8 @@ describe('dep-graph-client in watch mode', () => {
   // TODO: This test is getting flaky but was fixed by increasing the tick time between checks
   // Figure out a better way to test this
   it('should retain selected projects as new libs are created', () => {
-    cy.contains('existing-app-1').siblings('button').click();
-    cy.contains('existing-lib-1').siblings('button').click();
+    cy.get('[data-project="existing-app-1"]').click();
+    cy.get('[data-project="existing-lib-1"]').click();
 
     cy.tick(6000);
 

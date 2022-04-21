@@ -22,6 +22,8 @@ export interface GraphPerfReport {
   numNodes: number;
   numEdges: number;
 }
+
+export type TracingAlgorithmType = 'shortest' | 'all';
 // The events that the machine handles
 
 export type DepGraphUIEvents =
@@ -40,6 +42,7 @@ export type DepGraphUIEvents =
   | { type: 'setTracingEnd'; projectName: string }
   | { type: 'clearTraceStart' }
   | { type: 'clearTraceEnd' }
+  | { type: 'setTracingAlgorithm'; algorithm: TracingAlgorithmType }
   | { type: 'setCollapseEdges'; collapseEdges: boolean }
   | { type: 'setIncludeProjectsByPath'; includeProjectsByPath: boolean }
   | { type: 'incrementSearchDepth' }
@@ -126,6 +129,7 @@ export type GraphRenderEvents =
       type: 'notifyGraphTracing';
       start: string;
       end: string;
+      algorithm: TracingAlgorithmType;
     };
 
 export type RouteEvents =
@@ -156,7 +160,12 @@ export type RouteEvents =
       type: 'notifyRouteSelectAffected';
     }
   | { type: 'notifyRouteClearSelect' }
-  | { type: 'notifyRouteTracing'; start: string; end: string };
+  | {
+      type: 'notifyRouteTracing';
+      start: string;
+      end: string;
+      algorithm: TracingAlgorithmType;
+    };
 
 export type AllEvents = DepGraphUIEvents | GraphRenderEvents | RouteEvents;
 
@@ -184,6 +193,7 @@ export interface DepGraphContext {
   tracing: {
     start: string;
     end: string;
+    algorithm: TracingAlgorithmType;
   };
 }
 

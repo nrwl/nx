@@ -10,7 +10,8 @@ type ParamKeys =
   | 'select'
   | 'collapseEdges'
   | 'traceStart'
-  | 'traceEnd';
+  | 'traceEnd'
+  | 'traceAlgorithm';
 type ParamRecord = Record<ParamKeys, string | null>;
 
 function reduceParamRecordToQueryString(params: ParamRecord): string {
@@ -37,6 +38,7 @@ export const createRouteMachine = () => {
     select: params.get('select'),
     traceStart: params.get('traceStart'),
     traceEnd: params.get('traceEnd'),
+    traceAlgorithm: params.get('traceAlgorithm'),
   };
 
   const initialContext = {
@@ -61,6 +63,7 @@ export const createRouteMachine = () => {
           collapseEdges: null,
           traceStart: null,
           traceEnd: null,
+          traceAlgorithm: null,
         },
       },
       always: {
@@ -129,15 +132,17 @@ export const createRouteMachine = () => {
         },
         notifyRouteTracing: {
           actions: assign((ctx, event) => {
-            if (event.start !== null && event.end !== null) {
+            if (event.start !== null && event.end !== null && event.algorithm) {
               ctx.params.traceStart = event.start;
               ctx.params.traceEnd = event.end;
+              ctx.params.traceAlgorithm = event.algorithm;
 
               ctx.params.focus = null;
               ctx.params.select = null;
             } else {
               ctx.params.traceStart = null;
               ctx.params.traceEnd = null;
+              ctx.params.traceAlgorithm = null;
             }
           }),
         },

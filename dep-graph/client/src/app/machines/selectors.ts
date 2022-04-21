@@ -2,7 +2,7 @@
 import type { ProjectGraphProjectNode } from '@nrwl/devkit';
 import { DepGraphSelector } from '../hooks/use-dep-graph-selector';
 import { WorkspaceLayout } from '../interfaces';
-import { GraphPerfReport } from './interfaces';
+import { GraphPerfReport, TracingAlgorithmType } from './interfaces';
 
 export const allProjectsSelector: DepGraphSelector<
   ProjectGraphProjectNode[]
@@ -52,4 +52,5 @@ export const hasAffectedProjectsSelector: DepGraphSelector<boolean> = (state) =>
 export const getTracingInfo: DepGraphSelector<{
   start: string;
   end: string;
+  algorithm: TracingAlgorithmType;
 }> = (state) => state.context.tracing;
