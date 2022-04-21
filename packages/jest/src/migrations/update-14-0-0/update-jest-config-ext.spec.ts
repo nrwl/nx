@@ -131,6 +131,11 @@ module.exports = { ...nxPreset };
       return json;
     });
 
+    updateJson(tree, 'libs/lib-one/tsconfig.spec.json', (json) => {
+      json.include = ['**/*.spec.ts'];
+      return json;
+    });
+
     await updateJestConfigExt(tree);
 
     const tsconfig = readJson(tree, 'libs/lib-one/tsconfig.json');
@@ -140,6 +145,7 @@ module.exports = { ...nxPreset };
     expect(tsconfig.exclude).toBeFalsy();
     expect(libTsConfig.exclude).toEqual(['**/*.spec.ts', 'jest.config.ts']);
     expect(specTsConfig.exclude).toBeFalsy();
+    expect(specTsConfig.include).toEqual(['**/*.spec.ts', 'jest.config.ts']);
   });
 
   it('should add exclude to root tsconfig with no references', async () => {
