@@ -130,6 +130,8 @@ export async function extractFileFromTarball(
         stream.pipe(destinationFileStream);
         stream.on('end', () => {
           isFileExtracted = true;
+        });
+        destinationFileStream.on('close', () => {
           resolve(destinationFilePath);
         });
       }
