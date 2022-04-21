@@ -71,7 +71,7 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
           m.id === 'ci' ||
           m.id === 'modern-angular' ||
           m.id === 'guides' ||
-          m.id === 'micro-frontends' ||
+          m.id === 'module-federation' ||
           m.id === 'examples' ||
           m.id === 'core-extended'
       )
