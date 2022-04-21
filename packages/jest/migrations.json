@@ -100,6 +100,27 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.0.0": {
+      "version": "14.0.0-beta.2",
+      "packages": {
+        "jest": {
+          "version": "27.5.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "27.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "27.1.4",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "27.5.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
