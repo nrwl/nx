@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`lib should generate azure CI config 1`] = `
-"name: build
+"name: CI
 
 trigger:
   - main
@@ -9,39 +9,32 @@ pr:
   - main
 
 variables:
-  - name: NX_CLOUD_DISTRIBUTED_EXECUTION
-    value: 'true'
-  - name: NX_BRANCH
-    \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(System.PullRequest.PullRequestNumber)
-    \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(Build.SourceBranchName)
-  - name: TARGET_BRANCH
-    \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
-  - name: BASE_SHA
-    \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(git merge-base $(TARGET_BRANCH) HEAD)
-    \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(git rev-parse HEAD~1)
-  - name: HEAD_SHA
-    value: $(git rev-parse HEAD)
+  CI: 'true'
+  NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
 
 jobs:
   - job: agents
     strategy:
       parallel: 3
-    displayName: 'Nx Cloud Agent'
+    displayName: Nx Cloud Agent
     pool:
       vmImage: 'ubuntu-latest'
     steps:
       - script: yarn --frozen-lockfile
         displayName: NPM Install Dependencies
       - script: npx nx-cloud start-agent
-        displayName: 'Start Nx-Cloud agent
+        displayName: Start Nx-Cloud agent
 
   - job: main
-    displayName: 'Nx Cloud Main'
+    displayName: Nx Cloud Main
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -49,9 +42,9 @@ jobs:
         displayName: NPM Install Dependencies
       - script: yarn nx-cloud start-ci-run
         displayName: Start CI run
-      - script: yarn nx workspace-lint
+      - script: yarn nx-cloud record -- yarn nx workspace-lint
         displayName: Run workspace lint
-      - script: yarn nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+      - script: yarn nx-cloud record -- yarn nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
         displayName: Check format
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
         displayName: Run lint
@@ -104,10 +97,10 @@ jobs:
           command: yarn nx-cloud start-ci-run
       - run:
           name: Run workspace lint
-          command: yarn nx workspace-lint
+          command: yarn nx-cloud record -- yarn nx workspace-lint
       - run:
           name: Check format
-          command: yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
+          command: yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run:
           name: Run lint
           command: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
@@ -125,20 +118,20 @@ jobs:
 workflows:
   version: 2
 
-  build:
+  ci:
     jobs:
       - agent:
           name: Nx Cloud Agent << matrix.ordinal >>
           matrix:
             parameters:
               ordinal: [1, 2, 3]
-      - main
+      - main:
           name: Nx Cloud Main
 "
 `;
 
 exports[`lib should generate github CI config 1`] = `
-"name: build
+"name: CI
 
 on:
   push:
@@ -152,8 +145,8 @@ jobs:
     uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
     with:
       parallel-commands: |
-        yarn nx workspace-lint
-        yarn nx format:check
+        yarn nx-cloud record -- yarn nx workspace-lint
+        yarn nx-cloud record -- yarn nx format:check
       parallel-commands-on-agents: |
         yarn nx affected --target=lint --parallel=3
         yarn nx affected --target=test --parallel=3 --ci --code-coverage
@@ -182,8 +175,8 @@ jobs:
     uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
     with:
       parallel-commands: |
-        yarn nx workspace-lint
-        yarn nx format:check
+        yarn nx-cloud record -- yarn nx workspace-lint
+        yarn nx-cloud record -- yarn nx format:check
       parallel-commands-on-agents: |
         yarn nx affected --target=lint --parallel=3
         yarn nx affected --target=test --parallel=3 --ci --code-coverage

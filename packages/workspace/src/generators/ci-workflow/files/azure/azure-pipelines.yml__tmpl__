@@ -6,29 +6,22 @@ pr:
   - <%= mainBranch %>
 
 variables:
-  - name: NX_CLOUD_DISTRIBUTED_EXECUTION
-    value: 'true'
-  - name: NX_BRANCH
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(System.PullRequest.PullRequestNumber)
-    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(Build.SourceBranchName)
-  - name: TARGET_BRANCH
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
-  - name: BASE_SHA
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(git merge-base $(TARGET_BRANCH) HEAD)
-    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-      value: $(git rev-parse HEAD~1)
-  - name: HEAD_SHA
-    value: $(git rev-parse HEAD)
+  CI: 'true'
+  NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+  ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
 
 jobs:
   - job: agents
     strategy:
       parallel: 3
-    displayName: 'Nx Cloud Agent'
+    displayName: Nx Cloud Agent
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -38,10 +31,10 @@ jobs:
       <% } %>- script: <%= packageManagerInstall %>
         displayName: NPM Install Dependencies
       - script: npx nx-cloud start-agent
-        displayName: 'Start Nx-Cloud agent
+        displayName: Start Nx-Cloud agent
 
   - job: main
-    displayName: 'Nx Cloud Main'
+    displayName: Nx Cloud Main
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -52,9 +45,9 @@ jobs:
         displayName: NPM Install Dependencies
       - script: <%= packageManagerPrefix %> nx-cloud start-ci-run
         displayName: Start CI run
-      - script: <%= packageManagerPrefix %> nx workspace-lint
+      - script: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx workspace-lint
         displayName: Run workspace lint
-      - script: <%= packageManagerPrefix %> nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+      - script: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
         displayName: Check format
       - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
         displayName: Run lint

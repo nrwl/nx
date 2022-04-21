@@ -13,7 +13,7 @@ describe('lib', () => {
     setNxCloud(tree);
     await ciWorkflowGenerator(tree, { ci: 'github' });
 
-    expect(tree.read('.github/workflows/build.yml', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('.github/workflows/ci.yml', 'utf-8')).toMatchSnapshot();
   });
 
   it('should generate circleci CI config', async () => {

@@ -87,8 +87,8 @@ jobs:
       - nx/set-shas
       - run: npx nx-cloud start-ci-run
 
-      - run: npx nx workspace-lint
-      - run: npx nx format:check
+      - run: npx nx-cloud record -- npx nx workspace-lint
+      - run: npx nx-cloud record -- npx nx format:check
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
