@@ -76,7 +76,7 @@ async function askAboutNxCloud(parsedArgs: any) {
               name: 'No',
             },
           ],
-          initial: 'No' as any,
+          initial: 'Yes' as any,
         },
       ])
       .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
