@@ -75,8 +75,8 @@ describe('addLinting generator', () => {
       executor: '@nrwl/linter:eslint',
       options: {
         lintFilePatterns: [
-          `${appProjectRoot}/src/**/*.ts`,
-          `${appProjectRoot}/src/**/*.html`,
+          `${appProjectRoot}/**/*.ts`,
+          `${appProjectRoot}/**/*.html`,
         ],
       },
     });

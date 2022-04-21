@@ -14,8 +14,8 @@ export function addProjectLintTarget(
     executor: '@nrwl/linter:eslint',
     options: {
       lintFilePatterns: [
-        `${options.projectRoot}/src/**/*.ts`,
-        `${options.projectRoot}/src/**/*.html`,
+        `${options.projectRoot}/**/*.ts`,
+        `${options.projectRoot}/**/*.html`,
       ],
     },
   };

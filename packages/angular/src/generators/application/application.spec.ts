@@ -493,8 +493,8 @@ describe('app', () => {
             "builder": "@nrwl/linter:eslint",
             "options": Object {
               "lintFilePatterns": Array [
-                "apps/my-app/src/**/*.ts",
-                "apps/my-app/src/**/*.html",
+                "apps/my-app/**/*.ts",
+                "apps/my-app/**/*.html",
               ],
             },
           }
@@ -527,8 +527,8 @@ describe('app', () => {
             "builder": "@nrwl/linter:eslint",
             "options": Object {
               "lintFilePatterns": Array [
-                "apps/my-app/src/**/*.ts",
-                "apps/my-app/src/**/*.html",
+                "apps/my-app/**/*.ts",
+                "apps/my-app/**/*.html",
               ],
             },
           }
