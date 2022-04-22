@@ -490,7 +490,7 @@ class ProjectHasher {
       res.projects ??= {};
       return res;
     } catch {
-      return { npmScope: '' };
+      return {};
     }
   }
 }

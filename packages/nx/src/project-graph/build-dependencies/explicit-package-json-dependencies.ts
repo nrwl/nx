@@ -38,7 +38,10 @@ function createPackageNameMap(w: Workspace) {
       const packageJson = parseJson(
         defaultFileRead(join(w.projects[projectName].root, 'package.json'))
       );
-      res[packageJson.name || `@${w.npmScope}/${projectName}`] = projectName;
+      res[
+        packageJson.name ??
+          (w.npmScope ? `@${w.npmScope}/${projectName}` : projectName)
+      ] = projectName;
     } catch (e) {}
   }
   return res;

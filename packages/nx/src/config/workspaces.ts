@@ -587,10 +587,12 @@ function buildProjectConfigurationFromPackageJson(
   nxJson: NxJsonConfiguration
 ): ProjectConfiguration & { name: string } {
   const directory = dirname(path).split('\\').join('/');
-  const npmPrefix = `@${nxJson.npmScope}/`;
   let name = packageJson.name ?? toProjectName(directory, nxJson);
-  if (name.startsWith(npmPrefix)) {
-    name = name.replace(npmPrefix, '');
+  if (nxJson.npmScope) {
+    const npmPrefix = `@${nxJson.npmScope}/`;
+    if (name.startsWith(npmPrefix)) {
+      name = name.replace(npmPrefix, '');
+    }
   }
   return {
     root: directory,

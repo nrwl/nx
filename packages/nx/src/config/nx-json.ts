@@ -35,7 +35,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   /**
    * NPM Scope that the workspace uses
    */
-  npmScope: string;
+  npmScope?: string;
   /**
    * Default options for `nx affected`
    */
