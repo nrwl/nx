@@ -16,7 +16,7 @@ import {
 } from './package-manager';
 import { validateNpmPackage } from './validate-npm-package';
 import { deduceDefaultBase } from './default-base';
-import { stringifyCollection } from './utils';
+import { getFileName, stringifyCollection } from './utils';
 import { yargsDecorator } from './decorator';
 import chalk = require('chalk');
 import { ciList } from './ci';
@@ -790,7 +790,7 @@ async function setupNxCloud(name: string, packageManager: PackageManager) {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
       `${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics`,
-      path.join(process.cwd(), name)
+      path.join(process.cwd(), getFileName(name))
     );
     nxCloudSpinner.succeed('NxCloud has been set up successfully');
     return res;
@@ -832,7 +832,7 @@ async function setupCI(
         async (provider) =>
           await execAndWait(
             `${pmc.exec} nx g @nrwl/workspace:ci-workflow --ci=${provider}`,
-            path.join(process.cwd(), name)
+            path.join(process.cwd(), getFileName(name))
           )
       )
     );
