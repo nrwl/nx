@@ -27,8 +27,6 @@
   "devDependencies": {
     "@angular-devkit/architect": "~0.1303.0",
     "@angular-devkit/build-angular": "~13.3.0",
-    "@angular-devkit/build-optimizer": "~0.1302.0",
-    "@angular-devkit/build-webpack": "~0.1303.0",
     "@angular-devkit/core": "~13.3.0",
     "@angular-devkit/schematics": "~13.3.0",
     "@angular-eslint/eslint-plugin": "~13.1.0",
