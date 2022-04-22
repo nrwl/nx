@@ -81,7 +81,7 @@ Now, serve `shell` to view it in your browser.
 nx serve shell --open
 ```
 
-The above command serve `shell` in development mode, whereas the remotes are built and served statically. That is, changes to `shell` will update its bundle, but changes to remotes will not update.
+The above command serves `shell` in development mode, whereas the remotes are built and served statically. That is, changes to `shell` will update its bundle, but changes to remotes will not update.
 
 To run one or more remotes in development mode, use the `--devRemotes` option.
 
@@ -89,7 +89,7 @@ To run one or more remotes in development mode, use the `--devRemotes` option.
 nx serve shell --open --devRemotes=shop,cart
 ```
 
-The above command will start the `shop` and `cart` remotes in development mode, but `about` will remain static.
+The above command starts the `shop` and `cart` remotes in development mode, but `about` will remain static.
 
 ## What was generated?
 
@@ -101,11 +101,11 @@ The `build` target uses `@nrwl/web:webpack` for React, and `@nrwl/angular:webpac
 
 We also encourage you do create implicit dependencies between the host to all the remotes it references. This has a benefit when [building the host](#production-build-and-deployment), and also allows distributed task execution to work. To create these dependencies, add the `implicitDependencies` configuration.
 
-```json5
+```text
 // apps/shell/project.json
 {
   //...
-  implicitDependencies: ['about', 'shop', 'cart'],
+  "implicitDependencies": ["about", "shop", "cart"]
 }
 ```
 
@@ -217,14 +217,33 @@ This caching behavior is _crucial_ for things like end-to-end (E2E) testing beca
 
 ## Production build and deployment
 
+In this section, we'll examine how to set up your production build and simulate a deployment to `http://localhost:3000`.
+
 In order to make building and deploying easier, we recommend adding implicit dependencies from `shell` to each remote. In case you didn't already set this up, add the following line to the `shell`'s project configuration.
 
-```json5
+```text
 // apps/shell/project.json
 {
   //...
-  implicitDependencies: ['about', 'shop', 'cart'],
+  "implicitDependencies": ["about", "shop", "cart"]
 }
+```
+
+Next, open up the production webpack configuration file and update the remote URLs to their own subfolder under `http://localhost:3000`.
+
+```js
+// apps/shell/webpack.config.prod.js
+const withModuleFederation = require('@nrwl/react/module-federation');
+const moduleFederationConfig = require('./module-federation.config');
+
+module.exports = withModuleFederation({
+  ...moduleFederationConfig,
+  remotes: [
+    ['shop', 'http://localhost:3000/shop'],
+    ['cart', 'http://localhost:3000/cart'],
+    ['about', 'http://localhost:3000/about'],
+  ],
+});
 ```
 
 Now you can run `nx build shell` to build all the `shell` and all the implicit dependencies in production mode. Again, if you have [Nx Cloud enabled](#distributed-caching-with-nx-cloud) then the build artifact will be in the distributed cache for other developers and CI/CD to read from.
@@ -253,15 +272,12 @@ You can then run `nx deploy shell` to see the application running on `http://loc
 ```treeview
 production/
 ├── about
-│   ├── index.html
 │   ├── remoteEntry.js
 │   └── (snip)
 ├── cart
-│   ├── index.html
 │   ├── remoteEntry.js
 │   └── (snip)
 ├── shop
-│   ├── index.html
 │   ├── remoteEntry.js
 │   └── (snip)
 ├── index.html
