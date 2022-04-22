@@ -12,7 +12,6 @@ export function addEntryModule(
   appRoot: string
 ) {
   if (mfeType === 'remote') {
-    const { npmScope } = readWorkspaceConfiguration(host);
     generateFiles(
       host,
       joinPathFragments(__dirname, '../files/entry-module-files'),
@@ -20,7 +19,6 @@ export function addEntryModule(
       {
         tmpl: '',
         appName,
-        npmScope,
         routing,
       }
     );
