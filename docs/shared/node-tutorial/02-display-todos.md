@@ -117,7 +117,7 @@ Next, update the `app.controller.ts` file with the following:
 import { Controller, Get, Render } from '@nestjs/common';
 
 import { AppService } from './app.service';
-import { TodosService } from './todos/todos.service';
+import { TodosService } from './todo/todo.service';
 
 @Controller()
 export class AppController {
