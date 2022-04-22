@@ -298,7 +298,9 @@
     "send": "0.17.1",
     "tailwindcss": "^3.0.13",
     "tslib": "^2.3.0",
-    "weak-napi": "^2.0.2"
+    "weak-napi": "^2.0.2",
+    "cliui": "^7.0.2",
+    "string-width": "^4.2.3"
   },
   "resolutions": {
     "ng-packagr/rxjs": "6.6.7",

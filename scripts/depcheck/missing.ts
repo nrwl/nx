@@ -100,13 +100,6 @@ const IGNORE_MATCHES = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
     '@angular/cli',
-    /**
-     * cliui is the CLI layout engine developed by yargs and we want to use the version of it
-     * which our currently installed yargs version brings in. It in turn depends on a specific
-     * version of string-width which we also leverage directly in print-help.
-     */
-    'cliui',
-    'string-width',
   ],
   web: [
     // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
