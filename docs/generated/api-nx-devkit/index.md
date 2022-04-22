@@ -74,7 +74,6 @@ It only uses language primitives and immutable objects
 - [MigrationsJson](../../nx-devkit/index#migrationsjson)
 - [NxAffectedConfig](../../nx-devkit/index#nxaffectedconfig)
 - [NxJsonConfiguration](../../nx-devkit/index#nxjsonconfiguration)
-- [NxJsonProjectConfiguration](../../nx-devkit/index#nxjsonprojectconfiguration)
 - [ProjectConfiguration](../../nx-devkit/index#projectconfiguration)
 - [TargetConfiguration](../../nx-devkit/index#targetconfiguration)
 - [TargetDependencyConfig](../../nx-devkit/index#targetdependencyconfig)
@@ -408,12 +407,6 @@ A plugin for Nx
 | Name | Type                |
 | :--- | :------------------ |
 | `T`  | `"*"` \| `string`[] |
-
----
-
-### NxJsonProjectConfiguration
-
-• **NxJsonProjectConfiguration**: `Object`
 
 ---
 

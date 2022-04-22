@@ -62,7 +62,6 @@ export type {
   ImplicitDependencyEntry,
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
-  NxJsonProjectConfiguration,
   NxAffectedConfig,
 } from 'nx/src/config/nx-json';
 

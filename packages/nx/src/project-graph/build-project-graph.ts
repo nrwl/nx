@@ -29,10 +29,7 @@ import {
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
-import {
-  NxJsonConfiguration,
-  NxJsonProjectConfiguration,
-} from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
@@ -356,10 +353,9 @@ function createContext(
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap
 ): ProjectGraphProcessorContext {
-  const projects: Record<
-    string,
-    ProjectConfiguration & NxJsonProjectConfiguration
-  > = Object.keys(workspaceJson.projects).reduce((map, projectName) => {
+  const projects: Record<string, ProjectConfiguration> = Object.keys(
+    workspaceJson.projects
+  ).reduce((map, projectName) => {
     map[projectName] = {
       ...workspaceJson.projects[projectName],
     };
