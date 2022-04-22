@@ -15,6 +15,7 @@ import {
   swcJestVersion,
   tsJestVersion,
   tslibVersion,
+  tsNodeVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
 
@@ -22,12 +23,13 @@ interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 
 const schemaDefaults = {
   compiler: 'tsc',
+  js: false,
 } as const;
 
-function createJestConfig(host: Tree) {
-  if (!host.exists('jest.config.ts')) {
+function createJestConfig(host: Tree, js: boolean = false) {
+  if (!host.exists(`jest.config.${js ? 'js' : 'ts'}`)) {
     host.write(
-      'jest.config.ts',
+      `jest.config.${js ? 'js' : 'ts'}`,
       stripIndents`
   const { getJestProjects } = require('@nrwl/jest');
 
@@ -37,9 +39,9 @@ function createJestConfig(host: Tree) {
     );
   }
 
-  if (!host.exists('jest.preset.ts')) {
+  if (!host.exists(`jest.preset.${js ? 'js' : 'ts'}`)) {
     host.write(
-      'jest.preset.ts',
+      `jest.preset.${js ? 'js' : 'ts'}`,
       `
       const nxPreset = require('@nrwl/jest/preset');
      
@@ -62,6 +64,10 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
     // even if not using it in overriding transformers
     'ts-jest': tsJestVersion,
   };
+
+  if (!options.js) {
+    devDeps['ts-node'] = tsNodeVersion;
+  }
 
   if (options.compiler === 'babel' || options.babelJest) {
     devDeps['babel-jest'] = babelJestVersion;
@@ -91,7 +97,7 @@ function updateExtensions(host: Tree) {
 
 export function jestInitGenerator(tree: Tree, schema: JestInitSchema) {
   const options = normalizeOptions(schema);
-  createJestConfig(tree);
+  createJestConfig(tree, options.js);
 
   let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {

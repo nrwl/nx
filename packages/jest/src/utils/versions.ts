@@ -6,3 +6,4 @@ export const tsJestVersion = '27.1.4';
 export const babelJestVersion = '27.5.1';
 export const swcJestVersion = '0.2.20';
 export const typesNodeVersion = '16.11.7';
+export const tsNodeVersion = '9.1.1';

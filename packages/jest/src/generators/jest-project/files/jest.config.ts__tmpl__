@@ -1,6 +1,6 @@
 module.exports = {
   displayName: '<%= project %>',
-  preset: '<%= offsetFromRoot %>jest.preset.ts',<% if(setupFile !== 'none') { %>
+  preset: '<%= offsetFromRoot %>jest.preset<%= ext %>',<% if(setupFile !== 'none') { %>
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],<% } %><% if (transformer === 'ts-jest') { %>
   globals: {
     'ts-jest': {
