@@ -15,6 +15,7 @@ import {
   swcJestVersion,
   tsJestVersion,
   tslibVersion,
+  tsNodeVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
 
@@ -61,6 +62,7 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
     // jest will throw an error if it's not installed
     // even if not using it in overriding transformers
     'ts-jest': tsJestVersion,
+    'ts-node': tsNodeVersion,
   };
 
   if (options.compiler === 'babel' || options.babelJest) {

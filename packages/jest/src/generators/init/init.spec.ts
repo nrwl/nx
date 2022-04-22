@@ -35,6 +35,7 @@ describe('jest', () => {
     expect(packageJson.devDependencies['@nrwl/jest']).toBeDefined();
     expect(packageJson.devDependencies['@types/jest']).toBeDefined();
     expect(packageJson.devDependencies['ts-jest']).toBeDefined();
+    expect(packageJson.devDependencies['ts-node']).toBeDefined();
   });
 
   describe('Deprecated: --babelJest', () => {
