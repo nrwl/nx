@@ -8,6 +8,7 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
   }
 
   return await jestProjectGenerator(host, {
+    ...options,
     project: options.projectName,
     supportTsx: true,
     skipSerializers: true,

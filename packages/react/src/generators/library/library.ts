@@ -90,6 +90,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   if (options.unitTestRunner === 'jest') {
     const jestTask = await jestProjectGenerator(host, {
+      ...options,
       project: options.name,
       setupFile: 'none',
       supportTsx: true,

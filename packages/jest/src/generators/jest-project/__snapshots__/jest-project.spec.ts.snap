@@ -77,3 +77,16 @@ exports[`jestProject should create a jest.config.ts 1`] = `
 };
 "
 `;
+
+exports[`jestProject should use jest.config.js in project config with --js flag 1`] = `
+Object {
+  "executor": "@nrwl/jest:jest",
+  "options": Object {
+    "jestConfig": "libs/lib1/jest.config.js",
+    "passWithNoTests": true,
+  },
+  "outputs": Array [
+    "coverage/libs/lib1",
+  ],
+}
+`;

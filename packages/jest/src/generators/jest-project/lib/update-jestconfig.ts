@@ -1,22 +1,23 @@
+import { findRootJestConfig } from '../../../utils/config/find-root-jest-files';
 import { JestProjectSchema } from '../schema';
 import { addPropertyToJestConfig } from '../../../utils/config/update-config';
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 
-function isUsingUtilityFunction(host: Tree, js = false) {
+function isUsingUtilityFunction(host: Tree) {
   return host
-    .read(`jest.config.${js ? 'js' : 'ts'}`)
+    .read(findRootJestConfig(host))
     .toString()
     .includes('getJestProjects()');
 }
 
 export function updateJestConfig(host: Tree, options: JestProjectSchema) {
-  if (isUsingUtilityFunction(host, options.js)) {
+  if (isUsingUtilityFunction(host)) {
     return;
   }
   const project = readProjectConfiguration(host, options.project);
   addPropertyToJestConfig(
     host,
-    `jest.config.${options.js ? 'js' : 'ts'}`,
+    findRootJestConfig(host),
     'projects',
     `<rootDir>/${project.root}`
   );

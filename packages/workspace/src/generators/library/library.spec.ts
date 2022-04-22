@@ -704,7 +704,7 @@ describe('lib', () => {
         name: 'myLib',
         js: true,
       });
-      expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.js')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.js')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
@@ -758,7 +758,7 @@ describe('lib', () => {
         directory: 'myDir',
         js: true,
       });
-      expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.js')

@@ -32,6 +32,11 @@
             "description": "Skip formatting files.",
             "type": "boolean",
             "default": false
+          },
+          "js": {
+            "type": "boolean",
+            "default": false,
+            "description": "Use JavaScript instead of TypeScript"
           }
         },
         "required": [],
