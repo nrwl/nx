@@ -55,6 +55,8 @@
     "tmp": "~0.2.1",
     "yargs": "^17.4.0",
     "yargs-parser": "21.0.1",
+    "cliui": "^7.0.2",
+    "string-width": "^4.2.3",
     "chalk": "4.1.0",
     "flat": "^5.0.2",
     "minimatch": "3.0.4",
