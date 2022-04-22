@@ -26,6 +26,7 @@ export function createFiles(tree: Tree, options: JestProjectSchema) {
     tmpl: '',
     ...options,
     transformer,
+    ext: options.js && tree.exists('jest.preset.js') ? '.js' : '.ts',
     projectRoot: projectConfig.root,
     offsetFromRoot: offsetFromRoot(projectConfig.root),
   });
@@ -40,6 +41,13 @@ export function createFiles(tree: Tree, options: JestProjectSchema) {
       JSON.stringify({
         babelrcRoots: ['*'],
       })
+    );
+  }
+
+  if (options.js) {
+    tree.rename(
+      join(projectConfig.root, 'jest.config.ts'),
+      join(projectConfig.root, 'jest.config.js')
     );
   }
 }

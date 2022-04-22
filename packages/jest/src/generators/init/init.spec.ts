@@ -38,6 +38,11 @@ describe('jest', () => {
     expect(packageJson.devDependencies['ts-node']).toBeDefined();
   });
 
+  it('should make js jest files', () => {
+    jestInitGenerator(tree, { js: true });
+    expect(tree.exists('jest.config.js')).toBeTruthy();
+    expect(tree.exists('jest.preset.js')).toBeTruthy();
+  });
   describe('Deprecated: --babelJest', () => {
     it('should add babel dependencies', async () => {
       jestInitGenerator(tree, { babelJest: true });

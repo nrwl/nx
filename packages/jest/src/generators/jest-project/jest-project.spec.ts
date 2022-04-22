@@ -258,6 +258,20 @@ describe('jestProject', () => {
     });
   });
 
+  it('should create jest.config.js with --js flag', async () => {
+    await jestProjectGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+      js: true,
+    } as JestProjectSchema);
+    expect(tree.exists('jest.preset.js')).toBeTruthy();
+    expect(tree.exists('jest.config.js')).toBeTruthy();
+    expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
+    expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
+      "preset: '../../jest.preset.js',"
+    );
+  });
+
   describe('--babelJest', () => {
     it('should have globals.ts-jest configured when babelJest is false', async () => {
       await jestProjectGenerator(tree, {

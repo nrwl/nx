@@ -26,6 +26,11 @@
             "type": "boolean",
             "default": false,
             "description": "Do not add dependencies to `package.json`."
+          },
+          "js": {
+            "type": "boolean",
+            "default": false,
+            "description": "Use JavaScript instead of TypeScript for config files"
           }
         },
         "required": [],
@@ -103,6 +108,11 @@
             "type": "boolean",
             "default": false,
             "description": "Do not add dependencies to `package.json`."
+          },
+          "js": {
+            "type": "boolean",
+            "default": false,
+            "description": "Use JavaScript instead of TypeScript for config files"
           }
         },
         "required": [],
