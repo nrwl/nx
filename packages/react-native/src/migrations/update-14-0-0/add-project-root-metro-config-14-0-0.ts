@@ -25,7 +25,6 @@ export default async function update(tree: Tree) {
       if (metroConfigContent.includes('projectRoot: __dirname')) {
         return;
       }
-      if (metroConfigContent.includes('projectRoot')) return;
       tree.write(
         metroConfigPath,
         metroConfigContent.replace(
