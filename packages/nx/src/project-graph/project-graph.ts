@@ -54,13 +54,8 @@ export function readCachedProjectGraph(): ProjectGraph {
 }
 
 async function buildProjectGraphWithoutDaemon() {
-  try {
-    await defaultFileHasher.ensureInitialized();
-    return await buildProjectGraph();
-  } catch (e) {
-    printErrorMessage(e);
-    process.exit(1);
-  }
+  await defaultFileHasher.ensureInitialized();
+  return await buildProjectGraph();
 }
 
 /**
