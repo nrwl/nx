@@ -305,9 +305,26 @@ function updatePackageJson(
     /\.[jt]sx?$/,
     '.d.ts'
   );
-  packageJson.main = entryFileTmpl.replace('<%= extension %>', 'umd');
-  packageJson.module = entryFileTmpl.replace('<%= extension %>', 'esm');
-  packageJson.typings = `./${typingsFile}`;
+
+  // Update main field
+  if (!packageJson.main) {
+    if (options.format.includes('cjs')) {
+      packageJson.main = entryFileTmpl.replace('<%= extension %>', 'cjs');
+    } else if (options.format.includes('umd')) {
+      packageJson.main = entryFileTmpl.replace('<%= extension %>', 'umd');
+    }
+  }
+
+  // Update module field
+  if (!packageJson.module && options.format.includes('esm')) {
+    packageJson.module = entryFileTmpl.replace('<%= extension %>', 'esm');
+  }
+
+  // Update typings field
+  if (!packageJson.typings) {
+    packageJson.typings = `./${typingsFile}`;
+  }
+
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 
   if (
