@@ -985,6 +985,7 @@
         "additionalProperties": false,
         "presets": []
       },
+      "x-type": "application",
       "description": "Generate a host react application",
       "implementation": "/packages/react/src/generators/host/host#hostGenerator.ts",
       "aliases": [],
@@ -1145,6 +1146,7 @@
         "additionalProperties": false,
         "presets": []
       },
+      "x-type": "application",
       "description": "Generate a remote react application",
       "implementation": "/packages/react/src/generators/remote/remote#remoteGenerator.ts",
       "aliases": [],

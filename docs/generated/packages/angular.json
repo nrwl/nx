@@ -1024,6 +1024,7 @@
         "required": ["name"],
         "presets": []
       },
+      "x-type": "application",
       "description": "Generate a Remote Angular Module Federation Application.",
       "implementation": "/packages/angular/src/generators/remote/remote.ts",
       "aliases": [],
@@ -1258,6 +1259,7 @@
         "required": ["name"],
         "presets": []
       },
+      "x-type": "application",
       "description": "Generate a Host Angular Module Federation Application.",
       "implementation": "/packages/angular/src/generators/host/host.ts",
       "aliases": [],

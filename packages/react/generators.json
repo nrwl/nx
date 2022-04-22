@@ -153,12 +153,14 @@
     "host": {
       "factory": "./src/generators/host/host#hostGenerator",
       "schema": "./src/generators/host/schema.json",
+      "x-type": "application",
       "description": "Generate a host react application"
     },
 
     "remote": {
       "factory": "./src/generators/remote/remote#remoteGenerator",
       "schema": "./src/generators/remote/schema.json",
+      "x-type": "application",
       "description": "Generate a remote react application"
     }
   }
