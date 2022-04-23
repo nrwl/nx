@@ -220,16 +220,7 @@
   optionalDependencies:
     esbuild "0.14.22"
 
-"@angular-devkit/build-optimizer@~0.1302.0":
-  version "0.1302.1"
-  resolved "https://registry.yarnpkg.com/@angular-devkit/build-optimizer/-/build-optimizer-0.1302.1.tgz#48fc45c063597093ae9f538f8131edc9074d1c3a"
-  integrity sha512-lhMEQ5q7Kdxs6SRm2NEnFjQ1k4n3uso/Y0NhBYOMD5Ai7IwcLOAuMJCwHWSfIDuT/9c9kzIi1IqvuPuPttU51Q==
-  dependencies:
-    source-map "0.7.3"
-    tslib "2.3.1"
-    typescript "4.5.5"
-
-"@angular-devkit/build-webpack@0.1303.0", "@angular-devkit/build-webpack@~0.1303.0":
+"@angular-devkit/build-webpack@0.1303.0":
   version "0.1303.0"
   resolved "https://registry.yarnpkg.com/@angular-devkit/build-webpack/-/build-webpack-0.1303.0.tgz#2bcf60975d2f0fbf123038131e6e8024a5ac5e3b"
   integrity sha512-a+Veg2oYn3RM2Kl148BReuONmD1kjbbYBnMUVi8nD6rvJPStFZkqN5s5ZkYybKeWnzMGaB3VasKR88z5XeH22A==
@@ -22251,11 +22242,6 @@ typedoc@0.22.9:
     marked "^3.0.8"
     minimatch "^3.0.4"
     shiki "^0.9.12"
-
-typescript@4.5.5:
-  version "4.5.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.5.5.tgz#d8c953832d28924a9e3d37c73d729c846c5896f3"
-  integrity sha512-TCTIul70LyWe6IJWT8QSYeA54WQe8EjQFU4wY52Fasj5UKx88LNYKCgBEHcOMOrFF1rKGbD8v/xcNWVUq9SymA==
 
 typescript@4.6.2, typescript@^4.4.3, typescript@^4.5.3, typescript@~4.6.2:
   version "4.6.2"
