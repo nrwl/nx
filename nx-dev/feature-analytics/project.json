@@ -14,7 +14,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/nx-dev/feature-analytics"],
       "options": {
-        "jestConfig": "nx-dev/feature-analytics/jest.config.js",
+        "jestConfig": "nx-dev/feature-analytics/jest.config.ts",
         "passWithNoTests": true
       }
     }

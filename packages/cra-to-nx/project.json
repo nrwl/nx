@@ -13,7 +13,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/packages/cra-to-nx"],
       "options": {
-        "jestConfig": "packages/cra-to-nx/jest.config.js",
+        "jestConfig": "packages/cra-to-nx/jest.config.ts",
         "passWithNoTests": true
       }
     },

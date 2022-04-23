@@ -31,7 +31,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/typedoc-theme"],
       "options": {
-        "jestConfig": "typedoc-theme/jest.config.js",
+        "jestConfig": "typedoc-theme/jest.config.ts",
         "passWithNoTests": true
       }
     }

@@ -6,7 +6,7 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/cypress/jest.config.js",
+        "jestConfig": "packages/cypress/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/cypress"]

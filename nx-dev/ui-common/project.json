@@ -14,7 +14,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/nx-dev/ui-common"],
       "options": {
-        "jestConfig": "nx-dev/ui-common/jest.config.js",
+        "jestConfig": "nx-dev/ui-common/jest.config.ts",
         "passWithNoTests": true
       }
     }

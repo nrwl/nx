@@ -14,7 +14,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/nx-dev/data-access-documents"],
       "options": {
-        "jestConfig": "nx-dev/data-access-documents/jest.config.js",
+        "jestConfig": "nx-dev/data-access-documents/jest.config.ts",
         "passWithNoTests": true
       }
     }

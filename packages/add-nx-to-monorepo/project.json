@@ -13,7 +13,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/packages/add-nx-to-monorepo"],
       "options": {
-        "jestConfig": "packages/add-nx-to-monorepo/jest.config.js",
+        "jestConfig": "packages/add-nx-to-monorepo/jest.config.ts",
         "passWithNoTests": true
       }
     },

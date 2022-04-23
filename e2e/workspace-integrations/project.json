@@ -23,7 +23,7 @@
     "run-e2e-tests": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "e2e/workspace-integrations/jest.config.js",
+        "jestConfig": "e2e/workspace-integrations/jest.config.ts",
         "passWithNoTests": true,
         "runInBand": true
       },

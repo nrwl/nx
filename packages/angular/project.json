@@ -6,7 +6,7 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/angular/jest.config.js",
+        "jestConfig": "packages/angular/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/angular"]
