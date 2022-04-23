@@ -16,7 +16,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/nx-dev/feature-package-schema-viewer"],
       "options": {
-        "jestConfig": "nx-dev/feature-package-schema-viewer/jest.config.js",
+        "jestConfig": "nx-dev/feature-package-schema-viewer/jest.config.ts",
         "passWithNoTests": true
       }
     }

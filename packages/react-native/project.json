@@ -22,7 +22,7 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/react-native/jest.config.js",
+        "jestConfig": "packages/react-native/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/react-native"]

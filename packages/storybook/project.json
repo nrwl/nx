@@ -6,7 +6,7 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/storybook/jest.config.js",
+        "jestConfig": "packages/storybook/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/storybook"]

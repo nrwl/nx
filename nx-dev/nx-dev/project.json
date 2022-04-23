@@ -102,7 +102,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/nx-dev/nx-dev"],
       "options": {
-        "jestConfig": "nx-dev/nx-dev/jest.config.js",
+        "jestConfig": "nx-dev/nx-dev/jest.config.ts",
         "passWithNoTests": true
       }
     }
