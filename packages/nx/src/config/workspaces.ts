@@ -185,7 +185,9 @@ export class Workspaces {
       implementation.split('#');
     return () => {
       const module = require(path.join(directory, implementationModulePath));
-      return module[implementationExportName || 'default'] as T;
+      return implementationExportName
+        ? module[implementationExportName]
+        : module.default ?? module;
     };
   }
 
