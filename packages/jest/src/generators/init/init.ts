@@ -27,7 +27,8 @@ const schemaDefaults = {
 } as const;
 
 function createJestConfig(host: Tree, js: boolean = false) {
-  if (!host.exists(`jest.config.${js ? 'js' : 'ts'}`)) {
+  // if the root ts config already exists then don't make a js one or vice versa
+  if (!host.exists('jest.config.ts') && !host.exists('jest.config.js')) {
     host.write(
       `jest.config.${js ? 'js' : 'ts'}`,
       stripIndents`
@@ -39,7 +40,7 @@ function createJestConfig(host: Tree, js: boolean = false) {
     );
   }
 
-  if (!host.exists(`jest.preset.${js ? 'js' : 'ts'}`)) {
+  if (!host.exists('jest.preset.ts') && !host.exists('jest.preset.js')) {
     host.write(
       `jest.preset.${js ? 'js' : 'ts'}`,
       `
@@ -57,8 +58,7 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
   const devDeps = {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
-    '@types/jest': jestTypesVersion,
-    '@types/node': '16.11.7',
+
     // because the default jest-preset uses ts-jest,
     // jest will throw an error if it's not installed
     // even if not using it in overriding transformers
@@ -67,6 +67,8 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
 
   if (!options.js) {
     devDeps['ts-node'] = tsNodeVersion;
+    devDeps['@types/jest'] = jestTypesVersion;
+    devDeps['@types/node'] = '16.11.7';
   }
 
   if (options.compiler === 'babel' || options.babelJest) {

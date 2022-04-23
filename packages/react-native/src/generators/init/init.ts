@@ -50,7 +50,7 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   const tasks = [moveDependency(host), updateDependencies(host)];
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, {});
+    const jestTask = jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
 

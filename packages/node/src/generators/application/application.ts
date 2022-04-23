@@ -212,6 +212,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   if (options.unitTestRunner === 'jest') {
     const jestTask = await jestProjectGenerator(tree, {
+      ...options,
       project: options.name,
       setupFile: 'none',
       skipSerializers: true,

@@ -395,7 +395,7 @@ describe('app', () => {
         js: true,
       } as Schema);
 
-      expect(tree.exists(`apps/my-node-app/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
       expect(tree.exists('apps/my-node-app/src/main.js')).toBeTruthy();
 
       const tsConfig = readJson(tree, 'apps/my-node-app/tsconfig.json');
@@ -439,7 +439,7 @@ describe('app', () => {
         js: true,
       } as Schema);
       expect(
-        tree.exists(`apps/my-dir/my-node-app/jest.config.ts`)
+        tree.exists(`apps/my-dir/my-node-app/jest.config.js`)
       ).toBeTruthy();
       expect(tree.exists('apps/my-dir/my-node-app/src/main.js')).toBeTruthy();
     });

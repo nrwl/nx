@@ -173,6 +173,7 @@ async function addJest(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   return await jestProjectGenerator(tree, {
+    ...options,
     project: options.name,
     setupFile: 'none',
     supportTsx: true,

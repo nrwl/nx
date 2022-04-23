@@ -40,7 +40,7 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   setDefaultCollection(host, '@nrwl/next');
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, {});
+    const jestTask = jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {

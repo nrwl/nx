@@ -6,6 +6,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { jestInitGenerator } from '@nrwl/jest';
 import { updateJestConfigExt } from './update-jest-config-ext';
 import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
 
@@ -13,22 +14,7 @@ describe('Jest Migration (v14.0.0)', () => {
   let tree: Tree;
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace(2);
-    tree.write(
-      'jest.config.js',
-      String.raw`
-const { getJestProjects } = require('@nrwl/jest');
-module.exports = {
-  projects: getJestProjects(),
-};
-`
-    );
-    tree.write(
-      'jest.preset.js',
-      String.raw`
-const nxPreset = require('@nrwl/jest/preset');
-module.exports = { ...nxPreset };
-`
-    );
+    jestInitGenerator(tree, { js: true, skipPackageJson: true });
     await workspaceLib(tree, { name: 'lib-one' });
     tree.rename('libs/lib-one/jest.config.ts', 'libs/lib-one/jest.config.js');
     updateProjectConfiguration(tree, 'lib-one', {

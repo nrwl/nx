@@ -3,7 +3,7 @@
 exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.config.ts 1`] = `
 "module.exports = {
   displayName: 'lib-one',
-  preset: '../../jest.preset.ts',
+  
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -13,7 +13,7 @@ exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.c
     '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib-one'
+  coverageDirectory: '../../coverage/libs/lib-one',\\"preset\\": \\"../../jest.preset.ts\\"
 };
 "
 `;
@@ -21,7 +21,7 @@ exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.c
 exports[`Jest Migration (v14.0.0) should update jest.config.ts preset to use the jest.preset.ts 1`] = `
 "module.exports = {
   displayName: 'lib-one',
-  preset: '../../jest.preset.ts',
+  
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -31,7 +31,7 @@ exports[`Jest Migration (v14.0.0) should update jest.config.ts preset to use the
     '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib-one'
+  coverageDirectory: '../../coverage/libs/lib-one',\\"preset\\": \\"../../jest.preset.ts\\"
 };
 "
 `;

@@ -41,7 +41,7 @@ export async function initGenerator(tree: Tree, schema: Schema) {
 
   let jestInstall: GeneratorCallback;
   if (options.unitTestRunner === 'jest') {
-    jestInstall = await jestInitGenerator(tree, {});
+    jestInstall = await jestInitGenerator(tree, schema);
   }
   const installTask = await updateDependencies(tree);
   if (!options.skipFormat) {

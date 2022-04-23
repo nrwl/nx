@@ -21,7 +21,9 @@ export function updateJestConfig(host: Tree, options: NormalizedSchema) {
     return json;
   });
 
-  const configPath = `${options.appProjectRoot}/jest.config.ts`;
+  const configPath = `${options.appProjectRoot}/jest.config.${
+    options.js ? 'js' : 'ts'
+  }`;
   const originalContent = host.read(configPath, 'utf-8');
   const content = updateJestConfigContent(originalContent);
   host.write(configPath, content);
