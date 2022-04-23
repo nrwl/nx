@@ -76,6 +76,19 @@ export function migrateStorybookInstance(
 function maybeUpdateVersion(tree: Tree): GeneratorCallback {
   let needsInstall = false;
   updateJson(tree, 'package.json', (json) => {
+    const ignoredStorybookPackages = [
+      '@storybook/builder-vite',
+      '@storybook/jest',
+      '@storybook/react-native',
+      '@storybook/storybook-deployer',
+      '@storybook/test-runner',
+      '@storybook/testing-library',
+      '@storybook/testing-angular',
+      '@storybook/testing-react',
+      '@storybook/testing-vue',
+      '@storybook/testing-vue3',
+    ];
+
     json.dependencies = json.dependencies || {};
     json.devDependencies = json.devDependencies || {};
 
@@ -84,8 +97,7 @@ function maybeUpdateVersion(tree: Tree): GeneratorCallback {
     ).filter(
       (packageName: string) =>
         packageName.startsWith('@storybook/') &&
-        !packageName.includes('@storybook/react-native') &&
-        !packageName.includes('@storybook/storybook-deployer')
+        !ignoredStorybookPackages.includes(packageName)
     );
 
     const allStorybookPackagesInDevDependencies = Object.keys(
@@ -93,8 +105,7 @@ function maybeUpdateVersion(tree: Tree): GeneratorCallback {
     ).filter(
       (packageName: string) =>
         packageName.startsWith('@storybook/') &&
-        !packageName.includes('@storybook/react-native') &&
-        !packageName.includes('@storybook/storybook-deployer')
+        !ignoredStorybookPackages.includes(packageName)
     );
 
     const storybookPackages = [
