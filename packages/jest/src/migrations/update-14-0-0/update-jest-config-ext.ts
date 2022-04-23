@@ -1,5 +1,6 @@
 import {
   formatFiles,
+  joinPathFragments,
   logger,
   offsetFromRoot,
   ProjectConfiguration,
@@ -39,7 +40,10 @@ function updateJestPreset(
       tree,
       options.jestConfig,
       'preset',
-      join(offsetFromRoot(dirname(options.jestConfig)), 'jest.preset.ts'),
+      joinPathFragments(
+        offsetFromRoot(dirname(options.jestConfig)),
+        'jest.preset.ts'
+      ),
       { valueAsString: false }
     );
   }
@@ -79,7 +83,7 @@ function updateTsconfigSpec(
   projectConfig: ProjectConfiguration,
   path
 ) {
-  updateJson(tree, join(projectConfig.root, path), (json) => {
+  updateJson(tree, joinPathFragments(projectConfig.root, path), (json) => {
     json.include = Array.from(
       new Set([...(json.include || []), 'jest.config.ts'])
     );
@@ -115,7 +119,7 @@ export async function updateJestConfigExt(tree: Tree) {
       const rootFiles = tree.children(projectConfig.root);
       for (const fileName of rootFiles) {
         if (fileName === 'tsconfig.json') {
-          const filePath = join(projectConfig.root, fileName);
+          const filePath = joinPathFragments(projectConfig.root, fileName);
           const tsConfig = readJson(tree, filePath);
 
           if (tsConfig.references) {
@@ -125,7 +129,7 @@ export async function updateJestConfigExt(tree: Tree) {
                 continue;
               }
 
-              updateTsConfig(tree, join(projectConfig.root, path));
+              updateTsConfig(tree, joinPathFragments(projectConfig.root, path));
             }
           } else {
             updateTsConfig(tree, filePath);
