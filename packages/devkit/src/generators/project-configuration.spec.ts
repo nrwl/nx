@@ -301,6 +301,7 @@ describe('project configuration', () => {
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
         const expectedProjectConfig = {
           ...baseTestProjectConfigV2,
+          root: undefined,
           targets: { build: { executor: '' } },
         };
         updateProjectConfiguration(tree, 'test', expectedProjectConfig);
@@ -471,6 +472,7 @@ describe('project configuration', () => {
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
         const expectedProjectConfig = {
           ...baseTestProjectConfigV2,
+          root: undefined,
           targets: { build: { executor: '' } },
         };
         updateProjectConfiguration(tree, 'test', expectedProjectConfig);

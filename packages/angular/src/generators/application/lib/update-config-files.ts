@@ -46,6 +46,9 @@ function updateAppAndE2EProjectConfigurations(
       options.ngCliSchematicAppRoot,
       options.appProjectRoot
     );
+    // project already has the right root, but the above function, makes it incorrect.
+    // This corrects it.
+    project.root = options.appProjectRoot;
   }
 
   delete project.targets.test;

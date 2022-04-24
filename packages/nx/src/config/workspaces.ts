@@ -411,7 +411,10 @@ function inlineProjectConfigurations(w: any, root: string = workspaceRoot) {
       if (typeof config === 'string') {
         const configFilePath = path.join(root, config, 'project.json');
         const fileConfig = readJsonFile(configFilePath);
-        w.projects[project] = fileConfig;
+        w.projects[project] = {
+          root: config,
+          ...fileConfig,
+        };
       }
     }
   );
@@ -642,6 +645,9 @@ export function buildWorkspaceConfigurationFromGlobs(
       // directory as a package.json should overwrite the inferred package.json
       // project configuration.
       const configuration = readJson(file);
+
+      configuration.root = directory;
+
       let name = configuration.name;
       if (!configuration.name) {
         name = toProjectName(file, nxJson);

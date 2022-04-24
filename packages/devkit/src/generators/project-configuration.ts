@@ -358,7 +358,7 @@ function addProjectToWorkspaceJson(
         workspaceJson.projects[projectName] = project.root;
       }
       // update the project.json file
-      writeJson(tree, configFile, project);
+      writeJson(tree, configFile, { ...project, root: undefined });
     }
   } else if (mode === 'delete') {
     delete workspaceJson.projects[projectName];
@@ -399,10 +399,10 @@ function inlineProjectConfigurationsWithTree(
   Object.entries(workspaceJson.projects || {}).forEach(([project, config]) => {
     if (typeof config === 'string') {
       const configFileLocation = joinPathFragments(config, 'project.json');
-      workspaceJson.projects[project] = readJson<ProjectConfiguration>(
-        tree,
-        configFileLocation
-      );
+      workspaceJson.projects[project] = {
+        root: config,
+        ...readJson<ProjectConfiguration>(tree, configFileLocation),
+      };
     }
   });
   return workspaceJson as WorkspaceJsonConfiguration;
