@@ -29,7 +29,7 @@ type Arguments = {
   style: string;
   nxCloud: boolean;
   allPrompts: boolean;
-  packageManager: string;
+  packageManager: PackageManager;
   defaultBase: string;
   ci: string[];
 };
@@ -693,10 +693,12 @@ async function determineCI(
   return [];
 }
 
-async function createSandbox(packageManager: string) {
+async function createSandbox(packageManager: PackageManager) {
   const installSpinner = ora(
     `Installing dependencies with ${packageManager}`
   ).start();
+
+  const { install } = getPackageManagerCommand(packageManager);
 
   const tmpDir = dirSync().name;
   try {
@@ -713,7 +715,7 @@ async function createSandbox(packageManager: string) {
       })
     );
 
-    await execAndWait(`${packageManager} install --silent`, tmpDir);
+    await execAndWait(`${install} --silent`, tmpDir);
 
     installSpinner.succeed();
   } catch (e) {
