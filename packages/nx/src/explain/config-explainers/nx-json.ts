@@ -9,9 +9,6 @@ import { ConfigExplainer } from '../config-explainer';
  * We have a utility in the unit tests to ensure that this is the case.
  */
 export const nxConfigExplainer: ConfigExplainer<NxJsonConfiguration> = {
-  /**
-   * TODO: Add logic to merge configs and indicate which settings were inherited and which are set in the nx.json directly
-   */
   extends: {
     description: `Optional (additional) Nx.json configuration file which becomes a base for this one`,
     explainConfig: (extendsVal) => {
@@ -347,32 +344,6 @@ Example:
           output += `You have set an empty value for \`defaultCollection\`, which means that a collection will always need to be specified when you run a generator command: e.g. \`nx generate @nrwl/react:application\` is fine (the collection is \`@nrwl/react\`) but \`nx generate application\` will error because it cannot know where to look for an appropriate \`application\` generator`;
         } else {
           output += `The default collection is set to \`${cli.defaultCollection}\`, which means that when you run a generator command such as \`nx generate application\` or \`nx g app\`, without an explicit collection, it is the same as if you had run \`nx generate ${cli.defaultCollection}:application\` or \`nx g ${cli.defaultCollection}:app\``;
-        }
-      }
-
-      /**
-       * TODO: Is this config pointless? It is persisted by create-nx-workspace, but subsequent logic related to package installation
-       * within the workspace seems to use detectPackageManager() instead of using this setting as the source of truth...
-       */
-      if (typeof cli.packageManager !== 'undefined') {
-        output +=
-          output.length > 0
-            ? '\n\n→ '
-            : '' + `packageManager set to: ${cli.packageManager}`;
-      }
-
-      /**
-       * TODO: This is even weirder... there is nothing in Nx which sets this value via the file templates etc and in VSCode the schema feedback
-       * will tell you you are not supposed to have an entry for it under "cli" BUT nx's logic is set to PREFER it over the value set for "defaultProject"
-       * if it does exist...
-       */
-      if (typeof cli.defaultProjectName !== 'undefined') {
-        output += output.length > 0 ? '\n\n→ ' : '' + output;
-        if (!cli.defaultProjectName) {
-          output +=
-            'You have set an empty value for `defaultProjectName` which means that a project name will always need to be specified when running Nx target/run commands such as `nx build` or `nx run build`, and the CLI will appropriately error if you do not';
-        } else {
-          output += `You have configured a \`defaultProjectName\` value of \`${cli.defaultProjectName}\`, which means that whenever you run an Nx target/run command such as \`nx build\` or \`nx run build\`, without an explicit project name, it is the same as if you had run \`nx build ${cli.defaultProjectName}\` or \`nx run ${cli.defaultProjectName}:build\``;
         }
       }
 

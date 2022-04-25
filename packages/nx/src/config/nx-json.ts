@@ -85,8 +85,18 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Default generator collection. It is used when no collection is provided.
    */
   cli?: {
-    packageManager?: PackageManager;
     defaultCollection?: string;
+
+    /**
+     * TODO: Remove these two properties
+     */
+    // (1) Never used (but is currently set by create-nx-workspace)
+    packageManager?: PackageManager;
+    /**
+     * (2) Duplicate of the intention behind defaultProject
+     * It does not show as a valid option in VSCode but actually takes priority over "defaultProject" when set
+     * We should set up a migration which takes this value if set and updates defaultProject
+     */
     defaultProjectName?: string;
   };
   /**
