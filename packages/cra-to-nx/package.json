@@ -25,7 +25,7 @@
     "@nrwl/workspace": "*",
     "@nrwl/devkit": "*",
     "nx": "*",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.1.0",
     "yargs-parser": "21.0.1"
   }
 }

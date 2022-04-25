@@ -31,7 +31,7 @@
     "nx": "*",
     "@nrwl/devkit": "*",
     "enquirer": "~2.3.6",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.1.0",
     "tmp": "~0.2.1",
     "yargs-parser": "21.0.1"
   }
