@@ -3,11 +3,12 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import * as yargs from 'yargs';
 import { generateDaemonHelpOutput } from '../daemon/client/generate-help-output';
+import { workspaceRoot } from '../utils/app-root';
+import { writeJsonFile } from '../utils/fileutils';
+import { getPackageManagerCommand } from '../utils/package-manager';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
-import { workspaceRoot } from '../utils/app-root';
-import { getPackageManagerCommand } from '../utils/package-manager';
-import { writeJsonFile } from '../utils/fileutils';
+import { ExplainArgs } from './explain';
 
 const isGenerateDocsProcess = process.env.NX_GENERATE_DOCS_PROCESS === 'true';
 const daemonHelpOutput = generateDaemonHelpOutput(isGenerateDocsProcess);
@@ -261,6 +262,15 @@ ${daemonHelpOutput}
     describe:
       'Reports useful version numbers to copy into the Nx issue template',
     handler: async () => (await import('./report')).reportHandler(),
+  })
+  .command({
+    command: 'explain [config]',
+    describe: 'Explains your nx.json configuration',
+    builder: (yargs) => withExplainOptions(yargs),
+    handler: async (args) =>
+      (await import('./explain')).explainHandler(
+        args as unknown as ExplainArgs
+      ),
   })
   .command({
     command: 'list [plugin]',
@@ -707,6 +717,14 @@ function withListOptions(yargs) {
   return yargs.positional('plugin', {
     type: 'string',
     description: 'The name of an installed plugin to query',
+  });
+}
+
+function withExplainOptions(yargs) {
+  return yargs.positional('config', {
+    type: 'string',
+    description: 'The path to an nx.json config to explain',
+    default: 'nx.json',
   });
 }
 
