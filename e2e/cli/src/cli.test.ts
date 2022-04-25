@@ -101,6 +101,24 @@ describe('report', () => {
   }, 120000);
 });
 
+describe('explain', () => {
+  beforeAll(() => newProject());
+
+  it(`should explain the root nx.json`, async () => {
+    const explainOutput = runCLI('explain');
+    expect(explainOutput).toContain(
+      'Explanation of your current nx.json settings'
+    );
+  }, 120000);
+
+  it(`should explain a given nx.json preset`, async () => {
+    const explainOutput = runCLI('explain nx/presets/core.json');
+    expect(explainOutput).toContain(
+      'Explanation of the nx.json settings in node_modules/nx/presets/core.json'
+    );
+  }, 120000);
+});
+
 describe('list', () => {
   beforeEach(() => newProject());
 
