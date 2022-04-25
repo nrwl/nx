@@ -74,6 +74,7 @@ function convertToGenerateOptions(
 
   delete generatorOptions.d;
   delete generatorOptions.dryRun;
+  delete generatorOptions['dry-run'];
   delete generatorOptions.interactive;
   delete generatorOptions.help;
   delete generatorOptions.collection;
