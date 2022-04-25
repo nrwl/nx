@@ -140,7 +140,7 @@ describe('withModuleFederation', () => {
           { target: 'npm:zone.js' },
           { target: 'core' },
         ],
-        core: [{ target: 'shared' }],
+        core: [{ target: 'shared' }, { target: 'npm:lodash' }],
       },
     });
 

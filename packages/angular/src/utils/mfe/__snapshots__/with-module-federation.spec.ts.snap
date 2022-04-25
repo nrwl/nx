@@ -23,6 +23,11 @@ Array [
           "eager": undefined,
           "requiredVersion": false,
         },
+        "npm:lodash": Object {
+          "requiredVersion": undefined,
+          "singleton": true,
+          "strictVersion": true,
+        },
         "shared": Object {
           "eager": undefined,
           "requiredVersion": false,
