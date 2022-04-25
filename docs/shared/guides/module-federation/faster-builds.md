@@ -91,6 +91,8 @@ nx serve shell --open --devRemotes=shop,cart
 
 The above command starts the `shop` and `cart` remotes in development mode, but `about` will remain static.
 
+> Note, both commands serve the whole system. By passing devRemotes, you configure what parts of it you will be changing. For instance, in the example above, you can go to the about page and back. This is different from having different versions of the app for every team.
+
 ## What was generated?
 
 To understand how Module Federation works with Nx, let's take a look at three files that control this feature.
@@ -99,7 +101,7 @@ To understand how Module Federation works with Nx, let's take a look at three fi
 
 The `build` target uses `@nrwl/web:webpack` for React, and `@nrwl/angular:webpack-browser` for Angular. This is the same as a normal SPA that uses custom webpack configuration (`webpackConfig`), but difference is in the webpack configuration file.
 
-We also encourage you do create implicit dependencies between the host to all the remotes it references. This has a benefit when [building the host](#production-build-and-deployment), and also allows distributed task execution to work. To create these dependencies, add the `implicitDependencies` configuration.
+If you use Module Federation to speed up your CI and improve your local development, and not to deploy different remotes independently, you need to create implicit dependencies from the host to all the remotes. Semantically, the host and the remotes comprise one application, so you cannot build the host without the remotes. Adding implicit dependencies also makes distributed builds possible ([see below](#production-build-and-deployment)). To create these dependencies, add the `implicitDependencies` configuration.
 
 ```text
 // apps/shell/project.json
@@ -174,19 +176,13 @@ The `shared` function can return a [shared config](https://webpack.js.org/plugin
 
 ## Distributed caching with Nx Cloud
 
-Module Federation works best when Nx Cloud is enabled in the workspace. If you haven't enabled it yet when using `create-nx-workspace`, you can do the following.
+To use Module Federation well, we recommend you to enable Nx Cloud. If you haven't enabled it yet when using `create-nx-workspace`, you can do the following.
 
 ```bash
-# Install the package
-npm install --save-dev @nrwl/nx-cloud
-# Or through yarn
-yarn add --dev @nrwl/nx-cloud
-
-# Then enable cloud in the workspace
-nx g @nrwl/nx-cloud:init
+nx connect-to-nx-cloud
 ```
 
-With Nx Cloud enabled, a large set of builds can be skipped entirely when running the application locally (and in CI/CD). When you run builds through Nx + Nx Cloud, the artifacts are stored in the distributed cache, so as long as the source hasn't changed, the application can be served from cache.
+With Nx Cloud enabled, a large set of builds can be skipped entirely when running the application locally (and in CI/CD). When you run builds through Nx + Nx Cloud, the artifacts are stored in the distributed cache, so as long as the source of a given remote hasn't changed, it will be served from cache.
 
 You can see this behavior locally if you serve the `shell` twice.
 
@@ -198,7 +194,7 @@ nx serve shell
 nx serve shell
 ```
 
-The second serve should start up much faster, because the three remotes (`shop`, `cart`, `about`) are read from cache. Not only that, any other copy of the workspace will also benefit from the cache if they are on the same branch as you are.
+The second serve should start up much faster, because the three remotes (`shop`, `cart`, `about`) are read from cache. Not only that, any other copy of the workspace will also benefit from the cache if they haven't changed a particular remote. If, say, someone is working on `shop`, they will get the `cart` and `about` builds from the cache.
 
 If you inspect the terminal output, you'll see something like this, even if you are on different machines.
 
@@ -213,13 +209,15 @@ If you inspect the terminal output, you'll see something like this, even if you 
 
 ```
 
-This caching behavior is _crucial_ for things like end-to-end (E2E) testing because testing against a static server is much more efficient than starting many servers in development mode. When the CI pipeline runs E2E tests, it should be be reading from caching, since you've already run the server locally.
+> This caching behavior is _crucial_. If you don't have a build system supporting distributed computation caching, using Module Federation will likely be slower. It takes longer to build `shop`, `cart` and `about` separately than building all of them together as part of the same process. **When using Nx, you rarely have to build all of them because most of the time you work on one remote, other remotes will be retrieved from cache.**
 
-## Production build and deployment
+This also helps things like end-to-end (E2E) testing because testing against a static server is much more efficient than starting many servers in development mode. When the CI pipeline runs E2E tests, all the remotes should be served statically from cache.
+
+## Production build and deployment with Nx Cloud
 
 In this section, we'll examine how to set up your production build and simulate a deployment to `http://localhost:3000`.
 
-In order to make building and deploying easier, we recommend adding implicit dependencies from `shell` to each remote. In case you didn't already set this up, add the following line to the `shell`'s project configuration.
+First, make sure you have implicit dependencies from `shell` to each remote. In case you didn't already set this up, add the following line to the `shell`'s project configuration.
 
 ```text
 // apps/shell/project.json
@@ -246,7 +244,9 @@ module.exports = withModuleFederation({
 });
 ```
 
-Now you can run `nx build shell` to build all the `shell` and all the implicit dependencies in production mode. Again, if you have [Nx Cloud enabled](#distributed-caching-with-nx-cloud) then the build artifact will be in the distributed cache for other developers and CI/CD to read from.
+Now you can run `nx build shell` to build all the `shell` and all the implicit dependencies in production mode.
+
+> Again, if you don't use [Nx Cloud's Distributed Tasks Execution](/using-nx/dte) using Module Federation will likely be slower than building everything in a single process. It's only if you enable Distributed Tasks Execution, your CI will be able to build each remote on a separate machine, in parallel, (or not build it at all and retrieve it from cache), which will reduce the CI time.
 
 After running that command you'll see the following artifacts in `dist` folder.
 
@@ -285,3 +285,21 @@ production/
 ```
 
 The above command is just an example. You'll need to use what make sense for your team and workspace.
+
+## Using buildable libs
+
+By using Module Federation you essentially split your application build process vertically. You can also split it horizontally by making some libraries buildable.
+
+We don't recommend making all libraries in your workspace buildable--it will make some things faster but many other things slower. But in some scenarios making a few large libraries at the bottom of your graph buildable can speed up your CI.
+
+Because Nx Cloud's Distributed Tasks Execution works with any task graph, having buildable libraries is handled automatically. If you have a buildable `components` library that all remotes depend on, Nx Cloud will build the library first before building the remotes.
+
+## Summary
+
+You could use Module Federation to implement microfrontends, but this guide showed how to use it to speed up your builds.
+
+Module Federation allows you to split a single build process into multiple processes which can run in parallel or even on multiple machines. The result of each build process can be cached independently. For this to work well in practice you need to have a build system supporting distributed computation caching and distributed tasks execution (e.g., Nx + Nx Cloud).
+
+When a developer runs say `nx serve host --devRemotes=cart`, they still run the whole application, but `shop` and `about` are served statically, from cache. As a result, the serve time and the time it takes to see the changes on the screen go down, often by an order of magnitude.
+
+When a CI machine runs say `nx build host --configuration=production`, the `shop`, `about` and `cart` remotes will either be build on separate machines or retrieved from cache. Once all of them are built, the build process for `host` will combine the file artifacts from all the remotes. Nx Cloud takes care of distributing the tasks and moving file artifacts across machines. As a result, the worst case scenario build time (when nothing is cached) goes from building all the code to building the largest remote, which is often an order of magnitude faster.
