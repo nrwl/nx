@@ -4,8 +4,6 @@ import {
   convertNxGenerator,
   detectPackageManager,
   formatFiles,
-  logger,
-  readJson,
   removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
@@ -21,7 +19,6 @@ import {
 import {
   babelRuntimeVersion,
   jestReactNativeVersion,
-  metroReactNativeBabelPresetVersion,
   metroVersion,
   nxVersion,
   reactNativeAsyncStorageAsyncStorageVersion,
@@ -83,13 +80,13 @@ export function updateDependencies(host: Tree) {
       '@react-native-community/cli-platform-android':
         reactNativeCommunityCliAndroid,
       '@react-native-community/cli-platform-ios': reactNativeCommunityCliIos,
-      'metro-react-native-babel-preset': metroReactNativeBabelPresetVersion,
       '@testing-library/react-native': testingLibraryReactNativeVersion,
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
       'jest-react-native': jestReactNativeVersion,
       metro: metroVersion,
       'metro-resolver': metroVersion,
       'metro-babel-register': metroVersion,
+      'metro-react-native-babel-preset': metroVersion,
       'react-test-renderer': reactTestRendererVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
