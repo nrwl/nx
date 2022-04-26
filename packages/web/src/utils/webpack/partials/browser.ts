@@ -45,7 +45,7 @@ export function getBrowserConfig(wco: WebpackConfigOptions) {
         : false,
     },
     optimization: {
-      runtimeChunk: 'single',
+      runtimeChunk: !!buildOptions.runtimeChunk ? 'single' : false,
       splitChunks: {
         maxAsyncRequests: Infinity,
         cacheGroups: {
