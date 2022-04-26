@@ -833,7 +833,6 @@ describe('lib', () => {
           options: {
             command:
               'node tools/scripts/publish.mjs my-lib {args.ver} {args.tag}',
-            cwd: 'dist/libs/my-lib',
           },
           dependsOn: [{ projects: 'self', target: 'build' }],
         });
