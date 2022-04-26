@@ -261,6 +261,17 @@ describe('create-nx-workspace', () => {
     process.env.SELECTED_PM = packageManager;
   });
 
+  it('should return error when ci workflow is selected but no cloud is set up', () => {
+    const wsName = uniq('github');
+    expect(() =>
+      runCreateWorkspace(wsName, {
+        preset: 'core',
+        packageManager,
+        ci: 'github',
+      })
+    ).toThrowError(/CI workflow generation skipped/);
+  });
+
   describe('Use detected package manager', () => {
     function setupProject(envPm: 'npm' | 'yarn' | 'pnpm') {
       process.env.SELECTED_PM = envPm;

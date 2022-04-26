@@ -126,6 +126,7 @@ export function runCreateWorkspace(
     packageManager,
     cli,
     extraArgs,
+    ci,
     useDetectedPm = false,
   }: {
     preset: string;
@@ -135,6 +136,7 @@ export function runCreateWorkspace(
     packageManager?: 'npm' | 'yarn' | 'pnpm';
     cli?: string;
     extraArgs?: string;
+    ci?: 'azure' | 'github' | 'circleci';
     useDetectedPm?: boolean;
   }
 ) {
