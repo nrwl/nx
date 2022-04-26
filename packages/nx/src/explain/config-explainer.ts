@@ -14,7 +14,7 @@ type Markdown = string;
 export type ConfigExplainer<Config> = Required<{
   [key in keyof Config]: {
     /**
-     * NOTE: We have configured e2e tests for nx-dev to ensure that all of the configurated `nxDevLearnMorePath`s
+     * NOTE: We have set up e2e tests within nx-dev-e2e to ensure that all of the configured `nxDevLearnMorePath`s
      * remain valid links over time.
      */
     nxDevLearnMorePath: `/${string}#${string}`;
