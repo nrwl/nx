@@ -39,7 +39,7 @@ export function ConfScheduleShort(): JSX.Element {
       title: 'Build your own Nx Workspace from Scratch',
       description:
         "Nx Plugins are opinionated and generate quite a bit of configuration. But what happens when that doesn't suit your organization? What is actually necessary and what can be altered? To understand the core of Nx and how to configure it exactly to your needs, Jason Jean and Miroslav Jonas will be building an Nx Workspace from scratch!",
-      speakers: ['Jason Jean'],
+      speakers: ['Jason Jean', 'Miroslav Jonas'],
       videoUrl: '',
     },
     {
