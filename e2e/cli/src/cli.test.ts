@@ -113,9 +113,8 @@ describe('explain', () => {
 
   it(`should explain a given nx.json preset`, async () => {
     const explainOutput = runCLI('explain nx/presets/core.json');
-    expect(explainOutput).toContain(
-      'Explanation of the nx.json settings in node_modules/nx/presets/core.json'
-    );
+    expect(explainOutput).toContain('Explanation of the nx.json settings in ');
+    expect(explainOutput).toContain('node_modules/nx/presets/core.json');
   }, 120000);
 });
 
