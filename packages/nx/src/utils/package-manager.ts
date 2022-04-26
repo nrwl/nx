@@ -6,6 +6,7 @@ import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import { readJsonFile, writeJsonFile } from './fileutils';
 import { PackageJson } from './package-json';
+import { gte } from 'semver';
 
 const execAsync = promisify(exec);
 
@@ -61,9 +62,9 @@ export function getPackageManagerCommand(
       list: 'yarn list',
     }),
     pnpm: () => {
-      const [major, minor] = getPackageManagerVersion('pnpm').split('.');
+      const pnpmVersion = getPackageManagerVersion('pnpm');
       let useExec = false;
-      if (+major >= 6 && +minor >= 13) {
+      if (gte(pnpmVersion, '6.13.0')) {
         useExec = true;
       }
       return {
