@@ -454,14 +454,6 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
         'This is the configuration to use when performing tasks on projects',
       type: 'string',
     })
-    .options('with-deps', {
-      describe:
-        'Include dependencies of specified projects when computing what to run',
-      type: 'boolean',
-      default: false,
-      deprecated:
-        'Configure target dependencies instead. It will be removed in v14.',
-    })
     .options('only-failed', {
       deprecated:
         'The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.',

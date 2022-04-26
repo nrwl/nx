@@ -105,11 +105,3 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   defaultProject?: string;
 }
-
-/**
- * @deprecated(v14): nx.json no longer contains projects
- */
-export interface NxJsonProjectConfiguration {
-  implicitDependencies?: string[];
-  tags?: string[];
-}

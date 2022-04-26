@@ -114,13 +114,3 @@ Print additional error stack trace on failure
 Type: boolean
 
 Show version number
-
-### ~~with-deps~~
-
-Type: boolean
-
-Default: false
-
-**Deprecated:** Configure target dependencies instead. It will be removed in v14.
-
-Include dependencies of specified projects when computing what to run

@@ -101,9 +101,6 @@ export async function runCommand(
 ) {
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  // Doing this for backwards compatibility, should be removed in v14
-  ensureTargetDependenciesBackwardCompatibility(nxJson, nxArgs);
-
   const defaultDependencyConfigs = nxJson.targetDependencies;
   const tasks = createTasksForProjectToRun(
     projectsToRun,
@@ -582,25 +579,4 @@ function interpolateOverrides<T = any>(
     }
   });
   return interpolatedArgs;
-}
-
-function ensureTargetDependenciesBackwardCompatibility(
-  nxJson: NxJsonConfiguration,
-  nxArgs: NxArgs
-): void {
-  nxJson.targetDependencies ??= {};
-  if (nxArgs.withDeps) {
-    logger.warn(
-      stripIndent(`
-        DEPRECATION WARNING: --with-deps is deprecated and it will be removed in v14.
-        Configure target dependencies instead: https://nx.dev/configuration/projectjson
-      `)
-    );
-
-    if (!nxJson.targetDependencies[nxArgs.target]) {
-      nxJson.targetDependencies[nxArgs.target] = [
-        { target: nxArgs.target, projects: 'dependencies' },
-      ];
-    }
-  }
 }
