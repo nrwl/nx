@@ -170,8 +170,9 @@ jobs:
             done
       - run:
           name: Run E2E Tests
+          # We exclude nx-dev-e2e because it has its own github workflow so that we can run it against the Vercel preview deployment for the active PR
           command: |
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-react-native,e2e-detox --parallel=1
+            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-react-native,e2e-detox,nx-dev-e2e --parallel=1
           no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
@@ -197,7 +198,7 @@ jobs:
       - run:
           name: Run E2E Tests
           command: |
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-workspace-integrations,e2e-workspace-core,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-cli,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo --parallel=1
+            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-workspace-integrations,e2e-workspace-core,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-cli,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e --parallel=1
           no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
