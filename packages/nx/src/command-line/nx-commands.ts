@@ -15,6 +15,12 @@ const daemonHelpOutput = generateDaemonHelpOutput(isGenerateDocsProcess);
 // Ensure that the output takes up the available width of the terminal
 yargs.wrap(yargs.terminalWidth());
 
+export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
+  'strip-dashed': true,
+  // allow parsing --env.SOME_ARG for cypress cli env args
+  'dot-notation': true,
+};
+
 /**
  * Exposing the Yargs commands object so the documentation generator can
  * parse it. The CLI will consume it and call the `.argv` to bootstrapped
@@ -23,11 +29,7 @@ yargs.wrap(yargs.terminalWidth());
  * le executed correctly.
  */
 export const commandsObject = yargs
-  .parserConfiguration({
-    'strip-dashed': true,
-    // allow parsing --env.SOME_ARG for cypress cli env args
-    'dot-notation': true,
-  })
+  .parserConfiguration(parserConfiguration)
   .usage(
     `
 ${chalk.bold('Smart, Fast and Extensible Build System')}` +

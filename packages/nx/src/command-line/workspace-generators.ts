@@ -13,6 +13,7 @@ import { readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { logger } from '../utils/logger';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { normalizePath } from '../utils/path';
+import { parserConfiguration } from './nx-commands';
 
 const rootDirectory = workspaceRoot;
 const toolsDir = path.join(rootDirectory, 'tools');
@@ -160,6 +161,7 @@ function parseOptions(
     default: {
       interactive: true,
     },
+    configuration: parserConfiguration,
   });
   parsed['generator'] = `${collectionFile}:${parsed['_'][0]}`;
   parsed['_'] = parsed['_'].slice(1);
