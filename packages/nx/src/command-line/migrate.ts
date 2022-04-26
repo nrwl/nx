@@ -460,7 +460,7 @@ export function parseMigrationsOptions(options: {
 function versions(root: string, from: Record<string, string>) {
   const cache: Record<string, string> = {};
 
-  return (packageName: string) => {
+  function getFromVersion(packageName: string) {
     try {
       if (from[packageName]) {
         return from[packageName];
@@ -475,9 +475,15 @@ function versions(root: string, from: Record<string, string>) {
 
       return cache[packageName];
     } catch {
+      // Support migrating old workspaces without nx package
+      if (packageName === 'nx') {
+        return getFromVersion('@nrwl/workspace');
+      }
       return null;
     }
-  };
+  }
+
+  return getFromVersion;
 }
 
 // testing-fetch-start
