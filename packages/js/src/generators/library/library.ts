@@ -117,7 +117,6 @@ function addProject(
         executor: '@nrwl/workspace:run-commands',
         options: {
           command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
-          cwd: outputPath,
         },
         dependsOn: [{ projects: 'self', target: 'build' }],
       };
