@@ -6,13 +6,18 @@ type Markdown = string;
  * `Config`, all keys are required to be implemented (we use the TS built in `Required<T>` to
  * enforce that).
  *
- * The value of each entry in the ConfigExplainer instance should be an object containing a
- * markdown `description` and an `explainConfig()` method which will be given the user's actual
- * config to interpret at runtime.
+ * The value of each entry in the ConfigExplainer instance should be an object containing an
+ * `nxDevLearnMorePath` which will be used to link out to the docs as the source of truth for
+ * the generic field description and functionality, and an `explainConfig()` method which will be
+ * given the user's actual config for that field in order to provide a specific explanation.
  */
 export type ConfigExplainer<Config> = Required<{
   [key in keyof Config]: {
-    description: Markdown;
+    /**
+     * NOTE: We have configured e2e tests for nx-dev to ensure that all of the configurated `nxDevLearnMorePath`s
+     * remain valid links over time.
+     */
+    nxDevLearnMorePath: `/${string}#${string}`;
     explainConfig: (configValue: Config[key]) => Markdown;
   };
 }>;

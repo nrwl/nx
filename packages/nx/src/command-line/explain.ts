@@ -40,11 +40,10 @@ export function explainHandler(args: ExplainArgs) {
     linesToLog.push(` ${chalk.cyan.bold(key)}`);
     linesToLog.push('\n');
 
-    const description = explainer.description;
     linesToLog.push('\n');
-    for (const line of description.split('\n')) {
-      linesToLog.push(chalk.dim(`${line}` + '\n'));
-    }
+    linesToLog.push(
+      `Learn more about "${key}" here: https://nx.dev${explainer.nxDevLearnMorePath}\n`
+    );
     linesToLog.push('\n');
     linesToLog.push('\n');
     linesToLog.push(chalk.bold('Your Config:'));

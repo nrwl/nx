@@ -1,21 +1,6 @@
-import { join } from 'path';
-import { ensureDescriptionsMatch } from '../test-utils';
 import { nxConfigExplainer } from './nx-json';
 
 describe('nx.json explainer', () => {
-  it('should keep its description fields in sync with the JSDoc annotations on the interface representing the config', () => {
-    expect(() =>
-      ensureDescriptionsMatch({
-        fileContainingConfigInterface: join(
-          __dirname,
-          '../../config/nx-json.ts'
-        ),
-        configInterfaceName: 'NxJsonConfiguration',
-        configExplainer: nxConfigExplainer,
-      })
-    ).not.toThrow();
-  });
-
   describe('extends', () => {
     it('should explain the extends property', () => {
       expect(nxConfigExplainer.extends.explainConfig('nx/presets/npm.json'))
@@ -24,8 +9,9 @@ describe('nx.json explainer', () => {
 
         If you want to inspect the base config you can run:
 
+        \`\`\`sh
         npx nx explain nx/presets/npm.json
-        "
+        \`\`\`"
       `);
     });
   });
@@ -197,8 +183,6 @@ describe('nx.json explainer', () => {
       ).toMatchInlineSnapshot(`
         "Your \`default\` task runner is using the \`nx/tasks-runners/default\` runner.
 
-        To learn more about configuring Nx task runners, see https://nx.dev/configuration/projectjson#tasks-runner-options
-
         P.S. Have you considered enabling Nx Cloud? It's free for most workspaces. Learn how to add Nx Cloud to your workspace here: https://nx.app/docs/add-nx-cloud-to-workspace#adding-nx-cloud-to-an-existing-workspace"
       `);
     });
@@ -214,11 +198,9 @@ describe('nx.json explainer', () => {
             },
           },
         })
-      ).toMatchInlineSnapshot(`
-        "Your \`default\` task runner is using the \`@nrwl/nx-cloud\` runner.
-
-        To learn more about configuring Nx task runners, see https://nx.dev/configuration/projectjson#tasks-runner-options"
-      `);
+      ).toMatchInlineSnapshot(
+        `"Your \`default\` task runner is using the \`@nrwl/nx-cloud\` runner."`
+      );
     });
 
     it('should explain the tasksRunnerOptions property - MULTIPLE RUNNERS', () => {
@@ -244,9 +226,7 @@ describe('nx.json explainer', () => {
 
           - \`default\` using runner \`@nrwl/nx-cloud\`
 
-          - \`anotherCompletelyCustomRunner\` using runner \`completely/custom/runner\`
-
-        To learn more about configuring Nx task runners, see https://nx.dev/configuration/projectjson#tasks-runner-options"
+          - \`anotherCompletelyCustomRunner\` using runner \`completely/custom/runner\`"
       `);
     });
   });

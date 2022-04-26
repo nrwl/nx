@@ -4,13 +4,15 @@ import type {
 } from 'nx/src/config/nx-json';
 import { ConfigExplainer } from '../config-explainer';
 
+const NX_DEV_BASE_PATH = '/configuration/workspace-defaults-and-cli';
+
 /**
  * The descriptions below should be kept in sync with their JSDoc counterparts on the config interface itself.
  * We have a utility in the unit tests to ensure that this is the case.
  */
 export const nxConfigExplainer: ConfigExplainer<NxJsonConfiguration> = {
   extends: {
-    description: `Optional (additional) Nx.json configuration file which becomes a base for this one`,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#extends`,
     explainConfig: (extendsVal) => {
       if (!extendsVal) {
         return 'No custom config set, you could safely remove this section';
@@ -19,12 +21,13 @@ export const nxConfigExplainer: ConfigExplainer<NxJsonConfiguration> = {
 
 If you want to inspect the base config you can run:
 
+\`\`\`sh
 npx nx explain ${extendsVal}
-`;
+\`\`\``;
     },
   },
   implicitDependencies: {
-    description: `Map of files to projects that implicitly depend on them`,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#files--implicit-dependencies`,
     explainConfig: (implicitDependencies) => {
       if (
         !implicitDependencies ||
@@ -122,7 +125,7 @@ npx nx explain ${extendsVal}
     },
   },
   targetDependencies: {
-    description: `Dependencies between different target names across all projects`,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#target-dependencies`,
     explainConfig: (targetDependencies) => {
       if (Object.keys(targetDependencies).length === 0) {
         return 'No custom config set, you could safely remove this section';
@@ -149,7 +152,7 @@ npx nx explain ${extendsVal}
     },
   },
   npmScope: {
-    description: `NPM Scope that the workspace uses`,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#npm-scope`,
     explainConfig: (npmScope) => {
       if (!npmScope) {
         return 'No custom config set, you could safely remove this section';
@@ -168,7 +171,7 @@ npx nx explain ${extendsVal}
     },
   },
   affected: {
-    description: `Default options for \`nx affected\``,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#affected`,
     explainConfig: (affected) => {
       if (!affected || !affected.defaultBase) {
         return 'No custom config set, you could safely remove this section';
@@ -177,7 +180,7 @@ npx nx explain ${extendsVal}
     },
   },
   workspaceLayout: {
-    description: `Where new apps + libs should be placed`,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#workspace-layout`,
     explainConfig: (workspaceLayout) => {
       if (!workspaceLayout || Object.keys(workspaceLayout).length === 0) {
         return 'No custom config set, you could safely remove this section';
@@ -217,7 +220,7 @@ npx nx explain ${extendsVal}
     },
   },
   tasksRunnerOptions: {
-    description: `Available Task Runners`,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#tasks-runner-options`,
     explainConfig: (tasksRunnerOptions) => {
       if (Object.keys(tasksRunnerOptions).length === 0) {
         return 'No custom config set, you could safely remove this section';
@@ -228,8 +231,6 @@ npx nx explain ${extendsVal}
       const usesNxCloud = allRunners.some(
         ([_, runnerConfig]) => runnerConfig.runner === '@nrwl/nx-cloud'
       );
-
-      const learnMoreText = `To learn more about configuring Nx task runners, see https://nx.dev/configuration/projectjson#tasks-runner-options`;
 
       if (allRunners.length === 1) {
         output += `Your \`${allRunners[0][0]}\` task runner is using the \`${allRunners[0][1].runner}\` runner.`;
@@ -243,7 +244,6 @@ npx nx explain ${extendsVal}
         }
       }
 
-      output += `\n\n${learnMoreText}`;
       if (!usesNxCloud) {
         output += `\n\nP.S. Have you considered enabling Nx Cloud? It's free for most workspaces. Learn how to add Nx Cloud to your workspace here: https://nx.app/docs/add-nx-cloud-to-workspace#adding-nx-cloud-to-an-existing-workspace`;
       }
@@ -252,21 +252,7 @@ npx nx explain ${extendsVal}
     },
   },
   generators: {
-    description: `List of default values used by generators.
-
-These defaults are global. They are used when no other defaults are configured.
-
-Example:
-
-\`\`\`
-{
-  "@nrwl/react": {
-    "library": {
-      "style": "scss"
-    }
-  }
-}
-\`\`\``,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#generators`,
     explainConfig: (generatorsConfig) => {
       if (!generatorsConfig || Object.keys(generatorsConfig).length === 0) {
         return 'No custom config set, you could safely remove this section';
@@ -332,7 +318,7 @@ Example:
     },
   },
   cli: {
-    description: `Default generator collection. It is used when no collection is provided.`,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#cli-options`,
     explainConfig: (cli) => {
       if (!cli || Object.keys(cli).length === 0) {
         return 'No custom config set, you could safely remove this section';
@@ -356,7 +342,7 @@ Example:
     },
   },
   plugins: {
-    description: `Plugins for extending the project graph`,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#plugins`,
     explainConfig: (plugins) => {
       if (!plugins || (Array.isArray(plugins) && plugins.length === 0)) {
         return 'No custom config set, you could safely remove this section';
@@ -371,7 +357,7 @@ Example:
     },
   },
   pluginsConfig: {
-    description: `Configuration for Nx Plugins`,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#plugins-config`,
     explainConfig: (pluginsConfig) => {
       if (!pluginsConfig || Object.keys(pluginsConfig).length === 0) {
         return 'No custom config set, you could safely remove this section';
@@ -392,8 +378,7 @@ Example:
     },
   },
   defaultProject: {
-    description: `Default project. When project isn't provided, the default project
-will be used. Convenient for small workspaces with one main application.`,
+    nxDevLearnMorePath: `${NX_DEV_BASE_PATH}#default-project`,
     explainConfig: (defaultProject) => {
       if (!defaultProject) {
         return 'You have set an empty value for `defaultProject` which means that a project name will always need to be specified when running Nx target/run commands such as `nx build` or `nx run build`, and the CLI will appropriately error if you do not';

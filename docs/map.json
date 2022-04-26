@@ -44,12 +44,17 @@
         "id": "configuration",
         "itemList": [
           {
-            "name": "package.json and nx.json",
+            "name": "Workspace defaults and CLI: nx.json",
+            "id": "workspace-defaults-and-cli",
+            "file": "shared/configuration/workspace-defaults-and-cli"
+          },
+          {
+            "name": "Project configuration: package.json",
             "id": "packagejson",
             "file": "shared/configuration/packagejson"
           },
           {
-            "name": "project.json and nx.json",
+            "name": "Project configuration: project.json",
             "id": "projectjson",
             "file": "shared/configuration/projectjson"
           }

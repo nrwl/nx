@@ -100,8 +100,6 @@ const IGNORE_MATCHES = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
     '@angular/cli',
-    // Only used in unit tests
-    'jest-diff',
   ],
   web: [
     // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
