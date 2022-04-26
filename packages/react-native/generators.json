@@ -46,6 +46,12 @@
       "schema": "./src/generators/stories/schema.json",
       "description": "Create stories for all components declared in an application or library.",
       "hidden": false
+    },
+    "upgrade-native": {
+      "factory": "./src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeSchematic",
+      "schema": "./src/generators/upgrade-native/schema.json",
+      "description": "Destructive command to upgrade native iOS and Android code to latest.",
+      "hidden": false
     }
   },
   "generators": {
@@ -91,6 +97,12 @@
       "factory": "./src/generators/stories/stories#storiesGenerator",
       "schema": "./src/generators/stories/schema.json",
       "description": "Create stories/specs for all components declared in an application or library.",
+      "hidden": false
+    },
+    "upgrade-native": {
+      "factory": "./src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeGenerator",
+      "schema": "./src/generators/upgrade-native/schema.json",
+      "description": "Destructive command to upgrade native iOS and Android code to latest.",
       "hidden": false
     }
   }

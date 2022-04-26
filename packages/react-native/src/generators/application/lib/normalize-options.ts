@@ -1,4 +1,4 @@
-import { names, Tree } from '@nrwl/devkit';
+import { names } from '@nrwl/devkit';
 import { join } from 'path';
 import { Schema } from '../schema';
 
