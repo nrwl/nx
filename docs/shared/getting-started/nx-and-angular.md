@@ -34,7 +34,7 @@ Check out the following to get started:
 
 Nx integrates well with the Angular CLI:
 
-- It decorates the Angular CLI. After adding Nx to your workspace, running `ng` will run the wrapped Angular CLI that goes through Nx. Everything will work the same way but a lot faster.
+- It decorates the Angular CLI. After adding Nx to your workspace, running `nx` will run the wrapped Angular CLI that goes through Nx. Everything will work the same way but a lot faster.
 - It supports all Angular Devkit builders and schematics.
 - It supports using `angular.json` to configure projects and their targets.
 - Nx Console works with Angular CLI projects.
