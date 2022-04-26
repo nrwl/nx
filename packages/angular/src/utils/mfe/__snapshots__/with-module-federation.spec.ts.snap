@@ -23,7 +23,7 @@ Array [
           "eager": undefined,
           "requiredVersion": false,
         },
-        "npm:lodash": Object {
+        "lodash": Object {
           "requiredVersion": undefined,
           "singleton": true,
           "strictVersion": true,

@@ -39,7 +39,7 @@ function recursivelyResolveWorkspaceDependents(
 
     // If this is a npm dep ensure it is going to be added as a dep of this MFE so it can be shared if needed
     if (isNpm) {
-      dependencySets.npmPackages.add(dep.target);
+      dependencySets.npmPackages.add(dep.target.replace('npm:', ''));
     } else {
       dependencySets.workspaceLibraries.add(dep.target);
     }
