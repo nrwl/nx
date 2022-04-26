@@ -151,3 +151,12 @@ utility functions missing from the RTL package: `waitForNextUpdate` and `waitFor
 utility functions, try swapping them with `waitFor` instead.
 
 If you continue to have issues after the migration, please open an issue on the RTL repo: https://github.com/testing-library/react-testing-library.
+
+## React Native v0.68
+
+Nx will also update your workspace to React Native v0.68. There are breaking changes, please refer to the official [React Native 0.68 guide](https://reactnative.dev/blog/2022/03/30/version-068) for details.
+
+Because typical React Native projects are essentially made up of a JavaScript project and native code projects (an Android project, an iOS project). For native code, you can either upgrade manully using [React Native Upgrade Helper](https://react-native-community.github.io/upgrade-helper/ or using Nx's `upgrade-native` generator.
+
+For manully update, simplly go to [React Native Upgrade Helper](https://react-native-community.github.io/upgrade-helper/) and copy the diff to your native code one by one.
+Nevertheless, you can use Nx's command `nx g @nrwl/react-native:upgrade-native <your project name>` to replace your iOS and Android folder with the latest code. (Note: this command is destructive, do NOT use it if you got customized native code.)
