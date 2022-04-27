@@ -1541,6 +1541,11 @@
             "file": "shared/guides/module-federation/faster-builds"
           },
           {
+            "name": "Micro Frontend Architecture",
+            "id": "micro-frontend-architecture",
+            "file": "shared/guides/module-federation/micro-frontend-architecture"
+          },
+          {
             "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
             "id": "dynamic-module-federation-with-angular",
             "file": "shared/guides/module-federation/dynamic-mfe-angular"

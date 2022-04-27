@@ -296,7 +296,7 @@ Because Nx Cloud's Distributed Tasks Execution works with any task graph, having
 
 ## Summary
 
-You could use Module Federation to implement microfrontends, but this guide showed how to use it to speed up your builds.
+You could use Module Federation to implement [micro frontends](/module-federation/micro-frontend-architecture), but this guide showed how to use it to speed up your builds.
 
 Module Federation allows you to split a single build process into multiple processes which can run in parallel or even on multiple machines. The result of each build process can be cached independently. For this to work well in practice you need to have a build system supporting distributed computation caching and distributed tasks execution (e.g., Nx + Nx Cloud).
 
