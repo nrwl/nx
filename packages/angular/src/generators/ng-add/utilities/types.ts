@@ -21,3 +21,8 @@ export type ValidationError = {
   hint?: string;
 };
 export type ValidationResult = ValidationError[] | null;
+
+export type Target = {
+  builders: string[];
+  acceptMultipleDefinitions?: boolean;
+};
