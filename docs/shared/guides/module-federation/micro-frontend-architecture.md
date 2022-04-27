@@ -1,7 +1,7 @@
 # Micro Frontend Architecture
 
 Since version 14, Nx provides out-of-the-box [Module Federation](/module-federation/faster-builds) support to both React
-and Angular. The micro frontend (MFE) architecture builds on top of Module Federation by providing _independent deployability_.
+and Angular. The Micro Frontend (MFE) architecture builds on top of Module Federation by providing _independent deployability_.
 
 If you have not read the [Module Federation guide](/module-federation/faster-builds) yet, we recommend that you read it
 before continuing with this MFE guide.
@@ -146,7 +146,7 @@ such as migrating from React to Vue, for example.
 ## Summary
 
 While Module Federation enables faster builds by vertically slicing your application into smaller ones, the
-Micro frontend architecture layers _independent deployments_ on top of federation. Teams should only choose MFEs
+MFE architecture layers _independent deployments_ on top of federation. Teams should only choose MFEs
 if they want to deploy their host and remotes on different cadences.
 
 Teams should consider a process for changes to core libraries that require deploying all applications. These types of
