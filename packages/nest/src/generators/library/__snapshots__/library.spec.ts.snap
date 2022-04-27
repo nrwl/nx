@@ -1,7 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`lib --testEnvironment should set target jest testEnvironment to jsdom 1`] = `
-"module.exports = {
+"/* eslint-disable */
+module.exports = {
   displayName: 'my-lib',
   preset: '../../jest.preset.js',
   globals: {
@@ -19,7 +20,8 @@ exports[`lib --testEnvironment should set target jest testEnvironment to jsdom 1
 `;
 
 exports[`lib --testEnvironment should set target jest testEnvironment to node by default 1`] = `
-"module.exports = {
+"/* eslint-disable */
+module.exports = {
   displayName: 'my-lib',
   preset: '../../jest.preset.js',
   globals: {

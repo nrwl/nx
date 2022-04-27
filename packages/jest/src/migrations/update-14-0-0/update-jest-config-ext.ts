@@ -31,6 +31,17 @@ function updateTsConfig(tree: Tree, tsConfigPath: string) {
   }
 }
 
+function addEsLintIgnoreComments(tree: Tree, filePath: string) {
+  if (tree.exists(filePath)) {
+    const contents = tree.read(filePath, 'utf-8');
+    tree.write(
+      filePath,
+      `/* eslint-disable */
+${contents}`
+    );
+  }
+}
+
 function isJestConfigValid(tree: Tree, options: JestExecutorOptions) {
   const configExt = extname(options.jestConfig);
 
@@ -72,6 +83,8 @@ export async function updateJestConfigExt(tree: Tree) {
       if (!options.jestConfig || !isJestConfigValid(tree, options)) {
         return;
       }
+
+      addEsLintIgnoreComments(tree, options.jestConfig);
 
       const newJestConfigPath = options.jestConfig.replace('.js', '.ts');
       tree.rename(options.jestConfig, newJestConfigPath);

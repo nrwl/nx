@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Jest Migration (v14.0.0) should NOT update jest.config.ts preset 1`] = `
+exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.config.ts 1`] = `
 "module.exports = {
   displayName: 'lib-one',
   preset: '../../jest.preset.js',
@@ -18,7 +18,7 @@ exports[`Jest Migration (v14.0.0) should NOT update jest.config.ts preset 1`] = 
 "
 `;
 
-exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.config.ts 1`] = `
+exports[`Jest Migration (v14.0.0) should update jest.config.ts preset to use the jest.preset.ts 1`] = `
 "module.exports = {
   displayName: 'lib-one',
   preset: '../../jest.preset.js',

@@ -462,7 +462,8 @@ describe('lib', () => {
 
       expect(tree.read(`libs/my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/* eslint-disable */
+        module.exports = {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
           testEnvironment: 'node',

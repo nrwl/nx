@@ -1,8 +1,8 @@
 import * as ts from 'typescript';
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
-import { Config } from '@jest/types';
-import { createContext, runInContext } from 'vm';
-import { dirname, join } from 'path';
+import {applyChangesToString, ChangeType, Tree} from '@nrwl/devkit';
+import {Config} from '@jest/types';
+import {createContext, runInContext} from 'vm';
+import {dirname, join} from 'path';
 
 function makeTextToInsert(
   value: unknown,
@@ -93,7 +93,7 @@ export function addOrUpdateProperty(
         const text = makeTextToInsert(
           value,
           arrayLiteral.elements.length !== 0 &&
-            !arrayLiteral.elements.hasTrailingComma
+          !arrayLiteral.elements.hasTrailingComma
         );
         const updatedContents = applyChangesToString(originalContents, [
           {
@@ -150,7 +150,7 @@ export function removeProperty(
     if (
       properties.length > 0 &&
       propertyAssignment.initializer.kind ===
-        ts.SyntaxKind.ObjectLiteralExpression
+      ts.SyntaxKind.ObjectLiteralExpression
     ) {
       return removeProperty(
         propertyAssignment.initializer as ts.ObjectLiteralExpression,
@@ -253,16 +253,20 @@ export function jestConfigObject(
 ): Partial<Config.InitialOptions> & { [index: string]: any } {
   const __filename = join(host.root, path);
   const contents = host.read(path, 'utf-8');
-  let module = { exports: {} };
+  let module = {exports: {}};
 
-  // TODO(caleb): handle imports
   // transform the export default syntax to module.exports
-  // const forcedModuleSyntax = `module.exports = ${jestConfigObjectAst(contents).getText()}`;
-
+  // this will work for the default config, but will break if there are any other ts syntax
+  // TODO(caleb): use the AST to transform back to the module.exports syntax so this will keep working
+  //  or deprecate and make a new method for getting the jest config object
+  const forcedModuleSyntax = contents.replace(
+    /export\s+default/,
+    'module.exports ='
+  );
   // Run the contents of the file with some stuff from this current context
   // The module.exports will be mutated by the contents of the file...
   runInContext(
-    contents,
+    forcedModuleSyntax,
     createContext({
       module,
       require,

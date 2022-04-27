@@ -421,7 +421,8 @@ describe('app', () => {
 
       expect(tree.read(`apps/my-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/* eslint-disable */
+        module.exports = {
           displayName: 'my-app',
           preset: '../../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -443,7 +444,8 @@ describe('app', () => {
 
       expect(tree.read(`apps/my-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/* eslint-disable */
+        module.exports = {
           displayName: 'my-app',
           preset: '../../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],

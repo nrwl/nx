@@ -1,7 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`jestProject --babelJest should generate proper jest.transform when --compiler=swc and supportTsx is true 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
@@ -14,7 +15,8 @@ exports[`jestProject --babelJest should generate proper jest.transform when --co
 `;
 
 exports[`jestProject --babelJest should generate proper jest.transform when babelJest and supportTsx is true 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
@@ -27,7 +29,8 @@ exports[`jestProject --babelJest should generate proper jest.transform when babe
 `;
 
 exports[`jestProject --babelJest should generate proper jest.transform when babelJest is true 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
@@ -40,7 +43,8 @@ exports[`jestProject --babelJest should generate proper jest.transform when babe
 `;
 
 exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-jest in the jest.config when generated for angular 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -65,7 +69,8 @@ exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-
 `;
 
 exports[`jestProject should create a jest.config.ts 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   globals: {
@@ -79,7 +84,8 @@ exports[`jestProject should create a jest.config.ts 1`] = `
 `;
 
 exports[`jestProject should generate files 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],

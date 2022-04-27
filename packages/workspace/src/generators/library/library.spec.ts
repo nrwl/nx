@@ -195,7 +195,8 @@ describe('lib', () => {
       expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.read(`libs/my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/* eslint-disable */
+        module.exports = {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
           globals: {
@@ -829,7 +830,8 @@ describe('lib', () => {
 
       expect(tree.read(`libs/my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/* eslint-disable */
+        module.exports = {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
           transform: {
