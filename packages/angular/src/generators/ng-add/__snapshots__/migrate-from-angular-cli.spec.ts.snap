@@ -1,0 +1,230 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`workspace --preserve-angular-cli-layout should create nx.json 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "implicitDependencies": Object {
+    ".eslintrc.json": "*",
+    "package.json": Object {
+      "dependencies": "*",
+      "devDependencies": "*",
+    },
+  },
+  "npmScope": "my-scope",
+  "targetDependencies": Object {
+    "build": Array [
+      Object {
+        "projects": "dependencies",
+        "target": "build",
+      },
+    ],
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+  "workspaceLayout": Object {
+    "appsDir": "",
+    "libsDir": "",
+  },
+}
+`;
+
+exports[`workspace --preserve-angular-cli-layout should support multiple projects 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "implicitDependencies": Object {
+    ".eslintrc.json": "*",
+    "package.json": Object {
+      "dependencies": "*",
+      "devDependencies": "*",
+    },
+  },
+  "npmScope": "my-scope",
+  "targetDependencies": Object {
+    "build": Array [
+      Object {
+        "projects": "dependencies",
+        "target": "build",
+      },
+    ],
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+  "workspaceLayout": Object {
+    "appsDir": "projects",
+    "libsDir": "projects",
+  },
+}
+`;
+
+exports[`workspace move to nx layout should create a root eslint config 1`] = `
+Object {
+  "ignorePatterns": Array [
+    "**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "extends": Array [
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": Array [
+        "*.ts",
+      ],
+      "parserOptions": Object {
+        "createDefaultProgram": true,
+      },
+      "rules": Object {
+        "@angular-eslint/component-selector": Array [
+          "error",
+          Object {
+            "prefix": "app",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": Array [
+          "error",
+          Object {
+            "prefix": "app",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@angular-eslint/template/recommended",
+      ],
+      "files": Array [
+        "*.html",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {
+        "@nrwl/nx/enforce-module-boundaries": Array [
+          "error",
+          Object {
+            "allow": Array [],
+            "depConstraints": Array [
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "*",
+                ],
+                "sourceTag": "*",
+              },
+            ],
+            "enforceBuildableLibDependency": true,
+          },
+        ],
+      },
+    },
+  ],
+  "plugins": Array [
+    "@nrwl/nx",
+  ],
+  "root": true,
+}
+`;
+
+exports[`workspace move to nx layout should create nx.json 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "cli": Object {
+    "defaultCollection": "@nrwl/angular",
+  },
+  "defaultProject": "myApp",
+  "implicitDependencies": Object {
+    ".eslintrc.json": "*",
+    "package.json": Object {
+      "dependencies": "*",
+      "devDependencies": "*",
+    },
+  },
+  "npmScope": "my-org",
+  "targetDependencies": Object {
+    "build": Array [
+      Object {
+        "projects": "dependencies",
+        "target": "build",
+      },
+    ],
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`workspace move to nx layout should update tsconfig.base.json if present 1`] = `
+Object {
+  "compilerOptions": Object {
+    "baseUrl": ".",
+    "paths": Object {},
+    "rootDir": ".",
+  },
+  "exclude": Array [
+    "node_modules",
+    "tmp",
+  ],
+}
+`;
+
+exports[`workspace move to nx layout should work if angular-cli workspace had tsconfig.base.json 1`] = `
+Object {
+  "compilerOptions": Object {
+    "baseUrl": ".",
+    "paths": Object {},
+    "rootDir": ".",
+  },
+  "exclude": Array [
+    "node_modules",
+    "tmp",
+  ],
+}
+`;

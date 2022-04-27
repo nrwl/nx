@@ -6,6 +6,7 @@ import { readJson, updateJson } from '../utils/json';
 import {
   addProjectConfiguration,
   getProjects,
+  getWorkspacePath,
   readProjectConfiguration,
   readWorkspaceConfiguration,
   removeProjectConfiguration,
@@ -13,7 +14,6 @@ import {
   updateWorkspaceConfiguration,
   WorkspaceConfiguration,
 } from './project-configuration';
-import { getWorkspacePath } from '../utils/get-workspace-layout';
 
 type ProjectConfigurationV1 = Pick<
   ProjectConfiguration,

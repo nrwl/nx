@@ -6,7 +6,7 @@ import type * as Prettier from 'prettier';
  * Formats all the created or updated files using Prettier
  * @param tree - the file system tree
  */
-export async function formatChangedWithPrettierIfAvailable(
+export async function formatChangedFilesWithPrettierIfAvailable(
   tree: Tree
 ): Promise<void> {
   let prettier: typeof Prettier;

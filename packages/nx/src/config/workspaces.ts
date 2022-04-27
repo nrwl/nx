@@ -319,11 +319,11 @@ function findFullGeneratorName(
 export function reformattedWorkspaceJsonOrNull(w: any) {
   const workspaceJson =
     w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+  if (workspaceJson?.projects) {
+    workspaceJson.projects = sortObjectByKeys(workspaceJson.projects);
+  }
 
-  return {
-    ...workspaceJson,
-    projects: sortObjectByKeys(workspaceJson.projects),
-  };
+  return workspaceJson;
 }
 
 export function toNewFormat(w: any): WorkspaceJsonConfiguration {

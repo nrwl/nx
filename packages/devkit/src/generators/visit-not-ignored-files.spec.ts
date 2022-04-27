@@ -1,4 +1,4 @@
-import { createTree } from '../tests/create-tree';
+import { createTree } from 'nx/src/generators/testing-utils/create-tree';
 import type { Tree } from 'nx/src/generators/tree';
 import { visitNotIgnoredFiles } from './visit-not-ignored-files';
 
