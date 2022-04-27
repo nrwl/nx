@@ -37,6 +37,7 @@ describe('@nrwl/workspace:workspace', () => {
       cli: 'nx',
       preset: Preset.Empty,
       defaultBase: 'main',
+      npmScope: 'proj',
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toEqual({
