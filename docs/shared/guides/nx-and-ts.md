@@ -153,40 +153,50 @@ To run these scripts with Nx, use the same syntax as Nx executors. `nx build myl
 
 ### `--publishable` flag
 
-If you generate the library with `--publishable`, Nx generates a minimal publish script in `tools/scripts/` directory along with a `publish` target to the library `project.json` with the following content:
+Let's start by generating a new library `publish-me` with the following command:
+
+```shell
+nx g @nrwl/js:lib publish-me --publishable --importPath="@happynrwl/publish-me"
+```
+
+Generating a library with `--publishable` flag does several things extra on top of `--buildable`. It generates a minimal `publish.mjs` script in `tools/scripts/` directory if it does not already exist. Additionally, `--publishable` also adds a `publish` target to the library's `project.json` with the following content:
 
 ```json
 {
-  "root": "packages/hello-tsc",
-  "sourceRoot": "packages/hello-tsc/src",
-  "projectType": "library",
+  "root": "packages/publish-me",
+  "sourceRoot": "packages/publish-me/src",
   "targets": {
-    "build": { ... },
-    "lint": { ... },
-    "test": { ... },
+    "build": {},
     "publish": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "node tools/scripts/publish.mjs hello-tsc {args.ver} {args.tag}"
+        "command": "node tools/scripts/publish.mjs publish-me {args.ver} {args.tag}"
       },
-      "dependsOn": [{ "projects": "self", "target": "build" }]
-    }
+      "dependsOn": [
+        {
+          "projects": "self",
+          "target": "build"
+        }
+      ]
+    },
+    "lint": {},
+    "test": {}
   },
   "tags": []
 }
 ```
 
-The `publish` target invokes the generated `publish.mjs` script using [`@nrwl/workspace:run-commands`](/executors/run-commands-builder) executor. The publish script does the following:
+The `publish` target invokes the generated `publish.mjs` script using [`@nrwl/workspace:run-commands`](/executors/run-commands-builder) executor. The script does the following:
 
 - Validate the `ver` argument against a simple [SemVer](https://semver.org/) RegExp.
-- Validate the `name` of the project (eg: `hello-tsc`) against the workspace's existing projects.
+- Validate the `name` of the project (eg: `publish-me`) against the workspace existing projects.
 - Update the `version` property in the `package.json` of your project's `build.outputPath`
 - Invoke `npm publish` with the provided tag (default to `next` so you won't publish to `latest` by accident)
 
-Make sure to authenticate with `npm` before running the `publish` target.
+> Make sure to authenticate with `npm` before running the `publish` target.
 
 ```shell
-nx publish hello-tsc --ver=<required-version> --tag=[custom-tag]
+nx publish publish-me --ver=<required-version> --tag=[custom-tag]
 ```
 
 Thanks to [“Target Dependencies” (`dependsOn`)](/configuration/projectjson#dependson) property under the `publish` target, Nx runs the `build` target automatically before Nx runs `publish`. And of course, if `build` has already run, it won't execute again, thanks to [Nx computation caching](/using-nx/caching).
@@ -195,16 +205,32 @@ Thanks to [“Target Dependencies” (`dependsOn`)](/configuration/projectjson#d
 
 ### Manual setup
 
-If you have never used `--publishable` flag when generating your libraries, you can generate a new dummy library with `--publishable`
+Let's set up our `hello-tsc` library to be publishable as well but this time, we'll do it manually. All we have to do is to copy the `publish` target from `publish-me` library to `hello-tsc` and modify it to use `hello-tsc` project name instead.
 
 ```shell
-nx generate @nrwl/js:lib dummy --publishable --importPath=@happyorg/dummy
+{
+  "root": "packages/hello-tsc",
+  "sourceRoot": "packages/hello-tsc/src",
+  "targets": {
+    "build": {},
+    "publish": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "node tools/scripts/publish.mjs hello-tsc {args.ver} {args.tag}",
+      },
+      "dependsOn": [
+        {
+          "projects": "self",
+          "target": "build"
+        }
+      ]
+    },
+    "lint": {},
+    "test": {}
+  },
+  "tags": []
+}
+
 ```
 
-This will prompt Nx to generate the minimal `publish.mjs` script in `tools/scripts`. Afterwards, you can copy the `publish` target from `dummy` to your library's `project.json`. Remember to change the `command` to your library's name. Finally, you can safely remove the `dummy` library
-
-```shell
-nx generate @nrwl/workspace:remove dummy
-```
-
-Now, you should be able to invoke `nx publish <your-lib-name> --ver=<required-version>` to publish your library.
+Now, you should be able to invoke `nx publish hello-tsc --ver=<required-version>` to publish it to `npm`
