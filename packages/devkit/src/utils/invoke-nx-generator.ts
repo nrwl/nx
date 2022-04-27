@@ -1,5 +1,9 @@
 import { logger, stripIndent } from 'nx/src/utils/logger';
-import type { FileChange, Tree, TreeWriteOptions } from 'nx/src/config/tree';
+import type {
+  FileChange,
+  Tree,
+  TreeWriteOptions,
+} from 'nx/src/generators/tree';
 import { toNewFormat, toOldFormatOrNull } from 'nx/src/config/workspaces';
 import { Generator, GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import { parseJson, serializeJson } from 'nx/src/utils/json';

@@ -15,7 +15,7 @@ import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import { Stats } from 'fs';
 import { detectPackageManager } from '../utils/package-manager';
 import { GenerateOptions } from '../command-line/generate';
-import { FileChange, Tree } from '../config/tree';
+import { FileChange, Tree } from '../generators/tree';
 import {
   buildWorkspaceConfigurationFromGlobs,
   globForProjectFiles,

@@ -4,23 +4,19 @@ import {
   globForProjectFiles,
   reformattedWorkspaceJsonOrNull,
   toNewFormat,
-} from 'nx/src/config/workspaces';
+} from '../../config/workspaces';
 import { basename, dirname, relative } from 'path';
 
-import {
-  getWorkspaceLayout,
-  getWorkspacePath,
-} from '../utils/get-workspace-layout';
-import { readJson, updateJson, writeJson } from '../utils/json';
+import { readJson, updateJson, writeJson } from './json';
 
-import type { Tree } from 'nx/src/config/tree';
-import type { NxJsonConfiguration } from 'nx/src/config/nx-json';
-import { joinPathFragments } from 'nx/src/utils/path';
+import type { Tree } from '../tree';
+import type { NxJsonConfiguration } from '../../config/nx-json';
+import { joinPathFragments } from '../../utils/path';
 import {
   ProjectConfiguration,
   RawWorkspaceJsonConfiguration,
   WorkspaceJsonConfiguration,
-} from 'nx/src/config/workspace-json-project-json';
+} from '../../config/workspace-json-project-json';
 
 export type WorkspaceConfiguration = Omit<
   WorkspaceJsonConfiguration,
@@ -45,8 +41,7 @@ export function addProjectConfiguration(
   projectConfiguration: ProjectConfiguration,
   standalone?: boolean
 ): void {
-  const workspaceLayout = getWorkspaceLayout(tree);
-  standalone = standalone ?? workspaceLayout.standaloneAsDefault;
+  standalone = standalone ?? shouldDefaultToUsingStandaloneConfigs(tree);
   setProjectConfiguration(
     tree,
     projectName,
@@ -549,4 +544,34 @@ function validateProjectConfigurationOperationsWithoutWorkspaceJson(
       `Cannot delete Project ${projectName}. It doesn't exist or uses package.json configuration.`
     );
   }
+}
+
+export function shouldDefaultToUsingStandaloneConfigs(tree: Tree): boolean {
+  const workspacePath = getWorkspacePath(tree);
+  const rawWorkspace =
+    workspacePath && tree.exists(workspacePath)
+      ? readJson<RawWorkspaceJsonConfiguration>(tree, workspacePath)
+      : null;
+  return !rawWorkspace
+    ? true // if workspace.json doesn't exist, all projects **must** be standalone
+    : Object.values(rawWorkspace.projects).reduce(
+        // default for second, third... projects should be based on all projects being defined as a path
+        // for configuration read from ng schematics, this is determined by configFilePath's presence
+        (allStandalone, next) =>
+          allStandalone &&
+          (typeof next === 'string' || 'configFilePath' in next),
+
+        // default for first project should be true if using Nx Schema
+        rawWorkspace.version > 1
+      );
+}
+
+export function getWorkspacePath(
+  tree: Tree
+): '/angular.json' | '/workspace.json' | null {
+  const possibleFiles: ('/angular.json' | '/workspace.json')[] = [
+    '/angular.json',
+    '/workspace.json',
+  ];
+  return possibleFiles.filter((path) => tree.exists(path))[0];
 }

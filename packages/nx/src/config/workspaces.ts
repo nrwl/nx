@@ -25,6 +25,7 @@ import {
   CustomHasher,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
 export function workspaceConfigName(root: string) {
   if (existsSync(path.join(root, 'angular.json'))) {
@@ -316,7 +317,13 @@ function findFullGeneratorName(
 }
 
 export function reformattedWorkspaceJsonOrNull(w: any) {
-  return w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+  const workspaceJson =
+    w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+
+  return {
+    ...workspaceJson,
+    projects: sortObjectByKeys(workspaceJson.projects),
+  };
 }
 
 export function toNewFormat(w: any): WorkspaceJsonConfiguration {

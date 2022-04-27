@@ -1,5 +1,5 @@
 import { createTree } from '../tests/create-tree';
-import type { Tree } from 'nx/src/config/tree';
+import type { Tree } from 'nx/src/generators/tree';
 import { visitNotIgnoredFiles } from './visit-not-ignored-files';
 
 describe('visitNotIgnoredFiles', () => {

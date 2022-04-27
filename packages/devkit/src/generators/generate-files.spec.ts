@@ -1,5 +1,5 @@
-import type { Tree } from 'nx/src/config/tree';
-import { createTree } from '../tests/create-tree';
+import type { Tree } from 'nx/src/generators/tree';
+import { createTree } from 'nx/src/generators/testing-utils/create-tree';
 import { generateFiles } from './generate-files';
 import { join } from 'path';
 import * as FileType from 'file-type';

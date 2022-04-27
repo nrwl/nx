@@ -1,7 +1,7 @@
-import { Tree } from 'nx/src/config/tree';
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
+import { Tree } from '../tree';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
-import { createTreeWithEmptyWorkspace } from '../tests/create-tree-with-empty-workspace';
+import { createTreeWithEmptyWorkspace } from '../testing-utils/create-tree-with-empty-workspace';
 import { readJson, updateJson } from '../utils/json';
 import {
   addProjectConfiguration,

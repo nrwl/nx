@@ -1,5 +1,5 @@
-import type { Tree } from 'nx/src/config/tree';
-import { updateJson } from '../utils/json';
+import type { Tree } from 'nx/src/generators/tree';
+import { updateJson } from 'nx/src/generators/utils/json';
 
 export function updateTsConfigsToJs(
   tree: Tree,

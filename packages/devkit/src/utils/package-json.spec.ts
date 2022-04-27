@@ -1,4 +1,4 @@
-import type { Tree } from 'nx/src/config/tree';
+import type { Tree } from 'nx/src/generators/tree';
 import { readJson, writeJson } from './json';
 import { addDependenciesToPackageJson } from './package-json';
 import { createTree } from '../tests/create-tree';
