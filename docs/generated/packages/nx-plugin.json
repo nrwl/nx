@@ -290,6 +290,11 @@
             "enum": ["jest", "none"],
             "description": "Test runner to use for unit tests.",
             "default": "jest"
+          },
+          "includeHasher": {
+            "type": "boolean",
+            "default": false,
+            "description": "Should the boilerplate for a custom hasher be generated?"
           }
         },
         "required": ["project", "name"],

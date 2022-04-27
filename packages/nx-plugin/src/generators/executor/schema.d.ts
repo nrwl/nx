@@ -3,4 +3,5 @@ export interface Schema {
   name: string;
   description?: string;
   unitTestRunner: 'jest' | 'none';
+  includeHasher: boolean;
 }
