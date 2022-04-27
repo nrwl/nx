@@ -59,14 +59,42 @@ function isJestConfigValid(tree: Tree, options: JestExecutorOptions) {
 function updateTsconfigSpec(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  path
+  path,
+  options: { isNextWithProjectParse: boolean; tsConfigPath: string } = {
+    isNextWithProjectParse: false,
+    tsConfigPath: '',
+  }
 ) {
   updateJson(tree, joinPathFragments(projectConfig.root, path), (json) => {
     json.include = Array.from(
       new Set([...(json.include || []), 'jest.config.ts'])
     );
+    if (options.isNextWithProjectParse) {
+      const tsConfig = readJson(tree, options.tsConfigPath);
+      const tsConfigExclude = (tsConfig.exclude || []).filter(
+        (e) => e !== 'jest.config.ts'
+      );
+      json.exclude = Array.from(
+        new Set([...(json.exclude || []), ...tsConfigExclude])
+      );
+    }
     return json;
   });
+}
+
+function isNextWithProjectLint(
+  projectConfig: ProjectConfiguration,
+  esLintJson: any
+) {
+  const esLintOverrides = esLintJson?.overrides?.find((o) =>
+    ['*.ts', '*.tsx', '*.js', '*.jsx'].every((ext) => o.files.includes(ext))
+  );
+
+  // check if it's a next app and has a parserOptions.project set in the eslint overrides
+  return !!(
+    projectConfig?.targets?.['build']?.executor === '@nrwl/next:build' &&
+    esLintOverrides?.parserOptions?.project
+  );
 }
 
 export async function updateJestConfigExt(tree: Tree) {
@@ -98,7 +126,19 @@ export async function updateJestConfigExt(tree: Tree) {
           if (tsConfig.references) {
             for (const { path } of tsConfig.references) {
               if (path.endsWith('tsconfig.spec.json')) {
-                updateTsconfigSpec(tree, projectConfig, path);
+                const eslintPath = joinPathFragments(
+                  projectConfig.root,
+                  '.eslintrc.json'
+                );
+                updateTsconfigSpec(tree, projectConfig, path, {
+                  isNextWithProjectParse: tree.exists(eslintPath)
+                    ? isNextWithProjectLint(
+                        projectConfig,
+                        readJson(tree, eslintPath)
+                      )
+                    : false,
+                  tsConfigPath: filePath,
+                });
                 continue;
               }
 
