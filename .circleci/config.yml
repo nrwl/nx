@@ -79,9 +79,11 @@ commands:
                 paths:
                   - /usr/local/Homebrew
                   - ~/Library/Caches/Homebrew
-
+      - node/install-yarn:
+          version: 1.22.18
       - node/install-packages:
           pkg-manager: yarn
+          cache-version: v2
           include-branch-in-cache-key: false
       - when:
           condition:
