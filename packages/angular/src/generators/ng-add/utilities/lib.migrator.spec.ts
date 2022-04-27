@@ -28,6 +28,7 @@ describe('lib migrator', () => {
     name: string,
     config: AngularCliProjectConfiguration
   ): MigrationProjectConfiguration {
+    config.projectType = 'library';
     const angularJson = readJson(tree, 'angular.json');
     angularJson.projects[name] = config;
     writeJson(tree, 'angular.json', angularJson);
@@ -38,13 +39,32 @@ describe('lib migrator', () => {
   }
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
 
-    // a previous step in the migration that invokes the migrator sets the version to 2
+    // when this migrator is invoked, some of the workspace migration has
+    // already been run, so we make some adjustments to match that state
+    tree.delete('workspace.json');
     writeJson(tree, 'angular.json', { version: 2, projects: {} });
+
+    jest.clearAllMocks();
   });
 
   describe('validation', () => {
+    it('should fail validation when the project root is not specified', async () => {
+      const project = addProject('lib1', {} as any);
+      const migrator = new LibMigrator(tree, {}, project);
+
+      const result = migrator.validate();
+
+      expect(result).toHaveLength(1);
+      expect(result[0].message).toBe(
+        'The project root is not defined in the project configuration.'
+      );
+      expect(result[0].hint).toBe(
+        'Make sure the value for "projects.lib1.root" is set or remove the project if it is not valid.'
+      );
+    });
+
     it('should fail validation when the project root is not valid', async () => {
       const project = addProject('lib1', { root: 'projects/lib1' });
       const migrator = new LibMigrator(
@@ -352,7 +372,6 @@ describe('lib migrator', () => {
     });
 
     it('should warn when the lint target does not have any options', async () => {
-      writeJson(tree, 'projects/lib1/tsconfig.lib.json', {});
       const project = addProject('lib1', {
         root: 'projects/lib1',
         architect: { lint: { builder: '@angular-eslint/builder:lint' } },
@@ -366,8 +385,61 @@ describe('lib migrator', () => {
       ]);
     });
 
+    it('should warn when the specified eslintConfig in the lint target does not exist', async () => {
+      const project = addProject('lib1', {
+        root: 'projects/lib1',
+        architect: {
+          lint: {
+            builder: '@angular-eslint/builder:lint',
+            options: { eslintConfig: '.non-existent-eslintrc.json' },
+          },
+        },
+      });
+      const migrator = new LibMigrator(tree, {}, project, mockedLogger as any);
+
+      await expect(migrator.migrate()).resolves.not.toThrow();
+
+      expect(mockedLogger.warn.mock.calls).toContainEqual([
+        'The ESLint config file ".non-existent-eslintrc.json" could not be found. Skipping updating the file.',
+      ]);
+    });
+
+    it('should warn when eslintConfig is not specified and the ".eslintrc.json" file at the project root does not exist', async () => {
+      const project = addProject('lib1', {
+        root: 'projects/lib1',
+        architect: {
+          lint: { builder: '@angular-eslint/builder:lint', options: {} },
+        },
+      });
+      const migrator = new LibMigrator(tree, {}, project, mockedLogger as any);
+
+      await expect(migrator.migrate()).resolves.not.toThrow();
+
+      expect(mockedLogger.warn.mock.calls).toContainEqual([
+        'The ESLint config file "projects/lib1/.eslintrc.json" could not be found. Skipping updating the file.',
+      ]);
+    });
+
+    it('should warn when a specified lint file pattern is not contained within the project', async () => {
+      const project = addProject('lib1', {
+        root: 'projects/lib1',
+        architect: {
+          lint: {
+            builder: '@angular-eslint/builder:lint',
+            options: { lintFilePatterns: ['not-within-project/**/*.ts'] },
+          },
+        },
+      });
+      const migrator = new LibMigrator(tree, {}, project, mockedLogger as any);
+
+      await expect(migrator.migrate()).resolves.not.toThrow();
+
+      expect(mockedLogger.warn.mock.calls).toContainEqual([
+        'The lint file pattern "not-within-project/**/*.ts" specified in the "lint" target is not contained in the project root or source root. The pattern will not be updated.',
+      ]);
+    });
+
     it('should warn when the test target does not have any options', async () => {
-      writeJson(tree, 'projects/lib1/tsconfig.lib.json', {});
       const project = addProject('lib1', {
         root: 'projects/lib1',
         architect: { test: { builder: '@angular-devkit/build-angular:karma' } },
@@ -465,10 +537,17 @@ describe('lib migrator', () => {
       expect(sourceRoot).toBe('libs/lib1/src');
     });
 
+    it('should set source root when it was not set', async () => {
+      const project = addProject('lib1', { root: 'projects/lib1' });
+      const migrator = new LibMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      const { sourceRoot } = readProjectConfiguration(tree, 'lib1');
+      expect(sourceRoot).toBe('libs/lib1/src');
+    });
+
     it('should update build target', async () => {
-      writeJson(tree, 'projects/lib1/ng-package.json', {});
-      writeJson(tree, 'projects/lib1/tsconfig.lib.json', {});
-      writeJson(tree, 'projects/lib1/tsconfig.lib.prod.json', {});
       const project = addProject('lib1', {
         root: 'projects/lib1',
         sourceRoot: 'projects/lib1/src',
@@ -501,9 +580,6 @@ describe('lib migrator', () => {
     });
 
     it('should update build target when using a target name different than "build"', async () => {
-      writeJson(tree, 'projects/lib1/ng-package.json', {});
-      writeJson(tree, 'projects/lib1/tsconfig.lib.json', {});
-      writeJson(tree, 'projects/lib1/tsconfig.lib.prod.json', {});
       const project = addProject('lib1', {
         root: 'projects/lib1',
         sourceRoot: 'projects/lib1/src',
@@ -536,9 +612,6 @@ describe('lib migrator', () => {
     });
 
     it('should support a build target with only configurations', async () => {
-      writeJson(tree, 'projects/lib1/ng-package.json', {});
-      writeJson(tree, 'projects/lib1/tsconfig.lib.json', {});
-      writeJson(tree, 'projects/lib1/tsconfig.lib.prod.json', {});
       const project = addProject('lib1', {
         root: 'projects/lib1',
         sourceRoot: 'projects/lib1/src',
@@ -581,9 +654,6 @@ describe('lib migrator', () => {
     });
 
     it('should support a build target with no development configuration', async () => {
-      writeJson(tree, 'projects/lib1/ng-package.json', {});
-      writeJson(tree, 'projects/lib1/tsconfig.lib.json', {});
-      writeJson(tree, 'projects/lib1/tsconfig.lib.prod.json', {});
       const project = addProject('lib1', {
         root: 'projects/lib1',
         sourceRoot: 'projects/lib1/src',
@@ -618,7 +688,6 @@ describe('lib migrator', () => {
     });
 
     it('should update lint target', async () => {
-      writeJson(tree, 'projects/lib1/.eslintrc.json', {});
       const project = addProject('lib1', {
         root: 'projects/lib1',
         sourceRoot: 'projects/lib1/src',
@@ -648,7 +717,6 @@ describe('lib migrator', () => {
     });
 
     it('should update lint target when using a name different than "lint"', async () => {
-      writeJson(tree, 'projects/lib1/.eslintrc.json', {});
       const project = addProject('lib1', {
         root: 'projects/lib1',
         sourceRoot: 'projects/lib1/src',
@@ -678,7 +746,6 @@ describe('lib migrator', () => {
     });
 
     it('should update the eslintConfig option when specified', async () => {
-      writeJson(tree, 'projects/lib1/.eslintrc.json', {});
       const project = addProject('lib1', {
         root: 'projects/lib1',
         sourceRoot: 'projects/lib1/src',
@@ -844,7 +911,6 @@ describe('lib migrator', () => {
 
   describe('tsConfig', () => {
     it('should update tsConfig file specified in the build target options', async () => {
-      writeJson(tree, 'tsconfig.json', {});
       writeJson(tree, 'projects/lib1/tsconfig.lib.json', {
         extends: '../../tsconfig.json',
         compilerOptions: {
@@ -889,7 +955,6 @@ describe('lib migrator', () => {
     });
 
     it('should not overwrite the include option in the tsConfig file specified in the build target options', async () => {
-      writeJson(tree, 'tsconfig.json', {});
       writeJson(tree, 'projects/lib1/tsconfig.lib.json', {
         extends: '../../tsconfig.json',
         compilerOptions: {},
@@ -919,7 +984,6 @@ describe('lib migrator', () => {
     });
 
     it('should not set the include option in the tsConfig file specified in the build target options when files is set', async () => {
-      writeJson(tree, 'tsconfig.json', {});
       writeJson(tree, 'projects/lib1/tsconfig.lib.json', {
         extends: '../../tsconfig.json',
         compilerOptions: {},
@@ -949,7 +1013,6 @@ describe('lib migrator', () => {
     });
 
     it('should update tsConfig file specified in the build target development configuration', async () => {
-      writeJson(tree, 'tsconfig.json', {});
       writeJson(tree, 'projects/lib1/tsconfig.lib.json', {
         extends: '../../tsconfig.json',
         compilerOptions: {
@@ -996,7 +1059,6 @@ describe('lib migrator', () => {
     });
 
     it('should update tsConfig file specified in the test target options', async () => {
-      writeJson(tree, 'tsconfig.json', {});
       writeJson(tree, 'projects/lib1/tsconfig.spec.json', {
         extends: '../../tsconfig.json',
         compilerOptions: {
