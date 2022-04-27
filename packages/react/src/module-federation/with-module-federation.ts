@@ -15,51 +15,31 @@ import { readWorkspaceJson } from 'nx/src/project-graph/file-utils';
 import { ModuleFederationConfig, Remotes } from './models';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
-interface DependencySets {
+function collectDependencies(
+  projectGraph: ProjectGraph,
+  name: string,
+  dependencies = {
+    workspaceLibraries: new Set<string>(),
+    npmPackages: new Set<string>(),
+  },
+  seen: Set<string> = new Set()
+): {
   workspaceLibraries: Set<string>;
   npmPackages: Set<string>;
-}
-
-function recursivelyResolveWorkspaceDependents(
-  projectGraph: ProjectGraph<any>,
-  target: string,
-  dependencySets: DependencySets,
-  seenTargets: Set<string> = new Set()
-) {
-  if (seenTargets.has(target)) {
-    return [];
+} {
+  if (seen.has(name)) {
+    return dependencies;
   }
-  let dependencies = [target];
-  seenTargets.add(target);
+  seen.add(name);
 
-  const workspaceDependencies = (
-    projectGraph.dependencies[target] ?? []
-  ).filter((dep) => {
-    const isNpm = dep.target.startsWith('npm:');
-
-    // If this is a npm dep ensure it is going to be added as a dep of this MFE so it can be shared if needed
-    if (isNpm) {
-      dependencySets.npmPackages.add(dep.target.replace('npm:', ''));
+  (projectGraph.dependencies[name] ?? []).forEach((dependency) => {
+    if (dependency.target.startsWith('npm:')) {
+      dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
     } else {
-      dependencySets.workspaceLibraries.add(dep.target);
+      dependencies.workspaceLibraries.add(dependency.target);
+      collectDependencies(projectGraph, dependency.target, dependencies, seen);
     }
-
-    return !isNpm;
   });
-
-  if (workspaceDependencies.length > 0) {
-    for (const dep of workspaceDependencies) {
-      dependencies = [
-        ...dependencies,
-        ...recursivelyResolveWorkspaceDependents(
-          projectGraph,
-          dep.target,
-          dependencySets,
-          seenTargets
-        ),
-      ];
-    }
-  }
 
   return dependencies;
 }
@@ -107,45 +87,17 @@ async function getDependentPackagesForProject(name: string) {
     projectGraph = await createProjectGraphAsync();
   }
 
-  // Build Sets for the direct deps (internal and external) for this MFE app
-  const dependencySets = projectGraph.dependencies[name].reduce(
-    (dependencies, dependency) => {
-      const workspaceLibraries = new Set(dependencies.workspaceLibraries);
-      const npmPackages = new Set(dependencies.npmPackages);
-
-      if (dependency.target.startsWith('npm:')) {
-        npmPackages.add(dependency.target.replace('npm:', ''));
-      } else {
-        workspaceLibraries.add(dependency.target);
-      }
-
-      return {
-        workspaceLibraries,
-        npmPackages,
-      };
-    },
-    { workspaceLibraries: new Set<string>(), npmPackages: new Set<string>() }
+  const { npmPackages, workspaceLibraries } = collectDependencies(
+    projectGraph,
+    name
   );
 
-  const seenWorkspaceLibraries = new Set<string>();
-  dependencySets.workspaceLibraries.forEach((workspaceLibrary) => {
-    recursivelyResolveWorkspaceDependents(
-      projectGraph,
-      workspaceLibrary,
-      dependencySets,
-      seenWorkspaceLibraries
-    );
-  });
-
-  const deps = {
-    workspaceLibraries: [...dependencySets.workspaceLibraries],
-    npmPackages: [...dependencySets.npmPackages],
+  return {
+    workspaceLibraries: mapWorkspaceLibrariesToTsConfigImport([
+      ...workspaceLibraries,
+    ]),
+    npmPackages: [...npmPackages],
   };
-
-  deps.workspaceLibraries = mapWorkspaceLibrariesToTsConfigImport(
-    deps.workspaceLibraries
-  );
-  return deps;
 }
 
 function determineRemoteUrl(remote: string) {
