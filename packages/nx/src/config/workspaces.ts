@@ -504,7 +504,11 @@ export function globForProjectFiles(
 ) {
   // Deal w/ Caching
   const cacheKey = [root, ...(nxJson?.plugins || [])].join(',');
-  if (projectGlobCache && cacheKey === projectGlobCacheKey)
+  if (
+    process.env.NX_PROJECT_GLOB_CACHE !== 'false' &&
+    projectGlobCache &&
+    cacheKey === projectGlobCacheKey
+  )
     return projectGlobCache;
   projectGlobCacheKey = cacheKey;
 
