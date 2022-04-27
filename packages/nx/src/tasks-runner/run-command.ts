@@ -368,7 +368,7 @@ function addTasksForProjectDependencyConfig(
   };
 
   const newPath = [...path, pathFragment];
-  seenSet.add(project.name);
+  seenSet.add(targetIdentifier);
 
   if (tasksMap.has(targetIdentifier)) {
     return;
@@ -388,11 +388,11 @@ function addTasksForProjectDependencyConfig(
         ) {
           const depTargetId = getId({
             project: depProject.name,
-            target,
+            target: dependencyConfig.target,
             configuration: configuration,
           });
           exitOnCircularDep(newPath, depTargetId);
-          if (seenSet.has(dep.target)) {
+          if (seenSet.has(depTargetId)) {
             continue;
           }
 
@@ -413,18 +413,17 @@ function addTasksForProjectDependencyConfig(
           );
         } else {
           if (!depProject) {
-            seenSet.add(dep.target);
             continue;
           }
           const depTargetId = getId({
             project: depProject.name,
-            target,
+            target: dependencyConfig.target,
             configuration: configuration,
           });
 
           exitOnCircularDep(newPath, depTargetId);
 
-          if (seenSet.has(dep.target)) {
+          if (seenSet.has(depTargetId)) {
             continue;
           }
 
