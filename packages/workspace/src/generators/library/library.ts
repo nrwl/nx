@@ -13,6 +13,7 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   addDependenciesToPackageJson,
+  getImportPath,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
@@ -243,8 +244,8 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const defaultImportPath = `@${npmScope}/${projectDirectory}`;
-  const importPath = options.importPath || defaultImportPath;
+  const importPath =
+    options.importPath || getImportPath(npmScope, projectDirectory);
 
   return {
     ...options,

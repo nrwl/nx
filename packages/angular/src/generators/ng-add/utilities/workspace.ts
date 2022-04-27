@@ -47,9 +47,10 @@ export function createNxJson(
   setWorkspaceLayoutAsNewProjectRoot: boolean = false
 ): void {
   const { newProjectRoot = '' } = readJson(tree, 'angular.json');
+  const { npmScope } = options;
 
   writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-    npmScope: options.npmScope,
+    ...(npmScope ? { npmScope } : {}),
     affected: {
       defaultBase: options.defaultBase ?? deduceDefaultBase(),
     },

@@ -4,6 +4,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getImportPath,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -352,15 +353,14 @@ function normalizeOptions(
   });
 
   const { npmScope } = getWorkspaceLayout(tree);
-
   const projectRoot = joinPathFragments(destinationDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const defaultImportPath = `@${npmScope}/${projectDirectory}`;
-  const importPath = options.importPath || defaultImportPath;
+  const importPath =
+    options.importPath || getImportPath(npmScope, projectDirectory);
 
   return {
     ...options,

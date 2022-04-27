@@ -2,6 +2,7 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
+  getImportPath,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -62,7 +63,6 @@ export const librarySchematic = convertNxGenerator(libraryGenerator);
 
 function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
   const { npmScope, libsDir } = getWorkspaceLayout(tree);
-  const defaultPrefix = npmScope;
   const name = names(options.name).fileName;
   const projectDirectory = options.directory
     ? `${names(options.directory).fileName}/${name}`
@@ -80,11 +80,11 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
     : [];
 
   const importPath =
-    options.importPath || `@${defaultPrefix}/${projectDirectory}`;
+    options.importPath || getImportPath(npmScope, projectDirectory);
 
   return {
     ...options,
-    prefix: defaultPrefix, // we could also allow customizing this
+    prefix: npmScope, // we could also allow customizing this
     fileName,
     name: projectName,
     projectRoot,

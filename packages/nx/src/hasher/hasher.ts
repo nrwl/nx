@@ -17,6 +17,7 @@ import { Task } from '../config/task-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { FilesetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
+import { getImportPath } from '../utils/path';
 
 /**
  * A data structure returned by the default hasher.
@@ -518,7 +519,8 @@ class TaskHasher {
     const { paths, ...compilerOptions } = this.tsConfigJson.compilerOptions;
     const rootPath = p.data.root.split('/');
     rootPath.shift();
-    const pathAlias = `@${this.nxJson.npmScope}/${rootPath.join('/')}`;
+    const { npmScope } = this.nxJson;
+    const pathAlias = getImportPath(npmScope, rootPath.join('/'));
 
     return JSON.stringify({
       compilerOptions: {

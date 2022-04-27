@@ -87,7 +87,7 @@ function generatePreset(host: Tree, opts: NormalizedSchema) {
       `--name=${opts.appName}`,
       opts.style ? `--style=${opts.style}` : null,
       opts.linter ? `--linter=${opts.linter}` : null,
-      opts.npmScope ? `--npmScope=${opts.npmScope}` : `--npmScope=${opts.name}`,
+      opts.npmScope ? `--npmScope=${opts.npmScope}` : null,
       opts.preset ? `--preset=${opts.preset}` : null,
       opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
       `--cli=${cliCommand}`,

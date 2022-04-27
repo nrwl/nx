@@ -137,6 +137,7 @@ It only uses language primitives and immutable objects
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
 - [formatFiles](../../devkit/index#formatfiles)
 - [generateFiles](../../devkit/index#generatefiles)
+- [getImportPath](../../devkit/index#getimportpath)
 - [getOutputsForTargetAndConfiguration](../../devkit/index#getoutputsfortargetandconfiguration)
 - [getPackageManagerCommand](../../devkit/index#getpackagemanagercommand)
 - [getPackageManagerVersion](../../devkit/index#getpackagemanagerversion)
@@ -1027,6 +1028,25 @@ doesn't get confused about incorrect TypeScript files.
 #### Returns
 
 `void`
+
+---
+
+### getImportPath
+
+▸ **getImportPath**(`npmScope`, `projectDirectory`): `string`
+
+Prefixes project name with npm scope
+
+#### Parameters
+
+| Name               | Type     |
+| :----------------- | :------- |
+| `npmScope`         | `string` |
+| `projectDirectory` | `string` |
+
+#### Returns
+
+`string`
 
 ---
 

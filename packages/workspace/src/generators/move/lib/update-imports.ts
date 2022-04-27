@@ -1,6 +1,7 @@
 import {
   applyChangesToString,
   ChangeType,
+  getImportPath,
   getProjects,
   getWorkspaceLayout,
   ProjectConfiguration,
@@ -51,7 +52,7 @@ export function updateImports(
     from:
       fromPath ||
       normalizeSlashes(
-        `@${npmScope}/${project.root.slice(libsDir.length + 1)}`
+        getImportPath(npmScope, project.root.slice(libsDir.length + 1))
       ),
     to: schema.importPath,
   };

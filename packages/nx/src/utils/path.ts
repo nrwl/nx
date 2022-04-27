@@ -17,3 +17,13 @@ export function normalizePath(osSpecificPath: string): string {
 export function joinPathFragments(...fragments: string[]): string {
   return normalizePath(path.join(...fragments));
 }
+
+/**
+ * Prefixes project name with npm scope
+ */
+export function getImportPath(
+  npmScope: string,
+  projectDirectory: string
+): string {
+  return npmScope ? `@${npmScope}/${projectDirectory}` : projectDirectory;
+}

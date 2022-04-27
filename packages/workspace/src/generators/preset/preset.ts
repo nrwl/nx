@@ -3,6 +3,7 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
+  getImportPath,
   installPackagesTask,
   names,
   PackageManager,
@@ -211,16 +212,17 @@ function connectAngularAndNest(host: Tree, options: Schema) {
 
   insertNgModuleImport(host, modulePath, 'HttpClientModule');
 
-  const scope = options.npmScope;
+  const importScope = getImportPath(options.npmScope, '');
+  const scopePrefix = options.npmScope ? `${options.npmScope}-` : '';
   const style = options.style ?? 'css';
   host.write(
     `apps/${options.name}/src/app/app.component.ts`,
     `import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Message } from '@${scope}/api-interfaces';
+import { Message } from '${importScope}api-interfaces';
 
 @Component({
-  selector: '${scope}-root',
+  selector: '${scopePrefix}root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.${style}']
 })
@@ -273,7 +275,7 @@ describe('AppComponent', () => {
     `apps/api/src/app/app.controller.ts`,
     `import { Controller, Get } from '@nestjs/common';
 
-import { Message } from '@${scope}/api-interfaces';
+import { Message } from '${importScope}api-interfaces';
 
 import { AppService } from './app.service';
 
@@ -292,7 +294,7 @@ export class AppController {
   host.write(
     `apps/api/src/app/app.service.ts`,
     `import { Injectable } from '@nestjs/common';
-import { Message } from '@${scope}/api-interfaces';
+import { Message } from '${importScope}api-interfaces';
 
 @Injectable()
 export class AppService {
@@ -305,7 +307,8 @@ export class AppService {
 }
 
 function connectReactAndExpress(host: Tree, options: Schema) {
-  const scope = options.npmScope;
+  const importScope = getImportPath(options.npmScope, '');
+  const scopePrefix = options.npmScope ? `${options.npmScope}-` : '';
   host.write(
     'libs/api-interfaces/src/lib/api-interfaces.ts',
     `export interface Message { message: string }`
@@ -314,7 +317,7 @@ function connectReactAndExpress(host: Tree, options: Schema) {
   host.write(
     `apps/${options.name}/src/app/app.tsx`,
     `import React, { useEffect, useState } from 'react';
-import { Message } from '@${scope}/api-interfaces';
+import { Message } from '${importScope}api-interfaces';
 
 export const App = () => {
   const [m, setMessage] = useState<Message>({ message: '' });
@@ -373,7 +376,7 @@ describe('App', () => {
   host.write(
     `apps/api/src/main.ts`,
     `import * as express from 'express';
-import { Message } from '@${scope}/api-interfaces';
+import { Message } from '${importScope}api-interfaces';
 
 const app = express();
 

@@ -6,6 +6,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getImportPath,
   getProjects,
   getWorkspaceLayout,
   joinPathFragments,
@@ -358,7 +359,7 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
       addRoute(appComponentPath, componentSource, {
         routePath: options.routePath,
         componentName: names(options.name).className,
-        moduleName: `@${npmScope}/${options.projectDirectory}`,
+        moduleName: getImportPath(npmScope, options.projectDirectory),
       })
     );
     host.write(appComponentPath, changes);
@@ -402,7 +403,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const importPath = options.importPath || `@${npmScope}/${projectDirectory}`;
+  const importPath =
+    options.importPath || getImportPath(npmScope, projectDirectory);
 
   const normalized: NormalizedSchema = {
     ...options,

@@ -29,7 +29,9 @@ function addFiles(
 ) {
   const packageJsonPath = join(projectRoot, 'package.json');
   writeJson(tree, packageJsonPath, {
-    name: joinPathFragments(`@${npmScope}`, options.name),
+    name: npmScope
+      ? joinPathFragments(`@${npmScope}`, options.name)
+      : options.name,
     version: '0.0.0',
     scripts: {
       test: 'node index.js',
