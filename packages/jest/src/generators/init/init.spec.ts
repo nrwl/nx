@@ -9,14 +9,27 @@ describe('jest', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should generate files', async () => {
+  it('should generate files with --js flag', async () => {
+    jestInitGenerator(tree, { js: true });
+
+    expect(tree.exists('jest.config.js')).toBeTruthy();
+    expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
+      "const { getJestProjects } = require('@nrwl/jest');
+
+      module.exports = {
+      projects: getJestProjects()
+      };"
+    `);
+  });
+
+  it('should generate files ', async () => {
     jestInitGenerator(tree, {});
 
     expect(tree.exists('jest.config.ts')).toBeTruthy();
     expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "const { getJestProjects } = require('@nrwl/jest');
-      
-      module.exports = {
+      "import { getJestProjects } from '@nrwl/jest';
+
+      export default {
       projects: getJestProjects()
       };"
     `);

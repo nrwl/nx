@@ -1,9 +1,8 @@
-
 import * as ts from 'typescript';
-import {applyChangesToString, ChangeType, Tree} from '@nrwl/devkit';
-import {Config} from '@jest/types';
-import {createContext, runInContext} from 'vm';
-import {dirname, join} from 'path';
+import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
+import { Config } from '@jest/types';
+import { createContext, runInContext } from 'vm';
+import { dirname, join } from 'path';
 
 function makeTextToInsert(
   value: unknown,
@@ -94,7 +93,7 @@ export function addOrUpdateProperty(
         const text = makeTextToInsert(
           value,
           arrayLiteral.elements.length !== 0 &&
-          !arrayLiteral.elements.hasTrailingComma
+            !arrayLiteral.elements.hasTrailingComma
         );
         const updatedContents = applyChangesToString(originalContents, [
           {
@@ -151,7 +150,7 @@ export function removeProperty(
     if (
       properties.length > 0 &&
       propertyAssignment.initializer.kind ===
-      ts.SyntaxKind.ObjectLiteralExpression
+        ts.SyntaxKind.ObjectLiteralExpression
     ) {
       return removeProperty(
         propertyAssignment.initializer as ts.ObjectLiteralExpression,
@@ -165,19 +164,22 @@ export function removeProperty(
 }
 
 function isModuleExport(node: ts.Statement) {
-  return ts.isExpressionStatement(node) &&
+  return (
+    ts.isExpressionStatement(node) &&
     node.expression?.kind &&
     ts.isBinaryExpression(node.expression) &&
     node.expression.left.getText() === 'module.exports' &&
     node.expression.operatorToken?.kind === ts.SyntaxKind.EqualsToken
-
+  );
 }
 
 function isDefaultExport(node: ts.Statement) {
-  return ts.isExportAssignment(node) &&
+  return (
+    ts.isExportAssignment(node) &&
     node.expression?.kind &&
     ts.isObjectLiteralExpression(node.expression) &&
-    node.getText().startsWith('export default');
+    node.getText().startsWith('export default')
+  );
 }
 
 /**
@@ -194,14 +196,12 @@ export function jestConfigObjectAst(
   );
 
   const exportStatement = sourceFile.statements.find(
-    (statement) =>
-      isModuleExport(statement) || isDefaultExport(statement)
+    (statement) => isModuleExport(statement) || isDefaultExport(statement)
   );
 
   let ast: ts.ObjectLiteralExpression;
   if (ts.isExpressionStatement(exportStatement)) {
-    console.log('isExpressionStatement');
-    const moduleExports = exportStatement.expression as ts.BinaryExpression
+    const moduleExports = exportStatement.expression as ts.BinaryExpression;
     if (!moduleExports) {
       throw new Error(
         `
@@ -210,11 +210,10 @@ export function jestConfigObjectAst(
       );
     }
 
-    ast = moduleExports.right as ts.ObjectLiteralExpression
+    ast = moduleExports.right as ts.ObjectLiteralExpression;
   } else if (ts.isExportAssignment(exportStatement)) {
-    console.log('isExportStatement');
-    const defaultExport = exportStatement.expression as ts.ObjectLiteralExpression
-
+    const defaultExport =
+      exportStatement.expression as ts.ObjectLiteralExpression;
 
     if (!defaultExport) {
       throw new Error(
@@ -224,7 +223,7 @@ export function jestConfigObjectAst(
       );
     }
 
-    ast = defaultExport
+    ast = defaultExport;
   }
   if (!ast) {
     throw new Error(
@@ -234,14 +233,13 @@ export function jestConfigObjectAst(
     );
   }
 
-  console.log(ast.kind, ast.getText());
   if (!ts.isObjectLiteralExpression(ast)) {
     throw new Error(
       `The 'export default' or 'module.exports' expression is not an object literal.`
     );
   }
 
-  return ast
+  return ast;
 }
 
 /**
@@ -255,7 +253,7 @@ export function jestConfigObject(
 ): Partial<Config.InitialOptions> & { [index: string]: any } {
   const __filename = join(host.root, path);
   const contents = host.read(path, 'utf-8');
-  let module = {exports: {}};
+  let module = { exports: {} };
 
   // TODO(caleb): handle imports
   // transform the export default syntax to module.exports

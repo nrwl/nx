@@ -1,5 +1,5 @@
-import {createTree} from '@nrwl/devkit/testing';
-import {jestConfigObject, jestConfigObjectAst} from './functions';
+import { createTree } from '@nrwl/devkit/testing';
+import { jestConfigObject, jestConfigObjectAst } from './functions';
 
 describe('jestConfigObject', () => {
   describe('module.exports', () => {
@@ -84,17 +84,17 @@ describe('jestConfigObject', () => {
         projects: ['<rootDir>/project-a', '<rootDir>/project-b'],
       });
     });
-  })
+  });
 
   describe('export default', () => {
     it('should work for basic cases', () => {
       const content = `
         export default {
           abc: 'xyz'
-        }`
+        }`;
 
       expect(jestConfigObjectAst(content).getText()).toMatchSnapshot();
-    })
+    });
 
     it('should handle spread assignments', () => {
       const content = `
@@ -103,9 +103,9 @@ describe('jestConfigObject', () => {
         export default {
           ...nxPreset,
           abc: 'xyz'
-        }`
+        }`;
 
       expect(jestConfigObjectAst(content).getText()).toMatchSnapshot();
-    })
+    });
   });
 });
