@@ -31,7 +31,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@swc/core": "^1.2.152",
+    "@swc/core": "^1.2.173",
     "@swc-node/register": "^1.4.2",
     "fast-glob": "3.2.7",
     "jsonc-parser": "3.0.0",
