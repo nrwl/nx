@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.config.ts 1`] = `
-"module.exports = {
+exports[`Jest Migration (v14.0.0) should NOT update jest.config.ts preset 1`] = `
+"export default {
   displayName: 'lib-one',
-  
+  preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -13,15 +13,30 @@ exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.c
     '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib-one',\\"preset\\": \\"../../jest.preset.ts\\"
+  coverageDirectory: '../../coverage/libs/lib-one'
 };
 "
 `;
 
-exports[`Jest Migration (v14.0.0) should update jest.config.ts preset to use the jest.preset.ts 1`] = `
-"module.exports = {
+exports[`Jest Migration (v14.0.0) should convert module.exports => export default 1`] = `
+"const { getJestProjects } = require('@nrwl/jest');
+const nxPreset = require('@nrwl/jest/preset');
+
+
+const someFn = () => ({more: 'stuff'});
+module.export.abc = someFn;
+export default {
+...nxPreset,
+more: 'stuff',
+someFn,
+projects: getJestProjects()
+};"
+`;
+
+exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.config.ts 1`] = `
+"export default {
   displayName: 'lib-one',
-  
+  preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -31,7 +46,7 @@ exports[`Jest Migration (v14.0.0) should update jest.config.ts preset to use the
     '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib-one',\\"preset\\": \\"../../jest.preset.ts\\"
+  coverageDirectory: '../../coverage/libs/lib-one'
 };
 "
 `;

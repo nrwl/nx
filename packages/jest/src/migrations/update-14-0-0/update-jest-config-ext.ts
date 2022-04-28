@@ -11,43 +11,14 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { jestConfigObject } from '../../utils/config/functions';
-import { dirname, extname, join } from 'path';
-import {
-  removePropertyFromJestConfig,
-  addPropertyToJestConfig,
-} from '../../utils/config/update-config';
-import { JestExecutorOptions } from '../../executors/jest/schema';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import {tsquery} from "@phenomnomnominal/tsquery";
+import {BinaryExpression} from "typescript";
+import {jestConfigObject, jestConfigObjectAst} from '../../utils/config/functions';
+import {dirname, extname, join} from 'path';
+import {JestExecutorOptions} from '../../executors/jest/schema';
+import {forEachExecutorOptions} from '@nrwl/workspace/src/utilities/executor-options-utils';
 
 const allowedExt = ['.ts', '.js'];
-let isRootPresetUpdated = false;
-
-function updateJestPreset(
-  tree: Tree,
-  options: JestExecutorOptions,
-  projectName: string
-) {
-  const oldConfig = jestConfigObject(tree, options.jestConfig);
-  if (!oldConfig) {
-    return;
-  }
-  // if using the root preset and the root preset was updated to ts file.
-  // then update the jest config
-  if (isRootPresetUpdated && oldConfig?.preset?.endsWith('jest.preset.js')) {
-    removePropertyFromJestConfig(tree, options.jestConfig, 'preset');
-    addPropertyToJestConfig(
-      tree,
-      options.jestConfig,
-      'preset',
-      joinPathFragments(
-        offsetFromRoot(dirname(options.jestConfig)),
-        'jest.preset.ts'
-      ),
-      { valueAsString: false }
-    );
-  }
-}
 
 function updateTsConfig(tree: Tree, tsConfigPath: string) {
   try {
@@ -91,14 +62,22 @@ function updateTsconfigSpec(
   });
 }
 
+export function updateToDefaultExport(tree: Tree, filePath: string) {
+  const newConfig = tsquery.replace(tree.read(filePath, 'utf-8'),'ExpressionStatement BinaryExpression', (node: BinaryExpression) => {
+    if(node.left.getText() === 'module.exports') {
+      return `export default ${node.right.getText()}`;
+    }
+
+    return node.getText()
+  });
+
+  tree.write(filePath, newConfig);
+}
+
 export async function updateJestConfigExt(tree: Tree) {
   if (tree.exists('jest.config.js')) {
+    updateToDefaultExport(tree, 'jest.config.js');
     tree.rename('jest.config.js', 'jest.config.ts');
-  }
-
-  if (tree.exists('jest.preset.js')) {
-    isRootPresetUpdated = true;
-    tree.rename('jest.preset.js', 'jest.preset.ts');
   }
 
   forEachExecutorOptions<JestExecutorOptions>(
@@ -111,7 +90,7 @@ export async function updateJestConfigExt(tree: Tree) {
         return;
       }
 
-      updateJestPreset(tree, options, projectName);
+      updateToDefaultExport(tree, options.jestConfig);
 
       const newJestConfigPath = options.jestConfig.replace('.js', '.ts');
       tree.rename(options.jestConfig, newJestConfigPath);
@@ -123,7 +102,7 @@ export async function updateJestConfigExt(tree: Tree) {
           const tsConfig = readJson(tree, filePath);
 
           if (tsConfig.references) {
-            for (const { path } of tsConfig.references) {
+            for (const {path} of tsConfig.references) {
               if (path.endsWith('tsconfig.spec.json')) {
                 updateTsconfigSpec(tree, projectConfig, path);
                 continue;

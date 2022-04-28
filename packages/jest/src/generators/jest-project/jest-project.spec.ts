@@ -293,7 +293,7 @@ describe('jestProject', () => {
     } as JestProjectSchema);
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
-      "preset: '../../jest.preset.ts',"
+      "preset: '../../jest.preset.js',"
     );
   });
 
