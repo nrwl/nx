@@ -1,6 +1,5 @@
 import * as chalk from 'chalk';
 import { exec, execSync } from 'child_process';
-import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
 import { gt, lt, lte, major, valid } from 'semver';
 import { promisify } from 'util';
@@ -643,7 +642,7 @@ async function downloadPackageMigrationsFromRegistry(
   packageVersion: string,
   { migrations: migrationsFilePath, packageGroup }: NxMigrationsConfiguration
 ): Promise<ResolvedMigrationConfiguration> {
-  const dir = createTempNpmDirectory();
+  const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;
 
@@ -666,11 +665,7 @@ async function downloadPackageMigrationsFromRegistry(
       `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
     );
   } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
+    await cleanup();
   }
 
   return result;
@@ -680,7 +675,7 @@ async function getPackageMigrationsUsingInstall(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
-  const dir = createTempNpmDirectory();
+  const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;
 
@@ -704,11 +699,7 @@ async function getPackageMigrationsUsingInstall(
 
     result = { ...migrations, packageGroup, version: packageJson.version };
   } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
+    await cleanup();
   }
 
   return result;
