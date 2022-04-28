@@ -5,8 +5,7 @@ const fs = require('fs');
 const { exclude: _, ...swcJestConfig } = JSON.parse(
   fs.readFileSync(`${__dirname}/.lib.swcrc`, 'utf-8')
 );
-
-module.exports = {
+<% if(ext === 'ts') {%>export default {<% } else { %>module.exports = {<% } %>
   displayName: '<%= project %>',
   preset: '<%= offsetFromRoot %>jest.preset.js',
   transform: {

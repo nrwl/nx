@@ -4,7 +4,6 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { findRootJestPreset } from '../../../utils/config/find-root-jest-files';
 import { join } from 'path';
 import { JestProjectSchema } from '../schema';
 
@@ -27,7 +26,7 @@ export function createFiles(tree: Tree, options: JestProjectSchema) {
     tmpl: '',
     ...options,
     transformer,
-    ext: findRootJestPreset(tree) === 'jest.preset.js' ? '.js' : '.ts',
+    ext: options.js, // it doesn't matter if the root jest.config is ts or js
     projectRoot: projectConfig.root,
     offsetFromRoot: offsetFromRoot(projectConfig.root),
   });

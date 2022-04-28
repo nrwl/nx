@@ -1,4 +1,4 @@
-export = {
+export const nxPreset = {
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
   resolver: '@nrwl/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],

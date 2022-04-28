@@ -1,4 +1,4 @@
-module.exports = {
+<% if(ext === 'ts') {%>export default {<% } else { %>module.exports = {<% } %>
   displayName: '<%= project %>',
   preset: '<%= offsetFromRoot %>jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],

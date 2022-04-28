@@ -29,15 +29,20 @@ const schemaDefaults = {
 function createJestConfig(host: Tree, js: boolean = false) {
   // if the root ts config already exists then don't make a js one or vice versa
   if (!host.exists('jest.config.ts') && !host.exists('jest.config.js')) {
-    host.write(
-      `jest.config.${js ? 'js' : 'ts'}`,
-      stripIndents`
-  const { getJestProjects } = require('@nrwl/jest');
+    const contents = js
+      ? stripIndents`
+      const { getJestProjects } = require('@nrwl/jest');
 
-  module.exports = {
-    projects: getJestProjects()
-  };`
-    );
+      module.exports = {
+        projects: getJestProjects()
+      };`
+      : stripIndents`
+      import { getJestProjects } from '@nrwl/jest';
+
+      export default {
+       projects: getJestProjects()
+      };`;
+    host.write(`jest.config.${js ? 'js' : 'ts'}`, contents);
   }
 
   if (!host.exists('jest.preset.js')) {
@@ -45,7 +50,7 @@ function createJestConfig(host: Tree, js: boolean = false) {
     host.write(
       `jest.preset.js`,
       `
-      const nxPreset = require('@nrwl/jest/preset');
+      const nxPreset = require('@nrwl/jest/preset').default;
      
       module.exports = { ...nxPreset }`
     );

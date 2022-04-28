@@ -78,6 +78,31 @@ exports[`jestProject should create a jest.config.ts 1`] = `
 "
 `;
 
+exports[`jestProject should generate files 1`] = `
+"module.exports = {
+  displayName: 'lib1',
+  preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+    }
+  },
+  coverageDirectory: '../../coverage/libs/lib1',
+  transform: {
+    '^.+\\\\\\\\.(ts|mjs|js|html)$': 'jest-preset-angular'
+  },
+  transformIgnorePatterns: ['node_modules/(?!.*\\\\\\\\.mjs$)'],
+  snapshotSerializers: [
+    'jest-preset-angular/build/serializers/no-ng-attributes',
+    'jest-preset-angular/build/serializers/ng-snapshot',
+    'jest-preset-angular/build/serializers/html-comment',
+  ]
+};
+"
+`;
+
 exports[`jestProject should use jest.config.js in project config with --js flag 1`] = `
 Object {
   "executor": "@nrwl/jest:jest",

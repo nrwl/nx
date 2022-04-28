@@ -5,22 +5,13 @@ import {
   runCLIAsync,
   uniq,
   updateFile,
+  fileExists,
 } from '@nrwl/e2e/utils';
 
 describe('Jest', () => {
   beforeAll(() => {
-    newProject({ name: uniq('proj') });
+    newProject({ name: uniq('proj-jest') });
   });
-
-  it('should be able test projects using jest', async () => {
-    const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
-
-    const libResult = await runCLIAsync(`test ${mylib}`);
-    expect(libResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-  }, 500000);
 
   it('should merge with jest config globals', async () => {
     const testGlobal = `'My Test Global'`;
@@ -149,4 +140,27 @@ describe('Jest', () => {
       'Test Suites: 1 passed, 1 total'
     );
   }, 90000);
+
+  [
+    { generator: '@nrwl/js:lib', name: uniq('js-lib') },
+    { generator: '@nrwl/node:lib', name: uniq('node-lib') },
+    { generator: '@nrwl/react:lib', name: uniq('react-lib') },
+    { generator: '@nrwl/react:app', name: uniq('react-app') },
+    { generator: '@nrwl/next:app', name: uniq('next-app') },
+    { generator: '@nrwl/angular:app', name: uniq('angular-app') },
+    { generator: '@nrwl/workspace:lib', name: uniq('workspace-lib') },
+    { generator: '@nrwl/web:app', name: uniq('web-app') },
+  ].forEach(({ generator, name }) => {
+    it(`should run default jest tests for ${generator}`, async () => {
+      const generatedResults = runCLI(
+        `generate ${generator} ${name} --no-interactive`
+      );
+      expect(generatedResults).toContain(`jest.config.ts`);
+
+      const results = await runCLIAsync(`test ${name}`);
+      expect(results.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
+    }, 500000);
+  });
 });
