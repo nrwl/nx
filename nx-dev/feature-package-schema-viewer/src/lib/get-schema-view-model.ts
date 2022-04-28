@@ -18,11 +18,6 @@ function getReferenceFromQuery(query: string): string {
 
 export interface SchemaViewModel {
   packageName: string;
-  /**
-   * TODO@ben: Remove this property when there is nor more consumer.
-   * @Deprecated Will be removed. We are switching to internal linking, use "packageUrl".
-   */
-  packageGithubUrl: string;
   packageUrl: string;
   schemaGithubUrl: string;
   schemaMetadata: SchemaMetadata;
@@ -46,7 +41,6 @@ export function getSchemaViewModel(
   return {
     schemaMetadata,
     packageName: `@nrwl/${schemaRequest.pkg.name}`,
-    packageGithubUrl: schemaRequest.pkg.githubRoot + schemaRequest.pkg.root,
     packageUrl: `/packages/${schemaRequest.pkg.name}`,
     schemaGithubUrl: schemaRequest.pkg.githubRoot + schemaMetadata.path,
     rootReference: '#',
