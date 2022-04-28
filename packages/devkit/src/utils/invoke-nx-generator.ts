@@ -1,9 +1,13 @@
 import { logger, stripIndent } from 'nx/src/utils/logger';
-import type { FileChange, Tree, TreeWriteOptions } from 'nx/src/config/tree';
+import type {
+  FileChange,
+  Tree,
+  TreeWriteOptions,
+} from 'nx/src/generators/tree';
 import { toNewFormat, toOldFormatOrNull } from 'nx/src/config/workspaces';
 import { Generator, GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import { parseJson, serializeJson } from 'nx/src/utils/json';
-import { join, relative } from 'path';
+import { join, relative, dirname } from 'path';
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}
@@ -192,9 +196,10 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
       const w = parseJson(content.toString());
       for (const [project, configuration] of Object.entries(w.projects)) {
         if (typeof configuration === 'string') {
-          w.projects[project] = parseJson(
-            this.tree.read(`${configuration}/project.json`)
-          );
+          w.projects[project] = {
+            root: configuration,
+            ...parseJson(this.tree.read(`${configuration}/project.json`)),
+          };
           w.projects[project].configFilePath = `${configuration}/project.json`;
         }
       }

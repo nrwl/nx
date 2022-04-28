@@ -25,6 +25,7 @@ import {
   CustomHasher,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
 export function workspaceConfigName(root: string) {
   if (existsSync(path.join(root, 'angular.json'))) {
@@ -316,7 +317,13 @@ function findFullGeneratorName(
 }
 
 export function reformattedWorkspaceJsonOrNull(w: any) {
-  return w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+  const workspaceJson =
+    w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+  if (workspaceJson?.projects) {
+    workspaceJson.projects = sortObjectByKeys(workspaceJson.projects);
+  }
+
+  return workspaceJson;
 }
 
 export function toNewFormat(w: any): WorkspaceJsonConfiguration {
@@ -411,7 +418,10 @@ function inlineProjectConfigurations(w: any, root: string = workspaceRoot) {
       if (typeof config === 'string') {
         const configFilePath = path.join(root, config, 'project.json');
         const fileConfig = readJsonFile(configFilePath);
-        w.projects[project] = fileConfig;
+        w.projects[project] = {
+          root: config,
+          ...fileConfig,
+        };
       }
     }
   );
@@ -642,6 +652,9 @@ export function buildWorkspaceConfigurationFromGlobs(
       // directory as a package.json should overwrite the inferred package.json
       // project configuration.
       const configuration = readJson(file);
+
+      configuration.root = directory;
+
       let name = configuration.name;
       if (!configuration.name) {
         name = toProjectName(file, nxJson);

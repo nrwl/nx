@@ -1,11 +1,12 @@
-import { Tree } from 'nx/src/config/tree';
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
+import { Tree } from '../tree';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
-import { createTreeWithEmptyWorkspace } from '../tests/create-tree-with-empty-workspace';
+import { createTreeWithEmptyWorkspace } from '../testing-utils/create-tree-with-empty-workspace';
 import { readJson, updateJson } from '../utils/json';
 import {
   addProjectConfiguration,
   getProjects,
+  getWorkspacePath,
   readProjectConfiguration,
   readWorkspaceConfiguration,
   removeProjectConfiguration,
@@ -13,7 +14,6 @@ import {
   updateWorkspaceConfiguration,
   WorkspaceConfiguration,
 } from './project-configuration';
-import { getWorkspacePath } from '../utils/get-workspace-layout';
 
 type ProjectConfigurationV1 = Pick<
   ProjectConfiguration,
@@ -301,6 +301,7 @@ describe('project configuration', () => {
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
         const expectedProjectConfig = {
           ...baseTestProjectConfigV2,
+          root: undefined,
           targets: { build: { executor: '' } },
         };
         updateProjectConfiguration(tree, 'test', expectedProjectConfig);
@@ -471,6 +472,7 @@ describe('project configuration', () => {
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
         const expectedProjectConfig = {
           ...baseTestProjectConfigV2,
+          root: undefined,
           targets: { build: { executor: '' } },
         };
         updateProjectConfiguration(tree, 'test', expectedProjectConfig);

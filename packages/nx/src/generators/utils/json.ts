@@ -1,6 +1,6 @@
-import type { Tree } from 'nx/src/config/tree';
-import { parseJson, serializeJson } from 'nx/src/utils/json';
-import type { JsonParseOptions, JsonSerializeOptions } from 'nx/src/utils/json';
+import type { Tree } from '../tree';
+import { parseJson, serializeJson } from '../../utils/json';
+import type { JsonParseOptions, JsonSerializeOptions } from '../../utils/json';
 
 /**
  * Reads a json file, removes all comments and parses JSON.
