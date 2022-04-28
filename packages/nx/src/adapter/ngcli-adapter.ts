@@ -15,7 +15,7 @@ import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import { Stats } from 'fs';
 import { detectPackageManager } from '../utils/package-manager';
 import { GenerateOptions } from '../command-line/generate';
-import { FileChange, Tree } from '../config/tree';
+import { FileChange, Tree } from '../generators/tree';
 import {
   buildWorkspaceConfigurationFromGlobs,
   globForProjectFiles,
@@ -497,6 +497,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         // project was read from a project.json file
         const configPath = projectConfig.configFilePath;
         const fileConfigObject = { ...projectConfig };
+        delete fileConfigObject.root; // remove the root before writing
         delete fileConfigObject.configFilePath; // remove the configFilePath before writing
         const projectJsonWrite = super.write(
           configPath,
@@ -539,6 +540,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             map((x) => ({
               project,
               projectConfig: {
+                root: dirname(configFilePath),
                 ...parseJson(Buffer.from(x).toString()),
                 configFilePath,
               },
@@ -600,9 +602,10 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
         const nxJsonInTree = nxJsonChange
           ? parseJson(nxJsonChange.content.toString())
           : parseJson(this.host.read('nx.json').toString());
-        const readJsonWithHost = (file) =>
-          parseJson(this.host.read(file).toString());
-
+        const readJsonWithHost = (file) => ({
+          root: dirname(file),
+          ...parseJson(this.host.read(file).toString()),
+        });
         const staticProjects = buildWorkspaceConfigurationFromGlobs(
           nxJsonInTree,
           globForProjectFiles(this.host.root).filter(
@@ -1214,6 +1217,7 @@ function saveWorkspaceConfigurationInWrappedSchematic(
     ) {
       const path = config.configFilePath || join(config.root, 'project.json');
       workspace.projects[project] = normalize(dirname(path));
+      delete config.root; // remove the root before writing
       delete config.configFilePath;
       host.write(path, serializeJson(config));
     }

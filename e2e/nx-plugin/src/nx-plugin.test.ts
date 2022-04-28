@@ -277,7 +277,7 @@ describe('Nx Plugin', () => {
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
       const pluginProject = readProjectConfig(`subdir-${plugin}`);
       const pluginE2EProject = readProjectConfig(`subdir-${plugin}-e2e`);
-      expect(pluginProject.root).toBe(`libs/subdir/${plugin}`);
+      expect(pluginProject.targets).toBeDefined();
       expect(pluginE2EProject).toBeTruthy();
     }, 90000);
   });
