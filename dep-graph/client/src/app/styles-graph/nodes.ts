@@ -2,6 +2,9 @@ import { Stylesheet } from 'cytoscape';
 import { selectValueByThemeDynamic } from '../theme-resolver';
 import { FONTS } from './fonts';
 import { NrwlPalette } from './palette';
+import { LabelWidthCalculator } from './label-width';
+
+const labelWidthCalculator = new LabelWidthCalculator();
 
 const allNodes: Stylesheet = {
   selector: 'node',
@@ -19,7 +22,8 @@ const allNodes: Stylesheet = {
     'padding-left': '16px',
     color: selectValueByThemeDynamic(NrwlPalette.white, NrwlPalette.black),
     label: 'data(id)',
-    width: (node) => node.data('id').length * 16,
+    // width: (node) => node.data('id').length * 16,
+    width: (node) => labelWidthCalculator.calculateWidth(node),
     backgroundColor: selectValueByThemeDynamic(
       NrwlPalette.black,
       NrwlPalette.white
@@ -28,26 +32,6 @@ const allNodes: Stylesheet = {
       'background-color, border-color, line-color, target-arrow-color',
     'transition-duration': 250,
     'transition-timing-function': 'ease-out',
-  },
-};
-
-const appNodes: Stylesheet = {
-  selector: 'node[type="app"]',
-  style: {
-    shape: 'round-rectangle',
-  },
-};
-
-const libNodes: Stylesheet = {
-  selector: 'node[type="lib"]',
-  style: {
-    shape: 'round-rectangle',
-  },
-};
-
-const e2eNodes: Stylesheet = {
-  selector: 'node[type="e2e"]',
-  style: {
     shape: 'round-rectangle',
   },
 };
@@ -109,9 +93,6 @@ const transparentParentNodes: Stylesheet = {
 
 export const nodeStyles = [
   allNodes,
-  appNodes,
-  libNodes,
-  e2eNodes,
   focusedNodes,
   affectedNodes,
   parentNodes,
