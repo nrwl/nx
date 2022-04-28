@@ -156,7 +156,7 @@ async function buildProjectGraphUsingContext(
   builder.setVersion(projectGraphVersion);
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
-  const r = updateProjectGraphWithPlugins(ctx, initProjectGraph);
+  const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
 
   performance.mark('build project graph:end');
   performance.measure(
@@ -372,16 +372,17 @@ function createContext(
   };
 }
 
-function updateProjectGraphWithPlugins(
+async function updateProjectGraphWithPlugins(
   context: ProjectGraphProcessorContext,
   initProjectGraph: ProjectGraph
 ) {
   const plugins = loadNxPlugins(context.workspace.plugins).filter(
     (x) => !!x.processProjectGraph
   );
-  return (plugins || []).reduce((graph, plugin) => {
+  let graph = initProjectGraph;
+  for (const plugin of plugins) {
     try {
-      return plugin.processProjectGraph(graph, context);
+      graph = await plugin.processProjectGraph(graph, context);
     } catch (e) {
       const message = `Failed to process the project graph with "${plugin.name}". This will error in the future!`;
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -392,9 +393,9 @@ function updateProjectGraphWithPlugins(
         logger.warn(message);
         logger.warn(`Run with NX_VERBOSE_LOGGING=true to see the error.`);
       }
-      return graph;
     }
-  }, initProjectGraph);
+  }
+  return graph;
 }
 
 function readRootTsConfig() {
