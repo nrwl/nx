@@ -263,13 +263,13 @@ describe('create-nx-workspace', () => {
 
   it('should return error when ci workflow is selected but no cloud is set up', () => {
     const wsName = uniq('github');
-    expect(() =>
-      runCreateWorkspace(wsName, {
-        preset: 'core',
-        packageManager,
-        ci: 'github',
-      })
-    ).toThrowError(/CI workflow generation skipped/);
+    const create = runCreateWorkspace(wsName, {
+      preset: 'core',
+      packageManager,
+      ci: 'circleci',
+    });
+    checkFilesExist('package.json');
+    checkFilesDoNotExist('.circleci/config.yml');
   });
 
   describe('Use detected package manager', () => {

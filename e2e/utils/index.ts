@@ -153,6 +153,9 @@ export function runCreateWorkspace(
   if (style) {
     command += ` --style=${style}`;
   }
+  if (ci) {
+    command += ` --ci=${ci}`;
+  }
 
   if (base) {
     command += ` --defaultBase="${base}"`;
