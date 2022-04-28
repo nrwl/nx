@@ -23,7 +23,7 @@ export function PackageSchemaViewer({
     schema: SchemaViewModel | null;
     seo: { title: string; description: string; url: string; imageUrl: string };
   } = {
-    // Processing the request and make available the needed schema information
+    // Process the request and make available the needed schema information
     schema: getSchemaViewModel(router.query, schemaRequest),
     seo: {
       title: `@nrwl/${schemaRequest.pkg.name}:${schemaRequest.schemaName} | Nx`,
