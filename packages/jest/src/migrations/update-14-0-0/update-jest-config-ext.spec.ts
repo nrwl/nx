@@ -1,21 +1,21 @@
 import {
   readJson,
-  readProjectConfiguration,
+  readProjectConfiguration, stripIndents,
   Tree,
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { jestInitGenerator } from '@nrwl/jest';
-import { updateJestConfigExt } from './update-jest-config-ext';
-import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
+import {createTree, createTreeWithEmptyWorkspace} from '@nrwl/devkit/testing';
+import {jestInitGenerator} from '@nrwl/jest';
+import {updateJestConfigExt, updateToDefaultExport} from './update-jest-config-ext';
+import {libraryGenerator as workspaceLib} from '@nrwl/workspace';
 
 describe('Jest Migration (v14.0.0)', () => {
   let tree: Tree;
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace(2);
-    jestInitGenerator(tree, { js: true, skipPackageJson: true });
-    await workspaceLib(tree, { name: 'lib-one' });
+    jestInitGenerator(tree, {js: true, skipPackageJson: true});
+    await workspaceLib(tree, {name: 'lib-one'});
     tree.rename('libs/lib-one/jest.config.ts', 'libs/lib-one/jest.config.js');
     updateProjectConfiguration(tree, 'lib-one', {
       ...readProjectConfiguration(tree, 'lib-one'),
@@ -42,13 +42,13 @@ describe('Jest Migration (v14.0.0)', () => {
     expect(tree.read('libs/lib-one/jest.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should rename root jest files', async () => {
+  it('should rename root jest.config.js', async () => {
     await updateJestConfigExt(tree);
     expect(tree.exists('jest.config.ts')).toBeTruthy();
-    expect(tree.exists('jest.preset.ts')).toBeTruthy();
+    expect(tree.exists('jest.preset.js')).toBeTruthy();
   });
 
-  it('should update jest.config.ts preset to use the jest.preset.ts', async () => {
+  it('should NOT update jest.config.ts preset', async () => {
     tree.rename('libs/lib-one/jest.config.js', 'libs/lib-one/jest.config.ts');
     const projectConfig = readProjectConfiguration(tree, 'lib-one');
     updateProjectConfiguration(tree, 'lib-one', {
@@ -84,7 +84,7 @@ describe('Jest Migration (v14.0.0)', () => {
       },
     });
 
-    await workspaceLib(tree, { name: 'lib-two' });
+    await workspaceLib(tree, {name: 'lib-two'});
     tree.delete('libs/lib-two/jest.config.ts'); // lib generator creates a ts file
     tree.write('libs/lib-two/jest.config.json', '{}');
     updateProjectConfiguration(tree, 'lib-two', {
@@ -99,7 +99,7 @@ describe('Jest Migration (v14.0.0)', () => {
         },
       },
     });
-    await workspaceLib(tree, { name: 'lib-three' });
+    await workspaceLib(tree, {name: 'lib-three'});
 
     expect(tree.exists('libs/lib-one/jest.config.ts')).toBeTruthy();
     await updateJestConfigExt(tree);
@@ -156,4 +156,25 @@ describe('Jest Migration (v14.0.0)', () => {
     expect(tree.exists('libs/lib-one/tsconfig.spec.json')).toBeFalsy();
     expect(tree.exists('libs/lib-one/tsconfig.lib.json')).toBeFalsy();
   });
+
+  it('should convert module.exports => export default', () => {
+    tree = createTree();
+
+    tree.write('jest.config.js', stripIndents`
+  const { getJestProjects } = require('@nrwl/jest');
+  const nxPreset = require('@nrwl/jest/preset');
+  
+  
+  const someFn = () => ({more: 'stuff'});
+  module.export.abc = someFn;
+  module.exports = {
+    ...nxPreset,
+    more: 'stuff',
+    someFn,
+    projects: getJestProjects()
+  };`);
+    updateToDefaultExport(tree, 'jest.config.js');
+
+    expect(tree.read('jest.config.js', 'utf-8')).toMatchSnapshot()
+  })
 });

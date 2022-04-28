@@ -85,7 +85,7 @@ exports[`@nrwl/linter:workspace-rules-project should generate the required files
 exports[`@nrwl/linter:workspace-rules-project should generate the required files 5`] = `
 "module.exports = {
   displayName: 'eslint-rules',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',

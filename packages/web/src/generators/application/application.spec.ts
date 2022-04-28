@@ -423,7 +423,7 @@ describe('app', () => {
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-app',
-          preset: '../../jest.preset.ts',
+          preset: '../../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\\\\\.[tj]s$': 'babel-jest'
@@ -445,7 +445,7 @@ describe('app', () => {
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-app',
-          preset: '../../jest.preset.ts',
+          preset: '../../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\\\\\.[tj]s$': '@swc/jest'

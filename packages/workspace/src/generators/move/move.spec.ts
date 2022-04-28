@@ -21,7 +21,7 @@ describe('move', () => {
     const jestConfigPath = 'libs/shared/my-lib-new/jest.config.ts';
     const afterJestConfig = tree.read(jestConfigPath, 'utf-8');
     expect(tree.exists(jestConfigPath)).toBeTruthy();
-    expect(afterJestConfig).toContain("preset: '../../../jest.preset.ts'");
+    expect(afterJestConfig).toContain("preset: '../../../jest.preset.js'");
     expect(afterJestConfig).toContain(
       "coverageDirectory: '../../../coverage/libs/shared/my-lib-new'"
     );
@@ -39,7 +39,7 @@ describe('move', () => {
     const jestConfigPath = 'libs/my-lib-new/jest.config.ts';
     const afterJestConfig = tree.read(jestConfigPath, 'utf-8');
     expect(tree.exists(jestConfigPath)).toBeTruthy();
-    expect(afterJestConfig).toContain("preset: '../../jest.preset.ts'");
+    expect(afterJestConfig).toContain("preset: '../../jest.preset.js'");
     expect(afterJestConfig).toContain(
       "coverageDirectory: '../../coverage/libs/my-lib-new'"
     );

@@ -361,7 +361,7 @@ describe('nest libraries', function () {
     expect(stripIndents`${jestConfigContent}`).toEqual(
       stripIndents`module.exports = {
                 displayName: '${nestlib}',
-                preset: '../../jest.preset.ts',
+                preset: '../../jest.preset.js',
                 globals: {
                   'ts-jest': {
                   tsconfig: '<rootDir>/tsconfig.spec.json',

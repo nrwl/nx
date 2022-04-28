@@ -464,7 +464,7 @@ describe('lib', () => {
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',
-          preset: '../../jest.preset.ts',
+          preset: '../../jest.preset.js',
           testEnvironment: 'node',
           transform: {
             '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'

@@ -40,9 +40,10 @@ function createJestConfig(host: Tree, js: boolean = false) {
     );
   }
 
-  if (!host.exists('jest.preset.ts') && !host.exists('jest.preset.js')) {
+  if (!host.exists('jest.preset.js')) {
+    // preset is always js file.
     host.write(
-      `jest.preset.${js ? 'js' : 'ts'}`,
+      `jest.preset.js`,
       `
       const nxPreset = require('@nrwl/jest/preset');
      
