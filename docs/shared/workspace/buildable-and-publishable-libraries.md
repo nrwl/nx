@@ -13,6 +13,8 @@ This document will look to explain the motivations for why you would use either 
 
 You might use the `--publishable` option when generating a new Nx library if your intention is to distribute it outside the monorepo.
 
+> If you are using `@nrwl/js:lib`, check out [Nx and Typescript](/getting-started/nx-and-typescript#publish-your-typescript-packages-to-npm)
+
 One typical scenario for this may be that you use Nx to develop your organizations UI design system component library (maybe using its Storybook integration), which should be available also to your organizations’ apps that are not hosted within the same monorepo.
 
 A normal Nx library - let’s call it "workspace library" - is not made for building or publishing. Rather it only includes common lint and test targets in its `project.json` file. These libraries are directly referenced from one of the monorepo’s applications and built together with them.
