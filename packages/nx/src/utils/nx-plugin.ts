@@ -238,7 +238,7 @@ function readTsConfigPaths(root: string = workspaceRoot) {
     const { compilerOptions } = readJsonFile(tsconfigPath);
     tsconfigPaths = compilerOptions?.paths;
   }
-  return tsconfigPaths;
+  return tsconfigPaths ?? {};
 }
 
 function readPluginMainFromProjectConfiguration(

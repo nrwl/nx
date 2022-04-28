@@ -1,3 +1,4 @@
+import { ProjectConfiguration } from '@nrwl/devkit';
 import {
   checkFilesExist,
   expectTestsPass,
@@ -14,6 +15,8 @@ import {
   readFile,
   removeFile,
 } from '@nrwl/e2e/utils';
+
+import { ASYNC_GENERATOR_EXECUTOR_CONTENTS } from './nx-plugin.fixtures';
 
 describe('Nx Plugin', () => {
   let npmScope: string;
@@ -237,6 +240,7 @@ describe('Nx Plugin', () => {
 
     it('should be able to use local generators and executors', async () => {
       const generator = uniq('generator');
+      const executor = uniq('executor');
       const generatedProject = uniq('project');
 
       runCLI(
@@ -244,10 +248,28 @@ describe('Nx Plugin', () => {
       );
 
       runCLI(
+        `generate @nrwl/nx-plugin:executor ${executor} --project=${plugin}`
+      );
+
+      updateFile(
+        `libs/${plugin}/src/executors/${executor}/executor.ts`,
+        ASYNC_GENERATOR_EXECUTOR_CONTENTS
+      );
+
+      runCLI(
         `generate @${npmScope}/${plugin}:${generator} --name ${generatedProject}`
       );
+
+      updateFile(`libs/${generatedProject}/project.json`, (f) => {
+        const project: ProjectConfiguration = JSON.parse(f);
+        project.targets['execute'] = {
+          executor: `@${npmScope}/${plugin}:${executor}`,
+        };
+        return JSON.stringify(project, null, 2);
+      });
+
       expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
-      expect(() => runCLI(`build ${generatedProject}`)).not.toThrow();
+      expect(() => runCLI(`execute ${generatedProject}`)).not.toThrow();
     });
   });
 
