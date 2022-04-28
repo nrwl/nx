@@ -343,9 +343,9 @@
         "required": ["name"],
         "presets": []
       },
+      "aliases": ["c"],
       "description": "Generate an Angular Component.",
       "implementation": "/packages/angular/src/generators/component/component.ts",
-      "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/generators/component/schema.json"
     },

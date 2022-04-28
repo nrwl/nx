@@ -19,6 +19,7 @@
     "component": {
       "factory": "./src/generators/component/component.compat",
       "schema": "./src/generators/component/schema.json",
+      "aliases": ["c"],
       "description": "Generate an Angular Component."
     },
     "component-cypress-spec": {
@@ -166,6 +167,7 @@
     "component": {
       "factory": "./src/generators/component/component",
       "schema": "./src/generators/component/schema.json",
+      "aliases": ["c"],
       "description": "Generate an Angular Component."
     },
     "component-cypress-spec": {
