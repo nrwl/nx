@@ -177,6 +177,18 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
   });
 }
 
+function addBabelConfig(tree: Tree, options: NormalizedSchema) {
+  const filename = '.babelrc';
+  const babelrc = {
+    presets: [['@nrwl/web/babel', { useBuiltIns: 'usage' }]],
+  };
+
+  tree.write(
+    join(options.projectRoot, filename),
+    JSON.stringify(babelrc, null, 2)
+  );
+}
+
 function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
   const { className, name, propertyName } = names(options.name);
 
@@ -199,6 +211,10 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
   if (options.buildable && options.compiler === 'swc') {
     addSwcDependencies(tree);
     addSwcConfig(tree, options.projectRoot);
+  }
+
+  if (options.compiler !== 'swc') {
+    addBabelConfig(tree, options);
   }
 
   if (options.unitTestRunner === 'none') {

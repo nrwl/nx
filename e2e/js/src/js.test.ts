@@ -46,6 +46,12 @@ describe('js e2e', () => {
       'match the cache'
     );
 
+    const babelRc = readJson(`libs/${lib}/.babelrc`);
+    expect(babelRc.plugins).toBeUndefined();
+    expect(babelRc.presets).toStrictEqual([
+      ['@nrwl/web/babel', { useBuiltIns: 'usage' }],
+    ]);
+
     expect(runCLI(`build ${lib}`)).toContain('Done compiling TypeScript files');
     checkFilesExist(
       `dist/libs/${lib}/README.md`,

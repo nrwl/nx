@@ -162,6 +162,27 @@ describe('lib', () => {
               `);
       });
 
+      it('should create a local .babelrc configuration', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+        });
+
+        const babelRc = readJson(tree, 'libs/my-lib/.babelrc');
+        expect(babelRc).toMatchInlineSnapshot(`
+          Object {
+            "presets": Array [
+              Array [
+                "@nrwl/web/babel",
+                Object {
+                  "useBuiltIns": "usage",
+                },
+              ],
+            ],
+          }
+        `);
+      });
+
       it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
         tree.rename('tsconfig.base.json', 'tsconfig.json');
 
@@ -222,6 +243,7 @@ describe('lib', () => {
         expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
         expect(tree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
         expect(tree.exists(`libs/my-dir/my-lib/package.json`)).toBeFalsy();
+        expect(tree.exists(`libs/my-dir/my-lib/.babelrc`)).toBeTruthy();
       });
 
       it('should update workspace.json', async () => {
@@ -769,6 +791,17 @@ describe('lib', () => {
         });
 
         expect(tree.exists('libs/my-lib/.lib.swcrc')).toBeTruthy();
+      });
+
+      it('should not generate a .babelrc for swc', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          buildable: true,
+          compiler: 'swc',
+        });
+
+        expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
       });
 
       it('should setup jest project using swc', async () => {
