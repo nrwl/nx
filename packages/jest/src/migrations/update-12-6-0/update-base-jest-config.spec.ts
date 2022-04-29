@@ -7,7 +7,7 @@ const mockResolveConfig = jest.fn(() =>
 );
 
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from 'packages/devkit/src/tests/create-tree-with-empty-workspace';
 import update from './update-base-jest-config';
 
 describe('update 12.6.0', () => {

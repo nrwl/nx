@@ -12,7 +12,7 @@
 /**
  * @category Tree
  */
-export type { Tree, FileChange } from 'nx/src/generators/tree';
+export type { Tree, FileChange } from 'nx/src/config/tree';
 
 /**
  * @category Workspace
@@ -111,7 +111,7 @@ export { generateFiles } from './src/generators/generate-files';
 /**
  * @category Generators
  */
-export type { WorkspaceConfiguration } from 'nx/src/generators/utils/project-configuration';
+export type { WorkspaceConfiguration } from './src/generators/project-configuration';
 
 /**
  * @category Generators
@@ -125,7 +125,7 @@ export {
   updateWorkspaceConfiguration,
   getProjects,
   isStandaloneProject,
-} from 'nx/src/generators/utils/project-configuration';
+} from './src/generators/project-configuration';
 
 /**
  * @category Generators
@@ -183,7 +183,7 @@ export { ProjectGraphBuilder } from 'nx/src/project-graph/project-graph-builder'
 /**
  * @category Utils
  */
-export { readJson, writeJson, updateJson } from 'nx/src/generators/utils/json';
+export { readJson, writeJson, updateJson } from './src/utils/json';
 
 /**
  * @category Utils

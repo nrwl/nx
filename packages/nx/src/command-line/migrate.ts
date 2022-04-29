@@ -8,7 +8,7 @@ import {
   PackageJsonUpdateForPackage,
 } from '../config/misc-interfaces';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { flushChanges, FsTree } from '../generators/tree';
+import { flushChanges, FsTree } from '../config/tree';
 import {
   extractFileFromTarball,
   JsonReadOptions,

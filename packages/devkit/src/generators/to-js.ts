@@ -1,4 +1,4 @@
-import type { Tree } from 'nx/src/generators/tree';
+import type { Tree } from 'nx/src/config/tree';
 
 /**
  * Rename and transpile any new typescript files created to javascript files

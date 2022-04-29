@@ -138,9 +138,6 @@ function fixProjectWorkspaceConfig(host: Tree, options: NormalizedSchema) {
       options.ngCliSchematicLibRoot,
       options.projectRoot
     );
-    // project already has the right root, but the above function, makes it incorrect.
-    // This corrects it.
-    project.root = options.projectRoot;
   }
 
   if (!options.publishable && !options.buildable) {

@@ -1,4 +1,4 @@
-import type { Tree } from 'nx/src/generators/tree';
+import type { Tree } from 'nx/src/config/tree';
 import { execSync } from 'child_process';
 import { join } from 'path';
 import {

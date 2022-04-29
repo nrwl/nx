@@ -1,7 +1,7 @@
-import type { Tree } from 'nx/src/generators/tree';
-import { readJson, writeJson } from 'nx/src/generators/utils/json';
+import type { Tree } from 'nx/src/config/tree';
+import { readJson, writeJson } from './json';
 import { addDependenciesToPackageJson } from './package-json';
-import { createTree } from 'nx/src/generators/testing-utils/create-tree';
+import { createTree } from '../tests/create-tree';
 
 describe('addDependenciesToPackageJson', () => {
   let tree: Tree;

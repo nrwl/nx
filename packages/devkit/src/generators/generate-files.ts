@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import * as path from 'path';
-import type { Tree } from 'nx/src/generators/tree';
+import type { Tree } from 'nx/src/config/tree';
 import { logger } from 'nx/src/utils/logger';
 
 const binaryExts = new Set([

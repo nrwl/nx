@@ -85,7 +85,6 @@ describe('convert-to-nx-project', () => {
       getProjectConfigurationPath(config)
     );
 
-    delete config.root;
     expect(config).toEqual(newConfigFile);
   });
 
@@ -113,7 +112,6 @@ describe('convert-to-nx-project', () => {
         tree,
         getProjectConfigurationPath(config)
       );
-      delete config.root;
       expect(config).toEqual(newConfigFile);
     }
   });

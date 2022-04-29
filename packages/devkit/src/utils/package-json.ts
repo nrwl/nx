@@ -1,6 +1,6 @@
-import { readJson, updateJson } from 'nx/src/generators/utils/json';
+import { readJson, updateJson } from './json';
 import { installPackagesTask } from '../tasks/install-packages-task';
-import type { Tree } from 'nx/src/generators/tree';
+import type { Tree } from 'nx/src/config/tree';
 import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 
 /**

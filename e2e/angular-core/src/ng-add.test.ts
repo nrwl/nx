@@ -182,6 +182,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     // check project configuration
     const projectConfig = readJson(`apps/${project}/project.json`);
+    expect(projectConfig.root).toEqual(`apps/${project}`);
     expect(projectConfig.sourceRoot).toEqual(`apps/${project}/src`);
     expect(projectConfig.targets.build).toEqual({
       executor: '@angular-devkit/build-angular:browser',
@@ -258,6 +259,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     // check e2e project config
     const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
+    expect(e2eProjectConfig.root).toEqual(`apps/${project}-e2e`);
     expect(e2eProjectConfig.targets.e2e).toEqual({
       executor: '@angular-devkit/build-angular:protractor',
       options: {
@@ -354,6 +356,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     // check e2e project config
     const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
+    expect(e2eProjectConfig.root).toEqual(`apps/${e2eProject}`);
     expect(e2eProjectConfig.targets['cypress-run']).toEqual({
       executor: '@nrwl/cypress:cypress',
       options: {

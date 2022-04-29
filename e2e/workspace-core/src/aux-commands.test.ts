@@ -318,6 +318,7 @@ describe('move project', () => {
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
     const project = readProjectConfig(newName);
     expect(project).toBeTruthy();
+    expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
     expect(project.targets.lint.options.lintFilePatterns).toEqual([
       `libs/shared/${lib1}/data-access/**/*.ts`,
@@ -444,6 +445,7 @@ describe('move project', () => {
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
     const project = readProjectConfig(newName);
     expect(project).toBeTruthy();
+    expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
     expect(project.tags).toEqual([]);
     const lib3Config = readProjectConfig(lib3);
@@ -576,6 +578,7 @@ describe('move project', () => {
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
     const project = readProjectConfig(newName);
     expect(project).toBeTruthy();
+    expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
     expect(project.targets.lint.options.lintFilePatterns).toEqual([
       `packages/shared/${lib1}/data-access/**/*.ts`,
