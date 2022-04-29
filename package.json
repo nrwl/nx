@@ -61,7 +61,7 @@
     "@nrwl/eslint-plugin-nx": "14.0.5",
     "@nrwl/jest": "14.0.5",
     "@nrwl/next": "14.0.5",
-    "@nrwl/nx-cloud": "14.0.0",
+    "@nrwl/nx-cloud": "14.0.2",
     "@nrwl/react": "14.0.5",
     "@nrwl/web": "14.0.5",
     "@parcel/watcher": "2.0.4",
@@ -306,4 +306,3 @@
     "minimist": "^1.2.6"
   }
 }
-
