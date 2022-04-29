@@ -888,11 +888,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 function showConnectToCloudMessage() {
   try {
     const nxJson = readJsonFile<NxJsonConfiguration>('nx.json');
-    const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
-      (r: any) =>
-        r.runner == '@nrwl/workspace/tasks-runners/default' ||
-        r.runner == 'nx/tasks-runners/default'
-    );
+    const defaultRunnerIsUsed =
+      !nxJson.tasksRunnerOptions ||
+      Object.values(nxJson.tasksRunnerOptions).find(
+        (r: any) =>
+          r.runner == '@nrwl/workspace/tasks-runners/default' ||
+          r.runner == 'nx/tasks-runners/default'
+      );
     return !!defaultRunnerIsUsed;
   } catch {
     return false;
