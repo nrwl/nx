@@ -1,10 +1,10 @@
 {
   "generators": {
-    "14-0-4-remove-root": {
+    "14-0-6-remove-root": {
       "cli": "nx",
-      "version": "14.0.4",
+      "version": "14.0.6",
       "description": "Remove root property from project.json files",
-      "factory": "./src/migrations/update-14-0-4/remove-roots"
+      "factory": "./src/migrations/update-14-0-6/remove-roots"
     }
   }
 }
