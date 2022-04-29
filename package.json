@@ -132,7 +132,7 @@
     "cz-customizable": "^6.2.0",
     "depcheck": "^1.3.1",
     "dotenv": "~10.0.0",
-    "ejs": "^3.1.5",
+    "ejs": "^3.1.7",
     "enhanced-resolve": "^5.8.3",
     "eslint": "8.12.0",
     "eslint-config-next": "12.1.5",
