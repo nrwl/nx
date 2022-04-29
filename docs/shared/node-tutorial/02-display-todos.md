@@ -13,15 +13,15 @@ With Nx, you have the ability to scaffold out new code for your application. Cre
 **Run `nx generate @nrwl/nest:service todo --project todos --directory app` to generate our new service**
 
 ```bash
-$ nx generate @nrwl/nest:service todo --project todos --directory app
-CREATE apps/todos/src/app/todo/todo.service.spec.ts (453 bytes)
-CREATE apps/todos/src/app/todo/todo.service.ts (89 bytes)
+$ nx generate @nrwl/nest:service todos --project todos --directory app
+CREATE apps/todos/src/app/todos/todos.service.spec.ts (453 bytes)
+CREATE apps/todos/src/app/todos/todos.service.ts (89 bytes)
 UPDATE apps/todos/src/app/app.module.ts (318 bytes)
 ```
 
 > Services are not the only things that the `@nrwl/nest` plugin can create. Run `nx list @nrwl/nest` to see other capabilities that the plugin provides.
 
-Open the newly created file in `apps/todos/src/app/todo/todo.service.ts` and paste the following code:
+Open the newly created file in `apps/todos/src/app/todos/todos.service.ts` and paste the following code:
 
 ```typescript
 import { Injectable } from '@nestjs/common';
