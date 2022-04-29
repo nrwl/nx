@@ -1,5 +1,5 @@
 <% if ( !isPlainJs ) { %>import { Story, Meta } from '@storybook/react';<% } %>
-import<% if ( !isPlainJs ) { %> { <% } %> <%= componentName %><% if ( propsTypeName && !isPlainJs ) { %>, <%= propsTypeName %> <% } %> <% if ( !isPlainJs ) { %> } <% } %> from './<%= componentFileName %>';
+import<% if ( !isPlainJs ) { %> { <% } %> <%= componentName %><% if ( propsTypeName && !isPlainJs ) { %>, <%= propsTypeName %> <% } %> <% if ( !isPlainJs ) { %> } <% } %> from './<%= componentImportFileName %>';
 
 export default {
   component: <%= componentName %>,
