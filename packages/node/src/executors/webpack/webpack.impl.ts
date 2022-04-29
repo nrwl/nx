@@ -17,6 +17,7 @@ import { register } from 'ts-node';
 import { getNodeWebpackConfig } from '../../utils/node.config';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
+import { deleteOutputDir } from '../../utils/fs';
 import { runWebpack } from '../../utils/run-webpack';
 
 export type NodeBuildEvent = {
@@ -75,6 +76,11 @@ export async function* webpackExecutor(
     ) {
       return { success: false } as any;
     }
+  }
+
+  // Delete output path before bundling
+  if (options.deleteOutputPath) {
+    deleteOutputDir(context.root, options.outputPath);
   }
 
   const config = await options.webpackConfig.reduce(

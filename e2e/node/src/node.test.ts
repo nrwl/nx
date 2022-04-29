@@ -1,5 +1,6 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
+  createFile,
   checkFilesDoNotExist,
   checkFilesExist,
   expectJestTestsToPass,
@@ -308,6 +309,42 @@ ${jslib}();
 
     expect(nodeAppPackageJson['dependencies']['tslib']).toBeTruthy();
   }, 300000);
+
+  it('should remove previous output before building with the --deleteOutputPath option set', async () => {
+    const appName = uniq('app');
+    const libName = uniq('lib');
+
+    runCLI(
+      `generate @nrwl/node:app ${appName} --no-interactive --compiler swc`
+    );
+    runCLI(
+      `generate @nrwl/node:lib ${libName} --buildable --no-interactive --compiler swc`
+    );
+
+    createFile(`dist/apps/${appName}/_should_remove.txt`);
+    createFile(`dist/libs/${libName}/_should_remove.txt`);
+    createFile(`dist/apps/_should_not_remove.txt`);
+    checkFilesExist(
+      `dist/apps/${appName}/_should_remove.txt`,
+      `dist/apps/_should_not_remove.txt`
+    );
+    runCLI(`build ${appName} --outputHashing none`);
+    runCLI(`build ${libName}`);
+    checkFilesDoNotExist(
+      `dist/apps/${appName}/_should_remove.txt`,
+      `dist/libs/${libName}/_should_remove.txt`
+    );
+    checkFilesExist(`dist/apps/_should_not_remove.txt`);
+
+    // `delete-output-path`
+    createFile(`dist/apps/${appName}/_should_keep.txt`);
+    runCLI(`build ${appName} --delete-output-path=false --outputHashing none`);
+    checkFilesExist(`dist/apps/${appName}/_should_keep.txt`);
+
+    createFile(`dist/libs/${libName}/_should_keep.txt`);
+    runCLI(`build ${libName} --delete-output-path=false --outputHashing none`);
+    checkFilesExist(`dist/libs/${libName}/_should_keep.txt`);
+  }, 120000);
 
   describe('NestJS', () => {
     it('should have plugin output if specified in `tsPlugins`', async () => {
