@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Jest Migration (v14.0.0) should NOT update jest.config.ts preset 1`] = `
-"export default {
+"module.exports = {
   displayName: 'lib-one',
   preset: '../../jest.preset.js',
   globals: {
@@ -18,23 +18,8 @@ exports[`Jest Migration (v14.0.0) should NOT update jest.config.ts preset 1`] = 
 "
 `;
 
-exports[`Jest Migration (v14.0.0) should convert module.exports => export default 1`] = `
-"const { getJestProjects } = require('@nrwl/jest');
-const nxPreset = require('@nrwl/jest/preset');
-
-
-const someFn = () => ({more: 'stuff'});
-module.export.abc = someFn;
-export default {
-...nxPreset,
-more: 'stuff',
-someFn,
-projects: getJestProjects()
-};"
-`;
-
 exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.config.ts 1`] = `
-"export default {
+"module.exports = {
   displayName: 'lib-one',
   preset: '../../jest.preset.js',
   globals: {
