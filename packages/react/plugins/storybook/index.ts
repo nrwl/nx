@@ -6,11 +6,53 @@ import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-u
 import { logger } from '@storybook/node-logger';
 import { join } from 'path';
 import { gte } from 'semver';
-import { Configuration, WebpackPluginInstance } from 'webpack';
+import { Configuration, WebpackPluginInstance, DefinePlugin } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import { mergePlugins } from './merge-plugins';
 
 const reactWebpackConfig = require('../webpack');
+
+// This is shamelessly taken from CRA and modified for NX use
+// https://github.com/facebook/create-react-app/blob/4784997f0682e75eb32a897b4ffe34d735912e6c/packages/react-scripts/config/env.js#L71
+function getClientEnvironment(mode) {
+  // Grab NODE_ENV and NX_* and STORYBOOK_* environment variables and prepare them to be
+  // injected into the application via DefinePlugin in webpack configuration.
+  const NX_PREFIX = /^NX_/i;
+  const STORYBOOK_PREFIX = /^STORYBOOK__/i;
+
+  const raw = Object.keys(process.env)
+    .filter((key) => NX_PREFIX.test(key) || STORYBOOK_PREFIX.test(key))
+    .reduce(
+      (env, key) => {
+        env[key] = process.env[key];
+        return env;
+      },
+      {
+        // Useful for determining whether we’re running in production mode.
+        NODE_ENV: process.env.NODE_ENV || mode,
+
+        // Environment variables for Storybook
+        // https://github.com/storybookjs/storybook/blob/bdf9e5ed854b8d34e737eee1a4a05add88265e92/lib/core-common/src/utils/envs.ts#L12-L21
+        NODE_PATH: process.env.NODE_PATH || '',
+        STORYBOOK: process.env.STORYBOOK || 'true',
+        // This is to support CRA's public folder feature.
+        // In production we set this to dot(.) to allow the browser to access these assets
+        // even when deployed inside a subpath. (like in GitHub pages)
+        // In development this is just empty as we always serves from the root.
+        PUBLIC_URL: mode === 'production' ? '.' : '',
+      }
+    );
+
+  // Stringify all values so we can feed into webpack DefinePlugin
+  const stringified = {
+    'process.env': Object.keys(raw).reduce((env, key) => {
+      env[key] = JSON.stringify(raw[key]);
+      return env;
+    }, {}),
+  };
+
+  return { stringified };
+}
 
 export const babelDefault = (): Record<
   string,
@@ -151,6 +193,9 @@ export const webpack = async (
         ),
       },
       plugins: mergePlugins(
+        new DefinePlugin(
+          getClientEnvironment(storybookWebpackConfig.mode).stringified
+        ),
         ...(storybookWebpackConfig.plugins ?? []),
         ...(finalConfig.plugins ?? [])
       ),
