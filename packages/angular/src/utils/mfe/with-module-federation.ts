@@ -4,10 +4,10 @@ import {
   shareWorkspaceLibraries,
 } from './mfe-webpack';
 import {
-  workspaceRoot,
   createProjectGraphAsync,
   ProjectGraph,
   readCachedProjectGraph,
+  workspaceRoot,
   Workspaces,
 } from '@nrwl/devkit';
 import {
@@ -151,7 +151,7 @@ function mapRemotes(remotes: MFERemotes) {
 }
 
 export async function withModuleFederation(options: MFEConfig) {
-  const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js'];
+  const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mfe'];
 
   const dependencies = await getDependentPackagesForProject(options.name);
   const sharedLibraries = shareWorkspaceLibraries(
@@ -163,6 +163,12 @@ export async function withModuleFederation(options: MFEConfig) {
       (pkg) => !DEFAULT_NPM_PACKAGES_TO_AVOID.includes(pkg)
     )
   );
+
+  DEFAULT_NPM_PACKAGES_TO_AVOID.forEach((pkgName) => {
+    if (pkgName in npmPackages) {
+      delete npmPackages[pkgName];
+    }
+  });
 
   const sharedDependencies = {
     ...sharedLibraries.getLibraries(),
