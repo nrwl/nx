@@ -1,5 +1,6 @@
 import {
-  getComponentName,
+  findExportDeclarationsForJsx,
+  getComponentNode,
   getComponentPropsInterface,
 } from '../../utils/ast-utils';
 
@@ -74,14 +75,51 @@ export function createComponentSpecFile(
     true
   );
 
-  const cmpDeclaration = getComponentName(sourceFile);
+  const cmpDeclaration = getComponentNode(sourceFile);
   if (!cmpDeclaration) {
-    throw new Error(
-      `Could not find any React component in file ${componentFilePath}`
+    const componentNodes = findExportDeclarationsForJsx(sourceFile);
+    if (componentNodes?.length) {
+      componentNodes.forEach((declaration) => {
+        findPropsAndGenerateFileForCypress(
+          tree,
+          sourceFile,
+          declaration,
+          e2eLibIntegrationFolderPath,
+          componentName,
+          project,
+          js,
+          true
+        );
+      });
+    } else {
+      throw new Error(
+        `Could not find any React component in file ${componentFilePath}`
+      );
+    }
+  } else {
+    findPropsAndGenerateFileForCypress(
+      tree,
+      sourceFile,
+      cmpDeclaration,
+      e2eLibIntegrationFolderPath,
+      componentName,
+      project,
+      js
     );
   }
+}
 
-  const propsInterface = getComponentPropsInterface(sourceFile);
+function findPropsAndGenerateFileForCypress(
+  tree: Tree,
+  sourceFile: ts.SourceFile,
+  cmpDeclaration: ts.Node,
+  e2eLibIntegrationFolderPath: string,
+  componentName: string,
+  project: string,
+  js: boolean,
+  fromNodeArray?: boolean
+) {
+  const propsInterface = getComponentPropsInterface(sourceFile, cmpDeclaration);
 
   let props: {
     name: string;
@@ -100,7 +138,11 @@ export function createComponentSpecFile(
   generateFiles(
     tree,
     joinPathFragments(__dirname, './files'),
-    `${e2eLibIntegrationFolderPath}/${componentName}`,
+    `${e2eLibIntegrationFolderPath}/${
+      fromNodeArray
+        ? componentName + '--' + (cmpDeclaration as any).name.text
+        : componentName
+    }`,
     {
       projectName: project,
       componentName,

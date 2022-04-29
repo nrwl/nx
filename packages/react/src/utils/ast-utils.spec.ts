@@ -1,7 +1,7 @@
 import * as utils from './ast-utils';
 import * as ts from 'typescript';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { applyChangesToString, stripIndents, Tree } from '@nrwl/devkit';
+import { applyChangesToString, Tree } from '@nrwl/devkit';
 
 describe('findDefaultExport', () => {
   it('should find exported variable', () => {
@@ -393,8 +393,95 @@ const store = createStore(combineReducer({}));
   });
 });
 
-describe('getComponentName', () => {
-  [
+describe('findExportDeclarationsForJsx', () => {
+  const testConfigs = [
+    {
+      testName: 'exporting a function',
+      src: `export function Test(props: TestProps) {
+        return (
+          <div>
+            <h1>Welcome to test component, {props.name}</h1>
+          </div>
+        );`,
+      expectedName: 'Test',
+    },
+    {
+      testName: 'exporting an arrow function',
+      src: `
+      export const Test = (props: TestProps) => {
+        return (
+          <div>
+            <h1>Welcome to test component, {props.name}</h1>
+          </div>
+        );
+      };
+      `,
+      expectedName: 'Test',
+    },
+    {
+      testName: 'defining an arrow function that directly returns JSX',
+      src: `
+      export const Test = (props: TestProps) => <div><h1>Welcome to test component, {props.name}</h1></div>;
+    `,
+      expectedName: 'Test',
+    },
+    {
+      testName: 'exporting a react class component',
+      src: `
+      export class Test extends React.Component<TestProps> {
+        render() {
+          return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+        }
+      }
+      `,
+      expectedName: 'Test',
+    },
+    {
+      testName: 'exporting a react functional component',
+      src: `
+      export const Test: React.FC<TestProps> = (props) => {
+        return (
+          <div>
+            <h1>Welcome to test component, {props.name}</h1>
+          </div>
+        );
+      };
+      `,
+      expectedName: 'Test',
+    },
+    {
+      testName: 'using a JSX self closing element',
+      src: `
+      export function Test(props: TestProps) {
+        return <img src='something' />;
+      };
+      `,
+      expectedName: 'Test',
+    },
+  ];
+
+  it.each(testConfigs)(
+    'should find the component when: $testName',
+    ({ src, expectedName }) => {
+      const source = ts.createSourceFile(
+        'some-component.tsx',
+        src,
+        ts.ScriptTarget.Latest,
+        true
+      );
+
+      const result: Array<
+        ts.VariableDeclaration | ts.FunctionDeclaration | ts.ClassDeclaration
+      > = utils.findExportDeclarationsForJsx(source) as any;
+
+      expect(result).toBeDefined();
+      expect(result[0]?.name.getText()).toEqual(expectedName);
+    }
+  );
+});
+
+describe('getComponentNode', () => {
+  const testConfigs = [
     {
       testName: 'exporting a function',
       src: `export default function Test(props: TestProps) {
@@ -473,21 +560,24 @@ describe('getComponentName', () => {
       `,
       expectedName: 'Test',
     },
-  ].forEach((testConfig) => {
-    it(`should find the component when ${testConfig.testName}`, () => {
+  ];
+
+  it.each(testConfigs)(
+    'should find the component when: $testName',
+    ({ src, expectedName }) => {
       const source = ts.createSourceFile(
         'some-component.tsx',
-        testConfig.src,
+        src,
         ts.ScriptTarget.Latest,
         true
       );
 
-      const result = utils.getComponentName(source) as any;
+      const result = utils.getComponentNode(source) as any;
 
       expect(result).toBeDefined();
-      expect((result as any).name.text).toEqual(testConfig.expectedName);
-    });
-  });
+      expect((result as any).name.text).toEqual(expectedName);
+    }
+  );
 
   it('should return null if there is no component', () => {
     const source = ts.createSourceFile(
@@ -497,7 +587,7 @@ describe('getComponentName', () => {
       true
     );
 
-    const result = utils.getComponentName(source) as any;
+    const result = utils.getComponentNode(source) as any;
 
     expect(result).toBeNull();
   });

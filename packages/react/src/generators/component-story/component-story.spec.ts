@@ -278,121 +278,126 @@ describe('react:component-story', () => {
       });
     });
 
-    [
-      {
-        name: 'default export function',
-        src: `export default function Test(props: TestProps) {
-        return (
-          <div>
-            <h1>Welcome to test component, {props.name}</h1>
-          </div>
-        );
-      };
-      `,
-      },
-      {
-        name: 'function and then export',
-        src: `
-      function Test(props: TestProps) {
-        return (
-          <div>
-            <h1>Welcome to test component, {props.name}</h1>
-          </div>
-        );
-      };
-      export default Test;
-      `,
-      },
-      {
-        name: 'arrow function',
-        src: `
-      const Test = (props: TestProps) => {
-        return (
-          <div>
-            <h1>Welcome to test component, {props.name}</h1>
-          </div>
-        );
-      };
-      export default Test;
-      `,
-      },
-      {
-        name: 'arrow function without {..}',
-        src: `
-      const Test = (props: TestProps) => <div><h1>Welcome to test component, {props.name}</h1></div>;
-      export default Test
-      `,
-      },
-      {
-        name: 'direct export of component class',
-        src: `
-        export default class Test extends React.Component<TestProps> {
-          render() {
-            return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
-          }
-        }
+    describe('Other types of component definitions', () => {
+      describe('Component files with DEFAULT export', () => {
+        const reactComponentDefinitions = [
+          {
+            name: 'default export function',
+            src: `export default function Test(props: TestProps) {
+          return (
+            <div>
+              <h1>Welcome to test component, {props.name}</h1>
+            </div>
+          );
+        };
         `,
-      },
-      {
-        name: 'component class & then default export',
-        src: `
-        class Test extends React.Component<TestProps> {
-          render() {
-            return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
-          }
-        }
+          },
+          {
+            name: 'function and then export',
+            src: `
+        function Test(props: TestProps) {
+          return (
+            <div>
+              <h1>Welcome to test component, {props.name}</h1>
+            </div>
+          );
+        };
+        export default Test;
+        `,
+          },
+          {
+            name: 'arrow function',
+            src: `
+        const Test = (props: TestProps) => {
+          return (
+            <div>
+              <h1>Welcome to test component, {props.name}</h1>
+            </div>
+          );
+        };
+        export default Test;
+        `,
+          },
+          {
+            name: 'arrow function without {..}',
+            src: `
+        const Test = (props: TestProps) => <div><h1>Welcome to test component, {props.name}</h1></div>;
         export default Test
         `,
-      },
-      {
-        name: 'PureComponent class & then default export',
-        src: `
-        class Test extends React.PureComponent<TestProps> {
-          render() {
-            return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+          },
+          {
+            name: 'direct export of component class',
+            src: `
+          export default class Test extends React.Component<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
           }
-        }
-        export default Test
-        `,
-      },
-      {
-        name: 'direct export of component class new JSX transform',
-        src: `
-        export default class Test extends Component<TestProps> {
-          render() {
-            return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+          `,
+          },
+          {
+            name: 'component class & then default export',
+            src: `
+          class Test extends React.Component<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
           }
-        }
-        `,
-      },
-      {
-        name: 'component class & then default export new JSX transform',
-        src: `
-        class Test extends Component<TestProps> {
-          render() {
-            return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+          export default Test
+          `,
+          },
+          {
+            name: 'PureComponent class & then default export',
+            src: `
+          class Test extends React.PureComponent<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
           }
-        }
-        export default Test
-        `,
-      },
-      {
-        name: 'PureComponent class & then default export new JSX transform',
-        src: `
-        class Test extends PureComponent<TestProps> {
-          render() {
-            return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+          export default Test
+          `,
+          },
+          {
+            name: 'direct export of component class new JSX transform',
+            src: `
+          export default class Test extends Component<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
           }
-        }
-        export default Test
-        `,
-      },
-    ].forEach((config) => {
-      describe(`React component defined as:${config.name}`, () => {
-        beforeEach(async () => {
-          appTree.write(
-            cmpPath,
-            `import React from 'react';
+          `,
+          },
+          {
+            name: 'component class & then default export new JSX transform',
+            src: `
+          class Test extends Component<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
+          }
+          export default Test
+          `,
+          },
+          {
+            name: 'PureComponent class & then default export new JSX transform',
+            src: `
+          class Test extends PureComponent<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
+          }
+          export default Test
+          `,
+          },
+        ];
+
+        describe.each(reactComponentDefinitions)(
+          'React component defined as: $name',
+          ({ src }) => {
+            beforeEach(async () => {
+              appTree.write(
+                cmpPath,
+                `import React from 'react';
     
             import './test.scss';
             
@@ -401,19 +406,19 @@ describe('react:component-story', () => {
               displayAge: boolean;
             }
             
-            ${config.src}
+            ${src}
             `
-          );
+              );
 
-          await componentStoryGenerator(appTree, {
-            componentPath: 'lib/test-ui-lib.tsx',
-            project: 'test-ui-lib',
-          });
-        });
+              await componentStoryGenerator(appTree, {
+                componentPath: 'lib/test-ui-lib.tsx',
+                project: 'test-ui-lib',
+              });
+            });
 
-        it('should properly setup the controls based on the component props', () => {
-          expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
-            .toContain(formatFile`
+            it('should properly setup the controls based on the component props', () => {
+              expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
+                .toContain(formatFile`
             import { Story, Meta } from '@storybook/react';
             import { Test, TestProps } from './test-ui-lib';
 
@@ -430,6 +435,232 @@ describe('react:component-story', () => {
               displayAge: false,
             };
           `);
+            });
+          }
+        );
+      });
+
+      describe('Component files with NO DEFAULT export', () => {
+        const noDefaultExportComponents = [
+          {
+            name: 'no default simple export function',
+            src: `export function Test(props: TestProps) {
+          return (
+            <div>
+              <h1>Welcome to test component, {props.name}</h1>
+            </div>
+          );
+        };
+        `,
+          },
+          {
+            name: 'no default arrow function',
+            src: `
+            export const Test = (props: TestProps) => {
+          return (
+            <div>
+              <h1>Welcome to test component, {props.name}</h1>
+            </div>
+          );
+        };
+        `,
+          },
+          {
+            name: 'no default arrow function without {..}',
+            src: `
+            export const Test = (props: TestProps) => <div><h1>Welcome to test component, {props.name}</h1></div>;
+        `,
+          },
+          {
+            name: 'no default direct export of component class',
+            src: `
+          export class Test extends React.Component<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
+          }
+          `,
+          },
+          {
+            name: 'no default component class',
+            src: `
+            export class Test extends React.Component<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
+          }
+          `,
+          },
+          {
+            name: 'no default PureComponent class & then default export',
+            src: `
+            export class Test extends React.PureComponent<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
+          }
+          `,
+          },
+          {
+            name: 'no default direct export of component class new JSX transform',
+            src: `
+          export class Test extends Component<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
+          }
+          `,
+          },
+          {
+            name: 'no default PureComponent class & then default export new JSX transform',
+            src: `
+            export class Test extends PureComponent<TestProps> {
+            render() {
+              return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+            }
+          }
+          `,
+          },
+        ];
+
+        describe.each(noDefaultExportComponents)(
+          'React component defined as: $name',
+          ({ src }) => {
+            beforeEach(async () => {
+              appTree.write(
+                cmpPath,
+                `import React from 'react';
+      
+              import './test.scss';
+              
+              export interface TestProps {
+                name: string;
+                displayAge: boolean;
+              }
+              
+              ${src}
+              `
+              );
+
+              await componentStoryGenerator(appTree, {
+                componentPath: 'lib/test-ui-lib.tsx',
+                project: 'test-ui-lib',
+              });
+            });
+
+            it('should properly setup the controls based on the component props', () => {
+              expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
+                .toContain(formatFile`
+              import { Story, Meta } from '@storybook/react';
+              import { Test, TestProps } from './test-ui-lib';
+  
+              export default {
+                component: Test,
+                title: 'Test',
+              } as Meta;
+  
+              const Template: Story<TestProps> = (args) => <Test {...args} />;
+  
+              export const Primary = Template.bind({});
+              Primary.args = {
+                name: '',
+                displayAge: false,
+              };
+            `);
+            });
+          }
+        );
+
+        it('should create stories for all components in a file with no default export', async () => {
+          appTree.write(
+            cmpPath,
+            `import React from 'react';
+  
+            function One() {
+              return <div>Hello one</div>;
+            }
+            
+            function Two() {
+              return <div>Hello two</div>;
+            }
+            
+            export interface ThreeProps {
+              name: string;
+            }           
+    
+            function Three(props: ThreeProps) {
+              return (
+                <div>
+                  <h1>Welcome to Three {props.name}!</h1>
+                </div>
+              );
+            }
+            
+            export { One, Two, Three };    
+            `
+          );
+
+          await componentStoryGenerator(appTree, {
+            componentPath: 'lib/test-ui-lib.tsx',
+            project: 'test-ui-lib',
+          });
+
+          const storyFilePathOne =
+            'libs/test-ui-lib/src/lib/test-ui-lib--One.stories.tsx';
+          const storyFilePathTwo =
+            'libs/test-ui-lib/src/lib/test-ui-lib--Two.stories.tsx';
+          const storyFilePathThree =
+            'libs/test-ui-lib/src/lib/test-ui-lib--Three.stories.tsx';
+
+          expect(formatFile`${appTree.read(storyFilePathOne, 'utf-8')}`)
+            .toContain(formatFile`
+            import { Story, Meta } from '@storybook/react';
+            import { One } from './test-ui-lib';
+            
+            export default {
+              component: One,
+              title: 'One',
+            } as Meta;
+            
+            const Template: Story = (args) => <One {...args} />;
+            
+            export const Primary = Template.bind({});
+            Primary.args = {};
+            `);
+
+          expect(formatFile`${appTree.read(storyFilePathTwo, 'utf-8')}`)
+            .toContain(formatFile`
+            import { Story, Meta } from '@storybook/react';
+            import { Two } from './test-ui-lib';
+            
+            export default {
+              component: Two,
+              title: 'Two',
+            } as Meta;
+            
+            const Template: Story = (args) => <Two {...args} />;
+            
+            export const Primary = Template.bind({});
+            Primary.args = {};
+            `);
+
+          expect(formatFile`${appTree.read(storyFilePathThree, 'utf-8')}`)
+            .toContain(formatFile`
+            import { Story, Meta } from '@storybook/react';
+            import { Three, ThreeProps } from './test-ui-lib';
+            
+            export default {
+              component: Three,
+              title: 'Three',
+            } as Meta;
+            
+            const Template: Story<ThreeProps> = (args) => <Three {...args} />;
+            
+            export const Primary = Template.bind({});
+            Primary.args = {
+              name: '',
+            };        
+            `);
         });
       });
     });
