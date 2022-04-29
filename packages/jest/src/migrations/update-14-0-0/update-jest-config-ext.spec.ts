@@ -33,10 +33,9 @@ async function libSetUp(tree: Tree, options = setupDefaults) {
   const config = tree.read(`libs/${options.libName}/jest.config.js`, 'utf-8');
   tree.write(
     `libs/${options.libName}/jest.config.js`,
-    config.replace(
-      /\/\/ eslint-disable-next-line @typescript-eslint\/naming-convention/g,
-      ''
-    )
+    config
+      .replace(/\/\* eslint-disable \*\//g, '')
+      .replace(/export default/g, 'module.exports =')
   );
   updateProjectConfiguration(tree, options.libName, {
     ...readProjectConfiguration(tree, options.libName),
@@ -72,6 +71,8 @@ describe('Jest Migration (v14.0.0)', () => {
   });
 
   it('should rename root jest.config.js', async () => {
+    await libSetUp(tree);
+
     await updateJestConfigExt(tree);
     expect(tree.exists('jest.config.ts')).toBeTruthy();
     expect(tree.exists('jest.preset.js')).toBeTruthy();
