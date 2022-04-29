@@ -14,7 +14,7 @@ But they come with their own technical challenges. The more code you add into yo
 
 ## Setting up CircleCI
 
-The `CircleCI` can track the last successful run on `main` branch and use this as a reference point for the `BASE`. The `Nx Orb` provides conventient implementation of this functionality which you can drop into you existing CI config.
+The `CircleCI` can track the last successful run on `main` branch and use this as a reference point for the `BASE`. The `Nx Orb` provides convenient implementation of this functionality which you can drop into you existing CI config.
 To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation at Orb's docs](https://github.com/nrwl/nx-orb#background).
 
 Below is an example of a Circle CI setup for an Nx workspace only building and testing what is affected. For more details on how the orb is used, head over to the [official docs](https://circleci.com/developer/orbs/orb/nrwl/nx).
