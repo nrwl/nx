@@ -4,16 +4,16 @@ Nx is a smart, fast and extensible build system with first class monorepo suppor
 
 ## Making Things Fast
 
-If you're only interested in improving the performance of your monorepo by using Nx's [affected:\* commands](/using-nx/affected), [computation cache](/using-nx/cache), and [distributed task execution](/using-nx/dte), then you don't need to use any plugins. Everything will work the same way whether your monorepo has React, Vue, Svelte, or even Go, Rust, or Java apps. Nx is technology-agnostic.
+If you're only interested in improving the performance of your monorepo by using Nx's [affected:\* commands](/docs/shared/using-nx/affected), [computation cache](/docs/shared/using-nx/cache), and [distributed task execution](/docs/shared/using-nx/dte), then you don't need to use any plugins. Everything will work the same way whether your monorepo has React, Vue, Svelte, or even Go, Rust, or Java apps. Nx is technology-agnostic.
 
 Check out the following guides to get started:
 
-- [Using Nx without plugins](/getting-started/nx-core)
-- [Adding Nx to an existing monorepo](/migration/adding-to-monorepo)
-- [Adding Nx to an Angular CLI project](/migration/migration-angular)
-- [Migrating from AngularJS](/migration/migration-angularjs)
+- [Using Nx without plugins](/docs/shared/getting-started/nx-core)
+- [Adding Nx to an existing monorepo](/docs/shared/migration/adding-to-monorepo)
+- [Adding Nx to an Angular CLI project](/docs/shared/migration/migration-angular)
+- [Migrating from AngularJS](/docs/shared/migration/migration-angularjs)
 
-It is also a good idea to read the [mental model guide](/using-nx/mental-model) to understand how Nx works.
+It is also a good idea to read the [mental model guide](/docs/using-nx/mental-model) to understand how Nx works.
 
 ## Nx and Angular Plugins
 
