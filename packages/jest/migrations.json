@@ -47,6 +47,12 @@
       "cli": "nx",
       "description": "Update move jest config files to .ts files.",
       "factory": "./src/migrations/update-14-0-0/update-jest-config-ext"
+    },
+    "update-to-export-default": {
+      "version": "14.1.0-beta.0",
+      "cli": "nx",
+      "description": "Update to export default in jest config and revert jest.preset.ts to jest.preset.js",
+      "factory": "./src/migrations/update-14-1-0/update-exports-jest-config"
     }
   },
   "packageJsonUpdates": {

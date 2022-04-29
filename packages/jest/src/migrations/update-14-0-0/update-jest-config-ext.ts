@@ -2,7 +2,6 @@ import {
   formatFiles,
   joinPathFragments,
   logger,
-  offsetFromRoot,
   ProjectConfiguration,
   readJson,
   readProjectConfiguration,
@@ -11,12 +10,9 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import {tsquery} from "@phenomnomnominal/tsquery";
-import {BinaryExpression} from "typescript";
-import {jestConfigObject, jestConfigObjectAst} from '../../utils/config/functions';
-import {dirname, extname, join} from 'path';
-import {JestExecutorOptions} from '../../executors/jest/schema';
-import {forEachExecutorOptions} from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { extname } from 'path';
+import { JestExecutorOptions } from '../../executors/jest/schema';
 
 const allowedExt = ['.ts', '.js'];
 
@@ -62,21 +58,8 @@ function updateTsconfigSpec(
   });
 }
 
-export function updateToDefaultExport(tree: Tree, filePath: string) {
-  const newConfig = tsquery.replace(tree.read(filePath, 'utf-8'),'ExpressionStatement BinaryExpression', (node: BinaryExpression) => {
-    if(node.left.getText() === 'module.exports') {
-      return `export default ${node.right.getText()}`;
-    }
-
-    return node.getText()
-  });
-
-  tree.write(filePath, newConfig);
-}
-
 export async function updateJestConfigExt(tree: Tree) {
   if (tree.exists('jest.config.js')) {
-    updateToDefaultExport(tree, 'jest.config.js');
     tree.rename('jest.config.js', 'jest.config.ts');
   }
 
@@ -90,8 +73,6 @@ export async function updateJestConfigExt(tree: Tree) {
         return;
       }
 
-      updateToDefaultExport(tree, options.jestConfig);
-
       const newJestConfigPath = options.jestConfig.replace('.js', '.ts');
       tree.rename(options.jestConfig, newJestConfigPath);
 
@@ -102,7 +83,7 @@ export async function updateJestConfigExt(tree: Tree) {
           const tsConfig = readJson(tree, filePath);
 
           if (tsConfig.references) {
-            for (const {path} of tsConfig.references) {
+            for (const { path } of tsConfig.references) {
               if (path.endsWith('tsconfig.spec.json')) {
                 updateTsconfigSpec(tree, projectConfig, path);
                 continue;
