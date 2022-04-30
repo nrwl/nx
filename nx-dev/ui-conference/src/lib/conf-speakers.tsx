@@ -58,6 +58,20 @@ export function ConfSpeakers(): JSX.Element {
       name: 'Craigory Coppola',
       twitter: 'enderagent',
     },
+    {
+      description:
+        'Jason is an architect at Nrwl and a part of the Nx Core Team. He works with Fortune 500 companies across different industries to enable them to develop like Google, Microsoft, and Facebook. Jason is also an enthusiast of board games and mechanical keyboards.',
+      imageUrl: '/images/conf/jason-jeans.webp',
+      name: 'Jason Jean',
+      twitter: 'frozenpandaz',
+    },
+    {
+      description:
+        'Miro is an engineer at Nrwl.io and a member of the Nx Core team. He enjoys sharing with the community, speaking, contributing to open source, and organizing events. Miro is co-founder of Angular Austria and co-organizer of Angular Vienna and ViennaJS meetups.',
+      imageUrl: '/images/conf/miroslav-jonas.webp',
+      name: 'Miroslav Jonas',
+      twitter: 'meeroslav',
+    },
   ];
 
   function chunkList<ITEM>(itemList: ITEM[], chunkSize: number): Array<ITEM[]> {

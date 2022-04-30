@@ -152,6 +152,7 @@ describe('lib', () => {
       await libraryGenerator(appTree, defaultSchema);
       const tsconfigJson = readJson(appTree, 'libs/my-lib/tsconfig.lib.json');
       expect(tsconfigJson.exclude).toEqual([
+        'jest.config.ts',
         '**/*.spec.ts',
         '**/*.test.ts',
         '**/*.spec.tsx',
@@ -166,7 +167,7 @@ describe('lib', () => {
     it('should generate files', async () => {
       await libraryGenerator(appTree, defaultSchema);
       expect(appTree.exists('libs/my-lib/package.json')).toBeFalsy();
-      expect(appTree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
+      expect(appTree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
       expect(appTree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(appTree.exists('libs/my-lib/src/lib/my-lib.tsx')).toBeTruthy();
       expect(
@@ -247,7 +248,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(appTree, { ...defaultSchema, directory: 'myDir' });
-      expect(appTree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+      expect(appTree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
       expect(appTree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         appTree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.tsx')
@@ -395,7 +396,7 @@ describe('lib', () => {
       });
 
       expect(appTree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
+      expect(appTree.exists('libs/my-lib/jest.config.ts')).toBeFalsy();
       const workspaceJson = readJson(appTree, 'workspace.json');
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint)

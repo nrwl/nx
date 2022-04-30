@@ -343,9 +343,9 @@
         "required": ["name"],
         "presets": []
       },
+      "aliases": ["c"],
       "description": "Generate an Angular Component.",
       "implementation": "/packages/angular/src/generators/component/component.ts",
-      "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/generators/component/schema.json"
     },
@@ -1024,6 +1024,7 @@
         "required": ["name"],
         "presets": []
       },
+      "x-type": "application",
       "description": "Generate a Remote Angular Module Federation Application.",
       "implementation": "/packages/angular/src/generators/remote/remote.ts",
       "aliases": [],
@@ -1258,6 +1259,7 @@
         "required": ["name"],
         "presets": []
       },
+      "x-type": "application",
       "description": "Generate a Host Angular Module Federation Application.",
       "implementation": "/packages/angular/src/generators/host/host.ts",
       "aliases": [],
@@ -1292,11 +1294,6 @@
             "type": "boolean",
             "description": "Preserve the Angular CLI layout instead of moving the app into apps. NOTE: only used if running the generator in an Angular CLI workspace.",
             "default": false
-          },
-          "name": {
-            "type": "string",
-            "description": "Project name. NOTE: only used if running the generator in an Angular CLI workspace.",
-            "$default": { "$source": "projectName" }
           },
           "unitTestRunner": {
             "type": "string",
@@ -3064,6 +3061,11 @@
           "poll": {
             "type": "number",
             "description": "Enable and define the file watching poll time period in milliseconds."
+          },
+          "devRemotes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of remote applications to run in development mode (i.e. using serve target)."
           }
         },
         "additionalProperties": false,
@@ -3073,6 +3075,77 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/builders/module-federation-dev-server/schema.json"
+    },
+    {
+      "name": "file-server",
+      "implementation": "/packages/angular/src/executors/file-server/file-server.impl.ts",
+      "schema": {
+        "title": "File Server",
+        "description": "Serve a web application from a folder.",
+        "type": "object",
+        "cli": "nx",
+        "properties": {
+          "buildTarget": {
+            "type": "string",
+            "description": "Target which builds the application."
+          },
+          "parallel": {
+            "type": "boolean",
+            "description": "Build the target in parallel.",
+            "default": true
+          },
+          "maxParallel": {
+            "type": "number",
+            "description": "Max number of parallel jobs."
+          },
+          "port": {
+            "type": "number",
+            "description": "Port to listen on.",
+            "default": 4200
+          },
+          "host": {
+            "type": "string",
+            "description": "Host to listen on.",
+            "default": "localhost"
+          },
+          "ssl": {
+            "type": "boolean",
+            "description": "Serve using `HTTPS`.",
+            "default": false
+          },
+          "sslKey": {
+            "type": "string",
+            "description": "SSL key to use for serving `HTTPS`."
+          },
+          "sslCert": {
+            "type": "string",
+            "description": "SSL certificate to use for serving `HTTPS`."
+          },
+          "proxyUrl": {
+            "type": "string",
+            "description": "URL to proxy unhandled requests to."
+          },
+          "proxyOptions": {
+            "type": "object",
+            "description": "Options for the proxy used by `http-server`.",
+            "default": {},
+            "properties": { "secure": { "type": "boolean", "default": false } },
+            "additionalProperties": true
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Watch for file changes.",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["buildTarget"],
+        "presets": []
+      },
+      "description": "Serve a web application from a folder.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/executors/file-server/schema.json"
     }
   ]
 }

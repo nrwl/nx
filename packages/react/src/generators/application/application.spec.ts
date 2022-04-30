@@ -64,7 +64,7 @@ describe('app', () => {
       expect(appTree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/app/app.module.css')).toBeTruthy();
 
-      const jestConfig = appTree.read('apps/my-app/jest.config.js').toString();
+      const jestConfig = appTree.read('apps/my-app/jest.config.ts').toString();
       expect(jestConfig).toContain('@nrwl/react/plugins/jest');
 
       const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');
@@ -91,6 +91,7 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
       expect(tsconfigApp.exclude).toEqual([
+        'jest.config.ts',
         '**/*.spec.ts',
         '**/*.test.ts',
         '**/*.spec.tsx',
@@ -208,6 +209,7 @@ Object {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
           expectedValue: [
+            'jest.config.ts',
             '**/*.spec.ts',
             '**/*.test.ts',
             '**/*.spec.tsx',
@@ -274,7 +276,7 @@ Object {
   it('should setup jest with tsx support', async () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
-    expect(appTree.read('apps/my-app/jest.config.js').toString()).toContain(
+    expect(appTree.read('apps/my-app/jest.config.ts').toString()).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
   });
@@ -282,7 +284,7 @@ Object {
   it('should setup jest without serializers', async () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
-    expect(appTree.read('apps/my-app/jest.config.js').toString()).not.toContain(
+    expect(appTree.read('apps/my-app/jest.config.ts').toString()).not.toContain(
       `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
     );
   });
@@ -359,10 +361,10 @@ Object {
         unitTestRunner: 'none',
       });
 
-      expect(appTree.exists('jest.config.js')).toBeFalsy();
+      expect(appTree.exists('jest.config.ts')).toBeFalsy();
       expect(appTree.exists('apps/my-app/src/app/app.spec.tsx')).toBeFalsy();
       expect(appTree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('apps/my-app/jest.config.js')).toBeFalsy();
+      expect(appTree.exists('apps/my-app/jest.config.ts')).toBeFalsy();
       const workspaceJson = getProjects(appTree);
       expect(workspaceJson.get('my-app').targets.test).toBeUndefined();
       expect(workspaceJson.get('my-app').targets.lint).toMatchInlineSnapshot(`

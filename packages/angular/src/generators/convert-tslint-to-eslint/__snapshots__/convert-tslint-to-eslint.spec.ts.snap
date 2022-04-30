@@ -598,8 +598,8 @@ Object {
       "executor": "@nrwl/linter:eslint",
       "options": Object {
         "lintFilePatterns": Array [
-          "apps/angular-app-1/src/**/*.ts",
-          "apps/angular-app-1/src/**/*.html",
+          "apps/angular-app-1/**/*.ts",
+          "apps/angular-app-1/**/*.html",
         ],
       },
     },
@@ -956,8 +956,8 @@ Object {
       "executor": "@nrwl/linter:eslint",
       "options": Object {
         "lintFilePatterns": Array [
-          "libs/angular-lib-1/src/**/*.ts",
-          "libs/angular-lib-1/src/**/*.html",
+          "libs/angular-lib-1/**/*.ts",
+          "libs/angular-lib-1/**/*.html",
         ],
       },
     },

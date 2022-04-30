@@ -9,7 +9,8 @@
   "exclude": [
     "**/*.spec.ts",
     "**/*.test.ts",
-    "./src/utils/typescript/test-fixtures/**/*.ts"
+    "./src/utils/typescript/test-fixtures/**/*.ts",
+    "jest.config.ts"
   ],
   "include": ["**/*.ts"]
 }

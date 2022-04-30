@@ -84,7 +84,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/dep-graph/client"],
       "options": {
-        "jestConfig": "dep-graph/client/jest.config.js",
+        "jestConfig": "dep-graph/client/jest.config.ts",
         "passWithNoTests": true
       }
     },

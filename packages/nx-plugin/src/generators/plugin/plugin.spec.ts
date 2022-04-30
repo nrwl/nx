@@ -75,7 +75,7 @@ describe('NxPlugin Plugin Generator', () => {
       executor: '@nrwl/jest:jest',
       outputs: ['coverage/libs/my-plugin'],
       options: {
-        jestConfig: 'libs/my-plugin/jest.config.js',
+        jestConfig: 'libs/my-plugin/jest.config.ts',
         passWithNoTests: true,
       },
     });

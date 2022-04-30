@@ -7,6 +7,7 @@
   },<% if(setupFile !== 'none') { %>
   "files": ["src/test-setup.ts"],<% } %>
   "include": [
+    "jest.config.ts",
     "**/*.test.ts",
     "**/*.spec.ts",<% if (supportTsx) { %>
     "**/*.test.tsx",

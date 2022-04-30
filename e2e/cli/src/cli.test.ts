@@ -1,15 +1,16 @@
-import { renameSync } from 'fs';
 import {
   newProject,
   readFile,
   readJson,
   runCLI,
   runCLIAsync,
+  runCommand,
   tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { renameSync } from 'fs';
 import { packagesWeCareAbout } from 'nx/src/command-line/report';
 
 describe('Cli', () => {
@@ -156,9 +157,9 @@ describe('list', () => {
 });
 
 describe('migrate', () => {
-  beforeEach(() => newProject());
+  beforeEach(() => {
+    newProject();
 
-  it('should run migrations', () => {
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
       JSON.stringify({
@@ -252,7 +253,9 @@ describe('migrate', () => {
 
       return `${before}${newFetch}${after}`;
     });
+  });
 
+  it('should run migrations', () => {
     runCLI(
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
@@ -311,5 +314,92 @@ describe('migrate', () => {
     });
     expect(readFile('file-11')).toEqual('content11');
     expect(readFile('file-20')).toEqual('content20');
+  });
+
+  it('should run migrations and create individual git commits when createCommits is enabled', () => {
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    // runs migrations with createCommits enabled
+    runCLI('migrate --run-migrations=migrations.json --create-commits', {
+      env: {
+        ...process.env,
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+    });
+
+    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+
+    expect(recentCommits).toContain('chore: [nx migration] run11');
+    expect(recentCommits).toContain('chore: [nx migration] run20');
+  });
+
+  it('should run migrations and create individual git commits using a provided custom commit prefix', () => {
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    // runs migrations with createCommits enabled and custom commit-prefix (NOTE: the extra quotes are needed here to avoid shell escaping issues)
+    runCLI(
+      `migrate --run-migrations=migrations.json --create-commits --commit-prefix="'chore(core): AUTOMATED - '"`,
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+
+    expect(recentCommits).toContain('chore(core): AUTOMATED - run11');
+    expect(recentCommits).toContain('chore(core): AUTOMATED - run20');
+  });
+
+  it('should fail if a custom commit prefix is provided when --create-commits is not enabled', () => {
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
+    const output = runCLI(
+      `migrate --run-migrations=migrations.json --commit-prefix CUSTOM_PREFIX`,
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+        silenceError: true,
+      }
+    );
+
+    expect(output).toContain(
+      `Error: Providing a custom commit prefix requires --create-commits to be enabled`
+    );
   });
 });

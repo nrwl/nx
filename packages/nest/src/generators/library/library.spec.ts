@@ -36,7 +36,7 @@ describe('lib', () => {
         builder: '@nrwl/jest:jest',
         outputs: [`coverage/libs/${libFileName}`],
         options: {
-          jestConfig: `libs/${libFileName}/jest.config.js`,
+          jestConfig: `libs/${libFileName}/jest.config.ts`,
           passWithNoTests: true,
         },
       });
@@ -156,13 +156,17 @@ describe('lib', () => {
         `libs/${libFileName}/tsconfig.lib.json`
       );
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
-      expect(tsconfigJson.exclude).toEqual(['**/*.spec.ts', '**/*.test.ts']);
+      expect(tsconfigJson.exclude).toEqual([
+        'jest.config.ts',
+        '**/*.spec.ts',
+        '**/*.test.ts',
+      ]);
     });
 
     it('should generate files', async () => {
       await libraryGenerator(tree, { name: libName });
 
-      expect(tree.exists(`libs/${libFileName}/jest.config.js`)).toBeTruthy();
+      expect(tree.exists(`libs/${libFileName}/jest.config.ts`)).toBeTruthy();
       expect(tree.exists(`libs/${libFileName}/src/index.ts`)).toBeTruthy();
       expect(
         tree.exists(`libs/${libFileName}/src/lib/${libFileName}.spec.ts`)
@@ -195,7 +199,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { name: libName, directory: dirName });
 
       expect(
-        tree.exists(`libs/${dirFileName}/${libFileName}/jest.config.js`)
+        tree.exists(`libs/${dirFileName}/${libFileName}/jest.config.ts`)
       ).toBeTruthy();
       expect(
         tree.exists(`libs/${dirFileName}/${libFileName}/src/index.ts`)
@@ -285,7 +289,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { name: libName, unitTestRunner: 'none' });
 
       expect(tree.exists(`libs/${libFileName}/tsconfig.spec.json`)).toBeFalsy();
-      expect(tree.exists(`libs/${libFileName}/jest.config.js`)).toBeFalsy();
+      expect(tree.exists(`libs/${libFileName}/jest.config.ts`)).toBeFalsy();
       expect(
         tree.exists(`libs/${libFileName}/lib/${libFileName}.spec.ts`)
       ).toBeFalsy();
@@ -358,7 +362,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { name: libName });
 
       expect(
-        tree.read(`libs/${libFileName}/jest.config.js`, 'utf-8')
+        tree.read(`libs/${libFileName}/jest.config.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -366,7 +370,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { name: libName, testEnvironment: 'jsdom' });
 
       expect(
-        tree.read(`libs/${libFileName}/jest.config.js`, 'utf-8')
+        tree.read(`libs/${libFileName}/jest.config.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
   });

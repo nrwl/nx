@@ -68,8 +68,8 @@ jobs:
     uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
     with:
       parallel-commands: |
-        npx nx workspace-lint
-        npx nx format:check
+        npx nx-cloud record -- npx nx workspace-lint
+        npx nx-cloud record -- npx nx format:check
       parallel-commands-on-agents: |
         npx nx affected --target=lint --parallel=3
         npx nx affected --target=test --parallel=3 --ci --code-coverage
@@ -81,5 +81,7 @@ jobs:
     with:
       number-of-agents: 3
 ```
+
+You can also use our [ci-workflow generator](https://nx.app/packages/workspace/generators/ci-workflow) to generate the workflow file.
 
 Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.

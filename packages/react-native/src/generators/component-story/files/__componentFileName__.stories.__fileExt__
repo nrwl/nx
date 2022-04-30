@@ -6,7 +6,7 @@ import React from 'react';
 import {
   <%= componentName %>
   <% if ( propsTypeName ) { %>, <%= propsTypeName %> <% } %>
-} from './<%= componentFileName %>';
+} from './<%= componentImportFileName %>';
 
 <% if (hasActions) { %>
   const actions = {<% for (let argType of argTypes) { %>

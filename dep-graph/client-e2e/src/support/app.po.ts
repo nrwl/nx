@@ -19,8 +19,16 @@ export const getSearchDepthCheckbox = () =>
 export const getTextFilterInput = () => cy.get('[data-cy=textFilterInput]');
 export const getTextFilterReset = () => cy.get('[data-cy=textFilterReset]');
 
+export const getSearchDepthDecrementButton = () =>
+  cy.get('[data-cy=decrement-depth-filter]');
+export const getSearchDepthIncrementButton = () =>
+  cy.get('[data-cy=increment-depth-filter]');
+
 export const getIncludeProjectsInPathButton = () =>
   cy.get('input[name=textFilterCheckbox]');
 
 export const getImageDownloadButton = () =>
   cy.get('[data-cy=downloadImageButton]');
+
+export const getFocusButtonForProject = (projectName: string) =>
+  cy.get(`[data-cy="focus-button-${projectName}"]`);

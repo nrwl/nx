@@ -1,0 +1,22 @@
+module.exports = {
+  displayName: '<%= project %>',
+  preset: '<%= offsetFromRoot %>jest.preset.ts',
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\.(html|svg)$',
+    }
+  },<% if(testEnvironment) { %>
+  testEnvironment: '<%= testEnvironment %>',<% } %>
+  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>',
+  transform: {
+    '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular'
+  },
+  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)']<% if(!skipSerializers) { %>,
+  snapshotSerializers: [
+    'jest-preset-angular/build/serializers/no-ng-attributes',
+    'jest-preset-angular/build/serializers/ng-snapshot',
+    'jest-preset-angular/build/serializers/html-comment',
+  ]<% } %>
+};

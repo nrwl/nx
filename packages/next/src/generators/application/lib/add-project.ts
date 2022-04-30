@@ -17,20 +17,24 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       root: options.appProjectRoot,
       outputPath: joinPathFragments('dist', options.appProjectRoot),
     },
-    // This has to be here so `nx serve [app] --prod` will work. Otherwise
-    // a missing configuration error will be thrown.
     configurations: {
+      development: {},
       production: {},
     },
   };
 
   targets.serve = {
     builder: '@nrwl/next:server',
+    defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
       dev: true,
     },
     configurations: {
+      development: {
+        buildTarget: `${options.projectName}:build:development`,
+        dev: true,
+      },
       production: {
         buildTarget: `${options.projectName}:build:production`,
         dev: false,

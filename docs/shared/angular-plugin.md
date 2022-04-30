@@ -80,7 +80,7 @@ Read more about:
 ## More Documentation
 
 - [Angular Nx Tutorial](/angular-tutorial/01-create-application)
-- [Setup a Micro Frontend with Angular and Nx](/guides/setup-mfe-with-angular)
+- [Setup Module Federation with Angular and Nx](/module-federation/faster-builds)
 - [Using NgRx](/guides/misc-ngrx)
 - [Using DataPersistence](/guides/misc-data-persistence)
 - [Upgrading an AngularJS application to Angular](/guides/misc-upgrade)

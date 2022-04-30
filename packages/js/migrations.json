@@ -17,6 +17,12 @@
       "version": "13.10.1-beta.1",
       "description": "Update .lib.swcrc to exclude missing test files",
       "factory": "./src/migrations/update-13-10-1/update-lib-swcrc-exclude"
+    },
+    "exclude-jest-config-swcrc": {
+      "cli": "nx",
+      "version": "14.0.0-beta.2",
+      "description": "Exclude jest config from .lib.swcrc",
+      "factory": "./src/migrations/update-14-0-0/exclude-jest-config-swcrc"
     }
   },
   "packageJsonUpdates": {}

@@ -1,4 +1,4 @@
-// Replace "com.example" here and below with your app's package name from the top of MainActivity.java
+// Replace "com.<%= lowerCaseName %>" here and below with your app's package name from the top of MainActivity.java
 package com.<%= lowerCaseName %>;
 
 import com.wix.detox.Detox;

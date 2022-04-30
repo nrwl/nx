@@ -229,24 +229,20 @@ Here is the sample generator function which you can customize to meet your needs
 ```typescript
 export default async function (tree: Tree, options: PresetGeneratorSchema) {
   const normalizedOptions = normalizeOptions(tree, options);
-  addProjectConfiguration(
-    tree,
-    normalizedOptions.projectName,
-    {
-      root: normalizedOptions.projectRoot,
-      projectType: 'application',
-      sourceRoot: `${normalizedOptions.projectRoot}/src`,
-      targets: {
-        exec: {
-          executor: "@nrwl/workspace:run-commands",
-          options: {
-	          command: `node ${projectRoot}/src/index.js
-          }
+  addProjectConfiguration(tree, normalizedOptions.projectName, {
+    root: normalizedOptions.projectRoot,
+    projectType: 'application',
+    sourceRoot: `${normalizedOptions.projectRoot}/src`,
+    targets: {
+      exec: {
+        executor: '@nrwl/workspace:run-commands',
+        options: {
+          command: `node ${projectRoot}/src/index.js`,
         },
       },
-      tags: normalizedOptions.parsedTags,
-    }
-  );
+    },
+    tags: normalizedOptions.parsedTags,
+  });
   addFiles(tree, normalizedOptions);
   await formatFiles(tree);
 }

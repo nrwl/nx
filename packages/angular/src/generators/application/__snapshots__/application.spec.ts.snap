@@ -2,25 +2,25 @@
 
 exports[`app --mfe should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-const config = require('./mfe.config');
+const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
 exports[`app --mfe should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-const config = require('./mfe.config');
+const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
 exports[`app --mfe should generate a Module Federation correctly for a each app 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-const config = require('./mfe.config');
+const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
 exports[`app --mfe should generate a Module Federation correctly for a each app 2`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-const config = require('./mfe.config');
+const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
@@ -92,8 +92,8 @@ Object {
       "builder": "@nrwl/linter:eslint",
       "options": Object {
         "lintFilePatterns": Array [
-          "apps/my-dir/my-app/src/**/*.ts",
-          "apps/my-dir/my-app/src/**/*.html",
+          "apps/my-dir/my-app/**/*.ts",
+          "apps/my-dir/my-app/**/*.html",
         ],
       },
     },
@@ -112,7 +112,7 @@ Object {
     "test": Object {
       "builder": "@nrwl/jest:jest",
       "options": Object {
-        "jestConfig": "apps/my-dir/my-app/jest.config.js",
+        "jestConfig": "apps/my-dir/my-app/jest.config.ts",
         "passWithNoTests": true,
       },
       "outputs": Array [
@@ -261,8 +261,8 @@ Object {
       "builder": "@nrwl/linter:eslint",
       "options": Object {
         "lintFilePatterns": Array [
-          "apps/my-app/src/**/*.ts",
-          "apps/my-app/src/**/*.html",
+          "apps/my-app/**/*.ts",
+          "apps/my-app/**/*.html",
         ],
       },
     },
@@ -281,7 +281,7 @@ Object {
     "test": Object {
       "builder": "@nrwl/jest:jest",
       "options": Object {
-        "jestConfig": "apps/my-app/jest.config.js",
+        "jestConfig": "apps/my-app/jest.config.ts",
         "passWithNoTests": true,
       },
       "outputs": Array [

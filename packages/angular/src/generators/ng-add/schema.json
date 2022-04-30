@@ -24,13 +24,6 @@
       "description": "Preserve the Angular CLI layout instead of moving the app into apps. NOTE: only used if running the generator in an Angular CLI workspace.",
       "default": false
     },
-    "name": {
-      "type": "string",
-      "description": "Project name. NOTE: only used if running the generator in an Angular CLI workspace.",
-      "$default": {
-        "$source": "projectName"
-      }
-    },
 
     "unitTestRunner": {
       "type": "string",

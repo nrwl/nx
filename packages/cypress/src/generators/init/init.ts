@@ -4,7 +4,11 @@ import {
   removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
-import { cypressVersion, nxVersion } from '../../utils/versions';
+import {
+  cypressVersion,
+  nxVersion,
+  typesNodeVersion,
+} from '../../utils/versions';
 import { Schema } from './schema';
 
 function updateDependencies(host: Tree) {
@@ -16,6 +20,7 @@ function updateDependencies(host: Tree) {
     {
       ['@nrwl/cypress']: nxVersion,
       cypress: cypressVersion,
+      '@types/node': typesNodeVersion,
     }
   );
 }

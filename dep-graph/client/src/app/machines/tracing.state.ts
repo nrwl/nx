@@ -13,6 +13,15 @@ export const tracingStateConfig: DepGraphStateNodeConfig = {
     'notifyRouteTracing',
     'notifyGraphTracing',
   ],
+  exit: [
+    assign((ctx, event) => {
+      if (event.type !== 'setTracingStart' && event.type !== 'setTracingEnd') {
+        ctx.tracing.start = null;
+        ctx.tracing.end = null;
+      }
+    }),
+    'notifyRouteTracing',
+  ],
   on: {
     clearTraceStart: {
       actions: [

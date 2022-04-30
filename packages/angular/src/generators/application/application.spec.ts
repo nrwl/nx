@@ -70,7 +70,7 @@ describe('app', () => {
     it('should generate files', async () => {
       await generateApp(appTree);
 
-      expect(appTree.exists(`apps/my-app/jest.config.js`)).toBeTruthy();
+      expect(appTree.exists(`apps/my-app/jest.config.ts`)).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/main.ts')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/app/app.module.ts')).toBeTruthy();
       expect(
@@ -113,13 +113,13 @@ describe('app', () => {
     it('should setup jest with serializers', async () => {
       await generateApp(appTree);
 
-      expect(appTree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
+      expect(appTree.read('apps/my-app/jest.config.ts', 'utf-8')).toContain(
         `'jest-preset-angular/build/serializers/no-ng-attributes'`
       );
-      expect(appTree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
+      expect(appTree.read('apps/my-app/jest.config.ts', 'utf-8')).toContain(
         `'jest-preset-angular/build/serializers/ng-snapshot'`
       );
-      expect(appTree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
+      expect(appTree.read('apps/my-app/jest.config.ts', 'utf-8')).toContain(
         `'jest-preset-angular/build/serializers/html-comment'`
       );
     });
@@ -249,7 +249,7 @@ describe('app', () => {
 
       // Make sure these exist
       [
-        `apps/my-dir/my-app/jest.config.js`,
+        `apps/my-dir/my-app/jest.config.ts`,
         'apps/my-dir/my-app/src/main.ts',
         'apps/my-dir/my-app/src/app/app.module.ts',
         'apps/my-dir/my-app/src/app/app.component.ts',
@@ -332,7 +332,7 @@ describe('app', () => {
 
       // Make sure these exist
       [
-        'my-dir/my-app/jest.config.js',
+        'my-dir/my-app/jest.config.ts',
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app.module.ts',
         'my-dir/my-app/src/app/app.component.ts',
@@ -493,8 +493,8 @@ describe('app', () => {
             "builder": "@nrwl/linter:eslint",
             "options": Object {
               "lintFilePatterns": Array [
-                "apps/my-app/src/**/*.ts",
-                "apps/my-app/src/**/*.html",
+                "apps/my-app/**/*.ts",
+                "apps/my-app/**/*.html",
               ],
             },
           }
@@ -527,8 +527,8 @@ describe('app', () => {
             "builder": "@nrwl/linter:eslint",
             "options": Object {
               "lintFilePatterns": Array [
-                "apps/my-app/src/**/*.ts",
-                "apps/my-app/src/**/*.html",
+                "apps/my-app/**/*.ts",
+                "apps/my-app/**/*.html",
               ],
             },
           }
@@ -631,10 +631,10 @@ describe('app', () => {
 
   describe('--unit-test-runner', () => {
     describe('default (jest)', () => {
-      it('should generate jest.config.js with serializers', async () => {
+      it('should generate jest.config.ts with serializers', async () => {
         await generateApp(appTree);
 
-        const jestConfig = appTree.read('apps/my-app/jest.config.js', 'utf-8');
+        const jestConfig = appTree.read('apps/my-app/jest.config.ts', 'utf-8');
 
         expect(jestConfig).toContain(
           `'jest-preset-angular/build/serializers/no-ng-attributes'`
@@ -678,7 +678,7 @@ describe('app', () => {
         expect(appTree.exists('apps/my-app/src/test-setup.ts')).toBeFalsy();
         expect(appTree.exists('apps/my-app/src/test.ts')).toBeFalsy();
         expect(appTree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
-        expect(appTree.exists('apps/my-app/jest.config.js')).toBeFalsy();
+        expect(appTree.exists('apps/my-app/jest.config.ts')).toBeFalsy();
         expect(appTree.exists('apps/my-app/karma.config.js')).toBeFalsy();
         expect(
           appTree.exists('apps/my-app/src/app/app.component.spec.ts')

@@ -16,6 +16,7 @@ describe('init', () => {
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['react']).toBeDefined();
     expect(packageJson.dependencies['react-native']).toBeDefined();
+    expect(packageJson.devDependencies['@types/node']).toBeDefined();
     expect(packageJson.devDependencies['@types/react']).toBeDefined();
     expect(packageJson.devDependencies['@types/react-native']).toBeDefined();
   });
@@ -34,31 +35,6 @@ describe('init', () => {
     expect(content).toMatch(/# React Native/);
     expect(content).toMatch(/# Nested node_modules/);
   });
-
-  it.each`
-    version
-    ${'18.0.0'}
-    ${'~18.0.0'}
-    ${'^18.0.0'}
-  `(
-    'should warn if React v18 is already installed in workspace',
-    async ({ version }) => {
-      const spy = jest.spyOn(logger, 'warn');
-      spy.mockImplementation(() => {});
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          react: version,
-        };
-        return json;
-      });
-
-      await reactNativeInitGenerator(tree, { e2eTestRunner: 'none' });
-
-      expect(spy).toHaveBeenCalledWith(expect.stringContaining('incompatible'));
-
-      spy.mockRestore();
-    }
-  );
 
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {

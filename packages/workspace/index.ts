@@ -42,7 +42,6 @@ export {
   renameSyncInTree,
   renameDirSyncInTree,
   updateNxJsonInTree,
-  addProjectToNxJsonInTree,
   readNxJsonInTree,
   InsertChange,
   ReplaceChange,

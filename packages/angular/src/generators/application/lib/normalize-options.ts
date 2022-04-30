@@ -10,6 +10,7 @@ import type { NormalizedSchema } from './normalized-schema';
 import { names, getWorkspaceLayout } from '@nrwl/devkit';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { Linter } from '@nrwl/linter';
+import { normalizeDirectory, normalizeProjectName } from '../../utils/project';
 
 export function normalizeOptions(
   host: Tree,
@@ -17,14 +18,10 @@ export function normalizeOptions(
 ): NormalizedSchema {
   const { appsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
 
-  const appDirectory = options.directory
-    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
+  const appDirectory = normalizeDirectory(options.name, options.directory);
 
   let e2eProjectName = `${names(options.name).fileName}-e2e`;
-  const appProjectName = appDirectory
-    .replace(new RegExp('/', 'g'), '-')
-    .replace(/-\d+/g, '');
+  const appProjectName = normalizeProjectName(options.name, options.directory);
   if (options.e2eTestRunner !== 'cypress') {
     e2eProjectName = `${appProjectName}-e2e`;
   }

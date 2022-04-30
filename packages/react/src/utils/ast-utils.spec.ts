@@ -147,7 +147,7 @@ const App = () => (
       </div>
     </header>
     <p>Hello World!</p>
-    <Route path="/" component={Home}/>
+    <Route path="/" element={<Home/>}/>
   </>
 );
 export default App; 
@@ -170,7 +170,7 @@ export default App;
     );
 
     expect(result).toMatch(/<li><Link\s+to="\/about"/);
-    expect(result).toMatch(/<Route\s+path="\/about"\s+component={About}/);
+    expect(result).toMatch(/<Route\s+path="\/about"\s+element={<About\/>}/);
   });
 });
 
@@ -240,7 +240,7 @@ ReactDOM.render(<div/>, document.getElementById('root'));
   it('should return root.render(...)', () => {
     const sourceCode = `
 import React from 'react';
-import ReactDOMClient from 'react-dom/client';
+import ReactDOM from 'react-dom/client';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<div/>);
       `;
@@ -393,8 +393,95 @@ const store = createStore(combineReducer({}));
   });
 });
 
-describe('getComponentName', () => {
-  [
+describe('findExportDeclarationsForJsx', () => {
+  const testConfigs = [
+    {
+      testName: 'exporting a function',
+      src: `export function Test(props: TestProps) {
+        return (
+          <div>
+            <h1>Welcome to test component, {props.name}</h1>
+          </div>
+        );`,
+      expectedName: 'Test',
+    },
+    {
+      testName: 'exporting an arrow function',
+      src: `
+      export const Test = (props: TestProps) => {
+        return (
+          <div>
+            <h1>Welcome to test component, {props.name}</h1>
+          </div>
+        );
+      };
+      `,
+      expectedName: 'Test',
+    },
+    {
+      testName: 'defining an arrow function that directly returns JSX',
+      src: `
+      export const Test = (props: TestProps) => <div><h1>Welcome to test component, {props.name}</h1></div>;
+    `,
+      expectedName: 'Test',
+    },
+    {
+      testName: 'exporting a react class component',
+      src: `
+      export class Test extends React.Component<TestProps> {
+        render() {
+          return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+        }
+      }
+      `,
+      expectedName: 'Test',
+    },
+    {
+      testName: 'exporting a react functional component',
+      src: `
+      export const Test: React.FC<TestProps> = (props) => {
+        return (
+          <div>
+            <h1>Welcome to test component, {props.name}</h1>
+          </div>
+        );
+      };
+      `,
+      expectedName: 'Test',
+    },
+    {
+      testName: 'using a JSX self closing element',
+      src: `
+      export function Test(props: TestProps) {
+        return <img src='something' />;
+      };
+      `,
+      expectedName: 'Test',
+    },
+  ];
+
+  it.each(testConfigs)(
+    'should find the component when: $testName',
+    ({ src, expectedName }) => {
+      const source = ts.createSourceFile(
+        'some-component.tsx',
+        src,
+        ts.ScriptTarget.Latest,
+        true
+      );
+
+      const result: Array<
+        ts.VariableDeclaration | ts.FunctionDeclaration | ts.ClassDeclaration
+      > = utils.findExportDeclarationsForJsx(source) as any;
+
+      expect(result).toBeDefined();
+      expect(result[0]?.name.getText()).toEqual(expectedName);
+    }
+  );
+});
+
+describe('getComponentNode', () => {
+  const testConfigs = [
     {
       testName: 'exporting a function',
       src: `export default function Test(props: TestProps) {
@@ -467,27 +554,30 @@ describe('getComponentName', () => {
       testName: 'using a JSX self closing element',
       src: `
       function Test(props: TestProps) {
-        return <img src="something" />;
+        return <img src='something' />;
       };
       export default Test;
       `,
       expectedName: 'Test',
     },
-  ].forEach((testConfig) => {
-    it(`should find the component when ${testConfig.testName}`, () => {
+  ];
+
+  it.each(testConfigs)(
+    'should find the component when: $testName',
+    ({ src, expectedName }) => {
       const source = ts.createSourceFile(
         'some-component.tsx',
-        testConfig.src,
+        src,
         ts.ScriptTarget.Latest,
         true
       );
 
-      const result = utils.getComponentName(source) as any;
+      const result = utils.getComponentNode(source) as any;
 
       expect(result).toBeDefined();
-      expect((result as any).name.text).toEqual(testConfig.expectedName);
-    });
-  });
+      expect((result as any).name.text).toEqual(expectedName);
+    }
+  );
 
   it('should return null if there is no component', () => {
     const source = ts.createSourceFile(
@@ -497,7 +587,7 @@ describe('getComponentName', () => {
       true
     );
 
-    const result = utils.getComponentName(source) as any;
+    const result = utils.getComponentNode(source) as any;
 
     expect(result).toBeNull();
   });

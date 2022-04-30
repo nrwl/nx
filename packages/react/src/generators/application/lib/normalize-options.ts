@@ -3,15 +3,22 @@ import { assertValidStyle } from '../../../utils/assertion';
 import { getWorkspaceLayout, names, normalizePath, Tree } from '@nrwl/devkit';
 import { findFreePort } from './find-free-port';
 
+export function normalizeDirectory(options: Schema) {
+  return options.directory
+    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+    : names(options.name).fileName;
+}
+
+export function normalizeProjectName(options: Schema) {
+  return normalizeDirectory(options).replace(new RegExp('/', 'g'), '-');
+}
+
 export function normalizeOptions(
   host: Tree,
   options: Schema
 ): NormalizedSchema {
-  const appDirectory = options.directory
-    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
-
-  const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
+  const appDirectory = normalizeDirectory(options);
+  const appProjectName = normalizeProjectName(options);
   const e2eProjectName = `${appProjectName}-e2e`;
 
   const { appsDir } = getWorkspaceLayout(host);

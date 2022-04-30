@@ -6,7 +6,7 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/linter/jest.config.js",
+        "jestConfig": "packages/linter/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/linter"]

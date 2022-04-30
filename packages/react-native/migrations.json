@@ -23,6 +23,24 @@
       "cli": "nx",
       "description": "Add babel.config.json at root for react native workspace if it does not exist",
       "factory": "./src/migrations/update-13-5-0/add-babel-config-root-13-5-0"
+    },
+    "update-entry-file-bundle-14-0-0": {
+      "version": "14.0.0-beta.0",
+      "cli": "nx",
+      "description": "Udpate the entry file option under bundle target",
+      "factory": "./src/migrations/update-14-0-0/update-entry-file-bundle-14-0-0"
+    },
+    "add-project-root-metro-config-14-0-0": {
+      "version": "14.0.0-beta.0",
+      "cli": "nx",
+      "description": "Add projectRoot option in metro.config.js",
+      "factory": "./src/migrations/update-14-0-0/add-project-root-metro-config-14-0-0"
+    },
+    "change-main-to-class-name-14-0-2": {
+      "version": "14.0.3-beta.0",
+      "cli": "nx",
+      "description": "changes 'main' tag to project's className",
+      "factory": "./src/migrations/update-14-0-2/change-main-to-class-name-14-0-2"
     }
   },
   "packageJsonUpdates": {
@@ -466,6 +484,81 @@
         },
         "@babel/runtime": {
           "version": "7.17.8",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.0.0-beta.0": {
+      "version": "14.0.0-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.68.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.67.4",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.70.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.70.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-babel-register": {
+          "version": "0.70.1",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "devDependencies"
+        },
+        "metro-config": {
+          "version": "0.70.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "7.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.70.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-test-renderer": {
+          "version": "18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.17.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.0.3": {
+      "version": "14.0.3-beta.0",
+      "packages": {
+        "@types/react-native": {
+          "version": "0.67.6",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.70.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.70.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-babel-register": {
+          "version": "0.70.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-config": {
+          "version": "0.70.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.70.2",
           "alwaysAddToPackageJson": false
         }
       }

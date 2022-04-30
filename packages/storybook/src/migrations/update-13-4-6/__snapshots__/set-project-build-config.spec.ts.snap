@@ -4,24 +4,20 @@ exports[`Set the projectBuildConfig option in the Storybook configuration for An
 Object {
   "projects": Object {
     "main-app": Object {
-      "prefix": "katst",
-      "projectType": "application",
-      "root": "apps/main-app",
-      "sourceRoot": "apps/main-app/src",
-      "targets": Object {
+      "architect": Object {
         "build": Object {
-          "executor": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-devkit/build-angular:browser",
           "outputs": Array [
             "{options.outputPath}",
           ],
         },
         "build-storybook": Object {
+          "builder": "@nrwl/storybook:build",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:build",
           "options": Object {
             "config": Object {
               "configFolder": "apps/main-app/.storybook",
@@ -35,12 +31,12 @@ Object {
           ],
         },
         "storybook": Object {
+          "builder": "@nrwl/storybook:storybook",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:storybook",
           "options": Object {
             "config": Object {
               "configFolder": "apps/main-app/.storybook",
@@ -51,19 +47,20 @@ Object {
           },
         },
       },
+      "prefix": "katst",
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
     },
     "ui-one": Object {
-      "projectType": "library",
-      "root": "libs/ui/one",
-      "sourceRoot": "libs/ui/one/src",
-      "targets": Object {
+      "architect": Object {
         "build-storybook": Object {
+          "builder": "@nrwl/storybook:build",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:build",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/one/.storybook",
@@ -77,7 +74,7 @@ Object {
           ],
         },
         "storybook": Object {
-          "executor": "@nrwl/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/one/.storybook",
@@ -88,19 +85,19 @@ Object {
           },
         },
       },
+      "projectType": "library",
+      "root": "libs/ui/one",
+      "sourceRoot": "libs/ui/one/src",
     },
     "ui-three": Object {
-      "projectType": "library",
-      "root": "libs/ui/three",
-      "sourceRoot": "libs/ui/three/src",
-      "targets": Object {
+      "architect": Object {
         "build-storybook": Object {
+          "builder": "@nrwl/storybook:build",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:build",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/three/.storybook",
@@ -114,7 +111,7 @@ Object {
           ],
         },
         "storybook": Object {
-          "executor": "@nrwl/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/three/.storybook",
@@ -125,19 +122,19 @@ Object {
           },
         },
       },
+      "projectType": "library",
+      "root": "libs/ui/three",
+      "sourceRoot": "libs/ui/three/src",
     },
     "ui-two": Object {
-      "projectType": "library",
-      "root": "libs/ui/two",
-      "sourceRoot": "libs/ui/two/src",
-      "targets": Object {
+      "architect": Object {
         "build-storybook": Object {
+          "builder": "@nrwl/storybook:build",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:build",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/two/.storybook",
@@ -151,7 +148,7 @@ Object {
           ],
         },
         "storybook": Object {
-          "executor": "@nrwl/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/two/.storybook",
@@ -162,6 +159,9 @@ Object {
           },
         },
       },
+      "projectType": "library",
+      "root": "libs/ui/two",
+      "sourceRoot": "libs/ui/two/src",
     },
   },
   "version": 1,
@@ -172,18 +172,14 @@ exports[`Set the projectBuildConfig option in the Storybook configuration for An
 Object {
   "projects": Object {
     "main-app": Object {
-      "prefix": "katst",
-      "projectType": "application",
-      "root": "apps/main-app",
-      "sourceRoot": "apps/main-app/src",
-      "targets": Object {
+      "architect": Object {
         "lmfkcn": Object {
+          "builder": "@nrwl/storybook:storybook",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:storybook",
           "options": Object {
             "config": Object {
               "configFolder": "apps/main-app/.storybook",
@@ -194,18 +190,18 @@ Object {
           },
         },
         "njdfvndfjnv": Object {
-          "executor": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-devkit/build-angular:browser",
           "outputs": Array [
             "{options.outputPath}",
           ],
         },
         "odmwjbc": Object {
+          "builder": "@nrwl/storybook:build",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:build",
           "options": Object {
             "config": Object {
               "configFolder": "apps/main-app/.storybook",
@@ -219,19 +215,20 @@ Object {
           ],
         },
       },
+      "prefix": "katst",
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
     },
     "ui-one": Object {
-      "projectType": "library",
-      "root": "libs/ui/one",
-      "sourceRoot": "libs/ui/one/src",
-      "targets": Object {
+      "architect": Object {
         "asdgsdfg": Object {
+          "builder": "@nrwl/storybook:build",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:build",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/one/.storybook",
@@ -245,7 +242,7 @@ Object {
           ],
         },
         "trthrngb": Object {
-          "executor": "@nrwl/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/one/.storybook",
@@ -256,19 +253,19 @@ Object {
           },
         },
       },
+      "projectType": "library",
+      "root": "libs/ui/one",
+      "sourceRoot": "libs/ui/one/src",
     },
     "ui-three": Object {
-      "projectType": "library",
-      "root": "libs/ui/three",
-      "sourceRoot": "libs/ui/three/src",
-      "targets": Object {
+      "architect": Object {
         "aaaa": Object {
+          "builder": "@nrwl/storybook:build",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:build",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/three/.storybook",
@@ -282,7 +279,7 @@ Object {
           ],
         },
         "nmkgd": Object {
-          "executor": "@nrwl/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/three/.storybook",
@@ -293,14 +290,14 @@ Object {
           },
         },
       },
+      "projectType": "library",
+      "root": "libs/ui/three",
+      "sourceRoot": "libs/ui/three/src",
     },
     "ui-two": Object {
-      "projectType": "library",
-      "root": "libs/ui/two",
-      "sourceRoot": "libs/ui/two/src",
-      "targets": Object {
+      "architect": Object {
         "sdft": Object {
-          "executor": "@nrwl/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/two/.storybook",
@@ -311,12 +308,12 @@ Object {
           },
         },
         "thjkkb": Object {
+          "builder": "@nrwl/storybook:build",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:build",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/two/.storybook",
@@ -330,6 +327,9 @@ Object {
           ],
         },
       },
+      "projectType": "library",
+      "root": "libs/ui/two",
+      "sourceRoot": "libs/ui/two/src",
     },
   },
   "version": 1,
@@ -340,18 +340,14 @@ exports[`Set the projectBuildConfig option in the Storybook configuration for An
 Object {
   "projects": Object {
     "main-app": Object {
-      "prefix": "katst",
-      "projectType": "application",
-      "root": "apps/main-app",
-      "sourceRoot": "apps/main-app/src",
-      "targets": Object {
+      "architect": Object {
         "storybook": Object {
+          "builder": "@nrwl/storybook:storybook",
           "configurations": Object {
             "ci": Object {
               "quiet": true,
             },
           },
-          "executor": "@nrwl/storybook:storybook",
           "options": Object {
             "config": Object {
               "configFolder": "apps/main-app/.storybook",
@@ -361,6 +357,10 @@ Object {
           },
         },
       },
+      "prefix": "katst",
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
     },
     "ui-one": Object {
       "projectType": "library",
@@ -386,7 +386,7 @@ Object {
           ],
         },
         "storybook": Object {
-          "executor": "@nrwl/storybook:storybook",
+          "builder": "@nrwl/storybook:storybook",
           "options": Object {
             "config": Object {
               "configFolder": "libs/ui/one/.storybook",
@@ -398,6 +398,5 @@ Object {
       },
     },
   },
-  "version": undefined,
 }
 `;

@@ -4,6 +4,6 @@
     "outDir": "<%= offsetFromRoot %>dist/out-tsc",
     "types": ["node"]
   },
-  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+  "exclude": ["jest.config.ts","**/*.spec.ts", "**/*.test.ts"],
   "include": ["**/*.ts"]
 }

@@ -1,9 +1,13 @@
+import { findRootJestConfig } from '../../../utils/config/find-root-jest-files';
 import { JestProjectSchema } from '../schema';
 import { addPropertyToJestConfig } from '../../../utils/config/update-config';
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 
 function isUsingUtilityFunction(host: Tree) {
-  return host.read('jest.config.js').toString().includes('getJestProjects()');
+  return host
+    .read(findRootJestConfig(host))
+    .toString()
+    .includes('getJestProjects()');
 }
 
 export function updateJestConfig(host: Tree, options: JestProjectSchema) {
@@ -13,7 +17,7 @@ export function updateJestConfig(host: Tree, options: JestProjectSchema) {
   const project = readProjectConfiguration(host, options.project);
   addPropertyToJestConfig(
     host,
-    'jest.config.js',
+    findRootJestConfig(host),
     'projects',
     `<rootDir>/${project.root}`
   );

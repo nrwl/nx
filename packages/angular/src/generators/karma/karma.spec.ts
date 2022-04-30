@@ -49,6 +49,7 @@ describe('karma', () => {
     expect(devDependencies['jasmine-core']).toBeDefined();
     expect(devDependencies['jasmine-spec-reporter']).toBeDefined();
     expect(devDependencies['@types/jasmine']).toBeDefined();
+    expect(devDependencies['@types/node']).toBeDefined();
   });
 
   it('should add karma configuration', () => {

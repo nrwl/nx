@@ -61,13 +61,13 @@ describe('init generator', () => {
   it('should add jest config when unitTestRunner is jest', async () => {
     await initGenerator(tree, { unitTestRunner: 'jest' });
 
-    expect(tree.exists('jest.config.js')).toBe(true);
+    expect(tree.exists('jest.config.ts')).toBe(true);
   });
 
   it('should not add jest config when unitTestRunner is none', async () => {
     await initGenerator(tree, { unitTestRunner: 'none' });
 
-    expect(tree.exists('jest.config.js')).toBe(false);
+    expect(tree.exists('jest.config.ts')).toBe(false);
   });
 
   describe('--skipFormat', () => {

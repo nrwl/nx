@@ -1,6 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import host from './host';
 import applicationGenerator from '../application/application';
+import remote from '../remote/remote';
 
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
@@ -41,21 +42,67 @@ describe('Host App Generator', () => {
     expect(tree.read('apps/test/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should error when a host app is attempted to be generated with an incorrect remote', async () => {
+  it('should generate a host and any remotes that dont exist', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
 
     // ACT
-    try {
-      await host(tree, {
-        name: 'test',
-        remotes: ['remote'],
-      });
-    } catch (error) {
-      // ASSERT
-      expect(error.message).toEqual(
-        'Could not find specified remote application (remote)'
-      );
-    }
+
+    await host(tree, {
+      name: 'hostApp',
+      remotes: ['remote1', 'remote2'],
+    });
+
+    // ASSERT
+    expect(tree.exists('apps/remote1/project.json')).toBeTruthy();
+    expect(tree.exists('apps/remote2/project.json')).toBeTruthy();
+    expect(
+      tree.read('apps/host-app/module-federation.config.js', 'utf-8')
+    ).toContain(`'remote1','remote2'`);
+  });
+
+  it('should generate a host, integrate existing remotes and generate any remotes that dont exist', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    await remote(tree, {
+      name: 'remote1',
+    });
+
+    // ACT
+    await host(tree, {
+      name: 'hostApp',
+      remotes: ['remote1', 'remote2', 'remote3'],
+    });
+
+    // ASSERT
+    expect(tree.exists('apps/remote1/project.json')).toBeTruthy();
+    expect(tree.exists('apps/remote2/project.json')).toBeTruthy();
+    expect(tree.exists('apps/remote3/project.json')).toBeTruthy();
+    expect(
+      tree.read('apps/host-app/module-federation.config.js', 'utf-8')
+    ).toContain(`'remote1','remote2','remote3'`);
+  });
+
+  it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    await remote(tree, {
+      name: 'remote1',
+    });
+
+    // ACT
+    await host(tree, {
+      name: 'hostApp',
+      directory: 'foo',
+      remotes: ['remote1', 'remote2', 'remote3'],
+    });
+
+    // ASSERT
+    expect(tree.exists('apps/remote1/project.json')).toBeTruthy();
+    expect(tree.exists('apps/foo/remote2/project.json')).toBeTruthy();
+    expect(tree.exists('apps/foo/remote3/project.json')).toBeTruthy();
+    expect(
+      tree.read('apps/foo/host-app/module-federation.config.js', 'utf-8')
+    ).toContain(`'remote1','foo-remote2','foo-remote3'`);
   });
 });

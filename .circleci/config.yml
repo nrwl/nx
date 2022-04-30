@@ -204,7 +204,7 @@ jobs:
           command: npx nx-cloud stop-all-agents
 
 # -------------------------
-#        WORKFLOWS
+#        WORKFLOWS(JOBS)
 # -------------------------
 workflows:
   version: 2

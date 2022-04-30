@@ -1,6 +1,6 @@
-import { readJson, updateJson } from './json';
+import { readJson, updateJson } from 'nx/src/generators/utils/json';
 import { installPackagesTask } from '../tasks/install-packages-task';
-import type { Tree } from 'nx/src/config/tree';
+import type { Tree } from 'nx/src/generators/tree';
 import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 
 /**
@@ -97,7 +97,10 @@ export function removeDependenciesFromPackageJson(
   };
 }
 
-function sortObjectByKeys(obj: unknown): unknown {
+function sortObjectByKeys<T>(obj: T): T {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+    return obj;
+  }
   return Object.keys(obj)
     .sort()
     .reduce((result, key) => {
@@ -105,7 +108,7 @@ function sortObjectByKeys(obj: unknown): unknown {
         ...result,
         [key]: obj[key],
       };
-    }, {});
+    }, {}) as T;
 }
 
 /**

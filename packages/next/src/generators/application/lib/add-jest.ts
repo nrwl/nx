@@ -1,4 +1,4 @@
-import { Tree, updateJson } from '@nrwl/devkit';
+import { joinPathFragments, readJson, Tree, updateJson } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { NormalizedSchema } from './normalize-options';
 
@@ -8,6 +8,7 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
   }
 
   const jestTask = await jestProjectGenerator(host, {
+    ...options,
     project: options.projectName,
     supportTsx: true,
     skipSerializers: true,
@@ -15,10 +16,33 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     compiler: 'babel',
   });
 
-  updateJson(host, `${options.appProjectRoot}/tsconfig.spec.json`, (json) => {
-    json.compilerOptions.jsx = 'react';
-    return json;
-  });
+  const tsConfigSpecJson = readJson(
+    host,
+    joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json')
+  );
+
+  updateJson(
+    host,
+    joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
+    (json) => {
+      json.compilerOptions ??= {};
+      json.compilerOptions.types ??= [];
+      json.compilerOptions.types.push(
+        ...(tsConfigSpecJson?.compilerOptions?.types ?? [])
+      );
+
+      return json;
+    }
+  );
+
+  updateJson(
+    host,
+    joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json'),
+    (json) => {
+      json.compilerOptions.jsx = 'react';
+      return json;
+    }
+  );
 
   return jestTask;
 }

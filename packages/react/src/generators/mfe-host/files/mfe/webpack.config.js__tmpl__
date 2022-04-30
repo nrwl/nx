@@ -1,6 +1,0 @@
-const withModuleFederation = require('@nrwl/react/module-federation');
-const mfeConfig = require('./mfe.config');
-
-module.exports = withModuleFederation({
-    ...mfeConfig,
-});

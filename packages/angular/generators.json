@@ -19,6 +19,7 @@
     "component": {
       "factory": "./src/generators/component/component.compat",
       "schema": "./src/generators/component/schema.json",
+      "aliases": ["c"],
       "description": "Generate an Angular Component."
     },
     "component-cypress-spec": {
@@ -166,6 +167,7 @@
     "component": {
       "factory": "./src/generators/component/component",
       "schema": "./src/generators/component/schema.json",
+      "aliases": ["c"],
       "description": "Generate an Angular Component."
     },
     "component-cypress-spec": {
@@ -221,6 +223,7 @@
     "remote": {
       "factory": "./src/generators/remote/remote",
       "schema": "./src/generators/remote/schema.json",
+      "x-type": "application",
       "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
@@ -237,6 +240,7 @@
     "host": {
       "factory": "./src/generators/host/host",
       "schema": "./src/generators/host/schema.json",
+      "x-type": "application",
       "description": "Generate a Host Angular Module Federation Application."
     },
     "ng-add": {

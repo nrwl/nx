@@ -32,6 +32,11 @@
             "description": "Skip formatting files.",
             "type": "boolean",
             "default": false
+          },
+          "js": {
+            "type": "boolean",
+            "default": false,
+            "description": "Use JavaScript instead of TypeScript"
           }
         },
         "required": [],
@@ -836,11 +841,11 @@
       "path": "/packages/react/src/generators/hook/schema.json"
     },
     {
-      "name": "mfe-host",
-      "factory": "./src/generators/mfe-host/mfe-host#mfeHostGenerator",
+      "name": "host",
+      "factory": "./src/generators/host/host#hostGenerator",
       "schema": {
         "$schema": "http://json-schema.org/schema",
-        "$id": "GeneratorReactMFEHost",
+        "$id": "GeneratorReactHost",
         "cli": "nx",
         "title": "Generate Module Federation Setup for React Host App",
         "description": "Create Module Federation configuration files for given React Host Application.",
@@ -985,18 +990,19 @@
         "additionalProperties": false,
         "presets": []
       },
+      "x-type": "application",
       "description": "Generate a host react application",
-      "aliases": "host",
-      "implementation": "/packages/react/src/generators/mfe-host/mfe-host#mfeHostGenerator.ts",
+      "implementation": "/packages/react/src/generators/host/host#hostGenerator.ts",
+      "aliases": [],
       "hidden": false,
-      "path": "/packages/react/src/generators/mfe-host/schema.json"
+      "path": "/packages/react/src/generators/host/schema.json"
     },
     {
-      "name": "mfe-remote",
-      "factory": "./src/generators/mfe-remote/mfe-remote#mfeRemoteGenerator",
+      "name": "remote",
+      "factory": "./src/generators/remote/remote#remoteGenerator",
       "schema": {
         "$schema": "http://json-schema.org/schema",
-        "$id": "GeneratorReactMFERemote",
+        "$id": "GeneratorReactRemote",
         "cli": "nx",
         "title": "Generate Module Federation Setup for React Remote App",
         "description": "Create Module Federation configuration files for given React Remote Application.",
@@ -1145,23 +1151,29 @@
         "additionalProperties": false,
         "presets": []
       },
+      "x-type": "application",
       "description": "Generate a remote react application",
-      "aliases": "remote",
-      "implementation": "/packages/react/src/generators/mfe-remote/mfe-remote#mfeRemoteGenerator.ts",
+      "implementation": "/packages/react/src/generators/remote/remote#remoteGenerator.ts",
+      "aliases": [],
       "hidden": false,
-      "path": "/packages/react/src/generators/mfe-remote/schema.json"
+      "path": "/packages/react/src/generators/remote/schema.json"
     }
   ],
   "executors": [
     {
-      "name": "mfe-dev-server",
-      "implementation": "/packages/react/src/executors/mfe-dev-server/mfe-dev-server.impl.ts",
+      "name": "module-federation-dev-server",
+      "implementation": "/packages/react/src/executors/module-federation-dev-server/module-federation-dev-server.impl.ts",
       "schema": {
-        "title": "Web Dev Server",
+        "title": "Module Federation Dev Server",
         "description": "Serve a web application.",
         "cli": "nx",
         "type": "object",
         "properties": {
+          "devRemotes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of remote applications to run in development mode (i.e. using serve target)."
+          },
           "buildTarget": {
             "type": "string",
             "description": "Target which builds the application."
@@ -1228,19 +1240,14 @@
           "baseHref": {
             "type": "string",
             "description": "Base url for the application being built."
-          },
-          "apps": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "List of remote applications to serve in addition to the host application."
           }
         },
         "presets": []
       },
-      "description": "Serve an MFE host or remote application.",
+      "description": "Serve a host or remote application.",
       "aliases": [],
       "hidden": false,
-      "path": "/packages/react/src/executors/mfe-dev-server/schema.json"
+      "path": "/packages/react/src/executors/module-federation-dev-server/schema.json"
     }
   ]
 }

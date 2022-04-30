@@ -15,6 +15,12 @@ const daemonHelpOutput = generateDaemonHelpOutput(isGenerateDocsProcess);
 // Ensure that the output takes up the available width of the terminal
 yargs.wrap(yargs.terminalWidth());
 
+export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
+  'strip-dashed': true,
+  // allow parsing --env.SOME_ARG for cypress cli env args
+  'dot-notation': true,
+};
+
 /**
  * Exposing the Yargs commands object so the documentation generator can
  * parse it. The CLI will consume it and call the `.argv` to bootstrapped
@@ -23,11 +29,7 @@ yargs.wrap(yargs.terminalWidth());
  * le executed correctly.
  */
 export const commandsObject = yargs
-  .parserConfiguration({
-    'strip-dashed': true,
-    // allow parsing --env.SOME_ARG for cypress cli env args
-    'dot-notation': true,
-  })
+  .parserConfiguration(parserConfiguration)
   .usage(
     `
 ${chalk.bold('Smart, Fast and Extensible Build System')}` +
@@ -452,14 +454,6 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
         'This is the configuration to use when performing tasks on projects',
       type: 'string',
     })
-    .options('with-deps', {
-      describe:
-        'Include dependencies of specified projects when computing what to run',
-      type: 'boolean',
-      default: false,
-      deprecated:
-        'Configure target dependencies instead. It will be removed in v14.',
-    })
     .options('only-failed', {
       deprecated:
         'The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.',
@@ -635,6 +629,8 @@ async function withWorkspaceGeneratorOptions(yargs: yargs.Argv) {
 }
 
 function withMigrationOptions(yargs: yargs.Argv) {
+  const defaultCommitPrefix = 'chore: [nx migration] ';
+
   return yargs
     .positional('packageAndVersion', {
       describe: `The target package and version (e.g, @nrwl/workspace@13.0.0)`,
@@ -653,6 +649,26 @@ function withMigrationOptions(yargs: yargs.Argv) {
       describe:
         'Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react:12.0.0,@nrwl/js:12.0.0")',
       type: 'string',
+    })
+    .option('createCommits', {
+      describe: 'Automatically create a git commit after each migration runs',
+      type: 'boolean',
+      alias: ['C'],
+      default: false,
+    })
+    .option('commitPrefix', {
+      describe:
+        'Commit prefix to apply to the commit for each migration, when --create-commits is enabled',
+      type: 'string',
+      default: defaultCommitPrefix,
+    })
+    .check(({ createCommits, commitPrefix }) => {
+      if (!createCommits && commitPrefix !== defaultCommitPrefix) {
+        throw new Error(
+          'Error: Providing a custom commit prefix requires --create-commits to be enabled'
+        );
+      }
+      return true;
     });
 }
 

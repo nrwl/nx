@@ -14,6 +14,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
+import { findRootJestPreset } from '@nrwl/jest/src/utils/config/find-root-jest-files';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
@@ -116,7 +117,6 @@ function addProject(
         executor: '@nrwl/workspace:run-commands',
         options: {
           command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
-          cwd: outputPath,
         },
         dependsOn: [{ projects: 'self', target: 'build' }],
       };
@@ -235,6 +235,7 @@ async function addJest(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   return await jestProjectGenerator(tree, {
+    ...options,
     project: options.name,
     setupFile: 'none',
     supportTsx: false,
@@ -250,12 +251,10 @@ function replaceJestConfig(
   options: NormalizedSchema,
   filesDir: string
 ) {
-  // remove the generated jest config by Jest generator
-  tree.delete(join(options.projectRoot, 'jest.config.js'));
-
   // replace with JS:SWC specific jest config
   generateFiles(tree, filesDir, options.projectRoot, {
     tmpl: '',
+    ext: findRootJestPreset(tree) === 'jest.preset.js' ? 'js' : 'ts',
     project: options.name,
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     projectRoot: options.projectRoot,

@@ -1,10 +1,10 @@
 export const gitIgnoreEntriesForReactNative = `
 # React Native
 
-## Xcode
-
-**/ios/**/build/
-**/ios/**/*.pbxuser
+# Xcode
+#
+build/
+*.pbxuser
 !default.pbxuser
 *.mode1v3
 !default.mode1v3
@@ -20,34 +20,42 @@ DerivedData
 *.ipa
 *.xcuserstate
 
-## Android
+# Android/IntelliJ
+#
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
 
-**/android/**/build/
-**/android/**/.gradle
-**/android/**/local.properties
-**/android/**/*.iml
+# node.js
+#
+node_modules/
+npm-debug.log
+yarn-error.log
 
-## BUCK
-
+# BUCK
 buck-out/
-\\.buckd/
+\.buckd/
 *.keystore
 !debug.keystore
 
-## fastlane
+# fastlane
 #
 # It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
 # screenshots whenever they are needed.
 # For more information about the recommended setup visit:
 # https://docs.fastlane.tools/best-practices/source-control/
-#
+
 */fastlane/report.xml
 */fastlane/Preview.html
 */fastlane/screenshots
 
-## Bundle artifact
+# Bundle artifact
 *.jsbundle
 
-## CocoaPods
-**/ios/Pods/
+# Ruby / CocoaPods
+/ios/Pods/
+/vendor/bundle/
 `;

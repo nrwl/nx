@@ -8,12 +8,12 @@ export function setupHostIfDynamic(tree: Tree, options: Schema) {
     return;
   }
 
-  const pathToMfeManifest = joinPathFragments(
+  const pathToMFManifest = joinPathFragments(
     readProjectConfiguration(tree, options.appName).sourceRoot,
-    'assets/mfe.manifest.json'
+    'assets/module-federation.manifest.json'
   );
 
-  if (!tree.exists(pathToMfeManifest)) {
-    tree.write(pathToMfeManifest, '{}');
+  if (!tree.exists(pathToMFManifest)) {
+    tree.write(pathToMFManifest, '{}');
   }
 }

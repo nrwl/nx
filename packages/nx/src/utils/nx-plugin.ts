@@ -14,6 +14,7 @@ import {
   WorkspaceJsonConfiguration,
 } from '../config/workspace-json-project-json';
 import { findMatchingProjectForPath } from './target-project-locator';
+import { logger } from './logger';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -54,10 +55,19 @@ export function loadNxPlugins(
           } catch (e) {
             if (e.code === 'MODULE_NOT_FOUND') {
               const plugin = resolveLocalNxPlugin(moduleName);
-              const main = readPluginMainFromProjectConfiguration(
-                plugin.projectConfig
-              );
-              pluginPath = main ? path.join(workspaceRoot, main) : plugin.path;
+              if (plugin) {
+                const main = readPluginMainFromProjectConfiguration(
+                  plugin.projectConfig
+                );
+                pluginPath = main
+                  ? path.join(workspaceRoot, main)
+                  : plugin.path;
+              } else {
+                logger.error(
+                  `Plugin listed in \`nx.json\` not found: ${moduleName}`
+                );
+                throw e;
+              }
             } else {
               throw e;
             }
@@ -228,7 +238,7 @@ function readTsConfigPaths(root: string = workspaceRoot) {
     const { compilerOptions } = readJsonFile(tsconfigPath);
     tsconfigPaths = compilerOptions?.paths;
   }
-  return tsconfigPaths;
+  return tsconfigPaths ?? {};
 }
 
 function readPluginMainFromProjectConfiguration(

@@ -6,5 +6,5 @@
     "types": []
   },
   "include": ["**/*.ts"<% if (js) { %>, "**/*.js"<% } %>],
-  "exclude": ["**/*.spec.ts"<% if (js) { %>, "**/*.spec.js"<% } %>]
+  "exclude": ["jest.config.ts","**/*.spec.ts"<% if (js) { %>, "**/*.spec.js"<% } %>]
 }

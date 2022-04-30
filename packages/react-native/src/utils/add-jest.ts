@@ -13,6 +13,7 @@ export async function addJest(
   }
 
   const jestTask = await jestProjectGenerator(host, {
+    js,
     project: projectName,
     supportTsx: true,
     skipSerializers: true,
@@ -20,8 +21,8 @@ export async function addJest(
     compiler: 'babel',
   });
 
-  // overwrite the jest.config.js file because react native needs to have special transform property
-  const configPath = `${appProjectRoot}/jest.config.js`;
+  // overwrite the jest.config.ts file because react native needs to have special transform property
+  const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'ts'}`;
   const content = `module.exports = {
   displayName: '${projectName}',
   preset: 'react-native',

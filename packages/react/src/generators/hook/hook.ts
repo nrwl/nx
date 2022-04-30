@@ -1,3 +1,4 @@
+// TODO(jack): Remove inline renderHook function when RTL releases with its own version
 import * as ts from 'typescript';
 import {
   applyChangesToString,

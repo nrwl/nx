@@ -1,9 +1,14 @@
-import { workspaceRoot } from '@nrwl/workspace/src/utils/app-root';
+import { workspaceLayout, workspaceRoot } from '@nrwl/devkit';
+import { join } from 'path';
+import { existsSync } from 'fs-extra';
+
 import { getResolveRequest } from './metro-resolver';
 
 interface WithNxOptions {
   debug?: boolean;
   extensions?: string[];
+  projectRoot?: string;
+  watchFolders?: string[];
 }
 
 export function withNxMetro(config: any, opts: WithNxOptions = {}) {
@@ -11,14 +16,26 @@ export function withNxMetro(config: any, opts: WithNxOptions = {}) {
   if (opts.debug) process.env.NX_REACT_NATIVE_DEBUG = 'true';
   if (opts.extensions) extensions.push(...opts.extensions);
 
-  // Set the root to workspace root so we can resolve modules and assets
-  config.projectRoot = workspaceRoot;
+  config.projectRoot = opts.projectRoot || workspaceRoot;
 
   // Add support for paths specified by tsconfig
   config.resolver = {
     ...config.resolver,
     resolveRequest: getResolveRequest(extensions),
   };
+
+  let watchFolders = config.watchFolders || [];
+  watchFolders = watchFolders.concat([
+    join(workspaceRoot, 'node_modules'),
+    join(workspaceRoot, workspaceLayout().libsDir),
+    join(workspaceRoot, '.storybook'),
+  ]);
+  if (opts.watchFolders?.length) {
+    watchFolders = watchFolders.concat(opts.watchFolders);
+  }
+
+  watchFolders = watchFolders.filter((folder) => existsSync(folder));
+  config.watchFolders = watchFolders;
 
   return config;
 }

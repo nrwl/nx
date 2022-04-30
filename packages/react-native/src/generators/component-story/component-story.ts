@@ -9,7 +9,8 @@ import {
 } from '@nrwl/devkit';
 import * as ts from 'typescript';
 import {
-  getComponentName,
+  findExportDeclarationsForJsx,
+  getComponentNode,
   getComponentPropsInterface,
 } from '@nrwl/react/src/utils/ast-utils';
 import { CreateComponentStoriesFileSchema } from './schema';
@@ -71,15 +72,52 @@ export function createComponentStoriesFile(
     true
   );
 
-  const cmpDeclaration = getComponentName(sourceFile);
+  const cmpDeclaration = getComponentNode(sourceFile);
 
   if (!cmpDeclaration) {
-    throw new Error(
-      `Could not find any React Native component in file ${componentFilePath}`
+    const componentNodes = findExportDeclarationsForJsx(sourceFile);
+    if (componentNodes?.length) {
+      componentNodes.forEach((declaration) => {
+        findPropsAndGenerateFile(
+          host,
+          sourceFile,
+          declaration,
+          componentDirectory,
+          name,
+          isPlainJs,
+          fileExt,
+          componentNodes.length > 1
+        );
+      });
+    } else {
+      throw new Error(
+        `Could not find any React Native component in file ${componentFilePath}`
+      );
+    }
+  } else {
+    findPropsAndGenerateFile(
+      host,
+      sourceFile,
+      cmpDeclaration,
+      componentDirectory,
+      name,
+      isPlainJs,
+      fileExt
     );
   }
+}
 
-  const propsInterface = getComponentPropsInterface(sourceFile);
+function findPropsAndGenerateFile(
+  host: Tree,
+  sourceFile: ts.SourceFile,
+  cmpDeclaration: ts.Node,
+  componentDirectory: string,
+  name: string,
+  isPlainJs: boolean,
+  fileExt: string,
+  fromNodeArray?: boolean
+) {
+  const propsInterface = getComponentPropsInterface(sourceFile, cmpDeclaration);
 
   let propsTypeName: string = null;
   let props: {
@@ -116,7 +154,10 @@ export function createComponentStoriesFile(
     joinPathFragments(__dirname, './files'),
     normalizePath(componentDirectory),
     {
-      componentFileName: name,
+      componentFileName: fromNodeArray
+        ? `${name}--${(cmpDeclaration as any).name.text}`
+        : name,
+      componentImportFileName: name,
       propsTypeName,
       props,
       argTypes,

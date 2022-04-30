@@ -1,4 +1,4 @@
-import { names, Tree } from '@nrwl/devkit';
+import { names } from '@nrwl/devkit';
 import { join } from 'path';
 import { Schema } from '../schema';
 
@@ -11,7 +11,6 @@ export interface NormalizedSchema extends Schema {
   androidProjectRoot: string;
   parsedTags: string[];
   entryFile: string;
-  entryFileRelativeToRoot: string;
 }
 
 export function normalizeOptions(options: Schema): NormalizedSchema {
@@ -34,8 +33,7 @@ export function normalizeOptions(options: Schema): NormalizedSchema {
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const entryFile = options.js ? '/src/main.js' : '/src/main.tsx';
-  const entryFileRelativeToRoot = join(appProjectRoot, entryFile);
+  const entryFile = options.js ? 'src/main.js' : 'src/main.tsx';
 
   /**
    * if options.name is "my-app"
@@ -57,6 +55,5 @@ export function normalizeOptions(options: Schema): NormalizedSchema {
     androidProjectRoot,
     parsedTags,
     entryFile,
-    entryFileRelativeToRoot,
   };
 }

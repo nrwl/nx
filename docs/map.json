@@ -499,6 +499,11 @@
             "path": "/packages/workspace/generators/workspace-generator"
           },
           {
+            "name": "ci-workflow generator",
+            "id": "ci-workflow-generator",
+            "path": "/packages/workspace/generators/ci-workflow"
+          },
+          {
             "name": "convert-to-nx-project generator",
             "id": "convert-to-nx-project-generator",
             "path": "/packages/workspace/generators/convert-to-nx-project"
@@ -1276,7 +1281,7 @@
             "file": "shared/running-custom-commands"
           },
           {
-            "name": "Creating Custom Builders",
+            "name": "Creating Custom Executors",
             "id": "creating-custom-builders",
             "file": "shared/tools-workspace-builders"
           }
@@ -1500,6 +1505,11 @@
             "file": "shared/guides/using-tailwind-css-in-react"
           },
           {
+            "name": "React 18 Migration",
+            "id": "react-18",
+            "file": "shared/guides/react-18"
+          },
+          {
             "name": "Using Tailwind CSS with Angular projects",
             "id": "using-tailwind-css-with-angular-projects",
             "file": "shared/guides/using-tailwind-css-with-angular-projects"
@@ -1522,18 +1532,23 @@
         ]
       },
       {
-        "name": "Micro Frontends",
-        "id": "micro-frontends",
+        "name": "Module Federation",
+        "id": "module-federation",
         "itemList": [
           {
-            "name": "Setup Micro Frontends with Angular and Nx",
-            "id": "setup-mfe-with-angular",
-            "file": "shared/guides/setup-mfe-with-angular"
+            "name": "Faster Builds with Module Federation",
+            "id": "faster-builds",
+            "file": "shared/guides/module-federation/faster-builds"
+          },
+          {
+            "name": "Micro Frontend Architecture",
+            "id": "micro-frontend-architecture",
+            "file": "shared/guides/module-federation/micro-frontend-architecture"
           },
           {
             "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
             "id": "dynamic-module-federation-with-angular",
-            "file": "shared/guides/dynamic-mfe-angular"
+            "file": "shared/guides/module-federation/dynamic-mfe-angular"
           }
         ]
       },

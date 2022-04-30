@@ -1,21 +1,8 @@
-import {
-  NxJsonConfiguration,
-  ProjectGraph,
-  Task,
-  TaskGraph,
-  WorkspaceJsonConfiguration,
-  Hasher,
-  Hash,
-} from '@nrwl/devkit';
+import { Task, Hash, HasherContext } from '@nrwl/devkit';
 
 export default async function run(
   task: Task,
-  context: {
-    hasher: Hasher;
-    projectGraph: ProjectGraph;
-    taskGraph: TaskGraph;
-    workspaceConfig: WorkspaceJsonConfiguration & NxJsonConfiguration;
-  }
+  context: HasherContext
 ): Promise<Hash> {
   const jestPluginConfig = context.workspaceConfig.pluginsConfig
     ? (context.workspaceConfig.pluginsConfig['@nrwl/jest'] as any)

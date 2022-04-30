@@ -1,11 +1,13 @@
 import {
   getCheckedProjectItems,
   getDeselectAllButton,
+  getFocusButtonForProject,
   getGroupByFolderCheckbox,
   getImageDownloadButton,
   getIncludeProjectsInPathButton,
   getProjectItems,
   getSearchDepthCheckbox,
+  getSearchDepthIncrementButton,
   getSelectAffectedButton,
   getSelectAllButton,
   getSelectProjectsMessage,
@@ -145,15 +147,15 @@ describe('dep-graph-client', () => {
   describe('focusing projects in sidebar', () => {
     it('should select appropriate projects', () => {
       cy.contains('nx-dev').scrollIntoView().should('be.visible');
-      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+      getFocusButtonForProject('nx-dev').click({ force: true });
 
-      getCheckedProjectItems().should('have.length', 15);
+      getCheckedProjectItems().should('have.length', 11);
     });
   });
 
   describe('unfocus button', () => {
     it('should uncheck all project items', () => {
-      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+      getFocusButtonForProject('nx-dev').click({ force: true });
       getUnfocusProjectButton().click();
 
       getUncheckedProjectItems().should('have.length', 62);
@@ -171,7 +173,7 @@ describe('dep-graph-client', () => {
       getTextFilterInput().type('nx-dev');
       getIncludeProjectsInPathButton().click();
 
-      getCheckedProjectItems().should('have.length', 24);
+      getCheckedProjectItems().should('have.length', 17);
     });
   });
 
@@ -181,12 +183,12 @@ describe('dep-graph-client', () => {
     });
 
     it('should be shown when a project is selected', () => {
-      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+      cy.get('[data-project="nx-dev"]').click({ force: true });
       getImageDownloadButton().should('not.have.class', 'opacity-0');
     });
 
     it('should be hidden when no more projects are selected', () => {
-      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+      cy.get('[data-project="nx-dev"]').click({ force: true });
       getDeselectAllButton().click();
       getImageDownloadButton().should('have.class', 'opacity-0');
     });
@@ -195,7 +197,7 @@ describe('dep-graph-client', () => {
   describe('setting url params', () => {
     it('should set focused project', () => {
       cy.contains('nx-dev').scrollIntoView().should('be.visible');
-      cy.get('[data-project="nx-dev"]').prev('button').click({ force: true });
+      getFocusButtonForProject('nx-dev').click({ force: true });
 
       cy.url().should('contain', 'focus=nx-dev');
     });
@@ -206,10 +208,18 @@ describe('dep-graph-client', () => {
       cy.url().should('contain', 'groupByFolder=true');
     });
 
-    it('should set search depth', () => {
+    it('should set search depth disabled', () => {
+      // it's on by default, clicking should disable it
       getSearchDepthCheckbox().click();
 
-      cy.url().should('contain', 'searchDepth=1');
+      cy.url().should('contain', 'searchDepth=0');
+    });
+
+    it('should set search depth if greater than 1', () => {
+      // it's on by default and set to 1, clicking should change it to 2
+      getSearchDepthIncrementButton().click();
+
+      cy.url().should('contain', 'searchDepth=2');
     });
 
     it('should set select to all', () => {
@@ -229,18 +239,30 @@ describe('loading dep-graph client with url params', () => {
     // wait for first graph to finish loading
     cy.wait('@getGraph');
 
-    getCheckedProjectItems().should('have.length', 15);
+    getCheckedProjectItems().should('have.length', 11);
   });
 
   it('should focus projects with search depth', () => {
     cy.intercept('/assets/graphs/*').as('getGraph');
 
-    cy.visit('/?focus=nx-dev&searchDepth=1');
+    cy.visit('/?focus=nx-dev&searchDepth=2');
 
     // wait for first graph to finish loading
     cy.wait('@getGraph');
 
-    getCheckedProjectItems().should('have.length', 11);
+    getCheckedProjectItems().should('have.length', 15);
+    getSearchDepthCheckbox().should('exist');
+  });
+
+  it('should focus projects with search depth disabled', () => {
+    cy.intercept('/assets/graphs/*').as('getGraph');
+
+    cy.visit('/?focus=nx-dev&searchDepth=0');
+
+    // wait for first graph to finish loading
+    cy.wait('@getGraph');
+
+    getCheckedProjectItems().should('have.length', 15);
     getSearchDepthCheckbox().should('exist');
   });
 

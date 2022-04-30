@@ -16,7 +16,7 @@ export function updateJestConfig(
 ) {
   const jestConfigPath = path.join(
     schema.relativeToRootDestination,
-    'jest.config.js'
+    'jest.config.ts'
   );
 
   if (tree.exists(jestConfigPath)) {
@@ -31,8 +31,8 @@ export function updateJestConfig(
     tree.write(jestConfigPath, newContent);
   }
 
-  // update root jest.config.js
-  const rootJestConfigPath = '/jest.config.js';
+  // update root jest.config.ts
+  const rootJestConfigPath = '/jest.config.ts';
 
   if (!tree.exists(rootJestConfigPath)) {
     return;

@@ -22,7 +22,7 @@ export const initialContext: DepGraphContext = {
   textFilter: '',
   includePath: false,
   searchDepth: 1,
-  searchDepthEnabled: false,
+  searchDepthEnabled: true,
   groupByFolder: false,
   collapseEdges: false,
   workspaceLayout: {
@@ -40,6 +40,7 @@ export const initialContext: DepGraphContext = {
   tracing: {
     start: null,
     end: null,
+    algorithm: 'shortest',
   },
 };
 
@@ -211,6 +212,15 @@ export const depGraphMachine = Machine<
       setSearchDepth: {
         actions: ['setSearchDepth', 'notifyRouteSearchDepth'],
       },
+      setTracingAlgorithm: {
+        actions: [
+          assign((ctx, event) => {
+            ctx.tracing.algorithm = event.algorithm;
+          }),
+          'notifyRouteTracing',
+          'notifyGraphTracing',
+        ],
+      },
       filterByText: {
         target: 'textFiltered',
       },
@@ -280,6 +290,7 @@ export const depGraphMachine = Machine<
             type: 'notifyGraphTracing',
             start: ctx.tracing.start,
             end: ctx.tracing.end,
+            algorithm: ctx.tracing.algorithm,
           };
         },
         {
@@ -385,6 +396,7 @@ export const depGraphMachine = Machine<
             type: 'notifyRouteTracing',
             start: ctx.tracing.start,
             end: ctx.tracing.end,
+            algorithm: ctx.tracing.algorithm,
           };
         },
         {

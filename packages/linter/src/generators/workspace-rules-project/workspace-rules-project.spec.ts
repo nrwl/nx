@@ -46,7 +46,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
       tree.read('tools/eslint-rules/tsconfig.spec.json', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('tools/eslint-rules/jest.config.js', 'utf-8')
+      tree.read('tools/eslint-rules/jest.config.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -78,7 +78,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
           "test": Object {
             "executor": "@nrwl/jest:jest",
             "options": Object {
-              "jestConfig": "tools/eslint-rules/jest.config.js",
+              "jestConfig": "tools/eslint-rules/jest.config.ts",
               "passWithNoTests": true,
             },
             "outputs": Array [

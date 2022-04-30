@@ -158,9 +158,6 @@ export function readNxJson(
   path: string = `${workspaceRoot}/nx.json`
 ): NxJsonConfiguration {
   let config = readJsonFile<NxJsonConfiguration>(path);
-  if (!config.npmScope) {
-    throw new Error(`nx.json must define the npmScope property.`);
-  }
 
   if (config.extends) {
     config = {

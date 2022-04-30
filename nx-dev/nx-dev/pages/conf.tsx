@@ -217,7 +217,7 @@ export function ConfPage(): ReactComponentElement<any> {
                 </h2>
                 <h3 className="mb-6">
                   <div className="font-input-mono text-lg">
-                    12pm-3pm ET / 9am-12pm PT
+                    12pm-4pm ET / 9am-1pm PT
                   </div>
                 </h3>
                 <p className="mb-6 sm:text-lg">

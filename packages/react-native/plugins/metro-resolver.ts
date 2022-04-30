@@ -26,28 +26,21 @@ export function getResolveRequest(extensions: string[]) {
 
     const { resolveRequest, ...context } = _context;
 
-    let resolvedPath = defaultMetroResolver(context, moduleName, platform);
+    const resolvedPath =
+      defaultMetroResolver(context, moduleName, platform, DEBUG) ||
+      tsconfigPathsResolver(
+        context,
+        extensions,
+        realModuleName,
+        moduleName,
+        platform,
+        DEBUG
+      ) ||
+      pnpmResolver(extensions, context, realModuleName, moduleName, DEBUG);
     if (resolvedPath) {
       return resolvedPath;
     }
-
-    resolvedPath = pnpmResolver(
-      extensions,
-      context,
-      realModuleName,
-      moduleName
-    );
-    if (resolvedPath) {
-      return resolvedPath;
-    }
-
-    return tsconfigPathsResolver(
-      context,
-      extensions,
-      realModuleName,
-      moduleName,
-      platform
-    );
+    throw new Error(`Cannot resolve ${chalk.bold(moduleName)}`);
   };
 }
 
@@ -58,13 +51,13 @@ export function getResolveRequest(extensions: string[]) {
 function defaultMetroResolver(
   context: any,
   moduleName: string,
-  platform: string
+  platform: string,
+  debug: boolean
 ) {
-  const DEBUG = process.env.NX_REACT_NATIVE_DEBUG === 'true';
   try {
     return metroResolver.resolve(context, moduleName, platform);
   } catch {
-    if (DEBUG)
+    if (debug)
       console.log(
         chalk.cyan(
           `[Nx] Unable to resolve with default Metro resolver: ${moduleName}`
@@ -78,12 +71,17 @@ function defaultMetroResolver(
  * @returns path if resolved, else undefined
  * This pnpm resolver is inspired from https://github.com/vjpr/pnpm-react-native-example/blob/main/packages/pnpm-expo-helper/util/make-resolver.js
  */
-function pnpmResolver(extensions, context, realModuleName, moduleName) {
-  const DEBUG = process.env.NX_REACT_NATIVE_DEBUG === 'true';
+function pnpmResolver(
+  extensions: string[],
+  context: any,
+  realModuleName: string,
+  moduleName: string,
+  debug: boolean
+) {
   try {
-    const pnpmResolver = getPnpmResolver(workspaceRoot, extensions);
+    const pnpmResolve = getPnpmResolver(extensions);
     const lookupStartPath = dirname(context.originModulePath);
-    const filePath = pnpmResolver.resolveSync(
+    const filePath = pnpmResolve.resolveSync(
       {},
       lookupStartPath,
       realModuleName
@@ -92,7 +90,7 @@ function pnpmResolver(extensions, context, realModuleName, moduleName) {
       return { type: 'sourceFile', filePath };
     }
   } catch {
-    if (DEBUG)
+    if (debug)
       console.log(
         chalk.cyan(
           `[Nx] Unable to resolve with default PNPM resolver: ${moduleName}`
@@ -110,11 +108,11 @@ function tsconfigPathsResolver(
   extensions: string[],
   realModuleName: string,
   moduleName: string,
-  platform: string
+  platform: string,
+  debug: boolean
 ) {
-  const DEBUG = process.env.NX_REACT_NATIVE_DEBUG === 'true';
-  const matcher = getMatcher();
-  const match = matcher(
+  const tsConfigPathMatcher = getMatcher(debug);
+  const match = tsConfigPathMatcher(
     realModuleName,
     undefined,
     undefined,
@@ -124,7 +122,7 @@ function tsconfigPathsResolver(
   if (match) {
     return metroResolver.resolve(context, match, platform);
   } else {
-    if (DEBUG) {
+    if (debug) {
       console.log(
         chalk.red(`[Nx] Failed to resolve ${chalk.bold(moduleName)}`)
       );
@@ -136,7 +134,6 @@ function tsconfigPathsResolver(
         )
       );
     }
-    throw new Error(`Cannot resolve ${chalk.bold(moduleName)}`);
   }
 }
 
@@ -144,9 +141,7 @@ let matcher: MatchPath;
 let absoluteBaseUrl: string;
 let paths: Record<string, string[]>;
 
-function getMatcher() {
-  const DEBUG = process.env.NX_REACT_NATIVE_DEBUG === 'true';
-
+function getMatcher(DEBUG: boolean) {
   if (!matcher) {
     const result = loadConfig();
     if (result.resultType === 'success') {
@@ -178,7 +173,7 @@ function getMatcher() {
  * It is inspired form https://github.com/vjpr/pnpm-expo-example/blob/main/packages/pnpm-expo-helper/util/make-resolver.js.
  */
 let resolver;
-function getPnpmResolver(workspaceRoot: string, extensions: string[]) {
+function getPnpmResolver(extensions: string[]) {
   if (!resolver) {
     const fileSystem = new CachedInputFileSystem(fs, 4000);
     resolver = ResolverFactory.createResolver({

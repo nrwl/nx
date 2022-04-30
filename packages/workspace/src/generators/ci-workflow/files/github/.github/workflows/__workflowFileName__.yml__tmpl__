@@ -1,0 +1,26 @@
+name: <%= workflowName %>
+
+on:
+  push:
+    branches:
+      - <%= mainBranch %>
+  pull_request:
+
+jobs:
+  main:
+    name: Nx Cloud - Main Job
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
+    with:
+      parallel-commands: |
+        <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx workspace-lint
+        <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check
+      parallel-commands-on-agents: |
+        <%= packageManagerPrefix %> nx affected --target=lint --parallel=3
+        <%= packageManagerPrefix %> nx affected --target=test --parallel=3 --ci --code-coverage
+        <%= packageManagerPrefix %> nx affected --target=build --parallel=3
+
+  agents:
+    name: Nx Cloud - Agents
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.2
+    with:
+      number-of-agents: 3

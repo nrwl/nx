@@ -20,32 +20,24 @@ import { dirname, join } from 'path';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import { GeneratorOptions } from '../schema';
 import { WorkspaceCapabilities, WorkspaceProjects } from './types';
+import { workspaceMigrationErrorHeading } from './validation-logging';
 
-export function validateWorkspace(
-  tree: Tree,
-  projects: WorkspaceProjects
-): void {
-  try {
-    if (!tree.exists('package.json')) {
-      throw new Error('Cannot find package.json');
-    }
-
-    if (!tree.exists('angular.json')) {
-      throw new Error('Cannot find angular.json');
-    }
-
-    // TODO: this restrictions will be removed when support for multiple
-    // projects is added
-    if (projects.apps.length > 2 || projects.libs.length > 0) {
-      throw new Error('Can only convert projects with one app');
-    }
-  } catch (e) {
-    console.error(e.message);
-    console.error(
-      'Your workspace could not be converted into an Nx Workspace because of the above error.'
-    );
-    throw e;
+export function validateWorkspace(tree: Tree): void {
+  const errors: string[] = [];
+  if (!tree.exists('package.json')) {
+    errors.push('The "package.json" file could not be found.');
   }
+  if (!tree.exists('angular.json')) {
+    errors.push('The "angular.json" file could not be found.');
+  }
+
+  if (!errors.length) {
+    return;
+  }
+
+  throw new Error(`${workspaceMigrationErrorHeading}
+
+  - ${errors.join('\n  ')}`);
 }
 
 export function createNxJson(

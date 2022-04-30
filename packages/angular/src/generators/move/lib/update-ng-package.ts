@@ -1,5 +1,9 @@
-import { readProjectConfiguration, Tree, updateJson } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import {
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  workspaceRoot,
+} from '@nrwl/devkit';
 import { getNewProjectName } from '@nrwl/workspace/src/generators/move/lib/utils';
 import { join, relative } from 'path';
 import { Schema } from '../schema';

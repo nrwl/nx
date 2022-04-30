@@ -23,6 +23,11 @@ Array [
           "eager": undefined,
           "requiredVersion": false,
         },
+        "lodash": Object {
+          "requiredVersion": undefined,
+          "singleton": true,
+          "strictVersion": true,
+        },
         "shared": Object {
           "eager": undefined,
           "requiredVersion": false,
@@ -123,6 +128,43 @@ Array [
           "strictVersion": true,
         },
         "@myorg/core": Object {
+          "eager": undefined,
+          "requiredVersion": false,
+        },
+        "shared": Object {
+          "eager": undefined,
+          "requiredVersion": false,
+        },
+      },
+    },
+  },
+  NormalModuleReplacementPlugin {
+    "newResource": [Function],
+    "resourceRegExp": /\\./,
+  },
+]
+`;
+
+exports[`withModuleFederation should not have duplicated entries for duplicated dependencies 1`] = `
+Array [
+  ModuleFederationPlugin {
+    "_options": Object {
+      "exposes": Object {
+        "./Module": "apps/remote1/src/module.ts",
+      },
+      "filename": "remoteEntry.mjs",
+      "library": Object {
+        "type": "module",
+      },
+      "name": "remote1",
+      "remotes": Object {},
+      "shared": Object {
+        "@angular/core": Object {
+          "requiredVersion": "~13.2.0",
+          "singleton": true,
+          "strictVersion": true,
+        },
+        "core": Object {
           "eager": undefined,
           "requiredVersion": false,
         },

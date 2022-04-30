@@ -6,7 +6,7 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/create-nx-workspace/jest.config.js",
+        "jestConfig": "packages/create-nx-workspace/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": ["coverage/packages/create-nx-workspace"]

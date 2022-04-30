@@ -1,5 +1,5 @@
+import * as chalk from 'chalk';
 import { exec, execSync } from 'child_process';
-import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
 import { gt, lt, lte, major, valid } from 'semver';
 import { promisify } from 'util';
@@ -8,7 +8,7 @@ import {
   PackageJsonUpdateForPackage,
 } from '../config/misc-interfaces';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { flushChanges, FsTree } from '../config/tree';
+import { flushChanges, FsTree } from '../generators/tree';
 import {
   extractFileFromTarball,
   JsonReadOptions,
@@ -459,7 +459,7 @@ export function parseMigrationsOptions(options: {
 function versions(root: string, from: Record<string, string>) {
   const cache: Record<string, string> = {};
 
-  return (packageName: string) => {
+  function getFromVersion(packageName: string) {
     try {
       if (from[packageName]) {
         return from[packageName];
@@ -474,9 +474,15 @@ function versions(root: string, from: Record<string, string>) {
 
       return cache[packageName];
     } catch {
+      // Support migrating old workspaces without nx package
+      if (packageName === 'nx') {
+        return getFromVersion('@nrwl/workspace');
+      }
       return null;
     }
-  };
+  }
+
+  return getFromVersion;
 }
 
 // testing-fetch-start
@@ -636,7 +642,7 @@ async function downloadPackageMigrationsFromRegistry(
   packageVersion: string,
   { migrations: migrationsFilePath, packageGroup }: NxMigrationsConfiguration
 ): Promise<ResolvedMigrationConfiguration> {
-  const dir = createTempNpmDirectory();
+  const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;
 
@@ -659,11 +665,7 @@ async function downloadPackageMigrationsFromRegistry(
       `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
     );
   } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
+    await cleanup();
   }
 
   return result;
@@ -673,7 +675,7 @@ async function getPackageMigrationsUsingInstall(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
-  const dir = createTempNpmDirectory();
+  const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;
 
@@ -697,11 +699,7 @@ async function getPackageMigrationsUsingInstall(
 
     result = { ...migrations, packageGroup, version: packageJson.version };
   } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
+    await cleanup();
   }
 
   return result;
@@ -803,7 +801,6 @@ async function isMigratingToNewMajor(from: string, to: string) {
   if (!valid(to)) {
     to = await resolvePackageVersionUsingRegistry('nx', to);
   }
-  console.log({ from, to });
   return major(from) < major(to);
 }
 
@@ -891,11 +888,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 function showConnectToCloudMessage() {
   try {
     const nxJson = readJsonFile<NxJsonConfiguration>('nx.json');
-    const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
-      (r: any) =>
-        r.runner == '@nrwl/workspace/tasks-runners/default' ||
-        r.runner == 'nx/tasks-runners/default'
-    );
+    const defaultRunnerIsUsed =
+      !nxJson.tasksRunnerOptions ||
+      Object.values(nxJson.tasksRunnerOptions).find(
+        (r: any) =>
+          r.runner == '@nrwl/workspace/tasks-runners/default' ||
+          r.runner == 'nx/tasks-runners/default'
+      );
     return !!defaultRunnerIsUsed;
   } catch {
     return false;
@@ -910,16 +909,23 @@ function runInstall() {
   execSync(pmCommands.install, { stdio: [0, 1, 2] });
 }
 
+const NO_CHANGES = 'NO_CHANGES';
+
 async function runMigrations(
   root: string,
   opts: { runMigrations: string },
-  isVerbose: boolean
+  isVerbose: boolean,
+  shouldCreateCommits = false,
+  commitPrefix: string
 ) {
   if (!process.env.NX_MIGRATE_SKIP_INSTALL) {
     runInstall();
   }
 
-  logger.info(`NX Running migrations from '${opts.runMigrations}'`);
+  logger.info(
+    `NX Running migrations from '${opts.runMigrations}'` +
+      (shouldCreateCommits ? ', with each applied in a dedicated commit' : '')
+  );
 
   const migrations: {
     package: string;
@@ -937,13 +943,91 @@ async function runMigrations(
         await import('../adapter/ngcli-adapter')
       ).runMigration(root, m.package, m.name, isVerbose);
     }
+
     logger.info(`Successfully finished ${m.name}`);
+
+    if (shouldCreateCommits) {
+      const commitMessage = `${commitPrefix}${m.name}`;
+      const { sha: committedSha, reasonForNoCommit } =
+        commitChangesIfAny(commitMessage);
+
+      if (committedSha) {
+        logger.info(chalk.dim(`- Commit created for changes: ${committedSha}`));
+      } else {
+        switch (true) {
+          // Isolate the NO_CHANGES case so that we can render it differently to errors
+          case reasonForNoCommit === NO_CHANGES:
+            logger.info(chalk.dim(`- There were no changes to commit`));
+            break;
+          case typeof reasonForNoCommit === 'string': // Any other string is a specific error we captured
+            logger.info(chalk.red(`- ${reasonForNoCommit}`));
+            break;
+          default:
+            logger.info(
+              chalk.red(
+                `- A commit could not be created/retrieved for an unknown reason`
+              )
+            );
+        }
+      }
+    }
     logger.info(`---------------------------------------------------------`);
   }
 
   logger.info(
     `NX Successfully finished running migrations from '${opts.runMigrations}'`
   );
+}
+
+function commitChangesIfAny(commitMessage: string): {
+  sha: string | null;
+  reasonForNoCommit: string | null;
+} {
+  try {
+    if (
+      execSync('git ls-files -m -d -o --exclude-standard').toString() === ''
+    ) {
+      return {
+        sha: null,
+        reasonForNoCommit: NO_CHANGES,
+      };
+    }
+  } catch (err) {
+    return {
+      sha: null,
+      reasonForNoCommit: `Error determining git changes:\n${err.stderr}`,
+    };
+  }
+
+  try {
+    execSync('git add -A', { encoding: 'utf8', stdio: 'pipe' });
+    execSync('git commit --no-verify -F -', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      input: commitMessage,
+    });
+  } catch (err) {
+    return {
+      sha: null,
+      reasonForNoCommit: `Error committing changes:\n${err.stderr}`,
+    };
+  }
+
+  return {
+    sha: getLatestCommitSha(),
+    reasonForNoCommit: null,
+  };
+}
+
+function getLatestCommitSha(): string | null {
+  try {
+    return execSync('git rev-parse HEAD', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+    }).trim();
+  } catch {
+    return null;
+  }
 }
 
 async function runNxMigration(root: string, packageName: string, name: string) {
@@ -982,7 +1066,13 @@ export async function migrate(root: string, args: { [k: string]: any }) {
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
-      await runMigrations(root, opts, args['verbose']);
+      await runMigrations(
+        root,
+        opts,
+        args['verbose'],
+        args['createCommits'],
+        args['commitPrefix']
+      );
     }
   });
 }

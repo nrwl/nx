@@ -41,6 +41,12 @@
       "cli": "nx",
       "description": "Create a root babel config file if it doesn't exist and using babel-jest in jest.config.js and add @nrwl/web as needed",
       "factory": "./src/migrations/update-13-4-4/add-missing-root-babel-config"
+    },
+    "update-jest-config-extensions": {
+      "version": "14.0.0-beta.2",
+      "cli": "nx",
+      "description": "Update move jest config files to .ts files.",
+      "factory": "./src/migrations/update-14-0-0/update-jest-config-ext"
     }
   },
   "packageJsonUpdates": {
@@ -91,6 +97,27 @@
         },
         "babel-jest": {
           "version": "27.2.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.0.0": {
+      "version": "14.0.0-beta.2",
+      "packages": {
+        "jest": {
+          "version": "27.5.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "27.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "27.1.4",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "27.5.1",
           "alwaysAddToPackageJson": false
         }
       }

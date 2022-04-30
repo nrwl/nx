@@ -279,7 +279,7 @@ describe('app', () => {
       standaloneConfig: false,
     });
 
-    expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).not.toContain(
+    expect(tree.read('apps/my-app/jest.config.ts', 'utf-8')).not.toContain(
       `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
     );
   });
@@ -374,12 +374,12 @@ describe('app', () => {
         unitTestRunner: 'none',
         standaloneConfig: false,
       });
-      expect(tree.exists('jest.config.js')).toBeFalsy();
+      expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(
         tree.exists('apps/my-app/src/app/app.element.spec.ts')
       ).toBeFalsy();
       expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
-      expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
+      expect(tree.exists('apps/my-app/jest.config.ts')).toBeFalsy();
       const workspaceJson = readJson(tree, 'workspace.json');
       expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
       expect(workspaceJson.projects['my-app'].architect.lint)
@@ -419,11 +419,11 @@ describe('app', () => {
         compiler: 'babel',
       } as Schema);
 
-      expect(tree.read(`apps/my-app/jest.config.js`, 'utf-8'))
+      expect(tree.read(`apps/my-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-app',
-          preset: '../../jest.preset.js',
+          preset: '../../jest.preset.ts',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\\\\\.[tj]s$': 'babel-jest'
@@ -441,11 +441,11 @@ describe('app', () => {
         compiler: 'swc',
       } as Schema);
 
-      expect(tree.read(`apps/my-app/jest.config.js`, 'utf-8'))
+      expect(tree.read(`apps/my-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-app',
-          preset: '../../jest.preset.js',
+          preset: '../../jest.preset.ts',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\\\\\.[tj]s$': '@swc/jest'

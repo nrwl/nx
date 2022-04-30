@@ -72,27 +72,11 @@ export function filterNodes(
   };
 }
 
-/**
- * @deprecated will be removed in v14. All projects in ProjectGraph's `nodes` are workspace projects
- */
-export function isWorkspaceProject(
-  project: ProjectGraphNode
-): project is ProjectGraphProjectNode {
-  return (
-    project.type === 'app' || project.type === 'lib' || project.type === 'e2e'
-  );
-}
-
 export function isNpmProject(
   project: ProjectGraphNode
 ): project is ProjectGraphExternalNode {
   return project?.type === 'npm';
 }
-
-/**
- * @deprecated will be removed in v14. All projects in ProjectGraph's `nodes` are workspace projects. Use {@link pruneExternalNodes}
- */
-export const onlyWorkspaceProjects = filterNodes(isWorkspaceProject);
 
 export const pruneExternalNodes = filterNodes();
 

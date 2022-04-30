@@ -14,7 +14,7 @@ import { platform } from 'os';
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
 function getHttpServerArgs(options: Schema) {
-  const args = ['-c-1'];
+  const args = ['-c-1', '--cors'];
   if (options.port) {
     args.push(`-p=${options.port}`);
   }
@@ -91,7 +91,10 @@ function getIgnoredGlobs(root: string) {
   return ig;
 }
 
-function createFileWatcher(root: string, changeHandler: () => void) {
+function createFileWatcher(
+  root: string,
+  changeHandler: () => void
+): () => void {
   const ignoredGlobs = getIgnoredGlobs(root);
   const layout = workspaceLayout();
 
@@ -109,7 +112,7 @@ function createFileWatcher(root: string, changeHandler: () => void) {
     if (ignoredGlobs.ignores(path)) return;
     changeHandler();
   });
-  return { close: () => watcher.close() };
+  return () => watcher.close();
 }
 
 export default async function* fileServerExecutor(
@@ -125,13 +128,19 @@ export default async function* fileServerExecutor(
         const args = getBuildTargetCommand(options);
         execFileSync(pmCmd, args, {
           stdio: [0, 1, 2],
+          // NX_CLOUD: true is only used when Nx Cloud is on.
+          // It forces remote caching.
+          env: { ...process.env, NX_CLOUD: 'true' },
         });
       } catch {}
       running = false;
     }
   };
 
-  const watcher = createFileWatcher(context.root, run);
+  let disposeWatch: () => void;
+  if (options.watch) {
+    disposeWatch = createFileWatcher(context.root, run);
+  }
 
   // perform initial run
   run();
@@ -148,7 +157,9 @@ export default async function* fileServerExecutor(
   });
   const processExitListener = () => {
     serve.kill();
-    watcher.close();
+    if (disposeWatch) {
+      disposeWatch();
+    }
   };
   process.on('exit', processExitListener);
   process.on('SIGTERM', processExitListener);

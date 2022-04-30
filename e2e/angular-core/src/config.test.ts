@@ -10,6 +10,7 @@ import {
   checkFilesDoNotExist,
   isNotWindows,
   readJson,
+  createFile,
 } from '@nrwl/e2e/utils';
 
 describe('Angular Config', () => {
@@ -18,6 +19,7 @@ describe('Angular Config', () => {
 
   it('should support workspaces w/o workspace config file', async () => {
     if (isNotWindows()) {
+      const oldWorkspaceJson = readJson('workspace.json');
       removeFile('workspace.json');
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
@@ -27,6 +29,7 @@ describe('Angular Config', () => {
       expect(() =>
         checkFilesDoNotExist('workspace.json', 'angular.json')
       ).not.toThrow();
+      createFile('workspace.json', JSON.stringify(oldWorkspaceJson, null, 2));
     }
   }, 1000000);
 
@@ -152,7 +155,7 @@ const angularV1Json = (appName: string) => `{
             "builder": "@nrwl/jest:jest",
             "outputs": ["coverage/apps/${appName}"],
             "options": {
-              "jestConfig": "apps/${appName}/jest.config.js",
+              "jestConfig": "apps/${appName}/jest.config.ts",
               "passWithNoTests": true
             }
           }

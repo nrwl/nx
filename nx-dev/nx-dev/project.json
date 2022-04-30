@@ -45,6 +45,7 @@
         "outputPath": "dist/nx-dev/nx-dev"
       },
       "configurations": {
+        "development": {},
         "production": {}
       }
     },
@@ -58,8 +59,13 @@
         "production": {
           "buildTarget": "nx-dev:build-base:production",
           "dev": false
+        },
+        "development": {
+          "buildTarget": "nx-dev:build-base:development",
+          "dev": true
         }
-      }
+      },
+      "defaultConfiguration": "development"
     },
     "deploy-build": {
       "executor": "@nrwl/workspace:run-commands",
@@ -96,7 +102,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/nx-dev/nx-dev"],
       "options": {
-        "jestConfig": "nx-dev/nx-dev/jest.config.js",
+        "jestConfig": "nx-dev/nx-dev/jest.config.ts",
         "passWithNoTests": true
       }
     }

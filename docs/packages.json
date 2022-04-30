@@ -14,7 +14,8 @@
         "package",
         "webpack-browser",
         "webpack-server",
-        "module-federation-dev-server"
+        "module-federation-dev-server",
+        "file-server"
       ],
       "generators": [
         "add-linting",
@@ -191,7 +192,7 @@
     "name": "react",
     "path": "generated/packages/react.json",
     "schemas": {
-      "executors": ["mfe-dev-server"],
+      "executors": ["module-federation-dev-server"],
       "generators": [
         "init",
         "application",
@@ -203,8 +204,8 @@
         "stories",
         "component-cypress-spec",
         "hook",
-        "mfe-host",
-        "mfe-remote"
+        "host",
+        "remote"
       ]
     }
   },
@@ -229,7 +230,8 @@
         "component",
         "storybook-configuration",
         "component-story",
-        "stories"
+        "stories",
+        "upgrade-native"
       ]
     }
   },
@@ -269,7 +271,8 @@
         "workspace-generator",
         "run-commands",
         "convert-to-nx-project",
-        "npm-package"
+        "npm-package",
+        "ci-workflow"
       ]
     }
   }

@@ -17,8 +17,8 @@ import {
   reactDomVersion,
   reactTestRendererVersion,
   reactVersion,
-  testingLibraryReactHooksVersion,
   testingLibraryReactVersion,
+  typesNodeVersion,
   typesReactDomVersion,
   typesReactVersion,
 } from '../../utils/versions';
@@ -58,10 +58,10 @@ function updateDependencies(host: Tree) {
     },
     {
       '@nrwl/react': nxVersion,
+      '@types/node': typesNodeVersion,
       '@types/react': typesReactVersion,
       '@types/react-dom': typesReactDomVersion,
       '@testing-library/react': testingLibraryReactVersion,
-      '@testing-library/react-hooks': testingLibraryReactHooksVersion,
       'react-test-renderer': reactTestRendererVersion,
     }
   );
@@ -73,7 +73,7 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   setDefault(host);
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, {});
+    const jestTask = jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {

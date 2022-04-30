@@ -22,8 +22,10 @@ import {
   Generator,
   GeneratorsJson,
   ExecutorsJson,
+  CustomHasher,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
 export function workspaceConfigName(root: string) {
   if (existsSync(path.join(root, 'angular.json'))) {
@@ -126,7 +128,7 @@ export class Workspaces {
         : null;
 
       const hasherFactory = executorConfig.hasher
-        ? this.getImplementationFactory<Function>(
+        ? this.getImplementationFactory<CustomHasher>(
             executorConfig.hasher,
             executorsDir
           )
@@ -185,7 +187,9 @@ export class Workspaces {
       implementation.split('#');
     return () => {
       const module = require(path.join(directory, implementationModulePath));
-      return module[implementationExportName || 'default'] as T;
+      return implementationExportName
+        ? module[implementationExportName]
+        : module.default ?? module;
     };
   }
 
@@ -313,7 +317,13 @@ function findFullGeneratorName(
 }
 
 export function reformattedWorkspaceJsonOrNull(w: any) {
-  return w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+  const workspaceJson =
+    w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+  if (workspaceJson?.projects) {
+    workspaceJson.projects = sortObjectByKeys(workspaceJson.projects);
+  }
+
+  return workspaceJson;
 }
 
 export function toNewFormat(w: any): WorkspaceJsonConfiguration {
@@ -408,7 +418,10 @@ function inlineProjectConfigurations(w: any, root: string = workspaceRoot) {
       if (typeof config === 'string') {
         const configFilePath = path.join(root, config, 'project.json');
         const fileConfig = readJsonFile(configFilePath);
-        w.projects[project] = fileConfig;
+        w.projects[project] = {
+          root: config,
+          ...fileConfig,
+        };
       }
     }
   );
@@ -502,7 +515,11 @@ export function globForProjectFiles(
 ) {
   // Deal w/ Caching
   const cacheKey = [root, ...(nxJson?.plugins || [])].join(',');
-  if (projectGlobCache && cacheKey === projectGlobCacheKey)
+  if (
+    process.env.NX_PROJECT_GLOB_CACHE !== 'false' &&
+    projectGlobCache &&
+    cacheKey === projectGlobCacheKey
+  )
     return projectGlobCache;
   projectGlobCacheKey = cacheKey;
 
@@ -587,10 +604,12 @@ function buildProjectConfigurationFromPackageJson(
   nxJson: NxJsonConfiguration
 ): ProjectConfiguration & { name: string } {
   const directory = dirname(path).split('\\').join('/');
-  const npmPrefix = `@${nxJson.npmScope}/`;
   let name = packageJson.name ?? toProjectName(directory, nxJson);
-  if (name.startsWith(npmPrefix)) {
-    name = name.replace(npmPrefix, '');
+  if (nxJson.npmScope) {
+    const npmPrefix = `@${nxJson.npmScope}/`;
+    if (name.startsWith(npmPrefix)) {
+      name = name.replace(npmPrefix, '');
+    }
   }
   return {
     root: directory,
@@ -633,6 +652,9 @@ export function buildWorkspaceConfigurationFromGlobs(
       // directory as a package.json should overwrite the inferred package.json
       // project configuration.
       const configuration = readJson(file);
+
+      configuration.root = directory;
+
       let name = configuration.name;
       if (!configuration.name) {
         name = toProjectName(file, nxJson);

@@ -15,6 +15,7 @@ import {
   swcJestVersion,
   tsJestVersion,
   tslibVersion,
+  tsNodeVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
 
@@ -22,12 +23,14 @@ interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 
 const schemaDefaults = {
   compiler: 'tsc',
+  js: false,
 } as const;
 
-function createJestConfig(host: Tree) {
-  if (!host.exists('jest.config.js')) {
+function createJestConfig(host: Tree, js: boolean = false) {
+  // if the root ts config already exists then don't make a js one or vice versa
+  if (!host.exists('jest.config.ts') && !host.exists('jest.config.js')) {
     host.write(
-      'jest.config.js',
+      `jest.config.${js ? 'js' : 'ts'}`,
       stripIndents`
   const { getJestProjects } = require('@nrwl/jest');
 
@@ -37,9 +40,9 @@ function createJestConfig(host: Tree) {
     );
   }
 
-  if (!host.exists('jest.preset.js')) {
+  if (!host.exists('jest.preset.ts') && !host.exists('jest.preset.js')) {
     host.write(
-      'jest.preset.js',
+      `jest.preset.${js ? 'js' : 'ts'}`,
       `
       const nxPreset = require('@nrwl/jest/preset');
      
@@ -55,12 +58,18 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
   const devDeps = {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
-    '@types/jest': jestTypesVersion,
+
     // because the default jest-preset uses ts-jest,
     // jest will throw an error if it's not installed
     // even if not using it in overriding transformers
     'ts-jest': tsJestVersion,
   };
+
+  if (!options.js) {
+    devDeps['ts-node'] = tsNodeVersion;
+    devDeps['@types/jest'] = jestTypesVersion;
+    devDeps['@types/node'] = '16.11.7';
+  }
 
   if (options.compiler === 'babel' || options.babelJest) {
     devDeps['babel-jest'] = babelJestVersion;
@@ -90,7 +99,7 @@ function updateExtensions(host: Tree) {
 
 export function jestInitGenerator(tree: Tree, schema: JestInitSchema) {
   const options = normalizeOptions(schema);
-  createJestConfig(tree);
+  createJestConfig(tree, options.js);
 
   let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {

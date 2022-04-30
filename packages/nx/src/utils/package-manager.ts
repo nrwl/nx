@@ -6,6 +6,7 @@ import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import { readJsonFile, writeJsonFile } from './fileutils';
 import { PackageJson } from './package-json';
+import { gte } from 'semver';
 
 const execAsync = promisify(exec);
 
@@ -13,6 +14,7 @@ export type PackageManager = 'yarn' | 'pnpm' | 'npm';
 
 export interface PackageManagerCommands {
   install: string;
+  ciInstall: string;
   add: string;
   addDev: string;
   addGlobal: string;
@@ -50,6 +52,7 @@ export function getPackageManagerCommand(
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => ({
       install: 'yarn',
+      ciInstall: 'yarn --frozen-lockfile',
       add: 'yarn add -W',
       addDev: 'yarn add -D -W',
       addGlobal: 'yarn global add',
@@ -59,13 +62,14 @@ export function getPackageManagerCommand(
       list: 'yarn list',
     }),
     pnpm: () => {
-      const [major, minor] = getPackageManagerVersion('pnpm').split('.');
+      const pnpmVersion = getPackageManagerVersion('pnpm');
       let useExec = false;
-      if (+major >= 6 && +minor >= 13) {
+      if (gte(pnpmVersion, '6.13.0')) {
         useExec = true;
       }
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
+        ciInstall: 'pnpm install --frozen-lockfile',
         add: 'pnpm add',
         addDev: 'pnpm add -D',
         addGlobal: 'pnpm add -g',
@@ -80,6 +84,7 @@ export function getPackageManagerCommand(
 
       return {
         install: 'npm install',
+        ciInstall: 'npm ci',
         add: 'npm install',
         addDev: 'npm install -D',
         addGlobal: 'npm install -g',
@@ -126,7 +131,7 @@ export function checkForNPMRC(
  * this function looks up for the nearest `.npmrc` (if exists) and copies it over to the
  * temp directory.
  */
-export function createTempNpmDirectory(): string {
+export function createTempNpmDirectory() {
   const dir = dirSync().name;
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
@@ -137,7 +142,15 @@ export function createTempNpmDirectory(): string {
     copyFileSync(npmrc, `${dir}/.npmrc`);
   }
 
-  return dir;
+  const cleanup = async () => {
+    try {
+      await remove(dir);
+    } catch {
+      // It's okay if this fails, the OS will clean it up eventually
+    }
+  };
+
+  return { dir, cleanup };
 }
 
 /**
@@ -178,7 +191,7 @@ export async function resolvePackageVersionUsingInstallation(
   packageName: string,
   version: string
 ): Promise<string> {
-  const dir = createTempNpmDirectory();
+  const { dir, cleanup } = createTempNpmDirectory();
 
   try {
     const pmc = getPackageManagerCommand();
@@ -190,11 +203,7 @@ export async function resolvePackageVersionUsingInstallation(
 
     return readJsonFile<PackageJson>(packageJsonPath).version;
   } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
+    await cleanup();
   }
 }
 

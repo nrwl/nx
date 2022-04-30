@@ -87,7 +87,13 @@ export function findMainRenderStatement(
   return null;
 }
 
-export function findDefaultExport(source: ts.SourceFile): ts.Node | null {
+export function findDefaultExport(
+  source: ts.SourceFile
+):
+  | ts.VariableDeclaration
+  | ts.FunctionDeclaration
+  | ts.ClassDeclaration
+  | null {
   return (
     findDefaultExportDeclaration(source) || findDefaultClassOrFunction(source)
   );
@@ -95,9 +101,12 @@ export function findDefaultExport(source: ts.SourceFile): ts.Node | null {
 
 export function findDefaultExportDeclaration(
   source: ts.SourceFile
-): ts.Node | null {
+):
+  | ts.VariableDeclaration
+  | ts.FunctionDeclaration
+  | ts.ClassDeclaration
+  | null {
   const identifier = findDefaultExportIdentifier(source);
-
   if (identifier) {
     const variables = findNodes(source, ts.SyntaxKind.VariableDeclaration);
     const fns = findNodes(source, ts.SyntaxKind.FunctionDeclaration);
@@ -116,6 +125,85 @@ export function findDefaultExportDeclaration(
   }
 }
 
+export function findExportDeclarationsForJsx(
+  source: ts.SourceFile
+): Array<
+  ts.VariableDeclaration | ts.FunctionDeclaration | ts.ClassDeclaration
+> | null {
+  const variables = findNodes(source, ts.SyntaxKind.VariableDeclaration);
+  const variableStatements = findNodes(source, ts.SyntaxKind.VariableStatement);
+  const fns = findNodes(source, ts.SyntaxKind.FunctionDeclaration);
+  const cls = findNodes(source, ts.SyntaxKind.ClassDeclaration);
+
+  const exportDeclarations: ts.ExportDeclaration[] = findNodes(
+    source,
+    ts.SyntaxKind.ExportDeclaration
+  ) as ts.ExportDeclaration[];
+
+  let componentNamesNodes: ts.Node[] = [];
+
+  exportDeclarations.forEach((node) => {
+    componentNamesNodes = [
+      ...componentNamesNodes,
+      ...findNodes(node, ts.SyntaxKind.ExportSpecifier),
+    ];
+  });
+
+  const componentNames = componentNamesNodes?.map((node) => node.getText());
+
+  const all = [...variables, ...variableStatements, ...fns, ...cls] as Array<
+    | ts.VariableDeclaration
+    | ts.VariableStatement
+    | ts.FunctionDeclaration
+    | ts.ClassDeclaration
+  >;
+  let foundExport: ts.Node[];
+  let foundJSX: ts.Node[];
+
+  const nodesContainingJSX = all.filter((x) => {
+    foundJSX = findNodes(x, [
+      ts.SyntaxKind.JsxSelfClosingElement,
+      ts.SyntaxKind.JsxOpeningElement,
+    ]);
+    return foundJSX?.length;
+  });
+
+  const exported = nodesContainingJSX.filter((x) => {
+    foundExport = findNodes(x, ts.SyntaxKind.ExportKeyword);
+    if (x.kind === ts.SyntaxKind.VariableStatement) {
+      const nameNode = findNodes(
+        x,
+        ts.SyntaxKind.VariableDeclaration
+      )?.[0] as ts.VariableDeclaration;
+      return (
+        nameNode?.name?.kind === ts.SyntaxKind.Identifier ||
+        foundExport?.length ||
+        componentNames?.includes(nameNode?.name?.getText())
+      );
+    } else {
+      return (
+        (x.name.kind === ts.SyntaxKind.Identifier && foundExport?.length) ||
+        componentNames?.includes(x.name.getText())
+      );
+    }
+  });
+
+  const exportedDeclarations: Array<
+    ts.VariableDeclaration | ts.FunctionDeclaration | ts.ClassDeclaration
+  > = exported.map((x) => {
+    if (x.kind === ts.SyntaxKind.VariableStatement) {
+      const nameNode = findNodes(
+        x,
+        ts.SyntaxKind.VariableDeclaration
+      )?.[0] as ts.VariableDeclaration;
+      return nameNode;
+    }
+    return x;
+  });
+
+  return exportedDeclarations || null;
+}
+
 export function findDefaultExportIdentifier(
   source: ts.SourceFile
 ): ts.Identifier | null {
@@ -123,7 +211,6 @@ export function findDefaultExportIdentifier(
     source,
     ts.SyntaxKind.ExportAssignment
   ) as ts.ExportAssignment[];
-
   const identifier = exports
     .map((x) => x.expression)
     .find((x) => x.kind === ts.SyntaxKind.Identifier) as ts.Identifier;
@@ -132,7 +219,7 @@ export function findDefaultExportIdentifier(
 }
 
 export function findDefaultClassOrFunction(
-  source: ts.SourceFile
+  source: ts.SourceFile | null
 ): ts.FunctionDeclaration | ts.ClassDeclaration | null {
   const fns = findNodes(
     source,
@@ -255,26 +342,29 @@ export function addInitialRoutes(
         <li><Link to="/page-2">Page 2</Link></li>
       </ul>
     </div>
-    <Route
-      path="/"
-      exact
-      render={() => (
-        <div>This is the generated root route. <Link to="/page-2">Click here for page 2.</Link></div>
-      )}
-    />
-    <Route
-      path="/page-2"
-      exact
-      render={() => (
-        <div><Link to="/">Click here to go back to root page.</Link></div>
-      )}
-    />
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <div>This is the generated root route. <Link to="/page-2">Click here for page 2.</Link></div>
+        }
+      />
+      <Route
+        path="/page-2"
+        element={
+          <div><Link to="/">Click here to go back to root page.</Link></div>
+        }
+      />
+    </Routes>
     {/* END: routes */}
     `,
   };
 
   return [
-    ...addImport(source, `import { Route, Link } from 'react-router-dom';`),
+    ...addImport(
+      source,
+      `import { Route, Routes, Link } from 'react-router-dom';`
+    ),
     insertRoutes,
   ];
 }
@@ -311,7 +401,7 @@ export function addRoute(
     changes.push({
       type: ChangeType.Insert,
       index: firstRoute.getEnd(),
-      text: `<Route path="${options.routePath}" component={${options.componentName}} />`,
+      text: `<Route path="${options.routePath}" element={<${options.componentName}/>} />`,
     });
 
     if (firstLink) {
@@ -481,7 +571,7 @@ export function updateReduxStore(
   ];
 }
 
-export function getComponentName(sourceFile: ts.SourceFile): ts.Node | null {
+export function getComponentNode(sourceFile: ts.SourceFile): ts.Node | null {
   const defaultExport = findDefaultExport(sourceFile);
 
   if (
@@ -499,9 +589,9 @@ export function getComponentName(sourceFile: ts.SourceFile): ts.Node | null {
 }
 
 export function getComponentPropsInterface(
-  sourceFile: ts.SourceFile
+  sourceFile: ts.SourceFile,
+  cmpDeclaration: ts.Node
 ): ts.InterfaceDeclaration | null {
-  const cmpDeclaration = getComponentName(sourceFile);
   let propsTypeName: string = null;
 
   if (ts.isFunctionDeclaration(cmpDeclaration)) {

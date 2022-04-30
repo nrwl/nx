@@ -356,12 +356,12 @@ describe('nest libraries', function () {
     const nestlib = uniq('nestlib');
     runCLI(`generate @nrwl/nest:lib ${nestlib}`);
 
-    const jestConfigContent = readFile(`libs/${nestlib}/jest.config.js`);
+    const jestConfigContent = readFile(`libs/${nestlib}/jest.config.ts`);
 
     expect(stripIndents`${jestConfigContent}`).toEqual(
       stripIndents`module.exports = {
                 displayName: '${nestlib}',
-                preset: '../../jest.preset.js',
+                preset: '../../jest.preset.ts',
                 globals: {
                   'ts-jest': {
                   tsconfig: '<rootDir>/tsconfig.spec.json',

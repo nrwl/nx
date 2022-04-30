@@ -35,6 +35,24 @@
       "version": "13.10.0-beta.0",
       "description": "Update to React 18",
       "factory": "./src/migrations/update-13-10-0/update-13-10-0"
+    },
+    "update-react-dom-render-14.0.0": {
+      "cli": "nx",
+      "version": "14.0.0-beta.0",
+      "description": "Update to React DOM render call to React 18 API.",
+      "factory": "./src/migrations/update-14-0-0/update-react-dom-render-for-v18"
+    },
+    "replace-testing-library-react-hook-14.0.0": {
+      "cli": "nx",
+      "version": "14.0.0-beta.0",
+      "description": "Replace deprecated '@testing-library/react-hook' package with `renderHook` from '@testing-library/react'.",
+      "factory": "./src/migrations/update-14-0-0/replace-testing-library-react-hook"
+    },
+    "add-default-development-configurations-14.0.0": {
+      "cli": "nx",
+      "version": "14.0.0-beta.0",
+      "description": "Add a default development configuration for build and serve targets.",
+      "factory": "./src/migrations/update-14-0-0/add-default-development-configurations"
     }
   },
   "packageJsonUpdates": {
@@ -321,6 +339,51 @@
         },
         "eslint-plugin-import": {
           "version": "2.26.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.0.0": {
+      "version": "14.0.0-beta.1",
+      "packages": {
+        "react": {
+          "version": "18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-is": {
+          "version": "18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-test-renderer": {
+          "version": "18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/babel-plugin": {
+          "version": "11.9.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-router-dom": {
+          "version": "6.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "13.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-redux": {
+          "version": "8.0.0",
           "alwaysAddToPackageJson": false
         }
       }

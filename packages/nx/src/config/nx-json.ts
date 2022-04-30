@@ -35,7 +35,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   /**
    * NPM Scope that the workspace uses
    */
-  npmScope: string;
+  npmScope?: string;
   /**
    * Default options for `nx affected`
    */
@@ -104,12 +104,4 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * will be used. Convenient for small workspaces with one main application.
    */
   defaultProject?: string;
-}
-
-/**
- * @deprecated(v14): nx.json no longer contains projects
- */
-export interface NxJsonProjectConfiguration {
-  implicitDependencies?: string[];
-  tags?: string[];
 }

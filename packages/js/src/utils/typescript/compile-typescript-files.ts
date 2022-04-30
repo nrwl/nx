@@ -14,6 +14,15 @@ import { createAsyncIterable } from '../create-async-iterable/create-async-itera
 import { NormalizedExecutorOptions } from '../schema';
 import { loadTsTransformers } from './load-ts-transformers';
 
+const TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES = 6194;
+// Typescript diagnostic message for 6194: Found {0} errors. Watching for file changes.
+// https://github.com/microsoft/TypeScript/blob/d45012c5e2ab122919ee4777a7887307c5f4a1e0/src/compiler/diagnosticMessages.json#L4763-L4766
+const ERROR_COUNT_REGEX = /Found (\d+) errors/;
+
+function getErrorCountFromMessage(messageText: string) {
+  return Number.parseInt(ERROR_COUNT_REGEX.exec(messageText)[1]);
+}
+
 export async function* compileTypeScriptFiles(
   normalizedOptions: NormalizedExecutorOptions,
   context: ExecutorContext,
@@ -53,9 +62,11 @@ export async function* compileTypeScriptFiles(
     async ({ next, done }) => {
       if (normalizedOptions.watch) {
         compileTypeScriptWatcher(tscOptions, async (d: Diagnostic) => {
-          if (d.code === 6194) {
+          if (d.code === TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES) {
             await postCompilationCallback();
-            next(getResult(true));
+            next(
+              getResult(getErrorCountFromMessage(d.messageText as string) === 0)
+            );
           }
         });
       } else {

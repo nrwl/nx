@@ -1,7 +1,7 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import { NormalModuleReplacementPlugin } from 'webpack';
-import { normalizePath, joinPathFragments, workspaceRoot } from '@nrwl/devkit';
-import { dirname } from 'path';
+import { joinPathFragments, workspaceRoot } from '@nrwl/devkit';
+import { dirname, join, normalize } from 'path';
 import { ParsedCommandLine } from 'typescript';
 import {
   getRootTsConfigPath,
@@ -40,9 +40,7 @@ export function shareWorkspaceLibraries(
   const pathMappings: { name: string; path: string }[] = [];
   for (const [key, paths] of Object.entries(tsconfigPathAliases)) {
     if (libraries && libraries.includes(key)) {
-      const pathToLib = normalizePath(
-        joinPathFragments(workspaceRoot, paths[0])
-      );
+      const pathToLib = normalize(join(workspaceRoot, paths[0]));
       pathMappings.push({
         name: key,
         path: pathToLib,
@@ -71,16 +69,54 @@ export function shareWorkspaceLibraries(
         }
 
         const from = req.context;
-        const to = normalizePath(joinPathFragments(req.context, req.request));
+        const to = normalize(join(req.context, req.request));
 
         for (const library of pathMappings) {
-          const libFolder = normalizePath(dirname(library.path));
+          const libFolder = normalize(dirname(library.path));
           if (!from.startsWith(libFolder) && to.startsWith(libFolder)) {
             req.request = library.name;
           }
         }
       }),
   };
+}
+
+function collectPackageSecondaries(pkgName: string, packages: string[]) {
+  const pathToPackage = join(workspaceRoot, 'node_modules', pkgName);
+  const directories = readdirSync(pathToPackage)
+    .filter((file) => file !== 'node_modules')
+    .map((file) => join(pathToPackage, file))
+    .filter((file) => lstatSync(file).isDirectory());
+
+  const recursivelyCheckSubDirectories = (
+    directories: string[],
+    secondaries: string[]
+  ) => {
+    for (const directory of directories) {
+      if (existsSync(join(directory, 'package.json'))) {
+        secondaries.push(directory);
+      }
+
+      const subDirs = readdirSync(directory)
+        .filter((file) => file !== 'node_modules')
+        .map((file) => join(directory, file))
+        .filter((file) => lstatSync(file).isDirectory());
+      recursivelyCheckSubDirectories(subDirs, secondaries);
+    }
+  };
+
+  const secondaries = [];
+  recursivelyCheckSubDirectories(directories, secondaries);
+
+  for (const secondary of secondaries) {
+    const pathToPkg = join(secondary, 'package.json');
+    const libName = JSON.parse(readFileSync(pathToPkg, 'utf-8')).name;
+    if (!libName) {
+      continue;
+    }
+    packages.push(libName);
+    collectPackageSecondaries(libName, packages);
+  }
 }
 
 export function sharePackages(
@@ -95,15 +131,22 @@ export function sharePackages(
 
   const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'));
 
-  return packages.reduce(
-    (shared, pkgName) => ({
+  const allPackages = [...packages];
+  packages.forEach((pkg) => collectPackageSecondaries(pkg, allPackages));
+
+  return allPackages.reduce((shared, pkgName) => {
+    const nameToUseForVersionLookup =
+      pkgName.split('/').length > 2
+        ? pkgName.split('/').slice(0, 2).join('/')
+        : pkgName;
+
+    return {
       ...shared,
       [pkgName]: {
         singleton: true,
         strictVersion: true,
-        requiredVersion: pkgJson.dependencies[pkgName],
+        requiredVersion: pkgJson.dependencies[nameToUseForVersionLookup],
       },
-    }),
-    {}
-  );
+    };
+  }, {});
 }

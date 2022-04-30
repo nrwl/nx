@@ -461,25 +461,6 @@ export function updateNxJsonInTree(
   };
 }
 
-/**
- * Sets former nx.json options on projects which are already in workspace.json
- * @deprecated(v14) project options are no longer stored in nx.json, this should not be used.
- */
-export function addProjectToNxJsonInTree(
-  projectName: string,
-  options: Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>
-): Rule {
-  return updateWorkspaceInTree((json: WorkspaceJsonConfiguration) => {
-    const project =
-      json.projects[projectName] ?? ({} as Partial<ProjectConfiguration>);
-    project.tags = options.tags ?? project.tags ?? [];
-    project.implicitDependencies =
-      options.implicitDependencies ?? project.implicitDependencies;
-    json.projects[projectName] = project as ProjectConfiguration;
-    return json;
-  });
-}
-
 export function readWorkspace(host: Tree): any {
   const path = getWorkspacePath(host);
   return readJsonInTree(host, path);

@@ -153,4 +153,4 @@ export interface ProjectGraphProcessorContext {
 export type ProjectGraphProcessor = (
   currentGraph: ProjectGraph,
   context: ProjectGraphProcessorContext
-) => ProjectGraph;
+) => ProjectGraph | Promise<ProjectGraph>;

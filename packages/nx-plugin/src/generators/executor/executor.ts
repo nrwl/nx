@@ -5,6 +5,7 @@ import {
   generateFiles,
   updateJson,
   getWorkspaceLayout,
+  joinPathFragments,
 } from '@nrwl/devkit';
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
@@ -13,6 +14,7 @@ import * as path from 'path';
 interface NormalizedSchema extends Schema {
   fileName: string;
   className: string;
+  propertyName: string;
   projectRoot: string;
   projectSourceRoot: string;
   npmScope: string;
@@ -31,11 +33,34 @@ function addFiles(host: Tree, options: NormalizedSchema) {
 
   if (options.unitTestRunner === 'none') {
     host.delete(
-      path.join(
+      joinPathFragments(
         options.projectSourceRoot,
         'executors',
         options.fileName,
         `executor.spec.ts`
+      )
+    );
+  }
+}
+
+function addHasherFiles(host: Tree, options: NormalizedSchema) {
+  generateFiles(
+    host,
+    path.join(__dirname, './files/hasher'),
+    `${options.projectSourceRoot}/executors`,
+    {
+      ...options,
+      tmpl: '',
+    }
+  );
+
+  if (options.unitTestRunner === 'none') {
+    host.delete(
+      joinPathFragments(
+        options.projectSourceRoot,
+        'executors',
+        options.fileName,
+        'hasher.spec.ts'
       )
     );
   }
@@ -53,10 +78,15 @@ function updateExecutorJson(host: Tree, options: NormalizedSchema) {
     let executors = json.executors ?? json.builders;
     executors ||= {};
     executors[options.name] = {
-      implementation: `./src/executors/${options.name}/executor`,
-      schema: `./src/executors/${options.name}/schema.json`,
+      implementation: `./src/executors/${options.fileName}/executor`,
+      schema: `./src/executors/${options.fileName}/schema.json`,
       description: options.description,
     };
+    if (options.includeHasher) {
+      executors[
+        options.name
+      ].hasher = `./src/executors/${options.fileName}/hasher`;
+    }
     json.executors = executors;
 
     return json;
@@ -65,7 +95,7 @@ function updateExecutorJson(host: Tree, options: NormalizedSchema) {
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const { npmScope } = getWorkspaceLayout(host);
-  const { fileName, className } = names(options.name);
+  const { fileName, className, propertyName } = names(options.name);
 
   const { root: projectRoot, sourceRoot: projectSourceRoot } =
     readProjectConfiguration(host, options.project);
@@ -81,6 +111,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ...options,
     fileName,
     className,
+    propertyName,
     description,
     projectRoot,
     projectSourceRoot,
@@ -92,6 +123,9 @@ export async function executorGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
   addFiles(host, options);
+  if (options.includeHasher) {
+    addHasherFiles(host, options);
+  }
 
   updateExecutorJson(host, options);
 }

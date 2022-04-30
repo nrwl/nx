@@ -1,14 +1,21 @@
-import { DocumentSearchIcon } from '@heroicons/react/solid';
+import {
+  DocumentSearchIcon,
+  FlagIcon,
+  LocationMarkerIcon,
+} from '@heroicons/react/solid';
 // nx-ignore-next-line
 import type { ProjectGraphNode } from '@nrwl/devkit';
 import { useDepGraphService } from '../hooks/use-dep-graph';
 import { useDepGraphSelector } from '../hooks/use-dep-graph-selector';
 import {
   allProjectsSelector,
+  getTracingInfo,
   selectedProjectNamesSelector,
   workspaceLayoutSelector,
 } from '../machines/selectors';
-import { parseParentDirectoriesFromPilePath } from '../util';
+import { parseParentDirectoriesFromFilePath } from '../util';
+import { TracingAlgorithmType } from '../machines/interfaces';
+import ExperimentalFeature from '../experimental-feature';
 
 function getProjectsByType(type: string, projects: ProjectGraphNode[]) {
   return projects
@@ -23,6 +30,12 @@ interface SidebarProject {
 
 type DirectoryProjectRecord = Record<string, SidebarProject[]>;
 
+interface TracingInfo {
+  start: string;
+  end: string;
+  algorithm: TracingAlgorithmType;
+}
+
 function groupProjectsByDirectory(
   projects: ProjectGraphNode[],
   selectedProjects: string[],
@@ -35,10 +48,11 @@ function groupProjectsByDirectory(
       project.type === 'app' || project.type === 'e2e'
         ? workspaceLayout.appsDir
         : workspaceLayout.libsDir;
-    const directories = parseParentDirectoriesFromPilePath(
+    const directories = parseParentDirectoriesFromFilePath(
       project.data.root,
       workspaceRoot
     );
+
     const directory = directories.join('/');
 
     if (!groups.hasOwnProperty(directory)) {
@@ -57,17 +71,24 @@ function ProjectListItem({
   project,
   toggleProject,
   focusProject,
+  startTrace,
+  endTrace,
+  tracingInfo,
 }: {
   project: SidebarProject;
   toggleProject: (projectId: string, currentlySelected: boolean) => void;
   focusProject: (projectId: string) => void;
+  startTrace: (projectId: string) => void;
+  endTrace: (projectId: string) => void;
+  tracingInfo: TracingInfo;
 }) {
   return (
-    <li className="relative block cursor-default select-none py-1 pl-3 pr-9 text-xs text-slate-600 dark:text-slate-400">
+    <li className="relative block cursor-default select-none py-1 pl-2 pr-6 text-xs text-slate-600 dark:text-slate-400">
       <div className="flex items-center">
         <button
+          data-cy={`focus-button-${project.projectGraphNode.name}`}
           type="button"
-          className="flex rounded-md"
+          className="mr-1 flex rounded-md"
           title="Focus on this library"
           onClick={() => focusProject(project.projectGraphNode.name)}
         >
@@ -75,9 +96,47 @@ function ProjectListItem({
             <DocumentSearchIcon className="h-5 w-5" />
           </span>
         </button>
+
+        <ExperimentalFeature>
+          <button
+            type="button"
+            className="mr-1 flex rounded-md"
+            title="Start Trace"
+            onClick={() => startTrace(project.projectGraphNode.name)}
+          >
+            <span
+              className={`${
+                tracingInfo.start === project.projectGraphNode.name
+                  ? 'ring-blue-nx-base'
+                  : 'ring-slate-200 dark:ring-slate-600'
+              } flex items-center rounded-md bg-white p-1 font-medium  shadow-sm ring-1 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
+            >
+              <LocationMarkerIcon className="h-5 w-5" />
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="flex rounded-md"
+            title="End Trace"
+            onClick={() => endTrace(project.projectGraphNode.name)}
+          >
+            <span
+              className={`${
+                tracingInfo.end === project.projectGraphNode.name
+                  ? 'ring-blue-nx-base'
+                  : 'ring-slate-200 dark:ring-slate-600'
+              } flex items-center rounded-md bg-white p-1 font-medium  shadow-sm ring-1 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
+            >
+              <FlagIcon className="h-5 w-5" />
+            </span>
+          </button>
+        </ExperimentalFeature>
+
         <label
-          className="ml-3 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
+          className="ml-2 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
           data-project={project.projectGraphNode.name}
+          title={project.projectGraphNode.name}
           data-active={project.isSelected.toString()}
           onClick={() =>
             toggleProject(project.projectGraphNode.name, project.isSelected)
@@ -122,17 +181,23 @@ function ProjectListItem({
 }
 
 function SubProjectList({
-  headerText,
+  headerText = '',
   projects,
   selectProject,
   deselectProject,
   focusProject,
+  startTrace,
+  endTrace,
+  tracingInfo,
 }: {
   headerText: string;
   projects: SidebarProject[];
   selectProject: (projectName: string) => void;
   deselectProject: (projectName: string) => void;
   focusProject: (projectName: string) => void;
+  startTrace: (projectId: string) => void;
+  endTrace: (projectId: string) => void;
+  tracingInfo: TracingInfo;
 }) {
   let sortedProjects = [...projects];
   sortedProjects.sort((a, b) => {
@@ -149,9 +214,11 @@ function SubProjectList({
 
   return (
     <>
-      <h3 className="mt-4 cursor-text py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs">
-        {headerText}
-      </h3>
+      {headerText !== '' ? (
+        <h3 className="mt-4 cursor-text py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs">
+          {headerText}
+        </h3>
+      ) : null}
       <ul className="mt-2 -ml-3">
         {sortedProjects.map((project) => {
           return (
@@ -160,6 +227,9 @@ function SubProjectList({
               project={project}
               toggleProject={toggleProject}
               focusProject={focusProject}
+              startTrace={startTrace}
+              endTrace={endTrace}
+              tracingInfo={tracingInfo}
             ></ProjectListItem>
           );
         })}
@@ -170,6 +240,7 @@ function SubProjectList({
 
 export function ProjectList() {
   const depGraphService = useDepGraphService();
+  const tracingInfo = useDepGraphSelector(getTracingInfo);
 
   function deselectProject(projectName: string) {
     depGraphService.send({ type: 'deselectProject', projectName });
@@ -181,6 +252,14 @@ export function ProjectList() {
 
   function focusProject(projectName: string) {
     depGraphService.send({ type: 'focusProject', projectName });
+  }
+
+  function startTrace(projectName: string) {
+    depGraphService.send({ type: 'setTracingStart', projectName });
+  }
+
+  function endTrace(projectName: string) {
+    depGraphService.send({ type: 'setTracingEnd', projectName });
   }
 
   const projects = useDepGraphSelector(allProjectsSelector);
@@ -226,6 +305,9 @@ export function ProjectList() {
             deselectProject={deselectProject}
             selectProject={selectProject}
             focusProject={focusProject}
+            startTrace={startTrace}
+            endTrace={endTrace}
+            tracingInfo={tracingInfo}
           ></SubProjectList>
         );
       })}
@@ -243,6 +325,9 @@ export function ProjectList() {
             deselectProject={deselectProject}
             selectProject={selectProject}
             focusProject={focusProject}
+            startTrace={startTrace}
+            endTrace={endTrace}
+            tracingInfo={tracingInfo}
           ></SubProjectList>
         );
       })}
@@ -260,6 +345,9 @@ export function ProjectList() {
             deselectProject={deselectProject}
             selectProject={selectProject}
             focusProject={focusProject}
+            startTrace={startTrace}
+            endTrace={endTrace}
+            tracingInfo={tracingInfo}
           ></SubProjectList>
         );
       })}

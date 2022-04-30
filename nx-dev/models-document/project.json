@@ -14,7 +14,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/nx-dev/models-document"],
       "options": {
-        "jestConfig": "nx-dev/models-document/jest.config.js",
+        "jestConfig": "nx-dev/models-document/jest.config.ts",
         "passWithNoTests": true
       }
     }

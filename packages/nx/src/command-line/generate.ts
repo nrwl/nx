@@ -5,7 +5,7 @@ import {
   Schema,
 } from '../utils/params';
 import { Workspaces } from '../config/workspaces';
-import { FileChange, flushChanges, FsTree } from '../config/tree';
+import { FileChange, flushChanges, FsTree } from '../generators/tree';
 import { logger } from '../utils/logger';
 import * as chalk from 'chalk';
 import { workspaceRoot } from '../utils/app-root';
@@ -74,6 +74,7 @@ function convertToGenerateOptions(
 
   delete generatorOptions.d;
   delete generatorOptions.dryRun;
+  delete generatorOptions['dry-run'];
   delete generatorOptions.interactive;
   delete generatorOptions.help;
   delete generatorOptions.collection;

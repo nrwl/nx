@@ -23,6 +23,14 @@ describe('updateBuildTargets', () => {
     tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'my-source', {
       root: 'libs/my-source',
+      targets: {
+        storybook: {
+          executor: '@nrwl/storybook:storybook',
+        },
+      },
+    });
+    addProjectConfiguration(tree, 'storybook', {
+      root: 'libs/my-source',
       targets: {},
     });
     addProjectConfiguration(tree, 'my-source-e2e', {
@@ -32,6 +40,7 @@ describe('updateBuildTargets', () => {
           executor: 'test-executor:hi',
           options: {
             devServerTarget: 'my-source:serve',
+            browserTarget: 'storybook:serve',
           },
           configurations: {
             production: {
@@ -54,5 +63,23 @@ describe('updateBuildTargets', () => {
     expect(
       e2eProject.targets.e2e.configurations.production.devServerTarget
     ).toBe('subfolder-my-destination:serve:production');
+  });
+
+  it('should NOT update storybook target', async () => {
+    schema.projectName = 'storybook';
+    updateBuildTargets(tree, schema);
+
+    const myProject = readProjectConfiguration(tree, 'my-source');
+    const e2eProject = readProjectConfiguration(tree, 'my-source-e2e');
+
+    expect(myProject).toBeDefined();
+    expect(myProject.targets.storybook.executor).toBe(
+      '@nrwl/storybook:storybook'
+    );
+
+    expect(e2eProject).toBeDefined();
+    expect(e2eProject.targets.e2e.options.browserTarget).toBe(
+      'subfolder-my-destination:serve'
+    );
   });
 });

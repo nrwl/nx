@@ -6,7 +6,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/tools/eslint-rules"],
       "options": {
-        "jestConfig": "tools/eslint-rules/jest.config.js",
+        "jestConfig": "tools/eslint-rules/jest.config.ts",
         "passWithNoTests": true
       }
     }

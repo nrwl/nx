@@ -4,10 +4,10 @@ import {
   shareWorkspaceLibraries,
 } from './mfe-webpack';
 import {
-  workspaceRoot,
   createProjectGraphAsync,
   ProjectGraph,
   readCachedProjectGraph,
+  workspaceRoot,
   Workspaces,
 } from '@nrwl/devkit';
 import {
@@ -30,32 +30,31 @@ export interface MFEConfig {
   ) => SharedLibraryConfig | false;
 }
 
-function recursivelyResolveWorkspaceDependents(
-  projectGraph: ProjectGraph<any>,
-  target: string,
-  seenTargets: Set<string> = new Set()
-) {
-  if (seenTargets.has(target)) {
-    return [];
+function collectDependencies(
+  projectGraph: ProjectGraph,
+  name: string,
+  dependencies = {
+    workspaceLibraries: new Set<string>(),
+    npmPackages: new Set<string>(),
+  },
+  seen: Set<string> = new Set()
+): {
+  workspaceLibraries: Set<string>;
+  npmPackages: Set<string>;
+} {
+  if (seen.has(name)) {
+    return dependencies;
   }
-  let dependencies = [target];
-  seenTargets.add(target);
+  seen.add(name);
 
-  const workspaceDependencies = (
-    projectGraph.dependencies[target] ?? []
-  ).filter((dep) => !dep.target.startsWith('npm:'));
-  if (workspaceDependencies.length > 0) {
-    for (const dep of workspaceDependencies) {
-      dependencies = [
-        ...dependencies,
-        ...recursivelyResolveWorkspaceDependents(
-          projectGraph,
-          dep.target,
-          seenTargets
-        ),
-      ];
+  (projectGraph.dependencies[name] ?? []).forEach((dependency) => {
+    if (dependency.target.startsWith('npm:')) {
+      dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
+    } else {
+      dependencies.workspaceLibraries.add(dependency.target);
+      collectDependencies(projectGraph, dependency.target, dependencies, seen);
     }
-  }
+  });
 
   return dependencies;
 }
@@ -103,41 +102,17 @@ async function getDependentPackagesForProject(name: string) {
     projectGraph = await createProjectGraphAsync();
   }
 
-  const deps = projectGraph.dependencies[name].reduce(
-    (dependencies, dependency) => {
-      const workspaceLibraries = new Set(dependencies.workspaceLibraries);
-      const npmPackages = new Set(dependencies.npmPackages);
-
-      if (dependency.target.startsWith('npm:')) {
-        npmPackages.add(dependency.target.replace('npm:', ''));
-      } else {
-        workspaceLibraries.add(dependency.target);
-      }
-
-      return {
-        workspaceLibraries: [...workspaceLibraries],
-        npmPackages: [...npmPackages],
-      };
-    },
-    { workspaceLibraries: [], npmPackages: [] }
-  );
-  const seenWorkspaceLibraries = new Set<string>();
-  deps.workspaceLibraries = deps.workspaceLibraries.reduce(
-    (workspaceLibraryDeps, workspaceLibrary) => [
-      ...workspaceLibraryDeps,
-      ...recursivelyResolveWorkspaceDependents(
-        projectGraph,
-        workspaceLibrary,
-        seenWorkspaceLibraries
-      ),
-    ],
-    []
+  const { npmPackages, workspaceLibraries } = collectDependencies(
+    projectGraph,
+    name
   );
 
-  deps.workspaceLibraries = mapWorkspaceLibrariesToTsConfigImport(
-    deps.workspaceLibraries
-  );
-  return deps;
+  return {
+    workspaceLibraries: mapWorkspaceLibrariesToTsConfigImport([
+      ...workspaceLibraries,
+    ]),
+    npmPackages: [...npmPackages],
+  };
 }
 
 function determineRemoteUrl(remote: string) {
@@ -176,7 +151,7 @@ function mapRemotes(remotes: MFERemotes) {
 }
 
 export async function withModuleFederation(options: MFEConfig) {
-  const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js'];
+  const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mfe'];
 
   const dependencies = await getDependentPackagesForProject(options.name);
   const sharedLibraries = shareWorkspaceLibraries(
@@ -188,6 +163,12 @@ export async function withModuleFederation(options: MFEConfig) {
       (pkg) => !DEFAULT_NPM_PACKAGES_TO_AVOID.includes(pkg)
     )
   );
+
+  DEFAULT_NPM_PACKAGES_TO_AVOID.forEach((pkgName) => {
+    if (pkgName in npmPackages) {
+      delete npmPackages[pkgName];
+    }
+  });
 
   const sharedDependencies = {
     ...sharedLibraries.getLibraries(),

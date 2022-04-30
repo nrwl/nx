@@ -26,6 +26,7 @@ describe('init', () => {
 
     expect(packageJson.devDependencies.cypress).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/cypress']).toBeDefined();
+    expect(packageJson.devDependencies['@types/node']).toBeDefined();
     expect(packageJson.devDependencies[existing]).toBeDefined();
     expect(packageJson.dependencies['@nrwl/cypress']).toBeUndefined();
     expect(packageJson.dependencies[existing]).toBeDefined();

@@ -3,7 +3,7 @@
 exports[`Init MFE --federationType=dynamic should create a host with the correct configurations 1`] = `
 "import { setRemoteDefinitions } from '@nrwl/angular/mfe';
 
-  fetch('/assets/mfe.manifest.json')
+  fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
   .then(definitions => setRemoteDefinitions(definitions))
   .then(() => import('./bootstrap').catch(err => console.error(err)))"
@@ -83,7 +83,7 @@ export class AppModule { }
 
 exports[`Init MFE should create webpack and mfe configs correctly 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-const config = require('./mfe.config');
+const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
@@ -96,7 +96,7 @@ exports[`Init MFE should create webpack and mfe configs correctly 2`] = `
 
 exports[`Init MFE should create webpack and mfe configs correctly 3`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
-const config = require('./mfe.config');
+const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
