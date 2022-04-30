@@ -211,31 +211,6 @@ nx connect-to-nx-cloud
 
 You can also distribute the cache manually using your own storage mechanisms.
 
-### Using Distributed Caching for Internal Commands
-
-By default, Nx Cloud is not used for Nx commands invoked from within other Nx commands.
-For example, in the following configuration build1 and build2 won't be cached individually.
-
-```json
-{
-  "executor": "@nrwl/workspace:run-commands",
-  "options": {
-    "commands": ["nx build1 proj", "nx build2 proj"]
-  }
-}
-```
-
-If you would like them to be cached individually, and a separate run to be created for each of them, add the following:
-
-```json
-{
-  "executor": "@nrwl/workspace:run-commands",
-  "options": {
-    "commands": ["NX_CLOUD=true nx build1 proj", "NX_CLOUD=true nx build2 proj"]
-  }
-}
-```
-
 ## Example
 
 - [This is an example repo](https://github.com/vsavkin/large-monorepo) benchmarking Nx's computation caching. It also explains why Nx's computation caching tends to be a lot faster than the caching of other build systems.
