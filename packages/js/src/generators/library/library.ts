@@ -213,7 +213,7 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     addSwcConfig(tree, options.projectRoot);
   }
 
-  if (options.compiler !== 'swc') {
+  if (options.compiler !== 'swc' && !options.skipBabelConfig) {
     addBabelConfig(tree, options);
   }
 

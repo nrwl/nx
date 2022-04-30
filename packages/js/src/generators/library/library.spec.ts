@@ -13,6 +13,7 @@ describe('lib', () => {
   let tree: Tree;
   const defaultOptions: Omit<LibraryGeneratorSchema, 'name'> = {
     skipTsConfig: false,
+    skipBabelConfig: false,
     unitTestRunner: 'jest',
     skipFormat: false,
     linter: 'eslint',
@@ -793,17 +794,6 @@ describe('lib', () => {
         expect(tree.exists('libs/my-lib/.lib.swcrc')).toBeTruthy();
       });
 
-      it('should not generate a .babelrc for swc', async () => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'myLib',
-          buildable: true,
-          compiler: 'swc',
-        });
-
-        expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
-      });
-
       it('should setup jest project using swc', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
@@ -881,6 +871,30 @@ describe('lib', () => {
         });
 
         expect(tree.exists('tools/scripts/publish.mjs')).toBeTruthy();
+      });
+    });
+
+    describe('--skipBabelConfig', () => {
+      it('should not generate a .babelrc for swc even when set to false', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          buildable: true,
+          compiler: 'swc',
+          skipBabelConfig: false,
+        });
+
+        expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
+      });
+      it('should not create a .babelrc when set to true', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          compiler: 'tsc',
+          skipBabelConfig: true,
+        });
+
+        expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
       });
     });
   });

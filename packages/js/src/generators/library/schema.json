@@ -52,6 +52,11 @@
       "description": "Do not update tsconfig.json for development experience.",
       "default": false
     },
+    "skipBabelConfig": {
+      "type": "boolean",
+      "description": "Skip creating a .babelrc configuration",
+      "default": false
+    },
     "testEnvironment": {
       "type": "string",
       "enum": ["jsdom", "node"],
