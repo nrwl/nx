@@ -86,7 +86,7 @@ export interface ExecutorsJson {
 export interface ExecutorConfig {
   schema: any;
   hasherFactory?: () => CustomHasher;
-  implementationFactory: () => Executor;
+  implementationFactory: () => Promise<Executor>;
   batchImplementationFactory?: () => TaskGraphExecutor;
 }
 

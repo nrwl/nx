@@ -174,7 +174,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   );
 
   if (ws.isNxExecutor(nodeModule, executor)) {
-    const implementation = implementationFactory() as Executor<any>;
+    const implementation = await implementationFactory();
     const r = implementation(combinedOptions, {
       root,
       target: targetConfig,

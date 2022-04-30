@@ -140,7 +140,7 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
       const host = new FsTree(cwd, isVerbose);
-      const implementation = implementationFactory();
+      const implementation = await implementationFactory();
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
 
@@ -199,7 +199,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
       const host = new FsTree(workspaceRoot, isVerbose);
-      const implementation = implementationFactory();
+      const implementation = await implementationFactory();
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
 

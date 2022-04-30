@@ -4,6 +4,7 @@ import ignore, { Ignore } from 'ignore';
 import * as path from 'path';
 import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
+import { requireOrImport } from 'require-or-import';
 
 import { workspaceRoot } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
@@ -23,9 +24,12 @@ import {
   GeneratorsJson,
   ExecutorsJson,
   CustomHasher,
+  HasherContext,
+  ExecutorContext,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
+import { Task, TaskGraph } from './task-graph';
 
 export function workspaceConfigName(root: string) {
   if (existsSync(path.join(root, 'angular.json'))) {
@@ -137,8 +141,22 @@ export class Workspaces {
       return {
         schema,
         implementationFactory,
-        batchImplementationFactory,
-        hasherFactory,
+        batchImplementationFactory: batchImplementationFactory
+          ? () =>
+              (
+                taskGraph: TaskGraph,
+                options: Record<string, any>,
+                overrides: any,
+                context: ExecutorContext
+              ) =>
+                batchImplementationFactory().then((bif) =>
+                  bif(taskGraph, options, overrides, context)
+                )
+          : null,
+        hasherFactory: hasherFactory
+          ? () => (task: Task, context: HasherContext) =>
+              hasherFactory().then((hf) => hf(task, context))
+          : null,
       };
     } catch (e) {
       throw new Error(
@@ -182,11 +200,20 @@ export class Workspaces {
   private getImplementationFactory<T>(
     implementation: string,
     directory: string
-  ): () => T {
-    const [implementationModulePath, implementationExportName] =
+  ): () => Promise<T> {
+    let [implementationModulePath, implementationExportName] =
       implementation.split('#');
-    return () => {
-      const module = require(path.join(directory, implementationModulePath));
+
+    // ESM Requires file extensions, CommonJS handles with or without
+    // For the moment, we know the NX ecosystem always has .js extensions
+    if (!implementationModulePath.endsWith('.js')) {
+      implementationModulePath = implementationModulePath + '.js';
+    }
+
+    return async () => {
+      const module = await requireOrImport(
+        path.join(directory, implementationModulePath)
+      );
       return implementationExportName
         ? module[implementationExportName]
         : module.default ?? module;
