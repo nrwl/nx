@@ -35,6 +35,7 @@ export interface NextBuildBuilderOptions {
   assets?: any[];
   nextConfig?: string;
   buildLibsFromSource?: boolean;
+  analyze?: boolean;
 }
 
 export interface NextServeBuilderOptions {

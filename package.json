@@ -51,6 +51,7 @@
     "@nestjs/schematics": "^8.0.0",
     "@nestjs/swagger": "^5.0.9",
     "@nestjs/testing": "^8.0.0",
+    "@next/bundle-analyzer": "^12.1.5",
     "@ngrx/component-store": "~13.0.0",
     "@ngrx/effects": "~13.0.0",
     "@ngrx/entity": "~13.0.0",

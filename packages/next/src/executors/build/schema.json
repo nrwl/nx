@@ -41,6 +41,11 @@
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately.",
       "default": true
+    },
+    "analyze": {
+      "description": "Additionally use the @next/bundle-analyzer plugin to analyze the bundle.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["root", "outputPath"]

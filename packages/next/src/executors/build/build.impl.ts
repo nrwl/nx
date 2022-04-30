@@ -1,24 +1,24 @@
-import 'dotenv/config';
-import { ExecutorContext } from '@nrwl/devkit';
-
-import build from 'next/dist/build';
-
-import { join, resolve } from 'path';
-import { copySync, mkdir } from 'fs-extra';
-
-import { prepareConfig } from '../../utils/config';
-import { NextBuildBuilderOptions } from '../../utils/types';
-import { createPackageJson } from './lib/create-package-json';
-import { createNextConfigFile } from './lib/create-next-config-file';
-import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { readCachedProjectGraph } from '@nrwl/devkit';
+import withBundleAnalyzer from '@next/bundle-analyzer';
+import {
+  ExecutorContext,
+  readCachedProjectGraph,
+  workspaceLayout,
+} from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { checkPublicDirectory } from './lib/check-project';
+import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
+import 'dotenv/config';
+import { copySync, mkdir } from 'fs-extra';
+import build from 'next/dist/build';
+import { join, resolve } from 'path';
+import { prepareConfig } from '../../utils/config';
 import { importConstants } from '../../utils/require-shim';
-import { workspaceLayout } from '@nrwl/devkit';
+import { NextBuildBuilderOptions } from '../../utils/types';
+import { checkPublicDirectory } from './lib/check-project';
+import { createNextConfigFile } from './lib/create-next-config-file';
+import { createPackageJson } from './lib/create-package-json';
 
 const { PHASE_PRODUCTION_BUILD } = importConstants();
 
@@ -46,12 +46,16 @@ export default async function buildExecutor(
     dependencies = result.dependencies;
   }
 
-  const config = await prepareConfig(
-    PHASE_PRODUCTION_BUILD,
-    options,
-    context,
-    dependencies,
-    libsDir
+  const config = withBundleAnalyzer({
+    enabled: options.analyze ?? false,
+  })(
+    await prepareConfig(
+      PHASE_PRODUCTION_BUILD,
+      options,
+      context,
+      dependencies,
+      libsDir
+    )
   );
 
   await build(root, config as any);
