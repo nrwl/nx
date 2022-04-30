@@ -32,7 +32,7 @@ For your `package-lock.json` or `yarn.lock`, it's likely best to remove those en
 
 For other files (think `nx.json`, `workspace.json`, `angular.json`, `package.json`, `tsconfig.base.json`, etc.) you'll need to resolve these conflicts manually to ensure that considerations for both your existing workspace and the newly added project are accounted for.
 
-Note that for these files, the file history of the standalone project will be not be present after merging. You would see all changes from resolving conflicts in the single merge commit, and any further back would simply be the file history of your workspace.
+Note that for these files, the file history of the standalone project will not be present after merging. You would see all changes from resolving conflicts in the single merge commit, and any further back would simply be the file history of your workspace.
 
 ## Using `git mv`
 
