@@ -127,6 +127,7 @@ export function runCreateWorkspace(
     cli,
     extraArgs,
     ci,
+    nxCloud = false,
     useDetectedPm = false,
   }: {
     preset: string;
@@ -137,6 +138,7 @@ export function runCreateWorkspace(
     cli?: string;
     extraArgs?: string;
     ci?: 'azure' | 'github' | 'circleci';
+    nxCloud?: boolean;
     useDetectedPm?: boolean;
   }
 ) {
@@ -146,7 +148,12 @@ export function runCreateWorkspace(
 
   let command = `${pm.createWorkspace} ${name} --cli=${
     cli || currentCli()
-  } --preset=${preset} --no-nxCloud --no-interactive`;
+  } --preset=${preset} --no-interactive`;
+  if (nxCloud) {
+    command += ' --nxCloud';
+  } else {
+    command += ' --no-nxCloud';
+  }
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -169,10 +176,15 @@ export function runCreateWorkspace(
     command += ` ${extraArgs}`;
   }
 
+  const environment = {
+    ...process.env,
+    ...(nxCloud ? { NRWL_API: 'https://api.staging.nrwl.io' } : {}),
+  };
+
   const create = execSync(command, {
     cwd: e2eCwd,
     stdio: [0, 1, 2],
-    env: process.env,
+    env: environment,
     encoding: 'utf-8',
   });
   return create ? create.toString() : '';

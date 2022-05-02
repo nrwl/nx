@@ -262,14 +262,53 @@ describe('create-nx-workspace', () => {
   });
 
   it('should return error when ci workflow is selected but no cloud is set up', () => {
-    const wsName = uniq('github');
-    const create = runCreateWorkspace(wsName, {
+    const wsName = uniq('circleci');
+    runCreateWorkspace(wsName, {
       preset: 'core',
       packageManager,
       ci: 'circleci',
     });
     checkFilesExist('package.json');
     checkFilesDoNotExist('.circleci/config.yml');
+  });
+
+  it('should create CI workflow for circleci', () => {
+    const wsName = uniq('circleci');
+    runCreateWorkspace(wsName, {
+      preset: 'core',
+      packageManager,
+      ci: 'circleci',
+      nxCloud: true,
+    });
+    const nxJson = readJson('nx.json');
+    expect(nxJson.tasksRunnerOptions.default.runner).toEqual('@nrwl/nx-cloud');
+    checkFilesExist('.circleci/config.yml');
+  });
+
+  it('should create CI workflow for github', () => {
+    const wsName = uniq('github');
+    runCreateWorkspace(wsName, {
+      preset: 'core',
+      packageManager,
+      ci: 'github',
+      nxCloud: true,
+    });
+    const nxJson = readJson('nx.json');
+    expect(nxJson.tasksRunnerOptions.default.runner).toEqual('@nrwl/nx-cloud');
+    checkFilesExist('.github/workflows/ci.yml');
+  });
+
+  it('should create CI workflow for azure', () => {
+    const wsName = uniq('azure');
+    runCreateWorkspace(wsName, {
+      preset: 'core',
+      packageManager,
+      ci: 'azure',
+      nxCloud: true,
+    });
+    const nxJson = readJson('nx.json');
+    expect(nxJson.tasksRunnerOptions.default.runner).toEqual('@nrwl/nx-cloud');
+    checkFilesExist('azure-pipelines.yml');
   });
 
   describe('Use detected package manager', () => {
