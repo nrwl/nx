@@ -173,6 +173,47 @@ export function runCreateWorkspace(
   return create ? create.toString() : '';
 }
 
+export function runCreatePlugin(
+  name: string,
+  {
+    pluginName,
+    packageManager,
+    extraArgs,
+    useDetectedPm = false,
+  }: {
+    pluginName?: string;
+    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    extraArgs?: string;
+    useDetectedPm?: boolean;
+  }
+) {
+  projName = name;
+
+  const pm = getPackageManagerCommand({ packageManager });
+
+  let command = `${pm.runUninstalledPackage} create-nx-plugin ${name}`;
+
+  if (pluginName) {
+    command += ` --pluginName=${pluginName}`;
+  }
+
+  if (packageManager && !useDetectedPm) {
+    command += ` --package-manager=${packageManager}`;
+  }
+
+  if (extraArgs) {
+    command += ` ${extraArgs}`;
+  }
+
+  const create = execSync(command, {
+    cwd: e2eCwd,
+    stdio: [0, 1, 2],
+    env: process.env,
+    encoding: 'utf-8',
+  });
+  return create ? create.toString() : '';
+}
+
 export function packageInstall(
   pkg: string,
   projName?: string,
