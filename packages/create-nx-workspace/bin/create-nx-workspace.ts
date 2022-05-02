@@ -675,22 +675,27 @@ async function determineCI(
   }
 
   if (parsedArgs.allPrompts) {
-    return enquirer
-      .prompt([
-        {
-          name: 'CI',
-          message: `Autogenerate CI workflow file?`,
-          type: 'select',
-          initial: '' as any,
-          choices: [
-            { message: 'none', name: '' },
-            { message: 'GitHub Actions', name: 'github' },
-            { message: 'Circle CI', name: 'circleci' },
-            { message: 'Azure DevOps', name: 'azure' },
-          ],
-        },
-      ])
-      .then((a: { CI: string }) => a.CI);
+    return (
+      enquirer
+        .prompt([
+          {
+            name: 'CI',
+            message: `CI workflow file to generate?`,
+            type: 'select',
+            initial: '' as any,
+            choices: [
+              { message: 'none', name: '' },
+              { message: 'GitHub Actions', name: 'github' },
+              { message: 'Circle CI', name: 'circleci' },
+              { message: 'Azure DevOps', name: 'azure' },
+            ],
+          },
+        ])
+        // enquirer ignores name and value if they are falsy and takes
+        // first field that has a truthy value, so wee need to explicitly
+        // check for none
+        .then((a: { CI: string }) => (a.CI !== 'none' ? a.CI : ''))
+    );
   }
   return '';
 }
