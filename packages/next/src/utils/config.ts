@@ -168,7 +168,7 @@ export async function prepareConfig(
   config.outdir = `${offsetFromRoot(options.root)}${options.outputPath}`;
   config.distDir =
     config.distDir && config.distDir !== '.next'
-      ? config.distDir
+      ? joinPathFragments(config.outdir, config.distDir)
       : joinPathFragments(config.outdir, '.next');
   config.webpack = (a, b) =>
     createWebpackConfig(
