@@ -4,7 +4,7 @@ Nx is a smart, fast and extensible build system with first class monorepo suppor
 
 ## Making Things Fast
 
-If you're only interested in improving the performance of your monorepo by using Nx's [affected:\* commands](/using-nx/affected), [computation cache](/using-nx/cache), and [distributed task execution](/using-nx/dte), then you don't need to use any plugins. Everything will work the same way whether your monorepo has React, Vue, Svelte, or even Go, Rust, or Java apps. Nx is technology-agnostic.
+If you're only interested in improving the performance of your monorepo by using Nx's [affected:\* commands](/using-nx/affected), [computation cache](/using-nx/caching), and [distributed task execution](/using-nx/dte), then you don't need to use any plugins. Everything will work the same way whether your monorepo has React, Vue, Svelte, or even Go, Rust, or Java apps. Nx is technology-agnostic.
 
 Check out the following guides to get started:
 
