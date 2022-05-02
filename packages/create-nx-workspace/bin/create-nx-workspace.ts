@@ -424,13 +424,38 @@ async function determineNpmScope(
     return enquirer
       .prompt([
         {
-          name: 'NpmScope',
-          message: `Npm scope                          `,
-          initial: name,
-          type: 'input',
+          name: 'UseNpmScope',
+          message: `Use NPM scope for projects?        `,
+          type: 'select',
+          choices: [
+            {
+              name: 'Yes',
+              hint: 'Your imports will have form of "@scope/project"',
+            },
+
+            {
+              name: 'No',
+            },
+          ],
+          initial: 'Yes' as any,
         },
       ])
-      .then((a: { NpmScope: string }) => a.NpmScope);
+      .then((a: { UseNpmScope: string }) => {
+        if (a.UseNpmScope === 'Yes') {
+          return enquirer
+            .prompt([
+              {
+                name: 'NpmScope',
+                message: `Npm scope                          `,
+                initial: name,
+                type: 'input',
+              },
+            ])
+            .then((a: { NpmScope: string }) => a.NpmScope);
+        } else {
+          return '';
+        }
+      });
   }
   return Promise.resolve(name);
 }
