@@ -130,8 +130,6 @@ export default async function* fileServerExecutor(
         const args = getBuildTargetCommand(options);
         execFileSync(pmCmd, args, {
           stdio: [0, 1, 2],
-          // NX_CLOUD: true is only used when Nx Cloud is on.
-          // It forces remote caching.
         });
       } catch {}
       running = false;
