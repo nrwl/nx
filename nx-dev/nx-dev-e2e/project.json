@@ -3,12 +3,11 @@
   "sourceRoot": "nx-dev/nx-dev-e2e/src",
   "projectType": "application",
   "targets": {
-    "e2e-disabled": {
+    "e2e": {
       "executor": "@nrwl/cypress:cypress",
       "options": {
         "cypressConfig": "nx-dev/nx-dev-e2e/cypress.json",
-        "tsConfig": "nx-dev/nx-dev-e2e/tsconfig.e2e.json",
-        "devServerTarget": "nx-dev:serve"
+        "devServerTarget": "nx-dev:serve:development"
       },
       "configurations": {
         "production": {

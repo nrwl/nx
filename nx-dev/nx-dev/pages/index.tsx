@@ -92,7 +92,10 @@ export function Index(): ReactComponentElement<any> {
             <div className="md:py-18 mx-auto max-w-screen-lg px-4 py-4 xl:max-w-screen-xl">
               <div className="md:my-18 my-8 flex flex-col  items-center justify-center 2xl:my-24">
                 <div className="flex w-full flex-col text-center">
-                  <h1 className="mb-8 text-4xl font-extrabold leading-none tracking-tight sm:mt-10 sm:mt-14 sm:mb-10 sm:text-5xl lg:text-5xl">
+                  <h1
+                    className="mb-8 text-4xl font-extrabold leading-none tracking-tight sm:mt-10 sm:mt-14 sm:mb-10 sm:text-5xl lg:text-5xl"
+                    data-cy="primary-heading"
+                  >
                     <span className="block lg:inline">
                       Smart, Fast and Extensible
                     </span>{' '}
