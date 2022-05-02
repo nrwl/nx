@@ -3,9 +3,9 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
+  getImportPath,
   getWorkspaceLayout,
   getWorkspacePath,
-  joinPathFragments,
   names,
   Tree,
   writeJson,
@@ -29,9 +29,7 @@ function addFiles(
 ) {
   const packageJsonPath = join(projectRoot, 'package.json');
   writeJson(tree, packageJsonPath, {
-    name: npmScope
-      ? joinPathFragments(`@${npmScope}`, options.name)
-      : options.name,
+    name: getImportPath(npmScope, options.name),
     version: '0.0.0',
     scripts: {
       test: 'node index.js',

@@ -137,6 +137,7 @@ export function runCreateWorkspace(
     cli,
     extraArgs,
     ci,
+    npmScope,
     useDetectedPm = false,
   }: {
     preset: string;
@@ -147,6 +148,7 @@ export function runCreateWorkspace(
     cli?: string;
     extraArgs?: string;
     ci?: 'azure' | 'github' | 'circleci';
+    npmScope?: string;
     useDetectedPm?: boolean;
   }
 ) {
@@ -165,6 +167,9 @@ export function runCreateWorkspace(
   }
   if (ci) {
     command += ` --ci=${ci}`;
+  }
+  if (npmScope !== undefined) {
+    command += ` --npmScope=${npmScope}`;
   }
 
   if (base) {

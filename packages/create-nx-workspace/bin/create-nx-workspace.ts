@@ -417,7 +417,7 @@ async function determineNpmScope(
   parsedArgs: yargs.Arguments<Arguments>,
   name: string
 ): Promise<string> {
-  if (parsedArgs.npmScope) {
+  if (parsedArgs.npmScope !== undefined) {
     return Promise.resolve(parsedArgs.npmScope);
   }
   if (parsedArgs.allPrompts) {

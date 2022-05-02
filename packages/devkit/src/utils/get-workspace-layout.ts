@@ -1,5 +1,4 @@
 import {
-  getWorkspacePath,
   readNxJson,
   shouldDefaultToUsingStandaloneConfigs,
 } from 'nx/src/generators/utils/project-configuration';
@@ -28,7 +27,7 @@ export function getWorkspaceLayout(tree: Tree): {
   return {
     appsDir: nxJson?.workspaceLayout?.appsDir ?? 'apps',
     libsDir: nxJson?.workspaceLayout?.libsDir ?? 'libs',
-    npmScope: nxJson?.npmScope ?? '',
+    npmScope: nxJson?.npmScope,
     standaloneAsDefault: shouldDefaultToUsingStandaloneConfigs(tree),
   };
 }

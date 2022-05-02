@@ -1,7 +1,8 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "npmScope": "<%= npmScope %>",
-  "affected": {
+  <% if(npmScope){ %>
+    "npmScope": "<%= npmScope %>",
+  <% } %>"affected": {
     "defaultBase": "<%= defaultBase %>"
   },
 <% if (packageManager && cli === 'angular') { -%>

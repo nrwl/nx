@@ -14,6 +14,8 @@ import {
   updateProjectConfig,
   readProjectConfig,
   tmpProjPath,
+  getSelectedPackageManager,
+  runCreateWorkspace,
 } from '@nrwl/e2e/utils';
 
 let proj: string;
@@ -115,6 +117,43 @@ describe('Workspace Tests', () => {
       expect(result).toContain('Hello World');
     });
   });
+
+  describe('@nrwl/workspace + custom scope', () => {
+    const packageManager = getSelectedPackageManager() || 'pnpm';
+
+    it('should generate workspace with custom scope', () => {
+      const wsName = uniq('scope');
+      runCreateWorkspace(wsName, {
+        preset: 'core',
+        packageManager,
+        npmScope: 'my-scope',
+      });
+      const libName = uniq('mylib');
+      runCLI(`generate @nrwl/workspace:lib ${libName}`);
+
+      const tsConfig = readJson('tsconfig.base.json');
+      expect(tsConfig.compilerOptions.paths).toEqual({
+        [`@my-scope/${libName}`]: [`packages/${libName}/src/index.ts`],
+      });
+    });
+
+    it('should generate workspace with no scope', () => {
+      const wsName = uniq('scope');
+      runCreateWorkspace(wsName, {
+        preset: 'core',
+        packageManager,
+        npmScope: '',
+      });
+      const libName = uniq('mylib');
+      runCLI(`generate @nrwl/workspace:lib ${libName}`);
+
+      const tsConfig = readJson('tsconfig.base.json');
+      expect(tsConfig.compilerOptions.paths).toEqual({
+        [`${libName}`]: [`packages/${libName}/src/index.ts`],
+      });
+    });
+  });
+
   describe('workspace-generator', () => {
     let custom: string;
     let failing: string;
@@ -239,7 +278,7 @@ describe('Workspace Tests', () => {
       try {
         await runCLI(`workspace-generator ${failing} --no-interactive`);
         fail(`Should exit 1 for a workspace-generator that throws an error`);
-      } catch (e) {}
+      } catch (e) { }
 
       const listOutput = runCLI('workspace-generator --list-generators');
       expect(listOutput).toContain(custom);
@@ -391,7 +430,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-          `@${proj}/shared-${lib1}-data-access`
+        `@${proj}/shared-${lib1}-data-access`
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
@@ -518,7 +557,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-          `@${proj}/shared-${lib1}-data-access`
+        `@${proj}/shared-${lib1}-data-access`
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
@@ -651,7 +690,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-          `@${proj}/shared-${lib1}-data-access`
+        `@${proj}/shared-${lib1}-data-access`
         ]
       ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 

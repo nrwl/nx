@@ -308,7 +308,6 @@ export class AppService {
 
 function connectReactAndExpress(host: Tree, options: Schema) {
   const importScope = getImportPath(options.npmScope, '');
-  const scopePrefix = options.npmScope ? `${options.npmScope}-` : '';
   host.write(
     'libs/api-interfaces/src/lib/api-interfaces.ts',
     `export interface Message { message: string }`
