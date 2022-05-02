@@ -297,7 +297,7 @@
           "alwaysAddToPackageJson": false
         },
         "styled-jsx": {
-          "version": "5.0.2",
+          "version": "5.0.1",
           "alwaysAddToPackageJson": false
         },
         "eslint-plugin-react-hooks": {
