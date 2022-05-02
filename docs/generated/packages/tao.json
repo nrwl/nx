@@ -4,6 +4,7 @@
   "description": "CLI for generating code and running commands",
   "root": "/packages/tao",
   "source": "/packages/tao/src",
+  "documentation": [],
   "generators": [],
   "executors": []
 }

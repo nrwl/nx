@@ -5,13 +5,16 @@ import slug from 'rehype-slug';
 import gfm from 'remark-gfm';
 import { CodeBlock } from './code-block';
 import { renderIframes } from './renderers/render-iframe';
+import { transformImagePath } from './renderers/transform-image-path';
 
 export const Markdown = ({
   content,
   classes = '',
+  documentFilePath = '',
 }: {
   content: string;
   classes?: string;
+  documentFilePath?: string;
 }) => (
   <ReactMarkdown
     remarkPlugins={[gfm]}
@@ -28,6 +31,7 @@ export const Markdown = ({
     ]}
     children={content}
     className={classNames('prose max-w-none', classes)}
+    transformImageUri={transformImagePath(documentFilePath)}
     components={components({
       code: {
         callback: () => void 0,

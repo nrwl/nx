@@ -1,5 +1,3 @@
-# Express Plugin
-
 ![Express Logo](/shared/express-logo.png)
 
 [Express](https://expressjs.com/) is mature, minimal, and an open source web framework for making web applications and

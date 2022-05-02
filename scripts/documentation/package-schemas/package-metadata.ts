@@ -1,6 +1,8 @@
+import { readFileSync } from 'fs';
 import { readJsonSync } from 'fs-extra';
 import { sync } from 'glob';
 import { join, resolve } from 'path';
+import * as DocumentationMap from '../../../docs/map.json';
 import {
   JsonSchema1,
   PackageMetadata,
@@ -80,10 +82,21 @@ export function getPackageMetadataList(
 ): PackageMetadata[] {
   const packagesDir = resolve(join(absoluteRoot, packagesDirectory));
 
+  /**
+   * Get all the custom overview information on each package if available
+   */
+  const additionalApiReferences = DocumentationMap.find(
+    (data) => data.id === 'additional-api-references'
+  ).itemList;
+
+  // Do not use map.json, but add a documentation property on the package.json directly that can be easily resolved
   return sync(`${packagesDir}/*`).map((folderPath): PackageMetadata => {
     const folderName = folderPath.substring(packagesDir.length + 1);
     const relativeFolderPath = folderPath.replace(absoluteRoot, '');
     const packageJson = readJsonSync(join(folderPath, 'package.json'), 'utf8');
+    const hasDocumentation = additionalApiReferences.find(
+      (pkg) => pkg.id === folderName
+    );
 
     return {
       githubRoot: 'https://github.com/nrwl/nx/blob/master',
@@ -91,6 +104,13 @@ export function getPackageMetadataList(
       description: packageJson.description,
       root: relativeFolderPath,
       source: join(relativeFolderPath, '/src'),
+      documentation: !!hasDocumentation
+        ? hasDocumentation.itemList.map((item) => ({
+            ...item,
+            file: item.file,
+            content: readFileSync(join('docs', item.file + '.md'), 'utf8'),
+          }))
+        : [],
       generators: getSchemaList(
         {
           absoluteRoot,

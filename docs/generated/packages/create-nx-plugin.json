@@ -4,6 +4,7 @@
   "description": "Smart, Fast and Extensible Build System",
   "root": "/packages/create-nx-plugin",
   "source": "/packages/create-nx-plugin/src",
+  "documentation": [],
   "generators": [],
   "executors": []
 }

@@ -1,5 +1,3 @@
-# ESLint Plugin
-
 ![ESLint logo](/shared/eslint-logo.png)
 
 A plugin containing a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx specific [enforce-module-boundaries](#enforce-module-boundaries) rule.

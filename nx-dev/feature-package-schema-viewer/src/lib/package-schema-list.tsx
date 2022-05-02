@@ -27,6 +27,7 @@ export function PackageSchemaList({
       name: string;
       description: string;
       githubUrl: string;
+      readme: { content: string; filePath: string };
     };
     seo: { title: string; description: string; url: string; imageUrl: string };
   } = {
@@ -34,6 +35,15 @@ export function PackageSchemaList({
       name: getPublicPackageName(pkg.name),
       description: pkg.description,
       githubUrl: pkg.githubRoot + pkg.root,
+      get readme() {
+        const hasOverview = pkg.documentation.find((d) => d.id === 'overview');
+        return !!hasOverview
+          ? {
+              content: hasOverview.content,
+              filePath: hasOverview.file,
+            }
+          : { content: '', filePath: '' };
+      },
     },
     seo: {
       title: `${getPublicPackageName(pkg.name)} | Nx`,
@@ -99,7 +109,13 @@ export function PackageSchemaList({
 
               <Heading1 title={vm.pkg.name} />
 
-              <Markdown content={vm.pkg.description} classes="mb-4" />
+              <Markdown
+                content={vm.pkg.readme.content}
+                documentFilePath={vm.pkg.readme.filePath}
+                classes="mb-16"
+              />
+
+              <Heading2 title="Package reference" />
 
               <p className="mb-16">
                 Here is a list of all the executors and generators available

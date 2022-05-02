@@ -1,5 +1,3 @@
-# Next.js Plugin
-
 ![](/shared/nextjs-logo.png)
 
 When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.

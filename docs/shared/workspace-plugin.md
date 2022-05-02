@@ -1,5 +1,3 @@
-# Workspace Plugin
-
 The workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.
 
 ## Creating Workspace Generators

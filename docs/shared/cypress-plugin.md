@@ -1,5 +1,3 @@
-# Cypress Plugin
-
 ![Cypress logo](/shared/cypress-logo.png)
 
 Cypress is an e2e test runner built for modern web. It has a lot of great features:

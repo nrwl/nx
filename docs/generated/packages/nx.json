@@ -4,6 +4,7 @@
   "description": "Smart, Fast and Extensible Build System",
   "root": "/packages/nx",
   "source": "/packages/nx/src",
+  "documentation": [],
   "generators": [],
   "executors": [
     {

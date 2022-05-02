@@ -1,5 +1,3 @@
-# Angular Plugin
-
 ![Angular logo](/shared/angular-logo.png)
 
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:
