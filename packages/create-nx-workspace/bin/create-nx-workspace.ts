@@ -777,7 +777,7 @@ async function createApp(
   let workspaceSetupSpinner = ora('Creating your workspace').start();
 
   try {
-    const fullCommand = `${pmc.exec} nx ${command} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
+    const fullCommand = `${pmc.exec} nx ${command} --nxWorkspaceRoot="${nxWorkspaceRoot}"`;
     await execAndWait(fullCommand, tmpDir);
 
     workspaceSetupSpinner.succeed('Nx has successfully created the workspace.');
