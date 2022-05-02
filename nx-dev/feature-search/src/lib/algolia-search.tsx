@@ -98,6 +98,7 @@ export function AlgoliaSearch() {
           <DocSearchModal
             searchParameters={{
               facetFilters: ['language:en'],
+              hitsPerPage: 100,
             }}
             initialQuery={initialQuery}
             placeholder="Search documentation"
