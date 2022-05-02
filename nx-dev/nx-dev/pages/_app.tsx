@@ -58,7 +58,6 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
         Skip to content
       </a>
       <div className="documentation-app bg-white text-gray-700 antialiased">
-        <AnnouncementBanner />
         <Component {...pageProps} />
       </div>
       {/* Global Site Tag (gtag.js) - Google Analytics */}
