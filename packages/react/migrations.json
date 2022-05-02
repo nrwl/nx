@@ -387,6 +387,43 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.0.6": {
+      "version": "14.0.6-beta.0",
+      "packages": {
+        "react": {
+          "version": "18.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "18.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-is": {
+          "version": "18.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "18.0.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "18.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "react-redux": {
+          "version": "8.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-test-renderer": {
+          "version": "18.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react-hooks": {
+          "version": "4.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
