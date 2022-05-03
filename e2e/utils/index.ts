@@ -66,7 +66,7 @@ export const e2eCwd = `${e2eRoot}/${currentCli()}`;
 ensureDirSync(e2eCwd);
 
 let projName: string;
-const publishedVersion = `9999.0.2`;
+const publishedVersion = process.env.PUBLISHED_VERSION || `9999.0.2`;
 
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
