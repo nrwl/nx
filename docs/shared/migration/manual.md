@@ -172,7 +172,7 @@ You should consider implementing them as Nx tasks which should be a quick transi
 
 Your use-case may also be covered by one of our community plugins. Plugin authors are able to extend the functionality of Nx through our plugin API.
 
-[Learn more about the `run-commands` builder](/workspace/run-commands-executor)
+[Learn more about the `run-commands` builder](/packages/nx/executors/run-commands)
 
 [Learn more about caching](/using-nx/caching)
 

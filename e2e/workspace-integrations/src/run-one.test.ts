@@ -127,7 +127,14 @@ describe('run-one', () => {
     it('should be able to include deps using target dependencies', () => {
       const originalWorkspace = readProjectConfig(myapp);
       updateProjectConfig(myapp, (config) => {
+        config.targets.prep = {
+          executor: "nx:run-commands",
+          options: {
+            command: "echo PREP"
+          }
+        };
         config.targets.build.dependsOn = [
+          "prep",
           {
             target: 'build',
             projects: 'dependencies',
@@ -138,11 +145,12 @@ describe('run-one', () => {
 
       const output = runCLI(`build ${myapp}`);
       expect(output).toContain(
-        `NX   Running target build for project ${myapp} and 2 task(s) it depends on`
+        `NX   Running target build for project ${myapp} and 3 task(s) it depends on`
       );
       expect(output).toContain(myapp);
       expect(output).toContain(mylib1);
       expect(output).toContain(mylib2);
+      expect(output).toContain("PREP");
 
       updateProjectConfig(myapp, () => originalWorkspace);
     }, 10000);

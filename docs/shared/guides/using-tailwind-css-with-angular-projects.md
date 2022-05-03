@@ -464,7 +464,7 @@ Next, you need to configure your project to build the theme when you build the l
   "defaultConfiguration": "production"
 },
 "build-lib": {
-  "executor": "@nrwl/workspace:run-commands",
+  "executor": "nx:run-commands",
   "outputs": ["dist/libs/lib1"],
   "configurations": {
     "production": {
@@ -483,7 +483,7 @@ Next, you need to configure your project to build the theme when you build the l
   "defaultConfiguration": "production"
 },
 "build": {
-  "executor": "@nrwl/workspace:run-commands",
+  "executor": "nx:run-commands",
   "outputs": ["dist/libs/lib1"],
   "configurations": {
     "production": {

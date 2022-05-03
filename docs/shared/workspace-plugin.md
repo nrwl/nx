@@ -43,8 +43,8 @@ Like when moving projects, some steps are often missed when removing projects. T
 
 ## Running custom commands
 
-Executors provide an optimized way of running targets but unfortunately, not every target has an executor written for it. The [`@nrwl/workspace:run-commands`](/workspace/run-commands-executor) executor is an executor that runs any command or multiple commands in the shell. This can be useful when integrating with other tools which do not have an executor provided. There is also a generator to help configure this executor.
+Executors provide an optimized way of running targets but unfortunately, not every target has an executor written for it. The [`nx:run-commands`](/packages/nx/executors/run-commands) executor is an executor that runs any command or multiple commands in the shell. This can be useful when integrating with other tools which do not have an executor provided. There is also a generator to help configure this executor.
 
-Running `nx g @nrwl/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'` will create a `my-feature-lib:printhello` target that executes `echo hello` in the shell.
+Running `nx g nx:run-commands printhello --project my-feature-lib --command 'echo hello'` will create a `my-feature-lib:printhello` target that executes `echo hello` in the shell.
 
-> See more about [`@nrwl/workspace:run-commands`](/workspace/run-commands-executor)
+> See more about [`nx:run-commands`](/packages/nx/executors/run-commands)

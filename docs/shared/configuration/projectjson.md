@@ -177,6 +177,9 @@ sure that `mylib`'s dependencies are built as well. This doesn't mean Nx is goin
 artifacts are already in the right place, Nx will do nothing. If they aren't in the right place, but they are available
 in the cache, Nx will retrieve them from the cache.
 
+Depending on another target of the same project is very common. That's why we provide some syntax sugar, so
+`"dependsOn": [{"target": "build", "projects": "self"}]` can be shortened to `"dependsOn": ["build"]`.
+
 Another common scenario is for a target to depend on another target of the same project. For instance, `dependsOn` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.

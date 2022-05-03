@@ -27,7 +27,7 @@ For each project for which you want to enable `make`, add a target in its `proje
 // ...
 "targets": {
     "make": {
-        "executor": "@nrwl/workspace:run-commands",
+        "executor": "nx:run-commands",
             "options": {
             "commands": [
                 {
@@ -40,7 +40,7 @@ For each project for which you want to enable `make`, add a target in its `proje
 }
 ```
 
-For more information, see the [run-commands api doc](/workspace/run-commands-executor).
+For more information, see the [run-commands api doc](/packages/nx/executors/run-commands).
 
 ##### 3. Trigger the executor from the terminal
 

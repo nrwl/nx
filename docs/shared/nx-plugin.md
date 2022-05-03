@@ -235,7 +235,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     sourceRoot: `${normalizedOptions.projectRoot}/src`,
     targets: {
       exec: {
-        executor: '@nrwl/workspace:run-commands',
+        executor: 'nx:run-commands',
         options: {
           command: `node ${projectRoot}/src/index.js`,
         },

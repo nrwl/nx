@@ -11,7 +11,7 @@ export async function runCommandsGenerator(host: Tree, schema: Schema) {
   const project = readProjectConfiguration(host, schema.project);
   project.targets = project.targets || {};
   project.targets[schema.name] = {
-    executor: '@nrwl/workspace:run-commands',
+    executor: 'nx:run-commands',
     outputs: schema.outputs
       ? schema.outputs.split(',').map((s) => s.trim())
       : [],
