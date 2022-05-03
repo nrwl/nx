@@ -98,7 +98,7 @@ function createNxPlugin(
   packageManager,
   parsedArgs: any
 ) {
-  const importPath = parsedArgs.importPath ?? `${workspaceName}/${pluginName}`;
+  const importPath = parsedArgs.importPath ?? `@${workspaceName}/${pluginName}`;
   const command = `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${importPath}`;
   console.log(command);
 
