@@ -56,13 +56,13 @@ commands:
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
-            - nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
+            - node-deps-{{ arch }}-v1-{{ checksum "package.json" }}-{{ checksum checksum "yarn.lock" }}
       - run:
           name: Install dependencies
           command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
       - save_cache:
           name: Save Yarn Package Cache
-          key: nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
+          key: node-deps-{{ arch }}-v1-{{ checksum "package.json" }}-{{ checksum checksum "yarn.lock" }}
           paths:
             - node_modules
             - ~/.cache/yarn
