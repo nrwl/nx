@@ -212,7 +212,10 @@ export function createTasksForProjectToRun(
   params: Omit<TaskParams, 'project' | 'errorIfCannotFindConfiguration'>,
   projectGraph: ProjectGraph,
   initiatingProject: string | null,
-  defaultDependencyConfigs: Record<string, (TargetDependencyConfig|string)[]> = {}
+  defaultDependencyConfigs: Record<
+    string,
+    (TargetDependencyConfig | string)[]
+  > = {}
 ) {
   const tasksMap: Map<string, Task> = new Map<string, Task>();
   const seenSet = new Set<string>();
@@ -251,7 +254,10 @@ function addTasksForProjectTarget(
     overrides,
     errorIfCannotFindConfiguration,
   }: TaskParams,
-  defaultDependencyConfigs: Record<string, (TargetDependencyConfig|string)[]> = {},
+  defaultDependencyConfigs: Record<
+    string,
+    (TargetDependencyConfig | string)[]
+  > = {},
   projectGraph: ProjectGraph,
   originalTargetExecutor: string,
   tasksMap: Map<string, Task>,
@@ -349,7 +355,7 @@ function addTasksForProjectDependencyConfig(
     overrides,
   }: Pick<TaskParams, 'target' | 'configuration' | 'overrides'>,
   dependencyConfig: TargetDependencyConfig,
-  defaultDependencyConfigs: Record<string, (TargetDependencyConfig|string)[]>,
+  defaultDependencyConfigs: Record<string, (TargetDependencyConfig | string)[]>,
   projectGraph: ProjectGraph,
   originalTargetExecutor: string,
   tasksMap: Map<string, Task>,

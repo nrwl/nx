@@ -21,7 +21,7 @@ export function getCommandAsString(task: Task) {
 
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
-  defaultDependencyConfigs: Record<string, (TargetDependencyConfig|string)[]>,
+  defaultDependencyConfigs: Record<string, (TargetDependencyConfig | string)[]>,
   projectGraph: ProjectGraph
 ): TargetDependencyConfig[] | undefined {
   // DependencyConfigs configured in workspace.json override configurations at the root.

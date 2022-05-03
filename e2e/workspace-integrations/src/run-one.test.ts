@@ -128,13 +128,13 @@ describe('run-one', () => {
       const originalWorkspace = readProjectConfig(myapp);
       updateProjectConfig(myapp, (config) => {
         config.targets.prep = {
-          executor: "nx:run-commands",
+          executor: 'nx:run-commands',
           options: {
-            command: "echo PREP"
-          }
+            command: 'echo PREP',
+          },
         };
         config.targets.build.dependsOn = [
-          "prep",
+          'prep',
           {
             target: 'build',
             projects: 'dependencies',
@@ -150,7 +150,7 @@ describe('run-one', () => {
       expect(output).toContain(myapp);
       expect(output).toContain(mylib1);
       expect(output).toContain(mylib2);
-      expect(output).toContain("PREP");
+      expect(output).toContain('PREP');
 
       updateProjectConfig(myapp, () => originalWorkspace);
     }, 10000);

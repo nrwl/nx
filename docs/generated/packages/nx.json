@@ -7,6 +7,24 @@
   "generators": [],
   "executors": [
     {
+      "name": "noop",
+      "implementation": "/packages/nx/src/executors/noop/noop.impl.ts",
+      "schema": {
+        "title": "Noop",
+        "description": "An executor that does nothing",
+        "type": "object",
+        "cli": "nx",
+        "outputCapture": "pipe",
+        "properties": {},
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "An executor that does nothing",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/nx/src/executors/noop/schema.json"
+    },
+    {
       "name": "run-commands",
       "implementation": "/packages/nx/src/executors/run-commands/run-commands.impl.ts",
       "schema": {
