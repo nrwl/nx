@@ -680,7 +680,7 @@ async function determineCI(
         .prompt([
           {
             name: 'CI',
-            message: `CI workflow file to generate?`,
+            message: `CI workflow file to generate?      `,
             type: 'select',
             initial: '' as any,
             choices: [
