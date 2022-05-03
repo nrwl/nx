@@ -45,7 +45,7 @@ for workspace-specific settings (like the [Nx Cloud token](/using-nx/caching#dis
 If you want to load variables from `env` files other than the ones listed above:
 
 1. Use the [env-cmd](https://www.npmjs.com/package/env-cmd) package: `env-cmd -f .qa.env nx serve`
-2. Use the `envFile` option of the [run-commands](/workspace/run-commands-executor#envfile) builder and execute your command inside of the builder
+2. Use the `envFile` option of the [run-commands](/packages/nx/executors/run-commands#envfile) builder and execute your command inside of the builder
 
 ### Ad-hoc variables
 

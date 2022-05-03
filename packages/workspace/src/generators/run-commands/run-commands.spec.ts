@@ -23,7 +23,7 @@ describe('run-commands', () => {
     const customTarget = JSON.parse(tree.read('workspace.json').toString())
       .projects['lib'].architect['custom'];
     expect(customTarget).toEqual({
-      builder: '@nrwl/workspace:run-commands',
+      builder: 'nx:run-commands',
       outputs: ['/dist/a', '/dist/b', '/dist/c'],
       options: {
         command: 'echo 1',

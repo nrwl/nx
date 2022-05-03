@@ -4,7 +4,7 @@ import { dirSync, fileSync } from 'tmp';
 import runCommands, { LARGE_BUFFER } from './run-commands.impl';
 import { env } from 'npm-run-path';
 const {
-  devDependencies: { '@nrwl/workspace': version },
+  devDependencies: { nx: version },
 } = require('package.json');
 
 function normalize(p: string) {
@@ -14,7 +14,7 @@ function readFile(f: string) {
   return readFileSync(f).toString().replace(/\s/g, '');
 }
 
-describe('Command Runner Builder', () => {
+describe('Run Commands', () => {
   const context = {} as any;
 
   beforeEach(() => {
@@ -258,7 +258,7 @@ describe('Command Runner Builder', () => {
         fail('should throw');
       } catch (e) {
         expect(e.message).toEqual(
-          `ERROR: Bad executor config for @nrwl/run-commands - "readyWhen" can only be used when "parallel=true".`
+          `ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".`
         );
       }
     });

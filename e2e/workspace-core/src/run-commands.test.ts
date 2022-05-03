@@ -128,7 +128,7 @@ describe('Run Commands', () => {
       fail('Should error if process errors');
     } catch (e) {
       expect(e.stderr.toString()).toContain(
-        'Something went wrong in @nrwl/run-commands - Command failed: exit 1'
+        'Something went wrong in run-commands - Command failed: exit 1'
       );
     }
   });

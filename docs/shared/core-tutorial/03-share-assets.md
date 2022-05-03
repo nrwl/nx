@@ -139,14 +139,14 @@ For the cli project, you add the implicit dependencies in the `project.json` fil
   "implicitDependencies": ["ascii"],
   "targets": {
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "go build -o='../../dist/packages/cli/' ./src/ascii.go",
         "cwd": "packages/cli"
       }
     },
     "serve": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "go run ./src/ascii.go",
         "cwd": "packages/cli"

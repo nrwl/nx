@@ -168,16 +168,11 @@ Generating a library with `--publishable` flag does several things extra on top 
   "targets": {
     "build": {},
     "publish": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "node tools/scripts/publish.mjs publish-me {args.ver} {args.tag}"
       },
-      "dependsOn": [
-        {
-          "projects": "self",
-          "target": "build"
-        }
-      ]
+      "dependsOn": ["build"]
     },
     "lint": {},
     "test": {}
@@ -186,7 +181,7 @@ Generating a library with `--publishable` flag does several things extra on top 
 }
 ```
 
-The `publish` target invokes the generated `publish.mjs` script using [`@nrwl/workspace:run-commands`](/executors/run-commands-builder) executor. The script does the following:
+The `publish` target invokes the generated `publish.mjs` script using [`nx:run-commands`](/executors/run-commands-builder) executor. The script does the following:
 
 - Validate the `ver` argument against a simple [SemVer](https://semver.org/) RegExp.
 - Validate the `name` of the project (eg: `publish-me`) against the workspace existing projects.
@@ -214,16 +209,11 @@ Let's set up our `hello-tsc` library to be publishable as well but this time, we
   "targets": {
     "build": {},
     "publish": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "node tools/scripts/publish.mjs hello-tsc {args.ver} {args.tag}",
       },
-      "dependsOn": [
-        {
-          "projects": "self",
-          "target": "build"
-        }
-      ]
+      "dependsOn": ["build"]
     },
     "lint": {},
     "test": {}

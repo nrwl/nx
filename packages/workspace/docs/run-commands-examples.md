@@ -6,7 +6,7 @@
     "targets": {
         //...
         "ls-project-root": {
-            "executor": "@nrwl/workspace:run-commands",
+            "executor": "nx:run-commands",
             "options": {
                 "command": "ls apps/frontend/src"
             }
@@ -31,7 +31,7 @@ You can run them sequentially by setting `parallel: false`:
 
 ```json
 "create-script": {
-    "executor": "@nrwl/workspace:run-commands",
+    "executor": "nx:run-commands",
     "options": {
         "commands": [
           "mkdir -p scripts",
@@ -70,7 +70,7 @@ nx run frontend:webpack --args="--config=example.config.js"
 
 ```json
 "webpack": {
-    "executor": "@nrwl/workspace:run-commands",
+    "executor": "nx:run-commands",
     "options": {
         "command": "webpack"
     }
@@ -84,7 +84,7 @@ that sets the `forwardAllArgs` option to `false` as shown below:
 
 ```json
 "webpack": {
-    "executor": "@nrwl/workspace:run-commands",
+    "executor": "nx:run-commands",
     "options": {
         "commands": [
             {
@@ -102,7 +102,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 
 ```json
 "finish-when-ready": {
-    "executor": "@nrwl/workspace:run-commands",
+    "executor": "nx:run-commands",
     "options": {
         "commands": [
             "sleep 5 && echo 'FINISHED'",
@@ -136,7 +136,7 @@ nx affected --target=generate-docs
     "targets": {
         //...
         "generate-docs": {
-            "executor": "@nrwl/workspace:run-commands",
+            "executor": "nx:run-commands",
             "options": {
                 "command": "npx compodoc -p apps/frontend/tsconfig.app.json"
             }
@@ -147,7 +147,7 @@ nx affected --target=generate-docs
     "targets": {
         //...
         "generate-docs": {
-            "executor": "@nrwl/workspace:run-commands",
+            "executor": "nx:run-commands",
             "options": {
                 "command":  "npx compodoc -p apps/api/tsconfig.app.json"
             }
