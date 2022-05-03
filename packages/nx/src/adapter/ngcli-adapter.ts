@@ -737,23 +737,25 @@ function findCreatedProjects(host: Tree): FileChange[] {
     .listChanges()
     .filter(
       (f) =>
+        f.type === 'CREATE' &&
         (basename(f.path) === 'project.json' ||
-          basename(f.path) === 'package.json') &&
-        f.type === 'CREATE'
+          basename(f.path) === 'package.json')
     );
 }
 
 function findDeletedProjects(host: Tree): FileChange[] {
   return host
     .listChanges()
-    .filter((f) => basename(f.path) === 'project.json' && f.type === 'DELETE');
+    .filter((f) => f.type === 'DELETE' && basename(f.path) === 'project.json');
 }
 
 function findMatchingFileChange(host: Tree, path: Path) {
-  const targetPath = path.startsWith('/') ? path.substring(1) : path.toString();
+  const targetPath = normalize(
+    path.startsWith('/') ? path.substring(1) : path.toString()
+  );
   return host
     .listChanges()
-    .find((f) => f.path === targetPath && f.type !== 'DELETE');
+    .find((f) => f.type !== 'DELETE' && normalize(f.path) === targetPath);
 }
 
 function isWorkspaceConfigPath(p: Path | string) {
