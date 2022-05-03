@@ -524,6 +524,7 @@ export function globForProjectFiles(
   projectGlobCacheKey = cacheKey;
 
   const projectGlobPatterns: string[] = [
+    'project.json',
     '**/project.json',
     ...getGlobPatternsFromPackageManagerWorkspaces(root),
   ];

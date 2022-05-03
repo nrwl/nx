@@ -8,7 +8,7 @@ export class TaskGraphCreator {
     private readonly projectGraph: ProjectGraph,
     private readonly defaultTargetDependencies: Record<
       string,
-      (TargetDependencyConfig|string)[]
+      (TargetDependencyConfig | string)[]
     >
   ) {}
 

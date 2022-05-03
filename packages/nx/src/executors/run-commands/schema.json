@@ -7,23 +7,15 @@
   "presets": [
     {
       "name": "Arguments forwarding",
-      "keys": [
-        "commands"
-      ]
+      "keys": ["commands"]
     },
     {
       "name": "Custom done conditions",
-      "keys": [
-        "commands",
-        "readyWhen"
-      ]
+      "keys": ["commands", "readyWhen"]
     },
     {
       "name": "Setting the cwd",
-      "keys": [
-        "commands",
-        "cwd"
-      ]
+      "keys": ["commands", "cwd"]
     }
   ],
   "properties": {
@@ -81,9 +73,7 @@
               }
             },
             "additionalProperties": false,
-            "required": [
-              "command"
-            ]
+            "required": ["command"]
           },
           {
             "type": "string"
