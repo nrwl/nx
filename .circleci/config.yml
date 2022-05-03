@@ -13,12 +13,14 @@ orbs:
 machine:
   pre:
     - mkdir ~/.cache/yarn
+    - mkdir ~/.cache/Cypress
     - mkdir ~/Library/Caches/Homebrew
     - mkdir /usr/local/Homebrew
 
 dependencies:
   cache_directories:
     - ~/.cache/yarn
+    - ~/.cache/Cypress
     - /usr/local/Homebrew
     - ~/Library/Caches/Homebrew
   override:
