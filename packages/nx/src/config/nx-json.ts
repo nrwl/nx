@@ -31,7 +31,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   /**
    * Dependencies between different target names across all projects
    */
-  targetDependencies?: Record<string, TargetDependencyConfig[]>;
+  targetDependencies?: Record<string, (TargetDependencyConfig | string)[]>;
   /**
    * NPM Scope that the workspace uses
    */

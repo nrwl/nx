@@ -21,15 +21,15 @@ export function getCommandAsString(task: Task) {
 
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
-  defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
+  defaultDependencyConfigs: Record<string, (TargetDependencyConfig|string)[]>,
   projectGraph: ProjectGraph
 ): TargetDependencyConfig[] | undefined {
   // DependencyConfigs configured in workspace.json override configurations at the root.
-  const dependencyConfigs =
+  const dependencyConfigs = expandDependencyConfigSyntaxSugar(
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
-    defaultDependencyConfigs[target] ??
-    [];
-
+      defaultDependencyConfigs[target] ??
+      []
+  );
   for (const dependencyConfig of dependencyConfigs) {
     if (
       dependencyConfig.projects !== 'dependencies' &&
@@ -38,13 +38,25 @@ export function getDependencyConfigs(
       output.error({
         title: `dependsOn is improperly configured for ${project}:${target}`,
         bodyLines: [
-          `dependsOn.projects is ${dependencyConfig.projects} but should be "self" or "dependencies"`,
+          `dependsOn.projects is "${dependencyConfig.projects}" but should be "self" or "dependencies"`,
         ],
       });
       process.exit(1);
     }
   }
   return dependencyConfigs;
+}
+
+function expandDependencyConfigSyntaxSugar(
+  deps: (TargetDependencyConfig | string)[]
+): TargetDependencyConfig[] {
+  return deps.map((d) => {
+    if (typeof d === 'string') {
+      return { projects: 'self', target: d };
+    } else {
+      return d;
+    }
+  });
 }
 
 export function getOutputs(
