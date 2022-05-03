@@ -10,7 +10,11 @@ import type { NormalizedSchema } from './normalized-schema';
 import { names, getWorkspaceLayout } from '@nrwl/devkit';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { Linter } from '@nrwl/linter';
-import { normalizeDirectory, normalizeProjectName } from '../../utils/project';
+import {
+  normalizeDirectory,
+  normalizePrefix,
+  normalizeProjectName,
+} from '../../utils/project';
 
 export function normalizeOptions(
   host: Tree,
@@ -33,7 +37,7 @@ export function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const defaultPrefix = npmScope;
+  const prefix = normalizePrefix(options.prefix, npmScope);
 
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
@@ -64,7 +68,7 @@ export function normalizeOptions(
     linter: Linter.EsLint,
     strict: true,
     ...options,
-    prefix: options.prefix ?? defaultPrefix,
+    prefix,
     name: appProjectName,
     appProjectRoot,
     e2eProjectRoot,

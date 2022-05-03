@@ -10,6 +10,7 @@ import { NormalizedSchema } from './normalized-schema';
 import { names } from '@nrwl/devkit';
 import { Linter } from '@nrwl/linter';
 import { UnitTestRunner } from '../../../utils/test-runners';
+import { normalizePrefix } from '../../utils/project';
 
 export function normalizeOptions(
   host: Tree,
@@ -50,12 +51,11 @@ export function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
   const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
-  const defaultPrefix = npmScope;
+  const prefix = normalizePrefix(options.prefix, npmScope);
 
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
-  const importPath =
-    options.importPath || `@${defaultPrefix}/${projectDirectory}`;
+  const importPath = options.importPath || `@${npmScope}/${projectDirectory}`;
 
   // Determine the roots where @schematics/angular will place the projects
   // This might not be where the projects actually end up
@@ -72,7 +72,7 @@ export function normalizeOptions(
     ...options,
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
-    prefix: options.prefix ?? defaultPrefix,
+    prefix,
     name: projectName,
     projectRoot,
     entryFile: 'index',

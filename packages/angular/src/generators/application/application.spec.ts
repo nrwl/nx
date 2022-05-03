@@ -316,7 +316,7 @@ describe('app', () => {
       // ASSERT
       const workspaceJson = readJson(appTree, '/workspace.json');
 
-      expect(workspaceJson.projects['src-websites-my-app']).toMatchSnapshot();
+      expect(workspaceJson.projects['src-9-websites-my-app']).toMatchSnapshot();
     });
 
     it('should generate files', async () => {
