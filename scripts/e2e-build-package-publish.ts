@@ -7,7 +7,7 @@ import {
 } from '../packages/workspace/src/utils/versions';
 import { stripIndent } from 'nx/src/utils/logger';
 
-process.env.PUBLISHED_VERSION = `9999.0.2`;
+process.env.PUBLISHED_VERSION = process.env.PUBLISHED_VERSION || `9999.0.2`;
 process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
@@ -19,9 +19,9 @@ async function buildPackagePublishAndCleanPorts() {
   Did you know that you can run the command with:
     > NX_E2E_SKIP_BUILD_CLEANUP - saves time by reusing the previously built local packages
     > CI - simulate the CI environment settings
-    
+
   If you change create-nx-workspace or create-nx-plugin, make sure to remove your npx cache.
-  Otherwise the changes won't be reflected in the tests. 
+  Otherwise the changes won't be reflected in the tests.
   \n`)
       );
     }
