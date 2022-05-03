@@ -48,6 +48,25 @@ executors:
 #        COMMANDS
 # -------------------------
 commands:
+  run-yarn-install:
+    parameters:
+      os:
+        type: string
+    steps:
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install dependencies
+          command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+            - ~/.cache/yarn
+            - ~/.cache/Cypress
   install-pnpm:
     steps:
       - run:
@@ -82,9 +101,8 @@ commands:
                   - /usr/local/Homebrew
                   - ~/Library/Caches/Homebrew
 
-      - node/install-packages:
-          pkg-manager: yarn
-          include-branch-in-cache-key: false
+      - run-yarn-install:
+          os: << parameters.os >>
       - when:
           condition:
             equal: [<< parameters.os >>, linux]
