@@ -1,5 +1,10 @@
 {
   "executors": {
+    "run-commands": {
+      "implementation": "./src/executors/run-commands/run-commands.impl",
+      "schema": "./src/executors/run-commands/schema.json",
+      "description": "Run any custom commands with Nx."
+    },
     "run-script": {
       "implementation": "./src/executors/run-script/run-script.impl",
       "schema": "./src/executors/run-script/schema.json",
