@@ -172,7 +172,7 @@
   {
     "name": "nx",
     "path": "generated/packages/nx.json",
-    "schemas": { "executors": ["run-script"], "generators": [] }
+    "schemas": { "executors": ["run-commands", "run-script"], "generators": [] }
   },
   {
     "name": "nx-plugin",
