@@ -17,6 +17,11 @@
       "type": "string",
       "description": "The path to the Typescript configuration file."
     },
+    "swcConfig": {
+      "type": "string",
+      "description": "The path to the SWC configuration file.",
+      "default": ".lib.swcrc"
+    },
     "assets": {
       "type": "array",
       "description": "List of static assets.",
