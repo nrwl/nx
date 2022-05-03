@@ -358,7 +358,7 @@
             "type": "string",
             "description": "The path to the Typescript configuration file."
           },
-          "swcConfig": {
+          "swcrcPath": {
             "type": "string",
             "description": "The path to the SWC configuration file.",
             "default": ".lib.swcrc"
