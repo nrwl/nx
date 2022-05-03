@@ -1,18 +1,20 @@
 import {
-  formatFiles,
-  getWorkspaceLayout,
-  names,
-  convertNxGenerator,
-  readProjectConfiguration,
-  generateFiles,
   addProjectConfiguration,
+  convertNxGenerator,
+  formatFiles,
+  generateFiles,
+  getWorkspaceLayout,
+  joinPathFragments,
+  names,
+  readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import type { Tree } from '@nrwl/devkit';
-import type { Schema } from './schema';
-import * as path from 'path';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import * as path from 'path';
+
+import type { Tree } from '@nrwl/devkit';
+import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
   projectRoot: string;
@@ -26,8 +28,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const projectName = `${options.pluginName}-e2e`;
   const projectRoot = options.projectDirectory
-    ? path.join(appsDir, `${options.projectDirectory}-e2e`)
-    : path.join(appsDir, projectName);
+    ? joinPathFragments(appsDir, `${options.projectDirectory}-e2e`)
+    : joinPathFragments(appsDir, projectName);
   const pluginPropertyName = names(options.pluginName).propertyName;
 
   return {
