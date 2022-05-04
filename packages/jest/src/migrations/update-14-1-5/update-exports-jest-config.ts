@@ -10,7 +10,7 @@ export function updateExportsJestConfig(tree: Tree) {
     tree,
     '@nrwl/jest:jest',
     (options) => {
-      if (tree.exists(options.jestConfig)) {
+      if (options.jestConfig && tree.exists(options.jestConfig)) {
         if (options.jestConfig.endsWith('.ts')) {
           updateToDefaultExport(tree, options.jestConfig);
         }

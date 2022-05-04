@@ -1,4 +1,9 @@
-import { stripIndents, Tree } from '@nrwl/devkit';
+import {
+  readProjectConfiguration,
+  stripIndents,
+  Tree,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { createTree, createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
 import {
@@ -7,7 +12,7 @@ import {
   updateToDefaultExport,
 } from './update-exports-jest-config';
 
-describe('Jest Migration (v14.1.0)', () => {
+describe('Jest Migration (v14.1.2)', () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace(2);
@@ -50,6 +55,7 @@ describe('Jest Migration (v14.1.0)', () => {
 
   it('should update individual project jest configs', async () => {
     await workspaceLib(tree, { name: 'lib-one' });
+    tree.rename('jest.preset.js', 'jest.preset.ts');
     tree.write(
       'libs/lib-one/jest.config.ts',
       `
@@ -84,6 +90,66 @@ module.exports = {
 
     const config = tree.read('libs/lib-one/jest.config.ts', 'utf-8');
     expect(config).toMatchSnapshot();
+  });
+
+  it('should work with multiple configurations', async () => {
+    await workspaceLib(tree, { name: 'lib-one' });
+    tree.rename('jest.preset.js', 'jest.preset.ts');
+    updateProjectConfiguration(tree, 'lib-one', {
+      ...readProjectConfiguration(tree, 'lib-one'),
+      targets: {
+        test: {
+          executor: '@nrwl/jest:jest',
+          options: {
+            jestConfig: 'libs/lib-one/jest.config.ts',
+            passWithoutTests: true,
+          },
+          configurations: {
+            production: {
+              silent: true,
+            },
+          },
+        },
+      },
+    });
+
+    tree.write(
+      'libs/lib-one/jest.config.ts',
+      `
+const nxPreset = require('@nrwl/jest/preset');
+const someOtherImport = require('../something/else.js');
+module.exports = {
+  ...someOtherImport,
+  ...nxPreset,
+  displayName: 'lib-one',
+  preset: '../../jest.preset.ts',
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\\\.(html|svg)$',
+    },
+  },
+  coverageDirectory: '../../coverage/apps/lib-one',
+  transform: {
+    '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
+  },
+  transformIgnorePatterns: ['node_modules/(?!.*\\\\.mjs$)'],
+  snapshotSerializers: [
+    'jest-preset-angular/build/serializers/no-ng-attributes',
+    'jest-preset-angular/build/serializers/ng-snapshot',
+    'jest-preset-angular/build/serializers/html-comment',
+  ],
+};
+`
+    );
+
+    updateExportsJestConfig(tree);
+
+    const config = tree.read('libs/lib-one/jest.config.ts', 'utf-8');
+    expect(config).toMatchSnapshot();
+    expect(tree.exists('jest.preset.ts')).toBeFalsy();
+    expect(tree.exists('jest.preset.js')).toBeTruthy();
   });
 
   it('should convert module.exports => export default', () => {

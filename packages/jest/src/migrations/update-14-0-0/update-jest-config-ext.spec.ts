@@ -46,12 +46,12 @@ async function libSetUp(tree: Tree, options = setupDefaults) {
           jestConfig: `libs/${options.libName}/jest.config.js`,
           passWithNoTests: true,
         },
-      configurations: {
-        production: {
-          silent: true
-        }
+        configurations: {
+          production: {
+            silent: true,
+          },
+        },
       },
-      }
     },
   });
 }
