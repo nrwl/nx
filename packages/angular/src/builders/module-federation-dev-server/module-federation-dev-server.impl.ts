@@ -108,7 +108,7 @@ export function moduleFederationDevServer(
   }
 
   // Cleanup ports on kill
-  process.on('kill', () => {
+  process.on('exit', () => {
     remotePorts.forEach((port) => killPort(port));
   });
 
