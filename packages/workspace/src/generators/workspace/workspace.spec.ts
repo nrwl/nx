@@ -91,11 +91,9 @@ describe('@nrwl/workspace:workspace', () => {
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toEqual({
+      $schema: './node_modules/nx/schemas/nx-schema.json',
       affected: {
         defaultBase: 'main',
-      },
-      cli: {
-        defaultCollection: '@nrwl/workspace',
       },
       implicitDependencies: {
         'package.json': {
@@ -112,13 +110,10 @@ describe('@nrwl/workspace:workspace', () => {
           },
         },
       },
-      targetDependencies: {
-        build: [
-          {
-            projects: 'dependencies',
-            target: 'build',
-          },
-        ],
+      targetDefaults: {
+        build: {
+          dependsOn: ['^build'],
+        },
       },
     });
   });

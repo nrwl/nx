@@ -1,4 +1,7 @@
 import * as path from 'path';
+import { Tree } from '../generators/tree';
+import { readJson } from '../generators/utils/json';
+import { readNxJson } from '../generators/utils/project-configuration';
 
 function removeWindowsDriveLetter(osSpecificPath: string): string {
   return osSpecificPath.replace(/^[A-Z]:/, '');
@@ -16,6 +19,25 @@ export function normalizePath(osSpecificPath: string): string {
  */
 export function joinPathFragments(...fragments: string[]): string {
   return normalizePath(path.join(...fragments));
+}
+
+/**
+ * Detect workspace scope from the package.json name
+ * @param packageName
+ * @returns
+ */
+export function detectWorkspaceScope(packageName: string): string {
+  if (!packageName) return '';
+
+  if (packageName.startsWith('@')) {
+    return packageName.substring(1).split('/')[0];
+  }
+
+  if (packageName.includes('/')) {
+    return packageName.split('/')[0];
+  }
+
+  return '';
 }
 
 /**

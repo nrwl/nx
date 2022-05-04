@@ -2,7 +2,7 @@ import { defaultFileRead } from '../file-utils';
 import { join } from 'path';
 import { ProjectFileMap, ProjectGraph } from '../../config/project-graph';
 import { parseJson } from '../../utils/json';
-import { getImportPath, joinPathFragments } from '../../utils/path';
+import { joinPathFragments } from '../../utils/path';
 import { Workspace } from '../../config/workspace-json-project-json';
 
 class ProjectGraphNodeRecords {}
@@ -38,8 +38,7 @@ function createPackageNameMap(w: Workspace) {
       const packageJson = parseJson(
         defaultFileRead(join(w.projects[projectName].root, 'package.json'))
       );
-      res[packageJson.name ?? getImportPath(w.npmScope, projectName)] =
-        projectName;
+      res[packageJson.name ?? projectName] = projectName;
     } catch (e) {}
   }
   return res;

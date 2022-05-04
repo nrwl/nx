@@ -17,7 +17,8 @@ import { Task } from '../config/task-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { FilesetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
-import { getImportPath } from '../utils/path';
+import { detectWorkspaceScope, getImportPath } from '../utils/path';
+import { PackageJson } from '../utils/package-json';
 
 /**
  * A data structure returned by the default hasher.
@@ -284,6 +285,7 @@ class TaskHasher {
   } = {};
   private tsConfigJson: TsconfigJsonConfiguration;
   private nxJson: NxJsonConfiguration;
+  private name: string;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
@@ -292,6 +294,7 @@ class TaskHasher {
   ) {
     this.tsConfigJson = this.readTsConfig();
     this.nxJson = readNxJson();
+    this.name = this.readPackageJsonFile().name;
   }
 
   async hashTask(task: Task, visited: string[]): Promise<TaskGraphResult> {
@@ -519,8 +522,10 @@ class TaskHasher {
     const { paths, ...compilerOptions } = this.tsConfigJson.compilerOptions;
     const rootPath = p.data.root.split('/');
     rootPath.shift();
-    const { npmScope } = this.nxJson;
-    const pathAlias = getImportPath(npmScope, rootPath.join('/'));
+    const pathAlias = getImportPath(
+      this.nxJson?.npmScope || detectWorkspaceScope(this.name),
+      rootPath.join('/')
+    );
 
     return JSON.stringify({
       compilerOptions: {
@@ -541,6 +546,16 @@ class TaskHasher {
       return {
         compilerOptions: { paths: {} },
       };
+    }
+  }
+
+  private readPackageJsonFile(): PackageJson {
+    try {
+      const res = readJsonFile('package.json');
+      res.projects ??= {};
+      return res;
+    } catch {
+      return {} as PackageJson;
     }
   }
 }

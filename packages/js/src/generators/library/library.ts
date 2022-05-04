@@ -353,6 +353,7 @@ function normalizeOptions(
   });
 
   const { npmScope } = getWorkspaceLayout(tree);
+
   const projectRoot = joinPathFragments(destinationDir, projectDirectory);
 
   const parsedTags = options.tags

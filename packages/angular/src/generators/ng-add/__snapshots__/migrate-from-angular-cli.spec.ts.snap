@@ -12,6 +12,7 @@ Object {
       "devDependencies": "*",
     },
   },
+  "npmScope": "my-scope",
   "targetDefaults": Object {
     "build": Object {
       "dependsOn": Array [
@@ -51,7 +52,6 @@ Object {
       "devDependencies": "*",
     },
   },
-<<<<<<< HEAD
   "npmScope": "my-scope",
   "targetDefaults": Object {
     "build": Object {
@@ -59,15 +59,6 @@ Object {
         "^build",
       ],
     },
-=======
-  "targetDependencies": Object {
-    "build": Array [
-      Object {
-        "projects": "dependencies",
-        "target": "build",
-      },
-    ],
->>>>>>> 218ede310 (fix(core): fix tests)
   },
   "tasksRunnerOptions": Object {
     "default": Object {

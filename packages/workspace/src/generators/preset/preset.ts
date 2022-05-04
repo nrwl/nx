@@ -3,6 +3,7 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
+  getWorkspaceLayout,
   installPackagesTask,
   names,
   readWorkspaceConfiguration,
@@ -211,7 +212,8 @@ function connectAngularAndNest(host: Tree, options: Schema) {
 
   insertNgModuleImport(host, modulePath, 'HttpClientModule');
 
-  const importScope = getImportPath(options.npmScope, '');
+  const { npmScope } = getWorkspaceLayout(host);
+  const importScope = getImportPath(options.npmScope || npmScope, '');
   const scopePrefix = options.npmScope ? `${options.npmScope}-` : '';
   const style = options.style ?? 'css';
   host.write(
@@ -306,7 +308,8 @@ export class AppService {
 }
 
 function connectReactAndExpress(host: Tree, options: Schema) {
-  const importScope = getImportPath(options.npmScope, '');
+  const { npmScope } = getWorkspaceLayout(host);
+  const importScope = getImportPath(options.npmScope || npmScope, '');
   host.write(
     'libs/api-interfaces/src/lib/api-interfaces.ts',
     `export interface Message { message: string }`
