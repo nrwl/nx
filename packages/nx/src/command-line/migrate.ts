@@ -869,7 +869,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       `- Make sure package.json changes make sense and then run '${pmc.install}'`
     );
     if (migrations.length > 0) {
-      logger.info(`- Run '${pmc.run('nx', 'migrate --run-migrations')}'`);
+      logger.info(`- Run '${pmc.exec} nx migrate --run-migrations'`);
     }
     logger.info(`- To learn more go to https://nx.dev/using-nx/updating-nx`);
 
