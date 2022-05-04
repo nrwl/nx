@@ -119,7 +119,6 @@ const IGNORE_MATCHES = {
     '@nrwl/cli',
     '@nrwl/jest',
     '@nrwl/linter',
-    '@nrwl/devkit',
     'tsconfig-paths',
     '@swc-node/register',
   ],

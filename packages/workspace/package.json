@@ -64,6 +64,7 @@
   },
   "dependencies": {
     "@parcel/watcher": "2.0.4",
+    "@nrwl/devkit": "*",
     "chokidar": "^3.5.1",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
