@@ -1,7 +1,6 @@
 import {
   applyChangesToString,
   ChangeType,
-  getImportPath,
   getProjects,
   getWorkspaceLayout,
   ProjectConfiguration,
@@ -10,6 +9,7 @@ import {
   visitNotIgnoredFiles,
   writeJson,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import * as ts from 'typescript';
 import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
 import { findNodes } from '../../../utilities/typescript/find-nodes';

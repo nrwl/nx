@@ -13,8 +13,8 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   addDependenciesToPackageJson,
-  getImportPath,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { join } from 'path';
 import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
 import {

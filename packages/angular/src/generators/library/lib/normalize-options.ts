@@ -1,11 +1,11 @@
 import {
-  getImportPath,
   getWorkspaceLayout,
   getWorkspacePath,
   joinPathFragments,
   readJson,
   Tree,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 import { names } from '@nrwl/devkit';

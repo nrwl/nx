@@ -278,7 +278,7 @@ describe('Workspace Tests', () => {
       try {
         await runCLI(`workspace-generator ${failing} --no-interactive`);
         fail(`Should exit 1 for a workspace-generator that throws an error`);
-      } catch (e) { }
+      } catch (e) {}
 
       const listOutput = runCLI('workspace-generator --list-generators');
       expect(listOutput).toContain(custom);
@@ -430,7 +430,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-        `@${proj}/shared-${lib1}-data-access`
+          `@${proj}/shared-${lib1}-data-access`
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
@@ -557,7 +557,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-        `@${proj}/shared-${lib1}-data-access`
+          `@${proj}/shared-${lib1}-data-access`
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
@@ -690,7 +690,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-        `@${proj}/shared-${lib1}-data-access`
+          `@${proj}/shared-${lib1}-data-access`
         ]
       ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 

@@ -1,5 +1,5 @@
-import { getImportPath, ProjectConfiguration, Tree } from '@nrwl/devkit';
-import { getWorkspaceLayout } from '@nrwl/devkit';
+import { ProjectConfiguration, Tree, getWorkspaceLayout } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import type { NormalizedSchema, Schema } from '../schema';
 import { getDestination, getNewProjectName, normalizeSlashes } from './utils';
 

@@ -3,7 +3,6 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
-  getImportPath,
   getWorkspaceLayout,
   getWorkspacePath,
   names,
@@ -11,7 +10,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
-
+import { getImportPath } from 'nx/src/utils/path';
 export interface ProjectOptions {
   name: string;
 }

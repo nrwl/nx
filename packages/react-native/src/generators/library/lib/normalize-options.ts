@@ -1,10 +1,10 @@
 import {
-  getImportPath,
   getWorkspaceLayout,
   joinPathFragments,
   names,
   Tree,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {

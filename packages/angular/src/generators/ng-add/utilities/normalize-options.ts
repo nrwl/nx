@@ -37,7 +37,7 @@ export function normalizeOptions(
     const { name } = readJson(tree, 'package.json');
 
     if (name) {
-      npmScope = name.startsWith('@') ? name.split('/')[0].substring(1) : '';
+      npmScope = name.startsWith('@') ? name.split('/')[0].substring(1) : name;
     }
   }
 

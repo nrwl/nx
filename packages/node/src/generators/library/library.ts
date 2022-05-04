@@ -2,7 +2,6 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
-  getImportPath,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -13,7 +12,7 @@ import {
   updateProjectConfiguration,
   updateTsConfigsToJs,
 } from '@nrwl/devkit';
-
+import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from './schema';
 import { libraryGenerator as workspaceLibraryGenerator } from '@nrwl/workspace/generators';
 import { join } from 'path';

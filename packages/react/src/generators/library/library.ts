@@ -6,7 +6,6 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getImportPath,
   getProjects,
   getWorkspaceLayout,
   joinPathFragments,
@@ -17,6 +16,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';

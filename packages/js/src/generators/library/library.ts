@@ -4,7 +4,6 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getImportPath,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -16,6 +15,7 @@ import {
   readJson,
   writeJson,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';

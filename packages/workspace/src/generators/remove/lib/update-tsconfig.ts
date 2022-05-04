@@ -1,10 +1,10 @@
 import {
-  getImportPath,
   getWorkspaceLayout,
   ProjectConfiguration,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
 import { Schema } from '../schema';
 

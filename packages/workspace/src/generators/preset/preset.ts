@@ -3,15 +3,14 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
-  getImportPath,
   installPackagesTask,
   names,
-  PackageManager,
   readWorkspaceConfiguration,
   Tree,
   updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from './schema';
 
 import { libraryGenerator } from '../library/library';

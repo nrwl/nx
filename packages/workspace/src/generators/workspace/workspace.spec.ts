@@ -80,6 +80,49 @@ describe('@nrwl/workspace:workspace', () => {
     expect(validateWorkspaceJson(workspaceJson)).toEqual(true);
   });
 
+  it('should omit empty scope', async () => {
+    await workspaceGenerator(tree, {
+      name: 'proj',
+      directory: 'proj',
+      cli: 'nx',
+      preset: Preset.Empty,
+      defaultBase: 'main',
+      npmScope: '',
+    });
+    const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
+    expect(nxJson).toEqual({
+      affected: {
+        defaultBase: 'main',
+      },
+      cli: {
+        defaultCollection: '@nrwl/workspace',
+      },
+      implicitDependencies: {
+        'package.json': {
+          dependencies: '*',
+          devDependencies: '*',
+        },
+        '.eslintrc.json': '*',
+      },
+      tasksRunnerOptions: {
+        default: {
+          runner: 'nx/tasks-runners/default',
+          options: {
+            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+          },
+        },
+      },
+      targetDependencies: {
+        build: [
+          {
+            projects: 'dependencies',
+            target: 'build',
+          },
+        ],
+      },
+    });
+  });
+
   it('should create a prettierrc file', async () => {
     await workspaceGenerator(tree, {
       name: 'proj',
