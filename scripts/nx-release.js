@@ -210,7 +210,7 @@ const options = {
 updatePackageJsonFiles(parsedVersion, parsedArgs.local);
 if (parsedArgs.local) {
   childProcess.execSync(
-    `./scripts/publish.sh ${parsedVersion.version} latest --local`,
+    `./scripts/publish.sh ${parsedVersion.version} previous --local`,
     {
       stdio: [0, 1, 2],
     }
@@ -226,7 +226,7 @@ if (parsedArgs.local) {
         process.exit(0);
         return;
       }
-      const npmTag = parsedVersion.isPrerelease ? 'next' : 'latest';
+      const npmTag = parsedVersion.isPrerelease ? 'next' : 'previous';
       const npmPublishCommand = `./scripts/publish.sh ${output.version} ${npmTag}`;
       console.log('Executing publishing script for all packages:');
       console.log(`> ${npmPublishCommand}`);
