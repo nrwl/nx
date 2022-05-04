@@ -1,5 +1,4 @@
 {
-  "root": "e2e/angular-extensions",
   "sourceRoot": "e2e/angular-extensions",
   "projectType": "application",
   "targets": {

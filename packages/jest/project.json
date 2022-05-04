@@ -1,5 +1,4 @@
 {
-  "root": "packages/jest",
   "sourceRoot": "packages/jest",
   "projectType": "library",
   "targets": {

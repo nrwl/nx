@@ -1,5 +1,4 @@
 {
-  "root": "nx-dev/ui-common",
   "sourceRoot": "nx-dev/ui-common/src",
   "projectType": "library",
   "targets": {

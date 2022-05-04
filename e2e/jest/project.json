@@ -1,5 +1,4 @@
 {
-  "root": "e2e/jest",
   "sourceRoot": "e2e/jest",
   "projectType": "application",
   "targets": {

@@ -1,5 +1,4 @@
 {
-  "root": "nx-dev/feature-analytics",
   "sourceRoot": "nx-dev/feature-analytics/src",
   "projectType": "library",
   "targets": {

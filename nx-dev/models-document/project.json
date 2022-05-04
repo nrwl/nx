@@ -1,5 +1,4 @@
 {
-  "root": "nx-dev/models-document",
   "sourceRoot": "nx-dev/models-document/src",
   "projectType": "library",
   "targets": {

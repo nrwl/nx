@@ -1,5 +1,4 @@
 {
-  "root": "nx-dev/ui-commands",
   "sourceRoot": "nx-dev/ui-commands/src",
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:ui"],

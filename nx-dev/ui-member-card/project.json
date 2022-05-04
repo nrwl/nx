@@ -1,5 +1,4 @@
 {
-  "root": "nx-dev/ui-member-card",
   "sourceRoot": "nx-dev/ui-member-card/src",
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:ui"],

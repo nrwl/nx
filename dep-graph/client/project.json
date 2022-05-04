@@ -1,5 +1,4 @@
 {
-  "root": "dep-graph/client",
   "sourceRoot": "dep-graph/client/src",
   "projectType": "application",
   "targets": {

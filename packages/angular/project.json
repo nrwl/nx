@@ -1,5 +1,4 @@
 {
-  "root": "packages/angular",
   "sourceRoot": "packages/angular",
   "projectType": "library",
   "targets": {

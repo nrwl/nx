@@ -1,5 +1,4 @@
 {
-  "root": "nx-dev/nx-dev-e2e",
   "sourceRoot": "nx-dev/nx-dev-e2e/src",
   "projectType": "application",
   "targets": {

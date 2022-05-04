@@ -1,5 +1,4 @@
 {
-  "root": "e2e/detox",
   "sourceRoot": "e2e/detox",
   "projectType": "application",
   "targets": {

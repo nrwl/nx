@@ -1,5 +1,4 @@
 {
-  "root": "packages/make-angular-cli-faster",
   "sourceRoot": "packages/make-angular-cli-faster/src",
   "projectType": "library",
   "generators": {},

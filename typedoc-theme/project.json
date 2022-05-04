@@ -1,5 +1,4 @@
 {
-  "root": "typedoc-theme",
   "sourceRoot": "typedoc-theme/src",
   "projectType": "library",
   "targets": {

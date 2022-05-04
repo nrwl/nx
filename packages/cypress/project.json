@@ -1,5 +1,4 @@
 {
-  "root": "packages/cypress",
   "sourceRoot": "packages/cypress",
   "projectType": "library",
   "targets": {

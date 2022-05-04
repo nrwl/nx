@@ -1,5 +1,4 @@
 {
-  "root": "packages/js",
   "sourceRoot": "packages/js/src",
   "projectType": "library",
   "targets": {

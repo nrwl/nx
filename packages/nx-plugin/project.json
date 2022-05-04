@@ -1,5 +1,4 @@
 {
-  "root": "packages/nx-plugin",
   "sourceRoot": "packages/nx-plugin",
   "projectType": "library",
   "targets": {

@@ -1,5 +1,4 @@
 {
-  "root": "dep-graph/client-e2e",
   "sourceRoot": "dep-graph/client-e2e/src",
   "projectType": "application",
   "targets": {

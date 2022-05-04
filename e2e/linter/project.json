@@ -1,5 +1,4 @@
 {
-  "root": "e2e/linter",
   "sourceRoot": "e2e/linter",
   "projectType": "application",
   "targets": {

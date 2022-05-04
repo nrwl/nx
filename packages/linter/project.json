@@ -1,5 +1,4 @@
 {
-  "root": "packages/linter",
   "sourceRoot": "packages/linter",
   "projectType": "library",
   "targets": {

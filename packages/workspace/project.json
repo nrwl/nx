@@ -1,5 +1,4 @@
 {
-  "root": "packages/workspace",
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
   "targets": {

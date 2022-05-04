@@ -1,5 +1,4 @@
 {
-  "root": "packages/nx",
   "sourceRoot": "packages/nx",
   "projectType": "library",
   "implicitDependencies": ["dep-graph-client"],

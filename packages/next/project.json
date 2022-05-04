@@ -1,5 +1,4 @@
 {
-  "root": "packages/next",
   "sourceRoot": "packages/next",
   "projectType": "library",
   "targets": {

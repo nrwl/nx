@@ -1,5 +1,4 @@
 {
-  "root": "packages/cra-to-nx",
   "sourceRoot": "packages/cra-to-nx/src",
   "projectType": "library",
   "targets": {
