@@ -8,7 +8,7 @@
     "create-nx-plugin": "packages/create-nx-plugin",
     "create-nx-workspace": "packages/create-nx-workspace",
     "cypress": "packages/cypress",
-    "dep-graph-client": "/dep-graph/client",
+    "dep-graph-client": "dep-graph/client",
     "dep-graph-client-e2e": "dep-graph/client-e2e",
     "detox": "packages/detox",
     "devkit": "packages/devkit",

@@ -1,4 +1,4 @@
-import { Tree } from 'nx/src/config/tree';
+import { Tree } from 'nx/src/generators/tree';
 import { getProjects } from '@nrwl/devkit';
 
 export function findFreePort(host: Tree) {
