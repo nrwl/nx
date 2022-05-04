@@ -153,6 +153,10 @@ export class Hasher {
     return this.hashing.hashArray(values);
   }
 
+  hashFile(path: string): string {
+    return this.hashing.hashFile(path);
+  }
+
   private async runtimeInputsHash(): Promise<RuntimeHashResult> {
     if (this.runtimeInputs) return this.runtimeInputs;
 
