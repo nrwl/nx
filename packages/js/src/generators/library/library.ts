@@ -12,6 +12,8 @@ import {
   toJS,
   Tree,
   updateJson,
+  readJson,
+  writeJson,
 } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { findRootJestPreset } from '@nrwl/jest/src/utils/config/find-root-jest-files';
@@ -177,16 +179,38 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
   });
 }
 
-function addBabelConfig(tree: Tree, options: NormalizedSchema) {
+/**
+ * Currently `@nrwl/js:library` TypeScript files can be compiled by most NX applications scaffolded via the Plugin system. However, `@nrwl/react:app` is an exception that due to its babel configuration, won't transpile external TypeScript files from packages/libs that do not contain a .babelrc.
+ *
+ * If a user doesn't explicitly set the flag, to prevent breaking the experience (they see the application failing, and they need to manually add the babelrc themselves), we want to detect whether they have the `@nrwl/web` plugin installed, and generate it automatically for them (even when they do not explicity request it).
+ *
+ * You can find more details on why this is necessary here:
+ * https://github.com/nrwl/nx/pull/10055
+ */
+function shouldAddBabelRc(tree: Tree, options: NormalizedSchema) {
+  if (typeof options.includeBabelRc === 'undefined') {
+    const webPluginName = '@nrwl/web';
+
+    const packageJson = readJson(tree, 'package.json');
+
+    const hasNxWebPlugin = Object.keys(
+      packageJson.devDependencies as Record<string, string>
+    ).includes(webPluginName);
+
+    return hasNxWebPlugin;
+  }
+
+  return options.includeBabelRc;
+}
+
+function addBabelRc(tree: Tree, options: NormalizedSchema) {
   const filename = '.babelrc';
+
   const babelrc = {
     presets: [['@nrwl/web/babel', { useBuiltIns: 'usage' }]],
   };
 
-  tree.write(
-    join(options.projectRoot, filename),
-    JSON.stringify(babelrc, null, 2)
-  );
+  writeJson(tree, join(options.projectRoot, filename), babelrc);
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
@@ -208,13 +232,11 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
 
-  if (options.buildable && options.compiler === 'swc') {
+  if (options.compiler === 'swc') {
     addSwcDependencies(tree);
     addSwcConfig(tree, options.projectRoot);
-  }
-
-  if (options.compiler !== 'swc' && !options.skipBabelConfig) {
-    addBabelConfig(tree, options);
+  } else if (shouldAddBabelRc(tree, options)) {
+    addBabelRc(tree, options);
   }
 
   if (options.unitTestRunner === 'none') {
