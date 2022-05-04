@@ -139,6 +139,11 @@ function collectDependentProjectNodesNames(
       continue;
     }
 
+    // skip dependencies already added (avoid circular dependencies)
+    if (dependencyNodeNames.has(dependencyName)) {
+      continue;
+    }
+
     dependencyNodeNames.add(dependencyName);
 
     // Get the dependencies of the dependencies
