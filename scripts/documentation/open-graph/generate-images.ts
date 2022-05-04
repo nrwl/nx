@@ -27,20 +27,20 @@ documents.map((category) => {
 packages.map((pkg) => {
   data.push({
     title: 'Package details',
-    content: `@nrwl/${pkg.name}`,
+    content: getPublicPackageName(pkg.name),
     filename: ['packages', pkg.name].join('-'),
   });
   pkg.schemas.executors.map((schema) => {
     data.push({
       title: 'Executor details',
-      content: `@nrwl/${pkg.name}:${schema}`,
+      content: `${getPublicPackageName(pkg.name)}:${schema}`,
       filename: ['packages', pkg.name, 'executors', schema].join('-'),
     });
   });
   pkg.schemas.generators.map((schema) => {
     data.push({
       title: 'Generator details',
-      content: `@nrwl/${pkg.name}:${schema}`,
+      content: `${getPublicPackageName(pkg.name)}:${schema}`,
       filename: ['packages', pkg.name, 'generators', schema].join('-'),
     });
   });
@@ -131,3 +131,14 @@ ensureDir(targetFolder).then(() =>
     )
   )
 );
+
+export function getPublicPackageName(
+  packageName: string,
+  prefix: string = '@nrwl/'
+): string {
+  /**
+   * Core Nx package is not prefixed by "@nrwl/" on NPM
+   */
+  const isNxCorePackage = packageName === 'nx';
+  return isNxCorePackage ? packageName : prefix + packageName;
+}
