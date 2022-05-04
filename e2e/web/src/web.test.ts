@@ -14,6 +14,7 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
+  expectJestTestsToPass,
 } from '@nrwl/e2e/utils';
 
 describe('Web Components Applications', () => {
@@ -186,6 +187,10 @@ describe('Web Components Applications', () => {
       checkFilesDoNotExist('workspace.json', 'angular.json')
     ).not.toThrow();
   }, 1000000);
+
+  it('should run default jest tests', async () => {
+    await expectJestTestsToPass('@nrwl/web:app');
+  });
 });
 
 describe('CLI - Environment Variables', () => {

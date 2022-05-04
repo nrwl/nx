@@ -2,6 +2,7 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  expectJestTestsToPass,
   killPorts,
   newProject,
   packageInstall,
@@ -482,4 +483,8 @@ exports.FooModel = FooModel;
       checkFilesDoNotExist('workspace.json', 'angular.json')
     ).not.toThrow();
   }, 1000000);
+
+  it('should run default jest tests', async () => {
+    await expectJestTestsToPass('@nrwl/node:lib');
+  });
 });

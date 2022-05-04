@@ -881,3 +881,30 @@ export function waitUntil(
     }, opts.timeout);
   });
 }
+
+type GeneratorsWithDefaultTests =
+  | '@nrwl/js:lib'
+  | '@nrwl/node:lib'
+  | '@nrwl/react:lib'
+  | '@nrwl/react:app'
+  | '@nrwl/next:app'
+  | '@nrwl/angular:app'
+  | '@nrwl/workspace:lib'
+  | '@nrwl/web:app';
+
+/**
+ * Runs the pass in generator and then runs test on
+ * the generated project to make sure the default tests pass.
+ */
+export async function expectJestTestsToPass(
+  generator: GeneratorsWithDefaultTests | string
+) {
+  const name = uniq('proj');
+  const generatedResults = runCLI(
+    `generate ${generator} ${name} --no-interactive`
+  );
+  expect(generatedResults).toContain(`jest.config.ts`);
+
+  const results = await runCLIAsync(`test ${name}`);
+  expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
+}

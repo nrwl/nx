@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  expectJestTestsToPass,
   isNotWindows,
   killPorts,
   newProject,
@@ -409,6 +410,9 @@ describe('Next.js Applications', () => {
       checkExport: false,
     });
   }, 300000);
+  it('should run default jest tests', async () => {
+    await expectJestTestsToPass('@nrwl/next:app');
+  });
 });
 
 function getData(port: number, path = ''): Promise<any> {

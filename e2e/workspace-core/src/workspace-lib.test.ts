@@ -7,6 +7,7 @@ import {
   runCLIAsync,
   uniq,
   updateFile,
+  expectJestTestsToPass,
 } from '@nrwl/e2e/utils';
 
 let proj: string;
@@ -44,15 +45,8 @@ describe('@nrwl/workspace:library', () => {
   });
 
   describe('unit testing', () => {
-    it('should support jest', async () => {
-      const libName = uniq('mylib');
-
-      runCLI(`generate @nrwl/workspace:lib ${libName}`);
-
-      const { stderr: result } = await runCLIAsync(`test ${libName}`);
-
-      expect(result).toContain(`Test Suites: 1 passed, 1 total`);
-      expect(result).toContain('Tests:       1 passed, 1 total');
+    it('should run default jest tests', async () => {
+      await expectJestTestsToPass('@nrwl/workspace:lib');
     });
   });
 
