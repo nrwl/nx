@@ -7,6 +7,7 @@ import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ReactComponentElement } from 'react';
+import { getPublicPackageName } from './get-public-package-name';
 import { Heading1, Heading2 } from './ui/headings';
 import { Markdown } from './ui/markdown/markdown';
 
@@ -30,12 +31,12 @@ export function PackageSchemaList({
     seo: { title: string; description: string; url: string; imageUrl: string };
   } = {
     pkg: {
-      name: `@nrwl/${pkg.name}`,
+      name: getPublicPackageName(pkg.name),
       description: pkg.description,
       githubUrl: pkg.githubRoot + pkg.root,
     },
     seo: {
-      title: `@nrwl/${pkg.name} | Nx`,
+      title: `${getPublicPackageName(pkg.name)} | Nx`,
       description: pkg.description,
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath
         .replace('/', '')
