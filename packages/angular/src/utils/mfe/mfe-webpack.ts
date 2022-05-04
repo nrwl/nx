@@ -1,12 +1,17 @@
-import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
-import { NormalModuleReplacementPlugin } from 'webpack';
-import { joinPathFragments, workspaceRoot } from '@nrwl/devkit';
-import { dirname, join, normalize } from 'path';
-import { ParsedCommandLine } from 'typescript';
+import {
+  joinPathFragments,
+  logger,
+  readJsonFile,
+  workspaceRoot,
+} from '@nrwl/devkit';
 import {
   getRootTsConfigPath,
   readTsConfig,
 } from '@nrwl/workspace/src/utilities/typescript';
+import { existsSync, lstatSync, readdirSync } from 'fs';
+import { dirname, join, normalize, relative } from 'path';
+import { ParsedCommandLine } from 'typescript';
+import { NormalModuleReplacementPlugin } from 'webpack';
 
 export interface SharedLibraryConfig {
   singleton: boolean;
@@ -81,42 +86,68 @@ export function shareWorkspaceLibraries(
   };
 }
 
-function collectPackageSecondaries(pkgName: string, packages: string[]) {
-  const pathToPackage = join(workspaceRoot, 'node_modules', pkgName);
-  const directories = readdirSync(pathToPackage)
+function getNonNodeModulesSubDirs(directory: string): string[] {
+  return readdirSync(directory)
     .filter((file) => file !== 'node_modules')
-    .map((file) => join(pathToPackage, file))
+    .map((file) => join(directory, file))
     .filter((file) => lstatSync(file).isDirectory());
+}
 
-  const recursivelyCheckSubDirectories = (
-    directories: string[],
-    secondaries: string[]
-  ) => {
-    for (const directory of directories) {
-      if (existsSync(join(directory, 'package.json'))) {
-        secondaries.push(directory);
-      }
+function recursivelyCollectSecondaryEntryPointsFromDirectory(
+  pkgName: string,
+  pkgVersion: string,
+  pkgRoot: string,
+  directories: string[],
+  collectedPackages: { name: string; version: string }[]
+): void {
+  for (const directory of directories) {
+    const packageJsonPath = join(directory, 'package.json');
+    if (existsSync(packageJsonPath)) {
+      const importName = joinPathFragments(
+        pkgName,
+        relative(pkgRoot, directory)
+      );
 
-      const subDirs = readdirSync(directory)
-        .filter((file) => file !== 'node_modules')
-        .map((file) => join(directory, file))
-        .filter((file) => lstatSync(file).isDirectory());
-      recursivelyCheckSubDirectories(subDirs, secondaries);
+      try {
+        // require the secondary entry point to try to rule out sample code
+        require.resolve(importName, { paths: [workspaceRoot] });
+        const { name } = readJsonFile(packageJsonPath);
+        // further check to make sure what we were able to require is the
+        // same as the package name
+        if (name === importName) {
+          collectedPackages.push({ name, version: pkgVersion });
+        }
+      } catch {}
     }
-  };
 
-  const secondaries = [];
-  recursivelyCheckSubDirectories(directories, secondaries);
-
-  for (const secondary of secondaries) {
-    const pathToPkg = join(secondary, 'package.json');
-    const libName = JSON.parse(readFileSync(pathToPkg, 'utf-8')).name;
-    if (!libName) {
-      continue;
-    }
-    packages.push(libName);
-    collectPackageSecondaries(libName, packages);
+    const subDirs = getNonNodeModulesSubDirs(directory);
+    recursivelyCollectSecondaryEntryPointsFromDirectory(
+      pkgName,
+      pkgVersion,
+      pkgRoot,
+      subDirs,
+      collectedPackages
+    );
   }
+}
+
+function collectPackageSecondaryEntryPoints(
+  pkgName: string,
+  pkgVersion: string,
+  collectedPackages: { name: string; version: string }[]
+): void {
+  const packageJsonPath = require.resolve(`${pkgName}/package.json`, {
+    paths: [workspaceRoot],
+  });
+  const pathToPackage = dirname(packageJsonPath);
+  const subDirs = getNonNodeModulesSubDirs(pathToPackage);
+  recursivelyCollectSecondaryEntryPointsFromDirectory(
+    pkgName,
+    pkgVersion,
+    pathToPackage,
+    subDirs,
+    collectedPackages
+  );
 }
 
 export function sharePackages(
@@ -129,23 +160,32 @@ export function sharePackages(
     );
   }
 
-  const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'));
+  const pkgJson = readJsonFile(pkgJsonPath);
+  const allPackages: { name: string; version: string }[] = [];
+  packages.forEach((pkg) => {
+    const pkgVersion =
+      pkgJson.dependencies?.[pkg] ?? pkgJson.devDependencies?.[pkg];
+    allPackages.push({ name: pkg, version: pkgVersion });
+    collectPackageSecondaryEntryPoints(pkg, pkgVersion, allPackages);
+  });
 
-  const allPackages = [...packages];
-  packages.forEach((pkg) => collectPackageSecondaries(pkg, allPackages));
+  return allPackages.reduce((shared, pkg) => {
+    if (!pkg.version) {
+      logger.warn(
+        `Could not find a version for "${pkg.name}" in the root "package.json" ` +
+          'when collecting shared packages for the Module Federation setup. ' +
+          'The package will not be shared.'
+      );
 
-  return allPackages.reduce((shared, pkgName) => {
-    const nameToUseForVersionLookup =
-      pkgName.split('/').length > 2
-        ? pkgName.split('/').slice(0, 2).join('/')
-        : pkgName;
+      return shared;
+    }
 
     return {
       ...shared,
-      [pkgName]: {
+      [pkg.name]: {
         singleton: true,
         strictVersion: true,
-        requiredVersion: pkgJson.dependencies[nameToUseForVersionLookup],
+        requiredVersion: pkg.version,
       },
     };
   }, {});
