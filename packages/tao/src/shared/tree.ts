@@ -1,1 +1,1 @@
-export * from 'nx/src/config/tree';
+export * from 'nx/src/generators/tree';
