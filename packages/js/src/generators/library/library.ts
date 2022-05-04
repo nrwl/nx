@@ -216,7 +216,6 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
 
 function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
   const { className, name, propertyName } = names(options.name);
-
   generateFiles(tree, filesDir, options.projectRoot, {
     ...options,
     dot: '.',
@@ -293,7 +292,7 @@ function replaceJestConfig(
   // replace with JS:SWC specific jest config
   generateFiles(tree, filesDir, options.projectRoot, {
     tmpl: '',
-    ext: findRootJestPreset(tree) === 'jest.preset.js' ? 'js' : 'ts',
+    js: !!options.js,
     project: options.name,
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     projectRoot: options.projectRoot,

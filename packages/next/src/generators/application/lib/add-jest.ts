@@ -35,11 +35,6 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     }
   );
 
-  const tsConfig = readJson(
-    host,
-    joinPathFragments(options.appProjectRoot, 'tsconfig.json')
-  );
-
   updateJson(
     host,
     joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json'),
@@ -47,6 +42,10 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
       json.compilerOptions.jsx = 'react';
       // have to override exclude otherwise lint will fail with setParserOptionsProject and jest.config.ts
       if (options.setParserOptionsProject) {
+        const tsConfig = readJson(
+          host,
+          joinPathFragments(options.appProjectRoot, 'tsconfig.json')
+        );
         json.exclude = tsConfig.exclude.filter((e) => e !== 'jest.config.ts');
       }
       return json;

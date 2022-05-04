@@ -84,7 +84,7 @@ exports[`@nrwl/linter:workspace-rules-project should generate the required files
 
 exports[`@nrwl/linter:workspace-rules-project should generate the required files 5`] = `
 "/* eslint-disable */
-module.exports = {
+export default {
   displayName: 'eslint-rules',
   preset: '../../jest.preset.js',
   globals: {

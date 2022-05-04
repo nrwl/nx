@@ -375,7 +375,7 @@ describe('app', () => {
       expect(tree.read(`apps/my-node-app/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        module.exports = {
+        export default {
           displayName: 'my-node-app',
           preset: '../../jest.preset.js',
           testEnvironment: 'node',
