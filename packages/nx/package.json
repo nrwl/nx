@@ -83,6 +83,7 @@
       "@nrwl/web",
       "@nrwl/js",
       "@nrwl/cli",
+      "@nrwl/tao",
       {
         "package": "@nrwl/nx-cloud",
         "version": "latest"
