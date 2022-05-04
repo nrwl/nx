@@ -36,7 +36,7 @@ export interface ExecutorOptions {
   main: string;
   outputPath: string;
   tsConfig: string;
-  swcrcPath: string;
+  swcrc: string;
   watch: boolean;
   transformers: TransformerEntry[];
   updateBuildableProjectDepsInPackageJson?: boolean;

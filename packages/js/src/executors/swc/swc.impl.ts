@@ -50,7 +50,11 @@ function normalizeOptions(
     srcPath: projectDir,
     destPath: relative(join(contextRoot, swcCwd), outputPath),
     swcCwd,
-    swcrcPath: join(contextRoot, projectRoot, options.swcrcPath),
+    swcrcPath: join(
+      contextRoot,
+      projectRoot,
+      options.swcrc.replace(`${projectRoot}/`, '')
+    ),
   };
 
   return {
