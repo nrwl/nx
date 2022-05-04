@@ -15,6 +15,7 @@ export interface LibraryGeneratorSchema {
   tags?: string;
   simpleModuleName?: boolean;
   skipTsConfig?: boolean;
+  includeBabelRc?: boolean;
   unitTestRunner?: 'jest' | 'none';
   linter?: Linter;
   testEnvironment?: 'jsdom' | 'node';

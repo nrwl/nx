@@ -13,6 +13,7 @@ describe('lib', () => {
   let tree: Tree;
   const defaultOptions: Omit<LibraryGeneratorSchema, 'name'> = {
     skipTsConfig: false,
+    includeBabelRc: false,
     unitTestRunner: 'jest',
     skipFormat: false,
     linter: 'eslint',
@@ -848,6 +849,118 @@ describe('lib', () => {
         });
 
         expect(tree.exists('tools/scripts/publish.mjs')).toBeTruthy();
+      });
+    });
+
+    describe('--includeBabelRc', () => {
+      it('should generate a .babelrc when flag is set to true', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          includeBabelRc: true,
+        });
+
+        expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
+      });
+
+      it('should not generate a .babelrc when flag is set to false', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          includeBabelRc: false,
+        });
+
+        expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
+      });
+
+      it('should not generate a .babelrc when compiler is swc (even if flag is set to true)', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          compiler: 'swc',
+          includeBabelRc: true,
+        });
+
+        expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
+      });
+
+      it('should generate a .babelrc when flag is set to true (even if there is no `@nrwl/web` plugin installed)', async () => {
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies = {};
+          return json;
+        });
+
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          includeBabelRc: true,
+        });
+
+        expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
+
+        const babelRc = readJson(tree, 'libs/my-lib/.babelrc');
+        expect(babelRc).toMatchInlineSnapshot(`
+          Object {
+            "presets": Array [
+              Array [
+                "@nrwl/web/babel",
+                Object {
+                  "useBuiltIns": "usage",
+                },
+              ],
+            ],
+          }
+        `);
+      });
+
+      it('should generate a .babelrc when flag is not set and there is a `@nrwl/web` package installed', async () => {
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies = {
+            '@nrwl/web': '1.1.1',
+            '@nrwl/react': '1.1.1',
+            '@nrwl/next': '1.1.1',
+          };
+          return json;
+        });
+
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          includeBabelRc: undefined,
+        });
+
+        expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
+
+        const babelRc = readJson(tree, 'libs/my-lib/.babelrc');
+        expect(babelRc).toMatchInlineSnapshot(`
+          Object {
+            "presets": Array [
+              Array [
+                "@nrwl/web/babel",
+                Object {
+                  "useBuiltIns": "usage",
+                },
+              ],
+            ],
+          }
+        `);
+      });
+      it('should not generate a .babelrc when flag is not set and there is NOT a `@nrwl/web` package installed', async () => {
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies = {
+            '@nrwl/angular': '1.1.1',
+            '@nrwl/next': '1.1.1',
+          };
+          return json;
+        });
+
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          includeBabelRc: undefined,
+        });
+
+        expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
       });
     });
   });
