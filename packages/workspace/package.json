@@ -48,6 +48,7 @@
       "@nrwl/web": "*",
       "@nrwl/js": "*",
       "@nrwl/cli": "*",
+      "@nrwl/tao": "*",
       "@nrwl/nx-cloud": "latest",
       "@nrwl/react-native": "*",
       "@nrwl/detox": "*",
