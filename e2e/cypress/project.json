@@ -1,5 +1,4 @@
 {
-  "root": "e2e/cypress",
   "sourceRoot": "e2e/cypress",
   "projectType": "application",
   "targets": {

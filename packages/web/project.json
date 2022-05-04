@@ -1,5 +1,4 @@
 {
-  "root": "packages/web",
   "sourceRoot": "packages/web",
   "projectType": "library",
   "targets": {

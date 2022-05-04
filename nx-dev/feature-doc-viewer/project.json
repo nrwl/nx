@@ -1,5 +1,4 @@
 {
-  "root": "nx-dev/feature-doc-viewer",
   "sourceRoot": "nx-dev/feature-doc-viewer/src",
   "projectType": "library",
   "targets": {

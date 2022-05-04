@@ -1,5 +1,4 @@
 {
-  "root": "packages/create-nx-workspace",
   "sourceRoot": "packages/create-nx-workspace",
   "projectType": "library",
   "targets": {

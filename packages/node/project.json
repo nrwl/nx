@@ -1,5 +1,4 @@
 {
-  "root": "packages/node",
   "sourceRoot": "packages/node",
   "projectType": "library",
   "targets": {

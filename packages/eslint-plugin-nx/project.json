@@ -1,5 +1,4 @@
 {
-  "root": "packages/eslint-plugin-nx",
   "sourceRoot": "packages/eslint-plugin-nx",
   "projectType": "library",
   "targets": {

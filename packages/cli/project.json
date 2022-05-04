@@ -1,5 +1,4 @@
 {
-  "root": "packages/cli",
   "sourceRoot": "packages/cli",
   "projectType": "library",
   "targets": {

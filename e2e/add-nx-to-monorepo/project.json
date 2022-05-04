@@ -1,5 +1,4 @@
 {
-  "root": "e2e/add-nx-to-monorepo",
   "sourceRoot": "e2e/add-nx-to-monorepo",
   "projectType": "application",
   "targets": {

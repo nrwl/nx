@@ -1,5 +1,4 @@
 {
-  "root": "e2e/angular-core",
   "sourceRoot": "e2e/angular-core",
   "projectType": "application",
   "targets": {

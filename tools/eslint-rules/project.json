@@ -1,5 +1,4 @@
 {
-  "root": "tools/eslint-rules",
   "sourceRoot": "tools/eslint-rules",
   "targets": {
     "test": {

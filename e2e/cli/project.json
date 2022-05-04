@@ -1,5 +1,4 @@
 {
-  "root": "e2e/cli",
   "sourceRoot": "e2e/cli",
   "projectType": "application",
   "targets": {

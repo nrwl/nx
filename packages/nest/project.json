@@ -1,5 +1,4 @@
 {
-  "root": "packages/nest",
   "sourceRoot": "packages/nest",
   "projectType": "library",
   "targets": {

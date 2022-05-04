@@ -1,5 +1,4 @@
 {
-  "root": "packages/detox",
   "sourceRoot": "packages/detox/src",
   "projectType": "library",
   "targets": {

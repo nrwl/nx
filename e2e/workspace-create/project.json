@@ -1,5 +1,4 @@
 {
-  "root": "e2e/workspace-create",
   "sourceRoot": "e2e/workspace-create",
   "projectType": "application",
   "targets": {

@@ -1,5 +1,4 @@
 {
-  "root": "e2e/react",
   "sourceRoot": "e2e/react",
   "projectType": "application",
   "targets": {

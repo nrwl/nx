@@ -1,5 +1,4 @@
 {
-  "root": "packages/express",
   "sourceRoot": "packages/express",
   "projectType": "library",
   "targets": {

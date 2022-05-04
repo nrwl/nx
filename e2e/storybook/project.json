@@ -1,5 +1,4 @@
 {
-  "root": "e2e/storybook",
   "sourceRoot": "e2e/storybook",
   "projectType": "application",
   "targets": {

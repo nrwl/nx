@@ -1,5 +1,4 @@
 {
-  "root": "e2e/js",
   "sourceRoot": "e2e/js",
   "projectType": "application",
   "targets": {

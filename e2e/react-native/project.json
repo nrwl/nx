@@ -1,5 +1,4 @@
 {
-  "root": "e2e/react-native",
   "sourceRoot": "e2e/react-native",
   "projectType": "application",
   "targets": {

@@ -1,5 +1,4 @@
 {
-  "root": "nx-dev/feature-search",
   "sourceRoot": "nx-dev/feature-search/src",
   "projectType": "library",
   "targets": {

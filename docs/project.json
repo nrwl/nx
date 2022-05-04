@@ -1,5 +1,4 @@
 {
-  "root": "docs",
   "sourceRoot": "docs",
   "projectType": "library",
   "tags": ["scope:nx-dev"]

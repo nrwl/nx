@@ -1,5 +1,4 @@
 {
-  "root": "e2e/next",
   "sourceRoot": "e2e/next",
   "projectType": "application",
   "targets": {

@@ -1,5 +1,4 @@
 {
-  "root": "nx-dev/data-access-packages",
   "sourceRoot": "nx-dev/data-access-packages/src",
   "projectType": "library",
   "targets": {

@@ -1,5 +1,4 @@
 {
-  "root": "e2e/nx-plugin",
   "sourceRoot": "e2e/nx-plugin",
   "projectType": "application",
   "targets": {

@@ -1,5 +1,4 @@
 {
-  "root": "packages/react-native",
   "sourceRoot": "packages/react-native/src",
   "projectType": "library",
   "targets": {

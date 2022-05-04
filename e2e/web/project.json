@@ -1,5 +1,4 @@
 {
-  "root": "e2e/web",
   "sourceRoot": "e2e/web",
   "projectType": "application",
   "targets": {

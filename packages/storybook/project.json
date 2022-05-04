@@ -1,5 +1,4 @@
 {
-  "root": "packages/storybook",
   "sourceRoot": "packages/storybook",
   "projectType": "library",
   "targets": {

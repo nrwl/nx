@@ -1,5 +1,4 @@
 {
-  "root": "packages/tao",
   "sourceRoot": "packages/tao",
   "projectType": "library",
   "targets": {

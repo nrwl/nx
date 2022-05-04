@@ -1,5 +1,4 @@
 {
-  "root": "packages/devkit",
   "sourceRoot": "packages/devkit",
   "projectType": "library",
   "targets": {

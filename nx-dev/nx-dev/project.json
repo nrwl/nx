@@ -1,5 +1,4 @@
 {
-  "root": "nx-dev/nx-dev",
   "sourceRoot": "nx-dev/nx-dev",
   "projectType": "application",
   "targets": {

@@ -1,5 +1,4 @@
 {
-  "root": "packages/add-nx-to-monorepo",
   "sourceRoot": "packages/add-nx-to-monorepo/src",
   "projectType": "library",
   "targets": {
