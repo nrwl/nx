@@ -12,12 +12,13 @@ import { existsSync, lstatSync, readdirSync } from 'fs';
 import { dirname, join, normalize, relative } from 'path';
 import { ParsedCommandLine } from 'typescript';
 import { NormalModuleReplacementPlugin } from 'webpack';
+import { readRootPackageJson } from './utils';
 
 export interface SharedLibraryConfig {
-  singleton: boolean;
-  strictVersion: boolean;
-  requiredVersion: string;
-  eager: boolean;
+  singleton?: boolean;
+  strictVersion?: boolean;
+  requiredVersion?: false | string;
+  eager?: boolean;
 }
 
 export function shareWorkspaceLibraries(
@@ -36,7 +37,7 @@ export function shareWorkspaceLibraries(
   if (!tsconfigPathAliases) {
     return {
       getAliases: () => [],
-      getLibraries: () => {},
+      getLibraries: () => ({}),
       getReplacementPlugin: () =>
         new NormalModuleReplacementPlugin(/./, () => {}),
     };
@@ -65,7 +66,7 @@ export function shareWorkspaceLibraries(
           ...libraries,
           [library.name]: { requiredVersion: false, eager },
         }),
-        {}
+        {} as Record<string, SharedLibraryConfig>
       ),
     getReplacementPlugin: () =>
       new NormalModuleReplacementPlugin(/./, (req) => {
@@ -150,17 +151,27 @@ function collectPackageSecondaryEntryPoints(
   );
 }
 
+export function getNpmPackageSharedConfig(
+  pkgName: string,
+  version: string
+): SharedLibraryConfig | undefined {
+  if (!version) {
+    logger.warn(
+      `Could not find a version for "${pkgName}" in the root "package.json" ` +
+        'when collecting shared packages for the Module Federation setup. ' +
+        'The package will not be shared.'
+    );
+
+    return undefined;
+  }
+
+  return { singleton: true, strictVersion: true, requiredVersion: version };
+}
+
 export function sharePackages(
   packages: string[]
 ): Record<string, SharedLibraryConfig> {
-  const pkgJsonPath = joinPathFragments(workspaceRoot, 'package.json');
-  if (!existsSync(pkgJsonPath)) {
-    throw new Error(
-      'NX MFE: Could not find root package.json to determine dependency versions.'
-    );
-  }
-
-  const pkgJson = readJsonFile(pkgJsonPath);
+  const pkgJson = readRootPackageJson();
   const allPackages: { name: string; version: string }[] = [];
   packages.forEach((pkg) => {
     const pkgVersion =
@@ -170,23 +181,11 @@ export function sharePackages(
   });
 
   return allPackages.reduce((shared, pkg) => {
-    if (!pkg.version) {
-      logger.warn(
-        `Could not find a version for "${pkg.name}" in the root "package.json" ` +
-          'when collecting shared packages for the Module Federation setup. ' +
-          'The package will not be shared.'
-      );
-
-      return shared;
+    const config = getNpmPackageSharedConfig(pkg.name, pkg.version);
+    if (config) {
+      shared[pkg.name] = config;
     }
 
-    return {
-      ...shared,
-      [pkg.name]: {
-        singleton: true,
-        strictVersion: true,
-        requiredVersion: pkg.version,
-      },
-    };
-  }, {});
+    return shared;
+  }, {} as Record<string, SharedLibraryConfig>);
 }

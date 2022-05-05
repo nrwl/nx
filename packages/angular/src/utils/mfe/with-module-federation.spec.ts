@@ -286,4 +286,190 @@ describe('withModuleFederation', () => {
     // ASSERT
     expect(config.plugins).toMatchSnapshot();
   });
+
+  it('should apply the user-specified shared function correctly', async () => {
+    // ARRANGE
+    (graph.readCachedProjectGraph as jest.Mock).mockReturnValue({
+      dependencies: {
+        remote1: [
+          { target: 'npm:@angular/core' },
+          { target: 'npm:zone.js' },
+          { target: 'core' },
+        ],
+        core: [{ target: 'shared' }, { target: 'npm:@angular/core' }],
+      },
+    });
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
+    jest.spyOn(devkit, 'readJsonFile').mockImplementation(() => ({
+      dependencies: { '@angular/core': '~13.2.0' },
+    }));
+    (typescriptUtils.readTsConfig as jest.Mock).mockReturnValue({
+      options: {
+        paths: {
+          shared: ['/libs/shared/src/index.ts'],
+          core: ['/libs/core/src/index.ts'],
+        },
+      },
+    });
+    (graph.Workspaces as jest.Mock).mockReturnValue({
+      readWorkspaceConfiguration: () => ({
+        projects: {
+          shared: {
+            sourceRoot: '/libs/shared/src/',
+          },
+          core: {
+            sourceRoot: '/libs/core/src/',
+          },
+        },
+      }),
+    });
+    (fs.readdirSync as jest.Mock).mockReturnValue([]);
+
+    // ACT
+    const config = (
+      await withModuleFederation({
+        name: 'remote1',
+        exposes: { './Module': 'apps/remote1/src/module.ts' },
+        shared: (dep, config) => {
+          if (dep === 'core') {
+            return false;
+          }
+          if (dep === '@angular/core') {
+            return {
+              ...config,
+              strictVersion: false,
+              requiredVersion: undefined,
+            };
+          }
+        },
+      })
+    )({});
+
+    // ASSERT
+    expect(config.plugins).toMatchSnapshot();
+  });
+
+  it('should apply additional shared dependencies when specified', async () => {
+    // ARRANGE
+    (graph.readCachedProjectGraph as jest.Mock).mockReturnValue({
+      dependencies: {
+        remote1: [{ target: 'npm:@angular/core' }, { target: 'core' }],
+        core: [{ target: 'npm:@angular/core' }],
+      },
+      nodes: { shared: {} },
+      externalNodes: { '@angular/common': {} },
+    });
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
+    jest.spyOn(devkit, 'readJsonFile').mockImplementation(() => ({
+      dependencies: {
+        '@angular/core': '~13.2.0',
+        '@angular/common': '~13.2.0',
+        '@angular/router': '~13.2.0',
+      },
+    }));
+    (typescriptUtils.readTsConfig as jest.Mock).mockReturnValue({
+      options: {
+        paths: {
+          shared: ['/libs/shared/src/index.ts'],
+          core: ['/libs/core/src/index.ts'],
+        },
+      },
+    });
+    (graph.Workspaces as jest.Mock).mockReturnValue({
+      readWorkspaceConfiguration: () => ({
+        projects: {
+          shared: {
+            sourceRoot: '/libs/shared/src/',
+          },
+          core: {
+            sourceRoot: '/libs/core/src/',
+          },
+        },
+      }),
+    });
+    (fs.readdirSync as jest.Mock).mockReturnValue([]);
+
+    // ACT
+    const config = (
+      await withModuleFederation({
+        name: 'remote1',
+        exposes: { './Module': 'apps/remote1/src/module.ts' },
+        shared: (dep, config) => {
+          if (dep === 'core') {
+            return false;
+          }
+        },
+        additionalShared: [
+          '@angular/common',
+          [
+            '@angular/core',
+            {
+              strictVersion: false,
+              singleton: true,
+            },
+          ],
+          {
+            libraryName: '@angular/router',
+            sharedConfig: {
+              requiredVersion: '^13.0.0',
+              singleton: false,
+              strictVersion: true,
+            },
+          },
+          'shared',
+        ],
+      })
+    )({});
+
+    // ASSERT
+    expect(config.plugins).toMatchSnapshot();
+  });
+
+  it('should throw when an additionalShared entry is a string and it is not in the project graph', async () => {
+    // ARRANGE
+    (graph.readCachedProjectGraph as jest.Mock).mockReturnValue({
+      dependencies: {
+        remote1: [{ target: 'npm:@angular/core' }, { target: 'core' }],
+        core: [{ target: 'npm:@angular/core' }],
+      },
+      nodes: {},
+      externalNodes: {},
+    });
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
+    jest.spyOn(devkit, 'readJsonFile').mockImplementation(() => ({
+      dependencies: { '@angular/core': '~13.2.0' },
+    }));
+    (typescriptUtils.readTsConfig as jest.Mock).mockReturnValue({
+      options: {
+        paths: {
+          shared: ['/libs/shared/src/index.ts'],
+          core: ['/libs/core/src/index.ts'],
+        },
+      },
+    });
+    (graph.Workspaces as jest.Mock).mockReturnValue({
+      readWorkspaceConfiguration: () => ({
+        projects: {
+          shared: {
+            sourceRoot: '/libs/shared/src/',
+          },
+          core: {
+            sourceRoot: '/libs/core/src/',
+          },
+        },
+      }),
+    });
+    (fs.readdirSync as jest.Mock).mockReturnValue([]);
+
+    // ACT & ASSERT
+    await expect(
+      withModuleFederation({
+        name: 'remote1',
+        exposes: { './Module': 'apps/remote1/src/module.ts' },
+        additionalShared: ['shared'],
+      })
+    ).rejects.toThrow(
+      'The specified dependency "shared" in the additionalShared configuration does not exist in the project graph.'
+    );
+  });
 });
