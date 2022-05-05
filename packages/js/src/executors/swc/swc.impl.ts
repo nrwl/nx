@@ -45,16 +45,15 @@ function normalizeOptions(
   // default to current directory if projectRootParts is [].
   // Eg: when a project is at the root level, outside of layout dir
   const swcCwd = projectRootParts.join('/') || '.';
+  const swcrcPath = options.swcrc
+    ? join(contextRoot, options.swcrc)
+    : join(contextRoot, projectRoot, '.lib.swcrc');
 
   const swcCliOptions = {
     srcPath: projectDir,
     destPath: relative(join(contextRoot, swcCwd), outputPath),
     swcCwd,
-    swcrcPath: join(
-      contextRoot,
-      projectRoot,
-      options.swcrc.replace(`${projectRoot}/`, '')
-    ),
+    swcrcPath,
   };
 
   return {
