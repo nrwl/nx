@@ -11,6 +11,7 @@ export interface Schema {
   skipTests?: boolean;
   type?: string;
   flat?: boolean;
+  skipImport?: boolean;
   selector?: string;
   module?: string;
   skipSelector?: boolean;
