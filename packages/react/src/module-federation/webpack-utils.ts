@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import { NormalModuleReplacementPlugin } from 'webpack';
-import { joinPathFragments, normalizePath, workspaceRoot } from '@nrwl/devkit';
+import { joinPathFragments, logger, workspaceRoot } from '@nrwl/devkit';
 import { dirname, join, normalize } from 'path';
 import { ParsedCommandLine } from 'typescript';
 import {
@@ -87,15 +87,26 @@ export function sharePackages(
 
   const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'));
 
-  return packages.reduce(
-    (shared, pkgName) => ({
+  return packages.reduce((shared, pkgName) => {
+    const version =
+      pkgJson.dependencies?.[pkgName] ?? pkgJson.devDependencies?.[pkgName];
+    if (!version) {
+      logger.warn(
+        `Could not find a version for "${pkgName}" in the root "package.json" ` +
+          'when collecting shared packages for the Module Federation setup. ' +
+          'The package will not be shared.'
+      );
+
+      return shared;
+    }
+
+    return {
       ...shared,
       [pkgName]: {
         singleton: true,
         strictVersion: true,
-        requiredVersion: pkgJson.dependencies[pkgName],
+        requiredVersion: version,
       },
-    }),
-    {}
-  );
+    };
+  }, {});
 }
