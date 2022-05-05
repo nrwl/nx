@@ -72,7 +72,7 @@ The project-specific Storybook configuration is pretty much similar what you wou
 
 `@nrwl/react` ships with a Storybook preset to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the preset to your configuration.
 
-```ts
+```typescript
 const rootMain = require('../../../.storybook/main');
 
 module.exports = {

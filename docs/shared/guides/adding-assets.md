@@ -40,7 +40,7 @@ This method of import allow you to work with the SVG the same way you would with
 
 Note that if you are using Next.js, you have to opt into this behavior. To import SVGs as React components with Next.js, you need to make sure that `nx.svgr` value is set to `true` in your Next.js application's `next.config.js` file:
 
-```js
+```javascript
 module.exports = withNx({
   nx: {
     svgr: true,

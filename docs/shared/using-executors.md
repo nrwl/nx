@@ -257,7 +257,7 @@ export default async function (opts) {
 
 You can use the [`rxjs-for-await`](https://www.npmjs.com/package/rxjs-for-await) library to convert an `Observable` into an async iterable.
 
-```ts
+```typescript
 import { of } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
 
