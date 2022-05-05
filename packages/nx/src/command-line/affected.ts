@@ -107,7 +107,6 @@ export async function affected(
           env,
           nxArgs,
           overrides,
-          nxArgs.hideCachedOutput ? 'hide-cached-output' : 'default',
           null
         );
         break;

@@ -277,7 +277,7 @@ export function getSerializedArgsForTask(task: Task, isVerbose: boolean) {
   ];
 }
 
-export function shouldForwardOutput(
+export function shouldStreamOutput(
   task: Task,
   initiatingProject: string | null,
   options: {
@@ -285,8 +285,8 @@ export function shouldForwardOutput(
     cacheableTargets?: string[] | null;
   }
 ): boolean {
-  if (process.env.NX_FORWARD_OUTPUT === 'true') return true;
-  if (!isCacheableTask(task, options)) return true;
+  if (process.env.NX_STREAM_OUTPUT === 'true') return true;
+  if (longRunningTask(task)) return true;
   if (task.target.project === initiatingProject) return true;
   return false;
 }
@@ -307,5 +307,8 @@ export function isCacheableTask(
 }
 
 function longRunningTask(task: Task) {
-  return !!task.overrides['watch'];
+  const t = task.target.target;
+  return (
+    !!task.overrides['watch'] || t === 'serve' || t === 'dev' || t === 'start'
+  );
 }

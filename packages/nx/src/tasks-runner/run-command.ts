@@ -1,7 +1,6 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { join } from 'path';
 import { workspaceRoot } from '../utils/app-root';
-import { logger, stripIndent } from '../utils/logger';
 import { NxArgs } from '../utils/command-line-utils';
 import { isRelativePath } from '../utils/fileutils';
 import {
@@ -9,11 +8,10 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utils/project-graph-utils';
 import { output } from '../utils/output';
-import { getDependencyConfigs, shouldForwardOutput } from './utils';
+import { getDependencyConfigs, shouldStreamOutput } from './utils';
 import { CompositeLifeCycle, LifeCycle } from './life-cycle';
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
-import { EmptyTerminalOutputLifeCycle } from './life-cycles/empty-terminal-output-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
@@ -29,22 +27,20 @@ import {
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
-  terminalOutputStrategy: 'default' | 'hide-cached-output' | 'run-one',
   projectNames: string[],
   tasks: Task[],
   nxArgs: NxArgs,
   overrides: Record<string, unknown>,
   runnerOptions: any
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
-  const showVerboseOutput =
-    !!overrides.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
+  const isRunOne = initiatingProject != null;
+  const useDynamicOutput =
+    shouldUseDynamicLifeCycle(tasks, runnerOptions, nxArgs.outputStyle) &&
+    process.env.NX_VERBOSE_LOGGING !== 'true' &&
+    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false';
 
-  if (terminalOutputStrategy === 'run-one') {
-    if (
-      shouldUseDynamicLifeCycle(tasks, runnerOptions) &&
-      !showVerboseOutput &&
-      process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false'
-    ) {
+  if (isRunOne) {
+    if (useDynamicOutput) {
       return await createRunOneDynamicOutputRenderer({
         initiatingProject,
         tasks,
@@ -61,32 +57,25 @@ async function getTerminalOutputLifeCycle(
       ),
       renderIsDone: Promise.resolve(),
     };
-  } else if (terminalOutputStrategy === 'hide-cached-output') {
-    return {
-      lifeCycle: new EmptyTerminalOutputLifeCycle(),
-      renderIsDone: Promise.resolve(),
-    };
-  } else if (
-    shouldUseDynamicLifeCycle(tasks, runnerOptions) &&
-    !showVerboseOutput &&
-    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false'
-  ) {
-    return await createRunManyDynamicOutputRenderer({
-      projectNames,
-      tasks,
-      args: nxArgs,
-      overrides,
-    });
   } else {
-    return {
-      lifeCycle: new StaticRunManyTerminalOutputLifeCycle(
+    if (useDynamicOutput) {
+      return await createRunManyDynamicOutputRenderer({
         projectNames,
         tasks,
-        nxArgs,
-        overrides
-      ),
-      renderIsDone: Promise.resolve(),
-    };
+        args: nxArgs,
+        overrides,
+      });
+    } else {
+      return {
+        lifeCycle: new StaticRunManyTerminalOutputLifeCycle(
+          projectNames,
+          tasks,
+          nxArgs,
+          overrides
+        ),
+        renderIsDone: Promise.resolve(),
+      };
+    }
   }
 }
 
@@ -96,7 +85,6 @@ export async function runCommand(
   { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
   overrides: any,
-  terminalOutputStrategy: 'default' | 'hide-cached-output' | 'run-one',
   initiatingProject: string | null
 ) {
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
@@ -115,9 +103,11 @@ export async function runCommand(
   );
 
   const projectNames = projectsToRun.map((t) => t.name);
+  if (nxArgs.outputStyle == 'stream') {
+    process.env.NX_STREAM_OUTPUT = 'true';
+  }
   const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
     initiatingProject,
-    terminalOutputStrategy,
     projectNames,
     tasks,
     nxArgs,
@@ -138,7 +128,8 @@ export async function runCommand(
     tasks,
     { ...runnerOptions, lifeCycle: new CompositeLifeCycle(lifeCycles) },
     {
-      initiatingProject,
+      initiatingProject:
+        nxArgs.outputStyle === 'compact' ? null : initiatingProject,
       target: nxArgs.target,
       projectGraph,
       nxJson,
@@ -238,12 +229,17 @@ export function createTasksForProjectToRun(
   return Array.from(tasksMap.values());
 }
 
-function shouldUseDynamicLifeCycle(tasks: Task[], options: any) {
-  const isTTY = !!process.stdout.isTTY;
-  const noForwarding = !tasks.find((t) =>
-    shouldForwardOutput(t, null, options)
-  );
-  return isTTY && noForwarding && !isCI();
+function shouldUseDynamicLifeCycle(
+  tasks: Task[],
+  options: any,
+  outputStyle: string
+) {
+  if (!process.stdout.isTTY) return false;
+  if (isCI()) return false;
+  if (outputStyle === 'static' || outputStyle === 'stream') return false;
+
+  const noForwarding = !tasks.find((t) => shouldStreamOutput(t, null, options));
+  return noForwarding;
 }
 
 function addTasksForProjectTarget(

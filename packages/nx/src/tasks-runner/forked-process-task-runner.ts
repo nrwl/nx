@@ -96,9 +96,9 @@ export class ForkedProcessTaskRunner {
   public forkProcessPipeOutputCapture(
     task: Task,
     {
-      forwardOutput,
+      streamOutput,
       temporaryOutputPath,
-    }: { forwardOutput: boolean; temporaryOutputPath: string }
+    }: { streamOutput: boolean; temporaryOutputPath: string }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
@@ -107,11 +107,11 @@ export class ForkedProcessTaskRunner {
           task,
           task.overrides['verbose'] === true
         );
-
-        if (forwardOutput) {
+        if (streamOutput) {
           output.logCommand(args.join(' '));
           output.addNewline();
         }
+
         const p = fork(this.cliPath, serializedArgs, {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
           env: this.getEnvVariablesForTask(
@@ -119,22 +119,22 @@ export class ForkedProcessTaskRunner {
             process.env.FORCE_COLOR === undefined
               ? 'true'
               : process.env.FORCE_COLOR,
-            undefined,
-            forwardOutput
+            null,
+            null
           ),
         });
         this.processes.add(p);
         let out = [];
         let outWithErr = [];
         p.stdout.on('data', (chunk) => {
-          if (forwardOutput) {
+          if (streamOutput) {
             process.stdout.write(chunk);
           }
           out.push(chunk.toString());
           outWithErr.push(chunk.toString());
         });
         p.stderr.on('data', (chunk) => {
-          if (forwardOutput) {
+          if (streamOutput) {
             process.stderr.write(chunk);
           }
           outWithErr.push(chunk.toString());
@@ -146,7 +146,7 @@ export class ForkedProcessTaskRunner {
           // print all the collected output|
           const terminalOutput = outWithErr.join('');
 
-          if (!forwardOutput) {
+          if (!streamOutput) {
             this.options.lifeCycle.printTaskTerminalOutput(
               task,
               code === 0 ? 'success' : 'failure',
@@ -166,9 +166,9 @@ export class ForkedProcessTaskRunner {
   public forkProcessDirectOutputCapture(
     task: Task,
     {
-      forwardOutput,
+      streamOutput,
       temporaryOutputPath,
-    }: { forwardOutput: boolean; temporaryOutputPath: string }
+    }: { streamOutput: boolean; temporaryOutputPath: string }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
@@ -177,7 +177,7 @@ export class ForkedProcessTaskRunner {
           task,
           task.overrides['verbose'] === true
         );
-        if (forwardOutput) {
+        if (streamOutput) {
           output.logCommand(args.join(' '));
           output.addNewline();
         }
@@ -187,7 +187,7 @@ export class ForkedProcessTaskRunner {
             task,
             undefined,
             temporaryOutputPath,
-            forwardOutput
+            streamOutput
           ),
         });
         this.processes.add(p);
@@ -198,7 +198,7 @@ export class ForkedProcessTaskRunner {
           let terminalOutput = '';
           try {
             terminalOutput = this.readTerminalOutput(temporaryOutputPath);
-            if (!forwardOutput) {
+            if (!streamOutput) {
               this.options.lifeCycle.printTaskTerminalOutput(
                 task,
                 code === 0 ? 'success' : 'failure',
@@ -252,9 +252,9 @@ export class ForkedProcessTaskRunner {
     task: Task,
     forceColor: string,
     outputPath: string,
-    forwardOutput: boolean
+    streamOutput: boolean
   ) {
-    return {
+    const res = {
       // Start With Dotenv Variables
       ...this.getDotenvVariablesForTask(task),
       // User Process Env Variables override Dotenv Variables
@@ -264,15 +264,23 @@ export class ForkedProcessTaskRunner {
         task,
         forceColor,
         outputPath,
-        forwardOutput
+        streamOutput
       ),
     };
+
+    // we have to delete it because if we invoke Nx from within Nx, we need to reset those values
+    if (!outputPath) {
+      delete res.NX_TERMINAL_OUTPUT_PATH;
+      delete res.NX_STREAM_OUTPUT;
+    }
+    delete res.NX_SET_CLI;
+    return res;
   }
 
   private getNxEnvVariablesForForkedProcess(
     forceColor: string,
     outputPath?: string,
-    forwardOutput?: boolean
+    streamOutput?: boolean
   ) {
     const env: NodeJS.ProcessEnv = {
       FORCE_COLOR: forceColor,
@@ -285,8 +293,8 @@ export class ForkedProcessTaskRunner {
       if (this.options.captureStderr) {
         env.NX_TERMINAL_CAPTURE_STDERR = 'true';
       }
-      if (forwardOutput) {
-        env.NX_FORWARD_OUTPUT = 'true';
+      if (streamOutput) {
+        env.NX_STREAM_OUTPUT = 'true';
       }
     }
     return env;
@@ -296,7 +304,7 @@ export class ForkedProcessTaskRunner {
     task: Task,
     forceColor: string,
     outputPath: string,
-    forwardOutput: boolean
+    streamOutput: boolean
   ) {
     const env: NodeJS.ProcessEnv = {
       NX_TASK_TARGET_PROJECT: task.target.project,
@@ -312,7 +320,7 @@ export class ForkedProcessTaskRunner {
       ...this.getNxEnvVariablesForForkedProcess(
         forceColor,
         outputPath,
-        forwardOutput
+        streamOutput
       ),
       ...env,
     };

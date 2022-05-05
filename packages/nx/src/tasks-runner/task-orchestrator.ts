@@ -12,7 +12,7 @@ import {
   getOutputs,
   isCacheableTask,
   removeTasksFromTaskGraph,
-  shouldForwardOutput,
+  shouldStreamOutput,
 } from './utils';
 import { Batch, TasksSchedule } from './tasks-schedule';
 import { TaskMetadata } from './life-cycle';
@@ -280,7 +280,7 @@ export class TaskOrchestrator {
     try {
       // obtain metadata
       const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-      const forwardOutput = shouldForwardOutput(
+      const streamOutput = shouldStreamOutput(
         task,
         this.initiatingProject,
         this.options
@@ -293,14 +293,14 @@ export class TaskOrchestrator {
             task,
             {
               temporaryOutputPath,
-              forwardOutput,
+              streamOutput,
             }
           )
         : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
             task,
             {
               temporaryOutputPath,
-              forwardOutput,
+              streamOutput,
             }
           );
 

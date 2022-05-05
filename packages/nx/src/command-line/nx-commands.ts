@@ -72,7 +72,9 @@ ${daemonHelpOutput}
     describe: 'Run target for multiple listed projects',
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withRunManyOptions(withParallelOption(withTargetOption(yargs))),
+        withRunManyOptions(
+          withOutputStyleOption(withParallelOption(withTargetOption(yargs)))
+        ),
         'run-many'
       ),
     handler: async (args) => (await import('./run-many')).runMany({ ...args }),
@@ -82,7 +84,9 @@ ${daemonHelpOutput}
     describe: 'Run target for affected projects',
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withParallelOption(withTargetOption(yargs))),
+        withAffectedOptions(
+          withOutputStyleOption(withParallelOption(withTargetOption(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -93,7 +97,7 @@ ${daemonHelpOutput}
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withParallelOption(yargs)),
+        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -107,7 +111,7 @@ ${daemonHelpOutput}
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withParallelOption(yargs)),
+        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -121,7 +125,7 @@ ${daemonHelpOutput}
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withParallelOption(yargs)),
+        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -135,7 +139,7 @@ ${daemonHelpOutput}
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withParallelOption(yargs)),
+        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -524,6 +528,14 @@ function withParallelOption(yargs: yargs.Argv): yargs.Argv {
   });
 }
 
+function withOutputStyleOption(yargs: yargs.Argv): yargs.Argv {
+  return yargs.option('output-style', {
+    describe: 'Defines how Nx emits outputs tasks logs',
+    type: 'string',
+    choices: ['dynamic', 'static', 'stream'],
+  });
+}
+
 function withTargetOption(yargs: yargs.Argv): yargs.Argv {
   return yargs.option('target', {
     describe: 'Task to run for affected projects',
@@ -596,6 +608,11 @@ function withRunOneOptions(yargs: yargs.Argv) {
     .option('project', {
       describe: 'Target project',
       type: 'string',
+    })
+    .option('output-style', {
+      describe: 'Defines how Nx emits outputs tasks logs',
+      type: 'string',
+      choices: ['dynamic', 'static', 'stream', 'compact'],
     });
 
   if (executorShouldShowHelp) {

@@ -3,7 +3,7 @@ import { appendFileSync, openSync, writeFileSync } from 'fs';
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
     process.env.NX_TERMINAL_CAPTURE_STDERR === 'true',
-    process.env.NX_FORWARD_OUTPUT === 'true'
+    process.env.NX_STREAM_OUTPUT === 'true'
   );
 }
 
@@ -45,13 +45,13 @@ function requireCli() {
  * We need to collect all stdout and stderr and store it, so the caching mechanism
  * could store it.
  *
- * Writing stdout and stderr into different stream is too risky when using TTY.
+ * Writing stdout and stderr into different streams is too risky when using TTY.
  *
  * So we are simply monkey-patching the Javascript object. In this case the actual output will always be correct.
  * And the cached output should be correct unless the CLI bypasses process.stdout or console.log and uses some
  * C-binary to write to stdout.
  */
-function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
+function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
   const stdoutWrite = process.stdout._write;
   const stderrWrite = process.stderr._write;
 
@@ -67,7 +67,7 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
   ) => {
     onlyStdout.push(chunk);
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
-    if (forwardOutput) {
+    if (streamOutput) {
       stdoutWrite.apply(process.stdout, [chunk, encoding, callback]);
     } else {
       callback();
@@ -80,7 +80,7 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
     callback: Function
   ) => {
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
-    if (forwardOutput) {
+    if (streamOutput) {
       stderrWrite.apply(process.stderr, [chunk, encoding, callback]);
     } else {
       callback();
