@@ -38,6 +38,7 @@ import {
   RawWorkspaceJsonConfiguration,
   WorkspaceJsonConfiguration,
 } from '../config/workspace-json-project-json';
+import { readNxJson } from '../generators/utils/project-configuration';
 
 export async function scheduleTarget(
   root: string,
@@ -261,10 +262,17 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     };
 
     const readNxJsonFile = () => {
-      if (overrides?.nx) {
-        return overrides.nx;
-      }
-      return readJsonFile('nx.json');
+      let nxJson = overrides?.nx ? overrides.nx : readJsonFile('nx.json');
+
+      return nxJson.pipe(
+        map((json) => {
+          if (json.extends) {
+            return { ...require(json.extends), ...json };
+          } else {
+            return json;
+          }
+        })
+      );
     };
 
     return super.exists('nx.json' as Path).pipe(
@@ -599,9 +607,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
         // we have to add them into the file.
         const createdProjectFiles = findCreatedProjects(this.host);
         const deletedProjectFiles = findDeletedProjects(this.host);
-        const nxJsonInTree = nxJsonChange
-          ? parseJson(nxJsonChange.content.toString())
-          : parseJson(this.host.read('nx.json').toString());
+        const nxJsonInTree = readNxJson(this.host);
         const readJsonWithHost = (file) => ({
           root: dirname(file),
           ...parseJson(this.host.read(file).toString()),
