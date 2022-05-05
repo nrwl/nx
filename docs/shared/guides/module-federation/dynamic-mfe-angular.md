@@ -54,7 +54,7 @@ We’ll start by creating this file. Add a `mfe.manifest.json` file to the `src/
 
 Next, open `main.ts` under the `src/`folder and replace it with the following:
 
-```ts
+```typescript
 import { setRemoteDefinitions } from '@nrwl/angular/mfe';
 
 fetch('/assets/mfe.manifest.json')
@@ -75,7 +75,7 @@ At the moment, webpack is statically building our application, telling it at bui
 
 Open the `mfe.config.js` file at the root of our `apps/dashboard/` folder and set the `remotes` property to be an empty array. It should look like this:
 
-```js
+```javascript
 module.exports = {
   name: 'dashboard',
   remotes: [],
@@ -86,7 +86,7 @@ Next, we need to change how our application attempts to load the Remote when it 
 
 You should see the following line in the `RouterModule.forRoot()`:
 
-```ts
+```typescript
 {
     path: 'login',
     loadChildren: () =>
@@ -96,7 +96,7 @@ You should see the following line in the `RouterModule.forRoot()`:
 
 Replace it with the following:
 
-```ts
+```typescript
 {
     path: 'login',
     loadChildren: () =>
@@ -108,7 +108,7 @@ Replace it with the following:
 
 You will also need to add the following import to the top of the file:
 
-```ts
+```typescript
 import { loadRemoteModule } from '@nrwl/angular/mfe';
 ```
 

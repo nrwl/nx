@@ -117,7 +117,7 @@ In the future, Nx may automatically handle this for you.
 
 The webpack configuration uses an utility function that Nx provides: `withModuleFederation`.
 
-```js
+```javascript
 // For Angular, you'll see `@nrwl/angular/module-federation`
 const withModuleFederation = require('@nrwl/react/module-federation');
 const moduleFederationConfig = require('./module-federation.config');
@@ -133,7 +133,7 @@ We'll talk about [what `withModuleFederation` does](#what-does-withmodulefederat
 
 This file is the main configuration for the `shell`, and you'll see `module-federation.config.js` for the generated remotes as well.
 
-```js
+```javascript
 module.exports = {
   name: 'shell',
   remotes: ['shop', 'cart', 'about'],
@@ -157,7 +157,7 @@ With Nx, the developer experience (DX) when working with Module Federation match
 
 If you want to opt-out of the shared, singleton behavior of libraries you can use the `shared: (libraryName, sharedConfig) => sharedConfig)` option in `module-federation.config.js`.
 
-```js
+```javascript
 module.exports = {
   name: 'shell',
   remotes: ['shop', 'cart', 'about'],
@@ -229,7 +229,7 @@ First, make sure you have implicit dependencies from `shell` to each remote. In 
 
 Next, open up the production webpack configuration file and update the remote URLs to their own subfolder under `http://localhost:3000`.
 
-```js
+```javascript
 // apps/shell/webpack.config.prod.js
 const withModuleFederation = require('@nrwl/react/module-federation');
 const moduleFederationConfig = require('./module-federation.config');

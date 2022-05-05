@@ -17,7 +17,7 @@ All you need is a URL of a live Storybook, and a "host" Storybook. In the `.stor
 
 In the example below, we have a host Storybook running on local port 4400 (http://localhost:4400) - not displayed here. In it, we want to compose three other Storybooks. The "one-composed" and "two-composed", running on local ports `4401` and `4402` accordingly, as well as the [Storybook website's Storybook](https://next--storybookjs.netlify.app/official-storybook) which is live on the address that you see.
 
-```js
+```javascript
 // .storybook/main.js of our Host Storybook - assuming it's running on port 4400
 module.exports = {
   ...,
@@ -93,7 +93,7 @@ of our projects runs on which port. The problem that this creates is that we wil
 
 Now, we need to add to our host project's `main.js` file (the path of which would be `apps/main-host/.storybook/main.js`) a `refs` object, to configure our composition. An example of such a configuration looks like this:
 
-```js
+```javascript
 module.exports = {
   ...,
   refs: {

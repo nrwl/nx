@@ -123,7 +123,7 @@ By default, coverage reports will be generated in the `coverage/` directory unde
 In order to use Jest's global setup/teardown functions that reference nx libraries, you'll need to register the TS path for jest to resolve the libraries.
 Nx provides a helper function that you can import within your setup/teardown file.
 
-```ts
+```typescript
 import { registerTsProject } from 'nx/src/utils/register';
 const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
 

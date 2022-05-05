@@ -13,7 +13,7 @@ The executor will merge the provided configuration with the webpack configuratio
 
 To use a custom webpack configuration when building your Angular application, change the `build` target in your `project.json` to match the following:
 
-```ts
+```typescript
 "build": {
     "executor": "@nrwl/angular:webpack-browser",
     "options": {
@@ -36,7 +36,7 @@ This can improve build time as the building of the workspace libraries can be ca
 
 To allow your Angular application to take advantage of incremental building, change the `build` target in your `project.json` to match the following:
 
-```ts
+```typescript
 "build": {
     "executor": "@nrwl/angular:webpack-browser",
     "options": {

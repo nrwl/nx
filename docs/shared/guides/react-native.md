@@ -266,7 +266,7 @@ NX_BUILD_NUMBER=123
 
 Then access variables defined there from your app:
 
-```js
+```javascript
 import Config from 'react-native-config';
 
 Config.NX_BUILD_NUMBER; // '123'

@@ -156,7 +156,7 @@ The property keys that are required. Example:
 In this example, the property `name` is required, while the property `type` is optional.
 You can define your TypeScript schema like this:
 
-```ts
+```typescript
 interface Schema {
   name: string; // required
   type?: string; // optional
@@ -603,7 +603,7 @@ Reference to a schema. Examples can be seen in the [`definitions`](#definitions)
 
 The default source of this property. The full declaration of `$default` is:
 
-```ts
+```typescript
 // with ? - optional
 // without ? - required
 // | - or
@@ -655,7 +655,7 @@ See [the above `additionalProperties` section](#additionalproperties).
 
 Prompt and help user to input the value of the property. It can be a `string` or a `object`. The full declaration is:
 
-```ts
+```typescript
 // with ? - optional
 // without ? - required
 // | - or
@@ -696,7 +696,7 @@ The type of the prompt.
 
 The choice of the prompt. The `x-prompt.type` must be `list`. The declaration of `items` is:
 
-```ts
+```typescript
 // with ? - optional
 // without ? - required
 // | - or
