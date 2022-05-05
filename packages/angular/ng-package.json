@@ -18,7 +18,8 @@
     "ts-node",
     "tsconfig-paths",
     "semver",
-    "webpack"
+    "webpack",
+    "http-server"
   ],
   "keepLifecycleScripts": true
 }

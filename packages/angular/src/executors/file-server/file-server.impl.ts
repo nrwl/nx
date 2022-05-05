@@ -1,7 +1,8 @@
-import { execFile, execFileSync } from 'child_process';
+import { execFileSync, fork } from 'child_process';
 import {
   ExecutorContext,
   joinPathFragments,
+  readJsonFile,
   workspaceLayout,
 } from '@nrwl/devkit';
 import ignore from 'ignore';
@@ -9,6 +10,7 @@ import { readFileSync } from 'fs';
 import { Schema } from './schema';
 import { watch } from 'chokidar';
 import { platform } from 'os';
+import { resolve } from 'path';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -147,13 +149,24 @@ export default async function* fileServerExecutor(
   const outputPath = getBuildTargetOutputPath(options, context);
   const args = getHttpServerArgs(options);
 
-  const serve = execFile(pmCmd, ['http-server', outputPath, ...args], {
+  const pathToHttpServerPkgJson = require.resolve('http-server/package.json');
+  const pathToHttpServerBin = readJsonFile(pathToHttpServerPkgJson).bin[
+    'http-server'
+  ];
+  const pathToHttpServer = resolve(
+    pathToHttpServerPkgJson.replace('package.json', ''),
+    pathToHttpServerBin
+  );
+
+  const serve = fork(pathToHttpServer, [outputPath, ...args], {
+    stdio: 'pipe',
     cwd: context.root,
     env: {
       FORCE_COLOR: 'true',
       ...process.env,
     },
   });
+
   const processExitListener = () => {
     serve.kill();
     if (disposeWatch) {

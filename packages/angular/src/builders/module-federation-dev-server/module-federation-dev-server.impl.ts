@@ -5,51 +5,6 @@ import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { join } from 'path';
 import { webpackServer } from '../webpack-server/webpack-server.impl';
-import { exec, execSync } from 'child_process';
-
-/**
- * Inline kill-port to prevent adding a new dependency
- */
-function killPort(port, method = 'tcp') {
-  port = Number.parseInt(port);
-
-  if (!port) {
-    throw new Error('Invalid argument provided for port');
-  }
-
-  if (process.platform === 'win32') {
-    return exec('netstat -nao', (error, stdout, stderr) => {
-      if (!stdout) return;
-
-      const lines = stdout.split('\n');
-      // The second white-space delimited column of netstat output is the local port,
-      // which is the only port we care about.
-      // The regex here will match only the local port column of the output
-      const lineWithLocalPortRegEx = new RegExp(
-        `^ *${method.toUpperCase()} *[^ ]*:${port}`,
-        'gm'
-      );
-      const linesWithLocalPort = lines.filter((line) =>
-        line.match(lineWithLocalPortRegEx)
-      );
-
-      const pids = linesWithLocalPort.reduce((acc, line) => {
-        const match = line.match(/(\d*)\w*(\n|$)/gm);
-        return match && match[0] && !acc.includes(match[0])
-          ? acc.concat(match[0])
-          : acc;
-      }, []);
-
-      return execSync(`TaskKill /F /PID ${pids.join(' /PID ')}`);
-    });
-  }
-
-  return execSync(
-    `lsof -ni ${method === 'udp' ? 'udp' : 'tcp'}:${port} | grep ${
-      method === 'udp' ? 'UDP' : 'LISTEN'
-    } | awk '{print $2}' | xargs kill -9`
-  );
-}
 
 export function moduleFederationDevServer(
   schema: Schema,
@@ -106,11 +61,6 @@ export function moduleFederationDevServer(
       options.verbose
     );
   }
-
-  // Cleanup ports on kill
-  process.on('exit', () => {
-    remotePorts.forEach((port) => killPort(port));
-  });
 
   return webpackServer(options, context);
 }

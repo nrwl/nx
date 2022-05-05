@@ -55,6 +55,7 @@
     "ts-node": "~9.1.1",
     "tsconfig-paths": "^3.9.0",
     "semver": "7.3.4",
-    "webpack": "^5.58.1"
+    "webpack": "^5.58.1",
+    "http-server": "^14.1.0"
   }
 }
