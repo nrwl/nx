@@ -23,15 +23,7 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
   const projects = projectsToRun(nxArgs, projectGraph);
   const env = readEnvironment();
 
-  await runCommand(
-    projects,
-    projectGraph,
-    env,
-    nxArgs,
-    overrides,
-    nxArgs.hideCachedOutput ? 'hide-cached-output' : 'default',
-    null
-  );
+  await runCommand(projects, projectGraph, env, nxArgs, overrides, null);
 }
 
 function projectsToRun(

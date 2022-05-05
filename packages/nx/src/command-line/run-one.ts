@@ -49,7 +49,6 @@ export async function runOne(
     env,
     nxArgs,
     overrides,
-    'run-one',
     opts.project
   );
 }

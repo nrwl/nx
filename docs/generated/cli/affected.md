@@ -109,6 +109,14 @@ Default: false
 
 Isolate projects which previously failed
 
+### output-style
+
+Type: string
+
+Choices: [dynamic, static, stream]
+
+Defines how Nx emits outputs tasks logs
+
 ### parallel
 
 Type: string
