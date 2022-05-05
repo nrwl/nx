@@ -151,9 +151,12 @@ function chunkify(target: string[], size: number): string[][] {
 
 function write(patterns: string[]) {
   if (patterns.length > 0) {
-    execSync(`node "${PRETTIER_PATH}" --write ${patterns.join(' ')}`, {
-      stdio: [0, 1, 2],
-    });
+    execSync(
+      `node "${PRETTIER_PATH}" --write --list-different ${patterns.join(' ')}`,
+      {
+        stdio: [0, 1, 2],
+      }
+    );
   }
 }
 
