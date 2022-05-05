@@ -3,6 +3,7 @@ import {
   parseJson,
   ProjectConfiguration,
   readJsonFile,
+  ProjectGraph,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
@@ -561,6 +562,11 @@ export function runCLI(
       throw e;
     }
   }
+}
+
+export function readDependencyGraph(): ProjectGraph<any> {
+  runCLI('graph --file graph.json');
+  return readJson('graph.json').graph;
 }
 
 /**

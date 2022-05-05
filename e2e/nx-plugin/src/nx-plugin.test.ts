@@ -1,4 +1,8 @@
-import { ProjectConfiguration } from '@nrwl/devkit';
+import {
+  DependencyType,
+  ProjectConfiguration,
+  ProjectGraphDependency,
+} from '@nrwl/devkit';
 import {
   checkFilesExist,
   expectTestsPass,
@@ -14,6 +18,7 @@ import {
   createFile,
   readFile,
   removeFile,
+  readDependencyGraph,
 } from '@nrwl/e2e/utils';
 
 import { ASYNC_GENERATOR_EXECUTOR_CONTENTS } from './nx-plugin.fixtures';
@@ -268,8 +273,17 @@ describe('Nx Plugin', () => {
         return JSON.stringify(project, null, 2);
       });
 
+      const graph = readDependencyGraph();
+
       expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
       expect(() => runCLI(`execute ${generatedProject}`)).not.toThrow();
+      expect(
+        graph.dependencies[generatedProject]
+      ).toContainEqual<ProjectGraphDependency>({
+        source: generatedProject,
+        target: plugin,
+        type: DependencyType.implicit,
+      });
     });
   });
 

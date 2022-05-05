@@ -76,6 +76,9 @@
     },
     "@nrwl/cypress": {
       "hashingExcludesTestsOfDeps": true
+    },
+    "nx": {
+      "includeImplicitExecutorDependencies": true
     }
   },
   "defaultProject": "dep-graph-client"

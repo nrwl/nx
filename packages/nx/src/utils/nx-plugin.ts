@@ -141,19 +141,22 @@ export function readPluginPackageJson(
   return { json: readJsonFile(packageJsonPath), path: packageJsonPath };
 }
 
+export interface LocalPluginDetails {
+  path: string;
+  projectConfig: ProjectConfiguration;
+  projectName: string;
+}
+
 /**
- * Builds a plugin package and returns the path to output
+ * Locates a local plugin based on its import path
  * @param importPath What is the import path that refers to a potential plugin?
- * @returns The path to the built plugin, or null if it doesn't exist
+ * @returns an object containing the path to the plugin's root and its project configuration or null if it doesn't exist.
  */
-const localPluginCache: Record<
-  string,
-  { path: string; projectConfig: ProjectConfiguration }
-> = {};
+const localPluginCache: Record<string, LocalPluginDetails> = {};
 export function resolveLocalNxPlugin(
   importPath: string,
   root = workspaceRoot
-): { path: string; projectConfig: ProjectConfiguration } | null {
+): LocalPluginDetails | null {
   localPluginCache[importPath] ??= lookupLocalPlugin(importPath, root);
   return localPluginCache[importPath];
 }
@@ -166,7 +169,10 @@ function registerTSTranspiler() {
   tsNodeAndPathsRegistered = true;
 }
 
-function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
+function lookupLocalPlugin(
+  importPath: string,
+  root = workspaceRoot
+): LocalPluginDetails {
   const workspace = new Workspaces(root).readWorkspaceConfiguration({
     _ignorePluginInference: true,
   });
@@ -180,7 +186,11 @@ function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
   }
 
   const projectConfig = workspace.projects[plugin];
-  return { path: path.join(root, projectConfig.root), projectConfig };
+  return {
+    path: path.join(root, projectConfig.root),
+    projectConfig,
+    projectName: plugin,
+  };
 }
 
 function findNxProjectForImportPath(
@@ -232,11 +242,12 @@ function readTsConfigPaths(root: string = workspaceRoot) {
     const tsconfigPath: string | null = ['tsconfig.base.json', 'tsconfig.json']
       .map((x) => path.join(root, x))
       .filter((x) => existsSync(x))[0];
-    if (!tsconfigPath) {
-      throw new Error('unable to find tsconfig.base.json or tsconfig.json');
+    if (tsconfigPath) {
+      const { compilerOptions } = readJsonFile(tsconfigPath);
+      tsconfigPaths = compilerOptions?.paths;
+    } else {
+      tsconfigPaths = {};
     }
-    const { compilerOptions } = readJsonFile(tsconfigPath);
-    tsconfigPaths = compilerOptions?.paths;
   }
   return tsconfigPaths ?? {};
 }

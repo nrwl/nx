@@ -36,6 +36,7 @@ import {
   ProjectConfiguration,
   WorkspaceJsonConfiguration,
 } from '../config/workspace-json-project-json';
+import { buildExecutorDependencies } from './build-dependencies/build-executor-dependencies';
 
 export async function buildProjectGraph() {
   const workspaceJson = readWorkspaceJson();
@@ -141,6 +142,9 @@ async function buildProjectGraphUsingContext(
 
   buildWorkspaceProjectNodes(ctx, builder);
   buildNpmPackageNodes(builder);
+  if (nxCorePluginConfig(nxJson).includeImplicitExecutorDependencies) {
+    buildExecutorDependencies(ctx, builder);
+  }
   for (const proj of Object.keys(cachedFileData)) {
     for (const f of builder.graph.nodes[proj].data.files) {
       const cached = cachedFileData[proj][f.file];
@@ -177,11 +181,28 @@ function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
   return nxJson?.pluginsConfig?.['@nrwl/js'] ?? {};
 }
 
+interface NxCorePluginConfiguration {
+  includeImplicitExecutorDependencies?: boolean;
+}
+
+const NxCorePluginDefaults: NxCorePluginConfiguration = {
+  includeImplicitExecutorDependencies: true,
+};
+
+function nxCorePluginConfig(
+  nxJson: NxJsonConfiguration
+): NxCorePluginConfiguration {
+  if (typeof nxJson?.pluginsConfig?.['nx'] !== 'object') {
+    return NxCorePluginDefaults;
+  }
+  return {
+    ...NxCorePluginDefaults,
+    ...nxJson?.pluginsConfig?.['nx'],
+  };
+}
+
 function buildExplicitDependencies(
-  jsPluginConfig: {
-    analyzeSourceFiles?: boolean;
-    analyzePackageJson?: boolean;
-  },
+  jsPluginConfig: NrwlJsPluginConfig,
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder
 ) {
@@ -258,10 +279,7 @@ function createWorkerPool(numberOfWorkers: number) {
 }
 
 function buildExplicitDependenciesWithoutWorkers(
-  jsPluginConfig: {
-    analyzeSourceFiles?: boolean;
-    analyzePackageJson?: boolean;
-  },
+  jsPluginConfig: NrwlJsPluginConfig,
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder
 ) {
