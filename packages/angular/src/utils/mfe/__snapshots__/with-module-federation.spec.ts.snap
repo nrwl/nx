@@ -1,5 +1,79 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`withModuleFederation should apply additional shared dependencies when specified 1`] = `
+Array [
+  ModuleFederationPlugin {
+    "_options": Object {
+      "exposes": Object {
+        "./Module": "apps/remote1/src/module.ts",
+      },
+      "filename": "remoteEntry.mjs",
+      "library": Object {
+        "type": "module",
+      },
+      "name": "remote1",
+      "remotes": Object {},
+      "shared": Object {
+        "@angular/common": Object {
+          "requiredVersion": "~13.2.0",
+          "singleton": true,
+          "strictVersion": true,
+        },
+        "@angular/core": Object {
+          "singleton": true,
+          "strictVersion": false,
+        },
+        "@angular/router": Object {
+          "requiredVersion": "^13.0.0",
+          "singleton": false,
+          "strictVersion": true,
+        },
+        "shared": Object {
+          "requiredVersion": false,
+        },
+      },
+    },
+  },
+  NormalModuleReplacementPlugin {
+    "newResource": [Function],
+    "resourceRegExp": /\\./,
+  },
+]
+`;
+
+exports[`withModuleFederation should apply the user-specified shared function correctly 1`] = `
+Array [
+  ModuleFederationPlugin {
+    "_options": Object {
+      "exposes": Object {
+        "./Module": "apps/remote1/src/module.ts",
+      },
+      "filename": "remoteEntry.mjs",
+      "library": Object {
+        "type": "module",
+      },
+      "name": "remote1",
+      "remotes": Object {},
+      "shared": Object {
+        "@angular/core": Object {
+          "requiredVersion": undefined,
+          "singleton": true,
+          "strictVersion": false,
+        },
+        "shared": Object {
+          "eager": undefined,
+          "requiredVersion": false,
+        },
+      },
+    },
+  },
+  NormalModuleReplacementPlugin {
+    "newResource": [Function],
+    "resourceRegExp": /\\./,
+  },
+]
+`;
+
 exports[`withModuleFederation should collect dependencies correctly 1`] = `
 Array [
   ModuleFederationPlugin {
