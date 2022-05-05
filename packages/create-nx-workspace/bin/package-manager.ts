@@ -35,23 +35,13 @@ export function getPackageManagerCommand(
   packageManager: PackageManager = detectPackageManager()
 ): {
   install: string;
-  add: string;
-  addDev: string;
-  rm: string;
   exec: string;
-  list: string;
-  run: (script: string, args: string) => string;
 } {
   switch (packageManager) {
     case 'yarn':
       return {
         install: 'yarn',
-        add: 'yarn add -W',
-        addDev: 'yarn add -D -W',
-        rm: 'yarn remove',
         exec: 'yarn',
-        run: (script: string, args: string) => `yarn ${script} ${args}`,
-        list: 'yarn list',
       };
 
     case 'pnpm':
@@ -62,12 +52,7 @@ export function getPackageManagerCommand(
       }
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
-        add: 'pnpm add',
-        addDev: 'pnpm add -D',
-        rm: 'pnpm rm',
         exec: useExec ? 'pnpm exec' : 'pnpx',
-        run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
-        list: 'pnpm ls --depth 100',
       };
 
     case 'npm':
@@ -75,12 +60,7 @@ export function getPackageManagerCommand(
         process.env.npm_config_legacy_peer_deps ?? 'true';
       return {
         install: 'npm install',
-        add: 'npm install',
-        addDev: 'npm install -D',
-        rm: 'npm rm',
         exec: 'npx',
-        run: (script: string, args: string) => `npm run ${script} -- ${args}`,
-        list: 'npm ls',
       };
   }
 }
