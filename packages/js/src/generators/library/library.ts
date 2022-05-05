@@ -91,6 +91,7 @@ function addProject(
   const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+    projectType: 'library',
     targets: {},
     tags: options.parsedTags,
   };
