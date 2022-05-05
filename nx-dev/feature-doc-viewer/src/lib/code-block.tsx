@@ -3,6 +3,17 @@ import React, { useEffect, useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 
+function resolveLanguage(lang: string) {
+  switch (lang) {
+    case 'ts':
+      return 'typescript';
+    case 'js':
+      return 'javascript';
+    default:
+      return lang;
+  }
+}
+
 export function CodeBlock({
   text,
   language,
@@ -59,7 +70,7 @@ export function CodeBlock({
       <SyntaxHighlighter
         showLineNumbers={!['bash', 'text', 'treeview'].includes(language)}
         useInlineStyles={false}
-        language={language}
+        language={resolveLanguage(language)}
         children={text}
         style=""
         {...rest}
