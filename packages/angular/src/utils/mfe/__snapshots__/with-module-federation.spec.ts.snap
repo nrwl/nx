@@ -24,7 +24,7 @@ Array [
           "requiredVersion": false,
         },
         "lodash": Object {
-          "requiredVersion": undefined,
+          "requiredVersion": "~4.17.20",
           "singleton": true,
           "strictVersion": true,
         },

@@ -6,11 +6,13 @@ import * as graph from '@nrwl/devkit';
 import * as typescriptUtils from '@nrwl/workspace/src/utilities/typescript';
 import * as workspace from 'nx/src/project-graph/file-utils';
 import * as fs from 'fs';
+import * as devkit from '@nrwl/devkit';
 
 import { withModuleFederation } from './with-module-federation';
 
 describe('withModuleFederation', () => {
   afterEach(() => jest.clearAllMocks());
+
   it('should create a host config correctly', async () => {
     // ARRANGE
     (graph.readCachedProjectGraph as jest.Mock).mockReturnValue({
@@ -38,13 +40,9 @@ describe('withModuleFederation', () => {
     });
 
     (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.readFileSync as jest.Mock).mockReturnValue(
-      JSON.stringify({
-        dependencies: {
-          '@angular/core': '~13.2.0',
-        },
-      })
-    );
+    jest.spyOn(devkit, 'readJsonFile').mockImplementation(() => ({
+      dependencies: { '@angular/core': '~13.2.0' },
+    }));
 
     (typescriptUtils.readTsConfig as jest.Mock).mockReturnValue({
       options: {
@@ -91,13 +89,9 @@ describe('withModuleFederation', () => {
     });
 
     (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.readFileSync as jest.Mock).mockReturnValue(
-      JSON.stringify({
-        dependencies: {
-          '@angular/core': '~13.2.0',
-        },
-      })
-    );
+    jest.spyOn(devkit, 'readJsonFile').mockImplementation(() => ({
+      dependencies: { '@angular/core': '~13.2.0' },
+    }));
 
     (typescriptUtils.readTsConfig as jest.Mock).mockReturnValue({
       options: {
@@ -145,13 +139,9 @@ describe('withModuleFederation', () => {
     });
 
     (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.readFileSync as jest.Mock).mockReturnValue(
-      JSON.stringify({
-        dependencies: {
-          '@angular/core': '~13.2.0',
-        },
-      })
-    );
+    jest.spyOn(devkit, 'readJsonFile').mockImplementation(() => ({
+      dependencies: { '@angular/core': '~13.2.0', lodash: '~4.17.20' },
+    }));
 
     (typescriptUtils.readTsConfig as jest.Mock).mockReturnValue({
       options: {
@@ -203,13 +193,9 @@ describe('withModuleFederation', () => {
     });
 
     (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.readFileSync as jest.Mock).mockReturnValue(
-      JSON.stringify({
-        dependencies: {
-          '@angular/core': '~13.2.0',
-        },
-      })
-    );
+    jest.spyOn(devkit, 'readJsonFile').mockImplementation(() => ({
+      dependencies: { '@angular/core': '~13.2.0' },
+    }));
 
     (typescriptUtils.readTsConfig as jest.Mock).mockReturnValue({
       options: {
@@ -261,13 +247,9 @@ describe('withModuleFederation', () => {
     });
 
     (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.readFileSync as jest.Mock).mockReturnValue(
-      JSON.stringify({
-        dependencies: {
-          '@angular/core': '~13.2.0',
-        },
-      })
-    );
+    jest.spyOn(devkit, 'readJsonFile').mockImplementation(() => ({
+      dependencies: { '@angular/core': '~13.2.0' },
+    }));
 
     (typescriptUtils.readTsConfig as jest.Mock).mockImplementation(() => ({
       options: {
