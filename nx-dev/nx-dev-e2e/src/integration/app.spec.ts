@@ -1,13 +1,10 @@
-import { getGreeting } from '../support/app.po';
-
-describe('documentation', () => {
+describe('nx-dev', () => {
   beforeEach(() => cy.visit('/'));
 
-  it('should display welcome message', () => {
-    // Custom command example, see `../support/commands.ts` file
-    cy.login('my-email@something.com', 'myPassword');
-
-    // Function helper example, see `../support/app.po.ts` file
-    getGreeting().contains('Welcome to documentation!');
+  it('should display the primary heading', () => {
+    cy.get('[data-cy="primary-heading"]').should(
+      'contain',
+      'Smart, Fast and Extensible Build System'
+    );
   });
 });
