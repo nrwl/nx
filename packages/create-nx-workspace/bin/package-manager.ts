@@ -57,7 +57,7 @@ export function getPackageManagerCommand(
     case 'pnpm':
       const [major, minor] = getPackageManagerVersion('pnpm').split('.');
       let useExec = false;
-      if (+major >= 6 && +minor >= 13) {
+      if ((+major >= 6 && +minor >= 13) || +major >= 7) {
         useExec = true;
       }
       return {
