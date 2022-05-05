@@ -757,7 +757,7 @@ async function createApp(
 
   const pmc = getPackageManagerCommand(packageManager);
 
-  const command = `new ${name} ${args} --collection=@nrwl/workspace`;
+  const command = `new ${name} ${args} --collection=@nrwl/workspace/generators.json --cli=${cli}`;
 
   let nxWorkspaceRoot = `"${process.cwd().replace(/\\/g, '/')}"`;
 
@@ -773,11 +773,10 @@ async function createApp(
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }
   }
-  const fullCommandWithoutWorkspaceRoot = `${pmc.exec} nx ${command}/generators.json --cli=${cli}`;
   let workspaceSetupSpinner = ora('Creating your workspace').start();
 
   try {
-    const fullCommand = `${fullCommandWithoutWorkspaceRoot} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
+    const fullCommand = `${pmc.exec} nx ${command} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
     await execAndWait(fullCommand, tmpDir);
 
     workspaceSetupSpinner.succeed('Nx has successfully created the workspace.');
@@ -868,7 +867,7 @@ function mapErrorToBodyLines(error: {
   code: number;
   logFile: string;
 }): string[] {
-  if (error.logMessage.split('\n').filter((line) => !!line).length === 1) {
+  if (error.logMessage?.split('\n').filter((line) => !!line).length === 1) {
     // print entire log message only if it's only a single message
     return [`Error: ${error.logMessage}`];
   }
