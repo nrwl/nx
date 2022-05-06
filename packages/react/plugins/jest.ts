@@ -4,7 +4,7 @@ import { names } from '@nrwl/devkit';
 const JS_SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
 
 module.exports = {
-  process(src, filename, options) {
+  process(src, filename, options): { code: string } {
     const assetFilename = JSON.stringify(path.basename(filename));
 
     if (filename.match(/\.svg$/)) {
@@ -12,7 +12,8 @@ module.exports = {
       // https://github.com/smooth-code/svgr/blob/01b194cf967347d43d4cbe6b434404731b87cf27/packages/core/src/state.js#L6
       const pascalCaseFilename = names(path.parse(filename).name).className;
       const componentName = `Svg${pascalCaseFilename}`;
-      return `const React = require('react');
+      return {
+        code: `const React = require('react');
       module.exports = {
         __esModule: true,
         default: ${assetFilename},
@@ -27,7 +28,8 @@ module.exports = {
             })
           };
         }),
-      };`;
+      };`,
+      };
     }
 
     if (JS_SOURCE_EXTENSIONS.includes(path.extname(filename))) {
@@ -36,7 +38,9 @@ module.exports = {
     }
 
     // Fallback for unknown extensions
-    return `module.exports = ${assetFilename};`;
+    return {
+      code: `module.exports = ${assetFilename};`,
+    };
   },
 };
 

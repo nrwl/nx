@@ -733,6 +733,15 @@
         }
       }
     },
+    "14.4.0": {
+      "version": "14.4.0-beta.0",
+      "packages": {
+        "jest-jasmine2": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "14.4.4": {
       "version": "14.4.4-beta.0",
       "packages": {
