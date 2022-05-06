@@ -156,9 +156,31 @@ const guideUrls = {
 };
 
 /**
+ * API overview packages
+ */
+const overviewUrls = {
+  '/workspace/nrwl-workspace-overview': '/packages/workspace',
+  '/js/overview': '/packages/js',
+  '/web/overview': '/packages/web',
+  '/angular/overview': '/packages/angular',
+  '/react/overview': '/packages/react',
+  '/jest/overview': '/packages/jest',
+  '/cypress/overview': '/packages/cypress',
+  '/linter/overview': '/packages/linter',
+  '/node/overview': '/packages/node',
+  '/express/overview': '/packages/express',
+  '/nest/overview': '/packages/nest',
+  '/next/overview': '/packages/next',
+  '/detox/overview': '/packages/detox',
+  '/react-native/overview': '/packages/react-native',
+  '/nx-plugin/overview': '/packages/nx-plugin',
+};
+
+/**
  * Public export API
  */
 module.exports = {
   schemaUrls,
   guideUrls,
+  overviewUrls,
 };
