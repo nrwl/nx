@@ -1,5 +1,3 @@
-# Nest Plugin
-
 ![NestJS logo](/shared/nest-logo.png)
 
 Nest.js is a framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:

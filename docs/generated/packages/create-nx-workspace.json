@@ -4,6 +4,7 @@
   "description": "Smart, Fast and Extensible Build System",
   "root": "/packages/create-nx-workspace",
   "source": "/packages/create-nx-workspace/src",
+  "documentation": [],
   "generators": [],
   "executors": []
 }

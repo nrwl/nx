@@ -4,6 +4,7 @@
   "description": "ESLint Plugin for Nx",
   "root": "/packages/eslint-plugin-nx",
   "source": "/packages/eslint-plugin-nx/src",
+  "documentation": [],
   "generators": [],
   "executors": []
 }

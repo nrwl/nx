@@ -1,5 +1,3 @@
-# Linter Plugin
-
 The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
 
 ## Setting Up Linter

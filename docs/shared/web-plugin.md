@@ -1,5 +1,3 @@
-# Web Plugin
-
 The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Jest, Cypress, and Storybook.

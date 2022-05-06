@@ -1,5 +1,3 @@
-# React Plugin
-
 ![React Logo](/shared/react-logo.png)
 
 The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.

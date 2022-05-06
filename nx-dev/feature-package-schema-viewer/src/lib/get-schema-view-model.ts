@@ -51,13 +51,13 @@ export function getSchemaViewModel(
         ? getReferenceFromQuery(String(routerQuery['ref']))
         : '',
     lookup: new InternalLookup(schemaMetadata.schema as JsonSchema),
-    get currentSchema() {
+    get currentSchema(): NxSchema | null {
       return (
         (getSchemaFromReference(this.rootReference, this.lookup) as NxSchema) ??
         null
       );
     },
-    get currentSchemaExamples() {
+    get currentSchemaExamples(): Example | Errors {
       return generateJsonExampleFor(
         this.schemaMetadata.schema as JsonSchema,
         this.lookup,

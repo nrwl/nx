@@ -1,5 +1,3 @@
-# Nx Plugins
-
 Nx plugins are npm packages that contain generators and executors to extend a Nx workspace. Generators are blueprints to create new files from templates, and executors run those files. These plugins also update the `nx.json` when generating new libs or apps.
 
 > A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \

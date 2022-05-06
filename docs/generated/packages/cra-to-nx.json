@@ -3,6 +3,7 @@
   "name": "cra-to-nx",
   "root": "/packages/cra-to-nx",
   "source": "/packages/cra-to-nx/src",
+  "documentation": [],
   "generators": [],
   "executors": []
 }

@@ -4,6 +4,7 @@
   "description": "Smart, Fast and Extensible Build System",
   "root": "/packages/devkit",
   "source": "/packages/devkit/src",
+  "documentation": [],
   "generators": [],
   "executors": []
 }

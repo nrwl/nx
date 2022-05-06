@@ -1,5 +1,3 @@
-# JS Plugin
-
 The JS plugin contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.
 
 ## Setting Up JS

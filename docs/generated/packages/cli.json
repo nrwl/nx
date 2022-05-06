@@ -4,6 +4,7 @@
   "description": "Smart, Fast and Extensible Build System",
   "root": "/packages/cli",
   "source": "/packages/cli/src",
+  "documentation": [],
   "generators": [],
   "executors": []
 }

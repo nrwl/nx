@@ -466,7 +466,7 @@
           {
             "id": "nrwl-workspace-overview",
             "name": "Overview",
-            "file": "shared/workspace-plugin"
+            "path": "/packages/workspace"
           },
           {
             "name": "library generator",
@@ -527,7 +527,7 @@
           {
             "name": "Overview",
             "id": "overview",
-            "file": "shared/js-plugin"
+            "path": "/packages/js"
           },
           {
             "name": "library generator",
@@ -558,7 +558,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/web-plugin"
+            "path": "/packages/web"
           },
           {
             "name": "application generator",
@@ -594,7 +594,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/angular-plugin"
+            "path": "/packages/angular"
           },
           {
             "name": "application generator",
@@ -740,7 +740,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/react-plugin"
+            "path": "/packages/react"
           },
           {
             "name": "application generator",
@@ -796,7 +796,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/jest-plugin"
+            "path": "/packages/jest"
           },
           {
             "name": "jest executor",
@@ -812,7 +812,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/cypress-plugin"
+            "path": "/packages/cypress"
           },
           {
             "name": "cypress executor",
@@ -830,6 +830,11 @@
         "name": "storybook",
         "id": "storybook",
         "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "path": "/packages/storybook"
+          },
           {
             "id": "overview-react",
             "name": "Overview (React)",
@@ -894,7 +899,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/linter-plugin"
+            "path": "/packages/linter"
           },
           {
             "id": "eslint-plugin-nx",
@@ -925,7 +930,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/node-plugin"
+            "path": "/packages/node"
           },
           {
             "name": "application generator",
@@ -956,7 +961,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/express-plugin"
+            "path": "/packages/express"
           },
           {
             "name": "application generator",
@@ -972,7 +977,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/nest-plugin"
+            "path": "/packages/nest"
           },
           {
             "name": "application generator",
@@ -1073,7 +1078,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/next-plugin"
+            "path": "/packages/next"
           },
           {
             "name": "application generator",
@@ -1114,7 +1119,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/detox-plugin"
+            "path": "/packages/detox"
           },
           {
             "name": "application generator",
@@ -1140,7 +1145,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/react-native-plugin"
+            "path": "/packages/react-native"
           },
           {
             "name": "application generator",
@@ -1221,7 +1226,7 @@
           {
             "id": "overview",
             "name": "Overview",
-            "file": "shared/nx-plugin"
+            "path": "/packages/nx-plugin"
           },
           {
             "name": "executor generator",
@@ -1580,6 +1585,244 @@
             "name": "Large Repo and DTE",
             "id": "dte",
             "file": "shared/examples/dte"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "additional api references",
+    "id": "additional-api-references",
+    "itemList": [
+      {
+        "name": "workspace",
+        "id": "workspace",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "overview",
+            "file": "shared/workspace-plugin"
+          }
+        ]
+      },
+      {
+        "name": "js",
+        "id": "js",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "overview",
+            "file": "shared/js-plugin"
+          }
+        ]
+      },
+      {
+        "name": "web",
+        "id": "web",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "overview",
+            "file": "shared/web-plugin"
+          }
+        ]
+      },
+      {
+        "name": "angular",
+        "id": "angular",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "overview",
+            "file": "shared/angular-plugin"
+          }
+        ]
+      },
+      {
+        "name": "react",
+        "id": "react",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "overview",
+            "file": "shared/react-plugin"
+          }
+        ]
+      },
+      {
+        "name": "jest",
+        "id": "jest",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "overview",
+            "file": "shared/jest-plugin"
+          }
+        ]
+      },
+      {
+        "name": "cypress",
+        "id": "cypress",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "overview",
+            "file": "shared/cypress-plugin"
+          }
+        ]
+      },
+      {
+        "name": "storybook",
+        "id": "storybook",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview Generic",
+            "file": "shared/guides/storybook/plugin-overview"
+          },
+          {
+            "id": "overview-react",
+            "name": "Overview (React)",
+            "file": "shared/guides/storybook/plugin-react"
+          },
+          {
+            "id": "overview-angular",
+            "name": "Overview (Angular)",
+            "file": "shared/guides/storybook/plugin-angular"
+          },
+          {
+            "id": "migrate-webpack-final-react",
+            "name": "Migrate to the Nrwl React Storybook Preset",
+            "file": "shared/guides/storybook/migrate-webpack-final-react"
+          },
+          {
+            "id": "migrate-webpack-final-angular",
+            "name": "Migrate to the Nrwl Angular Storybook Preset",
+            "file": "shared/guides/storybook/migrate-webpack-final-angular"
+          },
+          {
+            "id": "upgrade-storybook-v6-react",
+            "name": "Upgrading to Storybook 6 (React)",
+            "file": "shared/guides/storybook/storybook-v6-react"
+          },
+          {
+            "id": "upgrade-storybook-v6-angular",
+            "name": "Upgrading to Storybook 6 (Angular)",
+            "file": "shared/guides/storybook/storybook-v6-angular"
+          },
+          {
+            "id": "storybook-composition-setup",
+            "name": "Setting up Storybook Composition with Nx",
+            "file": "shared/guides/storybook/storybook-composition-setup"
+          }
+        ]
+      },
+      {
+        "name": "linter",
+        "id": "linter",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "file": "shared/linter-plugin"
+          },
+          {
+            "id": "eslint-plugin-nx",
+            "name": "eslint-plugin-nx",
+            "file": "shared/eslint-plugin-nx"
+          }
+        ]
+      },
+      {
+        "name": "node",
+        "id": "node",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "file": "shared/node-plugin"
+          }
+        ]
+      },
+      {
+        "name": "express",
+        "id": "express",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "file": "shared/express-plugin"
+          }
+        ]
+      },
+      {
+        "name": "nest",
+        "id": "nest",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "file": "shared/nest-plugin"
+          }
+        ]
+      },
+      {
+        "name": "next",
+        "id": "next",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "file": "shared/next-plugin"
+          }
+        ]
+      },
+      {
+        "name": "detox",
+        "id": "detox",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "file": "shared/detox-plugin"
+          }
+        ]
+      },
+      {
+        "name": "react native",
+        "id": "react-native",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "file": "shared/react-native-plugin"
+          }
+        ]
+      },
+      {
+        "name": "Nx Plugin",
+        "id": "nx-plugin",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "file": "shared/nx-plugin"
+          }
+        ]
+      },
+      {
+        "name": "Nx Devkit",
+        "id": "nx-devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "Overview",
+            "file": "generated/api-nx-devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "Ng CLI Adapter",
+            "file": "generated/api-nx-devkit/ngcli_adapter"
           }
         ]
       }
