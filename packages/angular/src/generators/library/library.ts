@@ -58,7 +58,8 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
     name: options.name,
     prefix: options.prefix,
     entryFile: 'index',
-    skipPackageJson: !(options.publishable || options.buildable),
+    skipPackageJson:
+      options.skipPackageJson || !(options.publishable || options.buildable),
     skipTsConfig: true,
   });
 

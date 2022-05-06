@@ -29,4 +29,5 @@ export interface Schema {
   compilationMode?: 'full' | 'partial';
   setParserOptionsProject?: boolean;
   skipModule?: boolean;
+  skipPackageJson?: boolean;
 }
