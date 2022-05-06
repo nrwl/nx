@@ -44,7 +44,7 @@
     "@svgr/webpack": "^6.1.2",
     "chalk": "4.1.0",
     "eslint-config-next": "^12.1.0",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.1.0",
     "url-loader": "^4.1.1",
     "tsconfig-paths": "^3.9.0",
     "ts-node": "~9.1.1",

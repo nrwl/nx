@@ -31,7 +31,7 @@
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@nrwl/js": "*",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.1.0",
     "rxjs": "^6.5.4",
     "tslib": "^2.3.0"
   }

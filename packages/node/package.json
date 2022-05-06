@@ -39,7 +39,7 @@
     "copy-webpack-plugin": "^9.0.1",
     "enhanced-resolve": "^5.8.3",
     "fork-ts-checker-webpack-plugin": "6.2.10",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.1.0",
     "glob": "7.1.4",
     "license-webpack-plugin": "^4.0.2",
     "rxjs": "^6.5.4",

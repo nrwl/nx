@@ -68,7 +68,7 @@
     "enhanced-resolve": "^5.8.3",
     "file-loader": "^6.2.0",
     "fork-ts-checker-webpack-plugin": "6.2.10",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.1.0",
     "http-server": "^14.1.0",
     "identity-obj-proxy": "3.0.0",
     "less": "3.12.2",
