@@ -23,7 +23,8 @@ describe('update-swcrc-path migration', () => {
 
     await updateSwcrcPath(tree);
 
-    const { targets } = readProjectConfiguration(tree, 'test-package');
+    const { targets, root } = readProjectConfiguration(tree, 'test-package');
+    expect(root).toBe('packages/test-package');
     expect(targets.build.options.somethingThatShouldNotBeRemoved).toBeDefined();
     expect(targets.build.options.swcrcPath).toBeUndefined();
     expect(targets.build.options.swcrc).toBe(
