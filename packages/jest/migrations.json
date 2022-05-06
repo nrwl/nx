@@ -59,6 +59,18 @@
       "cli": "nx",
       "description": "Exclude jest.config.ts from tsconfig where missing.",
       "factory": "./src/migrations/update-14-0-0/update-jest-config-ext"
+    },
+    "update-configs-jest-28": {
+      "version": "14.4.0-beta.1",
+      "cli": "nx",
+      "description": "Update jest configs to support jest 28 changes (https://jestjs.io/docs/upgrading-to-jest28#configuration-options)",
+      "factory": "./src/migrations/update-14-4-0/update-configs-jest-28"
+    },
+    "update-tests-jest-28": {
+      "version": "14.4.0-beta.1",
+      "cli": "nx",
+      "description": "Update jest test files  to support jest 28 changes (https://jestjs.io/docs/upgrading-to-jest28)",
+      "factory": "./src/migrations/update-14-4-0/update-tests-jest-28"
     }
   },
   "packageJsonUpdates": {
@@ -148,6 +160,35 @@
       "packages": {
         "ts-node": {
           "version": "10.9.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.6.0": {
+      "version": "14.6.0-beta.1",
+      "packages": {
+        "jest": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "expect": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@jest/globals": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "~28.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "~28.1.1",
           "alwaysAddToPackageJson": false
         }
       }

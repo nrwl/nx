@@ -1,5 +1,6 @@
-import { Tree } from '@nrwl/devkit';
+import { addDependenciesToPackageJson, Tree } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
+import { jestVersion } from '@nrwl/jest/src/utils/versions';
 
 export async function addJest(
   host: Tree,
@@ -42,5 +43,14 @@ export async function addJest(
 };`;
   host.write(configPath, content);
 
-  return jestTask;
+  const installTask = addDependenciesToPackageJson(
+    host,
+    {},
+    { 'jest-jasmine2': jestVersion }
+  );
+
+  return () => {
+    jestTask();
+    installTask();
+  };
 }
