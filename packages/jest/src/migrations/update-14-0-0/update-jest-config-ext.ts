@@ -107,7 +107,7 @@ export async function updateJestConfigExt(tree: Tree) {
     (options, projectName, target, configuration) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
 
-      if (!isJestConfigValid(tree, options)) {
+      if (!options.jestConfig || !isJestConfigValid(tree, options)) {
         return;
       }
 

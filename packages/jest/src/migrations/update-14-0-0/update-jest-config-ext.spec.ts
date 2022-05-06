@@ -26,6 +26,11 @@ describe('Jest Migration (v14.0.0)', () => {
             jestConfig: 'libs/lib-one/jest.config.js',
             passWithNoTests: true,
           },
+          configurations: {
+            production: {
+              silent: true,
+            },
+          },
         },
       },
     });
