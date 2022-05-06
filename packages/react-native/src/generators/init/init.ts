@@ -14,6 +14,7 @@ import { detoxInitGenerator } from '@nrwl/detox';
 import {
   reactVersion,
   typesReactVersion,
+  reactTestRendererVersion,
 } from '@nrwl/react/src/utils/versions';
 
 import {
@@ -29,7 +30,6 @@ import {
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeVersion,
-  reactTestRendererVersion,
   testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesNodeVersion,
