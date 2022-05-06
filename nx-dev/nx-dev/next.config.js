@@ -98,6 +98,15 @@ module.exports = withNx({
       });
     }
 
+    // Api overviews
+    for (let s of Object.keys(redirectRules.overviewUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.overviewUrls[s],
+        permanent: true,
+      });
+    }
+
     // Generic, catch-all
     rules.push({
       source: '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*',
