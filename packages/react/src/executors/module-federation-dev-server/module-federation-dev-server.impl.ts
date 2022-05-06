@@ -1,8 +1,12 @@
-import { ExecutorContext, runExecutor } from '@nrwl/devkit';
+import { ExecutorContext, logger, runExecutor } from '@nrwl/devkit';
 import devServerExecutor, {
   WebDevServerOptions,
 } from '@nrwl/web/src/executors/dev-server/dev-server.impl';
 import { join } from 'path';
+import {
+  combineAsyncIterators,
+  tapAsyncIterator,
+} from '../../utils/async-iterator';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
@@ -57,61 +61,13 @@ export default async function* moduleFederationDevServer(
     );
   }
 
-  return yield* iter;
-}
-
-// TODO(jack): Extract this helper
-function getNextAsyncIteratorFactory(options) {
-  return async (asyncIterator, index) => {
-    try {
-      const iterator = await asyncIterator.next();
-
-      return { index, iterator };
-    } catch (err) {
-      if (options.errorCallback) {
-        options.errorCallback(err, index);
-      }
-      if (options.throwError !== false) {
-        return Promise.reject(err);
-      }
-
-      return { index, iterator: { done: true } };
-    }
-  };
-}
-
-async function* combineAsyncIterators(
-  ...iterators: { 0: AsyncIterator<any> } & AsyncIterator<any>[]
-) {
-  let [options] = iterators;
-  if (typeof options.next === 'function') {
-    options = Object.create(null);
-  } else {
-    iterators.shift();
-  }
-
-  const getNextAsyncIteratorValue = getNextAsyncIteratorFactory(options);
-
-  try {
-    const asyncIteratorsValues = new Map(
-      iterators.map((it, idx) => [idx, getNextAsyncIteratorValue(it, idx)])
-    );
-
-    do {
-      const { iterator, index } = await Promise.race(
-        asyncIteratorsValues.values()
+  let numAwaiting = knownRemotes.length + 1; // remotes + host
+  return yield* tapAsyncIterator(iter, (x) => {
+    numAwaiting--;
+    if (numAwaiting === 0) {
+      logger.info(
+        `Host is ready: ${options.host ?? 'localhost'}:${options.port ?? 4200}`
       );
-      if (iterator.done) {
-        asyncIteratorsValues.delete(index);
-      } else {
-        yield iterator.value;
-        asyncIteratorsValues.set(
-          index,
-          getNextAsyncIteratorValue(iterators[index], index)
-        );
-      }
-    } while (asyncIteratorsValues.size > 0);
-  } finally {
-    await Promise.allSettled(iterators.map((it) => it.return()));
-  }
+    }
+  });
 }

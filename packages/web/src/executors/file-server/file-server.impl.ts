@@ -1,4 +1,5 @@
 import { execFileSync, fork } from 'child_process';
+import * as chalk from 'chalk';
 import {
   ExecutorContext,
   joinPathFragments,
@@ -131,8 +132,13 @@ export default async function* fileServerExecutor(
         execFileSync(pmCmd, args, {
           stdio: [0, 1, 2],
         });
-      } catch {}
-      running = false;
+      } catch {
+        throw new Error(
+          `Build target failed: ${chalk.bold(options.buildTarget)}`
+        );
+      } finally {
+        running = false;
+      }
     }
   };
 
