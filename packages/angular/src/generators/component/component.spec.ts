@@ -83,6 +83,47 @@ describe('component Generator', () => {
     );
   });
 
+  it('should create the component correctly and not export it when "--skip-import=true"', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
+    tree.write('libs/lib1/src/index.ts', '');
+
+    // ACT
+    await componentGenerator(tree, {
+      name: 'example',
+      project: 'lib1',
+      skipImport: true,
+    });
+
+    // ASSERT
+    const componentSource = tree.read(
+      'libs/lib1/src/lib/example/example.component.ts',
+      'utf-8'
+    );
+    expect(componentSource).toMatchSnapshot();
+
+    const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
+    expect(indexSource).not.toContain(
+      `export * from "./lib/example/example.component"`
+    );
+  });
+
   it('should create the component correctly but not export it when no entry point exists', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);

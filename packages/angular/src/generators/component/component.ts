@@ -47,7 +47,7 @@ function checkPathUnderProjectRoot(tree: Tree, schema: Partial<Schema>) {
 }
 
 function exportComponent(tree: Tree, schema: Schema) {
-  if (!schema.export) {
+  if (!schema.export || schema.skipImport) {
     return;
   }
 

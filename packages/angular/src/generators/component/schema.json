@@ -81,6 +81,11 @@
       "description": "Create the new files at the top level of the current project.",
       "default": false
     },
+    "skipImport": {
+      "type": "boolean",
+      "description": "Do not import this component into the owning NgModule.",
+      "default": false
+    },
     "selector": {
       "type": "string",
       "format": "html-selector",
