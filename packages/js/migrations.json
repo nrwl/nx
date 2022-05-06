@@ -23,6 +23,12 @@
       "version": "14.0.0-beta.2",
       "description": "Exclude jest config from .lib.swcrc",
       "factory": "./src/migrations/update-14-0-0/exclude-jest-config-swcrc"
+    },
+    "update-swcrc-path": {
+      "cli": "nx",
+      "version": "14.1.1-beta.0",
+      "description": "Rename option swcrcPath to swcrc, and resolve relative to workspace root",
+      "factory": "./src/migrations/update-14.1.1-beta.0/update-swcrc-path"
     }
   },
   "packageJsonUpdates": {}
