@@ -133,7 +133,11 @@ export default async function* fileServerExecutor(
         execFileSync(pmCmd, args, {
           stdio: [0, 1, 2],
         });
-      } catch {}
+      } catch {
+        throw new Error(
+          "Project failed to build. Check the build's error output for more information."
+        );
+      }
       running = false;
     }
   };

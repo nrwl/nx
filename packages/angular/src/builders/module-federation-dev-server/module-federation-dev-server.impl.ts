@@ -40,14 +40,9 @@ export function moduleFederationDevServer(
     ? options.devRemotes
     : [options.devRemotes];
 
-  const remotePorts: number[] = [];
   for (const remote of remotes) {
     const isDev = devServeRemotes.includes(remote);
     const target = isDev ? 'serve' : 'serve-static';
-
-    remotePorts.push(
-      workspaceConfig.projects[remote]?.targets[target]?.options.port ?? 4200
-    );
 
     scheduleTarget(
       context.workspaceRoot,
@@ -59,7 +54,13 @@ export function moduleFederationDevServer(
         executor: context.builder.builderName,
       },
       options.verbose
-    );
+    ).then((obs) => {
+      obs.toPromise().catch((err) => {
+        throw new Error(
+          `Remote '${remote}' failed to serve correctly due to the following: \r\n${err.toString()}`
+        );
+      });
+    });
   }
 
   return webpackServer(options, context);
