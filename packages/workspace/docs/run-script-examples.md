@@ -5,7 +5,7 @@
     "root": "packages/frontend",
     "targets": {
         "build": {
-            "executor": "@nrwl/workspace:run-script",
+            "executor": "nx:run-script",
             "options": {
                 "script": "build-my-project"
             }
@@ -29,7 +29,7 @@ By default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/di
     "root": "packages/frontend",
     "targets": {
         "build": {
-            "executor": "@nrwl/workspace:run-script",
+            "executor": "nx:run-script",
             "outputs": ["packages/frontend/dist", "packaged/frontend/docs"],
             "options": {
                 "script": "build-my-project"
