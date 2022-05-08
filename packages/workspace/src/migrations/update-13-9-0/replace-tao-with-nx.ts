@@ -7,9 +7,9 @@ import {
 
 export function replaceTaoWithNx(host: Tree) {
   updateJson(host, 'package.json', (json: any) => {
-    if (json.dependencies['@nrwl/workspace']) {
+    if (json.dependencies?.['@nrwl/workspace']) {
       json.dependencies['nx'] = json.dependencies['@nrwl/workspace'];
-    } else if (json.devDependencies['@nrwl/workspace']) {
+    } else if (json.devDependencies?.['@nrwl/workspace']) {
       json.devDependencies['nx'] = json.devDependencies['@nrwl/workspace'];
     }
     removeTao(json.dependencies);
