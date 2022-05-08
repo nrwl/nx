@@ -85,7 +85,7 @@ can be testing `app1` at the same time.
 
 ![task-graph-execution](/shared/mental-model/task-graph-execution.png)
 
-Nx also runs the tasks in the task graph in the right order. Nx executing tasks being executed speeds up your overall
+Nx also runs the tasks in the task graph in the right order. Nx executing tasks in parallel speeds up your overall
 execution time.
 
 ## Affected commands
