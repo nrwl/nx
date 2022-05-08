@@ -31,7 +31,7 @@
       "factory": "./src/generators/component/component#componentSchematic",
       "schema": "./src/generators/component/schema.json",
       "description": "Create a React component.",
-      "aliases": "c"
+      "aliases": ["c"]
     },
 
     "redux": {
@@ -73,7 +73,7 @@
       "factory": "./src/generators/hook/hook#chookSchematic",
       "schema": "./src/generators/hook/schema.json",
       "description": "Create a hook.",
-      "aliases": "h"
+      "aliases": ["h"]
     }
   },
   "generators": {
@@ -105,7 +105,7 @@
       "factory": "./src/generators/component/component#componentGenerator",
       "schema": "./src/generators/component/schema.json",
       "description": "Create a React component.",
-      "aliases": "c"
+      "aliases": ["c"]
     },
 
     "redux": {
@@ -147,7 +147,7 @@
       "factory": "./src/generators/hook/hook#hookGenerator",
       "schema": "./src/generators/hook/schema.json",
       "description": "Create a hook.",
-      "aliases": "c"
+      "aliases": ["c"]
     },
 
     "host": {
