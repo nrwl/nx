@@ -7,6 +7,11 @@ export function swc(): Plugin {
     transform(code, filename) {
       return transform(code, {
         filename,
+        jsc: {
+          transform: {
+            react: { runtime: 'automatic' },
+          },
+        },
       });
     },
   };
