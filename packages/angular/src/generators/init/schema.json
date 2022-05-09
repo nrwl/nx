@@ -70,7 +70,7 @@
     "skipPostInstall": {
       "type": "boolean",
       "default": false,
-      "description": "Do not add or append `ngcc` to `postinstall`-script in `package.json`."
+      "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
     }
   },
   "additionalProperties": false
