@@ -55,6 +55,10 @@
     "e2eProjectName": {
       "type": "string",
       "description": "The project name of the associated E2E project for the application. This is only required for Cypress E2E projects that do not follow the naming convention `<appName>-e2e`."
+    },
+    "prefix": {
+      "type": "string",
+      "description": "The prefix to use for any generated component."
     }
   },
   "required": ["appName", "mfeType"],
