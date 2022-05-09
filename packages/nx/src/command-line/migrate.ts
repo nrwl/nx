@@ -804,6 +804,15 @@ async function isMigratingToNewMajor(from: string, to: string) {
   return major(from) < major(to);
 }
 
+function readNxVersion(packageJson: PackageJson) {
+  return (
+    packageJson?.devDependencies?.['nx'] ??
+    packageJson?.dependencies?.['nx'] ??
+    packageJson?.devDependencies?.['@nrwl/workspace'] ??
+    packageJson?.dependencies?.['@nrwl/workspace']
+  );
+}
+
 async function generateMigrationsJsonAndUpdatePackageJson(
   root: string,
   opts: {
@@ -818,20 +827,25 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     let originalPackageJson = readJsonFile<PackageJson>(
       join(root, 'package.json')
     );
-    if (
-      ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
-      (await isMigratingToNewMajor(
-        originalPackageJson.devDependencies?.['nx'] ??
-          originalPackageJson.devDependencies?.['@nrwl/workspace'],
-        opts.targetVersion
-      ))
-    ) {
-      await connectToNxCloudCommand(
-        'We noticed you are migrating to a new major version, but are not taking advantage of Nx Cloud. Nx Cloud can make your CI up to 10 times faster. Learn more about it here: nx.app. Would you like to add it?'
-      );
-      originalPackageJson = readJsonFile<PackageJson>(
-        join(root, 'package.json')
-      );
+
+    try {
+      if (
+        ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
+        (await isMigratingToNewMajor(
+          readNxVersion(originalPackageJson),
+          opts.targetVersion
+        ))
+      ) {
+        await connectToNxCloudCommand(
+          'We noticed you are migrating to a new major version, but are not taking advantage of Nx Cloud. Nx Cloud can make your CI up to 10 times faster. Learn more about it here: nx.app. Would you like to add it?'
+        );
+        originalPackageJson = readJsonFile<PackageJson>(
+          join(root, 'package.json')
+        );
+      }
+    } catch {
+      // The above code is to remind folks when updating to a new major and not currently using Nx cloud.
+      // If for some reason it fails, it shouldn't affect the overall migration process
     }
 
     logger.info(`Fetching meta data about packages.`);
