@@ -27,7 +27,10 @@ export async function angularInitGenerator(
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(rawOptions);
   setDefaults(host, options);
-  addPostInstall(host);
+
+  if (!options.skipPostInstall) {
+    addPostInstall(host);
+  }
 
   const depsTask = !options.skipPackageJson
     ? updateDependencies(host)
@@ -49,6 +52,7 @@ function normalizeOptions(options: Schema): Required<Schema> {
     linter: options.linter ?? Linter.EsLint,
     skipFormat: options.skipFormat ?? false,
     skipInstall: options.skipInstall ?? false,
+    skipPostInstall: options.skipPostInstall ?? false,
     skipPackageJson: options.skipPackageJson ?? false,
     style: options.style ?? 'css',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
