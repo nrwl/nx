@@ -2,9 +2,11 @@ import {
   addProjectConfiguration,
   joinPathFragments,
   ProjectConfiguration,
+  readJson,
   readProjectConfiguration,
   Tree,
   updateJson,
+  updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { installedCypressVersion } from '../../utils/cypress-version';
@@ -26,7 +28,7 @@ describe('convertToCypressTen', () => {
   > = installedCypressVersion as never;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace(2);
     mockedInstalledCypressVersion.mockReturnValue(9);
   });
 
@@ -67,6 +69,11 @@ describe('convertToCypressTen', () => {
       expect(
         tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
       ).toMatchSnapshot();
+      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+        'src/**/*.ts',
+        'src/**/*.js',
+        'cypress.config.ts',
+      ]);
       expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
       expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
     });
@@ -94,6 +101,11 @@ describe('convertToCypressTen', () => {
       expect(
         tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
       ).toMatchSnapshot();
+      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+        'src/**/*.ts',
+        'src/**/*.js',
+        'cypress.config.ts',
+      ]);
       expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
       expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
     });
@@ -107,7 +119,144 @@ describe('convertToCypressTen', () => {
       expect(tree.exists('apps/app/src/e2e/app.cy.ts')).toBeFalsy();
       expect(tree.exists('apps/app/src/support/e2e.ts')).toBeFalsy();
     });
+
+    it('should handle custom target names', async () => {
+      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      const pc = readProjectConfiguration(tree, 'app-e2e');
+      pc.targets = {
+        'e2e-custom': {
+          ...pc.targets['e2e'],
+        },
+      };
+      delete pc.targets['e2e'];
+      updateProjectConfiguration(tree, 'app-e2e', pc);
+
+      await convertCypressProject(tree, {
+        targets: ['e2e-custom'],
+        project: 'app-e2e',
+      });
+
+      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(
+        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+        'src/**/*.ts',
+        'src/**/*.js',
+        'cypress.config.ts',
+      ]);
+      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+    });
+
+    it('should infer targets with --all flag', async () => {
+      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      const pc = readProjectConfiguration(tree, 'app-e2e');
+      pc.targets = {
+        ...pc.targets,
+        'e2e-custom': {
+          ...pc.targets['e2e'],
+        },
+      };
+
+      updateProjectConfiguration(tree, 'app-e2e', pc);
+
+      await convertCypressProject(tree, {
+        project: 'app-e2e',
+        all: true,
+      });
+
+      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(
+        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+        'src/**/*.ts',
+        'src/**/*.js',
+        'cypress.config.ts',
+      ]);
+      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(
+        readProjectConfiguration(tree, 'app-e2e').targets
+      ).toMatchSnapshot();
+    });
+
+    it('should not break when an invalid target is passed in', async () => {
+      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      const pc = readProjectConfiguration(tree, 'app-e2e');
+      pc.targets = {
+        ...pc.targets,
+        'e2e-custom': {
+          ...pc.targets['e2e'],
+        },
+      };
+
+      updateProjectConfiguration(tree, 'app-e2e', pc);
+
+      await convertCypressProject(tree, {
+        project: 'app-e2e',
+        targets: ['e2e-custom', 'e2e', 'invalid'],
+      });
+
+      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(
+        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+        'src/**/*.ts',
+        'src/**/*.js',
+        'cypress.config.ts',
+      ]);
+      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(
+        readProjectConfiguration(tree, 'app-e2e').targets
+      ).toMatchSnapshot();
+    });
+
+    it('should handle multiple configurations', async () => {
+      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      const pc = readProjectConfiguration(tree, 'app-e2e');
+      pc.targets = {
+        ...pc.targets,
+        e2e: {
+          ...pc.targets['e2e'],
+          configurations: {
+            production: {
+              devServerTarget: 'target:serve:production',
+            },
+            static: {
+              baseUrl: 'http://localhost:3000',
+            },
+          },
+        },
+      };
+
+      updateProjectConfiguration(tree, 'app-e2e', pc);
+
+      await convertCypressProject(tree, {
+        project: 'app-e2e',
+        all: true,
+      });
+
+      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(
+        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+        'src/**/*.ts',
+        'src/**/*.js',
+        'cypress.config.ts',
+      ]);
+      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(
+        readProjectConfiguration(tree, 'app-e2e').targets['e2e']
+      ).toMatchSnapshot();
+    });
   });
+
   describe('updateProjectPaths', () => {
     const cypressConfigs = {
       cypressConfigTs: {
@@ -260,7 +409,7 @@ const eh = require("../../support")
 
       const actual = verifyProjectForUpgrade(tree, projectConfiguration, 'e2e');
 
-      expect(actual.shouldUpgrade).toEqual(false);
+      expect(actual.status).toEqual('no-convert');
     });
 
     it('should allow upgrade', () => {

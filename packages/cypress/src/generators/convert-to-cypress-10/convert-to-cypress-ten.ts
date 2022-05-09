@@ -14,6 +14,7 @@ function normalizeOptions(
   options: CypressConvertOptions
 ): CypressConvertOptions {
   // ignore project as that will always be the default project if not provided
+  options.targets = options.targets || ['e2e'];
   if (options.all) {
     return {
       all: true,

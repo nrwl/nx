@@ -1,5 +1,192 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`convertToCypressTen convertCypressProject should handle custom target names 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+fileServerFolder: '.',
+fixturesFolder: './src/fixtures',
+video: true,
+videosFolder: '../../dist/cypress/apps/app-e2e/videos',
+screenshotsFolder: '../../dist/cypress/apps/app-e2e/screenshots',
+chromeWebSecurity: false,
+specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
+supportFile: 'src/support/e2e.ts',
+
+}
+})"
+`;
+
+exports[`convertToCypressTen convertCypressProject should handle multiple configurations 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+fileServerFolder: '.',
+fixturesFolder: './src/fixtures',
+video: true,
+videosFolder: '../../dist/cypress/apps/app-e2e/videos',
+screenshotsFolder: '../../dist/cypress/apps/app-e2e/screenshots',
+chromeWebSecurity: false,
+specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
+supportFile: 'src/support/e2e.ts',
+
+}
+})"
+`;
+
+exports[`convertToCypressTen convertCypressProject should handle multiple configurations 2`] = `
+Object {
+  "configurations": Object {
+    "production": Object {
+      "devServerTarget": "target:serve:production",
+    },
+    "static": Object {
+      "baseUrl": "http://localhost:3000",
+    },
+  },
+  "executor": "@nrwl/cypress:cypress",
+  "options": Object {
+    "cypressConfig": "apps/app-e2e/cypress.config.ts",
+    "devServerTarget": "app:serve",
+    "testingType": "e2e",
+  },
+}
+`;
+
+exports[`convertToCypressTen convertCypressProject should infer targets with --all flag 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+fileServerFolder: '.',
+fixturesFolder: './src/fixtures',
+video: true,
+videosFolder: '../../dist/cypress/apps/app-e2e/videos',
+screenshotsFolder: '../../dist/cypress/apps/app-e2e/screenshots',
+chromeWebSecurity: false,
+specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
+supportFile: 'src/support/e2e.ts',
+
+}
+})"
+`;
+
+exports[`convertToCypressTen convertCypressProject should infer targets with --all flag 2`] = `
+Object {
+  "e2e": Object {
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "app:serve:production",
+      },
+    },
+    "executor": "@nrwl/cypress:cypress",
+    "options": Object {
+      "cypressConfig": "apps/app-e2e/cypress.config.ts",
+      "devServerTarget": "app:serve",
+      "testingType": "e2e",
+    },
+  },
+  "e2e-custom": Object {
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "app:serve:production",
+      },
+    },
+    "executor": "@nrwl/cypress:cypress",
+    "options": Object {
+      "cypressConfig": "apps/app-e2e/cypress.config.ts",
+      "devServerTarget": "app:serve",
+      "testingType": "e2e",
+    },
+  },
+  "lint": Object {
+    "executor": "@nrwl/linter:eslint",
+    "options": Object {
+      "lintFilePatterns": Array [
+        "apps/app-e2e/**/*.{js,ts}",
+      ],
+    },
+    "outputs": Array [
+      "{options.outputFile}",
+    ],
+  },
+}
+`;
+
+exports[`convertToCypressTen convertCypressProject should not break when an invalid target is passed in 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+fileServerFolder: '.',
+fixturesFolder: './src/fixtures',
+video: true,
+videosFolder: '../../dist/cypress/apps/app-e2e/videos',
+screenshotsFolder: '../../dist/cypress/apps/app-e2e/screenshots',
+chromeWebSecurity: false,
+specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
+supportFile: 'src/support/e2e.ts',
+
+}
+})"
+`;
+
+exports[`convertToCypressTen convertCypressProject should not break when an invalid target is passed in 2`] = `
+Object {
+  "e2e": Object {
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "app:serve:production",
+      },
+    },
+    "executor": "@nrwl/cypress:cypress",
+    "options": Object {
+      "cypressConfig": "apps/app-e2e/cypress.config.ts",
+      "devServerTarget": "app:serve",
+      "testingType": "e2e",
+    },
+  },
+  "e2e-custom": Object {
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "app:serve:production",
+      },
+    },
+    "executor": "@nrwl/cypress:cypress",
+    "options": Object {
+      "cypressConfig": "apps/app-e2e/cypress.config.ts",
+      "devServerTarget": "app:serve",
+      "testingType": "e2e",
+    },
+  },
+  "lint": Object {
+    "executor": "@nrwl/linter:eslint",
+    "options": Object {
+      "lintFilePatterns": Array [
+        "apps/app-e2e/**/*.{js,ts}",
+      ],
+    },
+    "outputs": Array [
+      "{options.outputFile}",
+    ],
+  },
+}
+`;
+
 exports[`convertToCypressTen convertCypressProject should update project w/customized config 1`] = `
 "import { defineConfig } from 'cypress'
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
@@ -76,7 +263,7 @@ exports[`convertToCypressTen verifyProjectForUpgrade should allow upgrade 1`] = 
 Object {
   "cypressConfigPathJson": "apps/app-e2e/cypress.json",
   "cypressConfigPathTs": "apps/app-e2e/cypress.config.ts",
-  "shouldUpgrade": true,
+  "status": "convert",
 }
 `;
 
@@ -84,7 +271,7 @@ exports[`convertToCypressTen verifyProjectForUpgrade should not upgrade if both 
 Object {
   "cypressConfigPathJson": "apps/app-e2e/cypress.json",
   "cypressConfigPathTs": "apps/app-e2e/cypress.config.ts",
-  "shouldUpgrade": false,
+  "status": "no-convert",
 }
 `;
 
@@ -92,6 +279,6 @@ exports[`convertToCypressTen verifyProjectForUpgrade should not upgrade if not u
 Object {
   "cypressConfigPathJson": "apps/app-e2e/cypress.json",
   "cypressConfigPathTs": "apps/app-e2e/cypress.config.ts",
-  "shouldUpgrade": false,
+  "status": "no-convert",
 }
 `;

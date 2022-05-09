@@ -6,6 +6,7 @@ import {
   readProjectConfiguration,
   stripIndents,
   Tree,
+  updateJson,
   updateProjectConfiguration,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
@@ -25,39 +26,63 @@ const validFilesEndingsToUpdate = [
   '.cjs',
 ];
 
+function findAllTargets(projectConfig: ProjectConfiguration) {
+  const targets = [];
+  for (const key in projectConfig.targets) {
+    const target = projectConfig.targets[key];
+    if (target.executor !== '@nrwl/cypress:cypress') {
+      continue;
+    }
+    targets.push(key);
+  }
+
+  return targets;
+}
+
 export function updateProject(
   tree: Tree,
   options: CypressConvertOptions
 ): boolean {
   let didConvert = false;
   const projectConfig = readProjectConfiguration(tree, options.project);
-  for (const target of options.targets) {
-    const { shouldUpgrade, cypressConfigPathTs, cypressConfigPathJson } =
-      verifyProjectForUpgrade(tree, projectConfig, target);
+  const targets = new Set<string>([
+    ...findAllTargets(projectConfig),
+    ...options.targets,
+  ]);
 
-    if (!shouldUpgrade) {
+  for (const target of targets.keys()) {
+    const { status, cypressConfigPathTs, cypressConfigPathJson } =
+      verifyProjectForUpgrade(tree, projectConfig, target);
+    if (status === 'no-convert') {
       continue;
     }
 
-    const cypressConfigs = createNewCypressConfig(
-      tree,
-      projectConfig,
-      cypressConfigPathJson
-    );
+    if (status === 'convert') {
+      const cypressConfigs = createNewCypressConfig(
+        tree,
+        projectConfig,
+        cypressConfigPathJson
+      );
 
-    updateProjectPaths(tree, projectConfig, cypressConfigs);
-    writeNewConfig(tree, cypressConfigPathTs, cypressConfigs);
+      updateProjectPaths(tree, projectConfig, cypressConfigs);
+      writeNewConfig(tree, cypressConfigPathTs, cypressConfigs);
+      addConfigToTsConfig(
+        tree,
+        joinPathFragments(projectConfig.root, 'tsconfig.json')
+      );
 
-    tree.delete(cypressConfigPathJson);
+      tree.delete(cypressConfigPathJson);
+    }
+    if (status === 'convert' || status === 'update-project-config') {
+      projectConfig.targets[target].options = {
+        ...projectConfig.targets[target].options,
+        cypressConfig: cypressConfigPathTs,
+        testingType: 'e2e',
+      };
 
-    projectConfig.targets[target].options = {
-      ...projectConfig.targets[target].options,
-      cypressConfig: cypressConfigPathTs,
-      testingType: 'e2e',
-    };
-
-    updateProjectConfiguration(tree, options.project, projectConfig);
-    didConvert = true;
+      updateProjectConfiguration(tree, options.project, projectConfig);
+      didConvert = true;
+    }
   }
 
   return didConvert;
@@ -72,13 +97,13 @@ export function verifyProjectForUpgrade(
   projectConfig: ProjectConfiguration,
   target: string
 ): {
-  shouldUpgrade: boolean;
+  status: 'convert' | 'no-convert' | 'update-project-config';
   cypressConfigPathJson: string;
   cypressConfigPathTs: string;
 } {
   if (!projectConfig.targets?.[target]) {
     return {
-      shouldUpgrade: false,
+      status: 'no-convert',
       cypressConfigPathJson: undefined,
       cypressConfigPathTs: undefined,
     };
@@ -93,8 +118,6 @@ export function verifyProjectForUpgrade(
     'cypress.config.ts'
   );
 
-  let shouldUpgrade = false;
-
   if (installedCypressVersion() < 8) {
     logger.warn(
       stripIndents`
@@ -104,23 +127,41 @@ https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-8
     return {
       cypressConfigPathJson,
       cypressConfigPathTs,
-      shouldUpgrade,
+      status: 'no-convert',
+    };
+  }
+  // not a cypress project, don't convert
+  if (projectConfig.targets[target]?.executor !== '@nrwl/cypress:cypress') {
+    return {
+      cypressConfigPathJson,
+      cypressConfigPathTs,
+      status: 'no-convert',
     };
   }
 
-  if (projectConfig.targets[target]?.executor === '@nrwl/cypress:cypress') {
-    if (
-      tree.exists(cypressConfigPathJson) &&
-      !tree.exists(cypressConfigPathTs)
-    ) {
-      shouldUpgrade = true;
-    }
+  // has cypress.json but no cypress.config.ts, needs to convert
+  if (tree.exists(cypressConfigPathJson) && !tree.exists(cypressConfigPathTs)) {
+    return {
+      cypressConfigPathJson,
+      cypressConfigPathTs,
+      status: 'convert',
+    };
   }
 
+  // has cypress.config.ts but no cypress.json project already converted but this config needs to be updated
+  if (!tree.exists(cypressConfigPathJson) && tree.exists(cypressConfigPathTs)) {
+    return {
+      cypressConfigPathJson,
+      cypressConfigPathTs,
+      status: 'update-project-config',
+    };
+  }
+
+  // unknown state, don't convert
   return {
     cypressConfigPathJson,
     cypressConfigPathTs,
-    shouldUpgrade,
+    status: 'no-convert',
   };
 }
 
@@ -362,4 +403,15 @@ export default defineConfig({
 })
 `
   );
+}
+
+function addConfigToTsConfig(tree: Tree, tsconfigPath: string) {
+  if (tree.exists(tsconfigPath)) {
+    updateJson(tree, tsconfigPath, (json) => {
+      json.include = Array.from(
+        new Set([...(json.include || []), 'cypress.config.ts'])
+      );
+      return json;
+    });
+  }
 }
