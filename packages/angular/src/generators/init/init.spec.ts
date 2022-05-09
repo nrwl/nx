@@ -42,7 +42,7 @@ describe('init', () => {
     expect(devDependencies['codelyzer']).toBeUndefined();
   });
 
-  it('should add a postinstall script for ngcc', async () => {
+  it('should add a postinstall script for ngcc by default', async () => {
     // ACT
     await init(host, {
       unitTestRunner: UnitTestRunner.Karma,
@@ -56,6 +56,21 @@ describe('init', () => {
     expect(packageJson.scripts.postinstall).toEqual(
       'ngcc --properties es2015 browser module main'
     );
+  });
+
+  it('should not add a postinstall script for ngcc if skipPostInstall=true', async () => {
+    // ACT
+    await init(host, {
+      unitTestRunner: UnitTestRunner.Karma,
+      linter: Linter.EsLint,
+      skipFormat: false,
+      skipPostInstall: true,
+    });
+
+    const packageJson = readJson(host, 'package.json');
+
+    // ASSERT
+    expect(packageJson?.scripts?.postinstall).toBeFalsy();
   });
 
   describe('--unit-test-runner', () => {

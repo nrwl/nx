@@ -10,4 +10,5 @@ export interface Schema {
   style?: Styles;
   linter?: Exclude<Linter, Linter.TsLint>;
   skipPackageJson?: boolean;
+  skipPostInstall?: boolean;
 }

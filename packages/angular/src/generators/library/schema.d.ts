@@ -30,4 +30,5 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   skipModule?: boolean;
   skipPackageJson?: boolean;
+  skipPostInstall?: boolean;
 }
