@@ -162,26 +162,33 @@ In the previous section, we saw `withModuleFederation` used in the webpack confi
 
 With Nx, the developer experience (DX) when working with Module Federation matches more closely to development on a SPA. You don't have to worry about managing a bunch of configuration, and most things just work out of the box.
 
-### Overriding shared library config
+### Excluding or overriding shared libraries
 
-If you want to opt-out of the shared, singleton behavior of libraries you can use the `shared: (libraryName, sharedConfig) => sharedConfig)` option in `module-federation.config.js`.
+There are cases where excluding or changing the shared configuration is required. For example, shared libraries are not tree shaken, so to enable this behavior you must exclude them from being shared.
+
+To exclude a library or change its configuration, you can provide the `shared: (libraryName, sharedConfig) => sharedConfig` function in your configuration file.
 
 ```javascript
+// module-federation.config.js
 module.exports = {
   name: 'host',
   remotes: ['shop', 'cart', 'about'],
   shared: (name, config) => {
-    if (name === 'react' || name === 'react-dom') {
-      // If you want to relax strictness
-      return { ...config, strictVersion: false };
+    // We want lodash to be tree shaken, and bundled into each host/remote separately.
+    if (name === 'lodash') {
+      return false;
     }
   },
 };
 ```
 
-The `shared` function can return a [shared config](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints) that webpack supports, `undefined` to use Nx's default value, or `false` to exclude it from being shared.
+The `shared` function can return an `undefined` to use Nx's default value, `false` to exclude it from being shared, or a [shared config](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints) that webpack supports.
 
-> Note: We discourage users from overriding the shared configuration. If you have any feedback regarding this feature, we'd love to hear from you--check our [community page](https://nx.dev/community) for links to our Slack and Twitter.
+> Note: The default configuration, without overrides, should work well for most workspaces, and we encourage you to analyze your bundles before optimizing the shared behavior.
+>
+> To analyze your bundle, run build with `--statsJson` and use a tool like [`webpack-bundle-analyzer`](https://www.npmjs.com/package/webpack-bundle-analyzer) to the size of your bundles.
+>
+> If you have any feedback regarding this feature, we'd love to hear from you--check our [community page](https://nx.dev/community) for links to our Slack and Twitter.
 
 ## Distributed computation caching with Nx Cloud
 
