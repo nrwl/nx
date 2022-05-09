@@ -231,6 +231,25 @@ describe('MFE Webpack Utils', () => {
         },
       });
     });
+
+    it('should not throw when the main entry point package.json cannot be required', () => {
+      // ARRANGE
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (file) => !file.endsWith('non-existent-top-level-package/package.json')
+      );
+      jest.spyOn(devkit, 'readJsonFile').mockImplementation((file) => ({
+        name: file
+          .replace(/\\/g, '/')
+          .replace(/^.*node_modules[/]/, '')
+          .replace('/package.json', ''),
+        dependencies: { '@angular/core': '~13.2.0' },
+      }));
+
+      // ACT & ASSERT
+      expect(() =>
+        sharePackages(['non-existent-top-level-package'])
+      ).not.toThrow();
+    });
   });
 });
 
