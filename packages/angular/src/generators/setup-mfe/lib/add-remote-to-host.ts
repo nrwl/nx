@@ -1,15 +1,16 @@
-import { ProjectConfiguration, Tree, updateJson } from '@nrwl/devkit';
-import type { Schema } from '../schema';
-
-import { readProjectConfiguration, joinPathFragments } from '@nrwl/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
-import { ArrayLiteralExpression } from 'typescript';
 import {
-  addImportToModule,
-  addRoute,
-} from '../../../utils/nx-devkit/ast-utils';
-
+  joinPathFragments,
+  names,
+  ProjectConfiguration,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
+import type { Schema } from '../schema';
+import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
+import { ArrayLiteralExpression } from 'typescript';
+import { addRoute } from '../../../utils/nx-devkit/ast-utils';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 
 export function checkIsCommaNeeded(mfeRemoteText: string) {
@@ -41,7 +42,7 @@ export function addRemoteToHost(tree: Tree, options: Schema) {
 
     const declarationFilePath = joinPathFragments(
       hostProject.sourceRoot,
-      'decl.d.ts'
+      'remotes.d.ts'
     );
 
     const declarationFileContent =
@@ -155,4 +156,22 @@ function addLazyLoadedRouteToHostAppModule(
          loadChildren: () => ${routeToAdd}.then(m => m.RemoteEntryModule)
      }`
   );
+  const pathToAppComponentTemplate = joinPathFragments(
+    hostAppConfig.sourceRoot,
+    'app/app.component.html'
+  );
+  const appComponent = tree.read(pathToAppComponentTemplate, 'utf-8');
+  if (
+    appComponent.includes(`<ul class="remote-menu">`) &&
+    appComponent.includes('</ul>')
+  ) {
+    const indexOfClosingMenuTag = appComponent.indexOf('</ul>');
+    const newAppComponent = `${appComponent.slice(
+      0,
+      indexOfClosingMenuTag
+    )}<li><a routerLink='${options.appName}'>${
+      names(options.appName).className
+    }</a></li>\n${appComponent.slice(indexOfClosingMenuTag)}`;
+    tree.write(pathToAppComponentTemplate, newAppComponent);
+  }
 }

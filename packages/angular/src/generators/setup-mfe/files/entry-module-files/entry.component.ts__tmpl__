@@ -2,12 +2,6 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: '<%= appName %>-entry',
-  template: `<div class="remote-entry"><h2><%= appName %>'s Remote Entry Component</h2></div>`,
-  styles: [`
-  .remote-entry {
-    background-color: #143055;
-    color: white;
-    padding: 5px;
-  }`]
+  template: `<<%= prefix %>-nx-welcome></<%= prefix %>-nx-welcome>`
 })
 export class RemoteEntryComponent {}
