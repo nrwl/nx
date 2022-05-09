@@ -137,10 +137,23 @@ function collectPackageSecondaryEntryPoints(
   pkgVersion: string,
   collectedPackages: { name: string; version: string }[]
 ): void {
-  const packageJsonPath = require.resolve(`${pkgName}/package.json`, {
-    paths: [workspaceRoot],
-  });
-  const pathToPackage = dirname(packageJsonPath);
+  let pathToPackage: string;
+  try {
+    const packageJsonPath = require.resolve(`${pkgName}/package.json`, {
+      paths: [workspaceRoot],
+    });
+    pathToPackage = dirname(packageJsonPath);
+  } catch {
+    // the package.json might not resolve if the package has the "exports"
+    // entry and is not exporting the package.json file, fall back to trying
+    // to find it from the top-level node_modules
+    pathToPackage = join(workspaceRoot, 'node_modules', pkgName);
+    if (!existsSync(join(pathToPackage, 'package.json'))) {
+      // might not exist if it's nested in another package, just return here
+      return;
+    }
+  }
+
   const subDirs = getNonNodeModulesSubDirs(pathToPackage);
   recursivelyCollectSecondaryEntryPointsFromDirectory(
     pkgName,
