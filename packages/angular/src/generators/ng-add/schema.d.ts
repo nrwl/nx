@@ -12,6 +12,7 @@ export interface GeneratorOptions {
   e2eTestRunner?: E2eTestRunner;
   skipFormat?: boolean;
   skipInstall?: boolean;
+  skipPostInstall?: boolean;
   style?: Styles;
   linter?: Exclude<Linter, Linter.TsLint>;
   skipPackageJson?: boolean;

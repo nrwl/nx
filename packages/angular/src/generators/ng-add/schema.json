@@ -58,6 +58,11 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add dependencies to `package.json`. NOTE: only used if running the generator in an Nx workspace."
+    },
+    "skipPostInstall": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add or append `ngcc` to `postinstall`-script in `package.json`. NOTE: only used if running the generator in an Nx workspace."
     }
   },
   "additionalProperties": false

@@ -30,5 +30,6 @@ export interface Schema {
   host?: string;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
+  skipPostInstall?: boolean;
   federationType?: 'static' | 'dynamic';
 }

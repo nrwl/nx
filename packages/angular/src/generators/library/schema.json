@@ -56,6 +56,11 @@
       "default": false,
       "description": "Do not add dependencies to `package.json`."
     },
+    "skipPostInstall": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add or append `ngcc` to `postinstall`-script in `package.json`."
+    },
     "skipTsConfig": {
       "type": "boolean",
       "default": false,
