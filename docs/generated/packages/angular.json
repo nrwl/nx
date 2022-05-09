@@ -158,7 +158,7 @@
           "skipPostInstall": {
             "type": "boolean",
             "default": false,
-            "description": "Do not add or append `ngcc` to `postinstall`-script in `package.json`."
+            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
           },
           "unitTestRunner": {
             "type": "string",
@@ -645,7 +645,7 @@
           "skipPostInstall": {
             "type": "boolean",
             "default": false,
-            "description": "Do not add or append `ngcc` to `postinstall`-script in `package.json`."
+            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
           }
         },
         "additionalProperties": false,
@@ -782,7 +782,7 @@
           "skipPostInstall": {
             "type": "boolean",
             "default": false,
-            "description": "Do not add or append `ngcc` to `postinstall`-script in `package.json`."
+            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
           },
           "skipTsConfig": {
             "type": "boolean",
@@ -1235,7 +1235,7 @@
           "skipPostInstall": {
             "type": "boolean",
             "default": false,
-            "description": "Do not add or append `ngcc` to `postinstall`-script in `package.json`."
+            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
           },
           "unitTestRunner": {
             "type": "string",
@@ -1365,7 +1365,7 @@
           "skipPostInstall": {
             "type": "boolean",
             "default": false,
-            "description": "Do not add or append `ngcc` to `postinstall`-script in `package.json`. NOTE: only used if running the generator in an Nx workspace."
+            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`. NOTE: only used if running the generator in an Nx workspace."
           }
         },
         "additionalProperties": false,
