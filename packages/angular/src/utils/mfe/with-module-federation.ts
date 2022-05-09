@@ -17,8 +17,8 @@ import {
 } from '@nrwl/workspace/src/utilities/typescript';
 import { ParsedCommandLine } from 'typescript';
 import { readWorkspaceJson } from 'nx/src/project-graph/file-utils';
-import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 import { readRootPackageJson } from './utils';
+import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 export type MFERemotes = string[] | [remoteName: string, remoteUrl: string][];
 
@@ -225,6 +225,20 @@ function applyAdditionalShared(
   }
 }
 
+function applyDefaultEagerPackages(
+  sharedConfig: Record<string, SharedLibraryConfig>
+) {
+  const DEFAULT_PACKAGES_TO_LOAD_EAGERLY = ['@angular/localize/init'];
+  for (const pkg of DEFAULT_PACKAGES_TO_LOAD_EAGERLY) {
+    if (sharedConfig[pkg]) {
+      return {
+        ...sharedConfig,
+        eager: true,
+      };
+    }
+  }
+}
+
 export async function withModuleFederation(options: MFEConfig) {
   const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mfe'];
 
@@ -260,6 +274,7 @@ export async function withModuleFederation(options: MFEConfig) {
     ...npmPackages,
   };
 
+  applyDefaultEagerPackages(sharedDependencies);
   applySharedFunction(sharedDependencies, options.shared);
   applyAdditionalShared(
     sharedDependencies,
