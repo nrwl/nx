@@ -530,7 +530,7 @@
         "presets": []
       },
       "description": "Create a React component.",
-      "aliases": "c",
+      "aliases": ["c"],
       "implementation": "/packages/react/src/generators/component/component#componentGenerator.ts",
       "hidden": false,
       "path": "/packages/react/src/generators/component/schema.json"
@@ -843,7 +843,7 @@
         "presets": []
       },
       "description": "Create a hook.",
-      "aliases": "c",
+      "aliases": ["c"],
       "implementation": "/packages/react/src/generators/hook/hook#hookGenerator.ts",
       "hidden": false,
       "path": "/packages/react/src/generators/hook/schema.json"
