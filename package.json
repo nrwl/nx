@@ -129,7 +129,7 @@
     "copy-webpack-plugin": "^9.0.1",
     "core-js": "^3.6.5",
     "css-minimizer-webpack-plugin": "^3.1.1",
-    "cypress": "https://cdn.cypress.io/beta/npm/10.0.0/darwin-x64/10.0-release-c8c2c7de443fd41cadf30d1ea2ec1e17bbf6366c/cypress.tgz",
+    "cypress": "^9.1.0",
     "cytoscape": "^3.18.2",
     "cytoscape-dagre": "^2.4.0",
     "cytoscape-popper": "^2.0.0",
