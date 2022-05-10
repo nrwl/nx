@@ -1,3 +1,4 @@
+import Ajv from 'ajv';
 import { Tree } from '../tree';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -14,6 +15,8 @@ import {
   updateWorkspaceConfiguration,
   WorkspaceConfiguration,
 } from './project-configuration';
+
+import * as projectSchema from '../../../schemas/project-schema.json';
 
 type ProjectConfigurationV1 = Pick<
   ProjectConfiguration,
@@ -82,7 +85,12 @@ describe('project configuration', () => {
     describe('addProjectConfiguration', () => {
       it('should throw when standalone is true', () => {
         expect(() =>
-          addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true)
+          addProjectConfiguration(
+            tree,
+            'test',
+            baseTestProjectConfigV2,
+            true
+          )
         ).toThrow();
       });
 
@@ -144,12 +152,22 @@ describe('project configuration', () => {
 
       it('should throw when standalone is true', () => {
         expect(() =>
-          addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true)
+          addProjectConfiguration(
+            tree,
+            'test',
+            baseTestProjectConfigV2,
+            true
+          )
         ).toThrow();
       });
 
       it('should update workspace.json file correctly when adding a project', () => {
-        addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
+        addProjectConfiguration(
+          tree,
+          'test',
+          baseTestProjectConfigV2,
+          false
+        );
 
         expect(readJson(tree, 'workspace.json').projects.test).toEqual(
           baseTestProjectConfigV1
@@ -157,7 +175,12 @@ describe('project configuration', () => {
       });
 
       it('should update workspace.json file correctly when updating a project', () => {
-        addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
+        addProjectConfiguration(
+          tree,
+          'test',
+          baseTestProjectConfigV2,
+          false
+        );
         const updatedProjectConfiguration = {
           ...baseTestProjectConfigV2,
           targets: { build: { executor: '' } },
@@ -174,7 +197,12 @@ describe('project configuration', () => {
       });
 
       it('should remove project configuration', () => {
-        addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
+        addProjectConfiguration(
+          tree,
+          'test',
+          baseTestProjectConfigV2,
+          false
+        );
         removeProjectConfiguration(tree, 'test');
 
         expect(readJson(tree, 'workspace.json').projects.test).toBeUndefined();
@@ -336,17 +364,32 @@ describe('project configuration', () => {
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
         addProjectConfiguration(tree, 'test2', baseTestProjectConfigV2, false);
         const configurations = getProjects(tree);
-        expect(configurations.get('test')).toEqual(baseTestProjectConfigV2);
+        expect(configurations.get('test')).toEqual({
+          $schema: '../../node_modules/nx/schemas/project-schema.json',
+          ...baseTestProjectConfigV2,
+        });
         expect(configurations.get('test2')).toEqual(baseTestProjectConfigV2);
       });
 
-      it('should have JSON $schema in project configuration for standalone projects', () => {
-        addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
-        const projectJson = readJson(tree, 'libs/test/project.json');
-        expect(projectJson['$schema']).toBeTruthy();
-        expect(projectJson['$schema']).toEqual(
-          '../../node_modules/nx/schemas/project-schema.json'
-        );
+      describe('JSON schema', () => {
+        it('should have JSON $schema in project configuration for standalone projects', () => {
+          addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
+          const projectJson = readJson(tree, 'libs/test/project.json');
+          expect(projectJson['$schema']).toBeTruthy();
+          expect(projectJson['$schema']).toEqual(
+            '../../node_modules/nx/schemas/project-schema.json'
+          );
+        });
+
+        it('should match project configuration with JSON $schema', () => {
+          const ajv = new Ajv();
+          const validate = ajv.compile(projectSchema);
+
+          addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
+          const projectJson = readJson(tree, 'libs/test/project.json');
+
+          expect(validate(projectJson)).toEqual(true);
+        });
       });
     });
 
@@ -524,7 +567,10 @@ describe('project configuration', () => {
 
         const configurations = getProjects(tree);
 
-        expect(configurations.get('test')).toEqual(baseTestProjectConfigV2);
+        expect(configurations.get('test')).toEqual({
+          $schema: '../../node_modules/nx/schemas/project-schema.json',
+          ...baseTestProjectConfigV2,
+        });
         expect(configurations.get('test2')).toEqual(baseTestProjectConfigV2);
       });
     });

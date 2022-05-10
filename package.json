@@ -113,6 +113,7 @@
     "@xstate/immer": "^0.2.0",
     "@xstate/inspect": "^0.5.1",
     "@xstate/react": "^1.6.3",
+    "ajv": "^8.11.0",
     "angular": "1.8.0",
     "autoprefixer": "^10.2.5",
     "babel-jest": "27.5.1",
