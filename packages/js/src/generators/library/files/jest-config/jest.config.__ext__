@@ -1,9 +1,9 @@
-const fs = require('fs');
+import { readFileSync } from 'fs';
 
 // Reading the SWC compilation config and remove the "exclude"
 // for the test files to be compiled by SWC
 const { exclude: _, ...swcJestConfig } = JSON.parse(
-  fs.readFileSync(`${__dirname}/.lib.swcrc`, 'utf-8')
+  readFileSync(`${__dirname}/.lib.swcrc`, 'utf-8')
 );
 
 module.exports = {
