@@ -43,6 +43,7 @@ describe('add `defaultBase` in nx.json', () => {
     const projects = Object.fromEntries(getProjects(tree).entries());
     expect(projects).toEqual({
       'tsc-project': {
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
         root: 'projects/tsc-project',
         targets: {
           build: {
@@ -54,6 +55,7 @@ describe('add `defaultBase` in nx.json', () => {
         },
       },
       'other-project': {
+        $schema: '../../node_modules/nx/schemas/project-schema.json',
         root: 'projects/other-project',
         targets: {
           build: {

@@ -1,3 +1,4 @@
+import Ajv from 'ajv';
 import { Tree } from '../tree';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -14,6 +15,8 @@ import {
   updateWorkspaceConfiguration,
   WorkspaceConfiguration,
 } from './project-configuration';
+
+import * as projectSchema from '../../../schemas/project-schema.json';
 
 type ProjectConfigurationV1 = Pick<
   ProjectConfiguration,
@@ -336,8 +339,32 @@ describe('project configuration', () => {
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
         addProjectConfiguration(tree, 'test2', baseTestProjectConfigV2, false);
         const configurations = getProjects(tree);
-        expect(configurations.get('test')).toEqual(baseTestProjectConfigV2);
+        expect(configurations.get('test')).toEqual({
+          $schema: '../../node_modules/nx/schemas/project-schema.json',
+          ...baseTestProjectConfigV2,
+        });
         expect(configurations.get('test2')).toEqual(baseTestProjectConfigV2);
+      });
+
+      describe('JSON schema', () => {
+        it('should have JSON $schema in project configuration for standalone projects', () => {
+          addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
+          const projectJson = readJson(tree, 'libs/test/project.json');
+          expect(projectJson['$schema']).toBeTruthy();
+          expect(projectJson['$schema']).toEqual(
+            '../../node_modules/nx/schemas/project-schema.json'
+          );
+        });
+
+        it('should match project configuration with JSON $schema', () => {
+          const ajv = new Ajv();
+          const validate = ajv.compile(projectSchema);
+
+          addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
+          const projectJson = readJson(tree, 'libs/test/project.json');
+
+          expect(validate(projectJson)).toEqual(true);
+        });
       });
     });
 
@@ -515,7 +542,10 @@ describe('project configuration', () => {
 
         const configurations = getProjects(tree);
 
-        expect(configurations.get('test')).toEqual(baseTestProjectConfigV2);
+        expect(configurations.get('test')).toEqual({
+          $schema: '../../node_modules/nx/schemas/project-schema.json',
+          ...baseTestProjectConfigV2,
+        });
         expect(configurations.get('test2')).toEqual(baseTestProjectConfigV2);
       });
     });

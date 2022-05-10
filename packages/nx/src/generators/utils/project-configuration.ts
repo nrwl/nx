@@ -1,3 +1,10 @@
+import { basename, dirname, join, relative } from 'path';
+import type { NxJsonConfiguration } from '../../config/nx-json';
+import {
+  ProjectConfiguration,
+  RawWorkspaceJsonConfiguration,
+  WorkspaceJsonConfiguration,
+} from '../../config/workspace-json-project-json';
 import {
   buildWorkspaceConfigurationFromGlobs,
   deduplicateProjectFiles,
@@ -5,18 +12,11 @@ import {
   reformattedWorkspaceJsonOrNull,
   toNewFormat,
 } from '../../config/workspaces';
-import { basename, dirname, relative } from 'path';
-
-import { readJson, updateJson, writeJson } from './json';
+import { joinPathFragments } from '../../utils/path';
 
 import type { Tree } from '../tree';
-import type { NxJsonConfiguration } from '../../config/nx-json';
-import { joinPathFragments } from '../../utils/path';
-import {
-  ProjectConfiguration,
-  RawWorkspaceJsonConfiguration,
-  WorkspaceJsonConfiguration,
-} from '../../config/workspace-json-project-json';
+
+import { readJson, updateJson, writeJson } from './json';
 
 export type WorkspaceConfiguration = Omit<
   WorkspaceJsonConfiguration,
@@ -314,6 +314,16 @@ function setProjectConfiguration(
   );
 }
 
+export function getRelativeProjectJsonSchemaPath(
+  tree: Tree,
+  project: ProjectConfiguration
+): string {
+  return relative(
+    join(tree.root, project.root),
+    join(tree.root, 'node_modules/nx/schemas/project-schema.json')
+  );
+}
+
 function addProjectToWorkspaceJson(
   tree: Tree,
   projectName: string,
@@ -342,6 +352,10 @@ function addProjectToWorkspaceJson(
     (mode === 'create' && standalone) || !workspaceConfigPath
       ? joinPathFragments(project.root, 'project.json')
       : getProjectFileLocation(tree, projectName);
+  const jsonSchema =
+    configFile && mode === 'create'
+      ? { $schema: getRelativeProjectJsonSchemaPath(tree, project) }
+      : {};
 
   if (configFile) {
     if (mode === 'delete') {
@@ -352,8 +366,13 @@ function addProjectToWorkspaceJson(
       if (workspaceConfigPath && mode === 'create') {
         workspaceJson.projects[projectName] = project.root;
       }
+
       // update the project.json file
-      writeJson(tree, configFile, { ...project, root: undefined });
+      writeJson(tree, configFile, {
+        ...jsonSchema,
+        ...project,
+        root: undefined,
+      });
     }
   } else if (mode === 'delete') {
     delete workspaceJson.projects[projectName];

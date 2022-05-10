@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://nx.dev/core-concepts/configuration#nxjson",
+  "title": "JSON schema for Nx configuration",
+  "type": "object",
+  "properties": {
+    "implicitDependencies": {
+      "type": "object",
+      "description": "Map of files to projects that implicitly depend on them."
+    },
+    "affected": {
+      "type": "object",
+      "description": "Default options for `nx affected`.",
+      "properties": {
+        "defaultBase": {
+          "type": "string",
+          "description": "Default based branch used by affected commands."
+        }
+      },
+      "additionalProperties": false
+    },
+    "npmScope": {
+      "type": "string",
+      "description": "NPM Scope that the workspace uses."
+    },
+    "tasksRunnerOptions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/tasksRunnerOptions"
+      }
+    },
+    "targetDependencies": {
+      "type": "object",
+      "description": "Dependencies between different target names across all projects.",
+      "additionalProperties": {
+        "$ref": "#/definitions/targetDependencyConfig"
+      }
+    },
+    "workspaceLayout": {
+      "type": "object",
+      "description": "Where new apps + libs should be placed.",
+      "properties": {
+        "libsDir": {
+          "type": "string",
+          "description": "Default folder name for libs."
+        },
+        "appsDir": {
+          "type": "string",
+          "description": "Default folder name for apps."
+        }
+      },
+      "additionalProperties": false
+    },
+    "cli": {
+      "$ref": "#/definitions/cliOptions"
+    },
+    "generators": {
+      "$ref": "#/definitions/generatorOptions"
+    },
+    "plugins": {
+      "type": "array",
+      "description": "Plugins for extending the project graph.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "defaultProject": {
+      "type": "string",
+      "description": "Default project. When project isn't provided, the default project will be used."
+    }
+  },
+  "definitions": {
+    "cliOptions": {
+      "type": "object",
+      "description": "Default generator collection.",
+      "properties": {
+        "packageManager": {
+          "type": "string",
+          "description": "The default package manager to use.",
+          "enum": ["yarn", "pnpm", "npm"]
+        },
+        "defaultCollection": {
+          "type": "string",
+          "description": "The default schematics collection to use."
+        }
+      }
+    },
+    "generatorOptions": {
+      "type": "object",
+      "description": "List of default values used by generators."
+    },
+    "tasksRunnerOptions": {
+      "type": "object",
+      "description": "Available Task Runners.",
+      "properties": {
+        "runner": {
+          "type": "string",
+          "description": "Path to resolve the runner."
+        },
+        "options": {
+          "type": "object",
+          "description": "Default options for the runner."
+        }
+      },
+      "additionalProperties": false
+    },
+    "targetDependencyConfig": {
+      "type": "array",
+      "description": "Target dependency.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "projects": {
+            "type": "string",
+            "description": "The projects that the targets belong to.",
+            "enum": ["self", "dependencies"]
+          },
+          "target": {
+            "type": "string",
+            "description": "The name of the target."
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

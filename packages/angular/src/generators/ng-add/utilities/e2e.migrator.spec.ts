@@ -331,6 +331,7 @@ describe('e2e migrator', () => {
         expect(angularJson.projects['app1-e2e']).toBe('apps/app1-e2e');
         const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(e2eProject).toStrictEqual({
+          $schema: '../../node_modules/nx/schemas/project-schema.json',
           root: 'apps/app1-e2e',
           sourceRoot: 'apps/app1-e2e/src',
           projectType: 'application',
@@ -457,6 +458,7 @@ describe('e2e migrator', () => {
         expect(angularJson.projects['app1-e2e']).toBe('apps/app1-e2e');
         const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(e2eProject).toStrictEqual({
+          $schema: '../../node_modules/nx/schemas/project-schema.json',
           root: 'apps/app1-e2e',
           sourceRoot: 'apps/app1-e2e/src',
           projectType: 'application',
@@ -521,6 +523,7 @@ describe('e2e migrator', () => {
 
         const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(e2eProject).toStrictEqual({
+          $schema: '../../node_modules/nx/schemas/project-schema.json',
           root: 'apps/app1-e2e',
           sourceRoot: 'apps/app1-e2e/src',
           projectType: 'application',
@@ -573,6 +576,7 @@ describe('e2e migrator', () => {
 
         const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(e2eProject).toStrictEqual({
+          $schema: '../../node_modules/nx/schemas/project-schema.json',
           root: 'apps/app1-e2e',
           sourceRoot: 'apps/app1-e2e/src',
           projectType: 'application',

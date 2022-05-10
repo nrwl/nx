@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://nx.dev",
+  "title": "JSON schema for Nx workspaces",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "enum": [1, 2]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "version": { "const": 2 } },
+        "required": ["version"]
+      },
+      "then": {
+        "properties": {
+          "projects": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "targets": {
+                      "type": "object",
+                      "description": "Configures all the targets which define what tasks you can run against the project",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "executor": {
+                            "description": "The function that Nx will invoke when you run this target",
+                            "type": "string"
+                          },
+                          "options": {
+                            "type": "object"
+                          },
+                          "outputs": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "configurations": {
+                            "type": "object",
+                            "description": "provides extra sets of values that will be merged into the options map",
+                            "additionalProperties": {
+                              "type": "object"
+                            }
+                          },
+                          "dependsOn": {
+                            "type": "array",
+                            "description": "Target dependency.",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "projects": {
+                                  "type": "string",
+                                  "description": "The projects that the targets belong to.",
+                                  "enum": ["self", "dependencies"]
+                                },
+                                "target": {
+                                  "type": "string",
+                                  "description": "The name of the target."
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "tags": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "implicitDependencies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "projects": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "architect": {
+                  "type": "object",
+                  "description": "Configures all the targets which define what tasks you can run against the project",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "builder": {
+                        "description": "The function that Nx will invoke when you run this architect",
+                        "type": "string"
+                      },
+                      "options": {
+                        "type": "object"
+                      },
+                      "configurations": {
+                        "type": "object",
+                        "description": "provides extra sets of values that will be merged into the options map",
+                        "additionalProperties": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
