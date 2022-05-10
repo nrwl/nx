@@ -4,7 +4,7 @@ The official Nx plugins rely on [browserslist](https://github.com/browserslist/b
 
 In general, the more modern your applications browser support is, the smaller the filesize as the code can rely on modern API's being present and not have to ship polyfills or shimmed code.
 
-By default, applications generated from official Nx generators ship an aggressively modern browser support config, in the form of a `.browserlistrc` file in the root of the application with the following contents.
+By default, applications generated from official Nx generators ship an aggressively modern browser support config, in the form of a `.browserslistrc` file in the root of the application with the following contents.
 
 ```text
 last 1 Chrome version
@@ -20,9 +20,9 @@ This configuration is used for many tools including babel, autoprefixer, postcss
 
 ## Adding Support for IE 11
 
-Adding support for IE or any other browser is as easy as changing the `.browserlistrc` file, following the rules and options listed on the [browserslist documentation](https://github.com/browserslist/browserslist#queries). These changes will affect differential loading and how the code is processed through babel and other tools for producing your builds.
+Adding support for IE or any other browser is as easy as changing the `.browserslistrc` file, following the rules and options listed on the [browserslist documentation](https://github.com/browserslist/browserslist#queries). These changes will affect differential loading and how the code is processed through babel and other tools for producing your builds.
 
-To add support for IE 11 simply change the final line in the `.browserlistrc` file to include IE:
+To add support for IE 11 simply change the final line in the `.browserslistrc` file to include IE:
 
 ```text
 last 1 Chrome version
