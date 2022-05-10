@@ -365,17 +365,13 @@ function addProjectToWorkspaceJson(
       }
 
       // update the project.json file
-      writeJson(
-        tree,
-        configFile,
-          {
-            ...(shouldAddJsonSchema
-              ? { $schema: getRelativeProjectJsonSchemaPath(tree, project) }
-              : {}),
-            ...project,
-            root: undefined,
-          }
-      );
+      writeJson(tree, configFile, {
+        ...(shouldAddJsonSchema
+          ? { $schema: getRelativeProjectJsonSchemaPath(tree, project) }
+          : {}),
+        ...project,
+        root: undefined,
+      });
     }
   } else if (mode === 'delete') {
     delete workspaceJson.projects[projectName];

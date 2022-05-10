@@ -85,12 +85,7 @@ describe('project configuration', () => {
     describe('addProjectConfiguration', () => {
       it('should throw when standalone is true', () => {
         expect(() =>
-          addProjectConfiguration(
-            tree,
-            'test',
-            baseTestProjectConfigV2,
-            true
-          )
+          addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true)
         ).toThrow();
       });
 
@@ -152,22 +147,12 @@ describe('project configuration', () => {
 
       it('should throw when standalone is true', () => {
         expect(() =>
-          addProjectConfiguration(
-            tree,
-            'test',
-            baseTestProjectConfigV2,
-            true
-          )
+          addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true)
         ).toThrow();
       });
 
       it('should update workspace.json file correctly when adding a project', () => {
-        addProjectConfiguration(
-          tree,
-          'test',
-          baseTestProjectConfigV2,
-          false
-        );
+        addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
 
         expect(readJson(tree, 'workspace.json').projects.test).toEqual(
           baseTestProjectConfigV1
@@ -175,12 +160,7 @@ describe('project configuration', () => {
       });
 
       it('should update workspace.json file correctly when updating a project', () => {
-        addProjectConfiguration(
-          tree,
-          'test',
-          baseTestProjectConfigV2,
-          false
-        );
+        addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
         const updatedProjectConfiguration = {
           ...baseTestProjectConfigV2,
           targets: { build: { executor: '' } },
@@ -197,12 +177,7 @@ describe('project configuration', () => {
       });
 
       it('should remove project configuration', () => {
-        addProjectConfiguration(
-          tree,
-          'test',
-          baseTestProjectConfigV2,
-          false
-        );
+        addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
         removeProjectConfiguration(tree, 'test');
 
         expect(readJson(tree, 'workspace.json').projects.test).toBeUndefined();

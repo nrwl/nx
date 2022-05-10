@@ -71,6 +71,7 @@ Object {
 
 exports[`new should generate an empty nx.json 1`] = `
 Object {
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "affected": Object {
     "defaultBase": "main",
   },
@@ -111,6 +112,7 @@ Object {
 
 exports[`new should generate an empty workspace.json 1`] = `
 Object {
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json",
   "projects": Object {},
   "version": 2,
 }
