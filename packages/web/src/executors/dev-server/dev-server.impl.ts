@@ -113,9 +113,6 @@ function getBuildOptions(
 ): WebWebpackExecutorOptions {
   const target = parseTargetString(options.buildTarget);
 
-  // TODO(jack): [Nx 14] Remove this line once we generate `development` configuration by default + add migration for it if missing
-  target.configuration ??= '';
-
   const overrides: Partial<WebWebpackExecutorOptions> = {
     watch: false,
   };

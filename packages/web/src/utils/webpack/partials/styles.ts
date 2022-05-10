@@ -150,7 +150,7 @@ export function getStylesConfig(
     ? true
     : typeof buildOptions.optimization === 'boolean'
     ? !buildOptions.optimization
-    : buildOptions.optimization.styles &&
+    : buildOptions.optimization?.styles &&
       // Inline all sourcemap types except hidden ones, which are the same as no sourcemaps
       // for component css.
       buildOptions.sourceMap !== 'hidden');
