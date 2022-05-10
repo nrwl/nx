@@ -5,6 +5,12 @@
       "version": "14.0.6",
       "description": "Remove root property from project.json files",
       "factory": "./src/migrations/update-14-0-6/remove-roots"
+    },
+    "14-2-0-add-json-schema": {
+      "cli": "nx",
+      "version": "14.2.0-beta.0",
+      "description": "Add JSON Schema to Nx configuration files",
+      "factory": "./src/migrations/update-14-2-0/add-json-schema"
     }
   }
 }

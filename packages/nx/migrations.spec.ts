@@ -1,7 +1,7 @@
 import path = require('path');
 import json = require('./migrations.json');
 
-describe('Node migrations', () => {
+describe('Nx migrations', () => {
   it('should have valid paths', () => {
     Object.values(json.generators).forEach((m) => {
       expect(() =>
