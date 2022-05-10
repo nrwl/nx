@@ -5,6 +5,7 @@
   "type": "object",
   "properties": {
     "targets": {
+      "type": "object",
       "description": "Configures all the targets which define what tasks you can run against the project",
       "additionalProperties": {
         "type": "object",
@@ -23,6 +24,7 @@
             }
           },
           "configurations": {
+            "type": "object",
             "description": "provides extra sets of values that will be merged into the options map",
             "additionalProperties": {
               "type": "object"

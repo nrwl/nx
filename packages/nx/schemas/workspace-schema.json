@@ -12,45 +12,6 @@
   "allOf": [
     {
       "if": {
-        "properties": { "version": { "const": 1 } },
-        "required": ["version"]
-      },
-      "then": {
-        "properties": {
-          "projects": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object",
-              "properties": {
-                "architect": {
-                  "description": "Configures all the targets which define what tasks you can run against the project",
-                  "additionalProperties": {
-                    "type": "object",
-                    "properties": {
-                      "builder": {
-                        "description": "The function that Nx will invoke when you run this architect",
-                        "type": "string"
-                      },
-                      "options": {
-                        "type": "object"
-                      },
-                      "configurations": {
-                        "description": "provides extra sets of values that will be merged into the options map",
-                        "additionalProperties": {
-                          "type": "object"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
         "properties": { "version": { "const": 2 } },
         "required": ["version"]
       },
@@ -67,6 +28,7 @@
                   "type": "object",
                   "properties": {
                     "targets": {
+                      "type": "object",
                       "description": "Configures all the targets which define what tasks you can run against the project",
                       "additionalProperties": {
                         "type": "object",
@@ -85,6 +47,7 @@
                             }
                           },
                           "configurations": {
+                            "type": "object",
                             "description": "provides extra sets of values that will be merged into the options map",
                             "additionalProperties": {
                               "type": "object"
@@ -127,6 +90,41 @@
                   }
                 }
               ]
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "projects": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "architect": {
+                  "type": "object",
+                  "description": "Configures all the targets which define what tasks you can run against the project",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "builder": {
+                        "description": "The function that Nx will invoke when you run this architect",
+                        "type": "string"
+                      },
+                      "options": {
+                        "type": "object"
+                      },
+                      "configurations": {
+                        "type": "object",
+                        "description": "provides extra sets of values that will be merged into the options map",
+                        "additionalProperties": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }

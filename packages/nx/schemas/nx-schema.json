@@ -24,6 +24,7 @@
       "description": "NPM Scope that the workspace uses."
     },
     "tasksRunnerOptions": {
+      "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/tasksRunnerOptions"
       }
@@ -82,8 +83,7 @@
           "type": "string",
           "description": "The default schematics collection to use."
         }
-      },
-      "additionalProperties": false
+      }
     },
     "generatorOptions": {
       "type": "object",
