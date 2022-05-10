@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://nx.dev/project-schema",
+  "title": "JSON schema for Nx projects",
+  "type": "object",
+  "properties": {
+    "targets": {
+      "description": "Configures all the targets which define what tasks you can run against the project",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "executor": {
+            "description": "The function that Nx will invoke when you run this target",
+            "type": "string"
+          },
+          "options": {
+            "type": "object"
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "configurations": {
+            "description": "provides extra sets of values that will be merged into the options map",
+            "additionalProperties": {
+              "type": "object"
+            }
+          },
+          "dependsOn": {
+            "type": "array",
+            "description": "Target dependency.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "projects": {
+                  "type": "string",
+                  "description": "The projects that the targets belong to.",
+                  "enum": ["self", "dependencies"]
+                },
+                "target": {
+                  "type": "string",
+                  "description": "The name of the target."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "implicitDependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

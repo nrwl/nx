@@ -25,7 +25,7 @@ describe('@nrwl/workspace:workspace', () => {
     expect(tree.exists('/proj/.prettierignore')).toBe(true);
   });
 
-  it('should create nx.json', async () => {
+  it('should create nx.json and workspace.json', async () => {
     await workspaceGenerator(tree, {
       name: 'proj',
       directory: 'proj',
@@ -35,6 +35,7 @@ describe('@nrwl/workspace:workspace', () => {
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toEqual({
+      $schema: './node_modules/nx/schemas/nx-schema.json',
       npmScope: 'proj',
       affected: {
         defaultBase: 'main',
@@ -65,6 +66,13 @@ describe('@nrwl/workspace:workspace', () => {
           },
         ],
       },
+    });
+
+    const workspaceJson = readJson(tree, '/proj/workspace.json');
+    expect(workspaceJson).toEqual({
+      $schema: './node_modules/nx/schemas/workspace-schema.json',
+      version: 2,
+      projects: {},
     });
   });
 

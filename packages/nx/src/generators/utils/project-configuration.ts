@@ -5,7 +5,7 @@ import {
   reformattedWorkspaceJsonOrNull,
   toNewFormat,
 } from '../../config/workspaces';
-import { basename, dirname, relative } from 'path';
+import { basename, dirname, join, relative } from 'path';
 
 import { readJson, updateJson, writeJson } from './json';
 
@@ -352,8 +352,17 @@ function addProjectToWorkspaceJson(
       if (workspaceConfigPath && mode === 'create') {
         workspaceJson.projects[projectName] = project.root;
       }
+
       // update the project.json file
-      writeJson(tree, configFile, { ...project, root: undefined });
+      const relativeJsonSchemaPath = relative(
+        join(tree.root, project.root),
+        join(tree.root, 'node_modules/nx/schemas/project-schema.json')
+      );
+      writeJson(tree, configFile, {
+        $schema: relativeJsonSchemaPath,
+        ...project,
+        root: undefined,
+      });
     }
   } else if (mode === 'delete') {
     delete workspaceJson.projects[projectName];

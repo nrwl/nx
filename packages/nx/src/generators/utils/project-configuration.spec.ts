@@ -339,6 +339,15 @@ describe('project configuration', () => {
         expect(configurations.get('test')).toEqual(baseTestProjectConfigV2);
         expect(configurations.get('test2')).toEqual(baseTestProjectConfigV2);
       });
+
+      it('should have JSON $schema in project configuration for standalone projects', () => {
+        addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
+        const projectJson = readJson(tree, 'libs/test/project.json');
+        expect(projectJson['$schema']).toBeTruthy();
+        expect(projectJson['$schema']).toEqual(
+          '../../node_modules/nx/schemas/project-schema.json'
+        );
+      });
     });
 
     describe('updateWorkspaceConfiguration', () => {
