@@ -1,8 +1,11 @@
 import { readJson } from '@nrwl/devkit';
 import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
+import Ajv from 'ajv';
 import { workspaceGenerator } from './workspace';
 import { createTree } from '@nrwl/devkit/testing';
 import { Preset } from '../utils/presets';
+import * as nxSchema from '../../../../nx/schemas/nx-schema.json';
+import * as workspaceSchema from '../../../../nx/schemas/workspace-schema.json';
 
 describe('@nrwl/workspace:workspace', () => {
   let tree: Tree;
@@ -26,6 +29,8 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should create nx.json and workspace.json', async () => {
+    const ajv = new Ajv();
+
     await workspaceGenerator(tree, {
       name: 'proj',
       directory: 'proj',
@@ -67,6 +72,8 @@ describe('@nrwl/workspace:workspace', () => {
         ],
       },
     });
+    const validateNxJson = ajv.compile(nxSchema);
+    expect(validateNxJson(nxJson)).toEqual(true);
 
     const workspaceJson = readJson(tree, '/proj/workspace.json');
     expect(workspaceJson).toEqual({
@@ -74,6 +81,8 @@ describe('@nrwl/workspace:workspace', () => {
       version: 2,
       projects: {},
     });
+    const validateWorkspaceJson = ajv.compile(workspaceSchema);
+    expect(validateWorkspaceJson(workspaceJson)).toEqual(true);
   });
 
   it('should create a prettierrc file', async () => {
