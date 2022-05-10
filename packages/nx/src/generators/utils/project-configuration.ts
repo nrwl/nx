@@ -352,7 +352,10 @@ function addProjectToWorkspaceJson(
     (mode === 'create' && standalone) || !workspaceConfigPath
       ? joinPathFragments(project.root, 'project.json')
       : getProjectFileLocation(tree, projectName);
-  const shouldAddJsonSchema = configFile && mode === 'create' && standalone;
+  const jsonSchema =
+    configFile && mode === 'create' && standalone
+      ? { $schema: getRelativeProjectJsonSchemaPath(tree, project) }
+      : {};
 
   if (configFile) {
     if (mode === 'delete') {
@@ -366,9 +369,7 @@ function addProjectToWorkspaceJson(
 
       // update the project.json file
       writeJson(tree, configFile, {
-        ...(shouldAddJsonSchema
-          ? { $schema: getRelativeProjectJsonSchemaPath(tree, project) }
-          : {}),
+        ...jsonSchema,
         ...project,
         root: undefined,
       });
