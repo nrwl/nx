@@ -228,7 +228,7 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
     });
 
-    it('should remove .browserlistrc when library is not buildable or publishable', async () => {
+    it('should remove .browserslistrc when library is not buildable or publishable', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({
         publishable: false,
@@ -236,7 +236,7 @@ describe('lib', () => {
       });
 
       // ASSERT
-      expect(tree.read('libs/my-lib/.browserlistrc')).toBeFalsy();
+      expect(tree.read('libs/my-lib/.browserslistrc')).toBeFalsy();
     });
 
     it('should remove tsconfib.lib.prod.json when library is not buildable or publishable', async () => {
