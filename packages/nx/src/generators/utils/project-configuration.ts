@@ -353,7 +353,7 @@ function addProjectToWorkspaceJson(
       ? joinPathFragments(project.root, 'project.json')
       : getProjectFileLocation(tree, projectName);
   const jsonSchema =
-    configFile && mode === 'create' && standalone
+    configFile && mode === 'create'
       ? { $schema: getRelativeProjectJsonSchemaPath(tree, project) }
       : {};
 
