@@ -18,5 +18,5 @@ export function findEslintFile(tree: Tree): string {
     }
   }
   // Default file
-  return 'eslintrc.json';
+  return '.eslintrc.json';
 }

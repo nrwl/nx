@@ -33,7 +33,7 @@ describe('@nrwl/linter:eslint-file', () => {
 
   describe('findEslintFile', () => {
     it('should return default name when calling findEslintFile when no eslint is found', () => {
-      expect(findEslintFile(tree)).toBe('eslintrc.json');
+      expect(findEslintFile(tree)).toBe('.eslintrc.json');
     });
 
     it('should return the name of the eslint config when calling findEslintFile', () => {
@@ -49,7 +49,7 @@ describe('@nrwl/linter:eslint-file', () => {
     it('should return default name when calling findEslintFile when no eslint is found', () => {
       tree.write('.eslintrc.yaml', '{}');
 
-      expect(findEslintFile(tree)).toBe('eslintrc.json');
+      expect(findEslintFile(tree)).toBe('.eslintrc.json');
     });
   });
 });
