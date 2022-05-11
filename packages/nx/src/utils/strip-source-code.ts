@@ -105,10 +105,12 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
        */
       case SyntaxKind.TemplateHead:
         token = scanner.scan();
-        while (token !== SyntaxKind.CloseBraceToken) {
-          token = scanner.scan();
+        while (token !== SyntaxKind.LastTemplateToken) {
+          while (token !== SyntaxKind.CloseBraceToken) {
+            token = scanner.scan();
+          }
+          token = scanner.reScanTemplateHeadOrNoSubstitutionTemplate();
         }
-        scanner.reScanTemplateHeadOrNoSubstitutionTemplate();
         break;
 
       default: {

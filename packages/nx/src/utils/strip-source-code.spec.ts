@@ -275,6 +275,23 @@ require('./c')`;
         )
       ).toEqual('');
 
+      // Multiple subsitutions, whitespace, newlines, etc. should not interefere
+      expect(
+        stripSourceCode(
+          scanner,
+          `
+            const v = \`\${val}
+            \${val}
+                \${val} \${val}
+            
+                  \${val} \${val}
+            
+                  \`;
+            tree.write('/path/to/file.ts', \`import something from "@myorg/foo";\`);
+          `
+        )
+      ).toEqual('');
+
       const input = `    
         import { ProjectConfiguration, Tree } from '@nrwl/devkit';
         require('@myorg/qux');
