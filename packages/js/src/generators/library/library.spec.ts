@@ -698,9 +698,10 @@ describe('lib', () => {
       expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.read(`libs/my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/* eslint-disable */
+        export default {
           displayName: 'my-lib',
-          preset: '../../jest.preset.ts',
+          preset: '../../jest.preset.js',
           globals: {
             'ts-jest': {
               tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -714,6 +715,30 @@ describe('lib', () => {
         };
         "
       `);
+      const readme = tree.read('libs/my-lib/README.md', 'utf-8');
+      expect(readme).toContain('nx test my-lib');
+    });
+
+    it('should generate test configuration with swc and js', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        unitTestRunner: 'jest',
+        compiler: 'swc',
+        js: true,
+      });
+
+      expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/jest.config.js')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
+
+      const projectConfig = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfig.targets.test).toBeDefined();
+
+      expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
+      expect(
+        tree.read(`libs/my-lib/jest.config.js`, 'utf-8')
+      ).toMatchSnapshot();
       const readme = tree.read('libs/my-lib/README.md', 'utf-8');
       expect(readme).toContain('nx test my-lib');
     });

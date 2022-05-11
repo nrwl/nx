@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   createFile,
+  expectJestTestsToPass,
   killPorts,
   newProject,
   readFile,
@@ -289,4 +290,9 @@ describe('React Applications and Libs with PostCSS', () => {
     expect(buildResults.combinedOutput).toMatch(/HELLO FROM APP/);
     expect(buildResults.combinedOutput).not.toMatch(/HELLO FROM LIB/);
   }, 250_000);
+
+  it('should run default jest tests', async () => {
+    await expectJestTestsToPass('@nrwl/react:lib');
+    await expectJestTestsToPass('@nrwl/react:app');
+  });
 });

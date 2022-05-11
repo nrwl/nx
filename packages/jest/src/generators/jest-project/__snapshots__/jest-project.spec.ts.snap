@@ -1,9 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`jestProject --babelJest should generate proper jest.transform when --compiler=swc and supportTsx is true 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
   transform: {
     '^.+\\\\\\\\.[tj]sx?$': ['@swc/jest', { jsc: { transform: { react: { runtime: 'automatic' } } } }]
   },
@@ -14,9 +15,10 @@ exports[`jestProject --babelJest should generate proper jest.transform when --co
 `;
 
 exports[`jestProject --babelJest should generate proper jest.transform when babelJest and supportTsx is true 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
   transform: {
     '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
   },
@@ -27,9 +29,10 @@ exports[`jestProject --babelJest should generate proper jest.transform when babe
 `;
 
 exports[`jestProject --babelJest should generate proper jest.transform when babelJest is true 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
   transform: {
     '^.+\\\\\\\\.[tj]s$': 'babel-jest'
   },
@@ -40,9 +43,10 @@ exports[`jestProject --babelJest should generate proper jest.transform when babe
 `;
 
 exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-jest in the jest.config when generated for angular 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
     'ts-jest': {
@@ -65,15 +69,42 @@ exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-
 `;
 
 exports[`jestProject should create a jest.config.ts 1`] = `
-"module.exports = {
+"/* eslint-disable */
+export default {
   displayName: 'lib1',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
     }
   },
   coverageDirectory: '../../coverage/libs/lib1'
+};
+"
+`;
+
+exports[`jestProject should generate files 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'lib1',
+  preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+    }
+  },
+  coverageDirectory: '../../coverage/libs/lib1',
+  transform: {
+    '^.+\\\\\\\\.(ts|mjs|js|html)$': 'jest-preset-angular'
+  },
+  transformIgnorePatterns: ['node_modules/(?!.*\\\\\\\\.mjs$)'],
+  snapshotSerializers: [
+    'jest-preset-angular/build/serializers/no-ng-attributes',
+    'jest-preset-angular/build/serializers/ng-snapshot',
+    'jest-preset-angular/build/serializers/html-comment',
+  ]
 };
 "
 `;

@@ -2,7 +2,6 @@ import {
   formatFiles,
   joinPathFragments,
   logger,
-  offsetFromRoot,
   ProjectConfiguration,
   readJson,
   readProjectConfiguration,
@@ -11,43 +10,11 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { jestConfigObject } from '../../utils/config/functions';
-import { dirname, extname, join } from 'path';
-import {
-  removePropertyFromJestConfig,
-  addPropertyToJestConfig,
-} from '../../utils/config/update-config';
+import { extname } from 'path';
 import { JestExecutorOptions } from '../../executors/jest/schema';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
 const allowedExt = ['.ts', '.js'];
-let isRootPresetUpdated = false;
-
-function updateJestPreset(
-  tree: Tree,
-  options: JestExecutorOptions,
-  projectName: string
-) {
-  const oldConfig = jestConfigObject(tree, options.jestConfig);
-  if (!oldConfig) {
-    return;
-  }
-  // if using the root preset and the root preset was updated to ts file.
-  // then update the jest config
-  if (isRootPresetUpdated && oldConfig?.preset?.endsWith('jest.preset.js')) {
-    removePropertyFromJestConfig(tree, options.jestConfig, 'preset');
-    addPropertyToJestConfig(
-      tree,
-      options.jestConfig,
-      'preset',
-      joinPathFragments(
-        offsetFromRoot(dirname(options.jestConfig)),
-        'jest.preset.ts'
-      ),
-      { valueAsString: false }
-    );
-  }
-}
 
 function updateTsConfig(tree: Tree, tsConfigPath: string) {
   try {
@@ -60,6 +27,17 @@ function updateTsConfig(tree: Tree, tsConfigPath: string) {
   } catch (e) {
     logger.warn(
       stripIndents`Nx Unable to update ${tsConfigPath}. Please manually ignore the jest.config.ts file.`
+    );
+  }
+}
+
+function addEsLintIgnoreComments(tree: Tree, filePath: string) {
+  if (tree.exists(filePath)) {
+    const contents = tree.read(filePath, 'utf-8');
+    tree.write(
+      filePath,
+      `/* eslint-disable */
+${contents}`
     );
   }
 }
@@ -81,24 +59,47 @@ function isJestConfigValid(tree: Tree, options: JestExecutorOptions) {
 function updateTsconfigSpec(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  path
+  path,
+  options: { isNextWithProjectParse: boolean; tsConfigPath: string } = {
+    isNextWithProjectParse: false,
+    tsConfigPath: '',
+  }
 ) {
   updateJson(tree, joinPathFragments(projectConfig.root, path), (json) => {
     json.include = Array.from(
       new Set([...(json.include || []), 'jest.config.ts'])
     );
+    if (options.isNextWithProjectParse) {
+      const tsConfig = readJson(tree, options.tsConfigPath);
+      const tsConfigExclude = (tsConfig.exclude || []).filter(
+        (e) => e !== 'jest.config.ts'
+      );
+      json.exclude = Array.from(
+        new Set([...(json.exclude || []), ...tsConfigExclude])
+      );
+    }
     return json;
   });
+}
+
+function isNextWithProjectLint(
+  projectConfig: ProjectConfiguration,
+  esLintJson: any
+) {
+  const esLintOverrides = esLintJson?.overrides?.find((o) =>
+    ['*.ts', '*.tsx', '*.js', '*.jsx'].every((ext) => o.files.includes(ext))
+  );
+
+  // check if it's a next app and has a parserOptions.project set in the eslint overrides
+  return !!(
+    projectConfig?.targets?.['build']?.executor === '@nrwl/next:build' &&
+    esLintOverrides?.parserOptions?.project
+  );
 }
 
 export async function updateJestConfigExt(tree: Tree) {
   if (tree.exists('jest.config.js')) {
     tree.rename('jest.config.js', 'jest.config.ts');
-  }
-
-  if (tree.exists('jest.preset.js')) {
-    isRootPresetUpdated = true;
-    tree.rename('jest.preset.js', 'jest.preset.ts');
   }
 
   forEachExecutorOptions<JestExecutorOptions>(
@@ -111,7 +112,7 @@ export async function updateJestConfigExt(tree: Tree) {
         return;
       }
 
-      updateJestPreset(tree, options, projectName);
+      addEsLintIgnoreComments(tree, options.jestConfig);
 
       const newJestConfigPath = options.jestConfig.replace('.js', '.ts');
       tree.rename(options.jestConfig, newJestConfigPath);
@@ -125,7 +126,19 @@ export async function updateJestConfigExt(tree: Tree) {
           if (tsConfig.references) {
             for (const { path } of tsConfig.references) {
               if (path.endsWith('tsconfig.spec.json')) {
-                updateTsconfigSpec(tree, projectConfig, path);
+                const eslintPath = joinPathFragments(
+                  projectConfig.root,
+                  '.eslintrc.json'
+                );
+                updateTsconfigSpec(tree, projectConfig, path, {
+                  isNextWithProjectParse: tree.exists(eslintPath)
+                    ? isNextWithProjectLint(
+                        projectConfig,
+                        readJson(tree, eslintPath)
+                      )
+                    : false,
+                  tsConfigPath: filePath,
+                });
                 continue;
               }
 

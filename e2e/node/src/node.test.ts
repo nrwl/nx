@@ -2,6 +2,7 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  expectJestTestsToPass,
   killPorts,
   newProject,
   packageInstall,
@@ -359,9 +360,10 @@ describe('nest libraries', function () {
     const jestConfigContent = readFile(`libs/${nestlib}/jest.config.ts`);
 
     expect(stripIndents`${jestConfigContent}`).toEqual(
-      stripIndents`module.exports = {
+      stripIndents`/* eslint-disable */
+              export default {
                 displayName: '${nestlib}',
-                preset: '../../jest.preset.ts',
+                preset: '../../jest.preset.js',
                 globals: {
                   'ts-jest': {
                   tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -481,4 +483,8 @@ exports.FooModel = FooModel;
       checkFilesDoNotExist('workspace.json', 'angular.json')
     ).not.toThrow();
   }, 1000000);
+
+  it('should run default jest tests', async () => {
+    await expectJestTestsToPass('@nrwl/node:lib');
+  });
 });

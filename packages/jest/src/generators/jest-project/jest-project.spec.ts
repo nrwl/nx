@@ -53,6 +53,7 @@ describe('jestProject', () => {
     expect(tree.exists('libs/lib1/src/test-setup.ts')).toBeTruthy();
     expect(tree.exists('libs/lib1/jest.config.ts')).toBeTruthy();
     expect(tree.exists('libs/lib1/tsconfig.spec.json')).toBeTruthy();
+    expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should generate files w/babel-jest', async () => {
@@ -284,7 +285,7 @@ describe('jestProject', () => {
     ).toMatchSnapshot();
   });
 
-  it('should use the jest.preset.ts when preset with --js', async () => {
+  it('should always use jest.preset.js with --js', async () => {
     tree.write('jest.preset.ts', '');
     await jestProjectGenerator(tree, {
       ...defaultOptions,
@@ -293,7 +294,19 @@ describe('jestProject', () => {
     } as JestProjectSchema);
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
-      "preset: '../../jest.preset.ts',"
+      "preset: '../../jest.preset.js',"
+    );
+  });
+
+  it('should use module.exports with --js flag', async () => {
+    await jestProjectGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+      js: true,
+    } as JestProjectSchema);
+    expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
+    expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
+      'module.exports = {'
     );
   });
 

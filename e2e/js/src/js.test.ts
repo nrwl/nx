@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  expectJestTestsToPass,
   checkFilesDoNotExist,
   newProject,
   readFile,
@@ -241,5 +242,9 @@ describe('js e2e', () => {
     );
 
     checkFilesDoNotExist(`libs/${lib}/.babelrc`);
+  });
+
+  it('should run default jest tests', async () => {
+    await expectJestTestsToPass('@nrwl/js:lib');
   });
 });

@@ -1,4 +1,4 @@
-import { readJson, Tree, writeJson } from '@nrwl/devkit';
+import { readJson, stripIndents, Tree, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { jestInitGenerator } from './init';
 
@@ -9,17 +9,28 @@ describe('jest', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should generate files', async () => {
+  it('should generate files with --js flag', async () => {
+    jestInitGenerator(tree, { js: true });
+
+    expect(tree.exists('jest.config.js')).toBeTruthy();
+    expect(
+      stripIndents`${tree.read('jest.config.js', 'utf-8')}`
+    ).toMatchSnapshot();
+    expect(
+      stripIndents`${tree.read('jest.preset.js', 'utf-8')}`
+    ).toMatchSnapshot();
+  });
+
+  it('should generate files ', async () => {
     jestInitGenerator(tree, {});
 
     expect(tree.exists('jest.config.ts')).toBeTruthy();
-    expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "const { getJestProjects } = require('@nrwl/jest');
-      
-      module.exports = {
-      projects: getJestProjects()
-      };"
-    `);
+    expect(
+      stripIndents`${tree.read('jest.config.ts', 'utf-8')}`
+    ).toMatchSnapshot();
+    expect(
+      stripIndents`${tree.read('jest.preset.js', 'utf-8')}`
+    ).toMatchSnapshot();
   });
 
   it('should not override existing files', async () => {
