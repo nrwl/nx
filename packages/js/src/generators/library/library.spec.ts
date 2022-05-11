@@ -795,6 +795,7 @@ describe('lib', () => {
         });
 
         expect(tree.exists('libs/my-lib/.lib.swcrc')).toBeTruthy();
+        expect(readJson(tree, '.prettierrc')).toMatchSnapshot();
       });
 
       it('should setup jest project using swc', async () => {
