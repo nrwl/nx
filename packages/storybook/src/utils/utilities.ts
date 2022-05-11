@@ -90,8 +90,10 @@ export function readCurrentWorkspaceStorybookVersionFromGenerator(
   return determineStorybookWorkspaceVersion(packageJsonContents);
 }
 
-export function readCurrentWorkspaceStorybookVersionFromExecutor() {
-  const packageJsonContents = readJsonFile('package.json');
+export function readCurrentWorkspaceStorybookVersionFromExecutor(
+  workspaceRoot: string
+) {
+  const packageJsonContents = readJsonFile(join(workspaceRoot, 'package.json'));
   return determineStorybookWorkspaceVersion(packageJsonContents);
 }
 

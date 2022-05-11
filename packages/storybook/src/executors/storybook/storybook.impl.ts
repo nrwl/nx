@@ -33,7 +33,13 @@ export default async function* storybookExecutor(
   // print warnings
   runStorybookSetupCheck(options);
 
+  // temporarily move up to the root of the workspace because Storybook relies on
+  // `process.cwd()` for certain things, like locating node_modules:
+  // https://github.com/storybookjs/storybook/blob/v6.4.12/app/angular/src/server/framework-preset-angular-ivy.ts#L44
+  const cwd = process.cwd();
+  process.chdir(context.root);
   await runInstance(option);
+  process.chdir(cwd);
 
   yield { success: true };
 

@@ -1,6 +1,7 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import * as build from '@storybook/core/standalone';
 import 'dotenv/config';
+import { join } from 'path';
 import { CommonNxStorybookConfig } from '../models';
 import {
   getStorybookFrameworkPath,
@@ -54,7 +55,9 @@ function storybookOptionMapper(
       context
     ),
     mode: 'static',
-    outputDir: builderOptions.outputPath,
+    // ensure that Storybook outputs resources to the same dir regardless of the pwd from
+    // which the command is executed
+    outputDir: join(context.root, builderOptions.outputPath),
   };
 
   return storybookOptions;

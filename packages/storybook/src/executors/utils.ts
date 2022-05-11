@@ -184,7 +184,7 @@ export function resolveCommonStorybookOptionMapper(
   if (
     builderOptions.uiFramework === '@storybook/angular' &&
     // just for new 6.4 with Angular
-    isStorybookGTE6_4()
+    isStorybookGTE6_4(context.root)
   ) {
     let buildProjectName;
     let targetName = 'build'; // default
@@ -255,7 +255,7 @@ export function resolveCommonStorybookOptionMapper(
         ...project.targets[targetName],
         project: buildProjectName,
       },
-      workspaceRoot: context.cwd,
+      workspaceRoot: context.root,
       getProjectMetadata: () => {
         return project;
       },
@@ -287,8 +287,9 @@ function normalizeTargetString(
   return `${appName}:${defaultTarget}`;
 }
 
-function isStorybookGTE6_4() {
-  const storybookVersion = readCurrentWorkspaceStorybookVersionFromExecutor();
+function isStorybookGTE6_4(workspaceRoot: string) {
+  const storybookVersion =
+    readCurrentWorkspaceStorybookVersionFromExecutor(workspaceRoot);
 
   return gte(
     checkAndCleanWithSemver('@storybook/core', storybookVersion),
