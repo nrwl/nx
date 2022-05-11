@@ -289,9 +289,18 @@ function replaceJestConfig(
   options: NormalizedSchema,
   filesDir: string
 ) {
+  // the existing config has to be deleted otherwise the new config won't overwrite it
+  const existingJestConfig = joinPathFragments(
+    filesDir,
+    `jest.config.${options.js ? 'js' : 'ts'}`
+  );
+  if (tree.exists(existingJestConfig)) {
+    tree.delete(existingJestConfig);
+  }
+
   // replace with JS:SWC specific jest config
   generateFiles(tree, filesDir, options.projectRoot, {
-    tmpl: '',
+    ext: options.js ? 'js' : 'ts',
     js: !!options.js,
     project: options.name,
     offsetFromRoot: offsetFromRoot(options.projectRoot),
