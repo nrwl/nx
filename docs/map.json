@@ -1,6 +1,6 @@
 [
   {
-    "name": "default",
+    "name": "Nx",
     "id": "default",
     "itemList": [
       {
@@ -1585,6 +1585,156 @@
             "name": "Large Repo and DTE",
             "id": "dte",
             "file": "shared/examples/dte"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Nx Cloud",
+    "id": "nx-cloud",
+    "itemList": [
+      {
+        "name": "Get Started",
+        "id": "get-started",
+        "itemList": [
+          {
+            "name": "What is Nx Cloud?",
+            "id": "intro",
+            "file": "nx-cloud/intro"
+          },
+          {
+            "name": "Set Up Distributed Caching",
+            "id": "set-up-caching",
+            "file": "nx-cloud/set-up/set-up-caching"
+          },
+          {
+            "name": "Set Up Distributed Task Execution",
+            "id": "set-up-dte",
+            "file": "nx-cloud/set-up/set-up-dte"
+          },
+          {
+            "name": "Record Non-Nx Commands",
+            "id": "record-commands",
+            "file": "nx-cloud/set-up/record-commands"
+          },
+          {
+            "name": "Enable GitHub PR Integration",
+            "id": "github",
+            "file": "nx-cloud/set-up/github"
+          }
+        ]
+      },
+      {
+        "name": "Account Management",
+        "id": "account",
+        "itemList": [
+          {
+            "name": "Billing and Utilization",
+            "id": "billing",
+            "file": "nx-cloud/account/billing"
+          },
+          {
+            "name": "Users",
+            "id": "users",
+            "file": "nx-cloud/account/users"
+          },
+          {
+            "name": "Authenticate with Google Identity",
+            "id": "google-auth",
+            "file": "nx-cloud/account/google-auth"
+          },
+          {
+            "name": "Access Tokens",
+            "id": "access-tokens",
+            "file": "nx-cloud/account/access-tokens"
+          },
+          {
+            "name": "Security Scenarios",
+            "id": "scenarios",
+            "file": "nx-cloud/account/scenarios"
+          },
+          {
+            "name": "End to End Encryption",
+            "id": "encryption",
+            "file": "nx-cloud/account/encryption"
+          }
+        ]
+      },
+      {
+        "name": "Private Cloud",
+        "id": "private-cloud",
+        "itemList": [
+          {
+            "name": "Get Started",
+            "id": "get-started",
+            "file": "nx-cloud/private/get-started"
+          },
+          {
+            "name": "Enable Github PR Integration",
+            "id": "github",
+            "file": "nx-cloud/private/github"
+          },
+          {
+            "name": "Deploy with Kubernetes",
+            "id": "deploy-kubernetes",
+            "file": "nx-cloud/private/deploy-kubernetes"
+          },
+          {
+            "name": "Deploy with AWS",
+            "id": "deploy-aws",
+            "file": "nx-cloud/private/deploy-aws"
+          },
+          {
+            "name": "Deploy with Azure",
+            "id": "deploy-azure",
+            "file": "nx-cloud/private/deploy-azure"
+          },
+          {
+            "name": "Authenticate with a Single Admin",
+            "id": "auth-single-admin",
+            "file": "nx-cloud/private/auth-single-admin"
+          },
+          {
+            "name": "Authenticate with GitHub",
+            "id": "auth-github",
+            "file": "nx-cloud/private/auth-github"
+          },
+          {
+            "name": "Authenticate with GitLab",
+            "id": "auth-gitlab",
+            "file": "nx-cloud/private/auth-gitlab"
+          },
+          {
+            "name": "Advanced Configuration",
+            "id": "advanced-config",
+            "file": "nx-cloud/private/advanced-config"
+          }
+        ]
+      },
+      {
+        "name": "Reference",
+        "id": "reference",
+        "itemList": [
+          {
+            "name": "Configuration Options",
+            "id": "config",
+            "file": "nx-cloud/reference/config"
+          },
+          {
+            "name": "Environment Variables",
+            "id": "env-vars",
+            "file": "nx-cloud/reference/env-vars"
+          },
+          {
+            "name": "Server API Reference",
+            "id": "server-api",
+            "file": "nx-cloud/reference/server-api"
+          },
+          {
+            "name": "Release Notes",
+            "id": "release-notes",
+            "file": "nx-cloud/reference/release-notes"
           }
         ]
       }
