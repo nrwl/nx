@@ -21,13 +21,6 @@ module.exports = withNx({
   async redirects() {
     const rules = [];
 
-    // Landing pages
-    rules.push({
-      source: '/(angular|react|node)',
-      destination: '/',
-      permanent: true,
-    });
-
     // Tutorials
     rules.push({
       source: '/(l|latest)/(r|react)/tutorial/01-create-application',
@@ -89,6 +82,23 @@ module.exports = withNx({
       });
     }
 
+    // Generic, catch-all
+    rules.push({
+      source: '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*',
+      destination: '/:path*',
+      permanent: true,
+    });
+    rules.push({
+      source: '/(l|latest|p|previous)/:path*',
+      destination: '/:path*',
+      permanent: true,
+    });
+    rules.push({
+      source: '/(a|angular|r|react|n|node)/:path*',
+      destination: '/:path*',
+      permanent: true,
+    });
+
     // Schemas (generators & executors)
     for (let s of Object.keys(redirectRules.schemaUrls)) {
       rules.push({
@@ -107,15 +117,10 @@ module.exports = withNx({
       });
     }
 
-    // Generic, catch-all
+    // Landing pages
     rules.push({
-      source: '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*',
-      destination: '/:path*',
-      permanent: true,
-    });
-    rules.push({
-      source: '/(l|latest|p|previous)/:path*',
-      destination: '/:path*',
+      source: '/(angular|react|node)',
+      destination: '/',
       permanent: true,
     });
     return rules;
