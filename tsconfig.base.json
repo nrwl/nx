@@ -48,6 +48,7 @@
       "@nrwl/nx-dev/data-access-documents/node-only": [
         "./nx-dev/data-access-documents/src/node.index.ts"
       ],
+      "@nrwl/nx-dev/data-access-menu": ["nx-dev/data-access-menu/src/index.ts"],
       "@nrwl/nx-dev/data-access-packages": [
         "./nx-dev/data-access-packages/src/index.ts"
       ],

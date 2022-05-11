@@ -1,3 +1,4 @@
+import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
 import { PackageMetadata, SchemaMetadata } from '@nrwl/nx-dev/models-package';
 import { readFileSync } from 'fs';
 
@@ -24,22 +25,21 @@ export class PackagesApi {
     }
   }
 
-  getPackage(name: string): PackageMetadata {
+  getPackage(id: string): PackageMetadata {
     const packagePath: string | null =
-      this.options.packagesIndex.find((p) => p.name === name)?.path ?? null;
+      this.options.packagesIndex.find((p) => p.name === id)?.path ?? null;
 
-    if (!packagePath)
-      throw new Error('Package name could not be found: ' + name);
+    if (!packagePath) throw new Error('Package name could not be found: ' + id);
 
-    if (!this.database[name])
-      this.database[name] = JSON.parse(
+    if (!this.database[id])
+      this.database[id] = JSON.parse(
         readFileSync(
           [this.options.publicPackagesRoot, packagePath].join('/'),
           'utf-8'
         )
       );
 
-    return this.database[name];
+    return this.database[id];
   }
 
   getStaticPackagePaths(): StaticPackagePaths[] {
@@ -67,6 +67,38 @@ export class PackagesApi {
       });
     });
     return paths;
+  }
+
+  getPackageDocuments(): DocumentMetadata {
+    return {
+      id: 'packages',
+      name: 'packages',
+      itemList: this.options.packagesIndex.map((p) => ({
+        id: p.name,
+        name: p.name.replace(/-/gi, ' '),
+        path: `/packages/${p.name}`,
+        itemList: this.getPackage(p.name)
+          .documentation.map((d) => ({
+            id: d.id,
+            name: d.name,
+            path: d.path,
+          }))
+          .concat(
+            p.schemas.executors.map((e) => ({
+              id: e,
+              name: e,
+              path: `/packages/${p.name}/executors/${e}`,
+            }))
+          )
+          .concat(
+            p.schemas.generators.map((g) => ({
+              id: g,
+              name: g,
+              path: `/packages/${p.name}/generators/${g}`,
+            }))
+          ),
+      })),
+    };
   }
 
   getPackageSchema(

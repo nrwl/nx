@@ -107,6 +107,7 @@ export function getPackageMetadataList(
       documentation: !!hasDocumentation
         ? hasDocumentation.itemList.map((item) => ({
             ...item,
+            path: item.path,
             file: item.file,
             content: readFileSync(join('docs', item.file + '.md'), 'utf8'),
           }))

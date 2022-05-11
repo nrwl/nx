@@ -9,5 +9,6 @@ export interface DocumentMetadata {
   id: string;
   name?: string;
   file?: string;
+  path?: string;
   itemList?: DocumentMetadata[];
 }

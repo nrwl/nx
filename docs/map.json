@@ -373,905 +373,6 @@
         ]
       },
       {
-        "name": "CLI",
-        "id": "cli",
-        "itemList": [
-          {
-            "name": "create-nx-workspace",
-            "id": "create-nx-workspace",
-            "file": "generated/cli/create-nx-workspace"
-          },
-          {
-            "name": "generate",
-            "id": "generate",
-            "file": "generated/cli/generate"
-          },
-          { "name": "serve", "id": "serve", "file": "generated/cli/serve" },
-          { "name": "build", "id": "build", "file": "generated/cli/build" },
-          { "name": "test", "id": "test", "file": "generated/cli/test" },
-          { "name": "lint", "id": "lint", "file": "generated/cli/lint" },
-          { "name": "e2e", "id": "e2e", "file": "generated/cli/e2e" },
-          { "name": "run", "id": "run", "file": "generated/cli/run" },
-          { "name": "daemon", "id": "daemon", "file": "generated/cli/daemon" },
-          { "name": "graph", "id": "dep-graph", "file": "generated/cli/graph" },
-          {
-            "name": "run-many",
-            "id": "run-many",
-            "file": "generated/cli/run-many"
-          },
-          {
-            "name": "affected",
-            "id": "affected",
-            "file": "generated/cli/affected"
-          },
-          {
-            "name": "affected:graph",
-            "id": "affected-dep-graph",
-            "file": "generated/cli/affected-graph"
-          },
-          {
-            "name": "affected:apps",
-            "id": "affected-apps",
-            "file": "generated/cli/affected-apps"
-          },
-          {
-            "name": "affected:libs",
-            "id": "affected-libs",
-            "file": "generated/cli/affected-libs"
-          },
-          {
-            "name": "print-affected",
-            "id": "print-affected",
-            "file": "generated/cli/print-affected"
-          },
-          {
-            "name": "format:check",
-            "id": "format-check",
-            "file": "generated/cli/format-check"
-          },
-          {
-            "name": "format:write",
-            "id": "format-write",
-            "file": "generated/cli/format-write"
-          },
-          {
-            "name": "migrate",
-            "id": "migrate",
-            "file": "generated/cli/migrate"
-          },
-          { "name": "report", "id": "report", "file": "generated/cli/report" },
-          { "name": "list", "id": "list", "file": "generated/cli/list" },
-          {
-            "name": "workspace-lint",
-            "id": "workspace-lint",
-            "file": "generated/cli/workspace-lint"
-          },
-          {
-            "name": "workspace-generator",
-            "id": "workspace-generator",
-            "file": "generated/cli/workspace-generator"
-          },
-          {
-            "name": "connect-to-nx-cloud",
-            "id": "connect-to-nx-cloud",
-            "file": "generated/cli/connect-to-nx-cloud"
-          },
-          { "name": "reset", "id": "reset", "file": "generated/cli/reset" }
-        ]
-      },
-      {
-        "name": "Workspace",
-        "id": "workspace",
-        "itemList": [
-          {
-            "id": "nrwl-workspace-overview",
-            "name": "Overview",
-            "path": "/packages/workspace"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "path": "/packages/workspace/generators/library"
-          },
-          {
-            "name": "npm-package generator",
-            "id": "npm-package",
-            "path": "/packages/workspace/generators/npm-package"
-          },
-          {
-            "name": "move generator",
-            "id": "move",
-            "path": "/packages/workspace/generators/move"
-          },
-          {
-            "name": "remove generator",
-            "id": "remove",
-            "path": "/packages/workspace/generators/remove"
-          },
-          {
-            "name": "run-commands generator",
-            "id": "run-commands-generator",
-            "path": "/packages/workspace/generators/run-commands"
-          },
-          {
-            "name": "workspace-generator generator",
-            "id": "workspace-generator",
-            "path": "/packages/workspace/generators/workspace-generator"
-          },
-          {
-            "name": "ci-workflow generator",
-            "id": "ci-workflow-generator",
-            "path": "/packages/workspace/generators/ci-workflow"
-          },
-          {
-            "name": "convert-to-nx-project generator",
-            "id": "convert-to-nx-project-generator",
-            "path": "/packages/workspace/generators/convert-to-nx-project"
-          },
-          {
-            "name": "run-commands executor",
-            "id": "run-commands-executor",
-            "path": "/packages/workspace/executors/run-commands"
-          },
-          {
-            "name": "run-script executor",
-            "id": "run-script",
-            "path": "/packages/workspace/executors/run-script"
-          }
-        ]
-      },
-      {
-        "name": "js",
-        "id": "js",
-        "itemList": [
-          {
-            "name": "Overview",
-            "id": "overview",
-            "path": "/packages/js"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "path": "/packages/js/generators/library"
-          },
-          {
-            "name": "convert-to-swc generator",
-            "id": "convert-to-swc",
-            "path": "/packages/js/generators/convert-to-swc"
-          },
-          {
-            "name": "tsc executor",
-            "id": "tsc",
-            "path": "/packages/js/executors/tsc"
-          },
-          {
-            "name": "swc executor",
-            "id": "swc",
-            "path": "/packages/js/executors/swc"
-          }
-        ]
-      },
-      {
-        "name": "web",
-        "id": "web",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/web"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "path": "/packages/web/generators/application"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "path": "/packages/web/executors/webpack"
-          },
-          {
-            "name": "dev-server executor",
-            "id": "dev-server",
-            "path": "/packages/web/executors/dev-server"
-          },
-          {
-            "name": "file-server executor",
-            "id": "file-server",
-            "path": "/packages/web/executors/file-server"
-          },
-          {
-            "name": "package executor",
-            "id": "package",
-            "path": "/packages/web/executors/rollup"
-          }
-        ]
-      },
-      {
-        "name": "angular",
-        "id": "angular",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/angular"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "path": "/packages/angular/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "path": "/packages/angular/generators/component"
-          },
-          {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "path": "/packages/angular/generators/convert-tslint-to-eslint"
-          },
-          {
-            "name": "downgrade-module generator",
-            "id": "downgrade-module",
-            "path": "/packages/angular/generators/downgrade-module"
-          },
-          {
-            "name": "karma generator",
-            "id": "karma",
-            "path": "/packages/angular/generators/karma"
-          },
-          {
-            "name": "karma-project generator",
-            "id": "karma-project",
-            "path": "/packages/angular/generators/karma-project"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "path": "/packages/angular/generators/library"
-          },
-          {
-            "name": "library-secondary-entry-point generator",
-            "id": "library-secondary-entry-point",
-            "path": "/packages/angular/generators/library-secondary-entry-point"
-          },
-          {
-            "name": "mfe-host generator",
-            "id": "mfe-host",
-            "path": "/packages/angular/generators/mfe-host"
-          },
-          {
-            "name": "mfe-remote generator",
-            "id": "mfe-remote",
-            "path": "/packages/angular/generators/mfe-remote"
-          },
-          {
-            "name": "move generator",
-            "id": "move",
-            "path": "/packages/angular/generators/move"
-          },
-          {
-            "name": "convert-to-with-mf generator",
-            "id": "convert-to-with-mf",
-            "path": "/packages/angular/generators/convert-to-with-mf"
-          },
-          {
-            "name": "ngrx generator",
-            "id": "ngrx",
-            "path": "/packages/angular/generators/ngrx"
-          },
-          {
-            "name": "scam generator",
-            "id": "scam",
-            "path": "/packages/angular/generators/scam"
-          },
-          {
-            "name": "scam-directive generator",
-            "id": "scam-directive",
-            "path": "/packages/angular/generators/scam-directive"
-          },
-          {
-            "name": "scam-pipe generator",
-            "id": "scam-pipe",
-            "path": "/packages/angular/generators/scam-pipe"
-          },
-          {
-            "name": "setup-mfe generator",
-            "id": "setup-mfe",
-            "path": "/packages/angular/generators/setup-mfe"
-          },
-          {
-            "name": "setup-tailwind generator",
-            "id": "setup-tailwind",
-            "path": "/packages/angular/generators/setup-tailwind"
-          },
-          {
-            "name": "stories generator",
-            "id": "stories",
-            "path": "/packages/angular/generators/stories"
-          },
-          {
-            "name": "storybook-configuration generator",
-            "id": "storybook-configuration",
-            "path": "/packages/angular/generators/storybook-configuration"
-          },
-          {
-            "name": "upgrade-module generator",
-            "id": "upgrade-module",
-            "path": "/packages/angular/generators/upgrade-module"
-          },
-          {
-            "name": "web-worker generator",
-            "id": "web-worker",
-            "path": "/packages/angular/generators/web-worker"
-          },
-          {
-            "name": "delegate-build executor",
-            "id": "delegate-build",
-            "path": "/packages/angular/executors/delegate-build"
-          },
-          {
-            "name": "ng packagr lite executor",
-            "id": "ng-packagr-lite",
-            "path": "/packages/angular/executors/ng-packagr-lite"
-          },
-          {
-            "name": "package executor",
-            "id": "package",
-            "path": "/packages/angular/executors/package"
-          },
-          {
-            "name": "webpack-browser executor",
-            "id": "webpack-browser",
-            "path": "/packages/angular/executors/webpack-browser"
-          },
-          {
-            "name": "webpack-server executor",
-            "id": "webpack-server",
-            "path": "/packages/angular/executors/webpack-server"
-          }
-        ]
-      },
-      {
-        "name": "react",
-        "id": "react",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/react"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "path": "/packages/react/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "path": "/packages/react/generators/component"
-          },
-          {
-            "name": "component-cypress-spec generator",
-            "id": "component-cypress-spec",
-            "path": "/packages/react/generators/component-cypress-spec"
-          },
-          {
-            "name": "component-story generator",
-            "id": "component-story",
-            "path": "/packages/react/generators/component-story"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "path": "/packages/react/generators/library"
-          },
-          {
-            "name": "redux generator",
-            "id": "redux",
-            "path": "/packages/react/generators/redux"
-          },
-          {
-            "name": "stories generator",
-            "id": "stories",
-            "path": "/packages/react/generators/stories"
-          },
-          {
-            "name": "storybook-configuration generator",
-            "id": "storybook-configuration",
-            "path": "/packages/react/generators/storybook-configuration"
-          },
-          {
-            "name": "hook generator",
-            "id": "hook",
-            "path": "/packages/react/generators/hook"
-          }
-        ]
-      },
-      {
-        "name": "jest",
-        "id": "jest",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/jest"
-          },
-          {
-            "name": "jest executor",
-            "id": "jest",
-            "path": "/packages/jest/executors/jest"
-          }
-        ]
-      },
-      {
-        "name": "cypress",
-        "id": "cypress",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/cypress"
-          },
-          {
-            "name": "cypress executor",
-            "id": "cypress",
-            "path": "/packages/cypress/executors/cypress"
-          },
-          {
-            "name": "cypress-project generator",
-            "id": "cypress-project",
-            "path": "/packages/cypress/generators/cypress-project"
-          }
-        ]
-      },
-      {
-        "name": "storybook",
-        "id": "storybook",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/storybook"
-          },
-          {
-            "id": "overview-react",
-            "name": "Overview (React)",
-            "file": "shared/guides/storybook/plugin-react"
-          },
-          {
-            "id": "overview-angular",
-            "name": "Overview (Angular)",
-            "file": "shared/guides/storybook/plugin-angular"
-          },
-          {
-            "id": "migrate-webpack-final-react",
-            "name": "Migrate to the Nrwl React Storybook Preset",
-            "file": "shared/guides/storybook/migrate-webpack-final-react"
-          },
-          {
-            "id": "migrate-webpack-final-angular",
-            "name": "Migrate to the Nrwl Angular Storybook Preset",
-            "file": "shared/guides/storybook/migrate-webpack-final-angular"
-          },
-          {
-            "id": "upgrade-storybook-v6-react",
-            "name": "Upgrading to Storybook 6 (React)",
-            "file": "shared/guides/storybook/storybook-v6-react"
-          },
-          {
-            "id": "upgrade-storybook-v6-angular",
-            "name": "Upgrading to Storybook 6 (Angular)",
-            "file": "shared/guides/storybook/storybook-v6-angular"
-          },
-          {
-            "id": "storybook-composition-setup",
-            "name": "Setting up Storybook Composition with Nx",
-            "file": "shared/guides/storybook/storybook-composition-setup"
-          },
-          {
-            "name": "configuration generator",
-            "id": "configuration",
-            "path": "/packages/storybook/generators/configuration"
-          },
-          {
-            "name": "cypress-project generator",
-            "id": "cypress-project",
-            "path": "/packages/storybook/generators/cypress-project"
-          },
-          {
-            "name": "Executors: Build",
-            "id": "executors-build",
-            "path": "/packages/storybook/executors/build"
-          },
-          {
-            "name": "Executors: Storybook",
-            "id": "executors-storybook",
-            "path": "/packages/storybook/executors/storybook"
-          }
-        ]
-      },
-      {
-        "name": "linter",
-        "id": "linter",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/linter"
-          },
-          {
-            "id": "eslint-plugin-nx",
-            "name": "eslint-plugin-nx",
-            "file": "shared/eslint-plugin-nx"
-          },
-          {
-            "name": "eslint executor",
-            "id": "eslint",
-            "path": "/packages/linter/executors/eslint"
-          },
-          {
-            "name": "lint executor",
-            "id": "lint",
-            "path": "/packages/linter/executors/lint"
-          },
-          {
-            "name": "workspace-rule generator",
-            "id": "workspace-rule",
-            "path": "/packages/linter/generators/workspace-rule"
-          }
-        ]
-      },
-      {
-        "name": "node",
-        "id": "node",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/node"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "path": "/packages/node/generators/application"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "path": "/packages/node/generators/library"
-          },
-          {
-            "name": "webpack executor",
-            "id": "webpack",
-            "path": "/packages/node/executors/webpack"
-          },
-          {
-            "name": "node executor",
-            "id": "node",
-            "path": "/packages/node/executors/node"
-          }
-        ]
-      },
-      {
-        "name": "express",
-        "id": "express",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/express"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "path": "/packages/express/generators/application"
-          }
-        ]
-      },
-      {
-        "name": "nest",
-        "id": "nest",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/nest"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "path": "/packages/nest/generators/application"
-          },
-          {
-            "name": "class generator",
-            "id": "class",
-            "path": "/packages/nest/generators/class"
-          },
-          {
-            "name": "controller generator",
-            "id": "controller",
-            "path": "/packages/nest/generators/controller"
-          },
-          {
-            "name": "decorator generator",
-            "id": "decorator",
-            "path": "/packages/nest/generators/decorator"
-          },
-          {
-            "name": "filter generator",
-            "id": "filter",
-            "path": "/packages/nest/generators/filter"
-          },
-          {
-            "name": "gateway generator",
-            "id": "gateway",
-            "path": "/packages/nest/generators/gateway"
-          },
-          {
-            "name": "guard generator",
-            "id": "guard",
-            "path": "/packages/nest/generators/guard"
-          },
-          {
-            "name": "interceptor generator",
-            "id": "interceptor",
-            "path": "/packages/nest/generators/interceptor"
-          },
-          {
-            "name": "interface generator",
-            "id": "interface",
-            "path": "/packages/nest/generators/interface"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "path": "/packages/nest/generators/library"
-          },
-          {
-            "name": "middleware generator",
-            "id": "middleware",
-            "path": "/packages/nest/generators/middleware"
-          },
-          {
-            "name": "module generator",
-            "id": "module",
-            "path": "/packages/nest/generators/module"
-          },
-          {
-            "name": "pipe generator",
-            "id": "pipe",
-            "path": "/packages/nest/generators/pipe"
-          },
-          {
-            "name": "provider generator",
-            "id": "provider",
-            "path": "/packages/nest/generators/provider"
-          },
-          {
-            "name": "resolver generator",
-            "id": "resolver",
-            "path": "/packages/nest/generators/resolver"
-          },
-          {
-            "name": "resource generator",
-            "id": "resource",
-            "path": "/packages/nest/generators/resource"
-          },
-          {
-            "name": "service generator",
-            "id": "service",
-            "path": "/packages/nest/generators/service"
-          },
-          {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "path": "/packages/nest/generators/convert-tslint-to-eslint"
-          }
-        ]
-      },
-      {
-        "name": "next",
-        "id": "next",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/next"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "path": "/packages/next/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "path": "/packages/next/generators/component"
-          },
-          {
-            "name": "page generator",
-            "id": "page",
-            "path": "/packages/next/generators/page"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "path": "/packages/next/executors/build"
-          },
-          {
-            "name": "server executor",
-            "id": "server",
-            "path": "/packages/next/executors/server"
-          },
-          {
-            "name": "export executor",
-            "id": "export",
-            "path": "/packages/next/executors/export"
-          }
-        ]
-      },
-      {
-        "name": "detox",
-        "id": "detox",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/detox"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "path": "/packages/detox/generators/application"
-          },
-          {
-            "name": "build executor",
-            "id": "build",
-            "path": "/packages/detox/executors/build"
-          },
-          {
-            "name": "test executor",
-            "id": "test",
-            "path": "/packages/detox/executors/test"
-          }
-        ]
-      },
-      {
-        "name": "react native",
-        "id": "react-native",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/react-native"
-          },
-          {
-            "name": "application generator",
-            "id": "application",
-            "path": "/packages/react-native/generators/application"
-          },
-          {
-            "name": "component generator",
-            "id": "component",
-            "path": "/packages/react-native/generators/component"
-          },
-          {
-            "name": "library generator",
-            "id": "library",
-            "path": "/packages/react-native/generators/library"
-          },
-          {
-            "name": "component-story generator",
-            "id": "component-story",
-            "path": "/packages/react-native/generators/component-story"
-          },
-          {
-            "name": "stories generator",
-            "id": "stories",
-            "path": "/packages/react-native/generators/stories"
-          },
-          {
-            "name": "storybook-configuration generator",
-            "id": "storybook-configuration",
-            "path": "/packages/react-native/generators/storybook-configuration"
-          },
-          {
-            "name": "build android executor",
-            "id": "build-android",
-            "path": "/packages/react-native/executors/build-android"
-          },
-          {
-            "name": "bundle executor",
-            "id": "bundle",
-            "path": "/packages/react-native/executors/bundle"
-          },
-          {
-            "name": "ensure symlink executor",
-            "id": "ensure-symlink",
-            "path": "/packages/react-native/executors/ensure-symlink"
-          },
-          {
-            "name": "run android executor",
-            "id": "run-android",
-            "path": "/packages/react-native/executors/run-android"
-          },
-          {
-            "name": "run ios executor",
-            "id": "run-ios",
-            "path": "/packages/react-native/executors/run-ios"
-          },
-          {
-            "name": "start executor",
-            "id": "start",
-            "path": "/packages/react-native/executors/start"
-          },
-          {
-            "name": "storybook executor",
-            "id": "storybook",
-            "path": "/packages/react-native/executors/storybook"
-          },
-          {
-            "name": "sync deps executor",
-            "id": "sync-deps",
-            "path": "/packages/react-native/executors/sync-deps"
-          }
-        ]
-      },
-      {
-        "name": "Nx Plugin",
-        "id": "nx-plugin",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/nx-plugin"
-          },
-          {
-            "name": "executor generator",
-            "id": "executor",
-            "path": "/packages/nx-plugin/generators/executor"
-          },
-          {
-            "name": "migration generator",
-            "id": "migration",
-            "path": "/packages/nx-plugin/generators/migration"
-          },
-          {
-            "name": "plugin generator",
-            "id": "plugin",
-            "path": "/packages/nx-plugin/generators/plugin"
-          },
-          {
-            "name": "generator generator",
-            "id": "schematic",
-            "path": "/packages/nx-plugin/generators/generator"
-          },
-          {
-            "name": "e2e executor",
-            "id": "e2e",
-            "path": "/packages/nx-plugin/executors/e2e"
-          }
-        ]
-      },
-      {
-        "name": "Nx Devkit",
-        "id": "nx-devkit",
-        "itemList": [
-          {
-            "id": "index",
-            "name": "Overview",
-            "file": "generated/api-nx-devkit/index"
-          },
-          {
-            "id": "ngcli_adapter",
-            "name": "Ng CLI Adapter",
-            "file": "generated/api-nx-devkit/ngcli_adapter"
-          }
-        ]
-      },
-      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
@@ -1595,12 +696,100 @@
     "id": "additional-api-references",
     "itemList": [
       {
+        "name": "cli",
+        "id": "cli",
+        "itemList": [
+          {
+            "name": "create-nx-workspace",
+            "id": "create-nx-workspace",
+            "file": "generated/cli/create-nx-workspace"
+          },
+          {
+            "name": "generate",
+            "id": "generate",
+            "file": "generated/cli/generate"
+          },
+          { "name": "serve", "id": "serve", "file": "generated/cli/serve" },
+          { "name": "build", "id": "build", "file": "generated/cli/build" },
+          { "name": "test", "id": "test", "file": "generated/cli/test" },
+          { "name": "lint", "id": "lint", "file": "generated/cli/lint" },
+          { "name": "e2e", "id": "e2e", "file": "generated/cli/e2e" },
+          { "name": "run", "id": "run", "file": "generated/cli/run" },
+          { "name": "daemon", "id": "daemon", "file": "generated/cli/daemon" },
+          { "name": "graph", "id": "dep-graph", "file": "generated/cli/graph" },
+          {
+            "name": "run-many",
+            "id": "run-many",
+            "file": "generated/cli/run-many"
+          },
+          {
+            "name": "affected",
+            "id": "affected",
+            "file": "generated/cli/affected"
+          },
+          {
+            "name": "affected:graph",
+            "id": "affected-dep-graph",
+            "file": "generated/cli/affected-graph"
+          },
+          {
+            "name": "affected:apps",
+            "id": "affected-apps",
+            "file": "generated/cli/affected-apps"
+          },
+          {
+            "name": "affected:libs",
+            "id": "affected-libs",
+            "file": "generated/cli/affected-libs"
+          },
+          {
+            "name": "print-affected",
+            "id": "print-affected",
+            "file": "generated/cli/print-affected"
+          },
+          {
+            "name": "format:check",
+            "id": "format-check",
+            "file": "generated/cli/format-check"
+          },
+          {
+            "name": "format:write",
+            "id": "format-write",
+            "file": "generated/cli/format-write"
+          },
+          {
+            "name": "migrate",
+            "id": "migrate",
+            "file": "generated/cli/migrate"
+          },
+          { "name": "report", "id": "report", "file": "generated/cli/report" },
+          { "name": "list", "id": "list", "file": "generated/cli/list" },
+          {
+            "name": "workspace-lint",
+            "id": "workspace-lint",
+            "file": "generated/cli/workspace-lint"
+          },
+          {
+            "name": "workspace-generator",
+            "id": "workspace-generator",
+            "file": "generated/cli/workspace-generator"
+          },
+          {
+            "name": "connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "file": "generated/cli/connect-to-nx-cloud"
+          },
+          { "name": "reset", "id": "reset", "file": "generated/cli/reset" }
+        ]
+      },
+      {
         "name": "workspace",
         "id": "workspace",
         "itemList": [
           {
             "name": "Overview",
             "id": "overview",
+            "path": "/packages/workspace",
             "file": "shared/workspace-plugin"
           }
         ]
@@ -1612,6 +801,7 @@
           {
             "name": "Overview",
             "id": "overview",
+            "path": "/packages/js",
             "file": "shared/js-plugin"
           }
         ]
@@ -1623,6 +813,7 @@
           {
             "name": "Overview",
             "id": "overview",
+            "path": "/packages/web",
             "file": "shared/web-plugin"
           }
         ]
@@ -1634,6 +825,7 @@
           {
             "name": "Overview",
             "id": "overview",
+            "path": "/packages/angular",
             "file": "shared/angular-plugin"
           }
         ]
@@ -1645,6 +837,7 @@
           {
             "name": "Overview",
             "id": "overview",
+            "path": "/packages/react",
             "file": "shared/react-plugin"
           }
         ]
@@ -1656,6 +849,7 @@
           {
             "name": "Overview",
             "id": "overview",
+            "path": "/packages/jest",
             "file": "shared/jest-plugin"
           }
         ]
@@ -1667,6 +861,7 @@
           {
             "name": "Overview",
             "id": "overview",
+            "path": "/packages/cypress",
             "file": "shared/cypress-plugin"
           }
         ]
@@ -1678,6 +873,7 @@
           {
             "id": "overview",
             "name": "Overview Generic",
+            "path": "/packages/storybook",
             "file": "shared/guides/storybook/plugin-overview"
           },
           {
@@ -1724,11 +920,24 @@
           {
             "id": "overview",
             "name": "Overview",
+            "path": "/packages/linter",
             "file": "shared/linter-plugin"
           },
           {
             "id": "eslint-plugin-nx",
             "name": "eslint-plugin-nx",
+            "file": "shared/eslint-plugin-nx"
+          }
+        ]
+      },
+      {
+        "name": "eslint-plugin-nx",
+        "id": "eslint-plugin-nx",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "path": "/packages/eslint-plugin-nx",
             "file": "shared/eslint-plugin-nx"
           }
         ]
@@ -1740,6 +949,7 @@
           {
             "id": "overview",
             "name": "Overview",
+            "path": "/packages/node",
             "file": "shared/node-plugin"
           }
         ]
@@ -1751,6 +961,7 @@
           {
             "id": "overview",
             "name": "Overview",
+            "path": "/packages/express",
             "file": "shared/express-plugin"
           }
         ]
@@ -1762,6 +973,7 @@
           {
             "id": "overview",
             "name": "Overview",
+            "path": "/packages/nest",
             "file": "shared/nest-plugin"
           }
         ]
@@ -1773,6 +985,7 @@
           {
             "id": "overview",
             "name": "Overview",
+            "path": "/packages/next",
             "file": "shared/next-plugin"
           }
         ]
@@ -1784,6 +997,7 @@
           {
             "id": "overview",
             "name": "Overview",
+            "path": "/packages/detox",
             "file": "shared/detox-plugin"
           }
         ]
@@ -1795,6 +1009,7 @@
           {
             "id": "overview",
             "name": "Overview",
+            "path": "/packages/react-native",
             "file": "shared/react-native-plugin"
           }
         ]
@@ -1806,6 +1021,7 @@
           {
             "id": "overview",
             "name": "Overview",
+            "path": "/packages/nx-plugin",
             "file": "shared/nx-plugin"
           }
         ]

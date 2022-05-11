@@ -46,6 +46,7 @@
     "nx": "packages/nx",
     "nx-dev": "nx-dev/nx-dev",
     "nx-dev-data-access-documents": "nx-dev/data-access-documents",
+    "nx-dev-data-access-menu": "nx-dev/data-access-menu",
     "nx-dev-data-access-packages": "nx-dev/data-access-packages",
     "nx-dev-e2e": "nx-dev/nx-dev-e2e",
     "nx-dev-feature-analytics": "nx-dev/feature-analytics",
