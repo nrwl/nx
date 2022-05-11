@@ -6,8 +6,10 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
-import { join } from 'path';
+
 import { Linter } from '../utils/linter';
+import { findEslintFile } from '../utils/eslint-file';
+import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
 
 interface LintProjectOptions {
@@ -40,7 +42,7 @@ function createEsLintConfiguration(
   setParserOptionsProject: boolean
 ) {
   writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
-    extends: [`${offsetFromRoot(projectConfig.root)}.eslintrc.json`],
+    extends: [`${offsetFromRoot(projectConfig.root)}${findEslintFile(tree)}`],
     // Include project files to be linted since the global one excludes all files.
     ignorePatterns: ['!**/*'],
     overrides: [
