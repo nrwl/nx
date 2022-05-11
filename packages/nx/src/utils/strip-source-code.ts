@@ -1,6 +1,6 @@
-import type { Scanner } from 'typescript';
+import type { Scanner, SyntaxKind as _SyntaxKind } from 'typescript';
 
-let SyntaxKind;
+let SyntaxKind: typeof _SyntaxKind | undefined;
 export function stripSourceCode(scanner: Scanner, contents: string): string {
   if (!SyntaxKind) {
     SyntaxKind = require('typescript').SyntaxKind;
@@ -89,6 +89,27 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
         }
         break;
       }
+
+      /**
+       * Due to the wider context of how template literals are spec'ed, a single pass of the scanner on
+       * template literals is not sufficient, so we need to handle them explicitly, otherwise the scanner
+       * will error with "Unterminated template literal" and our resulting code may incorrectly contain
+       * additional imports/requires if they happened to be present in subsequent template literals within
+       * the source file (e.g. in an Nx generator).
+       *
+       * See https://github.com/microsoft/TypeScript/issues/35527#issuecomment-562313057 for the minimal
+       * repro within the scanner and response from the TypeScript team regarding the context.
+       *
+       * See the unit tests for examples of code which would previously produce incorrect results during
+       * project graph creation before this case was added.
+       */
+      case SyntaxKind.TemplateHead:
+        token = scanner.scan();
+        while (token !== SyntaxKind.CloseBraceToken) {
+          token = scanner.scan();
+        }
+        scanner.reScanTemplateHeadOrNoSubstitutionTemplate();
+        break;
 
       default: {
         token = scanner.scan();

@@ -4,7 +4,7 @@ import { stripSourceCode } from '../../utils/strip-source-code';
 import { defaultFileRead } from '../file-utils';
 import { DependencyType } from '../../config/project-graph';
 
-let tsModule: any;
+let tsModule: typeof ts | undefined;
 
 export class TypeScriptImportLocator {
   private readonly scanner: ts.Scanner;

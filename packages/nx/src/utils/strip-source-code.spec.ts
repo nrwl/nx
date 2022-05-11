@@ -242,4 +242,69 @@ require('./c')`;
 
     expect(stripSourceCode(scanner, input)).toEqual(expected);
   });
+
+  /**
+   * In generators it would not be unreasonable to have code which handled writing import/require statements to a file in the Tree, e.g.
+   *
+   * ```ts
+   * tree.write('/path/to/file.ts', 'import something from "@myorg/foo";');
+   * ```
+   *
+   * Previously we had a bug in our usage of the Scanner, where if the above usage was written using a template literal instead
+   * of a string literal (again, not unreasonable) AND there was any other usage of template literals in the file occuring before
+   * that line, then the scanner would silently error with "Unterminated template literal" behind the scenes and subsequently
+   * erroneously pick up on the import/require keywords within the template literals as if they were directly in the source.
+   *
+   * E.g. the following contents being present in a file's source would have been enough to cause Nx to treat `@myorg/foo` as a dependency
+   * of the that file:
+   *
+   * ```ts
+   * const v = `${val}`;
+   * tree.write('/path/to/file.ts', `import something from "@myorg/foo";`);
+   * ```
+   */
+  describe('source containing import/require statements within template literals', () => {
+    it('should strip all imports and requires if they are found within a template literal, even if there is a VALID template literal present before the templatized imports', () => {
+      expect(
+        stripSourceCode(
+          scanner,
+          `
+            const v = \`\${val}\`;
+            tree.write('/path/to/file.ts', \`import something from "@myorg/foo";\`);
+          `
+        )
+      ).toEqual('');
+
+      const input = `    
+        import { ProjectConfiguration, Tree } from '@nrwl/devkit';
+        require('@myorg/qux');
+        \`\`;
+        \`\${Tree}\`;
+        \`import { A } from 'foo'\`;
+        \`import { B, C, D } from 'bar'\`;
+        \`require('@myorg/baz')\`;
+      `;
+      const expected = `import { ProjectConfiguration, Tree } from '@nrwl/devkit'
+require('@myorg/qux')`;
+
+      expect(stripSourceCode(scanner, input)).toEqual(expected);
+    });
+
+    // This case is here to ensure Nx isn't behaving subtly differently on incomplete code vs complete code
+    it('should strip all imports and requires if they are found within a template literal, even if there is an UNTERMINATED template literal present before the templatized imports', () => {
+      const input = `    
+        import { ProjectConfiguration, Tree } from '@nrwl/devkit';
+        require('@myorg/qux');
+        \`\${Tree\`;
+        \`\`;
+        \`import { A } from 'foo'\`;
+        \`import { B, C, D } from 'bar'\`;
+        \`require('@myorg/baz')\`;
+      `;
+      const expected = `import { ProjectConfiguration, Tree } from '@nrwl/devkit'
+require('@myorg/qux')`;
+
+      expect(stripSourceCode(scanner, input)).toEqual(expected);
+    });
+  });
 });
