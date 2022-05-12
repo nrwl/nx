@@ -153,6 +153,7 @@ const guideUrls = {
   '/guides/nextjs': '/next/overview',
   '/using-nx/nx-devkit': '/extending-nx/nx-devkit',
   '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
+  '/guides/lerna-and-nx': '/migration/lerna-and-nx',
 };
 
 /**
