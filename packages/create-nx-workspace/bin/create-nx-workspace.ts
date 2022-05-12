@@ -140,7 +140,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             .map((p) => `"${p}"`)
             .join(
               ', '
-            )}]. To build your own see https://nx.dev/nx-plugin/overview#preset`,
+            )}]. To build your own see https://nx.dev/packages/nx-plugin#preset`,
           type: 'string',
         })
         .option('appName', {
