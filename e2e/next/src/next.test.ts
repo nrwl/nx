@@ -1,5 +1,6 @@
 import { stringUtils } from '@nrwl/workspace';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
@@ -35,8 +36,8 @@ describe('Next.js Applications', () => {
     runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
     runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
 
-    // Create file in public that should be copied to dist
-    updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
+    // Create file in public that should not be copied to dist since it's not declared
+    updateFile(`apps/${appName}/a/b.txt`, `Hello World!`);
 
     // Additional assets that should be copied to dist
     const sharedLib = uniq('sharedLib');
@@ -134,11 +135,11 @@ describe('Next.js Applications', () => {
       checkExport: false,
     });
 
-    // public and shared assets should both be copied to dist
-    checkFilesExist(
-      `dist/apps/${appName}/public/a/b.txt`,
-      `dist/apps/${appName}/public/shared/ui/hello.txt`
-    );
+    // declared assets should be copied to dist
+    checkFilesExist(`dist/apps/${appName}/.next/shared/ui/hello.txt`);
+
+    // undeclared asset should not be copied to dist
+    checkFilesDoNotExist(`dist/apps/${appName}/.next/a/b.txt`);
   }, 300000);
 
   it('should be able to serve with a proxy configuration', async () => {

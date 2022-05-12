@@ -132,15 +132,10 @@ export function createWebpackConfig(
       });
     }
 
-    // Copy (shared) assets to `public` folder during client-side compilation
+    // Copy (shared) assets to `dist` folder during client-side compilation
     if (!isServer && Array.isArray(assets) && assets.length > 0) {
       config.plugins.push(
-        createCopyPlugin(
-          normalizeAssets(assets, workspaceRoot, projectRoot).map((asset) => ({
-            ...asset,
-            output: join('../public', asset.output),
-          }))
-        )
+        createCopyPlugin(normalizeAssets(assets, workspaceRoot, projectRoot))
       );
     }
 
