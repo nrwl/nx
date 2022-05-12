@@ -127,14 +127,19 @@
         "id": "migration",
         "itemList": [
           {
+            "name": "Nx and Lerna",
+            "id": "lerna-and-nx",
+            "file": "shared/migration/lerna-and-nx"
+          },
+          {
+            "name": "NPM/Yarn/PNPM workspaces",
+            "id": "adding-to-monorepo",
+            "file": "shared/migration/adding-to-monorepo"
+          },
+          {
             "name": "From CRA",
             "id": "migration-cra",
             "file": "shared/migration/migration-cra"
-          },
-          {
-            "name": "Lerna/Yarn/PNPM",
-            "id": "adding-to-monorepo",
-            "file": "shared/migration/adding-to-monorepo"
           },
           {
             "name": "From Angular CLI",
@@ -1429,11 +1434,6 @@
         "name": "Guides",
         "id": "guides",
         "itemList": [
-          {
-            "name": "Nx and Lerna/Yarn",
-            "id": "lerna-and-nx",
-            "file": "shared/guides/lerna-and-nx"
-          },
           {
             "name": "Nx and Turborepo",
             "id": "turbo-and-nx",

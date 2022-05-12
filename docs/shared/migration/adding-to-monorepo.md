@@ -1,10 +1,10 @@
 # Adding Nx to Lerna/Yarn/PNPM/NPM Workspace
 
-> In our teams we see a shift away from Lerna and a strong preference to use Nx for managing JavaScript-based monorepos.
-> [Thoughtworks Technology Radar 2021](https://www.thoughtworks.com/en-ca/radar/tools/nx)
+> Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This allows for a much better integration between the two. [Read more in our dedicated guide](/guides/lerna-and-nx).
 
-If you have a monorepo that is powered by Lerna, Yarn, PNPM, or NPM, you can make it a lot faster by running the
-following:
+**Short story:** you can use Nx easily together with your current Lerna/Yarn/PNPM/NPM monorepo setup. Why? To speed up your tasks by leveraging Nx's powerful scheduling and caching capabilities.
+
+Adding Nx is a low impact operation that does not require any particular change to your repository like how your packages and scripts are organized. Whatever setup you have still works the same way but faster and with better dev ergonomics. You could manually configure Nx, but it is way easier by running the following command:
 
 ```bash
 npx add-nx-to-monorepo
@@ -18,156 +18,32 @@ Watch this 3-min video to see how the command works and what next steps are:
 
 1. Add Nx to your package.json.
 2. Create `nx.json`, containing all the necessary configuration for Nx.
-3. Set up Nx Cloud (if you chose "yes").
+3. Set up [Nx Cloud](https://nx.app) (if you chose "yes").
 
 > If you are familiar with Turborepo, check out [this guide](/guides/turbo-and-nx). At this point, Nx can do anything Turbo can, and much more.
 
 ## What You Get Right Away
 
-### Run Any Npm Scripts
+This sets up [Nx core](/getting-started/nx-core) in your existing monorepo which comes with a series of interesting features that help intelligenty schedule tasks and make sure operations are quick:
 
-After you run the command above, you can run any npm script using Nx. For instance, if `myproj` has a `build` script,
-you can invoke it using `nx build myproj`. If you pass any flags, they are forwarded to the underlying script.
+- **Run any npm script -** with Nx installed, you can use it's powerful task scheduler which automatically picks up your npm scripts from your package's script section. For instance if package `myproj` has a `build` script, you can just run it using `nx build myproj`. Similarly for running tests use `nx test myproj` and so on.
+- **Parallelization and task dependencies -** Nx automatically [knows how your projects relate to each other](/structure/dependency-graph). As a result, if `project-a` depends on `project-b` and you run `nx build project-a`, Nx first runs the builds for all of `project-a`'s dependencies, in this specific example it builds `project-b` before `project-a`.
+- **Only run what changed -** Using [Nx affected commands](/using-nx/affected) you only really execute tasks on the projects that changed, compared to a given baseline (usually the main branch).
+- **Caching -** You get Nx's [computaton caching](/using-nx/caching) for free. All operations, including artifacts and terminal output are restored from the cache (if present) in a completely transparent way without disrupting your DX. No configuration needed. Obviously this results in an incredible speed improvement.
+- **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization. It even learns from previous runs to better distribute tasks! [Learn more](/using-nx/dte)
+- **Interactive workspace visualization -** Nx comes with a [project graph visualization](/structure/dependency-graph) built-in which you can use to interactively explore your workspace, understand dependencies and find paths between nodes and why they exist.
+- **Dedicated VSCode extension -** You can install [Nx Console](/using-nx/console) which is a dedicated VSCode extension to provide a visual interface for navigating your monorepo workspace in terms of launching commands as well as for generating code.
+- **GitHub integration -** Install the [Nx Cloud Github App](https://github.com/apps/nx-cloud) to get inline reporting on your CI jobs.
 
-### Parallelization and Task Invariants
+## Looking for integrating Lerna and Nx?
 
-Nx knows how your projects relate to each other. For instance, if Project A depends on Project B, Nx will build Project
-B first before building Project A.
+Check out our dedicated guide: [Lerna and Nx](/guides/lerna-and-nx)
 
-When you run `nx build myproj`, Nx doesn't just build `myproj`, it first makes sure the results of building
-all `myproj`'s dependencies are in the right place. If the right files are in the right place, Nx will do nothing. If
-not, Nx will check if the right files are in its computation cache. If yes, Nx will restore them. If not, Nx will build
-the dependencies. **In other words, Nx will use the faster way to get the context for building `myproj` ready.** Nx also
-knows which tasks can run in parallel and which tasks cannot be. Nx will parallelize the tasks without breaking any
-invariants.
+## Further customizations
 
-Finally, Nx is also much better at minimising your CPU's idle time, so running the same command via Nx will often be **a
-lot** faster than using Lerna.
+Here are some further customizations we found to be useful when adding Nx to existing monorepos.
 
-### Computation Caching
-
-Nx supports computation caching. If it has seen the computation you are trying to perform, it's going to extract the result
-from its cache instead of running it. To see it in action, run the same command twice: `nx build myproj` and then
-again `nx build myproj`. This cache can be shared with your teammates and your CI. Your whole organisation will never
-build or test the same thing twice when using Nx.
-
-In addition to restoring all the files, Nx replays the terminal output as well, so you don't lose any information when
-running a cached command. Other tools performing computation caching (e.g., Turborepo) change the terminal output of the
-commands you run. They don't preserve animations and colors. We instrument Node.js to be able to capture terminal output
-as is. When running, say, an npm script via Nx, the output will not be modified. The same is true when Nx restores the
-output from cache.
-
-[Learn about computation caching.](/using-nx/caching)
-
-### Distributed Task Execution
-
-Nx is the only build system used by the JavaScript community that supports this feature, and **this is the most powerful
-feature of Nx.**
-
-Imagine you are running `nx affected --build`. Normally this command runs the build target for the affected projects in
-parallel on the same machine. However, if you enable distributed task execution, the command will send the task graph to
-Nx Cloud. Nx Cloud agents will then pick up the tasks to execute them.
-
-This happens transparently. If an agent needs the output of `lib1` to build `app1`, and some agent built `lib1`, the
-first agent is going to fetch the needed output before running the build task.
-
-As agents complete tasks, the main job where you invoked nx affected `--build` will start receiving created files and
-terminal outputs. After nx affected `--build` completes, the machine will have the build files and all the terminal
-outputs as if it ran it locally.
-
-**Using Distributed Task Execution you can keep your CI fast, with practically no effort, regardless of the size of your
-workspace.**
-
-[Learn more distributed task execution.](/using-nx/dte)
-
-### Affected Commands
-
-Nx automatically analyzes your workspace to know what projects are affected by your commit. Simply
-run: `nx affected --target=test` to see it in action. Often, Nx is able to do a better job detecting affected than other
-tools because it looks not just at the changed files but also at the nature of the changes.
-
-[Learn more "affected".](/using-nx/affected)
-
-### Workspace Visualization
-
-Run `nx graph` to see a visualization of your workspace. `nx affected:graph` shows what is affected by your
-commit. `nx graph --watch` watches your workspace for changes and updates the visualization.
-
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/v87Y8NgAYLo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
-
-### GitHub integration
-
-If you said "yes" to Nx Cloud, you can enable Nx Cloud - GitHub integration to get a much better overview of what
-happens in your PRs.
-
-![Nx Console screenshot](/shared/github.png)
-
-### VS Code Plugin
-
-![Nx Console screenshot](/shared/nx-console-screenshot.png)
-
-## Lerna and Nx Command Comparison
-
-Lerna:
-
-```json
-{
-  "private": true,
-  "scripts": {
-    "build:all": "lerna run build",
-    "build:app1": "lerna run build --scope=app1",
-    "build:since": "lerna run build --since=main",
-    "test:app": "lerna run test",
-    "test:app1": "lerna run test --scope=app1",
-    "test:since": "lerna run test --since=main",
-    "dev": "lerna run dev --stream --parallel",
-    "dev:app1": "lerna run dev --stream --scope=app1"
-  },
-  "devDependencies": {
-    "lerna": "*"
-  }
-}
-```
-
-Nx + Lerna:
-
-```json
-{
-  "private": true,
-  "scripts": {
-    "build:all": "nx run-many --target=build --all",
-    "build:app1": "nx build app1",
-    "build:since": "nx affected --target=build",
-    "test:all": "nx run-many --target=test --all",
-    "test:app1": "nx test app1",
-    "test:since": "nx affected --target=test",
-    "dev": "nx run-many --target=dev --all",
-    "dev:app1": "nx dev app1"
-  },
-  "devDependencies": {
-    "lerna": "*",
-    "nx": "*"
-  }
-}
-```
-
-[Learn more about Nx CLI.](/using-nx/nx-cli)
-
-## Next Steps
-
-All this works without your having to change your repo in any way. Whatever setup you have still works the same way but
-faster and with better dev ergonomics. But Nx enables much more than that.
-
-Nx is like a VS Code of build tools. It has a very powerful core, but it's really the plugins and extra capabilities
-that really transform how you develop.
-
-Nx has first class support for React, Next.js, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and
-many more. All the plugins are designed to work together and create a cohesive and pleasant to use dev environment.
-
-In addition, Nx makes a lot of things much easier, like building large apps incrementally, distributing CI (no point in
-doing caching unless you can do that), enforcing best practices, building design systems.
-
-## Excluding Sources
+### Excluding Sources
 
 The `add-nx-to-monorepo` command does its best to figure out what projects you have in the repo. Similar to other tools, it looks at the `workspaces` property in the root `package.json` and tries to find all `package.json` files matching the globs. You can change those globs to exclude some projects. You can also exclude files by creating an `.nxignore` file, like this:
 
@@ -175,7 +51,7 @@ The `add-nx-to-monorepo` command does its best to figure out what projects you h
 third_party # nx will ignore everything in the third-party dir
 ```
 
-## Enabling JS Analysis
+### Enabling JS Analysis
 
 The `add-nx-to-monorepo` command adds the following to the generated `nx.json`. This disables JS analysis, such that Nx only analyzes `package.json` files like Lerna or Turborepo.
 
@@ -205,6 +81,14 @@ You can remove the section in the config, which will enable the JS/TS analysis. 
   }
 }
 ```
+
+## Next Steps
+
+Nx is like a VS Code of build tools. It has a very powerful core, but it's really the plugins and extra capabilities that really transform how you develop.
+
+Nx has first class support for React, Next.js, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and many more. All the plugins are designed to work together and create a cohesive and pleasant to use dev environment.
+
+In addition, Nx makes a lot of things much easier, like building large apps incrementally, distributing CI (no point in doing caching unless you can do that), enforcing best practices, building design systems.
 
 ## Real world examples of using add-nx-to-monorepo
 
