@@ -1,4 +1,4 @@
-export const nxVersion = '*';
+export const nxVersion = require('../../package.json').version;
 
 export const angularCliVersion = '~13.2.0';
 export const typescriptVersion = '~4.5.2';

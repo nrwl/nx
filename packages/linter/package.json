@@ -33,9 +33,9 @@
     "eslint": "^8.0.0"
   },
   "dependencies": {
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/jest": "file:../jest",
     "@phenomnomnominal/tsquery": "4.1.1",
-    "@nrwl/devkit": "*",
-    "@nrwl/jest": "*",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0"
   },

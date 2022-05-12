@@ -1,4 +1,4 @@
-export const nxVersion = '*';
+export const nxVersion = require('../../package.json').version;
 
 export const tslintVersion = '~6.1.0';
 export const tslintToEslintConfigVersion = '^2.4.0';

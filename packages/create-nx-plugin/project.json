@@ -64,6 +64,9 @@
           },
           {
             "command": "node ./scripts/copy-readme.js create-nx-plugin"
+          },
+          {
+            "command": "node ./scripts/replace-versions.js build/packages/create-nx-plugin/bin/create-nx-plugin.js"
           }
         ],
         "parallel": false

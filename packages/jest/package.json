@@ -33,16 +33,16 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/devkit": "*",
-    "identity-obj-proxy": "3.0.0",
-    "jest-resolve": "27.5.1",
-    "resolve.exports": "1.1.0",
-    "rxjs": "^6.5.4",
-    "tslib": "^2.3.0",
     "@jest/reporters": "27.5.1",
     "@jest/test-result": "27.5.1",
+    "@nrwl/devkit": "file:../devkit",
     "chalk": "4.1.0",
+    "identity-obj-proxy": "3.0.0",
     "jest-config": "27.5.1",
-    "jest-util": "27.5.1"
+    "jest-resolve": "27.5.1",
+    "jest-util": "27.5.1",
+    "resolve.exports": "1.1.0",
+    "rxjs": "^6.5.4",
+    "tslib": "^2.3.0"
   }
 }

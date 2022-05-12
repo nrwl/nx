@@ -1,4 +1,4 @@
-export const nxVersion = '*';
+export const nxVersion = require('../../package.json').version;
 
 export const reactNativeVersion = '0.68.2';
 export const typesReactNativeVersion = '0.67.7';
