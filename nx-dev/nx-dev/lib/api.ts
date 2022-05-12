@@ -1,7 +1,5 @@
-import {
-  DocumentsApi,
-  MenuApi,
-} from '@nrwl/nx-dev/data-access-documents/node-only';
+import { DocumentsApi } from '@nrwl/nx-dev/data-access-documents/node-only';
+import { MenuApi } from '@nrwl/nx-dev/data-access-menu';
 import { PackagesApi } from '@nrwl/nx-dev/data-access-packages/node-only';
 import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
 
@@ -17,7 +15,13 @@ export const packagesApi = new PackagesApi({
 
 export const documentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
-  documents: documents.find((x) => x.id === 'default') as DocumentMetadata,
+  documentSources: [
+    documents.find((x) => x.id === 'default'),
+    documents.find((x) => x.id === 'additional-api-references'),
+  ].filter((x) => !!x) as DocumentMetadata[],
 });
 
-export const menuApi = new MenuApi(documentsApi.getDocuments());
+export const menuApi = new MenuApi(
+  documentsApi.getDocuments(),
+  packagesApi.getPackageDocuments().itemList as DocumentMetadata[]
+);

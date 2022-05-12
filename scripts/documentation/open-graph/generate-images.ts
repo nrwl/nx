@@ -2,7 +2,13 @@ import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 import { readJSONSync, ensureDir, readFile, writeFileSync } from 'fs-extra';
 import { resolve } from 'path';
 
-const documents: any[] = readJSONSync('./docs/map.json', 'utf8')[0]['itemList'];
+const mapJson = readJSONSync('./docs/map.json', 'utf8');
+
+const documents: any[] = [
+  ...mapJson.find((x) => x.id === 'default')?.['itemList'],
+  ...mapJson.find((x) => x.id === 'additional-api-references')?.['itemList'],
+].filter(Boolean);
+
 const packages: {
   name: string;
   path: string;

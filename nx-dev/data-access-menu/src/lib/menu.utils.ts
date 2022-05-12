@@ -7,7 +7,7 @@ export function createMenuItems(root: DocumentMetadata): MenuItem[] {
   const createPathMetadata = (g: DocumentMetadata, parentId = ''): MenuItem => {
     const pathData = {
       ...g,
-      path: g['path'] ?? `/${parentId}/${g.id}`,
+      path: g.path ?? `/${parentId}/${g.id}`,
     };
 
     if (Array.isArray(g.itemList)) {
@@ -86,31 +86,18 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
   };
 }
 
-export function getApiSection(items: MenuItem[]): MenuSection {
+export function getPackageApiSection(items: MenuItem[]): MenuSection {
   return {
     id: 'api',
     name: 'API / Reference',
     itemList: items.filter(
       (m) =>
-        // m.id === 'plugins-overview' ||
-        m.id === 'workspace' ||
-        m.id === 'js' ||
-        m.id === 'web' ||
-        m.id === 'angular' ||
-        m.id === 'react' ||
-        m.id === 'jest' ||
-        m.id === 'cypress' ||
-        m.id === 'storybook' ||
-        m.id === 'linter' ||
-        m.id === 'node' ||
-        m.id === 'express' ||
-        m.id === 'nest' ||
-        m.id === 'next' ||
-        m.id === 'detox' ||
-        m.id === 'react-native' ||
-        m.id === 'nx-plugin' ||
-        m.id === 'nx-devkit' ||
-        m.id === 'cli'
+        m.id !== 'add-nx-to-monorepo' &&
+        m.id !== 'cra-to-nx' &&
+        m.id !== 'create-nx-plugin' &&
+        m.id !== 'create-nx-workspace' &&
+        m.id !== 'make-angular-cli-faster' &&
+        m.id !== 'tao'
     ),
   };
 }

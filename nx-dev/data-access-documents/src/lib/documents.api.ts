@@ -9,15 +9,26 @@ export interface StaticDocumentPaths {
 }
 
 export class DocumentsApi {
+  private documents: DocumentMetadata;
   constructor(
     private readonly options: {
       publicDocsRoot: string;
-      documents: DocumentMetadata;
+      documentSources: DocumentMetadata[];
     }
   ) {
     if (!options.publicDocsRoot) {
       throw new Error('public docs root cannot be undefined');
     }
+    if (!options.documentSources) {
+      throw new Error('public document sources cannot be undefined');
+    }
+    this.documents = {
+      id: 'documents',
+      name: 'documents',
+      itemList: options.documentSources.flatMap(
+        (x) => x.itemList
+      ) as DocumentMetadata[],
+    };
   }
 
   getDocument(path: string[]): DocumentData {
@@ -41,7 +52,7 @@ export class DocumentsApi {
   }
 
   getDocuments(): DocumentMetadata {
-    const docs = this.options.documents;
+    const docs = this.documents;
     if (docs) return docs;
     throw new Error(`Cannot find any documents`);
   }
@@ -55,14 +66,6 @@ export class DocumentsApi {
           recur(ii, [...acc, curr.id]);
         });
       } else {
-        /*
-         * Do not try to get paths for Packages (done by the PackagesApi).
-         * This should be removed when the packages/schemas menu is inferred directly from PackagesApi.
-         * TODO@ben: Remove this when packages schemas menu is auto-generated.
-         */
-        if (!!curr['path'] && curr['path'].startsWith('/packages/'))
-          return void 0; // Do nothing
-
         paths.push({
           params: {
             segments: [...acc, curr.id],
@@ -71,9 +74,9 @@ export class DocumentsApi {
       }
     }
 
-    if (!this.options.documents || !this.options.documents.itemList)
+    if (!this.documents || !this.documents.itemList)
       throw new Error(`Can't find any items`);
-    this.options.documents.itemList.forEach((item) => {
+    this.documents.itemList.forEach((item) => {
       recur(item, []);
     });
 
@@ -81,7 +84,7 @@ export class DocumentsApi {
   }
 
   private getFilePath(path: string[]): string {
-    let items = this.options.documents?.itemList;
+    let items = this.documents?.itemList;
 
     if (!items) {
       throw new Error(`Document not found`);
