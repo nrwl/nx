@@ -13,6 +13,7 @@ const schemaDefaults = {
   supportTsx: false,
   skipSetupFile: false,
   skipSerializers: false,
+  diagnostics: false,
 } as const;
 
 function normalizeOptions(options: JestProjectSchema) {

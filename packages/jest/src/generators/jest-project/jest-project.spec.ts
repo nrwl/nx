@@ -362,4 +362,23 @@ describe('jestProject', () => {
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
     });
   });
+  describe(' --diagnostics', () => {
+    it('should generate jest config with diagnostics enabled on ts-jest', async () => {
+      await jestProjectGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+        diagnostics: true,
+      } as JestProjectSchema);
+      expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+    it('should generate jest config with diagnostics enabled on ts-jest for angular project', async () => {
+      await jestProjectGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+        setupFile: 'angular',
+        diagnostics: true,
+      } as JestProjectSchema);
+      expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+  });
 });

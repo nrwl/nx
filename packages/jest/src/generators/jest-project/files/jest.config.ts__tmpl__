@@ -5,7 +5,8 @@
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],<% } %><% if (transformer === 'ts-jest') { %>
   globals: {
     'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
+      tsconfig: '<rootDir>/tsconfig.spec.json',<% if(diagnostics) { %>
+      diagnostics: true,<% } %>
     }
   },<% } %><% if(testEnvironment) { %>
   testEnvironment: '<%= testEnvironment %>',<% } %><% if(skipSerializers){ %>

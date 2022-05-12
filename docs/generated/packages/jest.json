@@ -121,6 +121,11 @@
             "type": "boolean",
             "default": false,
             "description": "Use JavaScript instead of TypeScript for config files"
+          },
+          "diagnostics": {
+            "type": "boolean",
+            "default": false,
+            "description": "Set diagnostics option for ts-jest configuration"
           }
         },
         "required": [],

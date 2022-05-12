@@ -1,5 +1,48 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`jestProject  --diagnostics should generate jest config with diagnostics enabled on ts-jest 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'lib1',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      diagnostics: true,
+    }
+  },
+  coverageDirectory: '../../coverage/libs/lib1'
+};
+"
+`;
+
+exports[`jestProject  --diagnostics should generate jest config with diagnostics enabled on ts-jest for angular project 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'lib1',
+  preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+      diagnostics: true,
+    }
+  },
+  coverageDirectory: '../../coverage/libs/lib1',
+  transform: {
+    '^.+\\\\\\\\.(ts|mjs|js|html)$': 'jest-preset-angular'
+  },
+  transformIgnorePatterns: ['node_modules/(?!.*\\\\\\\\.mjs$)'],
+  snapshotSerializers: [
+    'jest-preset-angular/build/serializers/no-ng-attributes',
+    'jest-preset-angular/build/serializers/ng-snapshot',
+    'jest-preset-angular/build/serializers/html-comment',
+  ]
+};
+"
+`;
+
 exports[`jestProject --babelJest should generate proper jest.transform when --compiler=swc and supportTsx is true 1`] = `
 "/* eslint-disable */
 export default {
