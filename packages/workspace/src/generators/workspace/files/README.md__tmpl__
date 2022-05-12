@@ -1,4 +1,4 @@
-<% if(cli === 'angular') { %>
+<% if(cli === 'angular' || preset === 'angular') { %>
 
 # <%= formattedNames.className %>
 
