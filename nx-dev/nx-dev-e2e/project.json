@@ -3,15 +3,16 @@
   "projectType": "application",
   "targets": {
     "e2e": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "dependencies"
+        }
+      ],
       "executor": "@nrwl/cypress:cypress",
       "options": {
         "cypressConfig": "nx-dev/nx-dev-e2e/cypress.json",
-        "devServerTarget": "nx-dev:serve:development"
-      },
-      "configurations": {
-        "production": {
-          "devServerTarget": "nx-dev:serve:production"
-        }
+        "devServerTarget": "nx-dev:serve:production"
       }
     },
     "lint": {
