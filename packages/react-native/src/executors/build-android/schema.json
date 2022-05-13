@@ -13,6 +13,10 @@
     "debug": {
       "type": "boolean",
       "description": "Generate a debug build instead of a release build."
+    },
+    "gradleTask": {
+      "type": "string",
+      "description": "Override default gradle task incase of multi build variants"
     }
   },
   "required": []
