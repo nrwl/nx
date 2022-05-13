@@ -34,4 +34,4 @@ If you open your `nx.json`, you will see something like this:
 If you remove the `accessToken` property from the configuration, the runner will run all commands as if you were not connected to Nx Cloud. This essentially turns off Nx Cloud.
 
 ## Setting a Different Access Token in CI
-You can also configure the access token by setting the NX_CLOUD_ACCESS_TOKEN environment variable. NX_CLOUD_ACCESS_TOKEN takes precedence over the accessToken property. It's common to have a read-only token stored in nx.json and a read-write token set via NX_CLOUD_ACCESS_TOKEN in CI.
+You can also configure the access token by setting the `NX_CLOUD_ACCESS_TOKEN` environment variable. `NX_CLOUD_ACCESS_TOKEN` takes precedence over the `accessToken` property. It's common to have a read-only token stored in `nx.json` and a read-write token set via `NX_CLOUD_ACCESS_TOKEN` in CI.

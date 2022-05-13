@@ -1595,14 +1595,30 @@
     "id": "nx-cloud",
     "itemList": [
       {
-        "name": "Get Started",
-        "id": "get-started",
+        "name": "Intro",
+        "id": "intro",
         "itemList": [
           {
             "name": "What is Nx Cloud?",
-            "id": "intro",
-            "file": "nx-cloud/intro"
+            "id": "nx-cloud",
+            "file": "nx-cloud/intro/nx-cloud"
           },
+          {
+            "name": "Distributed Caching",
+            "id": "distributed-caching",
+            "file": "nx-cloud/intro/distributed-caching"
+          },
+          {
+            "name": "Distributed Task Execution",
+            "id": "distributed-task-execution",
+            "file": "nx-cloud/intro/distributed-task-execution"
+          }
+        ]
+      },
+      {
+        "name": "Set Up",
+        "id": "set-up",
+        "itemList": [
           {
             "name": "Set Up Distributed Caching",
             "id": "set-up-caching",
