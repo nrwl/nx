@@ -64,7 +64,7 @@ function runCliBuild(
 }
 
 function getGradleCommand(options: ReactNativeBuildOptions) {
-  if(options.gradleTask) {
+  if(options?.gradleTask) {
     return options.gradleTask
   }
   if (options.apk) {
