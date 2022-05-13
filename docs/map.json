@@ -1028,7 +1028,7 @@
       },
       {
         "name": "Nx Devkit",
-        "id": "nx-devkit",
+        "id": "devkit",
         "itemList": [
           {
             "id": "index",
