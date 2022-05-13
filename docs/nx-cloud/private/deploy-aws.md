@@ -1,7 +1,9 @@
 # Deploying Nx Private Cloud to AWS
+
 You can easily deploy your Nx Private Cloud instance to AWS.
 
-## Using ECS 
+## Using ECS
+
 First, create a container configuration using the following image: nxprivatecloud/nxcloud:latest
 
 Second, set up a mount point.
@@ -147,9 +149,7 @@ For reference, here is an example complete task definition:
   "placementConstraints": [],
   "memory": null,
   "taskRoleArn": null,
-  "compatibilities": [
-    "EC2"
-  ],
+  "compatibilities": ["EC2"],
   "taskDefinitionArn": "your-task-definition-arn",
   "family": "deploy-nx-cloud",
   "requiresAttributes": [
@@ -179,9 +179,7 @@ For reference, here is an example complete task definition:
     }
   ],
   "pidMode": null,
-  "requiresCompatibilities": [
-    "EC2"
-  ],
+  "requiresCompatibilities": ["EC2"],
   "networkMode": null,
   "cpu": null,
   "status": "ACTIVE",
@@ -207,7 +205,8 @@ For reference, here is an example complete task definition:
 
 When using this configuration, the metadata and file artifacts are stored in the `/data` volume.
 
-## Using S3 
+## Using S3
+
 If you want to use S3 for storing and delivering cached artifacts, add the following env variables:
 
 ```json

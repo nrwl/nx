@@ -1,5 +1,7 @@
 # Nx Private Cloud Advanced Configuration
+
 ## Configure Memory Limits
+
 By default, the Nx Cloud container is configured to run on an instance with 8GB of RAM.
 
 If you have a container with 4GB of RAM, you can decrease the memory limits by setting the following env variables:
@@ -33,6 +35,7 @@ For instance, if you use S3 to store the cached artifacts and you host Mongo DB 
 If you run everything in the Nx Cloud container, then 8GB is much preferred.
 
 ## Configure Artifact Expiration When Using Built-in File Server
+
 By default, the Nx Cloud container is going to remove cached artifacts after two weeks. You can change it by setting `NX_CACHE_EXPIRATION_PERIOD_IN_DAYS` when starting the container.
 
 Example:
@@ -47,11 +50,13 @@ Example:
 ```
 
 ## Self-Signed Certificates
+
 If you have a self-signed certificate, you will have to provision `NODE_EXTRA_CA_CERTS`. The env variable should point to a PEM file with either your certificate, or the root certificate your certificate was created from. Though this can be accomplished with a CLI command like `NODE_EXTRA_CA_CERTS=./tools/certs/cert.crt nx test myapp`, you will most likely want to configure it as a global env variable (for instance in your `.bashrc` file).
 
 A self-sign certificate registered in your OS won't be picked up by Node. Node requires you to provision `NODE_EXTRA_CA_CERTS`.
 
 ## Troubleshooting and Verbose Logging
+
 To help troubleshoot installations, add the following env variables when starting the container:
 
 ```

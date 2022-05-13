@@ -87,6 +87,7 @@ Depending on how your infrastructure is set up, you can either run Nx Private Cl
 - `-v /data/private-cloud:/data` sets up the volume where the data is stored. `/data/private-cloud` refers to a folder on your machine, `/data` is the shareable folder from the Docker image.
 
 ### Step 3: Run the Container
+
 Once you create the container, you can start it using:
 
 ```bash
@@ -98,9 +99,11 @@ Imagine `NX_CLOUD_APP_URL` is set to `https://nxcloud.privateurl.com`.
 Now, go to https://nxcloud.privateurl.com to see cloud running. You can log into the account using `admin/ADMIN_PASSWORD`.
 
 ### Step 4: Connect Your Workspace
+
 Run `NX_CLOUD_API=https://nxcloud.privateurl.com` nx g @nrwl/nx-cloud:init. Click on the link to connect the workspace to your admin account.
 
 ### Step 5: Configure Billing
+
 Go to `https://nxcloud.privateurl.com`, select the workspace, click on Billing. You will see a link redirecting you to `https://nx.app`, where you can register your credit card.
 
 Note, it usually takes a few minutes for the billing information to sync up.
@@ -108,15 +111,19 @@ Note, it usually takes a few minutes for the billing information to sync up.
 As stated above, Nx Private Cloud will store all your artifacts and the information about runs on premises, but will report utilization to `https://api.nrwl.io`.
 
 ### Optional step 6: Set-up GitHub auth
+
 Follow the [instructions here](https://nx.app/docs/private-cloud-github-auth) to set-up GitHub OAuth authentication so you can invite other members in your team to the workspace.
 
 ### Optional step 7: Set-up GitHub Pull Request integration
+
 You can [optionally configure private cloud](https://nx.app/docs/private-cloud-github-integration) to post build stats directly on your GitHub pull requests.
 
 ### Optional step 8: Setting Up Proxy
+
 If your container cannot access `api.nrwl.io` directly and has to talk via a proxy, you can add `-e HTTPS_PROXY="https://myproxy.myorg.com"` to the container creation command.
 
 ## Running the Mongo Database Separately (Recommended)
+
 Nx Cloud uses MongoDB to store its metadata. By default, Nx Private Cloud is going to start a MongoDB instance and store its data in the provided volume. But you can also tell Nx Private Cloud to use a different MongoDB instance (e.g., if you are using MongoDB Atlas or Cosmos DB). To do this, provision the `NX_CLOUD_MONGO_SERVER_ENDPOINT` env variable when creating a container, like so:
 
 ```bash
@@ -130,18 +137,23 @@ By default, Nx Cloud requires Mongo 4.2+. If you are using an older version of M
 ```
 
 ### Using MongoDB Kubernetes Operator
+
 The MongoDB team maintains the open source [MongoDB Kubernetes Operator](https://github.com/mongodb/mongodb-kubernetes-operator). You can use it to set up your own deployment of MongoDB. See [the Nx Cloud and Kubernetes page](https://nx.app/docs/kubernetes) for more information.
 
 ### Using CosmosDB
+
 If you are deploying to Azure, you might have access to CosmosDB. See here for more information.
 
 ### Using Mongo Atlas
+
 [Mongo Atlas](https://mongodb.com/) is a great option for deploying MongoDB.
 
 ## Using External File Storage
+
 By default, Nx Private Cloud is going to start a file server and store the cached artifacts in the provided volume. But you can also configure Nx Private Cloud to use an external file storage. At the moment, only S3 and Azure Blob are supported.
 
 ### Using S3/Minio
+
 To configure S3 as a file storage, provision the `AWS_S3_ACCESS_KEY_ID`, `AWS_S3_SECRET_ACCESS_KEY`, and `AWS_S3_BUCKET` env variables when creating the Nx Cloud docker container, like so:
 
 ```bash
@@ -164,6 +176,7 @@ If you are using a local S3 installation (e.g., Minio), you can set the endpoint
 **Note:** Remember to set [a cache item expiration time](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-expire-general-considerations.html). The default is currently 4 weeks. If you would like to keep items for longer, for example for 8 weeks, please remember to set the `NX_CACHE_EXPIRATION_PERIOD_IN_DAYS=56` env variable as well, so the container knows when to expire the Mongo cache entries as well.
 
 ### Using Azure
+
 To configure Azure Blob as a file storage, provision the `AZURE_CONNECTION_STRING`, `AZURE_CONTAINER` env variables when creating the Nx Cloud docker container, like so:
 
 ```bash

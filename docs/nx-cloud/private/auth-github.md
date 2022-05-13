@@ -1,7 +1,9 @@
 # Nx Private Cloud GitHub Auth
+
 Before creating your container, you'll need to create a GitHub OAuth app for your organisation.
 
 ## Creating a GitHub OAuth app
+
 From GitHub, click on your profile picture and chose "Settings":
 
 ![Step 1](/nx-cloud/private/images/github_auth_step_1.png)
@@ -33,6 +35,7 @@ And then generate a new client secret, and save it somewhere secure (we'll use i
 ![Step 7](/nx-cloud/private/images/github_auth_step_7.png)
 
 ## Connect your private cloud instance to your OAuth App
+
 [When setting up your private cloud](https://nx.app/docs/get-started-with-private-cloud-community), you can pass these two environment variables to it:
 
 ```bash
@@ -43,6 +46,7 @@ GITHUB_AUTH_CLIENT_SECRET=...
 Use the Client ID and Client Secret from when you created the app above.
 
 ## GitHub Enterprise
+
 If you are running an on-premise version of GitHub (Enterprise Server), you will need to configure one additional environment variable:
 
 `GITHUB_API_URL=https://custom-github-instance.com`

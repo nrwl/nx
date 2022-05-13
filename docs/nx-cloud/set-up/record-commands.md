@@ -1,7 +1,9 @@
 # Recording Non-Nx Commands
+
 Build and deploy pipelines often do much more than run builds. Unfortunately, this creates more opportunities for pieces to fail. To minimize the number of different sites you need to visit to diagnose issues, Nx Cloud 13.3 and above is capable of recording and saving output from arbitrary commands.
 
-## Enable Command Recording 
+## Enable Command Recording
+
 To record a command with Nx Cloud:
 
 1. Identify a command you would like recorded from your CI/CD configuration, or think of one to run on your personal machine. (example: echo "hello world")
@@ -10,7 +12,8 @@ To record a command with Nx Cloud:
 
 ![npx nx-cloud record -- echo "hello world"](/nx-cloud/set-up/record-hello-world.png)
 
-## Locating Command Output in Nx Cloud 
+## Locating Command Output in Nx Cloud
+
 Commands that Nx Cloud stores will appear under your "Runs" view. For easy identification, stored output will be displayed as a "record-output" target being invoked on the "nx-cloud-tasks-runner" project.
 
 ![nx-cloud record -- yarn nx workspace-lint](/nx-cloud/set-up/record-workspace-lint.png)

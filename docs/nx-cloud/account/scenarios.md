@@ -1,4 +1,5 @@
 # Security Scenarios
+
 The following are the three commonly used setups.
 
 ## Setup 1: Only main branch has a read-write access token
@@ -28,12 +29,13 @@ This can drastically speed up the CI run against the main branch. The downside i
 This can speed up CI and local development. The computation performed locally can be shared among developers and CI agents.
 
 ## Deciding on a Setup
+
 In small close-sourced projects where developers have similar setups, it's common to have one read-write token shared by all the developers. The token is stored in `nx.json`. Every developer can write artifacts to the cache. Other developers and CI agents can read those values. This assumes a high degree of trust. As with Setup 2, you can still rebuild the artifact from scratch before any deployment.
 
 In large organizations, it's common to have a read token set in `nx.json `and a read-write token set as an `NX_CLOUD_ACCESS_TOKEN` env variable in CI. Developers can benefit from the computation performed on CI but cannot affect the CI execution. Depending on how much you want to isolate the main branch, and what you do with the cached artifacts, you can select between Setup 1 or Setup 2.
 
-## Revoking Access Tokens 
+## Revoking Access Tokens
 
-Generally, there is no need to revoke access tokens. To affect the computation run against, say, the main branch, you need to know the computation hash of the command you are trying to affect. You can only know the hash by running the command, so you need to have access to the latest HEAD of the main branch. 
+Generally, there is no need to revoke access tokens. To affect the computation run against, say, the main branch, you need to know the computation hash of the command you are trying to affect. You can only know the hash by running the command, so you need to have access to the latest HEAD of the main branch.
 
 That's why when a developer loses access to the source code, they lose the ability to know the computation hash. They cannot affect any computation even if they know a read-write access token.

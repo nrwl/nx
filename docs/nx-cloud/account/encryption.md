@@ -1,4 +1,5 @@
-# End to End Encryption 
+# End to End Encryption
+
 Data is encrypted both at rest and in transit.
 
 - Every communication with the Nx Cloud API is encrypted, including fetching/storing artifacts.
