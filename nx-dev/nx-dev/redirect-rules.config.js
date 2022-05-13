@@ -174,7 +174,7 @@ const overviewUrls = {
   '/next/overview': '/packages/next',
   '/detox/overview': '/packages/detox',
   '/react-native/overview': '/packages/react-native',
-  '/packages/nx-plugin': '/packages/nx-plugin',
+  '/nx-plugin/overview': '/packages/nx-plugin',
 };
 
 /**
