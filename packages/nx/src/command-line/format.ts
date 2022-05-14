@@ -157,12 +157,33 @@ function chunkify(target: string[], size: number): string[][] {
 
 function write(patterns: string[]) {
   if (patterns.length > 0) {
+    const [swcrcPatterns, regularPatterns] = patterns.reduce(
+      (result, pattern) => {
+        result[pattern.includes('.swcrc') ? 0 : 1].push(pattern);
+        return result;
+      },
+      [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
+    );
+
     execSync(
-      `node "${PRETTIER_PATH}" --write --list-different ${patterns.join(' ')}`,
+      `node "${PRETTIER_PATH}" --write --list-different ${regularPatterns.join(
+        ' '
+      )}`,
       {
         stdio: [0, 1, 2],
       }
     );
+
+    if (swcrcPatterns.length) {
+      execSync(
+        `node "${PRETTIER_PATH}" --write --list-different ${swcrcPatterns.join(
+          ' '
+        )} --parser json`,
+        {
+          stdio: [0, 1, 2],
+        }
+      );
+    }
   }
 }
 
