@@ -8,6 +8,8 @@ import {
 import { ProjectGraphProcessorContext } from 'nx/src/config/project-graph';
 import { mergeNpmScriptsWithTargets } from 'nx/src/utils/project-graph-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
+import { PackageJson } from 'nx/src/utils/package-json';
+import { readJsonFile } from 'nx/src/utils/fileutils';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
@@ -19,6 +21,19 @@ export function buildWorkspaceProjectNodes(
     const projectRoot = join(workspaceRoot, p.root);
     if (existsSync(join(projectRoot, 'package.json'))) {
       p.targets = mergeNpmScriptsWithTargets(projectRoot, p.targets);
+
+      const { nx }: PackageJson = readJsonFile(
+        join(projectRoot, 'package.json')
+      );
+      if (nx?.tags) {
+        p.tags = [...(p.tags || []), ...nx.tags];
+      }
+      if (nx?.implicitDependencies) {
+        p.implicitDependencies = [
+          ...(p.implicitDependencies || []),
+          ...nx.implicitDependencies,
+        ];
+      }
     }
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,

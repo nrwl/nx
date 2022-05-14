@@ -6,6 +6,8 @@ export type PackageJsonTargetConfiguration = Omit<
 >;
 
 export interface NxProjectPackageJsonConfiguration {
+  implicitDependencies?: string[];
+  tags?: string[];
   targets?: Record<string, PackageJsonTargetConfiguration>;
 }
 

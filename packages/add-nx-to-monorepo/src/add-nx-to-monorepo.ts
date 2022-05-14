@@ -187,10 +187,8 @@ function detectWorkspaceScope(repoRoot: string) {
 }
 
 function createNxJsonFile(repoRoot: string) {
-  const scope = detectWorkspaceScope(repoRoot);
   const res = {
     extends: 'nx/presets/npm.json',
-    npmScope: scope,
     tasksRunnerOptions: {
       default: {
         runner: 'nx/tasks-runners/default',
@@ -252,12 +250,19 @@ function deduceDefaultBase() {
       return 'dev';
     } catch (e) {
       try {
-        execSync(`git rev-parse --verify next`, {
+        execSync(`git rev-parse --verify develop`, {
           stdio: ['ignore', 'ignore', 'ignore'],
         });
-        return 'next';
+        return 'develop';
       } catch (e) {
-        return 'master';
+        try {
+          execSync(`git rev-parse --verify next`, {
+            stdio: ['ignore', 'ignore', 'ignore'],
+          });
+          return 'next';
+        } catch (e) {
+          return 'master';
+        }
       }
     }
   }
