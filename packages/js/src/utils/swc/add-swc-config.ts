@@ -50,7 +50,7 @@ function updatePrettierRcForSwcrc(tree: Tree) {
   if (!isExist) {
     logger.info(`
 For SWC, @nrwl/js:lib attempted to update Prettier Configuration for ".swcrc" file 
-but the root ".prettierrc" does not exist. Please consider adding parser support for ".swcrc" file
+but the root ".prettierrc" does not exist. Please consider adding parser support for ".lib.swcrc" file
 `);
     return;
   }
