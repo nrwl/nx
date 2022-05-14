@@ -1,19 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`lib --unit-test-runner jest --buildable should generate swcrc for swc 1`] = `
-Object {
-  "overrides": Array [
-    Object {
-      "files": "**/*.swcrc",
-      "options": Object {
-        "parser": "json",
-      },
-    },
-  ],
-  "singleQuote": true,
-}
-`;
-
 exports[`lib --unit-test-runner jest should generate test configuration with swc and js 1`] = `
 "/* eslint-disable */
 const { readFileSync } = require('fs')
