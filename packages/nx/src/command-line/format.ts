@@ -174,7 +174,7 @@ function write(patterns: string[]) {
       }
     );
 
-    if (swcrcPatterns.length) {
+    if (swcrcPatterns.length > 0) {
       execSync(
         `node "${PRETTIER_PATH}" --write --list-different ${swcrcPatterns.join(
           ' '
