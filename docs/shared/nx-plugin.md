@@ -2,7 +2,7 @@ Nx plugins are npm packages that contain generators and executors to extend a Nx
 
 > A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \
 > A list of custom plugins created by the community is found in the [Community](/community) section.
-> Plugins are written using Nx Devkit. **Read [Nx Devkit](/getting-started/nx-devkit) for more information.**
+> Plugins are written using Nx Devkit. **Read [Nx Devkit](/devkit/index) for more information.**
 
 <iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/fC1-4fAZDP4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 

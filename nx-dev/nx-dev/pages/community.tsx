@@ -65,7 +65,7 @@ export function Community(props: CommunityProps): ReactComponentElement<any> {
       description:
         'It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.',
       name: '@nrwl/devkit',
-      url: 'https://nx.dev/nx-devkit/index',
+      url: 'https://nx.dev/devkit/index',
       isOfficial: true,
     },
     {
