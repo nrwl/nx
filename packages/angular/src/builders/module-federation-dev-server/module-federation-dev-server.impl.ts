@@ -4,9 +4,9 @@ import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { join } from 'path';
-import { webpackServer } from '../webpack-server/webpack-server.impl';
+import { executeWebpackServerBuilder } from '../webpack-server/webpack-server.impl';
 
-export function moduleFederationDevServer(
+export function executeModuleFederationDevServerBuilder(
   schema: Schema,
   context: BuilderContext
 ) {
@@ -63,7 +63,9 @@ export function moduleFederationDevServer(
     });
   }
 
-  return webpackServer(options, context);
+  return executeWebpackServerBuilder(options, context);
 }
 
-export default createBuilder<JsonObject & Schema>(moduleFederationDevServer);
+export default createBuilder<JsonObject & Schema>(
+  executeModuleFederationDevServerBuilder
+);
