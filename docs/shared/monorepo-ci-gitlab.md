@@ -20,12 +20,10 @@ Below is an example of a GitLab pipeline setup for an Nx workspace only building
 image: node:16
 
 stages:
-  - setup
   - test
   - build
 
-install-dependencies:
-  stage: setup
+.distributed:
   interruptible: true
   only:
     - main
@@ -38,14 +36,8 @@ install-dependencies:
       - .npm/
   before_script:
     - npm ci --cache .npm --prefer-offline
-
-.distributed:
-  interruptible: true
-  only:
-    - main
-    - merge_requests
-  needs:
-    - install-dependencies
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
   artifacts:
     paths:
       - node_modules/.cache/nx
@@ -54,31 +46,31 @@ workspace-lint:
   stage: test
   extends: .distributed
   script:
-    - npx nx workspace-lint
+    - npx nx workspace-lint --base=$NX_BASE --head=$NX_HEAD
 
 format-check:
   stage: test
   extends: .distributed
   script:
-    - npx nx format:check
+    - npx nx format:check --base=$NX_BASE --head=$NX_HEAD
 
 lint:
   stage: test
   extends: .distributed
   script:
-    - npx nx affected --base=HEAD~1 --target=lint --parallel=3
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
 
 test:
   stage: test
   extends: .distributed
   script:
-    - npx nx affected --base=HEAD~1 --target=test --parallel=3 --ci --code-coverage
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
 
 build:
   stage: build
   extends: .distributed
   script:
-    - npx nx affected --base=HEAD~1 --target=build --parallel=3
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 ```
 
 The `build` and `test` jobs implement the CI workflow using `.distributed` as template to keep
