@@ -10,7 +10,7 @@ import type { NormalizedOptions } from '../schema';
 export function createFiles(tree: Tree, options: NormalizedOptions): void {
   const substitutions = {
     ...options,
-    ...names(options.projectName),
+    ...names(options.moduleName),
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
   };

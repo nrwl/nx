@@ -15,8 +15,9 @@ export function normalizeOptions(
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
+  const fileName = options.simpleModuleName ? name : projectName;
   const projectRoot = joinPathFragments(libsDir, projectDirectory);
+  const moduleName = options.simpleModuleName ? name : projectName;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -33,6 +34,7 @@ export function normalizeOptions(
     projectDirectory,
     projectName,
     projectRoot,
+    moduleName,
     service: options.service ?? false,
     target: options.target ?? 'es6',
     testEnvironment: options.testEnvironment ?? 'node',

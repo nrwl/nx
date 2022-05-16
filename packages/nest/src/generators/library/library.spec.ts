@@ -374,4 +374,32 @@ describe('lib', () => {
       ).toMatchSnapshot();
     });
   });
+
+  describe('--simpleModuleName', () => {
+    it('should create library with simple module name', async () => {
+      await libraryGenerator(tree, {
+        name: 'alfred-auth',
+        simpleModuleName: true,
+        directory: 'api',
+      });
+
+      expect(tree.exists(`libs/api/alfred-auth/README.md`)).toBeTruthy();
+      expect(tree.exists(`libs/api/alfred-auth/src/index.ts`)).toBeTruthy();
+      expect(tree.exists(`libs/api/alfred-auth/tsconfig.json`)).toBeTruthy();
+      expect(
+        tree.exists(`libs/api/alfred-auth/tsconfig.lib.json`)
+      ).toBeTruthy();
+      expect(tree.exists(`libs/api/alfred-auth/.eslintrc.json`)).toBeTruthy();
+      expect(tree.exists(`libs/api/alfred-auth/jest.config.ts`)).toBeTruthy();
+      expect(
+        tree.exists(`libs/api/alfred-auth/tsconfig.spec.json`)
+      ).toBeTruthy();
+      expect(
+        tree.exists(`libs/api/alfred-auth/src/lib/alfred-auth.module.ts`)
+      ).toBeTruthy();
+      expect(
+        tree.exists(`libs/api/alfred-auth/src/lib/api-alfred-auth.module.ts`)
+      ).toBeFalsy();
+    });
+  });
 });

@@ -29,6 +29,7 @@ export interface LibraryGeneratorOptions {
   unitTestRunner?: UnitTestRunner;
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
+  simpleModuleName?: boolean;
 }
 
 export interface NormalizedOptions extends LibraryGeneratorOptions {
@@ -38,4 +39,5 @@ export interface NormalizedOptions extends LibraryGeneratorOptions {
   projectDirectory: string;
   projectName: string;
   projectRoot: Path;
+  moduleName: string;
 }
