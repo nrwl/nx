@@ -1,5 +1,3 @@
-// TODO(chau): change back to 2015 when https://github.com/swc-project/swc/issues/1108 is solved
-// target: 'es2015'
 import { Tree } from '@nrwl/devkit';
 import { join } from 'path';
 
@@ -14,7 +12,7 @@ export const defaultExclude = [
 
 const swcOptionsString = () => `{
   "jsc": {
-    "target": "es2017",
+    "target": "es2015",
     "parser": {
       "syntax": "typescript",
       "decorators": true,
