@@ -21,8 +21,8 @@ async function buildPackagePublishAndCleanPorts() {
     > CI - simulate the CI environment settings
 
   If you change create-nx-workspace or create-nx-plugin, make sure to remove your npx cache.
-  Otherwise the changes won't be reflected in the tests. 
-  
+  Otherwise the changes won't be reflected in the tests.
+
   If your e2e tests fail when trying to create a workspace, remove your npx cache.
   \n`)
       );
@@ -213,6 +213,13 @@ function build(nxVersion: string) {
 
     writeFileSync(f, content);
   });
+
+  // patch devkit's nx limit
+  const content = readFileSync(
+    `${BUILD_DIR}/devkit/package.json`,
+    'utf-8'
+  ).replace(/"nx": ">= 13\.10 <= (\d+)"/, `"nx": ">= 13.10 <= ${nxVersion}"`);
+  writeFileSync(`${BUILD_DIR}/devkit/package.json`, content);
 }
 
 (async () => {
