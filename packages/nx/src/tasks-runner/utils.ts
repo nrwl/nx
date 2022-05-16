@@ -12,6 +12,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { workspaceRoot } from '../utils/app-root';
 
 export function getCommandAsString(task: Task) {
   const execCommand = getPackageManagerCommand().exec;
@@ -168,8 +169,9 @@ export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
   const workspaceConfiguration = workspace.readWorkspaceConfiguration();
   const project = workspaceConfiguration.projects[task.target.project];
 
-  if (existsSync(join(project.root, 'package.json'))) {
-    project.targets = mergeNpmScriptsWithTargets(project.root, project.targets);
+  const projectRoot = join(workspaceRoot, project.root);
+  if (existsSync(join(projectRoot, 'package.json'))) {
+    project.targets = mergeNpmScriptsWithTargets(projectRoot, project.targets);
   }
   project.targets = mergePluginTargetsWithNxTargets(
     project.root,

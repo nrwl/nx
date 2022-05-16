@@ -98,6 +98,11 @@ function parseRunOneOptions(
     [project, target, configuration] = splitTarget(
       parsedArgs['project:target:configuration']
     );
+    // this is to account for "nx npmsript:dev"
+    if (project && !target && defaultProjectName) {
+      project = defaultProjectName;
+      target = project;
+    }
   } else {
     target = parsedArgs['project:target:configuration'];
   }
