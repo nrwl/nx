@@ -33,7 +33,7 @@ describe('add-nx-to-monorepo', () => {
 
       // Act
       const output = runCommand(
-        `${packageManagerCommand} add-nx-to-monorepo --nx-cloud false`
+        `${packageManagerCommand} add-nx-to-monorepo@latest --nx-cloud false`
       );
       // Assert
       expect(output).toContain('🎉 Done!');
@@ -58,7 +58,7 @@ describe('add-nx-to-monorepo', () => {
 
       // Act
       runCommand(
-        `${packageManagerCommand} add-nx-to-monorepo --nx-cloud false`
+        `${packageManagerCommand} add-nx-to-monorepo@latest --nx-cloud false`
       );
       const output = runCLI('build package-a');
       // Assert
