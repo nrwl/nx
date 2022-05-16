@@ -12,7 +12,7 @@ export const defaultExclude = [
 
 const swcOptionsString = () => `{
   "jsc": {
-    "target": "es2015",
+    "target": "es2017",
     "parser": {
       "syntax": "typescript",
       "decorators": true,
