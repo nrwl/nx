@@ -196,7 +196,7 @@ export function runCreatePlugin(
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  let command = `${pm.runUninstalledPackage} create-nx-plugin ${name}`;
+  let command = `${pm.runUninstalledPackage} create-nx-plugin@latest ${name}`;
 
   if (pluginName) {
     command += ` --pluginName=${pluginName}`;
@@ -584,9 +584,7 @@ export function runCommand(
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
-    return (
-      `EXPLODE ON "${command}"\n` + e.stdout?.toString() + e.stderr?.toString()
-    );
+    return e.stdout?.toString() + e.stderr?.toString();
   }
 }
 
@@ -805,7 +803,7 @@ export function getPackageManagerCommand({
       run: (script: string, args: string) => `npm run ${script} -- ${args}`,
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
-      runUninstalledPackage: `npx`,
+      runUninstalledPackage: `npx --yes`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
@@ -815,7 +813,7 @@ export function getPackageManagerCommand({
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
-      runUninstalledPackage: 'npx',
+      runUninstalledPackage: 'npx --yes',
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },

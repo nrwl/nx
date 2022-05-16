@@ -30,6 +30,7 @@ jobs:
           # - e2e-storybook
           # - e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
           - e2e-add-nx-to-monorepo
+          - e2e-workspace-create
       fail-fast: false
 
     name: ${{ matrix.packages }}
