@@ -17,10 +17,12 @@ But they come with their own technical challenges. The more code you add into yo
 Below is an example of a GitLab pipeline setup for an Nx workspace only building and testing what is affected.
 
 ```yaml
-image: node:16-alpine
+image: node:16
+
 stages:
   - setup
   - test
+  - build
 
 install-dependencies:
   stage: setup
@@ -73,14 +75,14 @@ test:
     - npx nx affected --base=HEAD~1 --target=test --parallel=3 --ci --code-coverage
 
 build:
-  stage: test
+  stage: build
   extends: .distributed
   script:
     - npx nx affected --base=HEAD~1 --target=build --parallel=3
 ```
 
 The `build` and `test` jobs implement the CI workflow using `.distributed` as template to keep
-CI configuration file clearly.
+CI configuration file more readable.
 
 ## Distributed CI with Nx Cloud
 
