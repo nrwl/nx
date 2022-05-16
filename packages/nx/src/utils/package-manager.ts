@@ -6,7 +6,7 @@ import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import { readJsonFile, writeJsonFile } from './fileutils';
 import { PackageJson } from './package-json';
-import { gte } from 'semver';
+import { gte, lt } from 'semver';
 
 const execAsync = promisify(exec);
 
@@ -63,10 +63,8 @@ export function getPackageManagerCommand(
     }),
     pnpm: () => {
       const pnpmVersion = getPackageManagerVersion('pnpm');
-      let useExec = false;
-      if (gte(pnpmVersion, '6.13.0')) {
-        useExec = true;
-      }
+      const useExec = gte(pnpmVersion, '6.13.0');
+      const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
@@ -75,7 +73,10 @@ export function getPackageManagerCommand(
         addGlobal: 'pnpm add -g',
         rm: 'pnpm rm',
         exec: useExec ? 'pnpm exec' : 'pnpx',
-        run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
+        run: (script: string, args: string) =>
+          includeDoubleDashBeforeArgs
+            ? `pnpm run ${script} -- ${args}`
+            : `pnpm run ${script} ${args}`,
         list: 'pnpm ls --depth 100',
       };
     },
