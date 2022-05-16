@@ -12,8 +12,6 @@ import * as treeKill from 'tree-kill';
 import { promisify } from 'util';
 import { InspectType, NodeExecutorOptions } from './schema';
 
-let subProcess: ChildProcess = null;
-
 export interface ExecutorEvent {
   outfile: string;
   success: boolean;
@@ -23,16 +21,20 @@ export async function* nodeExecutor(
   options: NodeExecutorOptions,
   context: ExecutorContext
 ) {
+  let subProcessRef: { ref: ChildProcess } = {
+    ref: null,
+  };
+
   process.on('SIGTERM', async () => {
-    await killCurrentProcess();
+    await killCurrentProcess(subProcessRef.ref);
     process.exit(128 + 15);
   });
   process.on('SIGINT', async () => {
-    await killCurrentProcess();
+    await killCurrentProcess(subProcessRef.ref);
     process.exit(128 + 2);
   });
   process.on('SIGHUP', async () => {
-    await killCurrentProcess();
+    await killCurrentProcess(subProcessRef.ref);
     process.exit(128 + 1);
   });
 
@@ -53,7 +55,7 @@ export async function* nodeExecutor(
       logger.error('There was an error with the build. See above.');
       logger.info(`${event.outfile} was not restarted.`);
     }
-    await handleBuildEvent(event, options, mappings);
+    await handleBuildEvent(event, options, mappings, subProcessRef);
     yield event;
   }
 }
@@ -84,7 +86,7 @@ async function runProcess(
   options: NodeExecutorOptions,
   mappings: { [project: string]: string }
 ) {
-  subProcess = fork(
+  const subProcess = fork(
     joinPathFragments(__dirname, 'node-with-require-overrides'),
     options.args,
     {
@@ -109,6 +111,8 @@ async function runProcess(
       });
     });
   }
+
+  return subProcess;
 }
 
 function getExecArgv(options: NodeExecutorOptions) {
@@ -132,22 +136,26 @@ function getExecArgv(options: NodeExecutorOptions) {
 async function handleBuildEvent(
   event: ExecutorEvent,
   options: NodeExecutorOptions,
-  mappings: { [project: string]: string }
+  mappings: { [project: string]: string },
+  subProcessRef: { ref: ChildProcess | null }
 ) {
   // Don't kill previous run unless new build is successful.
   if (options.watch && event.success) {
-    await killCurrentProcess();
+    await killCurrentProcess(subProcessRef.ref);
   }
 
   if (event.success) {
-    await runProcess(event, options, mappings);
+    const subProcess = await runProcess(event, options, mappings);
+    if (subProcess) {
+      subProcessRef.ref = subProcess;
+    }
   }
 }
 
 const promisifiedTreeKill: (pid: number, signal: string) => Promise<void> =
   promisify(treeKill);
 
-async function killCurrentProcess() {
+async function killCurrentProcess(subProcess: ChildProcess | null) {
   if (!subProcess) return;
 
   try {
