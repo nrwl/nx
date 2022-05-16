@@ -87,27 +87,3 @@ export function generatePackageSchemas(): void {
       )
   );
 }
-
-// Temp, rework map API-reference
-function updateMenuPathsInMapJson(): void {
-  const absoluteRoot = resolve(join(__dirname, '../../../'));
-  const outputPath: string = join(absoluteRoot, 'docs');
-  const jsonFile = readJsonSync(join(outputPath, 'map.json'));
-
-  jsonFile[0].itemList.forEach((itemA, indexA) => {
-    itemA.itemList.forEach((itemB, indexB) => {
-      if (
-        itemB.file &&
-        itemB.file.includes('generated/api-') &&
-        !itemB.file.include('api-nx-devkit')
-      ) {
-        jsonFile[0].itemList[indexA].itemList[indexB] = {
-          ...itemB,
-          path: '/packages/' + itemB.file.replace('generated/api-', ''),
-        };
-      }
-    });
-  });
-
-  writeJSONSync(join(outputPath, 'map.json'), jsonFile, 'utf-8');
-}

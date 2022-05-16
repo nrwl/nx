@@ -1028,12 +1028,12 @@
           {
             "id": "index",
             "name": "Overview",
-            "file": "generated/api-nx-devkit/index"
+            "file": "generated/devkit/index"
           },
           {
             "id": "ngcli_adapter",
             "name": "Ng CLI Adapter",
-            "file": "generated/api-nx-devkit/ngcli_adapter"
+            "file": "generated/devkit/ngcli_adapter"
           }
         ]
       }

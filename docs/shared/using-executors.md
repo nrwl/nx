@@ -239,7 +239,7 @@ The `runExecutor` utility will find the target in the configuration, find the ex
 - `readTargetOptions` -- Reads and combines options for a given target.
 - `runExecutor` -- Constructs options and invokes an executor.
 
-See more helper functions in the [Devkit API Docs](/nx-devkit/index#functions)
+See more helper functions in the [Devkit API Docs](/devkit/index#functions)
 
 ## Using RxJS observables
 
