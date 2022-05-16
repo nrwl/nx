@@ -23,6 +23,7 @@ import {
 } from '../utils/package-json';
 import {
   createTempNpmDirectory,
+  detectPackageManager,
   getPackageManagerCommand,
   packageRegistryPack,
   packageRegistryView,
@@ -487,72 +488,99 @@ function versions(root: string, from: Record<string, string>) {
 
 // testing-fetch-start
 function createFetcher() {
-  const migrationsCache: Record<
-    string,
-    Promise<ResolvedMigrationConfiguration>
-  > = {};
-  const resolvedVersionCache: Record<string, Promise<string>> = {};
+  const migrationsCache: Record<string, ResolvedMigrationConfiguration> = {};
+  const resolvedVersionCache: Record<string, string> = {};
 
-  function fetchMigrations(
-    packageName,
-    packageVersion,
-    setCache: (packageName: string, packageVersion: string) => void
-  ): Promise<ResolvedMigrationConfiguration> {
-    const cacheKey = packageName + '-' + packageVersion;
-    return Promise.resolve(resolvedVersionCache[cacheKey])
-      .then((cachedResolvedVersion) => {
-        if (cachedResolvedVersion) {
-          return cachedResolvedVersion;
-        }
-
-        resolvedVersionCache[cacheKey] = resolvePackageVersionUsingRegistry(
-          packageName,
-          packageVersion
-        );
-        return resolvedVersionCache[cacheKey];
-      })
-      .then((resolvedVersion) => {
-        if (
-          resolvedVersion !== packageVersion &&
-          migrationsCache[`${packageName}-${resolvedVersion}`]
-        ) {
-          return migrationsCache[`${packageName}-${resolvedVersion}`];
-        }
-        setCache(packageName, resolvedVersion);
-        return getPackageMigrationsUsingRegistry(packageName, resolvedVersion);
-      })
-      .catch(() => {
-        logger.info(`Fetching ${packageName}@${packageVersion}`);
-
-        return getPackageMigrationsUsingInstall(packageName, packageVersion);
-      });
+  function getMigrationCache(packageName: string, packageVersion: string) {
+    return migrationsCache[`${packageName}-${packageVersion}`];
   }
 
-  return function nxMigrateFetcher(
+  function setMigrationCache(
+    packageName: string,
+    packageVersion: string,
+    migrations: ResolvedMigrationConfiguration
+  ) {
+    migrationsCache[`${packageName}-${packageVersion}`] = migrations;
+  }
+
+  const packageRegistryCache: Record<string, string> = {};
+
+  const pm = detectPackageManager();
+
+  async function getRegistryOfPackage(packageName: string) {
+    const configKeyPrefix = packageName.startsWith('@')
+      ? `${packageName.substring(0, packageName.indexOf('/'))}:`
+      : '';
+
+    if (!packageRegistryCache[packageName]) {
+      const { stdout } = await execAsync(
+        `${pm} config get ${configKeyPrefix}registry`
+      );
+
+      packageRegistryCache[configKeyPrefix] = stdout.trim();
+    }
+    return packageRegistryCache[configKeyPrefix];
+  }
+
+  async function fetchMigrations(
     packageName: string,
     packageVersion: string
   ): Promise<ResolvedMigrationConfiguration> {
-    if (migrationsCache[`${packageName}-${packageVersion}`]) {
-      return migrationsCache[`${packageName}-${packageVersion}`];
+    if (
+      (await getRegistryOfPackage(packageName)) ===
+      'https://npm.pkg.github.com/'
+    ) {
+      /**
+       * The github npm package registry does not yet support custom fields,
+       * meaning that `npm view` will not return the nx migration information,
+       * so we have to fallback to getting the information with a full install.
+       */
+      logger.info(`Fetching ${packageName}@${packageVersion}`);
+      return getPackageMigrationsUsingInstall(packageName, packageVersion);
     }
 
-    let resolvedVersion: string = packageVersion;
-    let migrations: Promise<ResolvedMigrationConfiguration>;
-    function setCache(packageName: string, packageVersion: string) {
-      migrationsCache[packageName + '-' + packageVersion] = migrations;
+    try {
+      const cacheKey = `${packageName}-${packageVersion}`;
+
+      resolvedVersionCache[cacheKey] ??=
+        await resolvePackageVersionUsingRegistry(packageName, packageVersion);
+
+      const resolvedVersion = resolvedVersionCache[cacheKey];
+
+      if (
+        resolvedVersion !== packageVersion &&
+        getMigrationCache(packageName, resolvedVersion)
+      ) {
+        return getMigrationCache(packageName, resolvedVersion);
+      }
+
+      return getPackageMigrationsUsingRegistry(packageName, resolvedVersion);
+    } catch {
+      logger.info(`Fetching ${packageName}@${packageVersion}`);
+      return getPackageMigrationsUsingInstall(packageName, packageVersion);
     }
-    migrations = fetchMigrations(packageName, packageVersion, setCache).then(
+  }
+
+  return async function nxMigrateFetcher(
+    packageName: string,
+    packageVersion: string
+  ): Promise<ResolvedMigrationConfiguration> {
+    if (getMigrationCache(packageName, packageVersion)) {
+      return getMigrationCache(packageName, packageVersion);
+    }
+
+    let migrations = await fetchMigrations(packageName, packageVersion).then(
       (result) => {
         if (result.schematics) {
           result.generators = result.schematics;
           delete result.schematics;
         }
-        resolvedVersion = result.version;
         return result;
       }
     );
 
-    setCache(packageName, packageVersion);
+    setMigrationCache(packageName, packageVersion, migrations);
+    setMigrationCache(packageName, migrations.version, migrations);
 
     return migrations;
   };
