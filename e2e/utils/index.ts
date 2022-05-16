@@ -584,7 +584,9 @@ export function runCommand(
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
-    return e.stdout?.toString() + e.stderr?.toString();
+    return (
+      `EXPLODE ON "${command}"\n` + e.stdout?.toString() + e.stderr?.toString()
+    );
   }
 }
 

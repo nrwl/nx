@@ -32,16 +32,16 @@ jobs:
           - yarn
           - pnpm
         packages:
-          - e2e-angular-core,e2e-angular-extensions
-          - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
-          - e2e-cypress
-          - e2e-react
-          - e2e-next
-          - e2e-node
-          - e2e-web
-          - e2e-storybook
-          - e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
-          - e2e-react-native
+          # - e2e-angular-core,e2e-angular-extensions
+          # - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
+          # - e2e-cypress
+          # - e2e-react
+          # - e2e-next
+          # - e2e-node
+          # - e2e-web
+          # - e2e-storybook
+          # - e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
+          # - e2e-react-native
           # - e2e-detox
           - e2e-add-nx-to-monorepo
         exclude:
