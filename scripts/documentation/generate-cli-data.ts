@@ -17,15 +17,7 @@ import { dedent } from 'tslint/lib/utils';
 
 const importFresh = require('import-fresh');
 
-const sharedCommands = [
-  'build',
-  'e2e',
-  'generate',
-  'lint',
-  'run',
-  'serve',
-  'test',
-];
+const sharedCommands = ['generate', 'run'];
 
 export async function generateCLIDocumentation(
   commandsOutputDirectory: string

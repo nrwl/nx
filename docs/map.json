@@ -709,11 +709,6 @@
             "id": "generate",
             "file": "generated/cli/generate"
           },
-          { "name": "serve", "id": "serve", "file": "generated/cli/serve" },
-          { "name": "build", "id": "build", "file": "generated/cli/build" },
-          { "name": "test", "id": "test", "file": "generated/cli/test" },
-          { "name": "lint", "id": "lint", "file": "generated/cli/lint" },
-          { "name": "e2e", "id": "e2e", "file": "generated/cli/e2e" },
           { "name": "run", "id": "run", "file": "generated/cli/run" },
           { "name": "daemon", "id": "daemon", "file": "generated/cli/daemon" },
           { "name": "graph", "id": "dep-graph", "file": "generated/cli/graph" },
