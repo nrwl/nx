@@ -47,6 +47,10 @@ export async function formatFiles(tree: Tree): Promise<void> {
         ...resolvedOptions,
       };
 
+      if (file.path.endsWith('.swcrc')) {
+        options.parser = 'json';
+      }
+
       const support = await prettier.getFileInfo(systemPath, options);
       if (support.ignored || !support.inferredParser) {
         return;

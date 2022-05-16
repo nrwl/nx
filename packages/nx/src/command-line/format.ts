@@ -83,10 +83,16 @@ async function getPatterns(
     }
 
     const p = parseFiles(args);
+
     const supportedExtensions = prettier
       .getSupportInfo()
       .languages.flatMap((language) => language.extensions)
-      .filter((extension) => !!extension);
+      .filter((extension) => !!extension)
+      // Prettier supports ".swcrc" as a file instead of an extension
+      // So we add ".swcrc" as a supported extension manually
+      // which allows it to be considered for calculating "patterns"
+      .concat('.swcrc');
+
     const patterns = p.files.filter(
       (f) => fileExists(f) && supportedExtensions.includes(path.extname(f))
     );
@@ -151,12 +157,33 @@ function chunkify(target: string[], size: number): string[][] {
 
 function write(patterns: string[]) {
   if (patterns.length > 0) {
+    const [swcrcPatterns, regularPatterns] = patterns.reduce(
+      (result, pattern) => {
+        result[pattern.includes('.swcrc') ? 0 : 1].push(pattern);
+        return result;
+      },
+      [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
+    );
+
     execSync(
-      `node "${PRETTIER_PATH}" --write --list-different ${patterns.join(' ')}`,
+      `node "${PRETTIER_PATH}" --write --list-different ${regularPatterns.join(
+        ' '
+      )}`,
       {
         stdio: [0, 1, 2],
       }
     );
+
+    if (swcrcPatterns.length > 0) {
+      execSync(
+        `node "${PRETTIER_PATH}" --write --list-different ${swcrcPatterns.join(
+          ' '
+        )} --parser json`,
+        {
+          stdio: [0, 1, 2],
+        }
+      );
+    }
   }
 }
 
