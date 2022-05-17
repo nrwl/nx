@@ -246,5 +246,5 @@ describe('js e2e', () => {
 
   it('should run default jest tests', async () => {
     await expectJestTestsToPass('@nrwl/js:lib');
-  });
+  }, 100000);
 });
