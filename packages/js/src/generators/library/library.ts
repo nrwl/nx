@@ -315,10 +315,6 @@ function normalizeOptions(
     options.buildable = true;
   }
 
-  if (options.config == null || options.config === 'project') {
-    options.config = options.standaloneConfig ? 'project' : 'workspace';
-  }
-
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;

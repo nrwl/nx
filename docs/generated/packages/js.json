@@ -140,10 +140,6 @@
             "type": "boolean",
             "description": "Whether to skip TypeScript type checking for SWC compiler.",
             "default": false
-          },
-          "standaloneConfig": {
-            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-            "type": "boolean"
           }
         },
         "required": ["name"],
