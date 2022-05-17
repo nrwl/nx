@@ -44,6 +44,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     setParserOptionsProject: options.setParserOptionsProject,
     module: 'none',
     supportTsx: true,
+    config: options.standaloneConfig ? 'project' : 'workspace',
   });
   createFiles(tree, options);
 

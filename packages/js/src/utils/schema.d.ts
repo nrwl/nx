@@ -32,7 +32,6 @@ export interface LibraryGeneratorSchema {
   compiler?: Compiler;
   module?: Module;
   skipTypeCheck?: boolean;
-  standaloneConfig?: boolean;
 }
 
 export interface ExecutorOptions {
