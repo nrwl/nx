@@ -1,6 +1,6 @@
 export const nxVersion = '*';
 
-export const reactNativeVersion = '0.68.1';
+export const reactNativeVersion = '0.68.2';
 export const typesReactNativeVersion = '0.67.7';
 
 export const typesNodeVersion = '16.11.7';
