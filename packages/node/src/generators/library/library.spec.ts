@@ -84,6 +84,7 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toMatchInlineSnapshot(`
         Object {
+          "compilerOptions": Object {},
           "extends": "../../tsconfig.base.json",
           "files": Array [],
           "include": Array [],
