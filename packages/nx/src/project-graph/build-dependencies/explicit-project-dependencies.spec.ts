@@ -25,7 +25,7 @@ describe('explicit project dependencies', () => {
   describe('static imports, dynamic imports, and commonjs requires', () => {
     it('should build explicit dependencies for static imports, and top-level dynamic imports and commonjs requires', () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createFixture({
+      const { ctx, builder } = createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -34,6 +34,94 @@ describe('explicit project dependencies', () => {
               import {a} from '@proj/my-second-proj';
               await import('@proj/project-3');
               require('@proj/proj4ab');
+              import * as npmPackage from 'npm-package';
+            `,
+          },
+        ],
+      });
+
+      const res = buildExplicitTypeScriptDependencies(
+        ctx.workspace,
+        builder.graph,
+        ctx.filesToProcess
+      );
+
+      expect(res).toEqual([
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.ts',
+          targetProjectName: 'proj2',
+        },
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.ts',
+          targetProjectName: 'proj3a',
+        },
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.ts',
+          targetProjectName: 'proj4ab',
+        },
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.ts',
+          targetProjectName: 'npm:npm-package',
+        },
+      ]);
+    });
+
+    it('should build explicit dependencies for static exports', () => {
+      const sourceProjectName = 'proj';
+      const { ctx, builder } = createVirtualWorkspace({
+        sourceProjectName,
+        sourceProjectFiles: [
+          {
+            path: 'libs/proj/index.ts',
+            content: `
+              export {a} from '@proj/my-second-proj';
+              export * as project3 from '@proj/project-3';
+              export * from '@proj/proj4ab';
+            `,
+          },
+        ],
+      });
+
+      const res = buildExplicitTypeScriptDependencies(
+        ctx.workspace,
+        builder.graph,
+        ctx.filesToProcess
+      );
+
+      expect(res).toEqual([
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.ts',
+          targetProjectName: 'proj2',
+        },
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.ts',
+          targetProjectName: 'proj3a',
+        },
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.ts',
+          targetProjectName: 'proj4ab',
+        },
+      ]);
+    });
+
+    it(`should build explicit dependencies for TypeScript's import/export require syntax, and side-effectful import`, () => {
+      const sourceProjectName = 'proj';
+      const { ctx, builder } = createVirtualWorkspace({
+        sourceProjectName,
+        sourceProjectFiles: [
+          {
+            path: 'libs/proj/index.ts',
+            content: `
+              import i = require("@proj/my-second-proj");
+              export import i = require("@proj/project-3");
+              import '@proj/proj4ab';
             `,
           },
         ],
@@ -66,7 +154,7 @@ describe('explicit project dependencies', () => {
 
     it('should build explicit dependencies for nested dynamic imports and commonjs requires', () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createFixture({
+      const { ctx, builder } = createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -108,9 +196,49 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
+    it('should build explicit dependencies when relative paths are used', () => {
+      const sourceProjectName = 'proj';
+      const { ctx, builder } = createVirtualWorkspace({
+        sourceProjectName,
+        sourceProjectFiles: [
+          {
+            path: 'libs/proj/absolute-path.ts',
+            content: `
+              import('../../libs/proj3a/index.ts');
+            `,
+          },
+          {
+            path: 'libs/proj/relative-path.ts',
+            content: `
+              import('../proj4ab/index.ts');
+            `,
+          },
+        ],
+      });
+
+      const res = buildExplicitTypeScriptDependencies(
+        ctx.workspace,
+        builder.graph,
+        ctx.filesToProcess
+      );
+
+      expect(res).toEqual([
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/absolute-path.ts',
+          targetProjectName: 'proj3a',
+        },
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/relative-path.ts',
+          targetProjectName: 'proj4ab',
+        },
+      ]);
+    });
+
     it('should not build explicit dependencies when nx-ignore-next-line comments are present', () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createFixture({
+      const { ctx, builder } = createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -173,6 +301,22 @@ describe('explicit project dependencies', () => {
               }
             `,
           },
+          {
+            path: 'libs/proj/comments-with-excess-whitespace.ts',
+            content: `
+              /* 
+                nx-ignore-next-line
+                
+                */
+              require('@proj/proj4ab');
+              //     nx-ignore-next-line
+              import('@proj/proj4ab');
+              /* 
+                
+              nx-ignore-next-line */
+              import { foo } from '@proj/proj4ab';
+            `,
+          },
         ],
       });
 
@@ -187,7 +331,7 @@ describe('explicit project dependencies', () => {
 
     it('should not build explicit dependencies for stringified or templatized import/require statements', () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createFixture({
+      const { ctx, builder } = createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -271,7 +415,7 @@ describe('explicit project dependencies', () => {
   describe('legacy Angular loadChildren string syntax', () => {
     it('should build explicit dependencies for legacy Angular loadChildren string syntax', () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createFixture({
+      const { ctx, builder } = createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -289,6 +433,17 @@ describe('explicit project dependencies', () => {
               }];
             `,
           },
+          /**
+           * TODO: This case, where a no subsitution template literal is used, is not working
+           */
+          // {
+          //   path: 'libs/proj/no-substitution-template-literal.ts',
+          //   content: `
+          //     const a = {
+          //       loadChildren: \`@proj/my-second-proj\`
+          //     };
+          //   `,
+          // },
         ],
       });
 
@@ -314,7 +469,7 @@ describe('explicit project dependencies', () => {
 
     it('should not build explicit dependencies when nx-ignore-next-line comments are present', () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createFixture({
+      const { ctx, builder } = createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -369,7 +524,7 @@ describe('explicit project dependencies', () => {
   });
 });
 
-interface Fixture {
+interface VirtualWorkspaceConfig {
   sourceProjectName: string;
   sourceProjectFiles: {
     path: string;
@@ -381,26 +536,28 @@ interface Fixture {
  * Prepares a minimal workspace and virtual file-system for the given files and dependency
  * projects in order to be able to execute `buildExplicitTypeScriptDependencies()` in the tests.
  */
-function createFixture(fixture: Fixture) {
+function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
   const nxJson = {
     npmScope: 'proj',
   };
   const workspaceJson = {
     projects: {
-      [fixture.sourceProjectName]: {
-        root: `libs/${fixture.sourceProjectName}`,
+      [config.sourceProjectName]: {
+        root: `libs/${config.sourceProjectName}`,
       },
     },
   };
   const fsJson = {
     './package.json': `{
       "name": "test",
-      "dependencies": [],
+      "dependencies": {
+        "npm-package": "1.0.0"
+      },
       "devDependencies": []
     }`,
     './workspace.json': JSON.stringify(workspaceJson),
     './nx.json': JSON.stringify(nxJson),
-    ...fixture.sourceProjectFiles.reduce(
+    ...config.sourceProjectFiles.reduce(
       (acc, file) => ({
         ...acc,
         [file.path]: file.content,
@@ -412,8 +569,8 @@ function createFixture(fixture: Fixture) {
     compilerOptions: {
       baseUrl: '.',
       paths: {
-        [`@proj/${fixture.sourceProjectName}`]: [
-          `libs/${fixture.sourceProjectName}/index.ts`,
+        [`@proj/${config.sourceProjectName}`]: [
+          `libs/${config.sourceProjectName}/index.ts`,
         ],
       },
     },
@@ -421,13 +578,21 @@ function createFixture(fixture: Fixture) {
 
   const builder = new ProjectGraphBuilder();
   builder.addNode({
-    name: fixture.sourceProjectName,
+    name: config.sourceProjectName,
     type: 'lib',
     data: {
-      root: `libs/${fixture.sourceProjectName}`,
-      files: fixture.sourceProjectFiles.map(({ path }) => ({
+      root: `libs/${config.sourceProjectName}`,
+      files: config.sourceProjectFiles.map(({ path }) => ({
         file: path,
       })),
+    },
+  });
+  builder.addExternalNode({
+    name: 'npm:npm-package',
+    type: 'npm',
+    data: {
+      version: '1.0.0',
+      packageName: 'npm-package',
     },
   });
 
