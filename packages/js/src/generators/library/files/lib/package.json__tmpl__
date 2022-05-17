@@ -1,5 +1,5 @@
 {
   "name": "<%= importPath %>",
-  "version": "0.0.1",
-  "type": "commonjs"
+  "version": "0.0.1"<% if (module != 'none') {%>,
+  "type": <% if (module === 'cjs') { %>"commonjs"<% } %><% } %>
 }

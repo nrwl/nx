@@ -9,11 +9,10 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  readJson,
   toJS,
   Tree,
   updateJson,
-  readJson,
-  writeJson,
 } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
@@ -162,6 +161,9 @@ export function addLint(
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {
+  const tsConfigJson = tree
+    .read(join(options.projectRoot, 'tsconfig.json'), 'utf-8')
+    .toString();
   updateJson(tree, join(options.projectRoot, 'tsconfig.json'), (json) => {
     if (options.strict) {
       json.compilerOptions = {
@@ -187,36 +189,26 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
  * You can find more details on why this is necessary here:
  * https://github.com/nrwl/nx/pull/10055
  */
-function shouldAddBabelRc(tree: Tree, options: NormalizedSchema) {
-  if (typeof options.includeBabelRc === 'undefined') {
-    const webPluginName = '@nrwl/web';
-
+function shouldSkipBabelRc(
+  tree: Tree,
+  options: LibraryGeneratorSchema
+): boolean {
+  if (options.skipBabelrc == null) {
     const packageJson = readJson(tree, 'package.json');
-
-    const hasNxWebPlugin = Object.keys(
-      packageJson.devDependencies as Record<string, string>
-    ).includes(webPluginName);
-
-    return hasNxWebPlugin;
+    return (
+      !packageJson['devDependencies']['@nrwl/web'] &&
+      !packageJson['dependencies']['@nrwl/web']
+    );
   }
 
-  return options.includeBabelRc;
-}
-
-function addBabelRc(tree: Tree, options: NormalizedSchema) {
-  const filename = '.babelrc';
-
-  const babelrc = {
-    presets: [['@nrwl/web/babel', { useBuiltIns: 'usage' }]],
-  };
-
-  writeJson(tree, join(options.projectRoot, filename), babelrc);
+  return options.skipBabelrc;
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
   const { className, name, propertyName } = names(options.name);
   generateFiles(tree, filesDir, options.projectRoot, {
     ...options,
+    module: options.module,
     dot: '.',
     className,
     name,
@@ -234,8 +226,10 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
   if (options.compiler === 'swc') {
     addSwcDependencies(tree);
     addSwcConfig(tree, options.projectRoot);
-  } else if (shouldAddBabelRc(tree, options)) {
-    addBabelRc(tree, options);
+  }
+
+  if (options.skipBabelrc || options.compiler === 'swc') {
+    tree.delete(join(options.projectRoot, '.babelrc'));
   }
 
   if (options.unitTestRunner === 'none') {
@@ -275,7 +269,7 @@ async function addJest(
     ...options,
     project: options.name,
     setupFile: 'none',
-    supportTsx: false,
+    supportTsx: options.supportTsx,
     skipSerializers: true,
     testEnvironment: options.testEnvironment,
     skipFormat: true,
@@ -321,6 +315,10 @@ function normalizeOptions(
     options.buildable = true;
   }
 
+  if (options.config == null || options.config === 'project') {
+    options.config = options.standaloneConfig ? 'project' : 'workspace';
+  }
+
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
@@ -331,6 +329,12 @@ function normalizeOptions(
   if (options.compiler === 'swc' && options.skipTypeCheck == null) {
     options.skipTypeCheck = false;
   }
+
+  if (options.module == null) {
+    options.module = 'cjs';
+  }
+
+  options.skipBabelrc = shouldSkipBabelRc(tree, options);
 
   const name = names(options.name).fileName;
   const projectDirectory = options.directory
