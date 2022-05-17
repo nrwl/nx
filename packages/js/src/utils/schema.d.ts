@@ -7,6 +7,7 @@ import type {
 import { TransformerEntry } from './typescript/types';
 
 export type Compiler = 'tsc' | 'swc';
+export type Module = 'cjs' | 'none';
 
 export interface LibraryGeneratorSchema {
   name: string;
@@ -15,10 +16,11 @@ export interface LibraryGeneratorSchema {
   tags?: string;
   simpleModuleName?: boolean;
   skipTsConfig?: boolean;
-  includeBabelRc?: boolean;
+  skipBabelrc?: boolean;
   unitTestRunner?: 'jest' | 'none';
   linter?: Linter;
   testEnvironment?: 'jsdom' | 'node';
+  supportTsx?: boolean;
   importPath?: string;
   js?: boolean;
   pascalCaseFiles?: boolean;
@@ -28,7 +30,9 @@ export interface LibraryGeneratorSchema {
   setParserOptionsProject?: boolean;
   config?: 'workspace' | 'project' | 'npm-scripts';
   compiler?: Compiler;
+  module?: Module;
   skipTypeCheck?: boolean;
+  standaloneConfig?: boolean;
 }
 
 export interface ExecutorOptions {

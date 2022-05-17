@@ -12,10 +12,10 @@ import {
   updateProjectConfiguration,
   updateTsConfigsToJs,
 } from '@nrwl/devkit';
+import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js/generators';
+import { join } from 'path';
 
 import { Schema } from './schema';
-import { libraryGenerator as workspaceLibraryGenerator } from '@nrwl/workspace/generators';
-import { join } from 'path';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -36,12 +36,14 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     );
   }
 
-  const libraryInstall = await workspaceLibraryGenerator(tree, {
+  const libraryInstall = await jsLibraryGenerator(tree, {
     ...schema,
     importPath: options.importPath,
     testEnvironment: 'node',
     skipFormat: true,
     setParserOptionsProject: options.setParserOptionsProject,
+    module: 'none',
+    supportTsx: true,
   });
   createFiles(tree, options);
 

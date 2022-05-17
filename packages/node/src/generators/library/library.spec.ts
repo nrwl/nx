@@ -1,14 +1,13 @@
 import {
   getProjects,
-  NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { libraryGenerator } from './library';
 
 import { Schema } from './schema.d';
-import { libraryGenerator } from './library';
 
 const baseLibraryConfig = {
   name: 'myLib',

@@ -68,15 +68,20 @@
             "description": "Do not update tsconfig.json for development experience.",
             "default": false
           },
-          "includeBabelRc": {
+          "skipBabelrc": {
             "type": "boolean",
-            "description": "Include a .babelrc configuration to compile TypeScript files"
+            "description": "Do not generate `.babelrc` file. Useful for Node libraries that are not compiled by Babel."
           },
           "testEnvironment": {
             "type": "string",
             "enum": ["jsdom", "node"],
             "description": "The test environment to use if unitTestRunner is set to jest.",
             "default": "jsdom"
+          },
+          "supportTsx": {
+            "type": "boolean",
+            "description": "Setup `tsx` support.",
+            "default": false
           },
           "importPath": {
             "type": "string",
@@ -125,10 +130,20 @@
             "default": "tsc",
             "description": "The compiler used by the build and test targets"
           },
+          "module": {
+            "type": "string",
+            "enum": ["cjs", "none"],
+            "default": "cjs",
+            "description": "The module type to use for this library"
+          },
           "skipTypeCheck": {
             "type": "boolean",
             "description": "Whether to skip TypeScript type checking for SWC compiler.",
             "default": false
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+            "type": "boolean"
           }
         },
         "required": ["name"],

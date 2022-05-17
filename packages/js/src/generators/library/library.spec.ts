@@ -13,7 +13,7 @@ describe('lib', () => {
   let tree: Tree;
   const defaultOptions: Omit<LibraryGeneratorSchema, 'name'> = {
     skipTsConfig: false,
-    includeBabelRc: false,
+    skipBabelrc: true,
     unitTestRunner: 'jest',
     skipFormat: false,
     linter: 'eslint',
@@ -877,39 +877,39 @@ describe('lib', () => {
       });
     });
 
-    describe('--includeBabelRc', () => {
-      it('should generate a .babelrc when flag is set to true', async () => {
+    describe('--skipBabelrc', () => {
+      it('should generate a .babelrc when flag is set to false', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          includeBabelRc: true,
+          skipBabelrc: false,
         });
 
         expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
       });
 
-      it('should not generate a .babelrc when flag is set to false', async () => {
+      it('should not generate a .babelrc when flag is set to true', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          includeBabelRc: false,
+          skipBabelrc: true,
         });
 
         expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
       });
 
-      it('should not generate a .babelrc when compiler is swc (even if flag is set to true)', async () => {
+      it('should not generate a .babelrc when compiler is swc (even if flag is set to false)', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
           compiler: 'swc',
-          includeBabelRc: true,
+          skipBabelrc: false,
         });
 
         expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
       });
 
-      it('should generate a .babelrc when flag is set to true (even if there is no `@nrwl/web` plugin installed)', async () => {
+      it('should generate a .babelrc when flag is set to false (even if there is no `@nrwl/web` plugin installed)', async () => {
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies = {};
           return json;
@@ -918,7 +918,7 @@ describe('lib', () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          includeBabelRc: true,
+          skipBabelrc: false,
         });
 
         expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
@@ -951,7 +951,7 @@ describe('lib', () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          includeBabelRc: undefined,
+          skipBabelrc: undefined,
         });
 
         expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
@@ -970,6 +970,7 @@ describe('lib', () => {
           }
         `);
       });
+
       it('should not generate a .babelrc when flag is not set and there is NOT a `@nrwl/web` package installed', async () => {
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies = {
@@ -982,10 +983,26 @@ describe('lib', () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          includeBabelRc: undefined,
+          skipBabelrc: undefined,
         });
 
         expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
+      });
+    });
+
+    describe('--module', () => {
+      it('should generate commonjs library', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'cjsLib',
+          buildable: true,
+        });
+
+        const packageJson = readJson(tree, 'libs/cjs-lib/package.json');
+        expect(packageJson.type).toEqual('commonjs');
+
+        const tsconfigJson = readJson(tree, 'libs/cjs-lib/tsconfig.json');
+        expect(tsconfigJson.compilerOptions.module).toEqual('commonjs');
       });
     });
   });
