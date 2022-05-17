@@ -98,7 +98,7 @@ To add Tailwind CSS to an existing Angular application, buildable library or pub
 npx nx g @nrwl/angular:setup-tailwind my-project
 ```
 
-You can see the available options for the above generator in [its docs](/angular/setup-tailwind).
+You can see the available options for the above generator in [its docs](/packages/angular/generators/setup-tailwind).
 
 ## Tailwind CSS setup scenarios
 

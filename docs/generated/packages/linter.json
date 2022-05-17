@@ -10,7 +10,7 @@
       "name": "Overview",
       "path": "/packages/linter",
       "file": "shared/linter-plugin",
-      "content": "The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.\n\n## Setting Up Linter\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/linter` by running the following commands if `@nrwl/linter` package is not installed:\n\n```bash\nnpm i --save-dev @nrwl/linter\n```\n\n```bash\nyarn add --dev @nrwl/linter\n```\n\n## Lint\n\nYou can lint an application or a library with the following command:\n\n```bash\nnx lint my-app\n```\n\n```bash\nnx lint my-lib\n```\n\n## Utils\n\n- [convert-tslint-to-eslint](/angular/convert-tslint-to-eslint) - Converts a project linter from [TSLint](https://palantir.github.io/tslint/) to [ESLint](https://eslint.org/)\n"
+      "content": "The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.\n\n## Setting Up Linter\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/linter` by running the following commands if `@nrwl/linter` package is not installed:\n\n```bash\nnpm i --save-dev @nrwl/linter\n```\n\n```bash\nyarn add --dev @nrwl/linter\n```\n\n## Lint\n\nYou can lint an application or a library with the following command:\n\n```bash\nnx lint my-app\n```\n\n```bash\nnx lint my-lib\n```\n\n## Utils\n\n- [convert-tslint-to-eslint](/packages/angular/generators/convert-tslint-to-eslint) - Converts a project linter from [TSLint](https://palantir.github.io/tslint/) to [ESLint](https://eslint.org/)\n"
     },
     {
       "id": "eslint-plugin-nx",

@@ -57,8 +57,8 @@ nx generate @nrwl/react:application my-application
 
 There are a lot of options when creating your application. If you want to follow Nx recommendations, you can accept the defaults. If you have a well-established codebase, you can configure those options at the time of application generation. You can find documentation for these options for the different frameworks here:
 
-- [Angular](/angular/application)
-- [React](/react/application)
+- [Angular](/packages/angular/generators/application)
+- [React](/packages/react/generators/application)
 
 You may also find it useful to use the [Nx Console](/using-nx/console) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
 

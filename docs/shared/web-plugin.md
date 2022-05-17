@@ -30,7 +30,7 @@ The application uses no framework and generates with web components. You can add
 
 To start the application in development mode, run `nx serve my-new-app`.
 
-**Note:** If you are looking to add a React application, check out the [React plugin](/react/overview).
+**Note:** If you are looking to add a React application, check out the [React plugin](/packages/react).
 
 ### Creating Libraries
 
@@ -93,5 +93,5 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
-- [Using Cypress](/cypress/overview)
-- [Using Jest](/cypress/overview)
+- [Using Cypress](/packages/cypress)
+- [Using Jest](/packages/jest)
