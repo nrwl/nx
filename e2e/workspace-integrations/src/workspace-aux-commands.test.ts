@@ -87,7 +87,7 @@ describe('format', () => {
     }
   }, 90000);
 
-  it('should check spoecific project', async () => {
+  it('should check specific project', async () => {
     if (isNotWindows()) {
       const stdout = runCLI(`format:check --projects=${myapp}`, {
         silenceError: true,

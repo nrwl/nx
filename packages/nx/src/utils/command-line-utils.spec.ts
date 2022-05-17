@@ -39,7 +39,6 @@ describe('splitArgs', () => {
       },
       'affected'
     ).nxArgs;
-    expect(nxArgs['nx-key']).toEqual('some-value');
     expect(nxArgs['nxKey']).toEqual('some-value');
   });
 

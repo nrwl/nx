@@ -1,6 +1,6 @@
-module.exports = {
+export default {
   displayName: 'nx-dev-data-access-menu',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',

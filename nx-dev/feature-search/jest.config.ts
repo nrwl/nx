@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   displayName: 'nx-dev-feature-search',
 
   transform: {
@@ -6,5 +6,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/nx-dev/feature-search',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
 };

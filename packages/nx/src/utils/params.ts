@@ -96,11 +96,17 @@ function camelCase(input: string): string {
   }
 }
 
-export function convertToCamelCase(parsed: { [k: string]: any }): Options {
-  return Object.keys(parsed).reduce(
-    (m, c) => ({ ...m, [camelCase(c)]: parsed[c] }),
-    {}
-  );
+export function convertToCamelCase(
+  parsed: { [k: string]: any },
+  schema: Schema
+): Options {
+  return Object.keys(parsed).reduce((m, c) => {
+    if (schema.properties[camelCase(c)]) {
+      return { ...m, [camelCase(c)]: parsed[c] };
+    } else {
+      return { ...m, [c]: parsed[c] };
+    }
+  }, {});
 }
 
 /**
@@ -520,7 +526,7 @@ export function combineOptionsForExecutor(
   isVerbose = false
 ) {
   const r = convertAliases(
-    coerceTypesInOptions(commandLineOpts, schema),
+    coerceTypesInOptions(convertToCamelCase(commandLineOpts, schema), schema),
     schema,
     false
   );
@@ -742,26 +748,6 @@ async function promptForValues(opts: Options, schema: Schema) {
     });
 }
 
-/**
- * Tries to find what the user meant by unmatched commands
- *
- * @param opts The options passed in by the user
- * @param schema The schema definition to check against
- *
- */
-export function lookupUnmatched(opts: Options, schema: Schema): Options {
-  if (opts['--']) {
-    const props = Object.keys(schema.properties);
-
-    opts['--'].forEach((unmatched) => {
-      unmatched.possible = props.filter(
-        (p) => levenshtein(p, unmatched.name) < 3
-      );
-    });
-  }
-  return opts;
-}
-
 function findSchemaForProperty(
   propName: string,
   schema: Schema
@@ -782,37 +768,6 @@ function findSchemaForProperty(
     return { name, description };
   }
   return null;
-}
-
-function levenshtein(a: string, b: string) {
-  if (a.length == 0) {
-    return b.length;
-  }
-  if (b.length == 0) {
-    return a.length;
-  }
-  const matrix = [];
-
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) == a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-  return matrix[b.length][a.length];
 }
 
 function isTTY(): boolean {

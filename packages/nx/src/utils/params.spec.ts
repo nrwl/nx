@@ -7,7 +7,6 @@ import {
   convertAliases,
   convertSmartDefaultsIntoNamedParams,
   convertToCamelCase,
-  lookupUnmatched,
   Schema,
   setDefaults,
   validateOptsAgainstSchema,
@@ -329,16 +328,40 @@ describe('params', () => {
   });
 
   describe('convertToCamelCase', () => {
-    it('should convert dash case to camel case', () => {
+    it('should convert dash case to camel case if the came case property is present in schema', () => {
       expect(
         convertToCamelCase(
           yargsParser(['--one-two', '1'], {
             number: ['oneTwo'],
-          })
+            configuration: {
+              'camel-case-expansion': false,
+            },
+          }),
+          {
+            properties: { oneTwo: 'some object' },
+          } as any
         )
       ).toEqual({
         _: [],
         oneTwo: 1,
+      });
+    });
+
+    it('should not convert dash case to camel case if the came case property is not present in schema', () => {
+      expect(
+        convertToCamelCase(
+          yargsParser(['--one-two', '1'], {
+            configuration: {
+              'camel-case-expansion': false,
+            },
+          }),
+          {
+            properties: {},
+          } as any
+        )
+      ).toEqual({
+        _: [],
+        'one-two': 1,
       });
     });
 
@@ -347,7 +370,13 @@ describe('params', () => {
         convertToCamelCase(
           yargsParser(['--oneTwo', '1'], {
             number: ['oneTwo'],
-          })
+            configuration: {
+              'camel-case-expansion': false,
+            },
+          }),
+          {
+            properties: { oneTwo: 'some object' },
+          } as any
         )
       ).toEqual({
         _: [],
@@ -360,7 +389,13 @@ describe('params', () => {
         convertToCamelCase(
           yargsParser(['--one-Two', '1'], {
             number: ['oneTwo'],
-          })
+            configuration: {
+              'camel-case-expansion': false,
+            },
+          }),
+          {
+            properties: { oneTwo: 'some object' },
+          } as any
         )
       ).toEqual({
         _: [],
@@ -432,62 +467,6 @@ describe('params', () => {
         )
       ).toEqual({
         d: 'test',
-      });
-    });
-  });
-
-  describe('lookupUnmatched', () => {
-    it('should populate the possible array with near matches', () => {
-      expect(
-        lookupUnmatched(
-          {
-            '--': [
-              {
-                name: 'directoy',
-                possible: [],
-              },
-            ],
-          },
-          {
-            properties: { directory: { type: 'string' } },
-            required: [],
-            description: '',
-          }
-        )
-      ).toEqual({
-        '--': [
-          {
-            name: 'directoy',
-            possible: ['directory'],
-          },
-        ],
-      });
-    });
-
-    it('should NOT populate the possible array with far matches', () => {
-      expect(
-        lookupUnmatched(
-          {
-            '--': [
-              {
-                name: 'directoy',
-                possible: [],
-              },
-            ],
-          },
-          {
-            properties: { faraway: { type: 'string' } },
-            required: [],
-            description: '',
-          }
-        )
-      ).toEqual({
-        '--': [
-          {
-            name: 'directoy',
-            possible: [],
-          },
-        ],
       });
     });
   });

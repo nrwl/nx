@@ -171,7 +171,8 @@ export function runCreateWorkspace(
 
   const create = execSync(command, {
     cwd: e2eCwd,
-    stdio: [0, 1, 2],
+    // stdio: [0, 1, 2],
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   });
@@ -212,7 +213,8 @@ export function runCreatePlugin(
 
   const create = execSync(command, {
     cwd: e2eCwd,
-    stdio: [0, 1, 2],
+    //stdio: [0, 1, 2],
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   });
@@ -232,7 +234,8 @@ export function packageInstall(
     .join(' ');
   const install = execSync(`${pm.addDev} ${pkgsWithVersions}`, {
     cwd,
-    stdio: [0, 1, 2],
+    // stdio: [0, 1, 2],
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   });

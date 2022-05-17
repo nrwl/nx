@@ -289,7 +289,7 @@ function transformCommand(
 ) {
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
-    return command.replace(regex, (_, group: string) => args[camelCase(group)]);
+    return command.replace(regex, (_, group: string) => args[group]);
   } else if (Object.keys(args).length > 0 && forwardAllArgs) {
     const stringifiedArgs = Object.keys(args)
       .map((a) =>
@@ -313,16 +313,6 @@ function parseArgs(options: RunCommandsOptions) {
     return unknownOptionsTreatedAsArgs;
   }
   return yargsParser(args.replace(/(^"|"$)/g, ''), {
-    configuration: { 'camel-case-expansion': true },
+    configuration: { 'camel-case-expansion': false },
   });
-}
-
-function camelCase(input) {
-  if (input.indexOf('-') > 1) {
-    return input
-      .toLowerCase()
-      .replace(/-(.)/g, (match, group1) => group1.toUpperCase());
-  } else {
-    return input;
-  }
 }

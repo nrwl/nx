@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   displayName: 'nx-dev-models-package',
 
   globals: {
@@ -12,5 +12,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/nx-dev/models-package',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
 };

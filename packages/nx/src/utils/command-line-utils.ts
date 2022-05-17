@@ -74,14 +74,14 @@ const runOne: string[] = [
   'prod',
   'runner',
   'parallel',
-  'max-parallel',
+  'maxParallel',
   'exclude',
-  'only-failed',
+  'onlyFailed',
   'help',
-  'with-deps',
-  'skip-nx-cache',
+  'withDeps',
+  'skipNxCache',
   'scan',
-  'output-style',
+  'outputStyle',
 ];
 
 const runMany: string[] = [...runOne, 'projects', 'all'];
@@ -144,7 +144,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   const nxArgs: RawNxArgs = {};
   const overrides = yargsParser(args._ as string[], {
     configuration: {
-      'strip-dashed': true,
+      'camel-case-expansion': false,
       'dot-notation': false,
     },
   });
@@ -154,9 +154,9 @@ export function splitArgsIntoNxArgsAndOverrides(
   delete overrides._;
 
   Object.entries(args).forEach(([key, value]) => {
-    const dasherized = names(key).fileName;
-    if (nxSpecific.includes(dasherized) || dasherized.startsWith('nx-')) {
-      if (value !== undefined) nxArgs[key] = value;
+    const camelCased = names(key).propertyName;
+    if (nxSpecific.includes(camelCased) || camelCased.startsWith('nx')) {
+      if (value !== undefined) nxArgs[camelCased] = value;
     } else if (!ignoreArgs.includes(key)) {
       overrides[key] = value;
     }

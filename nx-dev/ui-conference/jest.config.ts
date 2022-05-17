@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   displayName: 'nx-dev-ui-conference',
 
   transform: {
@@ -7,5 +7,5 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/nx-dev/ui-conference',
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
 };
