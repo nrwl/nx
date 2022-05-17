@@ -342,12 +342,12 @@ class ProjectHasher {
           })
         )
       ).filter((r) => !!r);
-      const filterForProject =
-        filter === 'all-files'
-          ? 'all-files'
-          : filter === 'exclude-tests-of-deps' && visited[0] === projectName
-          ? 'all-files'
-          : 'exclude-tests';
+      let filterForProject: 'all-files' | 'exclude-tests' = 'all-files';
+      if (filter === 'exclude-tests-of-deps' && visited[0] === projectName) {
+        filterForProject = 'exclude-tests';
+      } else if (filter === 'exclude-tests-of-all') {
+        filterForProject = 'exclude-tests';
+      }
       const projectHash = await this.hashProjectNodeSource(
         projectName,
         filterForProject

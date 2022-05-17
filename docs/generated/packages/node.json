@@ -511,6 +511,7 @@
         },
         "presets": []
       },
+      "hasher": "./src/executors/webpack/hasher",
       "description": "Build a Node application using Webpack.",
       "aliases": [],
       "hidden": false,

@@ -3,6 +3,7 @@
     "webpack": {
       "implementation": "./src/executors/webpack/webpack.impl",
       "schema": "./src/executors/webpack/schema.json",
+      "hasher": "./src/executors/webpack/hasher",
       "description": "Build a Node application using Webpack."
     },
     "node": {
