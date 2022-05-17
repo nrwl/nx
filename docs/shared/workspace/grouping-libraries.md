@@ -12,7 +12,7 @@ For instance, if a library under the `booking` folder is now being shared by mul
 nx g move --project booking-some-library shared/some-library
 ```
 
-> **Note**: For Angular projects, you should use the [`@nrwl/angular:move` generator](/angular/move) instead.
+> **Note**: For Angular projects, you should use the [`@nrwl/angular:move` generator](/packages/angular/generators/move) instead.
 
 ## Remove Generator
 

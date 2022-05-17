@@ -17,9 +17,9 @@ It is also a good idea to read the [mental model guide](/using-nx/mental-model) 
 
 ## Nx and Angular Plugins
 
-Nx plugins helps you develop [Angular](/angular/overview) applications with fully integrated support for
+Nx plugins helps you develop [Angular](/packages/angular) applications with fully integrated support for
 modern tools and libraries like [Jest](/jest/overview), [Cypress](/cypress/overview),
-[ESLint](/linter/eslint), Storybook, [NgRx](/angular/guides/misc-ngrx) and more.
+[ESLint](/linter/eslint), [Storybook](/packages/storybook), [NgRx](/guides/misc-ngrx) and more.
 
 <iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/cXOkmOy-8dk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
