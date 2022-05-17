@@ -1,5 +1,5 @@
 import { vol } from 'memfs';
-import { Workspace } from 'nx/src/config/workspace-json-project-json';
+import type { Workspace } from '../../config/workspace-json-project-json';
 import { defaultFileHasher } from '../../hasher/file-hasher';
 import { createProjectFileMap } from '../file-map-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
