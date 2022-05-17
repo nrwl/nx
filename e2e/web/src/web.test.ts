@@ -190,7 +190,7 @@ describe('Web Components Applications', () => {
 
   it('should run default jest tests', async () => {
     await expectJestTestsToPass('@nrwl/web:app');
-  });
+  }, 100000);
 });
 
 describe('CLI - Environment Variables', () => {

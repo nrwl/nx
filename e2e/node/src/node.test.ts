@@ -486,5 +486,5 @@ exports.FooModel = FooModel;
 
   it('should run default jest tests', async () => {
     await expectJestTestsToPass('@nrwl/node:lib');
-  });
+  }, 100000);
 });

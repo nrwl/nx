@@ -294,5 +294,5 @@ describe('React Applications and Libs with PostCSS', () => {
   it('should run default jest tests', async () => {
     await expectJestTestsToPass('@nrwl/react:lib');
     await expectJestTestsToPass('@nrwl/react:app');
-  });
+  }, 200000);
 });

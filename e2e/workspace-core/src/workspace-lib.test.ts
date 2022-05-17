@@ -47,7 +47,7 @@ describe('@nrwl/workspace:library', () => {
   describe('unit testing', () => {
     it('should run default jest tests', async () => {
       await expectJestTestsToPass('@nrwl/workspace:lib');
-    });
+    }, 100000);
   });
 
   it('should be able to use and be used by other libs', () => {

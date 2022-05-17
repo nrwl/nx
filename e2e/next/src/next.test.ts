@@ -163,7 +163,7 @@ describe('Next.js Applications', () => {
       `apps/${appName}/pages/index.tsx`,
       `
         import React from 'react';
-        
+
         export const Index = ({ greeting }: any) => {
           return (
             <p>{process.env.NX_CUSTOM_VAR}</p>
@@ -412,7 +412,7 @@ describe('Next.js Applications', () => {
   }, 300000);
   it('should run default jest tests', async () => {
     await expectJestTestsToPass('@nrwl/next:app');
-  });
+  }, 100000);
 });
 
 function getData(port: number, path = ''): Promise<any> {
