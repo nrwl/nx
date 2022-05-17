@@ -100,8 +100,8 @@ function parseRunOneOptions(
     );
     // this is to account for "nx npmsript:dev"
     if (project && !target && defaultProjectName) {
-      project = defaultProjectName;
       target = project;
+      project = defaultProjectName;
     }
   } else {
     target = parsedArgs['project:target:configuration'];
