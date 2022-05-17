@@ -14,11 +14,11 @@ export async function update(tree: Tree) {
       if (!file.endsWith('.spec.ts')) return;
 
       const content = tree.read(file).toString();
-      if (content.includes('@testing-library/react-hook')) {
+      if (content.includes('@testing-library/react-hooks')) {
         tree.write(
           file,
           content.replace(
-            /@testing-library\/react-hook/g,
+            /@testing-library\/react-hooks/g,
             '@testing-library/react'
           )
         );
