@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   displayName: 'nx-dev-ui-community',
 
   transform: {
@@ -6,5 +6,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/nx-dev/ui-community',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
 };

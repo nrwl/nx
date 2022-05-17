@@ -1,5 +1,5 @@
-const nxPreset = require('@nrwl/jest/preset');
-module.exports = {
+const nxPreset = require('@nrwl/jest/preset').default;
+export default {
   ...nxPreset,
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   displayName: 'nx-dev-data-access-documents',

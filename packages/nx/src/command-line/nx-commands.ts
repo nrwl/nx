@@ -17,8 +17,6 @@ yargs.wrap(yargs.terminalWidth());
 
 export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
   'strip-dashed': true,
-  // allow parsing --env.SOME_ARG for cypress cli env args
-  'dot-notation': true,
 };
 
 /**
@@ -312,6 +310,9 @@ ${daemonHelpOutput}
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
   return withAffectedOptions(yargs)
+    .parserConfiguration({
+      'camel-case-expansion': true,
+    })
     .option('libs-and-apps', {
       describe: 'Format only libraries and applications files.',
       type: 'boolean',
@@ -346,6 +347,11 @@ function withPlainOption(yargs: yargs.Argv): yargs.Argv {
 
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
+    .parserConfiguration({
+      'camel-case-expansion': false,
+      // allow parsing --env.SOME_ARG for cypress cli env args
+      'dot-notation': true,
+    })
     .option('files', {
       describe:
         'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas',
@@ -429,6 +435,11 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
 
 function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
+    .parserConfiguration({
+      'camel-case-expansion': false,
+      // allow parsing --env.SOME_ARG for cypress cli env args
+      'dot-notation': true,
+    })
     .option('projects', {
       describe: 'Projects to run (comma delimited)',
       type: 'string',
@@ -595,6 +606,11 @@ function withRunOneOptions(yargs: yargs.Argv) {
     process.argv[2] === 'run' && process.argv[3] === '--help'
   );
   const res = yargs
+    .parserConfiguration({
+      'camel-case-expansion': false,
+      // allow parsing --env.SOME_ARG for cypress cli env args
+      'dot-notation': true,
+    })
     .option('prod', {
       describe: 'Use the production configuration',
       type: 'boolean',

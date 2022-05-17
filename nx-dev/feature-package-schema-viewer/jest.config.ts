@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   displayName: 'nx-dev-feature-package-schema-viewer',
 
   globals: {
@@ -11,5 +11,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/nx-dev/feature-package-schema-viewer',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
 };

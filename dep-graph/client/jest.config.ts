@@ -1,7 +1,7 @@
 // nx-ignore-next-line
-const nxPreset = require('@nrwl/jest/preset');
+const nxPreset = require('@nrwl/jest/preset').default;
 
-module.exports = {
+export default {
   ...nxPreset,
   displayName: 'dep-graph-client',
   transform: {

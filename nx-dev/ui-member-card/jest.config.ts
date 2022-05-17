@@ -1,6 +1,6 @@
-const nxPreset = require('@nrwl/jest/preset');
+const nxPreset = require('@nrwl/jest/preset').default;
 
-module.exports = {
+export default {
   ...nxPreset,
   displayName: 'nx-dev-ui-member-card',
 
@@ -10,5 +10,5 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/nx-dev/ui-member-card',
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
 };
