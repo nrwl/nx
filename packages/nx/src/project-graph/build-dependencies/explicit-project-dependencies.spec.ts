@@ -173,6 +173,19 @@ describe('explicit project dependencies', () => {
               }
             `,
           },
+          {
+            path: 'libs/proj/component.tsx',
+            content: `              
+              export function App() {
+                import('@proj/my-second-proj')
+                return (
+                  <GlobalStateProvider>
+                    <Shell></Shell>
+                  </GlobalStateProvider>
+                );
+              }
+            `,
+          },
         ],
       });
 
@@ -183,6 +196,11 @@ describe('explicit project dependencies', () => {
       );
 
       expect(res).toEqual([
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/component.tsx',
+          targetProjectName: 'proj2',
+        },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/nested-dynamic-import.ts',
