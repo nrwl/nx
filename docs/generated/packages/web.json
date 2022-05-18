@@ -659,7 +659,7 @@
             "description": "Only build the specified comma-separated formats (`esm,umd,cjs`)",
             "alias": "f",
             "items": { "type": "string", "enum": ["esm", "umd", "cjs"] },
-            "default": ["esm", "umd"]
+            "default": ["esm"]
           },
           "external": {
             "type": "array",

@@ -33,7 +33,7 @@
         "type": "string",
         "enum": ["esm", "umd", "cjs"]
       },
-      "default": ["esm", "umd"]
+      "default": ["esm"]
     },
     "external": {
       "type": "array",

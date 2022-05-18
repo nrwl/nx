@@ -168,7 +168,7 @@ describe('cache', () => {
       };
       config.targets.build = {
         executor: '@nrwl/workspace:run-commands',
-        outputs: [`dist/libs/${mylib1}/index.esm.js`],
+        outputs: [`dist/libs/${mylib1}/index.js`],
         options: {
           commands: [
             {
@@ -193,7 +193,7 @@ describe('cache', () => {
     expect(outputWithBuildTasksCached).toContain('cache');
     expectCached(outputWithBuildTasksCached, [mylib1]);
     // Ensure that only the specific file in outputs was copied to cache
-    expect(listFiles(`dist/libs/${mylib1}`)).toEqual([`index.esm.js`]);
+    expect(listFiles(`dist/libs/${mylib1}`)).toEqual([`index.js`]);
   }, 120000);
 
   function expectCached(

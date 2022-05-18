@@ -104,11 +104,9 @@ describe('Build React libraries and apps', () => {
       runCLI(`build ${childLib}`);
       runCLI(`build ${childLib2}`);
 
-      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
-      checkFilesExist(`dist/libs/${childLib}/index.umd.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.js`);
 
-      checkFilesExist(`dist/libs/${childLib2}/index.esm.js`);
-      checkFilesExist(`dist/libs/${childLib2}/index.umd.js`);
+      checkFilesExist(`dist/libs/${childLib2}/index.js`);
 
       checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
       checkFilesExist(`dist/libs/${childLib2}/README.md`);
@@ -118,8 +116,7 @@ describe('Build React libraries and apps', () => {
        */
       runCLI(`build ${parentLib}`);
 
-      checkFilesExist(`dist/libs/${parentLib}/index.esm.js`);
-      checkFilesExist(`dist/libs/${parentLib}/index.umd.js`);
+      checkFilesExist(`dist/libs/${parentLib}/index.js`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.peerDependencies).toEqual(
@@ -136,9 +133,9 @@ describe('Build React libraries and apps', () => {
 
       runCLI(`build ${parentLib} --skip-nx-cache`);
 
-      checkFilesExist(`dist/libs/${parentLib}/index.esm.js`);
-      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
-      checkFilesExist(`dist/libs/${childLib2}/index.esm.js`);
+      checkFilesExist(`dist/libs/${parentLib}/index.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.js`);
+      checkFilesExist(`dist/libs/${childLib2}/index.js`);
     });
 
     it('should support --format option', () => {
@@ -151,25 +148,20 @@ export async function h() { return 'c'; }
 `
       );
 
-      runCLI(`build ${childLib} --format cjs,esm,umd`);
+      runCLI(`build ${childLib} --format cjs,esm`);
 
-      checkFilesExist(`dist/libs/${childLib}/index.cjs.js`);
-      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
-      checkFilesExist(`dist/libs/${childLib}/index.umd.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.cjs`);
+      checkFilesExist(`dist/libs/${childLib}/index.js`);
 
       const cjsPackageSize = getSize(
-        tmpProjPath(`dist/libs/${childLib}/index.cjs.js`)
+        tmpProjPath(`dist/libs/${childLib}/index.cjs`)
       );
       const esmPackageSize = getSize(
-        tmpProjPath(`dist/libs/${childLib}/index.esm.js`)
-      );
-      const umdPackageSize = getSize(
-        tmpProjPath(`dist/libs/${childLib}/index.umd.js`)
+        tmpProjPath(`dist/libs/${childLib}/index.js`)
       );
 
-      // This is a loose requirement that ESM and CJS packages should be less than the UMD counterpart.
-      expect(esmPackageSize).toBeLessThanOrEqual(umdPackageSize);
-      expect(cjsPackageSize).toBeLessThanOrEqual(umdPackageSize);
+      // This is a loose requirement that ESM should be smaller than CJS output.
+      expect(esmPackageSize).toBeLessThanOrEqual(cjsPackageSize);
     });
 
     it('should preserve the tsconfig target set by user', () => {
@@ -214,7 +206,7 @@ export async function h() { return 'c'; }
       // What we're testing
       runCLI(`build ${myLib}`);
       // Assertion
-      const content = readFile(`dist/libs/${myLib}/index.esm.js`);
+      const content = readFile(`dist/libs/${myLib}/index.js`);
 
       /**
        * Then check if the result contains this "promise" polyfill?
