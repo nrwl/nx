@@ -29,7 +29,7 @@ export function getBarrelEntryPointByImportScope(
 }
 
 export function getBarrelEntryPointProjectNode(
-  importScope: MappedProjectGraphNode<any>
+  projectNode: MappedProjectGraphNode<any>
 ): { path: string; importScope: string }[] | null {
   const tsConfigBase = tryReadBaseJson();
 
@@ -38,7 +38,10 @@ export function getBarrelEntryPointProjectNode(
       .filter((entry) => {
         const sourceFolderPaths = tsConfigBase.compilerOptions.paths[entry];
         return sourceFolderPaths.some((sourceFolderPath) => {
-          return sourceFolderPath.includes(importScope.data.root);
+          return (
+            sourceFolderPath === projectNode.data.sourceRoot ||
+            sourceFolderPath.indexOf(`${projectNode.data.sourceRoot}/`) === 0
+          );
         });
       })
       .map((entry) =>
