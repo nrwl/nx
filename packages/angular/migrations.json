@@ -1071,6 +1071,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.1.8": {
+      "version": "14.1.8-beta.0",
+      "packages": {
+        "postcss-import": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "postcss-preset-env": {
+          "version": "~7.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "postcss-url": {
+          "version": "~10.1.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

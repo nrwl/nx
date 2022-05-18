@@ -79,7 +79,7 @@
     "parse5": "4.0.0",
     "parse5-html-rewriting-stream": "6.0.1",
     "postcss": "^8.2.13",
-    "postcss-import": "14.0.2",
+    "postcss-import": "~14.1.0",
     "postcss-loader": "^6.1.1",
     "raw-loader": "^4.0.2",
     "rxjs": "^6.5.4",
