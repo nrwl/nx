@@ -288,7 +288,10 @@ export function newProject({
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
-        updateFile('.npmrc', 'prefer-frozen-lockfile=false');
+        updateFile(
+          '.npmrc',
+          'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false'
+        );
       }
 
       const packages = [
