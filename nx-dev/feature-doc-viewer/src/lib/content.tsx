@@ -1,5 +1,5 @@
-import { DocumentData } from '@nrwl/nx-dev/data-access-documents';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
+import { DocumentData } from '@nrwl/nx-dev/models-document';
 import { ReactComponentElement } from 'react';
 import ReactMarkdown from 'react-markdown';
 import autolinkHeadings from 'rehype-autolink-headings';
