@@ -1,6 +1,5 @@
 export default {
   displayName: 'nx-dev-feature-package-schema-viewer',
-
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',

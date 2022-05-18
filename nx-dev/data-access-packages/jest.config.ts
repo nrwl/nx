@@ -1,7 +1,4 @@
-const nxPreset = require('@nrwl/jest/preset').default;
 export default {
-  ...nxPreset,
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   displayName: 'nx-dev-data-access-packages',
   globals: {
     'ts-jest': {
@@ -13,4 +10,5 @@ export default {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/nx-dev/data-access-packages',
+  preset: '../../jest.preset.js',
 };

@@ -1,6 +1,5 @@
 export default {
   displayName: 'nx-dev-feature-search',
-
   transform: {
     '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nrwl/next/babel'] }],
   },

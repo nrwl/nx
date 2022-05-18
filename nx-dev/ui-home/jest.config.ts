@@ -1,6 +1,5 @@
 export default {
   displayName: 'nx-dev-ui-home',
-
   transform: {
     '^.+\\.[tj]sx?$': 'babel-jest',
   },
