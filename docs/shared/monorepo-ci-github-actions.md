@@ -65,7 +65,7 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.4
     with:
       parallel-commands: |
         npx nx-cloud record -- npx nx workspace-lint
@@ -77,7 +77,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.2
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.4
     with:
       number-of-agents: 3
 ```
