@@ -3,6 +3,12 @@ import { buildExplicitPackageJsonDependencies } from './explicit-package-json-de
 import { ProjectFileMap, ProjectGraph } from '../../config/project-graph';
 import { Workspace } from '../../config/workspace-json-project-json';
 
+export interface ExplicitDependency {
+  sourceProjectName: string;
+  targetProjectName: string;
+  sourceProjectFile: string;
+}
+
 export function buildExplicitTypescriptAndPackageJsonDependencies(
   jsPluginConfig: {
     analyzeSourceFiles?: boolean;
@@ -11,7 +17,7 @@ export function buildExplicitTypescriptAndPackageJsonDependencies(
   workspace: Workspace,
   projectGraph: ProjectGraph,
   filesToProcess: ProjectFileMap
-) {
+): ExplicitDependency[] {
   let res = [];
   if (
     jsPluginConfig.analyzeSourceFiles === undefined ||

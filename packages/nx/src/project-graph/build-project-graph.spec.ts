@@ -105,7 +105,7 @@ describe('project graph', () => {
       `,
       './apps/demo/src/index.ts': stripIndents`
         import * as ui from '@nrwl/ui';
-        import * as data from '@nrwl/shared-util-data;
+        import * as data from '@nrwl/shared-util-data';
         const s = { loadChildren: '@nrwl/lazy-lib#LAZY' }
       `,
       './apps/demo-e2e/src/integration/app.spec.ts': stripIndents`
