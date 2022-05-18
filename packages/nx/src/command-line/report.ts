@@ -31,7 +31,6 @@ export const packagesWeCareAbout = [
   '@nrwl/web',
   '@nrwl/workspace',
   'typescript',
-  'rxjs',
 ];
 
 export const patternsWeIgnoreInCommunityReport: Array<string | RegExp> = [

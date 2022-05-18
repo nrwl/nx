@@ -9,6 +9,7 @@ const IGNORE_MATCHES = {
     'prettier',
     'typescript',
     'dotenv',
+    'rxjs',
   ],
   angular: [
     '@angular-devkit/architect',
