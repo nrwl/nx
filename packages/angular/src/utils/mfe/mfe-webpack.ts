@@ -79,7 +79,11 @@ export function shareWorkspaceLibraries(
 
         for (const library of pathMappings) {
           const libFolder = normalize(dirname(library.path));
-          if (!from.startsWith(libFolder) && to.startsWith(libFolder)) {
+          if (
+            !from.startsWith(libFolder) &&
+            to.startsWith(libFolder) &&
+            !library.name.endsWith('/*')
+          ) {
             req.request = library.name;
           }
         }
