@@ -12,56 +12,44 @@ import {
 import * as ts from 'typescript';
 
 describe('Linter', () => {
-  describe('linting errors', () => {
+  it('should handle linting errors', () => {
     const myapp = uniq('myapp');
 
-    beforeAll(() => {
-      newProject();
-      runCLI(`generate @nrwl/react:app ${myapp}`);
-      updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
+    newProject();
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+    // create faulty file
+    updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
+    const eslintrc = readJson('.eslintrc.json');
+
+    // set the eslint rules to error
+    eslintrc.overrides.forEach((override) => {
+      if (override.files.includes('*.ts')) {
+        override.rules['no-console'] = 'error';
+      }
     });
+    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
-    describe('console error on', () => {
-      beforeAll(() => {
-        const eslintrc = readJson('.eslintrc.json');
-        eslintrc.overrides.forEach((override) => {
-          if (override.files.includes('*.ts')) {
-            override.rules['no-console'] = 'error';
-          }
-        });
-        updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
-      });
+    // 1. linting should error when rules are not followed
+    let out = runCLI(`lint ${myapp}`, { silenceError: true });
+    expect(out).toContain('Unexpected console statement');
 
-      it('linting should error when rules are not followed', () => {
-        const out = runCLI(`lint ${myapp}`, { silenceError: true });
-        expect(out).toContain('Unexpected console statement');
-      }, 1000000);
+    // 2. linting should not error when rules are not followed and the force flag is specified
+    expect(() => runCLI(`lint ${myapp} --force`)).not.toThrow();
 
-      it('linting should not error when rules are not followed and the force flag is specified', () => {
-        expect(() => runCLI(`lint ${myapp} --force`)).not.toThrow();
-      }, 1000000);
+    eslintrc.overrides.forEach((override) => {
+      if (override.files.includes('*.ts')) {
+        override.rules['no-console'] = undefined;
+      }
     });
+    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
-    describe('console error off', () => {
-      beforeAll(() => {
-        const eslintrc = readJson('.eslintrc.json');
-        eslintrc.overrides.forEach((override) => {
-          if (override.files.includes('*.ts')) {
-            override.rules['no-console'] = undefined;
-          }
-        });
-        updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
-      });
+    // 3. linting should not error when all rules are followed
+    out = runCLI(`lint ${myapp}`, { silenceError: true });
+    expect(out).toContain('All files pass linting');
+  }, 1000000);
 
-      it('linting should not error when all rules are followed', () => {
-        const out = runCLI(`lint ${myapp}`, { silenceError: true });
-        expect(out).toContain('All files pass linting');
-      }, 1000000);
-    });
-  });
-
-  describe('linting with --cache', () => {
-    function readCacheFile(cacheFile = '.eslintcache') {
+  it('should cache eslint with --cache', () => {
+    function readCacheFile(cacheFile) {
       const cacheInfo = readFile(cacheFile);
       return process.platform === 'win32'
         ? cacheInfo.replace(/\\\\/g, '\\')
@@ -69,32 +57,26 @@ describe('Linter', () => {
     }
     const myapp = uniq('myapp');
 
-    beforeAll(() => {
-      newProject();
-      runCLI(`generate @nrwl/react:app ${myapp}`);
+    newProject();
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+
+    // should generate a default cache file
+    expect(() => checkFilesExist(`.eslintcache`)).toThrow();
+    runCLI(`lint ${myapp} --cache`, { silenceError: true });
+    expect(() => checkFilesExist(`.eslintcache`)).not.toThrow();
+    expect(readCacheFile(`.eslintcache`)).toContain(
+      path.normalize(`${myapp}/src/app/app.spec.tsx`)
+    );
+
+    // should let you specify a cache file location
+    expect(() => checkFilesExist(`my-cache`)).toThrow();
+    runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
+      silenceError: true,
     });
-
-    it('should generate a default cache file', () => {
-      expect(() => checkFilesExist(`.eslintcache`)).toThrow();
-      runCLI(`lint ${myapp} --cache`, { silenceError: true });
-      expect(() => checkFilesExist(`.eslintcache`)).not.toThrow();
-      const cacheInfo = readCacheFile();
-      expect(cacheInfo).toContain(
-        path.normalize(`${myapp}/src/app/app.spec.tsx`)
-      );
-    }, 1000000);
-
-    it('should let you specify a cache file location', () => {
-      expect(() => checkFilesExist(`my-cache`)).toThrow();
-      runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
-        silenceError: true,
-      });
-      expect(() => checkFilesExist(`my-cache`)).not.toThrow();
-      const cacheInfo = readCacheFile('my-cache');
-      expect(cacheInfo).toContain(
-        path.normalize(`${myapp}/src/app/app.spec.tsx`)
-      );
-    }, 1000000);
+    expect(() => checkFilesExist(`my-cache`)).not.toThrow();
+    expect(readCacheFile('my-cache')).toContain(
+      path.normalize(`${myapp}/src/app/app.spec.tsx`)
+    );
   });
 
   it('linting should generate an output file with a specific format', () => {
@@ -135,63 +117,61 @@ describe('Linter', () => {
     );
   }, 1000000);
 
-  describe('workspace lint rules', () => {
-    it('should supporting creating, testing and using workspace lint rules', () => {
-      const myapp = uniq('myapp');
-      const mylib = uniq('mylib');
+  it('should support creating, testing and using workspace lint rules', () => {
+    const myapp = uniq('myapp');
+    const mylib = uniq('mylib');
 
-      const messageId = 'e2eMessageId';
-      const libMethodName = 'getMessageId';
+    const messageId = 'e2eMessageId';
+    const libMethodName = 'getMessageId';
 
-      const projScope = newProject();
-      runCLI(`generate @nrwl/react:app ${myapp}`);
-      runCLI(`generate @nrwl/workspace:lib ${mylib}`);
-      // add custom function
-      updateFile(
-        `libs/${mylib}/src/lib/${mylib}.ts`,
-        `export const ${libMethodName} = (): '${messageId}' => '${messageId}';`
-      );
+    const projScope = newProject();
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+    // add custom function
+    updateFile(
+      `libs/${mylib}/src/lib/${mylib}.ts`,
+      `export const ${libMethodName} = (): '${messageId}' => '${messageId}';`
+    );
 
-      // Generate a new rule (should also scaffold the required workspace project and tests)
-      const newRuleName = 'e2e-test-rule-name';
-      runCLI(`generate @nrwl/linter:workspace-rule ${newRuleName}`);
+    // Generate a new rule (should also scaffold the required workspace project and tests)
+    const newRuleName = 'e2e-test-rule-name';
+    runCLI(`generate @nrwl/linter:workspace-rule ${newRuleName}`);
 
-      // Ensure that the unit tests for the new rule are runnable
-      const unitTestsOutput = runCLI(`test eslint-rules`);
-      expect(unitTestsOutput).toContain('Successfully ran target test');
+    // Ensure that the unit tests for the new rule are runnable
+    const unitTestsOutput = runCLI(`test eslint-rules`);
+    expect(unitTestsOutput).toContain('Successfully ran target test');
 
-      // Update the rule for the e2e test so that we can assert that it produces the expected lint failure when used
-      const knownLintErrorMessage = 'e2e test known error message';
-      const newRulePath = `tools/eslint-rules/rules/${newRuleName}.ts`;
-      const newRuleGeneratedContents = readFile(newRulePath);
-      const updatedRuleContents = updateGeneratedRuleImplementation(
-        newRulePath,
-        newRuleGeneratedContents,
-        knownLintErrorMessage,
-        messageId,
-        libMethodName,
-        `@${projScope}/${mylib}`
-      );
-      updateFile(newRulePath, updatedRuleContents);
+    // Update the rule for the e2e test so that we can assert that it produces the expected lint failure when used
+    const knownLintErrorMessage = 'e2e test known error message';
+    const newRulePath = `tools/eslint-rules/rules/${newRuleName}.ts`;
+    const newRuleGeneratedContents = readFile(newRulePath);
+    const updatedRuleContents = updateGeneratedRuleImplementation(
+      newRulePath,
+      newRuleGeneratedContents,
+      knownLintErrorMessage,
+      messageId,
+      libMethodName,
+      `@${projScope}/${mylib}`
+    );
+    updateFile(newRulePath, updatedRuleContents);
 
-      const newRuleNameForUsage = `@nrwl/nx/workspace/${newRuleName}`;
+    const newRuleNameForUsage = `@nrwl/nx/workspace/${newRuleName}`;
 
-      // Add the new workspace rule to the lint config and run linting
-      const eslintrc = readJson('.eslintrc.json');
-      eslintrc.overrides.forEach((override) => {
-        if (override.files.includes('*.ts')) {
-          override.rules[newRuleNameForUsage] = 'error';
-        }
-      });
-      updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+    // Add the new workspace rule to the lint config and run linting
+    const eslintrc = readJson('.eslintrc.json');
+    eslintrc.overrides.forEach((override) => {
+      if (override.files.includes('*.ts')) {
+        override.rules[newRuleNameForUsage] = 'error';
+      }
+    });
+    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
-      const lintOutput = runCLI(`lint ${myapp} --verbose`, {
-        silenceError: true,
-      });
-      expect(lintOutput).toContain(newRuleNameForUsage);
-      expect(lintOutput).toContain(knownLintErrorMessage);
-    }, 1000000);
-  });
+    const lintOutput = runCLI(`lint ${myapp} --verbose`, {
+      silenceError: true,
+    });
+    expect(lintOutput).toContain(newRuleNameForUsage);
+    expect(lintOutput).toContain(knownLintErrorMessage);
+  }, 1000000);
 
   it('lint plugin should ensure module boundaries', () => {
     const proj = newProject();
@@ -288,7 +268,7 @@ describe('Linter', () => {
       export function someNonPublicLibFunction() {
         return 'this function is exported, but not via the libs barrel file';
       }
-      
+
       export function someSelectivelyExportedFn() {
         return 'this fn is exported selectively in the barrel file';
       }
@@ -320,7 +300,7 @@ describe('Linter', () => {
         import { libASayHello } from '../../../${libA}/src/lib/tslib-a';
         // import { someNonPublicLibFunction } from '../../../${libA}/src/lib/some-non-exported-function';
         import { someSelectivelyExportedFn } from '../../../${libA}/src/lib/some-non-exported-function';
-        
+
         export function tslibB(): string {
           // someNonPublicLibFunction();
           someSelectivelyExportedFn();
@@ -339,7 +319,7 @@ describe('Linter', () => {
         `
       export * from './lib/tslib-c';
       export * from './lib/constant';
-       
+
       `
       );
 
