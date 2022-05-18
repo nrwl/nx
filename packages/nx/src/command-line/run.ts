@@ -209,7 +209,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       },
       isVerbose
     );
-    const { eachValueFrom } = require('rxjs-for-await');
+    const { eachValueFrom } = await import('../adapter/rxjs-for-await');
     return eachValueFrom(observable as any);
   }
 }

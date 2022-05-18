@@ -917,7 +917,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 ### defaultTasksRunner
 
-▸ `Const` **defaultTasksRunner**(`tasks`, `options`, `context?`): `Observable`<`AffectedEvent`\> \| `Promise`<`Object`\>
+▸ `Const` **defaultTasksRunner**(`tasks`, `options`, `context?`): `any`
 
 #### Parameters
 
@@ -933,7 +933,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 #### Returns
 
-`Observable`<`AffectedEvent`\> \| `Promise`<`Object`\>
+`any`
 
 ---
 
