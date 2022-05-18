@@ -27,7 +27,7 @@ export function getResolveRequest(extensions: string[]) {
     const { resolveRequest, ...context } = _context;
 
     const resolvedPath =
-      defaultMetroResolver(context, moduleName, platform, DEBUG) ||
+      defaultMetroResolver(context, realModuleName, platform, DEBUG) ||
       tsconfigPathsResolver(
         context,
         extensions,
@@ -50,17 +50,17 @@ export function getResolveRequest(extensions: string[]) {
  */
 function defaultMetroResolver(
   context: any,
-  moduleName: string,
+  realModuleName: string,
   platform: string,
   debug: boolean
 ) {
   try {
-    return metroResolver.resolve(context, moduleName, platform);
+    return metroResolver.resolve(context, realModuleName, platform);
   } catch {
     if (debug)
       console.log(
         chalk.cyan(
-          `[Nx] Unable to resolve with default Metro resolver: ${moduleName}`
+          `[Nx] Unable to resolve with default Metro resolver: ${realModuleName}`
         )
       );
   }
@@ -141,13 +141,13 @@ let matcher: MatchPath;
 let absoluteBaseUrl: string;
 let paths: Record<string, string[]>;
 
-function getMatcher(DEBUG: boolean) {
+function getMatcher(debug: boolean) {
   if (!matcher) {
     const result = loadConfig();
     if (result.resultType === 'success') {
       absoluteBaseUrl = result.absoluteBaseUrl;
       paths = result.paths;
-      if (DEBUG) {
+      if (debug) {
         console.log(
           chalk.cyan(`[Nx] Located tsconfig at ${chalk.bold(absoluteBaseUrl)}`)
         );
