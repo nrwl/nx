@@ -1,6 +1,5 @@
 export default {
   displayName: 'nx-dev-ui-conference',
-
   transform: {
     '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nrwl/next/babel'] }],
   },

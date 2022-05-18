@@ -1,6 +1,5 @@
 export default {
   displayName: 'nx-dev-ui-commands',
-
   transform: {
     '^.+\\.[tj]sx?$': 'babel-jest',
   },

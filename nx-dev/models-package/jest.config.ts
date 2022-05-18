@@ -1,6 +1,5 @@
 export default {
   displayName: 'nx-dev-models-package',
-
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
