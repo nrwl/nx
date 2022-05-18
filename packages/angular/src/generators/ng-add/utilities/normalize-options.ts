@@ -35,6 +35,13 @@ export function normalizeOptions(
   if (!npmScope) {
     // use the name (scope if exists) in the root package.json
     const { name } = readJson(tree, 'package.json');
+
+    if (!name) {
+      throw new Error(
+        'Add the name-property to your package.json and try again.'
+      );
+    }
+
     npmScope = name.startsWith('@') ? name.split('/')[0].substring(1) : name;
   }
 
