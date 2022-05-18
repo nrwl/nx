@@ -262,7 +262,7 @@ describe('js e2e', () => {
 
   it('should not create a `.babelrc` file when creating libs with js executors (--compiler=tsc)', () => {
     const lib = uniq('lib');
-    runCLI(`generate @nrwl/js:lib ${lib} --compiler=tsc --skipBabelRc=true`);
+    runCLI(`generate @nrwl/js:lib ${lib} --compiler=tsc --skipBabelrc`);
 
     checkFilesDoNotExist(`libs/${lib}/.babelrc`);
   });
