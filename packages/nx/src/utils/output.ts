@@ -36,6 +36,7 @@ if (isCI() && !forceColor) {
 
 class CLIOutput {
   readonly X_PADDING = ' ';
+  cliName = 'NX';
 
   /**
    * Longer dash character which forms more of a continuous line when place side to side
@@ -95,12 +96,12 @@ class CLIOutput {
     let nxPrefix = '';
     if (chalk[color]) {
       nxPrefix = `${chalk[color]('>')} ${chalk.reset.inverse.bold[color](
-        ' NX '
+        ` ${this.cliName} `
       )}`;
     } else {
       nxPrefix = `${chalk.keyword(color)(
         '>'
-      )} ${chalk.reset.inverse.bold.keyword(color)(' NX ')}`;
+      )} ${chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `)}`;
     }
     return `${nxPrefix}  ${text}`;
   }
