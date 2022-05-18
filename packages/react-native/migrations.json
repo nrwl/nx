@@ -566,6 +566,10 @@
     "14.1.8": {
       "version": "14.1.8-beta.0",
       "packages": {
+        "react-native": {
+          "version": "0.68.2",
+          "alwaysAddToPackageJson": false
+        },
         "metro": {
           "version": "0.70.3",
           "alwaysAddToPackageJson": false

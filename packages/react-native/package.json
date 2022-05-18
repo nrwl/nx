@@ -40,7 +40,7 @@
     "tsconfig-paths": "^3.9.0"
   },
   "peerDependencies": {
-    "react-native": "^0.68.1"
+    "react-native": "^0.68.2"
   },
   "builders": "./executors.json",
   "ng-update": {
