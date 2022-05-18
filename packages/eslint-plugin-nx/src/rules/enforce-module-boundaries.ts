@@ -267,11 +267,13 @@ export default createESLintRule<Options, MessageIds>({
                       entryPointPath.path,
                       sourceProject.data.sourceRoot
                     );
-
-                    importsToRemap.push({
-                      member: importMember,
-                      importPath: importPath ? entryPointPath.importScope : imp, // we cannot remap, so leave it as is
-                    });
+                    // we cannot remap, so leave it as is
+                    if (importPath) {
+                      importsToRemap.push({
+                        member: importMember,
+                        importPath: entryPointPath.importScope,
+                      });
+                    }
                   }
                 }
 
