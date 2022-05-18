@@ -13,6 +13,7 @@ import {
   updateTsConfigsToJs,
 } from '@nrwl/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js/generators';
+import { shouldDefaultToUsingStandaloneConfigs } from 'nx/src/generators/utils/project-configuration';
 import { join } from 'path';
 
 import { Schema } from './schema';
@@ -44,7 +45,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     setParserOptionsProject: options.setParserOptionsProject,
     module: 'none',
     supportTsx: true,
-    config: options.standaloneConfig ? 'project' : 'workspace',
+    config: options.standaloneConfig === false ? 'workspace' : 'project',
   });
   createFiles(tree, options);
 
@@ -84,6 +85,9 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
 
   const importPath =
     options.importPath || `@${defaultPrefix}/${projectDirectory}`;
+
+  options.standaloneConfig =
+    options.standaloneConfig ?? shouldDefaultToUsingStandaloneConfigs(tree);
 
   return {
     ...options,
