@@ -69,15 +69,13 @@ export function findAllAngularProjectsWithStorybookConfiguration(tree: Tree): {
         '@storybook/angular'
     )
     ?.map(([projectName, projectConfig]) => {
-      if (projectConfig?.targets?.storybook) {
-        return {
-          name: projectName,
-          configFolder:
-            projectConfig.targets.storybook?.options?.config?.configFolder,
-          projectRoot: projectConfig.root,
-          projectSrc: projectConfig.sourceRoot,
-        };
-      }
+      return {
+        name: projectName,
+        configFolder:
+          projectConfig.targets.storybook?.options?.config?.configFolder,
+        projectRoot: projectConfig.root,
+        projectSrc: projectConfig.sourceRoot,
+      };
     });
   return projectsThatHaveStorybookConfiguration;
 }

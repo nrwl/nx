@@ -33,20 +33,18 @@ export function migrateAllStorybookInstances(tree: Tree) {
   }[] = [...projects.entries()]
     .filter(
       ([_, projectConfig]) =>
-        projectConfig.targets &&
-        projectConfig.targets.storybook &&
-        projectConfig.targets.storybook.executor !==
+        projectConfig?.targets?.storybook &&
+        projectConfig?.targets?.storybook?.executor !==
           '@nrwl/react-native:storybook'
     )
     .map(([projectName, projectConfig]) => {
-      if (projectConfig.targets && projectConfig.targets.storybook) {
-        return {
-          name: projectName,
-          uiFramework: projectConfig.targets.storybook.options.uiFramework,
-          configFolder:
-            projectConfig.targets.storybook.options.config.configFolder,
-        };
-      }
+      return {
+        name: projectName,
+        uiFramework: projectConfig?.targets?.storybook?.options?.uiFramework,
+        configFolder:
+          projectConfig?.targets?.storybook?.options?.config?.configFolder ??
+          '',
+      };
     });
 
   for (const projectWithStorybook of projectsThatHaveStorybookConfiguration) {
@@ -168,7 +166,7 @@ function migrateProjectLevelStorybookInstance(
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   const projectDirectory = projectType === 'application' ? 'app' : 'lib';
   const old_folder_exists_already = tree.exists(
-    configFolder.replace('.storybook', '.old_storybook')
+    configFolder?.replace('.storybook', '.old_storybook')
   );
   const new_config_exists_already = tree.exists(`${configFolder}/main.js`);
 

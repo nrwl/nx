@@ -228,18 +228,7 @@
         "presets": [
           {
             "name": "Default minimum setup",
-            "keys": ["uiFramework", "port", "projectBuildConfig", "config"]
-          },
-          {
-            "name": "Angular setup with styles",
-            "keys": [
-              "uiFramework",
-              "port",
-              "projectBuildConfig",
-              "config",
-              "styles",
-              "stylePreprocessorOptions"
-            ]
+            "keys": ["uiFramework", "port", "config"]
           }
         ],
         "properties": {
@@ -254,7 +243,7 @@
               "@storybook/vue3",
               "@storybook/svelte"
             ],
-            "default": "@storybook/angular",
+            "default": "@storybook/react",
             "hidden": true
           },
           "port": {
@@ -290,10 +279,6 @@
             "description": "Directory where to load static files from, array of strings.",
             "items": { "type": "string" },
             "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
-          },
-          "projectBuildConfig": {
-            "type": "string",
-            "description": "Workspace project where Storybook reads the Webpack config from."
           },
           "config": {
             "type": "object",
@@ -347,30 +332,22 @@
         "presets": [
           {
             "name": "Default minimum setup",
-            "keys": [
-              "uiFramework",
-              "outputPath",
-              "projectBuildConfig",
-              "config"
-            ]
-          },
-          {
-            "name": "Angular setup with styles",
-            "keys": [
-              "uiFramework",
-              "outputPath",
-              "projectBuildConfig",
-              "config",
-              "styles",
-              "stylePreprocessorOptions"
-            ]
+            "keys": ["uiFramework", "outputPath", "config"]
           }
         ],
         "properties": {
           "uiFramework": {
             "type": "string",
             "description": "Storybook framework npm package.",
-            "default": "@storybook/angular",
+            "enum": [
+              "@storybook/react",
+              "@storybook/html",
+              "@storybook/web-components",
+              "@storybook/vue",
+              "@storybook/vue3",
+              "@storybook/svelte"
+            ],
+            "default": "@storybook/react",
             "hidden": true
           },
           "outputPath": {
@@ -383,7 +360,7 @@
           },
           "styles": {
             "type": "array",
-            "description": "Global styles to be included in the build. This is for Angular projects only. It will be ignored in non-Angular projects.",
+            "description": "Global styles to be included in the build.",
             "items": {
               "oneOf": [
                 {
@@ -417,7 +394,7 @@
             "properties": {
               "includePaths": {
                 "type": "array",
-                "description": "The paths to include. Paths will be resolved to workspace root. This is for Angular projects only. It will be ignored in non-Angular projects.",
+                "description": "The paths to include. Paths will be resolved to workspace root.",
                 "items": { "type": "string" }
               }
             }
