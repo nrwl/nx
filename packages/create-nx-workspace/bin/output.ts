@@ -1,29 +1,7 @@
-/*
- * Because we don't want to depend on @nrwl/workspace (to speed up the workspace creation)
- * we duplicate the helper functions from @nrwl/workspace in this file.
- */
-
 import * as chalk from 'chalk';
 import { EOL } from 'os';
-
-export function isCI() {
-  return (
-    process.env.CI === 'true' ||
-    process.env.TF_BUILD === 'true' ||
-    process.env['bamboo.buildKey'] ||
-    process.env.BUILDKITE === 'true' ||
-    process.env.CIRCLECI === 'true' ||
-    process.env.CIRRUS_CI === 'true' ||
-    process.env.CODEBUILD_BUILD_ID ||
-    process.env.GITHUB_ACTIONS === 'true' ||
-    process.env.GITLAB_CI ||
-    process.env.HEROKU_TEST_RUN_ID ||
-    process.env.BUILD_ID ||
-    process.env.BUILD_BUILDID ||
-    process.env.TEAMCITY_VERSION ||
-    process.env.TRAVIS === 'true'
-  );
-}
+import { isCI } from './is-ci';
+import { TaskStatus } from '../tasks-runner/tasks-runner';
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -50,12 +28,15 @@ export interface CLISuccessMessageConfig {
 /**
  * Automatically disable styling applied by chalk if CI=true
  */
-if (isCI()) {
+const forceColor =
+  process.env.FORCE_COLOR === '' || process.env.FORCE_COLOR === 'true';
+if (isCI() && !forceColor) {
   (chalk as any).level = 0;
 }
 
 class CLIOutput {
   readonly X_PADDING = ' ';
+  cliName = 'NX';
 
   /**
    * Longer dash character which forms more of a continuous line when place side to side
@@ -115,12 +96,12 @@ class CLIOutput {
     let nxPrefix = '';
     if (chalk[color]) {
       nxPrefix = `${chalk[color]('>')} ${chalk.reset.inverse.bold[color](
-        ' NX '
+        ` ${this.cliName} `
       )}`;
     } else {
       nxPrefix = `${chalk.keyword(color)(
         '>'
-      )} ${chalk.reset.inverse.bold.keyword(color)(' NX ')}`;
+      )} ${chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `)}`;
     }
     return `${nxPrefix}  ${text}`;
   }
@@ -228,16 +209,35 @@ class CLIOutput {
     this.addNewline();
   }
 
-  logCommand(message: string) {}
+  logCommand(message: string, taskStatus?: TaskStatus) {
+    // normalize the message
+    if (message.startsWith('nx run ')) {
+      message = message.substring('nx run '.length);
+    } else if (message.startsWith('run ')) {
+      message = message.substring('run '.length);
+    }
+
+    this.addNewline();
+    let commandOutput = `${chalk.dim('> nx run')} ${message}`;
+    if (taskStatus === 'local-cache') {
+      commandOutput += `  ${chalk.dim('[local cache]')}`;
+    } else if (taskStatus === 'remote-cache') {
+      commandOutput += `  ${chalk.dim('[remote cache]')}`;
+    } else if (taskStatus === 'local-cache-kept-existing') {
+      commandOutput += `  ${chalk.dim(
+        '[existing outputs match the cache, left as is]'
+      )}`;
+    }
+    this.writeToStdOut(commandOutput);
+    this.addNewline();
+  }
 
   log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
     this.addNewline();
 
-    color = color || 'white';
-
     this.writeOutputTitle({
       color: 'cyan',
-      title: chalk[color](title),
+      title: color ? chalk[color](title) : title,
     });
 
     this.writeOptionalOutputBody(bodyLines);
