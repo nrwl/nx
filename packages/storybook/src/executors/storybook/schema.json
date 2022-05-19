@@ -25,7 +25,6 @@
       "type": "string",
       "description": "Storybook framework npm package.",
       "enum": [
-        "@storybook/angular",
         "@storybook/react",
         "@storybook/html",
         "@storybook/web-components",
@@ -76,26 +75,6 @@
       "type": "string",
       "description": "Workspace project where Storybook reads the Webpack config from."
     },
-    "styles": {
-      "type": "array",
-      "description": "Global styles to be included in the build. This is for Angular projects only. It will be ignored in non-Angular projects.",
-      "items": {
-        "$ref": "#/definitions/extraEntryPoint"
-      }
-    },
-    "stylePreprocessorOptions": {
-      "type": "object",
-      "description": "Options to pass to style preprocessors.",
-      "properties": {
-        "includePaths": {
-          "type": "array",
-          "description": "The paths to include. Paths will be resolved to workspace root. This is for Angular projects only. It will be ignored in non-Angular projects.",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "config": {
       "type": "object",
       "description": ".storybook configuration.",
@@ -129,36 +108,6 @@
       "default": true
     }
   },
-  "definitions": {
-    "extraEntryPoint": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "input": {
-              "type": "string",
-              "description": "The file to include."
-            },
-            "bundleName": {
-              "type": "string",
-              "pattern": "^[\\w\\-.]*$",
-              "description": "The bundle name for this extra entry point."
-            },
-            "inject": {
-              "type": "boolean",
-              "description": "If the bundle will be referenced in the HTML file.",
-              "default": true
-            }
-          },
-          "additionalProperties": false,
-          "required": ["input"]
-        },
-        {
-          "type": "string",
-          "description": "The file to include."
-        }
-      ]
-    }
-  },
+  "definitions": {},
   "required": ["uiFramework", "config"]
 }

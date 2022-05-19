@@ -16,9 +16,5 @@ export interface CommonNxStorybookConfig {
     | '@storybook/svelte'
     | '@storybook/react-native';
   projectBuildConfig?: string;
-  styles?: any[];
-  stylePreprocessorOptions?: {
-    includePaths?: string[];
-  };
   config: StorybookConfig;
 }

@@ -44,7 +44,8 @@
         "stories",
         "storybook-configuration",
         "upgrade-module",
-        "web-worker"
+        "web-worker",
+        "change-storybook-targets"
       ]
     }
   },
@@ -243,7 +244,12 @@
     "path": "generated/packages/storybook.json",
     "schemas": {
       "executors": ["storybook", "build"],
-      "generators": ["init", "configuration", "cypress-project"]
+      "generators": [
+        "init",
+        "configuration",
+        "cypress-project",
+        "change-storybook-targets"
+      ]
     }
   },
   {

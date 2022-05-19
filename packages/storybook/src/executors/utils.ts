@@ -1,25 +1,10 @@
-import {
-  ExecutorContext,
-  joinPathFragments,
-  logger,
-  parseTargetString,
-  readProjectConfiguration,
-  readTargetOptions,
-  TargetConfiguration,
-  Tree,
-} from '@nrwl/devkit';
-import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { gte } from 'semver';
-import {
-  findOrCreateConfig,
-  readCurrentWorkspaceStorybookVersionFromExecutor,
-} from '../utils/utilities';
-import { StorybookBuilderOptions } from './build-storybook/build-storybook.impl';
+import { findOrCreateConfig } from '../utils/utilities';
 import { CommonNxStorybookConfig } from './models';
-import { StorybookExecutorOptions } from './storybook/storybook.impl';
 
 export interface NodePackage {
   name: string;
@@ -28,7 +13,6 @@ export interface NodePackage {
 
 export function getStorybookFrameworkPath(uiFramework) {
   const serverOptionsPaths = {
-    '@storybook/angular': '@storybook/angular/dist/ts3.9/server/options',
     '@storybook/react': '@storybook/react/dist/cjs/server/options',
     '@storybook/html': '@storybook/html/dist/cjs/server/options',
     '@storybook/vue': '@storybook/vue/dist/cjs/server/options',
@@ -52,35 +36,6 @@ function isStorybookV62onwards(uiFramework) {
   )).version;
 
   return gte(storybookPackageVersion, '6.2.0-rc.4');
-}
-
-// see: https://github.com/storybookjs/storybook/pull/12565
-// TODO: this should really be passed as a param to the CLI rather than env
-export function setStorybookAppProject(
-  context: ExecutorContext,
-  leadStorybookProject: string
-) {
-  let leadingProject: string;
-  // for libs we check whether the build config should be fetched
-  // from some app
-
-  if (
-    context.workspace.projects[context.projectName].projectType === 'library'
-  ) {
-    // we have a lib so let's try to see whether the app has
-    // been set from which we want to get the build config
-    if (leadStorybookProject) {
-      leadingProject = leadStorybookProject;
-    } else {
-      // do nothing
-      return;
-    }
-  } else {
-    // ..for apps we just use the app target itself
-    leadingProject = context.projectName;
-  }
-
-  process.env.STORYBOOK_ANGULAR_PROJECT = leadingProject;
 }
 
 export function runStorybookSetupCheck(options: CommonNxStorybookConfig) {
@@ -180,213 +135,5 @@ export function resolveCommonStorybookOptionMapper(
     watch: false,
   };
 
-  if (
-    builderOptions.uiFramework === '@storybook/angular' &&
-    // just for new 6.4 with Angular
-    isStorybookGTE6_4()
-  ) {
-    let buildProjectName;
-    let targetName = 'build'; // default
-    let targetOptions = null;
-
-    if (builderOptions.projectBuildConfig) {
-      const targetString = normalizeTargetString(
-        builderOptions.projectBuildConfig,
-        targetName
-      );
-
-      const { project, target, configuration } =
-        parseTargetString(targetString);
-
-      // set the extracted target name
-      targetName = target;
-      buildProjectName = project;
-
-      targetOptions = readTargetOptions(
-        { project, target, configuration },
-        context
-      );
-
-      storybookOptions.angularBrowserTarget = targetString;
-    } else {
-      const { storybookBuildTarget, storybookTarget, buildTarget } =
-        findStorybookAndBuildTargets(
-          context?.workspace?.projects?.[context.projectName]?.targets
-        );
-
-      throw new Error(
-        `
-        No projectBuildConfig was provided.
-        
-        To fix this, you can try one of the following options:
-        
-        1. You can run the ${
-          context.targetName ? context.targetName : storybookTarget
-        } executor by providing the projectBuildConfig flag as follows:
-               
-        nx ${context.targetName ? context.targetName : storybookTarget} ${
-          context.projectName
-        } --projectBuildConfig=${context.projectName}${
-          !buildTarget && storybookBuildTarget ? `:${storybookBuildTarget}` : ''
-        }
-
-        2. In your project configuration, under the "${
-          context.targetName ? context.targetName : storybookTarget
-        }" target options, you can
-        set the "projectBuildConfig" property to the name of the project of which you want to use
-        the build configuration for Storybook.
-        `
-      );
-    }
-
-    const project = context.workspace.projects[buildProjectName];
-
-    const angularDevkitCompatibleLogger = {
-      ...logger,
-      createChild() {
-        return angularDevkitCompatibleLogger;
-      },
-    };
-
-    // construct a builder object for Storybook
-    storybookOptions.angularBuilderContext = {
-      target: {
-        ...project.targets[targetName],
-        project: buildProjectName,
-      },
-      workspaceRoot: context.cwd,
-      getProjectMetadata: () => {
-        return project;
-      },
-      getTargetOptions: () => {
-        return targetOptions;
-      },
-      logger: angularDevkitCompatibleLogger,
-    };
-
-    // Add watch to angularBuilderOptions for Storybook to merge configs correctly
-    storybookOptions.angularBuilderOptions = {
-      watch: true,
-    };
-  } else {
-    // keep the backwards compatibility
-    setStorybookAppProject(context, builderOptions.projectBuildConfig);
-  }
-
   return storybookOptions;
-}
-
-function normalizeTargetString(
-  appName: string,
-  defaultTarget: string = 'build'
-) {
-  if (appName?.includes(':')) {
-    return appName;
-  }
-  return `${appName}:${defaultTarget}`;
-}
-
-function isStorybookGTE6_4() {
-  const storybookVersion = readCurrentWorkspaceStorybookVersionFromExecutor();
-
-  return gte(
-    checkAndCleanWithSemver('@storybook/core', storybookVersion),
-    '6.4.0-rc.1'
-  );
-}
-
-export function customProjectBuildConfigIsValid(
-  tree: Tree,
-  projectBuildConfig: string
-): boolean {
-  if (projectBuildConfig?.includes(':')) {
-    const { project, target } = parseTargetString(projectBuildConfig);
-    const projectConfig = readProjectConfiguration(tree, project);
-    if (projectConfig?.targets?.[target]) {
-      return true;
-    } else {
-      logger.warn(`
-      The projectBuildConfig you provided is not valid.   
-      ${!projectConfig ? 'The project ' + project + ' does not exist.' : ''}   
-      ${
-        projectConfig &&
-        !projectConfig.targets?.[target] &&
-        `The project ${project} does not have the target ${target}.`
-      }  
-      The default projectBuildConfig is going to be used.       
-      `);
-    }
-  } else {
-    try {
-      return Boolean(readProjectConfiguration(tree, projectBuildConfig));
-    } catch (e) {
-      logger.warn(`
-      The projectBuildConfig you provided is not valid. 
-      The project ${projectBuildConfig} does not exist.
-      The default projectBuildConfig is going to be used.
-      `);
-    }
-  }
-}
-
-export function findStorybookAndBuildTargets(targets: {
-  [targetName: string]: TargetConfiguration;
-}): {
-  storybookBuildTarget?: string;
-  storybookTarget?: string;
-  buildTarget?: string;
-} {
-  const returnObject: {
-    storybookBuildTarget?: string;
-    storybookTarget?: string;
-    buildTarget?: string;
-  } = {};
-  Object.entries(targets).forEach(([target, targetConfig]) => {
-    if (targetConfig.executor === '@nrwl/storybook:storybook') {
-      returnObject.storybookTarget = target;
-    }
-    if (targetConfig.executor === '@nrwl/storybook:build') {
-      returnObject.storybookBuildTarget = target;
-    }
-    /**
-     * Not looking for '@nrwl/angular:ng-packagr-lite', only
-     * looking for '@angular-devkit/build-angular:browser'
-     * because the '@nrwl/angular:ng-packagr-lite' executor
-     * does not support styles and extra options, so the user
-     * will be forced to switch to build-storybook to add extra options.
-     *
-     * So we might as well use the build-storybook by default to
-     * avoid any errors.
-     */
-    if (targetConfig.executor === '@angular-devkit/build-angular:browser') {
-      returnObject.buildTarget = target;
-    }
-  });
-  return returnObject;
-}
-
-export function normalizeAngularBuilderStylesOptions(
-  builderOptions: StorybookBuilderOptions | StorybookExecutorOptions,
-  uiFramework:
-    | '@storybook/angular'
-    | '@storybook/react'
-    | '@storybook/html'
-    | '@storybook/web-components'
-    | '@storybook/vue'
-    | '@storybook/vue3'
-    | '@storybook/svelte'
-    | '@storybook/react-native'
-): StorybookBuilderOptions | StorybookExecutorOptions {
-  if (
-    uiFramework !== '@storybook/angular' &&
-    uiFramework !== '@storybook/react'
-  ) {
-    if (builderOptions.styles) {
-      delete builderOptions.styles;
-    }
-    if (builderOptions.stylePreprocessorOptions) {
-      delete builderOptions.stylePreprocessorOptions;
-    }
-  }
-  return builderOptions;
 }

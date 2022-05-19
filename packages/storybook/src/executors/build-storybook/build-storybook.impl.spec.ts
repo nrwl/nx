@@ -1,5 +1,4 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
-
 import { join } from 'path';
 jest.mock('@storybook/core/standalone', () =>
   jest.fn().mockImplementation(() => Promise.resolve())
@@ -17,7 +16,7 @@ describe('Build storybook', () => {
   let config: StorybookBuilderOptions['config'];
 
   beforeEach(async () => {
-    uiFramework = '@storybook/angular';
+    uiFramework = '@storybook/react';
     outputPath = '/root/dist/storybook';
     config = {
       pluginPath: join(
@@ -36,11 +35,6 @@ describe('Build storybook', () => {
     options = {
       uiFramework,
       outputPath,
-      projectBuildConfig: 'proj',
-      stylePreprocessorOptions: {
-        includePaths: ['my-path/my-style-options'],
-      },
-      styles: ['my-other-path/my-other-styles.scss'],
       config,
     };
 
@@ -57,12 +51,22 @@ describe('Build storybook', () => {
             sourceRoot: 'src',
             targets: {
               build: {
-                executor: '@angular-devkit/build-angular:browser',
+                executor: '@nrwl/web:webpack',
                 options: {
-                  main: 'apps/proj/src/main.ts',
-                  outputPath: 'dist/apps/proj',
-                  tsConfig: 'apps/proj/tsconfig.app.json',
-                  index: 'apps/proj/src/index.html',
+                  compiler: 'babel',
+                  outputPath: 'dist/apps/webre',
+                  index: 'apps/webre/src/index.html',
+                  baseHref: '/',
+                  main: 'apps/webre/src/main.tsx',
+                  polyfills: 'apps/webre/src/polyfills.ts',
+                  tsConfig: 'apps/webre/tsconfig.app.json',
+                  assets: [
+                    'apps/webre/src/favicon.ico',
+                    'apps/webre/src/assets',
+                  ],
+                  styles: ['apps/webre/src/styles.css'],
+                  scripts: [],
+                  webpackConfig: '@nrwl/react/plugins/webpack',
                 },
               },
               storybook: {
@@ -72,7 +76,6 @@ describe('Build storybook', () => {
             },
           },
         },
-        defaultProject: 'proj',
         npmScope: 'test',
       },
       isVerbose: false,
