@@ -55,6 +55,23 @@ module.exports = withNx({
       permanent: true,
     });
 
+    // Nx Console
+    rules.push({
+      source: '/nx-console',
+      destination: '/using-nx/console',
+      permanent: true,
+    });
+    rules.push({
+      source: '/(l|latest)/(a|angular)/storybook/overview',
+      destination: '/storybook/overview-angular',
+      permanent: true,
+    });
+    rules.push({
+      source: '/(l|latest)/(a|angular|r|react)/storybook/executors',
+      destination: '/storybook/executors-storybook',
+      permanent: true,
+    });
+
     // Customs
     for (let s of Object.keys(redirectRules.guideUrls)) {
       rules.push({
