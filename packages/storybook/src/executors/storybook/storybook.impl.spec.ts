@@ -20,14 +20,13 @@ describe('@nrwl/storybook:storybook', () => {
     const rootPath = join(__dirname, `../../../../../`);
     const packageJsonPath = join(
       rootPath,
-      `node_modules/@storybook/angular/package.json`
+      `node_modules/@storybook/react/package.json`
     );
     const storybookPath = join(rootPath, '.storybook');
 
     options = {
-      uiFramework: '@storybook/angular',
+      uiFramework: '@storybook/react',
       port: 4400,
-      projectBuildConfig: 'proj',
       config: {
         configFolder: storybookPath,
       },
@@ -51,12 +50,22 @@ describe('@nrwl/storybook:storybook', () => {
             sourceRoot: 'src',
             targets: {
               build: {
-                executor: '@angular-devkit/build-angular:browser',
+                executor: '@nrwl/web:webpack',
                 options: {
-                  main: 'apps/proj/src/main.ts',
-                  outputPath: 'dist/apps/proj',
-                  tsConfig: 'apps/proj/tsconfig.app.json',
-                  index: 'apps/proj/src/index.html',
+                  compiler: 'babel',
+                  outputPath: 'dist/apps/webre',
+                  index: 'apps/webre/src/index.html',
+                  baseHref: '/',
+                  main: 'apps/webre/src/main.tsx',
+                  polyfills: 'apps/webre/src/polyfills.ts',
+                  tsConfig: 'apps/webre/tsconfig.app.json',
+                  assets: [
+                    'apps/webre/src/favicon.ico',
+                    'apps/webre/src/assets',
+                  ],
+                  styles: ['apps/webre/src/styles.css'],
+                  scripts: [],
+                  webpackConfig: '@nrwl/react/plugins/webpack',
                 },
               },
               storybook: {
@@ -66,7 +75,6 @@ describe('@nrwl/storybook:storybook', () => {
             },
           },
         },
-        defaultProject: 'proj',
         npmScope: 'test',
       },
       isVerbose: false,

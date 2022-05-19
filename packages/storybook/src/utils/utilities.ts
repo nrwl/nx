@@ -1,8 +1,8 @@
 import {
   ExecutorContext,
-  logger,
   readJson,
   readJsonFile,
+  TargetConfiguration,
   Tree,
 } from '@nrwl/devkit';
 import { CompilerOptions } from 'typescript';
@@ -158,7 +158,7 @@ export function findOrCreateConfig(
   config: StorybookConfig,
   context: ExecutorContext
 ): string {
-  if (config.configFolder && statSync(config.configFolder).isDirectory()) {
+  if (config?.configFolder && statSync(config.configFolder).isDirectory()) {
     return config.configFolder;
   } else if (
     statSync(config.configPath).isFile() &&
@@ -203,4 +203,95 @@ function createStorybookConfig(
     constants.COPYFILE_EXCL
   );
   return tmpFolder;
+}
+
+export function dedupe(arr: string[]) {
+  return Array.from(new Set(arr));
+}
+
+/**
+ * This function is only used for ANGULAR projects.
+ * And it is used for the "old" Storybook/Angular setup,
+ * where the Nx executor is used.
+ *
+ * At the moment, it's used by the migrator to set projectBuildConfig
+ * and it is also used by the change-storybook-targets generator/migrator
+ */
+export function findStorybookAndBuildTargets(targets: {
+  [targetName: string]: TargetConfiguration;
+}): {
+  storybookBuildTarget?: string;
+  storybookTarget?: string;
+  buildTarget?: string;
+} {
+  const returnObject: {
+    storybookBuildTarget?: string;
+    storybookTarget?: string;
+    buildTarget?: string;
+  } = {};
+  Object.entries(targets).forEach(([target, targetConfig]) => {
+    if (targetConfig.executor === '@nrwl/storybook:storybook') {
+      returnObject.storybookTarget = target;
+    }
+    if (targetConfig.executor === '@nrwl/storybook:build') {
+      returnObject.storybookBuildTarget = target;
+    }
+    /**
+     * Not looking for '@nrwl/angular:ng-packagr-lite', only
+     * looking for '@angular-devkit/build-angular:browser'
+     * because the '@nrwl/angular:ng-packagr-lite' executor
+     * does not support styles and extra options, so the user
+     * will be forced to switch to build-storybook to add extra options.
+     *
+     * So we might as well use the build-storybook by default to
+     * avoid any errors.
+     */
+    if (targetConfig.executor === '@angular-devkit/build-angular:browser') {
+      returnObject.buildTarget = target;
+    }
+  });
+  return returnObject;
+}
+
+/**
+ * This function is not used at the moment.
+ *
+ * However, it may be valuable to create this here, in order to avoid
+ * any confusion in the future.
+ *
+ */
+export function findStorybookAndBuildTargetsForStorybookAngularExecutors(targets: {
+  [targetName: string]: TargetConfiguration;
+}): {
+  storybookBuildTarget?: string;
+  storybookTarget?: string;
+  buildTarget?: string;
+} {
+  const returnObject: {
+    storybookBuildTarget?: string;
+    storybookTarget?: string;
+    buildTarget?: string;
+  } = {};
+  Object.entries(targets).forEach(([target, targetConfig]) => {
+    if (targetConfig.executor === '@storybook/angular:start-storybook') {
+      returnObject.storybookTarget = target;
+    }
+    if (targetConfig.executor === '@storybook/angular:build-storybook') {
+      returnObject.storybookBuildTarget = target;
+    }
+    /**
+     * Not looking for '@nrwl/angular:ng-packagr-lite', only
+     * looking for '@angular-devkit/build-angular:browser'
+     * because the '@nrwl/angular:ng-packagr-lite' executor
+     * does not support styles and extra options, so the user
+     * will be forced to switch to build-storybook to add extra options.
+     *
+     * So we might as well use the build-storybook by default to
+     * avoid any errors.
+     */
+    if (targetConfig.executor === '@angular-devkit/build-angular:browser') {
+      returnObject.buildTarget = target;
+    }
+  });
+  return returnObject;
 }

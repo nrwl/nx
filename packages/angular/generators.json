@@ -148,6 +148,12 @@
       "factory": "./src/generators/web-worker/compat",
       "schema": "./src/generators/web-worker/schema.json",
       "description": "Creates a Web Worker."
+    },
+    "change-storybook-targets": {
+      "factory": "./src/generators/change-storybook-targets/compat",
+      "schema": "./src/generators/change-storybook-targets/schema.json",
+      "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
+      "hidden": false
     }
   },
   "generators": {
@@ -298,6 +304,11 @@
       "factory": "./src/generators/web-worker/web-worker",
       "schema": "./src/generators/web-worker/schema.json",
       "description": "Creates a Web Worker."
+    },
+    "change-storybook-targets": {
+      "factory": "./src/generators/change-storybook-targets/change-storybook-targets",
+      "schema": "./src/generators/change-storybook-targets/schema.json",
+      "description": "Change storybook targets for Angular projects to use @storybook/angular executors"
     }
   }
 }

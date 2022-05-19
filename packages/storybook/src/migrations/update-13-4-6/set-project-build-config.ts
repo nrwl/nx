@@ -5,7 +5,7 @@ import {
   updateProjectConfiguration,
   getProjects,
 } from '@nrwl/devkit';
-import { findStorybookAndBuildTargets } from '../../executors/utils';
+import { findStorybookAndBuildTargets } from '../../utils/utilities';
 
 export default async function setProjectBuildConfig(tree: Tree) {
   let changesMade = false;

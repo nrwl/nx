@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "change-storybook-targets",
+  "title": "Change Storybook targets",
+  "description": "Change the Storybook target executors.",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

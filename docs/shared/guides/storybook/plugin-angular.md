@@ -188,69 +188,32 @@ describe('shared-ui', () => {
 });
 ```
 
-### Setting up `projectBuildConfig`
+### Storybook uses `browserTarget` for Angular
 
-Storybook for Angular needs a default project specified in order to run. The reason is that it uses that default project to read the build configuration from (paths to files to include in the build, and other configurations/settings). In Nx workspaces, that project is specified with the `projectBuildConfig` property.
-
-If you're using Nx version `>=13.4.6` either in a new Nx workspace, or you migrated your older Nx workspace to Nx version `>=13.4.6`, Nx will automatically add the `projectBuildConfig` property in your projects `project.json` files, for projects that are using Storybook. It will look like this:
+Nx is using the original Storybook executor for Angular to serve and build Storybook. If you're using Storybook in
+your Angular project, you will notice that `browserTarget` is specified for the `storybook` and `build-storybook` targets, much like it is done for `serve` or other targets. Angular needs the `browserTarget` for Storybook in order to know which configuration to use for the build. If your project is buildable (it has a `build` target, and uses the main Angular builder - `@angular-devkit/build-angular:browser`) the `browserTarget` for Storybook will use the `build` target, if it's not buildable it will use the `build-storybook` target.
 
 ```json
     "storybook": {
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@storybook/angular:start-storybook",
       "options": {
          ...
-        "projectBuildConfig": "my-project:build-storybook"
+        "browserTarget": "my-project:build"
       },
       ...
     },
     "build-storybook": {
-      "executor": "@nrwl/storybook:build",
+      "executor": "@storybook/angular:build-storybook",
        ...
       "options": {
          ...
-        "projectBuildConfig": "my-project:build-storybook"
+        "browserTarget": "my-project:build"
       },
      ...
     }
 ```
 
-This setup instructs Nx to use the configuration under the `build-storybook` target of `my-project` when using the `storybook` and `build-storybook` executors.
-
-If the `projectBuildConfig` is not set in your `project.json`, you can manually set it up in one of the following ways:
-
-#### Adding the `projectBuildConfig` option directly in the project's `project.json`
-
-In your project's `project.json` file find the `storybook` and `build-storybook` targets. Add the `projectBuildConfig` property under the `options` as shown above.
-
-After you add this property, you can run your `storybook` and `build-storybook` executors as normal:
-
-```bash
-nx storybook my-project
-```
-
-and
-
-```bash
-nx build-storybook my-project
-```
-
-#### Using the `projectBuildConfig` flag on the executors
-
-The way you would run your `storybook` and your `build-storybook` executors would be:
-
-```bash
-nx storybook my-project --projectBuildConfig=my-project:build-storybook
-```
-
-and
-
-```bash
-nx build-storybook my-project --projectBuildConfig=my-project:build-storybook
-```
-
-**Note:** If your project is buildable (eg. any project that has a `build` target set up in its `project.json`) you can also do `nx storybook my-project --projectBuildConfig=my-project`.
-
-> In a pure Angular/Storybook setup (**not** an Nx workspace), the Angular application/project would have an `angular.json` file. That file would have a property called `defaultProject`. In an Nx workspace the `defaultProject` property would be specified in the `nx.json` file. Previously, Nx would try to resolve the `defaultProject` of the workspace, and use the build configuration of that project. In most cases, the `defaultProject`'s build configuration would not work for some other project set up with Storybook, since there would most probably be mismatches in paths or other project-specific options.
+This setup instructs Nx to use the configuration under the `build` target of `my-project` when using the `storybook` and `build-storybook` executors.
 
 ### Configuring styles and preprocessor options
 
@@ -258,7 +221,7 @@ Angular supports including extra entry-point files for styles. Also, in case you
 
 ```json
     "storybook": {
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@storybook/angular:start-storybook",
       "options": {
          ...
         "styles": ["some-styles.css"],
@@ -269,10 +232,36 @@ Angular supports including extra entry-point files for styles. Also, in case you
       ...
     },
     "build-storybook": {
-      "executor": "@nrwl/storybook:build",
+      "executor": "@storybook/angular:build-storybook",
        ...
       "options": {
          ...
+        "styles": ["some-styles.css"],
+        "stylePreprocessorOptions": {
+          "includePaths": ["some-style-paths"]
+        }
+      },
+     ...
+    }
+```
+
+> **Note**: Chances are, you will most probably need the same `styles` and `stylePreprocessorOptions` for your `storybook` and your `build-storybook` targets. Since you're using `browserTarget`, that means that Storybook will use the `options` of `build` or `build-storybook` when executing the `storybook` task (when compiling your Storybook). In that case, you _only_ need to add the `styles` or `stylePreprocessorOptions` to the corresponding target (`build` or `build-storybook`) that the `browserTarget` is pointing to. In that case, for example, the configuration shown above would look like this:
+
+```json
+    "storybook": {
+      "executor": "@storybook/angular:start-storybook",
+      "options": {
+         ...
+         "browserTarget": "my-project:build-storybook"
+      },
+      ...
+    },
+    "build-storybook": {
+      "executor": "@storybook/angular:build-storybook",
+       ...
+      "options": {
+         ...
+        "browserTarget": "my-project:build-storybook",
         "styles": ["some-styles.css"],
         "stylePreprocessorOptions": {
           "includePaths": ["some-style-paths"]
