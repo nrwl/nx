@@ -4,9 +4,9 @@ import * as fs from 'fs';
 import { ExecutorContext } from '@nrwl/devkit';
 
 jest.mock('@storybook/core-server', () => ({
-  buildDevStandalone: jest.fn().mockImplementation(() => Promise.resolve()),
+  buildDev: jest.fn().mockImplementation(() => Promise.resolve()),
 }));
-import { buildDevStandalone } from '@storybook/core-server';
+import { buildDev } from '@storybook/core-server';
 
 import storybookExecutor, { StorybookExecutorOptions } from './storybook.impl';
 import { join } from 'path';
@@ -89,6 +89,6 @@ describe('@nrwl/storybook:storybook', () => {
     const iterator = storybookExecutor(options, context);
     const { value } = await iterator.next();
     expect(value).toEqual({ success: true });
-    expect(buildDevStandalone).toHaveBeenCalled();
+    expect(buildDev).toHaveBeenCalled();
   });
 });

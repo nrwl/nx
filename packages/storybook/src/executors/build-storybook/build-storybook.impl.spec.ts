@@ -1,9 +1,9 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { join } from 'path';
-jest.mock('@storybook/core/standalone', () =>
+jest.mock('@storybook/core-server/standalone', () =>
   jest.fn().mockImplementation(() => Promise.resolve())
 );
-import * as storybook from '@storybook/core/standalone';
+import * as storybook from '@storybook/core-server/standalone';
 import storybookBuilder, {
   StorybookBuilderOptions,
 } from './build-storybook.impl';
