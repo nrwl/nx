@@ -323,7 +323,6 @@ export class FsTree implements Tree {
 
   private fsIsFile(filePath: string): boolean {
     const stat = statSync(join(this.root, filePath));
-    console.log(filePath, this.root, stat);
     return stat.isFile();
   }
 
