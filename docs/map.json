@@ -1048,6 +1048,11 @@
             "file": "shared/guides/storybook/plugin-angular"
           },
           {
+            "id": "extra-topics-for-angular-projects",
+            "name": "Extra topics for Angular projects",
+            "file": "shared/guides/storybook/extra-topics-for-angular-projects"
+          },
+          {
             "id": "migrate-webpack-final-react",
             "name": "Migrate to the Nrwl React Storybook Preset",
             "file": "shared/guides/storybook/migrate-webpack-final-react"
