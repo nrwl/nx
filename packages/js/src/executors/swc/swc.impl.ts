@@ -7,16 +7,21 @@ import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/bui
 import { join, relative, resolve } from 'path';
 
 import { checkDependencies } from '../../utils/check-dependencies';
+import {
+  getHelperDependency,
+  HelperDependency,
+} from '../../utils/compiler-helper-dependency';
 import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
 import {
   NormalizedSwcExecutorOptions,
   SwcExecutorOptions,
 } from '../../utils/schema';
 import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc';
+import { getSwcrcPath } from '../../utils/swc/get-swcrc-path';
 import { updatePackageJson } from '../../utils/update-package-json';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
 
-function normalizeOptions(
+export function normalizeOptions(
   options: SwcExecutorOptions,
   contextRoot: string,
   sourceRoot?: string,
@@ -45,9 +50,7 @@ function normalizeOptions(
   // default to current directory if projectRootParts is [].
   // Eg: when a project is at the root level, outside of layout dir
   const swcCwd = projectRootParts.join('/') || '.';
-  const swcrcPath = options.swcrc
-    ? join(contextRoot, options.swcrc)
-    : join(contextRoot, projectRoot, '.lib.swcrc');
+  const swcrcPath = getSwcrcPath(options, contextRoot, projectRoot);
 
   const swcCliOptions = {
     srcPath: projectDir,
@@ -104,6 +107,16 @@ export async function* swcExecutor(
 
   if (tmpTsConfig) {
     options.tsConfig = tmpTsConfig;
+  }
+
+  const swcHelperDependency = getHelperDependency(
+    HelperDependency.swc,
+    options.swcCliOptions.swcrcPath,
+    dependencies
+  );
+
+  if (swcHelperDependency) {
+    dependencies.push(swcHelperDependency);
   }
 
   const assetHandler = new CopyAssetsHandler({
