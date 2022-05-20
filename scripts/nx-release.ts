@@ -42,7 +42,6 @@ import * as publish from '@lerna/publish/index';
     message: 'chore(misc): publish %v',
     loglevel: options.loglevel ?? 'info',
     yes: false,
-    ignoreScripts: true,
   };
 
   if (options.local) {

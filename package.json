@@ -17,6 +17,7 @@
     "e2e-build-package-publish": "ts-node -P ./scripts/tsconfig.e2e.json ./scripts/e2e-build-package-publish.ts",
     "format": "nx format",
     "nx-release": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/nx-release",
+    "prepublishOnly": "node ./scripts/update-package-group.js",
     "depcheck": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/depcheck",
     "local-registry": "./scripts/local-registry.sh",
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/documentation.ts && yarn check-documentation-map",

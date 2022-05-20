@@ -15,5 +15,4 @@ writeFileSync(
   originalContents
     .replace(/TYPESCRIPT_VERSION/g, typescriptVersion)
     .replace(/PRETTIER_VERSION/g, prettierVersion)
-  // .replace(/TYPESCRIPT_VERSION/g, typescriptVersion)
 );
