@@ -7,7 +7,9 @@ import { NormalizedSchema } from '../schema';
 /**
  * Updates relative path to root storybook config for `main.js` & `webpack.config.js`
  *
- * @param schema The options provided to the schematic
+ * @param {Tree} tree
+ * @param {NormalizedSchema} schema The options provided to the schematic
+ * @param {ProjectConfiguration} project
  */
 export function updateStorybookConfig(
   tree: Tree,
@@ -42,10 +44,24 @@ export function updateStorybookConfig(
   }
 
   // Replace relative import path to root storybook folder for each file under project storybook
-  for (const file of tree.children(storybookDir)) {
-    const oldContent = tree.read(join(storybookDir, file), 'utf-8');
-    const newContent = oldContent.replace(oldRelativeRoot, newRelativeRoot);
+  updateRecursively(tree, storybookDir, oldRelativeRoot, newRelativeRoot);
+}
 
-    tree.write(join(storybookDir, file), newContent);
+function updateRecursively(
+  tree: Tree,
+  dir: string,
+  oldRoot: string,
+  newRoot: string
+) {
+  for (const child of tree.children(dir)) {
+    const childPath = join(dir, child);
+
+    if (tree.isFile(childPath)) {
+      const oldContent = tree.read(childPath, 'utf-8');
+      const newContent = oldContent.replace(oldRoot, newRoot);
+      tree.write(childPath, newContent);
+    } else {
+      updateRecursively(tree, childPath, oldRoot, newRoot);
+    }
   }
 }
