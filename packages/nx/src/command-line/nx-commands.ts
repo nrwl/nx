@@ -543,7 +543,7 @@ function withOutputStyleOption(yargs: yargs.Argv): yargs.Argv {
   return yargs.option('output-style', {
     describe: 'Defines how Nx emits outputs tasks logs',
     type: 'string',
-    choices: ['dynamic', 'static', 'stream'],
+    choices: ['dynamic', 'static', 'stream', 'stream-without-prefixes'],
   });
 }
 
@@ -628,7 +628,13 @@ function withRunOneOptions(yargs: yargs.Argv) {
     .option('output-style', {
       describe: 'Defines how Nx emits outputs tasks logs',
       type: 'string',
-      choices: ['dynamic', 'static', 'stream', 'compact'],
+      choices: [
+        'dynamic',
+        'static',
+        'stream',
+        'stream-without-prefixes',
+        'compact',
+      ],
     });
 
   if (executorShouldShowHelp) {

@@ -285,6 +285,7 @@ export class TaskOrchestrator {
         this.initiatingProject,
         this.options
       );
+
       const pipeOutput = this.pipeOutputCapture(task);
 
       // execution
