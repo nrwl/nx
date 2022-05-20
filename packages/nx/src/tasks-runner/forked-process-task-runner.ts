@@ -18,6 +18,7 @@ import {
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task } from '../config/task-graph';
+import { addCommandPrefixIfNeeded } from '../utils/add-command-prefix';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
 
@@ -98,7 +99,10 @@ export class ForkedProcessTaskRunner {
     {
       streamOutput,
       temporaryOutputPath,
-    }: { streamOutput: boolean; temporaryOutputPath: string }
+    }: {
+      streamOutput: boolean;
+      temporaryOutputPath: string;
+    }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
@@ -128,14 +132,20 @@ export class ForkedProcessTaskRunner {
         let outWithErr = [];
         p.stdout.on('data', (chunk) => {
           if (streamOutput) {
-            process.stdout.write(chunk);
+            process.stdout.write(
+              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
+                .content
+            );
           }
           out.push(chunk.toString());
           outWithErr.push(chunk.toString());
         });
         p.stderr.on('data', (chunk) => {
           if (streamOutput) {
-            process.stderr.write(chunk);
+            process.stderr.write(
+              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
+                .content
+            );
           }
           outWithErr.push(chunk.toString());
         });
@@ -168,7 +178,10 @@ export class ForkedProcessTaskRunner {
     {
       streamOutput,
       temporaryOutputPath,
-    }: { streamOutput: boolean; temporaryOutputPath: string }
+    }: {
+      streamOutput: boolean;
+      temporaryOutputPath: string;
+    }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {

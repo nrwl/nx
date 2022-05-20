@@ -105,6 +105,10 @@ export async function runCommand(
   const projectNames = projectsToRun.map((t) => t.name);
   if (nxArgs.outputStyle == 'stream') {
     process.env.NX_STREAM_OUTPUT = 'true';
+    process.env.NX_PREFIX_OUTPUT = 'true';
+  }
+  if (nxArgs.outputStyle == 'stream-without-prefixes') {
+    process.env.NX_STREAM_OUTPUT = 'true';
   }
   const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
     initiatingProject,
