@@ -1,7 +1,7 @@
 import { Type, Static } from '@sinclair/typebox';
 import { TStringUnion } from '@nrwl/devkit/typebox-extensions';
 
-export type Schema = Static<typeof JsonSchema>;
+export type NxPluginGeneratorSchema = Static<typeof JsonSchema>;
 
 export const JsonSchema = Type.Object(
   {

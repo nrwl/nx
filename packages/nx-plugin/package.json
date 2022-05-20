@@ -31,6 +31,7 @@
     "@nrwl/jest": "file:../jest",
     "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
+    "@sinclair/typebox": "^0.23.5",
     "fs-extra": "^10.1.0",
     "rxjs": "^6.5.4",
     "tslib": "^2.3.0"

@@ -47,11 +47,6 @@
       "schema": "./src/generators/migration/schema.json",
       "description": "Create a migration for an Nx Plugin."
     },
-    "generator": {
-      "factory": "./src/generators/generator/generator#generatorSchematic",
-      "schema": "./src/generators/generator/schema.json",
-      "description": "Create a generator for an Nx Plugin."
-    },
     "executor": {
       "factory": "./src/generators/executor/executor#executorSchematic",
       "schema": "./src/generators/executor/schema.json",

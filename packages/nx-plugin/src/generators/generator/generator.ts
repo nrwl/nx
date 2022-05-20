@@ -9,9 +9,9 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import * as path from 'path';
-import type { Schema } from './schema';
+import type { NxPluginGeneratorSchema } from './schema';
 
-interface NormalizedSchema extends Schema {
+interface NormalizedSchema extends NxPluginGeneratorSchema {
   fileName: string;
   className: string;
   projectRoot: string;
@@ -20,7 +20,10 @@ interface NormalizedSchema extends Schema {
   npmPackageName: string;
 }
 
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
+function normalizeOptions(
+  host: Tree,
+  options: NxPluginGeneratorSchema
+): NormalizedSchema {
   const { npmScope } = getWorkspaceLayout(host);
   const { fileName, className } = names(options.name);
 
@@ -102,7 +105,10 @@ function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
   });
 }
 
-export async function generatorGenerator(host: Tree, schema: Schema) {
+export async function generatorGenerator(
+  host: Tree,
+  schema: NxPluginGeneratorSchema
+) {
   const options = normalizeOptions(host, schema);
 
   addFiles(host, options);

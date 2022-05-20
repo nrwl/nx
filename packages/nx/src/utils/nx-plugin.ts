@@ -114,7 +114,7 @@ export function mergePluginTargetsWithNxTargets(
 export function readSchemaFile(schemaPath: string) {
   const [file, id] = schemaPath.split('#');
   let ext = extname(file);
-  
+
   // If the schema is a regular json file, we can short circuit
   if (ext === '.json') {
     return readJsonFile(file);
@@ -123,18 +123,16 @@ export function readSchemaFile(schemaPath: string) {
   // If ext not specified, we need to check if it references a .ts file.
   // This is to support local plugins, which may not be built at this point.
   if (ext === '') {
-    ext = ['.js', '.ts'].filter((x) => existsSync(file + ext))[0];
+    ext = ['.js', '.ts'].filter((x) => existsSync(file + x))[0];
   }
-  
-  
+
   if (ext === '.ts') {
     registerTSTranspiler();
   }
-  
+
   if (['.js', '.ts'].includes(ext)) {
     const module = require(file);
     if (id) {
-      console.log(module);
       if (!(id in module)) {
         throw new Error(`Could not resolve ${id} in ${file}`);
       }

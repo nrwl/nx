@@ -8,6 +8,7 @@ import {
   PackageMetadata,
   SchemaMetadata,
 } from '../../../nx-dev/models-package/src';
+import { readSchemaFile } from '../../../packages/nx/src/utils/nx-plugin';
 
 function createSchemaMetadata(
   name: string,
@@ -33,7 +34,7 @@ function createSchemaMetadata(
     implementation: join(paths.root, data.implementation) + '.ts',
     path, // Switching property for less confusing naming conventions
     schema: data.schema
-      ? readJsonSync(join(paths.absoluteRoot, paths.root, data.schema))
+      ? readSchemaFile(join(paths.absoluteRoot, paths.root, data.schema))
       : null,
   };
 
@@ -54,9 +55,10 @@ function getSchemaList(
 ): SchemaMetadata[] {
   const targetPath = join(paths.absoluteRoot, paths.root, type + '.json');
   try {
-    return Object.entries(readJsonSync(targetPath, 'utf8')[type]).map(
-      ([name, schema]: [string, JsonSchema1]) =>
-        createSchemaMetadata(name, schema, paths)
+    return Object.entries<JsonSchema1>(
+      readJsonSync(targetPath, 'utf8')[type]
+    ).map(([name, schema]: [string, JsonSchema1]) =>
+      createSchemaMetadata(name, schema, paths)
     );
   } catch (e) {
     console.log(
