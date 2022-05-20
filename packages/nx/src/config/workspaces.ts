@@ -8,7 +8,7 @@ import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
 import { logger } from '../utils/logger';
-import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
+import { loadNxPlugins, readPluginPackageJson, readSchemaFile } from '../utils/nx-plugin';
 
 import type { NxJsonConfiguration } from './nx-json';
 import {
@@ -111,7 +111,7 @@ export class Workspaces {
       );
       const executorsDir = path.dirname(executorsFilePath);
       const schemaPath = path.join(executorsDir, executorConfig.schema || '');
-      const schema = readJsonFile(schemaPath);
+      const schema = readSchemaFile(schemaPath);
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
       }
@@ -156,7 +156,8 @@ export class Workspaces {
         generatorsJson.generators?.[normalizedGeneratorName] ||
         generatorsJson.schematics?.[normalizedGeneratorName];
       const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
-      const schema = readJsonFile(schemaPath);
+      
+      const schema = readSchemaFile(schemaPath);
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
       }

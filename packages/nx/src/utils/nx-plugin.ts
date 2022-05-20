@@ -15,6 +15,7 @@ import {
 } from '../config/workspace-json-project-json';
 import { findMatchingProjectForPath } from './target-project-locator';
 import { logger } from './logger';
+import { extname } from 'path';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -108,6 +109,40 @@ export function mergePluginTargetsWithNxTargets(
     }
   }
   return { ...newTargets, ...targets };
+}
+
+export function readSchemaFile(schemaPath: string) {
+  const [file, id] = schemaPath.split('#');
+  let ext = extname(file);
+  
+  // If the schema is a regular json file, we can short circuit
+  if (ext === '.json') {
+    return readJsonFile(file);
+  }
+
+  // If ext not specified, we need to check if it references a .ts file.
+  // This is to support local plugins, which may not be built at this point.
+  if (ext === '') {
+    ext = ['.js', '.ts'].filter((x) => existsSync(file + ext))[0];
+  }
+  
+  
+  if (ext === '.ts') {
+    registerTSTranspiler();
+  }
+  
+  if (['.js', '.ts'].includes(ext)) {
+    const module = require(file);
+    if (id) {
+      console.log(module);
+      if (!(id in module)) {
+        throw new Error(`Could not resolve ${id} in ${file}`);
+      }
+      return module[id];
+    }
+    return module;
+  }
+  throw new Error(`Unsupported schema file extension: ${ext}`);
 }
 
 export function readPluginPackageJson(
