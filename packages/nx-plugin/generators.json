@@ -21,7 +21,7 @@
     },
     "generator": {
       "factory": "./src/generators/generator/generator",
-      "schema": "./src/generators/generator/schema.json",
+      "schema": "./src/generators/generator/schema#JsonSchema",
       "description": "Create a generator for an Nx Plugin."
     },
     "executor": {
