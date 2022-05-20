@@ -188,92 +188,13 @@ describe('shared-ui', () => {
 });
 ```
 
-### Storybook uses `browserTarget` for Angular
+## Extra topics for Angular projects
 
-Nx is using the original Storybook executor for Angular to serve and build Storybook. If you're using Storybook in
-your Angular project, you will notice that `browserTarget` is specified for the `storybook` and `build-storybook` targets, much like it is done for `serve` or other targets. Angular needs the `browserTarget` for Storybook in order to know which configuration to use for the build. If your project is buildable (it has a `build` target, and uses the main Angular builder - `@angular-devkit/build-angular:browser`) the `browserTarget` for Storybook will use the `build` target, if it's not buildable it will use the `build-storybook` target.
-
-```json
-    "storybook": {
-      "executor": "@storybook/angular:start-storybook",
-      "options": {
-         ...
-        "browserTarget": "my-project:build"
-      },
-      ...
-    },
-    "build-storybook": {
-      "executor": "@storybook/angular:build-storybook",
-       ...
-      "options": {
-         ...
-        "browserTarget": "my-project:build"
-      },
-     ...
-    }
-```
-
-This setup instructs Nx to use the configuration under the `build` target of `my-project` when using the `storybook` and `build-storybook` executors.
-
-### Configuring styles and preprocessor options
-
-Angular supports including extra entry-point files for styles. Also, in case you use Sass, you can add extra base paths that will be checked for imports. In your project's `project.json` file you can use the `styles` and `stylePreprocessorOptions` properties in your `storybook` and `build-storybook` target `options`, as you would in your Storybook or your Angular configurations. Check out the [Angular Workspace Configuration](https://angular.io/guide/workspace-config#styles-and-scripts-configuration) documentation for more information.
-
-```json
-    "storybook": {
-      "executor": "@storybook/angular:start-storybook",
-      "options": {
-         ...
-        "styles": ["some-styles.css"],
-        "stylePreprocessorOptions": {
-          "includePaths": ["some-style-paths"]
-        }
-      },
-      ...
-    },
-    "build-storybook": {
-      "executor": "@storybook/angular:build-storybook",
-       ...
-      "options": {
-         ...
-        "styles": ["some-styles.css"],
-        "stylePreprocessorOptions": {
-          "includePaths": ["some-style-paths"]
-        }
-      },
-     ...
-    }
-```
-
-> **Note**: Chances are, you will most probably need the same `styles` and `stylePreprocessorOptions` for your `storybook` and your `build-storybook` targets. Since you're using `browserTarget`, that means that Storybook will use the `options` of `build` or `build-storybook` when executing the `storybook` task (when compiling your Storybook). In that case, you _only_ need to add the `styles` or `stylePreprocessorOptions` to the corresponding target (`build` or `build-storybook`) that the `browserTarget` is pointing to. In that case, for example, the configuration shown above would look like this:
-
-```json
-    "storybook": {
-      "executor": "@storybook/angular:start-storybook",
-      "options": {
-         ...
-         "browserTarget": "my-project:build-storybook"
-      },
-      ...
-    },
-    "build-storybook": {
-      "executor": "@storybook/angular:build-storybook",
-       ...
-      "options": {
-         ...
-        "browserTarget": "my-project:build-storybook",
-        "styles": ["some-styles.css"],
-        "stylePreprocessorOptions": {
-          "includePaths": ["some-style-paths"]
-        }
-      },
-     ...
-    }
-```
+[Here](/storybook/extra-topics-for-angular-projects) you can find some extra topics for configuring Storybook on Angular projects.
 
 ## More Documentation
 
-For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
+For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/angular/get-started/introduction).
 
 ### Migration Scenarios
 

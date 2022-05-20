@@ -29,6 +29,10 @@ describe('nx-dev: Additional API references section', () => {
     { title: 'Storybook', path: '/storybook/overview-react' },
     { title: 'Storybook', path: '/storybook/overview-angular' },
     {
+      title: 'Extra topics for Angular projects',
+      path: '/storybook/extra-topics-for-angular-projects',
+    },
+    {
       title: 'Nrwl React Storybook Preset',
       path: '/storybook/migrate-webpack-final-react',
     },
