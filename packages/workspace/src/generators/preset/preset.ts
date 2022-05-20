@@ -5,20 +5,18 @@ import {
   generateFiles,
   installPackagesTask,
   names,
-  PackageManager,
   readWorkspaceConfiguration,
   Tree,
   updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { Schema } from './schema';
-
-import { libraryGenerator } from '../library/library';
+import { shouldDefaultToUsingStandaloneConfigs } from 'nx/src/generators/utils/project-configuration';
+import { join } from 'path';
 
 import { insertImport } from '../utils/insert-import';
 import { insertStatement } from '../utils/insert-statement';
 import { Preset } from '../utils/presets';
-import { join } from 'path';
+import { Schema } from './schema';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
   options = normalizeOptions(options);
@@ -33,7 +31,13 @@ export const presetSchematic = convertNxGenerator(presetGenerator);
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  if (options.preset === Preset.Empty || options.preset === Preset.Apps) {
+  options.standaloneConfig =
+    options.standaloneConfig ?? shouldDefaultToUsingStandaloneConfigs(tree);
+
+  if (
+    options.preset === Preset.Empty ||
+    options.preset === Preset.Apps
+  ) {
     return;
   } else if (options.preset === Preset.Angular) {
     const {
@@ -95,6 +99,8 @@ async function createPreset(tree: Tree, options: Schema) {
     } = require('@nrwl' + '/angular/generators');
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');
+    const { libraryGenerator: jsLibraryGenerator } = require('@nrwl' +
+      '/js/generators');
 
     await angularApplicationGenerator(tree, {
       name: options.name,
@@ -109,11 +115,13 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
     });
-    await libraryGenerator(tree, {
+    await jsLibraryGenerator(tree, {
       name: 'api-interfaces',
       unitTestRunner: 'none',
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
+      module: 'none',
+      supportTsx: true,
+      config: options.standaloneConfig === false ? 'workspace' : 'project',
     });
     connectAngularAndNest(tree, options);
   } else if (options.preset === Preset.ReactWithExpress) {
@@ -123,6 +131,8 @@ async function createPreset(tree: Tree, options: Schema) {
     const {
       applicationGenerator: reactApplicationGenerator,
     } = require('@nrwl' + '/react');
+    const { libraryGenerator: jsLibraryGenerator } = require('@nrwl' +
+      '/js/generators');
 
     await reactApplicationGenerator(tree, {
       name: options.name,
@@ -136,11 +146,13 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
     });
-    await libraryGenerator(tree, {
+    await jsLibraryGenerator(tree, {
       name: 'api-interfaces',
       unitTestRunner: 'none',
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
+      module: 'none',
+      supportTsx: true,
+      config: options.standaloneConfig === false ? 'workspace' : 'project',
     });
     connectReactAndExpress(tree, options);
   } else if (options.preset === Preset.Nest) {
