@@ -64,6 +64,9 @@
           },
           {
             "command": "node ./scripts/copy-readme.js create-nx-workspace"
+          },
+          {
+            "command": "node ./scripts/replace-versions.js build/packages/create-nx-workspace/bin/create-nx-workspace.js"
           }
         ],
         "parallel": false

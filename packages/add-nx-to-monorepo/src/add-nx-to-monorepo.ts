@@ -4,11 +4,10 @@ import * as stripJsonComments from 'strip-json-comments';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as cp from 'child_process';
+import { execSync } from 'child_process';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import * as enquirer from 'enquirer';
 import * as yargsParser from 'yargs-parser';
-
-import { execSync } from 'child_process';
 import { output } from '@nrwl/devkit';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ignore = require('ignore');
@@ -272,7 +271,7 @@ function deduceDefaultBase() {
 function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
   const json = readJsonFile(repoRoot, `package.json`);
   if (!json.devDependencies) json.devDependencies = {};
-  json.devDependencies['nx'] = 'NX_VERSION';
+  json.devDependencies['nx'] = require('../package.json').version;
   if (useCloud) {
     json.devDependencies['@nrwl/nx-cloud'] = 'latest';
   }

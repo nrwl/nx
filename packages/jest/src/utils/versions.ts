@@ -1,4 +1,4 @@
-export const nxVersion = '*';
+export const nxVersion = require('../../package.json').version;
 export const jestVersion = '27.5.1';
 export const jestTypesVersion = '27.4.1';
 export const tslibVersion = '^2.3.0';

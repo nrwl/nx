@@ -15,3 +15,5 @@ jest.debug.config.js
 dep-graph/client/src/assets/environment.js
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/images/open-graph
+# Lerna creates this
+CHANGELOG.md

@@ -1,4 +1,4 @@
-export const nxVersion = '*';
+export const nxVersion = require('../../package.json').version;
 export const storybookVersion = '~6.4.12';
 export const babelCoreVersion = '7.12.13';
 export const babelLoaderVersion = '8.1.0';

@@ -112,10 +112,9 @@ const presetOptions: { name: Preset; message: string }[] = [
   },
 ];
 
-const tsVersion = 'TYPESCRIPT_VERSION';
-const cliVersion = 'NX_VERSION';
-const nxVersion = 'NX_VERSION';
-const prettierVersion = 'PRETTIER_VERSION';
+const nxVersion = require('../package.json').version;
+const tsVersion = 'TYPESCRIPT_VERSION'; // This gets replaced with the typescript version in the root package.json during build
+const prettierVersion = 'PRETTIER_VERSION'; // This gets replaced with the prettier version in the root package.json during build
 
 export const commandsObject: yargs.Argv<Arguments> = yargs
   .wrap(yargs.terminalWidth())
@@ -221,7 +220,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   } = parsedArgs;
 
   output.log({
-    title: `Nx is creating your v${cliVersion} workspace.`,
+    title: `Nx is creating your v${nxVersion} workspace.`,
     bodyLines: [
       'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
       `Nx will run "${packageManager} install" several times. Please wait.`,
@@ -714,7 +713,7 @@ async function createSandbox(packageManager: PackageManager) {
       JSON.stringify({
         dependencies: {
           '@nrwl/workspace': nxVersion,
-          nx: cliVersion,
+          nx: nxVersion,
           typescript: tsVersion,
           prettier: prettierVersion,
         },

@@ -4,8 +4,8 @@ exports[`convert-tslint-to-eslint should work for NestJS applications 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@nrwl/eslint-plugin-nx": "*",
-    "@nrwl/linter": "*",
+    "@nrwl/eslint-plugin-nx": "0.0.1",
+    "@nrwl/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "~5.18.0",
     "@typescript-eslint/parser": "~5.18.0",
     "eslint": "~8.12.0",
@@ -297,8 +297,8 @@ exports[`convert-tslint-to-eslint should work for NestJS libraries 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@nrwl/eslint-plugin-nx": "*",
-    "@nrwl/linter": "*",
+    "@nrwl/eslint-plugin-nx": "0.0.1",
+    "@nrwl/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "~5.18.0",
     "@typescript-eslint/parser": "~5.18.0",
     "eslint": "~8.12.0",
