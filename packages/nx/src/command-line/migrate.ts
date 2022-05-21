@@ -941,6 +941,8 @@ async function runMigrations(
       (shouldCreateCommits ? ', with each applied in a dedicated commit' : '')
   );
 
+  const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
+
   const migrations: {
     package: string;
     name: string;
@@ -988,9 +990,22 @@ async function runMigrations(
     logger.info(`---------------------------------------------------------`);
   }
 
+  const depsAfterMigrations = getStringifiedPackageJsonDeps(root);
+  if (depsBeforeMigrations !== depsAfterMigrations) {
+    runInstall();
+  }
+
   logger.info(
     `NX Successfully finished running migrations from '${opts.runMigrations}'`
   );
+}
+
+function getStringifiedPackageJsonDeps(root: string): string {
+  const { dependencies, devDependencies } = readJsonFile<PackageJson>(
+    join(root, 'package.json')
+  );
+
+  return JSON.stringify([dependencies, devDependencies]);
 }
 
 function commitChangesIfAny(commitMessage: string): {
