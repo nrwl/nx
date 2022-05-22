@@ -187,6 +187,23 @@ describe('NxPlugin Plugin Generator', () => {
       expect(name).toEqual('@proj/my-plugin');
     });
 
+    it('should correctly setup npmScope less workspaces', async () => {
+      // remove the npmScope from nx.json
+      const nxJson = JSON.parse(tree.read('nx.json')!.toString());
+      delete nxJson.npmScope;
+      tree.write('nx.json', JSON.stringify(nxJson));
+
+      await pluginGenerator(tree, getSchema());
+
+      const { root } = readProjectConfiguration(tree, 'my-plugin');
+      const { name } = readJson<{ name: string }>(
+        tree,
+        joinPathFragments(root, 'package.json')
+      );
+
+      expect(name).toEqual('my-plugin');
+    });
+
     it('should use importPath as the package.json name', async () => {
       await pluginGenerator(
         tree,

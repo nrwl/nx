@@ -47,7 +47,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const npmPackageName = options.importPath || `@${npmScope}/${name}`;
+  const npmPackageName =
+    options.importPath || resolvePackageName(npmScope, name);
 
   return {
     ...options,
@@ -161,6 +162,14 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
   await formatFiles(host);
 
   return runTasksInSerial(...tasks);
+}
+
+function resolvePackageName(npmScope: string, name: string): string {
+  if (npmScope && npmScope !== '') {
+    return `@${npmScope}/${name}`;
+  } else {
+    return name;
+  }
 }
 
 export default pluginGenerator;
