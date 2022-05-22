@@ -2,13 +2,17 @@
 
 > In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This opens up a range of new opportunities for integrating the two. Continue reading to learn more.
 
-Lerna does three main things:
+[Lerna](https://lerna.js.org/) is a popular JavaScript monorepo management tool and which can be used in combination with Nx. Lerna does three main things:
 
-- managing dependencies (`lerna bootstrap`)
-- running commands for a single or multiple packages (`lerna run`)
-- publish your packages, including version management and changelog generation (`lerna publish`)
+1. it runs commands for a single package or multiple packages (`lerna run`)
+2. it manages dependencies (`lerna bootstrap`)
+3. it publishes your packages, handles version management, and does changelog generation (`lerna publish`)
 
-A common pain point with Lerna is when it comes to scaling monorepos. This is **where Nx shines**.
+While Lerna is good at managing dependencies and publishing, it can quickly become painful to scale Lerna based monorepos, simply because Lerna is slow. That's where Nx shines and where it can really speed up your monorepo.
+
+If you are about to setup a new monorepo from scratch, you can directly [go with Nx](/getting-started/nx-setup). If you have an existing Lerna monorepo, you can easily integrate the two.
+
+For a discussion on #2, see [dependency management](#dependency-management) below. For a discussion on #3, see [version management](#version-Management--publishing) below.
 
 ## Speed up Lerna with Nx's powerful task scheduler
 
@@ -75,13 +79,22 @@ Here's an overview of some more Lerna commands and the corresponding Nx version:
 
 ## Dependency Management
 
-Nx does not handle dependency management. You can continue using `lerna bootstrap` if that suits your needs or switch to newer options such as using built-in features of Yarn/NPM/PNPM workspaces.
+Lerna has dependency management already built-in using `lerna bootstrap`. Running that will install all npm dependencies for all packages and also symlink together all Lerna packages that have dependencies of each other.
 
-## Publishing
+Nx does not handle dependency management. As a result, if you already have a Lerna workspace, you can safely keep using `lerna bootstrap`. Alternatively you can use some of the backed-in solutions that now come with npm/yarn/pnpm workspaces.
 
-Lerna has an integrated publishing process with version management and changelog generation. Nx doesn't handle publishing, quite contrary. The Nx repository itself uses Lerna for the package publishing process. So feel free to coninue using it!
+## Version Management & Publishing
 
-That said, you can also easily integrate other tools such as [changesets](https://github.com/changesets/changesets) or [release-it](https://github.com/release-it/release-it) (just to mention two).
+Version management is defined as bumping the version of your changed monorepo packages and automatically creating a changelog. After bumping the version, you will commonly want to publish/upload the new version to NPM (or some other package repository).
+
+If you have an existing Lerna monorepo, feel free to continue using `lerna publish`.
+
+Right now Nx does not handle version management although you can use the [@jscutlery/semver](https://github.com/jscutlery/semver) Nx plugin.
+
+You can also leverage a 3rd-party tool such as:
+
+- [release-it](https://github.com/release-it/release-it) (standalone CLI tool)
+- [changesets](https://github.com/changesets/changesets) (standalone CLI tool)
 
 ## What's more?
 
