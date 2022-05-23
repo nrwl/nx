@@ -23,7 +23,7 @@ const workerPath = join(__dirname, './batch/run-batch.js');
 
 export class ForkedProcessTaskRunner {
   workspaceRoot = workspaceRoot;
-  cliPath = getCliPath(this.workspaceRoot);
+  cliPath = getCliPath();
 
   private processes = new Set<ChildProcess>();
 
