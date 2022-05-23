@@ -18,6 +18,7 @@ import {
 import { ParsedCommandLine } from 'typescript';
 import { readWorkspaceJson } from 'nx/src/project-graph/file-utils';
 import { readRootPackageJson } from './utils';
+import { extname, join } from 'path';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 export type MFERemotes = string[] | [remoteName: string, remoteUrl: string][];
@@ -142,12 +143,11 @@ function mapRemotes(remotes: MFERemotes) {
 
   for (const remote of remotes) {
     if (Array.isArray(remote)) {
-      const remoteLocation = remote[1].match(/remoteEntry\.(js|mjs)/)
-        ? remote[1]
-        : `${
-            remote[1].endsWith('/') ? remote[1].slice(0, -1) : remote[1]
-          }/remoteEntry.mjs`;
-      mappedRemotes[remote[0]] = remoteLocation;
+      const [remoteName, remoteLocation] = remote;
+      const remoteLocationExt = extname(remoteLocation);
+      mappedRemotes[remoteName] = ['.js', '.mjs'].includes(remoteLocationExt)
+        ? remoteLocation
+        : join(remoteLocation, 'remoteEntry.mjs');
     } else if (typeof remote === 'string') {
       mappedRemotes[remote] = determineRemoteUrl(remote);
     }
