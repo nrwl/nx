@@ -1,4 +1,5 @@
 import { appendFileSync, openSync, writeFileSync } from 'fs';
+import { run } from '../src/command-line/run';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
@@ -17,10 +18,7 @@ function requireCli() {
   process.env.NX_CLI_SET = 'true';
   try {
     const args = JSON.parse(process.argv[2]);
-    const e = require(require.resolve('nx/src/command-line/run.js', {
-      paths: [process.env.NX_WORKSPACE_ROOT],
-    }));
-    e.run(
+    run(
       process.cwd(),
       process.env.NX_WORKSPACE_ROOT,
       args.targetDescription,

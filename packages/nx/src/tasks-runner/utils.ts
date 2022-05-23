@@ -246,11 +246,8 @@ export function calculateReverseDeps(
   return reverseTaskDeps;
 }
 
-export function getCliPath(workspaceRoot: string) {
-  const cli = require.resolve(`nx/bin/run-executor.js`, {
-    paths: [workspaceRoot],
-  });
-  return `${cli}`;
+export function getCliPath() {
+  return require.resolve(`../../bin/run-executor.js`);
 }
 
 export function getPrintableCommandArgsForTask(task: Task) {
