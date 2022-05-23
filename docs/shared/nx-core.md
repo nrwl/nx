@@ -17,7 +17,6 @@ This is what is generated:
 ```text
 packages/
 nx.json
-workspace.json
 tsconfig.base.json
 package.json
 ```
