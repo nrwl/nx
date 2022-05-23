@@ -100,7 +100,7 @@ _**Note**: The `RemoteEntryModule` generated will be imported in `app.module.ts`
 
 ## What was generated?
 
-Let's take a closer after generating each application.
+Let's take a closer look after generating each application.
 
 For both applications, the generator did the following:
 
@@ -338,7 +338,6 @@ import { UserService } from '@ng-mfe/shared/data-access-user';
     </div>
     <ng-template #signIn><router-outlet></router-outlet></ng-template>
   `,
-  styles: [``],
 })
 export class AppComponent implements OnInit {
   isLoggedIn$ = this.userService.isUserLoggedIn$;
