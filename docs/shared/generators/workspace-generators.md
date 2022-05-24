@@ -46,7 +46,7 @@ export default async function (tree: Tree, schema: any) {
 }
 ```
 
-To invoke other generators, import the entry point function and run it against the tree tree. `async/await` can be used to make code with Promises read like procedural code. The generator function may return a callback function that is executed after changes to the file system have been applied.
+To invoke other generators, import the entry point function and run it against the tree. `async/await` can be used to make code with Promises read like procedural code. The generator function may return a callback function that is executed after changes to the file system have been applied.
 
 In the schema.json file for your generator, the `name` is provided as a default option. The `cli` property is set to `nx` to signal that this is a generator that uses `@nrwl/devkit` and not `@angular-devkit`.
 
