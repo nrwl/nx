@@ -19,7 +19,7 @@ import { swcCoreVersion, swcNodeVersion } from 'nx/src/utils/versions';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
 
-const WORKSPACE_PLUGIN_DIR = 'tools/eslint-rules';
+export const WORKSPACE_PLUGIN_DIR = 'tools/eslint-rules';
 
 export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
   // Noop if the workspace rules project already exists

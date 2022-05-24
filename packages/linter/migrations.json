@@ -64,6 +64,12 @@
       "version": "13.3.0-beta.0",
       "description": "Update eslint-rules jest.config.js in order to support ESLint v8 exports mapping, remove category field",
       "factory": "./src/migrations/update-13-3-0/eslint-8-updates"
+    },
+    "add-swc-deps": {
+      "cli": "nx",
+      "version": "14-1-9-beta.0",
+      "description": "Adds @swc/core and @swc-node as a dev dep if you are using them",
+      "factory": "./src/migrations/update-14-1-9/add-swc-deps-if-needed"
     }
   },
   "packageJsonUpdates": {
