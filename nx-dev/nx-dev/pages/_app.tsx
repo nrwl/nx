@@ -1,5 +1,4 @@
 import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
-import { AnnouncementBanner } from '@nrwl/nx-dev/ui-common';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
