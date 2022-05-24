@@ -3,7 +3,6 @@ import { remove } from 'fs-extra';
 import { existsSync } from 'fs';
 import { stripIndent } from 'nx/src/utils/logger';
 
-process.env.PUBLISHED_VERSION = process.env.PUBLISHED_VERSION || `9999.0.2`;
 process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
@@ -43,9 +42,15 @@ async function buildPackagePublishAndCleanPorts() {
 }
 
 async function updateVersionsAndPublishPackages() {
-  execSync(`yarn nx-release ${process.env.PUBLISHED_VERSION} --local`, {
-    stdio: 'inherit',
+  const output = execSync(`yarn nx-release --local`, {
+    encoding: 'utf8',
   });
+  process.env.PUBLISHED_VERSION = output.match(
+    /Successfully published:\n(?:.*\n)*(?: - nx@(.*))/
+  )[1];
+  process.stdout.write(output);
+
+  console.log(`\n⏩ Using published version ${process.env.PUBLISHED_VERSION}`);
 }
 
 (async () => {

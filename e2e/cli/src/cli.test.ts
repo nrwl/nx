@@ -84,9 +84,6 @@ describe('Cli', () => {
 
     const affectedHelp = runCLI(`affected --help`);
     expect(affectedHelp).toContain('Run target for affected projects');
-
-    const version = runCLI(`--version`);
-    expect(version).toContain('9999.0.2'); // stub value
   }, 120000);
 });
 

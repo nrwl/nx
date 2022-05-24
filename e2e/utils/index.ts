@@ -66,7 +66,6 @@ export const e2eCwd = `${e2eRoot}/${currentCli()}`;
 ensureDirSync(e2eCwd);
 
 let projName: string;
-const publishedVersion = process.env.PUBLISHED_VERSION || `9999.0.2`;
 
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
@@ -224,7 +223,7 @@ export function runCreatePlugin(
 export function packageInstall(
   pkg: string,
   projName?: string,
-  version = publishedVersion
+  version = 'latest'
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
@@ -478,7 +477,7 @@ export function runCLIAsync(
 export function runNgAdd(
   packageName: string,
   command?: string,
-  version: string = publishedVersion,
+  version: string = 'latest',
   opts: RunCmdOpts = {
     silenceError: false,
     env: null,
@@ -805,7 +804,7 @@ export function getPackageManagerCommand({
     npm: {
       createWorkspace: `npx ${
         +npmMajorVersion >= 7 ? '--yes' : ''
-      } create-nx-workspace@${publishedVersion}`,
+      } create-nx-workspace@latest`,
       run: (script: string, args: string) => `npm run ${script} -- ${args}`,
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
@@ -815,7 +814,7 @@ export function getPackageManagerCommand({
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
+      createWorkspace: `yarn global add create-nx-workspace@latest && create-nx-workspace`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
@@ -825,7 +824,7 @@ export function getPackageManagerCommand({
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
-      createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
+      createWorkspace: `pnpm dlx create-nx-workspace@latest`,
       run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
