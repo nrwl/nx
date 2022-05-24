@@ -213,6 +213,9 @@ async function runSchematic(
 type AngularJsonConfiguration = WorkspaceJsonConfiguration &
   Pick<NxJsonConfiguration, 'cli' | 'defaultProject' | 'generators'> & {
     schematics?: NxJsonConfiguration['generators'];
+    cli?: NxJsonConfiguration['cli'] & {
+      schematicCollections?: string[];
+    };
   };
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
   protected __nxInMemoryWorkspace: WorkspaceJsonConfiguration | null;
@@ -432,6 +435,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         if (formatted) {
           const { cli, generators, defaultProject, ...workspaceJson } =
             formatted;
+          delete cli.schematicCollections;
           return merge(
             this.writeWorkspaceConfigFiles(context, workspaceJson),
             cli || generators || defaultProject
@@ -446,6 +450,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             defaultProject,
             ...angularJson
           } = w;
+          delete cli.schematicCollections;
           return merge(
             this.writeWorkspaceConfigFiles(context, angularJson),
             cli || schematics
@@ -461,6 +466,8 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     }
     const { cli, schematics, generators, defaultProject, ...angularJson } =
       config;
+    delete cli.schematicCollections;
+
     return merge(
       this.writeWorkspaceConfigFiles(context, angularJson),
       this.__saveNxJsonProps({

@@ -1,4 +1,5 @@
 {
+  "$schema": "packages/nx/schemas/nx-schema.json",
   "implicitDependencies": {
     "package.json": "*",
     ".eslintrc.json": "*",
