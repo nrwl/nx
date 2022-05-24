@@ -2,6 +2,7 @@ import {
   joinPathFragments,
   parseJson,
   ProjectConfiguration,
+  readJsonFile,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
@@ -30,6 +31,16 @@ import isCI = require('is-ci');
 import treeKill = require('tree-kill');
 import { Workspaces } from '../../packages/nx/src/config/workspaces';
 import { PackageManager } from 'nx/src/utils/package-manager';
+
+export function getPublishedVersion(): string {
+  process.env.PUBLISHED_VERSION =
+    process.env.PUBLISHED_VERSION ||
+    // read version of built nx package
+    readJsonFile(`./build/packages/nx/package.json`).version ||
+    // fallback to latest if built nx package is missing
+    'latest';
+  return process.env.PUBLISHED_VERSION;
+}
 
 export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
@@ -196,7 +207,9 @@ export function runCreatePlugin(
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  let command = `${pm.runUninstalledPackage} create-nx-plugin@latest ${name}`;
+  let command = `${
+    pm.runUninstalledPackage
+  } create-nx-plugin@${getPublishedVersion()} ${name}`;
 
   if (pluginName) {
     command += ` --pluginName=${pluginName}`;
@@ -223,7 +236,7 @@ export function runCreatePlugin(
 export function packageInstall(
   pkg: string,
   projName?: string,
-  version = 'latest'
+  version = getPublishedVersion()
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
@@ -477,7 +490,7 @@ export function runCLIAsync(
 export function runNgAdd(
   packageName: string,
   command?: string,
-  version: string = 'latest',
+  version: string = getPublishedVersion(),
   opts: RunCmdOpts = {
     silenceError: false,
     env: null,
@@ -804,7 +817,7 @@ export function getPackageManagerCommand({
     npm: {
       createWorkspace: `npx ${
         +npmMajorVersion >= 7 ? '--yes' : ''
-      } create-nx-workspace@latest`,
+      } create-nx-workspace@${getPublishedVersion()}`,
       run: (script: string, args: string) => `npm run ${script} -- ${args}`,
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
@@ -814,7 +827,7 @@ export function getPackageManagerCommand({
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@latest && create-nx-workspace`,
+      createWorkspace: `yarn global add create-nx-workspace@${getPublishedVersion()} && create-nx-workspace`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
@@ -824,7 +837,7 @@ export function getPackageManagerCommand({
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
-      createWorkspace: `pnpm dlx create-nx-workspace@latest`,
+      createWorkspace: `pnpm dlx create-nx-workspace@${getPublishedVersion()}`,
       run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,

@@ -6,6 +6,7 @@ import {
   updateFile,
   getPackageManagerCommand,
   getSelectedPackageManager,
+  getPublishedVersion,
 } from '@nrwl/e2e/utils';
 import { Workspaces } from 'nx/src/config/workspaces';
 
@@ -33,7 +34,7 @@ describe('add-nx-to-monorepo', () => {
 
       // Act
       const output = runCommand(
-        `${packageManagerCommand} add-nx-to-monorepo@latest --nx-cloud false`
+        `${packageManagerCommand} add-nx-to-monorepo@${getPublishedVersion()} --nx-cloud false`
       );
       // Assert
       expect(output).toContain('🎉 Done!');
@@ -58,7 +59,7 @@ describe('add-nx-to-monorepo', () => {
 
       // Act
       runCommand(
-        `${packageManagerCommand} add-nx-to-monorepo@latest --nx-cloud false`
+        `${packageManagerCommand} add-nx-to-monorepo@${getPublishedVersion()} --nx-cloud false`
       );
       const output = runCLI('build package-a');
       // Assert

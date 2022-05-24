@@ -42,15 +42,9 @@ async function buildPackagePublishAndCleanPorts() {
 }
 
 async function updateVersionsAndPublishPackages() {
-  const output = execSync(`yarn nx-release --local`, {
-    encoding: 'utf8',
+  execSync(`yarn nx-release --local`, {
+    stdio: 'inherit',
   });
-  process.env.PUBLISHED_VERSION = output.match(
-    /Successfully published:\n(?:.*\n)*(?: - nx@(.*))/
-  )[1];
-  process.stdout.write(output);
-
-  console.log(`\n⏩ Using published version ${process.env.PUBLISHED_VERSION}`);
 }
 
 (async () => {
