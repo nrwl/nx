@@ -173,7 +173,7 @@
     "karma-jasmine-html-reporter": "^0.2.2",
     "karma-webpack": "4.0.2",
     "kill-port": "^1.6.1",
-    "lerna": "^4.0.0",
+    "lerna": "5.0.0-alpha.2",
     "less": "3.12.2",
     "less-loader": "^10.1.0",
     "license-webpack-plugin": "^4.0.2",
