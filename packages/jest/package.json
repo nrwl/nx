@@ -36,6 +36,7 @@
     "@jest/reporters": "27.5.1",
     "@jest/test-result": "27.5.1",
     "@nrwl/devkit": "file:../devkit",
+    "@phenomnomnominal/tsquery": "4.1.1",
     "chalk": "4.1.0",
     "identity-obj-proxy": "3.0.0",
     "jest-config": "27.5.1",
