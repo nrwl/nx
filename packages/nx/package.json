@@ -32,8 +32,6 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "@parcel/watcher": "2.0.4",
-    "@swc-node/register": "^1.4.2",
-    "@swc/core": "^1.2.173",
     "chalk": "4.1.0",
     "chokidar": "^3.5.1",
     "cli-cursor": "3.1.0",
@@ -60,6 +58,18 @@
     "v8-compile-cache": "2.3.0",
     "yargs": "^17.4.0",
     "yargs-parser": "21.0.1"
+  },
+  "peerDependencies": {
+    "@swc-node/register": "^1.4.2",
+    "@swc/core": "^1.2.173"
+  },
+  "peerDependenciesMeta": {
+    "@swc-node/register": {
+      "optional": true
+    },
+    "@swc/core": {
+      "optional": true
+    }
   },
   "nx-migrations": {
     "migrations": "./migrations.json",

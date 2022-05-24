@@ -1,4 +1,3 @@
-import type { Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
@@ -6,21 +5,25 @@ import {
   generateFiles,
   GeneratorCallback,
   getWorkspaceLayout,
+  installPackagesTask,
   joinPathFragments,
   names,
   normalizePath,
   readProjectConfiguration,
+  Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import type { Schema } from './schema';
-import { nxVersion } from '../../utils/versions';
-import * as path from 'path';
 import { libraryGenerator } from '@nrwl/js';
-import { e2eProjectGenerator } from '../e2e-project/e2e';
-import { generatorGenerator } from '../generator/generator';
-import { executorGenerator } from '../executor/executor';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies';
+import { swcNodeVersion } from 'nx/src/utils/versions';
+import * as path from 'path';
 
+import { nxVersion } from '../../utils/versions';
+import { e2eProjectGenerator } from '../e2e-project/e2e';
+import { executorGenerator } from '../executor/executor';
+import { generatorGenerator } from '../generator/generator';
+
+import type { Schema } from './schema';
 interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
@@ -135,17 +138,21 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
 
   tasks.push(libraryTask);
 
-  const installTask = addDependenciesToPackageJson(
+  addDependenciesToPackageJson(
     host,
     {},
     {
       '@nrwl/devkit': nxVersion,
       '@nrwl/jest': nxVersion,
       '@nrwl/js': nxVersion,
+      '@swc-node/register': swcNodeVersion,
       tslib: '^2.0.0',
     }
   );
-  tasks.push(installTask);
+
+  // Ensures Swc Deps are installed to handle running
+  // local plugin generators and executors
+  addSwcDependencies(host);
 
   await addFiles(host, options);
   updateWorkspaceJson(host, options);
@@ -160,7 +167,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
 
   await formatFiles(host);
 
-  return runTasksInSerial(...tasks);
+  return () => installPackagesTask(host);
 }
 
 export default pluginGenerator;
