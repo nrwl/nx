@@ -1,4 +1,5 @@
 import {
+  getPublishedVersion,
   isNotWindows,
   newProject,
   readFile,
@@ -86,7 +87,7 @@ describe('Cli', () => {
     expect(affectedHelp).toContain('Run target for affected projects');
 
     const version = runCLI(`--version`);
-    expect(version).toContain('9999.0.2'); // stub value
+    expect(version).toContain(getPublishedVersion()); // stub value
   }, 120000);
 });
 
