@@ -1,16 +1,13 @@
-import { toOldFormatOrNull, Workspaces } from '../config/workspaces';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
-import type { NxArgs } from '../utils/command-line-utils';
-import { workspaceRoot } from '../utils/workspace-root';
-import { fileExists } from '../utils/fileutils';
-import { jsonDiff } from '../utils/json-diff';
-import ignore from 'ignore';
 import { FileData } from '../config/project-graph';
-import { readJsonFile } from '../utils/fileutils';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { toOldFormatOrNull, Workspaces } from '../config/workspaces';
+import type { NxArgs } from '../utils/command-line-utils';
+import { fileExists, readJsonFile } from '../utils/fileutils';
+import { createWorkspaceIgnore } from '../utils/ignore';
+import { jsonDiff } from '../utils/json-diff';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export interface Change {
   type: string;
@@ -32,13 +29,6 @@ export function readFileIfExisting(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
-function getIgnoredGlobs() {
-  const ig = ignore();
-  ig.add(readFileIfExisting(`${workspaceRoot}/.gitignore`));
-  ig.add(readFileIfExisting(`${workspaceRoot}/.nxignore`));
-  return ig;
-}
-
 export function calculateFileChanges(
   files: string[],
   allWorkspaceFiles: FileData[],
@@ -47,7 +37,7 @@ export function calculateFileChanges(
     f: string,
     r: void | string
   ) => string = defaultReadFileAtRevision,
-  ignore = getIgnoredGlobs()
+  ignore = createWorkspaceIgnore()
 ): FileChange[] {
   files = files.filter((f) => !ignore.ignores(f));
 

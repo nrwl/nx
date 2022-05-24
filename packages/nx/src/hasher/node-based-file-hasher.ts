@@ -1,12 +1,12 @@
-import { workspaceRoot } from '../utils/workspace-root';
+import { readdirSync, statSync } from 'fs';
+import { join, relative } from 'path';
 import { performance } from 'perf_hooks';
 import { FileData } from '../config/project-graph';
-import { join, relative } from 'path';
-import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
-import { FileHasherBase } from './file-hasher-base';
-import { stripIndents } from '../utils/strip-indents';
-import ignore from 'ignore';
+import { createWorkspaceIgnore } from '../utils/ignore';
 import { normalizePath } from '../utils/path';
+import { stripIndents } from '../utils/strip-indents';
+import { workspaceRoot } from '../utils/workspace-root';
+import { FileHasherBase } from './file-hasher-base';
 
 export class NodeBasedFileHasher extends FileHasherBase {
   ignoredGlobs = getIgnoredGlobs();
@@ -65,18 +65,12 @@ export class NodeBasedFileHasher extends FileHasherBase {
 }
 
 function getIgnoredGlobs() {
-  const ig = ignore();
-  ig.add(readFileIfExisting(`${workspaceRoot}/.gitignore`));
-  ig.add(readFileIfExisting(`${workspaceRoot}/.nxignore`));
+  const ig = createWorkspaceIgnore();
   ig.add(stripIndents`
       node_modules
       tmp
       dist
-      build    
+      build
     `);
   return ig;
-}
-
-function readFileIfExisting(path: string) {
-  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }

@@ -1,17 +1,15 @@
-import { execFileSync, fork } from 'child_process';
 import {
   ExecutorContext,
   joinPathFragments,
-  readJsonFile,
   workspaceLayout,
 } from '@nrwl/devkit';
-import ignore from 'ignore';
-import { readFileSync } from 'fs';
-import { Schema } from './schema';
+import { execFileSync, fork } from 'child_process';
 import { watch } from 'chokidar';
+import { createWorkspaceIgnore } from 'nx/src/utils/ignore';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { platform } from 'os';
 import { resolve } from 'path';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
+import { Schema } from './schema';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -85,22 +83,11 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
   return outputPath;
 }
 
-function getIgnoredGlobs(root: string) {
-  const ig = ignore();
-  try {
-    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
-  } catch {}
-  return ig;
-}
-
 function createFileWatcher(
   root: string,
   changeHandler: () => void
 ): () => void {
-  const ignoredGlobs = getIgnoredGlobs(root);
+  const ignore = createWorkspaceIgnore(root);
   const layout = workspaceLayout();
 
   const watcher = watch(
@@ -114,7 +101,7 @@ function createFileWatcher(
     }
   );
   watcher.on('all', (_event: string, path: string) => {
-    if (ignoredGlobs.ignores(path)) return;
+    if (ignore.ignores(path)) return;
     changeHandler();
   });
   return () => watcher.close();

@@ -1,5 +1,5 @@
 import type { Tree } from 'nx/src/generators/tree';
-import ignore, { Ignore } from 'ignore';
+import { createGitignoreFromTree } from 'nx/src/utils/ignore';
 import { join, relative, sep } from 'path';
 
 /**
@@ -10,26 +10,27 @@ export function visitNotIgnoredFiles(
   dirPath: string = tree.root,
   visitor: (path: string) => void
 ): void {
-  let ig: Ignore;
-  if (tree.exists('.gitignore')) {
-    ig = ignore();
-    ig.add(tree.read('.gitignore', 'utf-8'));
-  }
-  dirPath = normalizePathRelativeToRoot(dirPath, tree.root);
-  if (dirPath !== '' && ig?.ignores(dirPath)) {
-    return;
-  }
-  for (const child of tree.children(dirPath)) {
-    const fullPath = join(dirPath, child);
-    if (ig?.ignores(fullPath)) {
-      continue;
+  const ignore = createGitignoreFromTree(tree);
+
+  function inner(dirPath: string) {
+    dirPath = normalizePathRelativeToRoot(dirPath, tree.root);
+    if (dirPath !== '' && ignore.ignores(dirPath)) {
+      return;
     }
-    if (tree.isFile(fullPath)) {
-      visitor(fullPath);
-    } else {
-      visitNotIgnoredFiles(tree, fullPath, visitor);
+    for (const child of tree.children(dirPath)) {
+      const fullPath = join(dirPath, child);
+      if (ignore.ignores(fullPath)) {
+        continue;
+      }
+      if (tree.isFile(fullPath)) {
+        visitor(fullPath);
+      } else {
+        inner(fullPath);
+      }
     }
   }
+
+  inner(dirPath);
 }
 
 function normalizePathRelativeToRoot(path: string, root: string): string {
