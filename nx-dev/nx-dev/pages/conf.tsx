@@ -1,11 +1,5 @@
-import {
-  ConfSchedule,
-  ConfScheduleShort,
-  ConfSpeakers,
-  ConfSponsors,
-  ConfWorkshop,
-} from '@nrwl/nx-dev/ui-conference';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
+import { ConfScheduleShort, ConfSpeakers } from '@nrwl/nx-dev/ui-conference';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
