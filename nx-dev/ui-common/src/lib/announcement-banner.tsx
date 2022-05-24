@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 export function AnnouncementBanner() {
   return (
     <div className="bg-slate-800">
@@ -7,23 +5,30 @@ export function AnnouncementBanner() {
         <div className="text-center sm:px-16 sm:pr-16">
           <p className="text-sm font-medium text-white">
             <span className="md:hidden">
-              <Link href="/conf">
-                <a className="text-white underline">
-                  Nx Conf Lite is coming! 4/29
-                </a>
-              </Link>
+              <a
+                href="https://ti.to/nrwl/nx-workshop-7-2022/?utm_source=nxdev-announcement-banner"
+                rel="noreferrer"
+                target="_blank"
+                className="text-white underline"
+              >
+                A new Nx workshop is coming on July 7th and 8th!
+              </a>
             </span>
             <span className="hidden md:inline">
-              To your agenda! Nx Conf Lite is on 4/29, a free to attend
-              conference that you don't want to miss!
+              To your agenda! A new Nx workshop will happen on July 7th and 8th,
+              an online workshop to know how to Develop at Scale with Nx
+              Monorepos!
             </span>
             <span className="ml-2 inline-block">
-              <Link href="/conf">
-                <a className="font-bold text-white underline">
-                  {' '}
-                  Schedule and more info <span aria-hidden="true">&rarr;</span>
-                </a>
-              </Link>
+              <a
+                href="https://ti.to/nrwl/nx-workshop-7-2022/?utm_source=nxdev-announcement-banner"
+                rel="noreferrer"
+                target="_blank"
+                className="font-bold text-white underline"
+              >
+                {' '}
+                Schedule and more info <span aria-hidden="true">&rarr;</span>
+              </a>
             </span>
           </p>
         </div>
