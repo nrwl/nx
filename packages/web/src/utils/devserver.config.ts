@@ -93,7 +93,6 @@ function getDevServerPartial(
     open: options.open,
     static: false,
     compress: scriptsOptimization || stylesOptimization,
-    https: options.ssl,
     devMiddleware: {
       publicPath: servePath,
       stats: false,
@@ -110,7 +109,13 @@ function getDevServerPartial(
   };
 
   if (options.ssl && options.sslKey && options.sslCert) {
-    config.https = getSslConfig(root, options);
+    // deprecation of 'https' setting: https://webpack.js.org/configuration/dev-server/#devserverserver
+    config.server = {
+      type: 'https',
+      options: {
+        ...getSslConfig(root, options),
+      },
+    };
   }
 
   if (options.proxyConfig) {
