@@ -39,8 +39,7 @@ export const registerTsProject = (
     const tsNodeInstalled = packageIsInstalled('ts-node/register');
     if (tsNodeInstalled) {
       warnTsNodeUsage();
-      const { register } =
-        require('ts-node') as typeof import('ts-node');
+      const { register } = require('ts-node') as typeof import('ts-node');
 
       // ts-node doesn't provide a cleanup method
       registerTranspiler = () => {
@@ -48,8 +47,8 @@ export const registerTsProject = (
           project: tsConfigPath,
           transpileOnly: true,
           compilerOptions: {
-            module: 'commonjs'
-          }
+            module: 'commonjs',
+          },
         });
         return () => {};
       };
