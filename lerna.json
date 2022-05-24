@@ -1,7 +1,5 @@
 {
-  "packages": [
-    "build/packages/*"
-  ],
+  "packages": ["build/packages/*"],
   "version": "14.1.8",
   "granularPathspec": false,
   "command": {
