@@ -48,7 +48,7 @@
     "glob": "7.1.4",
     "ignore": "^5.0.4",
     "jsonc-parser": "3.0.0",
-    "minimatch": "3.0.4",
+    "minimatch": "3.0.5",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
     "semver": "7.3.4",
