@@ -1,16 +1,14 @@
 #!/usr/bin/env node
 
-import * as stripJsonComments from 'strip-json-comments';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as cp from 'child_process';
 import { execSync } from 'child_process';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 import * as enquirer from 'enquirer';
 import * as yargsParser from 'yargs-parser';
-import { output } from '@nrwl/devkit';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const ignore = require('ignore');
+import { output, readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import ignore from 'ignore';
+
 const parsedArgs = yargsParser(process.argv, {
   boolean: ['nxCloud'],
   configuration: {
@@ -146,7 +144,7 @@ function createProjectDesc(
   const res = [];
   packageJsonFiles.forEach((p) => {
     const dir = path.dirname(p);
-    const packageJson = readJsonFile(repoRoot, p);
+    const packageJson = readJsonFile(path.join(repoRoot, p));
     if (!packageJson.name) return;
 
     if (packageJson.main) {
@@ -168,14 +166,8 @@ function createProjectDesc(
   return res;
 }
 
-function readJsonFile(repoRoot: string, file: string) {
-  return JSON.parse(
-    stripJsonComments(fs.readFileSync(path.join(repoRoot, file)).toString())
-  );
-}
-
 function detectWorkspaceScope(repoRoot: string) {
-  let scope = readJsonFile(repoRoot, `package.json`).name;
+  let scope = readJsonFile(path.join(repoRoot, `package.json`)).name;
   if (!scope) return 'undetermined';
 
   if (scope.startsWith('@')) {
@@ -212,7 +204,7 @@ function createNxJsonFile(repoRoot: string) {
     },
   };
 
-  fs.writeFileSync(`${repoRoot}/nx.json`, JSON.stringify(res, null, 2));
+  writeJsonFile(`${repoRoot}/nx.json`, res);
 }
 
 function deduceWorkspaceLayout(repoRoot: string) {
@@ -227,10 +219,8 @@ function deduceWorkspaceLayout(repoRoot: string) {
 
 function exists(folder: string) {
   try {
-    const s = fs.statSync(folder);
-    return s.isDirectory();
-    // eslint-disable-next-line no-empty
-  } catch (e) {
+    return fs.statSync(folder).isDirectory();
+  } catch {
     return false;
   }
 }
@@ -241,25 +231,25 @@ function deduceDefaultBase() {
       stdio: ['ignore', 'ignore', 'ignore'],
     });
     return 'main';
-  } catch (e) {
+  } catch {
     try {
       execSync(`git rev-parse --verify dev`, {
         stdio: ['ignore', 'ignore', 'ignore'],
       });
       return 'dev';
-    } catch (e) {
+    } catch {
       try {
         execSync(`git rev-parse --verify develop`, {
           stdio: ['ignore', 'ignore', 'ignore'],
         });
         return 'develop';
-      } catch (e) {
+      } catch {
         try {
           execSync(`git rev-parse --verify next`, {
             stdio: ['ignore', 'ignore', 'ignore'],
           });
           return 'next';
-        } catch (e) {
+        } catch {
           return 'master';
         }
       }
@@ -269,13 +259,13 @@ function deduceDefaultBase() {
 
 // add dependencies
 function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
-  const json = readJsonFile(repoRoot, `package.json`);
+  const json = readJsonFile(path.join(repoRoot, `package.json`));
   if (!json.devDependencies) json.devDependencies = {};
   json.devDependencies['nx'] = require('../package.json').version;
   if (useCloud) {
     json.devDependencies['@nrwl/nx-cloud'] = 'latest';
   }
-  fs.writeFileSync(`package.json`, JSON.stringify(json, null, 2));
+  writeJsonFile(`package.json`, json);
 }
 
 function runInstall(repoRoot: string) {
