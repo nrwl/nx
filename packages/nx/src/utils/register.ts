@@ -15,13 +15,11 @@ export const registerTsProject = (
   path: string,
   configFilename = 'tsconfig.json'
 ): (() => void) => {
-  const cleanupFunctions: (() => void)[] = [];
-
   // Function to register transpiler that returns cleanup function
   let registerTranspiler: () => () => void;
 
   const tsConfigPath = join(path, configFilename);
-  cleanupFunctions.push(registerTsConfigPaths(tsConfigPath));
+  const cleanupFunctions = [registerTsConfigPaths(tsConfigPath)];
 
   const swcNodeInstalled = packageIsInstalled('@swc-node/register');
   if (swcNodeInstalled) {

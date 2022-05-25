@@ -127,7 +127,6 @@ function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
 
 export async function pluginGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
-  const tasks: GeneratorCallback[] = [];
 
   const libraryTask = await libraryGenerator(host, {
     ...schema,
@@ -135,8 +134,6 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     buildable: true,
     importPath: options.npmPackageName,
   });
-
-  tasks.push(libraryTask);
 
   addDependenciesToPackageJson(
     host,
