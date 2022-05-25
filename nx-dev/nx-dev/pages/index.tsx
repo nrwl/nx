@@ -112,7 +112,7 @@ export function Index(): ReactComponentElement<any> {
                 >
                   <NpxCreateNxWorkspace />
                 </div>
-                <div className="my-14 flex flex-wrap text-center sm:space-x-4">
+                <div className="my-14 flex flex-wrap space-y-4 text-center sm:space-y-0 sm:space-x-4">
                   <Link href="#getting-started">
                     <a
                       title="Start using Nx by creating a workspace"
