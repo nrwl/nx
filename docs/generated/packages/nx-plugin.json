@@ -329,7 +329,8 @@
         "properties": {
           "projectName": {
             "type": "string",
-            "description": "Which project should be the target be added to?"
+            "description": "Which project should be the target be added to?",
+            "$default": { "$source": "projectName" }
           }
         },
         "required": ["projectName"],

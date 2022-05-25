@@ -11,7 +11,7 @@
       "description": "Which project should be the target be added to?",
       "$default": {
         "$source": "projectName"
-      },
+      }
     }
   },
   "required": ["projectName"]

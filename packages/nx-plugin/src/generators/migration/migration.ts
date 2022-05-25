@@ -11,7 +11,8 @@ import {
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 import * as path from 'path';
-
+import { addMigrationJsonChecks } from '../plugin-lint-checks/generator';
+import type { Linter as EsLint } from 'eslint';
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectSourceRoot: string;
@@ -124,6 +125,9 @@ export async function migrationGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
   addFiles(host, options);
+  if (!host.exists('migrations.json')) {
+    addMigrationJsonChecks(host, { projectName: schema.project });
+  }
   updateMigrationsJson(host, options);
   updateWorkspaceJson(host, options);
   updateMigrationsJson(host, options);

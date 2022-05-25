@@ -43,7 +43,7 @@ export type MessageIds =
   | 'noExecutorsOrBuildersFound'
   | 'valueShouldBeObject';
 
-export const RULE_NAME = 'nx-plugin-schema';
+export const RULE_NAME = 'nx-plugin-checks';
 
 export default createESLintRule<Options, MessageIds>({
   name: RULE_NAME,
@@ -59,8 +59,8 @@ export default createESLintRule<Options, MessageIds>({
       invalidImplementationPath:
         '{{ key }}: Implementation path should point to a valid file',
       invalidImplementationModule:
-        'Unable to find export {{ identifier }} in implementation module',
-      invalidVersion: 'Version should be a valid semver',
+        '{{ key }}: Unable to find export {{ identifier }} in implementation module',
+      invalidVersion: '{{ key }}: Version should be a valid semver',
       noGeneratorsOrSchematicsFound:
         'Unable to find `generators` or `schematics` property',
       noExecutorsOrBuildersFound:
@@ -69,7 +69,7 @@ export default createESLintRule<Options, MessageIds>({
       missingRequiredSchema: '{{ key }}: Missing required property - `schema`',
       missingImplementation:
         '{{ key }}: Missing required property - `implementation`',
-      missingVersion: 'Missing required property: `version`',
+      missingVersion: '{{ key }}: Missing required property - `version`',
     },
   },
   defaultOptions: [DEFAULT_OPTIONS],
@@ -290,7 +290,7 @@ export function validateEntry(
       node: baseNode as any,
     });
   } else {
-    validateImplemenationNode(implementationNode, context);
+    validateImplemenationNode(implementationNode, key, context);
   }
 
   if (mode === 'migration') {
@@ -300,6 +300,9 @@ export function validateEntry(
     if (!versionNode) {
       context.report({
         messageId: 'missingVersion',
+        data: {
+          key,
+        },
         node: baseNode as any,
       });
     } else if (
@@ -308,6 +311,9 @@ export function validateEntry(
     ) {
       context.report({
         messageId: 'invalidVersion',
+        data: {
+          key,
+        },
         node: versionNode.value as any,
       });
     } else {
@@ -315,6 +321,9 @@ export function validateEntry(
       if (!valid(specifiedVersion)) {
         context.report({
           messageId: 'invalidVersion',
+          data: {
+            key,
+          },
           node: versionNode.value as any,
         });
       }
@@ -324,6 +333,7 @@ export function validateEntry(
 
 export function validateImplemenationNode(
   implementationNode: AST.JSONProperty,
+  key: string,
   context: TSESLint.RuleContext<MessageIds, Options>
 ) {
   if (
@@ -333,7 +343,7 @@ export function validateImplemenationNode(
     context.report({
       messageId: 'invalidImplementationPath',
       data: {
-        key: (implementationNode.key as AST.JSONLiteral).value,
+        key,
       },
       node: implementationNode.value as any,
     });
@@ -353,7 +363,7 @@ export function validateImplemenationNode(
       context.report({
         messageId: 'invalidImplementationPath',
         data: {
-          key: (implementationNode.key as AST.JSONLiteral).value,
+          key,
         },
         node: implementationNode.value as any,
       });
@@ -367,6 +377,7 @@ export function validateImplemenationNode(
           node: implementationNode.value as any,
           data: {
             identifier,
+            key,
           },
         });
       }
@@ -385,37 +396,60 @@ export function validatePackageGroup(
       (x.key.value === 'nx-migrations' ||
         x.key.value === 'ng-update' ||
         x.key.value === 'migrations')
-  ).value as AST.JSONObjectExpression;
+  )?.value as AST.JSONObjectExpression;
 
-  const packageGroupNode = migrationsNode.properties.find(
+  const packageGroupNode = migrationsNode?.properties.find(
     (x) => x.key.type === 'JSONLiteral' && x.key.value === 'packageGroup'
   );
 
   if (packageGroupNode) {
+    // Package group is defined as an array
     if (packageGroupNode.value.type === 'JSONArrayExpression') {
+      // Look at entries which are an object
       const members = packageGroupNode.value.elements.filter(
         (x) => x.type === 'JSONObjectExpression'
       );
+      // validate that the version property exists and is valid
       for (const member of members) {
         const versionPropertyNode = (
           member as AST.JSONObjectExpression
         ).properties.find(
           (x) => x.key.type === 'JSONLiteral' && x.key.value === 'version'
         );
-        if (versionPropertyNode && !versionPropertyNode.value) {
+        const packageNode = (
+          member as AST.JSONObjectExpression
+        ).properties.find(
+          (x) => x.key.type === 'JSONLiteral' && x.key.value === 'package'
+        );
+        const key = (packageNode?.value as AST.JSONLiteral)?.value ?? 'unknown';
+
+        if (versionPropertyNode) {
+          if (!validateVersionJsonExpression(versionPropertyNode.value))
+            context.report({
+              messageId: 'invalidVersion',
+              data: { key },
+              node: versionPropertyNode.value as any,
+            });
+        } else {
           context.report({
-            messageId: 'invalidVersion',
-            node: versionPropertyNode as any,
+            messageId: 'missingVersion',
+            data: { key },
+            node: member as any,
           });
         }
       }
+      // Package group is defined as an object (Record<PackageName, Version>)
     } else if (packageGroupNode.value.type === 'JSONObjectExpression') {
       const properties = packageGroupNode.value.properties;
+      // For each property, ensure its value is a valid version
       for (const propertyNode of properties) {
         if (!validateVersionJsonExpression(propertyNode.value)) {
           context.report({
             messageId: 'invalidVersion',
-            node: propertyNode as any,
+            data: {
+              key: (propertyNode.key as AST.JSONLiteral).value,
+            },
+            node: propertyNode.value as any,
           });
         }
       }
@@ -425,6 +459,7 @@ export function validatePackageGroup(
 
 export function validateVersionJsonExpression(node: AST.JSONExpression) {
   return (
+    node &&
     node.type === 'JSONLiteral' &&
     typeof node.value === 'string' &&
     valid(node.value)

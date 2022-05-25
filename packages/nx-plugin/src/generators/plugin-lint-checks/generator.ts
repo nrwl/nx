@@ -4,6 +4,7 @@ import {
   ProjectConfiguration,
   readJson,
   readProjectConfiguration,
+  TargetConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -34,9 +35,54 @@ export default async function pluginLintCheckGenerator(
     if (host.exists('.vscode')) {
       setupVsCodeLintingForJsonFiles(host);
     }
+
+    // Project contains migrations.json
+    if (host.exists('migrations.json')) {
+      addMigrationJsonChecks(host, options);
+    }
   } else {
     logger.error(
       `${NX_PREFIX} plugin lint checks can only be added to plugins which use eslint for linting`
+    );
+  }
+}
+
+export function addMigrationJsonChecks(
+  host: Tree,
+  options: PluginLintChecksGeneratorSchema
+) {
+  const projectConfiguration = readProjectConfiguration(
+    host,
+    options.projectName
+  );
+  const [eslintTarget, eslintTargetConfiguration] =
+    getEsLintOptions(projectConfiguration);
+  if (
+    eslintTarget &&
+    eslintTargetConfiguration.options?.lintFilePatterns?.includes(
+      `${projectConfiguration.root}/generators.json`
+    ) &&
+    !eslintTargetConfiguration.options?.lintFilePatterns?.includes(
+      `${projectConfiguration.root}/migrations.json`
+    )
+  ) {
+    // Add to lintFilePatterns
+    eslintTargetConfiguration.options.lintFilePatterns.push(
+      `${projectConfiguration.root}/migrations.json`
+    );
+    updateProjectConfiguration(host, options.projectName, projectConfiguration);
+
+    // Update project level eslintrc
+    updateJson<ESLint.Config>(
+      host,
+      `${projectConfiguration.root}/.eslintrc.json`,
+      (c) => {
+        const override = c.overrides.find((o) =>
+          o.files?.includes('generators.json')
+        );
+        (override.files as string[]).push('migrations.json');
+        return c;
+      }
     );
   }
 }
@@ -49,7 +95,7 @@ function updateProjectTarget(
   project.targets ??= {};
   for (const [target, configuration] of Object.entries(project.targets)) {
     if (configuration.executor === '@nrwl/linter:eslint') {
-      const opts: EsLintExecutorOptions = configuration.options;
+      const opts: EsLintExecutorOptions = configuration.options ?? {};
       opts.lintFilePatterns ??= [];
       opts.lintFilePatterns.push(
         `${project.root}/generators.json`,
@@ -65,21 +111,17 @@ function updateProjectTarget(
 function updateProjectEslintConfig(host: Tree, options: ProjectConfiguration) {
   // Update the project level lint configuration to specify
   // the plugin schema rule for generated files
-  updateJson(
-    host,
-    `${options.root}/.eslintrc.json`,
-    (eslintConfig: ESLint.Config) => {
-      eslintConfig.overrides ??= [];
-      eslintConfig.overrides.push({
-        files: ['executors.json', 'package.json', 'generators.json'],
-        parser: 'jsonc-eslint-parser',
-        rules: {
-          '@nrwl/nx/nx-plugin-schema': 'error',
-        },
-      });
-      return eslintConfig;
-    }
-  );
+  const eslintPath = `${options.root}/.eslintrc.json`;
+  const eslintConfig = readJson<ESLint.Config>(host, eslintPath);
+  eslintConfig.overrides ??= [];
+  eslintConfig.overrides.push({
+    files: ['executors.json', 'package.json', 'generators.json'],
+    parser: 'jsonc-eslint-parser',
+    rules: {
+      '@nrwl/nx/nx-plugin-checks': 'error',
+    },
+  });
+  writeJson(host, eslintPath, eslintConfig);
 }
 
 // Update the root eslint to specify a parser for json files
@@ -118,19 +160,21 @@ function eslintConfigContainsJsonOverride(eslintConfig: ESLint.Config) {
   return eslintConfig.overrides.some((x) => {
     if (typeof x.files === 'string' && x.files.includes('.json')) {
       return true;
-    } else if (
-      Array.isArray(x.files) &&
-      x.files.some((f) => f.includes('.json'))
-    ) {
-      return true;
-    } else {
-      return false;
     }
+    return Array.isArray(x.files) && x.files.some((f) => f.includes('.json'));
   });
 }
 
 function projectIsEsLintEnabled(project: ProjectConfiguration) {
   return Object.values(project.targets || {}).some(
     (x) => x.executor === '@nrwl/linter:eslint'
+  );
+}
+
+export function getEsLintOptions(
+  project: ProjectConfiguration
+): [target: string, configuration: TargetConfiguration<EsLintExecutorOptions>] {
+  return Object.entries(project.targets || {}).find(
+    ([, x]) => x.executor === '@nrwl/linter:eslint'
   );
 }

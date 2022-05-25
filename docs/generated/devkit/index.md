@@ -441,7 +441,13 @@ A plugin for Nx
 
 ### TargetConfiguration
 
-• **TargetConfiguration**: `Object`
+• **TargetConfiguration**<`T`\>: `Object`
+
+#### Type parameters
+
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 ---
 

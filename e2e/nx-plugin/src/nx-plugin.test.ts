@@ -189,6 +189,9 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     const goodGenerator = uniq('good-generator');
     const goodExecutor = uniq('good-executor');
+    const goodMigration = uniq('good-migration');
+    const badMigrationVersion = uniq('bad-version');
+    const missingMigrationVersion = uniq('missing-version');
 
     // Generating the plugin results in a generator also called {plugin},
     // as well as an executor called "build"
@@ -202,11 +205,22 @@ describe('Nx Plugin', () => {
       `generate @nrwl/nx-plugin:executor ${goodExecutor} --project=${plugin}`
     );
 
+    runCLI(
+      `generate @nrwl/nx-plugin:migration ${badMigrationVersion} --project=${plugin} --packageVersion="invalid"`
+    );
+
+    runCLI(
+      `generate @nrwl/nx-plugin:migration ${missingMigrationVersion} --project=${plugin} --packageVersion="0.1.0"`
+    );
+
+    runCLI(
+      `generate @nrwl/nx-plugin:migration ${goodMigration} --project=${plugin} --packageVersion="0.1.0"`
+    );
+
     updateFile(`libs/${plugin}/generators.json`, (f) => {
       const json = JSON.parse(f);
       // @proj/plugin:plugin has an invalid implementation path
-      json.generators[plugin].factory =
-        json.generators[plugin].factory.substring(1);
+      json.generators[plugin].factory = `./generators/${plugin}/bad-path`;
       // @proj/plugin:non-existant has a missing implementation path amd schema
       json.generators['non-existant-generator'] = {};
       return JSON.stringify(json);
@@ -215,10 +229,15 @@ describe('Nx Plugin', () => {
     updateFile(`libs/${plugin}/executors.json`, (f) => {
       const json = JSON.parse(f);
       // @proj/plugin:build has an invalid implementation path
-      json.executors['build'].implementation =
-        json.executors['build'].implementation.substring(1);
+      json.executors['build'].implementation = './executors/build/bad-path';
       // @proj/plugin:non-existant has a missing implementation path amd schema
       json.executors['non-existant-executor'] = {};
+      return JSON.stringify(json);
+    });
+
+    updateFile(`libs/${plugin}/migrations.json`, (f) => {
+      const json = JSON.parse(f);
+      delete json.generators[missingMigrationVersion].version;
       return JSON.stringify(json);
     });
 
@@ -244,6 +263,14 @@ describe('Nx Plugin', () => {
       `non-existant-executor: Missing required property - \`implementation\``
     );
     expect(results).not.toContain(goodExecutor);
+
+    expect(results).toContain(
+      `${missingMigrationVersion}: Missing required property - \`version\``
+    );
+    expect(results).toContain(
+      `${badMigrationVersion}: Version should be a valid semver`
+    );
+    expect(results).not.toContain(goodMigration);
   });
 
   describe('local plugins', () => {

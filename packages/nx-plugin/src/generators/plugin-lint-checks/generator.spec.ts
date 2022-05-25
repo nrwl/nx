@@ -45,7 +45,7 @@ describe('plugin-lint generator', () => {
       expect.objectContaining({
         files: ['executors.json', 'package.json', 'generators.json'],
         rules: {
-          '@nrwl/nx/nx-plugin-schema': 'error',
+          '@nrwl/nx/nx-plugin-checks': 'error',
         },
       })
     );
