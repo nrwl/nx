@@ -486,55 +486,52 @@ function versions(root: string, from: Record<string, string>) {
   return getFromVersion;
 }
 
+const pm = detectPackageManager();
+
+const packageRegistryCache: Record<string, string> = {};
+
+async function getRegistryOfPackage(packageName: string) {
+  const configKeyPrefix = packageName.startsWith('@')
+    ? `${packageName.substring(0, packageName.indexOf('/'))}:`
+    : '';
+
+  if (!packageRegistryCache[packageName]) {
+    const { stdout } = await execAsync(
+      `${pm} config get ${configKeyPrefix}registry`
+    );
+
+    packageRegistryCache[configKeyPrefix] = stdout.trim();
+  }
+
+  return packageRegistryCache[configKeyPrefix];
+}
+
 // testing-fetch-start
 function createFetcher() {
-  const migrationsCache: Record<string, ResolvedMigrationConfiguration> = {};
+  const migrationsCache: Record<
+    string,
+    Promise<ResolvedMigrationConfiguration>
+  > = {};
   const resolvedVersionCache: Record<string, string> = {};
 
   function getMigrationCache(packageName: string, packageVersion: string) {
     return migrationsCache[`${packageName}-${packageVersion}`];
   }
 
-  function setMigrationCache(
-    packageName: string,
-    packageVersion: string,
-    migrations: ResolvedMigrationConfiguration
-  ) {
-    migrationsCache[`${packageName}-${packageVersion}`] = migrations;
-  }
-
-  const packageRegistryCache: Record<string, string> = {};
-
-  const pm = detectPackageManager();
-
-  async function getRegistryOfPackage(packageName: string) {
-    const configKeyPrefix = packageName.startsWith('@')
-      ? `${packageName.substring(0, packageName.indexOf('/'))}:`
-      : '';
-
-    if (!packageRegistryCache[packageName]) {
-      const { stdout } = await execAsync(
-        `${pm} config get ${configKeyPrefix}registry`
-      );
-
-      packageRegistryCache[configKeyPrefix] = stdout.trim();
-    }
-    return packageRegistryCache[configKeyPrefix];
-  }
-
   async function fetchMigrations(
     packageName: string,
-    packageVersion: string
+    packageVersion: string,
+    reusePromiseAsCacheFor: (packageName: string, version: string) => void
   ): Promise<ResolvedMigrationConfiguration> {
+    /**
+     * The github npm package registry does not yet support custom fields,
+     * meaning that `npm view` will not return the nx migration information,
+     * so we have to fallback to getting the information with a full install.
+     */
     if (
       (await getRegistryOfPackage(packageName)) ===
       'https://npm.pkg.github.com/'
     ) {
-      /**
-       * The github npm package registry does not yet support custom fields,
-       * meaning that `npm view` will not return the nx migration information,
-       * so we have to fallback to getting the information with a full install.
-       */
       logger.info(`Fetching ${packageName}@${packageVersion}`);
       return getPackageMigrationsUsingInstall(packageName, packageVersion);
     }
@@ -554,6 +551,7 @@ function createFetcher() {
         return getMigrationCache(packageName, resolvedVersion);
       }
 
+      reusePromiseAsCacheFor(packageName, resolvedVersion);
       return getPackageMigrationsUsingRegistry(packageName, resolvedVersion);
     } catch {
       logger.info(`Fetching ${packageName}@${packageVersion}`);
@@ -569,18 +567,23 @@ function createFetcher() {
       return getMigrationCache(packageName, packageVersion);
     }
 
-    let migrations = await fetchMigrations(packageName, packageVersion).then(
-      (result) => {
-        if (result.schematics) {
-          result.generators = result.schematics;
-          delete result.schematics;
-        }
-        return result;
-      }
-    );
+    function setMigrationCache(packageName: string, packageVersion: string) {
+      migrationsCache[`${packageName}-${packageVersion}`] = migrations;
+    }
 
-    setMigrationCache(packageName, packageVersion, migrations);
-    setMigrationCache(packageName, migrations.version, migrations);
+    let migrations = fetchMigrations(
+      packageName,
+      packageVersion,
+      setMigrationCache
+    ).then((result) => {
+      if (result.schematics) {
+        result.generators = result.schematics;
+        delete result.schematics;
+      }
+      return result;
+    });
+
+    setMigrationCache(packageName, packageVersion);
 
     return migrations;
   };
