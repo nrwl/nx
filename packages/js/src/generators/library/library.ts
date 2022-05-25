@@ -196,8 +196,8 @@ function shouldSkipBabelRc(
   if (options.skipBabelrc == null) {
     const packageJson = readJson(tree, 'package.json');
     return (
-      !packageJson['devDependencies']['@nrwl/web'] &&
-      !packageJson['dependencies']['@nrwl/web']
+      !packageJson['devDependencies']?.['@nrwl/web'] &&
+      !packageJson['dependencies']?.['@nrwl/web']
     );
   }
 

@@ -34,10 +34,7 @@ async function createPreset(tree: Tree, options: Schema) {
   options.standaloneConfig =
     options.standaloneConfig ?? shouldDefaultToUsingStandaloneConfigs(tree);
 
-  if (
-    options.preset === Preset.Empty ||
-    options.preset === Preset.Apps
-  ) {
+  if (options.preset === Preset.Empty || options.preset === Preset.Apps) {
     return;
   } else if (options.preset === Preset.Angular) {
     const {
