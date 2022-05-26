@@ -424,7 +424,8 @@ export class TaskOrchestrator {
   private pipeOutputCapture(task: Task) {
     try {
       return (
-        getExecutorForTask(task, this.workspace).schema.outputCapture === 'pipe'
+        getExecutorForTask(task, this.workspace).schema.outputCapture ===
+          'pipe' || process.env.NX_STREAM_OUTPUT === 'true'
       );
     } catch (e) {
       return false;
