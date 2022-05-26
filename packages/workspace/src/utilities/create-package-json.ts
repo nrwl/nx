@@ -1,5 +1,6 @@
 import type { ProjectGraph } from '@nrwl/devkit';
 import { readJsonFile } from '@nrwl/devkit';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
 /**
  * Creates a package.json in the output directory for support to install dependencies within containers.
@@ -40,6 +41,9 @@ export function createPackageJson(
       packageJson.dependencies[packageName] = version;
     }
   });
+
+  packageJson.devDependencies &&= sortObjectByKeys(packageJson.devDependencies);
+  packageJson.dependencies &&= sortObjectByKeys(packageJson.dependencies);
 
   return packageJson;
 }
