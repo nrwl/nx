@@ -36,6 +36,7 @@
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/jest": "file:../jest",
     "@phenomnomnominal/tsquery": "4.1.1",
+    "nx": "file:../nx",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0"
   },
