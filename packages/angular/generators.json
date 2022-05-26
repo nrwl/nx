@@ -75,6 +75,7 @@
     "remote": {
       "factory": "./src/generators/remote/remote.compat",
       "schema": "./src/generators/remote/schema.json",
+      "x-type": "application",
       "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
@@ -91,6 +92,7 @@
     "host": {
       "factory": "./src/generators/host/host.compat",
       "schema": "./src/generators/host/schema.json",
+      "x-type": "application",
       "description": "Generate a Host Angular Module Federation Application."
     },
     "ng-add": {
