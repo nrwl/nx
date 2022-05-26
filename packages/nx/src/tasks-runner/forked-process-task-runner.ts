@@ -285,6 +285,7 @@ export class ForkedProcessTaskRunner {
     if (!outputPath) {
       delete res.NX_TERMINAL_OUTPUT_PATH;
       delete res.NX_STREAM_OUTPUT;
+      delete res.NX_PREFIX_OUTPUT;
     }
     delete res.NX_SET_CLI;
     return res;
