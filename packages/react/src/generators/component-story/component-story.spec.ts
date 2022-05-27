@@ -52,15 +52,15 @@ describe('react:component-story', () => {
       it('should properly set up the story', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-          import { Story, Meta } from '@storybook/react';
-          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
+          import { ComponentStory, ComponentMeta } from '@storybook/react';
+          import { TestUiLib } from './test-ui-lib';
           
           export default {
             component: TestUiLib,
             title: 'TestUiLib',
-          } as Meta;
+          } as ComponentMeta<typeof TestUiLib>;
           
-          const Template: Story<TestUiLibProps> = (args) => <TestUiLib {...args} />;
+          const Template: ComponentStory<typeof TestUiLib> = (args) => <TestUiLib {...args} />;
           
           export const Primary = Template.bind({});
           Primary.args = {};
