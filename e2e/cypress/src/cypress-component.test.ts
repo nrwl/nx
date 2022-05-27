@@ -69,14 +69,14 @@ describe(Index.name, () => {
     }, 1000000);
 
     it('should successfully run default cypress tests for react', async () => {
-      expect(runCLI(`comp-test ${appName}-react --no-watch`)).toContain(
+      expect(runCLI(`component-test ${appName}-react --no-watch`)).toContain(
         'All specs passed!'
       );
       await killPorts(8080);
     }, 1000000);
 
     it('should successfully run default cypress tests for next', async () => {
-      expect(runCLI(`comp-test ${appName}-next --no-watch`)).toContain(
+      expect(runCLI(`component-test ${appName}-next --no-watch`)).toContain(
         'All specs passed!'
       );
       await killPorts(8080);
@@ -84,7 +84,7 @@ describe(Index.name, () => {
   });
 
   describe('libs', () => {
-    const libName = uniq('cy-comp-test-lib');
+    const libName = uniq('cy-component-test-lib');
     it('should generate w/ cypress component tests', () => {
       runCLI(
         `generate @nrwl/react:lib ${libName}-react --cy --compiler=swc --no-interactive`
@@ -108,14 +108,14 @@ describe(Index.name, () => {
     }, 1000000);
 
     it('should successfully run default cypress tests react', async () => {
-      expect(runCLI(`comp-test ${libName}-react --no-watch`)).toContain(
+      expect(runCLI(`component-test ${libName}-react --no-watch`)).toContain(
         'All specs passed!'
       );
       await killPorts(8080);
     }, 1000000);
 
     it('should successfully run default cypress tests for next', async () => {
-      expect(runCLI(`comp-test ${libName}-next --no-watch`)).toContain(
+      expect(runCLI(`component-test ${libName}-next --no-watch`)).toContain(
         'All specs passed!'
       );
       await killPorts(8080);

@@ -21,4 +21,4 @@ export function filePathPrefix(directory: string) {
   return `${names(directory).fileName}`.replace(new RegExp('/', 'g'), '-');
 }
 
-export const CYPRESS_COMPONENT_TEST_TARGET = 'comp-test';
+export const CYPRESS_COMPONENT_TEST_TARGET = 'component-test';
