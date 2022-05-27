@@ -128,3 +128,9 @@ Your Storybook targets in your `project.json` will look like this:
      ...
     }
 ```
+
+## Moving your project targets to the new (native Storybook) schema
+
+If you are on Nx version `<14.1.8` and you want to move to the latest version (or any version `>=14.1.8`) you can use the `nx migrate` command, which will take care of migrating your Storybook targets across all your Angular projects using Storybook to use the new schema, the original Storybook executors for Angular. The configuration changes that you need to make will be handled automatically by Nx, so you will not have to do any manual work.
+
+If you have already moved on a version of Nx `>=14.1.8` without using `nx migrate` and now you are having trouble with with your Angular projects using Storybook (eg. `Property 'uiFramework' does not match the schema. '@storybook/angular' should be one of ...`), that means that your targets are still using the old schema and they should change. For that, you can use the [`change-storybook-targets` generator](/packages/storybook/generators/change-storybook-targets) which will take care of changing your `storybook` and `build-storybook` targets across your workspace for your Angular projects using Storybook.

@@ -3,7 +3,7 @@
   "cli": "nx",
   "$id": "change-storybook-targets",
   "title": "Change Storybook targets",
-  "description": "Change the Storybook target executors.",
+  "description": "Change the Storybook target executors of Angular projects to use the native Storybook for Angular executor schema.",
   "type": "object",
   "properties": {},
   "required": []
