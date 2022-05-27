@@ -5,7 +5,7 @@ import { dirname, join } from 'path';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import { readJsonFile, writeJsonFile } from './fileutils';
-import { PackageJson } from './package-json';
+import { PackageJson, readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
 
 const execAsync = promisify(exec);
@@ -198,11 +198,9 @@ export async function resolvePackageVersionUsingInstallation(
     const pmc = getPackageManagerCommand();
     await execAsync(`${pmc.add} ${packageName}@${version}`, { cwd: dir });
 
-    const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-      paths: [dir],
-    });
+    const { packageJson } = readModulePackageJson(packageName, [dir]);
 
-    return readJsonFile<PackageJson>(packageJsonPath).version;
+    return packageJson.version;
   } finally {
     await cleanup();
   }

@@ -6,6 +6,7 @@ import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
 import { getPackageManagerCommand } from '../package-manager';
+import { readModulePackageJson } from '../package-json';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -29,10 +30,8 @@ export function getPluginCapabilities(
   pluginName: string
 ): PluginCapabilities | null {
   try {
-    const packageJsonPath = require.resolve(`${pluginName}/package.json`, {
-      paths: [workspaceRoot],
-    });
-    const packageJson = readJsonFile(packageJsonPath);
+    const { packageJson, path: packageJsonPath } =
+      readModulePackageJson(pluginName);
     return {
       name: pluginName,
       generators:

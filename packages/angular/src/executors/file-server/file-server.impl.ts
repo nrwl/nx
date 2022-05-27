@@ -11,6 +11,7 @@ import { Schema } from './schema';
 import { watch } from 'chokidar';
 import { platform } from 'os';
 import { resolve } from 'path';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -153,7 +154,7 @@ export default async function* fileServerExecutor(
   const outputPath = getBuildTargetOutputPath(options, context);
   const args = getHttpServerArgs(options);
 
-  const pathToHttpServerPkgJson = require.resolve('http-server/package.json');
+  const pathToHttpServerPkgJson = readModulePackageJson('http-server').path;
   const pathToHttpServerBin = readJsonFile(pathToHttpServerPkgJson).bin[
     'http-server'
   ];

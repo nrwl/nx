@@ -9,6 +9,7 @@ import {
   readTsConfig,
 } from '@nrwl/workspace/src/utilities/typescript';
 import { existsSync, lstatSync, readdirSync } from 'fs';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { dirname, join, normalize, relative } from 'path';
 import { ParsedCommandLine } from 'typescript';
 import { NormalModuleReplacementPlugin } from 'webpack';
@@ -154,9 +155,7 @@ function collectPackageSecondaryEntryPoints(
   let pathToPackage: string;
   let packageJsonPath: string;
   try {
-    packageJsonPath = require.resolve(`${pkgName}/package.json`, {
-      paths: [workspaceRoot],
-    });
+    const packageJsonPath = readModulePackageJson(pkgName).path;
     pathToPackage = dirname(packageJsonPath);
   } catch {
     // the package.json might not resolve if the package has the "exports"

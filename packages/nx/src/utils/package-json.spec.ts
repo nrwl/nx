@@ -1,6 +1,11 @@
+import { join } from 'path';
+import { workspaceRoot } from './app-root';
+import { readJsonFile } from './fileutils';
 import {
   buildTargetFromScript,
+  PackageJson,
   PackageJsonTargetConfiguration,
+  readModulePackageJson,
 } from './package-json';
 
 describe('buildTargetFromScript', () => {
@@ -36,5 +41,20 @@ describe('buildTargetFromScript', () => {
 
     expect(target.options.script).toEqual('build');
     expect(target.executor).toEqual('nx:run-script');
+  });
+});
+
+const rootPackageJson: PackageJson = readJsonFile(
+  join(workspaceRoot, 'package.json')
+);
+
+const dependencies = [
+  ...Object.keys(rootPackageJson.dependencies),
+  ...Object.keys(rootPackageJson.devDependencies),
+];
+
+describe('readModulePackageJson', () => {
+  it.each(dependencies)(`should be able to find %s`, (s) => {
+    expect(() => readModulePackageJson(s)).not.toThrow();
   });
 });

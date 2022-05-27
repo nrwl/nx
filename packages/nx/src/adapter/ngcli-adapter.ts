@@ -39,6 +39,7 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { readNxJson } from '../generators/utils/project-configuration';
+import { readModulePackageJson } from '../utils/package-json';
 
 export async function scheduleTarget(
   root: string,
@@ -898,9 +899,7 @@ function resolveMigrationsCollection(name: string): string {
   } else {
     let packageJsonPath;
     try {
-      packageJsonPath = require.resolve(join(name, 'package.json'), {
-        paths: [process.cwd()],
-      });
+      packageJsonPath = readModulePackageJson(name, [process.cwd()]).path;
     } catch (e) {
       // workaround for a bug in node 12
       packageJsonPath = require.resolve(
