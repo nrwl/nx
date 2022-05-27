@@ -1,14 +1,21 @@
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import type { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { scamGenerator } from '../scam/scam';
 import { angularStoriesGenerator } from './stories';
-
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe('angularStories generator: applications', () => {
   let tree: Tree;
   const appName = 'test-app';
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
 
   beforeEach(async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
     tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
       name: appName,

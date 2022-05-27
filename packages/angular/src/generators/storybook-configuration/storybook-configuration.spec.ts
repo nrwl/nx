@@ -1,3 +1,4 @@
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, writeJson } from '@nrwl/devkit';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
@@ -7,7 +8,9 @@ import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
 import type { StorybookConfigurationOptions } from './schema';
 import { storybookConfigurationGenerator } from './storybook-configuration';
-
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 function listFiles(tree: Tree): string[] {
   const files = new Set<string>();
   tree.listChanges().forEach((change) => {
@@ -22,8 +25,12 @@ function listFiles(tree: Tree): string[] {
 describe('StorybookConfiguration generator', () => {
   let tree: Tree;
   const libName = 'test-ui-lib';
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
 
   beforeEach(async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
     tree = await createStorybookTestWorkspaceForLib(libName);
 
     overrideCollectionResolutionForTesting({

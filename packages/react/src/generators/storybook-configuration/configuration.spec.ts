@@ -1,3 +1,4 @@
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { logger, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
@@ -5,10 +6,14 @@ import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import libraryGenerator from '../library/library';
 import storybookConfigurationGenerator from './configuration';
-
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe('react:storybook-configuration', () => {
   let appTree;
-
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
   beforeEach(async () => {
     // jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
     //   devDependencies: {
@@ -16,7 +21,7 @@ describe('react:storybook-configuration', () => {
     //     '@storybook/react': '^6.0.21',
     //   },
     // });
-
+    mockedInstalledCypressVersion.mockReturnValue(10);
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
   });

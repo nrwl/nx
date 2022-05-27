@@ -52,7 +52,6 @@ export async function componentGenerator(host: Tree, schema: Schema) {
     tasks.push(routingTask);
   }
 
-  // TODO(caleb): test this
   if (options.componentTest) {
     cypressComponentTestFiles(host, {
       componentType: 'react',

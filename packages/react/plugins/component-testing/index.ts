@@ -143,7 +143,6 @@ const commonLoaders = [
 ];
 
 const CSS_MODULES_LOADER = {
-  // TODO(caleb): does css outside of css-in-js work?
   test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
   oneOf: [
     {

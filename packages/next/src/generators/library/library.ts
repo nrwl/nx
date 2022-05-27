@@ -1,5 +1,7 @@
-import { libraryGenerator as reactLibraryGenerator } from '@nrwl/react';
-import { nextInitGenerator } from '../init/init';
+import {
+  cypressComponentProject,
+  cypressComponentTestFiles,
+} from '@nrwl/cypress';
 import {
   convertNxGenerator,
   GeneratorCallback,
@@ -9,12 +11,10 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { Schema } from './schema';
+import { libraryGenerator as reactLibraryGenerator } from '@nrwl/react';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import {
-  cypressComponentProject,
-  cypressComponentTestFiles,
-} from '@nrwl/cypress';
+import { nextInitGenerator } from '../init/init';
+import { Schema } from './schema';
 
 export async function libraryGenerator(host: Tree, options: Schema) {
   const name = names(options.name).fileName;
@@ -38,19 +38,18 @@ export async function libraryGenerator(host: Tree, options: Schema) {
   const libTask = await reactLibraryGenerator(host, restOptions);
   tasks.push(libTask);
 
-  // TODO(caleb): test this
   if (addCypress) {
     const cypressTask = await cypressComponentProject(host, {
-      project: options.name,
+      project: name,
       componentType: 'next',
       compiler: 'babel',
     });
     tasks.push(cypressTask);
 
     cypressComponentTestFiles(host, {
+      name,
       componentType: 'next',
-      project: options.name,
-      name: options.name,
+      project: name,
       directory: options.directory,
     });
   }

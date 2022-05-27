@@ -1,3 +1,4 @@
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import {
   getProjects,
   readJson,
@@ -6,14 +7,18 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import libraryGenerator from './library';
 import { Linter } from '@nrwl/linter';
-import { Schema } from './schema';
 import applicationGenerator from '../application/application';
-
+import libraryGenerator from './library';
+import { Schema } from './schema';
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe('lib', () => {
   let appTree: Tree;
-
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
   let defaultSchema: Schema = {
     name: 'myLib',
     linter: Linter.EsLint,
@@ -727,4 +732,37 @@ describe('lib', () => {
       }).not.toThrow();
     }
   );
+
+  it('should add component testing with addCypress option', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+    await libraryGenerator(appTree, {
+      ...defaultSchema,
+      name: 'myLib',
+      addCypress: true,
+    });
+    expect(appTree.exists('libs/my-lib/cypress.config.ts')).toBeTruthy();
+    expect(
+      appTree.exists('libs/my-lib/cypress/component/index.html')
+    ).toBeTruthy();
+    expect(
+      appTree.exists('libs/my-lib/cypress/fixtures/example.json')
+    ).toBeTruthy();
+    expect(
+      appTree.exists('libs/my-lib/cypress/support/commands.ts')
+    ).toBeTruthy();
+    expect(
+      appTree.exists('libs/my-lib/cypress/support/component.ts')
+    ).toBeTruthy();
+    expect(appTree.exists('libs/my-lib/src/lib/my-lib.cy.ts'));
+    expect(readJson(appTree, 'libs/my-lib/tsconfig.lib.json').exclude).toEqual(
+      expect.arrayContaining([
+        'cypress/**/*',
+        'cypress.config.ts',
+        '**/*.cy.ts',
+        '**/*.cy.js',
+        '**/*.cy.tsx',
+        '**/*.cy.jsx',
+      ])
+    );
+  });
 });
