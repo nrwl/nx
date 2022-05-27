@@ -293,9 +293,10 @@ ${daemonHelpOutput}
     builder: (yargs) => withNewOptions(yargs),
     handler: async (args) => {
       args._ = args._.slice(1);
-      return (await import('./generate')).newWorkspace(
-        args['nxWorkspaceRoot'] as string,
-        args
+      process.exit(
+        await (
+          await import('./generate')
+        ).newWorkspace(args['nxWorkspaceRoot'] as string, args)
       );
     },
   })
@@ -303,7 +304,10 @@ ${daemonHelpOutput}
     '_migrate [packageAndVersion]',
     false,
     (yargs) => withMigrationOptions(yargs),
-    async (args) => (await import('./migrate')).migrate(process.cwd(), args)
+    async (args) =>
+      process.exit(
+        await (await import('./migrate')).migrate(process.cwd(), args)
+      )
   )
   .help('help')
   .version(nxVersion);
