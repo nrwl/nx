@@ -1,6 +1,8 @@
 import {
   formatFiles,
   installPackagesTask,
+  logger,
+  stripIndents,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
@@ -44,18 +46,28 @@ export async function convertCypressProject(
       tree,
       '@nrwl/cypress:cypress',
       (currentValue: CypressExecutorOptions, project) => {
-        const status = updateProject(tree, {
-          ...options,
-          project,
-        });
-        projectConversionStatus.push(status);
+        try {
+          const status = updateProject(tree, {
+            ...options,
+            project,
+          });
+          projectConversionStatus.push(status);
+        } catch (e) {
+          logger.error(errorMessage(project));
+          logger.error(e);
+        }
       }
     );
 
     // if any projects were converted, update the version
     didConvert = projectConversionStatus.some((status) => status);
   } else {
-    didConvert = updateProject(tree, options);
+    try {
+      didConvert = updateProject(tree, options);
+    } catch (e) {
+      logger.error(errorMessage(options.project));
+      logger.error(e);
+    }
   }
 
   if (didConvert) {
@@ -72,3 +84,9 @@ export async function convertCypressProject(
 }
 
 export default convertCypressProject;
+
+const errorMessage = (projectName) =>
+  stripIndents`NX There was an error converting project ${projectName}. 
+  You can manually update the project by following the migration guide if need be. 
+  https://nx.dev/packages/cypress/cypress-v10-migration
+  `;

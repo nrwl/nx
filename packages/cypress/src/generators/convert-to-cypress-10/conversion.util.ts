@@ -68,7 +68,9 @@ export function updateProject(
       writeNewConfig(tree, cypressConfigPathTs, cypressConfigs);
       addConfigToTsConfig(
         tree,
-        joinPathFragments(projectConfig.root, 'tsconfig.json')
+        projectConfig.targets?.[target]?.options?.tsConfig ||
+          joinPathFragments(projectConfig.root, 'tsconfig.json'),
+        basename(cypressConfigPathTs)
       );
 
       tree.delete(cypressConfigPathJson);
@@ -115,7 +117,10 @@ export function verifyProjectForUpgrade(
 
   const cypressConfigPathTs = joinPathFragments(
     projectConfig.root,
-    'cypress.config.ts'
+    // create matching ts config for custom cypress config if present
+    cypressConfigPathJson.endsWith('cypress.json')
+      ? 'cypress.config.ts' //default
+      : `${basename(cypressConfigPathJson, extname(cypressConfigPathJson))}.ts`
   );
 
   if (installedCypressVersion() < 8) {
@@ -186,26 +191,31 @@ export function createNewCypressConfig(
     ...restOfConfig
   } = cypressConfigJson;
 
+  const newIntegrationFolder = tree.exists(
+    joinPathFragments(projectConfig.sourceRoot, 'integration')
+  )
+    ? 'src/e2e'
+    : integrationFolder;
   const cypressConfigTs = {
     e2e: {
       ...restOfConfig,
-      specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
-      // if supportFile is defined (can be false if not using it) and in the default location,
+      specPattern: `${newIntegrationFolder}/**/*.cy.{js,jsx,ts,tsx}`,
+      // if supportFile is defined (can be false if not using it) and in the default location (or in the new default location),
       // then use the new default location.
       // otherwise we will use the existing folder location/falsey value
       supportFile:
-        supportFile &&
+        (supportFile &&
+          tree.exists(
+            joinPathFragments(projectConfig.sourceRoot, 'support', 'index.ts')
+          )) ||
         tree.exists(
-          joinPathFragments(projectConfig.sourceRoot, 'support', 'index.ts')
+          joinPathFragments(projectConfig.sourceRoot, 'support', 'e2e.ts')
         )
           ? 'src/support/e2e.ts'
           : supportFile,
       // if the default location is used then will update to the new location otherwise keep the custom location
-      integrationFolder: tree.exists(
-        joinPathFragments(projectConfig.sourceRoot, 'integration')
-      )
-        ? 'src/e2e'
-        : integrationFolder,
+      // this is used down the line, but won't be in the final config file since it's a deprecated option
+      integrationFolder: newIntegrationFolder,
     },
   };
 
@@ -289,7 +299,11 @@ export function updateProjectPaths(
     );
 
     newSupportFile = joinPathFragments(projectConfig.root, supportFile);
-    tree.rename(oldSupportFile, newSupportFile);
+    // oldSupportFile might have already been updated
+    // to the new default location so must be guarded for
+    if (oldSupportFile !== newSupportFile && tree.exists(oldSupportFile)) {
+      tree.rename(oldSupportFile, newSupportFile);
+    }
   } else {
     shouldUpdateSupportFileImports = false;
     newSupportFile = supportFile;
@@ -306,7 +320,12 @@ export function updateProjectPaths(
         'support',
         'e2e.ts'
       );
-      tree.rename(defaultSupportFile, newSupportDefaultPath);
+      if (
+        defaultSupportFile !== newSupportDefaultPath &&
+        tree.exists(defaultSupportFile)
+      ) {
+        tree.rename(defaultSupportFile, newSupportDefaultPath);
+      }
     }
   }
 
@@ -332,8 +351,9 @@ export function updateProjectPaths(
     if (fileName.includes('.spec.')) {
       newPath = newPath.replace('.spec.', '.cy.');
     }
-    // renaming with same path is a noop
-    tree.rename(path, newPath);
+    if (newPath !== path && tree.exists(path)) {
+      tree.rename(path, newPath);
+    }
     // if they weren't using the supportFile then there is no need to update the imports.
     if (
       shouldUpdateSupportFileImports &&
@@ -405,13 +425,23 @@ export default defineConfig({
   );
 }
 
-function addConfigToTsConfig(tree: Tree, tsconfigPath: string) {
+function addConfigToTsConfig(
+  tree: Tree,
+  tsconfigPath: string,
+  cypressConfigName = 'cypress.config.ts'
+) {
   if (tree.exists(tsconfigPath)) {
-    updateJson(tree, tsconfigPath, (json) => {
-      json.include = Array.from(
-        new Set([...(json.include || []), 'cypress.config.ts'])
-      );
-      return json;
-    });
+    updateJson(
+      tree,
+      tsconfigPath,
+      (json) => {
+        json.include = Array.from(
+          new Set([...(json.include || []), cypressConfigName])
+        );
+        return json;
+        // some people put comments in their tsconfigs!
+      },
+      { expectComments: true }
+    );
   }
 }
