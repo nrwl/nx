@@ -3,7 +3,6 @@
   "implicitDependencies": {
     "package.json": "*",
     ".eslintrc.json": "*",
-    "scripts/vercel/*": ["nx-dev"],
     ".circleci/config.yml": "*",
     "tools/eslint-rules/**/*": "*"
   },
