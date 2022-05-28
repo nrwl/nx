@@ -82,6 +82,7 @@ const runOne: string[] = [
   'skipNxCache',
   'scan',
   'outputStyle',
+  'nxBail',
 ];
 
 const runMany: string[] = [...runOne, 'projects', 'all'];
@@ -115,20 +116,17 @@ export interface NxArgs {
   exclude?: string[];
   files?: string[];
   onlyFailed?: boolean;
-  'only-failed'?: boolean;
   verbose?: boolean;
   help?: boolean;
   version?: boolean;
   plain?: boolean;
   withDeps?: boolean;
-  'with-deps'?: boolean;
   projects?: string[];
   select?: string;
   skipNxCache?: boolean;
-  'skip-nx-cache'?: boolean;
-  'output-style'?: string;
   outputStyle?: string;
   scan?: boolean;
+  nxBail?: boolean;
 }
 
 const ignoreArgs = ['$0', '_'];

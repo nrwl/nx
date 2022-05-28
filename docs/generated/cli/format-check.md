@@ -67,6 +67,14 @@ Type: boolean
 
 Format only libraries and applications files.
 
+### nx-bail
+
+Type: boolean
+
+Default: false
+
+Stop command execution after the first failed task
+
 ### ~~only-failed~~
 
 Type: boolean

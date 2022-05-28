@@ -40,6 +40,8 @@ export class TaskOrchestrator {
 
   private groups = [];
 
+  private bailed = false;
+
   // endregion internal state
 
   constructor(
@@ -47,7 +49,8 @@ export class TaskOrchestrator {
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
-    private readonly options: DefaultTasksRunnerOptions
+    private readonly options: DefaultTasksRunnerOptions,
+    private readonly bail: boolean
   ) {}
 
   async run() {
@@ -76,7 +79,7 @@ export class TaskOrchestrator {
 
   private async executeNextBatchOfTasksUsingTaskSchedule() {
     // completed all the tasks
-    if (!this.tasksSchedule.hasTasks()) {
+    if (!this.tasksSchedule.hasTasks() || this.bailed) {
       return null;
     }
 
@@ -404,15 +407,23 @@ export class TaskOrchestrator {
     for (const { taskId, status } of taskResults) {
       if (this.completedTasks[taskId] === undefined) {
         this.completedTasks[taskId] = status;
-      }
 
-      if (status === 'failure' || status === 'skipped') {
-        this.complete(
-          this.reverseTaskDeps[taskId].map((depTaskId) => ({
-            taskId: depTaskId,
-            status: 'skipped',
-          }))
-        );
+        if (status === 'failure' || status === 'skipped') {
+          if (this.bail) {
+            // mark the execution as bailed which will stop all further execution
+            // only the tasks that are currently running will finish
+            this.bailed = true;
+          } else {
+            // only mark the packages that depend on the current task as skipped
+            // other tasks will continue to execute
+            this.complete(
+              this.reverseTaskDeps[taskId].map((depTaskId) => ({
+                taskId: depTaskId,
+                status: 'skipped',
+              }))
+            );
+          }
+        }
       }
     }
   }

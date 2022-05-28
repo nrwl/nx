@@ -81,6 +81,14 @@ Type: boolean
 
 Show help
 
+### nx-bail
+
+Type: boolean
+
+Default: false
+
+Stop command execution after the first failed task
+
 ### ~~only-failed~~
 
 Type: boolean
