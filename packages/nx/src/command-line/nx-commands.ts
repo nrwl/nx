@@ -425,6 +425,11 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .option('verbose', {
       describe: 'Print additional error stack trace on failure',
     })
+    .option('nx-bail', {
+      describe: 'Stop command execution after the first failed task',
+      type: 'boolean',
+      default: false,
+    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
@@ -484,6 +489,11 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('verbose', {
       describe: 'Print additional error stack trace on failure',
+    })
+    .option('nx-bail', {
+      describe: 'Stop command execution after the first failed task',
+      type: 'boolean',
+      default: false,
     })
     .conflicts({
       all: 'projects',
@@ -635,6 +645,11 @@ function withRunOneOptions(yargs: yargs.Argv) {
         'stream-without-prefixes',
         'compact',
       ],
+    })
+    .option('nx-bail', {
+      describe: 'Stop command execution after the first failed task',
+      type: 'boolean',
+      default: false,
     });
 
   if (executorShouldShowHelp) {

@@ -7,6 +7,7 @@ import { LifeCycle } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
+import { NxArgs } from '../utils/command-line-utils';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;
@@ -35,6 +36,7 @@ export const defaultTasksRunner: TasksRunner<
     initiatingProject?: string;
     projectGraph: ProjectGraph;
     nxJson: NxJsonConfiguration;
+    nxArgs: NxArgs;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
   if (
@@ -69,6 +71,7 @@ async function runAllTasks(
     initiatingProject?: string;
     projectGraph: ProjectGraph;
     nxJson: NxJsonConfiguration;
+    nxArgs: NxArgs;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
   const defaultTargetDependencies = context.nxJson.targetDependencies ?? {};
@@ -96,7 +99,8 @@ async function runAllTasks(
     context.initiatingProject,
     context.projectGraph,
     taskGraph,
-    options
+    options,
+    context.nxArgs?.nxBail
   );
 
   return orchestrator.run();

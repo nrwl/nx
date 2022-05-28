@@ -552,7 +552,7 @@ export function runCLI(
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return e.stdout?.toString() + e.stderr?.toString();
+      return stripConsoleColors(e.stdout?.toString() + e.stderr?.toString());
     } else {
       logError(
         `Original command: ${command}`,

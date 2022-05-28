@@ -123,6 +123,14 @@ Type: string
 
 Bind the project graph server to a specific ip address.
 
+### nx-bail
+
+Type: boolean
+
+Default: false
+
+Stop command execution after the first failed task
+
 ### ~~only-failed~~
 
 Type: boolean

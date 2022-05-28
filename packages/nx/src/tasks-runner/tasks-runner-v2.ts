@@ -6,6 +6,7 @@ import { TaskStatus } from './tasks-runner';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
+import { NxArgs } from '../utils/command-line-utils';
 
 export { DefaultTasksRunnerOptions, RemoteCache } from './default-tasks-runner';
 
@@ -24,6 +25,7 @@ export const tasksRunnerV2 = (
     initiatingProject?: string;
     projectGraph: ProjectGraph;
     nxJson: NxJsonConfiguration;
+    nxArgs: NxArgs;
   }
 ): any => {
   if (!options.lifeCycle.startCommand) {

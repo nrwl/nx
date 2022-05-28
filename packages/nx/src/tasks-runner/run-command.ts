@@ -137,6 +137,7 @@ export async function runCommand(
       target: nxArgs.target,
       projectGraph,
       nxJson,
+      nxArgs,
     }
   );
 
