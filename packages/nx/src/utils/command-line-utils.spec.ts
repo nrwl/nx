@@ -1,6 +1,6 @@
 import {
-  splitArgsIntoNxArgsAndOverrides,
   getAffectedConfig,
+  splitArgsIntoNxArgsAndOverrides,
 } from './command-line-utils';
 import * as fileUtils from '../project-graph/file-utils';
 

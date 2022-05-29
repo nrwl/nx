@@ -37,7 +37,7 @@ if (isCI() && !forceColor) {
 class CLIOutput {
   readonly X_PADDING = ' ';
   cliName = 'NX';
-  formatCommand = (message: string) => `${chalk.dim('> nx run')} ${message}`;
+  formatCommand = (taskId: string) => `${chalk.dim('nx run')} ${taskId}`;
 
   /**
    * Longer dash character which forms more of a continuous line when place side to side
@@ -212,7 +212,8 @@ class CLIOutput {
 
   logCommand(message: string, taskStatus?: TaskStatus) {
     this.addNewline();
-    const commandOutput = this.formatCommand(this.normalizeMessage(message));
+    const commandOutput =
+      chalk.dim('> ') + this.formatCommand(this.normalizeMessage(message));
     const commandOutputWithStatus = this.addTaskStatus(
       taskStatus,
       commandOutput
