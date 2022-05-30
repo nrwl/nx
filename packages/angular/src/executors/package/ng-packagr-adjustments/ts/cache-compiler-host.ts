@@ -12,12 +12,10 @@ import { BuildGraph } from 'ng-packagr/lib/graph/build-graph';
 import { Node } from 'ng-packagr/lib/graph/node';
 import { EntryPointNode, fileUrl } from 'ng-packagr/lib/ng-package/nodes';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
+import { NgPackageConfig } from 'ng-packagr/ng-package.schema';
 import * as path from 'path';
 import * as ts from 'typescript';
-import {
-  InlineStyleLanguage,
-  StylesheetProcessor,
-} from '../styles/stylesheet-processor';
+import { StylesheetProcessor } from '../styles/stylesheet-processor';
 
 export function cacheCompilerHost(
   graph: BuildGraph,
@@ -25,7 +23,7 @@ export function cacheCompilerHost(
   compilerOptions: CompilerOptions,
   moduleResolutionCache: ts.ModuleResolutionCache,
   stylesheetProcessor?: StylesheetProcessor,
-  inlineStyleLanguage?: InlineStyleLanguage,
+  inlineStyleLanguage?: NgPackageConfig['inlineStyleLanguage'],
   sourcesFileCache: FileCache = entryPoint.cache.sourcesFileCache
 ): CompilerHost {
   const compilerHost = ts.createIncrementalCompilerHost(compilerOptions);
@@ -46,6 +44,11 @@ export function cacheCompilerHost(
     const node = getNode(fileName);
     entryPoint.dependsOn(node);
   };
+
+  const { flatModuleFile, entryFile } = entryPoint.data.entryPoint;
+  const flatModuleFileDtsFilename = `${flatModuleFile}.d.ts`;
+  const hasIndexEntryFile =
+    path.basename(entryFile.toLowerCase()) === 'index.ts';
 
   return {
     ...compilerHost,
@@ -82,6 +85,18 @@ export function cacheCompilerHost(
       sourceFiles?: ReadonlyArray<ts.SourceFile>
     ) => {
       if (fileName.endsWith('.d.ts')) {
+        if (
+          hasIndexEntryFile &&
+          path.basename(fileName) === flatModuleFileDtsFilename
+        ) {
+          // In case the entry file is index.ts, we should not emit the `d.ts` which are a re-export of the `index.ts`.
+          // Because it will cause a conflict.
+          return;
+        }
+
+        // Rename file to index.d.ts so that TypeScript can resolve types without
+        // them needing to be referenced in the package.json manifest.
+        fileName = fileName.replace(flatModuleFileDtsFilename, 'index.d.ts');
         sourceFiles.forEach((source) => {
           const cache = sourcesFileCache.getOrCreate(source.fileName);
           if (!cache.declarationFileName) {

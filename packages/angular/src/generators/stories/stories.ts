@@ -3,7 +3,10 @@ import { logger } from '@nrwl/devkit';
 import { getProjectRootPath } from '@nrwl/workspace/src/utilities/project-type';
 import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
 import componentStoryGenerator from '../component-story/component-story';
-import { getComponentsInfo } from './lib/component-info';
+import {
+  getComponentsInfo,
+  getStandaloneComponentsInfo,
+} from './lib/component-info';
 import { getE2EProject } from './lib/get-e2e-project';
 import { getModuleFilePaths } from './lib/module-info';
 import type { StoriesGeneratorOptions } from './schema';
@@ -16,7 +19,11 @@ export function angularStoriesGenerator(
   const e2eProject = getE2EProject(tree, e2eProjectName);
   const projectPath = getProjectRootPath(tree, options.name);
   const moduleFilePaths = getModuleFilePaths(tree, projectPath);
-  const componentsInfo = getComponentsInfo(tree, moduleFilePaths, options.name);
+  const componentsInfo = [
+    ...getComponentsInfo(tree, moduleFilePaths, options.name),
+    // TODO(leo): uncomment once Storybook supports standalone components https://github.com/storybookjs/storybook/pull/18272
+    // ...getStandaloneComponentsInfo(tree, projectPath),
+  ];
 
   if (options.generateCypressSpecs && !e2eProject) {
     logger.info(

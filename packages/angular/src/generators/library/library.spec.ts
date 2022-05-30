@@ -287,6 +287,7 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../tsconfig.base.json',
         angularCompilerOptions: {
+          enableI18nLegacyMessageIdFormat: false,
           strictInjectionParameters: true,
           strictInputAccessModifiers: true,
           strictTemplates: true,
@@ -298,6 +299,7 @@ describe('lib', () => {
           noImplicitOverride: true,
           noImplicitReturns: true,
           strict: true,
+          target: 'es2020',
         },
         files: [],
         include: [],
@@ -653,6 +655,7 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../../tsconfig.base.json',
         angularCompilerOptions: {
+          enableI18nLegacyMessageIdFormat: false,
           strictInjectionParameters: true,
           strictInputAccessModifiers: true,
           strictTemplates: true,
@@ -664,6 +667,7 @@ describe('lib', () => {
           noImplicitOverride: true,
           noImplicitReturns: true,
           strict: true,
+          target: 'es2020',
         },
         files: [],
         include: [],

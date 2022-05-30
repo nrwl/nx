@@ -168,6 +168,7 @@ Object {
 exports[`app not nested should generate files 1`] = `
 Object {
   "angularCompilerOptions": Object {
+    "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,

@@ -60,10 +60,6 @@ function exportComponent(tree: Tree, schema: Schema) {
   );
 
   if (projectType === 'application') {
-    logger.warn(
-      '--export=true was ignored as the project the component being generated in is not a library.'
-    );
-
     return;
   }
 

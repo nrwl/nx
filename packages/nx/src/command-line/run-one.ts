@@ -71,8 +71,6 @@ function getProjects(projectGraph: ProjectGraph, project: string): any {
 const targetAliases = {
   b: 'build',
   e: 'e2e',
-  'i18n-extract': 'extract-i18n',
-  xi18n: 'extract-i18n',
   l: 'lint',
   s: 'serve',
   t: 'test',

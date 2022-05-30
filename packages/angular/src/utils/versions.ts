@@ -1,11 +1,12 @@
 export const nxVersion = require('../../package.json').version;
-export const angularVersion = '~13.3.0';
-export const angularDevkitVersion = '~13.3.0';
+export const angularVersion = '~14.0.0-rc.2';
+export const angularDevkitVersion = '~14.0.0-rc.2';
+export const ngPackagrVersion = '~14.0.0-rc.0';
 export const angularJsVersion = '1.7.9';
-export const ngrxVersion = '~13.0.0';
+export const ngrxVersion = '~13.2.0';
 export const rxjsVersion = '~7.4.0';
-export const jestPresetAngularVersion = '11.1.1';
-export const angularEslintVersion = '~13.1.0';
+export const jestPresetAngularVersion = '~11.1.2';
+export const angularEslintVersion = '~13.2.1';
 export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';
 export const autoprefixerVersion = '^10.4.0';

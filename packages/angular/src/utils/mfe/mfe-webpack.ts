@@ -102,27 +102,36 @@ function recursivelyCollectSecondaryEntryPointsFromDirectory(
   pkgName: string,
   pkgVersion: string,
   pkgRoot: string,
+  mainEntryPointExports: any | undefined,
   directories: string[],
   collectedPackages: { name: string; version: string }[]
 ): void {
   for (const directory of directories) {
     const packageJsonPath = join(directory, 'package.json');
+    const relativeEntryPointPath = relative(pkgRoot, directory);
+    const entryPointName = joinPathFragments(pkgName, relativeEntryPointPath);
     if (existsSync(packageJsonPath)) {
-      const importName = joinPathFragments(
-        pkgName,
-        relative(pkgRoot, directory)
-      );
-
       try {
         // require the secondary entry point to try to rule out sample code
-        require.resolve(importName, { paths: [workspaceRoot] });
+        require.resolve(entryPointName, { paths: [workspaceRoot] });
         const { name } = readJsonFile(packageJsonPath);
         // further check to make sure what we were able to require is the
         // same as the package name
-        if (name === importName) {
+        if (name === entryPointName) {
           collectedPackages.push({ name, version: pkgVersion });
         }
       } catch {}
+    } else if (mainEntryPointExports) {
+      // if the package.json doesn't exist, check if the directory is
+      // exported by the main entry point
+      const entryPointExportKey = `./${relativeEntryPointPath}`;
+      const entryPointInfo = mainEntryPointExports[entryPointExportKey];
+      if (entryPointInfo) {
+        collectedPackages.push({
+          name: entryPointName,
+          version: pkgVersion,
+        });
+      }
     }
 
     const subDirs = getNonNodeModulesSubDirs(directory);
@@ -130,6 +139,7 @@ function recursivelyCollectSecondaryEntryPointsFromDirectory(
       pkgName,
       pkgVersion,
       pkgRoot,
+      mainEntryPointExports,
       subDirs,
       collectedPackages
     );
@@ -142,8 +152,9 @@ function collectPackageSecondaryEntryPoints(
   collectedPackages: { name: string; version: string }[]
 ): void {
   let pathToPackage: string;
+  let packageJsonPath: string;
   try {
-    const packageJsonPath = require.resolve(`${pkgName}/package.json`, {
+    packageJsonPath = require.resolve(`${pkgName}/package.json`, {
       paths: [workspaceRoot],
     });
     pathToPackage = dirname(packageJsonPath);
@@ -152,17 +163,20 @@ function collectPackageSecondaryEntryPoints(
     // entry and is not exporting the package.json file, fall back to trying
     // to find it from the top-level node_modules
     pathToPackage = join(workspaceRoot, 'node_modules', pkgName);
-    if (!existsSync(join(pathToPackage, 'package.json'))) {
+    packageJsonPath = join(pathToPackage, 'package.json');
+    if (!existsSync(packageJsonPath)) {
       // might not exist if it's nested in another package, just return here
       return;
     }
   }
 
+  const { exports } = readJsonFile(packageJsonPath);
   const subDirs = getNonNodeModulesSubDirs(pathToPackage);
   recursivelyCollectSecondaryEntryPointsFromDirectory(
     pkgName,
     pkgVersion,
     pathToPackage,
+    exports,
     subDirs,
     collectedPackages
   );

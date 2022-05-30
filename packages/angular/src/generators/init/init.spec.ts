@@ -54,7 +54,7 @@ describe('init', () => {
 
     // ASSERT
     expect(packageJson.scripts.postinstall).toEqual(
-      'ngcc --properties es2015 browser module main'
+      'ngcc --properties es2020 browser module main'
     );
   });
 

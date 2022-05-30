@@ -193,44 +193,9 @@ describe('Angular Projects', () => {
     runCLI(
       `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-interactive`
     );
-
-    // create secondary entrypoint
-    updateFile(
-      `libs/${childLib}/sub/package.json`,
-      `
-  {
-    "ngPackage": {}
-  }
-`
+    runCLI(
+      `generate @nrwl/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`
     );
-    updateFile(
-      `libs/${childLib}/sub/src/lib/sub.module.ts`,
-      `
-  import { NgModule } from '@angular/core';
-  import { CommonModule } from '@angular/common';
-  @NgModule({ imports: [CommonModule] })
-  export class SubModule {}
-`
-    );
-
-    updateFile(
-      `libs/${childLib}/sub/src/public_api.ts`,
-      `export * from './lib/sub.module';`
-    );
-
-    updateFile(
-      `libs/${childLib}/sub/src/index.ts`,
-      `export * from './public_api';`
-    );
-
-    updateFile(`tsconfig.base.json`, (s) => {
-      return s.replace(
-        `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],`,
-        `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],
-"@${proj}/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
-`
-      );
-    });
 
     const moduleContent = `
     import { NgModule } from '@angular/core';
