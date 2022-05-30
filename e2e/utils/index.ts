@@ -298,7 +298,7 @@ export function newProject({
       if (isCI && packageManager === 'pnpm') {
         updateFile(
           '.npmrc',
-          'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false'
+          'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
         );
       }
 

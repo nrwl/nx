@@ -89,6 +89,14 @@ function createPrettierrc(host: Tree, options: Schema) {
   );
 }
 
+// ensure that pnpm install add all the missing peer deps
+function createNpmrc(host: Tree, options: Schema) {
+  host.write(
+    join(options.directory, '.npmrc'),
+    'strict-peer-dependencies=false\nauto-install-peers=true\n'
+  );
+}
+
 function formatWorkspaceJson(host: Tree, options: Schema) {
   const path = join(
     options.directory,
@@ -145,6 +153,9 @@ export async function workspaceGenerator(host: Tree, options: Schema) {
   createPrettierrc(host, options);
   if (options.cli === 'angular') {
     decorateAngularClI(host, options);
+  }
+  if (options.packageManager === 'pnpm') {
+    createNpmrc(host, options);
   }
   setPresetProperty(host, options);
   addNpmScripts(host, options);
