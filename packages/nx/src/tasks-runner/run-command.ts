@@ -3,12 +3,8 @@ import { join } from 'path';
 import { workspaceRoot } from '../utils/app-root';
 import { NxArgs } from '../utils/command-line-utils';
 import { isRelativePath } from '../utils/fileutils';
-import {
-  projectHasTarget,
-  projectHasTargetAndConfiguration,
-} from '../utils/project-graph-utils';
 import { output } from '../utils/output';
-import { getDependencyConfigs, shouldStreamOutput } from './utils';
+import { shouldStreamOutput } from './utils';
 import { CompositeLifeCycle, LifeCycle } from './life-cycle';
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
@@ -20,10 +16,8 @@ import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
-import {
-  ProjectConfiguration,
-  TargetDependencyConfig,
-} from '../config/workspace-json-project-json';
+import { createTaskGraph } from './create-task-graph';
+import { findCycle, makeAcyclic } from './task-graph-utils';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -90,19 +84,34 @@ export async function runCommand(
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
   const defaultDependencyConfigs = nxJson.targetDependencies;
-  const tasks = createTasksForProjectToRun(
-    projectsToRun,
-    {
-      target: nxArgs.target,
-      configuration: nxArgs.configuration,
-      overrides,
-    },
+  const projectNames = projectsToRun.map((t) => t.name);
+  const taskGraph = createTaskGraph(
     projectGraph,
-    initiatingProject,
-    defaultDependencyConfigs
+    defaultDependencyConfigs,
+    projectNames,
+    [nxArgs.target],
+    nxArgs.configuration,
+    overrides
   );
 
-  const projectNames = projectsToRun.map((t) => t.name);
+  const cycle = findCycle(taskGraph);
+  if (cycle) {
+    if (nxArgs.nxIgnoreCycles) {
+      output.warn({
+        title: `The task graph has a circular dependency`,
+        bodyLines: [`${cycle.join(' --> ')}`],
+      });
+      makeAcyclic(taskGraph);
+    } else {
+      output.error({
+        title: `Could not execute command because the task graph has a circular dependency`,
+        bodyLines: [`${cycle.join(' --> ')}`],
+      });
+      process.exit(1);
+    }
+  }
+
+  const tasks = Object.values(taskGraph.tasks);
   if (nxArgs.outputStyle == 'stream') {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
@@ -138,6 +147,7 @@ export async function runCommand(
       projectGraph,
       nxJson,
       nxArgs,
+      taskGraph,
     }
   );
 
@@ -195,45 +205,6 @@ async function anyFailuresInObservable(obs: any) {
   });
 }
 
-interface TaskParams {
-  project: ProjectGraphProjectNode;
-  target: string;
-  configuration: string;
-  overrides: Object;
-  errorIfCannotFindConfiguration: boolean;
-}
-
-export function createTasksForProjectToRun(
-  projectsToRun: ProjectGraphProjectNode[],
-  params: Omit<TaskParams, 'project' | 'errorIfCannotFindConfiguration'>,
-  projectGraph: ProjectGraph,
-  initiatingProject: string | null,
-  defaultDependencyConfigs: Record<
-    string,
-    (TargetDependencyConfig | string)[]
-  > = {}
-) {
-  const tasksMap: Map<string, Task> = new Map<string, Task>();
-  const seenSet = new Set<string>();
-
-  for (const project of projectsToRun) {
-    addTasksForProjectTarget(
-      {
-        project,
-        ...params,
-        errorIfCannotFindConfiguration: project.name === initiatingProject,
-      },
-      defaultDependencyConfigs,
-      projectGraph,
-      project.data.targets?.[params.target]?.executor,
-      tasksMap,
-      [],
-      seenSet
-    );
-  }
-  return Array.from(tasksMap.values());
-}
-
 function shouldUseDynamicLifeCycle(
   tasks: Task[],
   options: any,
@@ -247,260 +218,6 @@ function shouldUseDynamicLifeCycle(
   return noForwarding;
 }
 
-function addTasksForProjectTarget(
-  {
-    project,
-    target,
-    configuration,
-    overrides,
-    errorIfCannotFindConfiguration,
-  }: TaskParams,
-  defaultDependencyConfigs: Record<
-    string,
-    (TargetDependencyConfig | string)[]
-  > = {},
-  projectGraph: ProjectGraph,
-  originalTargetExecutor: string,
-  tasksMap: Map<string, Task>,
-  path: { targetIdentifier: string; hasTarget: boolean }[],
-  seenSet: Set<string>
-) {
-  const task = createTask({
-    project,
-    target,
-    configuration,
-    overrides:
-      project.data.targets?.[target]?.executor === originalTargetExecutor
-        ? overrides
-        : {},
-    errorIfCannotFindConfiguration,
-  });
-
-  const dependencyConfigs = getDependencyConfigs(
-    { project: project.name, target },
-    defaultDependencyConfigs,
-    projectGraph
-  );
-
-  if (dependencyConfigs) {
-    for (const dependencyConfig of dependencyConfigs) {
-      addTasksForProjectDependencyConfig(
-        project,
-        {
-          target,
-          configuration,
-          overrides,
-        },
-        dependencyConfig,
-        defaultDependencyConfigs,
-        projectGraph,
-        originalTargetExecutor,
-        tasksMap,
-        path,
-        seenSet
-      );
-    }
-  }
-  tasksMap.set(task.id, task);
-}
-
-export function createTask({
-  project,
-  target,
-  configuration,
-  overrides,
-  errorIfCannotFindConfiguration,
-}: TaskParams): Task {
-  if (!projectHasTarget(project, target)) {
-    output.error({
-      title: `Cannot find target '${target}' for project '${project.name}'`,
-    });
-    process.exit(1);
-  }
-
-  configuration ??= project.data.targets?.[target]?.defaultConfiguration;
-
-  const config = projectHasTargetAndConfiguration(
-    project,
-    target,
-    configuration
-  )
-    ? configuration
-    : undefined;
-
-  if (errorIfCannotFindConfiguration && configuration && !config) {
-    output.error({
-      title: `Cannot find configuration '${configuration}' for project '${project.name}:${target}'`,
-    });
-    process.exit(1);
-  }
-
-  const qualifiedTarget = {
-    project: project.name,
-    target,
-    configuration: config,
-  };
-  return {
-    id: getId(qualifiedTarget),
-    target: qualifiedTarget,
-    projectRoot: project.data.root,
-    overrides: interpolateOverrides(overrides, project.name, project.data),
-  };
-}
-
-function addTasksForProjectDependencyConfig(
-  project: ProjectGraphProjectNode<ProjectConfiguration>,
-  {
-    target,
-    configuration,
-    overrides,
-  }: Pick<TaskParams, 'target' | 'configuration' | 'overrides'>,
-  dependencyConfig: TargetDependencyConfig,
-  defaultDependencyConfigs: Record<string, (TargetDependencyConfig | string)[]>,
-  projectGraph: ProjectGraph,
-  originalTargetExecutor: string,
-  tasksMap: Map<string, Task>,
-  path: { targetIdentifier: string; hasTarget: boolean }[],
-  seenSet: Set<string>
-) {
-  const targetIdentifier = getId({
-    project: project.name,
-    target,
-    configuration,
-  });
-
-  const pathFragment = {
-    targetIdentifier,
-    hasTarget: projectHasTarget(project, target),
-  };
-
-  const newPath = [...path, pathFragment];
-  seenSet.add(targetIdentifier);
-
-  if (tasksMap.has(targetIdentifier)) {
-    return;
-  }
-
-  if (dependencyConfig.projects === 'dependencies') {
-    const dependencies = projectGraph.dependencies[project.name];
-    if (dependencies) {
-      for (const dep of dependencies) {
-        const depProject = projectGraph.nodes[
-          dep.target
-        ] as ProjectGraphProjectNode;
-
-        if (
-          depProject &&
-          projectHasTarget(depProject, dependencyConfig.target)
-        ) {
-          const depTargetId = getId({
-            project: depProject.name,
-            target: dependencyConfig.target,
-            configuration: configuration,
-          });
-          exitOnCircularDep(newPath, depTargetId);
-          if (seenSet.has(depTargetId)) {
-            continue;
-          }
-
-          addTasksForProjectTarget(
-            {
-              project: depProject,
-              target: dependencyConfig.target,
-              configuration,
-              overrides,
-              errorIfCannotFindConfiguration: false,
-            },
-            defaultDependencyConfigs,
-            projectGraph,
-            originalTargetExecutor,
-            tasksMap,
-            newPath,
-            seenSet
-          );
-        } else {
-          if (!depProject) {
-            continue;
-          }
-          const depTargetId = getId({
-            project: depProject.name,
-            target: dependencyConfig.target,
-            configuration: configuration,
-          });
-
-          exitOnCircularDep(newPath, depTargetId);
-
-          if (seenSet.has(depTargetId)) {
-            continue;
-          }
-
-          addTasksForProjectDependencyConfig(
-            depProject,
-            { target, configuration, overrides },
-            dependencyConfig,
-            defaultDependencyConfigs,
-            projectGraph,
-            originalTargetExecutor,
-            tasksMap,
-            newPath,
-            seenSet
-          );
-        }
-      }
-    }
-  } else if (projectHasTarget(project, dependencyConfig.target)) {
-    addTasksForProjectTarget(
-      {
-        project,
-        target: dependencyConfig.target,
-        configuration,
-        overrides,
-        errorIfCannotFindConfiguration: false,
-      },
-      defaultDependencyConfigs,
-      projectGraph,
-      originalTargetExecutor,
-      tasksMap,
-      newPath,
-      seenSet
-    );
-  }
-}
-
-function exitOnCircularDep(
-  path: { targetIdentifier: string; hasTarget: boolean }[],
-  targetIdentifier: string
-) {
-  if (
-    path.length > 0 &&
-    path[path.length - 1].hasTarget &&
-    path.filter((p) => p.targetIdentifier === targetIdentifier).length > 0
-  ) {
-    const identifiers = path.map((p) => p.targetIdentifier);
-    output.error({
-      title: `Could not execute ${identifiers[0]} because it has a circular dependency`,
-      bodyLines: [`${[...identifiers, targetIdentifier].join(' --> ')}`],
-    });
-    process.exit(1);
-  }
-}
-
-function getId({
-  project,
-  target,
-  configuration,
-}: {
-  project: string;
-  target: string;
-  configuration?: string;
-}): string {
-  let id = `${project}:${target}`;
-  if (configuration) {
-    id += `:${configuration}`;
-  }
-  return id;
-}
-
 export function getRunner(
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration
@@ -509,27 +226,7 @@ export function getRunner(
   runnerOptions: any;
 } {
   let runner = nxArgs.runner;
-
-  //TODO: vsavkin remove in Nx 12
-  if (!nxJson.tasksRunnerOptions) {
-    const t = require('./default-tasks-runner');
-    return {
-      tasksRunner: t.defaultTasksRunner,
-      runnerOptions: nxArgs,
-    };
-  }
-
-  //TODO: vsavkin remove in Nx 12
-  if (!runner && !nxJson.tasksRunnerOptions.default) {
-    const t = require('./default-tasks-runner');
-    return {
-      tasksRunner: t.defaultTasksRunner,
-      runnerOptions: nxArgs,
-    };
-  }
-
   runner = runner || 'default';
-
   if (nxJson.tasksRunnerOptions[runner]) {
     let modulePath: string = nxJson.tasksRunnerOptions[runner].runner;
 
@@ -561,28 +258,4 @@ export function getRunner(
     });
     process.exit(1);
   }
-}
-
-function interpolateOverrides<T = any>(
-  args: T,
-  projectName: string,
-  projectMetadata: any
-): T {
-  const interpolatedArgs: T = { ...args };
-  Object.entries(interpolatedArgs).forEach(([name, value]) => {
-    if (typeof value === 'string') {
-      const regex = /{project\.([^}]+)}/g;
-      interpolatedArgs[name] = value.replace(regex, (_, group: string) => {
-        if (group.includes('.')) {
-          throw new Error('Only top-level properties can be interpolated');
-        }
-
-        if (group === 'name') {
-          return projectName;
-        }
-        return projectMetadata[group];
-      });
-    }
-  });
-  return interpolatedArgs;
 }

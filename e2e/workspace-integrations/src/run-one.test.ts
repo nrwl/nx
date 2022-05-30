@@ -96,13 +96,6 @@ describe('run-one', () => {
     );
   }, 10000);
 
-  it('should error for invalid configurations', () => {
-    const myapp = uniq('app');
-    runCLI(`generate @nrwl/react:app ${myapp}`);
-    // configuration has to be valid for the initiating project
-    expect(() => runCLI(`build ${myapp} -c=invalid`)).toThrow();
-  }, 10000);
-
   describe('target dependencies', () => {
     let myapp;
     let mylib1;

@@ -83,6 +83,7 @@ const runOne: string[] = [
   'scan',
   'outputStyle',
   'nxBail',
+  'nxIgnoreCycles',
 ];
 
 const runMany: string[] = [...runOne, 'projects', 'all'];
@@ -127,6 +128,7 @@ export interface NxArgs {
   outputStyle?: string;
   scan?: boolean;
   nxBail?: boolean;
+  nxIgnoreCycles?: boolean;
 }
 
 const ignoreArgs = ['$0', '_'];

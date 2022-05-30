@@ -1,6 +1,6 @@
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
-import { Task } from '../config/task-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
 
 export type TaskStatus =
@@ -24,5 +24,6 @@ export type TasksRunner<T = unknown> = (
     projectGraph: ProjectGraph;
     nxJson: NxJsonConfiguration;
     nxArgs: NxArgs;
+    taskGraph?: TaskGraph;
   }
 ) => any | Promise<{ [id: string]: TaskStatus }>;
