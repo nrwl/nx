@@ -93,7 +93,6 @@ function getDevServerPartial(
     open: options.open,
     static: false,
     compress: scriptsOptimization || stylesOptimization,
-    https: options.ssl,
     devMiddleware: {
       publicPath: servePath,
       stats: false,
@@ -109,8 +108,13 @@ function getDevServerPartial(
     hot: options.hmr,
   };
 
-  if (options.ssl && options.sslKey && options.sslCert) {
-    config.https = getSslConfig(root, options);
+  if (options.ssl) {
+    config.server = {
+      type: 'https',
+    };
+    if (options.sslKey && options.sslCert) {
+      config.server.options = getSslConfig(root, options);
+    }
   }
 
   if (options.proxyConfig) {
