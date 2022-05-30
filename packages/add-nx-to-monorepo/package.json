@@ -27,8 +27,6 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/workspace": "file:../workspace",
     "enquirer": "~2.3.6",
     "ignore": "^5.0.4",
     "nx": "file:../nx",

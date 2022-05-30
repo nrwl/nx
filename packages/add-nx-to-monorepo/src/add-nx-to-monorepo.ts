@@ -2,12 +2,18 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import * as cp from 'child_process';
 import { execSync } from 'child_process';
 import * as enquirer from 'enquirer';
 import * as yargsParser from 'yargs-parser';
-import { output, readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import ignore from 'ignore';
+import {
+  readJsonFile,
+  writeJsonFile,
+  directoryExists,
+} from 'nx/src/utils/fileutils';
+import { output } from 'nx/src/utils/output';
+import { NxJsonConfiguration } from 'nx/src/config/nx-json';
+import { detectPackageManager } from 'nx/src/utils/package-manager';
 
 const parsedArgs = yargsParser(process.argv, {
   boolean: ['nxCloud'],
@@ -21,6 +27,7 @@ addNxToMonorepo().catch((e) => console.error(e));
 
 export async function addNxToMonorepo() {
   const repoRoot = process.cwd();
+  const pmc = getPackageManagerCommand(repoRoot);
 
   output.log({
     title: `🐳 Nx initialization`,
@@ -46,13 +53,22 @@ export async function addNxToMonorepo() {
   addDepsToPackageJson(repoRoot, useCloud);
 
   output.log({ title: `📦 Installing dependencies` });
-  runInstall(repoRoot);
+  execSync(pmc.install, { stdio: [0, 1, 2] });
 
   if (useCloud) {
-    initCloud(repoRoot);
+    execSync(`${pmc.exec} nx g @nrwl/nx-cloud:init`, { stdio: [0, 1, 2] });
   }
 
-  printFinalMessage(repoRoot);
+  output.success({
+    title: `🎉 Done!`,
+    bodyLines: [
+      `- Enabled Computation caching!`,
+      `- Run "${pmc.exec} nx run-many --target=build --all" to run the build script for every project in the monorepo.`,
+      `- Run it again to replay the cached computation.`,
+      `- Run "${pmc.exec} nx graph" to see the structure of the monorepo.`,
+      `- Learn more at https://nx.dev/migration/adding-to-monorepo`,
+    ],
+  });
 }
 
 async function askAboutNxCloud(parsedArgs: any) {
@@ -68,7 +84,6 @@ async function askAboutNxCloud(parsedArgs: any) {
               name: 'Yes',
               hint: 'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
             },
-
             {
               name: 'No',
             },
@@ -166,19 +181,8 @@ function createProjectDesc(
   return res;
 }
 
-function detectWorkspaceScope(repoRoot: string) {
-  let scope = readJsonFile(path.join(repoRoot, `package.json`)).name;
-  if (!scope) return 'undetermined';
-
-  if (scope.startsWith('@')) {
-    scope = scope.substring(1);
-  }
-
-  return scope.split('/')[0];
-}
-
 function createNxJsonFile(repoRoot: string) {
-  const res = {
+  writeJsonFile<NxJsonConfiguration>(`${repoRoot}/nx.json`, {
     extends: 'nx/presets/npm.json',
     tasksRunnerOptions: {
       default: {
@@ -202,26 +206,16 @@ function createNxJsonFile(repoRoot: string) {
         analyzeSourceFiles: false,
       },
     },
-  };
-
-  writeJsonFile(`${repoRoot}/nx.json`, res);
+  });
 }
 
 function deduceWorkspaceLayout(repoRoot: string) {
-  if (exists(path.join(repoRoot, 'packages'))) {
+  if (directoryExists(path.join(repoRoot, 'packages'))) {
     return undefined;
-  } else if (exists(path.join(repoRoot, 'projects'))) {
+  } else if (directoryExists(path.join(repoRoot, 'projects'))) {
     return { libsDir: 'projects', appsDir: 'projects' };
   } else {
     return undefined;
-  }
-}
-
-function exists(folder: string) {
-  try {
-    return fs.statSync(folder).isDirectory();
-  } catch {
-    return false;
   }
 }
 
@@ -268,28 +262,11 @@ function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
   writeJsonFile(`package.json`, json);
 }
 
-function runInstall(repoRoot: string) {
-  cp.execSync(getPackageManagerCommand(repoRoot).install, { stdio: [0, 1, 2] });
-}
-
-function initCloud(repoRoot: string) {
-  execSync(
-    `${getPackageManagerCommand(repoRoot).exec} nx g @nrwl/nx-cloud:init`,
-    {
-      stdio: [0, 1, 2],
-    }
-  );
-}
-
 function getPackageManagerCommand(repoRoot: string): {
   install: string;
   exec: string;
 } {
-  const packageManager = fs.existsSync(path.join(repoRoot, 'yarn.lock'))
-    ? 'yarn'
-    : fs.existsSync(path.join(repoRoot, 'pnpm-lock.yaml'))
-    ? 'pnpm'
-    : 'npm';
+  const packageManager = detectPackageManager(repoRoot);
 
   switch (packageManager) {
     case 'yarn':
@@ -310,21 +287,4 @@ function getPackageManagerCommand(repoRoot: string): {
         exec: 'npx',
       };
   }
-}
-
-function printFinalMessage(repoRoot) {
-  output.success({
-    title: `🎉 Done!`,
-    bodyLines: [
-      `- Enabled Computation caching!`,
-      `- Run "${
-        getPackageManagerCommand(repoRoot).exec
-      } nx run-many --target=build --all" to run the build script for every project in the monorepo.`,
-      `- Run it again to replay the cached computation.`,
-      `- Run "${
-        getPackageManagerCommand(repoRoot).exec
-      } nx graph" to see the structure of the monorepo.`,
-      `- Learn more at https://nx.dev/migration/adding-to-monorepo`,
-    ],
-  });
 }
