@@ -53,6 +53,11 @@
       "version": "14.0.0-beta.0",
       "description": "Add a default development configuration for build and serve targets.",
       "factory": "./src/migrations/update-14-0-0/add-default-development-configurations"
+    },
+    "update-external-emotion-jsx-runtime-14.1.0": {
+      "version": "14.1.0-beta.0",
+      "description": "Update external option in projects for Emotion",
+      "factory": "./src/migrations/update-14-1-0/update-external-emotion-jsx-runtime"
     }
   },
   "packageJsonUpdates": {
