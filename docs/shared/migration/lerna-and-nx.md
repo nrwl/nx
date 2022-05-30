@@ -20,7 +20,7 @@ Nx comes with a powerful task scheduler that intelligenty runs operations and ma
 
 - **Parallelization and task dependencies -** Nx automatically [knows how your projects relate to each other](/structure/dependency-graph). As a result, if `project-a` depends on `project-b` and you run the build command for `project-a`, Nx first runs the builds for all of `project-a`'s dependencies and then the invoked project itself. Nx sorts these tasks to maximize parallelism.
 - **Only run what changed -** Using [Nx affected commands](/using-nx/affected) you only really execute tasks on the projects that changed, compared to a given baseline (usually the main branch).
-- **Caching -** You get Nx's [computaton caching](/using-nx/caching) for free. All operations, including artifacts and terminal output are restored from the cache (if present) in a completely transparent way without disrupting your DX. No configuration needed. Obviously this results in an incredible speed improvement.
+- **Caching -** You get Nx's [computation caching](/using-nx/caching) for free. All operations, including artifacts and terminal output are restored from the cache (if present) in a completely transparent way without disrupting your DX. No configuration needed. Obviously this results in an incredible speed improvement.
 - **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization. It even learns from previous runs to better distribute tasks! [Learn more](/using-nx/dte)
 
 ## Add Nx to an existing Lerna monorepo
