@@ -1,24 +1,21 @@
 #!/usr/bin/env node
 
-// we can't import from '@nrwl/workspace' because it will require typescript
+import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
+import { output } from 'nx/src/utils/output';
 import {
+  PackageManager,
   getPackageManagerCommand,
-  NxJsonConfiguration,
-  readJsonFile,
-  writeJsonFile,
-  output,
-} from '@nrwl/devkit';
+  PackageManagerCommands,
+} from 'nx/src/utils/package-manager';
+import { NxJsonConfiguration } from 'nx/src/config/nx-json';
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 import * as path from 'path';
 import { dirSync } from 'tmp';
-import { showNxWarning } from './shared';
-import {
-  detectInvokedPackageManager,
-  PackageManager,
-} from './detect-invoked-package-manager';
-import enquirer = require('enquirer');
+import { prompt } from 'enquirer';
 import yargsParser = require('yargs-parser');
+
+const supportedPackageManagers: PackageManager[] = ['pnpm', 'yarn', 'npm'];
 
 const nxVersion = require('../package.json').version;
 const tsVersion = 'TYPESCRIPT_VERSION'; // This gets replaced with the typescript version in the root package.json during build
@@ -34,7 +31,7 @@ const parsedArgs = yargsParser(process.argv, {
   boolean: ['help'],
 });
 
-function createSandbox(packageManager: string) {
+function createSandbox(packageManager: PackageManager) {
   console.log(`Creating a sandbox with Nx...`);
   const tmpDir = dirSync().name;
   writeJsonFile(path.join(tmpDir, 'package.json'), {
@@ -57,8 +54,8 @@ function createSandbox(packageManager: string) {
 
 function createWorkspace(
   tmpDir: string,
-  packageManager: PackageManager,
-  parsedArgs: any,
+  pmc: PackageManagerCommands,
+  parsedArgs: yargsParser.Arguments,
   name: string
 ) {
   // Ensure to use packageManager for args
@@ -75,7 +72,6 @@ function createWorkspace(
   const command = `new ${args} --preset=empty --collection=@nrwl/workspace`;
   console.log(command);
 
-  const pmc = getPackageManagerCommand(packageManager);
   execSync(
     `${
       pmc.exec
@@ -92,16 +88,15 @@ function createWorkspace(
 }
 
 function createNxPlugin(
-  workspaceName,
-  pluginName,
-  packageManager,
-  parsedArgs: any
+  workspaceName: string,
+  pluginName: string,
+  pmc: PackageManagerCommands,
+  parsedArgs: yargsParser.Arguments
 ) {
   const importPath = parsedArgs.importPath ?? `@${workspaceName}/${pluginName}`;
   const command = `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${importPath}`;
   console.log(command);
 
-  const pmc = getPackageManagerCommand(packageManager);
   execSync(`${pmc.exec} ${command}`, {
     cwd: workspaceName,
     stdio: [0, 1, 2],
@@ -123,7 +118,7 @@ function updateWorkspace(workspaceName: string) {
   removeSync(path.join(workspaceName, 'libs'));
 }
 
-function commitChanges(workspaceName) {
+function commitChanges(workspaceName: string) {
   execSync('git add .', {
     cwd: workspaceName,
     stdio: 'ignore',
@@ -134,56 +129,97 @@ function commitChanges(workspaceName) {
   });
 }
 
-function determineWorkspaceName(parsedArgs: any): Promise<string> {
-  const workspaceName: string = parsedArgs._[2];
+async function determineWorkspaceName(
+  parsedArgs: yargsParser.Arguments
+): Promise<string> {
+  const workspaceName: string | number = parsedArgs._[2];
 
   if (workspaceName) {
-    return Promise.resolve(workspaceName);
+    return workspaceName.toString();
   }
 
-  return enquirer
-    .prompt([
-      {
-        name: 'WorkspaceName',
-        message: `Workspace name (e.g., org name)    `,
-        type: 'input',
-      },
-    ])
-    .then((a: { WorkspaceName: string }) => {
-      if (!a.WorkspaceName) {
-        output.error({
-          title: 'Invalid workspace name',
-          bodyLines: [`Workspace name cannot be empty`],
-        });
-        process.exit(1);
-      }
-      return a.WorkspaceName;
+  const result = await prompt<{ WorkspaceName: string }>([
+    {
+      name: 'WorkspaceName',
+      message: `Workspace name (e.g., org name)    `,
+      type: 'input',
+    },
+  ]);
+  if (!result.WorkspaceName) {
+    output.error({
+      title: 'Invalid workspace name',
+      bodyLines: [`Workspace name cannot be empty`],
     });
+    process.exit(1);
+  }
+  return result.WorkspaceName;
 }
 
-function determinePluginName(parsedArgs) {
+async function determinePluginName(parsedArgs: yargsParser.Arguments) {
   if (parsedArgs.pluginName) {
     return Promise.resolve(parsedArgs.pluginName);
   }
 
-  return enquirer
-    .prompt([
-      {
-        name: 'PluginName',
-        message: `Plugin name                        `,
-        type: 'input',
-      },
-    ])
-    .then((a: { PluginName: string }) => {
-      if (!a.PluginName) {
-        output.error({
-          title: 'Invalid name',
-          bodyLines: [`Name cannot be empty`],
-        });
-        process.exit(1);
-      }
-      return a.PluginName;
+  const res = await prompt<{ PluginName: string }>([
+    {
+      name: 'PluginName',
+      message: `Plugin name                        `,
+      type: 'input',
+    },
+  ]);
+
+  if (!res.PluginName) {
+    output.error({
+      title: 'Invalid name',
+      bodyLines: [`Name cannot be empty`],
     });
+    process.exit(1);
+  }
+  return res.PluginName;
+}
+
+/**
+ * Detects which package manager was used to invoke create-nx-{plugin|workspace} command
+ * based on the main Module process that invokes the command
+ * - npx returns 'npm'
+ * - pnpx returns 'pnpm'
+ * - yarn create returns 'yarn'
+ *
+ * Default to 'npm'
+ */
+export function detectInvokedPackageManager(): PackageManager {
+  // mainModule is deprecated since Node 14, fallback for older versions
+  const invoker = require.main || process['mainModule'];
+
+  if (invoker) {
+    for (const pkgManager of supportedPackageManagers) {
+      if (invoker.path.includes(pkgManager)) {
+        return pkgManager;
+      }
+    }
+  }
+
+  return 'npm';
+}
+
+function showNxWarning(workspaceName: string) {
+  try {
+    const pathToRunNxCommand = path.resolve(process.cwd(), workspaceName);
+    execSync('nx --version', {
+      cwd: pathToRunNxCommand,
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+  } catch {
+    // no nx found
+    output.addVerticalSeparator();
+    output.note({
+      title: `Nx CLI is not installed globally.`,
+      bodyLines: [
+        `This means that you might have to use "yarn nx" or "npx nx" to execute commands in the workspace.`,
+        `Run "yarn global add nx" or "npm install -g nx" to be able to execute command directly.`,
+      ],
+    });
+  }
 }
 
 function showHelp() {
@@ -208,14 +244,21 @@ if (parsedArgs.help) {
 }
 
 const packageManager: PackageManager =
-  parsedArgs.packageManager || detectInvokedPackageManager();
-determineWorkspaceName(parsedArgs).then((workspaceName) => {
-  return determinePluginName(parsedArgs).then((pluginName) => {
-    const tmpDir = createSandbox(packageManager);
-    createWorkspace(tmpDir, packageManager, parsedArgs, workspaceName);
-    updateWorkspace(workspaceName);
-    createNxPlugin(workspaceName, pluginName, packageManager, parsedArgs);
-    commitChanges(workspaceName);
-    showNxWarning(workspaceName);
-  });
+  parsedArgs.packageManager &&
+  typeof parsedArgs.packageManager === 'string' &&
+  supportedPackageManagers.includes(
+    parsedArgs.packageManager.trim() as PackageManager
+  )
+    ? (parsedArgs.packageManager.trim() as PackageManager)
+    : detectInvokedPackageManager();
+
+determineWorkspaceName(parsedArgs).then(async (workspaceName) => {
+  const pluginName = await determinePluginName(parsedArgs);
+  const tmpDir = createSandbox(packageManager);
+  const pmc = getPackageManagerCommand(packageManager);
+  createWorkspace(tmpDir, pmc, parsedArgs, workspaceName);
+  updateWorkspace(workspaceName);
+  createNxPlugin(workspaceName, pluginName, pmc, parsedArgs);
+  commitChanges(workspaceName);
+  showNxWarning(workspaceName);
 });
