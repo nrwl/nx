@@ -434,6 +434,11 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: false,
     })
+    .option('nx-ignore-cycles', {
+      describe: 'Ignore cycles in the task graph',
+      type: 'boolean',
+      default: false,
+    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
@@ -496,6 +501,11 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('nx-bail', {
       describe: 'Stop command execution after the first failed task',
+      type: 'boolean',
+      default: false,
+    })
+    .option('nx-ignore-cycles', {
+      describe: 'Ignore cycles in the task graph',
       type: 'boolean',
       default: false,
     })
@@ -652,6 +662,11 @@ function withRunOneOptions(yargs: yargs.Argv) {
     })
     .option('nx-bail', {
       describe: 'Stop command execution after the first failed task',
+      type: 'boolean',
+      default: false,
+    })
+    .option('nx-ignore-cycles', {
+      describe: 'Ignore cycles in the task graph',
       type: 'boolean',
       default: false,
     });

@@ -931,6 +931,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 | `context.nxJson`             | [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)<`string`[] \| `"*"`\> |
 | `context.projectGraph`       | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\>                             |
 | `context.target?`            | `string`                                                                              |
+| `context.taskGraph?`         | [`TaskGraph`](../../devkit/index#taskgraph)                                           |
 
 #### Returns
 
