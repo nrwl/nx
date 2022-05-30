@@ -260,14 +260,10 @@ export function runNgNew(
 ): string {
   projName = projectName;
 
-  // Use the latest version of the currently supported @angular/cli major version
-  // to cover existing usage out there while avoiding the tests to fail when a new
-  // major comes out and is still not supported
-  const ngCliMajorVersion = coerce(angularCliVersion).major;
   const npmMajorVersion = getNpmMajorVersion();
   const command = `npx ${
     +npmMajorVersion >= 7 ? '--yes' : ''
-  } @angular/cli@${ngCliMajorVersion} new ${projectName} --package-manager=${packageManager}`;
+  } @angular/cli@${angularCliVersion} new ${projectName} --package-manager=${packageManager}`;
 
   return execSync(command, {
     cwd: e2eCwd,

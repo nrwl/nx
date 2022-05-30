@@ -469,7 +469,6 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(
       `CREATE apps/${newPath}/src/environments/environment.ts`
     );
-    expect(moveOutput).toContain(`UPDATE nx.json`);
     expect(moveOutput).toContain(`UPDATE workspace.json`);
   });
 

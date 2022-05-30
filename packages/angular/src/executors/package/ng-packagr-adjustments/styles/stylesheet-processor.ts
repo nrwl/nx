@@ -17,7 +17,7 @@ import {
   saveCacheEntry,
 } from 'ng-packagr/lib/utils/cache';
 import * as log from 'ng-packagr/lib/utils/log';
-import { dirname, extname, join, resolve } from 'path';
+import { dirname, extname, join } from 'path';
 import * as postcssPresetEnv from 'postcss-preset-env';
 import * as postcssUrl from 'postcss-url';
 import {
@@ -32,13 +32,6 @@ const postcss = require('postcss');
 export enum CssUrl {
   inline = 'inline',
   none = 'none',
-}
-
-export enum InlineStyleLanguage {
-  sass = 'sass',
-  scss = 'scss',
-  css = 'css',
-  less = 'less',
 }
 
 export interface Result {

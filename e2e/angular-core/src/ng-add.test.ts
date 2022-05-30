@@ -85,13 +85,13 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     updateFile('tsconfig.json', JSON.stringify(tsConfig, null, 2));
 
     // add an extra script file
-    updateFile('src/scripts.ts', 'const x = 1;');
+    updateFile('src/scripts.js', 'const x = 1;');
 
     // update angular.json
     const angularJson = readJson('angular.json');
     angularJson.projects[project].architect.build.options.scripts =
       angularJson.projects[project].architect.test.options.scripts = [
-        'src/scripts.ts',
+        'src/scripts.js',
       ];
     angularJson.projects[project].architect.test.options.styles = [
       'src/styles.css',
@@ -144,7 +144,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         defaultCollection: '@nrwl/angular',
         packageManager: packageManager,
       },
-      defaultProject: project,
       implicitDependencies: {
         '.eslintrc.json': '*',
         'package.json': {
@@ -196,7 +195,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
           `apps/${project}/src/assets`,
         ],
         styles: [`apps/${project}/src/styles.css`],
-        scripts: [`apps/${project}/src/scripts.ts`],
+        scripts: [`apps/${project}/src/scripts.js`],
       },
       configurations: {
         production: {
@@ -251,7 +250,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
           `apps/${project}/src/assets`,
         ],
         styles: [`apps/${project}/src/styles.css`],
-        scripts: [`apps/${project}/src/scripts.ts`],
+        scripts: [`apps/${project}/src/scripts.js`],
       },
     });
     expect(projectConfig.targets.e2e).toBeUndefined();
@@ -271,7 +270,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
     });
 
-    runCLI('build --configuration production --outputHashing none');
+    runCLI(`build ${project} --configuration production --outputHashing none`);
     checkFilesExist(`dist/apps/${project}/main.js`);
   });
 

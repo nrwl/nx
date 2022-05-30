@@ -208,6 +208,23 @@
           "version": "~8.12.0"
         }
       }
+    },
+    "14.2.0": {
+      "version": "14.2.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~5.24.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~5.24.0"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "~5.24.0"
+        },
+        "eslint": {
+          "version": "~8.15.0"
+        }
+      }
     }
   }
 }

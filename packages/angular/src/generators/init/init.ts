@@ -87,7 +87,7 @@ function setDefaults(host: Tree, options: Schema) {
 function addPostInstall(host: Tree) {
   updateJson(host, 'package.json', (pkgJson) => {
     pkgJson.scripts = pkgJson.scripts ?? {};
-    const command = 'ngcc --properties es2015 browser module main';
+    const command = 'ngcc --properties es2020 browser module main';
     if (!pkgJson.scripts.postinstall) {
       pkgJson.scripts.postinstall = command;
     } else if (!pkgJson.scripts.postinstall.includes('ngcc')) {

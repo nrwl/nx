@@ -1,7 +1,9 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
   moveFilesToNewDirectory,
+  removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
@@ -9,6 +11,7 @@ import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import init from '../../generators/init/init';
+import { ngPackagrVersion } from '../../utils/versions';
 import addLintingGenerator from '../add-linting/add-linting';
 import karmaProjectGenerator from '../karma-project/karma-project';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
@@ -86,6 +89,14 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   }
 
   if (options.buildable || options.publishable) {
+    removeDependenciesFromPackageJson(host, [], ['ng-packagr']);
+    addDependenciesToPackageJson(
+      host,
+      {},
+      {
+        'ng-packagr': ngPackagrVersion,
+      }
+    );
     addBuildableLibrariesPostCssDependencies(host);
   }
 

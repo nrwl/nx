@@ -34,6 +34,7 @@ export function enableStrictTypeChecking(
       // update Angular Template Settings
       json.angularCompilerOptions = {
         ...(json.angularCompilerOptions ?? {}),
+        enableI18nLegacyMessageIdFormat: false,
         strictInjectionParameters: true,
         strictInputAccessModifiers: true,
         strictTemplates: true,

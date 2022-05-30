@@ -6,9 +6,9 @@ Object {
   "devDependencies": Object {
     "@nrwl/eslint-plugin-nx": "0.0.1",
     "@nrwl/linter": "0.0.1",
-    "@typescript-eslint/eslint-plugin": "~5.18.0",
-    "@typescript-eslint/parser": "~5.18.0",
-    "eslint": "~8.12.0",
+    "@typescript-eslint/eslint-plugin": "~5.24.0",
+    "@typescript-eslint/parser": "~5.24.0",
+    "eslint": "~8.15.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-cypress": "^2.10.3",
     "eslint-plugin-import": "latest",

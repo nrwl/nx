@@ -32,7 +32,7 @@ const migrationTestRunner = new SchematicTestRunner(
   join(__dirname, '../../migrations.json')
 );
 
-export function runMigration<SchemaOptions = any>(
+export function runMigration<SchemaOptions extends object = any>(
   schematicName: string,
   options: SchemaOptions,
   tree: Tree

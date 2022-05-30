@@ -232,6 +232,78 @@ describe('MFE Webpack Utils', () => {
       });
     });
 
+    it('should collect secondary entry points from exports and fall back to lookinp up for package.json', () => {
+      // ARRANGE
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (path) => !path.endsWith('/secondary/package.json')
+      );
+      jest.spyOn(devkit, 'readJsonFile').mockImplementation((file) => {
+        if (file.endsWith('pkg1/package.json')) {
+          return {
+            name: 'pkg1',
+            version: '1.0.0',
+            exports: {
+              '.': './index.js',
+              './package.json': './package.json',
+              './secondary': './secondary/index.js',
+            },
+          };
+        }
+
+        // @angular/core/package.json won't have exports, so it looks up for package.json
+        return {
+          name: file
+            .replace(/\\/g, '/')
+            .replace(/^.*node_modules[/]/, '')
+            .replace('/package.json', ''),
+          dependencies: { pkg1: '1.0.0', '@angular/core': '~13.2.0' },
+        };
+      });
+      (fs.readdirSync as jest.Mock).mockImplementation(
+        (directoryPath: string) => {
+          const packages = {
+            pkg1: ['secondary'],
+            '@angular/core': ['testing'],
+          };
+
+          for (const key of Object.keys(packages)) {
+            if (directoryPath.endsWith(key)) {
+              return packages[key];
+            }
+          }
+          return [];
+        }
+      );
+      (fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
+
+      // ACT
+      const packages = sharePackages(['pkg1', '@angular/core']);
+
+      // ASSERT
+      expect(packages).toStrictEqual({
+        pkg1: {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '1.0.0',
+        },
+        'pkg1/secondary': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '1.0.0',
+        },
+        '@angular/core': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '~13.2.0',
+        },
+        '@angular/core/testing': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '~13.2.0',
+        },
+      });
+    });
+
     it('should not throw when the main entry point package.json cannot be required', () => {
       // ARRANGE
       (fs.existsSync as jest.Mock).mockImplementation(
