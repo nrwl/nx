@@ -4,7 +4,12 @@ import {
   serveWebpackBrowser,
 } from '@angular-devkit/build-angular/src/builders/dev-server';
 import { JsonObject } from '@angular-devkit/core';
-import { joinPathFragments, parseTargetString, Workspaces } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  parseTargetString,
+  readAllWorkspaceConfiguration,
+  Workspaces,
+} from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
 import { resolveCustomWebpackConfig } from '../utilities/webpack';
@@ -21,9 +26,7 @@ export function executeWebpackServerBuilder(
   );
 
   const options = normalizeOptions(schema);
-  const workspaceConfig = new Workspaces(
-    context.workspaceRoot
-  ).readWorkspaceConfiguration();
+  const workspaceConfig = readAllWorkspaceConfiguration();
 
   const parsedBrowserTarget = parseTargetString(options.browserTarget);
   const buildTarget =

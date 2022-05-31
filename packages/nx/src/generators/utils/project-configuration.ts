@@ -2,8 +2,8 @@ import { basename, dirname, join, relative } from 'path';
 import type { NxJsonConfiguration } from '../../config/nx-json';
 import {
   ProjectConfiguration,
-  RawWorkspaceJsonConfiguration,
-  WorkspaceJsonConfiguration,
+  RawProjectsConfigurations,
+  ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
 import {
   buildWorkspaceConfigurationFromGlobs,
@@ -18,10 +18,7 @@ import type { Tree } from '../tree';
 
 import { readJson, updateJson, writeJson } from './json';
 
-export type WorkspaceConfiguration = Omit<
-  WorkspaceJsonConfiguration,
-  'projects'
-> &
+export type WorkspaceConfiguration = Omit<ProjectsConfigurations, 'projects'> &
   Partial<NxJsonConfiguration>;
 
 /**
@@ -181,7 +178,7 @@ export function updateWorkspaceConfiguration(
   // in project config.
   const workspacePath = getWorkspacePath(tree);
   if (workspacePath) {
-    updateJson<WorkspaceJsonConfiguration>(tree, workspacePath, (json) => {
+    updateJson<ProjectsConfigurations>(tree, workspacePath, (json) => {
       const config = {
         ...json,
         version: workspaceConfig.version,
@@ -257,7 +254,7 @@ export function isStandaloneProject(tree: Tree, project: string): boolean {
   const path = getWorkspacePath(tree);
   const rawWorkspace =
     path && tree.exists(path)
-      ? readJson<RawWorkspaceJsonConfiguration>(tree, path)
+      ? readJson<RawProjectsConfigurations>(tree, path)
       : null;
   if (rawWorkspace) {
     const projectConfig = rawWorkspace.projects?.[project];
@@ -268,7 +265,7 @@ export function isStandaloneProject(tree: Tree, project: string): boolean {
 
 function getProjectConfiguration(
   projectName: string,
-  workspace: WorkspaceJsonConfiguration
+  workspace: ProjectsConfigurations
 ): ProjectConfiguration {
   return {
     ...readWorkspaceSection(workspace, projectName),
@@ -276,7 +273,7 @@ function getProjectConfiguration(
 }
 
 function readWorkspaceSection(
-  workspace: WorkspaceJsonConfiguration,
+  workspace: ProjectsConfigurations,
   projectName: string
 ) {
   return workspace.projects[projectName];
@@ -391,7 +388,7 @@ function addProjectToWorkspaceJson(
 /**
  * Read the workspace configuration, including projects.
  */
-export function readWorkspace(tree: Tree): WorkspaceJsonConfiguration {
+export function readWorkspace(tree: Tree): ProjectsConfigurations {
   const workspaceJson = inlineProjectConfigurationsWithTree(tree);
   const originalVersion = workspaceJson.version;
   return {
@@ -408,7 +405,7 @@ export function readWorkspace(tree: Tree): WorkspaceJsonConfiguration {
  */
 function inlineProjectConfigurationsWithTree(
   tree: Tree
-): WorkspaceJsonConfiguration {
+): ProjectsConfigurations {
   const workspaceJson = readRawWorkspaceJson(tree);
   Object.entries(workspaceJson.projects || {}).forEach(([project, config]) => {
     if (typeof config === 'string') {
@@ -419,7 +416,7 @@ function inlineProjectConfigurationsWithTree(
       };
     }
   });
-  return workspaceJson as WorkspaceJsonConfiguration;
+  return workspaceJson as ProjectsConfigurations;
 }
 
 /**
@@ -458,12 +455,12 @@ function findDeletedProjects(tree: Tree) {
   });
 }
 
-let staticFSWorkspace: RawWorkspaceJsonConfiguration;
-function readRawWorkspaceJson(tree: Tree): RawWorkspaceJsonConfiguration {
+let staticFSWorkspace: RawProjectsConfigurations;
+function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
   const path = getWorkspacePath(tree);
   if (path && tree.exists(path)) {
     // `workspace.json` exists, use it.
-    return readJson<RawWorkspaceJsonConfiguration>(tree, path);
+    return readJson<RawProjectsConfigurations>(tree, path);
   } else {
     const nxJson = readNxJson(tree);
     const createdProjects = buildWorkspaceConfigurationFromGlobs(
@@ -513,10 +510,7 @@ function getProjectFileLocation(tree: Tree, project: string): string | null {
 
 function validateProjectConfigurationOperationsGivenWorkspaceJson(
   mode: 'create' | 'update' | 'delete',
-  workspaceJson:
-    | RawWorkspaceJsonConfiguration
-    | WorkspaceJsonConfiguration
-    | null,
+  workspaceJson: RawProjectsConfigurations | ProjectsConfigurations | null,
   projectName: string
 ) {
   if (mode == 'create' && workspaceJson.projects[projectName]) {
@@ -569,7 +563,7 @@ export function shouldDefaultToUsingStandaloneConfigs(tree: Tree): boolean {
   const workspacePath = getWorkspacePath(tree);
   const rawWorkspace =
     workspacePath && tree.exists(workspacePath)
-      ? readJson<RawWorkspaceJsonConfiguration>(tree, workspacePath)
+      ? readJson<RawProjectsConfigurations>(tree, workspacePath)
       : null;
   return !rawWorkspace
     ? true // if workspace.json doesn't exist, all projects **must** be standalone

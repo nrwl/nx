@@ -1,4 +1,4 @@
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { watch } from 'chokidar';
 import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
@@ -9,7 +9,7 @@ import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL, URLSearchParams } from 'url';
-import { workspaceLayout } from '../project-graph/file-utils';
+import { workspaceLayout } from '../config/configuration';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { output } from '../utils/output';
 import { writeJsonFile } from '../utils/fileutils';

@@ -870,6 +870,7 @@
             "id": "create-nx-workspace",
             "file": "generated/cli/create-nx-workspace"
           },
+          { "name": "init", "id": "init", "file": "generated/cli/init" },
           {
             "name": "generate",
             "id": "generate",

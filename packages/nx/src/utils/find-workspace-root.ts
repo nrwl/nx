@@ -1,5 +1,6 @@
 import { existsSync } from 'fs';
 import * as path from 'path';
+import { workspaceRootInner } from './workspace-root';
 
 /**
  * Recursive function that walks back up the directory
@@ -8,19 +9,21 @@ import * as path from 'path';
  * @param dir Directory to start searching with
  */
 export function findWorkspaceRoot(dir: string): WorkspaceTypeAndRoot | null {
-  if (existsSync(path.join(dir, 'angular.json'))) {
-    return { type: 'angular', dir };
+  const r = workspaceRootInner(dir, null);
+
+  if (existsSync(path.join(r, 'angular.json'))) {
+    return { type: 'angular', dir: r };
   }
 
-  if (existsSync(path.join(dir, 'nx.json'))) {
-    return { type: 'nx', dir };
+  if (existsSync(path.join(r, 'nx.json'))) {
+    return { type: 'nx', dir: r };
   }
 
-  if (path.dirname(dir) === dir) {
-    return null;
+  if (existsSync(path.join(r, 'node_modules', 'nx', 'package.json'))) {
+    return { type: 'nx', dir: r };
   }
 
-  return findWorkspaceRoot(path.dirname(dir));
+  return null;
 }
 
 export interface WorkspaceTypeAndRoot {

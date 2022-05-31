@@ -24,6 +24,7 @@
     "e2e-linter": "e2e/linter",
     "e2e-next": "e2e/next",
     "e2e-node": "e2e/node",
+    "e2e-nx-init": "e2e/nx-init",
     "e2e-nx-plugin": "e2e/nx-plugin",
     "e2e-react": "e2e/react",
     "e2e-react-native": "e2e/react-native",

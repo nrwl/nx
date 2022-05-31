@@ -12,7 +12,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export function getCommandAsString(task: Task) {
   const execCommand = getPackageManagerCommand().exec;

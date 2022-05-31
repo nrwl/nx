@@ -1,6 +1,6 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { join } from 'path';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { NxArgs } from '../utils/command-line-utils';
 import { isRelativePath } from '../utils/fileutils';
 import { output } from '../utils/output';

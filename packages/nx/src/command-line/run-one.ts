@@ -5,11 +5,11 @@ import { performance } from 'perf_hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { splitTarget } from '../utils/split-target';
 import { output } from '../utils/output';
 import { readEnvironment } from './read-environment';
-import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 
 export async function runOne(
   cwd: string,
@@ -27,7 +27,9 @@ export async function runOne(
       configuration: opts.configuration,
       target: opts.target,
     },
-    'run-one'
+    'run-one',
+    { printWarnings: true },
+    env.nxJson
   );
 
   if (nxArgs.help) {
@@ -79,7 +81,7 @@ const targetAliases = {
 function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
-  workspaceConfiguration: WorkspaceJsonConfiguration & NxJsonConfiguration
+  workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
 ): { project; target; configuration; parsedArgs } {
   const defaultProjectName = calculateDefaultProjectName(
     cwd,
@@ -135,7 +137,7 @@ function parseRunOneOptions(
 function calculateDefaultProjectName(
   cwd: string,
   root: string,
-  workspaceConfiguration: WorkspaceJsonConfiguration & NxJsonConfiguration
+  workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
 ) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
   if (relativeCwd) {

@@ -1,8 +1,8 @@
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
-import { FileData, readNxJson, readWorkspaceJson } from './file-utils';
+import { FileData } from './file-utils';
 import { normalizeNxJson } from './normalize-nx-json';
 import {
   createCache,
@@ -34,11 +34,15 @@ import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
   ProjectConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
+import {
+  readAllWorkspaceConfiguration,
+  readNxJson,
+} from '../config/configuration';
 
 export async function buildProjectGraph() {
-  const workspaceJson = readWorkspaceJson();
+  const workspaceJson = readAllWorkspaceConfiguration();
   const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
     workspaceJson,
     defaultFileHasher.allFileData()
@@ -58,7 +62,7 @@ export async function buildProjectGraph() {
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
-  workspaceJson: WorkspaceJsonConfiguration,
+  workspaceJson: ProjectsConfigurations,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
   cache: ProjectGraphCache | null,
@@ -348,7 +352,7 @@ function getNumberOfWorkers(): number {
 }
 
 function createContext(
-  workspaceJson: WorkspaceJsonConfiguration,
+  workspaceJson: ProjectsConfigurations,
   nxJson: NxJsonConfiguration,
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap

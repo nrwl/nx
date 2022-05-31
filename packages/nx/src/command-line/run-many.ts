@@ -12,16 +12,18 @@ import { readEnvironment } from './read-environment';
 
 export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
   performance.mark('command-execution-begins');
+  const env = readEnvironment();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
-    'run-many'
+    'run-many',
+    { printWarnings: true },
+    env.nxJson
   );
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
   const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
-  const env = readEnvironment();
 
   await runCommand(projects, projectGraph, env, nxArgs, overrides, null);
 }

@@ -2,7 +2,7 @@ import {
   ProjectGraph,
   Task,
   TaskGraph,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
   Hasher,
   Hash,
 } from '@nrwl/devkit';
@@ -13,7 +13,7 @@ export default async function run(
     hasher: Hasher;
     projectGraph: ProjectGraph;
     taskGraph: TaskGraph;
-    workspaceConfig: WorkspaceJsonConfiguration;
+    workspaceConfig: ProjectsConfigurations;
   }
 ): Promise<Hash> {
   if (task.overrides['hasTypeAwareRules'] === true) {

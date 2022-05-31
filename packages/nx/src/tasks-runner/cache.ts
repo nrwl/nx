@@ -1,4 +1,4 @@
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import {
   copy,
   mkdir,

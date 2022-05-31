@@ -6,7 +6,7 @@ import { ProjectGraphBuilder } from '../project-graph-builder';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('nx/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 

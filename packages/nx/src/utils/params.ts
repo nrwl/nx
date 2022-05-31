@@ -2,7 +2,7 @@ import { logger } from './logger';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
   TargetConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 
 type PropertyDescription = {
@@ -554,7 +554,7 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  wc: (WorkspaceJsonConfiguration & NxJsonConfiguration) | null,
+  wc: (ProjectsConfigurations & NxJsonConfiguration) | null,
   schema: Schema,
   isInteractive: boolean,
   defaultProjectName: string | null,
@@ -646,7 +646,7 @@ export function convertSmartDefaultsIntoNamedParams(
 
 function getGeneratorDefaults(
   projectName: string | null,
-  wc: (WorkspaceJsonConfiguration & NxJsonConfiguration) | null,
+  wc: (ProjectsConfigurations & NxJsonConfiguration) | null,
   collectionName: string,
   generatorName: string
 ) {

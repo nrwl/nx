@@ -76,12 +76,12 @@ It only uses language primitives and immutable objects
 - [NxAffectedConfig](../../devkit/index#nxaffectedconfig)
 - [NxJsonConfiguration](../../devkit/index#nxjsonconfiguration)
 - [ProjectConfiguration](../../devkit/index#projectconfiguration)
+- [ProjectsConfigurations](../../devkit/index#projectsconfigurations)
 - [TargetConfiguration](../../devkit/index#targetconfiguration)
 - [TargetDependencyConfig](../../devkit/index#targetdependencyconfig)
 - [Task](../../devkit/index#task)
 - [TaskGraph](../../devkit/index#taskgraph)
 - [Workspace](../../devkit/index#workspace)
-- [WorkspaceJsonConfiguration](../../devkit/index#workspacejsonconfiguration)
 
 ### Generators Type aliases
 
@@ -112,6 +112,7 @@ It only uses language primitives and immutable objects
 - [ImplicitDependencyEntry](../../devkit/index#implicitdependencyentry)
 - [ProjectType](../../devkit/index#projecttype)
 - [TaskGraphExecutor](../../devkit/index#taskgraphexecutor)
+- [WorkspaceJsonConfiguration](../../devkit/index#workspacejsonconfiguration)
 
 ### Logger Variables
 
@@ -151,6 +152,7 @@ It only uses language primitives and immutable objects
 - [offsetFromRoot](../../devkit/index#offsetfromroot)
 - [parseJson](../../devkit/index#parsejson)
 - [parseTargetString](../../devkit/index#parsetargetstring)
+- [readAllWorkspaceConfiguration](../../devkit/index#readallworkspaceconfiguration)
 - [readCachedProjectGraph](../../devkit/index#readcachedprojectgraph)
 - [readJson](../../devkit/index#readjson)
 - [readJsonFile](../../devkit/index#readjsonfile)
@@ -424,6 +426,12 @@ A plugin for Nx
 
 ---
 
+### ProjectsConfigurations
+
+• **ProjectsConfigurations**: `Object`
+
+---
+
 ### TargetConfiguration
 
 • **TargetConfiguration**: `Object`
@@ -452,17 +460,11 @@ A plugin for Nx
 
 • **Workspace**: `Object`
 
----
-
-### WorkspaceJsonConfiguration
-
-• **WorkspaceJsonConfiguration**: `Object`
-
 ## Generators Type aliases
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: `Omit`<[`WorkspaceJsonConfiguration`](../../devkit/index#workspacejsonconfiguration), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)\>
+Ƭ **WorkspaceConfiguration**: `Omit`<[`ProjectsConfigurations`](../../devkit/index#projectsconfigurations), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)\>
 
 ---
 
@@ -666,6 +668,12 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 `Promise`<`Record`<`string`, `Object`\>\>
 
+---
+
+### WorkspaceJsonConfiguration
+
+Ƭ **WorkspaceJsonConfiguration**: [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations)
+
 ## Logger Variables
 
 ### logger
@@ -689,7 +697,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ### appRootPath
 
-• **appRootPath**: `string`
+• **appRootPath**: `string` = `workspaceRoot`
 
 ---
 
@@ -707,7 +715,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ### workspaceRoot
 
-• **workspaceRoot**: `string` = `appRootPath`
+• **workspaceRoot**: `string`
 
 ## Functions
 
@@ -1357,6 +1365,16 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ---
 
+### readAllWorkspaceConfiguration
+
+▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
+
+#### Returns
+
+[`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
+
+---
+
 ### readCachedProjectGraph
 
 ▸ **readCachedProjectGraph**(): [`ProjectGraph`](../../devkit/index#projectgraph)
@@ -1426,17 +1444,7 @@ Object the JSON content of the file represents
 
 ### readNxJson
 
-▸ **readNxJson**(`path?`): [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
-
-Returns the contents of nx.json.
-
-If nx.json extends another config file, it will be inlined here.
-
-#### Parameters
-
-| Name   | Type     |
-| :----- | :------- |
-| `path` | `string` |
+▸ **readNxJson**(): [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
 
 #### Returns
 

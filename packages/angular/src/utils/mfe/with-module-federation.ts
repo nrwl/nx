@@ -7,16 +7,14 @@ import {
 import {
   createProjectGraphAsync,
   ProjectGraph,
+  readAllWorkspaceConfiguration,
   readCachedProjectGraph,
-  workspaceRoot,
-  Workspaces,
 } from '@nrwl/devkit';
 import {
   getRootTsConfigPath,
   readTsConfig,
 } from '@nrwl/workspace/src/utilities/typescript';
 import { ParsedCommandLine } from 'typescript';
-import { readWorkspaceJson } from 'nx/src/project-graph/file-utils';
 import { readRootPackageJson } from './utils';
 import { extname, join } from 'path';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
@@ -71,9 +69,7 @@ function collectDependencies(
 }
 
 function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
-  const { projects } = new Workspaces(
-    workspaceRoot
-  ).readWorkspaceConfiguration();
+  const { projects } = readAllWorkspaceConfiguration();
 
   const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath();
   const tsConfig: ParsedCommandLine = readTsConfig(tsConfigPath);
@@ -123,7 +119,7 @@ async function getDependentPackagesForProject(
 }
 
 function determineRemoteUrl(remote: string) {
-  const workspace = readWorkspaceJson();
+  const workspace = readAllWorkspaceConfiguration();
   let publicHost = '';
   try {
     publicHost = workspace.projects[remote].targets.serve.options.publicHost;

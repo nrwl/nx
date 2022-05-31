@@ -1,9 +1,4 @@
-import {
-  FileChange,
-  readNxJson,
-  readPackageJson,
-  readWorkspaceJson,
-} from '../file-utils';
+import { FileChange, readPackageJson } from '../file-utils';
 import {
   getImplicitlyTouchedProjects,
   getTouchedProjects,
@@ -20,12 +15,16 @@ import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
-import { WorkspaceJsonConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
+import {
+  readAllWorkspaceConfiguration,
+  readNxJson,
+} from '../../config/configuration';
 
 export function filterAffected(
   graph: ProjectGraph,
   touchedFiles: FileChange[],
-  workspaceJson: WorkspaceJsonConfiguration = readWorkspaceJson(),
+  workspaceJson: ProjectsConfigurations = readAllWorkspaceConfiguration(),
   nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {

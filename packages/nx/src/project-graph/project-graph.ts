@@ -1,6 +1,6 @@
 import { ProjectGraphCache, readCache } from './nx-deps-cache';
 import { buildProjectGraph } from './build-project-graph';
-import { readNxJson, workspaceFileName } from './file-utils';
+import { workspaceFileName } from './file-utils';
 import { output } from '../utils/output';
 import { isCI } from '../utils/is-ci';
 import { defaultFileHasher } from '../hasher/file-hasher';
@@ -12,6 +12,7 @@ import {
 import { statSync } from 'fs';
 import { ProjectGraph, ProjectGraphV4 } from '../config/project-graph';
 import { stripIndents } from '../utils/strip-indents';
+import { readNxJson } from '../config/configuration';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.

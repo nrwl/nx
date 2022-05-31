@@ -8,7 +8,7 @@ import { Workspaces } from '../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../generators/tree';
 import { logger } from '../utils/logger';
 import * as chalk from 'chalk';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { printHelp } from '../utils/print-help';
 import { prompt } from 'enquirer';

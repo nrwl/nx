@@ -1,7 +1,7 @@
 // import * as devkit from '@nrwl/devkit';
 import * as fileUtils from '../utils/fileutils';
 
-jest.mock('nx/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '',
 }));
 

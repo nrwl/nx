@@ -1,16 +1,5 @@
 {
   "schematics": {
-    "update-builder-8.8.2": {
-      "version": "8.8.2",
-      "description": "Update storybook builder and tsconfig",
-      "factory": "./src/migrations/update-8-8-2/update-builder-8-8-2"
-    },
-    "update-9.2.0": {
-      "version": "9.2.0-beta.1",
-      "cli": "nx",
-      "description": "Add build-storybook to cacheable operations",
-      "factory": "./src/migrations/update-9-2-0/update-9-2-0"
-    },
     "update-10.2.1": {
       "version": "10.2.1-beta.1",
       "description": "Adjusts the tsconfig mapping",

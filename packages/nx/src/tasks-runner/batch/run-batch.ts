@@ -4,10 +4,11 @@ import {
   BatchMessageType,
 } from './batch-messages';
 import { Workspaces } from '../../config/workspaces';
-import { workspaceRoot } from '../../utils/app-root';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { combineOptionsForExecutor } from '../../utils/params';
 import { TaskGraph } from '../../config/task-graph';
 import { ExecutorContext } from '../../config/misc-interfaces';
+import { readAllWorkspaceConfiguration } from 'nx/src/config/configuration';
 
 function getBatchExecutor(executorName: string) {
   const workspace = new Workspaces(workspaceRoot);
@@ -17,8 +18,7 @@ function getBatchExecutor(executorName: string) {
 
 async function runTasks(executorName: string, taskGraph: TaskGraph) {
   const input: Record<string, any> = {};
-  const workspace = new Workspaces(workspaceRoot);
-  const workspaceConfig = workspace.readWorkspaceConfiguration();
+  const workspaceConfig = readAllWorkspaceConfiguration();
 
   const batchExecutor = getBatchExecutor(executorName);
   const tasks = Object.values(taskGraph.tasks);
@@ -29,8 +29,7 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
     isVerbose: false,
   };
   for (const task of tasks) {
-    const projectConfiguration =
-      workspace.readWorkspaceConfiguration().projects[task.target.project];
+    const projectConfiguration = workspaceConfig.projects[task.target.project];
     const targetConfiguration =
       projectConfiguration.targets[task.target.target];
     input[task.id] = combineOptionsForExecutor(

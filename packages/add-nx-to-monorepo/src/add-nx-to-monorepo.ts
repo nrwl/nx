@@ -41,7 +41,7 @@ export async function addNxToMonorepo() {
     process.exit(1);
   }
 
-  createNxJsonFile(repoRoot);
+  createNxJsonFile(repoRoot, pds);
 
   addDepsToPackageJson(repoRoot, useCloud);
 
@@ -135,6 +135,7 @@ interface ProjectDesc {
   name: string;
   dir: string;
   mainFilePath: string;
+  scripts: string[];
 }
 
 function createProjectDesc(
@@ -147,61 +148,64 @@ function createProjectDesc(
     const packageJson = readJsonFile(path.join(repoRoot, p));
     if (!packageJson.name) return;
 
+    const scripts = Object.keys(packageJson.scripts || {});
     if (packageJson.main) {
       res.push({
         name: packageJson.name,
         dir,
         mainFilePath: path.join(dir, packageJson.main),
+        scripts,
       });
     } else if (packageJson.index) {
       res.push({
         name: packageJson.name,
         dir,
         mainFilePath: path.join(dir, packageJson.index),
+        scripts,
       });
     } else {
-      res.push({ name: packageJson.name, dir, mainFilePath: null });
+      res.push({ name: packageJson.name, dir, mainFilePath: null, scripts });
     }
   });
   return res;
 }
 
-function detectWorkspaceScope(repoRoot: string) {
-  let scope = readJsonFile(path.join(repoRoot, `package.json`)).name;
-  if (!scope) return 'undetermined';
-
-  if (scope.startsWith('@')) {
-    scope = scope.substring(1);
+function createNxJsonFile(repoRoot: string, projects: ProjectDesc[]) {
+  const allScripts = {};
+  for (const p of projects) {
+    for (const s of p.scripts) {
+      allScripts[s] = true;
+    }
   }
 
-  return scope.split('/')[0];
-}
+  const cacheableOperations = Object.keys(allScripts).filter(
+    (s) => s.indexOf('serve') === -1 && s.indexOf('start') === -1
+  );
+  const targetDependencies = cacheableOperations
+    .filter((c) => c === 'build' || c === 'prepare' || c === 'package')
+    .reduce(
+      (m, c) => ({
+        ...m,
+        [c]: [{ target: c, projects: 'dependencies' }],
+      }),
+      {}
+    );
 
-function createNxJsonFile(repoRoot: string) {
   const res = {
-    extends: 'nx/presets/npm.json',
+    extends: 'nx/presets/core.json',
     tasksRunnerOptions: {
       default: {
         runner: 'nx/tasks-runners/default',
         options: {
-          cacheableOperations: ['build', 'test', 'lint', 'package', 'prepare'],
+          cacheableOperations,
         },
       },
     },
-    targetDependencies: {
-      build: [{ target: 'build', projects: 'dependencies' }],
-      prepare: [{ target: 'prepare', projects: 'dependencies' }],
-      package: [{ target: 'package', projects: 'dependencies' }],
-    },
+    targetDependencies,
     affected: {
       defaultBase: deduceDefaultBase(),
     },
     workspaceLayout: deduceWorkspaceLayout(repoRoot),
-    pluginsConfig: {
-      '@nrwl/js': {
-        analyzeSourceFiles: false,
-      },
-    },
   };
 
   writeJsonFile(`${repoRoot}/nx.json`, res);
