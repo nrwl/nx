@@ -9,7 +9,6 @@ import {
   getCommands,
   parseCommand,
   ParsedCommand,
-  sortAlphabeticallyFunction,
 } from './utils';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
 import { examples } from '../../packages/nx/src/command-line/examples';
@@ -48,7 +47,7 @@ description: "${command.description}"
 ---
 # ${command.name}
 
-${command.description}
+${dedent`${formatDeprecated(command.description, command.deprecated)}`}
 
 ## Usage
 

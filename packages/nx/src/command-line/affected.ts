@@ -49,7 +49,10 @@ export async function affected(
           if (apps.length) {
             output.log({
               title: 'Affected apps:',
-              bodyLines: apps.map((app) => `${output.dim('-')} ${app}`),
+              bodyLines: [
+                '[Deprecated] Use `nx print-affected --type=app ...` instead. This command will be removed in v15.',
+                ...apps.map((app) => `${output.dim('-')} ${app}`),
+              ],
             });
           }
         }
@@ -65,7 +68,10 @@ export async function affected(
           if (libs.length) {
             output.log({
               title: 'Affected libs:',
-              bodyLines: libs.map((lib) => `${output.dim('-')} ${lib}`),
+              bodyLines: [
+                '[Deprecated] Use `nx print-affected --type=lib ...` instead. This command will be removed in v15.',
+                ...libs.map((lib) => `${output.dim('-')} ${lib}`),
+              ],
             });
           }
         }

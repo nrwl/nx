@@ -129,6 +129,7 @@ export interface NxArgs {
   scan?: boolean;
   nxBail?: boolean;
   nxIgnoreCycles?: boolean;
+  type?: string;
 }
 
 const ignoreArgs = ['$0', '_'];

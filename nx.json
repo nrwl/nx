@@ -51,9 +51,6 @@
     "libsDir": "",
     "appsDir": ""
   },
-  "cli": {
-    "defaultCollection": "@nrwl/react"
-  },
   "generators": {
     "@nrwl/react": {
       "application": {

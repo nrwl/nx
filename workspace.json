@@ -71,5 +71,6 @@
     "typedoc-theme": "typedoc-theme",
     "web": "packages/web",
     "workspace": "packages/workspace"
-  }
+  },
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }

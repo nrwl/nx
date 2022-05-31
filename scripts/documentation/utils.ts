@@ -121,6 +121,7 @@ export interface ParsedCommand {
   name: string;
   commandString: string;
   description: string;
+  deprecated: string;
   options?: Array<ParsedCommandOption>;
 }
 
@@ -142,6 +143,7 @@ export async function parseCommand(
     return {
       name,
       commandString: command.original,
+      deprecated: command.deprecated,
       description: command.description,
     };
   }
@@ -170,6 +172,7 @@ export async function parseCommand(
     name,
     description: command.description,
     commandString: command.original.replace('$0', name),
+    deprecated: command.deprecated,
     options:
       Object.keys(builderDescriptions).map((key) => ({
         name: key,

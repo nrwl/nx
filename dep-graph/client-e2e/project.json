@@ -1,4 +1,5 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "dep-graph/client-e2e/src",
   "projectType": "application",
   "targets": {
