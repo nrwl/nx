@@ -1,4 +1,5 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/nx-plugin",
   "projectType": "application",
   "targets": {
