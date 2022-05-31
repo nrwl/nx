@@ -5,6 +5,8 @@ description: 'Print applications affected by changes'
 
 # affected:apps
 
+**Deprecated:** Use `nx print-affected --type=app ...` instead. This command will be removed in v15.
+
 Print applications affected by changes
 
 ## Usage

@@ -148,7 +148,9 @@ ${daemonHelpOutput}
   })
   .command({
     command: 'affected:apps',
-    describe: 'Print applications affected by changes',
+    deprecated:
+      'Use `nx print-affected --type=app ...` instead. This command will be removed in v15.',
+    describe: `Print applications affected by changes`,
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(withPlainOption(yargs)),
@@ -159,7 +161,9 @@ ${daemonHelpOutput}
   })
   .command({
     command: 'affected:libs',
-    describe: 'Print libraries affected by changes',
+    deprecated:
+      'Use `nx print-affected --type=lib ...` instead. This command will be removed in v15.',
+    describe: `Print libraries affected by changes`,
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(withPlainOption(yargs)),
@@ -336,11 +340,17 @@ function withDaemonStartOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('select', {
-    type: 'string',
-    describe:
-      'Select the subset of the returned json document (e.g., --selected=projects)',
-  });
+  return yargs
+    .option('select', {
+      type: 'string',
+      describe:
+        'Select the subset of the returned json document (e.g., --selected=projects)',
+    })
+    .option('type', {
+      type: 'string',
+      choices: ['app', 'lib'],
+      describe: 'Select the type of projects to be returned (e.g., --type=app)',
+    });
 }
 
 function withPlainOption(yargs: yargs.Argv): yargs.Argv {

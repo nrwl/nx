@@ -47,6 +47,10 @@ export async function affected(
           console.log(apps.join(' '));
         } else {
           if (apps.length) {
+            output.warn({
+              title:
+                'Deprecated: Use "nx print-affected --type=app --select=projects" instead. This command will be removed in v15.',
+            });
             output.log({
               title: 'Affected apps:',
               bodyLines: apps.map((app) => `${output.dim('-')} ${app}`),
@@ -63,6 +67,10 @@ export async function affected(
           console.log(libs.join(' '));
         } else {
           if (libs.length) {
+            output.warn({
+              title:
+                'Deprecated: Use "nx print-affected --type=lib --select=projects" instead. This command will be removed in v15.',
+            });
             output.log({
               title: 'Affected libs:',
               bodyLines: libs.map((lib) => `${output.dim('-')} ${lib}`),

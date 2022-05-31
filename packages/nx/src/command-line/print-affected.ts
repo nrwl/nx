@@ -14,9 +14,13 @@ export async function printAffected(
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
-  const projectNames = affectedProjects.map((p) => p.name);
+  const projectNames = affectedProjects
+    .filter((p) => (nxArgs.type ? p.type === nxArgs.type : true))
+    .map((p) => p.name);
   const tasksJson = await createTasks(
-    affectedProjectsWithTargetAndConfig,
+    affectedProjectsWithTargetAndConfig.filter((p) =>
+      nxArgs.type ? p.type === nxArgs.type : true
+    ),
     projectGraph,
     nxArgs,
     overrides

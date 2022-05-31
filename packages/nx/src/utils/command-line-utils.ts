@@ -98,6 +98,7 @@ const runAffected: string[] = [
   'files',
   'plain',
   'select',
+  'type',
 ];
 
 export interface RawNxArgs extends NxArgs {
@@ -129,6 +130,7 @@ export interface NxArgs {
   scan?: boolean;
   nxBail?: boolean;
   nxIgnoreCycles?: boolean;
+  type?: string;
 }
 
 const ignoreArgs = ['$0', '_'];
