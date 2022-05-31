@@ -1,4 +1,9 @@
-import { newProject, runCLI, updateProjectConfig } from '@nrwl/e2e/utils';
+import {
+  isNotWindows,
+  newProject,
+  runCLI,
+  updateProjectConfig,
+} from '@nrwl/e2e/utils';
 
 describe('Output Style', () => {
   beforeEach(() => newProject());
@@ -24,7 +29,7 @@ describe('Output Style', () => {
     });
 
     const withPrefixes = runCLI(`echo ${myapp} --output-style=stream`).split(
-      '\n'
+      isNotWindows() ? '\n' : '\r\n'
     );
     expect(withPrefixes).toContain(`[${myapp}] 1`);
     expect(withPrefixes).toContain(`[${myapp}] 2`);
