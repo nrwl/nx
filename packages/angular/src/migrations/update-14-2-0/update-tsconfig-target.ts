@@ -32,17 +32,25 @@ export default async function (tree: Tree) {
   const tsConfigPaths = await collectTsConfigPaths(tree);
 
   for (const tsConfigPath of tsConfigPaths) {
-    updateJson(tree, tsConfigPath, (json) => {
-      if (
-        !json.compilerOptions?.target ||
-        (json.compilerOptions?.target &&
-          !skipTargets.includes(json.compilerOptions.target.toLowerCase()))
-      ) {
-        json.compilerOptions ??= {};
-        json.compilerOptions.target = 'es2020';
+    updateJson(
+      tree,
+      tsConfigPath,
+      (json) => {
+        if (
+          !json.compilerOptions?.target ||
+          (json.compilerOptions?.target &&
+            !skipTargets.includes(json.compilerOptions.target.toLowerCase()))
+        ) {
+          json.compilerOptions ??= {};
+          json.compilerOptions.target = 'es2020';
+        }
+        return json;
+      },
+      {
+        allowTrailingComma: true,
+        disallowComments: false,
       }
-      return json;
-    });
+    );
   }
 
   await formatFiles(tree);
@@ -73,7 +81,10 @@ async function collectTsConfigPaths(tree: Tree): Promise<string[]> {
         false
       );
       targetTsConfigPaths.forEach((tsConfigPath) => {
-        const tsConfig = readJson(tree, tsConfigPath);
+        const tsConfig = readJson(tree, tsConfigPath, {
+          allowTrailingComma: true,
+          disallowComments: false,
+        });
         if (tsConfig.compilerOptions?.target) {
           uniqueTsConfigs.add(tsConfigPath);
         }

@@ -79,4 +79,21 @@ describe('parseJson', () => {
       )
     ).toThrowError();
   });
+
+  it('should handle trailing commas', () => {
+    expect(
+      parseJson(
+        `{
+      "nested": {
+          "test": 123,
+      },
+      "array": [1, 2, 3,]
+  }`,
+        { allowTrailingComma: true }
+      )
+    ).toEqual({
+      nested: { test: 123 },
+      array: [1, 2, 3],
+    });
+  });
 });
