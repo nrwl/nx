@@ -1,6 +1,5 @@
-import {
+import type {
   ProjectConfiguration,
-  readJson,
   TargetConfiguration,
   Tree,
 } from '@nrwl/devkit';
@@ -10,7 +9,8 @@ import {
   joinPathFragments,
   logger,
   readProjectConfiguration,
-  updateJson,
+  readTsConfigJson,
+  updateTsConfigJson,
 } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { dirname } from 'path';
@@ -32,7 +32,7 @@ export default async function (tree: Tree) {
   const tsConfigPaths = await collectTsConfigPaths(tree);
 
   for (const tsConfigPath of tsConfigPaths) {
-    updateJson(tree, tsConfigPath, (json) => {
+    updateTsConfigJson(tree, tsConfigPath, (json) => {
       if (
         !json.compilerOptions?.target ||
         (json.compilerOptions?.target &&
@@ -62,9 +62,9 @@ async function collectTsConfigPaths(tree: Tree): Promise<string[]> {
     }));
 
   for (const { projectName, project } of angularProjects) {
-    const tsConfigPath = joinPathFragments(project.root, 'tsconfig.json');
-    if (tree.exists(tsConfigPath)) {
-      uniqueTsConfigs.add(tsConfigPath);
+    const rootTsConfigPath = joinPathFragments(project.root, 'tsconfig.json');
+    if (tree.exists(rootTsConfigPath)) {
+      uniqueTsConfigs.add(rootTsConfigPath);
 
       const targetTsConfigPaths = getProjectTsConfigPaths(
         tree,
@@ -73,7 +73,7 @@ async function collectTsConfigPaths(tree: Tree): Promise<string[]> {
         false
       );
       targetTsConfigPaths.forEach((tsConfigPath) => {
-        const tsConfig = readJson(tree, tsConfigPath);
+        const tsConfig = readTsConfigJson(tree, tsConfigPath);
         if (tsConfig.compilerOptions?.target) {
           uniqueTsConfigs.add(tsConfigPath);
         }

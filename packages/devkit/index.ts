@@ -120,6 +120,15 @@ export { generateFiles } from './src/generators/generate-files';
 /**
  * @category Generators
  */
+export {
+  readTsConfigJson,
+  readTsConfiguration,
+  updateTsConfigJson,
+} from './src/generators/typescript/config';
+
+/**
+ * @category Generators
+ */
 export type { WorkspaceConfiguration } from 'nx/src/generators/utils/project-configuration';
 
 /**

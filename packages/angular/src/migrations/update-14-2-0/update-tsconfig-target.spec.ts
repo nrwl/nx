@@ -21,6 +21,7 @@ describe('update-tsconfig-target migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace(2);
+    jest.clearAllMocks();
   });
 
   it('should update target in "tsconfig.json" at the project root when it is an Angular project', async () => {
@@ -28,12 +29,7 @@ describe('update-tsconfig-target migration', () => {
       root: 'apps/app1',
       sourceRoot: 'apps/app1/src',
       projectType: 'application',
-      targets: {
-        build: {
-          executor: '@nrwl/angular:webpack-browser',
-          options: { tsConfig: 'apps/app1/tsconfig.app.json' },
-        },
-      },
+      targets: {},
     });
     projectGraph = {
       dependencies: {
@@ -50,16 +46,11 @@ describe('update-tsconfig-target migration', () => {
     writeJson(tree, 'apps/app1/tsconfig.json', {
       compilerOptions: { target: 'es2017' },
     });
-    writeJson(tree, 'apps/app1/tsconfig.app.json', {
-      compilerOptions: { target: 'es2017' },
-    });
 
     await updateTsConfigTarget(tree);
 
     const { compilerOptions } = readJson(tree, 'apps/app1/tsconfig.json');
     expect(compilerOptions.target).toBe('es2020');
-    const optionTsConfig = readJson(tree, 'apps/app1/tsconfig.app.json');
-    expect(optionTsConfig.compilerOptions.target).toBe('es2020');
   });
 
   it('should not update target in a tsconfig file referenced by a target option when it does not have the target set and there is a "tsconfig.json" at the project root', async () => {
@@ -99,6 +90,45 @@ describe('update-tsconfig-target migration', () => {
     expect(compilerOptions.target).toBe('es2020');
     const optionTsConfig = readJson(tree, 'apps/app1/tsconfig.app.json');
     expect(optionTsConfig.compilerOptions).toStrictEqual({});
+  });
+
+  it('should update target in a tsconfig file referenced by a target option when it has the target set and even if there is a "tsconfig.json" at the project root', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      sourceRoot: 'apps/app1/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nrwl/angular:webpack-browser',
+          options: { tsConfig: 'apps/app1/tsconfig.app.json' },
+        },
+      },
+    });
+    projectGraph = {
+      dependencies: {
+        app1: [
+          {
+            type: DependencyType.static,
+            source: 'app1',
+            target: 'npm:@angular/core',
+          },
+        ],
+      },
+      nodes: {},
+    };
+    writeJson(tree, 'apps/app1/tsconfig.json', {
+      compilerOptions: { target: 'es2017' },
+    });
+    writeJson(tree, 'apps/app1/tsconfig.app.json', {
+      compilerOptions: { target: 'es2015' },
+    });
+
+    await updateTsConfigTarget(tree);
+
+    const { compilerOptions } = readJson(tree, 'apps/app1/tsconfig.json');
+    expect(compilerOptions.target).toBe('es2020');
+    const optionTsConfig = readJson(tree, 'apps/app1/tsconfig.app.json');
+    expect(optionTsConfig.compilerOptions.target).toBe('es2020');
   });
 
   it.each([
@@ -604,5 +634,38 @@ describe('update-tsconfig-target migration', () => {
 
     const { compilerOptions } = readJson(tree, 'tsconfig.base.json');
     expect(compilerOptions.target).toBe('es2017');
+  });
+
+  it('should handle a tsconfig file with trailing commas and comments', async () => {
+    addProjectConfiguration(tree, 'lib1', {
+      root: 'libs/lib1',
+      sourceRoot: 'libs/lib1/src',
+      projectType: 'library',
+      targets: { test: { executor: '@nrwl/angular:package' } },
+    });
+    projectGraph = {
+      dependencies: {
+        lib1: [
+          {
+            type: DependencyType.static,
+            source: 'lib1',
+            target: 'npm:@angular/core',
+          },
+        ],
+      },
+      nodes: {},
+    };
+    tree.write(
+      'libs/lib1/tsconfig.json',
+      `{
+      /* some comment */
+      "compilerOptions": {},
+    }`
+    );
+
+    await expect(updateTsConfigTarget(tree)).resolves.not.toThrow();
+
+    const { compilerOptions } = readJson(tree, 'libs/lib1/tsconfig.json');
+    expect(compilerOptions.target).toBe('es2020');
   });
 });

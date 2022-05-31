@@ -159,6 +159,8 @@ It only uses language primitives and immutable objects
 - [readNxJson](../../devkit/index#readnxjson)
 - [readProjectConfiguration](../../devkit/index#readprojectconfiguration)
 - [readTargetOptions](../../devkit/index#readtargetoptions)
+- [readTsConfigJson](../../devkit/index#readtsconfigjson)
+- [readTsConfiguration](../../devkit/index#readtsconfiguration)
 - [readWorkspaceConfiguration](../../devkit/index#readworkspaceconfiguration)
 - [removeDependenciesFromPackageJson](../../devkit/index#removedependenciesfrompackagejson)
 - [removeProjectConfiguration](../../devkit/index#removeprojectconfiguration)
@@ -171,6 +173,7 @@ It only uses language primitives and immutable objects
 - [toJS](../../devkit/index#tojs)
 - [updateJson](../../devkit/index#updatejson)
 - [updateProjectConfiguration](../../devkit/index#updateprojectconfiguration)
+- [updateTsConfigJson](../../devkit/index#updatetsconfigjson)
 - [updateTsConfigsToJs](../../devkit/index#updatetsconfigstojs)
 - [updateWorkspaceConfiguration](../../devkit/index#updateworkspaceconfiguration)
 - [visitNotIgnoredFiles](../../devkit/index#visitnotignoredfiles)
@@ -1503,6 +1506,61 @@ Works as if you invoked the target yourself without passing any command lint ove
 
 ---
 
+### readTsConfigJson
+
+▸ **readTsConfigJson**<`T`\>(`tree`, `tsConfigPath`): `T`
+
+Reads the provided tsconfig json file.
+
+#### Type parameters
+
+| Name | Type                     |
+| :--- | :----------------------- |
+| `T`  | extends `object` = `any` |
+
+#### Parameters
+
+| Name           | Type                              | Description                     |
+| :------------- | :-------------------------------- | :------------------------------ |
+| `tree`         | [`Tree`](../../devkit/index#tree) | File system tree.               |
+| `tsConfigPath` | `string`                          | Path to the tsconfig json file. |
+
+#### Returns
+
+`T`
+
+The parsed tsconfig json file.
+
+---
+
+### readTsConfiguration
+
+▸ **readTsConfiguration**<`T`\>(`tree`, `tsConfigPath`): `T`
+
+Reads the full TS configuration from the provided tsconfig json file path
+by loading the base configuration if set.
+
+#### Type parameters
+
+| Name | Type                     |
+| :--- | :----------------------- |
+| `T`  | extends `object` = `any` |
+
+#### Parameters
+
+| Name           | Type                              | Description                     |
+| :------------- | :-------------------------------- | :------------------------------ |
+| `tree`         | [`Tree`](../../devkit/index#tree) | File system tree.               |
+| `tsConfigPath` | `string`                          | Path to the tsconfig json file. |
+
+#### Returns
+
+`T`
+
+The parsed TS configuration.
+
+---
+
 ### readWorkspaceConfiguration
 
 ▸ **readWorkspaceConfiguration**(`tree`): [`WorkspaceConfiguration`](../../devkit/index#workspaceconfiguration)
@@ -1810,6 +1868,34 @@ The utility will update either files.
 | `tree`                 | [`Tree`](../../devkit/index#tree)                                 | the file system tree                                                    |
 | `projectName`          | `string`                                                          | unique name. Often directories are part of the name (e.g., mydir-mylib) |
 | `projectConfiguration` | [`ProjectConfiguration`](../../devkit/index#projectconfiguration) | project configuration                                                   |
+
+#### Returns
+
+`void`
+
+---
+
+### updateTsConfigJson
+
+▸ **updateTsConfigJson**<`T`, `U`\>(`tree`, `tsConfigPath`, `updater`, `options?`): `void`
+
+Updates a tsconfig json file.
+
+#### Type parameters
+
+| Name | Type                     |
+| :--- | :----------------------- |
+| `T`  | extends `object` = `any` |
+| `U`  | extends `object` = `T`   |
+
+#### Parameters
+
+| Name           | Type                                                              | Description                                                                                              |
+| :------------- | :---------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| `tree`         | [`Tree`](../../devkit/index#tree)                                 | File system tree.                                                                                        |
+| `tsConfigPath` | `string`                                                          | Path to the tsconfig json file.                                                                          |
+| `updater`      | (`value`: `T`) => `U`                                             | Function that maps the current value of the tsconfig json file to a new value to be written to the file. |
+| `options?`     | [`JsonSerializeOptions`](../../devkit/index#jsonserializeoptions) | Options to be use when serializing the JSON.                                                             |
 
 #### Returns
 
