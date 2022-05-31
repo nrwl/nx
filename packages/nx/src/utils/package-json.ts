@@ -1,8 +1,8 @@
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { TargetConfiguration } from '../config/workspace-json-project-json';
-import { workspaceRoot } from './app-root';
 import { readJsonFile } from './fileutils';
+import { workspaceRoot } from './workspace-root';
 
 export type PackageJsonTargetConfiguration = Omit<
   TargetConfiguration,
@@ -40,6 +40,7 @@ export interface PackageJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
+  bin?: Record<string, string>;
   workspaces?:
     | string[]
     | {
@@ -128,7 +129,7 @@ export function readModulePackageJson(
 
   const packageJson = readJsonFile(packageJsonPath);
 
-  if (!(packageJson.name === moduleSpecifier)) {
+  if (packageJson.name !== moduleSpecifier) {
     throw new Error(
       `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
     );
