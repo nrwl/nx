@@ -1,13 +1,23 @@
-import { joinPathFragments, logger, names, readJson, Tree } from '@nrwl/devkit';
-import type { Schema } from './schema';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import type { Tree } from '@nrwl/devkit';
 import {
   formatFiles,
-  readWorkspaceConfiguration,
-  readProjectConfiguration,
+  joinPathFragments,
+  logger,
+  names,
   normalizePath,
+  readProjectConfiguration,
+  readWorkspaceConfiguration,
+  stripIndents,
 } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { pathStartsWith } from '../utils/path';
+import {
+  findModuleFromOptions,
+  getRelativeImportToFile,
+  locateLibraryEntryPointFromDirectory,
+  shouldExportInEntryPoint,
+} from './lib';
+import type { Schema } from './schema';
 
 export async function componentGenerator(tree: Tree, schema: Schema) {
   checkPathUnderProjectRoot(tree, schema);
@@ -16,16 +26,14 @@ export async function componentGenerator(tree: Tree, schema: Schema) {
     '@schematics/angular',
     'component'
   );
-  await angularComponentSchematic(tree, {
-    ...schema,
-  });
+  await angularComponentSchematic(tree, { ...schema });
 
-  exportComponent(tree, schema);
+  exportComponentInEntryPoint(tree, schema);
 
   await formatFiles(tree);
 }
 
-function checkPathUnderProjectRoot(tree: Tree, schema: Partial<Schema>) {
+function checkPathUnderProjectRoot(tree: Tree, schema: Schema): void {
   if (!schema.path) {
     return;
   }
@@ -41,12 +49,13 @@ function checkPathUnderProjectRoot(tree: Tree, schema: Partial<Schema>) {
 
   if (!pathStartsWith(pathToComponent, root)) {
     throw new Error(
-      `The path provided for the component (${schema.path}) does not exist under the project root (${root}).`
+      `The path provided for the component (${schema.path}) does not exist under the project root (${root}). ` +
+        `Please make sure to provide a path that exists under the project root.`
     );
   }
 }
 
-function exportComponent(tree: Tree, schema: Schema) {
+function exportComponentInEntryPoint(tree: Tree, schema: Schema): void {
   if (!schema.export || schema.skipImport) {
     return;
   }
@@ -66,52 +75,51 @@ function exportComponent(tree: Tree, schema: Schema) {
   const componentNames = names(schema.name);
 
   const componentFileName = `${componentNames.fileName}.${
-    schema.type ?? 'component'
+    schema.type ? names(schema.type).fileName : 'component'
   }`;
 
-  let componentDirectory = schema.flat
-    ? joinPathFragments(sourceRoot, 'lib')
-    : joinPathFragments(sourceRoot, 'lib', componentNames.fileName);
-
-  if (schema.path) {
-    componentDirectory = schema.flat
-      ? normalizePath(schema.path)
-      : joinPathFragments(schema.path, componentNames.fileName);
-  }
+  const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
+  schema.path ??= joinPathFragments(projectSourceRoot, 'lib');
+  const componentDirectory = schema.flat
+    ? normalizePath(schema.path)
+    : joinPathFragments(schema.path, componentNames.fileName);
 
   const componentFilePath = joinPathFragments(
     componentDirectory,
     `${componentFileName}.ts`
   );
 
-  const ngPackageJsonPath = joinPathFragments(root, 'ng-package.json');
-  const ngPackageEntryPoint = tree.exists(ngPackageJsonPath)
-    ? readJson(tree, ngPackageJsonPath).lib?.entryFile
-    : undefined;
-
-  const projectEntryPoint = ngPackageEntryPoint
-    ? joinPathFragments(root, ngPackageEntryPoint)
-    : joinPathFragments(sourceRoot, `index.ts`);
-
-  if (!tree.exists(projectEntryPoint)) {
-    // Let's not error, simply warn the user
-    // It's not too much effort to manually do this
-    // It would be more frustrating to have to find the correct path and re-run the command
+  const entryPointPath = locateLibraryEntryPointFromDirectory(
+    tree,
+    componentDirectory,
+    root,
+    projectSourceRoot
+  );
+  if (!entryPointPath) {
     logger.warn(
-      `Could not export the component in the library's entry point. Unable to determine project's entry point. The path ${projectEntryPoint} does not exist. The component has still been created.`
+      `Unable to determine whether the component should be exported in the library entry point file. ` +
+        `The library's entry point file could not be found. Skipping exporting the component in the entry point file.`
     );
 
     return;
   }
 
-  const relativePathFromEntryPoint = `.${componentFilePath
-    .split(sourceRoot)[1]
-    .replace('.ts', '')}`;
+  const modulePath = findModuleFromOptions(tree, schema, root);
+  if (!shouldExportInEntryPoint(tree, entryPointPath, modulePath)) {
+    return;
+  }
 
-  const updateEntryPointContent = `${tree.read(projectEntryPoint, 'utf-8')}
+  const relativePathFromEntryPoint = getRelativeImportToFile(
+    entryPointPath,
+    componentFilePath
+  );
+  const updateEntryPointContent = stripIndents`${tree.read(
+    entryPointPath,
+    'utf-8'
+  )}
     export * from "${relativePathFromEntryPoint}";`;
 
-  tree.write(projectEntryPoint, updateEntryPointContent);
+  tree.write(entryPointPath, updateEntryPointContent);
 }
 
 export default componentGenerator;
