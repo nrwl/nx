@@ -2,7 +2,7 @@ import { Workspaces } from '../config/workspaces';
 import { performance } from 'perf_hooks';
 import { Hasher } from '../hasher/hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';

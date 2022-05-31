@@ -1,4 +1,4 @@
-import { workspaceRoot } from '../app-root';
+import { workspaceRoot } from '../workspace-root';
 import * as chalk from 'chalk';
 import { dirname, join } from 'path';
 import { output } from '../output';

@@ -5,7 +5,7 @@ import * as yargs from 'yargs';
 import { generateDaemonHelpOutput } from '../daemon/client/generate-help-output';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
 
@@ -265,6 +265,11 @@ ${daemonHelpOutput}
     describe:
       'Reports useful version numbers to copy into the Nx issue template',
     handler: async () => (await import('./report')).reportHandler(),
+  })
+  .command({
+    command: 'init',
+    describe: 'Adds nx.json file and installs nx if not installed already',
+    handler: async () => (await import('./init')).initHandler(),
   })
   .command({
     command: 'list [plugin]',

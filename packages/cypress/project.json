@@ -56,7 +56,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["build/packages/cypress"],
       "options": {
         "command": "node ./scripts/copy-readme.js cypress"

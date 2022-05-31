@@ -1,7 +1,7 @@
-import { readNxJson } from '../project-graph/file-utils';
 import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { execSync } from 'child_process';
+import { readNxJson } from '../config/configuration';
 
 export async function connectToNxCloudUsingScan(scan: boolean): Promise<void> {
   if (!scan) return;

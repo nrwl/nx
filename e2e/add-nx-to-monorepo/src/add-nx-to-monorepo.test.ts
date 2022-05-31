@@ -23,12 +23,20 @@ describe('add-nx-to-monorepo', () => {
         'packages/package-a/package.json',
         JSON.stringify({
           name: 'package-a',
+          scripts: {
+            serve: 'some serve',
+            build: 'some build',
+            test: 'some test',
+          },
         })
       );
       updateFile(
         'packages/package-b/package.json',
         JSON.stringify({
           name: 'package-b',
+          scripts: {
+            lint: 'some lint',
+          },
         })
       );
 
@@ -40,6 +48,13 @@ describe('add-nx-to-monorepo', () => {
       expect(output).toContain('🎉 Done!');
       expect(readWorkspaceConfig().projects['package-a']).toBeTruthy();
       expect(readWorkspaceConfig().projects['package-b']).toBeTruthy();
+      expect(readWorkspaceConfig().targetDependencies).toEqual({
+        build: [{ projects: 'dependencies', target: 'build' }],
+      });
+      expect(
+        readWorkspaceConfig().tasksRunnerOptions['default'].options
+          .cacheableOperations
+      ).toEqual(['build', 'test', 'lint']);
     }
   });
 

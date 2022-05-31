@@ -1,7 +1,7 @@
 // This must come before the Hasher import
 import { DependencyType } from '../config/project-graph';
 
-jest.doMock('../utils/app-root', () => {
+jest.doMock('../utils/workspace-root', () => {
   return {
     workspaceRoot: '',
   };

@@ -1,4 +1,4 @@
-import { workspaceRoot } from '../../utils/app-root';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { performance, PerformanceObserver } from 'perf_hooks';

@@ -17,8 +17,6 @@ export {
 export { output } from './src/utilities/output';
 
 export {
-  readWorkspaceJson,
-  readNxJson,
   readWorkspaceConfig,
   readPackageJson,
 } from 'nx/src/project-graph/file-utils';

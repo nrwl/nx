@@ -1,5 +1,8 @@
 import type { Schema } from './schema';
-import { ProjectConfiguration, Workspaces } from '@nrwl/devkit';
+import {
+  ProjectConfiguration,
+  readAllWorkspaceConfiguration,
+} from '@nrwl/devkit';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
@@ -59,9 +62,7 @@ export function executeModuleFederationDevServerBuilder(
   schema: Schema,
   context: BuilderContext
 ) {
-  const workspaces = new Workspaces(context.workspaceRoot);
-  const workspaceConfig = workspaces.readWorkspaceConfiguration();
-
+  const workspaceConfig = readAllWorkspaceConfiguration();
   const p = workspaceConfig.projects[context.target.project];
 
   const mfConfigPath = join(

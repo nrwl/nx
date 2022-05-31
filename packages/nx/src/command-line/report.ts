@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import { join } from 'path';
 import {

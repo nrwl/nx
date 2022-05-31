@@ -1,13 +1,13 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
-import {
-  readNxJson,
-  readWorkspaceJson,
-  TEN_MEGABYTES,
-} from '../project-graph/file-utils';
+import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
-import { NxAffectedConfig } from '../config/nx-json';
+import { NxAffectedConfig, NxJsonConfiguration } from '../config/nx-json';
 import { execSync } from 'child_process';
+import {
+  readAllWorkspaceConfiguration,
+  readNxJson,
+} from '../config/configuration';
 
 export function names(name: string): {
   name: string;
@@ -136,7 +136,8 @@ const ignoreArgs = ['$0', '_'];
 export function splitArgsIntoNxArgsAndOverrides(
   args: yargs.Arguments,
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
-  options = { printWarnings: true }
+  options = { printWarnings: true },
+  nxJson: NxJsonConfiguration
 ): { nxArgs: NxArgs; overrides: yargs.Arguments } {
   const nxSpecific =
     mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
@@ -236,8 +237,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
 
     if (!nxArgs.base) {
-      const affectedConfig = getAffectedConfig();
-      nxArgs.base = affectedConfig.defaultBase;
+      nxArgs.base = nxJson.affected?.defaultBase || 'main';
 
       // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
       if (
@@ -276,14 +276,6 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   return { nxArgs, overrides } as any;
-}
-
-export function getAffectedConfig(): NxAffectedConfig {
-  const config = readNxJson();
-
-  return {
-    defaultBase: config.affected?.defaultBase || 'main',
-  };
 }
 
 export function parseFiles(options: NxArgs): { files: string[] } {
@@ -355,6 +347,6 @@ function parseGitOutput(command: string): string[] {
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {
-  const { projects } = readWorkspaceJson();
+  const { projects } = readAllWorkspaceConfiguration();
   return projectNames.map((name) => projects[name].root);
 }

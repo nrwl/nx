@@ -4,7 +4,7 @@ import { readdirSync, existsSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { fileExists } from '../utils/fileutils';
 import { output } from '../utils/output';
 import type { CompilerOptions } from 'typescript';

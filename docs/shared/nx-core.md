@@ -42,7 +42,6 @@ package.json
 ```json
 {
   "extends": "nx/presets/core.json",
-  "npmScope": "myorg",
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx/tasks-runners/default",

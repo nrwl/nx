@@ -16,7 +16,7 @@ jest.mock('@nrwl/devkit', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 

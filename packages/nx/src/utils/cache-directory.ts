@@ -1,5 +1,5 @@
 import { join, isAbsolute } from 'path';
-import { workspaceRoot } from './app-root';
+import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from './fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
 

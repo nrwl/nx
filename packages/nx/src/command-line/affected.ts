@@ -23,19 +23,20 @@ export async function affected(
   parsedArgs: yargs.Arguments & RawNxArgs
 ): Promise<void> {
   performance.mark('command-execution-begins');
+  const env = readEnvironment();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'affected',
     {
       printWarnings: command !== 'print-affected' && !parsedArgs.plain,
-    }
+    },
+    env.nxJson
   );
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
   const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
-  const env = readEnvironment();
 
   try {
     switch (command) {

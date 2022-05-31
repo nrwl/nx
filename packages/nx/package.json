@@ -8,7 +8,7 @@
     "directory": "packages/nx"
   },
   "scripts": {
-    "postinstall": "node ./bin/init"
+    "postinstall": "node ./bin/compute-project-graph"
   },
   "keywords": [
     "Monorepo",

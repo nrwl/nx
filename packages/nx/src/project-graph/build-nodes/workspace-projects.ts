@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,

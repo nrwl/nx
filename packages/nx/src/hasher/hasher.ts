@@ -5,14 +5,14 @@ import * as minimatch from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { getRootTsConfigFileName } from '../utils/typescript';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { workspaceFileName } from '../project-graph/file-utils';
 import { defaultHashing, HashingImpl } from './hashing-impl';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 
 /**
  * A data structure returned by the default hasher.
@@ -309,7 +309,7 @@ export class Hasher {
 
 class ProjectHasher {
   private sourceHashes: { [projectName: string]: Promise<string> } = {};
-  private workspaceJson: WorkspaceJsonConfiguration;
+  private workspaceJson: ProjectsConfigurations;
   private nxJson: NxJsonConfiguration;
   private tsConfigJson: TsconfigJsonConfiguration;
 
@@ -478,7 +478,7 @@ class ProjectHasher {
     }
   }
 
-  private readWorkspaceConfigFile(path: string): WorkspaceJsonConfiguration {
+  private readWorkspaceConfigFile(path: string): ProjectsConfigurations {
     try {
       const res = readJsonFile(path);
       res.projects ??= {};

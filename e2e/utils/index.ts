@@ -3,7 +3,7 @@ import {
   parseJson,
   ProjectConfiguration,
   readJsonFile,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
@@ -101,7 +101,7 @@ export function updateProjectConfig(
  * if you need a project's configuration.
  */
 export function readWorkspaceConfig(): Omit<
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
   'projects'
 > {
   const w = readJson(workspaceConfigName());

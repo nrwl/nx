@@ -3,7 +3,7 @@ import { ProjectGraph } from './project-graph';
 import { Task, TaskGraph } from './task-graph';
 import {
   TargetConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from './workspace-json-project-json';
 
 import type { NxJsonConfiguration } from './nx-json';
@@ -107,7 +107,7 @@ export interface HasherContext {
   hasher: Hasher;
   projectGraph: ProjectGraph<any>;
   taskGraph: TaskGraph;
-  workspaceConfig: WorkspaceJsonConfiguration & NxJsonConfiguration;
+  workspaceConfig: ProjectsConfigurations & NxJsonConfiguration;
 }
 
 export type CustomHasher = (
@@ -166,7 +166,7 @@ export interface ExecutorContext {
   /**
    * The full workspace configuration
    */
-  workspace: WorkspaceJsonConfiguration & NxJsonConfiguration;
+  workspace: ProjectsConfigurations & NxJsonConfiguration;
 
   /**
    * The current working directory
