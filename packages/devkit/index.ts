@@ -59,8 +59,6 @@ export type {
   ProjectTargetConfigurator,
 } from 'nx/src/utils/nx-plugin';
 
-export type { PackageJson } from 'nx/src/utils/package-json';
-
 /**
  * @category Workspace
  */

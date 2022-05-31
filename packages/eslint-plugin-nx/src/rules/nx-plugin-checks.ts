@@ -89,7 +89,7 @@ export default createESLintRule<Options, MessageIds>({
     const sourceProject = findSourceProject(projectGraph, sourceFilePath);
     // If source is not part of an nx workspace, return.
     if (!sourceProject) {
-      return;
+      return {};
     }
 
     const { generatorsJson, executorsJson, migrationsJson, packageJson } =
@@ -174,7 +174,7 @@ export function checkCollectionFileNode(
     return;
   }
 
-  if (!executorsRootNode && !executorsRootNode && mode === 'executor') {
+  if (!executorsRootNode && !buildersRootNode && mode === 'executor') {
     context.report({
       messageId: 'noExecutorsOrBuildersFound',
       node: baseNode as any,
