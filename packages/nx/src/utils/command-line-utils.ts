@@ -98,6 +98,7 @@ const runAffected: string[] = [
   'files',
   'plain',
   'select',
+  'type',
 ];
 
 export interface RawNxArgs extends NxArgs {
