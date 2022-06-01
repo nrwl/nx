@@ -1,5 +1,5 @@
 import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
-import { Menu, MenuSection } from '@nrwl/nx-dev/models-menu';
+import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
 import {
   createMenuItems,
   getBasicSection,
@@ -12,7 +12,8 @@ export class MenuApi {
 
   constructor(
     private readonly documents: DocumentMetadata,
-    private readonly packageDocuments: DocumentMetadata[] = []
+    private readonly packageDocuments: DocumentMetadata[] = [],
+    private readonly extractorFunctions: ((x: MenuItem[]) => MenuSection)[] = []
   ) {}
 
   getMenu(): Menu {
@@ -21,17 +22,23 @@ export class MenuApi {
     if (menu) return menu;
 
     const items = createMenuItems(this.documents);
-    if (items) {
-      menu = {
-        sections: [getBasicSection(items), getDeepDiveSection(items)],
-      };
-      if (!!this.packageDocuments.length)
-        menu.sections.push(
-          this.getReferenceApiMenuSection(this.packageDocuments)
-        );
-    } else {
-      throw new Error(`Cannot find any documents`);
-    }
+    if (!items) throw new Error(`Cannot find any documents`);
+
+    menu = {
+      sections: this.extractorFunctions.map((categorizer) =>
+        categorizer(
+          items.length === 1 && items[0].id === 'nx-cloud'
+            ? (items[0].itemList as MenuItem[])
+            : items
+        )
+      ),
+    };
+
+    if (!!this.packageDocuments.length)
+      menu.sections.push(
+        this.getReferenceApiMenuSection(this.packageDocuments)
+      );
+
     this.menuCache = menu;
 
     return menu;

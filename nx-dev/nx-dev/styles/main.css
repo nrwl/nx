@@ -55,6 +55,17 @@ iframe[src*='youtube'] {
   width: max-content;
 }
 
+.prose iframe[src^="https://nx.app"]
+{
+  border: 1px solid hsla(0, 0%, 85%, 1);
+  border-radius: 0.375rem;
+  box-shadow: 0 2px 6px hsla(0, 0%, 95%, 1);
+  height: 80vh;
+  max-width: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+
 /*
   Code embed
  */

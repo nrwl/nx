@@ -2,6 +2,12 @@ import { DocumentsApi } from '@nrwl/nx-dev/data-access-documents/node-only';
 import { MenuApi } from '@nrwl/nx-dev/data-access-menu';
 import { PackagesApi } from '@nrwl/nx-dev/data-access-packages/node-only';
 import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import {
+  getBasicNxCloudSection,
+  getBasicSection,
+  getDeepDiveNxCloudSection,
+  getDeepDiveSection,
+} from '../../data-access-menu/src/lib/menu.utils';
 
 // Imports JSON directly, so they can be bundled into the app and functions.
 // Also provides some test safety.
@@ -22,7 +28,22 @@ export const nxDocumentsApi = new DocumentsApi({
   addAncestor: null,
 });
 
+export const nxCloudDocumentsApi = new DocumentsApi({
+  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+  documentSources: [
+    documents.find((x) => x.id === 'nx-cloud-documentation'),
+  ].filter((x) => !!x) as DocumentMetadata[],
+  addAncestor: { id: 'nx-cloud', name: 'Nx Cloud' },
+});
+
 export const nxMenuApi = new MenuApi(
   nxDocumentsApi.getDocuments(),
-  packagesApi.getPackageDocuments().itemList as DocumentMetadata[]
+  packagesApi.getPackageDocuments().itemList as DocumentMetadata[],
+  [getBasicSection, getDeepDiveSection]
+);
+
+export const nxCloudMenuApi = new MenuApi(
+  nxCloudDocumentsApi.getDocuments(),
+  [],
+  [getBasicNxCloudSection, getDeepDiveNxCloudSection]
 );
