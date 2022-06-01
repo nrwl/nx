@@ -19,7 +19,7 @@ import { nxVersion } from '../../utils/versions';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import { executorGenerator } from '../executor/executor';
 import { generatorGenerator } from '../generator/generator';
-import pluginLintCheckGenerator from '../plugin-lint-checks/generator';
+import pluginLintCheckGenerator from '../lint-checks/generator';
 import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 
 import type { Schema } from './schema';
@@ -119,7 +119,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     npmPackageName: options.npmPackageName,
     standaloneConfig: options.standaloneConfig ?? true,
   });
-  if (options.linter === Linter.EsLint) {
+  if (options.linter === Linter.EsLint && !options.skipLintChecks) {
     await pluginLintCheckGenerator(host, { projectName: options.name });
   }
 

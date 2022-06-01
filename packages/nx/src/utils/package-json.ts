@@ -54,6 +54,33 @@ export interface PackageJson {
   'ng-update'?: string | NxMigrationsConfiguration;
 }
 
+export function readNxMigrateConfig(
+  json: Partial<PackageJson>
+): NxMigrationsConfiguration {
+  const parseNxMigrationsConfig = (
+    fromJson?: string | NxMigrationsConfiguration
+  ): NxMigrationsConfiguration => {
+    if (!fromJson) {
+      return {};
+    }
+    if (typeof fromJson === 'string') {
+      return { migrations: fromJson, packageGroup: [] };
+    }
+
+    return {
+      ...(fromJson.migrations ? { migrations: fromJson.migrations } : {}),
+      ...(fromJson.packageGroup ? { packageGroup: fromJson.packageGroup } : {}),
+    };
+  };
+
+  return {
+    ...parseNxMigrationsConfig(json['ng-update']),
+    ...parseNxMigrationsConfig(json['nx-migrations']),
+    // In case there's a `migrations` field in `package.json`
+    ...parseNxMigrationsConfig(json as any),
+  };
+}
+
 export function buildTargetFromScript(
   script: string,
   nx: NxProjectPackageJsonConfiguration

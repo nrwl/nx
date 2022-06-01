@@ -50,7 +50,8 @@
             "description": "The tool to use for running lint checks.",
             "type": "string",
             "enum": ["eslint", "tslint"],
-            "default": "eslint"
+            "default": "eslint",
+            "x-deprecated": "TSLint support is deprecated and will be removed"
           },
           "unitTestRunner": {
             "type": "string",
@@ -72,6 +73,11 @@
             "type": "boolean",
             "default": false,
             "description": "Do not update tsconfig.json for development experience."
+          },
+          "skipLintChecks": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not eslint configuration for plugin json files."
           },
           "standaloneConfig": {
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
@@ -318,7 +324,7 @@
     },
     {
       "name": "plugin-lint-checks",
-      "factory": "./src/generators/plugin-lint-checks/generator",
+      "factory": "./src/generators/lint-checks/generator",
       "schema": {
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
@@ -329,7 +335,7 @@
         "properties": {
           "projectName": {
             "type": "string",
-            "description": "Which project should be the target be added to?",
+            "description": "Which project should be the configuration be added to?",
             "$default": { "$source": "projectName" }
           }
         },
@@ -337,10 +343,10 @@
         "presets": []
       },
       "description": "Adds linting configuration to validate common json files for nx plugins.",
-      "implementation": "/packages/nx-plugin/src/generators/plugin-lint-checks/generator.ts",
+      "implementation": "/packages/nx-plugin/src/generators/lint-checks/generator.ts",
       "aliases": [],
       "hidden": false,
-      "path": "/packages/nx-plugin/src/generators/plugin-lint-checks/schema.json"
+      "path": "/packages/nx-plugin/src/generators/lint-checks/schema.json"
     }
   ],
   "executors": [

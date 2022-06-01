@@ -37,6 +37,7 @@ export type MessageIds =
   | 'missingImplementation'
   | 'invalidImplementationPath'
   | 'invalidImplementationModule'
+  | 'unableToReadImplementationExports'
   | 'invalidVersion'
   | 'missingVersion'
   | 'noGeneratorsOrSchematicsFound'
@@ -60,6 +61,8 @@ export default createESLintRule<Options, MessageIds>({
         '{{ key }}: Implementation path should point to a valid file',
       invalidImplementationModule:
         '{{ key }}: Unable to find export {{ identifier }} in implementation module',
+      unableToReadImplementationExports:
+        '{{ key }}: Unable to read exports for implementation module',
       invalidVersion: '{{ key }}: Version should be a valid semver',
       noGeneratorsOrSchematicsFound:
         'Unable to find `generators` or `schematics` property',
@@ -370,13 +373,23 @@ export function validateImplemenationNode(
     }
 
     if (identifier) {
-      const m = require(resolvedPath);
-      if (!(identifier in m && typeof m[identifier] === 'function')) {
+      try {
+        const m = require(resolvedPath);
+        if (!(identifier in m && typeof m[identifier] === 'function')) {
+          context.report({
+            messageId: 'invalidImplementationModule',
+            node: implementationNode.value as any,
+            data: {
+              identifier,
+              key,
+            },
+          });
+        }
+      } catch {
         context.report({
-          messageId: 'invalidImplementationModule',
+          messageId: 'unableToReadImplementationExports',
           node: implementationNode.value as any,
           data: {
-            identifier,
             key,
           },
         });

@@ -7,12 +7,14 @@ import {
   updateJson,
   readJson,
   writeJson,
+  joinPathFragments,
 } from '@nrwl/devkit';
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 import * as path from 'path';
-import { addMigrationJsonChecks } from '../plugin-lint-checks/generator';
+import { addMigrationJsonChecks } from '../lint-checks/generator';
 import type { Linter as EsLint } from 'eslint';
+import { PackageJson } from 'nx/src/utils/package-json';
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectSourceRoot: string;
@@ -125,13 +127,22 @@ export async function migrationGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
   addFiles(host, options);
-  if (!host.exists('migrations.json')) {
-    addMigrationJsonChecks(host, { projectName: schema.project });
-  }
   updateMigrationsJson(host, options);
   updateWorkspaceJson(host, options);
   updateMigrationsJson(host, options);
   updatePackageJson(host, options);
+
+  if (!host.exists('migrations.json')) {
+    const packageJsonPath = joinPathFragments(
+      options.projectRoot,
+      'package.json'
+    );
+    addMigrationJsonChecks(
+      host,
+      { projectName: schema.project },
+      readJson<PackageJson>(host, packageJsonPath)
+    );
+  }
 }
 
 export default migrationGenerator;

@@ -20,6 +20,7 @@ import {
   NxMigrationsConfiguration,
   PackageGroup,
   PackageJson,
+  readNxMigrateConfig,
 } from '../utils/package-json';
 import {
   createTempNpmDirectory,
@@ -593,33 +594,6 @@ async function getPackageMigrationsUsingRegistry(
   );
 }
 
-function resolveNxMigrationConfig(json: Partial<PackageJson>) {
-  const parseNxMigrationsConfig = (
-    fromJson?: string | NxMigrationsConfiguration
-  ): NxMigrationsConfiguration => {
-    if (!fromJson) {
-      return {};
-    }
-    if (typeof fromJson === 'string') {
-      return { migrations: fromJson, packageGroup: [] };
-    }
-
-    return {
-      ...(fromJson.migrations ? { migrations: fromJson.migrations } : {}),
-      ...(fromJson.packageGroup ? { packageGroup: fromJson.packageGroup } : {}),
-    };
-  };
-
-  const config: NxMigrationsConfiguration = {
-    ...parseNxMigrationsConfig(json['ng-update']),
-    ...parseNxMigrationsConfig(json['nx-migrations']),
-    // In case there's a `migrations` field in `package.json`
-    ...parseNxMigrationsConfig(json as any),
-  };
-
-  return config;
-}
-
 async function getPackageMigrationsConfigFromRegistry(
   packageName: string,
   packageVersion: string
@@ -634,7 +608,7 @@ async function getPackageMigrationsConfigFromRegistry(
     return null;
   }
 
-  return resolveNxMigrationConfig(JSON.parse(result));
+  return readNxMigrateConfig(JSON.parse(result));
 }
 
 async function downloadPackageMigrationsFromRegistry(
