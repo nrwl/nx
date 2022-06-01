@@ -17,7 +17,7 @@ describe('update-angular-cli migration', () => {
     await updateAngularCli(tree);
 
     const { devDependencies } = readJson(tree, 'package.json');
-    expect(devDependencies['@angular/cli']).toEqual('~14.0.0-rc.2');
+    expect(devDependencies['@angular/cli']).toEqual('~14.0.0-rc.3');
   });
 
   it('should update @angular/cli version when defined as a dependency', async () => {
@@ -28,7 +28,7 @@ describe('update-angular-cli migration', () => {
     await updateAngularCli(tree);
 
     const { dependencies } = readJson(tree, 'package.json');
-    expect(dependencies['@angular/cli']).toEqual('~14.0.0-rc.2');
+    expect(dependencies['@angular/cli']).toEqual('~14.0.0-rc.3');
   });
 
   it('should add @angular/cli to package.json when it is not set', async () => {
