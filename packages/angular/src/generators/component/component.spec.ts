@@ -3,7 +3,7 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import componentGenerator from './component';
 
 describe('component Generator', () => {
-  it('should create the component correctly and export it in the entry point', async () => {
+  it('should create the component correctly and export it in the entry point when "export=true"', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
     addProjectConfiguration(tree, 'lib1', {
@@ -42,7 +42,49 @@ describe('component Generator', () => {
     expect(indexSource).toMatchSnapshot();
   });
 
-  it('should create the component correctly and not export it when "export=false"', async () => {
+  it('should create the component correctly and export it in the entry point when is standalone and "export=true"', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
+    tree.write('libs/lib1/src/index.ts', '');
+
+    // ACT
+    await componentGenerator(tree, {
+      name: 'example',
+      project: 'lib1',
+      standalone: true,
+      export: true,
+    });
+
+    // ASSERT
+    const componentSource = tree.read(
+      'libs/lib1/src/lib/example/example.component.ts',
+      'utf-8'
+    );
+    expect(componentSource).toMatchSnapshot();
+
+    const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
+    expect(indexSource).toMatchInlineSnapshot(
+      `"export * from \\"./lib/example/example.component\\";"`
+    );
+  });
+
+  it('should create the component correctly and not export it in the entry point when "export=false"', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
     addProjectConfiguration(tree, 'lib1', {
@@ -67,6 +109,48 @@ describe('component Generator', () => {
     await componentGenerator(tree, {
       name: 'example',
       project: 'lib1',
+      export: false,
+    });
+
+    // ASSERT
+    const componentSource = tree.read(
+      'libs/lib1/src/lib/example/example.component.ts',
+      'utf-8'
+    );
+    expect(componentSource).toMatchSnapshot();
+
+    const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
+    expect(indexSource).not.toContain(
+      `export * from "./lib/example/example.component";`
+    );
+  });
+
+  it('should create the component correctly and not export it in the entry point when is standalone and "export=false"', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
+    tree.write('libs/lib1/src/index.ts', 'export * from "./lib/lib.module";');
+
+    // ACT
+    await componentGenerator(tree, {
+      name: 'example',
+      project: 'lib1',
+      standalone: true,
       export: false,
     });
 
