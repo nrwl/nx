@@ -144,9 +144,12 @@ describe('Next.js Applications', () => {
 
   it('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
+    const jsLib = uniq('tslib');
+
     const port = 4201;
 
     runCLI(`generate @nrwl/next:app ${appName}`);
+    runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
 
     const proxyConf = {
       '/external-api': {
@@ -160,13 +163,23 @@ describe('Next.js Applications', () => {
     updateFile('.env.local', 'NX_CUSTOM_VAR=test value from a file');
 
     updateFile(
+      `libs/${jsLib}/src/lib/${jsLib}.ts`,
+      `
+          export function testFn(): string {
+            return process.env.NX_CUSTOM_VAR;
+          };
+          `
+    );
+
+    updateFile(
       `apps/${appName}/pages/index.tsx`,
       `
         import React from 'react';
+        import { testFn } from '@${proj}/${jsLib}';
 
         export const Index = ({ greeting }: any) => {
           return (
-            <p>{process.env.NX_CUSTOM_VAR}</p>
+            <p>{testFn()}</p>
           );
         };
         export default Index;
