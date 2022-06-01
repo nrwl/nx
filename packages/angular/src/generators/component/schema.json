@@ -108,7 +108,7 @@
     },
     "export": {
       "type": "boolean",
-      "description": "Specifies if the component should be exported in the declaring `NgModule`. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`) if the module it belongs to is also exported.",
+      "description": "Specifies if the component should be exported in the declaring `NgModule`. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`) if the module it belongs to is also exported or if the component is standalone.",
       "default": false
     }
   },
