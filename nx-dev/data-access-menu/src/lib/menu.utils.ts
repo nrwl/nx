@@ -101,3 +101,38 @@ export function getPackageApiSection(items: MenuItem[]): MenuSection {
     ),
   };
 }
+
+export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
+  return {
+    id: 'basic',
+    name: 'Basic',
+    hideSectionHeader: true,
+    itemList: items
+      .filter(
+        (m) => m.id === 'intro' || m.id === 'set-up' || m.id === 'account'
+      )
+      .map((m) => {
+        return {
+          ...m,
+          disableCollapsible: !m.id.endsWith('tutorial'),
+        };
+      }),
+  };
+}
+
+export function getDeepDiveNxCloudSection(items: MenuItem[]): MenuSection {
+  return {
+    id: 'deep-dive',
+    name: 'Deep Dive',
+    itemList: items
+      .filter((m) => m.id === 'private-cloud' || m.id === 'reference')
+      .map((m) => ({
+        ...m,
+        disableCollapsible: true,
+        itemList: m.itemList?.map((item) => ({
+          ...item,
+          disableCollapsible: true,
+        })),
+      })),
+  };
+}
