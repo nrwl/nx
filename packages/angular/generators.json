@@ -127,7 +127,7 @@
       "description": "Generate a Module Federation configuration for a given Angular application."
     },
     "setup-tailwind": {
-      "factory": "./src/generators/setup-tailwind/compat",
+      "factory": "./src/generators/setup-tailwind/setup-tailwind.compat",
       "schema": "./src/generators/setup-tailwind/schema.json",
       "description": "Configures Tailwind CSS for an application or a buildable/publishable library."
     },
