@@ -1119,95 +1119,95 @@
         }
       }
     },
-    "14.2.0-beta.1": {
-      "version": "14.2.0-beta.1",
+    "14.2.0-beta.4": {
+      "version": "14.2.0-beta.4",
       "packages": {
         "@angular-devkit/architect": {
-          "version": "~0.1400.0-rc.2",
+          "version": "~0.1400.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-angular": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-webpack": {
-          "version": "~0.1400.0-rc.2",
+          "version": "~0.1400.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/core": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/core": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": true
         },
         "@angular/common": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/forms": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/elements": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/compiler": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/compiler-cli": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/localize": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/platform-browser": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/platform-browser-dynamic": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/platform-server": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/router": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/upgrade": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/language-service": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/animations": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/service-worker": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0-rc.3",
           "alwaysAddToPackageJson": false
         },
         "@angular/material": {
-          "version": "~14.0.0-rc.1",
+          "version": "~14.0.0-rc.2",
           "alwaysAddToPackageJson": false
         },
         "@angular/cdk": {
-          "version": "~14.0.0-rc.1",
+          "version": "~14.0.0-rc.2",
           "alwaysAddToPackageJson": false
         },
         "ng-packagr": {

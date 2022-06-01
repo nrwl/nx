@@ -5,10 +5,10 @@ export default async function (tree: Tree) {
 
   updateJson(tree, 'package.json', (json) => {
     if (json.devDependencies?.['@angular/cli']) {
-      json.devDependencies['@angular/cli'] = '~14.0.0-rc.2';
+      json.devDependencies['@angular/cli'] = '~14.0.0-rc.3';
       shouldFormat = true;
     } else if (json.dependencies?.['@angular/cli']) {
-      json.dependencies['@angular/cli'] = '~14.0.0-rc.2';
+      json.dependencies['@angular/cli'] = '~14.0.0-rc.3';
       shouldFormat = true;
     }
 

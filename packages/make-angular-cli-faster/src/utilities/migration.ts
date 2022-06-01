@@ -20,7 +20,8 @@ const latestVersionWithOldFlag = '13.8.3';
 // versions and the max version of the range if there's a bigger major version that
 // is already supported
 const nxAngularVersionMap: Record<number, { range: string; max?: string }> = {
-  13: { range: '>= 13.2.0' },
+  13: { range: '>= 13.2.0 < 14.2.0', max: '^13.10.0' },
+  14: { range: '>= 14.2.0-beta.4' },
 };
 // latest major version of Angular that is compatible with Nx, based on the map above
 const latestCompatibleAngularMajorVersion = Math.max(
@@ -147,7 +148,10 @@ async function getNxVersionBasedOnInstalledAngularVersion(
   }
   if (nxAngularVersionMap[majorAngularVersion]?.max) {
     // use the max of the range
-    return nxAngularVersionMap[majorAngularVersion].max;
+    return await resolvePackageVersion(
+      '@nrwl/angular',
+      nxAngularVersionMap[majorAngularVersion].max
+    );
   }
   if (majorAngularVersion > latestCompatibleAngularMajorVersion) {
     // installed Angular version is not supported yet, we can't @nrwl/angular:ng-add,
