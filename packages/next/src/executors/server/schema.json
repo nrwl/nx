@@ -30,7 +30,7 @@
     },
     "customServerPath": {
       "type": "string",
-      "description": "Use a custom server script."
+      "description": "Path to a file that runs a custom server script. It should export a runner function `(nextApp, settings) => Promise<void>` as default"
     },
     "hostname": {
       "type": "string",
