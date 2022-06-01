@@ -14,6 +14,7 @@ export class DocumentsApi {
     private readonly options: {
       publicDocsRoot: string;
       documentSources: DocumentMetadata[];
+      addAncestor: { id: string; name: string } | null;
     }
   ) {
     if (!options.publicDocsRoot) {
@@ -22,12 +23,23 @@ export class DocumentsApi {
     if (!options.documentSources) {
       throw new Error('public document sources cannot be undefined');
     }
+
+    const itemList: DocumentMetadata[] = options.documentSources.flatMap(
+      (x) => x.itemList
+    ) as DocumentMetadata[];
+
     this.documents = {
       id: 'documents',
       name: 'documents',
-      itemList: options.documentSources.flatMap(
-        (x) => x.itemList
-      ) as DocumentMetadata[],
+      itemList: !!this.options.addAncestor
+        ? [
+            {
+              id: this.options.addAncestor.id,
+              name: this.options.addAncestor.name,
+              itemList,
+            },
+          ]
+        : itemList,
     };
   }
 

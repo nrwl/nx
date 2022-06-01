@@ -10,7 +10,7 @@ import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import cx from 'classnames';
 import Router from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
-import { documentsApi, menuApi, packagesApi } from '../lib/api';
+import { nxDocumentsApi, nxMenuApi, packagesApi } from '../lib/api';
 
 interface DocumentationPageProps {
   menu: Menu;
@@ -143,7 +143,7 @@ export async function getStaticProps({
 }: {
   params: { segments: string[] };
 }) {
-  const menu = menuApi.getMenu();
+  const menu = nxMenuApi.getMenu();
 
   if (params.segments[0] === 'packages') {
     let pkg: PackageMetadata | null = null;
@@ -170,7 +170,7 @@ export async function getStaticProps({
       return {
         props: {
           document: null,
-          menu: menuApi.getMenu(),
+          menu: nxMenuApi.getMenu(),
           pkg,
           schemaRequest: null,
         },
@@ -180,7 +180,7 @@ export async function getStaticProps({
     return {
       props: {
         document: null,
-        menu: menuApi.getMenu(),
+        menu: nxMenuApi.getMenu(),
         pkg,
         schemaRequest: {
           type: params.segments[2],
@@ -192,7 +192,7 @@ export async function getStaticProps({
 
   let document: DocumentData | undefined;
   try {
-    document = documentsApi.getDocument(params.segments);
+    document = nxDocumentsApi.getDocument(params.segments);
   } catch (e) {
     // Do nothing
   }
@@ -220,7 +220,7 @@ export async function getStaticPaths() {
   return {
     paths: [
       ...packagesApi.getStaticPackagePaths(),
-      ...documentsApi.getStaticDocumentPaths(),
+      ...nxDocumentsApi.getStaticDocumentPaths(),
     ],
     fallback: 'blocking',
   };

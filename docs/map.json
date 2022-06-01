@@ -1,7 +1,7 @@
 [
   {
-    "name": "Nx",
-    "id": "default",
+    "name": "Nx docs",
+    "id": "nx-documentation",
     "itemList": [
       {
         "name": "Getting Started",
@@ -692,8 +692,8 @@
     ]
   },
   {
-    "name": "Nx Cloud",
-    "id": "nx-cloud",
+    "name": "Nx Cloud docs",
+    "id": "nx-cloud-documentation",
     "itemList": [
       {
         "name": "Intro",

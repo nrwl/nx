@@ -12,7 +12,7 @@ export class MenuApi {
 
   constructor(
     private readonly documents: DocumentMetadata,
-    private readonly packageDocuments: DocumentMetadata[]
+    private readonly packageDocuments: DocumentMetadata[] = []
   ) {}
 
   getMenu(): Menu {
@@ -23,13 +23,12 @@ export class MenuApi {
     const items = createMenuItems(this.documents);
     if (items) {
       menu = {
-        sections: [
-          getBasicSection(items),
-          getDeepDiveSection(items),
-          // getApiSection(items),
-          this.getReferenceApiMenuSection(),
-        ],
+        sections: [getBasicSection(items), getDeepDiveSection(items)],
       };
+      if (!!this.packageDocuments.length)
+        menu.sections.push(
+          this.getReferenceApiMenuSection(this.packageDocuments)
+        );
     } else {
       throw new Error(`Cannot find any documents`);
     }
@@ -38,11 +37,13 @@ export class MenuApi {
     return menu;
   }
 
-  getReferenceApiMenuSection(): MenuSection {
+  getReferenceApiMenuSection(
+    packageDocuments: DocumentMetadata[]
+  ): MenuSection {
     const documents: DocumentMetadata = {
       id: 'packages',
       name: 'Packages',
-      itemList: this.packageDocuments,
+      itemList: packageDocuments,
     };
 
     const items = createMenuItems(documents);
