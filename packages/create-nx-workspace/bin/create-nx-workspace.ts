@@ -721,7 +721,7 @@ async function createSandbox(packageManager: PackageManager) {
       })
     );
 
-    await execAndWait(`${install} --silent`, tmpDir);
+    await execAndWait(`${install} --silent --ignore-scripts`, tmpDir);
 
     installSpinner.succeed();
   } catch (e) {

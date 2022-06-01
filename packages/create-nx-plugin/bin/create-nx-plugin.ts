@@ -47,7 +47,7 @@ function createSandbox(packageManager: string) {
     license: 'MIT',
   });
 
-  execSync(`${packageManager} install --silent`, {
+  execSync(`${packageManager} install --silent --ignore-scripts`, {
     cwd: tmpDir,
     stdio: [0, 1, 2],
   });
