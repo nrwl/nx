@@ -20,8 +20,8 @@
       "description": "Set up Cypress Component Test for a project"
     },
     "migrate-to-cypress-10": {
-      "factory": "./src/generators/convert-to-cypress-10/convert-to-cypress-ten#convertCypressProject",
-      "schema": "./src/generators/convert-to-cypress-10/schema.json",
+      "factory": "./src/generators/migrate-to-cypress-10/migrate-to-cypress-ten#migrateCypressProject",
+      "schema": "./src/generators/migrate-to-cypress-10/schema.json",
       "description": "Convert existing Cypress e2e projects to Cypress 10"
     }
   },
@@ -46,9 +46,8 @@
       "hidden": true
     },
     "migrate-to-cypress-10": {
-      "factory": "./src/generators/convert-to-cypress-10/convert-to-cypress-ten#convertCypressProject",
-      "schema": "./src/generators/convert-to-cypress-10/schema.json",
-      "aliases": ["cy10"],
+      "factory": "./src/generators/migrate-to-cypress-10/migrate-to-cypress-ten#migrateCypressProject",
+      "schema": "./src/generators/migrate-to-cypress-10/schema.json",
       "description": "Convert to Cypress 10",
       "hidden": true
     }

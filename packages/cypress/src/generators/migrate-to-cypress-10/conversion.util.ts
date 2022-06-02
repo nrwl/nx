@@ -1,21 +1,19 @@
 import {
   joinPathFragments,
-  logger,
   ProjectConfiguration,
   readJson,
-  readProjectConfiguration,
   stripIndents,
   Tree,
   updateJson,
-  updateProjectConfiguration,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { basename, dirname, extname, relative } from 'path';
-import { StringLiteral } from 'typescript';
-import { inspect } from 'util';
-import { installedCypressVersion } from '../../utils/cypress-version';
-import { CypressConvertOptions } from './schema';
+import {
+  isCallExpression,
+  isImportDeclaration,
+  StringLiteral,
+} from 'typescript';
 
 const validFilesEndingsToUpdate = [
   '.js',
@@ -26,92 +24,17 @@ const validFilesEndingsToUpdate = [
   '.cjs',
 ];
 
-function findAllTargets(projectConfig: ProjectConfiguration) {
-  const targets = [];
-  for (const key in projectConfig.targets) {
-    const target = projectConfig.targets[key];
-    if (target.executor !== '@nrwl/cypress:cypress') {
-      continue;
-    }
-    targets.push(key);
-  }
-
-  return targets;
-}
-
-export function updateProject(
-  tree: Tree,
-  options: CypressConvertOptions
-): boolean {
-  let didConvert = false;
-  const projectConfig = readProjectConfiguration(tree, options.project);
-  const targets = new Set<string>([
-    ...findAllTargets(projectConfig),
-    ...options.targets,
-  ]);
-
-  for (const target of targets.keys()) {
-    const { status, cypressConfigPathTs, cypressConfigPathJson } =
-      verifyProjectForUpgrade(tree, projectConfig, target);
-    if (status === 'no-convert') {
-      continue;
-    }
-
-    if (status === 'convert') {
-      const cypressConfigs = createNewCypressConfig(
-        tree,
-        projectConfig,
-        cypressConfigPathJson
-      );
-
-      updateProjectPaths(tree, projectConfig, cypressConfigs);
-      writeNewConfig(tree, cypressConfigPathTs, cypressConfigs);
-      addConfigToTsConfig(
-        tree,
-        projectConfig.targets?.[target]?.options?.tsConfig ||
-          joinPathFragments(projectConfig.root, 'tsconfig.json'),
-        basename(cypressConfigPathTs)
-      );
-
-      tree.delete(cypressConfigPathJson);
-    }
-    if (status === 'convert' || status === 'update-project-config') {
-      projectConfig.targets[target].options = {
-        ...projectConfig.targets[target].options,
-        cypressConfig: cypressConfigPathTs,
-        testingType: 'e2e',
-      };
-
-      updateProjectConfiguration(tree, options.project, projectConfig);
-      didConvert = true;
-    }
-  }
-
-  return didConvert;
-}
-
-/**
- * validate that the provided project target is using the cypress executor
- * and there is a cypress.json file and NOT a cypress.config.ts file
- */
-export function verifyProjectForUpgrade(
+export function findCypressConfigs(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  target: string
+  target: string,
+  config: string
 ): {
-  status: 'convert' | 'no-convert' | 'update-project-config';
   cypressConfigPathJson: string;
   cypressConfigPathTs: string;
 } {
-  if (!projectConfig.targets?.[target]) {
-    return {
-      status: 'no-convert',
-      cypressConfigPathJson: undefined,
-      cypressConfigPathTs: undefined,
-    };
-  }
-  // make sure we have a cypress executor and a cypress.json file and NOT a cypress.config.ts file
   const cypressConfigPathJson =
+    projectConfig.targets[target]?.configurations?.[config]?.cypressConfig ||
     projectConfig.targets[target]?.options?.cypressConfig ||
     joinPathFragments(projectConfig.root, 'cypress.json');
 
@@ -123,50 +46,9 @@ export function verifyProjectForUpgrade(
       : `${basename(cypressConfigPathJson, extname(cypressConfigPathJson))}.ts`
   );
 
-  if (installedCypressVersion() < 8) {
-    logger.warn(
-      stripIndents`
-Please upgrade to Cypress version 8 before trying to convert the project to Cypress version 10. 
-https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-8-0`
-    );
-    return {
-      cypressConfigPathJson,
-      cypressConfigPathTs,
-      status: 'no-convert',
-    };
-  }
-  // not a cypress project, don't convert
-  if (projectConfig.targets[target]?.executor !== '@nrwl/cypress:cypress') {
-    return {
-      cypressConfigPathJson,
-      cypressConfigPathTs,
-      status: 'no-convert',
-    };
-  }
-
-  // has cypress.json but no cypress.config.ts, needs to convert
-  if (tree.exists(cypressConfigPathJson) && !tree.exists(cypressConfigPathTs)) {
-    return {
-      cypressConfigPathJson,
-      cypressConfigPathTs,
-      status: 'convert',
-    };
-  }
-
-  // has cypress.config.ts but no cypress.json project already converted but this config needs to be updated
-  if (!tree.exists(cypressConfigPathJson) && tree.exists(cypressConfigPathTs)) {
-    return {
-      cypressConfigPathJson,
-      cypressConfigPathTs,
-      status: 'update-project-config',
-    };
-  }
-
-  // unknown state, don't convert
   return {
     cypressConfigPathJson,
     cypressConfigPathTs,
-    status: 'no-convert',
   };
 }
 
@@ -380,13 +262,20 @@ export function updateImports(
     fileContent,
     endOfImportSelector,
     (node: StringLiteral) => {
-      return `'${node.text.replace(oldImportPath, newImportPath)}'`;
+      // if node.parent is an CallExpression require() ||ImportDeclaration
+      if (
+        node?.parent &&
+        (isCallExpression(node.parent) || isImportDeclaration(node.parent))
+      ) {
+        return `'${node.text.replace(oldImportPath, newImportPath)}'`;
+      }
+      return node.text;
     }
   );
   tree.write(filePath, newContent);
 }
 
-function writeNewConfig(
+export function writeNewConfig(
   tree: Tree,
   cypressConfigPathTs: string,
   cypressConfigs: {
@@ -404,8 +293,7 @@ function writeNewConfig(
     ? `import setupNodeEvents from '${pluginsFile}';`
     : '';
 
-  // strip off the start { } from the start/end of the object
-  const convertedConfig = inspect(restOfConfig).trim().slice(1, -1).trim();
+  const convertedConfig = JSON.stringify(restOfConfig, null, 2);
 
   tree.write(
     cypressConfigPathTs,
@@ -414,10 +302,11 @@ import { defineConfig } from 'cypress'
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 ${pluginImport}
 
+const cypressJsonConfig = ${convertedConfig}
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__dirname),
-    ${convertedConfig},
+    ...cypressJsonConfig,
     ${pluginsFile ? 'setupNodeEvents' : ''}
   }
 })
@@ -425,10 +314,10 @@ export default defineConfig({
   );
 }
 
-function addConfigToTsConfig(
+export function addConfigToTsConfig(
   tree: Tree,
   tsconfigPath: string,
-  cypressConfigName = 'cypress.config.ts'
+  cypressConfigPath: string
 ) {
   if (tree.exists(tsconfigPath)) {
     updateJson(
@@ -436,7 +325,10 @@ function addConfigToTsConfig(
       tsconfigPath,
       (json) => {
         json.include = Array.from(
-          new Set([...(json.include || []), cypressConfigName])
+          new Set([
+            ...(json.include || []),
+            relative(dirname(tsconfigPath), cypressConfigPath),
+          ])
         );
         return json;
         // some people put comments in their tsconfigs!

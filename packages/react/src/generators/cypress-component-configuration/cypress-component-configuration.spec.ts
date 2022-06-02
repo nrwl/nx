@@ -1,4 +1,4 @@
-import { assertCypress10Installed } from '@nrwl/cypress/src/utils/cypress-version';
+import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
@@ -9,8 +9,8 @@ jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe(cypressComponentConfigurationGenerator.name, () => {
   let tree: Tree;
   let mockedAssertCypressVersion: jest.Mock<
-    ReturnType<typeof assertCypress10Installed>
-  > = assertCypress10Installed as never;
+    ReturnType<typeof assertMinimumCypressVersion>
+  > = assertMinimumCypressVersion as never;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
   });

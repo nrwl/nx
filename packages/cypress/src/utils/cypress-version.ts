@@ -19,9 +19,9 @@ export function installedCypressVersion() {
   return +majorVersion;
 }
 
-export function assertCypress10Installed() {
+export function assertMinimumCypressVersion(minVersion: number) {
   const version = installedCypressVersion();
-  if (version && version < 10) {
+  if (version && version < minVersion) {
     throw new Error(
       `Cypress version of 10 or higher is not installed. Expected Cypress v10+, found Cypress v${version} instead.`
     );

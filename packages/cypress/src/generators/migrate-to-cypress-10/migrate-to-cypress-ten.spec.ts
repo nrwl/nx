@@ -1,7 +1,6 @@
 import {
   addProjectConfiguration,
   joinPathFragments,
-  ProjectConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -15,9 +14,8 @@ import {
   createSupportFileImport,
   updateImports,
   updateProjectPaths,
-  verifyProjectForUpgrade,
 } from './conversion.util';
-import { convertCypressProject } from './convert-to-cypress-ten';
+import { migrateCypressProject } from './migrate-to-cypress-ten';
 
 jest.mock('../../utils/cypress-version');
 
@@ -60,10 +58,7 @@ describe('convertToCypressTen', () => {
     it('should update project w/defaults', async () => {
       expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
 
-      await convertCypressProject(tree, {
-        targets: ['e2e'],
-        project: 'app-e2e',
-      });
+      await migrateCypressProject(tree);
 
       expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
       expect(
@@ -92,10 +87,7 @@ describe('convertToCypressTen', () => {
         return json;
       });
 
-      await convertCypressProject(tree, {
-        targets: ['e2e'],
-        project: 'app-e2e',
-      });
+      await migrateCypressProject(tree);
 
       expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
       expect(
@@ -111,10 +103,7 @@ describe('convertToCypressTen', () => {
     });
 
     it('should not update a non e2e project', async () => {
-      await convertCypressProject(tree, {
-        targets: ['e2e'],
-        project: 'app',
-      });
+      await migrateCypressProject(tree);
       expect(tree.exists('apps/app/cypress.config.ts')).toBeFalsy();
       expect(tree.exists('apps/app/src/e2e/app.cy.ts')).toBeFalsy();
       expect(tree.exists('apps/app/src/support/e2e.ts')).toBeFalsy();
@@ -131,10 +120,7 @@ describe('convertToCypressTen', () => {
       delete pc.targets['e2e'];
       updateProjectConfiguration(tree, 'app-e2e', pc);
 
-      await convertCypressProject(tree, {
-        targets: ['e2e-custom'],
-        project: 'app-e2e',
-      });
+      await migrateCypressProject(tree);
 
       expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
       expect(
@@ -161,10 +147,7 @@ describe('convertToCypressTen', () => {
 
       updateProjectConfiguration(tree, 'app-e2e', pc);
 
-      await convertCypressProject(tree, {
-        project: 'app-e2e',
-        all: true,
-      });
+      await migrateCypressProject(tree);
 
       expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
       expect(
@@ -194,10 +177,7 @@ describe('convertToCypressTen', () => {
 
       updateProjectConfiguration(tree, 'app-e2e', pc);
 
-      await convertCypressProject(tree, {
-        project: 'app-e2e',
-        targets: ['e2e-custom', 'e2e', 'invalid'],
-      });
+      await migrateCypressProject(tree);
 
       expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
       expect(
@@ -235,10 +215,7 @@ describe('convertToCypressTen', () => {
 
       updateProjectConfiguration(tree, 'app-e2e', pc);
 
-      await convertCypressProject(tree, {
-        project: 'app-e2e',
-        all: true,
-      });
+      await migrateCypressProject(tree);
 
       expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
       expect(
@@ -367,57 +344,6 @@ const eh = require("../../support")
       expect(tree.exists('apps/app-e2e/src/fixtures/example.json')).toEqual(
         true
       );
-    });
-  });
-
-  describe('verifyProjectForUpgrade', () => {
-    let projectConfiguration: ProjectConfiguration;
-
-    beforeEach(() => {
-      addProjectConfiguration(tree, 'app-e2e', {
-        root: 'apps/app-e2e',
-        sourceRoot: 'apps/app-e2e/src',
-        targets: {
-          e2e: {
-            executor: '@nrwl/cypress:cypress',
-            options: {
-              cypressConfig: 'apps/app-e2e/cypress.json',
-              devServerTarget: 'app:serve',
-            },
-          },
-        },
-      });
-      tree.write('apps/app-e2e/cypress.json', '{}');
-      projectConfiguration = readProjectConfiguration(tree, 'app-e2e');
-    });
-
-    it('should not upgrade if both cypress configs are present', () => {
-      tree.write('apps/app-e2e/cypress.config.ts', `blah`);
-      const actual = verifyProjectForUpgrade(tree, projectConfiguration, 'e2e');
-      expect(actual).toMatchSnapshot();
-    });
-
-    it('should not upgrade if not using cypress executor', () => {
-      projectConfiguration.targets.e2e.executor = 'not cypress executor';
-      const actual = verifyProjectForUpgrade(tree, projectConfiguration, 'e2e');
-      expect(actual).toMatchSnapshot();
-    });
-
-    it('should not upgrade if < v8 is installed', () => {
-      mockedInstalledCypressVersion.mockReturnValue(7);
-      tree.delete('apps/app-e2e/cypress.config.ts');
-
-      const actual = verifyProjectForUpgrade(tree, projectConfiguration, 'e2e');
-
-      expect(actual.status).toEqual('no-convert');
-    });
-
-    it('should allow upgrade', () => {
-      tree.delete('apps/app-e2e/cypress.config.ts');
-
-      const actual = verifyProjectForUpgrade(tree, projectConfiguration, 'e2e');
-
-      expect(actual).toMatchSnapshot();
     });
   });
 

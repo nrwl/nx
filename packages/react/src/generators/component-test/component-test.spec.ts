@@ -1,4 +1,4 @@
-import { assertCypress10Installed } from '@nrwl/cypress/src/utils/cypress-version';
+import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
@@ -8,14 +8,14 @@ import { componentTestGenerator } from './component-test';
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe(componentTestGenerator.name, () => {
   let tree: Tree;
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof assertCypress10Installed>
-  > = assertCypress10Installed as never;
+  let mockedAssertMinimumCypressVersion: jest.Mock<
+    ReturnType<typeof assertMinimumCypressVersion>
+  > = assertMinimumCypressVersion as never;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
   });
   it('should create component test for tsx files', async () => {
-    mockedInstalledCypressVersion.mockReturnValue();
+    mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
       name: 'some-lib',
@@ -35,7 +35,7 @@ describe(componentTestGenerator.name, () => {
   });
 
   it('should create component test for jsx files', async () => {
-    mockedInstalledCypressVersion.mockReturnValue();
+    mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
       name: 'some-lib',
@@ -56,7 +56,7 @@ describe(componentTestGenerator.name, () => {
   });
 
   it('should not throw if path is invalid', async () => {
-    mockedInstalledCypressVersion.mockReturnValue();
+    mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
       name: 'some-lib',
@@ -76,7 +76,7 @@ describe(componentTestGenerator.name, () => {
   });
 
   it('should handle being provided the full path to the component', async () => {
-    mockedInstalledCypressVersion.mockReturnValue();
+    mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
       name: 'some-lib',

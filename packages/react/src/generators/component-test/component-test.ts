@@ -1,4 +1,4 @@
-import { assertCypress10Installed } from '@nrwl/cypress/src/utils/cypress-version';
+import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import {
   generateFiles,
   joinPathFragments,
@@ -13,7 +13,7 @@ export function componentTestGenerator(
   tree: Tree,
   options: ComponentTestSchema
 ) {
-  assertCypress10Installed();
+  assertMinimumCypressVersion(10);
 
   const projectConfig = readProjectConfiguration(tree, options.project);
 

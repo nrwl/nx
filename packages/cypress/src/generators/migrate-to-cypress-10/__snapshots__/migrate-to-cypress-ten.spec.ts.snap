@@ -5,17 +5,20 @@ exports[`convertToCypressTen convertCypressProject should handle custom target n
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
 export default defineConfig({
 e2e: {
 ...nxE2EPreset(__dirname),
-fileServerFolder: '.',
-fixturesFolder: './src/fixtures',
-video: true,
-videosFolder: '../../dist/cypress/apps/app-e2e/videos',
-screenshotsFolder: '../../dist/cypress/apps/app-e2e/screenshots',
-chromeWebSecurity: false,
-specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
-supportFile: 'src/support/e2e.ts',
+...cypressJsonConfig,
 
 }
 })"
@@ -26,17 +29,20 @@ exports[`convertToCypressTen convertCypressProject should handle multiple config
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
 export default defineConfig({
 e2e: {
 ...nxE2EPreset(__dirname),
-fileServerFolder: '.',
-fixturesFolder: './src/fixtures',
-video: true,
-videosFolder: '../../dist/cypress/apps/app-e2e/videos',
-screenshotsFolder: '../../dist/cypress/apps/app-e2e/screenshots',
-chromeWebSecurity: false,
-specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
-supportFile: 'src/support/e2e.ts',
+...cypressJsonConfig,
 
 }
 })"
@@ -66,17 +72,20 @@ exports[`convertToCypressTen convertCypressProject should infer targets with --a
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
 export default defineConfig({
 e2e: {
 ...nxE2EPreset(__dirname),
-fileServerFolder: '.',
-fixturesFolder: './src/fixtures',
-video: true,
-videosFolder: '../../dist/cypress/apps/app-e2e/videos',
-screenshotsFolder: '../../dist/cypress/apps/app-e2e/screenshots',
-chromeWebSecurity: false,
-specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
-supportFile: 'src/support/e2e.ts',
+...cypressJsonConfig,
 
 }
 })"
@@ -129,17 +138,20 @@ exports[`convertToCypressTen convertCypressProject should not break when an inva
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
 export default defineConfig({
 e2e: {
 ...nxE2EPreset(__dirname),
-fileServerFolder: '.',
-fixturesFolder: './src/fixtures',
-video: true,
-videosFolder: '../../dist/cypress/apps/app-e2e/videos',
-screenshotsFolder: '../../dist/cypress/apps/app-e2e/screenshots',
-chromeWebSecurity: false,
-specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
-supportFile: 'src/support/e2e.ts',
+...cypressJsonConfig,
 
 }
 })"
@@ -192,18 +204,21 @@ exports[`convertToCypressTen convertCypressProject should update project w/custo
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 import setupNodeEvents from './src/plugins/index.js';
 
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"baseUrl\\": \\"http://localhost:4200\\",
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": false
+}
 export default defineConfig({
 e2e: {
 ...nxE2EPreset(__dirname),
-fileServerFolder: '.',
-fixturesFolder: './src/fixtures',
-video: true,
-videosFolder: '../../dist/cypress/apps/app-e2e/videos',
-screenshotsFolder: '../../dist/cypress/apps/app-e2e/screenshots',
-chromeWebSecurity: false,
-baseUrl: 'http://localhost:4200',
-specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
-supportFile: false,
+...cypressJsonConfig,
 setupNodeEvents
 }
 })"
@@ -214,17 +229,20 @@ exports[`convertToCypressTen convertCypressProject should update project w/defau
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
 export default defineConfig({
 e2e: {
 ...nxE2EPreset(__dirname),
-fileServerFolder: '.',
-fixturesFolder: './src/fixtures',
-video: true,
-videosFolder: '../../dist/cypress/apps/app-e2e/videos',
-screenshotsFolder: '../../dist/cypress/apps/app-e2e/screenshots',
-chromeWebSecurity: false,
-specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
-supportFile: 'src/support/e2e.ts',
+...cypressJsonConfig,
 
 }
 })"
@@ -257,28 +275,4 @@ describe('a', () => {
 });
 
 "
-`;
-
-exports[`convertToCypressTen verifyProjectForUpgrade should allow upgrade 1`] = `
-Object {
-  "cypressConfigPathJson": "apps/app-e2e/cypress.json",
-  "cypressConfigPathTs": "apps/app-e2e/cypress.config.ts",
-  "status": "convert",
-}
-`;
-
-exports[`convertToCypressTen verifyProjectForUpgrade should not upgrade if both cypress configs are present 1`] = `
-Object {
-  "cypressConfigPathJson": "apps/app-e2e/cypress.json",
-  "cypressConfigPathTs": "apps/app-e2e/cypress.config.ts",
-  "status": "no-convert",
-}
-`;
-
-exports[`convertToCypressTen verifyProjectForUpgrade should not upgrade if not using cypress executor 1`] = `
-Object {
-  "cypressConfigPathJson": "apps/app-e2e/cypress.json",
-  "cypressConfigPathTs": "apps/app-e2e/cypress.config.ts",
-  "status": "no-convert",
-}
 `;
