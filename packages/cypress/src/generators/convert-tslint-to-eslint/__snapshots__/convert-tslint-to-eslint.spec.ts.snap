@@ -155,6 +155,7 @@ Object {
         "eslint-plugin-import",
         "@typescript-eslint",
       ],
+      "root": true,
       "rules": Object {
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/dot-notation": "off",

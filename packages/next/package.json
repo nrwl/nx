@@ -45,7 +45,7 @@
     "chalk": "4.1.0",
     "eslint-config-next": "^12.1.0",
     "fs-extra": "^10.1.0",
-    "ts-node": "~9.1.1",
+    "ts-node": "~10.8.0",
     "tsconfig-paths": "^3.9.0",
     "url-loader": "^4.1.1",
     "webpack-merge": "^5.8.0"

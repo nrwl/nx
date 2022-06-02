@@ -37,6 +37,7 @@ Object {
     "plugins": Array [
       "@typescript-eslint",
     ],
+    "root": true,
   },
   "ensureESLintPlugins": Array [],
   "unconvertedTSLintRules": Array [],
@@ -60,6 +61,7 @@ Object {
       "@angular-eslint/eslint-plugin",
       "@typescript-eslint",
     ],
+    "root": true,
     "rules": Object {
       "@angular-eslint/component-selector": Array [
         "error",
@@ -103,6 +105,7 @@ Object {
       "@angular-eslint/eslint-plugin-template",
       "@typescript-eslint",
     ],
+    "root": true,
     "rules": Object {
       "@angular-eslint/component-selector": Array [
         "error",
@@ -244,6 +247,7 @@ Object {
     "plugins": Array [
       "@typescript-eslint",
     ],
+    "root": true,
   },
   "ensureESLintPlugins": Array [],
   "unconvertedTSLintRules": Array [],
