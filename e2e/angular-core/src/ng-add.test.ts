@@ -52,7 +52,9 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   }
 
   function addCypress() {
-    runNgAdd('@cypress/schematic', '--e2e-update', 'latest');
+    // TODO(leo): @cypress/schematic latest comes with Cypress 10 support
+    // which we don't support yet in our Cypress plugin.
+    runNgAdd('@cypress/schematic', '--e2e-update', '1.7.0');
   }
 
   function addEsLint() {
