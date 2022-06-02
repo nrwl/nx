@@ -48,19 +48,14 @@ export default async function cypressExecutor(
 
   let success;
 
-  if (options.testingType === 'component') {
-    // cypress handles all the dev server stuff
-    success = await runCypress(options.baseUrl, options, context);
-  } else {
-    for await (const baseUrl of startDevServer(options, context)) {
-      try {
-        success = await runCypress(baseUrl, options, context);
-        if (!options.watch) break;
-      } catch (e) {
-        logger.error(e.message);
-        success = false;
-        if (!options.watch) break;
-      }
+  for await (const baseUrl of startDevServer(options, context)) {
+    try {
+      success = await runCypress(baseUrl, options, context);
+      if (!options.watch) break;
+    } catch (e) {
+      logger.error(e.message);
+      success = false;
+      if (!options.watch) break;
     }
   }
 

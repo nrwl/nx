@@ -424,17 +424,5 @@ A generator to migrate from v9 to v10 is provided. See https://nx.dev/cypress
         })
       );
     });
-
-    it('should not create a devserver', async () => {
-      const { success } = await cypressExecutor(
-        {
-          ...cypressOptions,
-          testingType: 'component',
-        },
-        mockContext
-      );
-      expect(success).toEqual(true);
-      expect(runExecutor).not.toHaveBeenCalled();
-    });
   });
 });
