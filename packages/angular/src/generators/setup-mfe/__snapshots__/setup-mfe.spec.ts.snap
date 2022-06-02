@@ -108,3 +108,43 @@ exports[`Init MFE should create webpack and mfe configs correctly 4`] = `
   },
 }"
 `;
+
+exports[`Init MFE should generate the remote entry component correctly when prefix is not provided 1`] = `
+"import { Component } from '@angular/core';
+
+@Component({
+  selector: 'remote1-entry',
+  template: \`nx-welcome></nx-welcome>\`
+})
+export class RemoteEntryComponent {}
+"
+`;
+
+exports[`Init MFE should generate the remote entry module and component correctly 1`] = `
+"import { Component } from '@angular/core';
+
+@Component({
+  selector: 'my-org-remote1-entry',
+  template: \`<my-org-nx-welcome></my-org-nx-welcome>\`
+})
+export class RemoteEntryComponent {}
+"
+`;
+
+exports[`Init MFE should generate the remote entry module and component correctly 2`] = `
+"import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+import { RemoteEntryComponent } from './entry.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+@NgModule({
+  declarations: [RemoteEntryComponent, NxWelcomeComponent],
+  imports: [
+    CommonModule,
+  ],
+  providers: [],
+  exports: [RemoteEntryComponent],
+})
+export class RemoteEntryModule {}"
+`;
