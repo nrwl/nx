@@ -1,0 +1,105 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`cypressComponentConfigurationGenerator should generate tests for existing components 1`] = `
+"import * as React from 'react'
+import { mount } from '@cypress/react'
+import SomeLib from './some-lib'
+
+describe(SomeLib.name, () => {
+  it('should create', () => {
+    mount(<SomeLib />)
+  })
+})
+"
+`;
+
+exports[`cypressComponentConfigurationGenerator should generate tests for existing components 2`] = `
+"import * as React from 'react'
+import { mount } from '@cypress/react'
+import AnotherCmp from './another-cmp'
+
+describe(AnotherCmp.name, () => {
+  it('should create', () => {
+    mount(<AnotherCmp />)
+  })
+})
+"
+`;
+
+exports[`cypressComponentConfigurationGenerator should generate tests for existing js components 1`] = `
+"import * as React from 'react'
+import { mount } from '@cypress/react'
+import SomeCmp from './some-cmp'
+
+describe(SomeCmp.name, () => {
+  it('should create', () => {
+    mount(<SomeCmp />)
+  })
+})
+"
+`;
+
+exports[`cypressComponentConfigurationGenerator should generate tests for existing js components 2`] = `
+"import * as React from 'react'
+import { mount } from '@cypress/react'
+import AnotherCmp from './another-cmp'
+
+describe(AnotherCmp.name, () => {
+  it('should create', () => {
+    mount(<AnotherCmp />)
+  })
+})
+"
+`;
+
+exports[`cypressComponentConfigurationGenerator should generate tests for existing jsx components 1`] = `
+"import * as React from 'react'
+import { mount } from '@cypress/react'
+import SomeCmp from './some-cmp'
+
+describe(SomeCmp.name, () => {
+  it('should create', () => {
+    mount(<SomeCmp />)
+  })
+})
+"
+`;
+
+exports[`cypressComponentConfigurationGenerator should generate tests for existing jsx components 2`] = `
+"import * as React from 'react'
+import { mount } from '@cypress/react'
+import AnotherCmp from './another-cmp'
+
+describe(AnotherCmp.name, () => {
+  it('should create', () => {
+    mount(<AnotherCmp />)
+  })
+})
+"
+`;
+
+exports[`cypressComponentConfigurationGenerator should generate tests for existing tsx components 1`] = `
+"import * as React from 'react'
+import { mount } from '@cypress/react'
+import SomeLib from './some-lib'
+
+describe(SomeLib.name, () => {
+  it('should create', () => {
+    mount(<SomeLib />)
+  })
+})
+"
+`;
+
+exports[`cypressComponentConfigurationGenerator should generate tests for existing tsx components 2`] = `
+"import * as React from 'react'
+import { mount } from '@cypress/react'
+import AnotherCmp from './another-cmp'
+
+describe(AnotherCmp.name, () => {
+  it('should create', () => {
+    mount(<AnotherCmp />)
+  })
+})
+"
+`;

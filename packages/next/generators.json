@@ -25,6 +25,11 @@
       "factory": "./src/generators/component/component#componentSchematic",
       "schema": "./src/generators/component/schema.json",
       "description": "Create a React component."
+    },
+    "cypress-component-configuration": {
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationGenerator",
+      "schema": "./src/generators/cypress-component-configuration/schema.json",
+      "description": "Setup Cypress component testing for a Next project"
     }
   },
   "generators": {
@@ -57,6 +62,11 @@
       "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a library."
+    },
+    "cypress-component-configuration": {
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationGenerator",
+      "schema": "./src/generators/cypress-component-configuration/schema.json",
+      "description": "Setup Cypress component testing for a Next project"
     }
   }
 }

@@ -1,4 +1,3 @@
-import { cypressComponentTestFiles } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
@@ -52,14 +51,14 @@ export async function componentGenerator(host: Tree, schema: Schema) {
     tasks.push(routingTask);
   }
 
-  if (options.componentTest) {
-    cypressComponentTestFiles(host, {
-      componentType: 'react',
-      directory: options.directory,
-      name: options.name,
-      project: options.project,
-    });
-  }
+  // if (options.componentTest) {
+  //   cypressComponentTestFiles(host, {
+  //     componentType: 'react',
+  //     directory: options.directory,
+  //     name: options.name,
+  //     project: options.project,
+  //   });
+  // }
 
   await formatFiles(host);
 

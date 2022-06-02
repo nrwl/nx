@@ -5,6 +5,5 @@ import <%= className %> from './<%= fileName %>'
 describe(<%= className %>.name, () => {
   it('should create', () => {
     mount(<<%= className %> />)
-    cy.contains(/Welcome/i)
   })
 })

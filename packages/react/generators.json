@@ -74,6 +74,20 @@
       "schema": "./src/generators/hook/schema.json",
       "description": "Create a hook.",
       "aliases": ["h"]
+    },
+
+    "cypress-component-configuration": {
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationGenerator",
+      "schema": "./src/generators/cypress-component-configuration/schema.json",
+      "description": "Setup Cypress component testing for a React project",
+      "hidden": false
+    },
+
+    "component-test": {
+      "factory": "./src/generators/component-test/component-test#componentTestGenerator",
+      "schema": "./src/generators/component-test/schema.json",
+      "description": "Generate a Cypress component test for a React component",
+      "hidden": false
     }
   },
   "generators": {
@@ -162,6 +176,20 @@
       "schema": "./src/generators/remote/schema.json",
       "x-type": "application",
       "description": "Generate a remote react application"
+    },
+
+    "cypress-component-configuration": {
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationGenerator",
+      "schema": "./src/generators/cypress-component-configuration/schema.json",
+      "description": "Setup Cypress component testing for a React project",
+      "hidden": false
+    },
+
+    "component-test": {
+      "factory": "./src/generators/component-test/component-test#componentTestGenerator",
+      "schema": "./src/generators/component-test/schema.json",
+      "description": "Generate a Cypress component test for a React component",
+      "hidden": false
     }
   }
 }

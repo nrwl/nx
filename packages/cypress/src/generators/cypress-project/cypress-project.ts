@@ -6,15 +6,15 @@ import {
   generateFiles,
   getWorkspaceLayout,
   joinPathFragments,
+  logger,
   names,
   offsetFromRoot,
   ProjectConfiguration,
   readProjectConfiguration,
+  stripIndents,
   toJS,
   Tree,
   updateJson,
-  stripIndents,
-  logger,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
@@ -35,13 +35,10 @@ export interface CypressProjectSchema extends Schema {
   projectRoot: string;
 }
 
-function createFiles(
-  tree: Tree,
-  options: CypressProjectSchema,
-  cypressVersion: number
-) {
+function createFiles(tree: Tree, options: CypressProjectSchema) {
   // if not installed or >v10 use v10 folder
   // else use v9 folder
+  const cypressVersion = installedCypressVersion();
   const cypressFiles =
     cypressVersion && cypressVersion < 10 ? 'v9-and-under' : 'v10-and-after';
 
@@ -252,7 +249,7 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
 
 export async function cypressProjectGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
-  createFiles(host, options, installedCypressVersion());
+  createFiles(host, options);
   addProject(host, options);
   const installTask = await addLinter(host, options);
   if (!options.skipFormat) {

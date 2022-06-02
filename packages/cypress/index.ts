@@ -4,4 +4,3 @@ export { conversionGenerator } from './src/generators/convert-tslint-to-eslint/c
 export { cypressComponentProject } from './src/generators/cypress-component-project/cypress-component-project';
 export { convertCypressProject } from './src/generators/convert-to-cypress-10/convert-to-cypress-ten';
 export { CYPRESS_COMPONENT_TEST_TARGET } from './src/utils/project-name';
-export { cypressComponentTestFiles } from './src/generators/cypress-component-test-file/cypress-component-test-file';

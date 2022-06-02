@@ -6,8 +6,5 @@ export const typesNodeVersion = '16.11.7';
  */
 export const cypressVersion =
   'https://cdn.cypress.io/beta/npm/10.0.0/darwin-x64/10.0-release-ae078c74959ddd542ba6ad706613bfec1f07f761/cypress.tgz';
-export const cypressReactVersion = '^5.12.1';
 export const cypressWebpackVersion = '^1.8.0';
 export const webpackHttpPluginVersion = '^5.5.0';
-export const swcLoaderVersion = '0.1.15';
-export const swcCoreVersion = '~1.2.143';

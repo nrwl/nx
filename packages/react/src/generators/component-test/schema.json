@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxReactCypressComponentTest",
+  "title": "Add Cypress component test",
+  "description": "Add a Cypress component test for a component",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add cypress component testing configuration to",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-prompt": "What project should we add Cypress component testing to?"
+    },
+    "componentPath": {
+      "type": "string",
+      "description": "Path to component, from the project source root"
+    }
+  },
+  "required": [
+    "project",
+    "componentPath"
+  ]
+}

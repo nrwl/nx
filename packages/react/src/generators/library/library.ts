@@ -1,4 +1,3 @@
-import { cypressComponentProject } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -102,30 +101,30 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     tasks.push(jestTask);
   }
 
-  if (options.addCypress) {
-    const cypressTask = await cypressComponentProject(host, {
-      project: options.name,
-      componentType: 'react',
-      compiler: options.compiler,
-    });
-    tasks.push(cypressTask);
-
-    updateJson(
-      host,
-      joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
-      (json) => {
-        json.exclude.push(
-          'cypress/**/*',
-          'cypress.config.ts',
-          '**/*.cy.ts',
-          '**/*.cy.js',
-          '**/*.cy.tsx',
-          '**/*.cy.jsx'
-        );
-        return json;
-      }
-    );
-  }
+  // if (options.addCypress) {
+  //   const cypressTask = await cypressComponentProject(host, {
+  //     project: options.name,
+  //     componentType: 'react',
+  //     compiler: options.compiler,
+  //   });
+  //   tasks.push(cypressTask);
+  //
+  //   updateJson(
+  //     host,
+  //     joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
+  //     (json) => {
+  //       json.exclude.push(
+  //         'cypress/**/*',
+  //         'cypress.config.ts',
+  //         '**/*.cy.ts',
+  //         '**/*.cy.js',
+  //         '**/*.cy.tsx',
+  //         '**/*.cy.jsx'
+  //       );
+  //       return json;
+  //     }
+  //   );
+  // }
 
   if (options.component) {
     const componentTask = await componentGenerator(host, {
@@ -138,7 +137,6 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       routing: options.routing,
       js: options.js,
       pascalCaseFiles: options.pascalCaseFiles,
-      componentTest: options.addCypress,
     });
     tasks.push(componentTask);
   }

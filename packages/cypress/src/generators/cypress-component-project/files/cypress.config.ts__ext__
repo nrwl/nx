@@ -1,6 +1,3 @@
 import { defineConfig } from 'cypress';
-import { nxComponentTestingPreset } from '@nrwl/<%= componentType %>/plugins/component-testing';
 
-export default defineConfig({
-  component: nxComponentTestingPreset(__dirname)
-});
+export default defineConfig({});

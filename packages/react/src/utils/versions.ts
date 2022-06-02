@@ -34,3 +34,6 @@ export const eslintPluginReactVersion = '7.30.1';
 export const eslintPluginReactHooksVersion = '4.6.0';
 
 export const babelPluginStyledComponentsVersion = '1.10.7';
+
+// used for cypress component tests
+export const cypressReactVersion = '^5.12.1';

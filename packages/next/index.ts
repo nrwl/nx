@@ -5,3 +5,4 @@ export { applicationGenerator } from './src/generators/application/application';
 export { componentGenerator } from './src/generators/component/component';
 export { libraryGenerator } from './src/generators/library/library';
 export { pageGenerator } from './src/generators/page/page';
+export { cypressComponentConfigurationGenerator } from './src/generators/cypress-component-configuration/cypress-component-configuration';

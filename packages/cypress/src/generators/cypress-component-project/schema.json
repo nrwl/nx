@@ -7,12 +7,8 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nrwl/cypress:cypress-component-project --project=my-cool-lib --componentType=react",
+      "command": "nx g @nrwl/cypress:cypress-component-project --project=my-cool-lib ",
       "description": "Add cypress component testing to an existing project named my-cool-lib"
-    },
-    {
-      "command": "nx g @nrwl/cypress:cypress-component-project --project=my-cool-lib --componentType=react --force",
-      "description": "Add Cypress component testing to an existing project that already has a Cypress component testing enabled. Helpful to reset the configuration to the default."
     }
   ],
   "properties": {
@@ -23,25 +19,7 @@
         "$source": "projectName"
       },
       "x-prompt": "What project should we add Cypress component testing to?"
-    },
-    "componentType": {
-      "type": "string",
-      "enum": ["react", "next"],
-      "description": "Which framework is being used?",
-      "alias": "framework",
-      "x-prompt": "What framework is being used in this project?"
-    },
-    "compiler": {
-      "type": "string",
-      "enum": ["swc", "babel"],
-      "description": "Which compiler is being used in the existing project?",
-      "default": "babel"
-    },
-    "force": {
-      "type": "boolean",
-      "description": "Overwrite an existing cypress component test project. This is helpful if you want to reset to the default configurations.",
-      "default": false
     }
   },
-  "required": ["project", "componentType"]
+  "required": ["project"]
 }
