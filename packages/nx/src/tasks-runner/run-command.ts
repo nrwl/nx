@@ -18,6 +18,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
+import { TargetDependencyConfig } from 'nx/src/config/workspace-json-project-json';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -79,11 +80,15 @@ export async function runCommand(
   { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
   overrides: any,
-  initiatingProject: string | null
+  initiatingProject: string | null,
+  extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>
 ) {
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  const defaultDependencyConfigs = nxJson.targetDependencies;
+  const defaultDependencyConfigs = mergeTargetDependencies(
+    nxJson.targetDependencies,
+    extraTargetDependencies
+  );
   const projectNames = projectsToRun.map((t) => t.name);
   const taskGraph = createTaskGraph(
     projectGraph,
@@ -172,6 +177,29 @@ export async function runCommand(
   if (process.stdin['unref']) (process.stdin as any).unref();
 
   process.exit(anyFailures ? 1 : 0);
+}
+
+function mergeTargetDependencies(
+  a: Record<string, (TargetDependencyConfig | string)[]> | null,
+  b: Record<string, (TargetDependencyConfig | string)[]> | null
+): Record<string, (TargetDependencyConfig | string)[]> {
+  const res = {};
+  if (a) {
+    Object.keys(a).forEach((k) => {
+      res[k] = a[k];
+    });
+  }
+  if (b) {
+    Object.keys(b).forEach((k) => {
+      if (res[k]) {
+        res[k] = [...res[k], b[k]];
+      } else {
+        res[k] = b[k];
+      }
+    });
+
+    return res;
+  }
 }
 
 async function anyFailuresInPromise(

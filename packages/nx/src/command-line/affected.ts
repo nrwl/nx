@@ -17,10 +17,15 @@ import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
 import { readEnvironment } from './read-environment';
+import { TargetDependencyConfig } from 'nx/src/config/workspace-json-project-json';
 
 export async function affected(
   command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
-  parsedArgs: yargs.Arguments & RawNxArgs
+  parsedArgs: yargs.Arguments & RawNxArgs,
+  extraTargetDependencies: Record<
+    string,
+    (TargetDependencyConfig | string)[]
+  > = {}
 ): Promise<void> {
   performance.mark('command-execution-begins');
   const env = readEnvironment();
@@ -116,7 +121,8 @@ export async function affected(
           env,
           nxArgs,
           overrides,
-          null
+          null,
+          extraTargetDependencies
         );
         break;
       }
