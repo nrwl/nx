@@ -131,6 +131,33 @@ describe('Init MFE', () => {
     }
   );
 
+  it('should generate the remote entry module and component correctly', async () => {
+    // ACT
+    await setupMfe(tree, {
+      appName: 'remote1',
+      mfeType: 'remote',
+      prefix: 'my-org',
+    });
+
+    // ASSERT
+    expect(
+      tree.read('apps/remote1/src/app/remote-entry/entry.component.ts', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read('apps/remote1/src/app/remote-entry/entry.module.ts', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
+  it('should generate the remote entry component correctly when prefix is not provided', async () => {
+    // ACT
+    await setupMfe(tree, { appName: 'remote1', mfeType: 'remote' });
+
+    // ASSERT
+    expect(
+      tree.read('apps/remote1/src/app/remote-entry/entry.component.ts', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
   it('should add the remote config to the host when --remotes flag supplied', async () => {
     // ACT
     await setupMfe(tree, {

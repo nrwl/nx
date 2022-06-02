@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
 
-@Component({
+@Component({<% if (prefix) { %>
+  selector: '<%= prefix %>-<%= appName %>-entry',
+  template: `<<%= prefix %>-nx-welcome></<%= prefix %>-nx-welcome>`<% } else { %>
   selector: '<%= appName %>-entry',
-  template: `<<%= prefix %>-nx-welcome></<%= prefix %>-nx-welcome>`
+  template: `nx-welcome></nx-welcome>`<% } %>
 })
 export class RemoteEntryComponent {}
