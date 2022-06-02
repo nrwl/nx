@@ -511,6 +511,21 @@ describe('lib', () => {
         ].prefix
       ).toEqual('custom');
     });
+
+    it('should not install any e2e test runners', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        publishable: true,
+        importPath: '@myorg/lib',
+      });
+
+      // ASSERT
+      let { dependencies, devDependencies } = readJson(tree, 'package.json');
+      expect(dependencies.cypress).toBeUndefined();
+      expect(devDependencies.cypress).toBeUndefined();
+      expect(dependencies.protractor).toBeUndefined();
+      expect(devDependencies.protractor).toBeUndefined();
+    });
   });
 
   describe('nested', () => {
