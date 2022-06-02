@@ -2,8 +2,6 @@ import {
   cypressInitGenerator as _cypressInitGenerator,
   cypressProjectGenerator as _cypressProjectGenerator,
 } from '@nrwl/cypress';
-import { CypressConfigTransformer } from '@nrwl/cypress/src/utils/config/change-config-transformer';
-
 import {
   getE2eProjectName,
   getUnscopedLibName,
@@ -11,7 +9,9 @@ import {
 import {
   convertNxGenerator,
   formatFiles,
+  generateFiles,
   GeneratorCallback,
+  joinPathFragments,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -97,15 +97,10 @@ function addBaseUrlToCypressConfig(tree: Tree, projectName: string) {
     });
   } else if (tree.exists(cypressTs)) {
     // cypress >= v10
-    const result = CypressConfigTransformer.addOrUpdateProperties(
-      tree.read(cypressTs, 'utf-8'),
-      {
-        e2e: {
-          baseUrl: 'http://localhost:4400',
-        },
-      }
-    );
-    tree.write(cypressTs, result);
+    tree.delete(cypressTs);
+    generateFiles(tree, joinPathFragments(__dirname, 'files'), projectRoot, {
+      tpl: '',
+    });
   }
 }
 

@@ -2,12 +2,10 @@
 
 exports[`@nrwl/storybook:cypress-project should generate files 1`] = `
 "import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EStorybookPreset } from '@nrwl/storybook/presets/cypress';
+
 export default defineConfig({
-    e2e: {
-        ... nxE2EPreset(__dirname),
-        baseUrl: 'http://localhost:4400'
-    }
+  e2e: nxE2EStorybookPreset(__dirname)
 });
 "
 `;
