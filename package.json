@@ -61,7 +61,7 @@
     "@nrwl/eslint-plugin-nx": "14.2.0-beta.2",
     "@nrwl/jest": "14.2.0-beta.2",
     "@nrwl/next": "14.2.0-beta.2",
-    "@nrwl/nx-cloud": "14.0.5",
+    "@nrwl/nx-cloud": "14.0.6-beta.1",
     "@nrwl/react": "14.2.0-beta.2",
     "@nrwl/web": "14.2.0-beta.2",
     "@parcel/watcher": "2.0.4",
