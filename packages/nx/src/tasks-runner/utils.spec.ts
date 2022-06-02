@@ -17,6 +17,7 @@ describe('utils', () => {
         name: 'myapp',
         type: 'app',
         data: {
+          root: '/myapp',
           targets: {
             build: { ...build, executor: '' },
           },
@@ -26,6 +27,17 @@ describe('utils', () => {
     }
 
     describe('when `outputs` are defined', () => {
+      it('should return them', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['one', 'two'],
+            })
+          )
+        ).toEqual(['one', 'two']);
+      });
+
       it('should return them', () => {
         expect(
           getOutputsForTargetAndConfiguration(
@@ -49,6 +61,34 @@ describe('utils', () => {
             })
           )
         ).toEqual(['path/one', 'two']);
+      });
+
+      it('should support interpolating root', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['{project.root}/sub', 'two'],
+              options: {
+                myVar: 'one',
+              },
+            })
+          )
+        ).toEqual(['/myapp/sub', 'two']);
+      });
+
+      it('should support relative paths', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['./sub', 'two'],
+              options: {
+                myVar: 'one',
+              },
+            })
+          )
+        ).toEqual(['/myapp/sub', 'two']);
       });
 
       it('should support nested interpolation based on options', () => {

@@ -13,6 +13,8 @@ import { getPackageManagerCommand } from '../utils/package-manager';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
+import { isRelativePath } from 'nx/src/utils/fileutils';
+import { joinPathFragments } from 'nx/src/utils/path';
 
 export function getCommandAsString(task: Task) {
   const execCommand = getPackageManagerCommand().exec;
@@ -88,7 +90,15 @@ export function getOutputsForTargetAndConfiguration(
 
   if (targets?.outputs) {
     return targets.outputs
-      .map((output: string) => interpolateOutputs(output, options))
+      .map((output: string) => {
+        const interpolated = interpolate(output, {
+          options,
+          project: { ...node.data, name: node.name },
+        });
+        return isRelativePath(interpolated)
+          ? joinPathFragments(node.data.root, interpolated)
+          : interpolated;
+      })
       .filter((output) => !!output);
   }
 
@@ -150,17 +160,16 @@ function stringShouldBeWrappedIntoQuotes(str: string) {
   return str.includes(' ') || str.includes('{') || str.includes('"');
 }
 
-function interpolateOutputs(template: string, data: any): string {
+export function interpolate(template: string, data: any): string {
   return template.replace(/{([\s\S]+?)}/g, (match: string) => {
     let value = data;
-    let path = match.slice(1, -1).trim().split('.').slice(1);
+    let path = match.slice(1, -1).trim().split('.');
     for (let idx = 0; idx < path.length; idx++) {
       if (!value[path[idx]]) {
         return;
       }
       value = value[path[idx]];
     }
-
     return value;
   });
 }

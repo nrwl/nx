@@ -50,12 +50,14 @@ function projectsToRun(
   const allProjects = Object.values(projectGraph.nodes);
   const excludedProjects = new Set(nxArgs.exclude ?? []);
   if (nxArgs.all) {
-    return runnableForTarget(allProjects, nxArgs.target).filter(
+    const res = runnableForTarget(allProjects, nxArgs.target).filter(
       (proj) => !excludedProjects.has(proj.name)
     );
+    res.sort((a, b) => a.name.localeCompare(b.name));
+    return res;
   }
   checkForInvalidProjects(nxArgs, allProjects);
-  let selectedProjects = nxArgs.projects.map((name) =>
+  const selectedProjects = nxArgs.projects.map((name) =>
     allProjects.find((project) => project.name === name)
   );
   return runnableForTarget(selectedProjects, nxArgs.target, true).filter(

@@ -1,6 +1,6 @@
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
-import { getDependencyConfigs } from './utils';
+import { getDependencyConfigs, interpolate } from './utils';
 import {
   projectHasTarget,
   projectHasTargetAndConfiguration,
@@ -34,7 +34,6 @@ export class ProcessTasks {
           configuration
         );
         const id = this.getId(projectName, target, resolvedConfiguration);
-        debugger;
         const task = this.createTask(
           id,
           this.projectGraph.nodes[projectName],
@@ -219,23 +218,14 @@ export function createTaskGraph(
 function interpolateOverrides<T = any>(
   args: T,
   projectName: string,
-  projectMetadata: any
+  project: any
 ): T {
   const interpolatedArgs: T = { ...args };
   Object.entries(interpolatedArgs).forEach(([name, value]) => {
-    if (typeof value === 'string') {
-      const regex = /{project\.([^}]+)}/g;
-      interpolatedArgs[name] = value.replace(regex, (_, group: string) => {
-        if (group.includes('.')) {
-          throw new Error('Only top-level properties can be interpolated');
-        }
-
-        if (group === 'name') {
-          return projectName;
-        }
-        return projectMetadata[group];
-      });
-    }
+    interpolatedArgs[name] =
+      typeof value === 'string'
+        ? interpolate(value, { project: { ...project, name: projectName } })
+        : value;
   });
   return interpolatedArgs;
 }
