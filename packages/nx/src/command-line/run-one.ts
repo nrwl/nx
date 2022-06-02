@@ -9,11 +9,18 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { splitTarget } from '../utils/split-target';
 import { output } from '../utils/output';
 import { readEnvironment } from './read-environment';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import {
+  ProjectsConfigurations,
+  TargetDependencyConfig,
+} from '../config/workspace-json-project-json';
 
 export async function runOne(
   cwd: string,
-  args: { [k: string]: any }
+  args: { [k: string]: any },
+  extraTargetDependencies: Record<
+    string,
+    (TargetDependencyConfig | string)[]
+  > = {}
 ): Promise<void> {
   performance.mark('command-execution-begins');
   performance.measure('code-loading', 'init-local', 'command-execution-begins');
@@ -51,7 +58,8 @@ export async function runOne(
     env,
     nxArgs,
     overrides,
-    opts.project
+    opts.project,
+    extraTargetDependencies
   );
 }
 

@@ -9,8 +9,15 @@ import { performance } from 'perf_hooks';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { readEnvironment } from './read-environment';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 
-export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
+export async function runMany(
+  parsedArgs: yargs.Arguments & RawNxArgs,
+  extraTargetDependencies: Record<
+    string,
+    (TargetDependencyConfig | string)[]
+  > = {}
+) {
   performance.mark('command-execution-begins');
   const env = readEnvironment();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
@@ -25,7 +32,15 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
   const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
 
-  await runCommand(projects, projectGraph, env, nxArgs, overrides, null);
+  await runCommand(
+    projects,
+    projectGraph,
+    env,
+    nxArgs,
+    overrides,
+    null,
+    extraTargetDependencies
+  );
 }
 
 function projectsToRun(
