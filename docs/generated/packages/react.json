@@ -625,7 +625,12 @@
           },
           "js": {
             "type": "boolean",
-            "description": "Generate JavaScript files rather than TypeScript files.",
+            "description": "Generate JavaScript story files rather than TypeScript story files.",
+            "default": false
+          },
+          "tsConfiguration": {
+            "type": "boolean",
+            "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
             "default": false
           },
           "linter": {

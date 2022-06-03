@@ -238,7 +238,11 @@ export function normalizeSchema(
   };
 }
 
-export function createRootStorybookDir(tree: Tree, js: boolean) {
+export function createRootStorybookDir(
+  tree: Tree,
+  js: boolean,
+  tsConfiguration: boolean
+) {
   if (tree.exists('.storybook')) {
     logger.warn(
       `.storybook folder already exists at root! Skipping generating files in it.`
@@ -247,7 +251,10 @@ export function createRootStorybookDir(tree: Tree, js: boolean) {
   }
   logger.debug(`adding .storybook folder to the root directory`);
 
-  const templatePath = join(__dirname, './root-files');
+  const templatePath = join(
+    __dirname,
+    tsConfiguration ? './root-files-ts' : './root-files'
+  );
   generateFiles(tree, templatePath, '', {
     rootTsConfigPath: getRootTsConfigPathInTree(tree),
   });
@@ -261,8 +268,28 @@ export function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
   uiFramework: StorybookConfigureSchema['uiFramework'],
-  js: boolean
+  js: boolean,
+  tsConfiguration: boolean
 ) {
+  // Check if root main file is .ts or .js
+  if (tree.exists('.storybook/main.ts')) {
+    logger.info(
+      `The root Storybook configuration is in TypeScript, 
+      so Nx will generate TypeScript Storybook configuration files 
+      in this project's .storybook folder as well.`
+    );
+    tsConfiguration = true;
+  } else {
+    if (tree.exists('.storybook/main.js')) {
+      logger.info(
+        `The root Storybook configuration is in JavaScript, 
+        so Nx will generate JavaScript Storybook configuration files 
+        in this project's .storybook folder as well.`
+      );
+      tsConfiguration = false;
+    }
+  }
+
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   const projectDirectory = projectType === 'application' ? 'app' : 'lib';
 
@@ -276,7 +303,10 @@ export function createProjectStorybookDir(
   }
 
   logger.debug(`adding .storybook folder to ${projectDirectory}`);
-  const templatePath = join(__dirname, './project-files');
+  const templatePath = join(
+    __dirname,
+    tsConfiguration ? './project-files-ts' : './project-files'
+  );
 
   generateFiles(tree, templatePath, root, {
     tmpl: '',
