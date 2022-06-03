@@ -39,8 +39,14 @@ export async function configurationGenerator(
   });
   tasks.push(initTask);
 
-  createRootStorybookDir(tree, schema.js);
-  createProjectStorybookDir(tree, schema.name, schema.uiFramework, schema.js);
+  createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
+  createProjectStorybookDir(
+    tree,
+    schema.name,
+    schema.uiFramework,
+    schema.js,
+    schema.tsConfiguration
+  );
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);

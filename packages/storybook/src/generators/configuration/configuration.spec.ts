@@ -81,6 +81,31 @@ describe('@nrwl/storybook:configuration', () => {
     ).toBeFalsy();
   });
 
+  it('should generate TypeScript Configuration files', async () => {
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+      tsConfiguration: true,
+    });
+
+    // Root
+    expect(tree.exists('.storybook/tsconfig.json')).toBeTruthy();
+    expect(tree.exists('.storybook/main.ts')).toBeTruthy();
+    const rootStorybookTsconfigJson = readJson<TsConfig>(
+      tree,
+      '.storybook/tsconfig.json'
+    );
+    expect(rootStorybookTsconfigJson.extends).toBe('../tsconfig.base.json');
+
+    // Local
+    expect(
+      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
+    ).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/main.ts')).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/preview.ts')).toBeTruthy();
+  });
+
   it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
     tree.rename('tsconfig.base.json', 'tsconfig.json');
 
@@ -349,5 +374,40 @@ describe('@nrwl/storybook:configuration', () => {
     expect(
       readJson(tree, 'libs/test-ui-lib2/.storybook/tsconfig.json').files
     ).toMatchSnapshot();
+  });
+
+  it('should generate TS config for project if root config is TS', async () => {
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+      tsConfiguration: true,
+    });
+
+    const newContents = `module.exports = {
+  stories: [],
+  addons: ['@storybook/addon-essentials', 'new-addon'],
+};
+`;
+    // Setup a new lib
+    await libraryGenerator(tree, {
+      name: 'test-ui-lib-2',
+      standaloneConfig: false,
+    });
+
+    tree.write('.storybook/main.ts', newContents);
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib-2',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+    });
+
+    expect(tree.read('.storybook/main.ts', 'utf-8')).toEqual(newContents);
+    expect(tree.exists('libs/test-ui-lib-2/.storybook/main.ts')).toBeTruthy();
+    expect(
+      tree.exists('libs/test-ui-lib-2/.storybook/preview.ts')
+    ).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib-2/.storybook/main.js')).toBeFalsy();
+    expect(tree.exists('libs/test-ui-lib-2/.storybook/preview.js')).toBeFalsy();
   });
 });
