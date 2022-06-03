@@ -142,6 +142,12 @@
       "version": "14.2.0-beta.0",
       "description": "Update TypeScript compilation target to 'ES2020'.",
       "factory": "./src/migrations/update-14-2-0/update-tsconfig-target"
+    },
+    "update-router-initial-navigation": {
+      "cli": "nx",
+      "version": "14.2.0-beta.6",
+      "description": "Update `initialNavigation: 'enabled'` to `initialNavigation: 'enabledBlocking'`.",
+      "factory": "./src/migrations/update-14-2-0/update-router-initial-navigation"
     }
   },
   "packageJsonUpdates": {
@@ -1119,99 +1125,99 @@
         }
       }
     },
-    "14.2.0-beta.4": {
-      "version": "14.2.0-beta.4",
+    "14.2.0": {
+      "version": "14.2.0-beta.6",
       "packages": {
         "@angular-devkit/architect": {
-          "version": "~0.1400.0-rc.3",
+          "version": "~0.1400.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-angular": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-webpack": {
-          "version": "~0.1400.0-rc.3",
+          "version": "~0.1400.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/core": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/core": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": true
         },
         "@angular/common": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/forms": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/elements": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/compiler": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/compiler-cli": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/localize": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/platform-browser": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/platform-browser-dynamic": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/platform-server": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/router": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/upgrade": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/language-service": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/animations": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/service-worker": {
-          "version": "~14.0.0-rc.3",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/material": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/cdk": {
-          "version": "~14.0.0-rc.2",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "ng-packagr": {
-          "version": "~14.0.0-rc.0",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/eslint-plugin": {
@@ -1256,6 +1262,22 @@
         },
         "jest-preset-angular": {
           "version": "~11.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-jasmine": {
+          "version": "~5.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-core": {
+          "version": "~4.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-spec-reporter": {
+          "version": "~7.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jasmine": {
+          "version": "~4.0.0",
           "alwaysAddToPackageJson": false
         }
       }

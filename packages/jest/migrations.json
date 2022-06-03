@@ -127,6 +127,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.2.0": {
+      "version": "14.0.0-beta.6",
+      "packages": {
+        "ts-node": {
+          "version": "~10.8.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
