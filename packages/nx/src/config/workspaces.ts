@@ -10,6 +10,8 @@ import { readJsonFile } from '../utils/fileutils';
 import { logger } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
 
+import * as npmPreset from '../../presets/npm.json';
+
 import type { NxJsonConfiguration } from './nx-json';
 import {
   ProjectConfiguration,
@@ -192,13 +194,7 @@ export class Workspaces {
         return nxJsonConfig;
       }
     } else {
-      try {
-        return readJsonFile(
-          join(__dirname, '..', '..', 'presets', 'core.json')
-        );
-      } catch (e) {
-        return {};
-      }
+      return npmPreset as NxJsonConfiguration;
     }
   }
 

@@ -3,7 +3,9 @@ import { join } from 'path';
 import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { fileExists } from '../utils/workspace-root';
-import { readJsonFile, writeJsonFile } from '../utils/fileutils';
+import { writeJsonFile } from '../utils/fileutils';
+
+import * as npmJson from '../../presets/npm.json';
 
 export function initHandler() {
   const nxIsInstalled = !!execSync(getPackageManagerCommand().list)
@@ -28,10 +30,7 @@ export function initHandler() {
   }
 
   if (!fileExists('nx.json')) {
-    writeJsonFile(
-      'nx.json',
-      readJsonFile(join(__dirname, '..', '..', 'presets', 'core.json'))
-    );
+    writeJsonFile('nx.json', npmJson);
 
     output.success({
       title: 'nx.json has been created',

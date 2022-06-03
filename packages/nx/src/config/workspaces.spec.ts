@@ -76,6 +76,7 @@ describe('Workspaces', () => {
           }),
           'libs/domain/lib4/project.json': JSON.stringify(domainLibConfig),
           'libs/domain/lib4/package.json': JSON.stringify({}),
+          'nx.json': JSON.stringify({}),
         },
         '/root'
       );
