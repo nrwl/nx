@@ -164,8 +164,6 @@ async function convertToGenerateOptions(
     throwInvalidInvocation(['@nrwl/workspace:library']);
   }
 
-  logger.info(`NX Generating ${collectionName}:${generatorName}`);
-
   const res = {
     collectionName,
     generatorName,
@@ -232,6 +230,10 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
     const { normalizedGeneratorName, schema, implementationFactory } =
       ws.readGenerator(opts.collectionName, opts.generatorName);
 
+    logger.info(
+      `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
+    );
+
     const combinedOpts = await combineOptionsForGenerator(
       opts.generatorOptions,
       opts.collectionName,
@@ -286,6 +288,10 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
     );
     const { normalizedGeneratorName, schema, implementationFactory, aliases } =
       ws.readGenerator(opts.collectionName, opts.generatorName);
+
+    logger.info(
+      `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
+    );
 
     if (opts.help) {
       printGenHelp(opts, schema, normalizedGeneratorName, aliases);
