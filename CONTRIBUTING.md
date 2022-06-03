@@ -180,11 +180,11 @@ We want to fix all the issues as soon as possible, but before fixing a bug we ne
 - `yarn.lock` or `package-lock.json`
 - and most importantly - a use-case that fails
 
-A minimal reproduction allows us to quickly confirm a bug (or point out coding problem) as well as confirm that we are fixing the right problem.
+A minimal reproduction allows us to quickly confirm a bug (or point out a coding problem) as well as confirm that we are fixing the right problem.
 
-We will be insisting on a minimal reproduction in order to save maintainers time and ultimately be able to fix more bugs. Interestingly, from our experience, users often find coding problems themselves while preparing a minimal repository. We understand that sometimes it might be hard to extract essentials bits of code from a larger code-base, but we really need to isolate the problem before we can fix it.
+We will be insisting on a minimal reproduction in order to save maintainers' time and ultimately be able to fix more bugs. Interestingly, from our experience, users often find coding problems themselves while preparing a minimal reproduction repository. We understand that sometimes it might be hard to extract essentials bits of code from a larger codebase, but we really need to isolate the problem before we can fix it.
 
-You can file new issues by filling out our [issue form](https://github.com/nrwl/nx/issues/new).
+You can file new issues by filling out our [issue form](https://github.com/nrwl/nx/issues/new/choose).
 
 ### <a name="submit-pr"></a> Submitting a PR
 
