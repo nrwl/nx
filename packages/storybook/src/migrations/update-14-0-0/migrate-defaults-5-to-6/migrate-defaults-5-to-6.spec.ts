@@ -22,6 +22,7 @@ describe('migrate-defaults-5-to-6 Generator', () => {
           '@nrwl/workspace': '10.4.0',
           '@storybook/addon-knobs': '^5.3.8',
           '@storybook/angular': '^5.3.8',
+          '@storybook/addon-notes': '5.3.21',
         },
       };
     });
@@ -60,16 +61,18 @@ describe('migrate-defaults-5-to-6 Generator', () => {
     });
   });
 
-  it('should update Storybook packages to latest version', async () => {
+  it('should update Storybook packages to latest version and ignore the ones to be ignored', async () => {
     migrateDefaultsGenerator(appTree);
 
     const packageJson = readJson(appTree, 'package.json');
-    // general deps
     expect(packageJson.devDependencies['@storybook/angular']).toEqual(
       storybookVersion
     );
     expect(packageJson.devDependencies['@storybook/addon-knobs']).toEqual(
       storybookVersion
+    );
+    expect(packageJson.devDependencies['@storybook/addon-notes']).toEqual(
+      '5.3.21'
     );
   });
 
