@@ -11,6 +11,8 @@ import { StorybookConfig } from '../executors/models';
 import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { basename, join, sep } from 'path';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
+import ts = require('typescript');
 
 export const Constants = {
   addonDependencies: ['@storybook/addons'],
@@ -294,4 +296,63 @@ export function findStorybookAndBuildTargetsForStorybookAngularExecutors(targets
     }
   });
   return returnObject;
+}
+
+export function isTheFileAStory(tree: Tree, path: string): boolean {
+  const ext = path.slice(path.lastIndexOf('.'));
+  let fileIsStory = false;
+  if (ext === '.tsx' || ext === '.ts') {
+    const file = getTsSourceFile(tree, path);
+    const importArray = findNodes(file, [ts.SyntaxKind.ImportDeclaration]);
+    let nodeContainsStorybookImport = false;
+    let nodeContainsStoryImport = false;
+    importArray.forEach((importNode: ts.ImportClause) => {
+      const importPath = findNodes(importNode, [ts.SyntaxKind.StringLiteral]);
+      importPath.forEach((importPath: ts.StringLiteral) => {
+        if (importPath.getText()?.includes('@storybook/')) {
+          nodeContainsStorybookImport = true;
+        }
+      });
+      const importSpecifiers = findNodes(importNode, [
+        ts.SyntaxKind.ImportSpecifier,
+      ]);
+      importSpecifiers.forEach((importSpecifier: ts.ImportSpecifier) => {
+        if (
+          importSpecifier.getText() === 'Story' ||
+          importSpecifier.getText() === 'storiesOf' ||
+          importSpecifier.getText() === 'ComponentStory'
+        ) {
+          nodeContainsStoryImport = true;
+        }
+      });
+
+      // We place this check within the loop, because we want the
+      // import combination of Story from @storybook/*
+      if (nodeContainsStorybookImport && nodeContainsStoryImport) {
+        fileIsStory = true;
+      }
+    });
+  } else {
+    fileIsStory =
+      (path.endsWith('.js') && path.endsWith('.stories.js')) ||
+      (path.endsWith('.jsx') && path.endsWith('.stories.jsx'));
+  }
+
+  return fileIsStory;
+}
+
+export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
+  const buffer = host.read(path);
+  if (!buffer) {
+    throw new Error(`Could not read TS file (${path}).`);
+  }
+  const content = buffer.toString();
+  const source = ts.createSourceFile(
+    path,
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  return source;
 }

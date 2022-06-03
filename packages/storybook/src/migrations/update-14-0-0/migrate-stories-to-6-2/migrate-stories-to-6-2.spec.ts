@@ -10,14 +10,12 @@ import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { nxVersion } from '../../../utils/versions';
-import {
-  getTsSourceFile,
-  migrateStoriesTo62Generator,
-} from './migrate-stories-to-6-2';
+import { migrateStoriesTo62Generator } from './migrate-stories-to-6-2';
 import {
   overrideCollectionResolutionForTesting,
   wrapAngularDevkitSchematic,
 } from '@nrwl/devkit/ngcli-adapter';
+import { getTsSourceFile } from '@nrwl/storybook/src/utils/utilities';
 
 const componentSchematic = wrapAngularDevkitSchematic(
   '@schematics/angular',
