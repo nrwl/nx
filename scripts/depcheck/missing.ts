@@ -93,8 +93,9 @@ const IGNORE_MATCHES = {
     '@angular-devkit/schematics',
     // cypress component testing plugin utils, installed dynamically
     '@cypress/webpack-dev-server',
+    '@nrwl/react',
     // TODO(caleb): remove when refactoring plugin to use @nrwl/web
-    // webpack plugins for cypress component testing dev server
+    //  webpack plugins for cypress component testing dev server
     'babel-loader',
     'css-loader',
     'less-loader',
