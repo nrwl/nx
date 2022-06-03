@@ -118,7 +118,6 @@ function updateTsConfig(tree: Tree, projectConfig: ProjectConfiguration) {
       if (json.references) {
         json.references.push({ path: './tsconfig.cy.json' });
       } else {
-        // TODO(caleb): is this right?
         const excluded = new Set([
           ...(json.exclude || []),
           'cypress/**/*',

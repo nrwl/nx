@@ -5,22 +5,26 @@
   "title": "Add Cypress component test",
   "description": "Add a Cypress component test for a component",
   "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nrwl/react:component-test --project=my-react-project --component-path=src/lib/fancy-component.tsx",
+      "description": "Create a cypress component test for FancyComponent"
+    }
+  ],
   "properties": {
     "project": {
       "type": "string",
-      "description": "The name of the project to add cypress component testing configuration to",
+      "description": "The name of the project the component is apart of",
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What project should we add Cypress component testing to?"
+      "x-prompt": "What project is this component apart of?"
     },
     "componentPath": {
       "type": "string",
-      "description": "Path to component, from the project source root"
+      "description": "Path to component, from the project source root",
+      "x-prompt": "What is the path to the component?"
     }
   },
-  "required": [
-    "project",
-    "componentPath"
-  ]
+  "required": ["project", "componentPath"]
 }

@@ -91,40 +91,34 @@ on [the official website](https://docs.cypress.io/guides/references/configuratio
 
 ## Component Testing
 
-> Component testing is available on Cypress v10 and above. See
-> our [migration guide for more information](/cypress/cypress-v10-migration).
+> Component testing is available on Cypress v10 and above.
+> See our [migration guide for more information](/cypress/cypress-v10-migration).
 
 Unlike E2E testing, component testing does not create a new project. Instead, Cypress component testing is added
 directly to a project.
 
-Use the `--cy` flag to add Cypress component testing to your project when creating a react or next library.
+Use the frameworks specific `cypress-component-configuration` generator to set up component testing in the project.
 
 ```bash
-nx g @nrwl/react:lib your-react-lib --cy
+nx g @nrwl/react:cypress-component-configuration --project=your-react-lib
 ```
 
 ```bash
-nx g @nrwl/next:lib your-next-lib --cy
+nx g @nrwl/next:cypress-component-configuration --project=your-next-lib
 ```
 
-Add to an existing project with the component test project generator.
+You can optionally pass in `--generate-tests` to create component tests for all components within the library.
 
-```bash
-nx g @nrwl/cypress:cypress-component-project --project=existing-project-name --component-type=<react|next>
-```
+### Testing Projects
 
-### Testing Applications
-
-# TODO(caleb): update this with the component testing target name
-
-Run `nx comp-test your-lib` to execute the component tests with Cypress.
+Run `nx component-test your-lib` to execute the component tests with Cypress.
 
 By default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your
-terminal. Screenshots and videos will be accessible in `dist/libs/your-lib/screenshots` and `dist/libs/your-libvideos`.
+terminal. Screenshots and videos will be accessible in `dist/libs/your-lib/screenshots` and `dist/libs/your-lib/videos`.
 
 ### Watching for Changes (Headed Mode)
 
-With, `nx comp-test your-lib --watch` Cypress will start in headed mode. Where you can see your component being tested.
+With, `nx component-test your-lib --watch` Cypress will start in headed mode. Where you can see your component being tested.
 
 Running Cypress with `--watch` is a great way to enhance dev workflow. You can iterate on the component tests and
 component under test - Cypress will re-run your tests after changes to the component are made.

@@ -74,7 +74,7 @@ export async function migrateCypressProject(tree: Tree) {
         logger.error(stripIndents`
 NX There was an error converting ${projectName}:${target}.
 You can manually update the project by following the migration guide if need be.
-https://nx.dev/packages/cypress/cypress-v10-migration
+https://nx.dev/cypress/v10-migration-guide
   `);
         throw e;
       }

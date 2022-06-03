@@ -1,7 +1,5 @@
 # Migrating to Cypress V10
 
-# TODO(caleb): update this when cypress migration is available
-
 Cypress v10 introduce new features, like component testing, along with some breaking changes.
 
 Before continuing, make sure you have all your changes committed and have a clean working tree.
@@ -9,27 +7,18 @@ Before continuing, make sure you have all your changes committed and have a clea
 You can migrate an E2E project to v10 by running the following command:
 
 ```bash
-nx g @nrwl/cypress:convert-cypress-ten --project=<e2e-project-to-convert>
+nx g @nrwl/cypress:migrate-to-cypress-10
 ```
-
-Optionally, you can convert all e2e projects with the `--all` flag:
-
-```bash
-nx g @nrwl/cypress:convert-cypress-ten --all
-```
-
-We take the best effort to make this migration seamless, but there can be edge cases we didn't anticipate.
-So consulting the [Cypress migration guide](https://docs.cypress.io/guides/guides/cypress-migration-guide.html) is
-highly recommended.
 
 In general, these are the steps taken to migrate your project:
 
 1. create a new `cypress.config.ts` file based on the existing `cypress.json` file
    - the `pluginsFile` option has been replaced for `setupNodeEvents`. We will import the file and add it to
-     the `setupNodeEvents` config option. Double check your plugins are working correctly.
+     the `setupNodeEvents` config option. Double-check your plugins are working correctly.
 2. rename all test files from `spec.ts` to `cy.ts`
-3. rename `support/index.ts` to `support/e2e.ts`
+3. rename `support/index.ts` to `support/e2e.ts` 4. and update any associated imports
 4. rename `integrations` folder to `e2e` folder
 
-The Cypress migration guide [contains more details](https://docs.cypress.io/guides/guides/cypress-migration-guide.html)
-and will contain the most update to date information.
+We take the best effort to make this migration seamless, but there can be edge cases we didn't anticipate. So feel free to [open an issue](https://github.com/nrwl/nx/issues/new?assignees=&labels=type%3A+bug&template=1-bug.md) if you come across any problems.
+
+You can also consult the [official Cypress migration guide](https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-version-10-0) if you get stuck and want to manually migrate your projects.

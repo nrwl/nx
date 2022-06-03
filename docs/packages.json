@@ -78,8 +78,7 @@
         "init",
         "cypress-project",
         "cypress-component-project",
-        "convert-cypress-ten",
-        "cypress-component-test-file"
+        "migrate-to-cypress-10"
       ]
     }
   },
@@ -165,7 +164,14 @@
     "path": "generated/packages/next.json",
     "schemas": {
       "executors": ["build", "server", "export"],
-      "generators": ["init", "application", "page", "component", "library"]
+      "generators": [
+        "init",
+        "application",
+        "page",
+        "component",
+        "library",
+        "cypress-component-configuration"
+      ]
     }
   },
   {
@@ -216,7 +222,9 @@
         "component-cypress-spec",
         "hook",
         "host",
-        "remote"
+        "remote",
+        "cypress-component-configuration",
+        "component-test"
       ]
     }
   },

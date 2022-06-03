@@ -390,12 +390,6 @@
             "type": "boolean",
             "description": "Create component at the source root rather than its own directory.",
             "default": false
-          },
-          "componentTest": {
-            "type": "boolean",
-            "description": "Create a Cypress component test file for the component. https://docs.cypress.io/guides/component-testing/introduction",
-            "default": false,
-            "alias": "cy"
           }
         },
         "required": ["name", "project"],
@@ -561,12 +555,6 @@
           "standaloneConfig": {
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
             "type": "boolean"
-          },
-          "addCypress": {
-            "type": "boolean",
-            "description": "Add a Cypress component tests to library https://cypress.io",
-            "default": false,
-            "alias": "cy"
           }
         },
         "required": ["name"],
@@ -578,6 +566,48 @@
       "implementation": "/packages/next/src/generators/library/library#libraryGenerator.ts",
       "hidden": false,
       "path": "/packages/next/src/generators/library/schema.json"
+    },
+    {
+      "name": "cypress-component-configuration",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxNextCypressComponentTestConfiguration",
+        "title": "Add Cypress component testing",
+        "description": "Add a Cypress component testing configuration to an existing project",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/next:cypress-component-configuration --project=my-next-project",
+            "description": "Add component testing to your next project"
+          },
+          {
+            "command": "nx g @nrwl/next:cypress-component-configuration --project=my-next-project --generate-tests",
+            "description": "Add component testing to your next project and generate component tests for your existing components"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project to add cypress component testing configuration to",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What project should we add Cypress component testing to?"
+          },
+          "generateTests": {
+            "type": "boolean",
+            "description": "Generate default component tests for existing components in the project",
+            "default": false
+          }
+        },
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Setup Cypress component testing for a Next project",
+      "implementation": "/packages/next/src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/next/src/generators/cypress-component-configuration/schema.json"
     }
   ],
   "executors": [

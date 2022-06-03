@@ -5,6 +5,16 @@
   "title": "Add Cypress component testing",
   "description": "Add a Cypress component testing configuration to an existing project",
   "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nrwl/react:cypress-component-configuration --project=my-react-project",
+      "description": "Add component testing to your react project"
+    },
+    {
+      "command": "nx g @nrwl/react:cypress-component-configuration --project=my-react-project --generate-tests",
+      "description": "Add component testing to your react project and generate component tests for your existing components"
+    }
+  ],
   "properties": {
     "project": {
       "type": "string",
@@ -20,7 +30,5 @@
       "default": false
     }
   },
-  "required": [
-    "project"
-  ]
+  "required": ["project"]
 }
