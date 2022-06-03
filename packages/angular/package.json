@@ -37,7 +37,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "~14.0.0-rc.3",
+    "@angular-devkit/schematics": "~14.0.0",
     "@nrwl/cypress": "file:../cypress",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/jest": "file:../jest",
@@ -45,7 +45,7 @@
     "@nrwl/storybook": "file:../storybook",
     "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "4.1.1",
-    "@schematics/angular": "~14.0.0-rc.3",
+    "@schematics/angular": "~14.0.0",
     "chalk": "4.1.0",
     "chokidar": "^3.5.1",
     "http-server": "^14.1.0",
