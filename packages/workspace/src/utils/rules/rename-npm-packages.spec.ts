@@ -93,7 +93,6 @@ describe('renameNpmPackages Rule', () => {
 
     tree = await runSchematic('lib', { name: 'library-1' }, tree);
     tree = await runSchematic('lib', { name: 'library-2' }, tree);
-    // dies right here 🤔
     tree = await runExternalSchematic(
       '@nrwl/angular',
       'application',

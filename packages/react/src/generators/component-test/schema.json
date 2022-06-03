@@ -3,7 +3,7 @@
   "cli": "nx",
   "$id": "NxReactCypressComponentTest",
   "title": "Add Cypress component test",
-  "description": "Add a Cypress component test for a component",
+  "description": "Add a Cypress component test for a component.",
   "type": "object",
   "examples": [
     {

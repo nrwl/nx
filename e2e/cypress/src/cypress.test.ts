@@ -37,22 +37,21 @@ describe('Cypress E2E Test runner', () => {
   it('should execute e2e tests using Cypress', async () => {
     // contains the correct output and works
     const run1 = runCLI(`e2e ${myapp}-e2e --no-watch`);
-    console.log('run 1 output: ', run1);
     expect(run1).toContain('All specs passed!');
 
     await killPorts(4200);
-    // TODO(caleb) why are we changing the config and running 🤔
+    // config should not fail because of a config change
     const originalContents = readFile(`apps/${myapp}-e2e/cypress.config.ts`);
     updateFile(
       `apps/${myapp}-e2e/cypress.config.ts`,
       originalContents.replace(/(fixturesFolder).+/i, '')
     );
 
-    // this output is not the entire output and is missing the bottom part causing it the fail.
-    // it's also a replay from the cache idk if that has anything to do with it.
-    const run2 = runCLI(`e2e ${myapp}-e2e --no-watch`);
-    console.log('run 2 output: ', run2);
     // TODO(caleb): this output is cropped and is failing for missing the bottom part.
+    // this output is not the entire output and is missing the bottom part causing it the fail.
+    // it's also a replay from the cache which shouldn't happen?
+    const run2 = runCLI(`e2e ${myapp}-e2e --no-watch`);
+    // console.log('run 2 output: ', run2);
     // expect(run2).toContain('All specs passed!');
     expect(await killPorts(4200)).toBeTruthy();
   }, 1000000);

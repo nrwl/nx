@@ -525,12 +525,6 @@
           "fileName": {
             "type": "string",
             "description": "Create a component with this file name."
-          },
-          "componentTest": {
-            "type": "boolean",
-            "description": "Create a Cypress component test file for the component. https://docs.cypress.io/guides/component-testing/introduction",
-            "default": false,
-            "alias": "cy"
           }
         },
         "required": ["name", "project"],
@@ -1182,7 +1176,7 @@
         "cli": "nx",
         "$id": "NxReactCypressComponentTestConfiguration",
         "title": "Add Cypress component testing",
-        "description": "Add a Cypress component testing configuration to an existing project",
+        "description": "Add a Cypress component testing configuration to an existing project.",
         "type": "object",
         "examples": [
           {
@@ -1224,7 +1218,7 @@
         "cli": "nx",
         "$id": "NxReactCypressComponentTest",
         "title": "Add Cypress component test",
-        "description": "Add a Cypress component test for a component",
+        "description": "Add a Cypress component test for a component.",
         "type": "object",
         "examples": [
           {

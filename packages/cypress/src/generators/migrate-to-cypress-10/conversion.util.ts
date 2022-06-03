@@ -11,6 +11,7 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import { basename, dirname, extname, relative } from 'path';
 import {
   isCallExpression,
+  isExportDeclaration,
   isImportDeclaration,
   StringLiteral,
 } from 'typescript';
@@ -265,7 +266,9 @@ export function updateImports(
       // if node.parent is an CallExpression require() ||ImportDeclaration
       if (
         node?.parent &&
-        (isCallExpression(node.parent) || isImportDeclaration(node.parent))
+        (isCallExpression(node.parent) ||
+          isImportDeclaration(node.parent) ||
+          isExportDeclaration(node.parent))
       ) {
         return `'${node.text.replace(oldImportPath, newImportPath)}'`;
       }
@@ -331,7 +334,6 @@ export function addConfigToTsConfig(
           ])
         );
         return json;
-        // some people put comments in their tsconfigs!
       },
       { expectComments: true }
     );

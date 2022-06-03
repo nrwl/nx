@@ -167,7 +167,7 @@
         "properties": {},
         "presets": []
       },
-      "description": "Convert to Cypress 10",
+      "description": "Migrate existing Cypress e2e projects to Cypress v10",
       "hidden": true,
       "implementation": "/packages/cypress/src/generators/migrate-to-cypress-10/migrate-to-cypress-ten#migrateCypressProject.ts",
       "aliases": [],

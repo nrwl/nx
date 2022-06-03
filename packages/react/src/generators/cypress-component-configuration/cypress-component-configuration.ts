@@ -116,7 +116,12 @@ function updateTsConfig(tree: Tree, projectConfig: ProjectConfiguration) {
   if (tree.exists(projectBaseTsConfig)) {
     updateJson(tree, projectBaseTsConfig, (json) => {
       if (json.references) {
-        json.references.push({ path: './tsconfig.cy.json' });
+        const hasCyTsConfig = json.references.some(
+          (r) => r.path === './tsconfig.cy.json'
+        );
+        if (!hasCyTsConfig) {
+          json.references.push({ path: './tsconfig.cy.json' });
+        }
       } else {
         const excluded = new Set([
           ...(json.exclude || []),
