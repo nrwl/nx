@@ -42,9 +42,7 @@ export async function changeStorybookTargetsGenerator(tree: Tree) {
           storybookBuildTarget
         );
     } else {
-      logger.warn(
-        `Could not find an Angular Storybook target for ${projectName}.`
-      );
+      logger.warn(`Could not find a Storybook target for ${projectName}.`);
     }
     if (changesMade) {
       updateProjectConfiguration(tree, projectName, projectConfiguration);
