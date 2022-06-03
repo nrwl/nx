@@ -184,7 +184,6 @@ async function runCypress(
   const options: any = {
     project: projectFolderPath,
     configFile: basename(opts.cypressConfig),
-    config: {},
   };
   // If not, will use the `baseUrl` normally from `cypress.json`
   if (baseUrl) {
@@ -203,7 +202,6 @@ async function runCypress(
   }
 
   options.tag = opts.tag;
-  // @ts-ignore
   options.exit = opts.exit;
   options.headed = opts.headed;
 
