@@ -10,7 +10,6 @@ interface Schema {
   style: SupportedStyles;
   directory?: string;
   flat?: boolean;
-  componentTest?: boolean;
 }
 
 function getDirectory(host: Tree, options: Schema) {

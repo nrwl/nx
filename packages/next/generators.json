@@ -27,7 +27,7 @@
       "description": "Create a React component."
     },
     "cypress-component-configuration": {
-      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationGenerator",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Setup Cypress component testing for a Next project"
     }
@@ -64,7 +64,7 @@
       "description": "Create a library."
     },
     "cypress-component-configuration": {
-      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationGenerator",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Setup Cypress component testing for a Next project"
     }

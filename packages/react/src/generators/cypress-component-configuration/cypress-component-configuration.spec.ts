@@ -3,10 +3,10 @@ import { readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { componentGenerator, libraryGenerator } from '@nrwl/react';
-import { cypressComponentConfigurationGenerator } from './cypress-component-configuration';
+import { cypressComponentConfigGenerator } from './cypress-component-configuration';
 
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
-describe(cypressComponentConfigurationGenerator.name, () => {
+describe('React:CypressComponentTestConfiguration', () => {
   let tree: Tree;
   let mockedAssertCypressVersion: jest.Mock<
     ReturnType<typeof assertMinimumCypressVersion>
@@ -27,13 +27,15 @@ describe(cypressComponentConfigurationGenerator.name, () => {
       component: true,
     });
 
-    await cypressComponentConfigurationGenerator(tree, {
+    await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
     });
 
     const config = tree.read('libs/some-lib/cypress.config.ts', 'utf-8');
-
+    expect(config).toContain(
+      "import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing"
+    );
     expect(config).toContain('component: nxComponentTestingPreset(__dirname),');
 
     const cyTsConfig = readJson(tree, 'libs/some-lib/tsconfig.cy.json');
@@ -80,7 +82,7 @@ describe(cypressComponentConfigurationGenerator.name, () => {
       style: 'scss',
     });
 
-    await cypressComponentConfigurationGenerator(tree, {
+    await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: true,
     });
@@ -127,7 +129,7 @@ describe(cypressComponentConfigurationGenerator.name, () => {
       js: true,
     });
 
-    await cypressComponentConfigurationGenerator(tree, {
+    await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: true,
     });

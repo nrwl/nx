@@ -161,12 +161,6 @@
       "enum": ["babel", "swc"],
       "default": "babel",
       "description": "Which compiler to use."
-    },
-    "addCypress": {
-      "type": "boolean",
-      "description": "Add Cypress component testing to project. https://cypress.io",
-      "default": false,
-      "alias": "cy"
     }
   },
   "required": ["name"]

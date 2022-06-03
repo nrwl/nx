@@ -155,12 +155,6 @@
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
       "type": "boolean"
-    },
-    "addCypress": {
-      "type": "boolean",
-      "description": "Add a Cypress component tests to library https://cypress.io",
-      "default": false,
-      "alias": "cy"
     }
   },
   "required": ["name"]

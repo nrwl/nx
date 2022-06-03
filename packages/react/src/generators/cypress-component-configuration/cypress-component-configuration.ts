@@ -23,7 +23,7 @@ const isSpecFile = new RegExp(/(spec|test)\./g);
  * storybook components then use componentCypressGenerator instead.
  *
  */
-export async function cypressComponentConfigurationGenerator(
+export async function cypressComponentConfigGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
@@ -153,4 +153,4 @@ function isComponent(tree: Tree, filePath: string): boolean {
   return !!cmpDeclaration;
 }
 
-export default cypressComponentConfigurationGenerator;
+export default cypressComponentConfigGenerator;

@@ -77,7 +77,7 @@
     },
 
     "cypress-component-configuration": {
-      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationGenerator",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Setup Cypress component testing for a React project",
       "hidden": false
@@ -179,7 +179,7 @@
     },
 
     "cypress-component-configuration": {
-      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationGenerator",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Setup Cypress component testing for a React project",
       "hidden": false

@@ -1,6 +1,6 @@
 import { nxBaseCypressPreset } from '@nrwl/cypress/plugins/cypress-preset';
-import { workspaceLayout } from 'nx/src/project-graph/file-utils';
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceLayout } from 'nx/src/config/configuration';
+import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { join, resolve } from 'path';
 // doesn't like ESM imports
 const findNextWebpackConfig = require('@cypress/react/plugins/next/findNextWebpackConfig');

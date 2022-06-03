@@ -1,5 +1,5 @@
-import { SupportedStyles } from '../../../typings/style';
 import { Linter } from '@nrwl/linter';
+import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
   name: string;
@@ -23,5 +23,4 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
   compiler?: 'babel' | 'swc';
-  addCypress?: boolean;
 }

@@ -1,8 +1,4 @@
 import {
-  cypressComponentProject,
-  cypressComponentTestFiles,
-} from '@nrwl/cypress';
-import {
   convertNxGenerator,
   GeneratorCallback,
   getWorkspaceLayout,
@@ -31,28 +27,8 @@ export async function libraryGenerator(host: Tree, options: Schema) {
   });
   tasks.push(initTask);
 
-  // prevent the React lib generator from making cypress component tests
-  // as we need to make a next version not react
-  const { addCypress, ...restOptions } = options;
-
-  const libTask = await reactLibraryGenerator(host, restOptions);
+  const libTask = await reactLibraryGenerator(host, options);
   tasks.push(libTask);
-
-  if (addCypress) {
-    const cypressTask = await cypressComponentProject(host, {
-      project: name,
-      componentType: 'next',
-      compiler: 'babel',
-    });
-    tasks.push(cypressTask);
-
-    cypressComponentTestFiles(host, {
-      name,
-      componentType: 'next',
-      project: name,
-      directory: options.directory,
-    });
-  }
 
   updateJson(host, joinPathFragments(projectRoot, '.babelrc'), (json) => {
     if (options.style === '@emotion/styled') {

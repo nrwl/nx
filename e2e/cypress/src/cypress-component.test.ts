@@ -1,11 +1,10 @@
 import {
   checkFilesExist,
+  createFile,
   killPorts,
   newProject,
-  readJson,
   runCLI,
   uniq,
-  updateFile,
 } from '@nrwl/e2e/utils';
 
 describe('Cypress Component Test runner', () => {
@@ -18,23 +17,23 @@ describe('Cypress Component Test runner', () => {
       // react app
       runCLI(`generate @nrwl/react:app ${appName}-react --no-interactive`);
       runCLI(
-        `generate @nrwl/cypress:cy-cmp --project=${appName}-react --componentType=react --compiler=babel`
+        `generate @nrwl/react:cypress-component-configuration --project=${appName}-react --generateTests=true`
       );
-      runCLI(
-        `generate @nrwl/cypress:cy-test --project=${appName}-react --name=app --componentType=react --dir=app`
-      );
+      // runCLI(
+      //   `generate @nrwl/:cy-test --project=${appName}-react --name=app --componentType=react --dir=app`
+      // );
       // next app
       runCLI(`generate @nrwl/next:app ${appName}-next --no-interactive`);
       runCLI(
-        `generate @nrwl/cypress:cy-cmp --project=${appName}-next --componentType=next`
+        `generate @nrwl/next:cypress-component-configuration --project=${appName}-next`
       );
-      // by default the cy-test file will be generated assuming next to the test file, but for next apps needs to go into the specs folder
-      runCLI(
-        `generate @nrwl/cypress:cy-test --project=${appName}-next --name=index --componentType=next --dir=specs`
-      );
+      // // by default the cy-test file will be generated assuming next to the test file, but for next apps needs to go into the specs folder
+      // runCLI(
+      //   `generate @nrwl/cypress:cy-test --project=${appName}-next --name=index --componentType=next --dir=specs`
+      // );
       // the file should exist but we need to update the contents for next apps specifics
-      checkFilesExist(`apps/${appName}-next/specs/index.cy.tsx`);
-      updateFile(
+      // checkFilesExist(`apps/${appName}-next/specs/index.cy.tsx`);
+      createFile(
         `apps/${appName}-next/specs/index.cy.tsx`,
         `
 import * as React from 'react'
@@ -50,8 +49,8 @@ describe(Index.name, () => {
 `
       );
 
-      const packageJson = readJson('package.json');
-      expect(packageJson.devDependencies['cypress']).toBeTruthy();
+      // const packageJson = readJson('package.json');
+      // expect(packageJson.devDependencies['cypress']).toBeTruthy();
       checkFilesExist(
         `apps/${appName}-react/cypress.config.ts`,
         `apps/${appName}-react/tsconfig.cy.json`,
@@ -87,9 +86,15 @@ describe(Index.name, () => {
     const libName = uniq('cy-component-test-lib');
     it('should generate w/ cypress component tests', () => {
       runCLI(
-        `generate @nrwl/react:lib ${libName}-react --cy --compiler=swc --no-interactive`
+        `generate @nrwl/react:lib ${libName}-react --compiler=swc --no-interactive`
       );
-      runCLI(`generate @nrwl/next:lib ${libName}-next --cy --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:cypress-component-configuration --project=${libName}-react --generate-tests=true`
+      );
+      runCLI(`generate @nrwl/next:lib ${libName}-next --no-interactive`);
+      runCLI(
+        `generate @nrwl/next:cypress-component-configuration --project=${libName}-next --generate-tests=true`
+      );
 
       checkFilesExist(
         `libs/${libName}-react/cypress.config.ts`,
