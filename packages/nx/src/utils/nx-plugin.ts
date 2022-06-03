@@ -6,7 +6,7 @@ import { Workspaces } from '../config/workspaces';
 
 import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from '../utils/fileutils';
-import { PackageJson } from './package-json';
+import { PackageJson, readModulePackageJson } from './package-json';
 import { registerTsProject } from './register';
 import {
   ProjectConfiguration,
@@ -117,11 +117,12 @@ export function readPluginPackageJson(
   path: string;
   json: PackageJson;
 } {
-  let packageJsonPath: string;
   try {
-    packageJsonPath = require.resolve(`${pluginName}/package.json`, {
-      paths,
-    });
+    const result = readModulePackageJson(pluginName, paths);
+    return {
+      json: result.packageJson,
+      path: result.path,
+    };
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
       const localPluginPath = resolveLocalNxPlugin(pluginName);
@@ -138,7 +139,6 @@ export function readPluginPackageJson(
     }
     throw e;
   }
-  return { json: readJsonFile(packageJsonPath), path: packageJsonPath };
 }
 
 /**

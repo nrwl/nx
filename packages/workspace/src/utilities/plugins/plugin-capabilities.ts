@@ -1,6 +1,7 @@
 import { getPackageManagerCommand, readJsonFile } from '@nrwl/devkit';
 import { workspaceRoot } from '@nrwl/devkit';
 import * as chalk from 'chalk';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { dirname, join } from 'path';
 import { output } from '../output';
 import type { PluginCapabilities } from './models';
@@ -28,10 +29,8 @@ export function getPluginCapabilities(
   pluginName: string
 ): PluginCapabilities | null {
   try {
-    const packageJsonPath = require.resolve(`${pluginName}/package.json`, {
-      paths: [workspaceRoot],
-    });
-    const packageJson = readJsonFile(packageJsonPath);
+    const { path: packageJsonPath, packageJson } =
+      readModulePackageJson(pluginName);
     return {
       name: pluginName,
       generators:

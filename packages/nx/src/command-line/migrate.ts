@@ -21,6 +21,7 @@ import {
   PackageGroup,
   PackageJson,
   readNxMigrateConfig,
+  readModulePackageJson,
 } from '../utils/package-json';
 import {
   createTempNpmDirectory,
@@ -467,10 +468,8 @@ function versions(root: string, from: Record<string, string>) {
       }
 
       if (!cache[packageName]) {
-        const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-          paths: [root],
-        });
-        cache[packageName] = readJsonFile(packageJsonPath).version;
+        const { packageJson } = readModulePackageJson(packageName, [root]);
+        cache[packageName] = packageJson.version;
       }
 
       return cache[packageName];
@@ -687,11 +686,11 @@ function readPackageMigrationConfig(
   packageName: string,
   dir: string
 ): PackageMigrationConfig {
-  const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-    paths: [dir],
-  });
+  const { path: packageJsonPath, packageJson: json } = readModulePackageJson(
+    packageName,
+    [dir]
+  );
 
-  const json = readJsonFile<PackageJson>(packageJsonPath);
   const migrationConfigOrFile = json['nx-migrations'] || json['ng-update'];
 
   if (!migrationConfigOrFile) {

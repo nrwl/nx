@@ -39,6 +39,7 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { readNxJson } from '../generators/utils/project-configuration';
+import { PackageJson, readModulePackageJson } from '../utils/package-json';
 
 export async function scheduleTarget(
   root: string,
@@ -896,20 +897,10 @@ function resolveMigrationsCollection(name: string): string {
   if (extname(name)) {
     collectionPath = require.resolve(name);
   } else {
-    let packageJsonPath;
-    try {
-      packageJsonPath = require.resolve(join(name, 'package.json'), {
-        paths: [process.cwd()],
-      });
-    } catch (e) {
-      // workaround for a bug in node 12
-      packageJsonPath = require.resolve(
-        join(process.cwd(), name, 'package.json')
-      );
-    }
+    const { path: packageJsonPath, packageJson } = readModulePackageJson(name, [
+      process.cwd(),
+    ]);
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const packageJson = require(packageJsonPath);
     let pkgJsonSchematics =
       packageJson['nx-migrations'] ?? packageJson['ng-update'];
     if (!pkgJsonSchematics) {

@@ -166,6 +166,7 @@ describe('migrate', () => {
       `./node_modules/migrate-parent-package/package.json`,
       JSON.stringify({
         version: '1.0.0',
+        name: 'migrate-parent-package',
         'nx-migrations': './migrations.json',
       })
     );
@@ -211,6 +212,7 @@ describe('migrate', () => {
     updateFile(
       `./node_modules/migrate-child-package/package.json`,
       JSON.stringify({
+        name: 'migrate-child-package',
         version: '1.0.0',
       })
     );

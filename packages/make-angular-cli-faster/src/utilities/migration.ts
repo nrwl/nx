@@ -6,6 +6,7 @@ import {
 } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { lt, lte, major, satisfies } from 'semver';
 import { resolvePackageVersion } from './package-manager';
 import { MigrationDefinition } from './types';
@@ -177,10 +178,7 @@ async function promptForVersion(version: string): Promise<boolean> {
 }
 
 function getInstalledAngularVersion(): string {
-  const packageJsonPath = require.resolve('@angular/core/package.json', {
-    paths: [workspaceRoot],
-  });
-  return readJsonFile(packageJsonPath).version;
+  return readModulePackageJson('@angular/core').packageJson.version;
 }
 
 async function normalizeVersion(version: string): Promise<string> {

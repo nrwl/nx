@@ -1,4 +1,8 @@
+import { existsSync } from 'fs';
+import { dirname, join } from 'path';
 import { TargetConfiguration } from '../config/workspace-json-project-json';
+import { readJsonFile } from './fileutils';
+import { workspaceRoot } from './workspace-root';
 
 export type PackageJsonTargetConfiguration = Omit<
   TargetConfiguration,
@@ -36,6 +40,7 @@ export interface PackageJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
+  bin?: Record<string, string>;
   workspaces?:
     | string[]
     | {
@@ -94,5 +99,44 @@ export function buildTargetFromScript(
       ...(nxTargetConfiguration.options || {}),
       script,
     },
+  };
+}
+
+export function readModulePackageJson(
+  moduleSpecifier: string,
+  requirePaths = [workspaceRoot]
+): {
+  packageJson: PackageJson;
+  path: string;
+} {
+  let packageJsonPath: string;
+  try {
+    packageJsonPath = require.resolve(`${moduleSpecifier}/package.json`, {
+      paths: requirePaths,
+    });
+  } catch {
+    const entryPoint = require.resolve(moduleSpecifier, {
+      paths: requirePaths,
+    });
+    let moduleRootPath = dirname(entryPoint);
+    packageJsonPath = join(moduleRootPath, 'package.json');
+
+    while (!existsSync(packageJsonPath)) {
+      moduleRootPath = dirname(moduleRootPath);
+      packageJsonPath = join(moduleRootPath, 'package.json');
+    }
+  }
+
+  const packageJson = readJsonFile(packageJsonPath);
+
+  if (packageJson.name !== moduleSpecifier) {
+    throw new Error(
+      `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
+    );
+  }
+
+  return {
+    packageJson,
+    path: packageJsonPath,
   };
 }
