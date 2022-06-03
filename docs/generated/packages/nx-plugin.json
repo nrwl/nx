@@ -50,7 +50,8 @@
             "description": "The tool to use for running lint checks.",
             "type": "string",
             "enum": ["eslint", "tslint"],
-            "default": "eslint"
+            "default": "eslint",
+            "x-deprecated": "TSLint support is deprecated and will be removed"
           },
           "unitTestRunner": {
             "type": "string",
@@ -72,6 +73,11 @@
             "type": "boolean",
             "default": false,
             "description": "Do not update tsconfig.json for development experience."
+          },
+          "skipLintChecks": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not eslint configuration for plugin json files."
           },
           "standaloneConfig": {
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
@@ -315,6 +321,32 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/nx-plugin/src/generators/executor/schema.json"
+    },
+    {
+      "name": "plugin-lint-checks",
+      "factory": "./src/generators/lint-checks/generator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "PluginLint",
+        "title": "",
+        "type": "object",
+        "description": "Adds linting configuration to validate common json files for nx plugins.",
+        "properties": {
+          "projectName": {
+            "type": "string",
+            "description": "Which project should be the configuration be added to?",
+            "$default": { "$source": "projectName" }
+          }
+        },
+        "required": ["projectName"],
+        "presets": []
+      },
+      "description": "Adds linting configuration to validate common json files for nx plugins.",
+      "implementation": "/packages/nx-plugin/src/generators/lint-checks/generator.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/nx-plugin/src/generators/lint-checks/schema.json"
     }
   ],
   "executors": [

@@ -3,17 +3,14 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
-  GeneratorCallback,
-  getWorkspaceLayout,
   installPackagesTask,
-  joinPathFragments,
-  names,
   normalizePath,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { libraryGenerator } from '@nrwl/js';
+import { Linter } from '@nrwl/linter';
 import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies';
 import { swcNodeVersion } from 'nx/src/utils/versions';
 import * as path from 'path';
@@ -22,49 +19,10 @@ import { nxVersion } from '../../utils/versions';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import { executorGenerator } from '../executor/executor';
 import { generatorGenerator } from '../generator/generator';
+import pluginLintCheckGenerator from '../lint-checks/generator';
+import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 
 import type { Schema } from './schema';
-interface NormalizedSchema extends Schema {
-  name: string;
-  fileName: string;
-  libsDir: string;
-  projectRoot: string;
-  projectDirectory: string;
-  parsedTags: string[];
-  npmScope: string;
-  npmPackageName: string;
-}
-
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const { npmScope, libsDir } = getWorkspaceLayout(host);
-  const name = names(options.name).fileName;
-  const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
-    : name;
-
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
-  const projectRoot = joinPathFragments(libsDir, projectDirectory);
-
-  const parsedTags = options.tags
-    ? options.tags.split(',').map((s) => s.trim())
-    : [];
-
-  const npmPackageName =
-    options.importPath || resolvePackageName(npmScope, name);
-
-  return {
-    ...options,
-    fileName,
-    npmScope,
-    libsDir,
-    name: projectName,
-    projectRoot,
-    projectDirectory,
-    parsedTags,
-    npmPackageName,
-  };
-}
 
 async function addFiles(host: Tree, options: NormalizedSchema) {
   host.delete(normalizePath(`${options.projectRoot}/src/lib`));
@@ -129,7 +87,7 @@ function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
 export async function pluginGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
-  const libraryTask = await libraryGenerator(host, {
+  await libraryGenerator(host, {
     ...schema,
     config: options.standaloneConfig !== false ? 'project' : 'workspace',
     buildable: true,
@@ -154,7 +112,6 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
 
   await addFiles(host, options);
   updateWorkspaceJson(host, options);
-
   await e2eProjectGenerator(host, {
     pluginName: options.name,
     projectDirectory: options.projectDirectory,
@@ -162,18 +119,13 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     npmPackageName: options.npmPackageName,
     standaloneConfig: options.standaloneConfig ?? true,
   });
+  if (options.linter === Linter.EsLint && !options.skipLintChecks) {
+    await pluginLintCheckGenerator(host, { projectName: options.name });
+  }
 
   await formatFiles(host);
 
   return () => installPackagesTask(host);
-}
-
-function resolvePackageName(npmScope: string, name: string): string {
-  if (npmScope && npmScope !== '') {
-    return `@${npmScope}/${name}`;
-  } else {
-    return name;
-  }
 }
 
 export default pluginGenerator;

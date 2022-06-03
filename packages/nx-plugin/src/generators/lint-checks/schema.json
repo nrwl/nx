@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "PluginLint",
+  "title": "",
+  "type": "object",
+  "description": "Adds linting configuration to validate common json files for nx plugins.",
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "description": "Which project should be the configuration be added to?",
+      "$default": {
+        "$source": "projectName"
+      }
+    }
+  },
+  "required": ["projectName"]
+}

@@ -16,7 +16,6 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
-import { findRootJestPreset } from '@nrwl/jest/src/utils/config/find-root-jest-files';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {

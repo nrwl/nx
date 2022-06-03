@@ -16,6 +16,7 @@ const getSchema: (overrides?: Partial<Schema>) => Schema = (
   compiler: 'tsc',
   skipTsConfig: false,
   skipFormat: false,
+  skipLintChecks: false,
   linter: Linter.EsLint,
   unitTestRunner: 'jest',
   ...overrides,
@@ -68,7 +69,12 @@ describe('NxPlugin Plugin Generator', () => {
       executor: '@nrwl/linter:eslint',
       outputs: ['{options.outputFile}'],
       options: {
-        lintFilePatterns: ['libs/my-plugin/**/*.ts'],
+        lintFilePatterns: expect.arrayContaining([
+          'libs/my-plugin/**/*.ts',
+          'libs/my-plugin/generators.json',
+          'libs/my-plugin/package.json',
+          'libs/my-plugin/executors.json',
+        ]),
       },
     });
     expect(project.targets.test).toEqual({

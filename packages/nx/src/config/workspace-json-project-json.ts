@@ -112,7 +112,7 @@ export interface TargetDependencyConfig {
 /**
  * Target's configuration
  */
-export interface TargetConfiguration {
+export interface TargetConfiguration<T = any> {
   /**
    * The executor/builder used to implement the target.
    *
@@ -134,7 +134,7 @@ export interface TargetConfiguration {
   /**
    * Target's options. They are passed in to the executor.
    */
-  options?: any;
+  options?: T;
 
   /**
    * Sets of options

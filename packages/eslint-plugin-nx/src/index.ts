@@ -11,6 +11,10 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from './rules/enforce-module-boundaries';
 
+import nxPluginChecksRule, {
+  RULE_NAME as nxPluginChecksRuleName,
+} from './rules/nx-plugin-checks';
+
 // Resolve any custom rules that might exist in the current workspace
 import { workspaceRules } from './resolve-workspace-rules';
 
@@ -27,6 +31,7 @@ module.exports = {
   },
   rules: {
     [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,
+    [nxPluginChecksRuleName]: nxPluginChecksRule,
     ...workspaceRules,
   },
 };
