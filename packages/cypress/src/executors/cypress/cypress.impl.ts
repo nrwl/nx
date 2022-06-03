@@ -214,7 +214,6 @@ async function runCypress(
   options.parallel = opts.parallel;
   options.ciBuildId = opts.ciBuildId?.toString();
   options.group = opts.group;
-
   options.ignoreTestFiles = opts.ignoreTestFiles;
 
   if (opts.reporter) {

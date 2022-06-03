@@ -107,32 +107,6 @@ describe('component', () => {
     ).toBeFalsy();
   });
 
-  it('should generate files for cypress component tests', async () => {
-    await componentGenerator(appTree, {
-      name: 'hello',
-      style: 'css',
-      componentTest: true,
-      project: projectName,
-    });
-
-    expect(
-      appTree.exists('libs/my-lib/src/lib/hello/hello.cy.tsx')
-    ).toBeTruthy();
-    expect(appTree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
-    expect(
-      appTree.exists('libs/my-lib/src/lib/hello/hello.spec.tsx')
-    ).toBeTruthy();
-    expect(
-      appTree.exists('libs/my-lib/src/lib/hello/hello.module.css')
-    ).toBeTruthy();
-    expect(
-      appTree.read('libs/my-lib/src/lib/hello/hello.tsx').toString()
-    ).toMatch(/import styles from '.\/hello.module.css'/);
-    expect(
-      appTree.read('libs/my-lib/src/lib/hello/hello.tsx').toString()
-    ).toMatch(/<div className={styles\['container']}>/);
-  });
-
   describe('--export', () => {
     it('should add to index.ts barrel', async () => {
       await componentGenerator(appTree, {
@@ -421,17 +395,5 @@ describe('component', () => {
 
       expect(appTree.exists('/libs/my-lib/src/components/hello.tsx'));
     });
-  });
-
-  it('should add component test file', async () => {
-    await componentGenerator(appTree, {
-      name: 'hello',
-      style: 'scss',
-      project: projectName,
-      componentTest: true,
-    });
-    expect(
-      appTree.exists('libs/my-lib/src/lib/hello/hello.cy.tsx')
-    ).toBeTruthy();
   });
 });

@@ -23,14 +23,14 @@ export async function cypressComponentProject(
   tree: Tree,
   options: CypressComponentProjectSchema
 ) {
-  const projectConfig = readProjectConfiguration(tree, options.project);
   const cyVersion = installedCypressVersion();
-
   if (cyVersion && cyVersion < 10) {
     throw new Error(
-      'Cypress version of 10 or higher is required to create a component testing project'
+      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v10-migration-guide'
     );
   }
+
+  const projectConfig = readProjectConfiguration(tree, options.project);
 
   const installDepsTask = updateDeps(tree);
 

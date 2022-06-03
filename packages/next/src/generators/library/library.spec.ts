@@ -133,37 +133,4 @@ describe('next library', () => {
         .jsxImportSource
     ).toEqual('@emotion/react');
   });
-
-  it('should add component testing with addCypress option', async () => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
-    const baseOptions: Schema = {
-      name: '',
-      linter: Linter.EsLint,
-      skipFormat: false,
-      skipTsConfig: false,
-      unitTestRunner: 'jest',
-      style: 'css',
-      component: true,
-      addCypress: true,
-    };
-    const tree = createTreeWithEmptyWorkspace();
-
-    await libraryGenerator(tree, {
-      ...baseOptions,
-      name: 'myLib',
-    });
-
-    expect(tree.exists('libs/my-lib/cypress.config.ts')).toBeTruthy();
-    expect(
-      tree.exists('libs/my-lib/cypress/component/index.html')
-    ).toBeTruthy();
-    expect(
-      tree.exists('libs/my-lib/cypress/fixtures/example.json')
-    ).toBeTruthy();
-    expect(tree.exists('libs/my-lib/cypress/support/commands.ts')).toBeTruthy();
-    expect(
-      tree.exists('libs/my-lib/cypress/support/component.ts')
-    ).toBeTruthy();
-    expect(tree.exists('libs/my-lib/src/lib/my-lib.cy.ts'));
-  });
 });

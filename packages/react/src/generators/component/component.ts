@@ -51,15 +51,6 @@ export async function componentGenerator(host: Tree, schema: Schema) {
     tasks.push(routingTask);
   }
 
-  // if (options.componentTest) {
-  //   cypressComponentTestFiles(host, {
-  //     componentType: 'react',
-  //     directory: options.directory,
-  //     name: options.name,
-  //     project: options.project,
-  //   });
-  // }
-
   await formatFiles(host);
 
   return runTasksInSerial(...tasks);
@@ -80,11 +71,6 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
     let deleteFile = false;
 
     if (options.skipTests && /.*spec.tsx/.test(c.path)) {
-      deleteFile = true;
-    }
-
-    // this file is created via the cypress generator
-    if (!options.componentTest && /.*cy.tsx/.test(c.path)) {
       deleteFile = true;
     }
 
@@ -180,7 +166,6 @@ async function normalizeOptions(
   options.classComponent = options.classComponent ?? false;
   options.routing = options.routing ?? false;
   options.globalCss = options.globalCss ?? false;
-  options.componentTest = options.componentTest ?? false;
 
   return {
     ...options,

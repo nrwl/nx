@@ -732,37 +732,4 @@ describe('lib', () => {
       }).not.toThrow();
     }
   );
-
-  it('should add component testing with addCypress option', async () => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
-    await libraryGenerator(appTree, {
-      ...defaultSchema,
-      name: 'myLib',
-      addCypress: true,
-    });
-    expect(appTree.exists('libs/my-lib/cypress.config.ts')).toBeTruthy();
-    expect(
-      appTree.exists('libs/my-lib/cypress/component/index.html')
-    ).toBeTruthy();
-    expect(
-      appTree.exists('libs/my-lib/cypress/fixtures/example.json')
-    ).toBeTruthy();
-    expect(
-      appTree.exists('libs/my-lib/cypress/support/commands.ts')
-    ).toBeTruthy();
-    expect(
-      appTree.exists('libs/my-lib/cypress/support/component.ts')
-    ).toBeTruthy();
-    expect(appTree.exists('libs/my-lib/src/lib/my-lib.cy.ts'));
-    expect(readJson(appTree, 'libs/my-lib/tsconfig.lib.json').exclude).toEqual(
-      expect.arrayContaining([
-        'cypress/**/*',
-        'cypress.config.ts',
-        '**/*.cy.ts',
-        '**/*.cy.js',
-        '**/*.cy.tsx',
-        '**/*.cy.jsx',
-      ])
-    );
-  });
 });

@@ -6,10 +6,11 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { installedCypressVersion } from '../../utils/cypress-version';
 import { CYPRESS_COMPONENT_TEST_TARGET } from '../../utils/project-name';
-
 import { cypressComponentProject } from './cypress-component-project';
 
+jest.mock('../../utils/cypress-version');
 let projectConfig: ProjectConfiguration = {
   projectType: 'library',
   sourceRoot: 'libs/cool-lib/src',
@@ -31,6 +32,9 @@ let projectConfig: ProjectConfiguration = {
 };
 describe('Cypress Component Project', () => {
   let tree: Tree;
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -90,7 +94,35 @@ describe('Cypress Component Project', () => {
     jest.clearAllMocks();
   });
 
+  it('should add base cypress component testing config', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+    await cypressComponentProject(tree, {
+      project: 'cool-lib',
+      skipFormat: false,
+    });
+    const projectConfig = readProjectConfiguration(tree, 'cool-lib');
+    expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);
+    expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);
+    expect(tree.exists('libs/cool-lib/cypress/component/index.html')).toEqual(
+      true
+    );
+    expect(tree.exists('libs/cool-lib/cypress/fixtures/example.json')).toEqual(
+      true
+    );
+    expect(tree.exists('libs/cool-lib/cypress/support/commands.ts')).toEqual(
+      true
+    );
+    expect(tree.exists('libs/cool-lib/cypress/support/component.ts')).toEqual(
+      true
+    );
+    expect(tree.exists('libs/cool-lib/tsconfig.cy.json')).toEqual(true);
+    expect(
+      projectConfig.targets[CYPRESS_COMPONENT_TEST_TARGET]
+    ).toMatchSnapshot();
+  });
+
   it('should not error when rerunning on an existing project', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
     tree.write('libs/cool-lib/cypress.config.ts', '');
     const newTarget = {
       [CYPRESS_COMPONENT_TEST_TARGET]: {
@@ -121,5 +153,18 @@ describe('Cypress Component Project', () => {
     expect(
       actualProjectConfig.targets[CYPRESS_COMPONENT_TEST_TARGET]
     ).toMatchSnapshot();
+  });
+
+  it('should error when using cypress < v10', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(9);
+    await expect(
+      async () =>
+        await cypressComponentProject(tree, {
+          project: 'cool-lib',
+          skipFormat: true,
+        })
+    ).rejects.toThrowError(
+      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v10-migration-guide'
+    );
   });
 });
