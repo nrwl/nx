@@ -15,6 +15,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { join } from 'path';
+import { isTheFileAStory } from '@nrwl/storybook/src/utils/utilities';
 
 export interface StorybookStoriesSchema {
   project: string;
@@ -82,11 +83,16 @@ export async function createAllStories(
       (path.endsWith('.js') && !path.endsWith('.spec.js')) ||
       (path.endsWith('.jsx') && !path.endsWith('.spec.jsx'))
     ) {
-      const ext = path.slice(path.lastIndexOf('.'));
-      const storyPath = `${path.split(ext)[0]}.stories${ext}`;
-      // only add component if a stories file doesnt already exist
-      if (!tree.exists(storyPath)) {
-        componentPaths.push(path);
+      // Check if file is NOT a story (either ts/tsx or js/jsx)
+      if (!isTheFileAStory(tree, path)) {
+        // Since the file is not a story
+        // Let's see if the .stories.* file exists
+        const ext = path.slice(path.lastIndexOf('.'));
+        const storyPath = `${path.split(ext)[0]}.stories${ext}`;
+
+        if (!tree.exists(storyPath)) {
+          componentPaths.push(path);
+        }
       }
     }
   });
