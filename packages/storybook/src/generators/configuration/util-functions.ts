@@ -128,8 +128,8 @@ export function configureTsProjectConfig(
   }
 
   if (
-    !tsConfigContent.exclude.includes('**/*.stories.ts') &&
-    !tsConfigContent.exclude.includes('**/*.stories.js')
+    !tsConfigContent?.exclude?.includes('**/*.stories.ts') &&
+    !tsConfigContent?.exclude?.includes('**/*.stories.js')
   ) {
     tsConfigContent.exclude = [
       ...(tsConfigContent.exclude || []),
