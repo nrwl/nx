@@ -260,7 +260,7 @@ describe('Build Node apps', () => {
   beforeEach(() => newProject());
 
   it('should generate a package.json with the `--generatePackageJson` flag', async () => {
-    newProject();
+    const scope = newProject();
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
@@ -284,6 +284,29 @@ describe('Build Node apps', () => {
         version: '0.0.1',
       })
     );
+
+    const nodeapp = uniq('nodeapp');
+    runCLI(`generate @nrwl/node:app ${nodeapp}`);
+
+    const jslib = uniq('jslib');
+    runCLI(`generate @nrwl/js:lib ${jslib} --buildable`);
+
+    updateFile(
+      `apps/${nodeapp}/src/main.ts`,
+      `
+import { ${jslib} } from '@${scope}/${jslib}';   
+console.log('Hello World!');
+${jslib}();
+`
+    );
+
+    await runCLIAsync(`build ${nodeapp} --generate-package-json`);
+    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const nodeAppPackageJson = JSON.parse(
+      readFile(`dist/apps/${nodeapp}/package.json`)
+    );
+
+    expect(nodeAppPackageJson['dependencies']['tslib']).toBeTruthy();
   }, 300000);
 
   describe('NestJS', () => {
