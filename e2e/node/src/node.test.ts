@@ -232,44 +232,46 @@ describe('Node Applications', () => {
     }
   }, 120000);
 
-  it('should be able to run es module applications', async () => {
+  it('should be able to run ESM applications', async () => {
     const esmapp = uniq('esmapp');
 
-    runCLI(`generate @nrwl/node:app ${esmapp} --linter=eslint`);
+    runCLI(
+      `generate @nrwl/node:app ${esmapp} --linter=eslint --framework=none --bundler=webpack`
+    );
     updateJson(`apps/${esmapp}/tsconfig.app.json`, (config) => {
       config.module = 'esnext';
       config.target = 'es2020';
       return config;
     });
     updateProjectConfig(esmapp, (config) => {
-      config.targets.build.executor = '@nrwl/node:webpack';
       config.targets.build.options.outputFileName = 'main.mjs';
-      config.targets.build.options.webpackConfig = `apps/${esmapp}/webpack.config.js`;
-      config.targets.serve.executor = '@nrwl/node:node';
-      config.targets.serve.options.watch = false;
+      config.targets.build.options.assets = [];
       return config;
     });
     updateFile(
       `apps/${esmapp}/webpack.config.js`,
-      `module.exports = (config, context) => ({
-            ...config,
-            experiments: {
-                ...config.experiments,
-                outputModule: true,
-                topLevelAwait: true,
-            },
-            output: {
-                path: config.output.path,
-                chunkFormat: 'module',
-                library: {
-                    type: 'module',
-                },
-            },
-        })`
+      `
+        const { composePlugins, withNx } = require('@nx/webpack');
+        module.exports = composePlugins(withNx(), (config) => {
+          config.experiments = {
+            ...config.experiments,
+            outputModule: true,
+            topLevelAwait: true,
+          };
+          config.output = {
+            path: config.output.path,
+            chunkFormat: 'module',
+            library: { type: 'module' }
+          }
+          return config;
+        });
+      `
     );
     await runCLIAsync(`build ${esmapp}`);
-    const { stdout } = await runCLIAsync(`serve ${esmapp}`);
-    expect(stdout).toBe('Hello World!');
+    const p = await runCommandUntil(`serve ${esmapp}`, (output) => {
+      return output.includes('Hello World');
+    });
+    p.kill();
   }, 300000);
 });
 
