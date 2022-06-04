@@ -103,7 +103,7 @@ export function getHelperDependenciesFromProjectGraph(
     !projectGraph.dependencies[sourceProject] ||
     !projectGraph.dependencies[sourceProject].length
   )
-    return;
+    return [];
 
   const sourceDependencies = projectGraph.dependencies[sourceProject];
   const internalDependencies = sourceDependencies.reduce(
