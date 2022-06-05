@@ -81,7 +81,7 @@ Here's an overview of some more Lerna commands and the corresponding Nx version:
 
 Lerna has dependency management already built-in using `lerna bootstrap`. Running that will install all npm dependencies for all packages and also symlink together all Lerna packages that have dependencies of each other.
 
-Nx does not handle dependency management. As a result, if you already have a Lerna workspace, you can safely keep using `lerna bootstrap`. Alternatively you can use some of the backed-in solutions that now come with npm/yarn/pnpm workspaces.
+Nx does not handle dependency management. As a result, if you already have a Lerna workspace, you can safely keep using `lerna bootstrap`. Alternatively you can use some of the baked-in solutions that now come with npm/yarn/pnpm workspaces.
 
 ## Version Management & Publishing
 
