@@ -287,7 +287,9 @@ export function updateBuildableProjectPackageJsonDependencies(
   configurationName: string,
   node: ProjectGraphProjectNode,
   dependencies: DependentBuildableProjectNode[],
-  typeOfDependency: 'dependencies' | 'peerDependencies' = 'dependencies'
+  typeOfUndeclaredDependency:
+    | 'dependencies'
+    | 'peerDependencies' = 'dependencies'
 ) {
   const outputs = getOutputsForTargetAndConfiguration(
     {
@@ -321,13 +323,12 @@ export function updateBuildableProjectPackageJsonDependencies(
       ? entry.node.data.packageName
       : entry.name;
 
-    if (
-      !hasDependency(packageJson, 'dependencies', packageName) &&
-      !hasDependency(packageJson, 'devDependencies', packageName) &&
-      !hasDependency(packageJson, 'peerDependencies', packageName)
-    ) {
+    const declaredAs = whichDependency(packageJson, packageName);
+
+    // update if not declared or if dep's version should be inherited
+    if (!declaredAs || packageJson[declaredAs][packageName] === '[inherit]') {
+      const typeOfDependency = declaredAs || typeOfUndeclaredDependency;
       try {
-        let depVersion;
         if (entry.node.type === 'lib') {
           const outputs = getOutputsForTargetAndConfiguration(
             {
@@ -342,23 +343,16 @@ export function updateBuildableProjectPackageJsonDependencies(
           );
 
           const depPackageJsonPath = join(root, outputs[0], 'package.json');
-          depVersion = readJsonFile(depPackageJsonPath).version;
-
+          const depVersion = readJsonFile(depPackageJsonPath).version;
           packageJson[typeOfDependency][packageName] = depVersion;
         } else if (isNpmProject(entry.node)) {
           // If an npm dep is part of the workspace devDependencies, do not include it the library
-          if (
-            !!workspacePackageJson.devDependencies?.[
-              entry.node.data.packageName
-            ]
-          ) {
+          if (!!workspacePackageJson.devDependencies?.[packageName]) {
             return;
           }
 
-          depVersion = entry.node.data.version;
-
-          packageJson[typeOfDependency][entry.node.data.packageName] =
-            depVersion;
+          const depVersion = entry.node.data.version;
+          packageJson[typeOfDependency][packageName] = depVersion;
         }
         updatePackageJson = true;
       } catch (e) {
@@ -370,6 +364,15 @@ export function updateBuildableProjectPackageJsonDependencies(
   if (updatePackageJson) {
     writeJsonFile(packageJsonPath, packageJson);
   }
+}
+
+// verify whether the package.json already specifies the dep in any host
+function whichDependency(outputJson, packageName: string) {
+  return ['dependencies', 'devDependencies', 'peerDependencies'].find(
+    (depConfigName) => {
+      return hasDependency(outputJson, depConfigName, packageName);
+    }
+  );
 }
 
 // verify whether the package.json already specifies the dep
