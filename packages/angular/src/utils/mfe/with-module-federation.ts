@@ -226,12 +226,10 @@ function applyDefaultEagerPackages(
 ) {
   const DEFAULT_PACKAGES_TO_LOAD_EAGERLY = ['@angular/localize/init'];
   for (const pkg of DEFAULT_PACKAGES_TO_LOAD_EAGERLY) {
-    if (sharedConfig[pkg]) {
-      return {
-        ...sharedConfig,
-        eager: true,
-      };
-    }
+    sharedConfig[pkg] = {
+      ...(sharedConfig[pkg] ?? {}),
+      eager: true,
+    };
   }
 }
 
