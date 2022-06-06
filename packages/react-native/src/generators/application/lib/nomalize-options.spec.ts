@@ -8,6 +8,7 @@ describe('Normalize Options', () => {
       name: 'my-app',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
+      install: false,
     };
     const options = normalizeOptions(schema);
     expect(options).toEqual({
@@ -24,6 +25,7 @@ describe('Normalize Options', () => {
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 
@@ -31,6 +33,7 @@ describe('Normalize Options', () => {
     const schema: Schema = {
       name: 'myApp',
       e2eTestRunner: 'none',
+      install: false,
     };
     const options = normalizeOptions(schema);
     expect(options).toEqual({
@@ -46,6 +49,7 @@ describe('Normalize Options', () => {
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 
@@ -54,6 +58,7 @@ describe('Normalize Options', () => {
       name: 'my-app',
       directory: 'directory',
       e2eTestRunner: 'none',
+      install: false,
     };
     const options = normalizeOptions(schema);
     expect(options).toEqual({
@@ -70,6 +75,7 @@ describe('Normalize Options', () => {
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 
@@ -77,6 +83,7 @@ describe('Normalize Options', () => {
     const schema: Schema = {
       name: 'directory/my-app',
       e2eTestRunner: 'none',
+      install: false,
     };
     const options = normalizeOptions(schema);
     expect(options).toEqual({
@@ -92,6 +99,7 @@ describe('Normalize Options', () => {
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 
@@ -100,6 +108,7 @@ describe('Normalize Options', () => {
       name: 'my-app',
       displayName: 'My App',
       e2eTestRunner: 'none',
+      install: false,
     };
     const options = normalizeOptions(schema);
     expect(options).toEqual({
@@ -115,6 +124,7 @@ describe('Normalize Options', () => {
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 });

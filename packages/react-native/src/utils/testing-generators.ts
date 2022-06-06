@@ -10,6 +10,7 @@ export async function createApp(tree: Tree, appName: string): Promise<void> {
     unitTestRunner: 'none',
     name: appName,
     e2eTestRunner: 'none',
+    install: false,
   });
 }
 

@@ -17,12 +17,11 @@ export function getResolveRequest(extensions: string[]) {
   return function (
     _context: any,
     realModuleName: string,
-    platform: string | null,
-    moduleName: string
+    platform: string | null
   ) {
     const DEBUG = process.env.NX_REACT_NATIVE_DEBUG === 'true';
 
-    if (DEBUG) console.log(chalk.cyan(`[Nx] Resolving: ${moduleName}`));
+    if (DEBUG) console.log(chalk.cyan(`[Nx] Resolving: ${realModuleName}`));
 
     const { resolveRequest, ...context } = _context;
 
@@ -32,15 +31,14 @@ export function getResolveRequest(extensions: string[]) {
         context,
         extensions,
         realModuleName,
-        moduleName,
         platform,
         DEBUG
       ) ||
-      pnpmResolver(extensions, context, realModuleName, moduleName, DEBUG);
+      pnpmResolver(extensions, context, realModuleName, DEBUG);
     if (resolvedPath) {
       return resolvedPath;
     }
-    throw new Error(`Cannot resolve ${chalk.bold(moduleName)}`);
+    throw new Error(`Cannot resolve ${chalk.bold(realModuleName)}`);
   };
 }
 
@@ -75,7 +73,6 @@ function pnpmResolver(
   extensions: string[],
   context: any,
   realModuleName: string,
-  moduleName: string,
   debug: boolean
 ) {
   try {
@@ -93,7 +90,7 @@ function pnpmResolver(
     if (debug)
       console.log(
         chalk.cyan(
-          `[Nx] Unable to resolve with default PNPM resolver: ${moduleName}`
+          `[Nx] Unable to resolve with default PNPM resolver: ${realModuleName}`
         )
       );
   }
@@ -107,7 +104,6 @@ function tsconfigPathsResolver(
   context: any,
   extensions: string[],
   realModuleName: string,
-  moduleName: string,
   platform: string,
   debug: boolean
 ) {
@@ -124,7 +120,7 @@ function tsconfigPathsResolver(
   } else {
     if (debug) {
       console.log(
-        chalk.red(`[Nx] Failed to resolve ${chalk.bold(moduleName)}`)
+        chalk.red(`[Nx] Failed to resolve ${chalk.bold(realModuleName)}`)
       );
       console.log(
         chalk.cyan(

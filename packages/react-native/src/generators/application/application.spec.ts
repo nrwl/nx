@@ -22,6 +22,7 @@ describe('app', () => {
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
+      install: false,
     });
     const workspaceJson = readWorkspaceConfiguration(appTree);
     const projects = getProjects(appTree);
@@ -37,6 +38,7 @@ describe('app', () => {
       tags: 'one,two',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
+      install: false,
     });
 
     const { projects } = readJson(appTree, '/workspace.json');
@@ -53,6 +55,7 @@ describe('app', () => {
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
+      install: false,
     });
     expect(appTree.exists('apps/my-app/src/app/App.tsx')).toBeTruthy();
     expect(appTree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
@@ -71,6 +74,7 @@ describe('app', () => {
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
+      install: false,
     });
 
     const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');

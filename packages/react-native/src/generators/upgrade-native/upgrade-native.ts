@@ -39,7 +39,7 @@ export async function reactNativeUpgradeNativeGenerator(
 
   createNativeFiles(host, schema, root);
 
-  const podInstallTask = runPodInstall(iosProjectRoot);
+  const podInstallTask = runPodInstall(iosProjectRoot, schema.install);
   const chmodTaskGradlew = runChmod(join(androidProjectRoot, 'gradlew'), 0o775);
   const chmodTaskGradlewBat = runChmod(
     join(androidProjectRoot, 'gradlew.bat'),
