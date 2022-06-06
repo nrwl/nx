@@ -43,8 +43,8 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
   });
 
-  it('should be able to create an empty workspace with core capabilities', () => {
-    const wsName = uniq('core');
+  it('should be able to create an empty workspace with npm capabilities', () => {
+    const wsName = uniq('npm');
     runCreateWorkspace(wsName, {
       preset: 'npm',
       packageManager,
@@ -283,7 +283,7 @@ describe('create-nx-workspace', () => {
   it('should return error when ci workflow is selected but no cloud is set up', () => {
     const wsName = uniq('github');
     const create = runCreateWorkspace(wsName, {
-      preset: 'core',
+      preset: 'npm',
       packageManager,
       ci: 'circleci',
     });

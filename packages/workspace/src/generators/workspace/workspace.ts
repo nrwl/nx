@@ -33,12 +33,8 @@ function decorateAngularClI(host: Tree, options: Schema) {
 
 function setPresetProperty(tree: Tree, options: Schema) {
   updateJson(tree, join(options.directory, 'nx.json'), (json) => {
-    if (
-      options.preset === Preset.Core ||
-      options.preset === Preset.TS ||
-      options.preset === Preset.NPM
-    ) {
-      addPropertyWithStableKeys(json, 'extends', 'nx/presets/core.json');
+    if (options.preset === Preset.Core || options.preset === Preset.NPM) {
+      addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
       delete json.implicitDependencies;
       delete json.targetDependencies;
       delete json.workspaceLayout;

@@ -37,8 +37,8 @@ type Arguments = {
 enum Preset {
   Apps = 'apps',
   Empty = 'empty', // same as apps, deprecated
-  Core = 'core',
-  NPM = 'npm', // same as core, deprecated
+  Core = 'core', // same as npm, deprecated
+  NPM = 'npm',
   TS = 'ts',
   WebComponents = 'web-components',
   Angular = 'angular',
@@ -58,9 +58,9 @@ const presetOptions: { name: Preset; message: string }[] = [
       'apps              [an empty workspace with no plugins with a layout that works best for building apps]',
   },
   {
-    name: Preset.Core,
+    name: Preset.NPM,
     message:
-      'core              [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]',
+      'npm               [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]',
   },
   {
     name: Preset.TS,

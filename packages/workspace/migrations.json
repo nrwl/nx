@@ -65,6 +65,12 @@
       "description": "Migrates from @nrwl/workspace:run-script to nx:run-script",
       "cli": "nx",
       "implementation": "./src/migrations/update-14-0-0/change-npm-script-executor"
+    },
+    "14-2-0-enable-source-analysis": {
+      "version": "14.2.0",
+      "description": "Explicitly enable sourceAnalysis for all workspaces extending from npm.json or core.json (this was default behavior prior to 14.2)",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-14-2-0/enable-source-analysis"
     }
   },
   "packageJsonUpdates": {
