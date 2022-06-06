@@ -1,8 +1,16 @@
+import { Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { Schema } from '../schema';
 import { normalizeOptions } from './normalize-options';
 
 describe('Normalize Options', () => {
+  let appTree: Tree;
+
+  beforeEach(() => {
+    appTree = createTreeWithEmptyWorkspace();
+  });
+
   it('should normalize options with name in kebab case', () => {
     const schema: Schema = {
       name: 'my-app',
@@ -10,7 +18,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       install: false,
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -35,7 +43,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       install: false,
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -60,7 +68,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       install: false,
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/directory/my-app/android',
       appProjectRoot: 'apps/directory/my-app',
@@ -85,7 +93,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       install: false,
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/directory/my-app/android',
       appProjectRoot: 'apps/directory/my-app',
@@ -110,7 +118,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       install: false,
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
