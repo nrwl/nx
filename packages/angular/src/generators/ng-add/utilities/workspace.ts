@@ -116,9 +116,8 @@ export function decorateAngularCli(tree: Tree): void {
 export function updateWorkspaceConfigDefaults(tree: Tree): void {
   const workspaceConfig = readWorkspaceConfiguration(tree);
   delete (workspaceConfig as any).newProjectRoot;
-  workspaceConfig.cli = workspaceConfig.cli ?? {};
-  if (!workspaceConfig.cli.defaultCollection) {
-    workspaceConfig.cli.defaultCollection = '@nrwl/angular';
+  if (workspaceConfig.cli) {
+    delete (workspaceConfig as any).defaultCollection;
   }
   updateWorkspaceConfiguration(tree, workspaceConfig);
 }

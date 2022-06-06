@@ -25,8 +25,8 @@ describe('workspace-generator', () => {
   beforeEach(() => {
     custom = uniq('custom');
     failing = uniq('custom-failing');
-    runCLI(`g workspace-generator ${custom} --no-interactive`);
-    runCLI(`g workspace-generator ${failing} --no-interactive`);
+    runCLI(`g @nrwl/workspace:workspace-generator ${custom} --no-interactive`);
+    runCLI(`g @nrwl/workspace:workspace-generator ${failing} --no-interactive`);
 
     checkFilesExist(
       `tools/generators/${custom}/index.ts`,
@@ -144,7 +144,9 @@ describe('workspace-generator', () => {
 
   it('should support angular devkit schematics', () => {
     const angularDevkitSchematic = uniq('angular-devkit-schematic');
-    runCLI(`g workspace-generator ${angularDevkitSchematic} --no-interactive`);
+    runCLI(
+      `g @nrwl/workspace:workspace-generator ${angularDevkitSchematic} --no-interactive`
+    );
 
     const json = readJson(
       `tools/generators/${angularDevkitSchematic}/schema.json`

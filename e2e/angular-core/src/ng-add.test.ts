@@ -143,7 +143,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         defaultBase: 'main',
       },
       cli: {
-        defaultCollection: '@nrwl/angular',
         packageManager: packageManager,
       },
       implicitDependencies: {

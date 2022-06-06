@@ -5,7 +5,6 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { jestInitGenerator } from '@nrwl/jest';
 import { cypressInitGenerator } from '@nrwl/cypress';
@@ -36,8 +35,6 @@ function updateDependencies(host: Tree) {
 
 export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];
-
-  setDefaultCollection(host, '@nrwl/next');
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
     const jestTask = jestInitGenerator(host, schema);

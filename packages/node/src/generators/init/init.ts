@@ -7,7 +7,6 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import {
   nxVersion,
   tslibVersion,
@@ -36,8 +35,6 @@ function normalizeOptions(schema: Schema) {
 
 export async function initGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(schema);
-
-  setDefaultCollection(tree, '@nrwl/node');
 
   let jestInstall: GeneratorCallback;
   if (options.unitTestRunner === 'jest') {
