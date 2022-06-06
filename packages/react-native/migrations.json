@@ -41,6 +41,12 @@
       "cli": "nx",
       "description": "changes 'main' tag to project's className",
       "factory": "./src/migrations/update-14-0-2/change-main-to-class-name-14-0-2"
+    },
+    "rename-blockList-metro-config-14-2-1": {
+      "version": "14.2.1-beta.0",
+      "cli": "nx",
+      "description": "Rename blacklistRE to blockList in metro.config.js",
+      "factory": "./src/migrations/update-14-2-1/rename-blockList-metro-config"
     }
   },
   "packageJsonUpdates": {
