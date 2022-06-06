@@ -45,6 +45,10 @@ export default async function run(
     ? resolve(systemRoot, options.eslintConfig)
     : undefined;
 
+  options.cacheLocation = options.cacheLocation
+    ? join(options.cacheLocation, projectName)
+    : undefined;
+
   let lintResults: ESLint.LintResult[] = [];
 
   try {

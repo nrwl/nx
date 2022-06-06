@@ -139,7 +139,7 @@ describe('Linter Builder', () => {
       eslintConfig: './.eslintrc.json',
       fix: true,
       cache: true,
-      cacheLocation: 'cacheLocation1',
+      cacheLocation: 'cacheLocation1/proj',
       cacheStrategy: 'content',
       format: 'stylish',
       force: false,
