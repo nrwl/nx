@@ -192,7 +192,7 @@ function createNxJsonFile(repoRoot: string, projects: ProjectDesc[]) {
     );
 
   const res = {
-    extends: 'nx/presets/core.json',
+    extends: 'nx/presets/npm.json',
     tasksRunnerOptions: {
       default: {
         runner: 'nx/tasks-runners/default',
