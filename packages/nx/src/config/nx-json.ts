@@ -86,6 +86,10 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   cli?: {
     packageManager?: PackageManager;
+
+    /**
+     * @deprecated - defaultCollection is deprecated and will be removed
+     */
     defaultCollection?: string;
     defaultProjectName?: string;
   };

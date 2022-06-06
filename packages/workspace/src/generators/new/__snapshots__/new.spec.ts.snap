@@ -75,9 +75,6 @@ Object {
   "affected": Object {
     "defaultBase": "main",
   },
-  "cli": Object {
-    "defaultCollection": "@nrwl/workspace",
-  },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
     "package.json": Object {

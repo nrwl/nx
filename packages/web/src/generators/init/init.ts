@@ -10,7 +10,6 @@ import {
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { nxVersion, typesNodeVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -44,7 +43,6 @@ function initRootBabelConfig(tree: Tree) {
 export async function webInitGenerator(tree: Tree, schema: Schema) {
   let tasks: GeneratorCallback[] = [];
 
-  setDefaultCollection(tree, '@nrwl/web');
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
     const jestTask = jestInitGenerator(tree, {});
     tasks.push(jestTask);

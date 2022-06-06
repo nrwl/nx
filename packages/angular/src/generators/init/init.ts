@@ -10,7 +10,6 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   angularVersion,
@@ -82,7 +81,6 @@ function setDefaults(host: Tree, options: Schema) {
   };
 
   updateWorkspaceConfiguration(host, workspace);
-  setDefaultCollection(host, '@nrwl/angular');
 }
 
 function addPostInstall(host: Tree) {

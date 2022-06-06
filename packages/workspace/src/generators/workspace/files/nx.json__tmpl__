@@ -4,10 +4,11 @@
   "affected": {
     "defaultBase": "<%= defaultBase %>"
   },
+<% if (packageManager && cli === 'angular') { -%>
   "cli": {
-    "defaultCollection": "@nrwl/workspace"<% if (packageManager && cli === 'angular') { %>,
-    "packageManager": "<%=packageManager%>" <% } %>
+    "packageManager": "<%=packageManager%>" 
   },
+<% } -%>
   "implicitDependencies": {
     "package.json": {
       "dependencies": "*",

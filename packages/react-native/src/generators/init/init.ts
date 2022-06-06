@@ -1,4 +1,3 @@
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
@@ -40,7 +39,6 @@ import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { initRootBabelConfig } from './lib/init-root-babel-config';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
-  setDefaultCollection(host, '@nrwl/react-native');
   addGitIgnoreEntry(host);
   initRootBabelConfig(host);
 

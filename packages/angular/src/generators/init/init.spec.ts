@@ -295,42 +295,6 @@ describe('init', () => {
     });
   });
 
-  describe('defaultCollection', () => {
-    it('should be set if none was set before', async () => {
-      // ACT
-      await init(host, {
-        unitTestRunner: UnitTestRunner.Jest,
-        e2eTestRunner: E2eTestRunner.Cypress,
-        linter: Linter.EsLint,
-        skipFormat: false,
-      });
-
-      const { cli } = readJson<NxJsonConfiguration>(host, 'nx.json');
-
-      // ASSERT
-      expect(cli.defaultCollection).toEqual('@nrwl/angular');
-    });
-
-    it.each(['css', 'scss', 'less'])(
-      'should set "%s" as default style extension for components',
-      async (style: Styles) => {
-        // ACT
-        await init(host, {
-          unitTestRunner: UnitTestRunner.Jest,
-          e2eTestRunner: E2eTestRunner.Cypress,
-          linter: Linter.EsLint,
-          skipFormat: false,
-          style,
-        });
-
-        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
-
-        // ASSERT
-        expect(generators['@nrwl/angular:component']['style']).toBe(style);
-      }
-    );
-  });
-
   it('should add .angular to gitignore', async () => {
     host.write('.gitignore', '');
 

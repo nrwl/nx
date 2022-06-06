@@ -71,7 +71,6 @@ export { deleteFile } from './src/utils/rules/deleteFile';
 export * from './src/utils/rules/ng-add';
 export { updateKarmaConf } from './src/utils/rules/update-karma-conf';
 export { visitNotIgnoredFiles } from './src/utils/rules/visit-not-ignored-files';
-export { setDefaultCollection } from './src/utils/rules/workspace';
 export { renamePackageImports } from './src/utils/rules/rename-package-imports';
 export { renameNpmPackages } from './src/utils/rules/rename-npm-packages';
 import * as strings from './src/utils/strings';
