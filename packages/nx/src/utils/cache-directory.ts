@@ -3,20 +3,19 @@ import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from './fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
 
-function readCacheDirectoryProperty(root: string): string | undefined {
+function readTaskRunnerOption(
+  root: string,
+  option: string
+): string | undefined {
   try {
     const nxJson = readJsonFile<NxJsonConfiguration>(join(root, 'nx.json'));
-    return nxJson.tasksRunnerOptions.default.options.cacheDirectory;
+    return nxJson.tasksRunnerOptions.default.options[option];
   } catch {
     return undefined;
   }
 }
 
 function cacheDirectory(root: string, cacheDirectory: string) {
-  const cacheDirFromEnv = process.env.NX_CACHE_DIRECTORY;
-  if (cacheDirFromEnv) {
-    cacheDirectory = cacheDirFromEnv;
-  }
   if (cacheDirectory) {
     if (isAbsolute(cacheDirectory)) {
       return cacheDirectory;
@@ -33,5 +32,16 @@ function cacheDirectory(root: string, cacheDirectory: string) {
  */
 export const cacheDir = cacheDirectory(
   workspaceRoot,
-  readCacheDirectoryProperty(workspaceRoot)
+  process.env.NX_CACHE_DIRECTORY ||
+    readTaskRunnerOption(workspaceRoot, 'cacheDirectory')
+);
+
+/**
+ * Path to the directory where Nx stores its nxdeps.json file
+ */
+export const depsDir = cacheDirectory(
+  workspaceRoot,
+  process.env.NX_DEPS_DIRECTORY ||
+    readTaskRunnerOption(workspaceRoot, 'depsDirectory') ||
+    readTaskRunnerOption(workspaceRoot, 'cacheDirectory')
 );

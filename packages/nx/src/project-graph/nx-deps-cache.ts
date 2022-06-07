@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { cacheDir } from '../utils/cache-directory';
+import { depsDir } from '../utils/cache-directory';
 import { directoryExists, fileExists } from '../utils/fileutils';
 import {
   FileData,
@@ -29,12 +29,12 @@ export interface ProjectGraphCache {
   dependencies: Record<string, ProjectGraphDependency[]>;
 }
 
-export const nxDepsPath = join(cacheDir, 'nxdeps.json');
+export const nxDepsPath = join(depsDir, 'nxdeps.json');
 
 export function ensureCacheDirectory(): void {
   try {
-    if (!existsSync(cacheDir)) {
-      ensureDirSync(cacheDir);
+    if (!existsSync(depsDir)) {
+      ensureDirSync(depsDir);
     }
   } catch (e) {
     /*
@@ -47,8 +47,8 @@ export function ensureCacheDirectory(): void {
      * In this case, we're creating the directory. If the operation failed, we ensure that the directory
      * exists before continuing (or raise an exception).
      */
-    if (!directoryExists(cacheDir)) {
-      throw new Error(`Failed to create directory: ${cacheDir}`);
+    if (!directoryExists(depsDir)) {
+      throw new Error(`Failed to create directory: ${depsDir}`);
     }
   }
 }
