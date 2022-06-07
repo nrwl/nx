@@ -1,6 +1,5 @@
 // This must come before the Hasher import
 import { DependencyType } from '../config/project-graph';
-import { defaultFileHasher } from '../hasher/file-hasher';
 
 jest.doMock('../utils/workspace-root', () => {
   return {
@@ -57,10 +56,6 @@ describe('Hasher', () => {
   }
 
   beforeAll(() => {
-    jest
-      .spyOn(defaultFileHasher, 'hashFile')
-      .mockImplementation((p) => hashes[p]);
-
     fs.readFileSync = (file) => {
       if (file === 'workspace.json') {
         return JSON.stringify(workSpaceJson);

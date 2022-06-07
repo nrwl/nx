@@ -2,7 +2,7 @@ import { resolveNewFormatWithInlineProjects } from '../config/workspaces';
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import * as minimatch from 'minimatch';
-import { join, sep as pathSep } from 'path';
+import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { getRootTsConfigFileName } from '../utils/typescript';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -13,7 +13,6 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import { defaultFileHasher } from './file-hasher';
 
 /**
  * A data structure returned by the default hasher.
@@ -249,10 +248,20 @@ export class Hasher {
       ];
 
       const fileHashes = [
-        ...fileNames.map((file) => ({
-          file,
-          hash: defaultFileHasher.hashFile(file),
-        })),
+        ...fileNames
+          .map((maybeRelativePath) => {
+            // Normalize the path to always be absolute and starting with workspaceRoot so we can check it exists
+            if (!maybeRelativePath.startsWith(workspaceRoot)) {
+              return join(workspaceRoot, maybeRelativePath);
+            }
+            return maybeRelativePath;
+          })
+          .filter((file) => existsSync(file))
+          .map((file) => {
+            // we should use default file hasher here
+            const hash = this.hashing.hashFile(file);
+            return { file, hash };
+          }),
         ...this.hashNxJson(),
       ];
 
