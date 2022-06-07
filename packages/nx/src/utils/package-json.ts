@@ -110,10 +110,13 @@ export function readModulePackageJson(
   path: string;
 } {
   let packageJsonPath: string;
+  let packageJson: PackageJson;
+
   try {
     packageJsonPath = require.resolve(`${moduleSpecifier}/package.json`, {
       paths: requirePaths,
     });
+    packageJson = readJsonFile(packageJsonPath);
   } catch {
     const entryPoint = require.resolve(moduleSpecifier, {
       paths: requirePaths,
@@ -125,14 +128,13 @@ export function readModulePackageJson(
       moduleRootPath = dirname(moduleRootPath);
       packageJsonPath = join(moduleRootPath, 'package.json');
     }
-  }
 
-  const packageJson = readJsonFile(packageJsonPath);
-
-  if (packageJson.name !== moduleSpecifier) {
-    throw new Error(
-      `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
-    );
+    packageJson = readJsonFile(packageJsonPath);
+    if (packageJson.name && packageJson.name !== moduleSpecifier) {
+      throw new Error(
+        `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
+      );
+    }
   }
 
   return {
