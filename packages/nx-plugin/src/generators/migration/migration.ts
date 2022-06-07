@@ -14,7 +14,7 @@ import type { Schema } from './schema';
 import * as path from 'path';
 import { addMigrationJsonChecks } from '../lint-checks/generator';
 import type { Linter as EsLint } from 'eslint';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectSourceRoot: string;
@@ -54,7 +54,16 @@ function addFiles(host: Tree, options: NormalizedSchema) {
 }
 
 function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
-  const migrationsPath = path.join(options.projectRoot, 'migrations.json');
+  const configuredMigrationPath = readNxMigrateConfig(
+    readJson<PackageJson>(
+      host,
+      joinPathFragments(options.projectRoot, 'package.json')
+    )
+  ).migrations;
+  const migrationsPath = joinPathFragments(
+    options.projectRoot,
+    configuredMigrationPath ?? 'migrations.json'
+  );
   const migrations = host.exists(migrationsPath)
     ? readJson(host, migrationsPath)
     : {};

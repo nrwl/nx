@@ -6,10 +6,14 @@ import {
   updateJson,
   getWorkspaceLayout,
   joinPathFragments,
+  writeJson,
+  readJson,
+  ExecutorsJson,
 } from '@nrwl/devkit';
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 import * as path from 'path';
+import { PackageJson } from 'nx/src/utils/package-json';
 
 interface NormalizedSchema extends Schema {
   fileName: string;
@@ -66,15 +70,42 @@ function addHasherFiles(host: Tree, options: NormalizedSchema) {
   }
 }
 
+function createExecutorsJson(host: Tree, options: NormalizedSchema) {
+  updateJson<PackageJson>(
+    host,
+    joinPathFragments(options.projectRoot, 'package.json'),
+    (json) => {
+      json.executors ??= 'executors.json';
+      return json;
+    }
+  );
+  writeJson<ExecutorsJson>(
+    host,
+    joinPathFragments(options.projectRoot, 'executors.json'),
+    {
+      executors: {},
+    }
+  );
+}
+
 function updateExecutorJson(host: Tree, options: NormalizedSchema) {
-  let executorPath: string;
-  if (host.exists(path.join(options.projectRoot, 'executors.json'))) {
-    executorPath = path.join(options.projectRoot, 'executors.json');
-  } else {
-    executorPath = path.join(options.projectRoot, 'builders.json');
+  const packageJson = readJson<PackageJson>(
+    host,
+    joinPathFragments(options.projectRoot, 'package.json')
+  );
+  const packageJsonExecutors = packageJson.executors ?? packageJson.builders;
+  let executorsPath = packageJsonExecutors
+    ? joinPathFragments(options.projectRoot, packageJsonExecutors)
+    : null;
+
+  if (!executorsPath) {
+    executorsPath = joinPathFragments(options.projectRoot, 'executors.json');
+  }
+  if (!host.exists(executorsPath)) {
+    createExecutorsJson(host, options);
   }
 
-  return updateJson(host, executorPath, (json) => {
+  return updateJson(host, executorsPath, (json) => {
     let executors = json.executors ?? json.builders;
     executors ||= {};
     executors[options.name] = {

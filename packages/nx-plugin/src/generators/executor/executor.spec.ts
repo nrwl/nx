@@ -1,7 +1,8 @@
-import { Tree, readJson } from '@nrwl/devkit';
+import { Tree, readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { executorGenerator } from './executor';
 import { pluginGenerator } from '../plugin/plugin';
+import { libraryGenerator } from '@nrwl/js';
 
 describe('NxPlugin Executor Generator', () => {
   let tree: Tree;
@@ -88,6 +89,25 @@ describe('NxPlugin Executor Generator', () => {
 
     expect(executorsJson.executors['my-executor'].description).toEqual(
       'my-executor custom description'
+    );
+  });
+
+  it('should create executors.json if it is not present', async () => {
+    await libraryGenerator(tree, {
+      name: 'test-js-lib',
+      buildable: true,
+    });
+    const libConfig = readProjectConfiguration(tree, 'test-js-lib');
+    await executorGenerator(tree, {
+      project: 'test-js-lib',
+      includeHasher: false,
+      name: 'test-executor',
+      unitTestRunner: 'jest',
+    });
+
+    expect(() => tree.exists(`${libConfig.root}/executors.json`)).not.toThrow();
+    expect(readJson(tree, `${libConfig.root}/package.json`).executors).toBe(
+      'executors.json'
     );
   });
 
