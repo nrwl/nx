@@ -326,8 +326,6 @@ describe('Angular Projects', () => {
       if (process && process.pid) {
         await promisifiedTreeKill(process.pid, 'SIGKILL');
       }
-      await killPorts(port1);
-      await killPorts(port2);
     } catch (err) {
       expect(err).toBeFalsy();
     }
