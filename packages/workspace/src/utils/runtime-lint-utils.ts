@@ -10,7 +10,7 @@ import {
   joinPathFragments,
   FileData,
 } from '@nrwl/devkit';
-import { join } from 'path';
+import { join, relative } from 'path';
 import { workspaceRoot } from './app-root';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
@@ -207,7 +207,7 @@ export function onlyLoadChildren(
 }
 
 export function getSourceFilePath(sourceFileName: string, projectPath: string) {
-  return normalizePath(sourceFileName).substring(projectPath.length + 1);
+  return normalizePath(relative(projectPath, sourceFileName));
 }
 
 export function hasBannedImport(
