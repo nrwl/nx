@@ -2,15 +2,11 @@ import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as yargs from 'yargs';
-import { generateDaemonHelpOutput } from '../daemon/client/generate-help-output';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
 import { workspaceRoot } from '../utils/workspace-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
-
-const isGenerateDocsProcess = process.env.NX_GENERATE_DOCS_PROCESS === 'true';
-const daemonHelpOutput = generateDaemonHelpOutput(isGenerateDocsProcess);
 
 // Ensure that the output takes up the available width of the terminal
 yargs.wrap(yargs.terminalWidth());
@@ -28,16 +24,7 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  */
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
-  .usage(
-    `
-${chalk.bold('Smart, Fast and Extensible Build System')}` +
-      (daemonHelpOutput
-        ? `
-
-${daemonHelpOutput}
-  `.trimRight()
-        : '')
-  )
+  .usage(chalk.bold('Smart, Fast and Extensible Build System'))
   .command({
     command: 'generate <generator> [_..]',
     describe:
@@ -204,7 +191,8 @@ ${daemonHelpOutput}
   })
   .command({
     command: 'daemon',
-    describe: 'Prints information about the Nx Daemon process',
+    describe:
+      'Prints information about the Nx Daemon process or starts a daemon process',
     builder: (yargs) =>
       linkToNxDevAndExamples(withDaemonStartOptions(yargs), 'daemon'),
     handler: async (args) => (await import('./daemon')).daemonHandler(args),
@@ -341,7 +329,12 @@ function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withDaemonStartOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('background', { type: 'boolean', default: true });
+  return yargs
+    .option('background', { type: 'boolean', default: true })
+    .option('start', {
+      type: 'boolean',
+      default: false,
+    });
 }
 
 function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
