@@ -222,13 +222,14 @@ describe('Angular Projects', () => {
     expect(buildOutput).toContain('Successfully ran target build');
   });
 
-  it('MFE - should serve the host and remote apps successfully, even with a shared library between them', async () => {
+  it('MFE - should serve the host and remote apps successfully, even with a shared library with a secondary entry point between them', async () => {
     // ACT + ASSERT
     const port1 = 4200;
     const port2 = 4206;
     const hostApp = uniq('app');
     const remoteApp1 = uniq('remote');
-    const sharedLib = uniq('sharedLib');
+    const sharedLib = uniq('shared-lib');
+    const secondaryEntry = uniq('secondary');
 
     // generate host app
     runCLI(
@@ -241,7 +242,12 @@ describe('Angular Projects', () => {
     );
 
     // generate a shared lib
-    runCLI(`generate @nrwl/angular:library ${sharedLib} --no-interactive`);
+    runCLI(
+      `generate @nrwl/angular:library ${sharedLib} --buildable --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
+    );
 
     // update the files to use shared library
     updateFile(
@@ -251,6 +257,9 @@ describe('Angular Projects', () => {
       import { ${
         names(sharedLib).className
       }Module } from '@${proj}/${sharedLib}';
+      import { ${
+        names(secondaryEntry).className
+      }Module } from '@${proj}/${secondaryEntry}';
       import { AppComponent } from './app.component';
       import { NxWelcomeComponent } from './nx-welcome.component';
       import { RouterModule } from '@angular/router';
@@ -285,6 +294,9 @@ describe('Angular Projects', () => {
     import { CommonModule } from '@angular/common';
     import { RouterModule } from '@angular/router';
     import { ${names(sharedLib).className}Module } from '@${proj}/${sharedLib}';
+      import { ${
+        names(secondaryEntry).className
+      }Module } from '@${proj}/${secondaryEntry}';
     import { RemoteEntryComponent } from './entry.component';
     
     @NgModule({

@@ -22,6 +22,65 @@ export interface SharedLibraryConfig {
   eager?: boolean;
 }
 
+function traverseUpFileTreeAndPerformActionUntil(
+  dirPath: string,
+  endPath: string,
+  action: (dirname: string) => boolean
+) {
+  while (dirPath !== endPath) {
+    if (action(dirPath)) {
+      break;
+    }
+    dirPath = dirname(dirPath);
+  }
+}
+
+function collectWorkspaceLibrarySecondaryEntryPoints(
+  library: string,
+  libraryPath: string,
+  tsconfigPathAliases: Record<string, string[]>
+) {
+  let libraryRootDirPath = libraryPath;
+  traverseUpFileTreeAndPerformActionUntil(
+    dirname(libraryRootDirPath),
+    workspaceRoot,
+    (currentDirPath) => {
+      if (existsSync(join(currentDirPath, 'package.json'))) {
+        libraryRootDirPath = currentDirPath;
+        return true;
+      }
+    }
+  );
+
+  const aliasesUnderLibrary = Object.keys(tsconfigPathAliases).filter(
+    (libName) => libName.startsWith(library) && libName !== library
+  );
+  const secondaryEntryPoints = [];
+  for (const alias of aliasesUnderLibrary) {
+    const pathToLib = dirname(
+      join(workspaceRoot, tsconfigPathAliases[alias][0])
+    );
+    let isSecondaryEntrypoint = false;
+    let searchDir = pathToLib;
+    traverseUpFileTreeAndPerformActionUntil(
+      searchDir,
+      libraryRootDirPath,
+      (currentDirPath) => {
+        if (existsSync(join(currentDirPath, 'ng-package.json'))) {
+          isSecondaryEntrypoint = true;
+          return true;
+        }
+      }
+    );
+
+    if (isSecondaryEntrypoint) {
+      secondaryEntryPoints.push({ name: alias, path: pathToLib });
+    }
+  }
+
+  return secondaryEntryPoints;
+}
+
 export function shareWorkspaceLibraries(
   libraries: string[],
   tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath()
@@ -48,6 +107,17 @@ export function shareWorkspaceLibraries(
   for (const [key, paths] of Object.entries(tsconfigPathAliases)) {
     if (libraries && libraries.includes(key)) {
       const pathToLib = normalize(join(workspaceRoot, paths[0]));
+      collectWorkspaceLibrarySecondaryEntryPoints(
+        key,
+        pathToLib,
+        tsconfigPathAliases
+      ).forEach(({ name, path }) =>
+        pathMappings.push({
+          name,
+          path,
+        })
+      );
+
       pathMappings.push({
         name: key,
         path: pathToLib,
