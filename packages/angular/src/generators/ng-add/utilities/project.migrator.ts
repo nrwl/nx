@@ -1,5 +1,6 @@
 import {
   joinPathFragments,
+  normalizePath,
   offsetFromRoot,
   ProjectConfiguration,
   readWorkspaceConfiguration,
@@ -289,7 +290,7 @@ export abstract class ProjectMigrator<TargetType extends string = any> {
 
   protected moveDir(from: string, to: string): void {
     visitNotIgnoredFiles(this.tree, from, (file) => {
-      this.moveFile(file, file.replace(from, to), true);
+      this.moveFile(file, normalizePath(file).replace(from, to), true);
     });
   }
 
