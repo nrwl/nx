@@ -307,6 +307,10 @@
                 "type": "string",
                 "description": "Path to storybook preview.js file."
               },
+              "babelrcPath": {
+                "type": "string",
+                "description": "Path to storybook .babelrc file."
+              },
               "srcRoot": {
                 "type": "string",
                 "description": "Project source path."

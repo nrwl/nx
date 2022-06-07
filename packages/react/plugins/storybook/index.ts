@@ -147,31 +147,36 @@ export const webpack = async (
       '11.0.0'
     )
   ) {
-    const babelrc = readJsonFile(
-      joinPathFragments(options.configDir, '../', '.babelrc')
-    );
-    if (babelrc?.plugins?.includes('@emotion/babel-plugin')) {
-      resolvedEmotionAliases = {
-        resolve: {
-          alias: {
-            '@emotion/core': joinPathFragments(
-              workspaceRoot,
-              'node_modules',
-              '@emotion/react'
-            ),
-            '@emotion/styled': joinPathFragments(
-              workspaceRoot,
-              'node_modules',
-              '@emotion/styled'
-            ),
-            'emotion-theming': joinPathFragments(
-              workspaceRoot,
-              'node_modules',
-              '@emotion/react'
-            ),
+    try {
+      const babelrc = readJsonFile(
+        options.babelrcPath ||
+          joinPathFragments(options.configDir, '../', '.babelrc')
+      );
+      if (babelrc?.plugins?.includes('@emotion/babel-plugin')) {
+        resolvedEmotionAliases = {
+          resolve: {
+            alias: {
+              '@emotion/core': joinPathFragments(
+                workspaceRoot,
+                'node_modules',
+                '@emotion/react'
+              ),
+              '@emotion/styled': joinPathFragments(
+                workspaceRoot,
+                'node_modules',
+                '@emotion/styled'
+              ),
+              'emotion-theming': joinPathFragments(
+                workspaceRoot,
+                'node_modules',
+                '@emotion/react'
+              ),
+            },
           },
-        },
-      };
+        };
+      }
+    } catch (error) {
+      // silently ignore if the .babelrc doesn't exist
     }
   }
   return mergeWebpack.merge(
