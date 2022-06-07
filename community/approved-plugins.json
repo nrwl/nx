@@ -258,5 +258,10 @@
     "name": "nx-uvu",
     "description": "An nx executor for the uvu test library",
     "url": "https://github.com/jmcdo29/nx-uvu"
+  },
+  {
+    "name": "@ndrsg/nx-http",
+    "description": "Plugin with executors, which can perform http-stuff (e.g. requests, webhooks, file up/downloads, ...)",
+    "url": "https://github.com/ndrsg/nx-ext/tree/main/packages/nx-http"
   }
 ]
