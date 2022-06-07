@@ -217,7 +217,6 @@ export class Hasher {
     if (this.implicitDependencies) return this.implicitDependencies;
 
     performance.mark('hasher:implicit deps hash:start');
-    await defaultFileHasher.ensureInitialized();
 
     this.implicitDependencies = new Promise((res) => {
       const implicitDeps = Object.keys(this.nxJson.implicitDependencies ?? {});
