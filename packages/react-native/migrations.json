@@ -599,6 +599,43 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.2.1": {
+      "version": "14.2.1-beta.0",
+      "packages": {
+        "metro": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-babel-register": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-config": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "4.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.18.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.67.8",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

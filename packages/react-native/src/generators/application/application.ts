@@ -46,7 +46,10 @@ export async function reactNativeApplicationGenerator(
   );
   const detoxTask = await addDetox(host, options);
   const symlinkTask = runSymlink(host.root, options.appProjectRoot);
-  const podInstallTask = runPodInstall(join(host.root, options.iosProjectRoot));
+  const podInstallTask = runPodInstall(
+    join(host.root, options.iosProjectRoot),
+    options.install
+  );
   const chmodTaskGradlew = runChmod(
     join(host.root, options.androidProjectRoot, 'gradlew'),
     0o775

@@ -129,6 +129,7 @@ export async function createTestAppLib(
     unitTestRunner: 'none',
     name: libName,
     js: plainJS,
+    install: false,
   });
 
   await componentGenerator(appTree, {

@@ -11,6 +11,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
 import {
+  reactTestRendererVersion,
   reactVersion,
   typesReactVersion,
 } from '@nrwl/react/src/utils/versions';
@@ -28,7 +29,6 @@ import {
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeVersion,
-  reactTestRendererVersion,
   testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesNodeVersion,

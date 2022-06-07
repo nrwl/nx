@@ -130,6 +130,11 @@
             "type": "string",
             "enum": ["detox", "none"],
             "default": "detox"
+          },
+          "install": {
+            "type": "boolean",
+            "description": "Runs `pod install` for native modules before building iOS app.",
+            "default": true
           }
         },
         "required": [],
@@ -474,6 +479,11 @@
             "type": "string",
             "enum": ["detox", "none"],
             "default": "detox"
+          },
+          "install": {
+            "type": "boolean",
+            "description": "Runs `pod install` for native modules before building iOS app.",
+            "default": true
           }
         },
         "required": ["name"],

@@ -20,7 +20,9 @@ describe('react native', () => {
     const libName = uniq('lib');
     const componentName = uniq('component');
 
-    runCLI(`generate @nrwl/react-native:application ${appName}`);
+    runCLI(
+      `generate @nrwl/react-native:application ${appName} --install=false`
+    );
     runCLI(`generate @nrwl/react-native:library ${libName}`);
     runCLI(
       `generate @nrwl/react-native:component ${componentName} --project=${libName} --export`
@@ -59,7 +61,9 @@ describe('react native', () => {
 
   it('should create storybook with application', async () => {
     const appName = uniq('my-app');
-    runCLI(`generate @nrwl/react-native:application ${appName}`);
+    runCLI(
+      `generate @nrwl/react-native:application ${appName} --install=false`
+    );
     runCLI(
       `generate @nrwl/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
     );
@@ -86,7 +90,9 @@ describe('react native', () => {
 
   it('sync npm dependencies for autolink', async () => {
     const appName = uniq('my-app');
-    runCLI(`generate @nrwl/react-native:application ${appName}`);
+    runCLI(
+      `generate @nrwl/react-native:application ${appName} --install=false`
+    );
     // Add npm package with native modules
     updateFile(join('package.json'), (content) => {
       const json = JSON.parse(content);
