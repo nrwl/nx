@@ -34,6 +34,10 @@
   },
   "dependencies": {
     "@cypress/webpack-preprocessor": "^5.9.1",
+    "@babel/core": "^7.0.1",
+    "@babel/preset-env": "^7.0.0",
+    "babel-loader": "^8.0.2",
+    "webpack": "^4 || ^5",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
