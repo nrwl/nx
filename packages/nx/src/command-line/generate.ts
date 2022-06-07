@@ -48,17 +48,18 @@ async function promptForCollection(
       ...Object.keys(packageJson.devDependencies || {}),
     ])
   );
-  const choices = collections
-    .map((collectionName) => {
-      try {
-        const generator = ws.readGenerator(collectionName, generatorName);
+  const choicesMap = new Set<string>();
 
-        return `${collectionName}:${generator.normalizedGeneratorName}`;
-      } catch {
-        return null;
-      }
-    })
-    .filter((c) => !!c);
+  for (const collectionName of collections) {
+    try {
+      const { resolvedCollectionName, normalizedGeneratorName } =
+        ws.readGenerator(collectionName, generatorName);
+
+      choicesMap.add(`${resolvedCollectionName}:${normalizedGeneratorName}`);
+    } catch {}
+  }
+
+  const choices = Array.from(choicesMap);
 
   if (choices.length === 1) {
     return choices[0];

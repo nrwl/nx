@@ -147,8 +147,12 @@ export class Workspaces {
 
   readGenerator(collectionName: string, generatorName: string) {
     try {
-      const { generatorsFilePath, generatorsJson, normalizedGeneratorName } =
-        this.readGeneratorsJson(collectionName, generatorName);
+      const {
+        generatorsFilePath,
+        generatorsJson,
+        resolvedCollectionName,
+        normalizedGeneratorName,
+      } = this.readGeneratorsJson(collectionName, generatorName);
       const generatorsDir = path.dirname(generatorsFilePath);
       const generatorConfig =
         generatorsJson.generators?.[normalizedGeneratorName] ||
@@ -165,6 +169,7 @@ export class Workspaces {
         generatorsDir
       );
       return {
+        resolvedCollectionName,
         normalizedGeneratorName,
         schema,
         implementationFactory,
@@ -253,6 +258,7 @@ export class Workspaces {
     generatorsFilePath: string;
     generatorsJson: GeneratorsJson;
     normalizedGeneratorName: string;
+    resolvedCollectionName: string;
   } {
     let generatorsFilePath;
     if (collectionName.endsWith('.json')) {
@@ -291,7 +297,12 @@ export class Workspaces {
         `Cannot find generator '${generator}' in ${generatorsFilePath}.`
       );
     }
-    return { generatorsFilePath, generatorsJson, normalizedGeneratorName };
+    return {
+      generatorsFilePath,
+      generatorsJson,
+      normalizedGeneratorName,
+      resolvedCollectionName: collectionName,
+    };
   }
 
   private resolvePaths() {
