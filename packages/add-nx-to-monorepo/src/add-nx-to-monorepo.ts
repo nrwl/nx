@@ -8,6 +8,7 @@ import * as enquirer from 'enquirer';
 import * as yargsParser from 'yargs-parser';
 import { output, readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import ignore from 'ignore';
+import { directoryExists } from 'nx/src/utils/fileutils';
 
 const parsedArgs = yargsParser(process.argv, {
   boolean: ['nxCloud'],
@@ -212,20 +213,12 @@ function createNxJsonFile(repoRoot: string, projects: ProjectDesc[]) {
 }
 
 function deduceWorkspaceLayout(repoRoot: string) {
-  if (exists(path.join(repoRoot, 'packages'))) {
+  if (directoryExists(path.join(repoRoot, 'packages'))) {
     return undefined;
-  } else if (exists(path.join(repoRoot, 'projects'))) {
+  } else if (directoryExists(path.join(repoRoot, 'projects'))) {
     return { libsDir: 'projects', appsDir: 'projects' };
   } else {
     return undefined;
-  }
-}
-
-function exists(folder: string) {
-  try {
-    return fs.statSync(folder).isDirectory();
-  } catch {
-    return false;
   }
 }
 

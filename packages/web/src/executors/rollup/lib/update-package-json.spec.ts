@@ -2,9 +2,7 @@ import { updatePackageJson } from './update-package-json';
 import * as utils from 'nx/src/utils/fileutils';
 import { PackageJson } from 'nx/src/utils/package-json';
 
-jest.mock('nx/src/utils/fileutils', () => ({
-  writeJsonFile: () => {},
-}));
+jest.mock('fs', () => require('memfs').fs);
 
 describe('updatePackageJson', () => {
   const commonOptions = {
