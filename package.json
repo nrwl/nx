@@ -18,6 +18,7 @@
     "format": "nx format",
     "nx-release": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/nx-release",
     "prepublishOnly": "node ./scripts/update-package-group.js",
+    "version": "npx prettier lerna.json --write",
     "depcheck": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/depcheck",
     "local-registry": "./scripts/local-registry.sh",
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/documentation.ts && yarn check-documentation-map",
