@@ -291,6 +291,11 @@
             "type": "string",
             "description": "The output path of the generated files."
           },
+          "deleteOutputPath": {
+            "type": "boolean",
+            "description": "Delete the output path before building.",
+            "default": true
+          },
           "watch": {
             "type": "boolean",
             "description": "Run build when files change.",
