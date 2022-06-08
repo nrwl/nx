@@ -6,7 +6,7 @@ import {
 import * as chalk from 'chalk';
 import { execFileSync, fork } from 'child_process';
 import { watch } from 'chokidar';
-import { createWorkspaceIgnore } from 'nx/src/utils/ignore';
+import { createIgnore } from 'nx/src/utils/ignore';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { platform } from 'os';
 import { resolve } from 'path';
@@ -86,7 +86,7 @@ function createFileWatcher(
   root: string,
   changeHandler: () => void
 ): () => void {
-  const ignore = createWorkspaceIgnore(root);
+  const ignore = createIgnore(root);
   const layout = workspaceLayout();
 
   const watcher = watch(

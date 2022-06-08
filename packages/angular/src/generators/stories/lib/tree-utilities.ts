@@ -1,12 +1,12 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments } from '@nrwl/devkit';
-import { createGitignoreFromTree } from 'nx/src/utils/ignore';
+import { createGitIgnoreFromTree } from 'nx/src/utils/ignore';
 
 export function getAllFilesRecursivelyFromDir(
   tree: Tree,
   dir: string
 ): string[] {
-  const ignore = createGitignoreFromTree(tree);
+  const ignore = createGitIgnoreFromTree(tree);
 
   function inner(dir: string) {
     if (ignore.ignores(dir)) {

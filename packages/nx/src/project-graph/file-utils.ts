@@ -5,7 +5,7 @@ import { FileData } from '../config/project-graph';
 import { toOldFormatOrNull, Workspaces } from '../config/workspaces';
 import type { NxArgs } from '../utils/command-line-utils';
 import { fileExists, readJsonFile } from '../utils/fileutils';
-import { createWorkspaceIgnore } from '../utils/ignore';
+import { createIgnore } from '../utils/ignore';
 import { jsonDiff } from '../utils/json-diff';
 import { workspaceRoot } from '../utils/workspace-root';
 
@@ -37,7 +37,7 @@ export function calculateFileChanges(
     f: string,
     r: void | string
   ) => string = defaultReadFileAtRevision,
-  ignore = createWorkspaceIgnore()
+  ignore = createIgnore()
 ): FileChange[] {
   files = files.filter((f) => !ignore.ignores(f));
 

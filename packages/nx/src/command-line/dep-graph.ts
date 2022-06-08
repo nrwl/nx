@@ -17,7 +17,7 @@ import { defaultFileHasher } from '../hasher/file-hasher';
 import { pruneExternalNodes } from '../project-graph/operators';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { writeJsonFile } from '../utils/fileutils';
-import { createWorkspaceIgnore } from '../utils/ignore';
+import { createIgnore } from '../utils/ignore';
 import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -437,7 +437,7 @@ function debounce(fn: (...args) => void, time: number) {
 }
 
 function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
-  const ignore = createWorkspaceIgnore(root);
+  const ignore = createIgnore(root);
   const layout = workspaceLayout();
 
   const watcher = watch(

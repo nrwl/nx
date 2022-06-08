@@ -3,27 +3,23 @@ import * as fs from 'fs';
 import ignore, { Ignore } from 'ignore';
 import * as path from 'path';
 import { Tree } from '../generators/tree';
-import { workspaceRoot } from './workspace-root';
 import { normalizePath } from './path';
+import { workspaceRoot } from './workspace-root';
 
 const workspaceIgnoreFiles = ['.gitignore', '.nxignore'];
 
-export function createWorkspaceIgnore(root = workspaceRoot): Ignore {
-  return createIgnoreFromFS(root, workspaceIgnoreFiles);
+export function createNxIgnore(root: string = workspaceRoot): Ignore {
+  return createIgnore(root, ['.nxignore']);
 }
 
-export function createNxignore(root: string = workspaceRoot): Ignore {
-  return createIgnoreFromFS(root, ['.nxignore']);
-}
-
-export function createGitignoreFromTree(tree: Tree): Ignore {
+export function createGitIgnoreFromTree(tree: Tree): Ignore {
   return createIgnoreFromTree(tree, ['.gitignore']);
 }
 
 export function readWorkspaceIgnorePatterns(root = workspaceRoot): string[] {
   return combineIgnorePatterns(
     workspaceIgnoreFiles.flatMap((ignoreFile) =>
-      readIgnoreFilesFromFS(root, ignoreFile)
+      readIgnoreFiles(root, ignoreFile)
     )
   );
 }
@@ -40,16 +36,16 @@ export function createIgnoreFromPatterns(patterns: string[]): Ignore {
  *
  * @param rootDir The directory in which to start searching for ignore files.
  *                Paths evaluated by the returned object must be relative to this directory.
- * @param ignoreFiles The filename of ignore files to include, e.g. ".gitignore"
+ *                Defaults to the workspace root.
+ * @param ignoreFiles The filename of ignore files to include, e.g. ".gitignore".
+ *                    Defaults to [".gitignore", ".nxignore"].
  */
-export function createIgnoreFromFS(
-  rootDir: string,
-  ignoreFiles: string[]
+export function createIgnore(
+  rootDir = workspaceRoot,
+  ignoreFiles = workspaceIgnoreFiles
 ): Ignore {
   return createCombinedIgnore(
-    ignoreFiles.flatMap((ignoreFile) =>
-      readIgnoreFilesFromFS(rootDir, ignoreFile)
-    )
+    ignoreFiles.flatMap((ignoreFile) => readIgnoreFiles(rootDir, ignoreFile))
   );
 }
 
@@ -59,11 +55,12 @@ export function createIgnoreFromFS(
  *
  * @param tree The tree in which to searching for ignore files.
  *             Paths evaluated by the returned object must be relative to the tree root.
- * @param ignoreFiles The filename of ignore files to include, e.g. ".gitignore"
+ * @param ignoreFiles The filename of ignore files to include, e.g. ".gitignore".
+ *                    Defaults to [".gitignore", ".nxignore"].
  */
 export function createIgnoreFromTree(
   tree: Tree,
-  ignoreFiles: string[]
+  ignoreFiles = workspaceIgnoreFiles
 ): Ignore {
   return createCombinedIgnore(
     ignoreFiles.flatMap((ignoreFile) =>
@@ -72,7 +69,7 @@ export function createIgnoreFromTree(
   );
 }
 
-export interface IgnoreFile {
+interface IgnoreFile {
   /**
    * Path to the ignore file, relative to the root directory.
    */
@@ -83,10 +80,7 @@ export interface IgnoreFile {
   content: string;
 }
 
-function readIgnoreFilesFromFS(
-  rootDir: string,
-  ignoreFile: string
-): IgnoreFile[] {
+function readIgnoreFiles(rootDir: string, ignoreFile: string): IgnoreFile[] {
   const ignoreFilePaths = fastGlob.sync(`**/${ignoreFile}`, {
     cwd: rootDir,
     dot: true,

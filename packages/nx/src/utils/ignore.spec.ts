@@ -1,31 +1,30 @@
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
+import { vol } from 'memfs';
 import { createTree } from '../generators/testing-utils/create-tree';
 import { Tree } from '../generators/tree';
 import {
   createCombinedIgnore,
-  createIgnoreFromFS,
+  createIgnore,
   createIgnoreFromTree,
 } from './ignore';
 import { stripIndents } from './strip-indents';
 
-describe('createIgnoreFromFS', () => {
-  let tmpDir: string;
+jest.mock('fs', () => require('memfs').fs);
 
-  beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nx-createIgnoreFromFS-'));
-  });
-
+describe('createIgnore', () => {
   afterEach(() => {
-    fs.rmSync(tmpDir, { recursive: true });
+    vol.reset();
   });
 
   it('should combine all ignore files in tree', () => {
-    fs.writeFileSync(path.join(tmpDir, '.ignore'), 'a');
-    fs.mkdirSync(path.join(tmpDir, 'b'));
-    fs.writeFileSync(path.join(tmpDir, 'b/.ignore'), 'c');
-    const ignore = createIgnoreFromFS(tmpDir, ['.ignore']);
+    vol.fromJSON(
+      {
+        '.ignore': 'a',
+        'b/.ignore': 'c',
+      },
+      '/root'
+    );
+
+    const ignore = createIgnore('/root', ['.ignore']);
     expect(ignore.ignores('a')).toBe(true);
     expect(ignore.ignores('b/c')).toBe(true);
   });

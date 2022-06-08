@@ -1,5 +1,5 @@
 import type { Tree } from 'nx/src/generators/tree';
-import { createGitignoreFromTree } from 'nx/src/utils/ignore';
+import { createGitIgnoreFromTree } from 'nx/src/utils/ignore';
 import { join, relative, sep } from 'path';
 
 /**
@@ -10,7 +10,7 @@ export function visitNotIgnoredFiles(
   dirPath: string = tree.root,
   visitor: (path: string) => void
 ): void {
-  const ignore = createGitignoreFromTree(tree);
+  const ignore = createGitIgnoreFromTree(tree);
 
   function inner(dirPath: string) {
     dirPath = normalizePathRelativeToRoot(dirPath, tree.root);

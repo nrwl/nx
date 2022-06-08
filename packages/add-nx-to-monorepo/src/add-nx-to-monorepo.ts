@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import {
-  createIgnoreFromFS,
+  createIgnore,
   output,
   readJsonFile,
   writeJsonFile,
@@ -94,7 +94,7 @@ function allProjectPackageJsonFiles(repoRoot: string) {
 }
 
 function allPackageJsonFiles(repoRoot: string, dirName: string) {
-  const ignore = createIgnoreFromFS(repoRoot, ['.gitignore']);
+  const ignore = createIgnore(repoRoot, ['.gitignore']);
   const relDirName = path.relative(repoRoot, dirName);
   if (
     relDirName &&

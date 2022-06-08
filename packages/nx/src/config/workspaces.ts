@@ -5,7 +5,7 @@ import * as path from 'path';
 import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { readJsonFile } from '../utils/fileutils';
-import { createWorkspaceIgnore } from '../utils/ignore';
+import { createIgnore } from '../utils/ignore';
 import { logger } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
 import { sortObjectByKeys } from '../utils/object-sort';
@@ -566,7 +566,7 @@ export function globForProjectFiles(
     join(root, '.git'),
   ];
 
-  const ignore = createWorkspaceIgnore(root);
+  const ignore = createIgnore(root);
 
   const globResults = globSync(combinedProjectGlobPattern, {
     ignore: ALWAYS_IGNORE,

@@ -5,7 +5,7 @@ import * as fg from 'fast-glob';
 import * as fse from 'fs-extra';
 import { Ignore } from 'ignore';
 import * as minimatch from 'minimatch';
-import { createWorkspaceIgnore } from 'nx/src/utils/ignore';
+import { createIgnore } from 'nx/src/utils/ignore';
 import * as path from 'path';
 
 export type FileEventType = 'create' | 'update' | 'delete';
@@ -59,7 +59,7 @@ export class CopyAssetsHandler {
     this.projectDir = opts.projectDir;
     this.outputDir = opts.outputDir;
     this.callback = opts.callback ?? defaultFileEventHandler;
-    this.ignore = createWorkspaceIgnore(opts.rootDir);
+    this.ignore = createIgnore(opts.rootDir);
 
     this.assetGlobs = opts.assets.map((f) => {
       let isGlob = false;

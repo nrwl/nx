@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks';
-import { createNxignore } from '../utils/ignore';
+import { createNxIgnore } from '../utils/ignore';
 import { workspaceRoot } from '../utils/workspace-root';
 import { FileHasherBase } from './file-hasher-base';
 import { getFileHashes, getGitHashForFiles } from './git-hasher';
@@ -15,7 +15,7 @@ export class GitBasedFileHasher extends FileHasherBase {
     this.clear();
 
     const gitResult = await getFileHashes(workspaceRoot);
-    const ignore = createNxignore();
+    const ignore = createNxIgnore();
     gitResult.allFiles.forEach((hash, filename) => {
       if (!ignore.ignores(filename)) {
         this.fileHashes.set(filename, hash);

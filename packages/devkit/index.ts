@@ -323,4 +323,4 @@ export { cacheDir } from 'nx/src/utils/cache-directory';
 /**
  * @category Utils
  */
-export { createIgnoreFromFS, createIgnoreFromTree } from 'nx/src/utils/ignore';
+export { createIgnore, createIgnoreFromTree } from 'nx/src/utils/ignore';

@@ -2,7 +2,7 @@ import { readdirSync, statSync } from 'fs';
 import { join, relative } from 'path';
 import { performance } from 'perf_hooks';
 import { FileData } from '../config/project-graph';
-import { createWorkspaceIgnore } from '../utils/ignore';
+import { createIgnore } from '../utils/ignore';
 import { normalizePath } from '../utils/path';
 import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -65,7 +65,7 @@ export class NodeBasedFileHasher extends FileHasherBase {
 }
 
 function getIgnoredGlobs() {
-  const ig = createWorkspaceIgnore();
+  const ig = createIgnore();
   ig.add(stripIndents`
       node_modules
       tmp
