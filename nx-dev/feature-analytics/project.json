@@ -1,5 +1,5 @@
 {
-  "root": "nx-dev/feature-analytics",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/feature-analytics/src",
   "projectType": "library",
   "targets": {

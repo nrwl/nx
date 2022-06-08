@@ -24,15 +24,15 @@
   "main": "index.js",
   "types": "index.d.ts",
   "dependencies": {
-    "@nrwl/devkit": "*",
-    "@nrwl/jest": "*",
-    "@nrwl/linter": "*",
-    "@nrwl/react": "*",
-    "@nrwl/workspace": "*",
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/jest": "file:../jest",
+    "@nrwl/linter": "file:../linter",
+    "@nrwl/react": "file:../react",
+    "@nrwl/workspace": "file:../workspace",
     "chalk": "^4.1.0"
   },
   "peerDependencies": {
-    "detox": "^19.5.7"
+    "detox": "^19.7.1"
   },
   "builders": "./executors.json",
   "ng-update": {

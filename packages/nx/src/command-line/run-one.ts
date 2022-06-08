@@ -5,15 +5,22 @@ import { performance } from 'perf_hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { splitTarget } from '../utils/split-target';
 import { output } from '../utils/output';
 import { readEnvironment } from './read-environment';
-import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
+import {
+  ProjectsConfigurations,
+  TargetDependencyConfig,
+} from '../config/workspace-json-project-json';
 
 export async function runOne(
   cwd: string,
-  args: { [k: string]: any }
+  args: { [k: string]: any },
+  extraTargetDependencies: Record<
+    string,
+    (TargetDependencyConfig | string)[]
+  > = {}
 ): Promise<void> {
   performance.mark('command-execution-begins');
   performance.measure('code-loading', 'init-local', 'command-execution-begins');
@@ -27,7 +34,9 @@ export async function runOne(
       configuration: opts.configuration,
       target: opts.target,
     },
-    'run-one'
+    'run-one',
+    { printWarnings: true },
+    env.nxJson
   );
 
   if (nxArgs.help) {
@@ -49,8 +58,8 @@ export async function runOne(
     env,
     nxArgs,
     overrides,
-    'run-one',
-    opts.project
+    opts.project,
+    extraTargetDependencies
   );
 }
 
@@ -72,8 +81,6 @@ function getProjects(projectGraph: ProjectGraph, project: string): any {
 const targetAliases = {
   b: 'build',
   e: 'e2e',
-  'i18n-extract': 'extract-i18n',
-  xi18n: 'extract-i18n',
   l: 'lint',
   s: 'serve',
   t: 'test',
@@ -82,7 +89,7 @@ const targetAliases = {
 function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
-  workspaceConfiguration: WorkspaceJsonConfiguration & NxJsonConfiguration
+  workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
 ): { project; target; configuration; parsedArgs } {
   const defaultProjectName = calculateDefaultProjectName(
     cwd,
@@ -99,6 +106,11 @@ function parseRunOneOptions(
     [project, target, configuration] = splitTarget(
       parsedArgs['project:target:configuration']
     );
+    // this is to account for "nx npmsript:dev"
+    if (project && !target && defaultProjectName) {
+      target = project;
+      project = defaultProjectName;
+    }
   } else {
     target = parsedArgs['project:target:configuration'];
   }
@@ -133,7 +145,7 @@ function parseRunOneOptions(
 function calculateDefaultProjectName(
   cwd: string,
   root: string,
-  workspaceConfiguration: WorkspaceJsonConfiguration & NxJsonConfiguration
+  workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
 ) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
   if (relativeCwd) {

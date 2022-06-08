@@ -305,7 +305,7 @@ You need to point your `build` and `serve` tasks at this gulp build process. Typ
 ```json
 ...
         "build": {
-          "executor": "@nrwl/workspace:run-commands",
+          "executor": "nx:run-commands",
           "options": {
             "commands": [
               {
@@ -315,7 +315,7 @@ You need to point your `build` and `serve` tasks at this gulp build process. Typ
           }
         },
         "serve": {
-          "executor": "@nrwl/workspace:run-commands",
+          "executor": "nx:run-commands",
           "options": {
             "commands": [
               {

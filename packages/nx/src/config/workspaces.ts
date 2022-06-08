@@ -5,7 +5,7 @@ import * as path from 'path';
 import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
 import { logger } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
@@ -13,7 +13,7 @@ import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
 import type { NxJsonConfiguration } from './nx-json';
 import {
   ProjectConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from './workspace-json-project-json';
 import {
   Executor,
@@ -22,8 +22,10 @@ import {
   Generator,
   GeneratorsJson,
   ExecutorsJson,
+  CustomHasher,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
 export function workspaceConfigName(root: string) {
   if (existsSync(path.join(root, 'angular.json'))) {
@@ -36,8 +38,7 @@ export function workspaceConfigName(root: string) {
 }
 
 export class Workspaces {
-  private cachedWorkspaceConfig: WorkspaceJsonConfiguration &
-    NxJsonConfiguration;
+  private cachedWorkspaceConfig: ProjectsConfigurations & NxJsonConfiguration;
 
   constructor(private root: string) {}
 
@@ -47,7 +48,7 @@ export class Workspaces {
 
   calculateDefaultProjectName(
     cwd: string,
-    wc: WorkspaceJsonConfiguration & NxJsonConfiguration
+    wc: ProjectsConfigurations & NxJsonConfiguration
   ) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
@@ -65,10 +66,9 @@ export class Workspaces {
 
   readWorkspaceConfiguration(opts?: {
     _ignorePluginInference?: boolean;
-  }): WorkspaceJsonConfiguration & NxJsonConfiguration {
+  }): ProjectsConfigurations & NxJsonConfiguration {
     if (this.cachedWorkspaceConfig) return this.cachedWorkspaceConfig;
-    const nxJsonPath = path.join(this.root, 'nx.json');
-    const nxJson = readNxJson(nxJsonPath);
+    const nxJson = this.readNxJson();
     const workspaceFile = workspaceConfigName(this.root);
     const workspacePath = workspaceFile
       ? path.join(this.root, workspaceFile)
@@ -126,7 +126,7 @@ export class Workspaces {
         : null;
 
       const hasherFactory = executorConfig.hasher
-        ? this.getImplementationFactory<Function>(
+        ? this.getImplementationFactory<CustomHasher>(
             executorConfig.hasher,
             executorsDir
           )
@@ -147,8 +147,12 @@ export class Workspaces {
 
   readGenerator(collectionName: string, generatorName: string) {
     try {
-      const { generatorsFilePath, generatorsJson, normalizedGeneratorName } =
-        this.readGeneratorsJson(collectionName, generatorName);
+      const {
+        generatorsFilePath,
+        generatorsJson,
+        resolvedCollectionName,
+        normalizedGeneratorName,
+      } = this.readGeneratorsJson(collectionName, generatorName);
       const generatorsDir = path.dirname(generatorsFilePath);
       const generatorConfig =
         generatorsJson.generators?.[normalizedGeneratorName] ||
@@ -165,6 +169,7 @@ export class Workspaces {
         generatorsDir
       );
       return {
+        resolvedCollectionName,
         normalizedGeneratorName,
         schema,
         implementationFactory,
@@ -174,6 +179,29 @@ export class Workspaces {
       throw new Error(
         `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
       );
+    }
+  }
+
+  readNxJson(): NxJsonConfiguration {
+    const nxJson = path.join(this.root, 'nx.json');
+    if (existsSync(nxJson)) {
+      const nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
+      if (nxJsonConfig.extends) {
+        const extendedNxJsonPath = require.resolve(nxJsonConfig.extends, {
+          paths: [dirname(nxJson)],
+        });
+        const baseNxJson =
+          readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
+        return { ...baseNxJson, ...nxJsonConfig };
+      } else {
+        return nxJsonConfig;
+      }
+    } else {
+      try {
+        return readJsonFile(join(__dirname, '..', '..', 'presets', 'npm.json'));
+      } catch (e) {
+        return {};
+      }
     }
   }
 
@@ -230,6 +258,7 @@ export class Workspaces {
     generatorsFilePath: string;
     generatorsJson: GeneratorsJson;
     normalizedGeneratorName: string;
+    resolvedCollectionName: string;
   } {
     let generatorsFilePath;
     if (collectionName.endsWith('.json')) {
@@ -268,7 +297,12 @@ export class Workspaces {
         `Cannot find generator '${generator}' in ${generatorsFilePath}.`
       );
     }
-    return { generatorsFilePath, generatorsJson, normalizedGeneratorName };
+    return {
+      generatorsFilePath,
+      generatorsJson,
+      normalizedGeneratorName,
+      resolvedCollectionName: collectionName,
+    };
   }
 
   private resolvePaths() {
@@ -315,10 +349,16 @@ function findFullGeneratorName(
 }
 
 export function reformattedWorkspaceJsonOrNull(w: any) {
-  return w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+  const workspaceJson =
+    w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+  if (workspaceJson?.projects) {
+    workspaceJson.projects = sortObjectByKeys(workspaceJson.projects);
+  }
+
+  return workspaceJson;
 }
 
-export function toNewFormat(w: any): WorkspaceJsonConfiguration {
+export function toNewFormat(w: any): ProjectsConfigurations {
   const f = toNewFormatOrNull(w);
   return f ?? w;
 }
@@ -410,7 +450,10 @@ function inlineProjectConfigurations(w: any, root: string = workspaceRoot) {
       if (typeof config === 'string') {
         const configFilePath = path.join(root, config, 'project.json');
         const fileConfig = readJsonFile(configFilePath);
-        w.projects[project] = fileConfig;
+        w.projects[project] = {
+          root: config,
+          ...fileConfig,
+        };
       }
     }
   );
@@ -420,22 +463,6 @@ function inlineProjectConfigurations(w: any, root: string = workspaceRoot) {
 /**
  * Reads an nx.json file from a given path or extends a local nx.json config.
  */
-function readNxJson(nxJson: string): NxJsonConfiguration {
-  let nxJsonConfig: NxJsonConfiguration;
-  if (existsSync(nxJson)) {
-    nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
-  } else {
-    nxJsonConfig = {} as NxJsonConfiguration;
-  }
-  if (nxJsonConfig.extends) {
-    const extendedNxJsonPath = require.resolve(nxJsonConfig.extends, {
-      paths: [dirname(nxJson)],
-    });
-    const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
-    nxJsonConfig = { ...baseNxJson, ...nxJsonConfig };
-  }
-  return nxJsonConfig;
-}
 
 /**
  * Pulled from toFileName in names from @nrwl/devkit.
@@ -504,11 +531,16 @@ export function globForProjectFiles(
 ) {
   // Deal w/ Caching
   const cacheKey = [root, ...(nxJson?.plugins || [])].join(',');
-  if (projectGlobCache && cacheKey === projectGlobCacheKey)
+  if (
+    process.env.NX_PROJECT_GLOB_CACHE !== 'false' &&
+    projectGlobCache &&
+    cacheKey === projectGlobCacheKey
+  )
     return projectGlobCache;
   projectGlobCacheKey = cacheKey;
 
   const projectGlobPatterns: string[] = [
+    'project.json',
     '**/project.json',
     ...getGlobPatternsFromPackageManagerWorkspaces(root),
   ];
@@ -625,7 +657,7 @@ export function buildWorkspaceConfigurationFromGlobs(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: (string) => any = readJsonFile // making this an arg allows us to reuse in devkit
-): WorkspaceJsonConfiguration {
+): ProjectsConfigurations {
   const projects: Record<string, ProjectConfiguration> = {};
 
   for (const file of projectFiles) {
@@ -637,6 +669,9 @@ export function buildWorkspaceConfigurationFromGlobs(
       // directory as a package.json should overwrite the inferred package.json
       // project configuration.
       const configuration = readJson(file);
+
+      configuration.root = directory;
+
       let name = configuration.name;
       if (!configuration.name) {
         name = toProjectName(file, nxJson);

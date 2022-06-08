@@ -1,6 +1,6 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import { NormalModuleReplacementPlugin } from 'webpack';
-import { joinPathFragments, normalizePath, workspaceRoot } from '@nrwl/devkit';
+import { logger, workspaceRoot } from '@nrwl/devkit';
 import { dirname, join, normalize } from 'path';
 import { ParsedCommandLine } from 'typescript';
 import {
@@ -8,6 +8,7 @@ import {
   readTsConfig,
 } from '@nrwl/workspace/src/utilities/typescript';
 import { SharedLibraryConfig } from './models';
+import { readRootPackageJson } from './package-json';
 
 export function shareWorkspaceLibraries(
   libraries: string[],
@@ -25,7 +26,7 @@ export function shareWorkspaceLibraries(
   if (!tsconfigPathAliases) {
     return {
       getAliases: () => [],
-      getLibraries: () => {},
+      getLibraries: () => ({}),
       getReplacementPlugin: () =>
         new NormalModuleReplacementPlugin(/./, () => {}),
     };
@@ -54,7 +55,7 @@ export function shareWorkspaceLibraries(
           ...libraries,
           [library.name]: { requiredVersion: false, eager },
         }),
-        {}
+        {} as Record<string, SharedLibraryConfig>
       ),
     getReplacementPlugin: () =>
       new NormalModuleReplacementPlugin(/./, (req) => {
@@ -75,27 +76,37 @@ export function shareWorkspaceLibraries(
   };
 }
 
+export function getNpmPackageSharedConfig(
+  pkgName: string,
+  version: string
+): SharedLibraryConfig | undefined {
+  if (!version) {
+    logger.warn(
+      `Could not find a version for "${pkgName}" in the root "package.json" ` +
+        'when collecting shared packages for the Module Federation setup. ' +
+        'The package will not be shared.'
+    );
+
+    return undefined;
+  }
+
+  return { singleton: true, strictVersion: true, requiredVersion: version };
+}
+
 export function sharePackages(
   packages: string[]
 ): Record<string, SharedLibraryConfig> {
-  const pkgJsonPath = joinPathFragments(workspaceRoot, 'package.json');
-  if (!existsSync(pkgJsonPath)) {
-    throw new Error(
-      'NX: Could not find root package.json to determine dependency versions.'
+  const pkgJson = readRootPackageJson();
+
+  return packages.reduce((shared, pkg) => {
+    const config = getNpmPackageSharedConfig(
+      pkg,
+      pkgJson.dependencies?.[pkg] ?? pkgJson.devDependencies?.[pkg]
     );
-  }
+    if (config) {
+      shared[pkg] = config;
+    }
 
-  const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'));
-
-  return packages.reduce(
-    (shared, pkgName) => ({
-      ...shared,
-      [pkgName]: {
-        singleton: true,
-        strictVersion: true,
-        requiredVersion: pkgJson.dependencies[pkgName],
-      },
-    }),
-    {}
-  );
+    return shared;
+  }, {} as Record<string, SharedLibraryConfig>);
 }

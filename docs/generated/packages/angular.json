@@ -4,6 +4,15 @@
   "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, Karma, and Protractor. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
   "root": "/packages/angular",
   "source": "/packages/angular/src",
+  "documentation": [
+    {
+      "name": "Overview",
+      "id": "overview",
+      "path": "/packages/angular",
+      "file": "shared/angular-plugin",
+      "content": "![Angular logo](/shared/angular-logo.png)\n\nThe Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:\n\n- Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.\n- Generators to help scaffold code quickly, including:\n  - Micro Frontends\n  - Libraries, both internal to your codebase and publishable to npm\n  - Upgrading AngularJS applications\n  - Single Component Application Modules (SCAMs)\n- NgRx helpers.\n- Utilities for automatic workspace refactoring.\n\n## Setting up the Angular plugin\n\nAdding the Angular plugin to an existing Nx workspace can be done with the following:\n\n```bash\nyarn add -D @nrwl/angular\n```\n\n```bash\nnpm install -D @nrwl/angular\n```\n\n## Using the Angular Plugin\n\n### Generating an application\n\nIt's straightforward to generate an Angular application:\n\n```bash\nnx g @nrwl/angular:app appName\n```\n\nBy default, the application will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n- Cypress as the E2E test runner.\n\nWe can then serve, build, test, lint, and run e2e tests on the application with the following commands:\n\n```bash\nnx serve appName\nnx build appName\nnx test appName\nnx lint appName\nnx e2e appName\n```\n\n### Generating a library\n\nGenerating an Angular library is very similar to generating an application:\n\n```bash\nnx g @nrwl/angular:lib libName\n```\n\nBy default, the library will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n\nWe can then test and lint the library with the following commands:\n\n```bash\nnx test libName\nnx lint libName\n```\n\nRead more about:\n\n- [Creating Libraries](/structure/creating-libraries)\n- [Library Types](/structure/library-types)\n- [Buildable and Publishable Libraries](/structure/buildable-and-publishable-libraries)\n\n## More Documentation\n\n- [Angular Nx Tutorial](/angular-tutorial/01-create-application)\n- [Setup Module Federation with Angular and Nx](/module-federation/faster-builds)\n- [Using NgRx](/guides/misc-ngrx)\n- [Using DataPersistence](/guides/misc-data-persistence)\n- [Upgrading an AngularJS application to Angular](/guides/misc-upgrade)\n- [Using Tailwind CSS with Angular projects](/guides/using-tailwind-css-with-angular-projects)\n"
+    }
+  ],
   "generators": [
     {
       "name": "add-linting",
@@ -147,6 +156,11 @@
             "default": false,
             "description": "Do not add dependencies to `package.json`."
           },
+          "skipPostInstall": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
+          },
           "unitTestRunner": {
             "type": "string",
             "enum": ["karma", "jest", "none"],
@@ -285,6 +299,11 @@
             "default": false,
             "alias": "t"
           },
+          "standalone": {
+            "description": "Whether the generated component is standalone.",
+            "type": "boolean",
+            "default": false
+          },
           "viewEncapsulation": {
             "description": "The view encapsulation strategy to use in the new component.",
             "enum": ["Emulated", "None", "ShadowDom"],
@@ -319,6 +338,11 @@
             "description": "Create the new files at the top level of the current project.",
             "default": false
           },
+          "skipImport": {
+            "type": "boolean",
+            "description": "Do not import this component into the owning NgModule.",
+            "default": false
+          },
           "selector": {
             "type": "string",
             "format": "html-selector",
@@ -336,16 +360,16 @@
           },
           "export": {
             "type": "boolean",
-            "description": "Specifies if the component should be exported in the declaring `NgModule`. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`).",
+            "description": "Specifies if the component should be exported in the declaring `NgModule`. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`) if the module it belongs to is also exported or if the component is standalone.",
             "default": false
           }
         },
         "required": ["name"],
         "presets": []
       },
+      "aliases": ["c"],
       "description": "Generate an Angular Component.",
       "implementation": "/packages/angular/src/generators/component/component.ts",
-      "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/generators/component/schema.json"
     },
@@ -623,6 +647,11 @@
             "type": "boolean",
             "default": false,
             "description": "Do not add dependencies to `package.json`."
+          },
+          "skipPostInstall": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
           }
         },
         "additionalProperties": false,
@@ -755,6 +784,11 @@
             "type": "boolean",
             "default": false,
             "description": "Do not add dependencies to `package.json`."
+          },
+          "skipPostInstall": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
           },
           "skipTsConfig": {
             "type": "boolean",
@@ -1204,6 +1238,11 @@
             "default": false,
             "description": "Do not add dependencies to `package.json`."
           },
+          "skipPostInstall": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
+          },
           "unitTestRunner": {
             "type": "string",
             "enum": ["karma", "jest", "none"],
@@ -1328,6 +1367,11 @@
             "type": "boolean",
             "default": false,
             "description": "Do not add dependencies to `package.json`. NOTE: only used if running the generator in an Nx workspace."
+          },
+          "skipPostInstall": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`. NOTE: only used if running the generator in an Nx workspace."
           }
         },
         "additionalProperties": false,
@@ -1734,6 +1778,10 @@
           "e2eProjectName": {
             "type": "string",
             "description": "The project name of the associated E2E project for the application. This is only required for Cypress E2E projects that do not follow the naming convention `<appName>-e2e`."
+          },
+          "prefix": {
+            "type": "string",
+            "description": "The prefix to use for any generated component."
           }
         },
         "required": ["appName", "mfeType"],
@@ -1989,6 +2037,27 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/generators/web-worker/schema.json"
+    },
+    {
+      "name": "change-storybook-targets",
+      "factory": "./src/generators/change-storybook-targets/change-storybook-targets",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularChangeStorybookTargetsGenerator",
+        "title": "Change Storybook targets",
+        "description": "Change the Storybook target executors.",
+        "type": "object",
+        "cli": "nx",
+        "properties": {},
+        "additionalProperties": false,
+        "required": [],
+        "presets": []
+      },
+      "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
+      "implementation": "/packages/angular/src/generators/change-storybook-targets/change-storybook-targets.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/change-storybook-targets/schema.json"
     }
   ],
   "executors": [
@@ -2158,7 +2227,7 @@
         "$schema": "http://json-schema.org/draft-07/schema",
         "title": "Schema for Webpack Browser",
         "description": "The webpack-browser executor is very similar to the standard browser builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
-        "examplesFile": "##### Using a custom webpack configuration\n\nThe executor supports providing a path to a custom webpack configuration. This allows you to customize how your Angular application is built. It currently supports the following types of webpack configurations:\n\n- `object`\n- `Function`\n- `Promise<object|Function>`\n\nThe executor will merge the provided configuration with the webpack configuration that Angular Devkit uses. The merge order is:\n\n- Angular Devkit Configuration\n- Provided Configuration\n\nTo use a custom webpack configuration when building your Angular application, change the `build` target in your `project.json` to match the following:\n\n```ts\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n}\n```\n\n##### Incrementally Building your Application\n\nThe executor supports incrementally building your Angular application by building the workspace libraries it depends on _(that have been marked as buildable)_ and then building your application using the built source of the libraries.\n\nThis can improve build time as the building of the workspace libraries can be cached, meaning they only have to be rebuilt if they have changed.\n\n> Note: There may be some additional overhead in the linking of the built libraries' sources which may reduce the overall improvement in build time. Therefore this approach only benefits large applications and would likely have a negative impact on small and medium applications.  \n> You can read more about when to use incremental builds [here](/ci/incremental-builds#when-should-i-use-incremental-builds).\n\nTo allow your Angular application to take advantage of incremental building, change the `build` target in your `project.json` to match the following:\n\n```ts\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"buildLibsFromSource\": false\n    }\n}\n```\n",
+        "examplesFile": "##### Using a custom webpack configuration\n\nThe executor supports providing a path to a custom webpack configuration. This allows you to customize how your Angular application is built. It currently supports the following types of webpack configurations:\n\n- `object`\n- `Function`\n- `Promise<object|Function>`\n\nThe executor will merge the provided configuration with the webpack configuration that Angular Devkit uses. The merge order is:\n\n- Angular Devkit Configuration\n- Provided Configuration\n\nTo use a custom webpack configuration when building your Angular application, change the `build` target in your `project.json` to match the following:\n\n```typescript\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n}\n```\n\n##### Incrementally Building your Application\n\nThe executor supports incrementally building your Angular application by building the workspace libraries it depends on _(that have been marked as buildable)_ and then building your application using the built source of the libraries.\n\nThis can improve build time as the building of the workspace libraries can be cached, meaning they only have to be rebuilt if they have changed.\n\n> Note: There may be some additional overhead in the linking of the built libraries' sources which may reduce the overall improvement in build time. Therefore this approach only benefits large applications and would likely have a negative impact on small and medium applications.  \n> You can read more about when to use incremental builds [here](/ci/incremental-builds#when-should-i-use-incremental-builds).\n\nTo allow your Angular application to take advantage of incremental building, change the `build` target in your `project.json` to match the following:\n\n```typescript\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"buildLibsFromSource\": false\n    }\n}\n```\n",
         "type": "object",
         "presets": [
           {
@@ -2240,7 +2309,8 @@
                   "properties": {
                     "input": {
                       "type": "string",
-                      "description": "The file to include."
+                      "description": "The file to include.",
+                      "pattern": "\\.[cm]?jsx?$"
                     },
                     "bundleName": {
                       "type": "string",
@@ -2256,7 +2326,11 @@
                   "additionalProperties": false,
                   "required": ["input"]
                 },
-                { "type": "string", "description": "The file to include." }
+                {
+                  "type": "string",
+                  "description": "The file to include.",
+                  "pattern": "\\.[cm]?jsx?$"
+                }
               ]
             }
           },
@@ -2271,7 +2345,8 @@
                   "properties": {
                     "input": {
                       "type": "string",
-                      "description": "The file to include."
+                      "description": "The file to include.",
+                      "pattern": "\\.(?:css|scss|sass|less|styl)$"
                     },
                     "bundleName": {
                       "type": "string",
@@ -2287,7 +2362,11 @@
                   "additionalProperties": false,
                   "required": ["input"]
                 },
-                { "type": "string", "description": "The file to include." }
+                {
+                  "type": "string",
+                  "description": "The file to include.",
+                  "pattern": "\\.(?:css|scss|sass|less|styl)$"
+                }
               ]
             }
           },
@@ -2542,15 +2621,9 @@
             "description": "Extract all licenses in a separate file.",
             "default": true
           },
-          "showCircularDependencies": {
-            "type": "boolean",
-            "description": "Show circular dependency warnings on builds.",
-            "default": false,
-            "x-deprecated": "The recommended method to detect circular dependencies in project code is to use either a lint rule or other external tooling."
-          },
           "buildOptimizer": {
             "type": "boolean",
-            "description": "Enables '@angular-devkit/build-optimizer' optimizations when using the 'aot' option.",
+            "description": "Enables advanced build optimizations when using the 'aot' option.",
             "default": true
           },
           "namedChunks": {
@@ -2763,32 +2836,6 @@
                 "additionalProperties": false,
                 "required": ["replace", "with"]
               }
-            ]
-          },
-          "extraEntryPoint": {
-            "oneOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "input": {
-                    "type": "string",
-                    "description": "The file to include."
-                  },
-                  "bundleName": {
-                    "type": "string",
-                    "pattern": "^[\\w\\-.]*$",
-                    "description": "The bundle name for this extra entry point."
-                  },
-                  "inject": {
-                    "type": "boolean",
-                    "description": "If the bundle will be referenced in the HTML file.",
-                    "default": true
-                  }
-                },
-                "additionalProperties": false,
-                "required": ["input"]
-              },
-              { "type": "string", "description": "The file to include." }
             ]
           },
           "budget": {

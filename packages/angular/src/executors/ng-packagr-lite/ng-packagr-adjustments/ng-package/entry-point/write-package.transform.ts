@@ -7,6 +7,7 @@
  */
 
 import { logger } from '@nrwl/devkit';
+import { BuildGraph } from 'ng-packagr/lib/graph/build-graph';
 import { Node } from 'ng-packagr/lib/graph/node';
 import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
 import { NgEntryPoint } from 'ng-packagr/lib/ng-package/entry-point/entry-point';
@@ -22,6 +23,7 @@ import { NgPackage } from 'ng-packagr/lib/ng-package/package';
 import { copyFile, rmdir, stat, writeFile } from 'ng-packagr/lib/utils/fs';
 import { globFiles } from 'ng-packagr/lib/utils/glob';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
+import { AssetPattern } from 'ng-packagr/ng-package.schema';
 import * as path from 'path';
 
 export const nxWritePackageTransform = (options: NgPackagrOptions) =>
@@ -31,92 +33,132 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
     const ngPackageNode: PackageNode = graph.find(isPackage);
     const ngPackage = ngPackageNode.data;
     const { destinationFiles } = entryPoint.data;
-    const ignorePaths: string[] = [
-      '.gitkeep',
-      '**/.DS_Store',
-      '**/Thumbs.db',
-      '**/node_modules/**',
-      `${ngPackage.dest}/**`,
-    ];
 
     if (!ngEntryPoint.isSecondaryEntryPoint) {
-      const assetFiles: string[] = [];
-
-      // COPY ASSET FILES TO DESTINATION
       logger.log('Copying assets');
 
       try {
-        for (const asset of ngPackage.assets) {
-          let assetFullPath = path.join(ngPackage.src, asset);
-
-          try {
-            const stats = await stat(assetFullPath);
-            if (stats.isFile()) {
-              assetFiles.push(assetFullPath);
-              continue;
-            }
-
-            if (stats.isDirectory()) {
-              assetFullPath = path.join(assetFullPath, '**/*');
-            }
-          } catch {}
-
-          const files = await globFiles(assetFullPath, {
-            ignore: ignorePaths,
-            cache: ngPackageNode.cache.globCache,
-            dot: true,
-            nodir: true,
-          });
-
-          if (files.length) {
-            assetFiles.push(...files);
-          }
-        }
-
-        for (const file of assetFiles) {
-          const relativePath = path.relative(ngPackage.src, file);
-          const destination = path.resolve(ngPackage.dest, relativePath);
-          const nodeUri = fileUrl(ensureUnixPath(file));
-          let node = graph.get(nodeUri);
-          if (!node) {
-            node = new Node(nodeUri);
-            graph.put(node);
-          }
-
-          entryPoint.dependsOn(node);
-          await copyFile(file, destination);
-        }
+        await copyAssets(graph, entryPoint, ngPackageNode);
       } catch (error) {
         throw error;
       }
     }
 
     // 6. WRITE PACKAGE.JSON
-    try {
-      logger.info('Writing package metadata');
-      const relativeUnixFromDestPath = (filePath: string) =>
-        ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
+    // As of APF 14 only the primary entrypoint has a package.json
+    if (!ngEntryPoint.isSecondaryEntryPoint) {
+      try {
+        logger.info('Writing package manifest');
+        const relativeUnixFromDestPath = (filePath: string) =>
+          ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
 
-      await writePackageJson(
-        ngEntryPoint,
-        ngPackage,
-        {
-          module: relativeUnixFromDestPath(destinationFiles.esm2020),
-          es2020: relativeUnixFromDestPath(destinationFiles.esm2020),
-          esm2020: relativeUnixFromDestPath(destinationFiles.esm2020),
-          typings: relativeUnixFromDestPath(destinationFiles.declarations),
-          // webpack v4+ specific flag to enable advanced optimizations and code splitting
-          sideEffects: ngEntryPoint.packageJson.sideEffects ?? false,
-        },
-        !!options.watch
-      );
-    } catch (error) {
-      throw error;
+        await writePackageJson(
+          ngEntryPoint,
+          ngPackage,
+          {
+            module: relativeUnixFromDestPath(destinationFiles.esm2020),
+            es2020: relativeUnixFromDestPath(destinationFiles.esm2020),
+            esm2020: relativeUnixFromDestPath(destinationFiles.esm2020),
+            typings: relativeUnixFromDestPath(destinationFiles.declarations),
+            // webpack v4+ specific flag to enable advanced optimizations and code splitting
+            sideEffects: ngEntryPoint.packageJson.sideEffects ?? false,
+          },
+          !!options.watch
+        );
+      } catch (error) {
+        throw error;
+      }
     }
     logger.info(`Built ${ngEntryPoint.moduleId}`);
 
     return graph;
   });
+
+type AssetEntry = Exclude<AssetPattern, string>;
+
+async function copyAssets(
+  graph: BuildGraph,
+  entryPointNode: EntryPointNode,
+  ngPackageNode: PackageNode
+): Promise<void> {
+  const ngPackage = ngPackageNode.data;
+
+  const globsForceIgnored: string[] = [
+    '.gitkeep',
+    '**/.DS_Store',
+    '**/Thumbs.db',
+    `${ngPackage.dest}/**`,
+  ];
+
+  const assets: AssetEntry[] = [];
+
+  for (const item of ngPackage.assets) {
+    const asset: Partial<AssetEntry> = {};
+    if (typeof item == 'object') {
+      asset.glob = item.glob;
+      asset.input = path.join(ngPackage.src, item.input);
+      asset.output = path.join(ngPackage.dest, item.output);
+      asset.ignore = item.ignore;
+    } else {
+      const assetPath = item; // might be a glob
+      const assetFullPath = path.join(ngPackage.src, assetPath);
+      const [isDir, isFile] = await stat(assetFullPath)
+        .then((stats) => [stats.isDirectory(), stats.isFile()])
+        .catch(() => [false, false]);
+      if (isDir) {
+        asset.glob = '**/*';
+        asset.input = assetFullPath;
+        asset.output = path.join(ngPackage.dest, assetPath);
+      } else if (isFile) {
+        asset.glob = path.basename(assetFullPath); // filenames are their own glob
+        asset.input = path.dirname(assetFullPath);
+        asset.output = path.dirname(path.join(ngPackage.dest, assetPath));
+      } else {
+        asset.glob = assetPath;
+        asset.input = ngPackage.src;
+        asset.output = ngPackage.dest;
+      }
+    }
+
+    const isAncestorPath = (target: string, datum: string) =>
+      path.relative(datum, target).startsWith('..');
+    if (isAncestorPath(asset.input, ngPackage.src)) {
+      throw new Error(
+        'Cannot read assets from a location outside of the project root.'
+      );
+    }
+    if (isAncestorPath(asset.output, ngPackage.dest)) {
+      throw new Error(
+        'Cannot write assets to a location outside of the output path.'
+      );
+    }
+
+    assets.push(asset as AssetEntry);
+  }
+
+  for (const asset of assets) {
+    const filePaths = await globFiles(asset.glob, {
+      cwd: asset.input,
+      ignore: [...(asset.ignore ?? []), ...globsForceIgnored],
+      cache: ngPackageNode.cache.globCache,
+      dot: true,
+      nodir: true,
+      follow: asset.followSymlinks,
+    });
+    for (const filePath of filePaths) {
+      const fileSrcFullPath = path.join(asset.input, filePath);
+      const fileDestFullPath = path.join(asset.output, filePath);
+      const nodeUri = fileUrl(ensureUnixPath(fileSrcFullPath));
+      let node = graph.get(nodeUri);
+      if (!node) {
+        node = new Node(nodeUri);
+        graph.put(node);
+      }
+      entryPointNode.dependsOn(node);
+      await copyFile(fileSrcFullPath, fileDestFullPath);
+    }
+  }
+}
 
 /**
  * Creates and writes a `package.json` file of the entry point used by the `node_module`
@@ -146,41 +188,39 @@ async function writePackageJson(
   // version at least matches that of angular if we use require('tslib').version
   // it will get what installed and not the minimum version nor if it is a `~` or `^`
   // this is only required for primary
-  if (!entryPoint.isSecondaryEntryPoint) {
-    if (isWatchMode) {
-      // Needed because of Webpack's 5 `cachemanagedpaths`
-      // https://github.com/angular/angular-cli/issues/20962
-      packageJson.version = `0.0.0-watch+${Date.now()}`;
-    }
+  if (isWatchMode) {
+    // Needed because of Webpack's 5 `cachemanagedpaths`
+    // https://github.com/angular/angular-cli/issues/20962
+    packageJson.version = `0.0.0-watch+${Date.now()}`;
+  }
 
-    if (
-      !packageJson.peerDependencies?.tslib &&
-      !packageJson.dependencies?.tslib
-    ) {
-      const {
-        peerDependencies: angularPeerDependencies = {},
-        dependencies: angularDependencies = {},
-      } = require('@angular/compiler/package.json');
-      const tsLibVersion =
-        angularPeerDependencies.tslib || angularDependencies.tslib;
+  if (
+    !packageJson.peerDependencies?.tslib &&
+    !packageJson.dependencies?.tslib
+  ) {
+    const {
+      peerDependencies: angularPeerDependencies = {},
+      dependencies: angularDependencies = {},
+    } = require('@angular/compiler/package.json');
+    const tsLibVersion =
+      angularPeerDependencies.tslib || angularDependencies.tslib;
 
-      if (tsLibVersion) {
-        packageJson.dependencies = {
-          ...packageJson.dependencies,
-          tslib: tsLibVersion,
-        };
-      }
-    } else if (packageJson.peerDependencies?.tslib) {
-      logger.warn(
-        `'tslib' is no longer recommended to be used as a 'peerDependencies'. Moving it to 'dependencies'.`
-      );
+    if (tsLibVersion) {
       packageJson.dependencies = {
-        ...(packageJson.dependencies || {}),
-        tslib: packageJson.peerDependencies.tslib,
+        ...packageJson.dependencies,
+        tslib: tsLibVersion,
       };
-
-      delete packageJson.peerDependencies.tslib;
     }
+  } else if (packageJson.peerDependencies?.tslib) {
+    logger.warn(
+      `'tslib' is no longer recommended to be used as a 'peerDependencies'. Moving it to 'dependencies'.`
+    );
+    packageJson.dependencies = {
+      ...(packageJson.dependencies || {}),
+      tslib: packageJson.peerDependencies.tslib,
+    };
+
+    delete packageJson.peerDependencies.tslib;
   }
 
   // Verify non-peerDependencies as they can easily lead to duplicate installs or version conflicts

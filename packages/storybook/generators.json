@@ -20,6 +20,12 @@
       "schema": "./src/generators/cypress-project/schema.json",
       "description": "Add cypress e2e app to test a UI library that is set up for Storybook.",
       "hidden": false
+    },
+    "change-storybook-targets": {
+      "factory": "./src/generators/change-storybook-targets/change-storybook-targets#changeStorybookTargetsSchematic",
+      "schema": "./src/generators/change-storybook-targets/schema.json",
+      "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
+      "hidden": false
     }
   },
   "generators": {
@@ -40,6 +46,12 @@
       "factory": "./src/generators/cypress-project/cypress-project",
       "schema": "./src/generators/cypress-project/schema.json",
       "description": "Add cypress e2e app to test a UI library that is set up for Storybook.",
+      "hidden": false
+    },
+    "change-storybook-targets": {
+      "factory": "./src/generators/change-storybook-targets/change-storybook-targets",
+      "schema": "./src/generators/change-storybook-targets/schema.json",
+      "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
       "hidden": false
     }
   }

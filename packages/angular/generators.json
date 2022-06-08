@@ -19,6 +19,7 @@
     "component": {
       "factory": "./src/generators/component/component.compat",
       "schema": "./src/generators/component/schema.json",
+      "aliases": ["c"],
       "description": "Generate an Angular Component."
     },
     "component-cypress-spec": {
@@ -74,6 +75,7 @@
     "remote": {
       "factory": "./src/generators/remote/remote.compat",
       "schema": "./src/generators/remote/schema.json",
+      "x-type": "application",
       "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
@@ -90,6 +92,7 @@
     "host": {
       "factory": "./src/generators/host/host.compat",
       "schema": "./src/generators/host/schema.json",
+      "x-type": "application",
       "description": "Generate a Host Angular Module Federation Application."
     },
     "ng-add": {
@@ -124,7 +127,7 @@
       "description": "Generate a Module Federation configuration for a given Angular application."
     },
     "setup-tailwind": {
-      "factory": "./src/generators/setup-tailwind/compat",
+      "factory": "./src/generators/setup-tailwind/setup-tailwind.compat",
       "schema": "./src/generators/setup-tailwind/schema.json",
       "description": "Configures Tailwind CSS for an application or a buildable/publishable library."
     },
@@ -147,6 +150,12 @@
       "factory": "./src/generators/web-worker/compat",
       "schema": "./src/generators/web-worker/schema.json",
       "description": "Creates a Web Worker."
+    },
+    "change-storybook-targets": {
+      "factory": "./src/generators/change-storybook-targets/compat",
+      "schema": "./src/generators/change-storybook-targets/schema.json",
+      "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
+      "hidden": false
     }
   },
   "generators": {
@@ -166,6 +175,7 @@
     "component": {
       "factory": "./src/generators/component/component",
       "schema": "./src/generators/component/schema.json",
+      "aliases": ["c"],
       "description": "Generate an Angular Component."
     },
     "component-cypress-spec": {
@@ -296,6 +306,11 @@
       "factory": "./src/generators/web-worker/web-worker",
       "schema": "./src/generators/web-worker/schema.json",
       "description": "Creates a Web Worker."
+    },
+    "change-storybook-targets": {
+      "factory": "./src/generators/change-storybook-targets/change-storybook-targets",
+      "schema": "./src/generators/change-storybook-targets/schema.json",
+      "description": "Change storybook targets for Angular projects to use @storybook/angular executors"
     }
   }
 }

@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   transform: {
     '^.+\\.[tj]sx?$': 'ts-jest',
   },
@@ -7,5 +7,5 @@ module.exports = {
   globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
   displayName: 'e2e-detox',
   testTimeout: 600000,
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
 };

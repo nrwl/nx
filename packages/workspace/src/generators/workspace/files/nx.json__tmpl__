@@ -1,12 +1,14 @@
 {
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "npmScope": "<%= npmScope %>",
   "affected": {
     "defaultBase": "<%= defaultBase %>"
   },
+<% if (packageManager && cli === 'angular') { -%>
   "cli": {
-    "defaultCollection": "@nrwl/workspace"<% if (packageManager && cli === 'angular') { %>,
-    "packageManager": "<%=packageManager%>" <% } %>
+    "packageManager": "<%=packageManager%>" 
   },
+<% } -%>
   "implicitDependencies": {
     "package.json": {
       "dependencies": "*",

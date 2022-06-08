@@ -4,6 +4,7 @@
   "description": "Make Angular CLI faster by enabling distributed computation caching",
   "root": "/packages/make-angular-cli-faster",
   "source": "/packages/make-angular-cli-faster/src",
+  "documentation": [],
   "generators": [],
   "executors": []
 }

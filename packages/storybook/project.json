@@ -1,5 +1,5 @@
 {
-  "root": "packages/storybook",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/storybook",
   "projectType": "library",
   "targets": {
@@ -66,7 +66,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["build/packages/storybook"],
       "options": {
         "command": "node ./scripts/copy-readme.js storybook"

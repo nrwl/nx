@@ -10,6 +10,7 @@ import {
 } from '@nrwl/nx-dev/models-package';
 import { ParsedUrlQuery } from 'querystring';
 import { Errors, Example, generateJsonExampleFor } from './examples';
+import { getPublicPackageName } from './get-public-package-name';
 import { SchemaRequest } from './schema-request.models';
 
 function getReferenceFromQuery(query: string): string {
@@ -18,11 +19,6 @@ function getReferenceFromQuery(query: string): string {
 
 export interface SchemaViewModel {
   packageName: string;
-  /**
-   * TODO@ben: Remove this property when there is nor more consumer.
-   * @Deprecated Will be removed. We are switching to internal linking, use "packageUrl".
-   */
-  packageGithubUrl: string;
   packageUrl: string;
   schemaGithubUrl: string;
   schemaMetadata: SchemaMetadata;
@@ -45,8 +41,7 @@ export function getSchemaViewModel(
 
   return {
     schemaMetadata,
-    packageName: `@nrwl/${schemaRequest.pkg.name}`,
-    packageGithubUrl: schemaRequest.pkg.githubRoot + schemaRequest.pkg.root,
+    packageName: getPublicPackageName(schemaRequest.pkg.name),
     packageUrl: `/packages/${schemaRequest.pkg.name}`,
     schemaGithubUrl: schemaRequest.pkg.githubRoot + schemaMetadata.path,
     rootReference: '#',
@@ -56,13 +51,13 @@ export function getSchemaViewModel(
         ? getReferenceFromQuery(String(routerQuery['ref']))
         : '',
     lookup: new InternalLookup(schemaMetadata.schema as JsonSchema),
-    get currentSchema() {
+    get currentSchema(): NxSchema | null {
       return (
         (getSchemaFromReference(this.rootReference, this.lookup) as NxSchema) ??
         null
       );
     },
-    get currentSchemaExamples() {
+    get currentSchemaExamples(): Example | Errors {
       return generateJsonExampleFor(
         this.schemaMetadata.schema as JsonSchema,
         this.lookup,

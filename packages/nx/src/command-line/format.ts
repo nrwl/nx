@@ -13,7 +13,7 @@ import {
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
 } from '../config/workspaces';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import * as prettier from 'prettier';
 import { sortObjectByKeys } from '../utils/object-sort';
 import {
@@ -26,8 +26,9 @@ import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
 import {
   ProjectConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
+import { readNxJson } from '../config/configuration';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -35,7 +36,12 @@ export async function format(
   command: 'check' | 'write',
   args: yargs.Arguments
 ): Promise<void> {
-  const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args, 'affected');
+  const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
+    args,
+    'affected',
+    { printWarnings: true },
+    readNxJson()
+  );
   const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
     (p) => `"${p}"`
   );
@@ -83,10 +89,16 @@ async function getPatterns(
     }
 
     const p = parseFiles(args);
+
     const supportedExtensions = prettier
       .getSupportInfo()
       .languages.flatMap((language) => language.extensions)
-      .filter((extension) => !!extension);
+      .filter((extension) => !!extension)
+      // Prettier supports ".swcrc" as a file instead of an extension
+      // So we add ".swcrc" as a supported extension manually
+      // which allows it to be considered for calculating "patterns"
+      .concat('.swcrc');
+
     const patterns = p.files.filter(
       (f) => fileExists(f) && supportedExtensions.includes(path.extname(f))
     );
@@ -151,9 +163,33 @@ function chunkify(target: string[], size: number): string[][] {
 
 function write(patterns: string[]) {
   if (patterns.length > 0) {
-    execSync(`node "${PRETTIER_PATH}" --write ${patterns.join(' ')}`, {
-      stdio: [0, 1, 2],
-    });
+    const [swcrcPatterns, regularPatterns] = patterns.reduce(
+      (result, pattern) => {
+        result[pattern.includes('.swcrc') ? 0 : 1].push(pattern);
+        return result;
+      },
+      [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
+    );
+
+    execSync(
+      `node "${PRETTIER_PATH}" --write --list-different ${regularPatterns.join(
+        ' '
+      )}`,
+      {
+        stdio: [0, 1, 2],
+      }
+    );
+
+    if (swcrcPatterns.length > 0) {
+      execSync(
+        `node "${PRETTIER_PATH}" --write --list-different ${swcrcPatterns.join(
+          ' '
+        )} --parser json`,
+        {
+          stdio: [0, 1, 2],
+        }
+      );
+    }
   }
 }
 
@@ -212,11 +248,11 @@ function sortTsConfig() {
 function movePropertiesToNewLocations(workspaceJsonPath: string) {
   try {
     const workspaceJson = readJsonFile<
-      NxJsonConfiguration & WorkspaceJsonConfiguration
+      NxJsonConfiguration & ProjectsConfigurations
     >(workspaceJsonPath);
-    const nxJson = readJsonFile<
-      NxJsonConfiguration & WorkspaceJsonConfiguration
-    >('nx.json');
+    const nxJson = readJsonFile<NxJsonConfiguration & ProjectsConfigurations>(
+      'nx.json'
+    );
     if (
       workspaceJson.cli ||
       workspaceJson.generators ||
@@ -243,7 +279,7 @@ function movePropertiesToNewLocations(workspaceJsonPath: string) {
 }
 
 export function moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(
-  workspaceJson: WorkspaceJsonConfiguration,
+  workspaceJson: ProjectsConfigurations,
   nxJson: NxJsonConfiguration & {
     projects: Record<
       string,

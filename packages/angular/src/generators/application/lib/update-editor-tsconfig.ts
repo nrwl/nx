@@ -20,8 +20,8 @@ export function updateEditorTsConfig(tree: Tree, options: NormalizedSchema) {
   );
 
   if (options.unitTestRunner !== 'none') {
-    types.concat(
-      getCompilerOptionsTypes(
+    types.push(
+      ...getCompilerOptionsTypes(
         readJson<TsConfig>(
           tree,
           joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json')

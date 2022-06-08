@@ -26,11 +26,11 @@ export function karmaGenerator(tree: Tree, options: GeneratorOptions) {
       karma: '~6.3.0',
       'karma-chrome-launcher': '~3.1.0',
       'karma-coverage': '~2.2.0',
-      'karma-jasmine': '~4.0.0',
+      'karma-jasmine': '~5.0.0',
       'karma-jasmine-html-reporter': '~1.7.0',
-      'jasmine-core': '~3.10.0',
-      'jasmine-spec-reporter': '~5.0.0',
-      '@types/jasmine': '~3.5.0',
+      'jasmine-core': '~4.1.0',
+      'jasmine-spec-reporter': '~7.0.0',
+      '@types/jasmine': '~4.0.0',
       '@types/node': '16.11.7',
     }
   );

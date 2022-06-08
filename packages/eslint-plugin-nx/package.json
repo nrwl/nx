@@ -23,7 +23,7 @@
   },
   "homepage": "https://nx.dev",
   "peerDependencies": {
-    "@typescript-eslint/parser": "~5.18.0",
+    "@typescript-eslint/parser": "~5.24.0",
     "eslint-config-prettier": "^8.1.0"
   },
   "peerDependenciesMeta": {
@@ -32,10 +32,11 @@
     }
   },
   "dependencies": {
-    "@nrwl/devkit": "*",
-    "@nrwl/workspace": "*",
-    "@typescript-eslint/experimental-utils": "~5.18.0",
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/workspace": "file:../workspace",
+    "@typescript-eslint/experimental-utils": "~5.24.0",
     "chalk": "4.1.0",
-    "confusing-browser-globals": "^1.0.9"
+    "confusing-browser-globals": "^1.0.9",
+    "semver": "7.3.4"
   }
 }

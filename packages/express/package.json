@@ -29,9 +29,9 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/devkit": "*",
-    "@nrwl/node": "*",
-    "@nrwl/workspace": "*"
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/node": "file:../node",
+    "@nrwl/workspace": "file:../workspace"
   },
   "peerDependencies": {
     "express": "4.17.2"

@@ -1,4 +1,9 @@
-import { getProjects, ProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  getProjects,
+  parseTargetString,
+  TargetConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { Schema } from '../schema';
 
 /**
@@ -8,30 +13,35 @@ import { Schema } from '../schema';
  *
  * @param schema The options provided to the schematic
  */
-export function checkTargets(
-  tree: Tree,
-  schema: Schema,
-  proj: ProjectConfiguration
-) {
+export function checkTargets(tree: Tree, schema: Schema) {
   if (schema.forceRemove) {
     return;
   }
 
   const errors: string[] = [];
-  const findRegex = new RegExp(
-    `${schema.projectName}:(${Object.keys(proj.targets).join('|')})`
-  );
-  getProjects(tree).forEach((project, projectName) => {
+
+  getProjects(tree).forEach((projectConfig, projectName) => {
     if (projectName === schema.projectName) {
       return;
     }
-
-    const matches = findRegex.exec(JSON.stringify(project));
-    if (matches) {
-      errors.push(
-        `"${schema.projectName}:${matches[1]}" is used by "${projectName}"`
-      );
-    }
+    Object.entries(projectConfig.targets || {}).forEach(([, targetConfig]) => {
+      checkIfProjectIsUsed(targetConfig, (value) => {
+        try {
+          const { project } = parseTargetString(value);
+          if (project === schema.projectName) {
+            errors.push(`"${value}" is used by "${projectName}"`);
+          }
+        } catch (err) {
+          /**
+           * It threw because the target string was not
+           * in the format of project:target:configuration
+           *
+           * In that case, we don't care about it.
+           * So we can ignore this error.
+           */
+        }
+      });
+    });
   });
 
   if (errors.length > 0) {
@@ -42,4 +52,25 @@ export function checkTargets(
 
     throw new Error(message);
   }
+}
+
+function checkIfProjectIsUsed(
+  config: TargetConfiguration,
+  callback: (x: string) => void | string
+) {
+  function recur(obj, key, value) {
+    if (typeof value === 'string') {
+      callback(value);
+    } else if (Array.isArray(value)) {
+      value.forEach((x, idx) => recur(value, idx, x));
+    } else if (typeof value === 'object') {
+      Object.entries(value).forEach(([k, v]) => {
+        recur(value, k, v);
+      });
+    }
+  }
+
+  Object.entries(config).forEach(([k, v]) => {
+    recur(config, k, v);
+  });
 }

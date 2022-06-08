@@ -2,6 +2,7 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  expectJestTestsToPass,
   killPorts,
   newProject,
   packageInstall,
@@ -259,7 +260,7 @@ describe('Build Node apps', () => {
   beforeEach(() => newProject());
 
   it('should generate a package.json with the `--generatePackageJson` flag', async () => {
-    newProject();
+    const scope = newProject();
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
@@ -283,6 +284,29 @@ describe('Build Node apps', () => {
         version: '0.0.1',
       })
     );
+
+    const nodeapp = uniq('nodeapp');
+    runCLI(`generate @nrwl/node:app ${nodeapp}`);
+
+    const jslib = uniq('jslib');
+    runCLI(`generate @nrwl/js:lib ${jslib} --buildable`);
+
+    updateFile(
+      `apps/${nodeapp}/src/main.ts`,
+      `
+import { ${jslib} } from '@${scope}/${jslib}';   
+console.log('Hello World!');
+${jslib}();
+`
+    );
+
+    await runCLIAsync(`build ${nodeapp} --generate-package-json`);
+    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const nodeAppPackageJson = JSON.parse(
+      readFile(`dist/apps/${nodeapp}/package.json`)
+    );
+
+    expect(nodeAppPackageJson['dependencies']['tslib']).toBeTruthy();
   }, 300000);
 
   describe('NestJS', () => {
@@ -359,9 +383,10 @@ describe('nest libraries', function () {
     const jestConfigContent = readFile(`libs/${nestlib}/jest.config.ts`);
 
     expect(stripIndents`${jestConfigContent}`).toEqual(
-      stripIndents`module.exports = {
+      stripIndents`/* eslint-disable */
+              export default {
                 displayName: '${nestlib}',
-                preset: '../../jest.preset.ts',
+                preset: '../../jest.preset.js',
                 globals: {
                   'ts-jest': {
                   tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -481,4 +506,8 @@ exports.FooModel = FooModel;
       checkFilesDoNotExist('workspace.json', 'angular.json')
     ).not.toThrow();
   }, 1000000);
+
+  it('should run default jest tests', async () => {
+    await expectJestTestsToPass('@nrwl/node:lib');
+  }, 100000);
 });

@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   displayName: 'eslint-rules',
 
   globals: {
@@ -14,5 +14,5 @@ module.exports = {
   moduleNameMapper: {
     '@eslint/eslintrc': '@eslint/eslintrc/dist/eslintrc-universal.cjs',
   },
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
 };

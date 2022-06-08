@@ -9,6 +9,7 @@ import {
  *
  * Will only set the defaultCollection if one does not exist or if it is not `@nrwl/workspace`
  *
+ * @deprecated NxJson defaultCollection will be removed
  * @param host
  * @param collectionName Name of the collection to be set as the default
  */

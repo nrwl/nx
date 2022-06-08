@@ -1,5 +1,5 @@
-<% if ( !isPlainJs ) { %>import { Story, Meta } from '@storybook/react';<% } %>
-import<% if ( !isPlainJs ) { %> { <% } %> <%= componentName %><% if ( propsTypeName && !isPlainJs ) { %>, <%= propsTypeName %> <% } %> <% if ( !isPlainJs ) { %> } <% } %> from './<%= componentFileName %>';
+<% if ( !isPlainJs ) { %>import { ComponentStory, ComponentMeta } from '@storybook/react';<% } %>
+import<% if ( !isPlainJs ) { %> { <% } %> <%= componentName %> <% if ( !isPlainJs ) { %> } <% } %> from './<%= componentImportFileName %>';
 
 export default {
   component: <%= componentName %>,
@@ -8,9 +8,9 @@ export default {
     <%= argType.name %>: { <%- argType.type %> : "<%- argType.actionText %>" },<% } %>
 }
    <% } %> 
-}<% if ( !isPlainJs ) { %> as Meta <% } %>;
+}<% if ( !isPlainJs ) { %> as ComponentMeta<typeof <%= componentName %>> <% } %>;
 
-const Template<% if ( !isPlainJs ) { %>: Story<% if ( propsTypeName ) { %><<%= propsTypeName %>><% } %><% } %> = (args) => <<%= componentName %> {...args} />;
+const Template<% if ( !isPlainJs ) { %>: ComponentStory< typeof <%= componentName %> ><% } %> = (args) => <<%= componentName %> {...args} />;
 
 export const Primary = Template.bind({})
 Primary.args = {<% for (let prop of props) { %>

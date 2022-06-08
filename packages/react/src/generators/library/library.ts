@@ -179,10 +179,12 @@ function addProject(host: Tree, options: NormalizedSchema) {
 
   if (options.publishable || options.buildable) {
     const { libsDir } = getWorkspaceLayout(host);
-    const external = ['react/jsx-runtime'];
+    const external: string[] = [];
 
     if (options.style === '@emotion/styled') {
-      external.push('@emotion/styled/base');
+      external.push('@emotion/react/jsx-runtime');
+    } else {
+      external.push('react/jsx-runtime');
     }
 
     targets.build = {

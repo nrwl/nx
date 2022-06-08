@@ -30,9 +30,19 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         touched = Object.keys(workspaceJson.projects);
         break;
       } else {
-        touched.push(
-          npmPackages.find((pkg) => pkg.data.packageName === c.path[1]).name
+        const npmPackage = npmPackages.find(
+          (pkg) => pkg.data.packageName === c.path[1]
         );
+        touched.push(npmPackage.name);
+        // If it was a type declarations package then also mark its corresponding implementation package as affected
+        if (npmPackage.name.startsWith('npm:@types/')) {
+          const implementationNpmPackage = npmPackages.find(
+            (pkg) => pkg.data.packageName === c.path[1].substring(7)
+          );
+          if (implementationNpmPackage) {
+            touched.push(implementationNpmPackage.name);
+          }
+        }
       }
     } else if (isWholeFileChange(c)) {
       // Whole file was touched, so all npm packages are touched.

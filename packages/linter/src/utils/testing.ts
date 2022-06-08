@@ -7,7 +7,7 @@ const migrationTestRunner = new SchematicTestRunner(
   join(__dirname, '../../migrations.json')
 );
 
-export function runMigration<T = any>(
+export function runMigration<T extends object = any>(
   migrationName: string,
   options: T,
   tree: Tree

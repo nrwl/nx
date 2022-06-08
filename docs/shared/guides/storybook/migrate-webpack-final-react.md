@@ -11,7 +11,7 @@ Here are the main differences to the previous versions of Nx:
 
 Here's an example of a newly generated `main.js` file:
 
-```js
+```javascript
 // project-level .storybook/main.js file
 const rootMain = require('../../../.storybook/main');
 
@@ -45,7 +45,7 @@ module.exports = {
 
 At the Nx workspace root level, the configuration file looks as follows:
 
-```js
+```javascript
 // root level .storybook/main.js file
 module.exports = {
   stories: [],
@@ -74,7 +74,7 @@ Restructure your `main.js` file s.t. it looks like in the example illustrated ab
 
 If you need to keep your root-level `.storybook/webpack.config.js` for now, then make sure you adjust the `main.js` in a way that it properly calls the root-level `webpack.config.js` to inherit all of the global configurations.
 
-```js
+```javascript
 const rootMain = require('../../../.storybook/main');
 const rootWebpackConfig = require('../../../.storybook/webpack.config');
 
@@ -100,7 +100,7 @@ module.exports = {
 
 In previous versions of Nx a custom `webpack.config.js` was generated with the following content:
 
-```js
+```javascript
 module.exports = async ({ config, mode }) => {
   config = await rootWebpackConfig({ config, mode });
 

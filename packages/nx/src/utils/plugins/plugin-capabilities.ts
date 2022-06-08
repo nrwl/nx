@@ -1,4 +1,4 @@
-import { workspaceRoot } from '../app-root';
+import { workspaceRoot } from '../workspace-root';
 import * as chalk from 'chalk';
 import { dirname, join } from 'path';
 import { output } from '../output';
@@ -6,6 +6,7 @@ import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
 import { getPackageManagerCommand } from '../package-manager';
+import { readModulePackageJson } from '../package-json';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -29,10 +30,8 @@ export function getPluginCapabilities(
   pluginName: string
 ): PluginCapabilities | null {
   try {
-    const packageJsonPath = require.resolve(`${pluginName}/package.json`, {
-      paths: [workspaceRoot],
-    });
-    const packageJson = readJsonFile(packageJsonPath);
+    const { packageJson, path: packageJsonPath } =
+      readModulePackageJson(pluginName);
     return {
       name: pluginName,
       generators:

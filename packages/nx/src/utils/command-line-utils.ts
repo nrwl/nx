@@ -1,13 +1,13 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
-import {
-  readNxJson,
-  readWorkspaceJson,
-  TEN_MEGABYTES,
-} from '../project-graph/file-utils';
+import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
-import { NxAffectedConfig } from '../config/nx-json';
+import { NxAffectedConfig, NxJsonConfiguration } from '../config/nx-json';
 import { execSync } from 'child_process';
+import {
+  readAllWorkspaceConfiguration,
+  readNxJson,
+} from '../config/configuration';
 
 export function names(name: string): {
   name: string;
@@ -74,14 +74,16 @@ const runOne: string[] = [
   'prod',
   'runner',
   'parallel',
-  'max-parallel',
+  'maxParallel',
   'exclude',
-  'only-failed',
+  'onlyFailed',
   'help',
-  'with-deps',
-  'skip-nx-cache',
+  'withDeps',
+  'skipNxCache',
   'scan',
-  'hide-cached-output',
+  'outputStyle',
+  'nxBail',
+  'nxIgnoreCycles',
 ];
 
 const runMany: string[] = [...runOne, 'projects', 'all'];
@@ -96,6 +98,7 @@ const runAffected: string[] = [
   'files',
   'plain',
   'select',
+  'type',
 ];
 
 export interface RawNxArgs extends NxArgs {
@@ -115,20 +118,19 @@ export interface NxArgs {
   exclude?: string[];
   files?: string[];
   onlyFailed?: boolean;
-  'only-failed'?: boolean;
   verbose?: boolean;
   help?: boolean;
   version?: boolean;
   plain?: boolean;
   withDeps?: boolean;
-  'with-deps'?: boolean;
   projects?: string[];
   select?: string;
   skipNxCache?: boolean;
-  'skip-nx-cache'?: boolean;
-  'hide-cached-output'?: boolean;
-  hideCachedOutput?: boolean;
+  outputStyle?: string;
   scan?: boolean;
+  nxBail?: boolean;
+  nxIgnoreCycles?: boolean;
+  type?: string;
 }
 
 const ignoreArgs = ['$0', '_'];
@@ -136,7 +138,8 @@ const ignoreArgs = ['$0', '_'];
 export function splitArgsIntoNxArgsAndOverrides(
   args: yargs.Arguments,
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
-  options = { printWarnings: true }
+  options = { printWarnings: true },
+  nxJson: NxJsonConfiguration
 ): { nxArgs: NxArgs; overrides: yargs.Arguments } {
   const nxSpecific =
     mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
@@ -144,7 +147,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   const nxArgs: RawNxArgs = {};
   const overrides = yargsParser(args._ as string[], {
     configuration: {
-      'strip-dashed': true,
+      'camel-case-expansion': false,
       'dot-notation': false,
     },
   });
@@ -154,9 +157,9 @@ export function splitArgsIntoNxArgsAndOverrides(
   delete overrides._;
 
   Object.entries(args).forEach(([key, value]) => {
-    const dasherized = names(key).fileName;
-    if (nxSpecific.includes(dasherized) || dasherized.startsWith('nx-')) {
-      if (value !== undefined) nxArgs[key] = value;
+    const camelCased = names(key).propertyName;
+    if (nxSpecific.includes(camelCased) || camelCased.startsWith('nx')) {
+      if (value !== undefined) nxArgs[camelCased] = value;
     } else if (!ignoreArgs.includes(key)) {
       overrides[key] = value;
     }
@@ -236,8 +239,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
 
     if (!nxArgs.base) {
-      const affectedConfig = getAffectedConfig();
-      nxArgs.base = affectedConfig.defaultBase;
+      nxArgs.base = nxJson.affected?.defaultBase || 'main';
 
       // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
       if (
@@ -276,14 +278,6 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   return { nxArgs, overrides } as any;
-}
-
-export function getAffectedConfig(): NxAffectedConfig {
-  const config = readNxJson();
-
-  return {
-    defaultBase: config.affected?.defaultBase || 'main',
-  };
 }
 
 export function parseFiles(options: NxArgs): { files: string[] } {
@@ -355,6 +349,6 @@ function parseGitOutput(command: string): string[] {
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {
-  const { projects } = readWorkspaceJson();
+  const { projects } = readAllWorkspaceConfiguration();
   return projectNames.map((name) => projects[name].root);
 }

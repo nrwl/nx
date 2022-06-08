@@ -28,6 +28,11 @@
       "factory": "./src/generators/executor/executor",
       "schema": "./src/generators/executor/schema.json",
       "description": "Create a executor for an Nx Plugin."
+    },
+    "plugin-lint-checks": {
+      "factory": "./src/generators/lint-checks/generator",
+      "schema": "./src/generators/lint-checks/schema.json",
+      "description": "Adds linting configuration to validate common json files for nx plugins."
     }
   },
   "schematics": {

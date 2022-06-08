@@ -151,63 +151,76 @@ To run these scripts with Nx, use the same syntax as Nx executors. `nx build myl
 
 ## Publish your TypeScript packages to NPM
 
-Nx doesn’t provide an out of the box process for publishing and leaves it to the developer to invoke the final command. The reason for this is that the actual publishing process can be very specific to your project and target you deploy to and might have a lot of custom pre-deployment setup (e.g. generating changelogs, determining semver etc.). Make sure to check out our [community page](/community) as there are a lot of community provided packages integrating into the publishing process.
+### `--publishable` flag
 
-However, integrating your own custom publishing process with Nx can be very straightforward, especially with the help of Nx [run-commands](/executors/run-commands-builder) and [“Target Dependencies”](/configuration/projectjson#dependson).
+Let's start by generating a new library `publish-me` with the following command:
 
-To add a new run-command to our project, we can leverage the `run-command` generator:
-
-```bash
-nx g @nrwl/workspace:run-commands publish --project hello-tsc --command 'npm publish --tag=latest --access public'
+```shell
+nx g @nrwl/js:lib publish-me --publishable --importPath="@happynrwl/publish-me"
 ```
 
-This adds a new `publish` target to our existing `project.json` configuration of the `hello-tsc` project. Let's also make sure to adjust the `cwd` (current working directory) of our command, which should be the output folder of the `hello-tsc` package.
+Generating a library with `--publishable` flag does several things extra on top of `--buildable`. It generates a minimal `publish.mjs` script in `tools/scripts/` directory if it does not already exist. Additionally, `--publishable` also adds a `publish` target to the library's `project.json` with the following content:
 
 ```json
 {
-  "root": "packages/hello-tsc",
-  "sourceRoot": "packages/hello-tsc/src",
-  "projectType": "library",
+  "root": "packages/publish-me",
+  "sourceRoot": "packages/publish-me/src",
   "targets": {
-    "build": { ... },
-    "lint": { ... },
-    "test": { ... },
+    "build": {},
     "publish": {
-      "executor": "@nrwl/workspace:run-commands",
-      "outputs": [],
+      "executor": "nx:run-commands",
       "options": {
-        "command": "npm publish --tag=latest --access public",
-        "cwd": "dist/packages/hello-tsc"
-      }
-    }
+        "command": "node tools/scripts/publish.mjs publish-me {args.ver} {args.tag}"
+      },
+      "dependsOn": ["build"]
+    },
+    "lint": {},
+    "test": {}
   },
   "tags": []
 }
 ```
 
-With that, we're all set up. By running the following commands we can publish our package to NPM.
+The `publish` target invokes the generated `publish.mjs` script using [`nx:run-commands`](/executors/run-commands-builder) executor. The script does the following:
 
-```bash
-nx build hello-tsc
-nx publish hello-tsc
+- Validate the `ver` argument against a simple [SemVer](https://semver.org/) RegExp.
+- Validate the `name` of the project (eg: `publish-me`) against the workspace existing projects.
+- Update the `version` property in the `package.json` of your project's `build.outputPath`
+- Invoke `npm publish` with the provided tag (default to `next` so you won't publish to `latest` by accident)
+
+> Make sure to authenticate with `npm` before running the `publish` target.
+
+```shell
+nx publish publish-me --ver=<required-version> --tag=[custom-tag]
 ```
 
-We can automate this even further by leveraging the `targetDependencies` feature. There's clearly a dependency between `build` and `publish`, in that we want to make sure the `build` happens before the `publish` command. We can define this relationship in the `nx.json` file:
+Thanks to [“Target Dependencies” (`dependsOn`)](/configuration/projectjson#dependson) property under the `publish` target, Nx runs the `build` target automatically before Nx runs `publish`. And of course, if `build` has already run, it won't execute again, thanks to [Nx computation caching](/using-nx/caching).
 
-```json
+> The generated `publish.mjs` script is a minimal version of what a publishing process looks like. You can definitely add more to it as you see fit for your project. For example: you can add a capability to automatic increment the version
+
+### Manual setup
+
+Let's set up our `hello-tsc` library to be publishable as well but this time, we'll do it manually. All we have to do is to copy the `publish` target from `publish-me` library to `hello-tsc` and modify it to use `hello-tsc` project name instead.
+
+```shell
 {
-  ...
-  "targetDependencies": {
-    ...
-    "publish": [
-      {
-        "target": "build",
-        "projects": "self"
-      }
-    ]
+  "root": "packages/hello-tsc",
+  "sourceRoot": "packages/hello-tsc/src",
+  "targets": {
+    "build": {},
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/scripts/publish.mjs hello-tsc {args.ver} {args.tag}",
+      },
+      "dependsOn": ["build"]
+    },
+    "lint": {},
+    "test": {}
   },
-  ...
+  "tags": []
 }
+
 ```
 
-Now, just running `nx publish hello-tsc` will automatically run the `nx build hello-tsc` command first. And of course, if `build` has already run, it won't execute again, thanks to [Nx computation caching](/using-nx/caching).
+Now, you should be able to invoke `nx publish hello-tsc --ver=<required-version>` to publish it to `npm`

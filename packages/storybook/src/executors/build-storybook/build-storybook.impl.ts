@@ -1,10 +1,9 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
-import * as build from '@storybook/core/standalone';
+import * as build from '@storybook/core-server/standalone';
 import 'dotenv/config';
 import { CommonNxStorybookConfig } from '../models';
 import {
   getStorybookFrameworkPath,
-  normalizeAngularBuilderStylesOptions,
   resolveCommonStorybookOptionMapper,
   runStorybookSetupCheck,
 } from '../utils';
@@ -24,7 +23,6 @@ export default async function buildStorybookExecutor(
   const frameworkPath = getStorybookFrameworkPath(options.uiFramework);
   const { default: frameworkOptions } = await import(frameworkPath);
 
-  options = normalizeAngularBuilderStylesOptions(options, options.uiFramework);
   const option = storybookOptionMapper(options, frameworkOptions, context);
 
   // print warnings

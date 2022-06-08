@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   transform: {
     '^.+\\.[tj]sx?$': 'ts-jest',
   },
@@ -9,5 +9,5 @@ module.exports = {
   displayName: 'react-native',
   testEnvironment: 'node',
   verbose: true,
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
 };

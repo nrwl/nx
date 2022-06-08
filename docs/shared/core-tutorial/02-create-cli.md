@@ -27,14 +27,14 @@ Create a `project.json` file for your Go CLI.
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "go build -o='../../dist/packages/cli/' ./src/ascii.go",
         "cwd": "packages/cli"
       }
     },
     "serve": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "go run ./src/ascii.go",
         "cwd": "packages/cli"
@@ -68,7 +68,7 @@ All of these reasons are matters of preference. After this tutorial, you should 
 - `root`, `sourceRoot` and `application` are properties that help Nx know more about your project.
 - `targets` is similar to the `scripts` property in `package.json`.
 - Just as in `package.json`, `build` and `serve` can be any string you pick.
-- The `executor` is the code that runs the target. In this case, [`@nrwl/workspace:run-commands`](https://nx.dev/workspace/run-commands-executor) launches a terminal process to execute whatever command you pass in.
+- The `executor` is the code that runs the target. In this case, [`run-commands`](https://nx.dev/packages/nx/executors/run-commands) launches a terminal process to execute whatever command you pass in.
 - `options` contains whatever configuration properties the executor needs to run.
 
 ## Create the CLI

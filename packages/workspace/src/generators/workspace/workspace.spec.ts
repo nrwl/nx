@@ -1,8 +1,11 @@
 import { readJson } from '@nrwl/devkit';
 import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
+import Ajv from 'ajv';
 import { workspaceGenerator } from './workspace';
 import { createTree } from '@nrwl/devkit/testing';
 import { Preset } from '../utils/presets';
+import * as nxSchema from '../../../../nx/schemas/nx-schema.json';
+import * as workspaceSchema from '../../../../nx/schemas/workspace-schema.json';
 
 describe('@nrwl/workspace:workspace', () => {
   let tree: Tree;
@@ -25,7 +28,9 @@ describe('@nrwl/workspace:workspace', () => {
     expect(tree.exists('/proj/.prettierignore')).toBe(true);
   });
 
-  it('should create nx.json', async () => {
+  it('should create nx.json and workspace.json', async () => {
+    const ajv = new Ajv();
+
     await workspaceGenerator(tree, {
       name: 'proj',
       directory: 'proj',
@@ -35,12 +40,10 @@ describe('@nrwl/workspace:workspace', () => {
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toEqual({
+      $schema: './node_modules/nx/schemas/nx-schema.json',
       npmScope: 'proj',
       affected: {
         defaultBase: 'main',
-      },
-      cli: {
-        defaultCollection: '@nrwl/workspace',
       },
       implicitDependencies: {
         'package.json': {
@@ -66,6 +69,17 @@ describe('@nrwl/workspace:workspace', () => {
         ],
       },
     });
+    const validateNxJson = ajv.compile(nxSchema);
+    expect(validateNxJson(nxJson)).toEqual(true);
+
+    const workspaceJson = readJson(tree, '/proj/workspace.json');
+    expect(workspaceJson).toEqual({
+      $schema: './node_modules/nx/schemas/workspace-schema.json',
+      version: 2,
+      projects: {},
+    });
+    const validateWorkspaceJson = ajv.compile(workspaceSchema);
+    expect(validateWorkspaceJson(workspaceJson)).toEqual(true);
   });
 
   it('should create a prettierrc file', async () => {
@@ -165,7 +179,7 @@ Object {
     expect(tree.exists('/proj/apps/.gitkeep')).toBe(false);
     expect(tree.exists('/proj/libs/.gitkeep')).toBe(false);
     const nx = readJson(tree, '/proj/nx.json');
-    expect(nx.extends).toEqual('nx/presets/core.json');
+    expect(nx.extends).toEqual('nx/presets/npm.json');
 
     const { scripts } = readJson(tree, '/proj/package.json');
     expect(scripts).toMatchInlineSnapshot(`Object {}`);

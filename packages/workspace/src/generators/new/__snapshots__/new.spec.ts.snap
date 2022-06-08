@@ -3,14 +3,14 @@
 exports[`new --preset angular should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {
-    "@nrwl/angular": "*",
+    "@nrwl/angular": "0.0.1",
   },
   "devDependencies": Object {
-    "@nrwl/cli": "*",
-    "@nrwl/workspace": "*",
-    "nx": "*",
-    "prettier": "^2.5.1",
-    "typescript": "~4.6.2",
+    "@nrwl/cli": "0.0.1",
+    "@nrwl/workspace": "0.0.1",
+    "nx": "0.0.1",
+    "prettier": "^2.6.2",
+    "typescript": "~4.7.2",
   },
   "license": "MIT",
   "name": "my-workspace",
@@ -28,11 +28,11 @@ exports[`new --preset empty should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@nrwl/cli": "*",
-    "@nrwl/workspace": "*",
-    "nx": "*",
-    "prettier": "^2.5.1",
-    "typescript": "~4.6.2",
+    "@nrwl/cli": "0.0.1",
+    "@nrwl/workspace": "0.0.1",
+    "nx": "0.0.1",
+    "prettier": "^2.6.2",
+    "typescript": "~4.7.2",
   },
   "license": "MIT",
   "name": "my-workspace",
@@ -50,12 +50,12 @@ exports[`new --preset react should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@nrwl/cli": "*",
-    "@nrwl/react": "*",
-    "@nrwl/workspace": "*",
-    "nx": "*",
-    "prettier": "^2.5.1",
-    "typescript": "~4.6.2",
+    "@nrwl/cli": "0.0.1",
+    "@nrwl/react": "0.0.1",
+    "@nrwl/workspace": "0.0.1",
+    "nx": "0.0.1",
+    "prettier": "^2.6.2",
+    "typescript": "~4.7.2",
   },
   "license": "MIT",
   "name": "my-workspace",
@@ -71,11 +71,9 @@ Object {
 
 exports[`new should generate an empty nx.json 1`] = `
 Object {
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "affected": Object {
     "defaultBase": "main",
-  },
-  "cli": Object {
-    "defaultCollection": "@nrwl/workspace",
   },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
@@ -111,6 +109,7 @@ Object {
 
 exports[`new should generate an empty workspace.json 1`] = `
 Object {
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json",
   "projects": Object {},
   "version": 2,
 }

@@ -36,28 +36,6 @@ describe('init generator', () => {
     expect(packageJson.devDependencies['@nrwl/nest']).toBe(nxVersion);
   });
 
-  it('should set @nrwl/nest as the default collection when none was set before', async () => {
-    await initGenerator(tree, {});
-
-    const { cli } = devkit.readJson<devkit.NxJsonConfiguration>(
-      tree,
-      'nx.json'
-    );
-    expect(cli.defaultCollection).toEqual('@nrwl/nest');
-  });
-
-  it('should not set @nrwl/nest as the default collection when another one was set before', async () => {
-    devkit.updateJson(tree, 'nx.json', (json) => ({
-      ...json,
-      cli: { defaultCollection: '@nrwl/node' },
-    }));
-
-    await initGenerator(tree, {});
-
-    const workspaceJson = devkit.readJson(tree, 'nx.json');
-    expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/node');
-  });
-
   it('should add jest config when unitTestRunner is jest', async () => {
     await initGenerator(tree, { unitTestRunner: 'jest' });
 

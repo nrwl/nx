@@ -88,7 +88,10 @@ describe('react:stories for applications', () => {
 
   it('should not update existing stories', async () => {
     // ARRANGE
-    appTree.write('apps/test-ui-app/src/app/nx-welcome.stories.tsx', '');
+    appTree.write(
+      'apps/test-ui-app/src/app/nx-welcome.stories.tsx',
+      `import { ComponentStory, ComponentMeta } from '@storybook/react'`
+    );
 
     // ACT
     await storiesGenerator(appTree, {
@@ -99,7 +102,9 @@ describe('react:stories for applications', () => {
     // ASSERT
     expect(
       appTree.read('apps/test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
-    ).toEqual('');
+    ).toEqual(
+      `import { ComponentStory, ComponentMeta } from '@storybook/react'`
+    );
   });
 });
 

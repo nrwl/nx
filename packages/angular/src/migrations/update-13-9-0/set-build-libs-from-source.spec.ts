@@ -27,6 +27,9 @@ describe('set-build-libs-from-source migration', () => {
     };
     addProjectConfiguration(tree, 'app1', project);
 
+    // add $schema to projectConfig manually
+    project['$schema'] = '../../node_modules/nx/schemas/project-schema.json';
+
     await migration(tree);
 
     const resultingProject = readProjectConfiguration(tree, 'app1');

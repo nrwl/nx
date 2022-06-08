@@ -77,6 +77,18 @@ describe('project graph utils', () => {
       expect(paths).toContain(projGraph.nodes['core'].data.sourceRoot);
     });
 
+    it('should handle circular dependencies', () => {
+      projGraph.dependencies['core'] = [
+        {
+          type: 'static',
+          source: 'core',
+          target: 'demo-app',
+        },
+      ];
+      const paths = getSourceDirOfDependentProjects('demo-app', projGraph);
+      expect(paths).toContain(projGraph.nodes['ui'].data.sourceRoot);
+    });
+
     it('should throw an error if the project does not exist', () => {
       expect(() =>
         getSourceDirOfDependentProjects('non-existent-app', projGraph)

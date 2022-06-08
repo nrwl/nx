@@ -4,6 +4,7 @@ export interface Schema {
   dynamic?: boolean;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
+  skipPostInstall?: boolean;
   addTailwind?: boolean;
   prefix?: string;
   style?: Styles;

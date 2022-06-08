@@ -1,5 +1,5 @@
 {
-  "root": "nx-dev/ui-community",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/ui-community/src",
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:ui"],

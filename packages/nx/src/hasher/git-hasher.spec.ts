@@ -1,7 +1,7 @@
-import { dirSync } from 'tmp';
-import { mkdirSync, removeSync } from 'fs-extra';
 import { execSync } from 'child_process';
-import { getFileHashes } from './git-hasher';
+import { mkdirSync, removeSync } from 'fs-extra';
+import { dirSync } from 'tmp';
+import { getFileHashes, getGitHashForBatch } from './git-hasher';
 
 describe('git-hasher', () => {
   let dir: string;
@@ -173,4 +173,27 @@ describe('git-hasher', () => {
   function run(command: string) {
     return execSync(command, { cwd: dir, stdio: ['pipe', 'pipe', 'pipe'] });
   }
+
+  it('should hash two simple files', async () => {
+    const files = ['a.txt', 'b.txt'];
+    run(`echo AAA > a.txt`);
+    run(`echo BBB > b.txt`);
+    const hashes = await getGitHashForBatch(files, dir);
+    expect([...hashes.keys()]).toEqual(files);
+  });
+
+  it('should fail when file deleted', async () => {
+    const files = ['a.txt', 'b.txt'];
+    run(`echo AAA > a.txt`);
+    try {
+      const hashes = await getGitHashForBatch(files, dir);
+      expect(false).toBeTruthy();
+    } catch (err: any) {
+      expect(err instanceof Error).toBeTruthy();
+      const error = err as Error;
+      expect(error.message).toMatch(
+        /Passed 2 file paths to Git to hash, but received 1 hashes\.\n *fatal:.*b\.txt.*No such file or directory\n/
+      );
+    }
+  });
 });

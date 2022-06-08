@@ -39,5 +39,6 @@ module.exports = () => {
     autoWatch: true,
     browsers: ['Chrome'],
     singleRun: true,
+    restartOnFileChange: true
   };
 };

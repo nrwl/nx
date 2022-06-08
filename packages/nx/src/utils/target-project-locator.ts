@@ -1,7 +1,7 @@
 import { getRootTsConfigFileName, resolveModuleByImport } from './typescript';
 import { isRelativePath } from './fileutils';
 import { dirname, join, posix } from 'path';
-import { workspaceRoot } from './app-root';
+import { workspaceRoot } from './workspace-root';
 import { readFileSync } from 'fs';
 import {
   ProjectGraphExternalNode,

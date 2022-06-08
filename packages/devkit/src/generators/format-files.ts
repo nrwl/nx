@@ -1,14 +1,14 @@
-import type { Tree } from 'nx/src/config/tree';
+import type { Tree } from 'nx/src/generators/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-import { getWorkspacePath } from '../utils/get-workspace-layout';
-import { readJson, updateJson, writeJson } from '../utils/json';
-import { sortObjectByKeys } from 'nx/src/utils/object-sort';
+import { readJson, updateJson, writeJson } from 'nx/src/generators/utils/json';
 import {
+  getWorkspacePath,
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
   WorkspaceConfiguration,
-} from './project-configuration';
+} from 'nx/src/generators/utils/project-configuration';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
 /**
  * Formats all the created or updated files using Prettier
@@ -46,6 +46,10 @@ export async function formatFiles(tree: Tree): Promise<void> {
         ...options,
         ...resolvedOptions,
       };
+
+      if (file.path.endsWith('.swcrc')) {
+        options.parser = 'json';
+      }
 
       const support = await prettier.getFileInfo(systemPath, options);
       if (support.ignored || !support.inferredParser) {

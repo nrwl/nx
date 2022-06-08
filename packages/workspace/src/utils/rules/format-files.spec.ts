@@ -42,9 +42,6 @@ describe('formatFiles', () => {
           "architect": {}
         }
       },
-      "cli": {
-        "defaultCollection": "@nrwl/angular"
-      },
       "defaultProject": "app1"
     }`
     );

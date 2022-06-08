@@ -1,9 +1,11 @@
 import { appendFileSync, openSync, writeFileSync } from 'fs';
+import { run } from '../src/command-line/run';
+import { addCommandPrefixIfNeeded } from '../src/utils/add-command-prefix';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
     process.env.NX_TERMINAL_CAPTURE_STDERR === 'true',
-    process.env.NX_FORWARD_OUTPUT === 'true'
+    process.env.NX_STREAM_OUTPUT === 'true'
   );
 }
 
@@ -11,16 +13,15 @@ if (!process.env.NX_WORKSPACE_ROOT) {
   console.error('Invalid Nx command invocation');
   process.exit(1);
 }
+let projectName;
 requireCli();
 
 function requireCli() {
   process.env.NX_CLI_SET = 'true';
   try {
     const args = JSON.parse(process.argv[2]);
-    const e = require(require.resolve('nx/src/command-line/run.js', {
-      paths: [process.env.NX_WORKSPACE_ROOT],
-    }));
-    e.run(
+    projectName = args.targetDescription.project;
+    run(
       process.cwd(),
       process.env.NX_WORKSPACE_ROOT,
       args.targetDescription,
@@ -45,13 +46,13 @@ function requireCli() {
  * We need to collect all stdout and stderr and store it, so the caching mechanism
  * could store it.
  *
- * Writing stdout and stderr into different stream is too risky when using TTY.
+ * Writing stdout and stderr into different streams is too risky when using TTY.
  *
  * So we are simply monkey-patching the Javascript object. In this case the actual output will always be correct.
  * And the cached output should be correct unless the CLI bypasses process.stdout or console.log and uses some
  * C-binary to write to stdout.
  */
-function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
+function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
   const stdoutWrite = process.stdout._write;
   const stderrWrite = process.stderr._write;
 
@@ -67,8 +68,17 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
   ) => {
     onlyStdout.push(chunk);
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
-    if (forwardOutput) {
-      stdoutWrite.apply(process.stdout, [chunk, encoding, callback]);
+    if (streamOutput) {
+      const updatedChunk = addCommandPrefixIfNeeded(
+        projectName,
+        chunk,
+        encoding
+      );
+      stdoutWrite.apply(process.stdout, [
+        updatedChunk.content,
+        updatedChunk.encoding,
+        callback,
+      ]);
     } else {
       callback();
     }
@@ -80,8 +90,17 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
     callback: Function
   ) => {
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
-    if (forwardOutput) {
-      stderrWrite.apply(process.stderr, [chunk, encoding, callback]);
+    if (streamOutput) {
+      const updatedChunk = addCommandPrefixIfNeeded(
+        projectName,
+        chunk,
+        encoding
+      );
+      stderrWrite.apply(process.stderr, [
+        updatedChunk.content,
+        updatedChunk.encoding,
+        callback,
+      ]);
     } else {
       callback();
     }

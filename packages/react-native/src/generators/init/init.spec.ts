@@ -36,29 +36,6 @@ describe('init', () => {
     expect(content).toMatch(/# Nested node_modules/);
   });
 
-  describe('defaultCollection', () => {
-    it('should be set if none was set before', async () => {
-      await reactNativeInitGenerator(tree, { e2eTestRunner: 'none' });
-      const { cli } = readJson(tree, 'nx.json');
-      expect(cli.defaultCollection).toEqual('@nrwl/react-native');
-    });
-
-    it('should not be set if something else was set before', async () => {
-      updateJson(tree, 'nx.json', (json) => {
-        json.cli = {
-          defaultCollection: '@nrwl/react',
-        };
-
-        json.targets = {};
-
-        return json;
-      });
-      await reactNativeInitGenerator(tree, { e2eTestRunner: 'none' });
-      const { cli } = readJson(tree, 'nx.json');
-      expect(cli.defaultCollection).toEqual('@nrwl/react');
-    });
-  });
-
   describe('babel config', () => {
     it('should create babel config if not present', async () => {
       await reactNativeInitGenerator(tree, {

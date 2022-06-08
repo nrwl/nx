@@ -1,4 +1,6 @@
 import {
+  getPublishedVersion,
+  isNotWindows,
   newProject,
   readFile,
   readJson,
@@ -85,7 +87,7 @@ describe('Cli', () => {
     expect(affectedHelp).toContain('Run target for affected projects');
 
     const version = runCLI(`--version`);
-    expect(version).toContain('9999.0.2'); // stub value
+    expect(version).toContain(getPublishedVersion()); // stub value
   }, 120000);
 });
 
@@ -164,6 +166,7 @@ describe('migrate', () => {
       `./node_modules/migrate-parent-package/package.json`,
       JSON.stringify({
         version: '1.0.0',
+        name: 'migrate-parent-package',
         'nx-migrations': './migrations.json',
       })
     );
@@ -209,6 +212,7 @@ describe('migrate', () => {
     updateFile(
       `./node_modules/migrate-child-package/package.json`,
       JSON.stringify({
+        name: 'migrate-child-package',
         version: '1.0.0',
       })
     );
@@ -344,33 +348,36 @@ describe('migrate', () => {
   });
 
   it('should run migrations and create individual git commits using a provided custom commit prefix', () => {
-    runCLI(
-      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
-      {
-        env: {
-          ...process.env,
-          NX_MIGRATE_SKIP_INSTALL: 'true',
-          NX_MIGRATE_USE_LOCAL: 'true',
-        },
-      }
-    );
+    // Windows has shell escaping issues so this test would always fail
+    if (isNotWindows()) {
+      runCLI(
+        'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+        {
+          env: {
+            ...process.env,
+            NX_MIGRATE_SKIP_INSTALL: 'true',
+            NX_MIGRATE_USE_LOCAL: 'true',
+          },
+        }
+      );
 
-    // runs migrations with createCommits enabled and custom commit-prefix (NOTE: the extra quotes are needed here to avoid shell escaping issues)
-    runCLI(
-      `migrate --run-migrations=migrations.json --create-commits --commit-prefix="'chore(core): AUTOMATED - '"`,
-      {
-        env: {
-          ...process.env,
-          NX_MIGRATE_SKIP_INSTALL: 'true',
-          NX_MIGRATE_USE_LOCAL: 'true',
-        },
-      }
-    );
+      // runs migrations with createCommits enabled and custom commit-prefix (NOTE: the extra quotes are needed here to avoid shell escaping issues)
+      runCLI(
+        `migrate --run-migrations=migrations.json --create-commits --commit-prefix="'chore(core): AUTOMATED - '"`,
+        {
+          env: {
+            ...process.env,
+            NX_MIGRATE_SKIP_INSTALL: 'true',
+            NX_MIGRATE_USE_LOCAL: 'true',
+          },
+        }
+      );
 
-    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+      const recentCommits = runCommand('git --no-pager log --oneline -n 10');
 
-    expect(recentCommits).toContain('chore(core): AUTOMATED - run11');
-    expect(recentCommits).toContain('chore(core): AUTOMATED - run20');
+      expect(recentCommits).toContain('chore(core): AUTOMATED - run11');
+      expect(recentCommits).toContain('chore(core): AUTOMATED - run20');
+    }
   });
 
   it('should fail if a custom commit prefix is provided when --create-commits is not enabled', () => {

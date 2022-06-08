@@ -31,4 +31,4 @@ As of v13.6.0, the Nx Daemon is enabled by default. If you want to turn it off, 
 
 ## Logs
 
-To see information about the running Nx Daemon (such as its background process ID and log output file), run `nx daemon --help`. Once you have the path to that log file, you could either open it in your IDE or stream updates in a separate terminal window by running `tail -f {REPLACE_WITH_LOG_PATH}`, for example.
+To see information about the running Nx Daemon (such as its background process ID and log output file), run `nx daemon`. Once you have the path to that log file, you could either open it in your IDE or stream updates in a separate terminal window by running `tail -f {REPLACE_WITH_LOG_PATH}`, for example.

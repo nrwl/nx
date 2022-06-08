@@ -1,5 +1,5 @@
 {
-  "root": "tools/eslint-rules",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/eslint-rules",
   "targets": {
     "test": {

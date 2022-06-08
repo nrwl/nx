@@ -12,9 +12,10 @@ import {
   toJS,
   Tree,
   updateJson,
+  readJson,
+  writeJson,
 } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
-import { findRootJestPreset } from '@nrwl/jest/src/utils/config/find-root-jest-files';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
@@ -89,6 +90,7 @@ function addProject(
   const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+    projectType: 'library',
     targets: {},
     tags: options.parsedTags,
   };
@@ -117,7 +119,6 @@ function addProject(
         executor: '@nrwl/workspace:run-commands',
         options: {
           command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
-          cwd: outputPath,
         },
         dependsOn: [{ projects: 'self', target: 'build' }],
       };
@@ -178,9 +179,42 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
   });
 }
 
+/**
+ * Currently `@nrwl/js:library` TypeScript files can be compiled by most NX applications scaffolded via the Plugin system. However, `@nrwl/react:app` is an exception that due to its babel configuration, won't transpile external TypeScript files from packages/libs that do not contain a .babelrc.
+ *
+ * If a user doesn't explicitly set the flag, to prevent breaking the experience (they see the application failing, and they need to manually add the babelrc themselves), we want to detect whether they have the `@nrwl/web` plugin installed, and generate it automatically for them (even when they do not explicity request it).
+ *
+ * You can find more details on why this is necessary here:
+ * https://github.com/nrwl/nx/pull/10055
+ */
+function shouldAddBabelRc(tree: Tree, options: NormalizedSchema) {
+  if (typeof options.includeBabelRc === 'undefined') {
+    const webPluginName = '@nrwl/web';
+
+    const packageJson = readJson(tree, 'package.json');
+
+    const hasNxWebPlugin = Object.keys(
+      packageJson.devDependencies as Record<string, string>
+    ).includes(webPluginName);
+
+    return hasNxWebPlugin;
+  }
+
+  return options.includeBabelRc;
+}
+
+function addBabelRc(tree: Tree, options: NormalizedSchema) {
+  const filename = '.babelrc';
+
+  const babelrc = {
+    presets: [['@nrwl/web/babel', { useBuiltIns: 'usage' }]],
+  };
+
+  writeJson(tree, join(options.projectRoot, filename), babelrc);
+}
+
 function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
   const { className, name, propertyName } = names(options.name);
-
   generateFiles(tree, filesDir, options.projectRoot, {
     ...options,
     dot: '.',
@@ -197,9 +231,11 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
 
-  if (options.buildable && options.compiler === 'swc') {
+  if (options.compiler === 'swc') {
     addSwcDependencies(tree);
     addSwcConfig(tree, options.projectRoot);
+  } else if (shouldAddBabelRc(tree, options)) {
+    addBabelRc(tree, options);
   }
 
   if (options.unitTestRunner === 'none') {
@@ -252,10 +288,19 @@ function replaceJestConfig(
   options: NormalizedSchema,
   filesDir: string
 ) {
+  // the existing config has to be deleted otherwise the new config won't overwrite it
+  const existingJestConfig = joinPathFragments(
+    filesDir,
+    `jest.config.${options.js ? 'js' : 'ts'}`
+  );
+  if (tree.exists(existingJestConfig)) {
+    tree.delete(existingJestConfig);
+  }
+
   // replace with JS:SWC specific jest config
   generateFiles(tree, filesDir, options.projectRoot, {
-    tmpl: '',
-    ext: findRootJestPreset(tree) === 'jest.preset.js' ? 'js' : 'ts',
+    ext: options.js ? 'js' : 'ts',
+    js: !!options.js,
     project: options.name,
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     projectRoot: options.projectRoot,

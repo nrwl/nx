@@ -1,4 +1,4 @@
-import { workspaceRoot } from '../../utils/app-root';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { openSync, readFileSync } from 'fs';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
@@ -17,6 +17,11 @@ import {
 } from '../tmp-dir';
 import { ProjectGraph } from '../../config/project-graph';
 
+const DAEMON_ENV_SETTINGS = {
+  ...process.env,
+  NX_PROJECT_GLOB_CACHE: 'false',
+};
+
 export async function startInBackground(): Promise<ChildProcess['pid']> {
   await safelyCleanUpExistingProcess();
   ensureDirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
@@ -33,6 +38,7 @@ export async function startInBackground(): Promise<ChildProcess['pid']> {
       detached: true,
       windowsHide: true,
       shell: false,
+      env: DAEMON_ENV_SETTINGS,
     }
   );
   backgroundProcess.unref();
@@ -92,6 +98,7 @@ export function startInCurrentProcess(): void {
   spawnSync(process.execPath, [join(__dirname, '../server/start.js')], {
     cwd: workspaceRoot,
     stdio: 'inherit',
+    env: DAEMON_ENV_SETTINGS,
   });
 }
 

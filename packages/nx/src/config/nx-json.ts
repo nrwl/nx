@@ -31,7 +31,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   /**
    * Dependencies between different target names across all projects
    */
-  targetDependencies?: Record<string, TargetDependencyConfig[]>;
+  targetDependencies?: Record<string, (TargetDependencyConfig | string)[]>;
   /**
    * NPM Scope that the workspace uses
    */
@@ -86,6 +86,10 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   cli?: {
     packageManager?: PackageManager;
+
+    /**
+     * @deprecated - defaultCollection is deprecated and will be removed
+     */
     defaultCollection?: string;
     defaultProjectName?: string;
   };
@@ -104,12 +108,4 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * will be used. Convenient for small workspaces with one main application.
    */
   defaultProject?: string;
-}
-
-/**
- * @deprecated(v14): nx.json no longer contains projects
- */
-export interface NxJsonProjectConfiguration {
-  implicitDependencies?: string[];
-  tags?: string[];
 }

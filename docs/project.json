@@ -1,5 +1,5 @@
 {
-  "root": "docs",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "docs",
   "projectType": "library",
   "tags": ["scope:nx-dev"]

@@ -96,7 +96,9 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       const skippedTasks = this.skippedTasks();
       if (skippedTasks.length > 0) {
         bodyLines.push(
-          output.dim('Tasks not run because their dependencies failed:'),
+          output.dim(
+            'Tasks not run because their dependencies failed or --nx-bail=true:'
+          ),
           '',
           ...skippedTasks.map((task) => `${output.dim('-')} ${task.id}`),
           ''

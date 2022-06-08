@@ -14,7 +14,7 @@ import {
 } from '../config/project-graph';
 import { readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 
 export interface ProjectGraphCache {
   version: string;
@@ -107,7 +107,7 @@ export function writeCache(cache: ProjectGraphCache): void {
 export function shouldRecomputeWholeGraph(
   cache: ProjectGraphCache,
   packageJsonDeps: Record<string, string>,
-  workspaceJson: WorkspaceJsonConfiguration,
+  workspaceJson: ProjectsConfigurations,
   nxJson: NxJsonConfiguration,
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
 ): boolean {

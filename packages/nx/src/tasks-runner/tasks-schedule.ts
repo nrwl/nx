@@ -88,10 +88,6 @@ export class TasksSchedule {
       [taskId]
     );
     this.scheduledTasks.push(taskId);
-    // TODO vsavkin: remove the if statement after Nx 14 is out
-    if (this.options.lifeCycle.scheduleTask) {
-      this.options.lifeCycle.scheduleTask(task);
-    }
   }
 
   private scheduleBatches() {

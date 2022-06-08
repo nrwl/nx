@@ -1,6 +1,5 @@
 import * as chalk from 'chalk';
 import { exec, execSync } from 'child_process';
-import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
 import { gt, lt, lte, major, valid } from 'semver';
 import { promisify } from 'util';
@@ -9,7 +8,7 @@ import {
   PackageJsonUpdateForPackage,
 } from '../config/misc-interfaces';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { flushChanges, FsTree } from '../config/tree';
+import { flushChanges, FsTree } from '../generators/tree';
 import {
   extractFileFromTarball,
   JsonReadOptions,
@@ -21,6 +20,8 @@ import {
   NxMigrationsConfiguration,
   PackageGroup,
   PackageJson,
+  readNxMigrateConfig,
+  readModulePackageJson,
 } from '../utils/package-json';
 import {
   createTempNpmDirectory,
@@ -460,24 +461,28 @@ export function parseMigrationsOptions(options: {
 function versions(root: string, from: Record<string, string>) {
   const cache: Record<string, string> = {};
 
-  return (packageName: string) => {
+  function getFromVersion(packageName: string) {
     try {
       if (from[packageName]) {
         return from[packageName];
       }
 
       if (!cache[packageName]) {
-        const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-          paths: [root],
-        });
-        cache[packageName] = readJsonFile(packageJsonPath).version;
+        const { packageJson } = readModulePackageJson(packageName, [root]);
+        cache[packageName] = packageJson.version;
       }
 
       return cache[packageName];
     } catch {
+      // Support migrating old workspaces without nx package
+      if (packageName === 'nx') {
+        return getFromVersion('@nrwl/workspace');
+      }
       return null;
     }
-  };
+  }
+
+  return getFromVersion;
 }
 
 // testing-fetch-start
@@ -588,33 +593,6 @@ async function getPackageMigrationsUsingRegistry(
   );
 }
 
-function resolveNxMigrationConfig(json: Partial<PackageJson>) {
-  const parseNxMigrationsConfig = (
-    fromJson?: string | NxMigrationsConfiguration
-  ): NxMigrationsConfiguration => {
-    if (!fromJson) {
-      return {};
-    }
-    if (typeof fromJson === 'string') {
-      return { migrations: fromJson, packageGroup: [] };
-    }
-
-    return {
-      ...(fromJson.migrations ? { migrations: fromJson.migrations } : {}),
-      ...(fromJson.packageGroup ? { packageGroup: fromJson.packageGroup } : {}),
-    };
-  };
-
-  const config: NxMigrationsConfiguration = {
-    ...parseNxMigrationsConfig(json['ng-update']),
-    ...parseNxMigrationsConfig(json['nx-migrations']),
-    // In case there's a `migrations` field in `package.json`
-    ...parseNxMigrationsConfig(json as any),
-  };
-
-  return config;
-}
-
 async function getPackageMigrationsConfigFromRegistry(
   packageName: string,
   packageVersion: string
@@ -629,7 +607,7 @@ async function getPackageMigrationsConfigFromRegistry(
     return null;
   }
 
-  return resolveNxMigrationConfig(JSON.parse(result));
+  return readNxMigrateConfig(JSON.parse(result));
 }
 
 async function downloadPackageMigrationsFromRegistry(
@@ -637,7 +615,7 @@ async function downloadPackageMigrationsFromRegistry(
   packageVersion: string,
   { migrations: migrationsFilePath, packageGroup }: NxMigrationsConfiguration
 ): Promise<ResolvedMigrationConfiguration> {
-  const dir = createTempNpmDirectory();
+  const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;
 
@@ -660,11 +638,7 @@ async function downloadPackageMigrationsFromRegistry(
       `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
     );
   } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
+    await cleanup();
   }
 
   return result;
@@ -674,7 +648,7 @@ async function getPackageMigrationsUsingInstall(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
-  const dir = createTempNpmDirectory();
+  const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;
 
@@ -698,11 +672,7 @@ async function getPackageMigrationsUsingInstall(
 
     result = { ...migrations, packageGroup, version: packageJson.version };
   } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
+    await cleanup();
   }
 
   return result;
@@ -716,11 +686,11 @@ function readPackageMigrationConfig(
   packageName: string,
   dir: string
 ): PackageMigrationConfig {
-  const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-    paths: [dir],
-  });
+  const { path: packageJsonPath, packageJson: json } = readModulePackageJson(
+    packageName,
+    [dir]
+  );
 
-  const json = readJsonFile<PackageJson>(packageJsonPath);
   const migrationConfigOrFile = json['nx-migrations'] || json['ng-update'];
 
   if (!migrationConfigOrFile) {
@@ -807,6 +777,15 @@ async function isMigratingToNewMajor(from: string, to: string) {
   return major(from) < major(to);
 }
 
+function readNxVersion(packageJson: PackageJson) {
+  return (
+    packageJson?.devDependencies?.['nx'] ??
+    packageJson?.dependencies?.['nx'] ??
+    packageJson?.devDependencies?.['@nrwl/workspace'] ??
+    packageJson?.dependencies?.['@nrwl/workspace']
+  );
+}
+
 async function generateMigrationsJsonAndUpdatePackageJson(
   root: string,
   opts: {
@@ -821,20 +800,25 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     let originalPackageJson = readJsonFile<PackageJson>(
       join(root, 'package.json')
     );
-    if (
-      ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
-      (await isMigratingToNewMajor(
-        originalPackageJson.devDependencies?.['nx'] ??
-          originalPackageJson.devDependencies?.['@nrwl/workspace'],
-        opts.targetVersion
-      ))
-    ) {
-      await connectToNxCloudCommand(
-        'We noticed you are migrating to a new major version, but are not taking advantage of Nx Cloud. Nx Cloud can make your CI up to 10 times faster. Learn more about it here: nx.app. Would you like to add it?'
-      );
-      originalPackageJson = readJsonFile<PackageJson>(
-        join(root, 'package.json')
-      );
+
+    try {
+      if (
+        ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
+        (await isMigratingToNewMajor(
+          readNxVersion(originalPackageJson),
+          opts.targetVersion
+        ))
+      ) {
+        await connectToNxCloudCommand(
+          'We noticed you are migrating to a new major version, but are not taking advantage of Nx Cloud. Nx Cloud can make your CI up to 10 times faster. Learn more about it here: nx.app. Would you like to add it?'
+        );
+        originalPackageJson = readJsonFile<PackageJson>(
+          join(root, 'package.json')
+        );
+      }
+    } catch {
+      // The above code is to remind folks when updating to a new major and not currently using Nx cloud.
+      // If for some reason it fails, it shouldn't affect the overall migration process
     }
 
     logger.info(`Fetching meta data about packages.`);
@@ -872,7 +856,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       `- Make sure package.json changes make sense and then run '${pmc.install}'`
     );
     if (migrations.length > 0) {
-      logger.info(`- Run '${pmc.run('nx', 'migrate --run-migrations')}'`);
+      logger.info(`- Run '${pmc.exec} nx migrate --run-migrations'`);
     }
     logger.info(`- To learn more go to https://nx.dev/using-nx/updating-nx`);
 
@@ -891,11 +875,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 function showConnectToCloudMessage() {
   try {
     const nxJson = readJsonFile<NxJsonConfiguration>('nx.json');
-    const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
-      (r: any) =>
-        r.runner == '@nrwl/workspace/tasks-runners/default' ||
-        r.runner == 'nx/tasks-runners/default'
-    );
+    const defaultRunnerIsUsed =
+      !nxJson.tasksRunnerOptions ||
+      Object.values(nxJson.tasksRunnerOptions).find(
+        (r: any) =>
+          r.runner == '@nrwl/workspace/tasks-runners/default' ||
+          r.runner == 'nx/tasks-runners/default'
+      );
     return !!defaultRunnerIsUsed;
   } catch {
     return false;
@@ -927,6 +913,8 @@ async function runMigrations(
     `NX Running migrations from '${opts.runMigrations}'` +
       (shouldCreateCommits ? ', with each applied in a dedicated commit' : '')
   );
+
+  const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
 
   const migrations: {
     package: string;
@@ -975,9 +963,22 @@ async function runMigrations(
     logger.info(`---------------------------------------------------------`);
   }
 
+  const depsAfterMigrations = getStringifiedPackageJsonDeps(root);
+  if (depsBeforeMigrations !== depsAfterMigrations) {
+    runInstall();
+  }
+
   logger.info(
     `NX Successfully finished running migrations from '${opts.runMigrations}'`
   );
+}
+
+function getStringifiedPackageJsonDeps(root: string): string {
+  const { dependencies, devDependencies } = readJsonFile<PackageJson>(
+    join(root, 'package.json')
+  );
+
+  return JSON.stringify([dependencies, devDependencies]);
 }
 
 function commitChangesIfAny(commitMessage: string): {

@@ -1,5 +1,5 @@
 {
-  "root": "nx-dev/models-menu",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/models-menu/src",
   "projectType": "library",
   "targets": {

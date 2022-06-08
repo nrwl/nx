@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`jestConfigObject export default should handle spread assignments 1`] = `
+"{
+          ...nxPreset,
+          abc: 'xyz'
+        }"
+`;
+
+exports[`jestConfigObject export default should work for basic cases 1`] = `
+"{
+          abc: 'xyz'
+        }"
+`;

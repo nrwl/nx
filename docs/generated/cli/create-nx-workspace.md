@@ -33,11 +33,9 @@ The name of the application when a preset with pregenerated app is selected
 
 ### ci
 
-Type: array
+Type: string
 
 Choices: [github, circleci, azure]
-
-Default: []
 
 Generate a CI workflow file
 
@@ -95,7 +93,7 @@ Package manager to use
 
 Type: string
 
-Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular", "angular-nest", "react", "react-express", "react-native", "next", "nest", "express"]. To build your own see https://nx.dev/nx-plugin/overview#preset
+Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular", "angular-nest", "react", "react-express", "react-native", "next", "nest", "express"]. To build your own see https://nx.dev/packages/nx-plugin#preset
 
 ### style
 

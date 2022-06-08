@@ -92,7 +92,10 @@ export function Index(): ReactComponentElement<any> {
             <div className="md:py-18 mx-auto max-w-screen-lg px-4 py-4 xl:max-w-screen-xl">
               <div className="md:my-18 my-8 flex flex-col  items-center justify-center 2xl:my-24">
                 <div className="flex w-full flex-col text-center">
-                  <h1 className="mb-8 text-4xl font-extrabold leading-none tracking-tight sm:mt-10 sm:mt-14 sm:mb-10 sm:text-5xl lg:text-5xl">
+                  <h1
+                    className="mb-8 text-4xl font-extrabold leading-none tracking-tight sm:mt-10 sm:mt-14 sm:mb-10 sm:text-5xl lg:text-5xl"
+                    data-cy="primary-heading"
+                  >
                     <span className="block lg:inline">
                       Smart, Fast and Extensible
                     </span>{' '}
@@ -109,13 +112,22 @@ export function Index(): ReactComponentElement<any> {
                 >
                   <NpxCreateNxWorkspace />
                 </div>
-                <div className="my-14 flex flex-wrap text-center sm:space-x-4">
+                <div className="my-14 flex flex-wrap space-y-4 text-center sm:space-y-0 sm:space-x-4">
                   <Link href="#getting-started">
                     <a
                       title="Start using Nx by creating a workspace"
                       className="text-blue-nx-base hover:text-blue-nx-dark w-full flex-none rounded-md border border-transparent bg-white py-3 px-6 text-lg font-semibold leading-6 transition hover:bg-gray-100 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white sm:w-auto"
                     >
                       Create Nx Workspace
+                    </a>
+                  </Link>
+
+                  <Link href="/migration/lerna-and-nx">
+                    <a
+                      title="Integrate Nx and Lerna"
+                      className="text-blue-nx-base hover:text-blue-nx-dark w-full flex-none rounded-md border border-transparent bg-white py-3 px-6 text-lg font-semibold leading-6 transition hover:bg-gray-100 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white sm:w-auto"
+                    >
+                      Nx & Lerna
                     </a>
                   </Link>
 

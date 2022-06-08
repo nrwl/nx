@@ -53,6 +53,11 @@
       "version": "14.0.0-beta.0",
       "description": "Add a default development configuration for build and serve targets.",
       "factory": "./src/migrations/update-14-0-0/add-default-development-configurations"
+    },
+    "update-external-emotion-jsx-runtime-14.1.0": {
+      "version": "14.1.0-beta.0",
+      "description": "Update external option in projects for Emotion",
+      "factory": "./src/migrations/update-14-1-0/update-external-emotion-jsx-runtime"
     }
   },
   "packageJsonUpdates": {
@@ -297,7 +302,7 @@
           "alwaysAddToPackageJson": false
         },
         "styled-jsx": {
-          "version": "5.0.2",
+          "version": "5.0.1",
           "alwaysAddToPackageJson": false
         },
         "eslint-plugin-react-hooks": {
@@ -384,6 +389,43 @@
         },
         "react-redux": {
           "version": "8.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.0.6": {
+      "version": "14.0.6-beta.0",
+      "packages": {
+        "react": {
+          "version": "18.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "18.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-is": {
+          "version": "18.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "18.0.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "18.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "react-redux": {
+          "version": "8.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-test-renderer": {
+          "version": "18.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react-hooks": {
+          "version": "4.5.0",
           "alwaysAddToPackageJson": false
         }
       }

@@ -1,15 +1,18 @@
 import type { NxJsonConfiguration } from './nx-json';
 
-export interface Workspace
-  extends WorkspaceJsonConfiguration,
-    NxJsonConfiguration {
+export interface Workspace extends ProjectsConfigurations, NxJsonConfiguration {
   projects: Record<string, ProjectConfiguration>;
 }
 
 /**
- * Workspace configuration
+ * @deprecated use ProjectsConfigurations
  */
-export interface WorkspaceJsonConfiguration {
+export type WorkspaceJsonConfiguration = ProjectsConfigurations;
+
+/**
+ * Projects Configurations
+ */
+export interface ProjectsConfigurations {
   /**
    * Version of the configuration format
    */
@@ -22,8 +25,8 @@ export interface WorkspaceJsonConfiguration {
   };
 }
 
-export interface RawWorkspaceJsonConfiguration
-  extends Omit<WorkspaceJsonConfiguration, 'projects'> {
+export interface RawProjectsConfigurations
+  extends Omit<ProjectsConfigurations, 'projects'> {
   projects: { [projectName: string]: ProjectConfiguration | string };
 }
 
@@ -109,7 +112,7 @@ export interface TargetDependencyConfig {
 /**
  * Target's configuration
  */
-export interface TargetConfiguration {
+export interface TargetConfiguration<T = any> {
   /**
    * The executor/builder used to implement the target.
    *
@@ -126,12 +129,12 @@ export interface TargetConfiguration {
   /**
    * This describes other targets that a target depends on.
    */
-  dependsOn?: TargetDependencyConfig[];
+  dependsOn?: (TargetDependencyConfig | string)[];
 
   /**
    * Target's options. They are passed in to the executor.
    */
-  options?: any;
+  options?: T;
 
   /**
    * Sets of options

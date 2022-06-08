@@ -17,7 +17,7 @@ import {
 import {
   ProjectConfiguration,
   TargetConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { Executor, ExecutorContext } from '../config/misc-interfaces';
 
@@ -39,7 +39,7 @@ export function printRunHelp(
 }
 
 export function validateProject(
-  workspace: WorkspaceJsonConfiguration,
+  workspace: ProjectsConfigurations,
   projectName: string
 ) {
   const project = workspace.projects[projectName];
@@ -126,7 +126,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   options: { [k: string]: any },
   root: string,
   cwd: string,
-  workspace: WorkspaceJsonConfiguration & NxJsonConfiguration,
+  workspace: ProjectsConfigurations & NxJsonConfiguration,
   isVerbose: boolean,
   printHelp: boolean
 ): Promise<AsyncIterableIterator<T>> {
@@ -209,7 +209,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       },
       isVerbose
     );
-    const { eachValueFrom } = require('rxjs-for-await');
+    const { eachValueFrom } = await import('../adapter/rxjs-for-await');
     return eachValueFrom(observable as any);
   }
 }

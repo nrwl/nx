@@ -1,4 +1,4 @@
-export const nxVersion = '*';
+export const nxVersion = require('../../package.json').version;
 
 export const nestJsVersion7 = '^7.0.0';
 export const nestJsVersion8 = '^8.0.0';

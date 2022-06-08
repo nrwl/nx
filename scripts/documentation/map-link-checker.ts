@@ -7,11 +7,32 @@ console.log(`${chalk.blue('i')} Documentation Map Check`);
 const basePath = 'docs';
 const sharedFilesPattern = 'shared/cli';
 
+// These are Overview documentation files showed at url like `/packages/:name`
+const allowedOrphanFiles: string[] = [
+  'shared/angular-plugin.md',
+  'shared/cypress-plugin.md',
+  'shared/detox-plugin.md',
+  'shared/express-plugin.md',
+  'shared/guides/storybook/plugin-overview.md',
+  'shared/jest-plugin.md',
+  'shared/js-plugin.md',
+  'shared/linter-plugin.md',
+  'shared/nest-plugin.md',
+  'shared/next-plugin.md',
+  'shared/node-plugin.md',
+  'shared/nx-plugin.md',
+  'shared/react-native-plugin.md',
+  'shared/react-plugin.md',
+  'shared/web-plugin.md',
+  'shared/workspace-plugin.md',
+].map((x) => x.replace('.md', ''));
+
 const readmePathList: string[] = glob
   .sync(`${basePath}/**/*.md`)
   .map((path: string) => path.split(basePath)[1])
   .map((path: string) => path.slice(1, -3)) // Removing first `/` and `.md`
-  .filter((path: string) => !path.startsWith(sharedFilesPattern));
+  .filter((path: string) => !path.startsWith(sharedFilesPattern))
+  .filter((i) => !allowedOrphanFiles.includes(i)); // Removing the paths allowed to be orphans
 
 function pathExtractor(
   pathList: string[] = [],

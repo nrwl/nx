@@ -5,6 +5,7 @@ import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { ReactComponentElement } from 'react';
 import Content from './content';
+import { getPublicPackageName } from './get-public-package-name';
 import { getSchemaViewModel, SchemaViewModel } from './get-schema-view-model';
 import { SchemaRequest } from './schema-request.models';
 
@@ -23,10 +24,12 @@ export function PackageSchemaViewer({
     schema: SchemaViewModel | null;
     seo: { title: string; description: string; url: string; imageUrl: string };
   } = {
-    // Processing the request and make available the needed schema information
+    // Process the request and make available the needed schema information
     schema: getSchemaViewModel(router.query, schemaRequest),
     seo: {
-      title: `@nrwl/${schemaRequest.pkg.name}:${schemaRequest.schemaName} | Nx`,
+      title: `${getPublicPackageName(schemaRequest.pkg.name)}:${
+        schemaRequest.schemaName
+      } | Nx`,
       description:
         'Next generation build system with first class monorepo support and powerful integrations.',
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath

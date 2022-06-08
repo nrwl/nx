@@ -1,10 +1,10 @@
 {
-  "root": "e2e/add-nx-to-monorepo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/add-nx-to-monorepo",
   "projectType": "application",
   "targets": {
     "e2e": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "commands": [
           {

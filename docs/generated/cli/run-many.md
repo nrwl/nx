@@ -63,6 +63,22 @@ Type: boolean
 
 Show help
 
+### nx-bail
+
+Type: boolean
+
+Default: false
+
+Stop command execution after the first failed task
+
+### nx-ignore-cycles
+
+Type: boolean
+
+Default: false
+
+Ignore cycles in the task graph
+
 ### ~~only-failed~~
 
 Type: boolean
@@ -72,6 +88,14 @@ Default: false
 **Deprecated:** The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.
 
 Only run the target on projects which previously failed
+
+### output-style
+
+Type: string
+
+Choices: [dynamic, static, stream, stream-without-prefixes]
+
+Defines how Nx emits outputs tasks logs
 
 ### parallel
 
@@ -114,13 +138,3 @@ Print additional error stack trace on failure
 Type: boolean
 
 Show version number
-
-### ~~with-deps~~
-
-Type: boolean
-
-Default: false
-
-**Deprecated:** Configure target dependencies instead. It will be removed in v14.
-
-Include dependencies of specified projects when computing what to run

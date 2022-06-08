@@ -29,16 +29,16 @@ type Arguments = {
   style: string;
   nxCloud: boolean;
   allPrompts: boolean;
-  packageManager: string;
+  packageManager: PackageManager;
   defaultBase: string;
-  ci: string[];
+  ci: string;
 };
 
 enum Preset {
   Apps = 'apps',
   Empty = 'empty', // same as apps, deprecated
-  Core = 'core',
-  NPM = 'npm', // same as core, deprecated
+  Core = 'core', // same as npm, deprecated
+  NPM = 'npm',
   TS = 'ts',
   WebComponents = 'web-components',
   Angular = 'angular',
@@ -58,9 +58,9 @@ const presetOptions: { name: Preset; message: string }[] = [
       'apps              [an empty workspace with no plugins with a layout that works best for building apps]',
   },
   {
-    name: Preset.Core,
+    name: Preset.NPM,
     message:
-      'core              [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]',
+      'npm               [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]',
   },
   {
     name: Preset.TS,
@@ -112,10 +112,9 @@ const presetOptions: { name: Preset; message: string }[] = [
   },
 ];
 
-const tsVersion = 'TYPESCRIPT_VERSION';
-const cliVersion = 'NX_VERSION';
-const nxVersion = 'NX_VERSION';
-const prettierVersion = 'PRETTIER_VERSION';
+const nxVersion = require('../package.json').version;
+const tsVersion = 'TYPESCRIPT_VERSION'; // This gets replaced with the typescript version in the root package.json during build
+const prettierVersion = 'PRETTIER_VERSION'; // This gets replaced with the prettier version in the root package.json during build
 
 export const commandsObject: yargs.Argv<Arguments> = yargs
   .wrap(yargs.terminalWidth())
@@ -140,7 +139,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             .map((p) => `"${p}"`)
             .join(
               ', '
-            )}]. To build your own see https://nx.dev/nx-plugin/overview#preset`,
+            )}]. To build your own see https://nx.dev/packages/nx-plugin#preset`,
           type: 'string',
         })
         .option('appName', {
@@ -165,10 +164,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           type: 'boolean',
         })
         .option('ci', {
-          describe: `Generate a CI workflow file`,
+          describe: chalk.dim`Generate a CI workflow file`,
           choices: ciList,
-          defaultDescription: '[]',
-          type: 'array',
+          defaultDescription: '',
+          type: 'string',
         })
         .option('allPrompts', {
           alias: 'a',
@@ -221,7 +220,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   } = parsedArgs;
 
   output.log({
-    title: `Nx is creating your v${cliVersion} workspace.`,
+    title: `Nx is creating your v${nxVersion} workspace.`,
     bodyLines: [
       'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
       `Nx will run "${packageManager} install" several times. Please wait.`,
@@ -247,7 +246,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       packageManager as PackageManager
     );
   }
-  if (ci && ci.length) {
+  if (ci) {
     await setupCI(
       name,
       ci,
@@ -656,9 +655,9 @@ async function determineNxCloud(
 async function determineCI(
   parsedArgs: yargs.Arguments<Arguments>,
   nxCloud: boolean
-): Promise<string[]> {
+): Promise<string> {
   if (!nxCloud) {
-    if (parsedArgs.ci && parsedArgs.ci.length > 0) {
+    if (parsedArgs.ci) {
       output.warn({
         title: 'Invalid CI value',
         bodyLines: [
@@ -667,7 +666,7 @@ async function determineCI(
         ],
       });
     }
-    return [];
+    return '';
   }
 
   if (parsedArgs.ci) {
@@ -675,28 +674,37 @@ async function determineCI(
   }
 
   if (parsedArgs.allPrompts) {
-    return enquirer
-      .prompt([
-        {
-          name: 'CI',
-          message: `Autogenerate CI workflow file (multi-select)?`,
-          type: 'multiselect',
-          choices: [
-            { message: 'GitHub Actions', name: 'github' },
-            { message: 'Circle CI', name: 'circleci' },
-            { message: 'Azure DevOps', name: 'azure' },
-          ],
-        },
-      ])
-      .then((a: { CI: string[] }) => a.CI);
+    return (
+      enquirer
+        .prompt([
+          {
+            name: 'CI',
+            message: `CI workflow file to generate?      `,
+            type: 'select',
+            initial: '' as any,
+            choices: [
+              { message: 'none', name: '' },
+              { message: 'GitHub Actions', name: 'github' },
+              { message: 'Circle CI', name: 'circleci' },
+              { message: 'Azure DevOps', name: 'azure' },
+            ],
+          },
+        ])
+        // enquirer ignores name and value if they are falsy and takes
+        // first field that has a truthy value, so wee need to explicitly
+        // check for none
+        .then((a: { CI: string }) => (a.CI !== 'none' ? a.CI : ''))
+    );
   }
-  return [];
+  return '';
 }
 
-async function createSandbox(packageManager: string) {
+async function createSandbox(packageManager: PackageManager) {
   const installSpinner = ora(
     `Installing dependencies with ${packageManager}`
   ).start();
+
+  const { install } = getPackageManagerCommand(packageManager);
 
   const tmpDir = dirSync().name;
   try {
@@ -705,7 +713,7 @@ async function createSandbox(packageManager: string) {
       JSON.stringify({
         dependencies: {
           '@nrwl/workspace': nxVersion,
-          nx: cliVersion,
+          nx: nxVersion,
           typescript: tsVersion,
           prettier: prettierVersion,
         },
@@ -713,7 +721,7 @@ async function createSandbox(packageManager: string) {
       })
     );
 
-    await execAndWait(`${packageManager} install --silent`, tmpDir);
+    await execAndWait(`${install} --silent --ignore-scripts`, tmpDir);
 
     installSpinner.succeed();
   } catch (e) {
@@ -748,7 +756,7 @@ async function createApp(
 
   const pmc = getPackageManagerCommand(packageManager);
 
-  const command = `new ${name} ${args} --collection=@nrwl/workspace`;
+  const command = `new ${name} ${args} --collection=@nrwl/workspace/generators.json --cli=${cli}`;
 
   let nxWorkspaceRoot = `"${process.cwd().replace(/\\/g, '/')}"`;
 
@@ -764,11 +772,10 @@ async function createApp(
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }
   }
-  const fullCommandWithoutWorkspaceRoot = `${pmc.exec} nx ${command}/generators.json --cli=${cli}`;
   let workspaceSetupSpinner = ora('Creating your workspace').start();
 
   try {
-    const fullCommand = `${fullCommandWithoutWorkspaceRoot} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
+    const fullCommand = `${pmc.exec} nx ${command} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
     await execAndWait(fullCommand, tmpDir);
 
     workspaceSetupSpinner.succeed('Nx has successfully created the workspace.');
@@ -810,62 +817,33 @@ async function setupNxCloud(name: string, packageManager: PackageManager) {
 
 async function setupCI(
   name: string,
-  ci: string[],
+  ci: string,
   packageManager: PackageManager,
   nxCloudSuccessfullyInstalled: boolean
 ) {
   if (!nxCloudSuccessfullyInstalled) {
     output.error({
-      title: `CI workflow(s) generation skipped`,
+      title: `CI workflow generation skipped`,
       bodyLines: [
-        `Nx Cloud was not (successfully) installed`,
-        `The autogenerated CI workflows require Nx Cloud to be set-up.`,
+        `Nx Cloud was not installed`,
+        `The autogenerated CI workflow requires Nx Cloud to be set-up.`,
       ],
     });
   }
-  const ciSpinner = ora(`Generating CI workflow(s)`).start();
+  const ciSpinner = ora(`Generating CI workflow`).start();
   try {
     const pmc = getPackageManagerCommand(packageManager);
-    // GENERATE WORKFLOWS HERE based on `ci` and `packageManager`
-    const res = await Promise.allSettled(
-      ci.map(
-        async (provider) =>
-          await execAndWait(
-            `${pmc.exec} nx g @nrwl/workspace:ci-workflow --ci=${provider}`,
-            path.join(process.cwd(), getFileName(name))
-          )
-      )
+    const res = await execAndWait(
+      `${pmc.exec} nx g @nrwl/workspace:ci-workflow --ci=${ci}`,
+      path.join(process.cwd(), getFileName(name))
     );
-    if (res.some((r) => r.status === 'fulfilled')) {
-      if (res.some((r) => r.status === 'rejected')) {
-        // show error message that some failed
-        const failedWorkflows = res
-          .map((r, i) => [r.status, ci[i]])
-          .filter(([r, provider]) => r === 'rejected')
-          .map(([, provider]) => `"${provider}"`)
-          .join(', ');
-        ciSpinner.fail(
-          `Nx failed to generate some CI workflow(s): ${failedWorkflows}`
-        );
-      } else {
-        ciSpinner.succeed('CI workflow(s) have been generated successfully');
-      }
-      return res;
-    } else {
-      ciSpinner.fail();
-
-      output.error({
-        title: `Nx failed to generate CI workflow(s)`,
-        bodyLines: res.map((r: PromiseRejectedResult) => r.reason.message),
-      });
-
-      process.exit(1);
-    }
+    ciSpinner.succeed('CI workflow has been generated successfully');
+    return res;
   } catch (e) {
     ciSpinner.fail();
 
     output.error({
-      title: `Nx failed to generate CI workflow(s)`,
+      title: `Nx failed to generate CI workflow`,
       bodyLines: mapErrorToBodyLines(e),
     });
 
@@ -888,7 +866,7 @@ function mapErrorToBodyLines(error: {
   code: number;
   logFile: string;
 }): string[] {
-  if (error.logMessage.split('\n').filter((line) => !!line).length === 1) {
+  if (error.logMessage?.split('\n').filter((line) => !!line).length === 1) {
     // print entire log message only if it's only a single message
     return [`Error: ${error.logMessage}`];
   }

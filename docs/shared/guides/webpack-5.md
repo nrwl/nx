@@ -40,7 +40,7 @@ generator. They both install the same packages and are interchangeable.
 As of Next.js 11 and Nx 12.6.0, Webpack 5 is the default version used. Check your `next.config.js` file to ensure it is
 enabled.
 
-```js
+```javascript
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const withNx = require('@nrwl/next/plugins/with-nx');
 

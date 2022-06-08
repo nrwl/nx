@@ -1,24 +1,23 @@
-import 'dotenv/config';
-import { ExecutorContext } from '@nrwl/devkit';
-
-import { readCachedProjectGraph } from '@nrwl/devkit';
+import { ExecutorContext, readCachedProjectGraph } from '@nrwl/devkit';
+import { getHelperDependenciesFromProjectGraph } from '@nrwl/js/src/utils/compiler-helper-dependency';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { getRootTsConfigPath } from '@nrwl/workspace/src/utilities/typescript';
+import 'dotenv/config';
+import { resolve } from 'path';
+import { eachValueFrom } from 'rxjs-for-await';
 
 import { map, tap } from 'rxjs/operators';
-import { eachValueFrom } from 'rxjs-for-await';
-import { resolve } from 'path';
 import { register } from 'ts-node';
+import { generatePackageJson } from '../../utils/generate-package-json';
 
 import { getNodeWebpackConfig } from '../../utils/node.config';
-import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
-import { generatePackageJson } from '../../utils/generate-package-json';
 import { runWebpack } from '../../utils/run-webpack';
+import { BuildNodeBuilderOptions } from '../../utils/types';
 
 export type NodeBuildEvent = {
   outfile: string;
@@ -79,6 +78,14 @@ export async function* webpackExecutor(
   }
 
   if (options.generatePackageJson) {
+    const helperDependencies = getHelperDependenciesFromProjectGraph(
+      context.root,
+      context.projectName
+    );
+    if (helperDependencies.length > 0) {
+      projGraph.dependencies[context.projectName] =
+        projGraph.dependencies[context.projectName].concat(helperDependencies);
+    }
     generatePackageJson(context.projectName, projGraph, options);
   }
   const config = await options.webpackConfig.reduce(

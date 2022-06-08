@@ -1,10 +1,10 @@
-import { createTask } from '../tasks-runner/run-command';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
 import type { NxArgs } from '../utils/command-line-utils';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task } from '../config/task-graph';
 import { Environment } from './read-environment';
+import { ProcessTasks } from 'nx/src/tasks-runner/create-task-graph';
 
 export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
@@ -14,9 +14,13 @@ export async function printAffected(
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
-  const projectNames = affectedProjects.map((p) => p.name);
+  const projectNames = affectedProjects
+    .filter((p) => (nxArgs.type ? p.type === nxArgs.type : true))
+    .map((p) => p.name);
   const tasksJson = await createTasks(
-    affectedProjectsWithTargetAndConfig,
+    affectedProjectsWithTargetAndConfig.filter((p) =>
+      nxArgs.type ? p.type === nxArgs.type : true
+    ),
     projectGraph,
     nxArgs,
     overrides
@@ -40,14 +44,21 @@ async function createTasks(
   overrides: yargs.Arguments
 ) {
   const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
-    (affectedProject) =>
-      createTask({
-        project: affectedProject,
-        target: nxArgs.target,
-        configuration: nxArgs.configuration,
-        overrides,
-        errorIfCannotFindConfiguration: false,
-      })
+    (affectedProject) => {
+      const p = new ProcessTasks({}, projectGraph);
+      const resolvedConfiguration = p.resolveConfiguration(
+        affectedProject,
+        nxArgs.target,
+        nxArgs.configuration
+      );
+      return p.createTask(
+        p.getId(affectedProject.name, nxArgs.target, resolvedConfiguration),
+        affectedProject,
+        nxArgs.target,
+        resolvedConfiguration,
+        overrides
+      );
+    }
   );
 
   return tasks.map((task, index) => ({

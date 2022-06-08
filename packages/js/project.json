@@ -1,5 +1,5 @@
 {
-  "root": "packages/js",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/js/src",
   "projectType": "library",
   "targets": {
@@ -67,7 +67,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["build/packages/js"],
       "options": {
         "command": "node ./scripts/copy-readme.js js"

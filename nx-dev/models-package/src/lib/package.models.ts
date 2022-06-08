@@ -8,6 +8,13 @@ export interface PackageMetadata {
   githubRoot: string;
   name: string;
   description: string;
+  documentation: {
+    id: string;
+    name: string;
+    content: string;
+    file: string;
+    path: string;
+  }[];
   root: string;
   source: string;
   generators: SchemaMetadata[];

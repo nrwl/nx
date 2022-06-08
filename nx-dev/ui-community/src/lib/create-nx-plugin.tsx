@@ -32,21 +32,21 @@ export function CreateNxPlugin(): ReactComponentElement<any> {
 
         <ul className="mx-4 mb-4 list-disc">
           <li className="mb-2">
-            <Link href="/nx-plugin/overview#generating-a-plugin">
+            <Link href="/packages/nx-plugin#generating-a-plugin">
               <a className="text-lg font-normal  text-gray-500 hover:underline">
                 Create your Nx Plugin
               </a>
             </Link>
           </li>
           <li className="mb-2">
-            <Link href="/nx-plugin/overview#testing-your-plugin">
+            <Link href="/packages/nx-plugin#testing-your-plugin">
               <a className="text-lg font-normal text-gray-500 hover:underline">
                 Test your plugin
               </a>
             </Link>
           </li>
           <li className="mb-2">
-            <Link href="/nx-plugin/overview#generating-a-plugin">
+            <Link href="/packages/nx-plugin#generating-a-plugin">
               <a className="text-lg font-normal text-gray-500 hover:underline">
                 Publish your Nx Plugin
               </a>
@@ -69,11 +69,11 @@ export function CreateNxPlugin(): ReactComponentElement<any> {
             <div className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50">
               <div className="flex w-full px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <Link href="/nx-plugin/overview#generating-a-plugin">
+                  <Link href="/packages/nx-plugin#generating-a-plugin">
                     <a className="focus:outline-none">
                       <span className="absolute inset-0" aria-hidden="true" />
                       <p className="text-md mb-0.5 font-bold text-gray-600">
-                        Create a new Nx Plugin
+                        Create an Nx Plugin
                       </p>
                       <p className="text-xs text-gray-500">
                         Follow this guide to generate an Nx plugin to fit your
@@ -90,13 +90,13 @@ export function CreateNxPlugin(): ReactComponentElement<any> {
               </div>
               <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
                 <BookOpenIcon className="h-4 w-4" />
-                <p className="text-xs font-bold">nx-plugin/overview</p>
+                <p className="text-xs font-bold">packages/nx-plugin</p>
               </div>
             </div>
             <div className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50">
               <div className="flex w-full px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <Link href="/nx-plugin/overview#publishing-your-nx-plugin">
+                  <Link href="/packages/nx-plugin#publishing-your-nx-plugin">
                     <a className="focus:outline-none">
                       <span className="absolute inset-0" aria-hidden="true" />
                       <p className="text-md mb-0.5 font-bold text-gray-600">
@@ -117,7 +117,7 @@ export function CreateNxPlugin(): ReactComponentElement<any> {
               </div>
               <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
                 <BookOpenIcon className="h-4 w-4" />
-                <p className="text-xs font-bold">nx-plugin/overview</p>
+                <p className="text-xs font-bold">packages/nx-plugin</p>
               </div>
             </div>
           </div>

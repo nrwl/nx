@@ -68,6 +68,8 @@ To upgrade change the version number at the top of ${getWorkspacePath(
       continue;
     }
 
+    delete configuration.root;
+
     writeJson(host, configPath, configuration);
 
     updateJson(host, getWorkspacePath(host), (value) => {

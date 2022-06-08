@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`component Generator --flat should create the component correctly and export it 1`] = `
+exports[`component Generator --flat should create the component correctly and export it in the entry point 1`] = `
 "import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -19,7 +19,7 @@ export class ExampleComponent implements OnInit {
 "
 `;
 
-exports[`component Generator --flat should create the component correctly and not export it 1`] = `
+exports[`component Generator --flat should create the component correctly and not export it when "export=false" 1`] = `
 "import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -38,7 +38,7 @@ export class ExampleComponent implements OnInit {
 "
 `;
 
-exports[`component Generator --path should create the component correctly and export it 1`] = `
+exports[`component Generator --path should create the component correctly and export it in the entry point 1`] = `
 "import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -57,7 +57,7 @@ export class ExampleComponent implements OnInit {
 "
 `;
 
-exports[`component Generator should create the component correctly and export it 1`] = `
+exports[`component Generator secondary entry points should create the component correctly and export it in the entry point 1`] = `
 "import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -76,12 +76,12 @@ export class ExampleComponent implements OnInit {
 "
 `;
 
-exports[`component Generator should create the component correctly and export it 2`] = `
-"
-    export * from \\"./lib/example/example.component\\";"
+exports[`component Generator secondary entry points should create the component correctly and export it in the entry point 2`] = `
+"export * from \\"./lib/secondary.module\\";
+export * from \\"./lib/example/example.component\\";"
 `;
 
-exports[`component Generator should create the component correctly and not export it 1`] = `
+exports[`component Generator should create the component correctly and export it in the entry point when "export=true" 1`] = `
 "import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -100,7 +100,94 @@ export class ExampleComponent implements OnInit {
 "
 `;
 
-exports[`component Generator should create the component correctly but not export it when no entry point exists 1`] = `
+exports[`component Generator should create the component correctly and export it in the entry point when "export=true" 2`] = `
+"export * from \\"./lib/lib.module\\";
+export * from \\"./lib/example/example.component\\";"
+`;
+
+exports[`component Generator should create the component correctly and export it in the entry point when is standalone and "export=true" 1`] = `
+"import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'example',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './example.component.html',
+  styleUrls: ['./example.component.css']
+})
+export class ExampleComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+"
+`;
+
+exports[`component Generator should create the component correctly and not export it in the entry point when "export=false" 1`] = `
+"import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'example',
+  templateUrl: './example.component.html',
+  styleUrls: ['./example.component.css']
+})
+export class ExampleComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+"
+`;
+
+exports[`component Generator should create the component correctly and not export it in the entry point when is standalone and "export=false" 1`] = `
+"import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'example',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './example.component.html',
+  styleUrls: ['./example.component.css']
+})
+export class ExampleComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+"
+`;
+
+exports[`component Generator should create the component correctly and not export it when "--skip-import=true" 1`] = `
+"import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'example',
+  templateUrl: './example.component.html',
+  styleUrls: ['./example.component.css']
+})
+export class ExampleComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+"
+`;
+
+exports[`component Generator should create the component correctly but not export it in the entry point when it does not exist 1`] = `
 "import { Component, OnInit } from '@angular/core';
 
 @Component({

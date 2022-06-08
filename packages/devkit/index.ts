@@ -12,13 +12,14 @@
 /**
  * @category Tree
  */
-export type { Tree, FileChange } from 'nx/src/config/tree';
+export type { Tree, FileChange } from 'nx/src/generators/tree';
 
 /**
  * @category Workspace
  */
 export type {
   WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
   TargetDependencyConfig,
   TargetConfiguration,
   ProjectConfiguration,
@@ -38,12 +39,20 @@ export type {
   GeneratorsJson,
   ExecutorsJson,
   MigrationsJson,
+  CustomHasher,
+  HasherContext,
 } from 'nx/src/config/misc-interfaces';
 
 /**
  * @category Workspace
  */
 export { Workspaces } from 'nx/src/config/workspaces';
+
+export {
+  readNxJson,
+  readAllWorkspaceConfiguration,
+  workspaceLayout,
+} from 'nx/src/config/configuration';
 
 export type {
   NxPlugin,
@@ -62,7 +71,6 @@ export type {
   ImplicitDependencyEntry,
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
-  NxJsonProjectConfiguration,
   NxAffectedConfig,
 } from 'nx/src/config/nx-json';
 
@@ -112,7 +120,7 @@ export { generateFiles } from './src/generators/generate-files';
 /**
  * @category Generators
  */
-export type { WorkspaceConfiguration } from './src/generators/project-configuration';
+export type { WorkspaceConfiguration } from 'nx/src/generators/utils/project-configuration';
 
 /**
  * @category Generators
@@ -126,7 +134,7 @@ export {
   updateWorkspaceConfiguration,
   getProjects,
   isStandaloneProject,
-} from './src/generators/project-configuration';
+} from 'nx/src/generators/utils/project-configuration';
 
 /**
  * @category Generators
@@ -184,7 +192,7 @@ export { ProjectGraphBuilder } from 'nx/src/project-graph/project-graph-builder'
 /**
  * @category Utils
  */
-export { readJson, writeJson, updateJson } from './src/utils/json';
+export { readJson, writeJson, updateJson } from 'nx/src/generators/utils/json';
 
 /**
  * @category Utils
@@ -274,7 +282,7 @@ export { moveFilesToNewDirectory } from './src/utils/move-dir';
 /**
  * @category Utils
  */
-export { workspaceRoot, appRootPath } from 'nx/src/utils/app-root';
+export { workspaceRoot, appRootPath } from 'nx/src/utils/workspace-root';
 
 /**
  * @category Utils
@@ -287,11 +295,6 @@ export {
   createProjectGraphAsync,
   readCachedProjectGraph,
 } from 'nx/src/project-graph/project-graph';
-
-/**
- * @category Utils
- */
-export { readNxJson, workspaceLayout } from 'nx/src/project-graph/file-utils';
 
 /**
  * @category Utils

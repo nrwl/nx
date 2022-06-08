@@ -123,6 +123,22 @@ Type: string
 
 Bind the project graph server to a specific ip address.
 
+### nx-bail
+
+Type: boolean
+
+Default: false
+
+Stop command execution after the first failed task
+
+### nx-ignore-cycles
+
+Type: boolean
+
+Default: false
+
+Ignore cycles in the task graph
+
 ### ~~only-failed~~
 
 Type: boolean

@@ -1,9 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.config.ts 1`] = `
-"module.exports = {
+exports[`Jest Migration (v14.0.0) should NOT update jest.config.ts preset 1`] = `
+"/* eslint-disable */
+
+module.exports = {
   displayName: 'lib-one',
-  
+  preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -13,15 +15,17 @@ exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.c
     '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib-one',\\"preset\\": \\"../../jest.preset.ts\\"
+  coverageDirectory: '../../coverage/libs/lib-one'
 };
 "
 `;
 
-exports[`Jest Migration (v14.0.0) should update jest.config.ts preset to use the jest.preset.ts 1`] = `
-"module.exports = {
+exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.config.ts 1`] = `
+"/* eslint-disable */
+
+module.exports = {
   displayName: 'lib-one',
-  
+  preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -31,7 +35,24 @@ exports[`Jest Migration (v14.0.0) should update jest.config.ts preset to use the
     '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib-one',\\"preset\\": \\"../../jest.preset.ts\\"
+  coverageDirectory: '../../coverage/libs/lib-one'
 };
 "
+`;
+
+exports[`Jest Migration (v14.0.0) should update the excludes of next js apps using the project parser settings 1`] = `
+Object {
+  "files": Array [
+    "*.ts",
+    "*.tsx",
+    "*.js",
+    "*.jsx",
+  ],
+  "parserOptions": Object {
+    "project": Array [
+      "libs/lib-one/tsconfig.*?.json",
+    ],
+  },
+  "rules": Object {},
+}
 `;

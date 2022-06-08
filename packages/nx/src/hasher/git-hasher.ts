@@ -40,9 +40,9 @@ export async function getGitHashForFiles(
   return { hashes: res, deleted };
 }
 
-async function getGitHashForBatch(filesToHash: string[], path) {
+export async function getGitHashForBatch(filesToHash: string[], path) {
   const res: Map<string, string> = new Map<string, string>();
-  const hashStdout = await spawnProcess(
+  const { stdout: hashStdout, stderr: hashStderr } = await spawnProcess(
     'git',
     ['hash-object', ...filesToHash],
     path
@@ -50,7 +50,7 @@ async function getGitHashForBatch(filesToHash: string[], path) {
   const hashes: string[] = hashStdout.split('\n').filter((s) => !!s);
   if (hashes.length !== filesToHash.length) {
     throw new Error(
-      `Passed ${filesToHash.length} file paths to Git to hash, but received ${hashes.length} hashes.`
+      `Passed ${filesToHash.length} file paths to Git to hash, but received ${hashes.length} hashes.\n${hashStderr}`
     );
   }
   for (let i = 0; i < hashes.length; i++) {
@@ -67,7 +67,7 @@ function getActualFilesToHash(
 ): { filesToHash: string[]; deleted: string[] } {
   const filesToHash = [];
   const deleted = [];
-  for (let file of potentialFilesToHash) {
+  for (const file of potentialFilesToHash) {
     if (fileExists(joinPathFragments(path, file))) {
       filesToHash.push(file);
     } else {
@@ -77,28 +77,42 @@ function getActualFilesToHash(
   return { filesToHash, deleted };
 }
 
-async function spawnProcess(command: string, args: string[], cwd: string) {
+async function spawnProcess(
+  command: string,
+  args: string[],
+  cwd: string
+): Promise<{ code: number; stdout: string; stderr: string }> {
   const cp = spawn(command, args, {
     windowsHide: true,
     shell: false,
     cwd,
   });
   let stdout = '';
-  for await (const data of cp.stdout) {
+  let stderr = '';
+  cp.stdout.on('data', (data) => {
     stdout += data;
-  }
-  return stdout;
+  });
+  cp.stderr.on('data', (data) => {
+    stderr += data;
+  });
+  return new Promise((resolve) => {
+    cp.on('close', (code) => {
+      resolve({ code, stdout, stderr });
+    });
+  });
 }
 
 async function getStagedFiles(path: string) {
-  const staged = await spawnProcess(
+  const { stdout: staged } = await spawnProcess(
     'git',
     ['ls-files', '-s', '-z', '--exclude-standard', '.'],
     path
   );
   const res = new Map();
-  for (let line of staged.split('\0')) {
-    if (!line) continue;
+  for (const line of staged.split('\0')) {
+    if (!line) {
+      continue;
+    }
     const [_, hash, __, ...fileParts] = line.split(/\s/);
     const fileName = fileParts.join(' ');
     res.set(fileName, hash);
@@ -107,7 +121,7 @@ async function getStagedFiles(path: string) {
 }
 
 async function getUnstagedFiles(path: string) {
-  const unstaged = await spawnProcess(
+  const { stdout: unstaged } = await spawnProcess(
     'git',
     ['ls-files', '-m', '-z', '--exclude-standard', '.'],
     path
@@ -117,7 +131,7 @@ async function getUnstagedFiles(path: string) {
 }
 
 async function getUntrackedFiles(path: string) {
-  const untracked = await spawnProcess(
+  const { stdout: untracked } = await spawnProcess(
     'git',
     ['ls-files', '--other', '-z', '--exclude-standard', '.'],
     path

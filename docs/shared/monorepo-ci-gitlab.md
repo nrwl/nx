@@ -17,13 +17,13 @@ But they come with their own technical challenges. The more code you add into yo
 Below is an example of a GitLab pipeline setup for an Nx workspace only building and testing what is affected.
 
 ```yaml
-image: node:16-alpine
-stages:
-  - setup
-  - test
+image: node:16
 
-install-dependencies:
-  stage: setup
+stages:
+  - test
+  - build
+
+.distributed:
   interruptible: true
   only:
     - main
@@ -36,14 +36,8 @@ install-dependencies:
       - .npm/
   before_script:
     - npm ci --cache .npm --prefer-offline
-
-.distributed:
-  interruptible: true
-  only:
-    - main
-    - merge_requests
-  needs:
-    - install-dependencies
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
   artifacts:
     paths:
       - node_modules/.cache/nx
@@ -52,35 +46,35 @@ workspace-lint:
   stage: test
   extends: .distributed
   script:
-    - npx nx workspace-lint
+    - npx nx workspace-lint --base=$NX_BASE --head=$NX_HEAD
 
 format-check:
   stage: test
   extends: .distributed
   script:
-    - npx nx format:check
+    - npx nx format:check --base=$NX_BASE --head=$NX_HEAD
 
 lint:
   stage: test
   extends: .distributed
   script:
-    - npx nx affected --base=HEAD~1 --target=lint --parallel=3
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
 
 test:
   stage: test
   extends: .distributed
   script:
-    - npx nx affected --base=HEAD~1 --target=test --parallel=3 --ci --code-coverage
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
 
 build:
-  stage: test
+  stage: build
   extends: .distributed
   script:
-    - npx nx affected --base=HEAD~1 --target=build --parallel=3
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 ```
 
 The `build` and `test` jobs implement the CI workflow using `.distributed` as template to keep
-CI configuration file clearly.
+CI configuration file more readable.
 
 ## Distributed CI with Nx Cloud
 

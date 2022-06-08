@@ -1,0 +1,92 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Change the Storybook targets for Angular projects to use native Storybooke executor for all types of angular projects - non-buildable and buildable libs/apps should keep any extra options added in the target 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+  "version": 1,
+}
+`;
+
+exports[`Change the Storybook targets for Angular projects to use native Storybooke executor for all types of angular projects - non-buildable and buildable libs/apps should set the browserTarget correctly even if target names are not the default 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+  "version": 1,
+}
+`;
+
+exports[`Change the Storybook targets for Angular projects to use native Storybooke executor for all types of angular projects - non-buildable and buildable libs/apps should set the browserTarget correctly in the Storybook config according to the type of project 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+  "version": 1,
+}
+`;
+
+exports[`Change the Storybook targets for Angular projects to use native Storybooke executor for non-angular projects should not change their Storybook targets 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+}
+`;

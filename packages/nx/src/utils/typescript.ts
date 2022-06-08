@@ -1,4 +1,4 @@
-import { workspaceRoot } from './app-root';
+import { workspaceRoot } from './workspace-root';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';

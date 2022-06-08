@@ -1,3 +1,4 @@
+import { ProjectConfiguration } from '@nrwl/devkit';
 import {
   checkFilesExist,
   expectTestsPass,
@@ -14,6 +15,8 @@ import {
   readFile,
   removeFile,
 } from '@nrwl/e2e/utils';
+
+import { ASYNC_GENERATOR_EXECUTOR_CONTENTS } from './nx-plugin.fixtures';
 
 describe('Nx Plugin', () => {
   let npmScope: string;
@@ -147,7 +150,9 @@ describe('Nx Plugin', () => {
     const executor = uniq('executor');
 
     runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
-    runCLI(`generate @nrwl/nx-plugin:executor ${executor} --project=${plugin}`);
+    runCLI(
+      `generate @nrwl/nx-plugin:executor ${executor} --project=${plugin} --includeHasher`
+    );
 
     const lintResults = runCLI(`lint ${plugin}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -160,22 +165,113 @@ describe('Nx Plugin', () => {
       `libs/${plugin}/src/executors/${executor}/schema.d.ts`,
       `libs/${plugin}/src/executors/${executor}/schema.json`,
       `libs/${plugin}/src/executors/${executor}/executor.ts`,
+      `libs/${plugin}/src/executors/${executor}/hasher.ts`,
       `libs/${plugin}/src/executors/${executor}/executor.spec.ts`,
       `dist/libs/${plugin}/src/executors/${executor}/schema.d.ts`,
       `dist/libs/${plugin}/src/executors/${executor}/schema.json`,
-      `dist/libs/${plugin}/src/executors/${executor}/executor.js`
+      `dist/libs/${plugin}/src/executors/${executor}/executor.js`,
+      `dist/libs/${plugin}/src/executors/${executor}/hasher.js`
     );
     const executorsJson = readJson(`libs/${plugin}/executors.json`);
     expect(executorsJson).toMatchObject({
       executors: expect.objectContaining({
         [executor]: {
           implementation: `./src/executors/${executor}/executor`,
+          hasher: `./src/executors/${executor}/hasher`,
           schema: `./src/executors/${executor}/schema.json`,
           description: `${executor} executor`,
         },
       }),
     });
   }, 90000);
+
+  it('should catch invalid implementations, schemas, and version in lint', async () => {
+    const plugin = uniq('plugin');
+    const goodGenerator = uniq('good-generator');
+    const goodExecutor = uniq('good-executor');
+    const goodMigration = uniq('good-migration');
+    const badMigrationVersion = uniq('bad-version');
+    const missingMigrationVersion = uniq('missing-version');
+
+    // Generating the plugin results in a generator also called {plugin},
+    // as well as an executor called "build"
+    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
+
+    runCLI(
+      `generate @nrwl/nx-plugin:generator ${goodGenerator} --project=${plugin}`
+    );
+
+    runCLI(
+      `generate @nrwl/nx-plugin:executor ${goodExecutor} --project=${plugin}`
+    );
+
+    runCLI(
+      `generate @nrwl/nx-plugin:migration ${badMigrationVersion} --project=${plugin} --packageVersion="invalid"`
+    );
+
+    runCLI(
+      `generate @nrwl/nx-plugin:migration ${missingMigrationVersion} --project=${plugin} --packageVersion="0.1.0"`
+    );
+
+    runCLI(
+      `generate @nrwl/nx-plugin:migration ${goodMigration} --project=${plugin} --packageVersion="0.1.0"`
+    );
+
+    updateFile(`libs/${plugin}/generators.json`, (f) => {
+      const json = JSON.parse(f);
+      // @proj/plugin:plugin has an invalid implementation path
+      json.generators[plugin].factory = `./generators/${plugin}/bad-path`;
+      // @proj/plugin:non-existant has a missing implementation path amd schema
+      json.generators['non-existant-generator'] = {};
+      return JSON.stringify(json);
+    });
+
+    updateFile(`libs/${plugin}/executors.json`, (f) => {
+      const json = JSON.parse(f);
+      // @proj/plugin:build has an invalid implementation path
+      json.executors['build'].implementation = './executors/build/bad-path';
+      // @proj/plugin:non-existant has a missing implementation path amd schema
+      json.executors['non-existant-executor'] = {};
+      return JSON.stringify(json);
+    });
+
+    updateFile(`libs/${plugin}/migrations.json`, (f) => {
+      const json = JSON.parse(f);
+      delete json.generators[missingMigrationVersion].version;
+      return JSON.stringify(json);
+    });
+
+    const results = runCLI(`lint ${plugin}`, { silenceError: true });
+    expect(results).toContain(
+      `${plugin}: Implementation path should point to a valid file`
+    );
+    expect(results).toContain(
+      `non-existant-generator: Missing required property - \`schema\``
+    );
+    expect(results).toContain(
+      `non-existant-generator: Missing required property - \`implementation\``
+    );
+    expect(results).not.toContain(goodGenerator);
+
+    expect(results).toContain(
+      `build: Implementation path should point to a valid file`
+    );
+    expect(results).toContain(
+      `non-existant-executor: Missing required property - \`schema\``
+    );
+    expect(results).toContain(
+      `non-existant-executor: Missing required property - \`implementation\``
+    );
+    expect(results).not.toContain(goodExecutor);
+
+    expect(results).toContain(
+      `${missingMigrationVersion}: Missing required property - \`version\``
+    );
+    expect(results).toContain(
+      `${badMigrationVersion}: Version should be a valid semver`
+    );
+    expect(results).not.toContain(goodMigration);
+  });
 
   describe('local plugins', () => {
     const plugin = uniq('plugin');
@@ -232,6 +328,7 @@ describe('Nx Plugin', () => {
 
     it('should be able to use local generators and executors', async () => {
       const generator = uniq('generator');
+      const executor = uniq('executor');
       const generatedProject = uniq('project');
 
       runCLI(
@@ -239,10 +336,28 @@ describe('Nx Plugin', () => {
       );
 
       runCLI(
+        `generate @nrwl/nx-plugin:executor ${executor} --project=${plugin}`
+      );
+
+      updateFile(
+        `libs/${plugin}/src/executors/${executor}/executor.ts`,
+        ASYNC_GENERATOR_EXECUTOR_CONTENTS
+      );
+
+      runCLI(
         `generate @${npmScope}/${plugin}:${generator} --name ${generatedProject}`
       );
+
+      updateFile(`libs/${generatedProject}/project.json`, (f) => {
+        const project: ProjectConfiguration = JSON.parse(f);
+        project.targets['execute'] = {
+          executor: `@${npmScope}/${plugin}:${executor}`,
+        };
+        return JSON.stringify(project, null, 2);
+      });
+
       expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
-      expect(() => runCLI(`build ${generatedProject}`)).not.toThrow();
+      expect(() => runCLI(`execute ${generatedProject}`)).not.toThrow();
     });
   });
 
@@ -255,7 +370,7 @@ describe('Nx Plugin', () => {
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
       const pluginProject = readProjectConfig(`subdir-${plugin}`);
       const pluginE2EProject = readProjectConfig(`subdir-${plugin}-e2e`);
-      expect(pluginProject.root).toBe(`libs/subdir/${plugin}`);
+      expect(pluginProject.targets).toBeDefined();
       expect(pluginE2EProject).toBeTruthy();
     }, 90000);
   });

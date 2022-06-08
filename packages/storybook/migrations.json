@@ -1,16 +1,5 @@
 {
   "schematics": {
-    "update-builder-8.8.2": {
-      "version": "8.8.2",
-      "description": "Update storybook builder and tsconfig",
-      "factory": "./src/migrations/update-8-8-2/update-builder-8-8-2"
-    },
-    "update-9.2.0": {
-      "version": "9.2.0-beta.1",
-      "cli": "nx",
-      "description": "Add build-storybook to cacheable operations",
-      "factory": "./src/migrations/update-9-2-0/update-9-2-0"
-    },
     "update-10.2.1": {
       "version": "10.2.1-beta.1",
       "description": "Adjusts the tsconfig mapping",
@@ -84,9 +73,48 @@
       "cli": "nx",
       "description": "Migrate Storybook to v6",
       "factory": "./src/migrations/update-14-0-0/migrate-to-storybook-6"
+    },
+    "update-14.1.8": {
+      "version": "14.1.8",
+      "cli": "nx",
+      "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
+      "factory": "./src/migrations/update-14-1-8/change-storybook-targets"
     }
   },
   "packageJsonUpdates": {
+    "14.2.0": {
+      "version": "14.2.0-beta.6",
+      "packages": {
+        "@storybook/core-server": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/angular": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-essentials": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/builder-webpack5": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/manager-webpack5": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": true
+        }
+      }
+    },
     "13.10.0": {
       "version": "13.10.0-beta.0",
       "packages": {

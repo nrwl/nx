@@ -1,5 +1,7 @@
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
+  expectJestTestsToPass,
   newProject,
   readFile,
   readJson,
@@ -45,6 +47,16 @@ describe('js e2e', () => {
     expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
       'match the cache'
     );
+
+    const packageJson = readJson('package.json');
+    const devPackageNames = Object.keys(packageJson.devDependencies);
+    expect(devPackageNames).toContain('@nrwl/web');
+
+    const babelRc = readJson(`libs/${lib}/.babelrc`);
+    expect(babelRc.plugins).toBeUndefined();
+    expect(babelRc.presets).toStrictEqual([
+      ['@nrwl/web/babel', { useBuiltIns: 'usage' }],
+    ]);
 
     expect(runCLI(`build ${lib}`)).toContain('Done compiling TypeScript files');
     checkFilesExist(
@@ -181,6 +193,8 @@ describe('js e2e', () => {
       `dist/libs/${lib}/src/lib/${lib}.d.ts`
     );
 
+    checkFilesDoNotExist(`libs/${lib}/.babelrc`);
+
     const parentLib = uniq('parentlib');
     runCLI(`generate @nrwl/js:lib ${parentLib} --buildable --compiler=swc`);
     const parentLibPackageJson = readJson(`libs/${parentLib}/package.json`);
@@ -219,5 +233,43 @@ describe('js e2e', () => {
     const output = runCLI(`build ${parentLib}`);
     expect(output).toContain('1 task(s) it depends on');
     expect(output).toContain('Successfully compiled: 2 files with swc');
+
+    updateJson(`libs/${lib}/.lib.swcrc`, (json) => {
+      json.jsc.externalHelpers = true;
+      return json;
+    });
+
+    runCLI(`build ${lib}`);
+
+    const rootPackageJson = readJson(`package.json`);
+
+    expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
+      'peerDependencies.@swc/helpers',
+      rootPackageJson.dependencies['@swc/helpers']
+    );
+
+    updateJson(`libs/${lib}/.lib.swcrc`, (json) => {
+      json.jsc.externalHelpers = false;
+      return json;
+    });
+
+    runCLI(`build ${lib}`);
+
+    expect(readJson(`dist/libs/${lib}/package.json`)).not.toHaveProperty(
+      'peerDependencies.@swc/helpers'
+    );
   }, 120000);
+
+  it('should not create a `.babelrc` file when creating libs with js executors (--compiler=tsc)', () => {
+    const lib = uniq('lib');
+    runCLI(
+      `generate @nrwl/js:lib ${lib} --compiler=tsc --includeBabelRc=false`
+    );
+
+    checkFilesDoNotExist(`libs/${lib}/.babelrc`);
+  });
+
+  it('should run default jest tests', async () => {
+    await expectJestTestsToPass('@nrwl/js:lib');
+  }, 100000);
 });

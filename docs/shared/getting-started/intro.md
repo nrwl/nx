@@ -4,7 +4,7 @@ Nx is a smart, fast and extensible build system with first class monorepo suppor
 
 ## Philosophy
 
-Nx has a similar design philosophy to Visual Studio Code. Code is a powerful text editor, and you can be very productive
+Nx has a similar design philosophy to Visual Studio Code. VSCode is a powerful text editor, and you can be very productive
 with it even if you don't install any extensions. The ecosystem of VSCode's extensions though is what can really level
 up your productivity.
 

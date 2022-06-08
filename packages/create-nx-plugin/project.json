@@ -1,5 +1,5 @@
 {
-  "root": "packages/create-nx-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/create-nx-plugin",
   "projectType": "library",
   "targets": {
@@ -56,7 +56,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["build/packages/create-nx-plugin"],
       "options": {
         "commands": [
@@ -65,6 +65,9 @@
           },
           {
             "command": "node ./scripts/copy-readme.js create-nx-plugin"
+          },
+          {
+            "command": "node ./scripts/replace-versions.js build/packages/create-nx-plugin/bin/create-nx-plugin.js"
           }
         ],
         "parallel": false

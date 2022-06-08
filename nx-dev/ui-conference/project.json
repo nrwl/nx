@@ -1,5 +1,5 @@
 {
-  "root": "nx-dev/ui-conference",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/ui-conference/src",
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:feature"],

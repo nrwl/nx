@@ -48,13 +48,6 @@ export async function migrateFromAngularCli(
     createNxJson(tree, options, true);
     decorateAngularCli(tree);
   } else {
-    // TODO(leo): remove when support for multiple apps is added
-    if (projects.apps.length > 2) {
-      throw new Error(
-        'Can not convert workspaces with more than 1 application.'
-      );
-    }
-
     const migrators: ProjectMigrator[] = [
       ...projects.apps.map((app) => new AppMigrator(tree, options, app)),
       ...projects.libs.map((lib) => new LibMigrator(tree, options, lib)),

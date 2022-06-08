@@ -1,4 +1,4 @@
-export const nxVersion = '*';
+export const nxVersion = require('../../package.json').version;
 
 export const nextVersion = '12.1.5';
 export const eslintConfigNextVersion = '12.1.5';

@@ -2,7 +2,8 @@ import {
   joinPathFragments,
   parseJson,
   ProjectConfiguration,
-  WorkspaceJsonConfiguration,
+  readJsonFile,
+  ProjectsConfigurations,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
@@ -30,6 +31,16 @@ import isCI = require('is-ci');
 import treeKill = require('tree-kill');
 import { Workspaces } from '../../packages/nx/src/config/workspaces';
 import { PackageManager } from 'nx/src/utils/package-manager';
+
+export function getPublishedVersion(): string {
+  process.env.PUBLISHED_VERSION =
+    process.env.PUBLISHED_VERSION ||
+    // read version of built nx package
+    readJsonFile(`./build/packages/nx/package.json`).version ||
+    // fallback to latest if built nx package is missing
+    'latest';
+  return process.env.PUBLISHED_VERSION;
+}
 
 export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
@@ -66,7 +77,6 @@ export const e2eCwd = `${e2eRoot}/${currentCli()}`;
 ensureDirSync(e2eCwd);
 
 let projName: string;
-const publishedVersion = `9999.0.2`;
 
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
@@ -91,7 +101,7 @@ export function updateProjectConfig(
  * if you need a project's configuration.
  */
 export function readWorkspaceConfig(): Omit<
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
   'projects'
 > {
   const w = readJson(workspaceConfigName());
@@ -126,6 +136,7 @@ export function runCreateWorkspace(
     packageManager,
     cli,
     extraArgs,
+    ci,
     useDetectedPm = false,
   }: {
     preset: string;
@@ -135,6 +146,7 @@ export function runCreateWorkspace(
     packageManager?: 'npm' | 'yarn' | 'pnpm';
     cli?: string;
     extraArgs?: string;
+    ci?: 'azure' | 'github' | 'circleci';
     useDetectedPm?: boolean;
   }
 ) {
@@ -151,6 +163,9 @@ export function runCreateWorkspace(
   if (style) {
     command += ` --style=${style}`;
   }
+  if (ci) {
+    command += ` --ci=${ci}`;
+  }
 
   if (base) {
     command += ` --defaultBase="${base}"`;
@@ -166,7 +181,52 @@ export function runCreateWorkspace(
 
   const create = execSync(command, {
     cwd: e2eCwd,
-    stdio: [0, 1, 2],
+    // stdio: [0, 1, 2],
+    stdio: ['pipe', 'pipe', 'pipe'],
+    env: process.env,
+    encoding: 'utf-8',
+  });
+  return create ? create.toString() : '';
+}
+
+export function runCreatePlugin(
+  name: string,
+  {
+    pluginName,
+    packageManager,
+    extraArgs,
+    useDetectedPm = false,
+  }: {
+    pluginName?: string;
+    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    extraArgs?: string;
+    useDetectedPm?: boolean;
+  }
+) {
+  projName = name;
+
+  const pm = getPackageManagerCommand({ packageManager });
+
+  let command = `${
+    pm.runUninstalledPackage
+  } create-nx-plugin@${getPublishedVersion()} ${name}`;
+
+  if (pluginName) {
+    command += ` --pluginName=${pluginName}`;
+  }
+
+  if (packageManager && !useDetectedPm) {
+    command += ` --package-manager=${packageManager}`;
+  }
+
+  if (extraArgs) {
+    command += ` ${extraArgs}`;
+  }
+
+  const create = execSync(command, {
+    cwd: e2eCwd,
+    //stdio: [0, 1, 2],
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   });
@@ -176,7 +236,7 @@ export function runCreateWorkspace(
 export function packageInstall(
   pkg: string,
   projName?: string,
-  version = publishedVersion
+  version = getPublishedVersion()
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
@@ -186,7 +246,8 @@ export function packageInstall(
     .join(' ');
   const install = execSync(`${pm.addDev} ${pkgsWithVersions}`, {
     cwd,
-    stdio: [0, 1, 2],
+    // stdio: [0, 1, 2],
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   });
@@ -199,14 +260,10 @@ export function runNgNew(
 ): string {
   projName = projectName;
 
-  // Use the latest version of the currently supported @angular/cli major version
-  // to cover existing usage out there while avoiding the tests to fail when a new
-  // major comes out and is still not supported
-  const ngCliMajorVersion = coerce(angularCliVersion).major;
   const npmMajorVersion = getNpmMajorVersion();
   const command = `npx ${
     +npmMajorVersion >= 7 ? '--yes' : ''
-  } @angular/cli@${ngCliMajorVersion} new ${projectName} --package-manager=${packageManager}`;
+  } @angular/cli@${angularCliVersion} new ${projectName} --package-manager=${packageManager}`;
 
   return execSync(command, {
     cwd: e2eCwd,
@@ -239,7 +296,10 @@ export function newProject({
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
-        updateFile('.npmrc', 'prefer-frozen-lockfile=false');
+        updateFile(
+          '.npmrc',
+          'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
+        );
       }
 
       const packages = [
@@ -426,7 +486,7 @@ export function runCLIAsync(
 export function runNgAdd(
   packageName: string,
   command?: string,
-  version: string = publishedVersion,
+  version: string = getPublishedVersion(),
   opts: RunCmdOpts = {
     silenceError: false,
     env: null,
@@ -488,7 +548,7 @@ export function runCLI(
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return e.stdout?.toString() + e.stderr?.toString();
+      return stripConsoleColors(e.stdout?.toString() + e.stderr?.toString());
     } else {
       logError(
         `Original command: ${command}`,
@@ -753,27 +813,27 @@ export function getPackageManagerCommand({
     npm: {
       createWorkspace: `npx ${
         +npmMajorVersion >= 7 ? '--yes' : ''
-      } create-nx-workspace@${publishedVersion}`,
+      } create-nx-workspace@${getPublishedVersion()}`,
       run: (script: string, args: string) => `npm run ${script} -- ${args}`,
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
-      runUninstalledPackage: `npx`,
+      runUninstalledPackage: `npx --yes`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
+      createWorkspace: `yarn global add create-nx-workspace@${getPublishedVersion()} && create-nx-workspace`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
-      runUninstalledPackage: 'npx',
+      runUninstalledPackage: 'npx --yes',
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
-      createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
+      createWorkspace: `pnpm dlx create-nx-workspace@${getPublishedVersion()}`,
       run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
@@ -834,4 +894,31 @@ export function waitUntil(
       reject(new Error(`Timed out waiting for condition to return true`));
     }, opts.timeout);
   });
+}
+
+type GeneratorsWithDefaultTests =
+  | '@nrwl/js:lib'
+  | '@nrwl/node:lib'
+  | '@nrwl/react:lib'
+  | '@nrwl/react:app'
+  | '@nrwl/next:app'
+  | '@nrwl/angular:app'
+  | '@nrwl/workspace:lib'
+  | '@nrwl/web:app';
+
+/**
+ * Runs the pass in generator and then runs test on
+ * the generated project to make sure the default tests pass.
+ */
+export async function expectJestTestsToPass(
+  generator: GeneratorsWithDefaultTests | string
+) {
+  const name = uniq('proj');
+  const generatedResults = runCLI(
+    `generate ${generator} ${name} --no-interactive`
+  );
+  expect(generatedResults).toContain(`jest.config.ts`);
+
+  const results = await runCLIAsync(`test ${name}`);
+  expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
 }

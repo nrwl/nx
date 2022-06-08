@@ -98,7 +98,7 @@ To add Tailwind CSS to an existing Angular application, buildable library or pub
 npx nx g @nrwl/angular:setup-tailwind my-project
 ```
 
-You can see the available options for the above generator in [its docs](/angular/setup-tailwind).
+You can see the available options for the above generator in [its docs](/packages/angular/generators/setup-tailwind).
 
 ## Tailwind CSS setup scenarios
 
@@ -464,7 +464,7 @@ Next, you need to configure your project to build the theme when you build the l
   "defaultConfiguration": "production"
 },
 "build-lib": {
-  "executor": "@nrwl/workspace:run-commands",
+  "executor": "nx:run-commands",
   "outputs": ["dist/libs/lib1"],
   "configurations": {
     "production": {
@@ -483,7 +483,7 @@ Next, you need to configure your project to build the theme when you build the l
   "defaultConfiguration": "production"
 },
 "build": {
-  "executor": "@nrwl/workspace:run-commands",
+  "executor": "nx:run-commands",
   "outputs": ["dist/libs/lib1"],
   "configurations": {
     "production": {

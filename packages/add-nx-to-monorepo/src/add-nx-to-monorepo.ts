@@ -1,17 +1,14 @@
 #!/usr/bin/env node
 
-import * as stripJsonComments from 'strip-json-comments';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as cp from 'child_process';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+import { execSync } from 'child_process';
 import * as enquirer from 'enquirer';
 import * as yargsParser from 'yargs-parser';
+import { output, readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import ignore from 'ignore';
 
-import { execSync } from 'child_process';
-import { output } from '@nrwl/devkit';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const ignore = require('ignore');
 const parsedArgs = yargsParser(process.argv, {
   boolean: ['nxCloud'],
   configuration: {
@@ -44,7 +41,7 @@ export async function addNxToMonorepo() {
     process.exit(1);
   }
 
-  createNxJsonFile(repoRoot);
+  createNxJsonFile(repoRoot, pds);
 
   addDepsToPackageJson(repoRoot, useCloud);
 
@@ -138,6 +135,7 @@ interface ProjectDesc {
   name: string;
   dir: string;
   mainFilePath: string;
+  scripts: string[];
 }
 
 function createProjectDesc(
@@ -147,75 +145,70 @@ function createProjectDesc(
   const res = [];
   packageJsonFiles.forEach((p) => {
     const dir = path.dirname(p);
-    const packageJson = readJsonFile(repoRoot, p);
+    const packageJson = readJsonFile(path.join(repoRoot, p));
     if (!packageJson.name) return;
 
+    const scripts = Object.keys(packageJson.scripts || {});
     if (packageJson.main) {
       res.push({
         name: packageJson.name,
         dir,
         mainFilePath: path.join(dir, packageJson.main),
+        scripts,
       });
     } else if (packageJson.index) {
       res.push({
         name: packageJson.name,
         dir,
         mainFilePath: path.join(dir, packageJson.index),
+        scripts,
       });
     } else {
-      res.push({ name: packageJson.name, dir, mainFilePath: null });
+      res.push({ name: packageJson.name, dir, mainFilePath: null, scripts });
     }
   });
   return res;
 }
 
-function readJsonFile(repoRoot: string, file: string) {
-  return JSON.parse(
-    stripJsonComments(fs.readFileSync(path.join(repoRoot, file)).toString())
-  );
-}
-
-function detectWorkspaceScope(repoRoot: string) {
-  let scope = readJsonFile(repoRoot, `package.json`).name;
-  if (!scope) return 'undetermined';
-
-  if (scope.startsWith('@')) {
-    scope = scope.substring(1);
+function createNxJsonFile(repoRoot: string, projects: ProjectDesc[]) {
+  const allScripts = {};
+  for (const p of projects) {
+    for (const s of p.scripts) {
+      allScripts[s] = true;
+    }
   }
 
-  return scope.split('/')[0];
-}
+  const cacheableOperations = Object.keys(allScripts).filter(
+    (s) => s.indexOf('serve') === -1 && s.indexOf('start') === -1
+  );
+  const targetDependencies = cacheableOperations
+    .filter((c) => c === 'build' || c === 'prepare' || c === 'package')
+    .reduce(
+      (m, c) => ({
+        ...m,
+        [c]: [{ target: c, projects: 'dependencies' }],
+      }),
+      {}
+    );
 
-function createNxJsonFile(repoRoot: string) {
-  const scope = detectWorkspaceScope(repoRoot);
   const res = {
     extends: 'nx/presets/npm.json',
-    npmScope: scope,
     tasksRunnerOptions: {
       default: {
         runner: 'nx/tasks-runners/default',
         options: {
-          cacheableOperations: ['build', 'test', 'lint', 'package', 'prepare'],
+          cacheableOperations,
         },
       },
     },
-    targetDependencies: {
-      build: [{ target: 'build', projects: 'dependencies' }],
-      prepare: [{ target: 'prepare', projects: 'dependencies' }],
-      package: [{ target: 'package', projects: 'dependencies' }],
-    },
+    targetDependencies,
     affected: {
       defaultBase: deduceDefaultBase(),
     },
     workspaceLayout: deduceWorkspaceLayout(repoRoot),
-    pluginsConfig: {
-      '@nrwl/js': {
-        analyzeSourceFiles: false,
-      },
-    },
   };
 
-  fs.writeFileSync(`${repoRoot}/nx.json`, JSON.stringify(res, null, 2));
+  writeJsonFile(`${repoRoot}/nx.json`, res);
 }
 
 function deduceWorkspaceLayout(repoRoot: string) {
@@ -230,10 +223,8 @@ function deduceWorkspaceLayout(repoRoot: string) {
 
 function exists(folder: string) {
   try {
-    const s = fs.statSync(folder);
-    return s.isDirectory();
-    // eslint-disable-next-line no-empty
-  } catch (e) {
+    return fs.statSync(folder).isDirectory();
+  } catch {
     return false;
   }
 }
@@ -244,20 +235,27 @@ function deduceDefaultBase() {
       stdio: ['ignore', 'ignore', 'ignore'],
     });
     return 'main';
-  } catch (e) {
+  } catch {
     try {
       execSync(`git rev-parse --verify dev`, {
         stdio: ['ignore', 'ignore', 'ignore'],
       });
       return 'dev';
-    } catch (e) {
+    } catch {
       try {
-        execSync(`git rev-parse --verify next`, {
+        execSync(`git rev-parse --verify develop`, {
           stdio: ['ignore', 'ignore', 'ignore'],
         });
-        return 'next';
-      } catch (e) {
-        return 'master';
+        return 'develop';
+      } catch {
+        try {
+          execSync(`git rev-parse --verify next`, {
+            stdio: ['ignore', 'ignore', 'ignore'],
+          });
+          return 'next';
+        } catch {
+          return 'master';
+        }
       }
     }
   }
@@ -265,13 +263,13 @@ function deduceDefaultBase() {
 
 // add dependencies
 function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
-  const json = readJsonFile(repoRoot, `package.json`);
+  const json = readJsonFile(path.join(repoRoot, `package.json`));
   if (!json.devDependencies) json.devDependencies = {};
-  json.devDependencies['nx'] = 'NX_VERSION';
+  json.devDependencies['nx'] = require('../package.json').version;
   if (useCloud) {
     json.devDependencies['@nrwl/nx-cloud'] = 'latest';
   }
-  fs.writeFileSync(`package.json`, JSON.stringify(json, null, 2));
+  writeJsonFile(`package.json`, json);
 }
 
 function runInstall(repoRoot: string) {

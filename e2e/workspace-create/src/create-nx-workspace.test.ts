@@ -10,9 +10,9 @@ import {
   readJson,
   runCLI,
   runCreateWorkspace,
-  updateJson,
-  updateFile,
   uniq,
+  updateFile,
+  updateJson,
 } from '@nrwl/e2e/utils';
 import { existsSync, mkdirSync } from 'fs-extra';
 import { execSync } from 'child_process';
@@ -43,8 +43,8 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
   });
 
-  it('should be able to create an empty workspace with core capabilities', () => {
-    const wsName = uniq('core');
+  it('should be able to create an empty workspace with npm capabilities', () => {
+    const wsName = uniq('npm');
     runCreateWorkspace(wsName, {
       preset: 'npm',
       packageManager,
@@ -93,9 +93,28 @@ describe('create-nx-workspace', () => {
     });
   });
 
+  it('should fail correctly when preset errors', () => {
+    // Using Angular Preset as the example here to test
+    // It will error when npmScope is of form `<char>-<num>-<char>`
+    // Due to a validation error Angular will throw.
+    const wsName = uniq('angular-1-test');
+    const appName = uniq('app');
+    try {
+      runCreateWorkspace(wsName, {
+        preset: 'angular',
+        style: 'css',
+        appName,
+        packageManager,
+      });
+    } catch (e) {
+      expect(e).toBeTruthy();
+    }
+  });
+
   it('should be able to create an react workspace', () => {
     const wsName = uniq('react');
     const appName = uniq('app');
+
     runCreateWorkspace(wsName, {
       preset: 'react',
       style: 'css',
@@ -259,6 +278,17 @@ describe('create-nx-workspace', () => {
     checkFilesDoNotExist('yarn.lock');
     checkFilesExist('package-lock.json');
     process.env.SELECTED_PM = packageManager;
+  });
+
+  it('should return error when ci workflow is selected but no cloud is set up', () => {
+    const wsName = uniq('github');
+    const create = runCreateWorkspace(wsName, {
+      preset: 'npm',
+      packageManager,
+      ci: 'circleci',
+    });
+    checkFilesExist('package.json');
+    checkFilesDoNotExist('.circleci/config.yml');
   });
 
   describe('Use detected package manager', () => {

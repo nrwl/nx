@@ -134,8 +134,6 @@ const schemaUrls = {
   '/nx-plugin/plugin': '/packages/nx-plugin/generators/plugin',
   '/nx-plugin/schematic': '/packages/nx-plugin/generators/generator',
   '/nx-plugin/e2e': '/packages/nx-plugin/executors/e2e',
-  '/nx-devkit/index': '/packages/nx-devkit/index',
-  '/nx-devkit/ngcli_adapter': '/packages/nx-devkit/ngcli_adapter',
 };
 
 /**
@@ -153,6 +151,28 @@ const guideUrls = {
   '/guides/nextjs': '/next/overview',
   '/using-nx/nx-devkit': '/extending-nx/nx-devkit',
   '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
+  '/guides/lerna-and-nx': '/migration/lerna-and-nx',
+};
+
+/**
+ * API overview packages
+ */
+const overviewUrls = {
+  '/workspace/nrwl-workspace-overview': '/packages/workspace',
+  '/js/overview': '/packages/js',
+  '/web/overview': '/packages/web',
+  '/angular/overview': '/packages/angular',
+  '/react/overview': '/packages/react',
+  '/jest/overview': '/packages/jest',
+  '/cypress/overview': '/packages/cypress',
+  '/linter/overview': '/packages/linter',
+  '/node/overview': '/packages/node',
+  '/express/overview': '/packages/express',
+  '/nest/overview': '/packages/nest',
+  '/next/overview': '/packages/next',
+  '/detox/overview': '/packages/detox',
+  '/react-native/overview': '/packages/react-native',
+  '/nx-plugin/overview': '/packages/nx-plugin',
 };
 
 /**
@@ -161,4 +181,5 @@ const guideUrls = {
 module.exports = {
   schemaUrls,
   guideUrls,
+  overviewUrls,
 };

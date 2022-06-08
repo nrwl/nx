@@ -9,4 +9,5 @@ export interface Schema {
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   e2eProjectName?: string;
+  prefix?: string;
 }

@@ -1,5 +1,5 @@
 {
-  "root": "e2e/utils",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/utils",
   "projectType": "library",
   "targets": {}

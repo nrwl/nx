@@ -93,6 +93,22 @@ Type: boolean
 
 Show help
 
+### nx-bail
+
+Type: boolean
+
+Default: false
+
+Stop command execution after the first failed task
+
+### nx-ignore-cycles
+
+Type: boolean
+
+Default: false
+
+Ignore cycles in the task graph
+
 ### ~~only-failed~~
 
 Type: boolean
@@ -122,6 +138,14 @@ Type: boolean
 Default: false
 
 Rerun the tasks even when the results are available in the cache
+
+### type
+
+Type: string
+
+Choices: [app, lib]
+
+Select the type of projects to be returned (e.g., --type=app)
 
 ### uncommitted
 

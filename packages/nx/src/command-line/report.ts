@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import { join } from 'path';
 import {
@@ -7,6 +7,7 @@ import {
   getPackageManagerVersion,
 } from '../utils/package-manager';
 import { readJsonFile } from '../utils/fileutils';
+import { PackageJson, readModulePackageJson } from '../utils/package-json';
 
 export const packagesWeCareAbout = [
   'nx',
@@ -31,7 +32,6 @@ export const packagesWeCareAbout = [
   '@nrwl/web',
   '@nrwl/workspace',
   'typescript',
-  'rxjs',
 ];
 
 export const patternsWeIgnoreInCommunityReport: Array<string | RegExp> = [
@@ -78,19 +78,16 @@ export function reportHandler() {
   });
 }
 
-export function readPackageJson(p: string) {
+export function readPackageJson(p: string): PackageJson | null {
   try {
-    const packageJsonPath = require.resolve(`${p}/package.json`, {
-      paths: [workspaceRoot],
-    });
-    return readJsonFile(packageJsonPath);
+    return readModulePackageJson(p).packageJson;
   } catch {
-    return {};
+    return null;
   }
 }
 
 export function readPackageVersion(p: string): string {
-  return readPackageJson(p).version || 'Not Found';
+  return readPackageJson(p)?.version || 'Not Found';
 }
 
 export function findInstalledCommunityPlugins(): {
@@ -117,7 +114,8 @@ export function findInstalledCommunityPlugins(): {
         return arr;
       }
       try {
-        const depPackageJson = readPackageJson(nextDep);
+        const depPackageJson: Partial<PackageJson> =
+          readPackageJson(nextDep) || {};
         if (
           [
             'ng-update',

@@ -1,11 +1,5 @@
-import {
-  ConfSchedule,
-  ConfScheduleShort,
-  ConfSpeakers,
-  ConfSponsors,
-  ConfWorkshop,
-} from '@nrwl/nx-dev/ui-conference';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
+import { ConfScheduleShort, ConfSpeakers } from '@nrwl/nx-dev/ui-conference';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -229,11 +223,11 @@ export function ConfPage(): ReactComponentElement<any> {
                 <div className="mt-16 flex">
                   <a
                     className="font-input-mono group flex w-full items-center justify-end sm:text-2xl"
-                    target="_blank"
-                    rel="noreferrer"
-                    href="https://ti.to/nrwl/nx-conf-lite-2022"
+                    href="https://youtu.be/iIZOfV0GFmU"
                   >
-                    <span className="group-hover:underline">Register now</span>
+                    <span className="group-hover:underline">
+                      Replay Available Watch Now
+                    </span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
@@ -249,46 +243,6 @@ export function ConfPage(): ReactComponentElement<any> {
                       />
                     </svg>
                   </a>
-                  {/*<a
-                    className="font-input-mono group flex w-full items-center justify-end sm:text-2xl"
-                    href="https://www.youtube.com/watch?v=oG2QbFquraA"
-                  >
-                    <span className="group-hover:underline">Watch Day 1</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                      />
-                    </svg>
-                  </a>
-                  <a
-                    className="font-input-mono group flex w-full items-center justify-end sm:text-2xl"
-                    href="https://www.youtube.com/watch?v=hlGOaGDsWKg"
-                  >
-                    <span className="group-hover:underline">Watch Day 2</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                      />
-                    </svg>
-                  </a>*/}
                 </div>
               </div>
             </div>

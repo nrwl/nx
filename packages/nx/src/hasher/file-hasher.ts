@@ -1,5 +1,5 @@
 import { GitBasedFileHasher } from './git-based-file-hasher';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { NodeBasedFileHasher } from './node-based-file-hasher';
 import { FileHasherBase } from './file-hasher-base';
 import { execSync } from 'child_process';

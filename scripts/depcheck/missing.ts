@@ -9,6 +9,7 @@ const IGNORE_MATCHES = {
     'prettier',
     'typescript',
     'dotenv',
+    'rxjs',
   ],
   angular: [
     '@angular-devkit/architect',
@@ -100,6 +101,7 @@ const IGNORE_MATCHES = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
     '@angular/cli',
+    'ts-node', // We *may* fall back on ts-node, but we want to encourage the use of @swc-node instead so we don't explicitly list ts-node as an optional dep
   ],
   web: [
     // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
@@ -119,9 +121,7 @@ const IGNORE_MATCHES = {
     '@nrwl/cli',
     '@nrwl/jest',
     '@nrwl/linter',
-    '@nrwl/devkit',
     'tsconfig-paths',
-    '@swc-node/register',
   ],
   nest: ['semver'],
   'make-angular-cli-faster': ['@angular/core'],

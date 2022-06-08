@@ -195,9 +195,10 @@ describe('lib', () => {
       expect(tree.exists(`libs/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.read(`libs/my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/* eslint-disable */
+        export default {
           displayName: 'my-lib',
-          preset: '../../jest.preset.ts',
+          preset: '../../jest.preset.js',
           globals: {
             'ts-jest': {
               tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -227,9 +228,9 @@ describe('lib', () => {
         name: 'myLib',
       });
       const expectedRootJestConfig = `
-        "const { getJestProjects } = require('@nrwl/jest');
+        "import { getJestProjects } from '@nrwl/jest';
 
-        module.exports = {
+        export default {
         projects: getJestProjects()
         };"
       `;
@@ -829,9 +830,10 @@ describe('lib', () => {
 
       expect(tree.read(`libs/my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "module.exports = {
+        "/* eslint-disable */
+        export default {
           displayName: 'my-lib',
-          preset: '../../jest.preset.ts',
+          preset: '../../jest.preset.js',
           transform: {
             '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
           },

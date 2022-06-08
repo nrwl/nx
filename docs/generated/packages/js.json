@@ -4,6 +4,15 @@
   "description": "The Nx plugin that provides the best experience for developing JavaScript and TypeScript projects.",
   "root": "/packages/js",
   "source": "/packages/js/src",
+  "documentation": [
+    {
+      "name": "Overview",
+      "id": "overview",
+      "path": "/packages/js",
+      "file": "shared/js-plugin",
+      "content": "The JS plugin contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.\n\n## Setting Up JS\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/js` by running the following commands if `@nrwl/js` package is not installed:\n\n```shell\nnpm i --save-dev @nrwl/js\n```\n\n```shell\nyarn add --dev @nrwl/js\n```\n\n### `ts` Preset\n\nWhen initializing a new Nx workspace, specifying `--preset=ts` will generate a workspace with `@nrwl/js` pre-installed.\n\n```shell\nnpx create-nx-workspace my-org --preset=ts\n```\n\n```shell\nyarn create nx-workspace my-org --preset=ts\n```\n\n## Create Libraries\n\nYou can add a new JS/TS library with the following command:\n\n```shell\nnx g @nrwl/js:lib my-lib\n```\n\n## Build\n\nYou can `build` libraries that are generated with `--buildable` flag.\n\n```shell\nnx g @nrwl/js:lib my-buildable-lib --buildable\n```\n\nGenerating a library with `--buildable` will add a `build` target to the library's `project.json` file allows the library to be built.\n\n```shell\nnx build my-buildable-lib\n```\n\n## Test\n\nYou can test a library with the following command:\n\n```shell\nnx test my-lib\n```\n\n## Lint\n\nYou can lint a library with the following command:\n\n```shell\nnx lint my-lib\n```\n\n## Compiler\n\nBy default, `@nrwl/js` uses [TypeScript Compiler (TSC)](https://www.typescriptlang.org/docs/handbook/2/basic-types.html#tsc-the-typescript-compiler), via `@nrwl/js:tsc` executor, to compile your libraries. Optionally, you can switch `tsc` out for a different compiler with `--compiler` flag when executing the generators.\n\nCurrently, `@nrwl/js` supports the following compilers:\n\n- [Speedy Web Compiler (SWC)](https://swc.rs)\n\n### SWC\n\n- Create a buildable library with `swc`\n\n```shell\nnx g @nrwl/js:lib my-swc-lib --compiler=swc --buildable\n```\n\n- Convert a `tsc` library to use `swc`\n\n```shell\nnx g @nrwl/js:convert-to-swc my-buildable-lib\n```\n\nNow the `build` command will use `@nrwl/js:swc` executor to compile your libraries.\n\n> The first time you generate a `swc` library or convert a `tsc` library over to `swc`, `@nrwl/js` will install the necessary dependencies to use `swc`.\n"
+    }
+  ],
   "generators": [
     {
       "name": "library",
@@ -58,6 +67,10 @@
             "type": "boolean",
             "description": "Do not update tsconfig.json for development experience.",
             "default": false
+          },
+          "includeBabelRc": {
+            "type": "boolean",
+            "description": "Include a .babelrc configuration to compile TypeScript files"
           },
           "testEnvironment": {
             "type": "string",
@@ -357,6 +370,10 @@
           "tsConfig": {
             "type": "string",
             "description": "The path to the Typescript configuration file."
+          },
+          "swcrc": {
+            "type": "string",
+            "description": "The path to the SWC configuration file. Default: .lib.swcrc"
           },
           "assets": {
             "type": "array",

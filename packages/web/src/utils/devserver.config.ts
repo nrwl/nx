@@ -1,5 +1,6 @@
 import { logger } from '@nrwl/devkit';
-import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+import type { Configuration as WebpackConfiguration } from 'webpack';
+import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import * as path from 'path';
 import { basename, resolve } from 'path';
 
@@ -18,14 +19,16 @@ export function getDevServerConfig(
   sourceRoot: string,
   buildOptions: WebWebpackExecutorOptions,
   serveOptions: WebDevServerOptions
-): Partial<WebpackDevServerConfiguration> {
+): Partial<WebpackConfiguration> {
   const webpackConfig = getWebConfig(
     workspaceRoot,
     projectRoot,
     sourceRoot,
     buildOptions,
-    true, // Don't need to support legacy browsers for dev.
-    false
+    true,
+    typeof buildOptions.optimization === 'boolean'
+      ? buildOptions.optimization
+      : buildOptions.optimization?.scripts
   );
 
   (webpackConfig as any).devServer = getDevServerPartial(
@@ -56,7 +59,7 @@ export function getDevServerConfig(
     })
   );
 
-  return webpackConfig as any;
+  return webpackConfig as WebpackConfiguration;
 }
 
 function getDevServerPartial(
@@ -67,7 +70,7 @@ function getDevServerPartial(
   const servePath = buildServePath(buildOptions);
 
   const { scripts: scriptsOptimization, styles: stylesOptimization } =
-    buildOptions.optimization as OptimizationOptions;
+    (buildOptions.optimization || {}) as OptimizationOptions;
 
   const config: WebpackDevServerConfiguration = {
     host: options.host,
@@ -90,7 +93,6 @@ function getDevServerPartial(
     open: options.open,
     static: false,
     compress: scriptsOptimization || stylesOptimization,
-    https: options.ssl,
     devMiddleware: {
       publicPath: servePath,
       stats: false,
@@ -106,8 +108,13 @@ function getDevServerPartial(
     hot: options.hmr,
   };
 
-  if (options.ssl && options.sslKey && options.sslCert) {
-    config.https = getSslConfig(root, options);
+  if (options.ssl) {
+    config.server = {
+      type: 'https',
+    };
+    if (options.sslKey && options.sslCert) {
+      config.server.options = getSslConfig(root, options);
+    }
   }
 
   if (options.proxyConfig) {

@@ -1,14 +1,14 @@
-const fs = require('fs');
+/* eslint-disable */
+<% if(js) {%>const { readFileSync } = require('fs')<% } else { %>import { readFileSync } from 'fs';<% } %>
 
 // Reading the SWC compilation config and remove the "exclude"
 // for the test files to be compiled by SWC
 const { exclude: _, ...swcJestConfig } = JSON.parse(
-  fs.readFileSync(`${__dirname}/.lib.swcrc`, 'utf-8')
+  readFileSync(`${__dirname}/.lib.swcrc`, 'utf-8')
 );
-
-module.exports = {
+<% if(js) {%>module.exports =<% } else { %>export default<% } %> {
   displayName: '<%= project %>',
-  preset: '<%= offsetFromRoot %>jest.preset.<%= ext %>',
+  preset: '<%= offsetFromRoot %>jest.preset.js',
   transform: {
     '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },

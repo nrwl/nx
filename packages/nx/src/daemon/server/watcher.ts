@@ -5,7 +5,7 @@
  *
  * See https://github.com/parcel-bundler/watcher for more details.
  */
-import { workspaceRoot } from '../../utils/app-root';
+import { workspaceRoot } from '../../utils/workspace-root';
 import type { AsyncSubscription, Event } from '@parcel/watcher';
 import { readFileSync } from 'fs';
 import { join, relative } from 'path';

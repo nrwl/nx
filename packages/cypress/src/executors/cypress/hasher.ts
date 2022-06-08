@@ -5,7 +5,7 @@ import {
   ProjectGraph,
   Task,
   TaskGraph,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from '@nrwl/devkit';
 
 export default async function run(
@@ -14,7 +14,7 @@ export default async function run(
     hasher: Hasher;
     projectGraph: ProjectGraph;
     taskGraph: TaskGraph;
-    workspaceConfig: WorkspaceJsonConfiguration & NxJsonConfiguration;
+    workspaceConfig: ProjectsConfigurations & NxJsonConfiguration;
   }
 ): Promise<Hash> {
   const cypressPluginConfig = context.workspaceConfig.pluginsConfig

@@ -1,9 +1,12 @@
-import type { NxJsonConfiguration } from './nx-json';
-import { TaskGraph } from './task-graph';
+import { Hash, Hasher } from '../hasher/hasher';
+import { ProjectGraph } from './project-graph';
+import { Task, TaskGraph } from './task-graph';
 import {
   TargetConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from './workspace-json-project-json';
+
+import type { NxJsonConfiguration } from './nx-json';
 /**
  * A callback function that is executed after changes are made to the file system
  */
@@ -82,7 +85,7 @@ export interface ExecutorsJson {
 
 export interface ExecutorConfig {
   schema: any;
-  hasherFactory?: () => any;
+  hasherFactory?: () => CustomHasher;
   implementationFactory: () => Executor;
   batchImplementationFactory?: () => TaskGraphExecutor;
 }
@@ -99,6 +102,18 @@ export type Executor<T = any> = (
 ) =>
   | Promise<{ success: boolean }>
   | AsyncIterableIterator<{ success: boolean }>;
+
+export interface HasherContext {
+  hasher: Hasher;
+  projectGraph: ProjectGraph<any>;
+  taskGraph: TaskGraph;
+  workspaceConfig: ProjectsConfigurations & NxJsonConfiguration;
+}
+
+export type CustomHasher = (
+  task: Task,
+  context: HasherContext
+) => Promise<Hash>;
 
 /**
  * Implementation of a target of a project that handles multiple projects to be batched
@@ -151,7 +166,7 @@ export interface ExecutorContext {
   /**
    * The full workspace configuration
    */
-  workspace: WorkspaceJsonConfiguration & NxJsonConfiguration;
+  workspace: ProjectsConfigurations & NxJsonConfiguration;
 
   /**
    * The current working directory

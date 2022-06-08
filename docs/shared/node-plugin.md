@@ -1,5 +1,3 @@
-# Node Plugin
-
 The Node Plugin contains generators and executors to manage Node applications within an Nx workspace. It provides:
 
 ## Setting Up Node

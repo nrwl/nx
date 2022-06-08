@@ -4,23 +4,29 @@ import {
   serveWebpackBrowser,
 } from '@angular-devkit/build-angular/src/builders/dev-server';
 import { JsonObject } from '@angular-devkit/core';
-import { joinPathFragments, parseTargetString, Workspaces } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  parseTargetString,
+  readAllWorkspaceConfiguration,
+  Workspaces,
+} from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
 import { resolveCustomWebpackConfig } from '../utilities/webpack';
 import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
-export function webpackServer(schema: Schema, context: BuilderContext) {
+export function executeWebpackServerBuilder(
+  schema: Schema,
+  context: BuilderContext
+) {
   process.env.NX_TSCONFIG_PATH = joinPathFragments(
     context.workspaceRoot,
     'tsconfig.base.json'
   );
 
   const options = normalizeOptions(schema);
-  const workspaceConfig = new Workspaces(
-    context.workspaceRoot
-  ).readWorkspaceConfiguration();
+  const workspaceConfig = readAllWorkspaceConfiguration();
 
   const parsedBrowserTarget = parseTargetString(options.browserTarget);
   const buildTarget =
@@ -86,4 +92,6 @@ export function webpackServer(schema: Schema, context: BuilderContext) {
   );
 }
 
-export default createBuilder<JsonObject & Schema>(webpackServer) as any;
+export default createBuilder<JsonObject & Schema>(
+  executeWebpackServerBuilder
+) as any;

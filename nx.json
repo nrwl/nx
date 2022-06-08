@@ -1,8 +1,8 @@
 {
+  "$schema": "packages/nx/schemas/nx-schema.json",
   "implicitDependencies": {
     "package.json": "*",
     ".eslintrc.json": "*",
-    "scripts/vercel/*": ["nx-dev"],
     ".circleci/config.yml": "*",
     "tools/eslint-rules/**/*": "*"
   },
@@ -20,6 +20,7 @@
           "build-base",
           "test",
           "lint",
+          "lint-base",
           "e2e",
           "sitemap"
         ],
@@ -50,9 +51,6 @@
   "workspaceLayout": {
     "libsDir": "",
     "appsDir": ""
-  },
-  "cli": {
-    "defaultCollection": "@nrwl/react"
   },
   "generators": {
     "@nrwl/react": {

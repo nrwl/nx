@@ -5,7 +5,8 @@ import { dirname, join } from 'path';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import { readJsonFile, writeJsonFile } from './fileutils';
-import { PackageJson } from './package-json';
+import { PackageJson, readModulePackageJson } from './package-json';
+import { gte, lt } from 'semver';
 
 const execAsync = promisify(exec);
 
@@ -61,11 +62,9 @@ export function getPackageManagerCommand(
       list: 'yarn list',
     }),
     pnpm: () => {
-      const [major, minor] = getPackageManagerVersion('pnpm').split('.');
-      let useExec = false;
-      if (+major >= 6 && +minor >= 13) {
-        useExec = true;
-      }
+      const pnpmVersion = getPackageManagerVersion('pnpm');
+      const useExec = gte(pnpmVersion, '6.13.0');
+      const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
@@ -74,7 +73,10 @@ export function getPackageManagerCommand(
         addGlobal: 'pnpm add -g',
         rm: 'pnpm rm',
         exec: useExec ? 'pnpm exec' : 'pnpx',
-        run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
+        run: (script: string, args: string) =>
+          includeDoubleDashBeforeArgs
+            ? `pnpm run ${script} -- ${args}`
+            : `pnpm run ${script} ${args}`,
         list: 'pnpm ls --depth 100',
       };
     },
@@ -130,7 +132,7 @@ export function checkForNPMRC(
  * this function looks up for the nearest `.npmrc` (if exists) and copies it over to the
  * temp directory.
  */
-export function createTempNpmDirectory(): string {
+export function createTempNpmDirectory() {
   const dir = dirSync().name;
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
@@ -141,7 +143,15 @@ export function createTempNpmDirectory(): string {
     copyFileSync(npmrc, `${dir}/.npmrc`);
   }
 
-  return dir;
+  const cleanup = async () => {
+    try {
+      await remove(dir);
+    } catch {
+      // It's okay if this fails, the OS will clean it up eventually
+    }
+  };
+
+  return { dir, cleanup };
 }
 
 /**
@@ -182,23 +192,17 @@ export async function resolvePackageVersionUsingInstallation(
   packageName: string,
   version: string
 ): Promise<string> {
-  const dir = createTempNpmDirectory();
+  const { dir, cleanup } = createTempNpmDirectory();
 
   try {
     const pmc = getPackageManagerCommand();
     await execAsync(`${pmc.add} ${packageName}@${version}`, { cwd: dir });
 
-    const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-      paths: [dir],
-    });
+    const { packageJson } = readModulePackageJson(packageName, [dir]);
 
-    return readJsonFile<PackageJson>(packageJsonPath).version;
+    return packageJson.version;
   } finally {
-    try {
-      await remove(dir);
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
+    await cleanup();
   }
 }
 

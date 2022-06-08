@@ -1,8 +1,8 @@
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
-import { FileData, readNxJson, readWorkspaceJson } from './file-utils';
+import { FileData } from './file-utils';
 import { normalizeNxJson } from './normalize-nx-json';
 import {
   createCache,
@@ -29,19 +29,20 @@ import {
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
-import {
-  NxJsonConfiguration,
-  NxJsonProjectConfiguration,
-} from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
   ProjectConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
+import {
+  readAllWorkspaceConfiguration,
+  readNxJson,
+} from '../config/configuration';
 
 export async function buildProjectGraph() {
-  const workspaceJson = readWorkspaceJson();
+  const workspaceJson = readAllWorkspaceConfiguration();
   const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
     workspaceJson,
     defaultFileHasher.allFileData()
@@ -61,7 +62,7 @@ export async function buildProjectGraph() {
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
-  workspaceJson: WorkspaceJsonConfiguration,
+  workspaceJson: ProjectsConfigurations,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
   cache: ProjectGraphCache | null,
@@ -159,7 +160,7 @@ async function buildProjectGraphUsingContext(
   builder.setVersion(projectGraphVersion);
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
-  const r = updateProjectGraphWithPlugins(ctx, initProjectGraph);
+  const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
 
   performance.mark('build project graph:end');
   performance.measure(
@@ -351,15 +352,14 @@ function getNumberOfWorkers(): number {
 }
 
 function createContext(
-  workspaceJson: WorkspaceJsonConfiguration,
+  workspaceJson: ProjectsConfigurations,
   nxJson: NxJsonConfiguration,
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap
 ): ProjectGraphProcessorContext {
-  const projects: Record<
-    string,
-    ProjectConfiguration & NxJsonProjectConfiguration
-  > = Object.keys(workspaceJson.projects).reduce((map, projectName) => {
+  const projects: Record<string, ProjectConfiguration> = Object.keys(
+    workspaceJson.projects
+  ).reduce((map, projectName) => {
     map[projectName] = {
       ...workspaceJson.projects[projectName],
     };
@@ -376,16 +376,17 @@ function createContext(
   };
 }
 
-function updateProjectGraphWithPlugins(
+async function updateProjectGraphWithPlugins(
   context: ProjectGraphProcessorContext,
   initProjectGraph: ProjectGraph
 ) {
   const plugins = loadNxPlugins(context.workspace.plugins).filter(
     (x) => !!x.processProjectGraph
   );
-  return (plugins || []).reduce((graph, plugin) => {
+  let graph = initProjectGraph;
+  for (const plugin of plugins) {
     try {
-      return plugin.processProjectGraph(graph, context);
+      graph = await plugin.processProjectGraph(graph, context);
     } catch (e) {
       const message = `Failed to process the project graph with "${plugin.name}". This will error in the future!`;
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -396,9 +397,9 @@ function updateProjectGraphWithPlugins(
         logger.warn(message);
         logger.warn(`Run with NX_VERBOSE_LOGGING=true to see the error.`);
       }
-      return graph;
     }
-  }, initProjectGraph);
+  }
+  return graph;
 }
 
 function readRootTsConfig() {

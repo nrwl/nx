@@ -1,10 +1,10 @@
+import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
   removeDependenciesFromPackageJson,
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import {
   buildAngularVersion,
   eslintConfigPrettierVersion,
@@ -13,7 +13,9 @@ import {
   tslintVersion,
   typescriptESLintVersion,
 } from '../../utils/versions';
+
 import { Linter } from '../utils/linter';
+import { containsEslint } from '../utils/eslint-file';
 
 export interface LinterInitOptions {
   linter?: Linter;
@@ -165,7 +167,7 @@ function initTsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
 }
 
 function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
-  if (tree.exists('/.eslintrc.json')) {
+  if (containsEslint(tree)) {
     return () => {};
   }
 

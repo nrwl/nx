@@ -1,4 +1,4 @@
-import type { Tree } from 'nx/src/config/tree';
+import type { Tree } from 'nx/src/generators/tree';
 import { execSync } from 'child_process';
 import { join } from 'path';
 import {
@@ -7,8 +7,6 @@ import {
 } from 'nx/src/utils/package-manager';
 import type { PackageManager } from 'nx/src/utils/package-manager';
 import { joinPathFragments } from 'nx/src/utils/path';
-
-let storedPackageJsonValue: string;
 
 /**
  * Runs `npm install` or `yarn install`. It will skip running the install if
@@ -23,24 +21,27 @@ export function installPackagesTask(
   cwd: string = '',
   packageManager: PackageManager = detectPackageManager(cwd)
 ): void {
+  if (
+    !tree
+      .listChanges()
+      .find((f) => f.path === joinPathFragments(cwd, 'package.json')) &&
+    !alwaysRun
+  ) {
+    return;
+  }
+
   const packageJsonValue = tree.read(
     joinPathFragments(cwd, 'package.json'),
     'utf-8'
   );
-  if (
-    tree
-      .listChanges()
-      .find((f) => f.path === joinPathFragments(cwd, 'package.json')) ||
-    alwaysRun
-  ) {
-    // Don't install again if install was already executed with package.json
-    if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
-      storedPackageJsonValue = packageJsonValue;
-      const pmc = getPackageManagerCommand(packageManager);
-      execSync(pmc.install, {
-        cwd: join(tree.root, cwd),
-        stdio: [0, 1, 2],
-      });
-    }
+  let storedPackageJsonValue: string = global['__packageJsonInstallCache__'];
+  // Don't install again if install was already executed with package.json
+  if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
+    global['__packageJsonInstallCache__'] = packageJsonValue;
+    const pmc = getPackageManagerCommand(packageManager);
+    execSync(pmc.install, {
+      cwd: join(tree.root, cwd),
+      stdio: [0, 1, 2],
+    });
   }
 }

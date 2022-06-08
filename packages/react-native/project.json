@@ -1,5 +1,5 @@
 {
-  "root": "packages/react-native",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/react-native/src",
   "projectType": "library",
   "targets": {
@@ -77,7 +77,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["build/packages/react-native"],
       "options": {
         "command": "node ./scripts/copy-readme.js react-native"

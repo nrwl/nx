@@ -1,5 +1,3 @@
-# Linter Plugin
-
 The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
 
 ## Setting Up Linter
@@ -30,4 +28,4 @@ nx lint my-lib
 
 ## Utils
 
-- [convert-tslint-to-eslint](/angular/convert-tslint-to-eslint) - Converts a project linter from [TSLint](https://palantir.github.io/tslint/) to [ESLint](https://eslint.org/)
+- [convert-tslint-to-eslint](/packages/angular/generators/convert-tslint-to-eslint) - Converts a project linter from [TSLint](https://palantir.github.io/tslint/) to [ESLint](https://eslint.org/)

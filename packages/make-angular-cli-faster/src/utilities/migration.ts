@@ -6,6 +6,7 @@ import {
 } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { lt, lte, major, satisfies } from 'semver';
 import { resolvePackageVersion } from './package-manager';
 import { MigrationDefinition } from './types';
@@ -20,7 +21,8 @@ const latestVersionWithOldFlag = '13.8.3';
 // versions and the max version of the range if there's a bigger major version that
 // is already supported
 const nxAngularVersionMap: Record<number, { range: string; max?: string }> = {
-  13: { range: '>= 13.2.0' },
+  13: { range: '>= 13.2.0 < 14.2.0', max: '~14.1.0' },
+  14: { range: '>= 14.2.0' },
 };
 // latest major version of Angular that is compatible with Nx, based on the map above
 const latestCompatibleAngularMajorVersion = Math.max(
@@ -147,7 +149,10 @@ async function getNxVersionBasedOnInstalledAngularVersion(
   }
   if (nxAngularVersionMap[majorAngularVersion]?.max) {
     // use the max of the range
-    return nxAngularVersionMap[majorAngularVersion].max;
+    return await resolvePackageVersion(
+      '@nrwl/angular',
+      nxAngularVersionMap[majorAngularVersion].max
+    );
   }
   if (majorAngularVersion > latestCompatibleAngularMajorVersion) {
     // installed Angular version is not supported yet, we can't @nrwl/angular:ng-add,
@@ -173,10 +178,7 @@ async function promptForVersion(version: string): Promise<boolean> {
 }
 
 function getInstalledAngularVersion(): string {
-  const packageJsonPath = require.resolve('@angular/core/package.json', {
-    paths: [workspaceRoot],
-  });
-  return readJsonFile(packageJsonPath).version;
+  return readModulePackageJson('@angular/core').packageJson.version;
 }
 
 async function normalizeVersion(version: string): Promise<string> {

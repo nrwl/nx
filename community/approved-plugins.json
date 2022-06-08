@@ -260,6 +260,11 @@
     "url": "https://github.com/jmcdo29/nx-uvu"
   },
   {
+    "name": "@ndrsg/nx-http",
+    "description": "Plugin with executors, which can perform http-stuff (e.g. requests, webhooks, file up/downloads, ...)",
+    "url": "https://github.com/ndrsg/nx-ext/tree/main/packages/nx-http"
+  },
+  {
     "name": "@diogovcs/graphql-mesh",
     "description": "Nx plugin to add GraphQL Mesh integration to Nx Workspace.",
     "url": "https://github.com/DiogoVCS/nx-graphql-mesh"

@@ -2,7 +2,13 @@ import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 import { readJSONSync, ensureDir, readFile, writeFileSync } from 'fs-extra';
 import { resolve } from 'path';
 
-const documents: any[] = readJSONSync('./docs/map.json', 'utf8')[0]['itemList'];
+const mapJson = readJSONSync('./docs/map.json', 'utf8');
+
+const documents: any[] = [
+  ...mapJson.find((x) => x.id === 'nx-documentation')?.['itemList'],
+  ...mapJson.find((x) => x.id === 'additional-api-references')?.['itemList'],
+].filter(Boolean);
+
 const packages: {
   name: string;
   path: string;
@@ -27,20 +33,20 @@ documents.map((category) => {
 packages.map((pkg) => {
   data.push({
     title: 'Package details',
-    content: `@nrwl/${pkg.name}`,
+    content: getPublicPackageName(pkg.name),
     filename: ['packages', pkg.name].join('-'),
   });
   pkg.schemas.executors.map((schema) => {
     data.push({
       title: 'Executor details',
-      content: `@nrwl/${pkg.name}:${schema}`,
+      content: `${getPublicPackageName(pkg.name)}:${schema}`,
       filename: ['packages', pkg.name, 'executors', schema].join('-'),
     });
   });
   pkg.schemas.generators.map((schema) => {
     data.push({
       title: 'Generator details',
-      content: `@nrwl/${pkg.name}:${schema}`,
+      content: `${getPublicPackageName(pkg.name)}:${schema}`,
       filename: ['packages', pkg.name, 'generators', schema].join('-'),
     });
   });
@@ -131,3 +137,14 @@ ensureDir(targetFolder).then(() =>
     )
   )
 );
+
+export function getPublicPackageName(
+  packageName: string,
+  prefix: string = '@nrwl/'
+): string {
+  /**
+   * Core Nx package is not prefixed by "@nrwl/" on NPM
+   */
+  const isNxCorePackage = packageName === 'nx';
+  return isNxCorePackage ? packageName : prefix + packageName;
+}

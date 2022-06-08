@@ -24,23 +24,23 @@
   "main": "index.js",
   "types": "index.d.ts",
   "dependencies": {
-    "@nrwl/detox": "*",
-    "@nrwl/devkit": "*",
-    "@nrwl/jest": "*",
-    "@nrwl/linter": "*",
-    "@nrwl/storybook": "*",
-    "@nrwl/react": "*",
-    "@nrwl/workspace": "*",
+    "@nrwl/detox": "file:../detox",
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/jest": "file:../jest",
+    "@nrwl/linter": "file:../linter",
+    "@nrwl/react": "file:../react",
+    "@nrwl/storybook": "file:../storybook",
+    "@nrwl/workspace": "file:../workspace",
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.1.0",
     "ignore": "^5.0.4",
-    "metro-resolver": "^0.69.1",
+    "metro-resolver": "^0.71.0",
     "node-fetch": "^2.6.7",
     "tsconfig-paths": "^3.9.0"
   },
   "peerDependencies": {
-    "react-native": "^0.67.3"
+    "react-native": "^0.68.2"
   },
   "builders": "./executors.json",
   "ng-update": {

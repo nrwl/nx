@@ -4,11 +4,11 @@ exports[`convert-tslint-to-eslint should work for Cypress applications 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@nrwl/eslint-plugin-nx": "*",
-    "@nrwl/linter": "*",
-    "@typescript-eslint/eslint-plugin": "~5.18.0",
-    "@typescript-eslint/parser": "~5.18.0",
-    "eslint": "~8.12.0",
+    "@nrwl/eslint-plugin-nx": "0.0.1",
+    "@nrwl/linter": "0.0.1",
+    "@typescript-eslint/eslint-plugin": "~5.24.0",
+    "@typescript-eslint/parser": "~5.24.0",
+    "eslint": "~8.15.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-cypress": "^2.10.3",
     "eslint-plugin-import": "latest",
@@ -155,6 +155,7 @@ Object {
         "eslint-plugin-import",
         "@typescript-eslint",
       ],
+      "root": true,
       "rules": Object {
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/dot-notation": "off",

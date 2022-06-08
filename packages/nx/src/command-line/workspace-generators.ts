@@ -4,7 +4,7 @@ import { readdirSync, existsSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { fileExists } from '../utils/fileutils';
 import { output } from '../utils/output';
 import type { CompilerOptions } from 'typescript';
@@ -13,6 +13,7 @@ import { readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { logger } from '../utils/logger';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { normalizePath } from '../utils/path';
+import { parserConfiguration } from './nx-commands';
 
 const rootDirectory = workspaceRoot;
 const toolsDir = path.join(rootDirectory, 'tools');
@@ -160,6 +161,7 @@ function parseOptions(
     default: {
       interactive: true,
     },
+    configuration: parserConfiguration,
   });
   parsed['generator'] = `${collectionFile}:${parsed['_'][0]}`;
   parsed['_'] = parsed['_'].slice(1);

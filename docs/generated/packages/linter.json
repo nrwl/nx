@@ -4,6 +4,21 @@
   "description": "The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
   "root": "/packages/linter",
   "source": "/packages/linter/src",
+  "documentation": [
+    {
+      "id": "overview",
+      "name": "Overview",
+      "path": "/packages/linter",
+      "file": "shared/linter-plugin",
+      "content": "The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.\n\n## Setting Up Linter\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/linter` by running the following commands if `@nrwl/linter` package is not installed:\n\n```bash\nnpm i --save-dev @nrwl/linter\n```\n\n```bash\nyarn add --dev @nrwl/linter\n```\n\n## Lint\n\nYou can lint an application or a library with the following command:\n\n```bash\nnx lint my-app\n```\n\n```bash\nnx lint my-lib\n```\n\n## Utils\n\n- [convert-tslint-to-eslint](/packages/angular/generators/convert-tslint-to-eslint) - Converts a project linter from [TSLint](https://palantir.github.io/tslint/) to [ESLint](https://eslint.org/)\n"
+    },
+    {
+      "id": "eslint-plugin-nx",
+      "name": "eslint-plugin-nx",
+      "file": "shared/eslint-plugin-nx",
+      "content": "![ESLint logo](/shared/eslint-logo.png)\n\nA plugin containing a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx specific [enforce-module-boundaries](#enforce-module-boundaries) rule.\n\n## Setting Up ESLint Plugin\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/eslint-plugin-nx` by running the following commands if the package is not already installed:\n\n```bash\nnpm i --save-dev @nrwl/eslint-plugin-nx\n```\n\n```bash\nyarn add --dev @nrwl/eslint-plugin-nx\n```\n\n## ESLint plugins\n\nThe plugin contains the following rule configurations divided into sub-plugins.\n\n### JavaScript\n\nThe `@nrwl/nx/javascript` ESLint plugin contains best practices when using JavaScript.\n\n### TypeScript\n\nThe `@nrwl/nx/typescript` ESLint plugin contains best practices when using TypeSript.\n\n### Angular\n\nContains configurations matching best practices when using Angular framework:\n\n- @nrwl/nx/angular\n- @nrwl/nx/angular-template\n\n### React\n\nContains configurations matching best practices when using React framework:\n\n- @nrwl/nx/react-base\n- @nrwl/nx/react-jsx\n- @nrwl/nx/react-typescript\n\nYou can also use `@nrwl/nx/react` which includes all three `@nrwl/nx/react-*` plugins\n\n## enforce-module-boundaries\n\nThe `@nrwl/nx/enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. By enforcing strict boundaries it helps keep prevent unplanned cross-dependencies.\n\n### Usage\n\nYou can use `enforce-module-boundaries` rule by adding it to your ESLint rules configuration:\n\n```json\n{\n  // ... more ESLint config here\n  \"overrides\": [\n    {\n      \"files\": [\"*.ts\", \"*.tsx\", \"*.js\", \"*.jsx\"],\n      \"rules\": {\n        \"@nrwl/nx/enforce-module-boundaries\": [\n          \"error\",\n          {\n            // ...rule specific configuration\n          }\n        ]\n      }\n    }\n    // ... more ESLint overrides here\n  ]\n}\n```\n\nRead more about proper usage of this rule:\n\n- [Imposing Constraints on the Project Graph](/structure/monorepo-tags)\n- [Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)\n"
+    }
+  ],
   "generators": [
     {
       "name": "workspace-rules-project",

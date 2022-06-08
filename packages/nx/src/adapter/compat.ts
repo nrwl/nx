@@ -4,7 +4,7 @@ import {
   workspaceConfigName,
   Workspaces,
 } from '../config/workspaces';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 
 /* eslint-disable */
 const Module = require('module');

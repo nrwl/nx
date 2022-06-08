@@ -4,6 +4,15 @@
   "description": "React Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.\n\nThe Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Detox, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
   "root": "/packages/react-native",
   "source": "/packages/react-native/src",
+  "documentation": [
+    {
+      "id": "overview",
+      "name": "Overview",
+      "path": "/packages/react-native",
+      "file": "shared/react-native-plugin",
+      "content": "![React Logo](/shared/react-logo.png)\n\nReact Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.\n\nThe Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:\n\n- Integration with libraries such as Jest, Detox, and Storybook.\n- Scaffolding for creating buildable libraries that can be published to npm.\n- Utilities for automatic workspace refactoring.\n\n## Setting Up React Native\n\n### Create a New Workspace\n\nThe easiest way to create your workspace is via `npx`.\n\n```bash\nnpx create-nx-workspace your-workspace-name \\\n--preset=react-native \\\n--appName=your-app-name\n```\n\n**Note:** You can also run the command without arguments to go through the interactive prompts.\n\n```bash\nnpx create-nx-workspace your-workspace-name\n```\n\n### Adding React Native to an Existing Workspace\n\nFor existing Nx workspaces, install the `@nrwl/react-native` package to add React Native capabilities to it.\n\n```bash\nnpm install @nrwl/react-native --save-dev\n\n# Or with yarn\nyarn add @nrwl/react-native --dev\n```\n\n### Generating Applications\n\nTo create additional React Native apps run:\n\n```bash\nnx g @nrwl/react-native:app your-app-name\n```\n\n### Generating Libraries\n\nTo generate a new library run:\n\n```bash\nnpx nx g @nrwl/react-native:lib your-lib-name\n```\n\n### Generating Components\n\nTo generate a new component inside library run:\n\n```bash\nnpx nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export\n```\n\nReplace `your-lib-name` with the app's name as defined in your workspace.json file.\n\n## Using React Native\n\n- [run-ios](/react-native/run-ios) - Builds your app and starts it on iOS simulator or device\n- [run-android](/react-native/run-android) - Builds your app and starts it on a connected Android emulator or device\n- [build-android](/react-native/build-android) - Release Build for Android\n- [start](/react-native/package) - Starts the server that communicates with connected devices\n- [bundle](/web/package) - Builds the JavaScript bundle for offline use\n- [sync-deps](/react-native/sync-deps) - Syncs dependencies to package.json (required for autolinking)\n- [ensure-symlink](/react-native/ensure-symlink) - Ensure workspace node_modules is symlink under app's node_modules folder\n\n## More Documentation\n\n- [Using Detox](/detox/overview)\n- [Using Jest](/jest/overview)\n"
+    }
+  ],
   "generators": [
     {
       "name": "init",
@@ -121,6 +130,11 @@
             "type": "string",
             "enum": ["detox", "none"],
             "default": "detox"
+          },
+          "install": {
+            "type": "boolean",
+            "description": "Runs `pod install` for native modules before building iOS app.",
+            "default": true
           }
         },
         "required": [],
@@ -346,7 +360,12 @@
           },
           "js": {
             "type": "boolean",
-            "description": "Generate JavaScript files rather than TypeScript files.",
+            "description": "Generate JavaScript story files rather than TypeScript story files.",
+            "default": false
+          },
+          "tsConfiguration": {
+            "type": "boolean",
+            "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
             "default": false
           },
           "linter": {
@@ -429,6 +448,52 @@
       "implementation": "/packages/react-native/src/generators/stories/stories#storiesGenerator.ts",
       "aliases": [],
       "path": "/packages/react-native/src/generators/stories/schema.json"
+    },
+    {
+      "name": "upgrade-native",
+      "factory": "./src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactNativeUpgradeNativeConfigure",
+        "title": "React native upgrade native configuration",
+        "description": "Upgrade native iOS and Android code to latest.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Project name.",
+            "$default": { "$source": "argv", "index": 0 }
+          },
+          "displayName": {
+            "description": "The display name to show in the application. Defaults to name.",
+            "type": "string"
+          },
+          "js": {
+            "type": "boolean",
+            "description": "Generate JavaScript files rather than TypeScript files",
+            "default": false
+          },
+          "e2eTestRunner": {
+            "description": "Adds the specified e2e test runner.",
+            "type": "string",
+            "enum": ["detox", "none"],
+            "default": "detox"
+          },
+          "install": {
+            "type": "boolean",
+            "description": "Runs `pod install` for native modules before building iOS app.",
+            "default": true
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Destructive command to upgrade native iOS and Android code to latest.",
+      "hidden": false,
+      "implementation": "/packages/react-native/src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react-native/src/generators/upgrade-native/schema.json"
     }
   ],
   "executors": [
@@ -665,6 +730,10 @@
           "debug": {
             "type": "boolean",
             "description": "Generate a debug build instead of a release build."
+          },
+          "gradleTask": {
+            "type": "string",
+            "description": "Override default gradle task incase of multi build variants"
           }
         },
         "required": [],

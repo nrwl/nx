@@ -16,6 +16,7 @@ import { resolveUserExistingPrettierConfig } from '@nrwl/workspace/src/utilities
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
 import { readFileSync } from 'fs';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { dirname, join } from 'path';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import { GeneratorOptions } from '../schema';
@@ -82,7 +83,7 @@ export function createNxJson(
 }
 
 export function decorateAngularCli(tree: Tree): void {
-  const nrwlWorkspacePath = require.resolve('@nrwl/workspace/package.json');
+  const nrwlWorkspacePath = readModulePackageJson('@nrwl/workspace').path;
   const decorateCli = readFileSync(
     join(
       dirname(nrwlWorkspacePath),
@@ -115,9 +116,8 @@ export function decorateAngularCli(tree: Tree): void {
 export function updateWorkspaceConfigDefaults(tree: Tree): void {
   const workspaceConfig = readWorkspaceConfiguration(tree);
   delete (workspaceConfig as any).newProjectRoot;
-  workspaceConfig.cli = workspaceConfig.cli ?? {};
-  if (!workspaceConfig.cli.defaultCollection) {
-    workspaceConfig.cli.defaultCollection = '@nrwl/angular';
+  if (workspaceConfig.cli) {
+    delete (workspaceConfig as any).defaultCollection;
   }
   updateWorkspaceConfiguration(tree, workspaceConfig);
 }

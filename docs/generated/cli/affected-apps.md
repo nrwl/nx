@@ -5,6 +5,8 @@ description: 'Print applications affected by changes'
 
 # affected:apps
 
+**Deprecated:** Use `nx print-affected --type=app ...` instead. This command will be removed in v15.
+
 Print applications affected by changes
 
 ## Usage
@@ -80,6 +82,22 @@ Latest commit of the current branch (usually HEAD)
 Type: boolean
 
 Show help
+
+### nx-bail
+
+Type: boolean
+
+Default: false
+
+Stop command execution after the first failed task
+
+### nx-ignore-cycles
+
+Type: boolean
+
+Default: false
+
+Ignore cycles in the task graph
 
 ### ~~only-failed~~
 

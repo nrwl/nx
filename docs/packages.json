@@ -44,7 +44,8 @@
         "stories",
         "storybook-configuration",
         "upgrade-module",
-        "web-worker"
+        "web-worker",
+        "change-storybook-targets"
       ]
     }
   },
@@ -172,7 +173,10 @@
   {
     "name": "nx",
     "path": "generated/packages/nx.json",
-    "schemas": { "executors": ["run-script"], "generators": [] }
+    "schemas": {
+      "executors": ["noop", "run-commands", "run-script"],
+      "generators": []
+    }
   },
   {
     "name": "nx-plugin",
@@ -184,7 +188,8 @@
         "e2e-project",
         "migration",
         "generator",
-        "executor"
+        "executor",
+        "plugin-lint-checks"
       ]
     }
   },
@@ -230,7 +235,8 @@
         "component",
         "storybook-configuration",
         "component-story",
-        "stories"
+        "stories",
+        "upgrade-native"
       ]
     }
   },
@@ -239,7 +245,12 @@
     "path": "generated/packages/storybook.json",
     "schemas": {
       "executors": ["storybook", "build"],
-      "generators": ["init", "configuration", "cypress-project"]
+      "generators": [
+        "init",
+        "configuration",
+        "cypress-project",
+        "change-storybook-targets"
+      ]
     }
   },
   {

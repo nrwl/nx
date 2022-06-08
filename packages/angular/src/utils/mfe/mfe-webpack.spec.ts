@@ -3,6 +3,7 @@ jest.mock('@nrwl/workspace/src/utilities/typescript');
 import * as fs from 'fs';
 import * as tsUtils from '@nrwl/workspace/src/utilities/typescript';
 
+import * as devkit from '@nrwl/devkit';
 import { sharePackages, shareWorkspaceLibraries } from './mfe-webpack';
 
 describe('MFE Webpack Utils', () => {
@@ -86,16 +87,14 @@ describe('MFE Webpack Utils', () => {
     it('should correctly map the shared packages to objects', () => {
       // ARRANGE
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.readFileSync as jest.Mock).mockImplementation((file) =>
-        JSON.stringify({
-          name: file.replace(/\\/g, '/').replace(/^.*node_modules[/]/, ''),
-          dependencies: {
-            '@angular/core': '~13.2.0',
-            '@angular/common': '~13.2.0',
-            rxjs: '~7.4.0',
-          },
-        })
-      );
+      jest.spyOn(devkit, 'readJsonFile').mockImplementation((file) => ({
+        name: file.replace(/\\/g, '/').replace(/^.*node_modules[/]/, ''),
+        dependencies: {
+          '@angular/core': '~13.2.0',
+          '@angular/common': '~13.2.0',
+          rxjs: '~7.4.0',
+        },
+      }));
       (fs.readdirSync as jest.Mock).mockReturnValue([]);
 
       // ACT
@@ -181,6 +180,148 @@ describe('MFE Webpack Utils', () => {
         },
       });
     });
+
+    it('should not collect a folder with a package.json when cannot be required', () => {
+      // ARRANGE
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      jest.spyOn(devkit, 'readJsonFile').mockImplementation((file) => {
+        // the "schematics" folder is not an entry point
+        if (file.endsWith('@angular/core/schematics/package.json')) {
+          return {};
+        }
+
+        return {
+          name: file
+            .replace(/\\/g, '/')
+            .replace(/^.*node_modules[/]/, '')
+            .replace('/package.json', ''),
+          dependencies: { '@angular/core': '~13.2.0' },
+        };
+      });
+      (fs.readdirSync as jest.Mock).mockImplementation(
+        (directoryPath: string) => {
+          const packages = {
+            '@angular/core': ['testing', 'schematics'],
+          };
+
+          for (const key of Object.keys(packages)) {
+            if (directoryPath.endsWith(key)) {
+              return packages[key];
+            }
+          }
+          return [];
+        }
+      );
+      (fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
+
+      // ACT
+      const packages = sharePackages(['@angular/core']);
+
+      // ASSERT
+      expect(packages).toStrictEqual({
+        '@angular/core': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '~13.2.0',
+        },
+        '@angular/core/testing': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '~13.2.0',
+        },
+      });
+    });
+
+    it('should collect secondary entry points from exports and fall back to lookinp up for package.json', () => {
+      // ARRANGE
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (path) => !path.endsWith('/secondary/package.json')
+      );
+      jest.spyOn(devkit, 'readJsonFile').mockImplementation((file) => {
+        if (file.endsWith('pkg1/package.json')) {
+          return {
+            name: 'pkg1',
+            version: '1.0.0',
+            exports: {
+              '.': './index.js',
+              './package.json': './package.json',
+              './secondary': './secondary/index.js',
+            },
+          };
+        }
+
+        // @angular/core/package.json won't have exports, so it looks up for package.json
+        return {
+          name: file
+            .replace(/\\/g, '/')
+            .replace(/^.*node_modules[/]/, '')
+            .replace('/package.json', ''),
+          dependencies: { pkg1: '1.0.0', '@angular/core': '~13.2.0' },
+        };
+      });
+      (fs.readdirSync as jest.Mock).mockImplementation(
+        (directoryPath: string) => {
+          const packages = {
+            pkg1: ['secondary'],
+            '@angular/core': ['testing'],
+          };
+
+          for (const key of Object.keys(packages)) {
+            if (directoryPath.endsWith(key)) {
+              return packages[key];
+            }
+          }
+          return [];
+        }
+      );
+      (fs.lstatSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
+
+      // ACT
+      const packages = sharePackages(['pkg1', '@angular/core']);
+
+      // ASSERT
+      expect(packages).toStrictEqual({
+        pkg1: {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '1.0.0',
+        },
+        'pkg1/secondary': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '1.0.0',
+        },
+        '@angular/core': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '~13.2.0',
+        },
+        '@angular/core/testing': {
+          singleton: true,
+          strictVersion: true,
+          requiredVersion: '~13.2.0',
+        },
+      });
+    });
+
+    it('should not throw when the main entry point package.json cannot be required', () => {
+      // ARRANGE
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (file) => !file.endsWith('non-existent-top-level-package/package.json')
+      );
+      jest.spyOn(devkit, 'readJsonFile').mockImplementation((file) => ({
+        name: file
+          .replace(/\\/g, '/')
+          .replace(/^.*node_modules[/]/, '')
+          .replace('/package.json', ''),
+        dependencies: { '@angular/core': '~13.2.0' },
+      }));
+
+      // ACT & ASSERT
+      expect(() =>
+        sharePackages(['non-existent-top-level-package'])
+      ).not.toThrow();
+    });
   });
 });
 
@@ -193,19 +334,17 @@ function createMockedFSForNestedEntryPoints() {
     }
   });
 
-  (fs.readFileSync as jest.Mock).mockImplementation((file) =>
-    JSON.stringify({
-      name: file
-        .replace(/\\/g, '/')
-        .replace(/^.*node_modules[/]/, '')
-        .replace('/package.json', ''),
-      dependencies: {
-        '@angular/core': '~13.2.0',
-        '@angular/common': '~13.2.0',
-        rxjs: '~7.4.0',
-      },
-    })
-  );
+  jest.spyOn(devkit, 'readJsonFile').mockImplementation((file) => ({
+    name: file
+      .replace(/\\/g, '/')
+      .replace(/^.*node_modules[/]/, '')
+      .replace('/package.json', ''),
+    dependencies: {
+      '@angular/core': '~13.2.0',
+      '@angular/common': '~13.2.0',
+      rxjs: '~7.4.0',
+    },
+  }));
 
   (fs.readdirSync as jest.Mock).mockImplementation((directoryPath: string) => {
     const PACKAGE_SETUP = {

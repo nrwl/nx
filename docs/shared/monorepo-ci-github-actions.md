@@ -65,7 +65,7 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.2
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.4
     with:
       parallel-commands: |
         npx nx-cloud record -- npx nx workspace-lint
@@ -77,11 +77,11 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.2
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.4
     with:
       number-of-agents: 3
 ```
 
-You can also use our [ci-workflow generator](https://nx.app/packages/workspace/generators/ci-workflow) to generate the workflow file.
+You can also use our [ci-workflow generator](https://nx.dev/packages/workspace/generators/ci-workflow) to generate the workflow file.
 
 Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.

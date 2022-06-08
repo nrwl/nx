@@ -99,6 +99,22 @@ Type: boolean
 
 Show help
 
+### nx-bail
+
+Type: boolean
+
+Default: false
+
+Stop command execution after the first failed task
+
+### nx-ignore-cycles
+
+Type: boolean
+
+Default: false
+
+Ignore cycles in the task graph
+
 ### ~~only-failed~~
 
 Type: boolean
@@ -108,6 +124,14 @@ Default: false
 **Deprecated:** The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.
 
 Isolate projects which previously failed
+
+### output-style
+
+Type: string
+
+Choices: [dynamic, static, stream, stream-without-prefixes]
+
+Defines how Nx emits outputs tasks logs
 
 ### parallel
 

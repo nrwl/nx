@@ -10,13 +10,13 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   angularVersion,
   angularDevkitVersion,
   jestPresetAngularVersion,
   rxjsVersion,
+  tsNodeVersion,
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
@@ -27,7 +27,10 @@ export async function angularInitGenerator(
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(rawOptions);
   setDefaults(host, options);
-  addPostInstall(host);
+
+  if (!options.skipPostInstall) {
+    addPostInstall(host);
+  }
 
   const depsTask = !options.skipPackageJson
     ? updateDependencies(host)
@@ -49,6 +52,7 @@ function normalizeOptions(options: Schema): Required<Schema> {
     linter: options.linter ?? Linter.EsLint,
     skipFormat: options.skipFormat ?? false,
     skipInstall: options.skipInstall ?? false,
+    skipPostInstall: options.skipPostInstall ?? false,
     skipPackageJson: options.skipPackageJson ?? false,
     style: options.style ?? 'css',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
@@ -77,13 +81,12 @@ function setDefaults(host: Tree, options: Schema) {
   };
 
   updateWorkspaceConfiguration(host, workspace);
-  setDefaultCollection(host, '@nrwl/angular');
 }
 
 function addPostInstall(host: Tree) {
   updateJson(host, 'package.json', (pkgJson) => {
     pkgJson.scripts = pkgJson.scripts ?? {};
-    const command = 'ngcc --properties es2015 browser module main';
+    const command = 'ngcc --properties es2020 browser module main';
     if (!pkgJson.scripts.postinstall) {
       pkgJson.scripts.postinstall = command;
     } else if (!pkgJson.scripts.postinstall.includes('ngcc')) {
@@ -152,7 +155,7 @@ function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
               protractor: '~7.0.0',
               'jasmine-core': '~3.6.0',
               'jasmine-spec-reporter': '~5.0.0',
-              'ts-node': '~9.1.1',
+              'ts-node': tsNodeVersion,
               '@types/jasmine': '~3.6.0',
               '@types/jasminewd2': '~2.0.3',
             }

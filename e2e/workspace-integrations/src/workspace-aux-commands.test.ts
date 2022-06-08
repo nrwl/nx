@@ -87,7 +87,7 @@ describe('format', () => {
     }
   }, 90000);
 
-  it('should check spoecific project', async () => {
+  it('should check specific project', async () => {
     if (isNotWindows()) {
       const stdout = runCLI(`format:check --projects=${myapp}`, {
         silenceError: true,
@@ -469,7 +469,6 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(
       `CREATE apps/${newPath}/src/environments/environment.ts`
     );
-    expect(moveOutput).toContain(`UPDATE nx.json`);
     expect(moveOutput).toContain(`UPDATE workspace.json`);
   });
 

@@ -1,6 +1,10 @@
-import { joinPathFragments, Tree } from '@nrwl/devkit';
+import {
+  getProjects,
+  joinPathFragments,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import type { Schema } from './schema';
-import { getProjects, readProjectConfiguration } from '@nrwl/devkit';
 import applicationGenerator from '../application/application';
 import { getMFProjects } from '../../utils/get-mf-projects';
 import { normalizeProjectName } from '../utils/project';
@@ -56,8 +60,12 @@ function removeDeadCode(tree: Tree, options: Schema) {
     }
   });
 
-  tree.delete(
-    joinPathFragments(project.sourceRoot, 'app/nx-welcome.component.ts')
+  tree.rename(
+    joinPathFragments(project.sourceRoot, 'app/nx-welcome.component.ts'),
+    joinPathFragments(
+      project.sourceRoot,
+      'app/remote-entry/nx-welcome.component.ts'
+    )
   );
   tree.delete(
     joinPathFragments(project.sourceRoot, 'app/app.component.spec.ts')

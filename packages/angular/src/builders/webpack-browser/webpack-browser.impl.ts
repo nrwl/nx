@@ -85,7 +85,7 @@ function buildAppWithCustomWebpackConfiguration(
   });
 }
 
-function run(
+export function executeWebpackBrowserBuilder(
   options: BrowserBuilderSchema,
   context: BuilderContext
 ): Observable<BuilderOutput> {
@@ -132,4 +132,6 @@ function run(
   );
 }
 
-export default createBuilder<JsonObject & BrowserBuilderSchema>(run) as any;
+export default createBuilder<JsonObject & BrowserBuilderSchema>(
+  executeWebpackBrowserBuilder
+) as any;

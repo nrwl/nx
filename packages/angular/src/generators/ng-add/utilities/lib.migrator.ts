@@ -2,11 +2,9 @@ import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
-  readWorkspaceConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 import { hasRulesRequiringTypeChecking } from '@nrwl/linter';
@@ -17,20 +15,20 @@ import { addBuildableLibrariesPostCssDependencies } from '../../utils/dependenci
 import { GeneratorOptions } from '../schema';
 import { Logger } from './logger';
 import { ProjectMigrator } from './project.migrator';
-import { MigrationProjectConfiguration, ValidationResult } from './types';
-import { arrayToString } from './validation-logging';
+import {
+  MigrationProjectConfiguration,
+  Target,
+  ValidationResult,
+} from './types';
 
-export class LibMigrator extends ProjectMigrator {
-  private readonly supportedBuilders = {
-    build: '@angular-devkit/build-angular:ng-packagr',
-    test: '@angular-devkit/build-angular:karma',
-    lint: '@angular-eslint/builder:lint',
-  };
-  private readonly targetNames: {
-    build?: string;
-    lint?: string;
-    test?: string;
-  } = {};
+type SupportedTargets = 'build' | 'test' | 'lint';
+const supportedTargets: Record<SupportedTargets, Target> = {
+  build: { builders: ['@angular-devkit/build-angular:ng-packagr'] },
+  test: { builders: ['@angular-devkit/build-angular:karma'] },
+  lint: { builders: ['@angular-eslint/builder:lint'] },
+};
+
+export class LibMigrator extends ProjectMigrator<SupportedTargets> {
   private oldEsLintConfigPath: string;
   private newEsLintConfigPath: string;
 
@@ -40,9 +38,7 @@ export class LibMigrator extends ProjectMigrator {
     project: MigrationProjectConfiguration,
     logger?: Logger
   ) {
-    super(tree, options, project, 'libs', logger);
-
-    this.collectTargetNames();
+    super(tree, options, supportedTargets, project, 'libs', logger);
 
     if (this.targetNames.lint) {
       this.oldEsLintConfigPath =
@@ -54,126 +50,23 @@ export class LibMigrator extends ProjectMigrator {
   }
 
   async migrate(): Promise<void> {
-    this.moveProjectFiles();
     await this.updateProjectConfiguration();
+    this.moveProjectFiles();
     this.updateNgPackageJson();
     this.updateTsConfigs();
     this.updateEsLintConfig();
-    this.updateCacheableOperations();
+    this.updateCacheableOperations(
+      [
+        this.targetNames.build,
+        this.targetNames.lint,
+        this.targetNames.test,
+      ].filter(Boolean)
+    );
     addBuildableLibrariesPostCssDependencies(this.tree);
   }
 
-  validate(): ValidationResult {
-    const result: ValidationResult = [];
-
-    // check project root
-    if (!this.tree.exists(this.projectConfig.root)) {
-      result.push({
-        message: `The project root "${this.project.oldRoot}" could not be found.`,
-        hint:
-          `Make sure the value for "projects.${this.project.name}.root" is correct ` +
-          `or remove the project if it is not valid.`,
-      });
-    }
-
-    // check project source root
-    if (
-      this.projectConfig.sourceRoot &&
-      !this.tree.exists(this.projectConfig.sourceRoot)
-    ) {
-      result.push({
-        message: `The project source root "${this.project.oldSourceRoot}" could not be found.`,
-        hint:
-          `Make sure the value for "projects.${this.project.name}.sourceRoot" is correct ` +
-          `or remove the project if it is not valid.`,
-      });
-    }
-
-    // check for usage of unsupported builders
-    const allSupportedBuilders = [
-      this.supportedBuilders.build,
-      this.supportedBuilders.test,
-      this.supportedBuilders.lint,
-    ];
-    const unsupportedBuilders: [target: string, builder: string][] = [];
-
-    Object.entries(this.projectConfig.targets ?? {}).forEach(
-      ([targetName, target]) => {
-        if (!allSupportedBuilders.includes(target.executor)) {
-          unsupportedBuilders.push([targetName, target.executor]);
-        }
-      }
-    );
-
-    if (unsupportedBuilders.length) {
-      result.push({
-        messageGroup: {
-          title: 'Unsupported builders',
-          messages: unsupportedBuilders.map(
-            ([target, builder]) =>
-              `The "${target}" target is using an unsupported builder "${builder}".`
-          ),
-        },
-        hint: `The supported builders for libraries are: ${arrayToString(
-          allSupportedBuilders
-        )}.`,
-      });
-    }
-
-    // check for multiple targets for the same type of target
-    const targetsByType: {
-      [key in keyof Required<typeof this.targetNames>]: string[];
-    } = Object.entries(this.projectConfig.targets ?? {}).reduce(
-      (acc, [target, { executor }]) => {
-        if (this.supportedBuilders.build === executor) {
-          acc.build.push(target);
-        } else if (this.supportedBuilders.test === executor) {
-          acc.test.push(target);
-        } else if (this.supportedBuilders.lint === executor) {
-          acc.lint.push(target);
-        }
-
-        return acc;
-      },
-      { build: [], lint: [], test: [] }
-    );
-    ['build', 'lint', 'test'].forEach((targetType) => {
-      if (targetsByType[targetType].length <= 1) {
-        return;
-      }
-
-      result.push({
-        message: `There is more than one target using a builder that is used to ${targetType} the project (${arrayToString(
-          targetsByType[targetType]
-        )}).`,
-        hint: `Make sure the project only has one target with a builder that is used to ${targetType} the project.`,
-      });
-    });
-
-    return result.length ? result : null;
-  }
-
-  private collectTargetNames(): void {
-    Object.entries(this.projectConfig.targets ?? {}).forEach(
-      ([targetName, target]) => {
-        if (
-          !this.targetNames.build &&
-          this.supportedBuilders.build === target.executor
-        ) {
-          this.targetNames.build = targetName;
-        } else if (
-          !this.targetNames.test &&
-          this.supportedBuilders.test === target.executor
-        ) {
-          this.targetNames.test = targetName;
-        } else if (
-          !this.targetNames.lint &&
-          this.supportedBuilders.lint === target.executor
-        ) {
-          this.targetNames.lint = targetName;
-        }
-      }
-    );
+  override validate(): ValidationResult {
+    return super.validate();
   }
 
   private moveProjectFiles(): void {
@@ -283,28 +176,6 @@ export class LibMigrator extends ProjectMigrator {
     });
   }
 
-  private updateCacheableOperations(): void {
-    const workspaceConfig = readWorkspaceConfiguration(this.tree);
-
-    Object.keys(workspaceConfig.tasksRunnerOptions ?? {}).forEach(
-      (taskRunnerName) => {
-        const taskRunner = workspaceConfig.tasksRunnerOptions[taskRunnerName];
-        taskRunner.options.cacheableOperations = Array.from(
-          new Set([
-            ...(taskRunner.options.cacheableOperations ?? []),
-            ...[
-              this.targetNames.build,
-              this.targetNames.lint,
-              this.targetNames.test,
-            ].filter(Boolean),
-          ])
-        );
-      }
-    );
-
-    updateWorkspaceConfiguration(this.tree, workspaceConfig);
-  }
-
   private updateBuildTargetConfiguration(): void {
     if (!this.targetNames.build) {
       this.logger.warn(
@@ -388,7 +259,7 @@ export class LibMigrator extends ProjectMigrator {
       return;
     }
 
-    const existEsLintConfigPath = this.tree.exists(this.newEsLintConfigPath);
+    const existEsLintConfigPath = this.tree.exists(this.oldEsLintConfigPath);
     if (!existEsLintConfigPath) {
       this.logger.warn(
         `The ESLint config file "${this.oldEsLintConfigPath}" could not be found. Skipping updating the file.`
@@ -396,20 +267,40 @@ export class LibMigrator extends ProjectMigrator {
     }
 
     lintOptions.eslintConfig =
-      lintOptions.eslintConfig &&
-      joinPathFragments(
-        this.project.newRoot,
-        basename(lintOptions.eslintConfig)
-      );
+      lintOptions.eslintConfig && this.newEsLintConfigPath;
     lintOptions.lintFilePatterns =
       lintOptions.lintFilePatterns &&
-      lintOptions.lintFilePatterns.map((pattern) => this.convertPath(pattern));
+      lintOptions.lintFilePatterns.map((pattern) => {
+        // replace the old source root with the new root, we want to lint all
+        // matching files in the project, not just the ones in the source root
+        if (pattern.startsWith(this.project.oldSourceRoot)) {
+          return joinPathFragments(
+            this.project.newRoot,
+            pattern.replace(this.project.oldSourceRoot, '')
+          );
+        }
+
+        // replace the old root with the new root
+        if (pattern.startsWith(this.project.oldRoot)) {
+          return joinPathFragments(
+            this.project.newRoot,
+            pattern.replace(this.project.oldRoot, '')
+          );
+        }
+
+        // do nothing, warn about the pattern
+        this.logger.warn(
+          `The lint file pattern "${pattern}" specified in the "${this.targetNames.lint}" target is not contained in the project root or source root. The pattern will not be updated.`
+        );
+
+        return pattern;
+      });
 
     if (!existEsLintConfigPath) {
       return;
     }
 
-    const eslintConfig = readJson(this.tree, this.newEsLintConfigPath);
+    const eslintConfig = readJson(this.tree, this.oldEsLintConfigPath);
     if (hasRulesRequiringTypeChecking(eslintConfig)) {
       lintOptions.hasTypeAwareRules = true;
     }

@@ -9,20 +9,8 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '@nrwl/workspace/generators';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { TsConfig } from '../../utils/utilities';
 import configurationGenerator from './configuration';
-import { nxVersion, storybookVersion } from '../../utils/versions';
-
-const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
-  '@schematics/angular',
-  'library'
-);
-
-const runAngularApplicationSchematic = wrapAngularDevkitSchematic(
-  '@schematics/angular',
-  'application'
-);
 
 describe('@nrwl/storybook:configuration', () => {
   let tree: Tree;
@@ -91,6 +79,31 @@ describe('@nrwl/storybook:configuration', () => {
     expect(
       storybookTsconfigJson.exclude.includes('../**/*.spec.jsx')
     ).toBeFalsy();
+  });
+
+  it('should generate TypeScript Configuration files', async () => {
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+      tsConfiguration: true,
+    });
+
+    // Root
+    expect(tree.exists('.storybook/tsconfig.json')).toBeTruthy();
+    expect(tree.exists('.storybook/main.ts')).toBeTruthy();
+    const rootStorybookTsconfigJson = readJson<TsConfig>(
+      tree,
+      '.storybook/tsconfig.json'
+    );
+    expect(rootStorybookTsconfigJson.extends).toBe('../tsconfig.base.json');
+
+    // Local
+    expect(
+      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
+    ).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/main.ts')).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/preview.ts')).toBeTruthy();
   });
 
   it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -211,7 +224,7 @@ describe('@nrwl/storybook:configuration', () => {
     const project = readProjectConfiguration(tree, 'test-ui-lib-2');
 
     expect(project.targets.storybook).toEqual({
-      executor: '@nrwl/storybook:storybook',
+      executor: '@storybook/angular:start-storybook',
       configurations: {
         ci: {
           quiet: true,
@@ -219,11 +232,9 @@ describe('@nrwl/storybook:configuration', () => {
       },
       options: {
         port: 4400,
-        projectBuildConfig: 'test-ui-lib-2:build-storybook',
-        uiFramework: '@storybook/angular',
-        config: {
-          configFolder: 'libs/test-ui-lib-2/.storybook',
-        },
+        browserTarget: 'test-ui-lib-2:build-storybook',
+        compodoc: false,
+        configDir: 'libs/test-ui-lib-2/.storybook',
       },
     });
 
@@ -251,7 +262,7 @@ describe('@nrwl/storybook:configuration', () => {
     const project = readProjectConfiguration(tree, 'test-ui-lib-5');
 
     expect(project.targets.storybook).toEqual({
-      executor: '@nrwl/storybook:storybook',
+      executor: '@storybook/angular:start-storybook',
       configurations: {
         ci: {
           quiet: true,
@@ -259,11 +270,9 @@ describe('@nrwl/storybook:configuration', () => {
       },
       options: {
         port: 4400,
-        projectBuildConfig: 'test-ui-lib-5:build-storybook',
-        uiFramework: '@storybook/angular',
-        config: {
-          configFolder: 'libs/test-ui-lib-5/.storybook',
-        },
+        browserTarget: 'test-ui-lib-5:build-storybook',
+        compodoc: false,
+        configDir: 'libs/test-ui-lib-5/.storybook',
       },
     });
 
@@ -274,109 +283,6 @@ describe('@nrwl/storybook:configuration', () => {
         lintFilePatterns: ['libs/test-ui-lib-5/**/*.ts'],
       },
     });
-  });
-
-  it('should update workspace file for angular libs with custom projectBuildConfig', async () => {
-    const newTree = createTreeWithEmptyWorkspace();
-
-    await runAngularLibrarySchematic(newTree, {
-      name: 'ui-lib',
-    });
-
-    await runAngularApplicationSchematic(newTree, {
-      name: 'test-app',
-    });
-
-    writeJson(newTree, 'package.json', {
-      devDependencies: {
-        '@nrwl/storybook': nxVersion,
-        '@storybook/addon-essentials': storybookVersion,
-        '@storybook/angular': storybookVersion,
-      },
-    });
-
-    writeJson(newTree, 'ui-lib/tsconfig.json', {});
-    writeJson(newTree, 'test-app/tsconfig.json', {});
-
-    await configurationGenerator(newTree, {
-      name: 'ui-lib',
-      uiFramework: '@storybook/angular',
-      standaloneConfig: false,
-      projectBuildConfig: 'test-app',
-    });
-
-    const project = readProjectConfiguration(newTree, 'ui-lib');
-
-    expect(project.targets.storybook?.options?.projectBuildConfig).toBe(
-      'test-app'
-    );
-  });
-
-  it('should update workspace file for angular libs with default projectBuildConfig if the one provided is invalid', async () => {
-    const newTree = createTreeWithEmptyWorkspace();
-
-    await runAngularLibrarySchematic(newTree, {
-      name: 'ui-lib',
-    });
-
-    await runAngularApplicationSchematic(newTree, {
-      name: 'test-app',
-    });
-
-    writeJson(newTree, 'package.json', {
-      devDependencies: {
-        '@nrwl/storybook': nxVersion,
-        '@storybook/addon-essentials': storybookVersion,
-        '@storybook/angular': storybookVersion,
-      },
-    });
-
-    writeJson(newTree, 'ui-lib/tsconfig.json', {});
-    writeJson(newTree, 'test-app/tsconfig.json', {});
-
-    await configurationGenerator(newTree, {
-      name: 'ui-lib',
-      uiFramework: '@storybook/angular',
-      standaloneConfig: false,
-      projectBuildConfig: 'test-app:asdfasdf',
-    });
-
-    const project = readProjectConfiguration(newTree, 'ui-lib');
-
-    expect(project.targets.storybook?.options?.projectBuildConfig).toBe(
-      'ui-lib:build-storybook'
-    );
-  });
-
-  it('should update workspace file for angular libs with default projectBuildConfig if the project provided does not exist', async () => {
-    const newTree = createTreeWithEmptyWorkspace();
-
-    await runAngularLibrarySchematic(newTree, {
-      name: 'ui-lib',
-    });
-
-    writeJson(newTree, 'package.json', {
-      devDependencies: {
-        '@nrwl/storybook': nxVersion,
-        '@storybook/addon-essentials': storybookVersion,
-        '@storybook/angular': storybookVersion,
-      },
-    });
-
-    writeJson(newTree, 'ui-lib/tsconfig.json', {});
-
-    await configurationGenerator(newTree, {
-      name: 'ui-lib',
-      uiFramework: '@storybook/angular',
-      standaloneConfig: false,
-      projectBuildConfig: 'test-app',
-    });
-
-    const project = readProjectConfiguration(newTree, 'ui-lib');
-
-    expect(project.targets.storybook?.options?.projectBuildConfig).toBe(
-      'ui-lib:build-storybook'
-    );
   });
 
   it('should update `tsconfig.lib.json` file', async () => {
@@ -468,5 +374,40 @@ describe('@nrwl/storybook:configuration', () => {
     expect(
       readJson(tree, 'libs/test-ui-lib2/.storybook/tsconfig.json').files
     ).toMatchSnapshot();
+  });
+
+  it('should generate TS config for project if root config is TS', async () => {
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+      tsConfiguration: true,
+    });
+
+    const newContents = `module.exports = {
+  stories: [],
+  addons: ['@storybook/addon-essentials', 'new-addon'],
+};
+`;
+    // Setup a new lib
+    await libraryGenerator(tree, {
+      name: 'test-ui-lib-2',
+      standaloneConfig: false,
+    });
+
+    tree.write('.storybook/main.ts', newContents);
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib-2',
+      uiFramework: '@storybook/angular',
+      standaloneConfig: false,
+    });
+
+    expect(tree.read('.storybook/main.ts', 'utf-8')).toEqual(newContents);
+    expect(tree.exists('libs/test-ui-lib-2/.storybook/main.ts')).toBeTruthy();
+    expect(
+      tree.exists('libs/test-ui-lib-2/.storybook/preview.ts')
+    ).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib-2/.storybook/main.js')).toBeFalsy();
+    expect(tree.exists('libs/test-ui-lib-2/.storybook/preview.js')).toBeFalsy();
   });
 });

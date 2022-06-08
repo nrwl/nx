@@ -1,10 +1,6 @@
-import { getComponentName } from '@nrwl/react/src/utils/ast-utils';
-import * as ts from 'typescript';
 import {
   convertNxGenerator,
   getProjects,
-  joinPathFragments,
-  ProjectType,
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
@@ -12,42 +8,11 @@ import { join } from 'path';
 
 import componentStoryGenerator from '../component-story/component-story';
 import { StorybookStoriesSchema } from './schema';
-
-export function projectRootPath(
-  tree: Tree,
-  sourceRoot: string,
-  projectType: ProjectType
-): string {
-  let projectDir = '';
-  if (projectType === 'application') {
-    // apps/test-app/src/app
-    projectDir = 'app';
-  } else if (projectType == 'library') {
-    // libs/test-lib/src/lib
-    projectDir = 'lib';
-  }
-
-  return joinPathFragments(sourceRoot, projectDir);
-}
-
-function containsComponentDeclaration(
-  tree: Tree,
-  componentPath: string
-): boolean {
-  const contents = tree.read(componentPath, 'utf-8');
-  if (contents === null) {
-    throw new Error(`Failed to read ${componentPath}`);
-  }
-
-  const sourceFile = ts.createSourceFile(
-    componentPath,
-    contents,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  return !!getComponentName(sourceFile);
-}
+import {
+  containsComponentDeclaration,
+  projectRootPath,
+} from '@nrwl/react/src/generators/stories/stories';
+import { isTheFileAStory } from '@nrwl/storybook/src/utils/utilities';
 
 export async function createAllStories(tree: Tree, projectName: string) {
   const projects = getProjects(tree);
@@ -63,7 +28,17 @@ export async function createAllStories(tree: Tree, projectName: string) {
       (path.endsWith('.js') && !path.endsWith('.spec.js')) ||
       (path.endsWith('.jsx') && !path.endsWith('.spec.jsx'))
     ) {
-      componentPaths.push(path);
+      // Check if file is NOT a story (either ts/tsx or js/jsx)
+      if (!isTheFileAStory(tree, path)) {
+        // Since the file is not a story
+        // Let's see if the .stories.* file exists
+        const ext = path.slice(path.lastIndexOf('.'));
+        const storyPath = `${path.split(ext)[0]}.stories${ext}`;
+
+        if (!tree.exists(storyPath)) {
+          componentPaths.push(path);
+        }
+      }
     }
   });
 

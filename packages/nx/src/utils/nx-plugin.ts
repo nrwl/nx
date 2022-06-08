@@ -4,16 +4,17 @@ import * as path from 'path';
 import { ProjectGraphProcessor } from '../config/project-graph';
 import { Workspaces } from '../config/workspaces';
 
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from '../utils/fileutils';
-import { PackageJson } from './package-json';
+import { PackageJson, readModulePackageJson } from './package-json';
 import { registerTsProject } from './register';
 import {
   ProjectConfiguration,
   TargetConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { findMatchingProjectForPath } from './target-project-locator';
+import { logger } from './logger';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -54,10 +55,19 @@ export function loadNxPlugins(
           } catch (e) {
             if (e.code === 'MODULE_NOT_FOUND') {
               const plugin = resolveLocalNxPlugin(moduleName);
-              const main = readPluginMainFromProjectConfiguration(
-                plugin.projectConfig
-              );
-              pluginPath = main ? path.join(workspaceRoot, main) : plugin.path;
+              if (plugin) {
+                const main = readPluginMainFromProjectConfiguration(
+                  plugin.projectConfig
+                );
+                pluginPath = main
+                  ? path.join(workspaceRoot, main)
+                  : plugin.path;
+              } else {
+                logger.error(
+                  `Plugin listed in \`nx.json\` not found: ${moduleName}`
+                );
+                throw e;
+              }
             } else {
               throw e;
             }
@@ -107,11 +117,12 @@ export function readPluginPackageJson(
   path: string;
   json: PackageJson;
 } {
-  let packageJsonPath: string;
   try {
-    packageJsonPath = require.resolve(`${pluginName}/package.json`, {
-      paths,
-    });
+    const result = readModulePackageJson(pluginName, paths);
+    return {
+      json: result.packageJson,
+      path: result.path,
+    };
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
       const localPluginPath = resolveLocalNxPlugin(pluginName);
@@ -128,7 +139,6 @@ export function readPluginPackageJson(
     }
     throw e;
   }
-  return { json: readJsonFile(packageJsonPath), path: packageJsonPath };
 }
 
 /**
@@ -175,7 +185,7 @@ function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
 
 function findNxProjectForImportPath(
   importPath: string,
-  workspace: WorkspaceJsonConfiguration,
+  workspace: ProjectsConfigurations,
   root = workspaceRoot
 ): string | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
@@ -228,7 +238,7 @@ function readTsConfigPaths(root: string = workspaceRoot) {
     const { compilerOptions } = readJsonFile(tsconfigPath);
     tsconfigPaths = compilerOptions?.paths;
   }
-  return tsconfigPaths;
+  return tsconfigPaths ?? {};
 }
 
 function readPluginMainFromProjectConfiguration(

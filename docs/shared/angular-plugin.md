@@ -1,5 +1,3 @@
-# Angular Plugin
-
 ![Angular logo](/shared/angular-logo.png)
 
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:
@@ -80,7 +78,7 @@ Read more about:
 ## More Documentation
 
 - [Angular Nx Tutorial](/angular-tutorial/01-create-application)
-- [Setup a Micro Frontend with Angular and Nx](/guides/setup-mfe-with-angular)
+- [Setup Module Federation with Angular and Nx](/module-federation/faster-builds)
 - [Using NgRx](/guides/misc-ngrx)
 - [Using DataPersistence](/guides/misc-data-persistence)
 - [Upgrading an AngularJS application to Angular](/guides/misc-upgrade)

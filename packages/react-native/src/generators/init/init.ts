@@ -1,11 +1,8 @@
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   detectPackageManager,
   formatFiles,
-  logger,
-  readJson,
   removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
@@ -14,6 +11,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
 import {
+  reactTestRendererVersion,
   reactVersion,
   typesReactVersion,
 } from '@nrwl/react/src/utils/versions';
@@ -21,7 +19,6 @@ import {
 import {
   babelRuntimeVersion,
   jestReactNativeVersion,
-  metroReactNativeBabelPresetVersion,
   metroVersion,
   nxVersion,
   reactNativeAsyncStorageAsyncStorageVersion,
@@ -32,7 +29,6 @@ import {
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeVersion,
-  reactTestRendererVersion,
   testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesNodeVersion,
@@ -43,7 +39,6 @@ import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { initRootBabelConfig } from './lib/init-root-babel-config';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
-  setDefaultCollection(host, '@nrwl/react-native');
   addGitIgnoreEntry(host);
   initRootBabelConfig(host);
 
@@ -83,13 +78,13 @@ export function updateDependencies(host: Tree) {
       '@react-native-community/cli-platform-android':
         reactNativeCommunityCliAndroid,
       '@react-native-community/cli-platform-ios': reactNativeCommunityCliIos,
-      'metro-react-native-babel-preset': metroReactNativeBabelPresetVersion,
       '@testing-library/react-native': testingLibraryReactNativeVersion,
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
       'jest-react-native': jestReactNativeVersion,
       metro: metroVersion,
       'metro-resolver': metroVersion,
       'metro-babel-register': metroVersion,
+      'metro-react-native-babel-preset': metroVersion,
       'react-test-renderer': reactTestRendererVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,

@@ -20,6 +20,11 @@ target '<%= className %>' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  target '<%= className %>Tests' do
+    inherit! :complete
+    # Pods for testing
+  end
+
   # Enables Flipper.
   #
   # Note that if you have use_frameworks! enabled, Flipper will not work and

@@ -42,7 +42,7 @@ describe('Host App Generator', () => {
     expect(tree.read('apps/test/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should generate a host and any remotes that dont exist', async () => {
+  it('should generate a host and any remotes that dont exist with correct routing setup', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
 
@@ -59,6 +59,17 @@ describe('Host App Generator', () => {
     expect(
       tree.read('apps/host-app/module-federation.config.js', 'utf-8')
     ).toContain(`'remote1','remote2'`);
+    expect(tree.read('apps/host-app/src/app/app.component.html', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "<ul class=\\"remote-menu\\">
+      <li><a routerLink='/'>Home</a></li>
+
+      <li><a routerLink='remote1'>Remote1</a></li>
+      <li><a routerLink='remote2'>Remote2</a></li>
+      </ul>
+      <router-outlet></router-outlet>
+      "
+    `);
   });
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist', async () => {

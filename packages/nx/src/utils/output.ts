@@ -36,6 +36,8 @@ if (isCI() && !forceColor) {
 
 class CLIOutput {
   readonly X_PADDING = ' ';
+  cliName = 'NX';
+  formatCommand = (taskId: string) => `${chalk.dim('nx run')} ${taskId}`;
 
   /**
    * Longer dash character which forms more of a continuous line when place side to side
@@ -95,12 +97,12 @@ class CLIOutput {
     let nxPrefix = '';
     if (chalk[color]) {
       nxPrefix = `${chalk[color]('>')} ${chalk.reset.inverse.bold[color](
-        ' NX '
+        ` ${this.cliName} `
       )}`;
     } else {
       nxPrefix = `${chalk.keyword(color)(
         '>'
-      )} ${chalk.reset.inverse.bold.keyword(color)(' NX ')}`;
+      )} ${chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `)}`;
     }
     return `${nxPrefix}  ${text}`;
   }
@@ -209,36 +211,56 @@ class CLIOutput {
   }
 
   logCommand(message: string, taskStatus?: TaskStatus) {
-    // normalize the message
-    if (message.startsWith('nx run ')) {
-      message = message.substring('nx run '.length);
-    } else if (message.startsWith('run ')) {
-      message = message.substring('run '.length);
-    }
-
     this.addNewline();
-    let commandOutput = `${chalk.dim('> nx run')} ${message}`;
+    const commandOutput =
+      chalk.dim('> ') + this.formatCommand(this.normalizeMessage(message));
+    const commandOutputWithStatus = this.addTaskStatus(
+      taskStatus,
+      commandOutput
+    );
+    this.writeToStdOut(commandOutputWithStatus);
+    this.addNewline();
+  }
+
+  private normalizeMessage(message: string) {
+    if (message.startsWith('nx run ')) {
+      return message.substring('nx run '.length);
+    } else if (message.startsWith('run ')) {
+      return message.substring('run '.length);
+    } else {
+      return message;
+    }
+  }
+
+  private addTaskStatus(
+    taskStatus:
+      | 'success'
+      | 'failure'
+      | 'skipped'
+      | 'local-cache-kept-existing'
+      | 'local-cache'
+      | 'remote-cache',
+    commandOutput: string
+  ) {
     if (taskStatus === 'local-cache') {
-      commandOutput += `  ${chalk.dim('[local cache]')}`;
+      return `${commandOutput}  ${chalk.dim('[local cache]')}`;
     } else if (taskStatus === 'remote-cache') {
-      commandOutput += `  ${chalk.dim('[remote cache]')}`;
+      return `${commandOutput}  ${chalk.dim('[remote cache]')}`;
     } else if (taskStatus === 'local-cache-kept-existing') {
-      commandOutput += `  ${chalk.dim(
+      return `${commandOutput}  ${chalk.dim(
         '[existing outputs match the cache, left as is]'
       )}`;
+    } else {
+      return commandOutput;
     }
-    this.writeToStdOut(commandOutput);
-    this.addNewline();
   }
 
   log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
     this.addNewline();
 
-    color = color || 'white';
-
     this.writeOutputTitle({
       color: 'cyan',
-      title: chalk[color](title),
+      title: color ? chalk[color](title) : title,
     });
 
     this.writeOptionalOutputBody(bodyLines);

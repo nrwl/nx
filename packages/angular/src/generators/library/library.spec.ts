@@ -228,7 +228,7 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
     });
 
-    it('should remove .browserlistrc when library is not buildable or publishable', async () => {
+    it('should remove .browserslistrc when library is not buildable or publishable', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({
         publishable: false,
@@ -236,7 +236,7 @@ describe('lib', () => {
       });
 
       // ASSERT
-      expect(tree.read('libs/my-lib/.browserlistrc')).toBeFalsy();
+      expect(tree.read('libs/my-lib/.browserslistrc')).toBeFalsy();
     });
 
     it('should remove tsconfib.lib.prod.json when library is not buildable or publishable', async () => {
@@ -287,6 +287,7 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../tsconfig.base.json',
         angularCompilerOptions: {
+          enableI18nLegacyMessageIdFormat: false,
           strictInjectionParameters: true,
           strictInputAccessModifiers: true,
           strictTemplates: true,
@@ -298,6 +299,7 @@ describe('lib', () => {
           noImplicitOverride: true,
           noImplicitReturns: true,
           strict: true,
+          target: 'es2020',
         },
         files: [],
         include: [],
@@ -509,6 +511,21 @@ describe('lib', () => {
         ].prefix
       ).toEqual('custom');
     });
+
+    it('should not install any e2e test runners', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        publishable: true,
+        importPath: '@myorg/lib',
+      });
+
+      // ASSERT
+      let { dependencies, devDependencies } = readJson(tree, 'package.json');
+      expect(dependencies.cypress).toBeUndefined();
+      expect(devDependencies.cypress).toBeUndefined();
+      expect(dependencies.protractor).toBeUndefined();
+      expect(devDependencies.protractor).toBeUndefined();
+    });
   });
 
   describe('nested', () => {
@@ -653,6 +670,7 @@ describe('lib', () => {
       expect(tsconfigJson).toEqual({
         extends: '../../../tsconfig.base.json',
         angularCompilerOptions: {
+          enableI18nLegacyMessageIdFormat: false,
           strictInjectionParameters: true,
           strictInputAccessModifiers: true,
           strictTemplates: true,
@@ -664,6 +682,7 @@ describe('lib', () => {
           noImplicitOverride: true,
           noImplicitReturns: true,
           strict: true,
+          target: 'es2020',
         },
         files: [],
         include: [],

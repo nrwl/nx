@@ -4,8 +4,152 @@
   "description": "Smart, Fast and Extensible Build System",
   "root": "/packages/nx",
   "source": "/packages/nx/src",
+  "documentation": [],
   "generators": [],
   "executors": [
+    {
+      "name": "noop",
+      "implementation": "/packages/nx/src/executors/noop/noop.impl.ts",
+      "schema": {
+        "title": "Noop",
+        "description": "An executor that does nothing",
+        "type": "object",
+        "cli": "nx",
+        "outputCapture": "pipe",
+        "properties": {},
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "An executor that does nothing",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/nx/src/executors/noop/schema.json"
+    },
+    {
+      "name": "run-commands",
+      "implementation": "/packages/nx/src/executors/run-commands/run-commands.impl.ts",
+      "schema": {
+        "title": "Run Commands",
+        "description": "Run any custom commands with Nx.",
+        "type": "object",
+        "cli": "nx",
+        "outputCapture": "pipe",
+        "presets": [
+          { "name": "Arguments forwarding", "keys": ["commands"] },
+          {
+            "name": "Custom done conditions",
+            "keys": ["commands", "readyWhen"]
+          },
+          { "name": "Setting the cwd", "keys": ["commands", "cwd"] }
+        ],
+        "properties": {
+          "commands": {
+            "type": "array",
+            "description": "Commands to run in child process.",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "command": {
+                      "type": "string",
+                      "description": "Command to run in child process."
+                    },
+                    "forwardAllArgs": {
+                      "type": "boolean",
+                      "description": "Whether arguments should be forwarded when interpolation is not present."
+                    },
+                    "prefix": {
+                      "type": "string",
+                      "description": "Prefix in front of every line out of the output"
+                    },
+                    "color": {
+                      "type": "string",
+                      "description": "Color of the output",
+                      "enum": [
+                        "black",
+                        "red",
+                        "green",
+                        "yellow",
+                        "blue",
+                        "magenta",
+                        "cyan",
+                        "white"
+                      ]
+                    },
+                    "bgColor": {
+                      "type": "string",
+                      "description": "Background color of the output",
+                      "enum": [
+                        "bgBlack",
+                        "bgRed",
+                        "bgGreen",
+                        "bgYellow",
+                        "bgBlue",
+                        "bgMagenta",
+                        "bgCyan",
+                        "bgWhite"
+                      ]
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "An optional description useful for inline documentation purposes. It is not used as part of the execution of the command."
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["command"]
+                },
+                { "type": "string" }
+              ]
+            }
+          },
+          "command": {
+            "type": "string",
+            "description": "Command to run in child process."
+          },
+          "parallel": {
+            "type": "boolean",
+            "description": "Run commands in parallel.",
+            "default": true
+          },
+          "readyWhen": {
+            "type": "string",
+            "description": "String to appear in `stdout` or `stderr` that indicates that the task is done. When running multiple commands, this option can only be used when `parallel` is set to `true`. If not specified, the task is done when all the child processes complete."
+          },
+          "args": {
+            "type": "string",
+            "description": "Extra arguments. You can pass them as follows: nx run project:target --args='--wait=100'. You can then use {args.wait} syntax to interpolate them in the workspace config file. See example [above](#chaining-commands-interpolating-args-and-setting-the-cwd)"
+          },
+          "envFile": {
+            "type": "string",
+            "description": "You may specify a custom .env file path."
+          },
+          "color": {
+            "type": "boolean",
+            "description": "Use colors when showing output of command.",
+            "default": false
+          },
+          "outputPath": {
+            "description": "Allows you to specify where the build artifacts are stored. This allows Nx Cloud to pick them up correctly, in the case that the build artifacts are placed somewhere other than the top level dist folder.",
+            "oneOf": [
+              { "type": "string" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Current working directory of the commands. If it's not specified the commands will run in the workspace root, if a relative path is specified the commands will run in that path relative to the workspace root and if it's an absolute path the commands will run in that path."
+          }
+        },
+        "additionalProperties": true,
+        "required": [],
+        "examplesFile": "`workspace.json`:\n\n```json\n//...\n\"frontend\": {\n    \"targets\": {\n        //...\n        \"ls-project-root\": {\n            \"executor\": \"nx:run-commands\",\n            \"options\": {\n                \"command\": \"ls apps/frontend/src\"\n            }\n        }\n    }\n}\n```\n\n```bash\nnx run frontend:ls-project-root\n```\n\n##### Chaining commands, interpolating args and setting the cwd\n\nLet's say each of our workspace projects has some custom bash scripts in a `scripts` folder.\nWe want a simple way to create empty bash script files for a given project, that have the execute permissions already set.\n\nGiven that Nx knows our workspace structure, we should be able to give it a project and the name of our script, and it should take care of the rest.\n\nThe `commands` option accepts as many commands as you want. By default, they all run in parallel.\nYou can run them sequentially by setting `parallel: false`:\n\n```json\n\"create-script\": {\n    \"executor\": \"nx:run-commands\",\n    \"options\": {\n        \"commands\": [\n          \"mkdir -p scripts\",\n          \"touch scripts/{args.name}.sh\",\n          \"chmod +x scripts/{args.name}.sh\"\n        ],\n        \"cwd\": \"apps/frontend\",\n        \"parallel\": false\n    }\n}\n```\n\nBy setting the `cwd` option, each command will run in the `apps/frontend` folder.\n\nWe run the above with:\n\n```bash\nnx run frontend:create-script --args=\"--name=example\"\n```\n\nor simply with:\n\n```bash\nnx run frontend:create-script --name=example\n```\n\n##### Arguments forwarding\n\nWhen interpolation is not present in the command, all arguments are forwarded to the command by default.\n\nThis is useful when you need to pass raw argument strings to your command.\n\nFor example, when you run:\n\nnx run frontend:webpack --args=\"--config=example.config.js\"\n\n```json\n\"webpack\": {\n    \"executor\": \"nx:run-commands\",\n    \"options\": {\n        \"command\": \"webpack\"\n    }\n}\n```\n\nThe above command will execute: `webpack --config=example.config.js`\n\nThis functionality can be disabled by using `commands` and expanding each `command` into an object\nthat sets the `forwardAllArgs` option to `false` as shown below:\n\n```json\n\"webpack\": {\n    \"executor\": \"nx:run-commands\",\n    \"options\": {\n        \"commands\": [\n            {\n                \"command\": \"webpack\",\n                \"forwardAllArgs\": false\n            }\n        ]\n    }\n}\n```\n\n##### Custom **done** conditions\n\nNormally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string that considers the commands finished the moment the string appears in `stdout` or `stderr`:\n\n```json\n\"finish-when-ready\": {\n    \"executor\": \"nx:run-commands\",\n    \"options\": {\n        \"commands\": [\n            \"sleep 5 && echo 'FINISHED'\",\n            \"echo 'READY'\"\n        ],\n        \"readyWhen\": \"READY\",\n        \"parallel\": true\n    }\n}\n```\n\n```bash\nnx run frontend:finish-when-ready\n```\n\nThe above commands will finish immediately, instead of waiting for 5 seconds.\n\n##### Nx Affected\n\nThe true power of `run-commands` comes from the fact that it runs through `nx`, which knows about your project graph. So you can run **custom commands** only for the projects that have been affected by a change.\n\nWe can create some configurations to generate docs, and if run using `nx affected`, it will only generate documentation for the projects that have been changed:\n\n```bash\nnx affected --target=generate-docs\n```\n\n```json\n//...\n\"frontend\": {\n    \"targets\": {\n        //...\n        \"generate-docs\": {\n            \"executor\": \"nx:run-commands\",\n            \"options\": {\n                \"command\": \"npx compodoc -p apps/frontend/tsconfig.app.json\"\n            }\n        }\n    }\n},\n\"api\": {\n    \"targets\": {\n        //...\n        \"generate-docs\": {\n            \"executor\": \"nx:run-commands\",\n            \"options\": {\n                \"command\":  \"npx compodoc -p apps/api/tsconfig.app.json\"\n            }\n        }\n    }\n}\n```\n"
+      },
+      "description": "Run any custom commands with Nx.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/nx/src/executors/run-commands/schema.json"
+    },
     {
       "name": "run-script",
       "implementation": "/packages/nx/src/executors/run-script/run-script.impl.ts",
@@ -23,7 +167,7 @@
         },
         "additionalProperties": true,
         "required": ["script"],
-        "examplesFile": "`workspace.json`:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"@nrwl/workspace:run-script\",\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n\n```bash\nnx run frontend:build\n```\n\nThe `build` target is going to run `npm run build-my-project` (or `yarn build-my-project`) in the `packages/frontend` directory.\n\n#### Caching Artifacts\n\nBy default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/dist`, `packages/frontend/build`, `packages/frontend/public`. If your npm script writes files to other places, you can override the list of cached outputs as follows:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"@nrwl/workspace:run-script\",\n            \"outputs\": [\"packages/frontend/dist\", \"packaged/frontend/docs\"],\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n",
+        "examplesFile": "`workspace.json`:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"nx:run-script\",\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n\n```bash\nnx run frontend:build\n```\n\nThe `build` target is going to run `npm run build-my-project` (or `yarn build-my-project`) in the `packages/frontend` directory.\n\n#### Caching Artifacts\n\nBy default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/dist`, `packages/frontend/build`, `packages/frontend/public`. If your npm script writes files to other places, you can override the list of cached outputs as follows:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"nx:run-script\",\n            \"outputs\": [\"packages/frontend/dist\", \"packaged/frontend/docs\"],\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n",
         "presets": []
       },
       "description": "Run an NPM script using Nx.",

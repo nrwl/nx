@@ -19,10 +19,18 @@ ${chalk.bold('sudo xcode-select --switch /Applications/Xcode.app')}
  * @param iosDirectory ios directory that contains Podfile
  * @returns resolve with 0 if not error, reject with error otherwise
  */
-export function runPodInstall(iosDirectory: string): GeneratorCallback {
+export function runPodInstall(
+  iosDirectory: string,
+  install: boolean = true
+): GeneratorCallback {
   return () => {
     if (platform() !== 'darwin') {
       logger.info('Skipping `pod install` on non-darwin platform');
+      return;
+    }
+
+    if (!install) {
+      logger.info('Skipping `pod install`');
       return;
     }
 

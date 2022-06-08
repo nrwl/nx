@@ -21,13 +21,6 @@ module.exports = withNx({
   async redirects() {
     const rules = [];
 
-    // Landing pages
-    rules.push({
-      source: '/(angular|react|node)',
-      destination: '/',
-      permanent: true,
-    });
-
     // Tutorials
     rules.push({
       source: '/(l|latest)/(r|react)/tutorial/01-create-application',
@@ -49,6 +42,23 @@ module.exports = withNx({
     rules.push({
       source: '/(l|latest)/(r|react)/storybook/overview',
       destination: '/storybook/overview-react',
+      permanent: true,
+    });
+    rules.push({
+      source: '/(l|latest)/(a|angular)/storybook/overview',
+      destination: '/storybook/overview-angular',
+      permanent: true,
+    });
+    rules.push({
+      source: '/(l|latest)/(a|angular|r|react)/storybook/executors',
+      destination: '/storybook/executors-storybook',
+      permanent: true,
+    });
+
+    // Nx Console
+    rules.push({
+      source: '/nx-console',
+      destination: '/using-nx/console',
       permanent: true,
     });
     rules.push({
@@ -89,15 +99,6 @@ module.exports = withNx({
       });
     }
 
-    // Schemas (generators & executors)
-    for (let s of Object.keys(redirectRules.schemaUrls)) {
-      rules.push({
-        source: s,
-        destination: redirectRules.schemaUrls[s],
-        permanent: true,
-      });
-    }
-
     // Generic, catch-all
     rules.push({
       source: '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*',
@@ -107,6 +108,36 @@ module.exports = withNx({
     rules.push({
       source: '/(l|latest|p|previous)/:path*',
       destination: '/:path*',
+      permanent: true,
+    });
+    rules.push({
+      source: '/(a|angular|r|react|n|node)/:path*',
+      destination: '/:path*',
+      permanent: true,
+    });
+
+    // Schemas (generators & executors)
+    for (let s of Object.keys(redirectRules.schemaUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.schemaUrls[s],
+        permanent: true,
+      });
+    }
+
+    // Api overviews
+    for (let s of Object.keys(redirectRules.overviewUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.overviewUrls[s],
+        permanent: true,
+      });
+    }
+
+    // Landing pages
+    rules.push({
+      source: '/(angular|react|node)',
+      destination: '/',
       permanent: true,
     });
     return rules;

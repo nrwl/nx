@@ -44,12 +44,12 @@ For instance `nx test lib` creates a task graph with a single node:
 A task is an invocation of a target. If you invoke the same target twice, you create two tasks.
 
 Nx uses the [project graph](#the-project-graph), but the task graph and project graph aren’t isomorphic, meaning they
-aren’t directly connected. In the case above, app1 and app2 depend on lib, but
+aren’t directly connected. In the case above, `app1` and `app2` depend on `lib`, but
 running `nx run-many --target=test --projects=app1,app2,lib`, the created task graph will look like this:
 
 ![task-graph-creation](/shared/mental-model/task-graph-creation.png)
 
-Even though the apps depend on lib, testing `app1` doesn’t depend on the testing lib. This means that the two tasks can
+Even though the apps depend on `lib`, testing `app1` doesn’t depend on the testing `lib`. This means that the two tasks can
 run in parallel.
 
 Let’s look at the test target relying on its dependencies.
@@ -77,7 +77,7 @@ With this, running the same test command creates the following task graph:
 
 ![task-graph-run](/shared/mental-model/task-graph-run.png)
 
-This often makes more sense for builds, where to build app1, you want to build lib first. You can also define similar
+This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define similar
 relationships between targets of the same project, including a test target that depends on the build.
 
 A task graph can contain different targets, and those can run in parallel. For instance, as Nx is building `app2`, it
@@ -85,15 +85,15 @@ can be testing `app1` at the same time.
 
 ![task-graph-execution](/shared/mental-model/task-graph-execution.png)
 
-Nx also runs the tasks in the task graph in the right order. Nx executing tasks being executed speeds up your overall
+Nx also runs the tasks in the task graph in the right order. Nx executing tasks in parallel speeds up your overall
 execution time.
 
 ## Affected commands
 
-When you run `nx test app1`, you are telling Nx to run the app1:test task plus all the tasks it depends on.
+When you run `nx test app1`, you are telling Nx to run the `app1:test` task plus all the tasks it depends on.
 
-When you run `nx run-many --target=test --projects=app1,lib`, you are telling Nx to do the same for two tasks app1:test
-and lib:test.
+When you run `nx run-many --target=test --projects=app1,lib`, you are telling Nx to do the same for two tasks `app1:test`
+and `lib:test`.
 
 When you run `nx run-many --target=test --all`, you are telling Nx to do this for all the projects.
 

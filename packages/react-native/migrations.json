@@ -35,6 +35,18 @@
       "cli": "nx",
       "description": "Add projectRoot option in metro.config.js",
       "factory": "./src/migrations/update-14-0-0/add-project-root-metro-config-14-0-0"
+    },
+    "change-main-to-class-name-14-0-2": {
+      "version": "14.0.3-beta.0",
+      "cli": "nx",
+      "description": "changes 'main' tag to project's className",
+      "factory": "./src/migrations/update-14-0-2/change-main-to-class-name-14-0-2"
+    },
+    "rename-blockList-metro-config-14-2-1": {
+      "version": "14.2.1-beta.0",
+      "cli": "nx",
+      "description": "Rename blacklistRE to blockList in metro.config.js",
+      "factory": "./src/migrations/update-14-2-1/rename-blockList-metro-config"
     }
   },
   "packageJsonUpdates": {
@@ -524,6 +536,109 @@
         },
         "@babel/runtime": {
           "version": "7.17.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.0.3": {
+      "version": "14.0.3-beta.0",
+      "packages": {
+        "@types/react-native": {
+          "version": "0.67.6",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.70.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.70.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-babel-register": {
+          "version": "0.70.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-config": {
+          "version": "0.70.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.70.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.1.8": {
+      "version": "14.1.8-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.68.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.70.3",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.70.3",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-babel-register": {
+          "version": "0.70.3",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-config": {
+          "version": "0.70.3",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.70.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.67.7",
+          "alwaysAddToPackageJson": false
+        },
+        "react-test-renderer": {
+          "version": "18.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.2.1": {
+      "version": "14.2.1-beta.0",
+      "packages": {
+        "metro": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-babel-register": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-config": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "4.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.18.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.67.8",
           "alwaysAddToPackageJson": false
         }
       }

@@ -8,7 +8,7 @@
     "create-nx-plugin": "packages/create-nx-plugin",
     "create-nx-workspace": "packages/create-nx-workspace",
     "cypress": "packages/cypress",
-    "dep-graph-client": "/dep-graph/client",
+    "dep-graph-client": "dep-graph/client",
     "dep-graph-client-e2e": "dep-graph/client-e2e",
     "detox": "packages/detox",
     "devkit": "packages/devkit",
@@ -24,6 +24,7 @@
     "e2e-linter": "e2e/linter",
     "e2e-next": "e2e/next",
     "e2e-node": "e2e/node",
+    "e2e-nx-init": "e2e/nx-init",
     "e2e-nx-plugin": "e2e/nx-plugin",
     "e2e-react": "e2e/react",
     "e2e-react-native": "e2e/react-native",
@@ -46,6 +47,7 @@
     "nx": "packages/nx",
     "nx-dev": "nx-dev/nx-dev",
     "nx-dev-data-access-documents": "nx-dev/data-access-documents",
+    "nx-dev-data-access-menu": "nx-dev/data-access-menu",
     "nx-dev-data-access-packages": "nx-dev/data-access-packages",
     "nx-dev-e2e": "nx-dev/nx-dev-e2e",
     "nx-dev-feature-analytics": "nx-dev/feature-analytics",
@@ -70,5 +72,6 @@
     "typedoc-theme": "typedoc-theme",
     "web": "packages/web",
     "workspace": "packages/workspace"
-  }
+  },
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }

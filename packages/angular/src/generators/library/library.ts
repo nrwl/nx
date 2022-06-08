@@ -1,7 +1,9 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
   moveFilesToNewDirectory,
+  removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
@@ -9,6 +11,8 @@ import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import init from '../../generators/init/init';
+import { E2eTestRunner } from '../../utils/test-runners';
+import { ngPackagrVersion } from '../../utils/versions';
 import addLintingGenerator from '../add-linting/add-linting';
 import karmaProjectGenerator from '../karma-project/karma-project';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
@@ -48,6 +52,7 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   await init(host, {
     ...options,
     skipFormat: true,
+    e2eTestRunner: E2eTestRunner.None,
   });
 
   const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
@@ -58,7 +63,8 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
     name: options.name,
     prefix: options.prefix,
     entryFile: 'index',
-    skipPackageJson: !(options.publishable || options.buildable),
+    skipPackageJson:
+      options.skipPackageJson || !(options.publishable || options.buildable),
     skipTsConfig: true,
   });
 
@@ -85,6 +91,14 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   }
 
   if (options.buildable || options.publishable) {
+    removeDependenciesFromPackageJson(host, [], ['ng-packagr']);
+    addDependenciesToPackageJson(
+      host,
+      {},
+      {
+        'ng-packagr': ngPackagrVersion,
+      }
+    );
     addBuildableLibrariesPostCssDependencies(host);
   }
 

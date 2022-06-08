@@ -1,8 +1,8 @@
-import { getTouchedNpmPackages } from './npm-packages';
-import { WholeFileChange } from '../../file-utils';
-import { DiffType } from '../../../utils/json-diff';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectGraph } from '../../../config/project-graph';
+import { DiffType } from '../../../utils/json-diff';
+import { WholeFileChange } from '../../file-utils';
+import { getTouchedNpmPackages } from './npm-packages';
 
 describe('getTouchedNpmPackages', () => {
   let workspaceJson;
@@ -52,6 +52,14 @@ describe('getTouchedNpmPackages', () => {
             version: '1',
           },
         },
+        'npm:@types/happy-nrwl': {
+          name: 'npm:@types/happy-nrwl',
+          type: 'npm',
+          data: {
+            packageName: '@types/happy-nrwl',
+            version: '1',
+          },
+        },
       },
       dependencies: {
         proj1: [],
@@ -88,6 +96,71 @@ describe('getTouchedNpmPackages', () => {
       projectGraph
     );
     expect(result).toEqual(['npm:happy-nrwl']);
+  });
+
+  it('should handle json changes for type declaration packages where the implementation package exists', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          hash: 'some-hash',
+          getChanges: () => [
+            {
+              type: DiffType.Modified,
+              path: ['dependencies', '@types/happy-nrwl'],
+              value: {
+                lhs: '0.0.1',
+                rhs: '0.0.2',
+              },
+            },
+          ],
+        },
+      ],
+      workspaceJson,
+      nxJson,
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.2',
+        },
+        devDependencies: {
+          '@types/happy-nrwl': '0.0.2',
+        },
+      },
+      projectGraph
+    );
+    expect(result).toEqual(
+      expect.arrayContaining(['npm:@types/happy-nrwl', 'npm:happy-nrwl'])
+    );
+  });
+
+  it('should handle json changes for type declaration packages where the implementation package does not exist', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          hash: 'some-hash',
+          getChanges: () => [
+            {
+              type: DiffType.Modified,
+              path: ['dependencies', '@types/happy-nrwl'],
+              value: {
+                lhs: '0.0.1',
+                rhs: '0.0.2',
+              },
+            },
+          ],
+        },
+      ],
+      workspaceJson,
+      nxJson,
+      {
+        devDependencies: {
+          '@types/happy-nrwl': '0.0.2',
+        },
+      },
+      projectGraph
+    );
+    expect(result).toEqual(expect.arrayContaining(['npm:@types/happy-nrwl']));
   });
 
   it('should handle package deletion', () => {
@@ -186,6 +259,10 @@ describe('getTouchedNpmPackages', () => {
       },
       projectGraph
     );
-    expect(result).toEqual(['npm:happy-nrwl', 'npm:awesome-nrwl']);
+    expect(result).toEqual([
+      'npm:happy-nrwl',
+      'npm:@types/happy-nrwl',
+      'npm:awesome-nrwl',
+    ]);
   });
 });

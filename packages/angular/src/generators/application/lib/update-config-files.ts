@@ -25,11 +25,16 @@ function updateTsConfigOptions(host: Tree, options: NormalizedSchema) {
     compilerOptions: {
       ...json.compilerOptions,
       outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`,
-      target: 'ES2017',
     },
     exclude: [
       ...new Set([...(json.exclude || []), '**/*.test.ts', '**/*.spec.ts']),
     ],
+  }));
+
+  // tsconfig.json
+  updateJson(host, `${options.appProjectRoot}/tsconfig.json`, (json) => ({
+    ...json,
+    compilerOptions: { ...json.compilerOptions, target: 'es2020' },
   }));
 }
 
@@ -46,6 +51,9 @@ function updateAppAndE2EProjectConfigurations(
       options.ngCliSchematicAppRoot,
       options.appProjectRoot
     );
+    // project already has the right root, but the above function, makes it incorrect.
+    // This corrects it.
+    project.root = options.appProjectRoot;
   }
 
   delete project.targets.test;

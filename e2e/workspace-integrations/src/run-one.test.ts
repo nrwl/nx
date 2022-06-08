@@ -96,13 +96,6 @@ describe('run-one', () => {
     );
   }, 10000);
 
-  it('should error for invalid configurations', () => {
-    const myapp = uniq('app');
-    runCLI(`generate @nrwl/react:app ${myapp}`);
-    // configuration has to be valid for the initiating project
-    expect(() => runCLI(`build ${myapp} -c=invalid`)).toThrow();
-  }, 10000);
-
   describe('target dependencies', () => {
     let myapp;
     let mylib1;
@@ -127,7 +120,14 @@ describe('run-one', () => {
     it('should be able to include deps using target dependencies', () => {
       const originalWorkspace = readProjectConfig(myapp);
       updateProjectConfig(myapp, (config) => {
+        config.targets.prep = {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo PREP',
+          },
+        };
         config.targets.build.dependsOn = [
+          'prep',
           {
             target: 'build',
             projects: 'dependencies',
@@ -138,11 +138,12 @@ describe('run-one', () => {
 
       const output = runCLI(`build ${myapp}`);
       expect(output).toContain(
-        `NX   Running target build for project ${myapp} and 2 task(s) it depends on`
+        `NX   Running target build for project ${myapp} and 3 task(s) it depends on`
       );
       expect(output).toContain(myapp);
       expect(output).toContain(mylib1);
       expect(output).toContain(mylib2);
+      expect(output).toContain('PREP');
 
       updateProjectConfig(myapp, () => originalWorkspace);
     }, 10000);

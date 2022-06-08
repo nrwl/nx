@@ -1,5 +1,5 @@
 {
-  "root": "typedoc-theme",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "typedoc-theme/src",
   "projectType": "library",
   "targets": {
@@ -14,7 +14,7 @@
       }
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "outputPath": "dist/typedoc-theme",
         "command": "echo 'Building TypeDoc custom theme'"

@@ -6,18 +6,7 @@
   "presets": [
     {
       "name": "Default minimum setup",
-      "keys": ["uiFramework", "port", "projectBuildConfig", "config"]
-    },
-    {
-      "name": "Angular setup with styles",
-      "keys": [
-        "uiFramework",
-        "port",
-        "projectBuildConfig",
-        "config",
-        "styles",
-        "stylePreprocessorOptions"
-      ]
+      "keys": ["uiFramework", "port", "config"]
     }
   ],
   "properties": {
@@ -25,7 +14,6 @@
       "type": "string",
       "description": "Storybook framework npm package.",
       "enum": [
-        "@storybook/angular",
         "@storybook/react",
         "@storybook/html",
         "@storybook/web-components",
@@ -33,7 +21,7 @@
         "@storybook/vue3",
         "@storybook/svelte"
       ],
-      "default": "@storybook/angular",
+      "default": "@storybook/react",
       "hidden": true
     },
     "port": {
@@ -72,30 +60,6 @@
       },
       "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
     },
-    "projectBuildConfig": {
-      "type": "string",
-      "description": "Workspace project where Storybook reads the Webpack config from."
-    },
-    "styles": {
-      "type": "array",
-      "description": "Global styles to be included in the build. This is for Angular projects only. It will be ignored in non-Angular projects.",
-      "items": {
-        "$ref": "#/definitions/extraEntryPoint"
-      }
-    },
-    "stylePreprocessorOptions": {
-      "type": "object",
-      "description": "Options to pass to style preprocessors.",
-      "properties": {
-        "includePaths": {
-          "type": "array",
-          "description": "The paths to include. Paths will be resolved to workspace root. This is for Angular projects only. It will be ignored in non-Angular projects.",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "config": {
       "type": "object",
       "description": ".storybook configuration.",
@@ -111,6 +75,10 @@
         "configPath": {
           "type": "string",
           "description": "Path to storybook preview.js file."
+        },
+        "babelrcPath": {
+          "type": "string",
+          "description": "Path to storybook .babelrc file."
         },
         "srcRoot": {
           "type": "string",
@@ -129,36 +97,6 @@
       "default": true
     }
   },
-  "definitions": {
-    "extraEntryPoint": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "input": {
-              "type": "string",
-              "description": "The file to include."
-            },
-            "bundleName": {
-              "type": "string",
-              "pattern": "^[\\w\\-.]*$",
-              "description": "The bundle name for this extra entry point."
-            },
-            "inject": {
-              "type": "boolean",
-              "description": "If the bundle will be referenced in the HTML file.",
-              "default": true
-            }
-          },
-          "additionalProperties": false,
-          "required": ["input"]
-        },
-        {
-          "type": "string",
-          "description": "The file to include."
-        }
-      ]
-    }
-  },
+  "definitions": {},
   "required": ["uiFramework", "config"]
 }

@@ -33,12 +33,8 @@ function decorateAngularClI(host: Tree, options: Schema) {
 
 function setPresetProperty(tree: Tree, options: Schema) {
   updateJson(tree, join(options.directory, 'nx.json'), (json) => {
-    if (
-      options.preset === Preset.Core ||
-      options.preset === Preset.TS ||
-      options.preset === Preset.NPM
-    ) {
-      addPropertyWithStableKeys(json, 'extends', 'nx/presets/core.json');
+    if (options.preset === Preset.Core || options.preset === Preset.NPM) {
+      addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
       delete json.implicitDependencies;
       delete json.targetDependencies;
       delete json.workspaceLayout;
@@ -86,6 +82,14 @@ function createPrettierrc(host: Tree, options: Schema) {
     host,
     join(options.directory, '.prettierrc'),
     DEFAULT_NRWL_PRETTIER_CONFIG
+  );
+}
+
+// ensure that pnpm install add all the missing peer deps
+function createNpmrc(host: Tree, options: Schema) {
+  host.write(
+    join(options.directory, '.npmrc'),
+    'strict-peer-dependencies=false\nauto-install-peers=true\n'
   );
 }
 
@@ -145,6 +149,9 @@ export async function workspaceGenerator(host: Tree, options: Schema) {
   createPrettierrc(host, options);
   if (options.cli === 'angular') {
     decorateAngularClI(host, options);
+  }
+  if (options.packageManager === 'pnpm') {
+    createNpmrc(host, options);
   }
   setPresetProperty(host, options);
   addNpmScripts(host, options);

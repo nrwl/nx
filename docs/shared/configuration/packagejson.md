@@ -77,6 +77,9 @@ sure that `mylib`'s dependencies are built as well. This doesn't mean Nx is goin
 artifacts are already in the right place, Nx will do nothing. If they aren't in the right place, but they are available
 in the cache, Nx will retrieve them from the cache.
 
+Depending on another target of the same project is very common. That's why we provide some syntax sugar, so
+`"dependsOn": [{"target": "build", "projects": "self"}]` can be shortened to `"dependsOn": ["build"]`.
+
 Another common scenario is for a target to depend on another target of the same project. For instance, `dependsOn` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
@@ -97,7 +100,8 @@ You can annotate your projects with `tags` as follows:
 }
 ```
 
-You can [configure lint rules using these tags](/structure/monorepo-tags) to, for instance, ensure that libraries belonging to `myteam` are not depended on by libraries belong to `theirteam`.
+You can [configure lint rules using these tags](/structure/monorepo-tags) to, for instance, ensure that libraries
+belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies
 
@@ -140,7 +144,9 @@ project, add the following to its `package.json`:
 
 ### workspace json
 
-The `workspace.json` file in the root directory is optional. It's used if you want to list the projects in your workspace explicitly instead of Nx scanning the file tree for all `project.json` and `package.json` files that match the globs specified in the `workspaces` property of the root `package.json`.
+The `workspace.json` file in the root directory is optional. It's used if you want to list the projects in your
+workspace explicitly instead of Nx scanning the file tree for all `project.json` and `package.json` files that match the
+globs specified in the `workspaces` property of the root `package.json`.
 
 ```json
 {
@@ -324,7 +330,8 @@ pass `--buildable=true` when creating new libraries.
 > A task is an invocation of a target.
 
 Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx affected`, and so on. The tasks runner
-named "default" is used by default. Specify a different one like this `nx run-many --target=build --all --runner=another`.
+named "default" is used by default. Specify a different one like
+this `nx run-many --target=build --all --runner=another`.
 
 Tasks runners can accept different options. The following are the options supported
 by `"nx/tasks-runners/default"` and `"@nrwl/nx-cloud"`.

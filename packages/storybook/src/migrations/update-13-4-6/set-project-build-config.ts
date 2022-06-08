@@ -5,12 +5,15 @@ import {
   updateProjectConfiguration,
   getProjects,
 } from '@nrwl/devkit';
-import { findStorybookAndBuildTargets } from '../../executors/utils';
+import { findStorybookAndBuildTargets } from '../../utils/utilities';
 
 export default async function setProjectBuildConfig(tree: Tree) {
   let changesMade = false;
   const projects = getProjects(tree);
   [...projects.entries()].forEach(([projectName, projectConfiguration]) => {
+    if (!projectConfiguration.targets) {
+      return;
+    }
     const { storybookBuildTarget, storybookTarget, buildTarget } =
       findStorybookAndBuildTargets(projectConfiguration.targets);
     if (

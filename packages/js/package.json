@@ -31,17 +31,17 @@
   "executors": "./executors.json",
   "builders": "./executors.json",
   "dependencies": {
-    "@nrwl/workspace": "*",
-    "@nrwl/devkit": "*",
-    "@nrwl/jest": "*",
-    "@nrwl/linter": "*",
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/jest": "file:../jest",
+    "@nrwl/linter": "file:../linter",
+    "@nrwl/workspace": "file:../workspace",
     "@parcel/watcher": "2.0.4",
     "chalk": "4.1.0",
     "fast-glob": "3.2.7",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.1.0",
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",
-    "minimatch": "3.0.4",
+    "minimatch": "3.0.5",
     "source-map-support": "0.5.19",
     "tree-kill": "1.2.2"
   }

@@ -17,7 +17,6 @@ This is what is generated:
 ```text
 packages/
 nx.json
-workspace.json
 tsconfig.base.json
 package.json
 ```
@@ -42,8 +41,7 @@ package.json
 
 ```json
 {
-  "extends": "nx/presets/core.json",
-  "npmScope": "myorg",
+  "extends": "nx/presets/npm.json",
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx/tasks-runners/default",

@@ -25,8 +25,8 @@ describe('workspace-generator', () => {
   beforeEach(() => {
     custom = uniq('custom');
     failing = uniq('custom-failing');
-    runCLI(`g workspace-generator ${custom} --no-interactive`);
-    runCLI(`g workspace-generator ${failing} --no-interactive`);
+    runCLI(`g @nrwl/workspace:workspace-generator ${custom} --no-interactive`);
+    runCLI(`g @nrwl/workspace:workspace-generator ${failing} --no-interactive`);
 
     checkFilesExist(
       `tools/generators/${custom}/index.ts`,
@@ -144,7 +144,9 @@ describe('workspace-generator', () => {
 
   it('should support angular devkit schematics', () => {
     const angularDevkitSchematic = uniq('angular-devkit-schematic');
-    runCLI(`g workspace-generator ${angularDevkitSchematic} --no-interactive`);
+    runCLI(
+      `g @nrwl/workspace:workspace-generator ${angularDevkitSchematic} --no-interactive`
+    );
 
     const json = readJson(
       `tools/generators/${angularDevkitSchematic}/schema.json`
@@ -262,7 +264,7 @@ describe('move project', () => {
     checkFilesExist(jestConfigPath);
     const jestConfig = readFile(jestConfigPath);
     expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
-    expect(jestConfig).toContain(`preset: '../../../../jest.preset.ts'`);
+    expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
     expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
 
     const tsConfigPath = `${newPath}/tsconfig.json`;
@@ -318,7 +320,6 @@ describe('move project', () => {
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
     const project = readProjectConfig(newName);
     expect(project).toBeTruthy();
-    expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
     expect(project.targets.lint.options.lintFilePatterns).toEqual([
       `libs/shared/${lib1}/data-access/**/*.ts`,
@@ -400,7 +401,7 @@ describe('move project', () => {
     checkFilesExist(jestConfigPath);
     const jestConfig = readFile(jestConfigPath);
     expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
-    expect(jestConfig).toContain(`preset: '../../../../jest.preset.ts'`);
+    expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
     expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
 
     const tsConfigPath = `${newPath}/tsconfig.json`;
@@ -445,7 +446,6 @@ describe('move project', () => {
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
     const project = readProjectConfig(newName);
     expect(project).toBeTruthy();
-    expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
     expect(project.tags).toEqual([]);
     const lib3Config = readProjectConfig(lib3);
@@ -533,7 +533,7 @@ describe('move project', () => {
     checkFilesExist(jestConfigPath);
     const jestConfig = readFile(jestConfigPath);
     expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
-    expect(jestConfig).toContain(`preset: '../../../../jest.preset.ts'`);
+    expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
     expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
 
     const tsConfigPath = `${newPath}/tsconfig.json`;
@@ -578,7 +578,6 @@ describe('move project', () => {
     expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
     const project = readProjectConfig(newName);
     expect(project).toBeTruthy();
-    expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
     expect(project.targets.lint.options.lintFilePatterns).toEqual([
       `packages/shared/${lib1}/data-access/**/*.ts`,

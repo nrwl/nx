@@ -1,14 +1,10 @@
 import type { Tree } from '@nrwl/devkit';
+import { generateFiles, joinPathFragments } from '@nrwl/devkit';
 import type { Schema } from '../schema';
-import {
-  generateFiles,
-  joinPathFragments,
-  readWorkspaceConfiguration,
-} from '@nrwl/devkit';
 
 export function addEntryModule(
   host: Tree,
-  { appName, routing, mfeType }: Schema,
+  { appName, routing, mfeType, prefix }: Schema,
   appRoot: string
 ) {
   if (mfeType === 'remote') {
@@ -20,6 +16,7 @@ export function addEntryModule(
         tmpl: '',
         appName,
         routing,
+        prefix,
       }
     );
 

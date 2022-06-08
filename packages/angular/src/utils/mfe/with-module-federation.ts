@@ -1,69 +1,75 @@
 import {
+  getNpmPackageSharedConfig,
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
 } from './mfe-webpack';
 import {
-  workspaceRoot,
   createProjectGraphAsync,
   ProjectGraph,
+  readAllWorkspaceConfiguration,
   readCachedProjectGraph,
-  Workspaces,
 } from '@nrwl/devkit';
 import {
   getRootTsConfigPath,
   readTsConfig,
 } from '@nrwl/workspace/src/utilities/typescript';
 import { ParsedCommandLine } from 'typescript';
-import { readWorkspaceJson } from 'nx/src/project-graph/file-utils';
+import { readRootPackageJson } from './utils';
+import { extname, join } from 'path';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 export type MFERemotes = string[] | [remoteName: string, remoteUrl: string][];
+
+type SharedFunction = (
+  libraryName: string,
+  sharedConfig: SharedLibraryConfig
+) => SharedLibraryConfig | false;
+type AdditionalSharedConfig = Array<
+  | string
+  | [libraryName: string, sharedConfig: SharedLibraryConfig]
+  | { libraryName: string; sharedConfig: SharedLibraryConfig }
+>;
 
 export interface MFEConfig {
   name: string;
   remotes?: MFERemotes;
   exposes?: Record<string, string>;
-  shared?: (
-    libraryName: string,
-    library: SharedLibraryConfig
-  ) => SharedLibraryConfig | false;
+  shared?: SharedFunction;
+  additionalShared?: AdditionalSharedConfig;
 }
 
-function recursivelyResolveWorkspaceDependents(
-  projectGraph: ProjectGraph<any>,
-  target: string,
-  seenTargets: Set<string> = new Set()
-) {
-  if (seenTargets.has(target)) {
-    return [];
+function collectDependencies(
+  projectGraph: ProjectGraph,
+  name: string,
+  dependencies = {
+    workspaceLibraries: new Set<string>(),
+    npmPackages: new Set<string>(),
+  },
+  seen: Set<string> = new Set()
+): {
+  workspaceLibraries: Set<string>;
+  npmPackages: Set<string>;
+} {
+  if (seen.has(name)) {
+    return dependencies;
   }
-  let dependencies = [target];
-  seenTargets.add(target);
+  seen.add(name);
 
-  const workspaceDependencies = (
-    projectGraph.dependencies[target] ?? []
-  ).filter((dep) => !dep.target.startsWith('npm:'));
-  if (workspaceDependencies.length > 0) {
-    for (const dep of workspaceDependencies) {
-      dependencies = [
-        ...dependencies,
-        ...recursivelyResolveWorkspaceDependents(
-          projectGraph,
-          dep.target,
-          seenTargets
-        ),
-      ];
+  (projectGraph.dependencies[name] ?? []).forEach((dependency) => {
+    if (dependency.target.startsWith('npm:')) {
+      dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
+    } else {
+      dependencies.workspaceLibraries.add(dependency.target);
+      collectDependencies(projectGraph, dependency.target, dependencies, seen);
     }
-  }
+  });
 
   return dependencies;
 }
 
 function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
-  const { projects } = new Workspaces(
-    workspaceRoot
-  ).readWorkspaceConfiguration();
+  const { projects } = readAllWorkspaceConfiguration();
 
   const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath();
   const tsConfig: ParsedCommandLine = readTsConfig(tsConfigPath);
@@ -95,53 +101,25 @@ function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
   return mappedLibraries;
 }
 
-async function getDependentPackagesForProject(name: string) {
-  let projectGraph: ProjectGraph<any>;
-  try {
-    projectGraph = readCachedProjectGraph();
-  } catch (e) {
-    projectGraph = await createProjectGraphAsync();
-  }
-
-  const deps = projectGraph.dependencies[name].reduce(
-    (dependencies, dependency) => {
-      const workspaceLibraries = new Set(dependencies.workspaceLibraries);
-      const npmPackages = new Set(dependencies.npmPackages);
-
-      if (dependency.target.startsWith('npm:')) {
-        npmPackages.add(dependency.target.replace('npm:', ''));
-      } else {
-        workspaceLibraries.add(dependency.target);
-      }
-
-      return {
-        workspaceLibraries: [...workspaceLibraries],
-        npmPackages: [...npmPackages],
-      };
-    },
-    { workspaceLibraries: [], npmPackages: [] }
-  );
-  const seenWorkspaceLibraries = new Set<string>();
-  deps.workspaceLibraries = deps.workspaceLibraries.reduce(
-    (workspaceLibraryDeps, workspaceLibrary) => [
-      ...workspaceLibraryDeps,
-      ...recursivelyResolveWorkspaceDependents(
-        projectGraph,
-        workspaceLibrary,
-        seenWorkspaceLibraries
-      ),
-    ],
-    []
+async function getDependentPackagesForProject(
+  projectGraph: ProjectGraph,
+  name: string
+) {
+  const { npmPackages, workspaceLibraries } = collectDependencies(
+    projectGraph,
+    name
   );
 
-  deps.workspaceLibraries = mapWorkspaceLibrariesToTsConfigImport(
-    deps.workspaceLibraries
-  );
-  return deps;
+  return {
+    workspaceLibraries: mapWorkspaceLibrariesToTsConfigImport([
+      ...workspaceLibraries,
+    ]),
+    npmPackages: [...npmPackages],
+  };
 }
 
 function determineRemoteUrl(remote: string) {
-  const workspace = readWorkspaceJson();
+  const workspace = readAllWorkspaceConfiguration();
   let publicHost = '';
   try {
     publicHost = workspace.projects[remote].targets.serve.options.publicHost;
@@ -161,12 +139,11 @@ function mapRemotes(remotes: MFERemotes) {
 
   for (const remote of remotes) {
     if (Array.isArray(remote)) {
-      const remoteLocation = remote[1].match(/remoteEntry\.(js|mjs)/)
-        ? remote[1]
-        : `${
-            remote[1].endsWith('/') ? remote[1].slice(0, -1) : remote[1]
-          }/remoteEntry.mjs`;
-      mappedRemotes[remote[0]] = remoteLocation;
+      const [remoteName, remoteLocation] = remote;
+      const remoteLocationExt = extname(remoteLocation);
+      mappedRemotes[remoteName] = ['.js', '.mjs'].includes(remoteLocationExt)
+        ? remoteLocation
+        : join(remoteLocation, 'remoteEntry.mjs');
     } else if (typeof remote === 'string') {
       mappedRemotes[remote] = determineRemoteUrl(remote);
     }
@@ -175,10 +152,101 @@ function mapRemotes(remotes: MFERemotes) {
   return mappedRemotes;
 }
 
-export async function withModuleFederation(options: MFEConfig) {
-  const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js'];
+function applySharedFunction(
+  sharedConfig: Record<string, SharedLibraryConfig>,
+  sharedFn: SharedFunction | undefined
+): void {
+  if (!sharedFn) {
+    return;
+  }
 
-  const dependencies = await getDependentPackagesForProject(options.name);
+  for (const [libraryName, library] of Object.entries(sharedConfig)) {
+    const mappedDependency = sharedFn(libraryName, library);
+    if (mappedDependency === false) {
+      delete sharedConfig[libraryName];
+      continue;
+    } else if (!mappedDependency) {
+      continue;
+    }
+
+    sharedConfig[libraryName] = mappedDependency;
+  }
+}
+
+function addStringDependencyToSharedConfig(
+  sharedConfig: Record<string, SharedLibraryConfig>,
+  dependency: string,
+  projectGraph: ProjectGraph
+): void {
+  if (projectGraph.nodes[dependency]) {
+    sharedConfig[dependency] = { requiredVersion: false };
+  } else if (projectGraph.externalNodes?.[dependency]) {
+    const pkgJson = readRootPackageJson();
+    const config = getNpmPackageSharedConfig(
+      dependency,
+      pkgJson.dependencies?.[dependency] ??
+        pkgJson.devDependencies?.[dependency]
+    );
+
+    if (!config) {
+      return;
+    }
+
+    sharedConfig[dependency] = config;
+  } else {
+    throw new Error(
+      `The specified dependency "${dependency}" in the additionalShared configuration does not exist in the project graph. ` +
+        `Please check your additionalShared configuration and make sure you are including valid workspace projects or npm packages.`
+    );
+  }
+}
+
+function applyAdditionalShared(
+  sharedConfig: Record<string, SharedLibraryConfig>,
+  additionalShared: AdditionalSharedConfig | undefined,
+  projectGraph: ProjectGraph
+): void {
+  if (!additionalShared) {
+    return;
+  }
+
+  for (const shared of additionalShared) {
+    if (typeof shared === 'string') {
+      addStringDependencyToSharedConfig(sharedConfig, shared, projectGraph);
+    } else if (Array.isArray(shared)) {
+      sharedConfig[shared[0]] = shared[1];
+    } else if (typeof shared === 'object') {
+      sharedConfig[shared.libraryName] = shared.sharedConfig;
+    }
+  }
+}
+
+function applyDefaultEagerPackages(
+  sharedConfig: Record<string, SharedLibraryConfig>
+) {
+  const DEFAULT_PACKAGES_TO_LOAD_EAGERLY = ['@angular/localize/init'];
+  for (const pkg of DEFAULT_PACKAGES_TO_LOAD_EAGERLY) {
+    sharedConfig[pkg] = {
+      ...(sharedConfig[pkg] ?? {}),
+      eager: true,
+    };
+  }
+}
+
+export async function withModuleFederation(options: MFEConfig) {
+  const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mfe'];
+
+  let projectGraph: ProjectGraph<any>;
+  try {
+    projectGraph = readCachedProjectGraph();
+  } catch (e) {
+    projectGraph = await createProjectGraphAsync();
+  }
+
+  const dependencies = await getDependentPackagesForProject(
+    projectGraph,
+    options.name
+  );
   const sharedLibraries = shareWorkspaceLibraries(
     dependencies.workspaceLibraries
   );
@@ -189,24 +257,24 @@ export async function withModuleFederation(options: MFEConfig) {
     )
   );
 
+  DEFAULT_NPM_PACKAGES_TO_AVOID.forEach((pkgName) => {
+    if (pkgName in npmPackages) {
+      delete npmPackages[pkgName];
+    }
+  });
+
   const sharedDependencies = {
     ...sharedLibraries.getLibraries(),
     ...npmPackages,
   };
 
-  if (options.shared) {
-    for (const [libraryName, library] of Object.entries(sharedDependencies)) {
-      const mappedDependency = options.shared(libraryName, library);
-      if (mappedDependency === false) {
-        delete sharedDependencies[libraryName];
-        continue;
-      } else if (!mappedDependency) {
-        continue;
-      }
-
-      sharedDependencies[libraryName] = mappedDependency;
-    }
-  }
+  applyDefaultEagerPackages(sharedDependencies);
+  applySharedFunction(sharedDependencies, options.shared);
+  applyAdditionalShared(
+    sharedDependencies,
+    options.additionalShared,
+    projectGraph
+  );
 
   const mappedRemotes =
     !options.remotes || options.remotes.length === 0

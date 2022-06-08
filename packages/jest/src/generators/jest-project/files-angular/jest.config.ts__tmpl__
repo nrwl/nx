@@ -1,6 +1,7 @@
-module.exports = {
+/* eslint-disable */
+<% if(js){ %>module.exports =<% } else{ %>export default<% } %> {
   displayName: '<%= project %>',
-  preset: '<%= offsetFromRoot %>jest.preset.ts',
+  preset: '<%= offsetFromRoot %>jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
     'ts-jest': {

@@ -2,18 +2,18 @@ import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as yargs from 'yargs';
-import { generateDaemonHelpOutput } from '../daemon/client/generate-help-output';
 import { nxVersion } from '../utils/versions';
 import { examples } from './examples';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
 
-const isGenerateDocsProcess = process.env.NX_GENERATE_DOCS_PROCESS === 'true';
-const daemonHelpOutput = generateDaemonHelpOutput(isGenerateDocsProcess);
-
 // Ensure that the output takes up the available width of the terminal
 yargs.wrap(yargs.terminalWidth());
+
+export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
+  'strip-dashed': true,
+};
 
 /**
  * Exposing the Yargs commands object so the documentation generator can
@@ -23,21 +23,8 @@ yargs.wrap(yargs.terminalWidth());
  * le executed correctly.
  */
 export const commandsObject = yargs
-  .parserConfiguration({
-    'strip-dashed': true,
-    // allow parsing --env.SOME_ARG for cypress cli env args
-    'dot-notation': true,
-  })
-  .usage(
-    `
-${chalk.bold('Smart, Fast and Extensible Build System')}` +
-      (daemonHelpOutput
-        ? `
-
-${daemonHelpOutput}
-  `.trimRight()
-        : '')
-  )
+  .parserConfiguration(parserConfiguration)
+  .usage(chalk.bold('Smart, Fast and Extensible Build System'))
   .command({
     command: 'generate <generator> [_..]',
     describe:
@@ -70,7 +57,9 @@ ${daemonHelpOutput}
     describe: 'Run target for multiple listed projects',
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withRunManyOptions(withParallelOption(withTargetOption(yargs))),
+        withRunManyOptions(
+          withOutputStyleOption(withParallelOption(withTargetOption(yargs)))
+        ),
         'run-many'
       ),
     handler: async (args) => (await import('./run-many')).runMany({ ...args }),
@@ -80,7 +69,9 @@ ${daemonHelpOutput}
     describe: 'Run target for affected projects',
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withParallelOption(withTargetOption(yargs))),
+        withAffectedOptions(
+          withOutputStyleOption(withParallelOption(withTargetOption(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -91,7 +82,7 @@ ${daemonHelpOutput}
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withParallelOption(yargs)),
+        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -105,7 +96,7 @@ ${daemonHelpOutput}
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withParallelOption(yargs)),
+        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -119,7 +110,7 @@ ${daemonHelpOutput}
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withParallelOption(yargs)),
+        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -133,7 +124,7 @@ ${daemonHelpOutput}
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withParallelOption(yargs)),
+        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -144,7 +135,9 @@ ${daemonHelpOutput}
   })
   .command({
     command: 'affected:apps',
-    describe: 'Print applications affected by changes',
+    deprecated:
+      'Use `nx print-affected --type=app ...` instead. This command will be removed in v15.',
+    describe: `Print applications affected by changes`,
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(withPlainOption(yargs)),
@@ -155,7 +148,9 @@ ${daemonHelpOutput}
   })
   .command({
     command: 'affected:libs',
-    describe: 'Print libraries affected by changes',
+    deprecated:
+      'Use `nx print-affected --type=lib ...` instead. This command will be removed in v15.',
+    describe: `Print libraries affected by changes`,
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(withPlainOption(yargs)),
@@ -196,7 +191,8 @@ ${daemonHelpOutput}
   })
   .command({
     command: 'daemon',
-    describe: 'Prints information about the Nx Daemon process',
+    describe:
+      'Prints information about the Nx Daemon process or starts a daemon process',
     builder: (yargs) =>
       linkToNxDevAndExamples(withDaemonStartOptions(yargs), 'daemon'),
     handler: async (args) => (await import('./daemon')).daemonHandler(args),
@@ -263,6 +259,11 @@ ${daemonHelpOutput}
     handler: async () => (await import('./report')).reportHandler(),
   })
   .command({
+    command: 'init',
+    describe: 'Adds nx.json file and installs nx if not installed already',
+    handler: async () => (await import('./init')).initHandler(),
+  })
+  .command({
     command: 'list [plugin]',
     describe:
       'Lists installed plugins, capabilities of installed plugins and other available plugins.',
@@ -289,9 +290,10 @@ ${daemonHelpOutput}
     builder: (yargs) => withNewOptions(yargs),
     handler: async (args) => {
       args._ = args._.slice(1);
-      return (await import('./generate')).newWorkspace(
-        args['nxWorkspaceRoot'] as string,
-        args
+      process.exit(
+        await (
+          await import('./generate')
+        ).newWorkspace(args['nxWorkspaceRoot'] as string, args)
       );
     },
   })
@@ -299,13 +301,19 @@ ${daemonHelpOutput}
     '_migrate [packageAndVersion]',
     false,
     (yargs) => withMigrationOptions(yargs),
-    async (args) => (await import('./migrate')).migrate(process.cwd(), args)
+    async (args) =>
+      process.exit(
+        await (await import('./migrate')).migrate(process.cwd(), args)
+      )
   )
   .help('help')
   .version(nxVersion);
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
   return withAffectedOptions(yargs)
+    .parserConfiguration({
+      'camel-case-expansion': true,
+    })
     .option('libs-and-apps', {
       describe: 'Format only libraries and applications files.',
       type: 'boolean',
@@ -321,15 +329,26 @@ function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withDaemonStartOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('background', { type: 'boolean', default: true });
+  return yargs
+    .option('background', { type: 'boolean', default: true })
+    .option('start', {
+      type: 'boolean',
+      default: false,
+    });
 }
 
 function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('select', {
-    type: 'string',
-    describe:
-      'Select the subset of the returned json document (e.g., --selected=projects)',
-  });
+  return yargs
+    .option('select', {
+      type: 'string',
+      describe:
+        'Select the subset of the returned json document (e.g., --selected=projects)',
+    })
+    .option('type', {
+      type: 'string',
+      choices: ['app', 'lib'],
+      describe: 'Select the type of projects to be returned (e.g., --type=app)',
+    });
 }
 
 function withPlainOption(yargs: yargs.Argv): yargs.Argv {
@@ -340,6 +359,11 @@ function withPlainOption(yargs: yargs.Argv): yargs.Argv {
 
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
+    .parserConfiguration({
+      'camel-case-expansion': false,
+      // allow parsing --env.SOME_ARG for cypress cli env args
+      'dot-notation': true,
+    })
     .option('files', {
       describe:
         'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas',
@@ -413,6 +437,16 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .option('verbose', {
       describe: 'Print additional error stack trace on failure',
     })
+    .option('nx-bail', {
+      describe: 'Stop command execution after the first failed task',
+      type: 'boolean',
+      default: false,
+    })
+    .option('nx-ignore-cycles', {
+      describe: 'Ignore cycles in the task graph',
+      type: 'boolean',
+      default: false,
+    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
@@ -423,6 +457,11 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
 
 function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
+    .parserConfiguration({
+      'camel-case-expansion': false,
+      // allow parsing --env.SOME_ARG for cypress cli env args
+      'dot-notation': true,
+    })
     .option('projects', {
       describe: 'Projects to run (comma delimited)',
       type: 'string',
@@ -452,14 +491,6 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
         'This is the configuration to use when performing tasks on projects',
       type: 'string',
     })
-    .options('with-deps', {
-      describe:
-        'Include dependencies of specified projects when computing what to run',
-      type: 'boolean',
-      default: false,
-      deprecated:
-        'Configure target dependencies instead. It will be removed in v14.',
-    })
     .options('only-failed', {
       deprecated:
         'The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.',
@@ -475,6 +506,16 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('verbose', {
       describe: 'Print additional error stack trace on failure',
+    })
+    .option('nx-bail', {
+      describe: 'Stop command execution after the first failed task',
+      type: 'boolean',
+      default: false,
+    })
+    .option('nx-ignore-cycles', {
+      describe: 'Ignore cycles in the task graph',
+      type: 'boolean',
+      default: false,
     })
     .conflicts({
       all: 'projects',
@@ -527,6 +568,14 @@ function withParallelOption(yargs: yargs.Argv): yargs.Argv {
   return yargs.option('parallel', {
     describe: 'Max number of parallel processes [default is 3]',
     type: 'string',
+  });
+}
+
+function withOutputStyleOption(yargs: yargs.Argv): yargs.Argv {
+  return yargs.option('output-style', {
+    describe: 'Defines how Nx emits outputs tasks logs',
+    type: 'string',
+    choices: ['dynamic', 'static', 'stream', 'stream-without-prefixes'],
   });
 }
 
@@ -589,6 +638,11 @@ function withRunOneOptions(yargs: yargs.Argv) {
     process.argv[2] === 'run' && process.argv[3] === '--help'
   );
   const res = yargs
+    .parserConfiguration({
+      'camel-case-expansion': false,
+      // allow parsing --env.SOME_ARG for cypress cli env args
+      'dot-notation': true,
+    })
     .option('prod', {
       describe: 'Use the production configuration',
       type: 'boolean',
@@ -602,6 +656,27 @@ function withRunOneOptions(yargs: yargs.Argv) {
     .option('project', {
       describe: 'Target project',
       type: 'string',
+    })
+    .option('output-style', {
+      describe: 'Defines how Nx emits outputs tasks logs',
+      type: 'string',
+      choices: [
+        'dynamic',
+        'static',
+        'stream',
+        'stream-without-prefixes',
+        'compact',
+      ],
+    })
+    .option('nx-bail', {
+      describe: 'Stop command execution after the first failed task',
+      type: 'boolean',
+      default: false,
+    })
+    .option('nx-ignore-cycles', {
+      describe: 'Ignore cycles in the task graph',
+      type: 'boolean',
+      default: false,
     });
 
   if (executorShouldShowHelp) {

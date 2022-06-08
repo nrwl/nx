@@ -20,10 +20,9 @@ import {
 import enquirer = require('enquirer');
 import yargsParser = require('yargs-parser');
 
-const tsVersion = 'TYPESCRIPT_VERSION';
-const cliVersion = 'NX_VERSION';
-const nxVersion = 'NX_VERSION';
-const prettierVersion = 'PRETTIER_VERSION';
+const nxVersion = require('../package.json').version;
+const tsVersion = 'TYPESCRIPT_VERSION'; // This gets replaced with the typescript version in the root package.json during build
+const prettierVersion = 'PRETTIER_VERSION'; // This gets replaced with the prettier version in the root package.json during build
 
 const parsedArgs = yargsParser(process.argv, {
   string: ['pluginName', 'packageManager', 'importPath'],
@@ -41,14 +40,14 @@ function createSandbox(packageManager: string) {
   writeJsonFile(path.join(tmpDir, 'package.json'), {
     dependencies: {
       '@nrwl/workspace': nxVersion,
-      nx: cliVersion,
+      nx: nxVersion,
       typescript: tsVersion,
       prettier: prettierVersion,
     },
     license: 'MIT',
   });
 
-  execSync(`${packageManager} install --silent`, {
+  execSync(`${packageManager} install --silent --ignore-scripts`, {
     cwd: tmpDir,
     stdio: [0, 1, 2],
   });
@@ -98,7 +97,7 @@ function createNxPlugin(
   packageManager,
   parsedArgs: any
 ) {
-  const importPath = parsedArgs.importPath ?? `${workspaceName}/${pluginName}`;
+  const importPath = parsedArgs.importPath ?? `@${workspaceName}/${pluginName}`;
   const command = `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${importPath}`;
   console.log(command);
 

@@ -1,6 +1,6 @@
-import { readJson, updateJson } from './json';
+import { readJson, updateJson } from 'nx/src/generators/utils/json';
 import { installPackagesTask } from '../tasks/install-packages-task';
-import type { Tree } from 'nx/src/config/tree';
+import type { Tree } from 'nx/src/generators/tree';
 import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 
 /**
@@ -45,10 +45,11 @@ export function addDependenciesToPackageJson(
 
       return json;
     });
+    return (): void => {
+      installPackagesTask(tree);
+    };
   }
-  return (): void => {
-    installPackagesTask(tree);
-  };
+  return () => {};
 }
 
 /**

@@ -7,6 +7,7 @@ import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ReactComponentElement } from 'react';
+import { getPublicPackageName } from './get-public-package-name';
 import { Heading1, Heading2 } from './ui/headings';
 import { Markdown } from './ui/markdown/markdown';
 
@@ -26,16 +27,26 @@ export function PackageSchemaList({
       name: string;
       description: string;
       githubUrl: string;
+      readme: { content: string; filePath: string };
     };
     seo: { title: string; description: string; url: string; imageUrl: string };
   } = {
     pkg: {
-      name: `@nrwl/${pkg.name}`,
+      name: getPublicPackageName(pkg.name),
       description: pkg.description,
       githubUrl: pkg.githubRoot + pkg.root,
+      get readme() {
+        const hasOverview = pkg.documentation.find((d) => d.id === 'overview');
+        return !!hasOverview
+          ? {
+              content: hasOverview.content,
+              filePath: hasOverview.file,
+            }
+          : { content: '', filePath: '' };
+      },
     },
     seo: {
-      title: `@nrwl/${pkg.name} | Nx`,
+      title: `${getPublicPackageName(pkg.name)} | Nx`,
       description: pkg.description,
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath
         .replace('/', '')
@@ -98,7 +109,13 @@ export function PackageSchemaList({
 
               <Heading1 title={vm.pkg.name} />
 
-              <Markdown content={vm.pkg.description} classes="mb-4" />
+              <Markdown
+                content={vm.pkg.readme.content}
+                documentFilePath={vm.pkg.readme.filePath}
+                classes="mb-16"
+              />
+
+              <Heading2 title="Package reference" />
 
               <p className="mb-16">
                 Here is a list of all the executors and generators available

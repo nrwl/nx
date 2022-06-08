@@ -560,7 +560,7 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react/jsx-runtime', '@emotion/styled/base'],
+          external: ['@emotion/react/jsx-runtime'],
         },
       });
       expect(babelrc.plugins).toEqual(['@emotion/babel-plugin']);
