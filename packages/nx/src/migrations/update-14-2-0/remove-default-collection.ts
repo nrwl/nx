@@ -9,7 +9,10 @@ export default async function (tree: Tree) {
   const workspaceConfiguration = readWorkspaceConfiguration(tree);
 
   delete workspaceConfiguration.cli?.defaultCollection;
-  if (Object.keys(workspaceConfiguration.cli).length === 0) {
+  if (
+    workspaceConfiguration.cli &&
+    Object.keys(workspaceConfiguration.cli).length === 0
+  ) {
     delete workspaceConfiguration.cli;
   }
 

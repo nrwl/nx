@@ -41,4 +41,12 @@ describe('remove-default-collection', () => {
       readWorkspaceConfiguration(tree).cli?.defaultCollection
     ).toBeUndefined();
   });
+
+  it('should not error when "cli" is not defined', async () => {
+    const config = readWorkspaceConfiguration(tree);
+    delete config.cli;
+    updateWorkspaceConfiguration(tree, config);
+
+    await expect(removeDefaultCollection(tree)).resolves.not.toThrow();
+  });
 });
