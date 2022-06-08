@@ -312,38 +312,37 @@ ${jslib}();
 
   it('should remove previous output before building with the --deleteOutputPath option set', async () => {
     const appName = uniq('app');
-    const libName = uniq('lib');
 
-    runCLI(
-      `generate @nrwl/node:app ${appName} --no-interactive --compiler swc`
-    );
-    runCLI(
-      `generate @nrwl/node:lib ${libName} --buildable --no-interactive --compiler swc`
-    );
+    runCLI(`generate @nrwl/node:app ${appName} --no-interactive`);
 
+    // deleteOutputPath should default to true
     createFile(`dist/apps/${appName}/_should_remove.txt`);
-    createFile(`dist/libs/${libName}/_should_remove.txt`);
     createFile(`dist/apps/_should_not_remove.txt`);
     checkFilesExist(
       `dist/apps/${appName}/_should_remove.txt`,
       `dist/apps/_should_not_remove.txt`
     );
-    runCLI(`build ${appName} --outputHashing none`);
-    runCLI(`build ${libName}`);
-    checkFilesDoNotExist(
-      `dist/apps/${appName}/_should_remove.txt`,
-      `dist/libs/${libName}/_should_remove.txt`
-    );
+    runCLI(`build ${appName} --outputHashing none`); // no explicit deleteOutputPath option set
+    checkFilesDoNotExist(`dist/apps/${appName}/_should_remove.txt`);
     checkFilesExist(`dist/apps/_should_not_remove.txt`);
 
-    // `delete-output-path`
-    createFile(`dist/apps/${appName}/_should_keep.txt`);
-    runCLI(`build ${appName} --delete-output-path=false --outputHashing none`);
-    checkFilesExist(`dist/apps/${appName}/_should_keep.txt`);
+    // Explicitly set `deleteOutputPath` to true
+    createFile(`dist/apps/${appName}/_should_remove.txt`);
+    createFile(`dist/apps/_should_not_remove.txt`);
+    checkFilesExist(
+      `dist/apps/${appName}/_should_remove.txt`,
+      `dist/apps/_should_not_remove.txt`
+    );
+    runCLI(`build ${appName} --outputHashing none --deleteOutputPath`);
+    checkFilesDoNotExist(`dist/apps/${appName}/_should_remove.txt`);
+    checkFilesExist(`dist/apps/_should_not_remove.txt`);
 
-    createFile(`dist/libs/${libName}/_should_keep.txt`);
-    runCLI(`build ${libName} --delete-output-path=false --outputHashing none`);
-    checkFilesExist(`dist/libs/${libName}/_should_keep.txt`);
+    // Explicitly set `deleteOutputPath` to false
+    createFile(`dist/apps/${appName}/_should_keep.txt`);
+    createFile(`dist/apps/_should_keep.txt`);
+    runCLI(`build ${appName} --deleteOutputPath=false --outputHashing none`);
+    checkFilesExist(`dist/apps/${appName}/_should_keep.txt`);
+    checkFilesExist(`dist/apps/_should_keep.txt`);
   }, 120000);
 
   describe('NestJS', () => {
@@ -362,35 +361,35 @@ ${jslib}();
       updateFile(
         `apps/${nestapp}/src/app/foo.dto.ts`,
         `
-export class FooDto {
-  foo: string;
-  bar: number;
-}`
+  export class FooDto {
+    foo: string;
+    bar: number;
+  }`
       );
       updateFile(
         `apps/${nestapp}/src/app/app.controller.ts`,
         `
-import { Controller, Get } from '@nestjs/common';
-import { FooDto } from './foo.dto';
-import { AppService } from './app.service';
+  import { Controller, Get } from '@nestjs/common';
+  import { FooDto } from './foo.dto';
+  import { AppService } from './app.service';
 
-@Controller()
-export class AppController {
-  constructor(private readonly appService: AppService) {}
+  @Controller()
+  export class AppController {
+    constructor(private readonly appService: AppService) {}
 
-  @Get()
-  getData() {
-    return this.appService.getData();
-  }
+    @Get()
+    getData() {
+      return this.appService.getData();
+    }
 
-  @Get('foo')
-  getFoo(): Promise<FooDto> {
-    return Promise.resolve({
-      foo: 'foo',
-      bar: 123
-    })
-  }
-}`
+    @Get('foo')
+    getFoo(): Promise<FooDto> {
+      return Promise.resolve({
+        foo: 'foo',
+        bar: 123
+      })
+    }
+  }`
       );
 
       await runCLIAsync(`build ${nestapp}`);
@@ -398,13 +397,13 @@ export class AppController {
       const mainJs = readFile(`dist/apps/${nestapp}/main.js`);
       expect(stripIndents`${mainJs}`).toContain(
         stripIndents`
-class FooDto {
-    static _OPENAPI_METADATA_FACTORY() {
-        return { foo: { required: true, type: () => String }, bar: { required: true, type: () => Number } };
-    }
-}
-exports.FooDto = FooDto;
-        `
+  class FooDto {
+      static _OPENAPI_METADATA_FACTORY() {
+          return { foo: { required: true, type: () => String }, bar: { required: true, type: () => Number } };
+      }
+  }
+  exports.FooDto = FooDto;
+          `
       );
     }, 300000);
   });
