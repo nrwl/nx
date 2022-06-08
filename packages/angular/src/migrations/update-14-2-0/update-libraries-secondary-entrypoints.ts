@@ -2,6 +2,7 @@ import {
   formatFiles,
   getProjects,
   joinPathFragments,
+  normalizePath,
   readJson,
   Tree,
   visitNotIgnoredFiles,
@@ -30,7 +31,8 @@ export default async function (tree: Tree) {
     visitNotIgnoredFiles(tree, project.root, (filePath) => {
       if (
         basename(filePath) !== 'package.json' ||
-        filePath === joinPathFragments(project.root, 'package.json')
+        normalizePath(filePath) ===
+          joinPathFragments(project.root, 'package.json')
       ) {
         return;
       }
