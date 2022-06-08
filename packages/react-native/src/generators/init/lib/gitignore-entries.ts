@@ -56,6 +56,6 @@ buck-out/
 *.jsbundle
 
 # Ruby / CocoaPods
-/ios/Pods/
-/vendor/bundle/
+**/ios/Pods/
+**/vendor/bundle/
 `;
