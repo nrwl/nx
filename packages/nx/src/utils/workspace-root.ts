@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { statSync } from 'fs';
+import { fileExists } from './fileutils';
 
 /**
  * The root of the workspace
@@ -26,13 +26,5 @@ export function workspaceRootInner(
     return workspaceRootInner(path.dirname(dir), dir);
   } else {
     return workspaceRootInner(path.dirname(dir), candidateRoot);
-  }
-}
-
-export function fileExists(filePath: string): boolean {
-  try {
-    return statSync(filePath).isFile();
-  } catch (err) {
-    return false;
   }
 }

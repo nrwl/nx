@@ -2,8 +2,7 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
-import { fileExists } from '../utils/workspace-root';
-import { readJsonFile, writeJsonFile } from '../utils/fileutils';
+import { readJsonFile, writeJsonFile, fileExists } from '../utils/fileutils';
 
 export function initHandler() {
   const nxIsInstalled = !!execSync(getPackageManagerCommand().list)

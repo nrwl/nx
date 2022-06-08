@@ -5,7 +5,11 @@ import type {
   NxJsonConfiguration,
   ProjectGraphExternalNode,
 } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import {
+  workspaceRoot,
+  readNxJson,
+  readCachedProjectGraph,
+} from '@nrwl/devkit';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -32,7 +36,6 @@ import {
   findFilesInCircularPath,
 } from '../utils/graph-utils';
 import { isRelativePath } from '../utilities/fileutils';
-import { readNxJson, readCachedProjectGraph } from '@nrwl/devkit';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(

@@ -1,13 +1,11 @@
 import { getRootTsConfigFileName, resolveModuleByImport } from './typescript';
-import { isRelativePath } from './fileutils';
+import { isRelativePath, readJsonFile } from './fileutils';
 import { dirname, join, posix } from 'path';
 import { workspaceRoot } from './workspace-root';
-import { readFileSync } from 'fs';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
-import { parseJson } from './json';
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
@@ -173,7 +171,7 @@ export class TargetProjectLocator {
     return {
       absolutePath,
       path,
-      config: parseJson(readFileSync(absolutePath, 'utf8')),
+      config: readJsonFile(absolutePath),
     };
   }
 
