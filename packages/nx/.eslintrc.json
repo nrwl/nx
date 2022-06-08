@@ -19,7 +19,12 @@
       "files": ["./package.json", "./executors.json", "./migrations.json"],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/nx-plugin-checks": "error"
+        "@nrwl/nx/nx-plugin-checks": [
+          "error",
+          {
+            "allowedVersionStrings": ["latest"]
+          }
+        ]
       }
     }
   ]

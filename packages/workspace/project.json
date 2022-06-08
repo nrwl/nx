@@ -9,9 +9,7 @@
         "jestConfig": "packages/workspace/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": [
-        "coverage/packages/workspace"
-      ]
+      "outputs": ["coverage/packages/workspace"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -35,10 +33,7 @@
           {
             "input": "packages/workspace",
             "glob": "**/*.json",
-            "ignore": [
-              "**/tsconfig*.json",
-              "project.json"
-            ],
+            "ignore": ["**/tsconfig*.json", "project.json"],
             "output": "/"
           },
           {
@@ -49,9 +44,7 @@
           {
             "input": "packages/workspace",
             "glob": "**/*.{js,css,html,svg}",
-            "ignore": [
-              "**/jest.config.js"
-            ],
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
@@ -66,15 +59,11 @@
           }
         ]
       },
-      "outputs": [
-        "{options.outputPath}"
-      ]
+      "outputs": ["{options.outputPath}"]
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": [
-        "build/packages/workspace"
-      ],
+      "outputs": ["build/packages/workspace"],
       "options": {
         "commands": [
           {
@@ -117,9 +106,7 @@
           "packages/workspace/migrations.json"
         ]
       },
-      "outputs": [
-        "{options.outputFile}"
-      ]
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

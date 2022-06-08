@@ -3,22 +3,12 @@
   "rules": {},
   "overrides": [
     {
-      "files": [
-        "*.ts",
-        "*.tsx",
-        "*.js",
-        "*.jsx"
-      ],
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {}
     },
     {
-      "files": [
-        "**/*.ts"
-      ],
-      "excludedFiles": [
-        "./src/migrations/**",
-        "./src/utils/**"
-      ],
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**", "./src/utils/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -38,11 +28,14 @@
       ],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/nx-plugin-checks": "error"
+        "@nrwl/nx/nx-plugin-checks": [
+          "error",
+          {
+            "allowedVersionStrings": ["latest", "*"]
+          }
+        ]
       }
     }
   ],
-  "ignorePatterns": [
-    "!**/*"
-  ]
+  "ignorePatterns": ["!**/*"]
 }

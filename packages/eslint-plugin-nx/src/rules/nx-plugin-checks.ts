@@ -25,7 +25,7 @@ type Options = [
   }
 ];
 
-const DEFAULT_OPTIONS = {
+const DEFAULT_OPTIONS: Options[0] = {
   generatorsJson: 'generators.json',
   executorsJson: 'executors.json',
   migrationsJson: 'migrations.json',
@@ -96,9 +96,10 @@ export default createESLintRule<Options, MessageIds>({
     if (!sourceProject) {
       return {};
     }
-
+    const options = normalizeOptions(sourceProject, context.options[0]);
+    context.options[0] = options;
     const { generatorsJson, executorsJson, migrationsJson, packageJson } =
-      normalizeOptions(sourceProject, context.options[0]);
+      options;
 
     if (
       ![generatorsJson, executorsJson, migrationsJson, packageJson].includes(
