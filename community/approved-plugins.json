@@ -225,6 +225,16 @@
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/translations"
   },
   {
+    "name": "@nx-extend/firebase-hosting",
+    "description": "Nx plugin to deploy your apps to Firebase hosting",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/firebase-hosting"
+  },
+  {
+    "name": "@nx-extend/e2e-runner",
+    "description": "Nx plugin that can start your API before running Cypress",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/e2e-runner"
+  },
+  {
     "name": "@nativescript/nx",
     "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
     "url": "https://github.com/nativescript/nx"
