@@ -21,6 +21,7 @@ type Options = [
     executorsJson?: string;
     migrationsJson?: string;
     packageJson?: string;
+    allowedVersionStrings: string[];
   }
 ];
 
@@ -29,6 +30,7 @@ const DEFAULT_OPTIONS = {
   executorsJson: 'executors.json',
   migrationsJson: 'migrations.json',
   packageJson: 'package.json',
+  allowedVersionStrings: ['*', 'latest', 'next'],
 };
 
 export type MessageIds =
@@ -135,6 +137,7 @@ function normalizeOptions(
 ): Options[0] {
   const base = { ...DEFAULT_OPTIONS, ...options };
   return {
+    ...base,
     executorsJson: base.executorsJson
       ? `${sourceProject.data.root}/${base.executorsJson}`
       : undefined,
@@ -437,7 +440,9 @@ export function validatePackageGroup(
         const key = (packageNode?.value as AST.JSONLiteral)?.value ?? 'unknown';
 
         if (versionPropertyNode) {
-          if (!validateVersionJsonExpression(versionPropertyNode.value))
+          if (
+            !validateVersionJsonExpression(versionPropertyNode.value, context)
+          )
             context.report({
               messageId: 'invalidVersion',
               data: { key },
@@ -456,7 +461,7 @@ export function validatePackageGroup(
       const properties = packageGroupNode.value.properties;
       // For each property, ensure its value is a valid version
       for (const propertyNode of properties) {
-        if (!validateVersionJsonExpression(propertyNode.value)) {
+        if (!validateVersionJsonExpression(propertyNode.value, context)) {
           context.report({
             messageId: 'invalidVersion',
             data: {
@@ -470,11 +475,15 @@ export function validatePackageGroup(
   }
 }
 
-export function validateVersionJsonExpression(node: AST.JSONExpression) {
+export function validateVersionJsonExpression(
+  node: AST.JSONExpression,
+  context: TSESLint.RuleContext<MessageIds, Options>
+) {
   return (
     node &&
     node.type === 'JSONLiteral' &&
     typeof node.value === 'string' &&
-    valid(node.value)
+    (valid(node.value) ||
+      context.options[0]?.allowedVersionStrings.includes(node.value))
   );
 }
