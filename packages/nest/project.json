@@ -74,7 +74,10 @@
           "packages/nest/**/*.spec.jsx",
           "packages/nest/**/*.d.ts",
           "packages/nest/**/executors/**/schema.json",
-          "packages/nest/**/generators/**/schema.json"
+          "packages/nest/**/generators/**/schema.json",
+          "packages/nest/generators.json",
+          "packages/nest/package.json",
+          "packages/nest/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

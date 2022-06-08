@@ -73,7 +73,8 @@
           "packages/devkit/**/*.spec.jsx",
           "packages/devkit/**/*.d.ts",
           "packages/devkit/**/executors/**/schema.json",
-          "packages/devkit/**/generators/**/schema.json"
+          "packages/devkit/**/generators/**/schema.json",
+          "packages/devkit/package.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

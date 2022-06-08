@@ -3,12 +3,22 @@
   "rules": {},
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx"
+      ],
       "rules": {}
     },
     {
-      "files": ["**/*.ts"],
-      "excludedFiles": ["./src/migrations/**", "./src/utils/**"],
+      "files": [
+        "**/*.ts"
+      ],
+      "excludedFiles": [
+        "./src/migrations/**",
+        "./src/utils/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -18,7 +28,21 @@
           "@angular-devkit/schematics"
         ]
       }
+    },
+    {
+      "files": [
+        "./package.json",
+        "./generators.json",
+        "./executors.json",
+        "./migrations.json"
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nrwl/nx/nx-plugin-checks": "error"
+      }
     }
   ],
-  "ignorePatterns": ["!**/*"]
+  "ignorePatterns": [
+    "!**/*"
+  ]
 }

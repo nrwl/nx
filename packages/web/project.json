@@ -79,7 +79,11 @@
           "packages/web/**/*.spec.jsx",
           "packages/web/**/*.d.ts",
           "packages/web/**/executors/**/schema.json",
-          "packages/web/**/generators/**/schema.json"
+          "packages/web/**/generators/**/schema.json",
+          "packages/web/generators.json",
+          "packages/web/executors.json",
+          "packages/web/package.json",
+          "packages/web/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

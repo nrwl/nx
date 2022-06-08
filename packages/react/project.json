@@ -84,7 +84,11 @@
           "packages/react/**/*.spec.jsx",
           "packages/react/**/*.d.ts",
           "packages/react/**/executors/**/schema.json",
-          "packages/react/**/generators/**/schema.json"
+          "packages/react/**/generators/**/schema.json",
+          "packages/react/generators.json",
+          "packages/react/executors.json",
+          "packages/react/package.json",
+          "packages/react/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

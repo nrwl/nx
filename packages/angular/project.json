@@ -87,7 +87,11 @@
           "packages/angular/**/*.spec.jsx",
           "packages/angular/**/*.d.ts",
           "packages/angular/**/executors/**/schema.json",
-          "packages/angular/**/generators/**/schema.json"
+          "packages/angular/**/generators/**/schema.json",
+          "packages/angular/generators.json",
+          "packages/angular/executors.json",
+          "packages/angular/package.json",
+          "packages/angular/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]
