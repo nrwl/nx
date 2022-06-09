@@ -124,9 +124,19 @@
     "cwd": {
       "type": "string",
       "description": "Current working directory of the commands. If it's not specified the commands will run in the workspace root, if a relative path is specified the commands will run in that path relative to the workspace root and if it's an absolute path the commands will run in that path."
+    },
+    "__unparsed__": {
+      "hidden": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "$default": {
+        "$source": "unparsed"
+      }
     }
   },
   "additionalProperties": true,
-  "required": [],
+  "required": ["__unparsed__"],
   "examplesFile": "../../../docs/run-commands-examples.md"
 }

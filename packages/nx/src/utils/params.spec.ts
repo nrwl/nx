@@ -647,7 +647,7 @@ describe('params', () => {
 
   describe('convertSmartDefaultsIntoNamedParams', () => {
     it('should use argv', () => {
-      const params = {};
+      const params = { _: ['argv-value', 'unused'] };
       convertSmartDefaultsIntoNamedParams(
         params,
         {
@@ -661,12 +661,11 @@ describe('params', () => {
             },
           },
         },
-        ['argv-value'],
         null,
         null
       );
 
-      expect(params).toEqual({ a: 'argv-value' });
+      expect(params).toEqual({ a: 'argv-value', _: ['unused'] });
     });
 
     it('should use projectName', () => {
@@ -683,7 +682,6 @@ describe('params', () => {
             },
           },
         },
-        [],
         'myProject',
         null
       );
@@ -704,7 +702,6 @@ describe('params', () => {
             },
           },
         },
-        [],
         null,
         './somepath'
       );

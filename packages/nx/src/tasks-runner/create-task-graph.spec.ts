@@ -174,7 +174,9 @@ describe('createTaskGraph', () => {
       ['app1'],
       ['build'],
       'development',
-      {}
+      {
+        __overrides_unparsed__: [],
+      }
     );
     // prebuild should also be in here
     expect(taskGraph).toEqual({
@@ -186,7 +188,9 @@ describe('createTaskGraph', () => {
             project: 'app1',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'app1-root',
         },
         'app1:prebuild': {
@@ -195,7 +199,9 @@ describe('createTaskGraph', () => {
             project: 'app1',
             target: 'prebuild',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'app1-root',
         },
         'lib1:build': {
@@ -204,7 +210,9 @@ describe('createTaskGraph', () => {
             project: 'lib1',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'lib1-root',
         },
       },
@@ -288,7 +296,9 @@ describe('createTaskGraph', () => {
       ['app1'],
       ['build'],
       'development',
-      {}
+      {
+        __overrides_unparsed__: [],
+      }
     );
     // prebuild should also be in here
     expect(taskGraph).toEqual({
@@ -300,7 +310,9 @@ describe('createTaskGraph', () => {
             project: 'app1',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'app1-root',
         },
         'lib1:build': {
@@ -309,7 +321,9 @@ describe('createTaskGraph', () => {
             project: 'lib1',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'lib1-root',
         },
         'lib2:build': {
@@ -318,7 +332,9 @@ describe('createTaskGraph', () => {
             project: 'lib2',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'lib2-root',
         },
         'lib3:build': {
@@ -327,7 +343,9 @@ describe('createTaskGraph', () => {
             project: 'lib3',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'lib3-root',
         },
       },
@@ -369,7 +387,9 @@ describe('createTaskGraph', () => {
       ['app1'],
       ['build'],
       'development',
-      {}
+      {
+        __overrides_unparsed__: [],
+      }
     );
     // prebuild should also be in here
     expect(taskGraph).toEqual({
@@ -381,7 +401,9 @@ describe('createTaskGraph', () => {
             project: 'app1',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'app1-root',
         },
         'app1:test': {
@@ -390,7 +412,9 @@ describe('createTaskGraph', () => {
             project: 'app1',
             target: 'test',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'app1-root',
         },
       },
@@ -454,7 +478,9 @@ describe('createTaskGraph', () => {
       ['app1'],
       ['build'],
       'development',
-      {}
+      {
+        __overrides_unparsed__: [],
+      }
     );
     expect(taskGraph).toEqual({
       roots: [],
@@ -465,7 +491,9 @@ describe('createTaskGraph', () => {
             project: 'app1',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'app1-root',
         },
         'app3:build': {
@@ -474,7 +502,9 @@ describe('createTaskGraph', () => {
             project: 'app3',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'app3-root',
         },
       },
@@ -535,7 +565,9 @@ describe('createTaskGraph', () => {
       ['app1'],
       ['build'],
       'development',
-      {}
+      {
+        __overrides_unparsed__: [],
+      }
     );
     expect(taskGraph).toEqual({
       roots: ['app3:build'],
@@ -546,7 +578,9 @@ describe('createTaskGraph', () => {
             project: 'app1',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'app1-root',
         },
         'app3:build': {
@@ -555,7 +589,9 @@ describe('createTaskGraph', () => {
             project: 'app3',
             target: 'build',
           },
-          overrides: {},
+          overrides: {
+            __overrides_unparsed__: [],
+          },
           projectRoot: 'app3-root',
         },
       },

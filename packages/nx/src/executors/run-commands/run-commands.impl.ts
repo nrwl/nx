@@ -46,6 +46,7 @@ export interface RunCommandsOptions extends Json {
   args?: string;
   envFile?: string;
   outputPath?: string;
+  __unparsed__: string[];
 }
 
 const propKeys = [
@@ -161,9 +162,9 @@ function normalizeOptions(
     );
   }
   (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
-    c.command = transformCommand(
+    c.command = interpolateArgsIntoCommand(
       c.command,
-      (options as NormalizedRunCommandsOptions).parsedArgs,
+      options as NormalizedRunCommandsOptions,
       c.forwardAllArgs ?? true
     );
   });
@@ -282,23 +283,18 @@ function processEnv(color: boolean) {
   return env;
 }
 
-function transformCommand(
+export function interpolateArgsIntoCommand(
   command: string,
-  args: { [key: string]: string },
+  opts: NormalizedRunCommandsOptions,
   forwardAllArgs: boolean
 ) {
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
-    return command.replace(regex, (_, group: string) => args[group]);
-  } else if (Object.keys(args).length > 0 && forwardAllArgs) {
-    const stringifiedArgs = Object.keys(args)
-      .map((a) =>
-        typeof args[a] === 'string' && args[a].includes(' ')
-          ? `--${a}="${args[a].replace(/"/g, '"')}"`
-          : `--${a}=${args[a]}`
-      )
-      .join(' ');
-    return `${command} ${stringifiedArgs}`;
+    return command.replace(regex, (_, group: string) => opts.parsedArgs[group]);
+  } else if (forwardAllArgs) {
+    return `${command}${
+      opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
+    }`;
   } else {
     return command;
   }

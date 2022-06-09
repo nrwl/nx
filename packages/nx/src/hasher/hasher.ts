@@ -119,11 +119,18 @@ export class Hasher {
   }
 
   hashCommand(task: Task) {
+    const overrides = { ...task.overrides };
+    delete overrides['__overrides_unparsed__'];
+    const sortedOverrides = {};
+    for (let k of Object.keys(overrides).sort()) {
+      sortedOverrides[k] = overrides[k];
+    }
+
     return this.hashing.hashArray([
       task.target.project ?? '',
       task.target.target ?? '',
       task.target.configuration ?? '',
-      JSON.stringify(task.overrides),
+      JSON.stringify(sortedOverrides),
     ]);
   }
 

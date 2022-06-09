@@ -8,7 +8,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
 
-// Ensure that the output takes up the available width of the terminal
+// Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
 
 export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
@@ -50,7 +50,7 @@ export const commandsObject = yargs
     You can skip the use of Nx cache by using the --skip-nx-cache option.`,
     builder: (yargs) => withRunOneOptions(yargs),
     handler: async (args) =>
-      (await import('./run-one')).runOne(process.cwd(), { ...args }),
+      (await import('./run-one')).runOne(process.cwd(), withOverrides(args)),
   })
   .command({
     command: 'run-many',
@@ -62,7 +62,8 @@ export const commandsObject = yargs
         ),
         'run-many'
       ),
-    handler: async (args) => (await import('./run-many')).runMany({ ...args }),
+    handler: async (args) =>
+      (await import('./run-many')).runMany(withOverrides(args)),
   })
   .command({
     command: 'affected',
@@ -75,7 +76,7 @@ export const commandsObject = yargs
         'affected'
       ),
     handler: async (args) =>
-      (await import('./affected')).affected('affected', { ...args }),
+      (await import('./affected')).affected('affected', withOverrides(args)),
   })
   .command({
     command: 'affected:test',
@@ -87,7 +88,7 @@ export const commandsObject = yargs
       ),
     handler: async (args) =>
       (await import('./affected')).affected('affected', {
-        ...args,
+        ...withOverrides(args),
         target: 'test',
       }),
   })
@@ -101,7 +102,7 @@ export const commandsObject = yargs
       ),
     handler: async (args) =>
       (await import('./affected')).affected('affected', {
-        ...args,
+        ...withOverrides(args),
         target: 'build',
       }),
   })
@@ -115,7 +116,7 @@ export const commandsObject = yargs
       ),
     handler: async (args) =>
       (await import('./affected')).affected('affected', {
-        ...args,
+        ...withOverrides(args),
         target: 'lint',
       }),
   })
@@ -129,7 +130,7 @@ export const commandsObject = yargs
       ),
     handler: async (args) =>
       (await import('./affected')).affected('affected', {
-        ...args,
+        ...withOverrides(args),
         target: 'e2e',
       }),
   })
@@ -185,9 +186,10 @@ export const commandsObject = yargs
         'print-affected'
       ),
     handler: async (args) =>
-      (await import('./affected')).affected('print-affected', {
-        ...args,
-      }),
+      (await import('./affected')).affected(
+        'print-affected',
+        withOverrides(args)
+      ),
   })
   .command({
     command: 'daemon',
@@ -540,6 +542,7 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'array',
       coerce: parseCSV,
     })
+
     .option('groupByFolder', {
       describe: 'Group projects by folder in the project graph',
       type: 'boolean',
@@ -562,6 +565,19 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: true,
     });
+}
+
+function withOverrides(args: any): any {
+  const split = process.argv.indexOf('--');
+  if (split > -1) {
+    const overrides = process.argv.slice(split + 1);
+    delete args._;
+    return { ...args, __overrides__: overrides };
+  } else {
+    args['__positional_overrides__'] = args._.slice(1);
+    delete args._;
+    return args;
+  }
 }
 
 function withParallelOption(yargs: yargs.Argv): yargs.Argv {
