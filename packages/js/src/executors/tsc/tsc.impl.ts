@@ -1,3 +1,4 @@
+import { fileExists } from 'nx/src/utils/fileutils';
 import { ExecutorContext } from '@nrwl/devkit';
 import {
   assetGlobsToFiles,
@@ -74,6 +75,10 @@ export async function* tscExecutor(
     dependencies.push(tsLibDependency);
   }
 
+  const packageJsonFileExists = fileExists(
+    join(context.root, projectRoot, 'package.json')
+  );
+
   const assetHandler = new CopyAssetsHandler({
     projectDir: projectRoot,
     rootDir: context.root,
@@ -87,7 +92,11 @@ export async function* tscExecutor(
     const disposePackageJsonChanged = await watchForSingleFileChanges(
       join(context.root, projectRoot),
       'package.json',
-      () => updatePackageJson(options, context, target, dependencies)
+      () => {
+        if (packageJsonFileExists) {
+          updatePackageJson(options, context, target, dependencies);
+        }
+      }
     );
     process.on('exit', async () => {
       await disposeWatchAssetChanges();
@@ -101,7 +110,9 @@ export async function* tscExecutor(
 
   return yield* compileTypeScriptFiles(options, context, async () => {
     await assetHandler.processAllAssetsOnce();
-    updatePackageJson(options, context, target, dependencies);
+    if (packageJsonFileExists) {
+      updatePackageJson(options, context, target, dependencies);
+    }
   });
 }
 
