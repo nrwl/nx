@@ -75,10 +75,6 @@ export async function* tscExecutor(
     dependencies.push(tsLibDependency);
   }
 
-  const packageJsonFileExists = fileExists(
-    join(context.root, projectRoot, 'package.json')
-  );
-
   const assetHandler = new CopyAssetsHandler({
     projectDir: projectRoot,
     rootDir: context.root,
@@ -92,11 +88,7 @@ export async function* tscExecutor(
     const disposePackageJsonChanged = await watchForSingleFileChanges(
       join(context.root, projectRoot),
       'package.json',
-      () => {
-        if (packageJsonFileExists) {
-          updatePackageJson(options, context, target, dependencies);
-        }
-      }
+      () => updatePackageJson(options, context, target, dependencies)
     );
     process.on('exit', async () => {
       await disposeWatchAssetChanges();
@@ -109,6 +101,9 @@ export async function* tscExecutor(
   }
 
   return yield* compileTypeScriptFiles(options, context, async () => {
+    const packageJsonFileExists = fileExists(
+      join(context.root, projectRoot, 'package.json')
+    );
     await assetHandler.processAllAssetsOnce();
     if (packageJsonFileExists) {
       updatePackageJson(options, context, target, dependencies);
