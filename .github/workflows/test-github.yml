@@ -1,0 +1,24 @@
+name: Test Github
+
+on:
+  pull_request:
+
+env:
+  NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3
+  MY_CUSTOM_VAR: 'foobar'
+
+jobs:
+  main:
+    name: Nx Cloud - Main Job
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.4
+    with:
+      main-branch-name: 'master'
+      parallel-commands: |
+        yarn nx-cloud record -- yarn nx workspace-lint
+        yarn nx-cloud record -- echo "The values are $NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT and $MY_CUSTOM_VAR"
+
+  agents:
+    name: Nx Cloud - Agents
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.4
+    with:
+      number-of-agents: 3
