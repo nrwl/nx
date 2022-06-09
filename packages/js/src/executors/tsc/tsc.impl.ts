@@ -1,4 +1,3 @@
-import { fileExists } from 'nx/src/utils/fileutils';
 import { ExecutorContext } from '@nrwl/devkit';
 import {
   assetGlobsToFiles,
@@ -101,13 +100,8 @@ export async function* tscExecutor(
   }
 
   return yield* compileTypeScriptFiles(options, context, async () => {
-    const packageJsonFileExists = fileExists(
-      join(context.root, projectRoot, 'package.json')
-    );
     await assetHandler.processAllAssetsOnce();
-    if (packageJsonFileExists) {
-      updatePackageJson(options, context, target, dependencies);
-    }
+    updatePackageJson(options, context, target, dependencies);
   });
 }
 
