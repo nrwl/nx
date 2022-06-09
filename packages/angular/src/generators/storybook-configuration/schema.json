@@ -42,9 +42,10 @@
       "enum": ["eslint", "none"],
       "default": "eslint"
     },
-    "projectBuildConfig": {
-      "description": "Provide a custom projectBuildConfig for the Angular executor. If left blank, Nx will use the default.",
-      "type": "string"
+    "tsConfiguration": {
+      "type": "boolean",
+      "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
+      "default": false
     }
   },
   "additionalProperties": false,
