@@ -256,6 +256,31 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.2.3": {
+      "version": "14.2.3-beta.0",
+      "packages": {
+        "next": {
+          "version": "12.1.6",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.1.6",
+          "alwaysAddToPackageJson": false
+        },
+        "sass": {
+          "version": "1.52.3",
+          "alwaysAddToPackageJson": false
+        },
+        "less-loader": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "stylus-loader": {
+          "version": "7.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
