@@ -103,7 +103,7 @@ export class ProcessTasks {
                 depProject,
                 dependencyConfig.target,
                 resolvedConfiguration,
-                {}
+                { __overrides_unparsed__: [] }
               );
               this.tasks[depTargetId] = newTask;
               this.dependencies[depTargetId] = [];
@@ -139,7 +139,7 @@ export class ProcessTasks {
               selfProject,
               dependencyConfig.target,
               resolvedConfiguration,
-              {}
+              { __overrides_unparsed__: [] }
             );
             this.tasks[selfTaskId] = newTask;
             this.dependencies[selfTaskId] = [];

@@ -21,7 +21,7 @@ import { TargetDependencyConfig } from 'nx/src/config/workspace-json-project-jso
 
 export async function affected(
   command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
-  parsedArgs: yargs.Arguments & RawNxArgs,
+  args: { [k: string]: any },
   extraTargetDependencies: Record<
     string,
     (TargetDependencyConfig | string)[]
@@ -30,10 +30,10 @@ export async function affected(
   performance.mark('command-execution-begins');
   const env = readEnvironment();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
-    parsedArgs,
+    args,
     'affected',
     {
-      printWarnings: command !== 'print-affected' && !parsedArgs.plain,
+      printWarnings: command !== 'print-affected' && !args.plain,
     },
     env.nxJson
   );
@@ -49,7 +49,7 @@ export async function affected(
         const apps = projects
           .filter((p) => p.type === 'app')
           .map((p) => p.name);
-        if (parsedArgs.plain) {
+        if (args.plain) {
           console.log(apps.join(' '));
         } else {
           if (apps.length) {
@@ -69,7 +69,7 @@ export async function affected(
         const libs = projects
           .filter((p) => p.type === 'lib')
           .map((p) => p.name);
-        if (parsedArgs.plain) {
+        if (args.plain) {
           console.log(libs.join(' '));
         } else {
           if (libs.length) {
@@ -87,7 +87,7 @@ export async function affected(
 
       case 'graph':
         const projectNames = projects.map((p) => p.name);
-        await generateGraph(parsedArgs as any, projectNames);
+        await generateGraph(args as any, projectNames);
         break;
 
       case 'print-affected':
@@ -128,7 +128,7 @@ export async function affected(
       }
     }
   } catch (e) {
-    printError(e, parsedArgs.verbose);
+    printError(e, args.verbose);
     process.exit(1);
   }
 }

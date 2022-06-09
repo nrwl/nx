@@ -53,20 +53,15 @@ describe('Run Commands', () => {
       config.targets.echo = {
         executor: '@nrwl/workspace:run-commands',
         options: {
-          command: 'echo',
+          command: 'echo --var1={args.var1}',
           var1: 'a',
-          var2: 'b',
-          'var-hyphen': 'c',
-          varCamelCase: 'd',
         },
       };
       return config;
     });
 
     const result = runCLI(`run ${mylib}:echo`, { silent: true });
-    expect(result).toContain(
-      '--var1=a --var2=b --var-hyphen=c --varCamelCase=d'
-    );
+    expect(result).toContain('--var1=a');
   }, 120000);
 
   it('should interpolate provided arguments', async () => {

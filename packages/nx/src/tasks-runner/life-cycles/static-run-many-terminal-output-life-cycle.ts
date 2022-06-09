@@ -3,6 +3,7 @@ import { TaskStatus } from '../tasks-runner';
 import { getPrintableCommandArgsForTask } from '../utils';
 import type { LifeCycle } from '../life-cycle';
 import { Task } from '../../config/task-graph';
+import { formatFlags } from './formatting-utils';
 
 /**
  * The following life cycle's outputs are static, meaning no previous content
@@ -42,9 +43,9 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     );
     if (Object.keys(this.taskOverrides).length > 0) {
       bodyLines.push('');
-      bodyLines.push(`${output.dim('With flags:')}`);
+      bodyLines.push(`${output.dim('With additional flags:')}`);
       Object.entries(this.taskOverrides)
-        .map(([flag, value]) => `  --${flag}=${value}`)
+        .map(([flag, value]) => formatFlags('', flag, value))
         .forEach((arg) => bodyLines.push(arg));
     }
 

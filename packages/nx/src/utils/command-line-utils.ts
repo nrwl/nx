@@ -2,13 +2,11 @@ import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
 import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
-import { NxAffectedConfig, NxJsonConfiguration } from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 import { execSync } from 'child_process';
-import {
-  readAllWorkspaceConfiguration,
-  readNxJson,
-} from '../config/configuration';
+import { readAllWorkspaceConfiguration } from '../config/configuration';
 
+//
 export function names(name: string): {
   name: string;
   className: string;
@@ -136,34 +134,69 @@ export interface NxArgs {
 const ignoreArgs = ['$0', '_'];
 
 export function splitArgsIntoNxArgsAndOverrides(
-  args: yargs.Arguments,
+  args: { [k: string]: any },
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
   options = { printWarnings: true },
   nxJson: NxJsonConfiguration
 ): { nxArgs: NxArgs; overrides: yargs.Arguments } {
+  if (!args.__overrides__ && args._) {
+    // required for backwards compatibility
+    args.__overrides__ = args._;
+    delete args._;
+  }
+
   const nxSpecific =
     mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
 
+  let explicitOverrides;
+  if (args.__overrides__) {
+    explicitOverrides = yargsParser(args.__overrides__ as string[], {
+      configuration: {
+        'camel-case-expansion': false,
+        'dot-notation': false,
+      },
+    });
+    if (!explicitOverrides._ || explicitOverrides._.length === 0) {
+      delete explicitOverrides._;
+    }
+  }
+  const overridesFromMainArgs = {} as any;
+  if (args['__positional_overrides__']) {
+    overridesFromMainArgs['_'] = args['__positional_overrides__'];
+  }
   const nxArgs: RawNxArgs = {};
-  const overrides = yargsParser(args._ as string[], {
-    configuration: {
-      'camel-case-expansion': false,
-      'dot-notation': false,
-    },
-  });
-  // This removes the overrides from the nxArgs._
-  args._ = overrides._;
-
-  delete overrides._;
-
   Object.entries(args).forEach(([key, value]) => {
     const camelCased = names(key).propertyName;
     if (nxSpecific.includes(camelCased) || camelCased.startsWith('nx')) {
       if (value !== undefined) nxArgs[camelCased] = value;
-    } else if (!ignoreArgs.includes(key)) {
-      overrides[key] = value;
+    } else if (
+      !ignoreArgs.includes(key) &&
+      key !== '__positional_overrides__' &&
+      key !== '__overrides__'
+    ) {
+      overridesFromMainArgs[key] = value;
     }
   });
+
+  let overrides;
+  if (explicitOverrides) {
+    overrides = explicitOverrides;
+    overrides['__overrides_unparsed__'] = args.__overrides__;
+    if (Object.keys(overridesFromMainArgs).length > 0) {
+      const s = Object.keys(overridesFromMainArgs).join(', ');
+      output.warn({
+        title: `Nx didn't recognize the following args: ${s}`,
+        bodyLines: [
+          "When using '--' all executor args have to be defined after '--'.",
+        ],
+      });
+    }
+  } else {
+    overrides = overridesFromMainArgs;
+    overrides['__overrides_unparsed__'] = serializeArgsIntoCommandLine(
+      overridesFromMainArgs
+    );
+  }
 
   if (mode === 'run-many') {
     if (!nxArgs.projects) {
@@ -210,10 +243,12 @@ export function splitArgsIntoNxArgsAndOverrides(
       !nxArgs.base &&
       !nxArgs.head &&
       !nxArgs.all &&
-      args._.length >= 3
+      overridesFromMainArgs._ &&
+      overridesFromMainArgs._.length >= 2
     ) {
-      nxArgs.base = args._[1] as string;
-      nxArgs.head = args._[2] as string;
+      throw new Error(
+        `Nx no longer supports using positional arguments for base and head. Please use --base and --head instead.`
+      );
     }
 
     // Allow setting base and head via environment variables (lower priority then direct command arguments)
@@ -316,6 +351,8 @@ function getUncommittedFiles(): string[] {
   return parseGitOutput(`git diff --name-only --relative HEAD .`);
 }
 
+``;
+
 function getUntrackedFiles(): string[] {
   return parseGitOutput(`git ls-files --others --exclude-standard`);
 }
@@ -351,4 +388,20 @@ function parseGitOutput(command: string): string[] {
 export function getProjectRoots(projectNames: string[]): string[] {
   const { projects } = readAllWorkspaceConfiguration();
   return projectNames.map((name) => projects[name].root);
+}
+
+export function serializeArgsIntoCommandLine(args: {
+  [k: string]: any;
+}): string[] {
+  const r = args['_'] ? [...args['_']] : [];
+  Object.keys(args).forEach((a) => {
+    if (a !== '_') {
+      r.push(
+        typeof args[a] === 'string' && args[a].includes(' ')
+          ? `--${a}="${args[a].replace(/"/g, '"')}"`
+          : `--${a}=${args[a]}`
+      );
+    }
+  });
+  return r;
 }

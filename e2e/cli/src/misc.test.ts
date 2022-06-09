@@ -1,95 +1,15 @@
 import {
-  getPublishedVersion,
   isNotWindows,
   newProject,
   readFile,
   readJson,
   runCLI,
-  runCLIAsync,
   runCommand,
   tmpProjPath,
-  uniq,
   updateFile,
-  updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { renameSync } from 'fs';
 import { packagesWeCareAbout } from 'nx/src/command-line/report';
-
-describe('Cli', () => {
-  beforeEach(() => newProject());
-
-  it('should execute long running tasks', async () => {
-    const myapp = uniq('myapp');
-    runCLI(`generate @nrwl/web:app ${myapp}`);
-    updateProjectConfig(myapp, (c) => {
-      c.targets['counter'] = {
-        executor: '@nrwl/workspace:counter',
-        options: {
-          to: 2,
-        },
-      };
-      return c;
-    });
-
-    const success = runCLI(`counter ${myapp} --result=true`);
-    expect(success).toContain('0');
-    expect(success).toContain('1');
-
-    expect(() => runCLI(`counter ${myapp} --result=false`)).toThrowError();
-  });
-
-  it('should run npm scripts', async () => {
-    const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/node:lib ${mylib}`);
-
-    updateProjectConfig(mylib, (j) => {
-      delete j.targets;
-      return j;
-    });
-
-    updateFile(
-      `libs/${mylib}/package.json`,
-      JSON.stringify({
-        name: 'mylib1',
-        scripts: { 'echo:dev': `echo ECHOED` },
-      })
-    );
-
-    const { stdout } = await runCLIAsync(`echo:dev ${mylib} --a=123`, {
-      silent: true,
-    });
-    expect(stdout).toMatch(/ECHOED "?--a=123"?/);
-  }, 1000000);
-
-  it('should show help', async () => {
-    const myapp = uniq('myapp');
-    runCLI(`generate @nrwl/web:app ${myapp}`);
-
-    let mainHelp = runCLI(`--help`);
-    expect(mainHelp).toContain('Run a target for a project');
-    expect(mainHelp).toContain('Run target for affected projects');
-
-    mainHelp = runCLI(`help`);
-    expect(mainHelp).toContain('Run a target for a project');
-    expect(mainHelp).toContain('Run target for affected projects');
-
-    const genHelp = runCLI(`g @nrwl/web:app --help`);
-    expect(genHelp).toContain(
-      'Find more information and examples at: https://nx.dev/packages/web/generators/application'
-    );
-
-    const buildHelp = runCLI(`build ${myapp} --help`);
-    expect(buildHelp).toContain(
-      'Find more information and examples at: https://nx.dev/packages/web/executors/webpack'
-    );
-
-    const affectedHelp = runCLI(`affected --help`);
-    expect(affectedHelp).toContain('Run target for affected projects');
-
-    const version = runCLI(`--version`);
-    expect(version).toContain(getPublishedVersion()); // stub value
-  }, 120000);
-});
 
 describe('report', () => {
   beforeEach(() => newProject());

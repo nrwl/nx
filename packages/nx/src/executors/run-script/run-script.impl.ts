@@ -5,6 +5,7 @@ import * as path from 'path';
 
 export interface RunScriptOptions {
   script: string;
+  __unparsed__: string[];
 }
 
 export default async function (
@@ -12,16 +13,8 @@ export default async function (
   context: ExecutorContext
 ) {
   const pm = getPackageManagerCommand();
-  const script = options.script;
-  delete options.script;
-
-  const args = [];
-  Object.keys(options).forEach((r) => {
-    args.push(`--${r}=${options[r]}`);
-  });
-
   try {
-    execSync(pm.run(script, args.join(' ')), {
+    execSync(pm.run(options.script, options.__unparsed__.join(' ')), {
       stdio: ['inherit', 'inherit', 'inherit'],
       cwd: path.join(
         context.root,

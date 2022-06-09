@@ -26,7 +26,10 @@ type PropertyDescription = {
     | string[]
     | { [key: string]: string | number | boolean | string[] };
   $ref?: string;
-  $default?: { $source: 'argv'; index: number } | { $source: 'projectName' };
+  $default?:
+    | { $source: 'argv'; index: number }
+    | { $source: 'projectName' }
+    | { $source: 'unparsed' };
   additionalProperties?: boolean;
   'x-prompt'?:
     | string
@@ -541,7 +544,6 @@ export function combineOptionsForExecutor(
   convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
-    (commandLineOpts['_'] as string[]) || [],
     defaultProjectName,
     relativeCwd
   );
@@ -579,7 +581,6 @@ export async function combineOptionsForGenerator(
   convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
-    (commandLineOpts['_'] as string[]) || [],
     defaultProjectName,
     relativeCwd
   );
@@ -615,10 +616,11 @@ export function warnDeprecations(
 export function convertSmartDefaultsIntoNamedParams(
   opts: { [k: string]: any },
   schema: Schema,
-  argv: string[],
   defaultProjectName: string | null,
   relativeCwd: string | null
 ) {
+  const argv = opts['_'] || [];
+  const usedPositionalArgs = {};
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (
       opts[k] === undefined &&
@@ -626,7 +628,10 @@ export function convertSmartDefaultsIntoNamedParams(
       v.$default.$source === 'argv' &&
       argv[v.$default.index]
     ) {
+      usedPositionalArgs[v.$default.index] = true;
       opts[k] = coerceType(v, argv[v.$default.index]);
+    } else if (v.$default !== undefined && v.$default.$source === 'unparsed') {
+      opts[k] = opts['__overrides_unparsed__'];
     } else if (
       opts[k] === undefined &&
       v.$default !== undefined &&
@@ -643,7 +648,18 @@ export function convertSmartDefaultsIntoNamedParams(
       opts[k] = relativeCwd.replace(/\\/g, '/');
     }
   });
-  delete opts['_'];
+  const leftOverPositionalArgs = [];
+  for (let i = 0; i < argv.length; ++i) {
+    if (!usedPositionalArgs[i]) {
+      leftOverPositionalArgs.push(argv[i]);
+    }
+  }
+  if (leftOverPositionalArgs.length === 0) {
+    delete opts['_'];
+  } else {
+    opts['_'] = leftOverPositionalArgs;
+  }
+  delete opts['__overrides_unparsed__'];
 }
 
 function getGeneratorDefaults(

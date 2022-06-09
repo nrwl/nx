@@ -12,7 +12,7 @@ import { readEnvironment } from './read-environment';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 
 export async function runMany(
-  parsedArgs: yargs.Arguments & RawNxArgs,
+  args: { [k: string]: any },
   extraTargetDependencies: Record<
     string,
     (TargetDependencyConfig | string)[]
@@ -21,7 +21,7 @@ export async function runMany(
   performance.mark('command-execution-begins');
   const env = readEnvironment();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
-    parsedArgs,
+    args,
     'run-many',
     { printWarnings: true },
     env.nxJson

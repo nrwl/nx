@@ -34,13 +34,16 @@ async function getTerminalOutputLifeCycle(
     process.env.NX_VERBOSE_LOGGING !== 'true' &&
     process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false';
 
+  const overridesWithoutHidden = { ...overrides };
+  delete overridesWithoutHidden['__overrides_unparsed__'];
+
   if (isRunOne) {
     if (useDynamicOutput) {
       return await createRunOneDynamicOutputRenderer({
         initiatingProject,
         tasks,
         args: nxArgs,
-        overrides,
+        overrides: overridesWithoutHidden,
       });
     }
     return {
@@ -58,7 +61,7 @@ async function getTerminalOutputLifeCycle(
         projectNames,
         tasks,
         args: nxArgs,
-        overrides,
+        overrides: overridesWithoutHidden,
       });
     } else {
       return {
@@ -66,7 +69,7 @@ async function getTerminalOutputLifeCycle(
           projectNames,
           tasks,
           nxArgs,
-          overrides
+          overridesWithoutHidden
         ),
         renderIsDone: Promise.resolve(),
       };
