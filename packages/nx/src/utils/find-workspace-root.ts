@@ -11,19 +11,13 @@ import { workspaceRootInner } from './workspace-root';
 export function findWorkspaceRoot(dir: string): WorkspaceTypeAndRoot | null {
   const r = workspaceRootInner(dir, null);
 
+  if (r === null) return null;
+
   if (existsSync(path.join(r, 'angular.json'))) {
     return { type: 'angular', dir: r };
-  }
-
-  if (existsSync(path.join(r, 'nx.json'))) {
+  } else {
     return { type: 'nx', dir: r };
   }
-
-  if (existsSync(path.join(r, 'node_modules', 'nx', 'package.json'))) {
-    return { type: 'nx', dir: r };
-  }
-
-  return null;
 }
 
 export interface WorkspaceTypeAndRoot {

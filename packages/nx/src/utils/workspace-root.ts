@@ -4,7 +4,7 @@ import { fileExists } from './fileutils';
 /**
  * The root of the workspace
  */
-export const workspaceRoot = workspaceRootInner(__dirname, null);
+export const workspaceRoot = workspaceRootInner(process.cwd(), process.cwd());
 
 /**
  * The root of the workspace.
@@ -19,7 +19,7 @@ export function workspaceRootInner(
 ): string {
   if (process.env.NX_WORKSPACE_ROOT_PATH)
     return process.env.NX_WORKSPACE_ROOT_PATH;
-  if (path.dirname(dir) === dir) return candidateRoot || process.cwd();
+  if (path.dirname(dir) === dir) return candidateRoot;
   if (fileExists(path.join(dir, 'nx.json'))) {
     return dir;
   } else if (fileExists(path.join(dir, 'node_modules', 'nx', 'package.json'))) {
