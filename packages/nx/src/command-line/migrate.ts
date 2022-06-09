@@ -1043,7 +1043,7 @@ async function runNxMigration(root: string, packageName: string, name: string) {
   if (!g[name]) {
     const source = collection.generators ? 'generators' : 'schematics';
     throw new Error(
-      `Migration not found by name="${name}" for package="${packageName}" in "${source}", collectionPath="${collectionPath}"`
+      `Unable to determine implementation path for "${collectionPath}:${name}" using collection.${source}`
     );
   }
   const implRelativePath = g[name].implementation || g[name].factory;
