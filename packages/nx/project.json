@@ -89,7 +89,10 @@
           "packages/nx/**/*.spec.tsx",
           "packages/nx/**/*.spec.js",
           "packages/nx/**/*.spec.jsx",
-          "packages/nx/**/*.d.ts"
+          "packages/nx/**/*.d.ts",
+          "packages/nx/executors.json",
+          "packages/nx/package.json",
+          "packages/nx/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

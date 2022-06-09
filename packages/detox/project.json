@@ -14,7 +14,11 @@
           "packages/detox/**/*.spec.jsx",
           "packages/detox/**/*.d.ts",
           "packages/detox/**/executors/**/schema.json",
-          "packages/detox/**/generators/**/schema.json"
+          "packages/detox/**/generators/**/schema.json",
+          "packages/detox/generators.json",
+          "packages/detox/executors.json",
+          "packages/detox/package.json",
+          "packages/detox/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

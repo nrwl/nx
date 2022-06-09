@@ -74,7 +74,10 @@
           "packages/express/**/*.spec.jsx",
           "packages/express/**/*.d.ts",
           "packages/express/**/executors/**/schema.json",
-          "packages/express/**/generators/**/schema.json"
+          "packages/express/**/generators/**/schema.json",
+          "packages/express/generators.json",
+          "packages/express/package.json",
+          "packages/express/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

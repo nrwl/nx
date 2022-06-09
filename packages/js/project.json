@@ -10,7 +10,11 @@
         "lintFilePatterns": [
           "packages/js/**/*.ts",
           "packages/js/**/executors/**/schema.json",
-          "packages/js/**/generators/**/schema.json"
+          "packages/js/**/generators/**/schema.json",
+          "packages/js/generators.json",
+          "packages/js/executors.json",
+          "packages/js/package.json",
+          "packages/js/migrations.json"
         ]
       }
     },

@@ -79,7 +79,11 @@
           "packages/next/**/*.spec.jsx",
           "packages/next/**/*.d.ts",
           "packages/next/**/executors/**/schema.json",
-          "packages/next/**/generators/**/schema.json"
+          "packages/next/**/generators/**/schema.json",
+          "packages/next/generators.json",
+          "packages/next/executors.json",
+          "packages/next/package.json",
+          "packages/next/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

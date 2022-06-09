@@ -99,7 +99,11 @@
           "packages/workspace/**/*.spec.jsx",
           "packages/workspace/**/*.d.ts",
           "packages/workspace/**/executors/**/schema.json",
-          "packages/workspace/**/generators/**/schema.json"
+          "packages/workspace/**/generators/**/schema.json",
+          "packages/workspace/generators.json",
+          "packages/workspace/executors.json",
+          "packages/workspace/package.json",
+          "packages/workspace/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]
