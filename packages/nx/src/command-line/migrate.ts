@@ -1040,12 +1040,8 @@ async function runNxMigration(root: string, packageName: string, name: string) {
 
   const collection = readJsonFile<MigrationsJson>(collectionPath);
   const g = collection.generators || collection.schematics;
-
-  let implRelativePath: string;
-  try {
-    const c = g[name];
-    implRelativePath = c.implementation || c.factory;
-  } catch (e) {
+  const implRelativePath = g[name]?.implementation || g[name]?.factory;
+  if (!implRelativePath) {
     throw new Error(
       `Can not get relative path for migration's implementation as collection not found by name="${name}" for package="${packageName}", collectionPath="${collectionPath}"`
     );
