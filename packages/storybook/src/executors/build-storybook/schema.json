@@ -28,10 +28,6 @@
       "type": "string",
       "description": "The output path of the generated files."
     },
-    "projectBuildConfig": {
-      "type": "string",
-      "description": "Workspace project where Storybook reads the Webpack config from."
-    },
     "styles": {
       "type": "array",
       "description": "Global styles to be included in the build.",

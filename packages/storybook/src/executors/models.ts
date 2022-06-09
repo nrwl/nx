@@ -15,6 +15,5 @@ export interface CommonNxStorybookConfig {
     | '@storybook/vue3'
     | '@storybook/svelte'
     | '@storybook/react-native';
-  projectBuildConfig?: string;
   config: StorybookConfig;
 }

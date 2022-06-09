@@ -133,10 +133,6 @@
             "enum": ["eslint", "tslint", "none"],
             "default": "eslint"
           },
-          "projectBuildConfig": {
-            "description": "Provide a custom projectBuildConfig for the Angular executor. If left blank, Nx will use the default.",
-            "type": "string"
-          },
           "js": {
             "type": "boolean",
             "description": "Generate JavaScript story files rather than TypeScript story files.",
@@ -368,10 +364,6 @@
           "outputPath": {
             "type": "string",
             "description": "The output path of the generated files."
-          },
-          "projectBuildConfig": {
-            "type": "string",
-            "description": "Workspace project where Storybook reads the Webpack config from."
           },
           "styles": {
             "type": "array",
