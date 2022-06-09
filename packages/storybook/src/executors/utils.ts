@@ -1,8 +1,10 @@
 import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { gte } from 'semver';
+import ts = require('typescript');
 import { findOrCreateConfig } from '../utils/utilities';
 import { CommonNxStorybookConfig } from './models';
 
@@ -67,19 +69,14 @@ function reactWebpack5Check(options: CommonNxStorybookConfig) {
       encoding: 'utf8',
     });
 
-    if (
-      !storybookConfig.match(/builder: ('webpack5'|"webpack5"|`webpack5`)/g)
-    ) {
-      // storybook needs to be upgraded to webpack 5
-      logger.warn(`
-It looks like you use Webpack 5 but your Storybook setup is not configured to leverage that
-and thus falls back to Webpack 4.
-Make sure you upgrade your Storybook config to use Webpack 5.
+    const source = ts.createSourceFile(
+      storybookConfigFilePath,
+      storybookConfig,
+      ts.ScriptTarget.Latest,
+      true
+    );
 
-  - https://gist.github.com/shilman/8856ea1786dcd247139b47b270912324#upgrade
-      
-`);
-    }
+    findBuilderInMainJsTs(source);
   }
 }
 
@@ -110,7 +107,7 @@ function webpackFinalPropertyCheck(options: CommonNxStorybookConfig) {
   You have a webpack.config.js files in your Storybook configuration:
   ${placesToCheck.map((x) => `- "${x.path}"`).join('\n  ')}
 
-  Consider switching to the "webpackFinal" property declared in "main.js" instead.
+  Consider switching to the "webpackFinal" property declared in "main.js" (or "main.ts") instead.
   ${
     options.uiFramework === '@storybook/react'
       ? 'https://nx.dev/storybook/migrate-webpack-final-react'
@@ -136,4 +133,35 @@ export function resolveCommonStorybookOptionMapper(
   };
 
   return storybookOptions;
+}
+
+export function findBuilderInMainJsTs(storybookConfig: ts.SourceFile) {
+  const importArray = findNodes(storybookConfig, [
+    ts.SyntaxKind.PropertyAssignment,
+  ]);
+  let builderIsSpecified = false;
+  importArray.forEach((parent) => {
+    const identifier = findNodes(parent, ts.SyntaxKind.Identifier);
+    const sbBuilder = findNodes(parent, ts.SyntaxKind.StringLiteral);
+    const builderText = sbBuilder?.[0]?.getText() ?? '';
+    if (identifier[0].getText() === 'builder') {
+      builderIsSpecified = true;
+      if (
+        builderText.includes('webpack') &&
+        !builderText.includes('webpack5')
+      ) {
+        builderIsSpecified = false;
+      }
+    }
+  });
+  if (!builderIsSpecified) {
+    logger.warn(`
+    It looks like you use Webpack 5 but your Storybook setup is not configured to leverage that
+    and thus falls back to Webpack 4.
+    Make sure you upgrade your Storybook config to use Webpack 5.
+    
+      - https://gist.github.com/shilman/8856ea1786dcd247139b47b270912324#upgrade
+          
+    `);
+  }
 }
