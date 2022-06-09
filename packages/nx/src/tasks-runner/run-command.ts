@@ -255,6 +255,12 @@ export function getRunner(
 } {
   let runner = nxArgs.runner;
   runner = runner || 'default';
+  if (!nxJson.tasksRunnerOptions) {
+    output.error({
+      title: `Could not find any runner configurations in nx.json`,
+    });
+    process.exit(1);
+  }
   if (nxJson.tasksRunnerOptions[runner]) {
     let modulePath: string = nxJson.tasksRunnerOptions[runner].runner;
 
