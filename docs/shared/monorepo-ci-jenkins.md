@@ -123,6 +123,6 @@ pipeline {
 }
 ```
 
-Learn more about [configuring your CI](/nx-cloud/set-up/set-up-dte#cicd-examples) environment using Nx Cloud with [Distributed Caching](/nx-cloud/set-up/set-up-caching) and [Distributed Task Execution](/nx-cloud/set-up/set-up-dte) in the Nx Cloud docs.
+Learn more about configuring your CI environment using Nx Cloud with [Distributed Caching](/nx-cloud/set-up/set-up-caching) and [Distributed Task Execution](/nx-cloud/set-up/set-up-dte) in the Nx Cloud docs.
 
 </div>

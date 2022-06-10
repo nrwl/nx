@@ -86,6 +86,6 @@ jobs:
 
 You can also use our [ci-workflow generator](https://nx.dev/packages/workspace/generators/ci-workflow) to generate the workflow file.
 
-Learn more about [configuring your CI](/nx-cloud/set-up/set-up-dte#cicd-examples) environment using Nx Cloud with [Distributed Caching](/nx-cloud/set-up/set-up-caching) and [Distributed Task Execution](/nx-cloud/set-up/set-up-dte) in the Nx Cloud docs.
+Learn more about configuring your CI environment using Nx Cloud with [Distributed Caching](/nx-cloud/set-up/set-up-caching) and [Distributed Task Execution](/nx-cloud/set-up/set-up-dte) in the Nx Cloud docs.
 
 </div>
