@@ -33,11 +33,7 @@ export const presetSchematic = convertNxGenerator(presetGenerator);
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  if (
-    options.preset === Preset.Empty ||
-    options.preset === Preset.Apps ||
-    options.preset === Preset.TS
-  ) {
+  if (options.preset === Preset.Empty || options.preset === Preset.Apps) {
     return;
   } else if (options.preset === Preset.Angular) {
     const {
@@ -178,6 +174,13 @@ async function createPreset(tree: Tree, options: Schema) {
     if (options.preset === Preset.Core) {
       tree.delete('workspace.json');
     }
+  } else if (options.preset === Preset.TS) {
+    const c = readWorkspaceConfiguration(tree);
+    c.workspaceLayout = {
+      appsDir: 'packages',
+      libsDir: 'packages',
+    };
+    updateWorkspaceConfiguration(tree, c);
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }
