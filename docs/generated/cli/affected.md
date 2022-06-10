@@ -171,6 +171,12 @@ Type: boolean
 
 Untracked changes
 
+### stashed
+
+Type: boolean
+
+Git stashed changes
+
 ### verbose
 
 Print additional error stack trace on failure

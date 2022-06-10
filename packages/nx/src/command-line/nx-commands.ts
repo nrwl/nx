@@ -381,6 +381,11 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: undefined,
     })
+    .option('staged', {
+      describe: 'Uncommitted changes',
+      type: 'boolean',
+      default: undefined,
+    })
     .option('all', {
       describe: 'All projects',
       type: 'boolean',
@@ -404,7 +409,7 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       ['base', 'head'],
       'or using --base=[SHA1] --head=[SHA2] (affected by the committed changes):'
     )
-    .group(['files', 'uncommitted', 'untracked'], 'or using:')
+    .group(['files', 'uncommitted', 'untracked', 'staged'], 'or using:')
     .implies('head', 'base')
     .option('exclude', {
       describe: 'Exclude certain projects from being processed',
@@ -448,10 +453,11 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       default: false,
     })
     .conflicts({
-      files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
-      untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
-      uncommitted: ['files', 'untracked', 'base', 'head', 'all'],
-      all: ['files', 'untracked', 'uncommitted', 'base', 'head'],
+      files: ['staged', 'uncommitted', 'untracked', 'base', 'head', 'all'],
+      untracked: ['staged', 'uncommitted', 'files', 'base', 'head', 'all'],
+      uncommitted: ['staged', 'files', 'untracked', 'base', 'head', 'all'],
+      staged: ['uncommitted', 'files', 'untracked', 'base', 'head', 'all'],
+      all: ['staged', 'files', 'untracked', 'uncommitted', 'base', 'head'],
     });
 }
 

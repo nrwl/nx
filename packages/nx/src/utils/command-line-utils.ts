@@ -92,6 +92,7 @@ const runAffected: string[] = [
   ...runOne,
   'untracked',
   'uncommitted',
+  'staged',
   'all',
   'base',
   'head',
@@ -112,6 +113,7 @@ export interface NxArgs {
   parallel?: number;
   untracked?: boolean;
   uncommitted?: boolean;
+  staged?: boolean;
   all?: boolean;
   base?: string;
   head?: string;
@@ -207,6 +209,7 @@ export function splitArgsIntoNxArgsAndOverrides(
       !nxArgs.files &&
       !nxArgs.uncommitted &&
       !nxArgs.untracked &&
+      !nxArgs.staged &&
       !nxArgs.base &&
       !nxArgs.head &&
       !nxArgs.all &&
@@ -247,6 +250,7 @@ export function splitArgsIntoNxArgsAndOverrides(
         !nxArgs.head &&
         !nxArgs.files &&
         !nxArgs.uncommitted &&
+        !nxArgs.staged &&
         !nxArgs.untracked &&
         !nxArgs.all
       ) {
@@ -281,7 +285,7 @@ export function splitArgsIntoNxArgsAndOverrides(
 }
 
 export function parseFiles(options: NxArgs): { files: string[] } {
-  const { files, uncommitted, untracked, base, head } = options;
+  const { files, uncommitted, untracked, staged, base, head } = options;
 
   if (files) {
     return {
@@ -294,6 +298,10 @@ export function parseFiles(options: NxArgs): { files: string[] } {
   } else if (untracked) {
     return {
       files: getUntrackedFiles(),
+    };
+  } else if (staged) {
+    return {
+      files: getStagedFiles(),
     };
   } else if (base && head) {
     return {
@@ -318,6 +326,10 @@ function getUncommittedFiles(): string[] {
 
 function getUntrackedFiles(): string[] {
   return parseGitOutput(`git ls-files --others --exclude-standard`);
+}
+
+function getStagedFiles(): string[] {
+  return parseGitOutput(`git diff --name-only --cached`);
 }
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
