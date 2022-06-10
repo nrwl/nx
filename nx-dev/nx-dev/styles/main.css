@@ -185,17 +185,17 @@ iframe[src*='youtube'] {
   visibility: visible;
 }
 
-
 /* Nx Cloud section */
 .nx-cloud-section {
   border-left-width: 0.25em;
-  border-left-color:hsla(162, 47%, 50%, 1);
+  border-left-color: hsla(162, 47%, 50%, 1);
   padding-left: 1em;
   margin-left: -1.25em;
 }
 
 .nx-cloud-section h2 {
-  background: url('/documentation/shared/nx-cloud-logo-horizontal-white.svg') no-repeat left center;
+  background: url('/documentation/shared/nx-cloud-logo-horizontal-white.svg')
+    no-repeat left center;
   background-size: contain;
   padding-left: 40px;
 }
