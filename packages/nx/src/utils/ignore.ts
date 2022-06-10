@@ -127,11 +127,15 @@ function combineIgnorePatterns(ignoreFiles: IgnoreFile[]): string[] {
 
 function parseIgnoreFile(file: IgnoreFile): string[] {
   const base = normalizePath(path.dirname(file.path));
-
-  return file.content
+  const patterns = file.content
     .split(/\r?\n/)
-    .filter((line) => line && !line.startsWith('#'))
-    .map((pattern) => applyBaseToPattern(pattern, base));
+    .filter((line) => line && !line.startsWith('#'));
+
+  if (base === '.') {
+    return patterns;
+  }
+
+  return patterns.map((pattern) => applyBaseToPattern(pattern, base));
 }
 
 function applyBaseToPattern(pattern: string, base: string): string {

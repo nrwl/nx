@@ -132,8 +132,6 @@ It only uses language primitives and immutable objects
 - [applyChangesToString](../../devkit/index#applychangestostring)
 - [convertNxExecutor](../../devkit/index#convertnxexecutor)
 - [convertNxGenerator](../../devkit/index#convertnxgenerator)
-- [createIgnore](../../devkit/index#createignore)
-- [createIgnoreFromTree](../../devkit/index#createignorefromtree)
 - [createProjectGraphAsync](../../devkit/index#createprojectgraphasync)
 - [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
@@ -896,46 +894,6 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 ##### Returns
 
 `Promise`<`any`\>
-
----
-
-### createIgnore
-
-▸ **createIgnore**(`rootDir?`, `ignoreFiles?`): `Ignore`
-
-Reads ignore files from the file system and returns an object which can be
-used to check whether a file should be ignored.
-
-#### Parameters
-
-| Name          | Type       | Default value          | Description                                                                                                                                                            |
-| :------------ | :--------- | :--------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `rootDir`     | `string`   | `workspaceRoot`        | The directory in which to start searching for ignore files. Paths evaluated by the returned object must be relative to this directory. Defaults to the workspace root. |
-| `ignoreFiles` | `string`[] | `workspaceIgnoreFiles` | The filename of ignore files to include, e.g. ".gitignore". Defaults to [".gitignore", ".nxignore"].                                                                   |
-
-#### Returns
-
-`Ignore`
-
----
-
-### createIgnoreFromTree
-
-▸ **createIgnoreFromTree**(`tree`, `ignoreFiles?`): `Ignore`
-
-Reads ignore files from a Tree and returns an object which can be
-used to check whether a file should be ignored.
-
-#### Parameters
-
-| Name          | Type                              | Default value          | Description                                                                                                                |
-| :------------ | :-------------------------------- | :--------------------- | :------------------------------------------------------------------------------------------------------------------------- |
-| `tree`        | [`Tree`](../../devkit/index#tree) | `undefined`            | The tree in which to searching for ignore files. Paths evaluated by the returned object must be relative to the tree root. |
-| `ignoreFiles` | `string`[]                        | `workspaceIgnoreFiles` | The filename of ignore files to include, e.g. ".gitignore". Defaults to [".gitignore", ".nxignore"].                       |
-
-#### Returns
-
-`Ignore`
 
 ---
 
