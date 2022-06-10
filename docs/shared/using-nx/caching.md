@@ -179,7 +179,7 @@ nx affected --target=build --skip-nx-cache
 
 ## Customizing the Cache Location
 
-The cache is stored in `node_modules/.cache/nx` by default. To change the cache location, update the `cacheDirectory` option for the task runner:
+The cache is stored in `node_modules/.cache/nx` by default. To change the cache location, set a `NX_CACHE_DIRECTORY` environment variable or update the `cacheDirectory` option for the task runner:
 
 ```json
 {
@@ -209,7 +209,11 @@ You can connect your workspace to Nx Cloud by running:
 nx connect-to-nx-cloud
 ```
 
-You can also distribute the cache manually using your own storage mechanisms.
+You can also distribute the cache manually using your own storage mechanisms. Be warned, it is not as simple as it might sound initially.
+
+- _If possible_, pull a copy of the cache which doesn't mutate the cache currently in use by other consumers. Push an updated copy afterwards.
+- By default, Nx also caches some computations necessary for calculating the project graph in the cache directory as well.
+  - If you are using a shared volume where mutations to the cache are reflected immediately in other consumers, you should set `NX_PROJECT_GRAPH_CACHE_DIRECTORY` to a separate directory to separate it from the computation cache.
 
 ## Example
 
