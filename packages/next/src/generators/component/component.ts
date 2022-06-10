@@ -32,7 +32,6 @@ export async function componentGenerator(host: Tree, options: Schema) {
     ...options,
     directory: getDirectory(host, options),
     pascalCaseFiles: false,
-    export: false,
     classComponent: false,
     routing: false,
   });
