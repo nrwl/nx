@@ -31,12 +31,12 @@
           },
           {
             "input": "packages/storybook",
-            "glob": "**/project-files-5/.storybook/**",
+            "glob": "**/project-files-ts/.storybook/**",
             "output": "/"
           },
           {
             "input": "packages/storybook",
-            "glob": "**/root-files-5/.storybook/**",
+            "glob": "**/root-files-ts/.storybook/**",
             "output": "/"
           },
           {
