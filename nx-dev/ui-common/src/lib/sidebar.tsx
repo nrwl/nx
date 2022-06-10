@@ -107,7 +107,7 @@ function SidebarSectionItems({
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
         {(item.itemList as MenuItem[]).map((subItem, index) => {
           const isActiveLink = subItem.path === withoutAnchors(router?.asPath);
-          const isNxCloudDocs = withoutAnchors(router.asPath).startsWith(
+          const isNxCloudDocs = withoutAnchors(router?.asPath).startsWith(
             '/nx-cloud'
           );
           if (isActiveLink && collapsed) {
