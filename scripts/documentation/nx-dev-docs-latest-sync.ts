@@ -30,6 +30,9 @@ function sync(): void {
 }
 
 function main(isWatched: boolean) {
+  // rsync doesn't exist on CI
+  if (process.env.CI) return;
+
   if (isWatched) {
     const isReady$ = new BehaviorSubject(false);
     const syncR$ = new BehaviorSubject(null);
@@ -69,4 +72,4 @@ function main(isWatched: boolean) {
   return sync();
 }
 
-main(argv.watch as boolean);
+main(argv['watch'] as boolean);

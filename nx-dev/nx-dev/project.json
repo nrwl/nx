@@ -50,6 +50,16 @@
       }
     },
     "serve": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "parallel": true,
+        "commands": [
+          "nx sync-documentation nx-dev --watch",
+          "nx serve-base nx-dev"
+        ]
+      }
+    },
+    "serve-base": {
       "executor": "@nrwl/next:server",
       "options": {
         "buildTarget": "nx-dev:build-base",
