@@ -5,9 +5,12 @@
  */
 import { statSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { cacheDir } from '../utils/cache-directory';
+import { projectGraphCacheDirectory } from '../utils/cache-directory';
 
-export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(cacheDir, 'd');
+export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(
+  projectGraphCacheDirectory,
+  'd'
+);
 
 export const DAEMON_OUTPUT_LOG_FILE = join(
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
