@@ -937,6 +937,11 @@
             "type": "boolean",
             "description": "Watch for file changes.",
             "default": true
+          },
+          "spa": {
+            "type": "boolean",
+            "description": "Redirect 404 errors to index.html (useful for SPA's)",
+            "default": false
           }
         },
         "additionalProperties": false,
