@@ -9,12 +9,17 @@ jest.doMock('../utils/workspace-root', () => {
 
 import fs = require('fs');
 import tsUtils = require('../utils/typescript');
+import fastGlob = require('fast-glob');
 import { Hasher } from './hasher';
 
 jest.mock('fs');
 jest.mock('../utils/typescript');
+jest.mock('fast-glob');
 
 fs.existsSync = () => true;
+
+// Used to find ignore files in utils/ignore. This spec does not use ignore files.
+fastGlob.sync = () => [];
 
 describe('Hasher', () => {
   const nxJson = {

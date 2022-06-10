@@ -1,11 +1,12 @@
-import type { Event } from '@parcel/watcher';
-import * as minimatch from 'minimatch';
-import * as path from 'path';
-import * as fse from 'fs-extra';
-import ignore, { Ignore } from 'ignore';
-import * as fg from 'fast-glob';
-import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
 import { logger } from '@nrwl/devkit';
+import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
+import type { Event } from '@parcel/watcher';
+import * as fg from 'fast-glob';
+import * as fse from 'fs-extra';
+import { Ignore } from 'ignore';
+import * as minimatch from 'minimatch';
+import { createIgnore } from 'nx/src/utils/ignore';
+import * as path from 'path';
 
 export type FileEventType = 'create' | 'update' | 'delete';
 
@@ -58,15 +59,7 @@ export class CopyAssetsHandler {
     this.projectDir = opts.projectDir;
     this.outputDir = opts.outputDir;
     this.callback = opts.callback ?? defaultFileEventHandler;
-
-    // TODO(jack): Should handle nested .gitignore files
-    this.ignore = ignore();
-    const gitignore = path.join(opts.rootDir, '.gitignore');
-    const nxignore = path.join(opts.rootDir, '.nxignore');
-    if (fse.existsSync(gitignore))
-      this.ignore.add(fse.readFileSync(gitignore).toString());
-    if (fse.existsSync(nxignore))
-      this.ignore.add(fse.readFileSync(nxignore).toString());
+    this.ignore = createIgnore(opts.rootDir);
 
     this.assetGlobs = opts.assets.map((f) => {
       let isGlob = false;
