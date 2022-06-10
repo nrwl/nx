@@ -2,7 +2,7 @@
 
 ## 13.3.1
 
-- Feat: Store output for non-Nx commands in Nx Cloud. Check out https://nx.app/docs/record-non-nx-commands for more information.
+- Feat: Store output for non-Nx commands in Nx Cloud. Check out https://nx.dev/nx-cloud/set-up/record-commands for more information.
 
 ## 13.2.1
 

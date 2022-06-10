@@ -2,6 +2,7 @@ import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { DocumentData } from '@nrwl/nx-dev/models-document';
 import { ReactComponentElement } from 'react';
 import ReactMarkdown from 'react-markdown';
+import raw from 'rehype-raw';
 import autolinkHeadings from 'rehype-autolink-headings';
 import slug from 'rehype-slug';
 import gfm from 'remark-gfm';
@@ -48,6 +49,7 @@ export function Content(props: ContentProps): ReactComponentElement<any> {
         remarkPlugins={[gfm]}
         rehypePlugins={[
           slug,
+          raw,
           [
             autolinkHeadings,
             {

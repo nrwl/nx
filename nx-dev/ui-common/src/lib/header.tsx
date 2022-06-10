@@ -74,9 +74,9 @@ export function Header(props: HeaderProps) {
             </Link>
             <Link href="/nx-cloud/intro/nx-cloud">
               <a
-                title="Check Nx documentation"
+                title="Nx Cloud documentation"
                 className={cx(
-                  'px-3 py-2 leading-tight text-white',
+                  'px-3 py-2 text-green-nx-base leading-tight text-white',
                   !!props.isDocViewer ? 'font-bold' : ''
                 )}
               >

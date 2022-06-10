@@ -293,6 +293,7 @@
     "react-syntax-highlighter": "^15.4.3",
     "regenerator-runtime": "0.13.7",
     "rehype-autolink-headings": "^5.0.1",
+    "rehype-raw": "^6.1.1",
     "rehype-slug": "^4.0.1",
     "remark-gfm": "^1.0.0",
     "send": "0.17.1",

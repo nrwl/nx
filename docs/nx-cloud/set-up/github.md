@@ -6,7 +6,7 @@ The [Nx Cloud Github App](https://github.com/marketplace/official-nx-cloud-app) 
 
 ## Nx Public Cloud CI Setup
 
-Before you install the app, please make sure you have a **valid Nx Cloud `accessToken` in your `nx.json` file**. Nx Cloud reports will not generate properly on your PRs without one. You should already have one if you’re using Nx Cloud, but if you don’t, you can learn how to add one [here](https://nx.app/docs/manage-access).
+Before you install the app, please make sure you have a **valid Nx Cloud `accessToken` in your `nx.json` file**. Nx Cloud reports will not generate properly on your PRs without one. You should already have one if you’re using Nx Cloud, but if you don’t, you can learn how to add one [here](/nx-cloud/account/users).
 
 You can find and install the app from [the GitHub marketplace](https://github.com/marketplace/official-nx-cloud-app).
 

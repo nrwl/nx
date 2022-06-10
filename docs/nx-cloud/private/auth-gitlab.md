@@ -32,7 +32,7 @@ Once you create, keep a note of the Client ID and the Secret:
 
 ## Connect your private cloud instance to your new app
 
-[When setting up your private cloud](https://nx.app/docs/get-started-with-private-cloud-community), you can pass these two environment variables to it:
+[When setting up your private cloud](/nx-cloud/private-cloud/get-started), you can pass these two environment variables to it:
 
 ```bash
 GITLAB_APP_ID=...

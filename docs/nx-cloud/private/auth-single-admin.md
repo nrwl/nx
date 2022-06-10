@@ -3,20 +3,20 @@
 There are a few methods of authenticating users in Nx Private Cloud:
 
 - single-admin user
-- [GitHub OAuth2](https://nx.app/docs/private-cloud-github-auth)
-- [GitLab OAuth2](https://nx.app/docs/private-cloud-gitlab-auth)
+- [GitHub OAuth2](/nx-cloud/private-cloud/auth-github)
+- [GitLab OAuth2](/nx-cloud/private-cloud/auth-gitlab)
 
 ## Why do users need access
 
 While just adding an NxCloud access token to your monorepo give you distributed caching, the NxCloud web app gives you analytics about tasks running in your workspace, allows devs to easily inspect terminal output, and works seamlessly with our GitHub integration for your Pull Requests. Here is a [video walkthrough of this](https://youtu.be/GT7XIwG1i5A?t=409).
 
-By default, when you connect your token to a workspace on your NxCloud web app, all links and runs are private to only members of your organisation. This means that you'll either need to explicitly add members, or make your organisation public (which means anyone with access to your Private NxCloud instance will be able to see your runs). [More details here.](https://nx.app/docs/manage-access#accessing-nx-cloud)
+By default, when you connect your token to a workspace on your NxCloud web app, all links and runs are private to only members of your organisation. This means that you'll either need to explicitly add members, or make your organisation public (which means anyone with access to your Private NxCloud instance will be able to see your runs). [More details here.](/nx-cloud/account/users#managing-members)
 
 ## Setting up a single admin user
 
-If you just want to try out private cloud and set-up full membership management later, then the simplest option is to just set-up a single admin user. This option might also work for you if you are okay with [making your organisation public](https://nx.app/docs/manage-access#accessing-nx-cloud) to anyone that has access to your private cloud NxCloud instance.
+If you just want to try out private cloud and set-up full membership management later, then the simplest option is to just set-up a single admin user. This option might also work for you if you are okay with [making your organisation public](/nx-cloud/account/users#public-organizations) to anyone that has access to your private cloud NxCloud instance.
 
-[While setting up your container](https://nx.app/docs/get-started-with-private-cloud-community) you can pass it the `ADMIN_PASSWORD` environment variable. This will set-up a default admin user for you, which you can use to manage your workspace on the NxCloud web app.
+[While setting up your container](/nx-cloud/private-cloud/get-started) you can pass it the `ADMIN_PASSWORD` environment variable. This will set-up a default admin user for you, which you can use to manage your workspace on the NxCloud web app.
 
 Note: Even if you can make your organisation public, we still recommend setting up GitHub authentication and inviting more than 1 admin to your workspace, to reduce the chance of losing access to it.
 
@@ -24,8 +24,8 @@ Note: Even if you can make your organisation public, we still recommend setting 
 
 For instructions on how to set-up third-party auth providers please refer to these guides:
 
-- [GitHub Auth](https://nx.app/docs/private-cloud-github-auth)
-- [GitLab Auth](https://nx.app/docs/private-cloud-gitlab-auth)
+- [GitHub Auth](/nx-cloud/private-cloud/auth-github)
+- [GitLab Auth](/nx-cloud/private-cloud/auth-gitlab)
 
 ## Inviting users
 

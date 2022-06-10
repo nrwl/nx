@@ -701,18 +701,8 @@
         "itemList": [
           {
             "name": "What is Nx Cloud?",
-            "id": "nx-cloud",
+            "id": "what-is-nx-cloud",
             "file": "nx-cloud/intro/nx-cloud"
-          },
-          {
-            "name": "Distributed Caching",
-            "id": "distributed-caching",
-            "file": "nx-cloud/intro/distributed-caching"
-          },
-          {
-            "name": "Distributed Task Execution",
-            "id": "distributed-task-execution",
-            "file": "nx-cloud/intro/distributed-task-execution"
           }
         ]
       },

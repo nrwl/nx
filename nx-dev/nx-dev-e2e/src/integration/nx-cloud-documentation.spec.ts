@@ -6,15 +6,7 @@ import { assertTextOnPage } from './helpers';
  */
 describe('nx-dev: Nx Cloud section', () => {
   (<{ title: string; path: string }[]>[
-    { title: 'What is Nx Cloud?', path: '/nx-cloud/intro/nx-cloud' },
-    {
-      title: 'Distributed Caching',
-      path: '/nx-cloud/intro/distributed-caching',
-    },
-    {
-      title: 'Distributed Task Execution',
-      path: '/nx-cloud/intro/distributed-task-execution',
-    },
+    { title: 'What is Nx Cloud?', path: '/nx-cloud/intro/what-is-nx-cloud' },
     {
       title: 'Set Up Distributed Caching',
       path: '/nx-cloud/set-up/set-up-caching',

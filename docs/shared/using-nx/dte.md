@@ -2,6 +2,8 @@
 
 > Before reading this guide, check out the [mental model guide](/using-nx/mental-model). It will help you understand how computation caching fits into the rest of Nx.
 
+<div class="nx-cloud-section">
+
 ## Overview
 
 Nx supports running commands across multiple machines. You can either set it up by hand (
@@ -32,3 +34,5 @@ it locally.
 These are the savings you get by enabling Distributed Task Execution in your CI config:
 
 ![DTE](/shared/using-nx/dte.png)
+
+</div>
