@@ -146,7 +146,7 @@
     "ci-workflow": {
       "factory": "./src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator",
       "schema": "./src/generators/ci-workflow/schema.json",
-      "description": "Generete a CI workflow."
+      "description": "Generate a CI workflow."
     }
   }
 }
