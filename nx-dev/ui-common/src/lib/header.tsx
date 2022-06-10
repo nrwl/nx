@@ -72,7 +72,7 @@ export function Header(props: HeaderProps) {
                 Nx Docs
               </a>
             </Link>
-            <Link href="/nx-cloud/intro/nx-cloud">
+            <Link href="/nx-cloud/intro/what-is-nx-cloud">
               <a
                 title="Nx Cloud documentation"
                 className={cx(
