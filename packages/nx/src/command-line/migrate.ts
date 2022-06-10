@@ -1040,6 +1040,12 @@ async function runNxMigration(root: string, packageName: string, name: string) {
 
   const collection = readJsonFile<MigrationsJson>(collectionPath);
   const g = collection.generators || collection.schematics;
+  if (!g[name]) {
+    const source = collection.generators ? 'generators' : 'schematics';
+    throw new Error(
+      `Unable to determine implementation path for "${collectionPath}:${name}" using collection.${source}`
+    );
+  }
   const implRelativePath = g[name].implementation || g[name].factory;
 
   let implPath: string;
