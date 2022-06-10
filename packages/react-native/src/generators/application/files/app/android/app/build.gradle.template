@@ -147,6 +147,7 @@ android {
         <% if (e2eTestRunner === 'detox') { %>
         testBuildType System.getProperty('testBuildType', 'debug')  // This will later be used to control the test apk build type
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        missingDimensionStrategy 'detox', 'full'
         <% } %>
 
         if (isNewArchitectureEnabled()) {
@@ -302,7 +303,7 @@ dependencies {
     }
 
     <% if (e2eTestRunner === 'detox') { %>
-    androidTestImplementation('com.wix:detox:+')
+    androidTestImplementation(project(path: ":detox"))
     <% } %>
 }
 
