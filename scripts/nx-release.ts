@@ -8,6 +8,15 @@ import { join } from 'path';
 import * as version from '@lerna/version/index';
 import * as publish from '@lerna/publish/index';
 
+function hideFromGitIndex(uncommittedFiles: string[]) {
+  execSync(`git update-index --assume-unchanged ${uncommittedFiles.join(' ')}`);
+
+  return () =>
+    execSync(
+      `git update-index --no-assume-unchanged ${uncommittedFiles.join(' ')}`
+    );
+}
+
 (async () => {
   const options = parseArgs();
   if (!options.local && !options.force) {
@@ -55,49 +64,38 @@ import * as publish from '@lerna/publish/index';
 
   const lernaJsonPath = join(__dirname, '../lerna.json');
   let originalLernaJson: Buffer;
-  let uncommittedFiles: string[];
 
-  try {
-    if (options.local || options.tag === 'next') {
-      originalLernaJson = readFileSync(lernaJsonPath);
-    }
-    if (options.local) {
-      /**
-       * Hide changes from Lerna
-       */
-      uncommittedFiles = execSync('git diff --name-only --relative HEAD .')
-        .toString()
-        .split('\n')
-        .filter((i) => i.length > 0);
-      execSync(
-        `git update-index --assume-unchanged ${uncommittedFiles.join(' ')}`
-      );
-    }
+  if (options.local || options.tag === 'next') {
+    originalLernaJson = readFileSync(lernaJsonPath);
+  }
+  if (options.local) {
+    /**
+     * Hide changes from Lerna
+     */
+    const uncommittedFiles = execSync('git diff --name-only --relative HEAD .')
+      .toString()
+      .split('\n')
+      .filter((i) => i.length > 0);
+    const unhideFromGitIndex = hideFromGitIndex(uncommittedFiles);
 
-    const publishOptions = {
-      gitReset: false,
-      distTag: options.tag,
-    };
+    process.on('exit', unhideFromGitIndex);
+    process.on('SIGTERM', unhideFromGitIndex);
+  }
 
-    if (!options.skipPublish) {
-      await publish({ ...versionOptions, ...publishOptions });
-    } else {
-      await version(versionOptions);
-      console.warn('Not Publishing because --dryRun was passed');
-    }
+  const publishOptions = {
+    gitReset: false,
+    distTag: options.tag,
+  };
 
-    if (options.local || options.tag === 'next') {
-      writeFileSync(lernaJsonPath, originalLernaJson);
-    }
-  } finally {
-    if (options.local) {
-      /**
-       * Unhide changes from Lerna
-       */
-      execSync(
-        `git update-index --no-assume-unchanged ${uncommittedFiles.join(' ')}`
-      );
-    }
+  if (!options.skipPublish) {
+    await publish({ ...versionOptions, ...publishOptions });
+  } else {
+    await version(versionOptions);
+    console.warn('Not Publishing because --dryRun was passed');
+  }
+
+  if (options.local || options.tag === 'next') {
+    writeFileSync(lernaJsonPath, originalLernaJson);
   }
 })();
 
