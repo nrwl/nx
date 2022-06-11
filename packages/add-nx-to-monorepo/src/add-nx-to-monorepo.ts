@@ -1,11 +1,7 @@
 #!/usr/bin/env node
 
-import {
-  createIgnore,
-  output,
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/devkit';
+import { output, readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import { createIgnore } from 'nx/src/utils/ignore';
 import * as cp from 'child_process';
 import { execSync } from 'child_process';
 import * as enquirer from 'enquirer';

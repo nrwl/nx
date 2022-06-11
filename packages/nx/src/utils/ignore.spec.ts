@@ -53,6 +53,13 @@ describe('createCombinedIgnore', () => {
     expect(ignore.ignores('c')).toBe(false);
   });
 
+  it('should support ignoring root directory from file at root', () => {
+    const ignore = createCombinedIgnore([{ path: '.ignore', content: '/b' }]);
+    expect(ignore.ignores('b')).toBe(true);
+    expect(ignore.ignores('path/to/b')).toBe(false);
+    expect(ignore.ignores('c')).toBe(false);
+  });
+
   it('should support nested ignore file', () => {
     const ignore = createCombinedIgnore([{ path: 'a/.ignore', content: 'b' }]);
     expect(ignore.ignores('a/b')).toBe(true);
