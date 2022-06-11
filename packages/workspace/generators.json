@@ -12,7 +12,7 @@
     "preset": {
       "factory": "./src/generators/preset/preset#presetSchematic",
       "schema": "./src/generators/preset/schema.json",
-      "description": "Create application in an empty workspace.",
+      "description": "Create an application in an empty workspace.",
       "hidden": true
     },
 
