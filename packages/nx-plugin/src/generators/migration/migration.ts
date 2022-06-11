@@ -8,6 +8,7 @@ import {
   readJson,
   writeJson,
   joinPathFragments,
+  formatFiles,
 } from '@nrwl/devkit';
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
@@ -152,6 +153,8 @@ export async function migrationGenerator(host: Tree, schema: Schema) {
       readJson<PackageJson>(host, packageJsonPath)
     );
   }
+
+  await formatFiles(host);
 }
 
 export default migrationGenerator;
