@@ -36,7 +36,7 @@ And then generate a new client secret, and save it somewhere secure (we'll use i
 
 ## Connect your private cloud instance to your OAuth App
 
-[When setting up your private cloud](https://nx.app/docs/get-started-with-private-cloud-community), you can pass these two environment variables to it:
+[When setting up your private cloud](/nx-cloud/private-cloud/get-started), you can pass these two environment variables to it:
 
 ```bash
 GITHUB_AUTH_CLIENT_ID=...
@@ -53,4 +53,4 @@ If you are running an on-premise version of GitHub (Enterprise Server), you will
 
 This will point all auth endpoints to your GitHub server (rather the public one).
 
-Note: the above environment variable, also helps with setting up the GitHub app integration, so you can have NxCloud build stats directly on your pull request. See full set-up instructions [here](https://nx.app/docs/private-cloud-github-integration).
+Note: the above environment variable, also helps with setting up the GitHub app integration, so you can have NxCloud build stats directly on your pull request. See full set-up instructions [here](/nx-cloud/private-cloud/github).

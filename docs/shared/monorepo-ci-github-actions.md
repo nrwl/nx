@@ -14,7 +14,7 @@ But they come with their own technical challenges. The more code you add into yo
 
 ## Setting GitHub Actions
 
-The `GitHub` can track the last successful run on `main` branch and use this as a reference point for the `BASE`. The `Nx Set SHAs` provides conventient implementation of this functionality which you can drop into you existing CI config.
+The `GitHub` can track the last successful run on `main` branch and use this as a reference point for the `BASE`. The `Nx Set SHAs` provides convenient implementation of this functionality which you can drop into you existing CI config.
 To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation at Actions's docs](https://github.com/marketplace/actions/nx-set-shas#background).
 
 Below is an example of a GitHub setup for an Nx workspace only building and testing what is affected. For more details on how the orb is used, head over to the [official docs](https://github.com/marketplace/actions/nx-set-shas).
@@ -45,6 +45,8 @@ jobs:
 ```
 
 The `pr` and `main` jobs implement the CI workflow. Setting `timeout-minutes` is needed only if you have very slow tasks.
+
+<div class="nx-cloud-section">
 
 ## Distributed CI with Nx Cloud
 
@@ -84,4 +86,6 @@ jobs:
 
 You can also use our [ci-workflow generator](https://nx.dev/packages/workspace/generators/ci-workflow) to generate the workflow file.
 
-Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.
+Learn more about configuring your CI environment using Nx Cloud with [Distributed Caching](/nx-cloud/set-up/set-up-caching) and [Distributed Task Execution](/nx-cloud/set-up/set-up-dte) in the Nx Cloud docs.
+
+</div>

@@ -6,7 +6,7 @@ But regardless of how smart Nx is, there will be some large changes affecting th
 
 There are several ways to distribute your CI across multiple machines.
 
-The easiest way is to use Nx Cloud. Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.
+The easiest way is to use Nx Cloud. Learn more about [configuring your CI](/nx-cloud/set-up/set-up-dte#cicd-examples) environment using Nx Cloud with [Distributed Caching](/nx-cloud/set-up/set-up-caching) and [Distributed Task Execution](/nx-cloud/set-up/set-up-dte) in the Nx Cloud docs.
 
 But you can also set up distribution manually using the `print-affected` and `run-many` commands.
 

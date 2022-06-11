@@ -2,7 +2,7 @@
 
 Nx Private Cloud is a docker image that can be deployed to your cloud. This version keeps all data on your cloud, except for billing and utilization data that's sent to the Nx Cloud API to enable an integrated billing experience.
 
-For companies who need complete control of data, with no external API calls, the [Nx Enterprise](https://nx.app/docs/get-started-with-private-cloud-enterprise) is for you.
+For companies who need complete control of data, with no external API calls, the [Nx Enterprise](/nx-cloud/private-cloud/get-started) is for you.
 
 **Nx Cloud consists of 3 parts:**
 
@@ -16,7 +16,7 @@ When running everything together, you won't be able to run more than one instanc
 
 The instructions will go through running everything together first, and then, at the end, will talk about running the database and the file server separately.
 
-The instructions will use Docker commands, but you can also deploy Nx Cloud to a Kubernetes cluster (see [here](https://nx.app/docs/kubernetes) for more information).
+The instructions will use Docker commands, but you can also deploy Nx Cloud to a Kubernetes cluster (see [here](/nx-cloud/private-cloud/deploy-kubernetes) for more information).
 
 ## Running Nx Private Cloud
 
@@ -83,7 +83,7 @@ Depending on how your infrastructure is set up, you can either run Nx Private Cl
 - `443:8081` maps the internal port 8081 to 443, so it can be accessed in the browser without specifying the port. 80:8081 works the same way when you use HTTP instead of HTTPS.
 - `CERT_KEY` and `CERT` contain the values of private key and cert. The file extensions of the cert and key files can be different, but as long as they are in the PEM format (which is the case if you use, for instance, OpenSSL), the command will work.
 - `NX_CLOUD_APP_URL` is the URL the cloud can be accessed by (e.g., `https://nxcloud.privateurl.com`). **Important: Unless you are experimenting, it won't be localhost. It has to be the URL that your CI and your developer machine can reach. Also note, there is no trailing slash in the URL.**
-- `ADMIN_PASSWORD` contains the password of the admin user. The admin user is created the first time you run cloud, you can remove this env variable after that. Instead of an admin password, you can also follow [the instructions here](https://nx.app/docs/private-cloud-github-auth) to set-up GitHub auth.
+- `ADMIN_PASSWORD` contains the password of the admin user. The admin user is created the first time you run cloud, you can remove this env variable after that. Instead of an admin password, you can also follow [the instructions here](/nx-cloud/private-cloud/auth-github) to set-up GitHub auth.
 - `-v /data/private-cloud:/data` sets up the volume where the data is stored. `/data/private-cloud` refers to a folder on your machine, `/data` is the shareable folder from the Docker image.
 
 ### Step 3: Run the Container
@@ -112,11 +112,11 @@ As stated above, Nx Private Cloud will store all your artifacts and the informat
 
 ### Optional step 6: Set-up GitHub auth
 
-Follow the [instructions here](https://nx.app/docs/private-cloud-github-auth) to set-up GitHub OAuth authentication so you can invite other members in your team to the workspace.
+Follow the [instructions here](/nx-cloud/private-cloud/auth-github) to set-up GitHub OAuth authentication so you can invite other members in your team to the workspace.
 
 ### Optional step 7: Set-up GitHub Pull Request integration
 
-You can [optionally configure private cloud](https://nx.app/docs/private-cloud-github-integration) to post build stats directly on your GitHub pull requests.
+You can [optionally configure private cloud](/nx-cloud/private-cloud/github) to post build stats directly on your GitHub pull requests.
 
 ### Optional step 8: Setting Up Proxy
 
@@ -138,7 +138,7 @@ By default, Nx Cloud requires Mongo 4.2+. If you are using an older version of M
 
 ### Using MongoDB Kubernetes Operator
 
-The MongoDB team maintains the open source [MongoDB Kubernetes Operator](https://github.com/mongodb/mongodb-kubernetes-operator). You can use it to set up your own deployment of MongoDB. See [the Nx Cloud and Kubernetes page](https://nx.app/docs/kubernetes) for more information.
+The MongoDB team maintains the open source [MongoDB Kubernetes Operator](https://github.com/mongodb/mongodb-kubernetes-operator). You can use it to set up your own deployment of MongoDB. See [the Nx Cloud and Kubernetes page](/nx-cloud/private-cloud/deploy-kubernetes) for more information.
 
 ### Using CosmosDB
 

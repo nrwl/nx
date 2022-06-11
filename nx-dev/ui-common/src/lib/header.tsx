@@ -69,7 +69,18 @@ export function Header(props: HeaderProps) {
                   !!props.isDocViewer ? 'font-bold' : ''
                 )}
               >
-                Docs
+                Nx Docs
+              </a>
+            </Link>
+            <Link href="/nx-cloud/intro/what-is-nx-cloud">
+              <a
+                title="Nx Cloud documentation"
+                className={cx(
+                  'text-green-nx-base px-3 py-2 leading-tight text-white',
+                  !!props.isDocViewer ? 'font-bold' : ''
+                )}
+              >
+                Nx Cloud Docs
               </a>
             </Link>
             <Link href="/community#create-nx-plugin">

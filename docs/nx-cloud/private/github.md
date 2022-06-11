@@ -1,4 +1,4 @@
-# Private Cloud GitHub Integration
+# Private Cloud GitHub PR Integration
 
 ## Set Up a Webhook
 
@@ -7,12 +7,12 @@
 - Content type: `application/json`
 - Add a "Secret" (can be anything). Remember it, as we'll need to pass it to our Docker container.
 
-![Add webhook to github](/nx-cloud/private/private-cloud-github-integration-add-webhook.png)
+![Add webhook to github](/nx-cloud/private/images/private-cloud-github-integration-add-webhook.png)
 
 - Enable "Check Suites", "Check runs" and "Pull Requests" as the events that trigger the webhook.
 
-![Enable check suites and check runs](/nx-cloud/private/webhook-trigger-events.png)
-![Enable pull requests](/nx-cloud/private/webhook-trigger-pull-requests.png)
+![Enable check suites and check runs](/nx-cloud/private/images/webhook-trigger-events.png)
+![Enable pull requests](/nx-cloud/private/images/webhook-trigger-pull-requests.png)
 
 ## Generate Access token
 
@@ -21,7 +21,7 @@
 - Make sure you select "repo" as a scope
 - After you generate the token, make sure to copy and store it. We'll add it to Private Cloud in a bit.
 
-![Generate personal access token](/nx-cloud/private/private-cloud-github-integration-generate-tokens.png)
+![Generate personal access token](/nx-cloud/private/images/private-cloud-github-integration-generate-token.png)
 
 ## Optional - Configure Self-Hosted GitHub Instances
 
