@@ -97,8 +97,8 @@
       "default": []
     },
     "extractCss": {
-      "type": "boolean",
-      "description": "CSS files will be extracted to the output folder.",
+      "type": ["boolean", "string"],
+      "description": "CSS files will be extracted to the output folder. Alternatively custom filename can be provided (e.g. styles.css)",
       "default": true
     },
     "assets": {
