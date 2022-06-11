@@ -47,6 +47,10 @@
       "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
       "enum": ["dependencies", "peerDependencies"],
       "default": "peerDependencies"
+    },
+    "srcRootForCompilationRoot": {
+      "type": "string",
+      "description": "Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property"
     }
   },
   "required": ["main", "outputPath", "tsConfig"],

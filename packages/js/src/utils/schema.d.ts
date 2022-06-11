@@ -41,6 +41,7 @@ export interface ExecutorOptions {
   transformers: TransformerEntry[];
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
+  srcRootForCompilationRoot?: string;
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {
