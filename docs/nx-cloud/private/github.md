@@ -1,4 +1,4 @@
-# Private Cloud GitHub Integration
+# Private Cloud GitHub PR Integration
 
 ## Set Up a Webhook
 

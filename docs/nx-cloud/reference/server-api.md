@@ -1,4 +1,4 @@
-# Nx API Spec
+# Nx Cloud Server API Reference
 
 ## OpenAPI 3.0.3
 

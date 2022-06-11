@@ -1,4 +1,4 @@
-# Github Integration
+# Enable Github PR Integration
 
 ## Get Started
 

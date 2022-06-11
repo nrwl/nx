@@ -8,7 +8,7 @@ describe('nx-dev: Nx Cloud section', () => {
   (<{ title: string; path: string }[]>[
     { title: 'What is Nx Cloud?', path: '/nx-cloud/intro/what-is-nx-cloud' },
     {
-      title: 'Set Up Distributed Caching',
+      title: 'Adding Nx Cloud to an Nx Workspace',
       path: '/nx-cloud/set-up/set-up-caching',
     },
     {
@@ -16,23 +16,23 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/set-up/set-up-dte',
     },
     {
-      title: 'Record Non-Nx Commands',
+      title: 'Recording Non-Nx Commands',
       path: '/nx-cloud/set-up/record-commands',
     },
     {
-      title: 'Enable GitHub PR Integration',
+      title: 'Enable Github PR Integration',
       path: '/nx-cloud/set-up/github',
     },
     {
       title: 'Billing and Utilization',
-      path: '/nx-cloud/account/github',
+      path: '/nx-cloud/account/billing',
     },
     {
-      title: 'Users',
+      title: 'User Management',
       path: '/nx-cloud/account/users',
     },
     {
-      title: 'Authenticate with Google Identity',
+      title: 'Connecting Nx Cloud to your existing Google identity provider',
       path: '/nx-cloud/account/google-auth',
     },
     {
@@ -48,35 +48,35 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/account/encryption',
     },
     {
-      title: 'Get Started',
+      title: 'Getting Started with Nx Private Cloud',
       path: '/nx-cloud/private-cloud/get-started',
     },
     {
-      title: 'Enable Github PR Integration',
+      title: 'Private Cloud GitHub PR Integration',
       path: '/nx-cloud/private-cloud/github',
     },
     {
-      title: 'Deploy with Kubernetes',
+      title: 'Nx Private Cloud and Kubernetes',
       path: '/nx-cloud/private-cloud/deploy-kubernetes',
     },
     {
-      title: 'Deploy with AWS',
+      title: 'Deploying Nx Private Cloud to AWS',
       path: '/nx-cloud/private-cloud/deploy-aws',
     },
     {
-      title: 'Deploy with Azure',
+      title: 'Deploying Nx Private Cloud to Azure',
       path: '/nx-cloud/private-cloud/deploy-azure',
     },
     {
-      title: 'Authenticate with a Single Admin',
+      title: 'Nx Private Cloud Auth',
       path: '/nx-cloud/private-cloud/auth-single-admin',
     },
     {
-      title: 'Authenticate with GitHub',
+      title: 'Nx Private Cloud GitHub Auth',
       path: '/nx-cloud/private-cloud/auth-github',
     },
     {
-      title: 'Authenticate with GitLab',
+      title: 'Nx Private Cloud GitLab Auth',
       path: '/nx-cloud/private-cloud/auth-gitlab',
     },
     {
@@ -84,7 +84,7 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/private-cloud/advanced-config',
     },
     {
-      title: 'Configuration Options',
+      title: 'Configuring the Cloud Runner / Nx CLI',
       path: '/nx-cloud/reference/config',
     },
     {
@@ -92,11 +92,11 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/reference/env-vars',
     },
     {
-      title: 'Server API Reference',
+      title: 'Nx Cloud Server API Reference',
       path: '/nx-cloud/reference/server-api',
     },
     {
-      title: 'Release Notes',
+      title: '@nrwl/nx-cloudNx Private Cloud',
       path: '/nx-cloud/reference/release-notes',
     },
   ]).forEach((page) => assertTextOnPage(page.path, page.title));

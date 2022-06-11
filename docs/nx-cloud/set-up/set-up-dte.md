@@ -1,4 +1,4 @@
-# Set up Distributed Task Execution
+# Set Up Distributed Task Execution
 
 To enable distributed task execution, the following has to be true:
 
