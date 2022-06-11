@@ -99,9 +99,11 @@ export class ForkedProcessTaskRunner {
     {
       streamOutput,
       temporaryOutputPath,
+      prefixRequired,
     }: {
       streamOutput: boolean;
       temporaryOutputPath: string;
+      prefixRequired: boolean;
     }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
@@ -133,8 +135,12 @@ export class ForkedProcessTaskRunner {
         p.stdout.on('data', (chunk) => {
           if (streamOutput) {
             process.stdout.write(
-              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
-                .content
+              addCommandPrefixIfNeeded(
+                task.target.project,
+                chunk,
+                'utf-8',
+                prefixRequired
+              ).content
             );
           }
           out.push(chunk.toString());
@@ -143,8 +149,12 @@ export class ForkedProcessTaskRunner {
         p.stderr.on('data', (chunk) => {
           if (streamOutput) {
             process.stderr.write(
-              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
-                .content
+              addCommandPrefixIfNeeded(
+                task.target.project,
+                chunk,
+                'utf-8',
+                prefixRequired
+              ).content
             );
           }
           outWithErr.push(chunk.toString());

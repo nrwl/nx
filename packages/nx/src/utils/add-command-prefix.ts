@@ -3,9 +3,10 @@ import * as chalk from 'chalk';
 export function addCommandPrefixIfNeeded(
   projectName: string,
   chunk: any,
-  encoding: string
+  encoding: string,
+  forceEnable?: boolean
 ) {
-  if (process.env.NX_PREFIX_OUTPUT === 'true') {
+  if (forceEnable || process.env.NX_PREFIX_OUTPUT === 'true') {
     const lines = (
       typeof chunk === 'string' ? chunk : chunk.toString('utf-8')
     ).split('\n');

@@ -11,6 +11,7 @@ import {
   getExecutorForTask,
   getOutputs,
   isCacheableTask,
+  longRunningTask,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
@@ -18,6 +19,8 @@ import { Batch, TasksSchedule } from './tasks-schedule';
 import { TaskMetadata } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
+import { output } from '../utils/output';
+import { watch } from 'chokidar';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);
@@ -290,28 +293,48 @@ export class TaskOrchestrator {
       );
 
       const pipeOutput = this.pipeOutputCapture(task);
+      const prefixRequired = this.prefixRequired();
 
       // execution
-      const { code, terminalOutput } = pipeOutput
-        ? await this.forkedProcessTaskRunner.forkProcessPipeOutputCapture(
-            task,
-            {
-              temporaryOutputPath,
-              streamOutput,
-            }
-          )
-        : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
-            task,
-            {
-              temporaryOutputPath,
-              streamOutput,
-            }
-          );
+      const promise = pipeOutput
+        ? this.forkedProcessTaskRunner.forkProcessPipeOutputCapture(task, {
+            temporaryOutputPath,
+            streamOutput,
+            prefixRequired,
+          })
+        : this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(task, {
+            temporaryOutputPath,
+            streamOutput,
+          });
 
-      return {
-        code,
-        terminalOutput,
-      };
+      if (this.waitForCompletion(task)) {
+        const { code, terminalOutput } = await promise;
+        return {
+          code,
+          terminalOutput,
+        };
+      } else {
+        const outputs = getOutputs(this.projectGraph.nodes, task);
+        const watcher = watch(outputs, {
+          cwd: workspaceRoot,
+          ignoreInitial: false,
+        });
+
+        await Promise.all(
+          outputs.map(
+            (f) =>
+              new Promise<void>((resolve, reject) => {
+                watcher.on('add', (path) => {
+                  if (path.startsWith(f)) resolve();
+                });
+              })
+          )
+        );
+
+        return {
+          code: 0,
+        };
+      }
     } catch (e) {
       return {
         code: 1,
@@ -441,6 +464,18 @@ export class TaskOrchestrator {
     } catch (e) {
       return false;
     }
+  }
+
+  private waitForCompletion(task: Task) {
+    return (
+      !longRunningTask(task) || task.target.project === this.initiatingProject
+    );
+  }
+
+  private prefixRequired() {
+    return Object.values(this.taskGraph.tasks).some(
+      (task) => !this.waitForCompletion(task)
+    );
   }
 
   private shouldCacheTaskResult(task: Task, code: number) {
