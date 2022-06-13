@@ -152,7 +152,7 @@ export function Header(props: HeaderProps) {
                   >
                     <rect width="10" height="10" />
                   </svg>
-                  12k+
+                  13k+
                 </span>
               </div>
             </a>
