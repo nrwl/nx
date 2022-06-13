@@ -1,8 +1,9 @@
-import { performance } from 'perf_hooks';
-import { createNxIgnore } from '../utils/ignore';
 import { workspaceRoot } from '../utils/workspace-root';
-import { FileHasherBase } from './file-hasher-base';
+import { performance } from 'perf_hooks';
 import { getFileHashes, getGitHashForFiles } from './git-hasher';
+import { existsSync, readFileSync } from 'fs';
+import { FileHasherBase } from './file-hasher-base';
+import ignore from 'ignore';
 
 export class GitBasedFileHasher extends FileHasherBase {
   /**
@@ -15,7 +16,7 @@ export class GitBasedFileHasher extends FileHasherBase {
     this.clear();
 
     const gitResult = await getFileHashes(workspaceRoot);
-    const ignore = createNxIgnore();
+    const ignore = getIgnoredGlobs();
     gitResult.allFiles.forEach((hash, filename) => {
       if (!ignore.ignores(filename)) {
         this.fileHashes.set(filename, hash);
@@ -32,5 +33,15 @@ export class GitBasedFileHasher extends FileHasherBase {
 
   async hashFiles(files: string[]) {
     return (await getGitHashForFiles(files, workspaceRoot)).hashes;
+  }
+}
+
+function getIgnoredGlobs() {
+  if (existsSync(`${workspaceRoot}/.nxignore`)) {
+    const ig = ignore();
+    ig.add(readFileSync(`${workspaceRoot}/.nxignore`, 'utf-8'));
+    return ig;
+  } else {
+    return { ignores: (file: string) => false };
   }
 }
