@@ -1,30 +1,31 @@
 import { sync as globSync } from 'fast-glob';
-import { existsSync } from 'fs';
-import { Ignore } from 'ignore';
+import { existsSync, readFileSync } from 'fs';
+import ignore, { Ignore } from 'ignore';
 import * as path from 'path';
 import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
+
+import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
-import { createIgnore } from '../utils/ignore';
 import { logger } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
-import { sortObjectByKeys } from '../utils/object-sort';
-import { PackageJson } from '../utils/package-json';
-import { workspaceRoot } from '../utils/workspace-root';
-import {
-  CustomHasher,
-  Executor,
-  ExecutorConfig,
-  ExecutorsJson,
-  Generator,
-  GeneratorsJson,
-  TaskGraphExecutor,
-} from './misc-interfaces';
+
 import type { NxJsonConfiguration } from './nx-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from './workspace-json-project-json';
+import {
+  Executor,
+  ExecutorConfig,
+  TaskGraphExecutor,
+  Generator,
+  GeneratorsJson,
+  ExecutorsJson,
+  CustomHasher,
+} from './misc-interfaces';
+import { PackageJson } from '../utils/package-json';
+import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
 export function workspaceConfigName(root: string) {
   if (existsSync(path.join(root, 'angular.json'))) {
@@ -526,7 +527,7 @@ function getGlobPatternsFromPackageManagerWorkspaces(root: string): string[] {
 }
 
 export function globForProjectFiles(
-  root: string,
+  root,
   nxJson?: NxJsonConfiguration,
   ignorePluginInference = false
 ) {
@@ -568,14 +569,24 @@ export function globForProjectFiles(
     join(root, '.git'),
   ];
 
-  const ignore = createIgnore(root);
+  /**
+   * TODO: This utility has been implemented multiple times across the Nx codebase,
+   * discuss whether it should be moved to a shared location.
+   */
+  const ig = ignore();
+  try {
+    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
+  } catch {}
+  try {
+    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
+  } catch {}
 
   const globResults = globSync(combinedProjectGlobPattern, {
     ignore: ALWAYS_IGNORE,
     absolute: false,
     cwd: root,
   });
-  projectGlobCache = deduplicateProjectFiles(globResults, ignore);
+  projectGlobCache = deduplicateProjectFiles(globResults, ig);
   performance.mark('finish-glob-for-projects');
   performance.measure(
     'glob-for-project-files',
@@ -585,15 +596,15 @@ export function globForProjectFiles(
   return projectGlobCache;
 }
 
-export function deduplicateProjectFiles(files: string[], ignore?: Ignore) {
+export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
   const filtered = new Map();
   files.forEach((file) => {
     const projectFolder = dirname(file);
     const projectFile = basename(file);
     if (
-      ignore?.ignores(file) || // file is in .gitignore or .nxignore
+      ig?.ignores(file) || // file is in .gitignore or .nxignore
       file === 'package.json' || // file is workspace root package json
-      // project.json or equivalent inferred project file has been found
+      // project.json or equivallent inferred project file has been found
       (filtered.has(projectFolder) && projectFile !== 'project.json')
     ) {
       return;

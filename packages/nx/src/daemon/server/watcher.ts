@@ -5,17 +5,15 @@
  *
  * See https://github.com/parcel-bundler/watcher for more details.
  */
-import type { AsyncSubscription, Event } from '@parcel/watcher';
-import { Server } from 'net';
-import { join, relative } from 'path';
-import {
-  createIgnoreFromPatterns,
-  readWorkspaceIgnorePatterns,
-} from '../../utils/ignore';
-import { normalizePath } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
+import type { AsyncSubscription, Event } from '@parcel/watcher';
+import { readFileSync } from 'fs';
+import { join, relative } from 'path';
 import { FULL_OS_SOCKET_PATH } from '../socket-utils';
 import { handleServerProcessTermination } from './shutdown-utils';
+import { Server } from 'net';
+import ignore from 'ignore';
+import { normalizePath } from '../../utils/path';
 
 /**
  * This configures the files and directories which we always want to ignore as part of file watching
@@ -35,11 +33,42 @@ const ALWAYS_IGNORE = [
   FULL_OS_SOCKET_PATH,
 ];
 
+function getIgnoredGlobs() {
+  return [
+    ...ALWAYS_IGNORE,
+    ...getIgnoredGlobsFromFile(join(workspaceRoot, '.nxignore')),
+    ...getIgnoredGlobsFromFile(join(workspaceRoot, '.gitignore')),
+  ];
+}
+
+function getIgnoredGlobsFromFile(file: string): string[] {
+  try {
+    return readFileSync(file, 'utf-8')
+      .split('\n')
+      .map((i) => i.trim())
+      .filter((i) => !!i && !i.startsWith('#'))
+      .map((i) => (i.startsWith('/') ? join(workspaceRoot, i) : i));
+  } catch (e) {
+    return [];
+  }
+}
+
 export type WatcherSubscription = AsyncSubscription;
 export type SubscribeToWorkspaceChangesCallback = (
   err: Error | null,
   changeEvents: Event[] | null
 ) => Promise<void>;
+
+function configureIgnoreObject() {
+  const ig = ignore();
+  try {
+    ig.add(readFileSync(`${workspaceRoot}/.gitignore`, 'utf-8'));
+  } catch {}
+  try {
+    ig.add(readFileSync(`${workspaceRoot}/.nxignore`, 'utf-8'));
+  } catch {}
+  return ig;
+}
 
 export async function subscribeToWorkspaceChanges(
   server: Server,
@@ -51,8 +80,7 @@ export async function subscribeToWorkspaceChanges(
    * executed by packages which do not have its necessary native binaries available.
    */
   const watcher = await import('@parcel/watcher');
-  const ignorePatterns = readWorkspaceIgnorePatterns();
-  const ignore = createIgnoreFromPatterns(ignorePatterns);
+  const ignoreObj = configureIgnoreObject();
 
   const subscription = await watcher.subscribe(
     workspaceRoot,
@@ -91,14 +119,14 @@ export async function subscribeToWorkspaceChanges(
 
       const nonIgnoredEvents = workspaceRelativeEvents
         .filter(({ path }) => !!path)
-        .filter(({ path }) => !ignore.ignores(path));
+        .filter(({ path }) => !ignoreObj.ignores(path));
 
       if (nonIgnoredEvents && nonIgnoredEvents.length > 0) {
         cb(null, nonIgnoredEvents);
       }
     },
     {
-      ignore: [...ALWAYS_IGNORE, ...ignorePatterns],
+      ignore: getIgnoredGlobs(),
     }
   );
 
