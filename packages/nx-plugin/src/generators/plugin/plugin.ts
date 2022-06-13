@@ -37,17 +37,19 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
     }
   );
 
-  await generatorGenerator(host, {
-    project: options.name,
-    name: options.name,
-    unitTestRunner: options.unitTestRunner,
-  });
-  await executorGenerator(host, {
-    project: options.name,
-    name: 'build',
-    unitTestRunner: options.unitTestRunner,
-    includeHasher: false,
-  });
+  if (!options.minimal) {
+    await generatorGenerator(host, {
+      project: options.name,
+      name: options.name,
+      unitTestRunner: options.unitTestRunner,
+    });
+    await executorGenerator(host, {
+      project: options.name,
+      name: 'build',
+      unitTestRunner: options.unitTestRunner,
+      includeHasher: false,
+    });
+  }
 }
 
 function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {

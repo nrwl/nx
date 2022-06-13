@@ -128,6 +128,48 @@ describe('NxPlugin Plugin Generator', () => {
     ).toContain('const variable = "<%= projectName %>";');
   });
 
+  it('should not create generator and executor files for minimal setups', async () => {
+    await pluginGenerator(tree, getSchema({ name: 'myPlugin', minimal: true }));
+
+    [
+      'libs/my-plugin/project.json',
+      'libs/my-plugin/generators.json',
+      'libs/my-plugin/executors.json',
+    ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
+
+    [
+      'libs/my-plugin/src/generators/my-plugin/schema.d.ts',
+      'libs/my-plugin/src/generators/my-plugin/generator.ts',
+      'libs/my-plugin/src/generators/my-plugin/generator.spec.ts',
+      'libs/my-plugin/src/generators/my-plugin/schema.json',
+      'libs/my-plugin/src/generators/my-plugin/schema.d.ts',
+      'libs/my-plugin/src/generators/my-plugin/files/src/index.ts__template__',
+      'libs/my-plugin/src/executors/build/executor.ts',
+      'libs/my-plugin/src/executors/build/executor.spec.ts',
+      'libs/my-plugin/src/executors/build/schema.json',
+      'libs/my-plugin/src/executors/build/schema.d.ts',
+    ].forEach((path) => expect(tree.exists(path)).toBeFalsy());
+
+    expect(tree.read('libs/my-plugin/generators.json', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "{
+        \\"$schema\\": \\"http://json-schema.org/schema\\",
+        \\"name\\": \\"my-plugin\\",
+        \\"version\\": \\"0.0.1\\",
+        \\"generators\\": {}
+      }
+      "
+    `);
+    expect(tree.read('libs/my-plugin/executors.json', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "{
+        \\"$schema\\": \\"http://json-schema.org/schema\\",
+        \\"executors\\": {}
+      }
+      "
+    `);
+  });
+
   describe('--unitTestRunner', () => {
     describe('none', () => {
       it('should not generate test files', async () => {
