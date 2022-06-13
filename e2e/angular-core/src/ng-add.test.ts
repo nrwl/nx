@@ -5,6 +5,7 @@ import {
   checkFilesExist,
   cleanupProject,
   getSelectedPackageManager,
+  packageInstall,
   readJson,
   runCLI,
   runCommand,
@@ -51,10 +52,12 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     updateFile('angular.json', JSON.stringify(angularJson, null, 2));
   }
 
-  function addCypress() {
-    // TODO(leo): @cypress/schematic latest comes with Cypress 10 support
-    // which we don't support yet in our Cypress plugin.
+  function addCypress9() {
     runNgAdd('@cypress/schematic', '--e2e-update', '1.7.0');
+    packageInstall('cypress', null, '^9.0.0');
+  }
+  function addCypress10() {
+    runNgAdd('@cypress/schematic', '--e2e-update', 'latest');
   }
 
   function addEsLint() {
@@ -296,8 +299,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // runCommand('mv src-bak src');
   });
 
-  it('should handle wrong cypress setup', () => {
-    addCypress();
+  it('should handle a workspace with cypress v9', () => {
+    addCypress9();
 
     // Remove cypress.json
     runCommand('mv cypress.json cypress.json.bak');
@@ -318,10 +321,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     );
     // Restore cypress.json
     runCommand('mv cypress-bak cypress');
-  });
-
-  it('should handle a workspace with cypress', () => {
-    addCypress();
 
     runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install');
 
@@ -378,6 +377,93 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         watch: true,
         headless: false,
         cypressConfig: `apps/${e2eProject}/cypress.json`,
+      },
+      configurations: {
+        production: {
+          devServerTarget: `${project}:serve:production`,
+        },
+      },
+    });
+  });
+
+  it('should handle a workspace with cypress v10', () => {
+    addCypress10();
+
+    // Remove cypress.config.ts
+    runCommand('mv cypress.config.ts cypress.config.ts.bak');
+    expect(() =>
+      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
+    ).toThrow(
+      'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.config.{ts,js,mjs,cjs}" file could not be found at the project root.'
+    );
+    // Restore cypress.json
+    runCommand('mv cypress.config.ts.bak cypress.config.ts');
+
+    // Remove cypress directory
+    runCommand('mv cypress cypress-bak');
+    expect(() =>
+      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
+    ).toThrow(
+      'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "cypress" directory could not be found at the project root.'
+    );
+    // Restore cypress.json
+    runCommand('mv cypress-bak cypress');
+
+    runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install');
+
+    const e2eProject = `${project}-e2e`;
+    //check e2e project files
+    checkFilesDoNotExist(
+      'cypress.config.ts',
+      'cypress/tsconfig.json',
+      'cypress/e2e/spec.cy.ts',
+      'cypress/fixtures/example.json',
+      'cypress/support/commands.ts',
+      'cypress/support/e2e.ts'
+    );
+    checkFilesExist(
+      `apps/${e2eProject}/cypress.config.ts`,
+      `apps/${e2eProject}/tsconfig.json`,
+      `apps/${e2eProject}/src/e2e/spec.cy.ts`,
+      `apps/${e2eProject}/src/fixtures/example.json`,
+      `apps/${e2eProject}/src/support/commands.ts`,
+      `apps/${e2eProject}/src/support/e2e.ts`
+    );
+
+    const projectConfig = readJson(`apps/${project}/project.json`);
+    expect(projectConfig.targets['cypress-run']).toBeUndefined();
+    expect(projectConfig.targets['cypress-open']).toBeUndefined();
+    expect(projectConfig.targets.e2e).toBeUndefined();
+
+    // check e2e project config
+    const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
+    expect(e2eProjectConfig.targets['cypress-run']).toEqual({
+      executor: '@nrwl/cypress:cypress',
+      options: {
+        devServerTarget: `${project}:serve`,
+        cypressConfig: `apps/${e2eProject}/cypress.config.ts`,
+      },
+      configurations: {
+        production: {
+          devServerTarget: `${project}:serve:production`,
+        },
+      },
+    });
+    expect(e2eProjectConfig.targets['cypress-open']).toEqual({
+      executor: '@nrwl/cypress:cypress',
+      options: {
+        watch: true,
+        headless: false,
+        cypressConfig: `apps/${e2eProject}/cypress.config.ts`,
+      },
+    });
+    expect(e2eProjectConfig.targets.e2e).toEqual({
+      executor: '@nrwl/cypress:cypress',
+      options: {
+        devServerTarget: `${project}:serve`,
+        watch: true,
+        headless: false,
+        cypressConfig: `apps/${e2eProject}/cypress.config.ts`,
       },
       configurations: {
         production: {
