@@ -197,7 +197,9 @@ export class Workspaces {
       }
     } else {
       try {
-        return readJsonFile(join(__dirname, '..', '..', 'presets', 'npm.json'));
+        return readJsonFile(
+          join(__dirname, '..', '..', 'presets', 'core.json')
+        );
       } catch (e) {
         return {};
       }

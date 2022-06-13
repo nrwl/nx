@@ -29,7 +29,7 @@ export function initHandler() {
   if (!fileExists('nx.json')) {
     writeJsonFile(
       'nx.json',
-      readJsonFile(join(__dirname, '..', '..', 'presets', 'npm.json'))
+      readJsonFile(join(__dirname, '..', '..', 'presets', 'core.json'))
     );
 
     output.success({

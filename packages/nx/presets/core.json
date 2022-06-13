@@ -1,10 +1,6 @@
 {
   "implicitDependencies": {
-    "package.json": {
-      "dependencies": "*",
-      "devDependencies": "*"
-    },
-    ".eslintrc.json": "*"
+    "package.json": "*"
   },
   "tasksRunnerOptions": {
     "default": {
@@ -13,10 +9,6 @@
         "cacheableOperations": []
       }
     }
-  },
-  "workspaceLayout": {
-    "libsDir": "packages",
-    "appsDir": "packages"
   },
   "pluginsConfig": {
     "@nrwl/js": {

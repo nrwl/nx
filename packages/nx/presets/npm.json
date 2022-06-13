@@ -10,6 +10,10 @@
       }
     }
   },
+  "workspaceLayout": {
+    "libsDir": "packages",
+    "appsDir": "packages"
+  },
   "pluginsConfig": {
     "@nrwl/js": {
       "analyzeSourceFiles": false
