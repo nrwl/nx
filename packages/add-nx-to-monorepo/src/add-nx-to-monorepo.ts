@@ -1,17 +1,13 @@
 #!/usr/bin/env node
 
-import {
-  createIgnore,
-  output,
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/devkit';
+import * as path from 'path';
+import * as fs from 'fs';
 import * as cp from 'child_process';
 import { execSync } from 'child_process';
 import * as enquirer from 'enquirer';
-import * as fs from 'fs';
-import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
+import { output, readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import ignore from 'ignore';
 import { directoryExists } from 'nx/src/utils/fileutils';
 
 const parsedArgs = yargsParser(process.argv, {
@@ -94,11 +90,12 @@ function allProjectPackageJsonFiles(repoRoot: string) {
 }
 
 function allPackageJsonFiles(repoRoot: string, dirName: string) {
-  const ignore = createIgnore(repoRoot, ['.gitignore']);
+  const ignoredGlobs = getIgnoredGlobs(repoRoot);
   const relDirName = path.relative(repoRoot, dirName);
   if (
     relDirName &&
-    (ignore.ignores(relDirName) || relDirName.indexOf(`node_modules`) > -1)
+    (ignoredGlobs.ignores(relDirName) ||
+      relDirName.indexOf(`node_modules`) > -1)
   ) {
     return [];
   }
@@ -107,7 +104,7 @@ function allPackageJsonFiles(repoRoot: string, dirName: string) {
   try {
     fs.readdirSync(dirName).forEach((c) => {
       const child = path.join(dirName, c);
-      if (ignore.ignores(path.relative(repoRoot, child))) {
+      if (ignoredGlobs.ignores(path.relative(repoRoot, child))) {
         return;
       }
       try {
@@ -123,6 +120,15 @@ function allPackageJsonFiles(repoRoot: string, dirName: string) {
     // eslint-disable-next-line no-empty
   } catch (e) {}
   return res;
+}
+
+function getIgnoredGlobs(repoRoot: string) {
+  const ig = ignore();
+  try {
+    ig.add(fs.readFileSync(`${repoRoot}/.gitignore`).toString());
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
+  return ig;
 }
 
 // creating project descs

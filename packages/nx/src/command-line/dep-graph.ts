@@ -1,26 +1,26 @@
+import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { watch } from 'chokidar';
 import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
+import ignore from 'ignore';
 import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL, URLSearchParams } from 'url';
 import { workspaceLayout } from '../config/configuration';
+import { defaultFileHasher } from '../hasher/file-hasher';
+import { output } from '../utils/output';
+import { writeJsonFile } from '../utils/fileutils';
+import { joinPathFragments } from '../utils/path';
 import {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
-import { defaultFileHasher } from '../hasher/file-hasher';
 import { pruneExternalNodes } from '../project-graph/operators';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { writeJsonFile } from '../utils/fileutils';
-import { createIgnore } from '../utils/ignore';
-import { output } from '../utils/output';
-import { joinPathFragments } from '../utils/path';
-import { workspaceRoot } from '../utils/workspace-root';
 
 export interface DepGraphClientResponse {
   hash: string;
@@ -408,6 +408,17 @@ let currentDepGraphClientResponse: DepGraphClientResponse = {
   exclude: [],
 };
 
+function getIgnoredGlobs(root: string) {
+  const ig = ignore();
+  try {
+    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
+  } catch {}
+  try {
+    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
+  } catch {}
+  return ig;
+}
+
 function startWatcher() {
   createFileWatcher(workspaceRoot, async () => {
     output.note({ title: 'Recalculating project graph...' });
@@ -437,7 +448,7 @@ function debounce(fn: (...args) => void, time: number) {
 }
 
 function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
-  const ignore = createIgnore(root);
+  const ignoredGlobs = getIgnoredGlobs(root);
   const layout = workspaceLayout();
 
   const watcher = watch(
@@ -453,7 +464,7 @@ function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
   watcher.on(
     'all',
     debounce(async (event: string, path: string) => {
-      if (ignore.ignores(path)) return;
+      if (ignoredGlobs.ignores(path)) return;
       await changeHandler();
     }, 500)
   );

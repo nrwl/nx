@@ -1,19 +1,17 @@
-import * as chalk from 'chalk';
 import { execFileSync, fork } from 'child_process';
-import { watch } from 'chokidar';
-import { copyFileSync, unlinkSync } from 'fs';
-import { createIgnore } from 'nx/src/utils/ignore';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
-import { platform } from 'os';
-import { join, resolve } from 'path';
-
+import * as chalk from 'chalk';
 import {
   ExecutorContext,
   joinPathFragments,
   workspaceLayout,
 } from '@nrwl/devkit';
-
+import ignore from 'ignore';
+import { copyFileSync, readFileSync, unlinkSync } from 'fs';
 import { Schema } from './schema';
+import { watch } from 'chokidar';
+import { platform } from 'os';
+import { join, resolve } from 'path';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -85,11 +83,22 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
   return outputPath;
 }
 
+function getIgnoredGlobs(root: string) {
+  const ig = ignore();
+  try {
+    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
+  } catch {}
+  try {
+    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
+  } catch {}
+  return ig;
+}
+
 function createFileWatcher(
   root: string,
   changeHandler: () => void
 ): () => void {
-  const ignore = createIgnore(root);
+  const ignoredGlobs = getIgnoredGlobs(root);
   const layout = workspaceLayout();
 
   const watcher = watch(
@@ -103,7 +112,7 @@ function createFileWatcher(
     }
   );
   watcher.on('all', (_event: string, path: string) => {
-    if (ignore.ignores(path)) return;
+    if (ignoredGlobs.ignores(path)) return;
     changeHandler();
   });
   return () => watcher.close();
