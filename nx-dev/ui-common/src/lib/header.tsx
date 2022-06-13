@@ -1,6 +1,7 @@
 import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 import cx from 'classnames';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 export interface HeaderProps {
   isDocViewer?: boolean;
@@ -8,6 +9,8 @@ export interface HeaderProps {
 }
 
 export function Header(props: HeaderProps) {
+  const router = useRouter();
+  const isNxCloudDoc: boolean = router.asPath.startsWith('/nx-cloud');
   return (
     <div
       className={cx(
@@ -66,7 +69,7 @@ export function Header(props: HeaderProps) {
                 title="Check Nx documentation"
                 className={cx(
                   'px-3 py-2 leading-tight text-white',
-                  !!props.isDocViewer ? 'font-bold' : ''
+                  !!props.isDocViewer && !isNxCloudDoc ? 'font-bold' : ''
                 )}
               >
                 Nx Docs
@@ -76,8 +79,8 @@ export function Header(props: HeaderProps) {
               <a
                 title="Nx Cloud documentation"
                 className={cx(
-                  'text-green-nx-base px-3 py-2 leading-tight text-white',
-                  !!props.isDocViewer ? 'font-bold' : ''
+                  'px-3 py-2 leading-tight text-white',
+                  !!props.isDocViewer && isNxCloudDoc ? 'font-bold' : ''
                 )}
               >
                 Nx Cloud Docs
