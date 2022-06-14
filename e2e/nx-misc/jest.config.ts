@@ -5,6 +5,6 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   maxWorkers: 1,
   globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
-  displayName: 'e2e-workspace-integrations',
+  displayName: 'e2e-nx-misc',
   preset: '../../jest.preset.js',
 };

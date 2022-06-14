@@ -1,83 +1,248 @@
 import {
+  cleanupProject,
   isNotWindows,
   newProject,
   readFile,
   readJson,
   runCLI,
+  runCLIAsync,
   runCommand,
   tmpProjPath,
+  uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
 import { renameSync } from 'fs';
 import { packagesWeCareAbout } from 'nx/src/command-line/report';
+import * as path from 'path';
 
-describe('report', () => {
-  beforeEach(() => newProject());
+describe('Nx Commands', () => {
+  let proj: string;
+  beforeAll(() => (proj = newProject()));
 
-  it(`should report package versions`, async () => {
-    const reportOutput = runCLI('report');
+  describe('report and list', () => {
+    it(`should report package versions`, async () => {
+      const reportOutput = runCLI('report');
 
-    packagesWeCareAbout.forEach((p) => {
-      expect(reportOutput).toContain(p);
+      packagesWeCareAbout.forEach((p) => {
+        expect(reportOutput).toContain(p);
+      });
+    }, 120000);
+
+    it(`should list plugins`, async () => {
+      let listOutput = runCLI('list');
+
+      expect(listOutput).toContain('NX   Installed plugins');
+
+      // just check for some, not all
+      expect(listOutput).toContain('@nrwl/angular');
+
+      // temporarily make it look like this isn't installed
+      renameSync(
+        tmpProjPath('node_modules/@nrwl/angular'),
+        tmpProjPath('node_modules/@nrwl/angular_tmp')
+      );
+
+      listOutput = runCLI('list');
+      expect(listOutput).toContain('NX   Also available');
+
+      // look for specific plugin
+      listOutput = runCLI('list @nrwl/workspace');
+
+      expect(listOutput).toContain('Capabilities in @nrwl/workspace');
+
+      // check for schematics
+      expect(listOutput).toContain('workspace');
+      expect(listOutput).toContain('library');
+      expect(listOutput).toContain('workspace-generator');
+
+      // check for builders
+      expect(listOutput).toContain('run-commands');
+
+      // // look for uninstalled core plugin
+      listOutput = runCLI('list @nrwl/angular');
+
+      expect(listOutput).toContain(
+        'NX   @nrwl/angular is not currently installed'
+      );
+
+      // look for an unknown plugin
+      listOutput = runCLI('list @wibble/fish');
+
+      expect(listOutput).toContain(
+        'NX   @wibble/fish is not currently installed'
+      );
+
+      // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
+      renameSync(
+        tmpProjPath('node_modules/@nrwl/angular_tmp'),
+        tmpProjPath('node_modules/@nrwl/angular')
+      );
+    }, 120000);
+  });
+  describe('format', () => {
+    const myapp = uniq('myapp');
+    const mylib = uniq('mylib');
+
+    beforeAll(() => {
+      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nrwl/js:lib ${mylib}`);
     });
-  }, 120000);
+
+    afterAll(() => cleanupProject());
+
+    beforeEach(() => {
+      updateFile(
+        `apps/${myapp}/src/main.ts`,
+        `
+       const x = 1111;
+  `
+      );
+
+      updateFile(
+        `apps/${myapp}/src/app/app.element.spec.ts`,
+        `
+       const y = 1111;
+  `
+      );
+
+      updateFile(
+        `apps/${myapp}/src/app/app.element.ts`,
+        `
+       const z = 1111;
+  `
+      );
+
+      updateFile(
+        `libs/${mylib}/index.ts`,
+        `
+       const x = 1111;
+  `
+      );
+      updateFile(
+        `libs/${mylib}/src/${mylib}.spec.ts`,
+        `
+       const y = 1111;
+  `
+      );
+
+      updateFile(
+        `README.md`,
+        `
+       my new readme;
+  `
+      );
+    });
+
+    it('should check libs and apps specific files', async () => {
+      if (isNotWindows()) {
+        const stdout = runCLI(
+          `format:check --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`,
+          { silenceError: true }
+        );
+        expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+        expect(stdout).toContain(
+          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
+        );
+        expect(stdout).not.toContain(path.normalize(`README.md`)); // It will be contained only in case of exception, that we fallback to all
+      }
+    }, 90000);
+
+    it('should check specific project', async () => {
+      if (isNotWindows()) {
+        const stdout = runCLI(`format:check --projects=${myapp}`, {
+          silenceError: true,
+        });
+        expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+        expect(stdout).toContain(
+          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
+        );
+        expect(stdout).toContain(
+          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
+        );
+        expect(stdout).not.toContain(path.normalize(`libs/${mylib}/index.ts`));
+        expect(stdout).not.toContain(
+          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
+        );
+        expect(stdout).not.toContain(path.normalize(`README.md`));
+      }
+    }, 90000);
+
+    it('should check multiple projects', async () => {
+      if (isNotWindows()) {
+        const stdout = runCLI(`format:check --projects=${myapp},${mylib}`, {
+          silenceError: true,
+        });
+        expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+        expect(stdout).toContain(
+          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
+        );
+        expect(stdout).toContain(
+          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
+        );
+        expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+        expect(stdout).toContain(
+          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
+        );
+        expect(stdout).not.toContain(path.normalize(`README.md`));
+      }
+    }, 90000);
+
+    it('should check all', async () => {
+      if (isNotWindows()) {
+        const stdout = runCLI(`format:check --all`, { silenceError: true });
+        expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+        expect(stdout).toContain(
+          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
+        );
+        expect(stdout).toContain(
+          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
+        );
+        expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+        expect(stdout).toContain(
+          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
+        );
+        expect(stdout).toContain(path.normalize(`README.md`));
+      }
+    }, 90000);
+
+    it('should throw error if passing both projects and --all param', async () => {
+      if (isNotWindows()) {
+        const { stderr } = await runCLIAsync(
+          `format:check --projects=${myapp},${mylib} --all`,
+          {
+            silenceError: true,
+          }
+        );
+        expect(stderr).toContain(
+          'Arguments all and projects are mutually exclusive'
+        );
+      }
+    }, 90000);
+
+    it('should reformat the code', async () => {
+      if (isNotWindows()) {
+        runCLI(
+          `format:write --files="apps/${myapp}/src/app/app.element.spec.ts,apps/${myapp}/src/app/app.element.ts"`
+        );
+        const stdout = runCLI('format:check --all', { silenceError: true });
+        expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+        expect(stdout).not.toContain(
+          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
+        );
+        expect(stdout).not.toContain(
+          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
+        );
+
+        runCLI('format:write --all');
+        expect(runCLI('format:check --all')).not.toContain(
+          path.normalize(`apps/${myapp}/src/main.ts`)
+        );
+      }
+    }, 300000);
+  });
 });
 
-describe('list', () => {
-  beforeEach(() => newProject());
-
-  it(`should work`, async () => {
-    let listOutput = runCLI('list');
-
-    expect(listOutput).toContain('NX   Installed plugins');
-
-    // just check for some, not all
-    expect(listOutput).toContain('@nrwl/angular');
-
-    // temporarily make it look like this isn't installed
-    renameSync(
-      tmpProjPath('node_modules/@nrwl/angular'),
-      tmpProjPath('node_modules/@nrwl/angular_tmp')
-    );
-
-    listOutput = runCLI('list');
-    expect(listOutput).toContain('NX   Also available');
-
-    // look for specific plugin
-    listOutput = runCLI('list @nrwl/workspace');
-
-    expect(listOutput).toContain('Capabilities in @nrwl/workspace');
-
-    // check for schematics
-    expect(listOutput).toContain('workspace');
-    expect(listOutput).toContain('library');
-    expect(listOutput).toContain('workspace-generator');
-
-    // check for builders
-    expect(listOutput).toContain('run-commands');
-
-    // // look for uninstalled core plugin
-    listOutput = runCLI('list @nrwl/angular');
-
-    expect(listOutput).toContain(
-      'NX   @nrwl/angular is not currently installed'
-    );
-
-    // look for an unknown plugin
-    listOutput = runCLI('list @wibble/fish');
-
-    expect(listOutput).toContain(
-      'NX   @wibble/fish is not currently installed'
-    );
-
-    // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
-    renameSync(
-      tmpProjPath('node_modules/@nrwl/angular_tmp'),
-      tmpProjPath('node_modules/@nrwl/angular')
-    );
-  }, 120000);
-});
-
+// TODO(colum): Change the fetcher to allow incremental migrations over multiple versions, allowing for beforeAll
 describe('migrate', () => {
   beforeEach(() => {
     newProject();

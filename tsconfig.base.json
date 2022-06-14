@@ -26,7 +26,6 @@
       "@nrwl/devkit": ["packages/devkit"],
       "@nrwl/devkit/ngcli-adapter": ["packages/devkit/ngcli-adapter"],
       "@nrwl/devkit/testing": ["packages/devkit/testing"],
-      "@nrwl/e2e/cli": ["e2e/cli"],
       "@nrwl/e2e/utils": ["e2e/utils"],
       "@nrwl/eslint-plugin-nx": ["packages/eslint-plugin-nx/src"],
       "@nrwl/express": ["packages/express"],

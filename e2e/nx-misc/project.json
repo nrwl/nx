@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/cli",
+  "sourceRoot": "e2e/nx-misc",
   "projectType": "application",
   "targets": {
     "e2e": {
@@ -14,7 +14,7 @@
             "command": "yarn e2e-build-package-publish"
           },
           {
-            "command": "nx run-e2e-tests e2e-cli"
+            "command": "nx run-e2e-tests e2e-nx-misc"
           }
         ],
         "parallel": false
@@ -23,11 +23,11 @@
     "run-e2e-tests": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "e2e/cli/jest.config.ts",
+        "jestConfig": "e2e/nx-misc/jest.config.ts",
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/cli"]
+      "outputs": ["coverage/e2e/nx-misc"]
     }
   },
   "implicitDependencies": ["js"]
