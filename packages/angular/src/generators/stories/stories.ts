@@ -21,8 +21,7 @@ export function angularStoriesGenerator(
   const moduleFilePaths = getModuleFilePaths(tree, projectPath);
   const componentsInfo = [
     ...getComponentsInfo(tree, moduleFilePaths, options.name),
-    // TODO(leo): uncomment once Storybook supports standalone components https://github.com/storybookjs/storybook/pull/18272
-    // ...getStandaloneComponentsInfo(tree, projectPath),
+    ...getStandaloneComponentsInfo(tree, projectPath),
   ];
 
   if (options.generateCypressSpecs && !e2eProject) {

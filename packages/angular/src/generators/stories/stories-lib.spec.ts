@@ -2,6 +2,7 @@ import type { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { cypressProjectGenerator } from '@nrwl/storybook';
+import { componentGenerator } from '../component/component';
 import { libraryGenerator } from '../library/library';
 import { scamGenerator } from '../scam/scam';
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
@@ -258,6 +259,28 @@ describe('angularStories generator: libraries', () => {
           `libs/${libName}/src/lib/my-scam/my-scam.component.stories.ts`
         )
       ).toBeTruthy();
+    });
+
+    it('should generate stories file for standalone component', async () => {
+      await componentGenerator(tree, {
+        name: 'standalone',
+        project: libName,
+        standalone: true,
+      });
+
+      angularStoriesGenerator(tree, { name: libName });
+
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/standalone/standalone.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.read(
+          `libs/${libName}/src/lib/standalone/standalone.component.stories.ts`,
+          'utf-8'
+        )
+      ).toMatchSnapshot();
     });
   });
 });
