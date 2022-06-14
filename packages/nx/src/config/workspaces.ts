@@ -585,6 +585,7 @@ export function globForProjectFiles(
     ignore: ALWAYS_IGNORE,
     absolute: false,
     cwd: root,
+    dot: true,
   });
   projectGlobCache = deduplicateProjectFiles(globResults, ig);
   performance.mark('finish-glob-for-projects');
