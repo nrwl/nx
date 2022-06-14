@@ -161,7 +161,10 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
   }
   const overridesFromMainArgs = {} as any;
-  if (args['__positional_overrides__']) {
+  if (
+    args['__positional_overrides__'] &&
+    args['__positional_overrides__'].length > 0
+  ) {
     overridesFromMainArgs['_'] = args['__positional_overrides__'];
   }
   const nxArgs: RawNxArgs = {};

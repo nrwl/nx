@@ -10,7 +10,7 @@ describe('splitArgs', () => {
           base: 'sha1',
           head: 'sha2',
           notNxArg: true,
-          _: ['--override'],
+          override: true,
           $0: '',
         },
         'affected',
@@ -99,6 +99,7 @@ describe('splitArgs', () => {
         {
           files: [''],
           notNxArg: true,
+          __positional_overrides__: [],
           $0: '',
         },
         'affected',
@@ -107,6 +108,26 @@ describe('splitArgs', () => {
       ).overrides
     ).toEqual({
       __overrides_unparsed__: ['--notNxArg=true'],
+      notNxArg: true,
+    });
+  });
+
+  it('should split non nx specific arguments into target args (with positonal args)', () => {
+    expect(
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          files: [''],
+          notNxArg: true,
+          __positional_overrides__: ['positional'],
+          $0: '',
+        },
+        'affected',
+        {} as any,
+        {} as any
+      ).overrides
+    ).toEqual({
+      _: ['positional'],
+      __overrides_unparsed__: ['positional', '--notNxArg=true'],
       notNxArg: true,
     });
   });
