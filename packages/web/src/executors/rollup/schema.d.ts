@@ -23,4 +23,7 @@ export interface WebRollupOptions {
   format: string[];
   compiler?: Compiler;
   javascriptEnabled?: boolean;
+  // TODO(jack): remove this for Nx 15
+  skipTypeField?: boolean;
+  generateExportsField?: boolean;
 }
