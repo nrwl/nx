@@ -12,8 +12,8 @@ export const typesNodeVersion = '16.11.7';
 export const styledComponentsVersion = '5.3.5';
 export const typesStyledComponentsVersion = '5.1.25';
 
-export const emotionStyledVersion = '11.8.1';
-export const emotionReactVersion = '11.9.0';
+export const emotionStyledVersion = '11.9.3';
+export const emotionReactVersion = '11.9.3';
 export const emotionBabelPlugin = '11.9.2';
 
 // WARNING: This needs to be in sync with Next.js' dependency or else there might be issues.
