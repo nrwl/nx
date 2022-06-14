@@ -467,6 +467,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.3.2": {
+      "version": "14.3.2-beta.0",
+      "packages": {
+        "@types/node": {
+          "version": "17.0.42",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.9.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/react": {
+          "version": "11.9.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
