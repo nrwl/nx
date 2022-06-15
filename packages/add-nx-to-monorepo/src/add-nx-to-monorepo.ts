@@ -182,12 +182,12 @@ function createNxJsonFile(repoRoot: string, projects: ProjectDesc[]) {
   const cacheableOperations = Object.keys(allScripts).filter(
     (s) => s.indexOf('serve') === -1 && s.indexOf('start') === -1
   );
-  const targetDependencies = cacheableOperations
+  const targetDefaults = cacheableOperations
     .filter((c) => c === 'build' || c === 'prepare' || c === 'package')
     .reduce(
       (m, c) => ({
         ...m,
-        [c]: [{ target: c, projects: 'dependencies' }],
+        [c]: { dependsOn: [`^${c}`] },
       }),
       {}
     );
@@ -202,7 +202,7 @@ function createNxJsonFile(repoRoot: string, projects: ProjectDesc[]) {
         },
       },
     },
-    targetDependencies,
+    targetDefaults,
     affected: {
       defaultBase: deduceDefaultBase(),
     },

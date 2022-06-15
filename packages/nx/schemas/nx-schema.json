@@ -29,6 +29,13 @@
         "$ref": "#/definitions/tasksRunnerOptions"
       }
     },
+    "targetDefaults": {
+      "type": "object",
+      "description": "Target defaults",
+      "additionalProperties": {
+        "$ref": "#/definitions/targetDefaultsConfig"
+      }
+    },
     "targetDependencies": {
       "type": "object",
       "description": "Dependencies between different target names across all projects.",
@@ -106,22 +113,66 @@
     },
     "targetDependencyConfig": {
       "type": "array",
-      "description": "Target dependency.",
       "items": {
-        "type": "object",
-        "properties": {
-          "projects": {
-            "type": "string",
-            "description": "The projects that the targets belong to.",
-            "enum": ["self", "dependencies"]
+        "oneOf": [
+          {
+            "type": "string"
           },
-          "target": {
-            "type": "string",
-            "description": "The name of the target."
+          {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "type": "string",
+                "description": "The projects that the targets belong to.",
+                "enum": ["self", "dependencies"]
+              },
+              "target": {
+                "type": "string",
+                "description": "The name of the target."
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "targetDefaultsConfig": {
+      "type": "object",
+      "description": "Target defaults",
+      "properties": {
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "projects": {
+                    "type": "string",
+                    "description": "The projects that the targets belong to.",
+                    "enum": ["self", "dependencies"]
+                  },
+                  "target": {
+                    "type": "string",
+                    "description": "The name of the target."
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
           }
         },
-        "additionalProperties": false
-      }
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

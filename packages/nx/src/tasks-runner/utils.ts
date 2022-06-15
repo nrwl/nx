@@ -55,7 +55,11 @@ function expandDependencyConfigSyntaxSugar(
 ): TargetDependencyConfig[] {
   return deps.map((d) => {
     if (typeof d === 'string') {
-      return { projects: 'self', target: d };
+      if (d.startsWith('^')) {
+        return { projects: 'dependencies', target: d.substring(1) };
+      } else {
+        return { projects: 'self', target: d };
+      }
     } else {
       return d;
     }

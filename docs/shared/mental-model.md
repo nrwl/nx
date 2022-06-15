@@ -11,7 +11,8 @@ authored in your repository, such as Webpack, React, Angular, and so forth.
 
 ![project-graph](/shared/mental-model/project-graph.png)
 
-With Nx, nodes in the project graph are defined in `project.json` files. You can manually define dependencies between the
+With Nx, nodes in the project graph are defined in `project.json` files. You can manually define dependencies between
+the
 nodes, but you don’t have to do it very often. Nx analyzes files’ source code, your installed dependencies, TypeScript
 files, and others figuring out these dependencies for you. Nx also stores the cached project graph, so it only
 reanalyzes the files you have changed.
@@ -49,7 +50,8 @@ running `nx run-many --target=test --projects=app1,app2,lib`, the created task g
 
 ![task-graph-creation](/shared/mental-model/task-graph-creation.png)
 
-Even though the apps depend on `lib`, testing `app1` doesn’t depend on the testing `lib`. This means that the two tasks can
+Even though the apps depend on `lib`, testing `app1` doesn’t depend on the testing `lib`. This means that the two tasks
+can
 run in parallel.
 
 Let’s look at the test target relying on its dependencies.
@@ -59,12 +61,7 @@ Let’s look at the test target relying on its dependencies.
   "test": {
     "executor": "@nrwl/jest:jest",
     "outputs": ["coverage/apps/app1"],
-    "dependsOn": [
-      {
-        "target": "test",
-        "projects": "dependencies"
-      }
-    ],
+    "dependsOn": ["^test"],
     "options": {
       "jestConfig": "apps/app1/jest.config.js",
       "passWithNoTests": true
@@ -77,7 +74,8 @@ With this, running the same test command creates the following task graph:
 
 ![task-graph-run](/shared/mental-model/task-graph-run.png)
 
-This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define similar
+This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define
+similar
 relationships between targets of the same project, including a test target that depends on the build.
 
 A task graph can contain different targets, and those can run in parallel. For instance, as Nx is building `app2`, it
@@ -92,7 +90,8 @@ execution time.
 
 When you run `nx test app1`, you are telling Nx to run the `app1:test` task plus all the tasks it depends on.
 
-When you run `nx run-many --target=test --projects=app1,lib`, you are telling Nx to do the same for two tasks `app1:test`
+When you run `nx run-many --target=test --projects=app1,lib`, you are telling Nx to do the same for two
+tasks `app1:test`
 and `lib:test`.
 
 When you run `nx run-many --target=test --all`, you are telling Nx to do this for all the projects.
@@ -162,14 +161,16 @@ work happens. The rest is either left as is or restored from the cache.
 ## Distributed task execution
 
 Nx supports running commands across multiple machines. You can either set it up by hand (
-see [here](/ci/distributed-builds)) or use Nx Cloud. [Read the comparison of the two approaches.](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953?source=friends_link&sk=5120b7ff982730854ed22becfe7a640a)
+see [here](/ci/distributed-builds)) or use Nx
+Cloud. [Read the comparison of the two approaches.](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953?source=friends_link&sk=5120b7ff982730854ed22becfe7a640a)
 
 When using the distributed task execution, Nx is able to run any task graph on many agents instead of locally.
 
 For instance, `nx affected --build` won't run the build locally (which can take hours for large workspaces). Instead,
 it will send the Task Graph to Nx Cloud. Nx Cloud Agents will then pick up the tasks they can run and execute them.
 
-Note that this happens transparently. If an agent builds `app1`, it will fetch the outputs for `lib` if it doesn't have them
+Note that this happens transparently. If an agent builds `app1`, it will fetch the outputs for `lib` if it doesn't have
+them
 already.
 
 As agents complete tasks, the main job where you invoked `nx affected --build` will start receiving created files and

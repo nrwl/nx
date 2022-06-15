@@ -60,13 +60,10 @@ describe('@nrwl/workspace:workspace', () => {
           },
         },
       },
-      targetDependencies: {
-        build: [
-          {
-            projects: 'dependencies',
-            target: 'build',
-          },
-        ],
+      targetDefaults: {
+        build: {
+          dependsOn: ['^build'],
+        },
       },
     });
     const validateNxJson = ajv.compile(nxSchema);

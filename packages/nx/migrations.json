@@ -4,25 +4,31 @@
       "cli": "nx",
       "version": "14.0.6",
       "description": "Remove root property from project.json files",
-      "factory": "./src/migrations/update-14-0-6/remove-roots"
+      "implementation": "./src/migrations/update-14-0-6/remove-roots"
     },
     "14-2-0-add-json-schema": {
       "cli": "nx",
       "version": "14.2.0-beta.0",
       "description": "Add JSON Schema to Nx configuration files",
-      "factory": "./src/migrations/update-14-2-0/add-json-schema"
+      "implementation": "./src/migrations/update-14-2-0/add-json-schema"
     },
     "14-2-0-remove-default-collection": {
       "cli": "nx",
       "version": "14.2.0-beta.0",
       "description": "Remove default collection from configuration to switch to prompts for collection",
-      "factory": "./src/migrations/update-14-2-0/remove-default-collection"
+      "implementation": "./src/migrations/update-14-2-0/remove-default-collection"
     },
     "14-2-0-replace-relative-outputs-with-absolute": {
       "cli": "nx",
       "version": "14.2.0-beta.5",
       "description": "Replace all ./ and ../ in outputs with absolute paths",
-      "factory": "./src/migrations/update-14-2-0/replace-all-relative-outputs-with-absolute"
+      "implementation": "./src/migrations/update-14-2-0/replace-all-relative-outputs-with-absolute"
+    },
+    "14.3.4-create-target-defaults": {
+      "cli": "nx",
+      "version": "14.3.4-beta.1",
+      "description": "Replace targetDependencies with targetDefaults",
+      "implementation": "./src/migrations/update-14-3-4/create-target-defaults"
     }
   }
 }

@@ -1,9 +1,11 @@
 import {
+  checkFilesExist,
   cleanupProject,
   newProject,
   readFile,
   readJson,
   readProjectConfig,
+  removeFile,
   runCLI,
   runCommand,
   uniq,
@@ -126,13 +128,7 @@ describe('run-one', () => {
             command: 'echo PREP',
           },
         };
-        config.targets.build.dependsOn = [
-          'prep',
-          {
-            target: 'build',
-            projects: 'dependencies',
-          },
-        ];
+        config.targets.build.dependsOn = ['prep', '^build'];
         return config;
       });
 
@@ -148,21 +144,12 @@ describe('run-one', () => {
       updateProjectConfig(myapp, () => originalWorkspace);
     }, 10000);
 
+    // deprecated
     it('should be able to include deps using target dependencies defined at the root', () => {
       const originalNxJson = readFile('nx.json');
       const nxJson = readJson('nx.json');
       nxJson.targetDependencies = {
-        build: [
-          {
-            target: 'build',
-            projects: 'dependencies',
-          },
-          /**
-           * At the time of writing, the above object is also the default in nx.json, so we need to make an additional change to ensure
-           * that the JSON is structurally different and the build results are therefore not read from the cache as part of this test.
-           */
-          { target: 'e2e-extra-entry-to-bust-cache', projects: 'dependencies' },
-        ],
+        build: ['^build', '^e2e-extra-entry-to-bust-cache'],
       };
       updateFile('nx.json', JSON.stringify(nxJson));
 
@@ -175,6 +162,49 @@ describe('run-one', () => {
       expect(output).toContain(mylib2);
 
       updateFile('nx.json', originalNxJson);
+    }, 10000);
+
+    it('should be able to include deps using target defaults defined at the root', () => {
+      const nxJson = readJson('nx.json');
+      updateProjectConfig(myapp, (config) => {
+        config.targets.prep = {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo PREP > one.txt',
+          },
+        };
+        config.targets.outside = {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo OUTSIDE',
+          },
+        };
+        return config;
+      });
+
+      nxJson.tasksRunnerOptions.default.options.cacheableOperations = [
+        'prep',
+        'outside',
+      ];
+      nxJson.targetDefaults = {
+        prep: {
+          outputs: ['one.txt'],
+        },
+        outside: {
+          dependsOn: ['prep'],
+        },
+      };
+      updateFile('nx.json', JSON.stringify(nxJson));
+
+      const output = runCLI(`outside ${myapp}`);
+      expect(output).toContain(
+        `NX   Running target outside for project ${myapp} and 1 task(s) it depends on`
+      );
+
+      removeFile(`one.txt`);
+      runCLI(`outside ${myapp}`);
+
+      checkFilesExist(`one.txt`);
     }, 10000);
   });
 });

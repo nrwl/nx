@@ -14,7 +14,11 @@ import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle'
 import { isCI } from '../utils/is-ci';
 import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
+import {
+  NxJsonConfiguration,
+  TargetDefaults,
+  TargetDependencies,
+} from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
@@ -89,7 +93,7 @@ export async function runCommand(
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
   const defaultDependencyConfigs = mergeTargetDependencies(
-    nxJson.targetDependencies,
+    nxJson.targetDefaults,
     extraTargetDependencies
   );
   const projectNames = projectsToRun.map((t) => t.name);
@@ -183,21 +187,19 @@ export async function runCommand(
 }
 
 function mergeTargetDependencies(
-  a: Record<string, (TargetDependencyConfig | string)[]> | null,
-  b: Record<string, (TargetDependencyConfig | string)[]> | null
-): Record<string, (TargetDependencyConfig | string)[]> {
+  defaults: TargetDefaults,
+  deps: TargetDependencies
+): TargetDependencies {
   const res = {};
-  if (a) {
-    Object.keys(a).forEach((k) => {
-      res[k] = a[k];
-    });
-  }
-  if (b) {
-    Object.keys(b).forEach((k) => {
+  Object.keys(defaults).forEach((k) => {
+    res[k] = defaults[k].dependsOn;
+  });
+  if (deps) {
+    Object.keys(deps).forEach((k) => {
       if (res[k]) {
-        res[k] = [...res[k], b[k]];
+        res[k] = [...res[k], deps[k]];
       } else {
-        res[k] = b[k];
+        res[k] = deps[k];
       }
     });
 
