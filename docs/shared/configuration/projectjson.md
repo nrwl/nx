@@ -29,12 +29,7 @@ Let's look at the following `project.json`:
     "test": {
       "executor": "@nrwl/jest:jest",
       "outputs": [],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "self"
-        }
-      ],
+      "dependsOn": ["build"],
       "options": {
         "jestConfig": "libs/mylib/jest.config.js",
         "tsConfig": "libs/mylib/tsconfig.spec.json"
@@ -43,12 +38,7 @@ Let's look at the following `project.json`:
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["dist/libs/mylib"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
+      "dependsOn": ["^build"],
       "options": {
         "tsConfig": "libs/mylib/tsconfig.lib.json",
         "main": "libs/mylib/src/main.ts"
@@ -79,12 +69,7 @@ Let's look at a sample test target:
   "test": {
     "executor": "@nrwl/jest:jest",
     "outputs": [],
-    "dependsOn": [
-      {
-        "target": "build",
-        "projects": "self"
-      }
-    ],
+    "dependsOn": ["build"],
     "options": {
       "jestConfig": "libs/mylib/jest.config.js",
       "tsConfig": "libs/mylib/tsconfig.spec.json"
@@ -126,12 +111,7 @@ The `configurations` property provides extra sets of values that will be merged 
   "build": {
     "executor": "@nrwl/js:tsc",
     "outputs": ["dist/libs/mylib"],
-    "dependsOn": [
-      {
-        "target": "build",
-        "projects": "dependencies"
-      }
-    ],
+    "dependsOn": ["^build"],
     "options": {
       "tsConfig": "libs/mylib/tsconfig.lib.json",
       "main": "libs/mylib/src/main.ts"
@@ -177,12 +157,12 @@ sure that `mylib`'s dependencies are built as well. This doesn't mean Nx is goin
 artifacts are already in the right place, Nx will do nothing. If they aren't in the right place, but they are available
 in the cache, Nx will retrieve them from the cache.
 
-Depending on another target of the same project is very common. That's why we provide some syntax sugar, so
-`"dependsOn": [{"target": "build", "projects": "self"}]` can be shortened to `"dependsOn": ["build"]`.
-
 Another common scenario is for a target to depend on another target of the same project. For instance, `dependsOn` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
+
+> You can also express the same configuration using `{ projects: "self", target: "build"}`
+> and `{ projects: "dependencies", target: "build"}`.
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
@@ -274,13 +254,10 @@ The following is an expanded version showing all options. Your `nx.json` will li
     "tsconfig.base.json": "*",
     "nx.json": "*"
   },
-  "targetDependencies": {
-    "build": [
-      {
-        "target": "build",
-        "projects": "dependencies"
-      }
-    ]
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
   },
   "cli": {
     "defaultCollection": "@nrwl/js"
@@ -361,30 +338,38 @@ In the example above:
 - Changing `globalFile` only affects `myapp`.
 - Changing any CSS file inside the `styles` directory only affects `myapp`.
 
-### Target Dependencies
+### Target Defaults
 
 Targets can depend on other targets. A common scenario is having to build dependencies of a project first before
-building the project. The `dependsOn` property in `package.json` can be used to define the list of dependencies of an
+building the project. The `dependsOn` property in `project.json` can be used to define the list of dependencies of an
 individual target.
 
 Often the same `dependsOn` configuration has to be defined for every project in the repo, and that's when
-defining `targetDependencies` in `nx.json` is helpful.
+defining `targetDefaults` in `nx.json` is helpful.
 
 ```json
 {
-  "targetDependencies": {
-    "build": [
-      {
-        "target": "build",
-        "projects": "dependencies"
-      }
-    ]
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
   }
 }
 ```
 
-The configuration above is identical to adding `{"dependsOn": [{"target": "build", "projects": "dependencies"]}` to
-every build target of every project.
+The configuration above is identical to adding `{"dependsOn": ["^build"]}` to every build target of every project.
+
+Another target default you can configure is `outputs`:
+
+```json
+{
+  "targetDefaults": {
+    "build": {
+      "outputs": ["./custom-dist"]
+    }
+  }
+}
+```
 
 ### CLI Options
 

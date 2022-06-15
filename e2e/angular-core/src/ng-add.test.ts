@@ -153,13 +153,10 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         },
       },
       npmScope: 'projscope',
-      targetDependencies: {
-        build: [
-          {
-            projects: 'dependencies',
-            target: 'build',
-          },
-        ],
+      targetDefaults: {
+        build: {
+          dependsOn: ['^build'],
+        },
       },
       tasksRunnerOptions: {
         default: {

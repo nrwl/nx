@@ -32,21 +32,27 @@
           },
           "dependsOn": {
             "type": "array",
-            "description": "Target dependency.",
             "items": {
-              "type": "object",
-              "properties": {
-                "projects": {
-                  "type": "string",
-                  "description": "The projects that the targets belong to.",
-                  "enum": ["self", "dependencies"]
+              "oneOf": [
+                {
+                  "type": "string"
                 },
-                "target": {
-                  "type": "string",
-                  "description": "The name of the target."
+                {
+                  "type": "object",
+                  "properties": {
+                    "projects": {
+                      "type": "string",
+                      "description": "The projects that the targets belong to.",
+                      "enum": ["self", "dependencies"]
+                    },
+                    "target": {
+                      "type": "string",
+                      "description": "The name of the target."
+                    }
+                  },
+                  "additionalProperties": false
                 }
-              },
-              "additionalProperties": false
+              ]
             }
           }
         }

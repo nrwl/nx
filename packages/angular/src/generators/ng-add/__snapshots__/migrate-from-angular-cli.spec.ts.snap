@@ -13,13 +13,12 @@ Object {
     },
   },
   "npmScope": "my-scope",
-  "targetDependencies": Object {
-    "build": Array [
-      Object {
-        "projects": "dependencies",
-        "target": "build",
-      },
-    ],
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+    },
   },
   "tasksRunnerOptions": Object {
     "default": Object {
@@ -54,13 +53,12 @@ Object {
     },
   },
   "npmScope": "my-scope",
-  "targetDependencies": Object {
-    "build": Array [
-      Object {
-        "projects": "dependencies",
-        "target": "build",
-      },
-    ],
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+    },
   },
   "tasksRunnerOptions": Object {
     "default": Object {
@@ -174,13 +172,12 @@ Object {
     },
   },
   "npmScope": "my-org",
-  "targetDependencies": Object {
-    "build": Array [
-      Object {
-        "projects": "dependencies",
-        "target": "build",
-      },
-    ],
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+    },
   },
   "tasksRunnerOptions": Object {
     "default": Object {

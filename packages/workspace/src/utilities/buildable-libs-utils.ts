@@ -217,7 +217,7 @@ export function checkDependentProjectsHaveBeenBuilt(
       It looks like all of ${projectName}'s dependencies have not been built yet:
       ${missing.map((x) => ` - ${x.node.name}`).join('\n')}
 
-      You might be missing a "targetDependencies" configuration in your root nx.json (https://nx.dev/configuration/packagejson#target-dependencies),
+      You might be missing a "targetDefaults" configuration in your root nx.json (https://nx.dev/configuration/packagejson#target-defaults),
       or "dependsOn" configured in ${projectName}'s angular.json/workspace.json record or project.json (https://nx.dev/configuration/packagejson#dependson) 
     `);
   } else if (missing.length > 0) {

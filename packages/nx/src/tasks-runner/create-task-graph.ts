@@ -6,6 +6,7 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
+import { TargetDependencies } from '../config/nx-json';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -13,10 +14,7 @@ export class ProcessTasks {
   readonly dependencies: { [k: string]: string[] } = {};
 
   constructor(
-    private readonly defaultDependencyConfigs: Record<
-      string,
-      (TargetDependencyConfig | string)[]
-    >,
+    private readonly defaultDependencyConfigs: TargetDependencies,
     private readonly projectGraph: ProjectGraph
   ) {}
 
@@ -197,10 +195,7 @@ export class ProcessTasks {
 
 export function createTaskGraph(
   projectGraph: ProjectGraph,
-  defaultDependencyConfigs: Record<
-    string,
-    (TargetDependencyConfig | string)[]
-  > = {},
+  defaultDependencyConfigs: TargetDependencies,
   projectNames: string[],
   targets: string[],
   configuration: string | undefined,

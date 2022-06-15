@@ -16,6 +16,19 @@ export interface NxAffectedConfig {
   defaultBase?: string;
 }
 
+export type TargetDefaults = Record<
+  string,
+  {
+    outputs?: string[];
+    dependsOn?: (TargetDependencyConfig | string)[];
+  }
+>;
+
+export type TargetDependencies = Record<
+  string,
+  (TargetDependencyConfig | string)[]
+>;
+
 /**
  * Nx.json configuration
  */
@@ -29,9 +42,14 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   implicitDependencies?: ImplicitDependencyEntry<T>;
   /**
+   * @deprecated use targetDefaults instead
    * Dependencies between different target names across all projects
    */
-  targetDependencies?: Record<string, (TargetDependencyConfig | string)[]>;
+  targetDependencies?: TargetDependencies;
+  /**
+   * Dependencies between different target names across all projects
+   */
+  targetDefaults?: TargetDefaults;
   /**
    * NPM Scope that the workspace uses
    */

@@ -83,13 +83,12 @@ Object {
     },
   },
   "npmScope": "npmScope",
-  "targetDependencies": Object {
-    "build": Array [
-      Object {
-        "projects": "dependencies",
-        "target": "build",
-      },
-    ],
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+    },
   },
   "tasksRunnerOptions": Object {
     "default": Object {

@@ -88,8 +88,35 @@ export class Workspaces {
           );
 
     assertValidWorkspaceConfiguration(nxJson);
-    this.cachedWorkspaceConfig = { ...workspace, ...nxJson };
+    this.cachedWorkspaceConfig = {
+      ...this.mergeTargetDefaultsIntoProjectDescriptions(workspace, nxJson),
+      ...nxJson,
+    };
     return this.cachedWorkspaceConfig;
+  }
+
+  private mergeTargetDefaultsIntoProjectDescriptions(
+    config: ProjectsConfigurations,
+    nxJson: NxJsonConfiguration
+  ) {
+    for (const proj of Object.values(config.projects)) {
+      if (proj.targets) {
+        for (const targetName of Object.keys(proj.targets)) {
+          if (nxJson.targetDefaults[targetName]) {
+            const projectTargetDefinition = proj.targets[targetName];
+            if (!projectTargetDefinition.outputs) {
+              projectTargetDefinition.outputs =
+                nxJson.targetDefaults[targetName].outputs;
+            }
+            if (!projectTargetDefinition.dependsOn) {
+              projectTargetDefinition.dependsOn =
+                nxJson.targetDefaults[targetName].dependsOn;
+            }
+          }
+        }
+      }
+    }
+    return config;
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
@@ -193,19 +220,45 @@ export class Workspaces {
         });
         const baseNxJson =
           readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
-        return { ...baseNxJson, ...nxJsonConfig };
+        return this.mergeTargetDefaultsAndTargetDependencies({
+          ...baseNxJson,
+          ...nxJsonConfig,
+        });
       } else {
-        return nxJsonConfig;
+        return this.mergeTargetDefaultsAndTargetDependencies(nxJsonConfig);
       }
     } else {
       try {
-        return readJsonFile(
-          join(__dirname, '..', '..', 'presets', 'core.json')
+        return this.mergeTargetDefaultsAndTargetDependencies(
+          readJsonFile(join(__dirname, '..', '..', 'presets', 'core.json'))
         );
       } catch (e) {
         return {};
       }
     }
+  }
+
+  private mergeTargetDefaultsAndTargetDependencies(
+    nxJson: NxJsonConfiguration
+  ) {
+    if (!nxJson.targetDefaults) {
+      nxJson.targetDefaults = {};
+    }
+    if (nxJson.targetDependencies) {
+      for (const targetName of Object.keys(nxJson.targetDependencies)) {
+        if (!nxJson.targetDefaults[targetName]) {
+          nxJson.targetDefaults[targetName] = {};
+        }
+        if (!nxJson.targetDefaults[targetName].dependsOn) {
+          nxJson.targetDefaults[targetName].dependsOn = [];
+        }
+        nxJson.targetDefaults[targetName].dependsOn = [
+          ...nxJson.targetDefaults[targetName].dependsOn,
+          ...nxJson.targetDependencies[targetName],
+        ];
+      }
+    }
+    return nxJson;
   }
 
   private getImplementationFactory<T>(

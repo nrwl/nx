@@ -36,6 +36,7 @@ function setPresetProperty(tree: Tree, options: Schema) {
     if (options.preset === Preset.Core || options.preset === Preset.NPM) {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
       delete json.implicitDependencies;
+      delete json.targetDefaults;
       delete json.targetDependencies;
       delete json.workspaceLayout;
     }

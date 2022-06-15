@@ -48,8 +48,8 @@ describe('add-nx-to-monorepo', () => {
       expect(output).toContain('🎉 Done!');
       expect(readWorkspaceConfig().projects['package-a']).toBeTruthy();
       expect(readWorkspaceConfig().projects['package-b']).toBeTruthy();
-      expect(readWorkspaceConfig().targetDependencies).toEqual({
-        build: [{ projects: 'dependencies', target: 'build' }],
+      expect(readWorkspaceConfig().targetDefaults).toEqual({
+        build: { dependsOn: ['^build'] },
       });
       expect(
         readWorkspaceConfig().tasksRunnerOptions['default'].options

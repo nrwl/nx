@@ -6,7 +6,7 @@
   },
 <% if (packageManager && cli === 'angular') { -%>
   "cli": {
-    "packageManager": "<%=packageManager%>" 
+    "packageManager": "<%=packageManager%>"
   },
 <% } -%>
   "implicitDependencies": {
@@ -24,12 +24,9 @@
       }
     }
   },
-  "targetDependencies": {
-    "build": [
-      {
-        "target": "build",
-        "projects": "dependencies"
-      }
-    ]
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
   }
 }

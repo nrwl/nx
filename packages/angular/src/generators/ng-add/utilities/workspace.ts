@@ -68,13 +68,8 @@ export function createNxJson(
         },
       },
     },
-    targetDependencies: {
-      build: [
-        {
-          target: 'build',
-          projects: 'dependencies',
-        },
-      ],
+    targetDefaults: {
+      build: { dependsOn: ['^build'] },
     },
     workspaceLayout: setWorkspaceLayoutAsNewProjectRoot
       ? { appsDir: newProjectRoot, libsDir: newProjectRoot }
