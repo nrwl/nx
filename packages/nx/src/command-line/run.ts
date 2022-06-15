@@ -20,6 +20,7 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { Executor, ExecutorContext } from '../config/misc-interfaces';
+import { serializeOverridesIntoCommandLine } from 'nx/src/utils/serialize-overrides-into-command-line';
 
 export interface Target {
   project: string;
@@ -123,7 +124,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
     target: string;
     configuration?: string;
   },
-  options: { [k: string]: any },
+  overrides: { [k: string]: any },
   root: string,
   cwd: string,
   workspace: ProjectsConfigurations & NxJsonConfiguration,
@@ -164,7 +165,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   }
 
   const combinedOptions = combineOptionsForExecutor(
-    options,
+    overrides,
     configuration,
     targetConfig,
     schema,
@@ -245,12 +246,15 @@ export async function runExecutor<T extends { success: boolean }>(
     target: string;
     configuration?: string;
   },
-  options: { [k: string]: any },
+  overrides: { [k: string]: any },
   context: ExecutorContext
 ): Promise<AsyncIterableIterator<T>> {
   return await runExecutorInternal<T>(
     targetDescription,
-    options,
+    {
+      ...overrides,
+      __overrides_unparsed__: serializeOverridesIntoCommandLine(overrides),
+    },
     context.root,
     context.cwd,
     context.workspace,

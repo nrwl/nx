@@ -5,8 +5,8 @@ import { output } from './output';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { execSync } from 'child_process';
 import { readAllWorkspaceConfiguration } from '../config/configuration';
+import { serializeOverridesIntoCommandLine } from './serialize-overrides-into-command-line';
 
-//
 export function names(name: string): {
   name: string;
   className: string;
@@ -199,7 +199,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
   } else {
     overrides = overridesFromMainArgs;
-    overrides['__overrides_unparsed__'] = serializeArgsIntoCommandLine(
+    overrides['__overrides_unparsed__'] = serializeOverridesIntoCommandLine(
       overridesFromMainArgs
     );
   }
@@ -394,20 +394,4 @@ function parseGitOutput(command: string): string[] {
 export function getProjectRoots(projectNames: string[]): string[] {
   const { projects } = readAllWorkspaceConfiguration();
   return projectNames.map((name) => projects[name].root);
-}
-
-export function serializeArgsIntoCommandLine(args: {
-  [k: string]: any;
-}): string[] {
-  const r = args['_'] ? [...args['_']] : [];
-  Object.keys(args).forEach((a) => {
-    if (a !== '_') {
-      r.push(
-        typeof args[a] === 'string' && args[a].includes(' ')
-          ? `--${a}="${args[a].replace(/"/g, '"')}"`
-          : `--${a}=${args[a]}`
-      );
-    }
-  });
-  return r;
 }

@@ -1605,7 +1605,7 @@ B will depend on A.
 
 ### runExecutor
 
-▸ **runExecutor**<`T`\>(`targetDescription`, `options`, `context`): `Promise`<`AsyncIterableIterator`<`T`\>\>
+▸ **runExecutor**<`T`\>(`targetDescription`, `overrides`, `context`): `Promise`<`AsyncIterableIterator`<`T`\>\>
 
 Loads and invokes executor.
 
@@ -1649,7 +1649,7 @@ Note that the return value is a promise of an iterator, so you need to await bef
 | `targetDescription.configuration?` | `string`                                                |
 | `targetDescription.project`        | `string`                                                |
 | `targetDescription.target`         | `string`                                                |
-| `options`                          | `Object`                                                |
+| `overrides`                        | `Object`                                                |
 | `context`                          | [`ExecutorContext`](../../devkit/index#executorcontext) |
 
 #### Returns
