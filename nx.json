@@ -34,20 +34,6 @@
       }
     }
   },
-  "targetDependencies": {
-    "build": [
-      {
-        "target": "build-base",
-        "projects": "self"
-      }
-    ],
-    "build-base": [
-      {
-        "target": "build-base",
-        "projects": "dependencies"
-      }
-    ]
-  },
   "workspaceLayout": {
     "libsDir": "",
     "appsDir": ""
@@ -76,5 +62,13 @@
       "hashingExcludesTestsOfDeps": true
     }
   },
-  "defaultProject": "dep-graph-client"
+  "defaultProject": "dep-graph-client",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["build-base"]
+    },
+    "build-base": {
+      "dependsOn": ["^build-base"]
+    }
+  }
 }
