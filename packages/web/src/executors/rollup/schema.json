@@ -119,10 +119,19 @@
       "type": "boolean",
       "description": "Sets `javascriptEnabled` option for less loader",
       "default": false
+    },
+    "generateExportsField": {
+      "type": "boolean",
+      "description": "Generate package.json with 'exports' field. This field defines entry points in the package and is used by Node and the TypeScript compiler.",
+      "default": false
+    },
+    "skipTypeField": {
+      "type": "boolean",
+      "description": "Prevents 'type' field from being added to compiled package.json file. Only use this if you are having an issue with this field.",
+      "default": false
     }
   },
   "required": ["tsConfig", "project", "entryFile", "outputPath"],
-
   "definitions": {
     "assetPattern": {
       "oneOf": [

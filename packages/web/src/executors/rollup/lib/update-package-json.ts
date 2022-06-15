@@ -47,15 +47,20 @@ export function updatePackageJson(
     exports['.']['require'] = './index.cjs';
   }
 
-  packageJson.type = options.format.includes('esm') ? 'module' : 'commonjs';
+  if (!options.skipTypeField) {
+    packageJson.type = options.format.includes('esm') ? 'module' : 'commonjs';
+  }
 
   // Support for older TS versions < 4.5
   packageJson.types = types;
 
-  packageJson.exports = {
-    ...packageJson.exports,
-    ...exports,
-  };
+  // TODO(jack): remove this for Nx 15
+  if (options.generateExportsField) {
+    packageJson.exports = {
+      ...packageJson.exports,
+      ...exports,
+    };
+  }
 
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 
