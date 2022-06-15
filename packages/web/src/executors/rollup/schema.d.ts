@@ -10,7 +10,7 @@ export interface WebRollupOptions {
   tsConfig: string;
   project: string;
   entryFile: string;
-  extractCss?: boolean;
+  extractCss?: boolean | string;
   globals?: Globals[];
   external?: string[];
   rollupConfig?: string | string[];
