@@ -253,7 +253,8 @@
     "xstate": "^4.25.0",
     "yargs": "^17.4.0",
     "yargs-parser": "21.0.1",
-    "zone.js": "~0.11.4"
+    "zone.js": "~0.11.4",
+    "js-yaml": "4.1.0"
   },
   "author": "Victor Savkin",
   "license": "MIT",
