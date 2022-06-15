@@ -599,12 +599,12 @@ export function NpxCreateNxWorkspaceAnimation({
                     First time using Nx? Check out this interactive Nx tutorial.
                     <br />
                     <a
-                      href="https://nx.dev/react/tutorial/01-create-application"
+                      href="https://nx.dev/react-tutorial/01-create-application"
                       target="_blank"
                       rel="noreferrer"
                       className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                     >
-                      https://nx.dev/react/tutorial/01-create-application
+                      https://nx.dev/react-tutorial/01-create-application
                     </a>
                     <br />
                     Prefer watching videos? Check out this free Nx course on
