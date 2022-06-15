@@ -383,4 +383,22 @@ describe('Run Commands', () => {
       }
     });
   });
+
+  it('should not fail if __unparsed__ is not given', async () => {
+    const root = dirSync().name;
+
+    const result = await runCommands(
+      {
+        commands: [
+          {
+            command: `echo Hello World`,
+          },
+        ],
+        cwd: root,
+      },
+      { root } as any
+    );
+
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+  });
 });
