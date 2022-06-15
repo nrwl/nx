@@ -436,7 +436,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         if (formatted) {
           const { cli, generators, defaultProject, ...workspaceJson } =
             formatted;
-          delete cli.schematicCollections;
+          delete cli?.schematicCollections;
           return merge(
             this.writeWorkspaceConfigFiles(context, workspaceJson),
             cli || generators || defaultProject
@@ -451,7 +451,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             defaultProject,
             ...angularJson
           } = w;
-          delete cli.schematicCollections;
+          delete cli?.schematicCollections;
           return merge(
             this.writeWorkspaceConfigFiles(context, angularJson),
             cli || schematics
@@ -467,7 +467,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     }
     const { cli, schematics, generators, defaultProject, ...angularJson } =
       config;
-    delete cli.schematicCollections;
+    delete cli?.schematicCollections;
 
     return merge(
       this.writeWorkspaceConfigFiles(context, angularJson),
