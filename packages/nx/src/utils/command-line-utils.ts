@@ -185,7 +185,10 @@ export function splitArgsIntoNxArgsAndOverrides(
   if (explicitOverrides) {
     overrides = explicitOverrides;
     overrides['__overrides_unparsed__'] = args.__overrides__;
-    if (Object.keys(overridesFromMainArgs).length > 0) {
+    if (
+      Object.keys(overridesFromMainArgs).length > 0 &&
+      options.printWarnings
+    ) {
       const s = Object.keys(overridesFromMainArgs).join(', ');
       output.warn({
         title: `Nx didn't recognize the following args: ${s}`,

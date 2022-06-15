@@ -39,7 +39,7 @@ export async function format(
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
     args,
     'affected',
-    { printWarnings: true },
+    { printWarnings: false },
     readNxJson()
   );
   const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
