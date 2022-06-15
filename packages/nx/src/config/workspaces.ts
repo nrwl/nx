@@ -9,6 +9,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
 import { logger } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
+import * as yaml from 'js-yaml';
 
 import type { NxJsonConfiguration } from './nx-json';
 import {
@@ -16,13 +17,13 @@ import {
   ProjectsConfigurations,
 } from './workspace-json-project-json';
 import {
+  CustomHasher,
   Executor,
   ExecutorConfig,
-  TaskGraphExecutor,
+  ExecutorsJson,
   Generator,
   GeneratorsJson,
-  ExecutorsJson,
-  CustomHasher,
+  TaskGraphExecutor,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
@@ -508,22 +509,34 @@ function getGlobPatternsFromPlugins(nxJson: NxJsonConfiguration): string[] {
  * Get the package.json globs from package manager workspaces
  */
 function getGlobPatternsFromPackageManagerWorkspaces(root: string): string[] {
-  // TODO: add support for pnpm
   try {
-    const { workspaces } = readJsonFile<PackageJson>(
-      join(root, 'package.json')
-    );
-    const packages = Array.isArray(workspaces)
-      ? workspaces
-      : workspaces?.packages;
-    return (
-      packages?.map((pattern) => pattern + '/package.json') ?? [
-        '**/package.json',
-      ]
-    );
+    try {
+      const obj = yaml.load(readFileSync(join(root, 'pnpm-workspace.yaml')));
+      return normalizePatterns(obj.packages);
+    } catch {
+      const { workspaces } = readJsonFile<PackageJson>(
+        join(root, 'package.json')
+      );
+      return normalizePatterns(
+        Array.isArray(workspaces) ? workspaces : workspaces?.packages
+      );
+    }
   } catch {
     return ['**/package.json'];
   }
+}
+
+function normalizePatterns(patterns: string[]): string[] {
+  if (patterns === undefined) return ['**/package.json'];
+  return patterns.map((pattern) =>
+    removeRelativePath(
+      pattern.endsWith('/package.json') ? pattern : `${pattern}/package.json`
+    )
+  );
+}
+
+function removeRelativePath(pattern: string): string {
+  return pattern.startsWith('./') ? pattern.substring(2) : pattern;
 }
 
 export function globForProjectFiles(
@@ -541,10 +554,21 @@ export function globForProjectFiles(
     return projectGlobCache;
   projectGlobCacheKey = cacheKey;
 
+  const globPatternsFromPackageManagerWorkspaces =
+    getGlobPatternsFromPackageManagerWorkspaces(root);
+
+  const globsToInclude = globPatternsFromPackageManagerWorkspaces.filter(
+    (glob) => !glob.startsWith('!')
+  );
+
+  const globsToExclude = globPatternsFromPackageManagerWorkspaces
+    .filter((glob) => glob.startsWith('!'))
+    .map((glob) => glob.substring(1));
+
   const projectGlobPatterns: string[] = [
     'project.json',
     '**/project.json',
-    ...getGlobPatternsFromPackageManagerWorkspaces(root),
+    ...globsToInclude,
   ];
 
   if (!ignorePluginInference) {
@@ -562,11 +586,12 @@ export function globForProjectFiles(
    * Other ignored entries will need to be determined dynamically by reading and evaluating the user's
    * .gitignore and .nxignore files below.
    */
+
   const ALWAYS_IGNORE = [
-    join(root, 'node_modules'),
+    '/node_modules',
     '**/node_modules',
-    join(root, 'dist'),
-    join(root, '.git'),
+    '/dist',
+    ...globsToExclude,
   ];
 
   /**
