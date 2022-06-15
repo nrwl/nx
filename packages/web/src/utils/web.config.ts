@@ -72,7 +72,7 @@ export function getWebConfig(
       wco.root,
       wco.projectRoot,
       wco.buildOptions,
-      true,
+      options.extractCss,
       options.postcssConfig
     ),
     getCommonPartial(wco),

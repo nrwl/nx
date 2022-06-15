@@ -430,7 +430,7 @@
           "extractCss": {
             "type": "boolean",
             "description": "Extract CSS into a `.css` file.",
-            "default": false
+            "default": true
           },
           "es2015Polyfills": {
             "description": "Conditional polyfills loaded in browsers which do not support `ES2015`.",

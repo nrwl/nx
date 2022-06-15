@@ -63,6 +63,8 @@ export interface WebWebpackExecutorOptions extends BuildBuilderOptions {
   generateIndexHtml?: boolean;
 
   postcssConfig?: string;
+
+  extractCss?: boolean;
 }
 
 async function getWebpackConfigs(
