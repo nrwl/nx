@@ -631,7 +631,7 @@ export function convertSmartDefaultsIntoNamedParams(
       usedPositionalArgs[v.$default.index] = true;
       opts[k] = coerceType(v, argv[v.$default.index]);
     } else if (v.$default !== undefined && v.$default.$source === 'unparsed') {
-      opts[k] = opts['__overrides_unparsed__'];
+      opts[k] = opts['__overrides_unparsed__'] || [];
     } else if (
       opts[k] === undefined &&
       v.$default !== undefined &&

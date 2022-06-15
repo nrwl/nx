@@ -708,6 +708,54 @@ describe('params', () => {
 
       expect(params).toEqual({ a: './somepath' });
     });
+
+    it('should set unparsed overrides', () => {
+      const params = { __overrides_unparsed__: ['one'] };
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            unparsed: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              $default: {
+                $source: 'unparsed',
+              },
+            },
+          },
+        },
+        null,
+        null
+      );
+
+      expect(params).toEqual({ unparsed: ['one'] });
+    });
+
+    it('should set unparsed overrides (missing)', () => {
+      const params = {};
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            unparsed: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              $default: {
+                $source: 'unparsed',
+              },
+            },
+          },
+        },
+        null,
+        null
+      );
+
+      expect(params).toEqual({ unparsed: [] });
+    });
   });
 
   describe('validateOptsAgainstSchema', () => {
