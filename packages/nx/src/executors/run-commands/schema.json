@@ -137,6 +137,6 @@
     }
   },
   "additionalProperties": true,
-  "required": [],
+  "required": ["__unparsed__"],
   "examplesFile": "../../../docs/run-commands-examples.md"
 }

@@ -46,7 +46,7 @@ export interface RunCommandsOptions extends Json {
   args?: string;
   envFile?: string;
   outputPath?: string;
-  __unparsed__?: string[];
+  __unparsed__: string[];
 }
 
 const propKeys = [
@@ -292,10 +292,9 @@ export function interpolateArgsIntoCommand(
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) => opts.parsedArgs[group]);
   } else if (forwardAllArgs) {
-    if (!opts.__unparsed__ || opts.__unparsed__.length === 0) {
-      return command;
-    }
-    return command + ' ' + opts.__unparsed__.join(' ');
+    return `${command}${
+      opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
+    }`;
   } else {
     return command;
   }
