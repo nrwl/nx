@@ -34,6 +34,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
+    minimal: options.minimal ?? false,
     projectName,
     pluginPropertyName,
     projectRoot,

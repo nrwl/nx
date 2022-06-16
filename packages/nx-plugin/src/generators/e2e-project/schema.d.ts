@@ -5,4 +5,5 @@ export interface Schema {
   pluginOutputPath?: string;
   jestConfig?: string;
   standaloneConfig?: boolean;
+  minimal?: boolean;
 }

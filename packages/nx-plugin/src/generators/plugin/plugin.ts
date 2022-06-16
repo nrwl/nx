@@ -37,6 +37,9 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
     }
   );
 
+  if (options.minimal) {
+    return;
+  }
   await generatorGenerator(host, {
     project: options.name,
     name: options.name,
@@ -118,6 +121,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
     npmPackageName: options.npmPackageName,
     standaloneConfig: options.standaloneConfig ?? true,
+    minimal: options.minimal ?? false,
   });
   if (options.linter === Linter.EsLint && !options.skipLintChecks) {
     await pluginLintCheckGenerator(host, { projectName: options.name });

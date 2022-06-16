@@ -77,6 +77,11 @@
       "enum": ["tsc", "swc"],
       "default": "tsc",
       "description": "The compiler used by the build and test targets."
+    },
+    "minimal": {
+      "type": "boolean",
+      "description": "Generate the plugin with a minimal setup. This would involve not generating a default executor and generator.",
+      "default": false
     }
   },
   "required": ["name"],
