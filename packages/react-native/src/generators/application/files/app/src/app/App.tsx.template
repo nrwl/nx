@@ -132,7 +132,7 @@ export const App = () => {
                 style={[styles.listItem, styles.learning]}
                 onPress={() =>
                   Linking.openURL(
-                    'https://nx.dev/tutorial/01-create-application?utm_source=nx-project'
+                    'https://nx.dev/react-tutorial/01-create-application?utm_source=nx-project'
                   )
                 }
               >
