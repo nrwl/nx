@@ -43,6 +43,7 @@
     "@nrwl/jest": "file:../jest",
     "@nrwl/linter": "file:../linter",
     "@nrwl/storybook": "file:../storybook",
+    "@nrwl/web": "file:../web",
     "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "4.1.1",
     "@schematics/angular": "~14.0.0",

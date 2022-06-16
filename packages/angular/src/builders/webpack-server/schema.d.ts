@@ -17,4 +17,5 @@ export interface Schema {
   hmr?: boolean;
   watch?: boolean;
   poll?: number;
+  buildLibsFromSource?: boolean;
 }
