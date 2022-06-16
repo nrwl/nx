@@ -1,12 +1,17 @@
-# Using Tailwind CSS in React
+# Using Tailwind CSS in React and Next.js
 
-This guide serves as a quickstart to installing [Tailwind CSS](https://tailwindcss.com) in your Web/React/Next.js app.
+This guide serves as a quickstart to installing [Tailwind CSS](https://tailwindcss.com) in your React and Next.js app.
 
 For more in-depth look on this topic, be sure to check out our blog post on [Setting up Next.js to use Tailwind with Nx](https://blog.nrwl.io/setup-next-js-to-use-tailwind-with-nx-849b7e21d8d0).
 
 ## Step 1: Install Tailwind Dependencies
 
-`npm install tailwindcss@latest postcss@latest autoprefixer@latest`
+```bash
+npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
+
+# or with yarn
+yarn add -D tailwindcss@latest postcss@latest autoprefixer@latest
+```
 
 This installs the requisite tailwind dependencies.
 
@@ -55,7 +60,10 @@ const { join } = require('path');
 
 module.exports = {
   content: [
-    join(__dirname, 'src/**/*!(*.stories|*.spec).{ts,tsx,html}'),
+    join(
+      __dirname,
+      '{src,pages,components}/**/*!(*.stories|*.spec).{ts,tsx,html}'
+    ),
     ...createGlobPatternsForDependencies(__dirname),
   ],
   theme: {
@@ -73,8 +81,6 @@ In the above, you are invoking the `createGlobPatternsForDependencies` utility f
   'libs/lib2/src/**/!(*.stories|*.spec).{ts,tsx,html}',
 ];
 ```
-
-_NOTE:_ To ensure proper purging for custom configurations, be sure that the `NODE_ENV` environment variable is set to `production`. By default, Nx only purges on prod build (for example: `nx build --prod`).
 
 ## Step 3: Import Tailwind CSS Styles
 
