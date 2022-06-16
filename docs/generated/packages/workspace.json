@@ -701,7 +701,7 @@
         "required": ["ci"],
         "presets": []
       },
-      "description": "Generete a CI workflow.",
+      "description": "Generate a CI workflow.",
       "implementation": "/packages/workspace/src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator.ts",
       "aliases": [],
       "hidden": false,
