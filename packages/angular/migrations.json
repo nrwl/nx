@@ -1148,6 +1148,10 @@
           "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
+        "@schematics/angular": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
         "@angular/core": {
           "version": "~14.0.0",
           "alwaysAddToPackageJson": true
