@@ -278,5 +278,10 @@
     "name": "@diogovcs/graphql-mesh",
     "description": "Nx plugin to add GraphQL Mesh integration to Nx Workspace.",
     "url": "https://github.com/DiogoVCS/nx-graphql-mesh"
+  },
+  {
+    "name": "@computas/nx-yarn",
+    "description": "A plugin to help make nx with yarn a pleasant experience.",
+    "url": "https://github.com/computas/nx-yarn"
   }
 ]
