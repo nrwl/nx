@@ -37,19 +37,20 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
     }
   );
 
-  if (!options.minimal) {
-    await generatorGenerator(host, {
-      project: options.name,
-      name: options.name,
-      unitTestRunner: options.unitTestRunner,
-    });
-    await executorGenerator(host, {
-      project: options.name,
-      name: 'build',
-      unitTestRunner: options.unitTestRunner,
-      includeHasher: false,
-    });
+  if (options.minimal) {
+    return;
   }
+  await generatorGenerator(host, {
+    project: options.name,
+    name: options.name,
+    unitTestRunner: options.unitTestRunner,
+  });
+  await executorGenerator(host, {
+    project: options.name,
+    name: 'build',
+    unitTestRunner: options.unitTestRunner,
+    includeHasher: false,
+  });
 }
 
 function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
@@ -120,6 +121,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
     npmPackageName: options.npmPackageName,
     standaloneConfig: options.standaloneConfig ?? true,
+    minimal: options.minimal ?? false,
   });
   if (options.linter === Linter.EsLint && !options.skipLintChecks) {
     await pluginLintCheckGenerator(host, { projectName: options.name });
