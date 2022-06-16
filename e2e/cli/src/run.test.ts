@@ -1,19 +1,12 @@
 import {
-  getPublishedVersion,
-  isNotWindows,
+  isWindows,
   newProject,
-  readFile,
-  readJson,
   runCLI,
   runCLIAsync,
-  runCommand,
-  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { renameSync } from 'fs';
-import { packagesWeCareAbout } from 'nx/src/command-line/report';
 
 //
 describe('Running targets', () => {
@@ -62,6 +55,11 @@ describe('Running targets', () => {
         silent: true,
       }
     );
-    expect(stdout).toMatch(/ECHOED positional --a=123 --no-b/);
+
+    if (isWindows()) {
+      expect(stdout).toMatch(/ECHOED "positional" "--a=123" "--no-b"/);
+    } else {
+      expect(stdout).toMatch(/ECHOED positional --a=123 --no-b/);
+    }
   }, 1000000);
 });
