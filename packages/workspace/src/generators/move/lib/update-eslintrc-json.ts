@@ -9,7 +9,7 @@ import { NormalizedSchema } from '../schema';
 
 interface PartialEsLintrcOverride {
   parserOptions?: {
-    project?: [string];
+    project?: string[];
   };
 }
 
@@ -65,9 +65,9 @@ export function updateEslintrcJson(
 
     eslintRcJson.overrides?.forEach((o) => {
       if (o.parserOptions?.project) {
-        o.parserOptions.project = [
-          `${schema.relativeToRootDestination}/tsconfig.*?.json`,
-        ];
+        o.parserOptions.project = o.parserOptions.project.map((p) =>
+          p.replace(project.root, schema.relativeToRootDestination)
+        );
       }
     });
 
