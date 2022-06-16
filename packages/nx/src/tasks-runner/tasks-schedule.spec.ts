@@ -21,6 +21,7 @@ describe('TasksSchedule', () => {
   let app1Build: Task;
   let app2Build: Task;
   let lib1Build: Task;
+  let lifeCycle: any;
   beforeEach(() => {
     app1Build = createMockTask('app1:build');
     app2Build = createMockTask('app2:build');
@@ -88,17 +89,18 @@ describe('TasksSchedule', () => {
       hashTaskWithDepsAndContext: () => 'hash',
     } as any;
 
+    lifeCycle = {
+      startTask: jest.fn(),
+      endTask: jest.fn(),
+      scheduleTask: jest.fn(),
+    };
     taskSchedule = new TasksSchedule(
       hasher,
       projectGraph,
       taskGraph,
       workspace as Workspaces,
       {
-        lifeCycle: {
-          startTask: jest.fn(),
-          endTask: jest.fn(),
-          scheduleTask: jest.fn(),
-        },
+        lifeCycle,
       }
     );
   });
@@ -123,6 +125,11 @@ describe('TasksSchedule', () => {
       await taskSchedule.scheduleNextTasks();
       expect(taskSchedule.nextTask()).toEqual(lib1Build);
       expect(taskSchedule.nextTask()).toEqual(app2Build);
+    });
+
+    it('should invoke lifeCycle.scheduleTask', async () => {
+      await taskSchedule.scheduleNextTasks();
+      expect(lifeCycle.scheduleTask).toHaveBeenCalled();
     });
 
     it('should not schedule any tasks that still have uncompleted dependencies', async () => {

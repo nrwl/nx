@@ -87,6 +87,7 @@ export class TasksSchedule {
       this.notScheduledTaskGraph,
       [taskId]
     );
+    this.options.lifeCycle.scheduleTask(task);
     this.scheduledTasks.push(taskId);
   }
 
