@@ -5,6 +5,7 @@ import {
   parseJson,
   readJson,
   readProjectConfiguration,
+  readWorkspaceConfiguration,
   updateJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
@@ -203,6 +204,29 @@ describe('app', () => {
       // ASSERT
       const appTsConfig = readJson(appTree, 'apps/app/tsconfig.json');
       expect(appTsConfig.extends).toBe('../../tsconfig.json');
+    });
+
+    it('should set default project', async () => {
+      // ACT
+      await generateApp(appTree);
+
+      // ASSERT
+      const { defaultProject } = readWorkspaceConfiguration(appTree);
+      expect(defaultProject).toBe('my-app');
+    });
+
+    it('should not overwrite default project if already set', async () => {
+      // ARRANGE
+      const workspace = readWorkspaceConfiguration(appTree);
+      workspace.defaultProject = 'some-awesome-project';
+      devkit.updateWorkspaceConfiguration(appTree, workspace);
+
+      // ACT
+      await generateApp(appTree);
+
+      // ASSERT
+      const { defaultProject } = readWorkspaceConfiguration(appTree);
+      expect(defaultProject).toBe('some-awesome-project');
     });
   });
 
