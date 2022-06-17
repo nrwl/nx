@@ -1,13 +1,6 @@
-import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runMigration } from '../../utils/testing';
-
-function createAngularCLIPoweredWorkspace() {
-  const tree = createEmptyWorkspace(Tree.empty());
-  tree.delete('workspace.json');
-  tree.create('angular.json', '{}');
-  return tree;
-}
+import { readJson, writeJson } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import updateNgccPostinstall from './update-ngcc-postinstall';
 
 describe('Remove ngcc flags from postinstall script', () => {
   [
@@ -33,21 +26,17 @@ describe('Remove ngcc flags from postinstall script', () => {
     },
   ].forEach((testEntry) => {
     it(`should adjust ngcc for: "${testEntry.test}"`, async () => {
-      const tree = createAngularCLIPoweredWorkspace();
+      const tree = createTreeWithEmptyWorkspace(2);
+      tree.delete('workspace.json');
+      tree.write('angular.json', '{}');
+      writeJson(tree, 'package.json', {
+        scripts: { postinstall: testEntry.test },
+      });
 
-      tree.overwrite(
-        '/package.json',
-        JSON.stringify({
-          scripts: {
-            postinstall: testEntry.test,
-          },
-        })
-      );
+      await updateNgccPostinstall(tree);
 
-      const result = await runMigration('update-ngcc-postinstall', {}, tree);
-
-      const packageJson = JSON.parse(result.read('/package.json').toString());
-      expect(packageJson.scripts.postinstall).toEqual(testEntry.expected);
+      const { scripts } = readJson(tree, 'package.json');
+      expect(scripts.postinstall).toEqual(testEntry.expected);
     });
   });
 });
