@@ -1017,6 +1017,11 @@
             "file": "shared/cypress-plugin"
           },
           {
+            "name": "Component Testing",
+            "id": "cypress-component-testing",
+            "file": "shared/cypress-component-testing"
+          },
+          {
             "name": "v10 Migration Guide",
             "id": "v10-migration-guide",
             "file": "shared/guides/cypress/cypress-v10-migration"

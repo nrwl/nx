@@ -36,8 +36,10 @@ export function findCypressConfigs(
 } {
   const cypressConfigPathJson =
     projectConfig.targets[target]?.configurations?.[config]?.cypressConfig ||
-    projectConfig.targets[target]?.options?.cypressConfig ||
-    joinPathFragments(projectConfig.root, 'cypress.json');
+    // make sure it's a json file, since it could have been updated to ts file from previous configuration migration
+    (projectConfig.targets[target]?.options?.cypressConfig.endsWith('json')
+      ? projectConfig.targets[target]?.options?.cypressConfig
+      : joinPathFragments(projectConfig.root, 'cypress.json'));
 
   const cypressConfigPathTs = joinPathFragments(
     projectConfig.root,
@@ -68,6 +70,7 @@ export function createNewCypressConfig(
   cypressConfigTs: Record<string, any>;
   cypressConfigJson: Record<string, any>;
 } {
+  console.log({ cypressConfigPathJson });
   const cypressConfigJson = readJson(tree, cypressConfigPathJson);
 
   const {

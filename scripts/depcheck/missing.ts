@@ -72,9 +72,6 @@ const IGNORE_MATCHES = {
     'rxjs',
     'tsconfig-paths-webpack-plugin',
     'webpack',
-    // cypress component testing plugin utils, installed dynamically
-    '@cypress/react',
-    '@cypress/webpack-dev-server',
   ],
   react: [
     'babel-plugin-emotion',

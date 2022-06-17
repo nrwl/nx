@@ -1,13 +1,12 @@
-import { startDevServer } from '@cypress/webpack-dev-server';
 import { nxBaseCypressPreset } from '@nrwl/cypress/plugins/cypress-preset';
 import { getCSSModuleLocalIdent } from '@nrwl/web/src/utils/web.config';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
 
 /**
- * nx Component Testing Preset for Cypress
- * @description
- * this preset contains the base configuration
+ * React nx preset for Cypress Component Testing
+ *
+ * This preset contains the base configuration
  * for your component tests that nx recommends.
  * including a devServer that supports nx workspaces.
  * you can easily extend this within your cypress config via spreading the preset
@@ -25,31 +24,14 @@ export function nxComponentTestingPreset(pathToConfig: string) {
   return {
     ...nxBaseCypressPreset(pathToConfig),
     devServer: {
-      // needed as the type is a string union that cypress doesn't expose
-      framework: 'react' as const,
-      bundler: 'webpack' as const,
+      framework: 'react',
+      bundler: 'webpack',
       webpackConfig: buildBaseWebpackConfig({
         tsConfigPath: 'tsconfig.cy.json',
         compiler: 'babel',
       }),
     },
   };
-}
-
-export function componentDevServer(
-  tsConfigPath = 'tsconfig.cy.json',
-  compiler: 'swc' | 'babel' = 'babel'
-): (
-  cypressDevServerConfig,
-  devServerConfig
-) => ReturnType<typeof startDevServer> {
-  const webpackConfig = buildBaseWebpackConfig({ tsConfigPath, compiler });
-
-  return (cypressDevServerConfig, devServerConfig) =>
-    startDevServer({
-      options: cypressDevServerConfig,
-      webpackConfig,
-    });
 }
 
 // TODO(caleb): use the webpack utils to build the config

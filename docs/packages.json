@@ -164,14 +164,7 @@
     "path": "generated/packages/next.json",
     "schemas": {
       "executors": ["build", "server", "export"],
-      "generators": [
-        "init",
-        "application",
-        "page",
-        "component",
-        "library",
-        "cypress-component-configuration"
-      ]
+      "generators": ["init", "application", "page", "component", "library"]
     }
   },
   {
