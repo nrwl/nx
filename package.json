@@ -167,6 +167,7 @@
     "jest": "27.5.1",
     "jest-circus": "27.2.3",
     "jest-preset-angular": "~11.1.2",
+    "js-yaml": "4.1.0",
     "jsonc-eslint-parser": "^2.1.0",
     "jsonc-parser": "3.0.0",
     "karma": "~4.0.0",
@@ -253,8 +254,7 @@
     "xstate": "^4.25.0",
     "yargs": "^17.4.0",
     "yargs-parser": "21.0.1",
-    "zone.js": "~0.11.4",
-    "js-yaml": "4.1.0"
+    "zone.js": "~0.11.4"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -264,6 +264,7 @@
     }
   },
   "dependencies": {
+    "@builder.io/partytown": "^0.6.1",
     "@docsearch/react": "3.0.0",
     "@headlessui/react": "^1.1.1",
     "@heroicons/react": "^1.0.1",
@@ -308,4 +309,3 @@
     "minimist": "^1.2.6"
   }
 }
-
