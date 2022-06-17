@@ -24,7 +24,7 @@
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/documentation.ts && yarn check-documentation-map",
     "submit-plugin": "node ./scripts/submit-plugin.js",
     "prepare": "is-ci || husky install",
-    "echo": "echo 1234"
+    "echo": "echo 12345"
   },
   "devDependencies": {
     "@angular-devkit/architect": "~0.1400.0",
@@ -63,7 +63,7 @@
     "@nrwl/eslint-plugin-nx": "14.3.4-beta.4",
     "@nrwl/jest": "14.3.4-beta.4",
     "@nrwl/next": "14.3.4-beta.4",
-    "@nrwl/nx-cloud": "14.1.1",
+    "@nrwl/nx-cloud": "14.1.2-beta.2",
     "@nrwl/react": "14.3.4-beta.4",
     "@nrwl/web": "14.3.4-beta.4",
     "@parcel/watcher": "2.0.4",
