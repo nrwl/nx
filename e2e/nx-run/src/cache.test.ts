@@ -2,6 +2,7 @@ import {
   cleanupProject,
   listFiles,
   newProject,
+  readFile,
   rmDist,
   runCLI,
   uniq,
@@ -12,7 +13,7 @@ import {
 describe('cache', () => {
   beforeEach(() => newProject());
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should cache command execution', async () => {
     const myapp1 = uniq('myapp1');
@@ -133,6 +134,7 @@ describe('cache', () => {
 
     // disable caching
     // --------------------------------------------
+    const originalNxJson = readFile('nx.json');
     updateFile('nx.json', (c) => {
       const nxJson = JSON.parse(c);
       nxJson.tasksRunnerOptions = {
@@ -155,6 +157,10 @@ describe('cache', () => {
     expect(outputWithoutCachingEnabled2).not.toContain(
       'read the output from the cache'
     );
+
+    // re-enable caching after test
+    // --------------------------------------------
+    updateFile('nx.json', (c) => originalNxJson);
   }, 120000);
 
   it('should only cache specific files if build outputs is configured with specific files', async () => {

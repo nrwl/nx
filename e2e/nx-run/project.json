@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/workspace-integrations",
+  "sourceRoot": "e2e/nx-run",
   "projectType": "application",
   "targets": {
     "e2e": {
@@ -14,7 +14,7 @@
             "command": "yarn e2e-build-package-publish"
           },
           {
-            "command": "nx run-e2e-tests e2e-workspace-integrations"
+            "command": "nx run-e2e-tests e2e-nx-run"
           }
         ],
         "parallel": false
@@ -23,12 +23,12 @@
     "run-e2e-tests": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "e2e/workspace-integrations/jest.config.ts",
+        "jestConfig": "e2e/nx-run/jest.config.ts",
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/workspace-integrations"]
+      "outputs": ["coverage/e2e/nx-run"]
     }
   },
-  "implicitDependencies": ["angular", "react"]
+  "implicitDependencies": ["js"]
 }

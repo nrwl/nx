@@ -33,14 +33,14 @@ jobs:
           - pnpm
         packages:
           - e2e-angular-core,e2e-angular-extensions
-          - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
+          - e2e-nx-run,e2e-nx-misc,e2e-nx-plugin,e2e-jest,e2e-linter
           - e2e-cypress
           - e2e-react
           - e2e-next
           - e2e-node
           - e2e-web
           - e2e-storybook
-          - e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
+          - e2e-workspace-create
           - e2e-react-native
           # - e2e-detox
           - e2e-add-nx-to-monorepo
@@ -57,11 +57,9 @@ jobs:
             package_manager: pnpm
           # exclude everything but react-native and detox from macos
           - os: macos-latest
-            packages: e2e-workspace-core
-          - os: macos-latest
             packages: e2e-angular-core,e2e-angular-extensions
           - os: macos-latest
-            packages: e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
+            packages: e2e-nx-run,e2e-nx-misc,e2e-nx-plugin,e2e-jest,e2e-linter
           - os: macos-latest
             packages: e2e-cypress
           - os: macos-latest
@@ -75,7 +73,7 @@ jobs:
           - os: macos-latest
             packages: e2e-storybook
           - os: macos-latest
-            packages: e2e-workspace-integrations,e2e-workspace-core,e2e-workspace-create
+            packages: e2e-workspace-create
           - os: macos-latest
             packages: e2e-add-nx-to-monorepo
       fail-fast: false
