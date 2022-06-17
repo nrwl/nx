@@ -1,6 +1,6 @@
 import { cypressComponentProject } from '@nrwl/cypress';
 import {
-  addDependenciesToPackageJson,
+  formatFiles,
   generateFiles,
   joinPathFragments,
   ProjectConfiguration,
@@ -9,10 +9,9 @@ import {
   updateJson,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
-import componentTestGenerator from '@nrwl/react/src/generators/component-test/component-test';
-import { getComponentNode } from '@nrwl/react/src/utils/ast-utils';
 import * as ts from 'typescript';
-import { cypressReactVersion } from '../../utils/versions';
+import { getComponentNode } from '../../utils/ast-utils';
+import componentTestGenerator from '../component-test/component-test';
 import { CypressComponentConfigurationSchema } from './schema';
 
 const allowedFileExt = new RegExp(/\.[jt]sx?/g);
@@ -28,27 +27,20 @@ export async function cypressComponentConfigGenerator(
   options: CypressComponentConfigurationSchema
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
-  const baseDepInstallTask = await cypressComponentProject(tree, {
+  const installTask = await cypressComponentProject(tree, {
     project: options.project,
     skipFormat: true,
   });
-  const installReactDeps = addDeps(tree);
 
   addFiles(tree, projectConfig, options);
   updateTsConfig(tree, projectConfig);
+  if (options.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return () => {
-    baseDepInstallTask();
-    installReactDeps();
+    installTask();
   };
-}
-
-function addDeps(tree: Tree) {
-  const devDeps = {
-    '@cypress/react': cypressReactVersion,
-  };
-  // TODO(caleb): add swc deps if using swc as a compiler?
-  return addDependenciesToPackageJson(tree, {}, devDeps);
 }
 
 function addFiles(

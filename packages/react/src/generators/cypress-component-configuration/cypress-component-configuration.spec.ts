@@ -2,7 +2,8 @@ import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-ver
 import { readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import { componentGenerator, libraryGenerator } from '@nrwl/react';
+import componentGenerator from '../component/component';
+import libraryGenerator from '../library/library';
 import { cypressComponentConfigGenerator } from './cypress-component-configuration';
 
 jest.mock('@nrwl/cypress/src/utils/cypress-version');

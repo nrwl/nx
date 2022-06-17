@@ -3,8 +3,8 @@ import { newProject, runCLI, uniq } from '../../utils';
 describe('Next Cypress Component Tests', () => {
   beforeAll(() => newProject());
 
-  it('should successfully test react app', () => {
-    const appName = uniq('cy-react-app');
+  it('should successfully test next app', () => {
+    const appName = uniq('cy-next-app');
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
     runCLI(
       `generate @nrwl/next:component fancy-component --project=${appName} --directory=components --no-interactive`
@@ -17,8 +17,8 @@ describe('Next Cypress Component Tests', () => {
     );
   }, 1000000);
 
-  it('should successfully test react app', () => {
-    const libName = uniq('cy-react-lib');
+  it('should successfully test next app', () => {
+    const libName = uniq('cy-next-lib');
     runCLI(`generate @nrwl/next:lib ${libName} --component --no-interactive`);
     runCLI(
       `generate @nrwl/next:component fancy-component --project=${libName} --no-interactive`

@@ -2,52 +2,74 @@
 
 exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 1`] = `
 "import * as React from 'react'
-import { mount } from '@cypress/react'
+import { mount } from 'cypress/react'
 import SomeCmp from './some-cmp'
 
+
 describe(SomeCmp.name, () => {
-  it('should create', () => {
+  it('renders', () => {
     mount(<SomeCmp />)
   })
 })
+
 "
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 2`] = `
 "import * as React from 'react'
-import { mount } from '@cypress/react'
+import { mount } from 'cypress/react'
 import AnotherCmp from './another-cmp'
 
+
 describe(AnotherCmp.name, () => {
-  it('should create', () => {
+  it('renders', () => {
     mount(<AnotherCmp />)
   })
 })
+
 "
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 1`] = `
 "import * as React from 'react'
-import { mount } from '@cypress/react'
-import SomeLib from './some-lib'
+import { mount } from 'cypress/react'
+import SomeLib, { SomeLibProps } from './some-lib'
+
 
 describe(SomeLib.name, () => {
-  it('should create', () => {
-    mount(<SomeLib />)
+  let props: SomeLibProps;
+
+  beforeEach(() => {
+    props = {
+    }
+  })
+
+  it('renders', () => {
+    mount(<SomeLib {...props}/>)
   })
 })
+
 "
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 2`] = `
 "import * as React from 'react'
-import { mount } from '@cypress/react'
-import AnotherCmp from './another-cmp'
+import { mount } from 'cypress/react'
+import AnotherCmp, { AnotherCmpProps } from './another-cmp'
+
 
 describe(AnotherCmp.name, () => {
-  it('should create', () => {
-    mount(<AnotherCmp />)
+  let props: AnotherCmpProps;
+
+  beforeEach(() => {
+    props = {
+    }
+  })
+
+  it('renders', () => {
+    mount(<AnotherCmp {...props}/>)
   })
 })
+
 "
 `;

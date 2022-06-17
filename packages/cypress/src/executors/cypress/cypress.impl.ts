@@ -50,7 +50,7 @@ export default async function cypressExecutor(
 
   for await (const baseUrl of startDevServer(options, context)) {
     try {
-      success = await runCypress(baseUrl, options, context);
+      success = await runCypress(baseUrl, options);
       if (!options.watch) break;
     } catch (e) {
       logger.error(e.message);
@@ -174,11 +174,7 @@ async function* startDevServer(
  * By default, Cypress will run tests from the CLI without the GUI and provide directly the results in the console output.
  * If `watch` is `true`: Open Cypress in the interactive GUI to interact directly with the application.
  */
-async function runCypress(
-  baseUrl: string,
-  opts: CypressExecutorOptions,
-  context: ExecutorContext
-) {
+async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
   // Cypress expects the folder where a `cypress.json` is present
   const projectFolderPath = dirname(opts.cypressConfig);
   const options: any = {

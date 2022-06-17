@@ -28,6 +28,11 @@
       "type": "boolean",
       "description": "Generate default component tests for existing components in the project",
       "default": false
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files",
+      "default": false
     }
   },
   "required": ["project"]

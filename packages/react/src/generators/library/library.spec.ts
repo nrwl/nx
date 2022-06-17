@@ -32,6 +32,7 @@ describe('lib', () => {
   };
 
   beforeEach(() => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
   });
 

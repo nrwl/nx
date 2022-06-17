@@ -1,9 +1,22 @@
 import * as React from 'react'
-import { mount } from '@cypress/react'
-import <%= className %> from './<%= fileName %>'
+import { mount } from 'cypress/react'
+<%- importStatement %>
 
-describe(<%= className %>.name, () => {
-  it('should create', () => {
-    mount(<<%= className %> />)
+<% for (let cmp of components) { %>
+describe(<%= cmp.name %>.name, () => {<% if (cmp.typeName) { %>
+  let props: <%= cmp.typeName%>;
+
+  beforeEach(() => {
+    props = {<% for (let prop of cmp.props) { %>
+      <%- prop.name %>: <% if(prop.type === 'action') { %>undefined<% } else { %><%- prop.defaultValue %>,<% } %><% }%>
+    }
   })
+
+  it('renders', () => {
+    mount(<<%= cmp.name %> {...props}/>)
+  })<% } else { %>
+  it('renders', () => {
+    mount(<<%= cmp.name %> />)
+  })<% } %>
 })
+<% } %>

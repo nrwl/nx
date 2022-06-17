@@ -66,25 +66,6 @@ describe('Move Angular Project', () => {
   /**
    * Tries moving an e2e project from ${app1} -> ${newPath}
    */
-  it('should work for e2e projects', () => {
-    const oldCypressConfig = readFile(`apps/${app1}-e2e/cypress.config.ts`);
-    const moveOutput = runCLI(
-      `generate @nrwl/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
-    );
-
-    // just check that the cypress.config.ts is updated correctly
-    const cypressConfigPath = `apps/${newPath}-e2e/cypress.config.ts`;
-    expect(moveOutput).toContain(`CREATE ${cypressConfigPath}`);
-    checkFilesExist(cypressConfigPath);
-    const cypressConfig = readFile(cypressConfigPath);
-    // by default the cypress config doesn't contain any app specific paths
-    // so it should match what was already there.
-    expect(cypressConfig).toEqual(oldCypressConfig);
-  });
-
-  /**
-   * Tries moving an e2e project from ${app1} -> ${newPath}
-   */
   it('should work for e2e projects w/custom cypress config', () => {
     // by default the cypress config doesn't contain any app specific paths
     // create a custom config with some app specific paths

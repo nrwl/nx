@@ -2,13 +2,13 @@
 
 Cypress is a test runner built for the modern web. It has a lot of great features:
 
-- Component Testing
 - Time travel
 - Real-time reloads
 - Automatic waiting
 - Spies, stubs, and clocks
 - Network traffic control
 - Screenshots and videos
+- Component Testing
 
 ## Setting Up Cypress
 
@@ -79,7 +79,7 @@ nx e2e frontend-e2e --baseUrl=https://frontend.com
 ```
 
 > If no `baseUrl` and no `devServerTarget` are provided, Cypress will expect to have the `baseUrl` property in
-> the `cypress.json` file, or will error.
+> the cypress config file, or will error.
 
 ### Using cypress.config.ts
 

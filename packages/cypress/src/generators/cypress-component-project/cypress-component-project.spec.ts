@@ -7,7 +7,6 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { installedCypressVersion } from '../../utils/cypress-version';
-import { CYPRESS_COMPONENT_TEST_TARGET } from '../../utils/project-name';
 import { cypressComponentProject } from './cypress-component-project';
 
 jest.mock('../../utils/cypress-version');
@@ -103,9 +102,9 @@ describe('Cypress Component Project', () => {
     const projectConfig = readProjectConfiguration(tree, 'cool-lib');
     expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);
     expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);
-    expect(tree.exists('libs/cool-lib/cypress/component/index.html')).toEqual(
-      true
-    );
+    expect(
+      tree.exists('libs/cool-lib/cypress/support/component-index.html')
+    ).toEqual(true);
     expect(tree.exists('libs/cool-lib/cypress/fixtures/example.json')).toEqual(
       true
     );
@@ -116,16 +115,14 @@ describe('Cypress Component Project', () => {
       true
     );
     expect(tree.exists('libs/cool-lib/tsconfig.cy.json')).toEqual(true);
-    expect(
-      projectConfig.targets[CYPRESS_COMPONENT_TEST_TARGET]
-    ).toMatchSnapshot();
+    expect(projectConfig.targets['component-test']).toMatchSnapshot();
   });
 
   it('should not error when rerunning on an existing project', async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     tree.write('libs/cool-lib/cypress.config.ts', '');
     const newTarget = {
-      [CYPRESS_COMPONENT_TEST_TARGET]: {
+      ['component-test']: {
         executor: '@nrwl/cypress:cypress',
         options: {
           cypressConfig: 'libs/cool-lib/cypress.config.ts',
@@ -150,9 +147,7 @@ describe('Cypress Component Project', () => {
     expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);
     expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);
     expect(tree.exists('libs/cool-lib/tsconfig.cy.json')).toEqual(true);
-    expect(
-      actualProjectConfig.targets[CYPRESS_COMPONENT_TEST_TARGET]
-    ).toMatchSnapshot();
+    expect(actualProjectConfig.targets['component-test']).toMatchSnapshot();
   });
 
   it('should error when using cypress < v10', async () => {

@@ -11,7 +11,6 @@ import {
 } from '@nrwl/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
-import { CYPRESS_COMPONENT_TEST_TARGET } from '../../utils/project-name';
 import {
   cypressVersion,
   cypressWebpackVersion,
@@ -78,7 +77,7 @@ function addTargetToProject(
   projectConfig: ProjectConfiguration,
   options: CypressComponentProjectSchema
 ) {
-  projectConfig.targets[CYPRESS_COMPONENT_TEST_TARGET] = {
+  projectConfig.targets['component-test'] = {
     executor: '@nrwl/cypress:cypress',
     options: {
       cypressConfig: joinPathFragments(projectConfig.root, 'cypress.config.ts'),

@@ -24,7 +24,15 @@ import { Configuration } from 'webpack';
 export function nxComponentTestingPreset(pathToConfig: string) {
   return {
     ...nxBaseCypressPreset(pathToConfig),
-    devServer: componentDevServer(),
+    devServer: {
+      // needed as the type is a string union that cypress doesn't expose
+      framework: 'react' as const,
+      bundler: 'webpack' as const,
+      webpackConfig: buildBaseWebpackConfig({
+        tsConfigPath: 'tsconfig.cy.json',
+        compiler: 'babel',
+      }),
+    },
   };
 }
 

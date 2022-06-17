@@ -8,7 +8,7 @@
   "examples": [
     {
       "command": "nx g @nrwl/cypress:migrate-to-cypress-10",
-      "description": "migrate existing cypress projects to Cypress v10"
+      "description": "Migrate existing cypress projects to Cypress v10"
     }
   ],
   "properties": {}

@@ -44,7 +44,10 @@ export function findCypressConfigs(
     // create matching ts config for custom cypress config if present
     cypressConfigPathJson.endsWith('cypress.json')
       ? 'cypress.config.ts' //default
-      : `${basename(cypressConfigPathJson, extname(cypressConfigPathJson))}.ts`
+      : `${basename(
+          cypressConfigPathJson,
+          extname(cypressConfigPathJson)
+        )}.config.ts`
   );
 
   return {
