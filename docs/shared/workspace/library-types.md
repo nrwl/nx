@@ -95,7 +95,7 @@ A utility library contains low level code used by many libraries. Often there is
 
 A utility library can depend only on utility libraries.
 
-An example ui lib module: **libs/shared/util-formatting**
+An example util lib module: **libs/shared/util-formatting**
 
 ```typescript
 export { formatDate, formatTime } from './src/format-date-fns';
