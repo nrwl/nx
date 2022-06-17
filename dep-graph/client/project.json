@@ -15,38 +15,49 @@
         "styles": ["dep-graph/client/src/styles.scss"],
         "scripts": [],
         "assets": [],
-        "webpackConfig": "dep-graph/client/webpack.config.js"
+        "webpackConfig": "dep-graph/client/webpack.config.js",
+        "optimization": false,
+        "outputHashing": "none",
+        "sourceMap": true,
+        "extractCss": true,
+        "namedChunks": false,
+        "extractLicenses": false,
+        "vendorChunk": true,
+        "budgets": [
+          {
+            "type": "initial",
+            "maximumWarning": "2mb",
+            "maximumError": "5mb"
+          }
+        ]
       },
       "configurations": {
         "dev": {
-          "fileReplacements": [],
           "assets": [
             "dep-graph/client/src/favicon.ico",
             "dep-graph/client/src/assets/graphs/",
             {
-              "input": "dep-graph/client/src/assets",
+              "input": "dep-graph/client/src/assets/dev",
               "output": "/",
               "glob": "environment.js"
-            }
-          ],
-          "optimization": false,
-          "outputHashing": "none",
-          "sourceMap": true,
-          "extractCss": true,
-          "namedChunks": false,
-          "extractLicenses": false,
-          "vendorChunk": true,
-          "budgets": [
-            {
-              "type": "initial",
-              "maximumWarning": "2mb",
-              "maximumError": "5mb"
             }
           ]
         },
         "release": {
+          "assets": [
+            "dep-graph/client/src/favicon.ico",
+            {
+              "input": "dep-graph/client/src/assets/graphs",
+              "output": "/assets/graphs",
+              "glob": "nx-examples.json"
+            },
+            {
+              "input": "dep-graph/client/src/assets/release",
+              "output": "/",
+              "glob": "environment.js"
+            }
+          ],
           "optimization": true,
-          "outputHashing": "none",
           "sourceMap": false,
           "extractCss": true,
           "namedChunks": false,
@@ -59,16 +70,32 @@
               "maximumError": "5mb"
             }
           ]
+        },
+        "watch": {
+          "assets": [
+            "dep-graph/client/src/favicon.ico",
+            {
+              "input": "dep-graph/client/src/assets/watch",
+              "output": "/",
+              "glob": "environment.js"
+            }
+          ]
         }
       },
       "defaultConfiguration": "release",
       "outputs": ["{options.outputPath}"]
     },
-    "serve-base": {
+    "serve": {
       "executor": "@nrwl/web:dev-server",
       "configurations": {
         "dev": {
           "buildTarget": "dep-graph-client:build-base:dev"
+        },
+        "release": {
+          "buildTarget": "dep-graph-client:build-base:release"
+        },
+        "watch": {
+          "buildTarget": "dep-graph-client:build-base:watch"
         }
       },
       "defaultConfiguration": "dev"
@@ -86,57 +113,6 @@
       "options": {
         "jestConfig": "dep-graph/client/jest.config.ts",
         "passWithNoTests": true
-      }
-    },
-    "serve": {
-      "executor": "nx:run-commands",
-      "outputs": [],
-      "options": {
-        "commands": [
-          "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts dev",
-          "nx serve-base dep-graph-client"
-        ]
-      },
-      "configurations": {
-        "watch": {
-          "commands": [
-            "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts watch",
-            "nx serve-base dep-graph-client"
-          ]
-        },
-        "release": {
-          "commands": [
-            "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts release",
-            "nx serve-base dep-graph-client"
-          ]
-        }
-      }
-    },
-    "serve-for-e2e": {
-      "executor": "nx:run-commands",
-      "outputs": [],
-      "options": {
-        "commands": [
-          "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts dev",
-          "nx serve-base dep-graph-client"
-        ],
-        "readyWhen": "No issues found."
-      },
-      "configurations": {
-        "watch": {
-          "commands": [
-            "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts watch",
-            "nx serve-base dep-graph-client"
-          ],
-          "readyWhen": "No issues found."
-        },
-        "release": {
-          "commands": [
-            "npx ts-node -P ./scripts/tsconfig.scripts.json ./scripts/copy-dep-graph-environment.ts release",
-            "nx serve-base dep-graph-client"
-          ],
-          "readyWhen": "No issues found."
-        }
       }
     }
   },
