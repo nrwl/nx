@@ -2,7 +2,6 @@ import {
   checkFilesExist,
   killPorts,
   newProject,
-  readFile,
   readJson,
   runCLI,
   uniq,
@@ -40,19 +39,24 @@ describe('Cypress E2E Test runner', () => {
     expect(run1).toContain('All specs passed!');
 
     await killPorts(4200);
-    // config should not fail because of a config change
-    const originalContents = readFile(`apps/${myapp}-e2e/cypress.config.ts`);
+    // tests should not fail because of a config change
     updateFile(
       `apps/${myapp}-e2e/cypress.config.ts`,
-      originalContents.replace(/(fixturesFolder).+/i, '')
+      `
+import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+  ...nxE2EPreset(__dirname),
+  fixturesFolder: undefined,
+  }
+  ,
+});`
     );
 
-    // TODO(caleb): this output is cropped and is failing for missing the bottom part.
-    // this output is not the entire output and is missing the bottom part causing it the fail.
-    // it's also a replay from the cache which shouldn't happen?
     const run2 = runCLI(`e2e ${myapp}-e2e --no-watch`);
-    // console.log('run 2 output: ', run2);
-    // expect(run2).toContain('All specs passed!');
+    expect(run2).toContain('All specs passed!');
     expect(await killPorts(4200)).toBeTruthy();
   }, 1000000);
 });
