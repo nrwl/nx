@@ -73,8 +73,8 @@ describe('Linter', () => {
     runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
       silenceError: true,
     });
-    expect(() => checkFilesExist(`my-cache`)).not.toThrow();
-    expect(readCacheFile('my-cache')).toContain(
+    expect(() => checkFilesExist(`my-cache/${myapp}`)).not.toThrow();
+    expect(readCacheFile(`my-cache/${myapp}`)).toContain(
       path.normalize(`${myapp}/src/app/app.spec.tsx`)
     );
   });
