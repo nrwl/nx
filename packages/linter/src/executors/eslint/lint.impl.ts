@@ -15,7 +15,11 @@ export default async function run(
   delete options.hasTypeAwareRules;
 
   const systemRoot = context.root;
-  process.chdir(context.cwd);
+
+  // eslint resolves files relative to the current working directory.
+  // We want these paths to always be resolved relative to the workspace
+  // root to be able to run the lint executor from any subfolder.
+  process.chdir(systemRoot);
 
   const projectName = context.projectName || '<???>';
   const printInfo = options.format && !options.silent;

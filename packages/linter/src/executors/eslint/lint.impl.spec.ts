@@ -36,6 +36,8 @@ jest.mock('./utility/eslint-utils', () => {
 });
 import lintExecutor from './lint.impl';
 
+let mockChdir = jest.fn().mockImplementation(() => {});
+
 function createValidRunBuilderOptions(
   additionalOptions: Partial<Schema> = {}
 ): Schema {
@@ -64,7 +66,7 @@ function createValidRunBuilderOptions(
 function setupMocks() {
   jest.resetModules();
   jest.clearAllMocks();
-  jest.spyOn(process, 'chdir').mockImplementation(() => {});
+  jest.spyOn(process, 'chdir').mockImplementation(mockChdir);
   console.warn = jest.fn();
   console.error = jest.fn();
   console.info = jest.fn();
@@ -152,6 +154,15 @@ describe('Linter Builder', () => {
       rulesdir: [],
       resolvePluginsRelativeTo: null,
     });
+  });
+
+  it('should execute correctly from another working directory than root', async () => {
+    setupMocks();
+    await lintExecutor(createValidRunBuilderOptions(), {
+      ...mockContext,
+      cwd: 'apps/project/',
+    });
+    expect(mockChdir).toHaveBeenCalledWith('/root');
   });
 
   it('should throw if no reports generated', async () => {
