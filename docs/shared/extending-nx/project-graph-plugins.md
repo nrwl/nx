@@ -2,9 +2,9 @@
 
 > This API is experimental and might change.
 
-Project Graph is the representation of the source code in your repo. Projects can have files associated with them. Projects can have dependencies on each other.
+The Project Graph is the representation of the source code in your repo. Projects can have files associated with them. Projects can have dependencies on each other.
 
-One of the best features of Nx is that is able to construct the project graph automatically by analyzing your source code. Currently, this works best within the JavaScript ecosystem, but it can be extended to other languages and technologies using plugins.
+One of the best features of Nx the ability to construct the project graph automatically by analyzing your source code. Currently, this works best within the JavaScript ecosystem, but it can be extended to other languages and technologies using plugins.
 
 ## Adding Plugins to Workspace
 
@@ -21,7 +21,7 @@ You can register a plugin by adding it to the plugins array in `nx.json`:
 
 ## Implementing a Project Graph Processor
 
-A Project Graph Processor that takes a project graph and returns a new project graph. It can add/remove nodes and edges.
+A Project Graph Processor takes a project graph and returns a new project graph. It can add/remove nodes and edges.
 
 Plugins should export a function named `processProjectGraph` that handles updating the project graph with new nodes and edges. This function receives two things:
 
@@ -92,7 +92,6 @@ builder.addImplicitDependency('existing-project', 'new-project');
 ```
 
 > Note: Even though the plugin is written in JavaScript, resolving dependencies of different languages will probably be more easily written in their native language. Therefore, a common approach is to spawn a new process and communicate via IPC or `stdout`.
-> .
 
 Because an implicit dependency is not associated with any file, Nx doesn't know when it might change, so it will be recomputed every time.
 
