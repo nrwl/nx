@@ -16,10 +16,10 @@ import { isTheFileAStory } from '@nrwl/storybook/src/utils/utilities';
 
 export async function createAllStories(tree: Tree, projectName: string) {
   const projects = getProjects(tree);
-  const project = projects.get(projectName);
+  const projectConfiguration = projects.get(projectName);
 
-  const { sourceRoot, projectType } = project;
-  const projectPath = projectRootPath(tree, sourceRoot, projectType);
+  const { sourceRoot } = projectConfiguration;
+  const projectPath = projectRootPath(tree, projectConfiguration);
 
   let componentPaths: string[] = [];
   visitNotIgnoredFiles(tree, projectPath, (path) => {
