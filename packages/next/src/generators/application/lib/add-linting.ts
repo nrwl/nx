@@ -33,6 +33,13 @@ export async function addLinting(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
       () => {
+        // Turn off @next/next/no-html-link-for-pages since there is an issue with nextjs throwing linting errors
+        // TODO(nicholas): remove after Vercel updates nextjs linter to only lint ["*.ts", "*.tsx", "*.js", "*.jsx"]
+
+        reactEslintJson.rules = {
+          '@next/next/no-html-link-for-pages': 'off',
+          ...reactEslintJson.rules,
+        };
         // Find the override that handles both TS and JS files.
         const commonOverride = reactEslintJson.overrides?.find((o) =>
           ['*.ts', '*.tsx', '*.js', '*.jsx'].every((ext) =>
@@ -62,11 +69,12 @@ export async function addLinting(
           reactEslintJson.extends = [reactEslintJson.extends];
         }
         // add next.js configuration
-        reactEslintJson.extends.push(...['next', 'next/core-web-vitals']);
+        reactEslintJson.extends.unshift(...['next', 'next/core-web-vitals']);
         // remove nx/react plugin, as it conflicts with the next.js one
         reactEslintJson.extends = reactEslintJson.extends.filter(
           (name) => name !== 'plugin:@nrwl/nx/react'
         );
+
         reactEslintJson.extends.unshift('plugin:@nrwl/nx/react-typescript');
         if (!reactEslintJson.env) {
           reactEslintJson.env = {};
