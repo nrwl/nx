@@ -40,6 +40,7 @@ jobs:
           - e2e-node
           - e2e-web
           - e2e-storybook
+          - e2e-storybook-angular
           - e2e-workspace-create
           - e2e-react-native
           # - e2e-detox
@@ -71,7 +72,7 @@ jobs:
           - os: macos-latest
             packages: e2e-web
           - os: macos-latest
-            packages: e2e-storybook
+            packages: e2e-storybook,e2e-storybook-angular
           - os: macos-latest
             packages: e2e-workspace-create
           - os: macos-latest

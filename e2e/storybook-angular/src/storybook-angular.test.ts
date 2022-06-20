@@ -57,6 +57,16 @@ describe('Storybook for Angular', () => {
   });
 
   describe('build storybook', () => {
+    let angularStorybookLib;
+
+    beforeAll(() => {
+      angularStorybookLib = uniq('test-ui-lib');
+      createTestUILib(angularStorybookLib);
+      runCLI(
+        `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
+      );
+    });
+
     xit('should execute e2e tests using Cypress running against Storybook', async () => {
       if (isNotWindows()) {
         const myapp = uniq('myapp');
@@ -193,25 +203,7 @@ describe('Storybook for Angular', () => {
       }
     }, 1000000);
 
-    it('should build an Angular based storybook', () => {
-      const angularStorybookLib = uniq('test-ui-lib');
-      createTestUILib(angularStorybookLib);
-      runCLI(
-        `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
-      );
-
-      // build Angular lib
-      runCLI(`run ${angularStorybookLib}:build-storybook`);
-      checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-    }, 1000000);
-
     it('should build an Angular based storybook that references another lib', () => {
-      const angularStorybookLib = uniq('test-ui-lib');
-      createTestUILib(angularStorybookLib);
-      runCLI(
-        `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
-      );
-
       // create another lib with a component
       const anotherTestLib = uniq('test-another-lib');
       runCLI(

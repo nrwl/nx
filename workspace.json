@@ -30,6 +30,7 @@
     "e2e-react": "e2e/react",
     "e2e-react-native": "e2e/react-native",
     "e2e-storybook": "e2e/storybook",
+    "e2e-storybook-angular": "e2e/storybook-angular",
     "e2e-utils": "e2e/utils",
     "e2e-web": "e2e/web",
     "e2e-workspace-create": "e2e/workspace-create",
