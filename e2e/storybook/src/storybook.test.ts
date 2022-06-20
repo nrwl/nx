@@ -47,12 +47,12 @@ describe('Storybook schematics', () => {
   });
 
   describe('build storybook', () => {
-    it('should build a React based storybook', () => {
+    it('should build and lint a React based storybook', () => {
+      // build
       runCLI(`run ${reactStorybookLib}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-    }, 1000000);
 
-    it('should lint a React based storybook without errors', () => {
+      // lint
       const output = runCLI(`run ${reactStorybookLib}:lint`);
       expect(output).toContain('All files pass linting.');
     }, 1000000);
@@ -118,50 +118,3 @@ describe('Storybook schematics', () => {
     }, 1000000);
   });
 });
-
-export function createTestUILib(libName: string): void {
-  runCLI(`g @nrwl/angular:library ${libName} --no-interactive`);
-  runCLI(
-    `g @nrwl/angular:component test-button --project=${libName} --no-interactive`
-  );
-
-  writeFileSync(
-    tmpProjPath(`libs/${libName}/src/lib/test-button/test-button.component.ts`),
-    `
-      import { Component, OnInit, Input } from '@angular/core';
-
-      export type ButtonStyle = 'default' | 'primary' | 'accent';
-
-      @Component({
-        selector: 'proj-test-button',
-        templateUrl: './test-button.component.html',
-        styleUrls: ['./test-button.component.css']
-      })
-      export class TestButtonComponent implements OnInit {
-        @Input('buttonType') type = 'button';
-        @Input() style: ButtonStyle = 'default';
-        @Input() age: number;
-        @Input() isDisabled = false;
-
-        constructor() { }
-
-        ngOnInit() {
-        }
-
-      }
-      `
-  );
-
-  writeFileSync(
-    tmpProjPath(
-      `libs/${libName}/src/lib/test-button/test-button.component.html`
-    ),
-    `
-    <button [disabled]="isDisabled" [attr.type]="type" [ngClass]="style">Click me</button>
-    <p>You are {{age}} years old.</p>
-    `
-  );
-  runCLI(
-    `g @nrwl/angular:component test-other --project=${libName} --no-interactive`
-  );
-}

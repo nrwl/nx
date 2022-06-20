@@ -27,7 +27,7 @@ jobs:
           - e2e-next
           - e2e-node
           - e2e-web
-          - e2e-storybook
+          - e2e-storybook,e2e-storybook-angular
           - e2e-workspace-create
           - e2e-add-nx-to-monorepo
       fail-fast: false
