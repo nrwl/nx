@@ -1,4 +1,3 @@
-import { resolveNewFormatWithInlineProjects } from '../config/workspaces';
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import * as minimatch from 'minimatch';
@@ -6,13 +5,18 @@ import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { getRootTsConfigFileName } from '../utils/typescript';
 import { workspaceRoot } from '../utils/workspace-root';
-import { workspaceFileName } from '../project-graph/file-utils';
 import { defaultHashing, HashingImpl } from './hashing-impl';
-import { ProjectGraph } from '../config/project-graph';
+import {
+  FileData,
+  ProjectGraph,
+  ProjectGraphDependency,
+  ProjectGraphProjectNode,
+} from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { FilesetDependencyConfig } from '../config/workspace-json-project-json';
+import { readNxJson } from '../config/configuration';
 
 /**
  * A data structure returned by the default hasher.
@@ -27,8 +31,9 @@ export interface Hash {
   };
 }
 
-interface ProjectHashResult {
+interface TaskGraphResult {
   value: string;
+  command: string;
   nodes: { [name: string]: string };
 }
 
@@ -54,10 +59,10 @@ interface TsconfigJsonConfiguration {
  * The default hasher used by executors.
  */
 export class Hasher {
-  static version = '2.0';
+  static version = '3.0';
   private implicitDependencies: Promise<ImplicitHashResult>;
   private runtimeInputs: Promise<RuntimeHashResult>;
-  private projectHashes: ProjectHasher;
+  private taskHasher: TaskHasher;
   private hashing: HashingImpl;
 
   constructor(
@@ -72,66 +77,32 @@ export class Hasher {
       // this is only used for testing
       this.hashing = hashing;
     }
-    this.projectHashes = new ProjectHasher(this.projectGraph, this.hashing, {
+    this.taskHasher = new TaskHasher(this.projectGraph, this.hashing, {
       selectivelyHashTsConfig: this.options.selectivelyHashTsConfig ?? false,
     });
   }
 
-  async hashTaskWithDepsAndContext(
-    task: Task,
-    filter:
-      | 'all-files'
-      | 'exclude-tests-of-all'
-      | 'exclude-tests-of-deps' = 'all-files'
-  ): Promise<Hash> {
-    const command = this.hashCommand(task);
-
+  async hashTaskWithDepsAndContext(task: Task): Promise<Hash> {
     const values = (await Promise.all([
-      this.projectHashes.hashProject(
-        task.target.project,
-        [task.target.project],
-        filter
-      ),
+      this.taskHasher.hashTask(task, [task.target.project]),
       this.implicitDepsHash(),
       this.runtimeInputsHash(),
-    ])) as [
-      ProjectHashResult,
-      ImplicitHashResult,
-      RuntimeHashResult
-      // NodeModulesResult
-    ];
+    ])) as [TaskGraphResult, ImplicitHashResult, RuntimeHashResult];
 
     const value = this.hashing.hashArray([
       Hasher.version,
-      command,
       ...values.map((v) => v.value),
     ]);
 
     return {
       value,
       details: {
-        command,
+        command: values[0].command,
         nodes: values[0].nodes,
         implicitDeps: values[1].files,
         runtime: values[2].runtime,
       },
     };
-  }
-
-  hashCommand(task: Task) {
-    const overrides = { ...task.overrides };
-    delete overrides['__overrides_unparsed__'];
-    const sortedOverrides = {};
-    for (let k of Object.keys(overrides).sort()) {
-      sortedOverrides[k] = overrides[k];
-    }
-
-    return this.hashing.hashArray([
-      task.target.project ?? '',
-      task.target.target ?? '',
-      task.target.configuration ?? '',
-      JSON.stringify(sortedOverrides),
-    ]);
   }
 
   async hashContext(): Promise<{
@@ -149,11 +120,13 @@ export class Hasher {
     };
   }
 
+  async hashCommand(task: Task): Promise<string> {
+    return (await this.taskHasher.hashTask(task, [task.target.project]))
+      .command;
+  }
+
   async hashSource(task: Task): Promise<string> {
-    return this.projectHashes.hashProjectNodeSource(
-      task.target.project,
-      'all-files'
-    );
+    return (await this.taskHasher.hashTask(task, [task.target.project])).value;
   }
 
   hashArray(values: string[]): string {
@@ -244,6 +217,8 @@ export class Hasher {
         ...filesWithoutPatterns,
         ...implicitDepsFromPatterns,
 
+        'nx.json',
+
         //TODO: vsavkin move the special cases into explicit ts support
         'package-lock.json',
         'yarn.lock',
@@ -269,7 +244,6 @@ export class Hasher {
             const hash = this.hashing.hashFile(file);
             return { file, hash };
           }),
-        ...this.hashNxJson(),
       ];
 
       const combinedHash = this.hashing.hashArray(
@@ -291,175 +265,258 @@ export class Hasher {
 
     return this.implicitDependencies;
   }
-
-  private hashNxJson() {
-    const nxJsonPath = join(workspaceRoot, 'nx.json');
-    if (!existsSync(nxJsonPath)) {
-      return [];
-    }
-
-    let nxJsonContents = '{}';
-    try {
-      const nxJson = readJsonFile(nxJsonPath);
-      delete nxJson.projects;
-      nxJsonContents = JSON.stringify(nxJson);
-    } catch {}
-
-    return [
-      {
-        hash: this.hashing.hashArray([nxJsonContents]),
-        file: 'nx.json',
-      },
-    ];
-  }
 }
 
-class ProjectHasher {
-  private sourceHashes: { [projectName: string]: Promise<string> } = {};
-  private workspaceJson: ProjectsConfigurations;
-  private nxJson: NxJsonConfiguration;
+class TaskHasher {
+  private DEFAULT_FILESET_CONFIG = [
+    {
+      projects: 'self',
+      fileset: 'default',
+    },
+    {
+      projects: 'dependencies',
+      fileset: 'default',
+    },
+  ];
+  private filesetHashes: {
+    [taskId: string]: Promise<{ taskId: string; value: string }>;
+  } = {};
   private tsConfigJson: TsconfigJsonConfiguration;
+  private nxJson: NxJsonConfiguration;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly hashing: HashingImpl,
     private readonly options: { selectivelyHashTsConfig: boolean }
   ) {
-    this.workspaceJson = this.readWorkspaceConfigFile(workspaceFileName());
-    this.nxJson = this.readNxJsonConfigFile('nx.json');
     this.tsConfigJson = this.readTsConfig();
+    this.nxJson = readNxJson();
   }
 
-  async hashProject(
-    projectName: string,
-    visited: string[],
-    filter: 'all-files' | 'exclude-tests-of-all' | 'exclude-tests-of-deps'
-  ): Promise<ProjectHashResult> {
+  async hashTask(task: Task, visited: string[]): Promise<TaskGraphResult> {
     return Promise.resolve().then(async () => {
-      const deps = this.projectGraph.dependencies[projectName] ?? [];
-      const depHashes = (
-        await Promise.all(
-          deps.map(async (d) => {
-            if (visited.indexOf(d.target) > -1) {
-              return null;
-            } else {
-              visited.push(d.target);
-              return await this.hashProject(d.target, visited, filter);
-            }
-          })
-        )
-      ).filter((r) => !!r);
-      const filterForProject =
-        filter === 'all-files'
-          ? 'all-files'
-          : filter === 'exclude-tests-of-deps' && visited[0] === projectName
-          ? 'all-files'
-          : 'exclude-tests';
-      const projectHash = await this.hashProjectNodeSource(
-        projectName,
-        filterForProject
+      const projectNode = this.projectGraph.nodes[task.target.project];
+      if (!projectNode) {
+        return this.hashExternalDependency(task);
+      }
+      const projectGraphDeps =
+        this.projectGraph.dependencies[task.target.project] ?? [];
+
+      const filesetConfigs = this.filesetConfigs(task, projectNode);
+      const self = await this.hashSelfFilesets(filesetConfigs, projectNode);
+      const deps = await this.hashDepsTasks(
+        filesetConfigs,
+        projectGraphDeps,
+        visited
       );
-      const nodes = depHashes.reduce(
-        (m, c) => {
-          return { ...m, ...c.nodes };
-        },
-        { [projectName]: projectHash }
-      );
+
+      const command = this.hashCommand(task);
+
+      const nodes = deps.reduce((m, c) => {
+        return { ...m, ...c.nodes };
+      }, {});
+      self.forEach((r) => (nodes[r.taskId] = r.value));
+
       const value = this.hashing.hashArray([
-        ...depHashes.map((d) => d.value),
-        projectHash,
+        command,
+        ...self.map((d) => d.value),
+        ...deps.map((d) => d.value),
       ]);
-      return { value, nodes };
+
+      return { value, command, nodes };
     });
   }
 
-  async hashProjectNodeSource(
-    projectName: string,
-    filter: 'all-files' | 'exclude-tests'
+  private async hashDepsTasks(
+    config: FilesetDependencyConfig[],
+    projectGraphDeps: ProjectGraphDependency[],
+    visited: string[]
   ) {
-    const mapKey = `${projectName}-${filter}`;
-    if (!this.sourceHashes[mapKey]) {
-      this.sourceHashes[mapKey] = new Promise(async (res) => {
+    return (
+      await Promise.all(
+        config
+          .filter((fileset) => fileset.projects === 'dependencies')
+          .map(async (fileset) => {
+            return await Promise.all(
+              projectGraphDeps.map(async (d) => {
+                if (visited.indexOf(d.target) > -1) {
+                  return null;
+                } else {
+                  visited.push(d.target);
+                  return await this.hashTask(
+                    {
+                      id: `${d.target}:$fileset:${fileset.fileset}`,
+                      target: {
+                        project: d.target,
+                        target: '$fileset',
+                        configuration: fileset.fileset,
+                      },
+                      overrides: {},
+                    },
+                    visited
+                  );
+                }
+              })
+            );
+          })
+      )
+    )
+      .flat()
+      .filter((r) => !!r);
+  }
+
+  private async hashSelfFilesets(
+    config: FilesetDependencyConfig[],
+    projectNode: ProjectGraphProjectNode<any>
+  ) {
+    return await Promise.all(
+      config
+        .filter((fileset) => fileset.projects === 'self')
+        .map((fileset) =>
+          this.hashFilesetSource(projectNode.name, fileset.fileset)
+        )
+    );
+  }
+
+  private filesetConfigs(
+    task: Task,
+    projectNode: ProjectGraphProjectNode<any>
+  ): FilesetDependencyConfig[] {
+    if (task.target.target === '$fileset') {
+      return [
+        {
+          fileset: task.target.configuration,
+          projects: 'self',
+        },
+        {
+          fileset: task.target.configuration,
+          projects: 'dependencies',
+        },
+      ];
+    } else {
+      const targetData = projectNode.data.targets[task.target.target];
+      const targetDefaults = this.nxJson.targetDefaults[task.target.target];
+      // task from TaskGraph can be added here
+      return expandFilesetConfigSyntaxSugar(
+        targetData.dependsOnFilesets ||
+          targetDefaults?.dependsOnFilesets ||
+          this.DEFAULT_FILESET_CONFIG
+      );
+    }
+  }
+
+  private hashExternalDependency(task: Task) {
+    const n = this.projectGraph.externalNodes[task.target.project];
+    const version = n?.data?.version;
+    let hash: string;
+    if (version) {
+      hash = this.hashing.hashArray([version]);
+    } else {
+      // unknown dependency
+      // this may occur if a file has a dependency to a npm package
+      // which is not directly registestered in package.json
+      // but only indirectly through dependencies of registered
+      // npm packages
+      // when it is at a later stage registered in package.json
+      // the cache project graph will not know this module but
+      // the new project graph will know it
+      // The actual checksum added here is of no importance as
+      // the version is unknown and may only change when some
+      // other change occurs in package.json and/or package-lock.json
+      hash = `__${task.target.project}__`;
+    }
+    return {
+      value: hash,
+      command: '',
+      nodes: {
+        [task.target.project]: version || hash,
+      },
+    };
+  }
+
+  private hashCommand(task: Task) {
+    const overrides = { ...task.overrides };
+    delete overrides['__overrides_unparsed__'];
+    const sortedOverrides = {};
+    for (let k of Object.keys(overrides).sort()) {
+      sortedOverrides[k] = overrides[k];
+    }
+
+    return this.hashing.hashArray([
+      task.target.project ?? '',
+      task.target.target ?? '',
+      task.target.configuration ?? '',
+      JSON.stringify(sortedOverrides),
+    ]);
+  }
+
+  private async hashFilesetSource(
+    projectName: string,
+    filesetName: string
+  ): Promise<{ taskId: string; value: string }> {
+    const mapKey = `${projectName}:$fileset:${filesetName}`;
+    if (!this.filesetHashes[mapKey]) {
+      this.filesetHashes[mapKey] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
 
-        if (!p) {
-          const n = this.projectGraph.externalNodes[projectName];
-          const version = n?.data?.version;
-          let hash: string;
-          if (version) {
-            hash = this.hashing.hashArray([version]);
-          } else {
-            // unknown dependency
-            // this may occur if a file has a dependency to a npm package
-            // which is not directly registestered in package.json
-            // but only indirectly through dependencies of registered
-            // npm packages
-            // when it is at a later stage registered in package.json
-            // the cache project graph will not know this module but
-            // the new project graph will know it
-            // The actual checksum added here is of no importance as
-            // the version is unknown and may only change when some
-            // other change occurs in package.json and/or package-lock.json
-            hash = `__${projectName}__`;
-          }
-          res(hash);
-          return;
-        }
-
-        const filteredFiles =
-          filter === 'all-files'
-            ? p.data.files
-            : p.data.files.filter((f) => !this.isSpec(f.file));
+        const filesetPatterns = this.selectFilesetPatterns(p, filesetName);
+        const filteredFiles = this.filterFiles(p.data.files, filesetPatterns);
 
         const fileNames = filteredFiles.map((f) => f.file);
         const values = filteredFiles.map((f) => f.hash);
 
-        const workspaceJson = JSON.stringify(
-          this.workspaceJson.projects[projectName] ?? ''
-        );
-
         let tsConfig: string;
-
-        if (this.options.selectivelyHashTsConfig) {
-          tsConfig = this.removeOtherProjectsPathRecords(projectName);
-        } else {
-          tsConfig = JSON.stringify(this.tsConfigJson);
-        }
-
-        res(
-          this.hashing.hashArray([
+        tsConfig = this.hashTsConfig(p);
+        res({
+          taskId: mapKey,
+          value: this.hashing.hashArray([
             ...fileNames,
             ...values,
-            workspaceJson,
+            JSON.stringify({ ...p.data, files: undefined }),
             tsConfig,
-          ])
-        );
+          ]),
+        });
       });
     }
-    return this.sourceHashes[mapKey];
+    return this.filesetHashes[mapKey];
   }
 
-  private isSpec(file: string) {
-    return (
-      file.endsWith('.spec.tsx') ||
-      file.endsWith('.test.tsx') ||
-      file.endsWith('-test.tsx') ||
-      file.endsWith('-spec.tsx') ||
-      file.endsWith('.spec.ts') ||
-      file.endsWith('.test.ts') ||
-      file.endsWith('-test.ts') ||
-      file.endsWith('-spec.ts') ||
-      file.endsWith('.spec.js') ||
-      file.endsWith('.test.js') ||
-      file.endsWith('-test.js') ||
-      file.endsWith('-spec.js')
+  private selectFilesetPatterns(
+    p: ProjectGraphProjectNode,
+    filesetName: string
+  ) {
+    if (filesetName == undefined) {
+      filesetName = 'default';
+    }
+    const projectFilesets = p.data.filesets
+      ? p.data.filesets[filesetName]
+      : null;
+    const defaultFilesets = this.nxJson.filesets
+      ? this.nxJson.filesets[filesetName]
+      : null;
+    if (projectFilesets) return projectFilesets;
+    if (defaultFilesets) return defaultFilesets;
+    return null;
+  }
+
+  private filterFiles(files: FileData[], patterns: string[] | null) {
+    if (patterns === null) return files;
+    return files.filter(
+      (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
     );
   }
 
-  private removeOtherProjectsPathRecords(projectName: string) {
-    const { paths, ...compilerOptions } = this.tsConfigJson.compilerOptions;
+  private hashTsConfig(p: ProjectGraphProjectNode) {
+    if (this.options.selectivelyHashTsConfig) {
+      return this.removeOtherProjectsPathRecords(p);
+    } else {
+      return JSON.stringify(this.tsConfigJson);
+    }
+  }
 
-    const rootPath = this.workspaceJson.projects[projectName].root.split('/');
+  private removeOtherProjectsPathRecords(p: ProjectGraphProjectNode) {
+    const { paths, ...compilerOptions } = this.tsConfigJson.compilerOptions;
+    const rootPath = p.data.root.split('/');
     rootPath.shift();
     const pathAlias = `@${this.nxJson.npmScope}/${rootPath.join('/')}`;
 
@@ -484,24 +541,20 @@ class ProjectHasher {
       };
     }
   }
+}
 
-  private readWorkspaceConfigFile(path: string): ProjectsConfigurations {
-    try {
-      const res = readJsonFile(path);
-      res.projects ??= {};
-      return resolveNewFormatWithInlineProjects(res);
-    } catch {
-      return { projects: {}, version: 2 };
+function expandFilesetConfigSyntaxSugar(
+  deps: (FilesetDependencyConfig | string)[]
+): FilesetDependencyConfig[] {
+  return deps.map((d) => {
+    if (typeof d === 'string') {
+      if (d.startsWith('^')) {
+        return { projects: 'dependencies', fileset: d.substring(1) };
+      } else {
+        return { projects: 'self', fileset: d };
+      }
+    } else {
+      return d;
     }
-  }
-
-  private readNxJsonConfigFile(path: string): NxJsonConfiguration {
-    try {
-      const res = readJsonFile(path);
-      res.projects ??= {};
-      return res;
-    } catch {
-      return {};
-    }
-  }
+  });
 }

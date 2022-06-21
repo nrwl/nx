@@ -1,5 +1,8 @@
 import { PackageManager } from '../utils/package-manager';
-import { TargetDependencyConfig } from './workspace-json-project-json';
+import {
+  FilesetDependencyConfig,
+  TargetDependencyConfig,
+} from './workspace-json-project-json';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
@@ -21,6 +24,7 @@ export type TargetDefaults = Record<
   {
     outputs?: string[];
     dependsOn?: (TargetDependencyConfig | string)[];
+    dependsOnFilesets?: (FilesetDependencyConfig | string)[];
   }
 >;
 
@@ -46,6 +50,10 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Dependencies between different target names across all projects
    */
   targetDependencies?: TargetDependencies;
+  /**
+   * Default filesets used when no project-specific fileset is defined;
+   */
+  filesets?: { [filesetName: string]: string[] };
   /**
    * Dependencies between different target names across all projects
    */

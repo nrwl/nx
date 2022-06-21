@@ -4,6 +4,11 @@
   "title": "JSON schema for Nx projects",
   "type": "object",
   "properties": {
+    "filesets": {
+      "type": "object",
+      "description": "Filesets used by Nx to hash relevant files to a given target",
+      "additionalProperties": true
+    },
     "targets": {
       "type": "object",
       "description": "Configures all the targets which define what tasks you can run against the project",
@@ -28,6 +33,31 @@
             "description": "provides extra sets of values that will be merged into the options map",
             "additionalProperties": {
               "type": "object"
+            }
+          },
+          "dependsOnFilesets": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "projects": {
+                      "type": "string",
+                      "description": "The projects that the targets belong to.",
+                      "enum": ["self", "dependencies"]
+                    },
+                    "fileset": {
+                      "type": "string",
+                      "description": "The name of the target."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             }
           },
           "dependsOn": {

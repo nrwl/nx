@@ -82,6 +82,10 @@ export interface ProjectGraphProjectNode<T = any> {
     root: string;
     sourceRoot?: string;
     /**
+     * Filesets associated with the project
+     */
+    filesets?: { [filesetName: string]: string[] };
+    /**
      * Targets associated to the project
      */
     targets?: { [targetName: string]: TargetConfiguration };

@@ -230,7 +230,6 @@
         "required": ["cypressConfig"],
         "presets": []
       },
-      "hasher": "./src/executors/cypress/hasher",
       "description": "Run Cypress E2E tests.",
       "aliases": [],
       "hidden": false,

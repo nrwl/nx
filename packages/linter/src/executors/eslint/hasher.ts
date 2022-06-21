@@ -20,7 +20,7 @@ export default async function run(
     return context.hasher.hashTaskWithDepsAndContext(task);
   }
 
-  const command = context.hasher.hashCommand(task);
+  const command = await context.hasher.hashCommand(task);
   const source = await context.hasher.hashSource(task);
   const deps = allDeps(task.id, context.taskGraph, context.projectGraph);
   const tags = context.hasher.hashArray(
