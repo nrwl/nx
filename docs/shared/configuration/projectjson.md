@@ -149,20 +149,37 @@ any artifacts on disk.
 
 ### dependsOn
 
-Targets can depend on other targets.
+Targets can depend on other targets. This is the relevant portion of the configuration file:
+
+```json
+"build": {
+  "dependsOn": ["^build"]
+},
+"test": {
+  "dependsOn": ["build"]
+}
+```
 
 A common scenario is having to build dependencies of a project first before building the project. This is what
-the `dependsOn` property of the `build` target configures. It tells Nx that before it can build `mylib` it needs to make
+the `"dependsOn": ["^build"]` property of the `build` target configures. It tells Nx that before it can build `mylib` it needs to make
 sure that `mylib`'s dependencies are built as well. This doesn't mean Nx is going to rerun those builds. If the right
 artifacts are already in the right place, Nx will do nothing. If they aren't in the right place, but they are available
 in the cache, Nx will retrieve them from the cache.
 
-Another common scenario is for a target to depend on another target of the same project. For instance, `dependsOn` of
+Another common scenario is for a target to depend on another target of the same project. For instance, `"dependsOn": ["build"]` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
-> You can also express the same configuration using `{ projects: "self", target: "build"}`
-> and `{ projects: "dependencies", target: "build"}`.
+> You can also express the same configuration using
+
+```json
+"build": {
+  "dependsOn": [{ projects: "dependencies", target: "build"}]
+},
+"test": {
+  "dependsOn": [{ projects: "self", target: "build"}]
+}
+```
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
