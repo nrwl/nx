@@ -18,7 +18,7 @@ For instance, this is an example of doing it in Azure pipelines.
 
 ```yml
 variables:
-  NX_BRANCH: $(System.PullRequestNumber)
+  NX_BRANCH: $(System.PullRequest.PullRequestNumber)
 ```
 
 ### CircleCI
