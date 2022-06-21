@@ -14,7 +14,7 @@ export function addGitIgnoreEntry(host: Tree) {
   ig.add(host.read('.gitignore', 'utf-8'));
 
   if (!ig.ignores('apps/example/ios/Pods/Folly')) {
-    content = `${content}\n${gitIgnoreEntriesForReactNative}/\n`;
+    content = `${content}\n${gitIgnoreEntriesForReactNative}\n`;
   }
 
   // also ignore nested node_modules folders due to symlink for React Native
