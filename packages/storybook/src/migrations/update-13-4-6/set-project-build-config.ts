@@ -14,7 +14,7 @@ export default async function setProjectBuildConfig(tree: Tree) {
     if (!projectConfiguration.targets) {
       return;
     }
-    const { storybookBuildTarget, storybookTarget, buildTarget } =
+    const { storybookBuildTarget, storybookTarget, ngBuildTarget } =
       findStorybookAndBuildTargets(projectConfiguration.targets);
     if (
       projectName &&
@@ -22,7 +22,7 @@ export default async function setProjectBuildConfig(tree: Tree) {
       projectConfiguration?.targets?.[storybookTarget]?.options?.uiFramework ===
         '@storybook/angular'
     ) {
-      if (buildTarget) {
+      if (ngBuildTarget) {
         if (
           !projectConfiguration.targets[storybookTarget].options
             .projectBuildConfig

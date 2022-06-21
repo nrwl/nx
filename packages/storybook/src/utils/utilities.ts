@@ -212,67 +212,31 @@ export function dedupe(arr: string[]) {
 }
 
 /**
- * This function is only used for ANGULAR projects.
+ * This function is mainly used for ANGULAR projects.
  * And it is used for the "old" Storybook/Angular setup,
- * where the Nx executor is used.
- *
- * At the moment, it's used by the migrator to set projectBuildConfig
+ * where the Nx executor is used. It's purpose is to set up
+ * the projectBuildConfig for the Angular project. For that purpose,
+ * it's used ONLY by the migrator to set projectBuildConfig
  * and it is also used by the change-storybook-targets generator/migrator
+ * when migrating to the new, angular-only Storybook schema.
+ *
+ * We are repurposing this function to also return the
+ * build target for Next apps.
  */
+
 export function findStorybookAndBuildTargets(targets: {
   [targetName: string]: TargetConfiguration;
 }): {
   storybookBuildTarget?: string;
   storybookTarget?: string;
-  buildTarget?: string;
+  ngBuildTarget?: string;
+  nextBuildTarget?: string;
 } {
   const returnObject: {
     storybookBuildTarget?: string;
     storybookTarget?: string;
-    buildTarget?: string;
-  } = {};
-  Object.entries(targets).forEach(([target, targetConfig]) => {
-    if (targetConfig.executor === '@nrwl/storybook:storybook') {
-      returnObject.storybookTarget = target;
-    }
-    if (targetConfig.executor === '@nrwl/storybook:build') {
-      returnObject.storybookBuildTarget = target;
-    }
-    /**
-     * Not looking for '@nrwl/angular:ng-packagr-lite', only
-     * looking for '@angular-devkit/build-angular:browser'
-     * because the '@nrwl/angular:ng-packagr-lite' executor
-     * does not support styles and extra options, so the user
-     * will be forced to switch to build-storybook to add extra options.
-     *
-     * So we might as well use the build-storybook by default to
-     * avoid any errors.
-     */
-    if (targetConfig.executor === '@angular-devkit/build-angular:browser') {
-      returnObject.buildTarget = target;
-    }
-  });
-  return returnObject;
-}
-
-/**
- * This function is not used at the moment.
- *
- * However, it may be valuable to create this here, in order to avoid
- * any confusion in the future.
- *
- */
-export function findStorybookAndBuildTargetsForStorybookAngularExecutors(targets: {
-  [targetName: string]: TargetConfiguration;
-}): {
-  storybookBuildTarget?: string;
-  storybookTarget?: string;
-  buildTarget?: string;
-} {
-  const returnObject: {
-    storybookBuildTarget?: string;
-    storybookTarget?: string;
-    buildTarget?: string;
+    ngBuildTarget?: string;
+    nextBuildTarget?: string;
   } = {};
   Object.entries(targets).forEach(([target, targetConfig]) => {
     if (targetConfig.executor === '@storybook/angular:start-storybook') {
@@ -281,6 +245,15 @@ export function findStorybookAndBuildTargetsForStorybookAngularExecutors(targets
     if (targetConfig.executor === '@storybook/angular:build-storybook') {
       returnObject.storybookBuildTarget = target;
     }
+
+    // If it's a non-angular project, these will be the executors
+    if (targetConfig.executor === '@nrwl/storybook:storybook') {
+      returnObject.storybookTarget = target;
+    }
+    if (targetConfig.executor === '@nrwl/storybook:build') {
+      returnObject.storybookBuildTarget = target;
+    }
+
     /**
      * Not looking for '@nrwl/angular:ng-packagr-lite', only
      * looking for '@angular-devkit/build-angular:browser'
@@ -292,7 +265,11 @@ export function findStorybookAndBuildTargetsForStorybookAngularExecutors(targets
      * avoid any errors.
      */
     if (targetConfig.executor === '@angular-devkit/build-angular:browser') {
-      returnObject.buildTarget = target;
+      returnObject.ngBuildTarget = target;
+    }
+
+    if (targetConfig.executor === '@nrwl/next:build') {
+      returnObject.nextBuildTarget = target;
     }
   });
   return returnObject;

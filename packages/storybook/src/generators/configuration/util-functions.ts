@@ -13,7 +13,12 @@ import {
 } from '@nrwl/devkit';
 import { Linter } from '@nrwl/linter';
 import { join } from 'path';
-import { dedupe, isFramework, TsConfig } from '../../utils/utilities';
+import {
+  dedupe,
+  isFramework,
+  TsConfig,
+  findStorybookAndBuildTargets,
+} from '../../utils/utilities';
 import { StorybookConfigureSchema } from './schema';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
@@ -61,19 +66,16 @@ export function addStorybookTask(
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
-export function addAngularStorybookTask(
-  tree: Tree,
-  projectName: string,
-  buildTargetForAngularProjects: string
-) {
+export function addAngularStorybookTask(tree: Tree, projectName: string) {
   const projectConfig = readProjectConfiguration(tree, projectName);
+  const { ngBuildTarget } = findStorybookAndBuildTargets(projectConfig.targets);
   projectConfig.targets['storybook'] = {
     executor: '@storybook/angular:start-storybook',
     options: {
       port: 4400,
       configDir: `${projectConfig.root}/.storybook`,
       browserTarget: `${projectName}:${
-        buildTargetForAngularProjects ? 'build' : 'build-storybook'
+        ngBuildTarget ? 'build' : 'build-storybook'
       }`,
       compodoc: false,
     },
@@ -90,7 +92,7 @@ export function addAngularStorybookTask(
       outputDir: joinPathFragments('dist/storybook', projectName),
       configDir: `${projectConfig.root}/.storybook`,
       browserTarget: `${projectName}:${
-        buildTargetForAngularProjects ? 'build' : 'build-storybook'
+        ngBuildTarget ? 'build' : 'build-storybook'
       }`,
       compodoc: false,
     },
@@ -290,8 +292,18 @@ export function createProjectStorybookDir(
     }
   }
 
-  const { root, projectType } = readProjectConfiguration(tree, projectName);
-  const projectDirectory = projectType === 'application' ? 'app' : 'lib';
+  const { root, projectType, targets } = readProjectConfiguration(
+    tree,
+    projectName
+  );
+  const { nextBuildTarget } = findStorybookAndBuildTargets(targets);
+
+  const projectDirectory =
+    projectType === 'application'
+      ? !!nextBuildTarget
+        ? 'components'
+        : 'src/app'
+      : 'src/lib';
 
   const storybookRoot = join(root, '.storybook');
 
@@ -302,7 +314,7 @@ export function createProjectStorybookDir(
     return;
   }
 
-  logger.debug(`adding .storybook folder to ${projectDirectory}`);
+  logger.debug(`adding .storybook folder to your ${projectType}`);
   const templatePath = join(
     __dirname,
     tsConfiguration ? './project-files-ts' : './project-files'
@@ -313,11 +325,13 @@ export function createProjectStorybookDir(
     uiFramework,
     offsetFromRoot: offsetFromRoot(root),
     rootTsConfigPath: getRootTsConfigPathInTree(tree),
-    projectType: projectDirectory,
+    projectDirectory,
     useWebpack5:
       uiFramework === '@storybook/angular' ||
       uiFramework === '@storybook/react',
     existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
+    mainDir:
+      !!nextBuildTarget && projectType === 'application' ? 'components' : 'src',
   });
 
   if (js) {

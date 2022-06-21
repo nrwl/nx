@@ -10,5 +10,5 @@
     "<%= offsetFromRoot %>../node_modules/@nrwl/react/typings/image.d.ts"
   ],<% } %>
   "exclude": ["../**/*.spec.ts" <% if(uiFramework === '@storybook/react') { %>, "../**/*.spec.js", "../**/*.spec.tsx", "../**/*.spec.jsx"<% } %>],
-  "include": ["../src/**/*", "*.js" <% if(uiFramework === '@storybook/react-native') { %>, "*.ts", "*.tsx"<% } %>]
+  "include": ["../<%= mainDir %>/**/*", "*.js" <% if(uiFramework === '@storybook/react-native') { %>, "*.ts", "*.tsx"<% } %>]
 }

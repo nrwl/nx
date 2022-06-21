@@ -22,7 +22,6 @@ import {
   updateLintConfig,
 } from './util-functions';
 import { Linter } from '@nrwl/linter';
-import { findStorybookAndBuildTargets } from '../../utils/utilities';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -32,8 +31,7 @@ export async function configurationGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const { projectType, targets } = readProjectConfiguration(tree, schema.name);
-  const { buildTarget } = findStorybookAndBuildTargets(targets);
+  const { projectType } = readProjectConfiguration(tree, schema.name);
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
   });
@@ -52,7 +50,7 @@ export async function configurationGenerator(
   updateLintConfig(tree, schema);
 
   if (schema.uiFramework === '@storybook/angular') {
-    addAngularStorybookTask(tree, schema.name, buildTarget);
+    addAngularStorybookTask(tree, schema.name);
   } else {
     addStorybookTask(tree, schema.name, schema.uiFramework);
   }

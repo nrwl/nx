@@ -4,17 +4,17 @@ import {
   getProjects,
   installPackagesTask,
   logger,
-  readProjectConfiguration,
   Tree,
   updateJson,
   visitNotIgnoredFiles,
-  offsetFromRoot,
 } from '@nrwl/devkit';
 import { lte } from 'semver';
-import { storybookVersion } from '../../../utils/versions';
 import { join } from 'path';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import { storybookVersion } from '../../../utils/versions';
+import { createProjectStorybookDir } from '../../../generators/configuration/util-functions';
+import { StorybookConfigureSchema } from '../../../generators/configuration/schema';
 
 export function migrateDefaultsGenerator(tree: Tree) {
   migrateAllStorybookInstances(tree);
@@ -28,7 +28,7 @@ export function migrateAllStorybookInstances(tree: Tree) {
   const projects = getProjects(tree);
   const projectsThatHaveStorybookConfiguration: {
     name: string;
-    uiFramework: string;
+    uiFramework: StorybookConfigureSchema['uiFramework'];
     configFolder: string;
   }[] = [...projects.entries()]
     .filter(
@@ -60,7 +60,7 @@ export function migrateAllStorybookInstances(tree: Tree) {
 export function migrateStorybookInstance(
   tree: Tree,
   projectName: string,
-  uiFramework: string,
+  uiFramework: StorybookConfigureSchema['uiFramework'],
   configFolder?: string
 ) {
   migrateProjectLevelStorybookInstance(
@@ -161,11 +161,9 @@ function moveOldFiles(tree: Tree, configFolderDir: string) {
 function migrateProjectLevelStorybookInstance(
   tree: Tree,
   projectName: string,
-  uiFramework: string,
+  uiFramework: StorybookConfigureSchema['uiFramework'],
   configFolder: string
 ) {
-  const { root, projectType } = readProjectConfiguration(tree, projectName);
-  const projectDirectory = projectType === 'application' ? 'app' : 'lib';
   const old_folder_exists_already = tree.exists(
     configFolder?.replace('.storybook', '.old_storybook')
   );
@@ -180,23 +178,8 @@ function migrateProjectLevelStorybookInstance(
   if (tree.exists(configFolder)) {
     return;
   }
-  generateFiles(
-    tree,
-    join(
-      __dirname,
-      '../../../generators/configuration/project-files/.storybook'
-    ),
-    configFolder,
-    {
-      tmpl: '',
-      uiFramework,
-      offsetFromRoot: offsetFromRoot(root),
-      rootTsConfigPath: getRootTsConfigPathInTree(tree),
-      projectType: projectDirectory,
-      useWebpack5: uiFramework === '@storybook/angular',
-      existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
-    }
-  );
+
+  createProjectStorybookDir(tree, projectName, uiFramework, false, false);
 }
 
 function migrateRootLevelStorybookInstance(tree: Tree) {

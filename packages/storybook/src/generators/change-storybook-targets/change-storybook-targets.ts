@@ -17,7 +17,7 @@ export async function changeStorybookTargetsGenerator(tree: Tree) {
   const projects = getProjects(tree);
   [...projects.entries()].forEach(([projectName, projectConfiguration]) => {
     changesMade = false;
-    const { storybookBuildTarget, storybookTarget, buildTarget } =
+    const { storybookBuildTarget, storybookTarget, ngBuildTarget } =
       findStorybookAndBuildTargets(projectConfiguration.targets);
     if (
       projectName &&
@@ -29,7 +29,7 @@ export async function changeStorybookTargetsGenerator(tree: Tree) {
         projectConfiguration,
         storybookTarget,
         projectName,
-        buildTarget,
+        ngBuildTarget,
         storybookBuildTarget
       );
       changesMade = true;
@@ -38,7 +38,7 @@ export async function changeStorybookTargetsGenerator(tree: Tree) {
         updateStorybookBuildTarget(
           projectConfiguration,
           projectName,
-          buildTarget,
+          ngBuildTarget,
           storybookBuildTarget
         );
     } else {
