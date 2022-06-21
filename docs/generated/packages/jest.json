@@ -316,7 +316,6 @@
         "required": ["jestConfig"],
         "presets": []
       },
-      "hasher": "./src/executors/jest/hasher",
       "description": "Run Jest unit tests.",
       "aliases": [],
       "hidden": false,

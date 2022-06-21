@@ -7,6 +7,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateJson,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
 
@@ -163,43 +164,69 @@ describe('cache', () => {
     updateFile('nx.json', (c) => originalNxJson);
   }, 120000);
 
-  it('should only cache specific files if build outputs is configured with specific files', async () => {
-    const mylib1 = uniq('mylib1');
-    runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
-
-    // Update outputs in workspace.json to just be a particular file
-    updateProjectConfig(mylib1, (config) => {
-      config.targets['build-base'] = {
-        ...config.targets.build,
-      };
-      config.targets.build = {
-        executor: '@nrwl/workspace:run-commands',
-        outputs: [`dist/libs/${mylib1}/index.js`],
-        options: {
-          commands: [
-            {
-              command: `npx nx run ${mylib1}:build-base`,
-            },
-          ],
-          parallel: false,
+  it('should use consider filesets when hashing', async () => {
+    const parent = uniq('parent');
+    const child1 = uniq('child1');
+    const child2 = uniq('child2');
+    runCLI(`generate @nrwl/js:lib ${parent}`);
+    runCLI(`generate @nrwl/js:lib ${child1}`);
+    runCLI(`generate @nrwl/js:lib ${child2}`);
+    updateJson(`nx.json`, (c) => {
+      c.filesets = { prod: ['!**/*.spec.ts'] };
+      c.targetDefaults = {
+        test: {
+          dependsOnFilesets: ['default', '^prod'],
         },
       };
-      return config;
+      return c;
     });
 
-    // run build with caching
-    // --------------------------------------------
-    const outputThatPutsDataIntoCache = runCLI(`run ${mylib1}:build`);
-    // now the data is in cache
-    expect(outputThatPutsDataIntoCache).not.toContain('cache');
+    updateJson(`libs/${parent}/project.json`, (c) => {
+      c.implicitDependencies = [child1, child2];
+      return c;
+    });
 
-    rmDist();
+    updateJson(`libs/${child1}/project.json`, (c) => {
+      c.filesets = { prod: ['**/*.ts'] };
+      return c;
+    });
 
-    const outputWithBuildTasksCached = runCLI(`run ${mylib1}:build`);
-    expect(outputWithBuildTasksCached).toContain('cache');
-    expectCached(outputWithBuildTasksCached, [mylib1]);
-    // Ensure that only the specific file in outputs was copied to cache
-    expect(listFiles(`dist/libs/${mylib1}`)).toEqual([`index.js`]);
+    const firstRun = runCLI(`test ${parent}`);
+    expect(firstRun).not.toContain('read the output from the cache');
+
+    // -----------------------------------------
+    // change child2 spec
+    updateFile(`libs/${child2}/src/lib/${child2}.spec.ts`, (c) => {
+      return c + '\n// some change';
+    });
+    const child2RunSpecChange = runCLI(`test ${child2}`);
+    expect(child2RunSpecChange).not.toContain('read the output from the cache');
+
+    const parentRunSpecChange = runCLI(`test ${parent}`);
+    expect(parentRunSpecChange).toContain('read the output from the cache');
+
+    // -----------------------------------------
+    // change child2 prod
+    updateFile(`libs/${child2}/src/lib/${child2}.ts`, (c) => {
+      return c + '\n// some change';
+    });
+    const child2RunProdChange = runCLI(`test ${child2}`);
+    expect(child2RunProdChange).not.toContain('read the output from the cache');
+
+    const parentRunProdChange = runCLI(`test ${parent}`);
+    expect(parentRunProdChange).not.toContain('read the output from the cache');
+
+    // -----------------------------------------
+    // change child1 spec
+    updateFile(`libs/${child1}/src/lib/${child1}.spec.ts`, (c) => {
+      return c + '\n// some change';
+    });
+
+    // this is a miss cause child1 redefined "prod" to include all files
+    const parentRunSpecChangeChild1 = runCLI(`test ${parent}`);
+    expect(parentRunSpecChangeChild1).not.toContain(
+      'read the output from the cache'
+    );
   }, 120000);
 
   function expectCached(

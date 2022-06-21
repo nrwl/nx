@@ -111,6 +111,11 @@
       },
       "additionalProperties": false
     },
+    "filesets": {
+      "type": "object",
+      "description": "Default filesets",
+      "additionalProperties": true
+    },
     "targetDependencyConfig": {
       "type": "array",
       "items": {
@@ -140,6 +145,31 @@
       "type": "object",
       "description": "Target defaults",
       "properties": {
+        "dependsOnFilesets": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "projects": {
+                    "type": "string",
+                    "description": "The projects that the targets belong to.",
+                    "enum": ["self", "dependencies"]
+                  },
+                  "fileset": {
+                    "type": "string",
+                    "description": "The name of the target."
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
         "dependsOn": {
           "type": "array",
           "items": {

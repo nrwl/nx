@@ -109,6 +109,21 @@ export interface TargetDependencyConfig {
   target: string;
 }
 
+export interface FilesetDependencyConfig {
+  /**
+   * This the projects that the filesets belong to
+   *
+   * 'self': This target depends on a fileset of the same project
+   * 'deps': This target depends on the deps' filesets.
+   */
+  projects: 'self' | 'dependencies';
+
+  /**
+   * The name of the fileset
+   */
+  fileset: string;
+}
+
 /**
  * Target's configuration
  */
@@ -130,6 +145,11 @@ export interface TargetConfiguration<T = any> {
    * This describes other targets that a target depends on.
    */
   dependsOn?: (TargetDependencyConfig | string)[];
+
+  /**
+   * This describes filesets that a target depends on.
+   */
+  dependsOnFilesets?: (FilesetDependencyConfig | string)[];
 
   /**
    * Target's options. They are passed in to the executor.
