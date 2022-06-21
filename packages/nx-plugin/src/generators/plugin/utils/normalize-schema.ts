@@ -1,4 +1,5 @@
 import {
+  getImportPath,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -34,8 +35,7 @@ export function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const npmPackageName =
-    options.importPath || resolvePackageName(npmScope, name);
+  const npmPackageName = options.importPath || getImportPath(npmScope, name);
 
   return {
     ...options,
@@ -48,12 +48,4 @@ export function normalizeOptions(
     parsedTags,
     npmPackageName,
   };
-}
-
-function resolvePackageName(npmScope: string, name: string): string {
-  if (npmScope && npmScope !== '') {
-    return `@${npmScope}/${name}`;
-  } else {
-    return name;
-  }
 }

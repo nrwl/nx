@@ -291,28 +291,6 @@ describe('create-nx-workspace', () => {
     checkFilesDoNotExist('.circleci/config.yml');
   });
 
-  it('should generate workspace with custom scope', () => {
-    const wsName = uniq('scope');
-    runCreateWorkspace(wsName, {
-      preset: 'core',
-      packageManager,
-      npmScope: 'my-scope',
-    });
-    const nxJson = readJson('nx.json');
-    expect(nxJson.npmScope).toEqual('my-scope');
-  });
-
-  it('should generate workspace with no scope', () => {
-    const wsName = uniq('scope');
-    runCreateWorkspace(wsName, {
-      preset: 'core',
-      packageManager,
-      npmScope: '',
-    });
-    const nxJson = readJson('nx.json');
-    expect(nxJson.npmScope).toEqual(undefined);
-  });
-
   describe('Use detected package manager', () => {
     function setupProject(envPm: 'npm' | 'yarn' | 'pnpm') {
       process.env.SELECTED_PM = envPm;

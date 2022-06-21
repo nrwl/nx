@@ -1,7 +1,4 @@
 import * as path from 'path';
-import { Tree } from '../generators/tree';
-import { readJson } from '../generators/utils/json';
-import { readNxJson } from '../generators/utils/project-configuration';
 
 function removeWindowsDriveLetter(osSpecificPath: string): string {
   return osSpecificPath.replace(/^[A-Z]:/, '');

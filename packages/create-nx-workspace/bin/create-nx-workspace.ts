@@ -32,7 +32,6 @@ type Arguments = {
   packageManager: PackageManager;
   defaultBase: string;
   ci: string;
-  npmScope: string;
 };
 
 enum Preset {
@@ -183,11 +182,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           defaultDescription: 'npm',
           type: 'string',
         })
-        .option('npmScope', {
-          defaultDescription: '[workspace name]',
-          describe: chalk.dim`Npm scope to use`,
-          type: 'string',
-        })
         .option('defaultBase', {
           defaultDescription: 'main',
           describe: chalk.dim`Default base to use for new projects`,
@@ -222,7 +216,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     nxCloud,
     packageManager,
     defaultBase,
-    npmScope,
     ci,
   } = parsedArgs;
 
@@ -244,7 +237,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     style,
     nxCloud,
     defaultBase,
-    npmScope,
   });
 
   let nxCloudInstallRes;
@@ -289,7 +281,6 @@ async function getConfiguration(
     const cli = await determineCli(preset, argv);
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
-    const npmScope = await determineNpmScope(argv, name);
     const nxCloud = await determineNxCloud(argv);
     const ci = await determineCI(argv, nxCloud);
 
@@ -302,7 +293,6 @@ async function getConfiguration(
       nxCloud,
       packageManager,
       defaultBase,
-      npmScope,
       ci,
     });
   } catch (e) {
@@ -411,53 +401,6 @@ async function determineDefaultBase(
       });
   }
   return Promise.resolve(deduceDefaultBase());
-}
-
-async function determineNpmScope(
-  parsedArgs: yargs.Arguments<Arguments>,
-  name: string
-): Promise<string> {
-  if (parsedArgs.npmScope !== undefined) {
-    return Promise.resolve(parsedArgs.npmScope);
-  }
-  if (parsedArgs.allPrompts) {
-    return enquirer
-      .prompt([
-        {
-          name: 'UseNpmScope',
-          message: `Use NPM scope for projects?        `,
-          type: 'select',
-          choices: [
-            {
-              name: 'Yes',
-              hint: 'Your imports will have form of "@scope/project"',
-            },
-
-            {
-              name: 'No',
-            },
-          ],
-          initial: 'Yes' as any,
-        },
-      ])
-      .then((a: { UseNpmScope: string }) => {
-        if (a.UseNpmScope === 'Yes') {
-          return enquirer
-            .prompt([
-              {
-                name: 'NpmScope',
-                message: `Npm scope                          `,
-                initial: name,
-                type: 'input',
-              },
-            ])
-            .then((a: { NpmScope: string }) => a.NpmScope);
-        } else {
-          return '';
-        }
-      });
-  }
-  return Promise.resolve(name);
 }
 
 function isKnownPreset(preset: string): preset is Preset {

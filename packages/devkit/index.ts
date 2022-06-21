@@ -272,7 +272,11 @@ export { stripIndents } from 'nx/src/utils/strip-indents';
 /**
  * @category Utils
  */
-export { joinPathFragments, normalizePath } from 'nx/src/utils/path';
+export {
+  joinPathFragments,
+  normalizePath,
+  getImportPath,
+} from 'nx/src/utils/path';
 
 /**
  * @category Utils

@@ -73,14 +73,6 @@ Type: string
 
 Workspace name (e.g. org name)
 
-### npmScope
-
-Type: string
-
-Default: [workspace name]
-
-Npm scope to use
-
 ### nxCloud
 
 Type: boolean
