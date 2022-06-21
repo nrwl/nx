@@ -38,37 +38,23 @@
     "libsDir": "",
     "appsDir": ""
   },
-  "generators": {
-    "@nrwl/react": {
-      "application": {
-        "style": "css",
-        "linter": "eslint",
-        "babel": true
-      },
-      "component": {
-        "style": "css"
-      },
-      "library": {
-        "style": "css",
-        "linter": "eslint"
-      }
-    }
+  "filesets": {
+    "prod": ["!**/*.spec.ts"]
   },
-  "pluginsConfig": {
-    "@nrwl/jest": {
-      "hashingExcludesTestsOfDeps": true
-    },
-    "@nrwl/cypress": {
-      "hashingExcludesTestsOfDeps": true
-    }
-  },
-  "defaultProject": "dep-graph-client",
   "targetDefaults": {
     "build": {
-      "dependsOn": ["build-base"]
+      "dependsOn": ["build-base"],
+      "dependsOnFilesets": ["prod", "^prod"]
     },
     "build-base": {
-      "dependsOn": ["^build-base"]
+      "dependsOn": ["^build-base"],
+      "dependsOnFilesets": ["prod", "^prod"]
+    },
+    "test": {
+      "dependsOnFilesets": ["default", "^prod"]
+    },
+    "e2e": {
+      "dependsOnFilesets": ["default", "^prod"]
     }
   }
 }
