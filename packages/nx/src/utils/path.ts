@@ -24,13 +24,9 @@ export function joinPathFragments(...fragments: string[]): string {
  * @returns
  */
 export function detectWorkspaceScope(packageName: string): string {
-  if (!packageName) return '';
-
-  if (packageName.startsWith('@')) {
-    return packageName.substring(1).split('/')[0];
-  }
-
-  return '';
+  return packageName?.startsWith('@')
+    ? packageName.substring(1).split('/')[0]
+    : '';
 }
 
 /**
