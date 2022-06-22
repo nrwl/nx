@@ -98,7 +98,11 @@ export class TasksSchedule {
     const batchMap: Record<string, TaskGraph> = {};
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
-      const executorName = getExecutorNameForTask(rootTask, this.nxJson,this.projectGraph);
+      const executorName = getExecutorNameForTask(
+        rootTask,
+        this.nxJson,
+        this.projectGraph
+      );
       this.processTaskForBatches(batchMap, rootTask, executorName, true);
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
@@ -128,7 +132,11 @@ export class TasksSchedule {
       this.projectGraph,
       this.nxJson
     );
-    const executorName = getExecutorNameForTask(task, this.nxJson, this.projectGraph);
+    const executorName = getExecutorNameForTask(
+      task,
+      this.nxJson,
+      this.projectGraph
+    );
     if (rootExecutorName !== executorName) {
       return;
     }
@@ -164,13 +172,20 @@ export class TasksSchedule {
   }
 
   private async hashTask(task: Task) {
-    const customHasher = getCustomHasher(task, this.workspaces, this.nxJson, this.projectGraph);
+    const customHasher = getCustomHasher(
+      task,
+      this.workspaces,
+      this.nxJson,
+      this.projectGraph
+    );
     const { value, details } = await (customHasher
       ? customHasher(task, {
           hasher: this.hasher,
           projectGraph: this.projectGraph,
           taskGraph: this.taskGraph,
-          workspaceConfig: readProjectsConfigurationFromProjectGraph(this.projectGraph),
+          workspaceConfig: readProjectsConfigurationFromProjectGraph(
+            this.projectGraph
+          ),
         })
       : this.hasher.hashTaskWithDepsAndContext(task));
     task.hash = value;

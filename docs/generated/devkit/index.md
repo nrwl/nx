@@ -1414,6 +1414,8 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
 
+**`deprecated`** Use createProjectGraphAsync + readProjectsConfigurationFromProjectGraph instead, or use readWorkspaceConfig.
+
 #### Returns
 
 [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
@@ -1422,7 +1424,7 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ### readCachedProjectGraph
 
-▸ **readCachedProjectGraph**(): [`ProjectGraph`](../../devkit/index#projectgraph)
+▸ **readCachedProjectGraph**(): [`ProjectGraph`](../../devkit/index#projectgraph)<[`ProjectConfiguration`](../../devkit/index#projectconfiguration)\>
 
 Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
@@ -1430,7 +1432,7 @@ Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
 #### Returns
 
-[`ProjectGraph`](../../devkit/index#projectgraph)
+[`ProjectGraph`](../../devkit/index#projectgraph)<[`ProjectConfiguration`](../../devkit/index#projectconfiguration)\>
 
 ---
 

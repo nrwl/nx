@@ -122,7 +122,10 @@ async function getPatternsFromApps(
     graph,
     calculateFileChanges(affectedFiles, allWorkspaceFiles)
   );
-  return getPatternsFromProjects(Object.keys(affectedGraph.nodes), projectGraph);
+  return getPatternsFromProjects(
+    Object.keys(affectedGraph.nodes),
+    projectGraph
+  );
 }
 
 function addRootConfigFiles(
@@ -151,7 +154,10 @@ function addRootConfigFiles(
   }
 }
 
-function getPatternsFromProjects(projects: string[], projectGraph: ProjectGraph): string[] {
+function getPatternsFromProjects(
+  projects: string[],
+  projectGraph: ProjectGraph
+): string[] {
   return getProjectRoots(projects, projectGraph);
 }
 

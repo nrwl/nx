@@ -13,7 +13,10 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { printHelp } from '../utils/print-help';
 import { prompt } from 'enquirer';
 import { readJsonFile } from 'nx/src/utils/fileutils';
-import { createProjectGraphAsync, readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
 import { readNxJson } from '../config/configuration';
 
 export interface GenerateOptions {
@@ -281,7 +284,8 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   const ws = new Workspaces(workspaceRoot);
   const nxJson = readNxJson();
   const projectGraph = await createProjectGraphAsync();
-  const workspaceConfiguration = readProjectsConfigurationFromProjectGraph(projectGraph);
+  const workspaceConfiguration =
+    readProjectsConfigurationFromProjectGraph(projectGraph);
   const isVerbose = args['verbose'];
 
   return handleErrors(isVerbose, async () => {

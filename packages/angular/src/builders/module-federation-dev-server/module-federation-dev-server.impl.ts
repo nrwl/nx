@@ -1,11 +1,17 @@
 import type { Schema } from './schema';
-import { ProjectConfiguration, workspaceRoot, Workspaces } from '@nrwl/devkit';
+import {
+  ProjectConfiguration,
+  readCachedProjectGraph,
+  workspaceRoot,
+  Workspaces,
+} from '@nrwl/devkit';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { join } from 'path';
 import { executeWebpackServerBuilder } from '../webpack-server/webpack-server.impl';
 import { existsSync, readFileSync } from 'fs';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
 function getDynamicRemotes(
   project: ProjectConfiguration,
@@ -126,8 +132,10 @@ export function executeModuleFederationDevServerBuilder(
   context: BuilderContext
 ) {
   const { ...options } = schema;
+  const projectGraph = readCachedProjectGraph();
+  const { projects: workspaceProjects } =
+    readProjectsConfigurationFromProjectGraph(projectGraph);
   const ws = new Workspaces(workspaceRoot);
-  const { projects: workspaceProjects } = ws.readWorkspaceConfiguration();
   const project = workspaceProjects[context.target.project];
 
   validateDevRemotes(options, workspaceProjects);

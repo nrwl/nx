@@ -7,7 +7,6 @@ import {
 import {
   createProjectGraphAsync,
   ProjectGraph,
-  readAllWorkspaceConfiguration,
   readCachedProjectGraph,
 } from '@nrwl/devkit';
 import {
@@ -18,6 +17,7 @@ import { ParsedCommandLine } from 'typescript';
 import { readRootPackageJson } from './utils';
 import { extname, join } from 'path';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 
 export type MFERemotes = string[] | [remoteName: string, remoteUrl: string][];
 
@@ -69,7 +69,7 @@ function collectDependencies(
 }
 
 function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
-  const { projects } = readAllWorkspaceConfiguration();
+  const { nodes: projectGraphNodes } = readCachedProjectGraph();
 
   const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath();
   const tsConfig: ParsedCommandLine = readTsConfig(tsConfigPath);
@@ -82,7 +82,7 @@ function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
 
   const mappedLibraries = [];
   for (const lib of workspaceLibraries) {
-    const sourceRoot = projects[lib].sourceRoot;
+    const sourceRoot = projectGraphNodes[lib].data.sourceRoot;
     let found = false;
 
     for (const [key, value] of Object.entries(tsconfigPathAliases)) {
@@ -119,10 +119,10 @@ async function getDependentPackagesForProject(
 }
 
 function determineRemoteUrl(remote: string) {
-  const workspace = readAllWorkspaceConfiguration();
+  const remoteProjectConfiguration = readCachedProjectConfiguration(remote);
   let publicHost = '';
   try {
-    publicHost = workspace.projects[remote].targets.serve.options.publicHost;
+    publicHost = remoteProjectConfiguration.targets.serve.options.publicHost;
   } catch (error) {
     throw new Error(
       `Cannot automatically determine URL of remote (${remote}). Looked for property "publicHost" in the project's "serve" target.\n

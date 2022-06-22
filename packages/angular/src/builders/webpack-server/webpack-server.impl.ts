@@ -1,6 +1,5 @@
 import {
   BuilderContext,
-  BuilderOutput,
   createBuilder,
 } from '@angular-devkit/architect';
 import {
@@ -11,7 +10,6 @@ import { JsonObject } from '@angular-devkit/core';
 import {
   joinPathFragments,
   parseTargetString,
-  readAllWorkspaceConfiguration,
   readCachedProjectGraph,
 } from '@nrwl/devkit';
 import { WebpackNxBuildCoordinationPlugin } from '@nrwl/web/src/plugins/webpack-nx-build-coordination-plugin';
@@ -20,9 +18,9 @@ import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { existsSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
-import { Observable } from 'rxjs';
 import { merge } from 'webpack-merge';
 import { resolveCustomWebpackConfig } from '../utilities/webpack';
 import { normalizeOptions } from './lib';
@@ -31,15 +29,21 @@ import type { Schema } from './schema';
 export function executeWebpackServerBuilder(
   rawOptions: Schema,
   context: BuilderContext
-): Observable<BuilderOutput> {
+) {
+  process.env.NX_TSCONFIG_PATH = joinPathFragments(
+    context.workspaceRoot,
+    'tsconfig.base.json'
+  );
+
   const options = normalizeOptions(rawOptions);
-  const workspaceConfig = readAllWorkspaceConfiguration();
 
   const parsedBrowserTarget = parseTargetString(options.browserTarget);
+  const browserTargetProjectConfiguration = readCachedProjectConfiguration(
+    parsedBrowserTarget.project
+  );
+
   const buildTarget =
-    workspaceConfig.projects[parsedBrowserTarget.project].targets[
-      parsedBrowserTarget.target
-    ];
+    browserTargetProjectConfiguration.targets[parsedBrowserTarget.target];
 
   const buildTargetConfiguration = parsedBrowserTarget.configuration
     ? buildTarget.configurations[parsedBrowserTarget.configuration]

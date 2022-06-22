@@ -16,9 +16,7 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import {
-  readNxJson,
-} from '../../config/configuration';
+import { readNxJson } from '../../config/configuration';
 
 export function filterAffected(
   graph: ProjectGraph<ProjectConfiguration>,
@@ -26,10 +24,7 @@ export function filterAffected(
   nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {
-  const normalizedNxJson = normalizeNxJson(
-    nxJson,
-    Object.keys(graph.nodes)
-  );
+  const normalizedNxJson = normalizeNxJson(nxJson, Object.keys(graph.nodes));
   // Additional affected logic should be in this array.
   const touchedProjectLocators: TouchedProjectLocator[] = [
     getTouchedProjects,
