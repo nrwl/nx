@@ -15,6 +15,9 @@ export interface Environment {
   workspaceResults: any;
 }
 
+/**
+ * @deprecated Read workspaceJson from projectGraph, and use readNxJson on its own.
+ */
 export function readEnvironment(): Environment {
   const nxJson = readNxJson();
   const workspaceJson = readAllWorkspaceConfiguration();

@@ -2,15 +2,20 @@ import { toOldFormatOrNull, Workspaces } from '../config/workspaces';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
+import { readNxJson } from '../config/configuration';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { FileData } from '../config/project-graph';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import type { NxArgs } from '../utils/command-line-utils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { fileExists } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
 import ignore from 'ignore';
-import { FileData } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import {
+  readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+} from './project-graph';
 
 export interface Change {
   type: string;
@@ -112,17 +117,29 @@ function defaultReadFileAtRevision(
   }
 }
 
+/**
+ * @deprecated This will be removed in v15, use project graph instead.
+ */
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
   path?: string;
-}) {
-  const ws = new Workspaces(opts.path || process.cwd());
-  const json = ws.readWorkspaceConfiguration();
+}): ProjectsConfigurations & NxJsonConfiguration {
+  let configuration: (ProjectsConfigurations & NxJsonConfiguration) | null;
+  try {
+    const projectGraph = readCachedProjectGraph();
+    configuration = {
+      ...readNxJson(),
+      ...readProjectsConfigurationFromProjectGraph(projectGraph),
+    };
+  } catch {
+    const ws = new Workspaces(opts.path || process.cwd());
+    configuration = ws.readWorkspaceConfiguration();
+  }
   if (opts.format === 'angularCli') {
-    const formatted = toOldFormatOrNull(json);
-    return formatted ?? json;
+    const formatted = toOldFormatOrNull(configuration);
+    return formatted ?? configuration;
   } else {
-    return json;
+    return configuration;
   }
 }
 

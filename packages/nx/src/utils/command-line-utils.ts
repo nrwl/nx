@@ -4,8 +4,8 @@ import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { execSync } from 'child_process';
-import { readAllWorkspaceConfiguration } from '../config/configuration';
 import { serializeOverridesIntoCommandLine } from './serialize-overrides-into-command-line';
+import { ProjectGraph } from '../config/project-graph';
 
 export function names(name: string): {
   name: string;
@@ -391,7 +391,9 @@ function parseGitOutput(command: string): string[] {
     .filter((a) => a.length > 0);
 }
 
-export function getProjectRoots(projectNames: string[]): string[] {
-  const { projects } = readAllWorkspaceConfiguration();
-  return projectNames.map((name) => projects[name].root);
+export function getProjectRoots(
+  projectNames: string[],
+  { nodes }: ProjectGraph
+): string[] {
+  return projectNames.map((name) => nodes[name].data.root);
 }

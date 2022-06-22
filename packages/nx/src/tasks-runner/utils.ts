@@ -15,6 +15,7 @@ import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { isRelativePath } from 'nx/src/utils/fileutils';
 import { joinPathFragments } from 'nx/src/utils/path';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export function getCommandAsString(task: Task) {
   const execCommand = getPackageManagerCommand().exec;
@@ -137,9 +138,12 @@ export function interpolate(template: string, data: any): string {
   });
 }
 
-export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
-  const workspaceConfiguration = workspace.readWorkspaceConfiguration();
-  const project = workspaceConfiguration.projects[task.target.project];
+export function getExecutorNameForTask(
+  task: Task,
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+) {
+  const project = projectGraph.nodes[task.target.project].data;
 
   const projectRoot = join(workspaceRoot, project.root);
   if (existsSync(join(projectRoot, 'package.json'))) {
@@ -148,7 +152,7 @@ export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
   project.targets = mergePluginTargetsWithNxTargets(
     project.root,
     project.targets,
-    loadNxPlugins(workspaceConfiguration.plugins)
+    loadNxPlugins(nxJson.plugins)
   );
 
   if (!project.targets[task.target.target]) {
@@ -160,16 +164,31 @@ export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
   return project.targets[task.target.target].executor;
 }
 
-export function getExecutorForTask(task: Task, workspace: Workspaces) {
-  const executor = getExecutorNameForTask(task, workspace);
+export function getExecutorForTask(
+  task: Task,
+  workspace: Workspaces,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+) {
+  const executor = getExecutorNameForTask(task, nxJson, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
   return workspace.readExecutor(nodeModule, executorName);
 }
 
-export function getCustomHasher(task: Task, workspace: Workspaces) {
+export function getCustomHasher(
+  task: Task,
+  workspace: Workspaces,
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+) {
   try {
-    const factory = getExecutorForTask(task, workspace).hasherFactory;
+    const factory = getExecutorForTask(
+      task,
+      workspace,
+      projectGraph,
+      nxJson
+    ).hasherFactory;
     return factory ? factory() : null;
   } catch (e) {
     console.error(e);

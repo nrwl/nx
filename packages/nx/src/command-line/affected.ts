@@ -16,8 +16,8 @@ import { withDeps } from '../project-graph/operators';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
-import { readEnvironment } from './read-environment';
 import { TargetDependencyConfig } from 'nx/src/config/workspace-json-project-json';
+import { readNxJson } from '../config/configuration';
 
 export async function affected(
   command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
@@ -28,14 +28,14 @@ export async function affected(
   > = {}
 ): Promise<void> {
   performance.mark('command-execution-begins');
-  const env = readEnvironment();
+  const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'affected',
     {
       printWarnings: command !== 'print-affected' && !args.plain,
     },
-    env.nxJson
+    nxJson
   );
 
   await connectToNxCloudUsingScan(nxArgs.scan);
@@ -97,7 +97,7 @@ export async function affected(
             projectsWithTarget,
             projects,
             projectGraph,
-            env,
+            { nxJson },
             nxArgs,
             overrides
           );
@@ -106,7 +106,7 @@ export async function affected(
             [],
             projects,
             projectGraph,
-            env,
+            { nxJson },
             nxArgs,
             overrides
           );
@@ -118,7 +118,7 @@ export async function affected(
         await runCommand(
           projectsWithTarget,
           projectGraph,
-          env,
+          { nxJson },
           nxArgs,
           overrides,
           null,

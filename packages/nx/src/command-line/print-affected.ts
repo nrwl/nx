@@ -3,14 +3,14 @@ import * as yargs from 'yargs';
 import type { NxArgs } from '../utils/command-line-utils';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task } from '../config/task-graph';
-import { Environment } from './read-environment';
 import { ProcessTasks } from 'nx/src/tasks-runner/create-task-graph';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
   affectedProjects: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
-  { nxJson }: Environment,
+  { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {

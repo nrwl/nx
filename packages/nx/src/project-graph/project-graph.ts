@@ -13,12 +13,16 @@ import { statSync } from 'fs';
 import { ProjectGraph, ProjectGraphV4 } from '../config/project-graph';
 import { stripIndents } from '../utils/strip-indents';
 import { readNxJson } from '../config/configuration';
+import {
+  ProjectConfiguration,
+  ProjectsConfigurations,
+} from '../config/workspace-json-project-json';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
  * @throws {Error} if there is no cached ProjectGraph to read from
  */
-export function readCachedProjectGraph(): ProjectGraph {
+export function readCachedProjectGraph(): ProjectGraph<ProjectConfiguration> {
   const projectGraphCache: ProjectGraphCache | false = readCache();
   const angularSpecificError =
     workspaceFileName() === 'angular.json'
@@ -52,6 +56,28 @@ export function readCachedProjectGraph(): ProjectGraph {
     '5.0',
     projectGraph
   ) as ProjectGraph;
+}
+
+export function readCachedProjectConfiguration(
+  projectName: string
+): ProjectConfiguration {
+  const graph = readCachedProjectGraph();
+  const node = graph.nodes[projectName];
+  return node.data;
+}
+
+export function readProjectsConfigurationFromProjectGraph(
+  projectGraph: ProjectGraph<ProjectConfiguration>
+): ProjectsConfigurations {
+  return {
+    projects: Object.fromEntries(
+      Object.entries(projectGraph.nodes).map(([project, { data }]) => [
+        project,
+        data,
+      ])
+    ),
+    version: 2,
+  };
 }
 
 async function buildProjectGraphWithoutDaemon() {

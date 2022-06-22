@@ -15,22 +15,20 @@ import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import {
-  readAllWorkspaceConfiguration,
   readNxJson,
 } from '../../config/configuration';
 
 export function filterAffected(
-  graph: ProjectGraph,
+  graph: ProjectGraph<ProjectConfiguration>,
   touchedFiles: FileChange[],
-  workspaceJson: ProjectsConfigurations = readAllWorkspaceConfiguration(),
   nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {
   const normalizedNxJson = normalizeNxJson(
     nxJson,
-    Object.keys(workspaceJson.projects)
+    Object.keys(graph.nodes)
   );
   // Additional affected logic should be in this array.
   const touchedProjectLocators: TouchedProjectLocator[] = [
@@ -43,12 +41,12 @@ export function filterAffected(
   ];
   const touchedProjects = touchedProjectLocators.reduce((acc, f) => {
     return acc.concat(
-      f(touchedFiles, workspaceJson, normalizedNxJson, packageJson, graph)
+      f(touchedFiles, graph.nodes, normalizedNxJson, packageJson, graph)
     );
   }, [] as string[]);
 
   return filterAffectedProjects(graph, {
-    workspaceJson,
+    projectGraphNodes: graph.nodes,
     nxJson: normalizedNxJson,
     touchedProjects,
   });

@@ -3,11 +3,11 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 
 export const getTouchedProjects: TouchedProjectLocator = (
   touchedFiles,
-  workspaceJson
+  projectGraphNodes
 ): string[] => {
   // sort project names with the most nested first,
   // e.g. ['libs/a/b/c', 'libs/a/b', 'libs/a']
-  const projectNames = Object.entries(workspaceJson.projects)
+  const projectNames = Object.entries(projectGraphNodes)
     .sort(([name1, p1]: any, [name2, p2]: any) =>
       p1.root.length > p2.root.length ? -1 : 1
     )
@@ -16,7 +16,7 @@ export const getTouchedProjects: TouchedProjectLocator = (
   return touchedFiles
     .map((f) => {
       return projectNames.find((projectName) => {
-        const p = workspaceJson.projects[projectName];
+        const p = projectGraphNodes[projectName].data;
         const projectRoot = p.root.endsWith('/') ? p.root : `${p.root}/`;
         return f.file.startsWith(projectRoot);
       });

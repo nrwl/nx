@@ -29,6 +29,7 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
+import { ProjectGraph } from '../config/project-graph';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -85,7 +86,7 @@ async function getPatterns(
 
   try {
     if (args.projects && args.projects.length > 0) {
-      return getPatternsFromProjects(args.projects);
+      return getPatternsFromProjects(args.projects, graph);
     }
 
     const p = parseFiles(args);
@@ -104,7 +105,7 @@ async function getPatterns(
     );
 
     return args.libsAndApps
-      ? await getPatternsFromApps(patterns, graph.allWorkspaceFiles)
+      ? await getPatternsFromApps(patterns, graph.allWorkspaceFiles, graph)
       : patterns;
   } catch {
     return allFilesPattern;
@@ -113,14 +114,15 @@ async function getPatterns(
 
 async function getPatternsFromApps(
   affectedFiles: string[],
-  allWorkspaceFiles: FileData[]
+  allWorkspaceFiles: FileData[],
+  projectGraph: ProjectGraph
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync();
   const affectedGraph = filterAffected(
     graph,
     calculateFileChanges(affectedFiles, allWorkspaceFiles)
   );
-  return getPatternsFromProjects(Object.keys(affectedGraph.nodes));
+  return getPatternsFromProjects(Object.keys(affectedGraph.nodes), projectGraph);
 }
 
 function addRootConfigFiles(
@@ -149,8 +151,8 @@ function addRootConfigFiles(
   }
 }
 
-function getPatternsFromProjects(projects: string[]): string[] {
-  return getProjectRoots(projects);
+function getPatternsFromProjects(projects: string[], projectGraph: ProjectGraph): string[] {
+  return getProjectRoots(projects, projectGraph);
 }
 
 function chunkify(target: string[], size: number): string[][] {

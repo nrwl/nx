@@ -21,6 +21,11 @@ import {
 } from '../config/workspace-json-project-json';
 import { Executor, ExecutorContext } from '../config/misc-interfaces';
 import { serializeOverridesIntoCommandLine } from 'nx/src/utils/serialize-overrides-into-command-line';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
+import { ProjectGraph } from '../config/project-graph';
 
 export interface Target {
   project: string;
@@ -273,11 +278,12 @@ export async function run(
   },
   overrides: { [k: string]: any },
   isVerbose: boolean,
-  isHelp: boolean
+  isHelp: boolean,
+  projectGraph?: ProjectGraph
 ) {
-  const ws = new Workspaces(root);
+  projectGraph ??= await createProjectGraphAsync();
   return handleErrors(isVerbose, async () => {
-    const workspace = ws.readWorkspaceConfiguration();
+    const workspace = readProjectsConfigurationFromProjectGraph(projectGraph);
     return iteratorToProcessStatusCode(
       await runExecutorInternal(
         targetDescription,

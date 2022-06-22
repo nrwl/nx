@@ -13,6 +13,8 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { printHelp } from '../utils/print-help';
 import { prompt } from 'enquirer';
 import { readJsonFile } from 'nx/src/utils/fileutils';
+import { createProjectGraphAsync, readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
+import { readNxJson } from '../config/configuration';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -277,14 +279,16 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
 
 export async function generate(cwd: string, args: { [k: string]: any }) {
   const ws = new Workspaces(workspaceRoot);
+  const nxJson = readNxJson();
+  const projectGraph = await createProjectGraphAsync();
+  const workspaceConfiguration = readProjectsConfigurationFromProjectGraph(projectGraph);
   const isVerbose = args['verbose'];
 
   return handleErrors(isVerbose, async () => {
-    const workspaceDefinition = ws.readWorkspaceConfiguration();
     const opts = await convertToGenerateOptions(
       args,
       ws,
-      readDefaultCollection(workspaceDefinition),
+      readDefaultCollection(nxJson),
       'generate'
     );
     const { normalizedGeneratorName, schema, implementationFactory, aliases } =
@@ -303,10 +307,10 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       opts.generatorOptions,
       opts.collectionName,
       normalizedGeneratorName,
-      workspaceDefinition,
+      workspaceConfiguration,
       schema,
       opts.interactive,
-      ws.calculateDefaultProjectName(cwd, workspaceDefinition),
+      ws.calculateDefaultProjectName(cwd, workspaceConfiguration),
       ws.relativeCwd(cwd),
       isVerbose
     );

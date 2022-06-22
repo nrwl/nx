@@ -2,17 +2,20 @@ import { runCommand } from '../tasks-runner/run-command';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
-import { createProjectGraphAsync } from '../project-graph/project-graph';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { splitTarget } from '../utils/split-target';
 import { output } from '../utils/output';
-import { readEnvironment } from './read-environment';
 import {
   ProjectsConfigurations,
   TargetDependencyConfig,
 } from '../config/workspace-json-project-json';
+import { readNxJson } from '../config/configuration';
 
 export async function runOne(
   cwd: string,
@@ -25,8 +28,14 @@ export async function runOne(
   performance.mark('command-execution-begins');
   performance.measure('code-loading', 'init-local', 'command-execution-begins');
 
-  const env = readEnvironment();
-  const opts = parseRunOneOptions(cwd, args, env.workspaceJson);
+  const nxJson = readNxJson();
+  const projectGraph = await createProjectGraphAsync();
+
+  const opts = parseRunOneOptions(
+    cwd,
+    args,
+    readProjectsConfigurationFromProjectGraph(projectGraph)
+  );
 
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     {
@@ -36,17 +45,15 @@ export async function runOne(
     },
     'run-one',
     { printWarnings: true },
-    env.nxJson
+    nxJson
   );
 
   if (nxArgs.help) {
     await (
       await import('./run')
-    ).run(cwd, workspaceRoot, opts, {}, false, true);
+    ).run(cwd, workspaceRoot, opts, {}, false, true, projectGraph);
     process.exit(0);
   }
-
-  const projectGraph = await createProjectGraphAsync();
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
@@ -55,7 +62,7 @@ export async function runOne(
   await runCommand(
     projects,
     projectGraph,
-    env,
+    { nxJson },
     nxArgs,
     overrides,
     opts.project,
