@@ -1,5 +1,5 @@
 import {Action} from '@ngrx/store';
-import {Entity} from './<%= fileName %>.reducer';
+import {<%= className %>Entity} from './<%= fileName %>.reducer';
 
 export enum <%= className %>ActionTypes {
   Load<%= className %> = '[<%= className %>] Load <%= className %>',
@@ -20,7 +20,7 @@ export class <%= className %>LoadError implements Action {
 export class <%= className %>Loaded implements Action {
   readonly type = <%= className %>ActionTypes.<%= className %>Loaded;
 
-  constructor(public payload: Entity[]) {}
+  constructor(public payload: <%= className %>Entity[]) {}
 }
 
 export type <%= className %>Action = Load<%= className %> | <%= className %>Loaded | <%= className %>LoadError;

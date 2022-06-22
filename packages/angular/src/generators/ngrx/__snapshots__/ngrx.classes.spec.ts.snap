@@ -2,7 +2,7 @@
 
 exports[`NgRx generator classes syntax should generate the ngrx actions 1`] = `
 "import {Action} from '@ngrx/store';
-import {Entity} from './users.reducer';
+import {UsersEntity} from './users.reducer';
 
 export enum UsersActionTypes {
   LoadUsers = '[Users] Load Users',
@@ -23,7 +23,7 @@ export class UsersLoadError implements Action {
 export class UsersLoaded implements Action {
   readonly type = UsersActionTypes.UsersLoaded;
 
-  constructor(public payload: Entity[]) {}
+  constructor(public payload: UsersEntity[]) {}
 }
 
 export type UsersAction = LoadUsers | UsersLoaded | UsersLoadError;
@@ -102,13 +102,13 @@ export const USERS_FEATURE_KEY = 'users';
  *
  *  Note: replace if already defined in another module
  */
-export interface Entity {
+export interface UsersEntity {
   id: string;
   name: string;
 }
 
 export interface UsersState {
-  list: Entity[]; // list of Users; analogous to a sql normalized table
+  list: UsersEntity[]; // list of Users; analogous to a sql normalized table
   selectedId?: string | number; // which Users record has been selected
   loaded: boolean; // has the Users list been loaded
   error?: any; // last none error (if any)
@@ -338,7 +338,7 @@ import { SuperUsersEffects } from './super-users.effects';
 import { SuperUsersFacade } from './super-users.facade';
 import {
   SuperUsersState,
-  Entity,
+  SuperUsersEntity,
   initialState,
   reducer
 } from './super-users.reducer';
@@ -351,7 +351,7 @@ interface TestSchema {
 describe('SuperUsersFacade', () => {
   let facade: SuperUsersFacade;
   let store: Store<TestSchema>;
-  const createSuperUsers = (id: string, name?: string): Entity => ({
+  const createSuperUsers = (id: string, name?: string): SuperUsersEntity => ({
     id,
     name: name || \`name-\${id}\`
   });
@@ -429,11 +429,11 @@ describe('SuperUsersFacade', () => {
 
 exports[`NgRx generator classes syntax unit tests should generate specs for the ngrx reducer 1`] = `
 "import { SuperUsersLoaded } from './super-users.actions';
-import { SuperUsersState, Entity, initialState, reducer } from './super-users.reducer';
+import { SuperUsersState, SuperUsersEntity, initialState, reducer } from './super-users.reducer';
 
 describe('SuperUsers Reducer', () => {
-  const getSuperUsersId = (it: Entity) => it.id;
-  const createSuperUsers = (id: string, name = ''): Entity => ({
+  const getSuperUsersId = (it: SuperUsersEntity) => it.id;
+  const createSuperUsers = (id: string, name = ''): SuperUsersEntity => ({
     id,
     name: name || \`name-\${id}\`
   });
@@ -464,17 +464,17 @@ describe('SuperUsers Reducer', () => {
 `;
 
 exports[`NgRx generator classes syntax unit tests should generate specs for the ngrx selectors 1`] = `
-"import { Entity, SuperUsersPartialState } from './super-users.reducer';
+"import { SuperUsersEntity, SuperUsersPartialState } from './super-users.reducer';
 import { superUsersQuery } from './super-users.selectors';
 
 describe('SuperUsers Selectors', () => {
   const ERROR_MSG = 'No Error Available';
-  const getSuperUsersId = (it: Entity) => it.id;
+  const getSuperUsersId = (it: SuperUsersEntity) => it.id;
 
   let storeState: SuperUsersPartialState;
 
   beforeEach(() => {
-    const createSuperUsers = (id: string, name = ''): Entity => ({
+    const createSuperUsers = (id: string, name = ''): SuperUsersEntity => ({
       id,
       name: name || \`name-\${id}\`
     });
@@ -501,8 +501,8 @@ describe('SuperUsers Selectors', () => {
       expect(selId).toBe('PRODUCT-BBB');
     });
 
-    it('getSelectedSuperUsers() should return the selected Entity', () => {
-      const result = superUsersQuery.getSelectedSuperUsers(storeState) as Entity;
+    it('getSelectedSuperUsers() should return the selected SuperUsersEntity', () => {
+      const result = superUsersQuery.getSelectedSuperUsers(storeState) as SuperUsersEntity;
       const selId = getSuperUsersId(result);
 
       expect(selId).toBe('PRODUCT-BBB');
