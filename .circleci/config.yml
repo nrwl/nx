@@ -153,6 +153,7 @@ jobs:
     executor: linux
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+      NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 8
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
       NX_VERBOSE_LOGGING: 'false'
     steps:
@@ -205,6 +206,7 @@ jobs:
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
+      NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 2
     steps:
       - run:
           name: Set dynamic nx run variable
