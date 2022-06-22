@@ -4,6 +4,7 @@ import {
   TargetConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
+import { execSync } from 'child_process';
 
 type PropertyDescription = {
   type?: string | string[];
@@ -231,7 +232,13 @@ export function validateObject(
   if (additionalProperties === false) {
     Object.keys(opts).find((p) => {
       if (Object.keys(properties).indexOf(p) === -1) {
-        throw new SchemaError(`'${p}' is not found in schema`);
+        if (p === '_') {
+          throw new SchemaError(
+            `Schema does not support positional arguments. Argument '${opts[p]}' found`
+          );
+        } else {
+          throw new SchemaError(`'${p}' is not found in schema`);
+        }
       }
     });
   }

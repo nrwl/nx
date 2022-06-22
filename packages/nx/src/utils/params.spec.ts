@@ -794,6 +794,27 @@ describe('params', () => {
       ).toThrow("'b' is not found in schema");
     });
 
+    it('should throw if found unsupported positional property', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {
+            a: true,
+            _: 'sometext',
+          },
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+            },
+            additionalProperties: false,
+          }
+        )
+      ).toThrow(
+        "Schema does not support positional arguments. Argument 'sometext' found"
+      );
+    });
+
     describe('primitive types', () => {
       it("should throw if the type doesn't match", () => {
         expect(() =>
