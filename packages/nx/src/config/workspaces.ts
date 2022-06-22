@@ -68,7 +68,7 @@ export class Workspaces {
   readWorkspaceConfiguration(opts?: {
     _ignorePluginInference?: boolean;
   }): ProjectsConfigurations & NxJsonConfiguration {
-    if (this.cachedWorkspaceConfig) return this.cachedWorkspaceConfig;
+    if (this.cachedWorkspaceConfig && process.env.NX_CACHE_WORKSPACE_CONFIG !== 'false') return this.cachedWorkspaceConfig;
     const nxJson = this.readNxJson();
     const workspaceFile = workspaceConfigName(this.root);
     const workspacePath = workspaceFile
@@ -603,8 +603,9 @@ export function globForProjectFiles(
     process.env.NX_PROJECT_GLOB_CACHE !== 'false' &&
     projectGlobCache &&
     cacheKey === projectGlobCacheKey
-  )
+  ) {
     return projectGlobCache;
+  }
   projectGlobCacheKey = cacheKey;
 
   const globPatternsFromPackageManagerWorkspaces =
