@@ -1,4 +1,4 @@
-import { commandsObject } from 'nx/src/command-line/nx-commands';
+import { commandsObject } from './nx-commands';
 
 describe('nx-commands', () => {
   it('should parse dot notion cli args', () => {

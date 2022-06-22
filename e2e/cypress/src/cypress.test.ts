@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  createFile,
   killPorts,
   newProject,
   readFile,
@@ -41,9 +42,30 @@ describe('Cypress E2E Test runner', () => {
       `generate @nrwl/react:app ${myapp} --e2eTestRunner=cypress --linter=eslint`
     );
 
-    expect(runCLI(`e2e ${myapp}-e2e --no-watch`)).toContain(
-      'All specs passed!'
+    // make sure arg parsing doesn't regress
+    // https://github.com/nrwl/nx/issues/10808
+    createFile(
+      `apps/${myapp}-e2e/cypress.env.json`,
+      JSON.stringify({
+        NX_API_URL: 'http://localhost:1234',
+      })
     );
+    createFile(
+      `apps/${myapp}-e2e/src/integration/args.spec.ts`,
+      `
+describe('args', () => {
+  it('should have the correct args', () => {
+    expect(Cypress.env('NX_API_URL')).eq('http://localhost:9000')
+  });
+});
+    `
+    );
+
+    expect(
+      runCLI(
+        `e2e ${myapp}-e2e --env.NX_API_URL=http://localhost:9000 --no-watch`
+      )
+    ).toContain('All specs passed!');
     await killPorts(4200);
     const originalContents = JSON.parse(
       readFile(`apps/${myapp}-e2e/cypress.json`)
