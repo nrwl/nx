@@ -276,6 +276,7 @@ export {
   joinPathFragments,
   normalizePath,
   getImportPath,
+  detectWorkspaceScope,
 } from 'nx/src/utils/path';
 
 /**

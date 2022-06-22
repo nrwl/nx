@@ -135,6 +135,7 @@ It only uses language primitives and immutable objects
 - [createProjectGraphAsync](../../devkit/index#createprojectgraphasync)
 - [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
+- [detectWorkspaceScope](../../devkit/index#detectworkspacescope)
 - [formatFiles](../../devkit/index#formatfiles)
 - [generateFiles](../../devkit/index#generatefiles)
 - [getImportPath](../../devkit/index#getimportpath)
@@ -969,6 +970,24 @@ Detects which package manager is used in the workspace based on the lock file.
 #### Returns
 
 [`PackageManager`](../../devkit/index#packagemanager)
+
+---
+
+### detectWorkspaceScope
+
+▸ **detectWorkspaceScope**(`packageName`): `string`
+
+Detect workspace scope from the package.json name
+
+#### Parameters
+
+| Name          | Type     |
+| :------------ | :------- |
+| `packageName` | `string` |
+
+#### Returns
+
+`string`
 
 ---
 

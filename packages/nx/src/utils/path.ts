@@ -30,10 +30,6 @@ export function detectWorkspaceScope(packageName: string): string {
     return packageName.substring(1).split('/')[0];
   }
 
-  if (packageName.includes('/')) {
-    return packageName.split('/')[0];
-  }
-
   return '';
 }
 

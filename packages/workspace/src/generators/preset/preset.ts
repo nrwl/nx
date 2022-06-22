@@ -212,8 +212,7 @@ function connectAngularAndNest(host: Tree, options: Schema) {
 
   insertNgModuleImport(host, modulePath, 'HttpClientModule');
 
-  const { npmScope } = getWorkspaceLayout(host);
-  const importScope = getImportPath(options.npmScope || npmScope, '');
+  const importScope = getImportPath(options.npmScope, '');
   const scopePrefix = options.npmScope ? `${options.npmScope}-` : '';
   const style = options.style ?? 'css';
   host.write(
@@ -308,8 +307,7 @@ export class AppService {
 }
 
 function connectReactAndExpress(host: Tree, options: Schema) {
-  const { npmScope } = getWorkspaceLayout(host);
-  const importScope = getImportPath(options.npmScope || npmScope, '');
+  const importScope = getImportPath(options.npmScope, '');
   host.write(
     'libs/api-interfaces/src/lib/api-interfaces.ts',
     `export interface Message { message: string }`
