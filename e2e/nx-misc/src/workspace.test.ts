@@ -680,6 +680,120 @@ describe('Workspace Tests', () => {
       delete nxJson.workspaceLayout;
       updateFile('nx.json', JSON.stringify(nxJson));
     });
+
+    it('should work for libraries when scope is unset', () => {
+      const json = readJson('nx.json');
+      delete json.npmScope;
+      updateFile('nx.json', JSON.stringify(json));
+
+      const lib1 = uniq('mylib');
+      const lib2 = uniq('mylib');
+      const lib3 = uniq('mylib');
+      runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
+      let rootTsConfig = readJson('tsconfig.base.json');
+      expect(
+        rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
+      ).toBeUndefined();
+      expect(
+        rootTsConfig.compilerOptions.paths[`${lib1}/data-access`]
+      ).toBeDefined();
+
+      updateFile(
+        `libs/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
+        `export function fromLibOne() { console.log('This is completely pointless'); }`
+      );
+
+      updateFile(
+        `libs/${lib1}/data-access/src/index.ts`,
+        `export * from './lib/${lib1}-data-access.ts'`
+      );
+
+      /**
+       * Create a library which imports a class from lib1
+       */
+
+      runCLI(`generate @nrwl/workspace:lib ${lib2}/ui`);
+
+      updateFile(
+        `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
+        `import { fromLibOne } from '${lib1}/data-access';
+
+        export const fromLibTwo = () => fromLibOne();`
+      );
+
+      /**
+       * Create a library which has an implicit dependency on lib1
+       */
+
+      runCLI(`generate @nrwl/workspace:lib ${lib3}`);
+      updateProjectConfig(lib3, (config) => {
+        config.implicitDependencies = [`${lib1}-data-access`];
+        return config;
+      });
+
+      /**
+       * Now try to move lib1
+       */
+
+      const moveOutput = runCLI(
+        `generate @nrwl/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
+      );
+
+      expect(moveOutput).toContain(`DELETE libs/${lib1}/data-access`);
+      expect(exists(`libs/${lib1}/data-access`)).toBeFalsy();
+
+      const newPath = `libs/shared/${lib1}/data-access`;
+      const newName = `shared-${lib1}-data-access`;
+
+      const readmePath = `${newPath}/README.md`;
+      expect(moveOutput).toContain(`CREATE ${readmePath}`);
+      checkFilesExist(readmePath);
+
+      const indexPath = `${newPath}/src/index.ts`;
+      expect(moveOutput).toContain(`CREATE ${indexPath}`);
+      checkFilesExist(indexPath);
+
+      const rootClassPath = `${newPath}/src/lib/${lib1}-data-access.ts`;
+      expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
+      checkFilesExist(rootClassPath);
+
+      const newConfig = readProjectConfig(newName);
+      expect(newConfig).toMatchObject({
+        tags: [],
+      });
+      const lib3Config = readProjectConfig(lib3);
+      expect(lib3Config.implicitDependencies).toEqual([
+        `shared-${lib1}-data-access`,
+      ]);
+
+      expect(moveOutput).toContain('UPDATE tsconfig.base.json');
+      rootTsConfig = readJson('tsconfig.base.json');
+      expect(
+        rootTsConfig.compilerOptions.paths[`${lib1}/data-access`]
+      ).toBeUndefined();
+      expect(
+        rootTsConfig.compilerOptions.paths[`shared-${lib1}-data-access`]
+      ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
+
+      expect(moveOutput).toContain(`UPDATE workspace.json`);
+      const workspaceJson = readJson(workspaceConfigName());
+      expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
+      const project = readProjectConfig(newName);
+      expect(project).toBeTruthy();
+      expect(project.sourceRoot).toBe(`${newPath}/src`);
+      expect(project.targets.lint.options.lintFilePatterns).toEqual([
+        `libs/shared/${lib1}/data-access/**/*.ts`,
+      ]);
+
+      /**
+       * Check that the import in lib2 has been updated
+       */
+      const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
+      const lib2File = readFile(lib2FilePath);
+      expect(lib2File).toContain(
+        `import { fromLibOne } from 'shared-${lib1}-data-access';`
+      );
+    });
   });
 
   describe('remove project', () => {
