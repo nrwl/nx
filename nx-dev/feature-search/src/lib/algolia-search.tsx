@@ -74,8 +74,8 @@ export function AlgoliaSearch() {
         onClick={handleOpen}
         className="flex w-full items-center rounded-md py-1.5 pl-2 pr-3 text-sm leading-6 text-slate-300 ring-1 ring-slate-600 transition hover:text-slate-200 hover:ring-slate-500"
       >
-        <SearchIcon className="mr-3 h-4 w-4 flex-none" />
-        <span className="mx-3">
+        <SearchIcon className="h-4 w-4 flex-none md:mr-3" />
+        <span className="mx-3 hidden md:inline-flex">
           <span className="hidden lg:inline">Quick </span>search
         </span>
         <span

@@ -97,7 +97,7 @@ export function Header(props: HeaderProps) {
             <Link href="/conf">
               <a
                 title="Check Nx conference"
-                className="relative px-3 py-2 leading-tight text-white md:inline-flex"
+                className="relative hidden px-3 py-2 leading-tight text-white md:inline-flex"
               >
                 {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
                 {/*  <span className="bg-green-nx-base absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />*/}
