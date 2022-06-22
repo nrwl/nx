@@ -231,6 +231,19 @@ describe('Linter Builder', () => {
     expect(mockOutputFixes).toHaveBeenCalled();
   });
 
+  it('should ignore any positional parameters', async () => {
+    setupMocks();
+    const result = lintExecutor(
+      createValidRunBuilderOptions({
+        eslintConfig: './.eslintrc.json',
+        lintFilePatterns: ['includedFile1'],
+        _: 'some-random-text',
+      }),
+      mockContext
+    );
+    await expect(result).resolves.not.toThrow();
+  });
+
   describe('bundled results', () => {
     it('should log if there are errors or warnings', async () => {
       mockReports = [

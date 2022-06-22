@@ -114,6 +114,5 @@
       "description": "The equivalent of the `--resolve-plugins-relative-to` flag on the ESLint CLI."
     }
   },
-  "additionalProperties": false,
   "required": ["lintFilePatterns"]
 }
