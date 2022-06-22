@@ -57,6 +57,12 @@ The output of the build step is placed into the `dist/packages/hello-tsc` by def
 
 Using either @nrwl/node or @nrwl/web, you can also setup a plain TypeScript application that is framework agnostic.
 
+Note, before using either of these commands you must first install the required "generator" into the root of the project:
+
+```bash
+npm install @nrwl/node
+```
+
 To generate a new framework agnostic TS node application, run
 
 ```bash
