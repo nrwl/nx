@@ -1,14 +1,14 @@
-import { Entity, <%= className %>PartialState } from './<%= fileName %>.reducer';
+import { <%= className %>Entity, <%= className %>PartialState } from './<%= fileName %>.reducer';
 import { <%= propertyName %>Query } from './<%= fileName %>.selectors';
 
 describe('<%= className %> Selectors', () => {
   const ERROR_MSG = 'No Error Available';
-  const get<%= className %>Id = (it: Entity) => it.id;
+  const get<%= className %>Id = (it: <%= className %>Entity) => it.id;
 
   let storeState: <%= className %>PartialState;
 
   beforeEach(() => {
-    const create<%= className %> = (id: string, name = ''): Entity => ({
+    const create<%= className %> = (id: string, name = ''): <%= className %>Entity => ({
       id,
       name: name || `name-${id}`
     });
@@ -35,8 +35,8 @@ describe('<%= className %> Selectors', () => {
       expect(selId).toBe('PRODUCT-BBB');
     });
 
-    it('getSelected<%= className %>() should return the selected Entity', () => {
-      const result = <%= propertyName %>Query.getSelected<%= className %>(storeState) as Entity;
+    it('getSelected<%= className %>() should return the selected <%= className %>Entity', () => {
+      const result = <%= propertyName %>Query.getSelected<%= className %>(storeState) as <%= className %>Entity;
       const selId = get<%= className %>Id(result);
 
       expect(selId).toBe('PRODUCT-BBB');

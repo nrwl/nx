@@ -8,13 +8,13 @@ export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
  *
  *  Note: replace if already defined in another module
  */
-export interface Entity {
+export interface <%= className %>Entity {
   id: string;
   name: string;
 }
 
 export interface <%= className %>State {
-  list: Entity[]; // list of <%= className %>; analogous to a sql normalized table
+  list: <%= className %>Entity[]; // list of <%= className %>; analogous to a sql normalized table
   selectedId?: string | number; // which <%= className %> record has been selected
   loaded: boolean; // has the <%= className %> list been loaded
   error?: any; // last none error (if any)

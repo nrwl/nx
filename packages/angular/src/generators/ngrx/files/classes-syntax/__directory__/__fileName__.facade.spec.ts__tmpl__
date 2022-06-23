@@ -10,7 +10,7 @@ import { <%= className %>Effects } from './<%= fileName %>.effects';
 import { <%= className %>Facade } from './<%= fileName %>.facade';
 import {
   <%= className %>State,
-  Entity,
+  <%= className %>Entity,
   initialState,
   reducer
 } from './<%= fileName %>.reducer';
@@ -23,7 +23,7 @@ interface TestSchema {
 describe('<%= className %>Facade', () => {
   let facade: <%= className %>Facade;
   let store: Store<TestSchema>;
-  const create<%= className %> = (id: string, name?: string): Entity => ({
+  const create<%= className %> = (id: string, name?: string): <%= className %>Entity => ({
     id,
     name: name || `name-${id}`
   });

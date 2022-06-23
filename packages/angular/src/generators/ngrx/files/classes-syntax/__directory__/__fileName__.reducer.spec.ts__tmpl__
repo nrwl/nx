@@ -1,9 +1,9 @@
 import { <%= className %>Loaded } from './<%= fileName %>.actions';
-import { <%= className %>State, Entity, initialState, reducer } from './<%= fileName %>.reducer';
+import { <%= className %>State, <%= className %>Entity, initialState, reducer } from './<%= fileName %>.reducer';
 
 describe('<%= className %> Reducer', () => {
-  const get<%= className %>Id = (it: Entity) => it.id;
-  const create<%= className %> = (id: string, name = ''): Entity => ({
+  const get<%= className %>Id = (it: <%= className %>Entity) => it.id;
+  const create<%= className %> = (id: string, name = ''): <%= className %>Entity => ({
     id,
     name: name || `name-${id}`
   });
