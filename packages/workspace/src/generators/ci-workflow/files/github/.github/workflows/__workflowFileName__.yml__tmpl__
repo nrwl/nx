@@ -9,8 +9,9 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.4
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.5
     with:
+      number-of-agents: 3
       parallel-commands: |
         <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx workspace-lint
         <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check
@@ -21,6 +22,6 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.4
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.5
     with:
       number-of-agents: 3
