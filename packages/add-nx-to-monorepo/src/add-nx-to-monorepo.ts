@@ -271,7 +271,9 @@ function runInstall(repoRoot: string) {
 
 function initCloud(repoRoot: string) {
   execSync(
-    `${getPackageManagerCommand(repoRoot).exec} nx g @nrwl/nx-cloud:init`,
+    `${
+      getPackageManagerCommand(repoRoot).exec
+    } nx g @nrwl/nx-cloud:init --installationSource=add-nx-to-monorepo`,
     {
       stdio: [0, 1, 2],
     }
