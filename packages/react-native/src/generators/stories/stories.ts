@@ -19,7 +19,7 @@ export async function createAllStories(tree: Tree, projectName: string) {
   const projectConfiguration = projects.get(projectName);
 
   const { sourceRoot } = projectConfiguration;
-  const projectPath = projectRootPath(tree, projectConfiguration);
+  const projectPath = projectRootPath(projectConfiguration);
 
   let componentPaths: string[] = [];
   visitNotIgnoredFiles(tree, projectPath, (path) => {

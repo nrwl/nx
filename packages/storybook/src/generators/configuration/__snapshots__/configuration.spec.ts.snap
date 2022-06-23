@@ -1,7 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nrwl/storybook:configuration should generate a webpackFinal into the main.js and reference a potential global webpackFinal definition 1`] = `
+exports[`@nrwl/storybook:configuration basic functionalities should generate a webpackFinal into the main.js and reference a potential global webpackFinal definition 1`] = `
 "const rootMain = require('../../../.storybook/main');
+
 
 
 module.exports = {
@@ -14,7 +15,10 @@ module.exports = {
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...rootMain.addons ],
+  addons: [...rootMain.addons 
+    
+    
+  ],
   webpackFinal: async (config, { configType }) => {
     // apply any global webpack configs that might have been specified in .storybook/main.js
     if (rootMain.webpackFinal) {
@@ -31,7 +35,7 @@ module.exports = {
 "
 `;
 
-exports[`@nrwl/storybook:configuration should have the proper typings 1`] = `
+exports[`@nrwl/storybook:configuration basic functionalities should have the proper typings 1`] = `
 Array [
   "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
   "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
@@ -39,9 +43,10 @@ Array [
 ]
 `;
 
-exports[`@nrwl/storybook:configuration should reference the "old" webpack.config.js if there - for backwards compatibility 1`] = `
+exports[`@nrwl/storybook:configuration basic functionalities should reference the "old" webpack.config.js if there - for backwards compatibility 1`] = `
 "const rootMain = require('../../../.storybook/main');
 const rootWebpackConfig = require('../../../.storybook/webpack.config'); 
+
 
 module.exports = {
   ...rootMain,
@@ -53,7 +58,10 @@ module.exports = {
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...rootMain.addons ],
+  addons: [...rootMain.addons 
+    
+    
+  ],
   webpackFinal: async (config, { configType }) => {
     // apply any global webpack configs that might have been specified in .storybook/main.js
     if (rootMain.webpackFinal) {
@@ -71,5 +79,661 @@ module.exports = {
     return config;
   },
 };
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS buildable libs 1`] = `
+"import { rootMain } from '../../../.storybook/main';
+import type { StorybookConfig, Options } from '@storybook/core-common';
+
+
+const config: StorybookConfig = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+    
+    
+  ],
+  webpackFinal: async (config, { configType }: Options) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.ts
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType } as Options);
+    }
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+
+module.exports = config;
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS buildable libs 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../src/**/*\\", \\"*.js\\", \\"*.ts\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS libs 1`] = `
+"import { rootMain } from '../../../.storybook/main';
+import type { StorybookConfig, Options } from '@storybook/core-common';
+
+
+const config: StorybookConfig = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+    
+    
+  ],
+  webpackFinal: async (config, { configType }: Options) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.ts
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType } as Options);
+    }
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+
+module.exports = config;
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS libs 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../src/**/*\\", \\"*.js\\", \\"*.ts\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJs apps 1`] = `
+"import { rootMain } from '../../../.storybook/main';
+import type { StorybookConfig, Options } from '@storybook/core-common';
+import path from 'path';
+
+const config: StorybookConfig = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+
+  stories: [
+    ...rootMain.stories,
+    '../components/**/*.stories.mdx',
+    '../components/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+    
+    , 'storybook-addon-swc', 
+        {
+      name: 'storybook-addon-next',
+      options: {
+        nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+      },
+    }
+     
+  ],
+  webpackFinal: async (config, { configType }: Options) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.ts
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType } as Options);
+    }
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+
+module.exports = config;
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJs apps 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../components/**/*\\", \\"*.js\\", \\"*.ts\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps 1`] = `
+"import { rootMain } from '../../../.storybook/main';
+import type { StorybookConfig, Options } from '@storybook/core-common';
+
+
+const config: StorybookConfig = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+
+  stories: [
+    ...rootMain.stories,
+    '../src/app/**/*.stories.mdx',
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+    
+    
+  ],
+  webpackFinal: async (config, { configType }: Options) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.ts
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType } as Options);
+    }
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+
+module.exports = config;
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../src/**/*\\", \\"*.js\\", \\"*.ts\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 1`] = `
+"import { rootMain } from '../../../.storybook/main';
+import type { StorybookConfig, Options } from '@storybook/core-common';
+
+
+const config: StorybookConfig = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+
+  stories: [
+    ...rootMain.stories,
+    '../src/app/**/*.stories.mdx',
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+    , 'storybook-addon-swc' 
+    
+  ],
+  webpackFinal: async (config, { configType }: Options) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.ts
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType } as Options);
+    }
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+
+module.exports = config;
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../src/**/*\\", \\"*.js\\", \\"*.ts\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React buildable libs 1`] = `
+"import { rootMain } from '../../../.storybook/main';
+import type { StorybookConfig, Options } from '@storybook/core-common';
+
+
+const config: StorybookConfig = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+    
+    
+  ],
+  webpackFinal: async (config, { configType }: Options) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.ts
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType } as Options);
+    }
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+
+module.exports = config;
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React buildable libs 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../src/**/*\\", \\"*.js\\", \\"*.ts\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS buildable libs 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+
+
+module.exports = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
+    
+    
+  ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS buildable libs 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../src/**/*\\", \\"*.js\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS libs 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+
+
+module.exports = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
+    
+    
+  ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS libs 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../src/**/*\\", \\"*.js\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJs apps 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+const path = require('path');
+
+module.exports = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../components/**/*.stories.mdx',
+    '../components/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
+    
+    , 'storybook-addon-swc', 
+        {
+      name: 'storybook-addon-next',
+      options: {
+        nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+      },
+    }
+     
+  ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJs apps 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../components/**/*\\", \\"*.js\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+
+
+module.exports = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/app/**/*.stories.mdx',
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
+    
+    
+  ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../src/**/*\\", \\"*.js\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps using the swc compiler 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+
+
+module.exports = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/app/**/*.stories.mdx',
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
+    , 'storybook-addon-swc' 
+    
+  ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React apps using the swc compiler 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../src/**/*\\", \\"*.js\\" ]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React buildable libs 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+
+
+module.exports = {
+  ...rootMain,
+  
+  core: { ...rootMain.core, builder: 'webpack5' },
+  
+  stories: [
+    ...rootMain.stories,
+    '../src/lib/**/*.stories.mdx',
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
+    
+    
+  ],
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+"
+`;
+
+exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React buildable libs 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [\\"../src/**/*\\", \\"*.js\\" ]
+}
 "
 `;

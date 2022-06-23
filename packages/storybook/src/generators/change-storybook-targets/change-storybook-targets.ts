@@ -9,7 +9,7 @@ import {
   Target,
   convertNxGenerator,
 } from '@nrwl/devkit';
-import { findStorybookAndBuildTargets } from '../../utils/utilities';
+import { findStorybookAndBuildTargetsAndCompiler } from '../../utils/utilities';
 
 export async function changeStorybookTargetsGenerator(tree: Tree) {
   let changesMade = false;
@@ -17,8 +17,8 @@ export async function changeStorybookTargetsGenerator(tree: Tree) {
   const projects = getProjects(tree);
   [...projects.entries()].forEach(([projectName, projectConfiguration]) => {
     changesMade = false;
-    const { storybookBuildTarget, storybookTarget, buildTarget } =
-      findStorybookAndBuildTargets(projectConfiguration.targets);
+    const { storybookBuildTarget, storybookTarget, ngBuildTarget } =
+      findStorybookAndBuildTargetsAndCompiler(projectConfiguration.targets);
     if (
       projectName &&
       storybookTarget &&
@@ -29,7 +29,7 @@ export async function changeStorybookTargetsGenerator(tree: Tree) {
         projectConfiguration,
         storybookTarget,
         projectName,
-        buildTarget,
+        ngBuildTarget,
         storybookBuildTarget
       );
       changesMade = true;
@@ -38,7 +38,7 @@ export async function changeStorybookTargetsGenerator(tree: Tree) {
         updateStorybookBuildTarget(
           projectConfiguration,
           projectName,
-          buildTarget,
+          ngBuildTarget,
           storybookBuildTarget
         );
     } else {
