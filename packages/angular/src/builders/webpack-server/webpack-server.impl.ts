@@ -1,7 +1,4 @@
-import {
-  BuilderContext,
-  createBuilder,
-} from '@angular-devkit/architect';
+import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import {
   DevServerBuilderOptions,
   executeDevServerBuilder,

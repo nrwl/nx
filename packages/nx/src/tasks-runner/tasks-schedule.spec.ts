@@ -2,6 +2,7 @@ import { TasksSchedule } from './tasks-schedule';
 import { Workspaces } from '../config/workspaces';
 import { removeTasksFromTaskGraph } from './utils';
 import { Task, TaskGraph } from '../config/task-graph';
+import { ProjectGraph } from '../config/project-graph';
 
 function createMockTask(id: string): Task {
   const [project, target] = id.split(':');
@@ -48,42 +49,52 @@ describe('TasksSchedule', () => {
           batchImplementationFactory: jest.fn(),
         };
       },
+    };
 
-      readWorkspaceConfiguration() {
-        return {
-          version: 2,
-          npmScope: '',
-          projects: {
-            app1: {
-              root: 'app1',
-              targets: {
-                build: {
-                  executor: 'awesome-executors:build',
-                },
-              },
-            },
-            app2: {
-              root: 'app2',
-              targets: {
-                build: {
-                  executor: 'awesome-executors:app2-build',
-                },
-              },
-            },
-            lib1: {
-              root: 'lib1',
-              targets: {
-                build: {
-                  executor: 'awesome-executors:build',
-                },
+    const projectGraph: ProjectGraph = {
+      nodes: {
+        app1: {
+          data: {
+            root: 'app1',
+            targets: {
+              build: {
+                executor: 'awesome-executors:build',
               },
             },
           },
-        };
+          name: 'app1',
+          type: 'app',
+        },
+        app2: {
+          name: 'app2',
+          type: 'app',
+          data: {
+            root: 'app2',
+            targets: {
+              build: {
+                executor: 'awesome-executors:app2-build',
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1',
+            targets: {
+              build: {
+                executor: 'awesome-executors:build',
+              },
+            },
+          },
+        },
       },
+      dependencies: {},
+      allWorkspaceFiles: [],
+      externalNodes: {},
+      version: '5',
     };
-
-    const projectGraph = {} as any;
 
     const hasher = {
       hashTaskWithDepsAndContext: () => 'hash',
@@ -96,6 +107,7 @@ describe('TasksSchedule', () => {
     };
     taskSchedule = new TasksSchedule(
       hasher,
+      {},
       projectGraph,
       taskGraph,
       workspace as Workspaces,

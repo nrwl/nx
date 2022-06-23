@@ -8,8 +8,8 @@ export const getTouchedProjects: TouchedProjectLocator = (
   // sort project names with the most nested first,
   // e.g. ['libs/a/b/c', 'libs/a/b', 'libs/a']
   const projectNames = Object.entries(projectGraphNodes)
-    .sort(([name1, p1]: any, [name2, p2]: any) =>
-      p1.root.length > p2.root.length ? -1 : 1
+    .sort(([name1, p1], [name2, p2]) =>
+      p1.data.root.length > p2.data.root.length ? -1 : 1
     )
     .map(([name]) => name);
 

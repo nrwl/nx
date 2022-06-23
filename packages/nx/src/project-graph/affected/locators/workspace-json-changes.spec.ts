@@ -30,12 +30,21 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       ],
       {
-        npmScope: 'proj',
-        projects: {
-          proj1: {
+        proj1: {
+          name: 'proj1',
+          type: 'lib',
+          data: {
+            root: 'proj1',
+            files: [],
             tags: [],
           },
-          proj2: {
+        },
+        proj2: {
+          name: 'proj2',
+          type: 'lib',
+          data: {
+            root: 'proj2',
+            files: [],
             tags: [],
           },
         },
@@ -63,12 +72,21 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       ],
       {
-        newProjectRoot: 'projects',
-        projects: {
-          proj1: {
+        proj1: {
+          name: 'proj1',
+          type: 'lib',
+          data: {
+            files: [],
+            root: 'proj1',
             tags: [],
           },
-          proj2: {
+        },
+        proj2: {
+          name: 'proj2',
+          type: 'lib',
+          data: {
+            files: [],
+            root: 'proj2',
             tags: [],
           },
         },
@@ -107,9 +125,13 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       ],
       {
-        projects: {
-          proj1: {
+        proj1: {
+          name: 'proj1',
+          type: 'lib',
+          data: {
+            files: [],
             root: 'proj1',
+            tags: [],
           },
         },
       }
@@ -138,12 +160,22 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       ],
       {
-        projects: {
-          proj1: {
+        proj1: {
+          name: 'proj1',
+          type: 'lib',
+          data: {
+            files: [],
             root: 'proj1',
+            tags: [],
           },
-          proj2: {
+        },
+        proj2: {
+          name: 'proj2',
+          type: 'lib',
+          data: {
+            files: [],
             root: 'proj2',
+            tags: [],
           },
         },
       }
@@ -182,12 +214,22 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       ],
       {
-        projects: {
-          proj1: {
+        proj1: {
+          name: 'proj1',
+          type: 'lib',
+          data: {
+            files: [],
             root: 'proj1',
+            tags: [],
           },
-          proj2: {
+        },
+        proj2: {
+          name: 'proj2',
+          type: 'lib',
+          data: {
+            files: [],
             root: 'proj2',
+            tags: [],
           },
         },
       }
