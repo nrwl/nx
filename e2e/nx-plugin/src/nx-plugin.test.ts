@@ -145,7 +145,7 @@ describe('Nx Plugin', () => {
     });
   }, 90000);
 
-  it('should be able to generate a executor', async () => {
+  it('should be able to generate an executor', async () => {
     const plugin = uniq('plugin');
     const executor = uniq('executor');
 
