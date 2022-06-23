@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
@@ -22,6 +23,11 @@ import {
   updateLintConfig,
 } from './util-functions';
 import { Linter } from '@nrwl/linter';
+import { findStorybookAndBuildTargetsAndCompiler } from '../../utils/utilities';
+import {
+  storybookNextAddonVersion,
+  storybookSwcAddonVersion,
+} from '../../utils/versions';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -31,7 +37,10 @@ export async function configurationGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const { projectType } = readProjectConfiguration(tree, schema.name);
+  const { projectType, targets } = readProjectConfiguration(tree, schema.name);
+  const { nextBuildTarget, compiler } =
+    findStorybookAndBuildTargetsAndCompiler(targets);
+
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
   });
@@ -43,7 +52,9 @@ export async function configurationGenerator(
     schema.name,
     schema.uiFramework,
     schema.js,
-    schema.tsConfiguration
+    schema.tsConfiguration,
+    !!nextBuildTarget,
+    compiler === 'swc'
   );
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
@@ -68,6 +79,29 @@ export async function configurationGenerator(
     } else {
       logger.warn('There is already an e2e project setup');
     }
+  }
+
+  if (nextBuildTarget && projectType === 'application') {
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          ['storybook-addon-next']: storybookNextAddonVersion,
+          ['storybook-addon-swc']: storybookSwcAddonVersion,
+        }
+      )
+    );
+  } else if (compiler === 'swc') {
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          ['storybook-addon-swc']: storybookSwcAddonVersion,
+        }
+      )
+    );
   }
 
   await formatFiles(tree);

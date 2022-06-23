@@ -1,0 +1,342 @@
+{
+  "projects": {
+    "nxapp": {
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "sourceRoot": "apps/nxapp",
+      "root": "apps/nxapp",
+      "projectType": "application",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/next:build",
+          "outputs": ["{options.outputPath}"],
+          "defaultConfiguration": "production",
+          "options": {
+            "root": "apps/nxapp",
+            "outputPath": "dist/apps/nxapp"
+          },
+          "configurations": {
+            "development": {},
+            "production": {}
+          }
+        },
+        "serve": {
+          "executor": "@nrwl/next:server",
+          "defaultConfiguration": "development",
+          "options": {
+            "buildTarget": "nxapp:build",
+            "dev": true
+          },
+          "configurations": {
+            "development": {
+              "buildTarget": "nxapp:build:development",
+              "dev": true
+            },
+            "production": {
+              "buildTarget": "nxapp:build:production",
+              "dev": false
+            }
+          }
+        },
+        "export": {
+          "executor": "@nrwl/next:export",
+          "options": {
+            "buildTarget": "nxapp:build:production"
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/apps/nxapp"],
+          "options": {
+            "jestConfig": "apps/nxapp/jest.config.ts",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["apps/nxapp/**/*.{ts,tsx,js,jsx}"]
+          }
+        }
+      },
+      "tags": []
+    },
+    "reapp": {
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "sourceRoot": "apps/reapp/src",
+      "root": "apps/reapp",
+      "projectType": "application",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/web:webpack",
+          "outputs": ["{options.outputPath}"],
+          "defaultConfiguration": "production",
+          "options": {
+            "compiler": "babel",
+            "outputPath": "dist/apps/reapp",
+            "index": "apps/reapp/src/index.html",
+            "baseHref": "/",
+            "main": "apps/reapp/src/main.tsx",
+            "polyfills": "apps/reapp/src/polyfills.ts",
+            "tsConfig": "apps/reapp/tsconfig.app.json",
+            "assets": ["apps/reapp/src/favicon.ico", "apps/reapp/src/assets"],
+            "styles": ["apps/reapp/src/styles.css"],
+            "scripts": [],
+            "webpackConfig": "@nrwl/react/plugins/webpack"
+          },
+          "configurations": {
+            "development": {
+              "extractLicenses": false,
+              "optimization": false,
+              "sourceMap": true,
+              "vendorChunk": true
+            },
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/reapp/src/environments/environment.ts",
+                  "with": "apps/reapp/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false
+            }
+          }
+        },
+        "serve": {
+          "executor": "@nrwl/web:dev-server",
+          "defaultConfiguration": "development",
+          "options": {
+            "buildTarget": "reapp:build",
+            "hmr": true
+          },
+          "configurations": {
+            "development": {
+              "buildTarget": "reapp:build:development"
+            },
+            "production": {
+              "buildTarget": "reapp:build:production",
+              "hmr": false
+            }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["apps/reapp/**/*.{ts,tsx,js,jsx}"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/apps/reapp"],
+          "options": {
+            "jestConfig": "apps/reapp/jest.config.ts",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "tags": []
+    },
+    "nxlib": {
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "sourceRoot": "libs/nxlib/src",
+      "root": "libs/nxlib",
+      "projectType": "library",
+      "tags": [],
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["libs/nxlib/**/*.{ts,tsx,js,jsx}"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/nxlib"],
+          "options": {
+            "jestConfig": "libs/nxlib/jest.config.ts",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "nxlib-buildable": {
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "sourceRoot": "libs/nxlib-buildable/src",
+      "root": "libs/nxlib-buildable",
+      "projectType": "library",
+      "tags": [],
+      "targets": {
+        "build": {
+          "executor": "@nrwl/web:rollup",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/libs/nxlib-buildable",
+            "tsConfig": "libs/nxlib-buildable/tsconfig.lib.json",
+            "project": "libs/nxlib-buildable/package.json",
+            "entryFile": "libs/nxlib-buildable/src/index.ts",
+            "external": ["react/jsx-runtime"],
+            "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+            "compiler": "babel",
+            "assets": [
+              {
+                "glob": "libs/nxlib-buildable/README.md",
+                "input": ".",
+                "output": "."
+              }
+            ]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["libs/nxlib-buildable/**/*.{ts,tsx,js,jsx}"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/nxlib-buildable"],
+          "options": {
+            "jestConfig": "libs/nxlib-buildable/jest.config.ts",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "relib-buildable": {
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "sourceRoot": "libs/relib-buildable/src",
+      "root": "libs/relib-buildable",
+      "projectType": "library",
+      "tags": [],
+      "targets": {
+        "build": {
+          "executor": "@nrwl/web:rollup",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/libs/relib-buildable",
+            "tsConfig": "libs/relib-buildable/tsconfig.lib.json",
+            "project": "libs/relib-buildable/package.json",
+            "entryFile": "libs/relib-buildable/src/index.ts",
+            "external": ["react/jsx-runtime"],
+            "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+            "compiler": "babel",
+            "assets": [
+              {
+                "glob": "libs/relib-buildable/README.md",
+                "input": ".",
+                "output": "."
+              }
+            ]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["libs/relib-buildable/**/*.{ts,tsx,js,jsx}"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/relib-buildable"],
+          "options": {
+            "jestConfig": "libs/relib-buildable/jest.config.ts",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "reapp-swc": {
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "sourceRoot": "apps/reapp-swc/src",
+      "root": "apps/reapp-swc",
+      "projectType": "application",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/web:webpack",
+          "outputs": ["{options.outputPath}"],
+          "defaultConfiguration": "production",
+          "options": {
+            "compiler": "swc",
+            "outputPath": "dist/apps/reapp-swc",
+            "index": "apps/reapp-swc/src/index.html",
+            "baseHref": "/",
+            "main": "apps/reapp-swc/src/main.tsx",
+            "polyfills": "apps/reapp-swc/src/polyfills.ts",
+            "tsConfig": "apps/reapp-swc/tsconfig.app.json",
+            "assets": [
+              "apps/reapp-swc/src/favicon.ico",
+              "apps/reapp-swc/src/assets"
+            ],
+            "styles": ["apps/reapp-swc/src/styles.css"],
+            "scripts": [],
+            "webpackConfig": "@nrwl/react/plugins/webpack"
+          },
+          "configurations": {
+            "development": {
+              "extractLicenses": false,
+              "optimization": false,
+              "sourceMap": true,
+              "vendorChunk": true
+            },
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/reapp-swc/src/environments/environment.ts",
+                  "with": "apps/reapp-swc/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false
+            }
+          }
+        },
+        "serve": {
+          "executor": "@nrwl/web:dev-server",
+          "defaultConfiguration": "development",
+          "options": {
+            "buildTarget": "reapp-swc:build",
+            "hmr": true
+          },
+          "configurations": {
+            "development": {
+              "buildTarget": "reapp-swc:build:development"
+            },
+            "production": {
+              "buildTarget": "reapp-swc:build:production",
+              "hmr": false
+            }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["apps/reapp-swc/**/*.{ts,tsx,js,jsx}"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/apps/reapp-swc"],
+          "options": {
+            "jestConfig": "apps/reapp-swc/jest.config.ts",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "tags": []
+    }
+  }
+}

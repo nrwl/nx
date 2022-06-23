@@ -16,7 +16,7 @@ import {
 } from '@nrwl/devkit';
 import { basename, join } from 'path';
 import {
-  findStorybookAndBuildTargets,
+  findStorybookAndBuildTargetsAndCompiler,
   isTheFileAStory,
 } from '@nrwl/storybook/src/utils/utilities';
 
@@ -30,7 +30,9 @@ export interface StorybookStoriesSchema {
 export function projectRootPath(config: ProjectConfiguration): string {
   let projectDir: string;
   if (config.projectType === 'application') {
-    const { nextBuildTarget } = findStorybookAndBuildTargets(config.targets);
+    const { nextBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
+      config.targets
+    );
     if (!!nextBuildTarget) {
       // Next.js apps
       projectDir = 'components';

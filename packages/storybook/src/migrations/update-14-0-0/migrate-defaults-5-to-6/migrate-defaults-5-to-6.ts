@@ -4,6 +4,7 @@ import {
   getProjects,
   installPackagesTask,
   logger,
+  readProjectConfiguration,
   Tree,
   updateJson,
   visitNotIgnoredFiles,
@@ -15,6 +16,7 @@ import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescr
 import { storybookVersion } from '../../../utils/versions';
 import { createProjectStorybookDir } from '../../../generators/configuration/util-functions';
 import { StorybookConfigureSchema } from '../../../generators/configuration/schema';
+import { findStorybookAndBuildTargetsAndCompiler } from '../../../utils/utilities';
 
 export function migrateDefaultsGenerator(tree: Tree) {
   migrateAllStorybookInstances(tree);
@@ -179,7 +181,19 @@ function migrateProjectLevelStorybookInstance(
     return;
   }
 
-  createProjectStorybookDir(tree, projectName, uiFramework, false, false);
+  const { targets } = readProjectConfiguration(tree, projectName);
+  const { nextBuildTarget, compiler } =
+    findStorybookAndBuildTargetsAndCompiler(targets);
+
+  createProjectStorybookDir(
+    tree,
+    projectName,
+    uiFramework,
+    false,
+    false,
+    !!nextBuildTarget,
+    compiler === 'swc'
+  );
 }
 
 function migrateRootLevelStorybookInstance(tree: Tree) {

@@ -17,7 +17,7 @@ import {
   dedupe,
   isFramework,
   TsConfig,
-  findStorybookAndBuildTargets,
+  findStorybookAndBuildTargetsAndCompiler,
 } from '../../utils/utilities';
 import { StorybookConfigureSchema } from './schema';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
@@ -68,7 +68,9 @@ export function addStorybookTask(
 
 export function addAngularStorybookTask(tree: Tree, projectName: string) {
   const projectConfig = readProjectConfiguration(tree, projectName);
-  const { ngBuildTarget } = findStorybookAndBuildTargets(projectConfig.targets);
+  const { ngBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
+    projectConfig.targets
+  );
   projectConfig.targets['storybook'] = {
     executor: '@storybook/angular:start-storybook',
     options: {
@@ -271,7 +273,9 @@ export function createProjectStorybookDir(
   projectName: string,
   uiFramework: StorybookConfigureSchema['uiFramework'],
   js: boolean,
-  tsConfiguration: boolean
+  tsConfiguration: boolean,
+  isNextJs?: boolean,
+  usesSwc?: boolean
 ) {
   // Check if root main file is .ts or .js
   if (tree.exists('.storybook/main.ts')) {
@@ -292,15 +296,11 @@ export function createProjectStorybookDir(
     }
   }
 
-  const { root, projectType, targets } = readProjectConfiguration(
-    tree,
-    projectName
-  );
-  const { nextBuildTarget } = findStorybookAndBuildTargets(targets);
+  const { root, projectType } = readProjectConfiguration(tree, projectName);
 
   const projectDirectory =
     projectType === 'application'
-      ? !!nextBuildTarget
+      ? isNextJs
         ? 'components'
         : 'src/app'
       : 'src/lib';
@@ -330,8 +330,9 @@ export function createProjectStorybookDir(
       uiFramework === '@storybook/angular' ||
       uiFramework === '@storybook/react',
     existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
-    mainDir:
-      !!nextBuildTarget && projectType === 'application' ? 'components' : 'src',
+    mainDir: isNextJs && projectType === 'application' ? 'components' : 'src',
+    isNextJs: isNextJs && projectType === 'application',
+    usesSwc,
   });
 
   if (js) {

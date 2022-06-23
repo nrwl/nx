@@ -5,7 +5,7 @@ import {
   updateProjectConfiguration,
   getProjects,
 } from '@nrwl/devkit';
-import { findStorybookAndBuildTargets } from '../../utils/utilities';
+import { findStorybookAndBuildTargetsAndCompiler } from '../../utils/utilities';
 
 export default async function setProjectBuildConfig(tree: Tree) {
   let changesMade = false;
@@ -15,7 +15,7 @@ export default async function setProjectBuildConfig(tree: Tree) {
       return;
     }
     const { storybookBuildTarget, storybookTarget, ngBuildTarget } =
-      findStorybookAndBuildTargets(projectConfiguration.targets);
+      findStorybookAndBuildTargetsAndCompiler(projectConfiguration.targets);
     if (
       projectName &&
       storybookTarget &&
