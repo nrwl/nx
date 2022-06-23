@@ -67,8 +67,9 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.4
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.5
     with:
+      number-of-agents: 3
       parallel-commands: |
         npx nx-cloud record -- npx nx workspace-lint
         npx nx-cloud record -- npx nx format:check
@@ -79,7 +80,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.4
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.5
     with:
       number-of-agents: 3
 ```
