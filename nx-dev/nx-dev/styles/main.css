@@ -39,13 +39,14 @@ pre,
   General CSS rules for markdown iframes and img
  */
 iframe[src*='youtube'] {
+  aspect-ratio: 16 / 9;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   border-radius: 0.375rem;
 }
 .prose iframe,
 .prose img {
   display: block;
-  margin: 1.7rem auto;
+  margin: 2rem auto;
 }
 .prose iframe {
   width: 100%;

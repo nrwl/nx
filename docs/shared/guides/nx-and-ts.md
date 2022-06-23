@@ -6,7 +6,65 @@ The `@nrwl/js` package ships with corresponding generators and executors that be
 
 > Note, you can also opt-out of TypeScript and use plain JavaScript by passing the `--js` flag to the generators.
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/-OmQ-PaSY5M" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/-OmQ-PaSY5M"
+title="Develop great Typescript Packages with Nx"
+width="100%" /%}
+
+{% callout
+title="This is my callout"
+type="note"%}
+Some text are here.
+{% /callout %}
+
+{% callout
+title="This is my callout"
+type="warning"%}
+Some text are here.
+{% /callout %}
+
+{% callout
+title="This is my callout"
+type="check"%}
+Some text are here.
+{% /callout %}
+
+{% callout
+title="This is my callout"
+type="error"%}
+Some text are here.
+{% /callout %}
+
+{% side-by-side%}
+To get started with TypeScript packages in Nx, either add the `@nrwl/js` package to an existing Nx workspace or generate a new Nx workspace using the `--preset=ts` preset.
+
+```bash
+npx create-nx-workspace happynrwl --preset=ts
+```
+
+{% /side-by-side %}
+
+{% tabs %}
+
+{% tab label="yarn" %}
+
+```bash
+yarn create nx-workspace happynrwl --preset=ts
+```
+
+{% /tab %}
+
+{% tab label="npm" %}
+
+```bash
+npx create-nx-workspace happynrwl --preset=ts
+```
+
+{% /tab %}
+
+{% /tabs %}
+
+{% vs-code-ad /%}
 
 `@nrwl/js` is particularly useful if you want to
 
