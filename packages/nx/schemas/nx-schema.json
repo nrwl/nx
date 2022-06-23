@@ -111,9 +111,9 @@
       },
       "additionalProperties": false
     },
-    "filesets": {
+    "namedInputs": {
       "type": "object",
-      "description": "Default filesets",
+      "description": "Named inputs used by inputs defined in targets",
       "additionalProperties": true
     },
     "targetDependencyConfig": {
@@ -145,7 +145,7 @@
       "type": "object",
       "description": "Target defaults",
       "properties": {
-        "dependsOnFilesets": {
+        "inputs": {
           "type": "array",
           "items": {
             "oneOf": [
@@ -155,14 +155,24 @@
               {
                 "type": "object",
                 "properties": {
+                  "fileset": {
+                    "type": "string",
+                    "description": "The name of the target."
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
                   "projects": {
                     "type": "string",
                     "description": "The projects that the targets belong to.",
                     "enum": ["self", "dependencies"]
                   },
-                  "fileset": {
+                  "input": {
                     "type": "string",
-                    "description": "The name of the target."
+                    "description": "The name of the input."
                   }
                 },
                 "additionalProperties": false

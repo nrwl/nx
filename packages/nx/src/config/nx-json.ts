@@ -1,6 +1,6 @@
 import { PackageManager } from '../utils/package-manager';
 import {
-  FilesetDependencyConfig,
+  InputDefinition,
   TargetDependencyConfig,
 } from './workspace-json-project-json';
 
@@ -24,7 +24,7 @@ export type TargetDefaults = Record<
   {
     outputs?: string[];
     dependsOn?: (TargetDependencyConfig | string)[];
-    dependsOnFilesets?: (FilesetDependencyConfig | string)[];
+    inputs?: (InputDefinition | string)[];
   }
 >;
 
@@ -51,9 +51,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   targetDependencies?: TargetDependencies;
   /**
-   * Default filesets used when no project-specific fileset is defined;
+   * Named inputs targets can refer to reduce duplication
    */
-  filesets?: { [filesetName: string]: string[] };
+  namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
   /**
    * Dependencies between different target names across all projects
    */

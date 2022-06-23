@@ -109,20 +109,9 @@ export interface TargetDependencyConfig {
   target: string;
 }
 
-export interface FilesetDependencyConfig {
-  /**
-   * This the projects that the filesets belong to
-   *
-   * 'self': This target depends on a fileset of the same project
-   * 'deps': This target depends on the deps' filesets.
-   */
-  projects: 'self' | 'dependencies';
-
-  /**
-   * The name of the fileset
-   */
-  fileset: string;
-}
+export type InputDefinition =
+  | { input: string; projects: 'self' | 'dependencies' }
+  | { fileset: string };
 
 /**
  * Target's configuration
@@ -147,9 +136,9 @@ export interface TargetConfiguration<T = any> {
   dependsOn?: (TargetDependencyConfig | string)[];
 
   /**
-   * This describes filesets that a target depends on.
+   * This describes filesets, runtime dependencies and other inputs that a target depends on.
    */
-  dependsOnFilesets?: (FilesetDependencyConfig | string)[];
+  inputs?: (InputDefinition | string)[];
 
   /**
    * Target's options. They are passed in to the executor.
