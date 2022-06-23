@@ -20,6 +20,10 @@ describe('Hasher', () => {
     npmScope: 'nrwl',
   };
 
+  const packageJson = {
+    name: 'nrwl',
+  };
+
   const tsConfigBaseJson = JSON.stringify({
     compilerOptions: {
       paths: {
@@ -61,6 +65,7 @@ describe('Hasher', () => {
         'nx.json': JSON.stringify(nxJson),
         'tsconfig.base.json': tsConfigBaseJson,
         'yarn.lock': 'content',
+        'package.json': JSON.stringify(packageJson),
       },
       '/root'
     );

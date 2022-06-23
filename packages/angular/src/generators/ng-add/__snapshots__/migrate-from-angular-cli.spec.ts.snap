@@ -12,7 +12,6 @@ Object {
       "devDependencies": "*",
     },
   },
-  "npmScope": "my-scope",
   "targetDefaults": Object {
     "build": Object {
       "dependsOn": Array [
@@ -52,7 +51,6 @@ Object {
       "devDependencies": "*",
     },
   },
-  "npmScope": "my-scope",
   "targetDefaults": Object {
     "build": Object {
       "dependsOn": Array [

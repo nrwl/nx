@@ -5,6 +5,7 @@ import {
   readJson,
   Tree,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 import { names } from '@nrwl/devkit';
@@ -55,7 +56,8 @@ export function normalizeOptions(
 
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
-  const importPath = options.importPath || `@${npmScope}/${projectDirectory}`;
+  const importPath =
+    options.importPath || getImportPath(npmScope, projectDirectory);
 
   // Determine the roots where @schematics/angular will place the projects
   // This might not be where the projects actually end up

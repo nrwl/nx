@@ -135,8 +135,10 @@ It only uses language primitives and immutable objects
 - [createProjectGraphAsync](../../devkit/index#createprojectgraphasync)
 - [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
+- [detectWorkspaceScope](../../devkit/index#detectworkspacescope)
 - [formatFiles](../../devkit/index#formatfiles)
 - [generateFiles](../../devkit/index#generatefiles)
+- [getImportPath](../../devkit/index#getimportpath)
 - [getOutputsForTargetAndConfiguration](../../devkit/index#getoutputsfortargetandconfiguration)
 - [getPackageManagerCommand](../../devkit/index#getpackagemanagercommand)
 - [getPackageManagerVersion](../../devkit/index#getpackagemanagerversion)
@@ -971,6 +973,24 @@ Detects which package manager is used in the workspace based on the lock file.
 
 ---
 
+### detectWorkspaceScope
+
+▸ **detectWorkspaceScope**(`packageName`): `string`
+
+Detect workspace scope from the package.json name
+
+#### Parameters
+
+| Name          | Type     |
+| :------------ | :------- |
+| `packageName` | `string` |
+
+#### Returns
+
+`string`
+
+---
+
 ### formatFiles
 
 ▸ **formatFiles**(`tree`): `Promise`<`void`\>
@@ -1027,6 +1047,25 @@ doesn't get confused about incorrect TypeScript files.
 #### Returns
 
 `void`
+
+---
+
+### getImportPath
+
+▸ **getImportPath**(`npmScope`, `projectDirectory`): `string`
+
+Prefixes project name with npm scope
+
+#### Parameters
+
+| Name               | Type     |
+| :----------------- | :------- |
+| `npmScope`         | `string` |
+| `projectDirectory` | `string` |
+
+#### Returns
+
+`string`
 
 ---
 

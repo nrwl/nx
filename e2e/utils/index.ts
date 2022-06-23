@@ -22,13 +22,12 @@ import {
 } from 'fs-extra';
 import * as path from 'path';
 import { join } from 'path';
-import { coerce } from 'semver';
 import { check as portCheck } from 'tcp-port-used';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
-import chalk = require('chalk');
-import isCI = require('is-ci');
-import treeKill = require('tree-kill');
+import * as chalk from 'chalk';
+import * as isCI from 'is-ci';
+import * as treeKill from 'tree-kill';
 import { Workspaces } from '../../packages/nx/src/config/workspaces';
 import { PackageManager } from 'nx/src/utils/package-manager';
 

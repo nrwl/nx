@@ -15,6 +15,7 @@ import {
   readJson,
   writeJson,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
@@ -359,8 +360,8 @@ function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const defaultImportPath = `@${npmScope}/${projectDirectory}`;
-  const importPath = options.importPath || defaultImportPath;
+  const importPath =
+    options.importPath || getImportPath(npmScope, projectDirectory);
 
   return {
     ...options,

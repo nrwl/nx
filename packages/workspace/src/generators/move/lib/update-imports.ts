@@ -9,6 +9,7 @@ import {
   visitNotIgnoredFiles,
   writeJson,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import * as ts from 'typescript';
 import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
 import { findNodes } from '../../../utilities/typescript/find-nodes';
@@ -51,7 +52,7 @@ export function updateImports(
     from:
       fromPath ||
       normalizeSlashes(
-        `@${npmScope}/${project.root.slice(libsDir.length + 1)}`
+        getImportPath(npmScope, project.root.slice(libsDir.length + 1))
       ),
     to: schema.importPath,
   };

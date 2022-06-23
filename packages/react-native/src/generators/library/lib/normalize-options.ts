@@ -4,6 +4,7 @@ import {
   names,
   Tree,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -35,7 +36,8 @@ export function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const importPath = options.importPath || `@${npmScope}/${projectDirectory}`;
+  const importPath =
+    options.importPath || getImportPath(npmScope, projectDirectory);
 
   const normalized: NormalizedSchema = {
     ...options,
