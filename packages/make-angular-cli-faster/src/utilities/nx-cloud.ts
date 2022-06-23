@@ -6,7 +6,7 @@ export async function promptForNxCloud(): Promise<boolean> {
   const { useNxCloud } = await prompt<{ useNxCloud: 'Yes' | 'No' }>([
     {
       name: 'useNxCloud',
-      message: `Use Nx Cloud? (It's free and doesn't require registration.)`,
+      message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
       type: 'select',
       choices: [
         {

@@ -160,7 +160,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           type: 'string',
         })
         .option('nxCloud', {
-          describe: chalk.dim`Use Nx Cloud`,
+          describe: chalk.dim`Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
           type: 'boolean',
         })
         .option('ci', {
