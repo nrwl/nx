@@ -10,9 +10,9 @@ Adding Nx is a low impact operation that does not require any particular change 
 npx add-nx-to-monorepo
 ```
 
-Watch this 3-min video to see how the command works and what next steps are:
+Here's a short video walking you through the steps of adding Nx to a Lerna & Yarn workspaces based monorepo:
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/Dq2ftPf3sn4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/hCm373Aq1uQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
 
 `npx add-nx-to-monorepo` does the following:
 
