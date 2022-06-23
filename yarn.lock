@@ -3663,6 +3663,11 @@
     npmlog "^4.1.2"
     write-file-atomic "^3.0.3"
 
+"@markdoc/markdoc@^0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@markdoc/markdoc/-/markdoc-0.1.3.tgz#6bcbfa536f7ad72534b7390365a5481d9f698076"
+  integrity sha512-4n2cobUSeOob+237wZhpNiOEHCSfOydlQnKHTFdRY6ug/DupXGaxkkkszJYQxRftiMs8jmb10XvVO1svEYD43Q==
+
 "@mdx-js/mdx@^1.6.22":
   version "1.6.22"
   resolved "https://registry.yarnpkg.com/@mdx-js/mdx/-/mdx-1.6.22.tgz#8a723157bf90e78f17dc0f27995398e6c731f1ba"

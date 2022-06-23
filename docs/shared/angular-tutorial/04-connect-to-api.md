@@ -1,6 +1,9 @@
 # Angular Nx Tutorial - Step 4: Connect to an API
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/digMpZzPtg8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/JlKAwGXmpac"
+title="Nx.dev Tutorial | Angular | Step 4: Connect to API"
+width="100%" /%}
 
 Real-world applications do not live in isolation — they need APIs to talk to. Setup your app to talk to an API.
 

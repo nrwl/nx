@@ -2,15 +2,15 @@ import { XCircleIcon } from '@heroicons/react/solid';
 import { getSchemaFromReference } from '@nrwl/nx-dev/data-access-packages';
 import { JsonSchema1, NxSchema } from '@nrwl/nx-dev/models-package';
 import { Breadcrumbs } from '@nrwl/nx-dev/ui-common';
+import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { generateJsonExampleFor, isErrors } from './examples';
 import { SchemaViewModel } from './get-schema-view-model';
 import { SchemaEditor } from './schema-editor';
 import { SchemaViewer } from './schema-viewer';
 import { Heading2, Heading3 } from './ui/headings';
-import { Markdown } from './ui/markdown/markdown';
 
 function pathCleaner(path: string): string {
   return path.split('?')[0];
@@ -77,6 +77,19 @@ export function Content({
         (x): x is { name: string; href: string; current: boolean } => !!x
       );
     },
+    get markdown(): ReactNode {
+      return renderMarkdown({
+        content: getMarkdown({
+          type: schemaViewModel.type,
+          packageName: schemaViewModel.packageName,
+          schemaName: schemaViewModel.schemaMetadata.name,
+          schemaAlias: schemaViewModel.schemaMetadata.aliases[0] ?? '',
+          schema: schemaViewModel.currentSchema as NxSchema,
+        }),
+        filePath: '',
+        data: {},
+      });
+    },
   };
 
   return (
@@ -116,15 +129,7 @@ export function Content({
         {/* We remove the top description on sub property lookup */}
         {!schemaViewModel.subReference && (
           <>
-            <Markdown
-              content={getMarkdown({
-                type: schemaViewModel.type,
-                packageName: schemaViewModel.packageName,
-                schemaName: schemaViewModel.schemaMetadata.name,
-                schemaAlias: schemaViewModel.schemaMetadata.aliases[0] ?? '',
-                schema: schemaViewModel.currentSchema,
-              })}
-            />
+            <div className="prose max-w-none">{vm.markdown}</div>
             <div className="h-12">{/* SPACER */}</div>
           </>
         )}
@@ -221,10 +226,9 @@ const getMarkdown = (data: {
   packageName: string;
   schemaAlias: string;
   schemaName: string;
-  schema: JsonSchema1;
+  schema: NxSchema;
   type: 'executors' | 'generators';
 }): string => {
-  const hasExamples = !!data.schema['examples'];
   const hasExamplesFile = !!data.schema['examplesFile'];
   const executorNotice: string = `Options can be configured in \`project.json\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: [https://nx.dev/configuration/projectjson#targets](https://nx.dev/configuration/projectjson#targets).`;
 
@@ -241,9 +245,11 @@ const getMarkdown = (data: {
         ? data.schema['examplesFile']
         : getUsage(data.packageName, data.schemaName, data.schemaAlias)
       : '',
-    hasExamples
+    !!data.schema['examples']
       ? `### Examples \n ${data.schema['examples']
-          .map((e) => `${e.description}: \n \`\`\`bash\n${e.command}\n\`\`\``)
+          .map(
+            (e: any) => `${e.description}: \n \`\`\`bash\n${e.command}\n\`\`\``
+          )
           .join('\n')}`
       : '',
     `\n\n`,

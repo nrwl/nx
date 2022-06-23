@@ -1,6 +1,9 @@
 # React Nx Tutorial - Step 5: Add Node Application Implementing API
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/XgfknOqgxQ0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/XgfknOqgxQ0"
+title="Nx.dev Tutorial | React | Step 5: Add Node Application Implementing API"
+width="100%" /%}
 
 The requests fail because the API has not been created yet. Using Nx you develop node applications next to your React applications. You can use same commands to run and test them. You share code between the backend and the frontend. Use this capability to implement the API service.
 

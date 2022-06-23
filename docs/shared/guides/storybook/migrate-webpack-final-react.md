@@ -2,7 +2,10 @@
 
 Nx 12.7 comes with a dedicated Storybook preset for React which drammatically simplifies the Storybook setup and makes sure that Storybook uses the same webpack configuration as your React applications running within an Nx workspace.
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/oUE74McS_NY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/oUE74McS_NY"
+title="New in Nx 12.7: React Storybook Preset"
+width="100%" /%}
 
 Here are the main differences to the previous versions of Nx:
 

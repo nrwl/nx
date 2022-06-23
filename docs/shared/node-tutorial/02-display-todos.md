@@ -1,6 +1,9 @@
 # Node Nx Tutorial - Step 2: Display todos
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/I4-sO2LeVbU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/I4-sO2LeVbU"
+title="Nx.dev Tutorial | Node | Step 2: Display Todos"
+width="100%" /%}
 
 Great! you now have a server application set up to show some data when going to the `/api` route.
 

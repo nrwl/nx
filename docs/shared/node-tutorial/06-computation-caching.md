@@ -1,6 +1,9 @@
 # Node Nx Tutorial - Step 6: Computation Caching
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/gXChzhI1Qpg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/gXChzhI1Qpg"
+title="Nx.dev Tutorial | Node | Step 6: Computation Caching"
+width="100%" /%}
 
 Nx has built-in computation caching, which drastically improves the performance of the commands.
 

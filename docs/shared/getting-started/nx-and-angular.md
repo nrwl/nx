@@ -21,7 +21,10 @@ Nx plugins helps you develop [Angular](/packages/angular) applications with full
 modern tools and libraries like [Jest](/jest/overview), [Cypress](/cypress/overview),
 [ESLint](/linter/eslint), [Storybook](/packages/storybook), [NgRx](/guides/misc-ngrx) and more.
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/cXOkmOy-8dk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+{% youtube
+src="https://www.youtube.com/embed/cXOkmOy-8dk"
+title="Modern Angular with Nx Dev Tools"
+width="100%" /%}
 
 Check out the following to get started:
 

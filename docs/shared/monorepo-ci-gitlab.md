@@ -61,7 +61,7 @@ build:
 
 The `build` and `test` jobs implement the CI workflow using `.distributed` as template to keep CI configuration file more readable.
 
-<div class="nx-cloud-section">
+{% nx-cloud-section %}
 
 ## Distributed CI with Nx Cloud
 
@@ -69,4 +69,4 @@ In order to use distributed task execution, we need to start agents and set the 
 
 Read more about the [Distributed CI setup with Nx Cloud](/using-nx/ci-overview#distributed-ci-with-nx-cloud).
 
-</div>
+{% /nx-cloud-section %}

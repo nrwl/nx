@@ -37,7 +37,7 @@ To use the [Nx Orb](https://github.com/nrwl/nx-orb) with a private repository on
 
 > Note: It should be a user token, not project token.
 
-<div class="nx-cloud-section">
+{% nx-cloud-section %}
 
 ## Distributed CI with Nx Cloud
 
@@ -93,4 +93,4 @@ workflows:
 
 You can also use our [ci-workflow generator](/packages/workspace/generators/ci-workflow) to generate the configuration file.
 
-</div>
+{% /nx-cloud-section %}

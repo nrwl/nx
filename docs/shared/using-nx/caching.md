@@ -199,7 +199,7 @@ The cache is stored in `node_modules/.cache/nx` by default. To change the cache 
 
 By default, Nx uses a local computation cache. Nx stores the cached values only for a week, after which they are deleted. To clear the cache run `nx reset`, and Nx creates a new one the next time it tries to access it.
 
-<div class="nx-cloud-section">
+{% nx-cloud-section %}
 
 ## Distributed Computation Caching
 
@@ -243,7 +243,7 @@ Tony pushes a branch up to CI, but CI doesn't pass. He asks Sofija to help. Sofi
 
 Maya and Trey push up changes to two different apps that both depend on an unchanged shared buildable library. CI reuses the build output of the shared buildable library when building the apps in the two different PRs.
 
-</div>
+{% /nx-cloud-section %}
 
 ## Example
 

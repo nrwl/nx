@@ -1,6 +1,9 @@
 # Node Nx Tutorial - Step 1: Create Application
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/UcBSBQYNlhE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/UcBSBQYNlhE"
+title="Nx.dev Tutorial | Node | Step 1: Create Application"
+width="100%" /%}
 
 In this tutorial you use Nx to build a server application out of common libraries using modern technologies.
 

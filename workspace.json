@@ -62,6 +62,7 @@
     "nx-dev-ui-community": "nx-dev/ui-community",
     "nx-dev-ui-conference": "nx-dev/ui-conference",
     "nx-dev-ui-home": "nx-dev/ui-home",
+    "nx-dev-ui-markdoc": "nx-dev/ui-markdoc",
     "nx-dev-ui-member-card": "nx-dev/ui-member-card",
     "nx-dev-ui-sponsor-card": "nx-dev/ui-sponsor-card",
     "nx-plugin": "packages/nx-plugin",

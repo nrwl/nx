@@ -51,7 +51,7 @@ pipeline {
 
 The `pr` and `main` jobs implement the CI workflow.
 
-<div class="nx-cloud-section">
+{% nx-cloud-section %}
 
 ## Distributed CI with Nx Cloud
 
@@ -107,4 +107,4 @@ pipeline {
 }
 ```
 
-</div>
+{% /nx-cloud-section %}

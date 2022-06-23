@@ -39,13 +39,14 @@ pre,
   General CSS rules for markdown iframes and img
  */
 iframe[src*='youtube'] {
+  aspect-ratio: 16 / 9;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   border-radius: 0.375rem;
 }
 .prose iframe,
 .prose img {
   display: block;
-  margin: 1.7rem auto;
+  margin: 2rem auto;
 }
 .prose iframe {
   width: 100%;
@@ -78,7 +79,6 @@ iframe[src*='youtube'] {
 /*
   Headers
  */
-
 .prose h5,
 .prose h6 {
   font-weight: 600;
@@ -183,19 +183,4 @@ iframe[src*='youtube'] {
 [data-tooltip]:hover:before {
   opacity: 1;
   visibility: visible;
-}
-
-/* Nx Cloud section */
-.nx-cloud-section {
-  border-left-width: 0.25em;
-  border-left-color: hsla(162, 47%, 50%, 1);
-  padding-left: 1em;
-  margin-left: -1.25em;
-}
-
-.nx-cloud-section h2 {
-  background: url('/documentation/shared/nx-cloud-logo-horizontal-white.svg')
-    no-repeat left center;
-  background-size: contain;
-  padding-left: 40px;
 }

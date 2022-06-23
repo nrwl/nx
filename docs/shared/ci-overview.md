@@ -16,7 +16,7 @@ Adding Nx to your CI pipeline makes this more efficient.
 
 Nx provides out-of-the-box implementation of CI workflows for `GitHub`, `Azure` and `CircleCI` during the [creation of the Nx workspace](/cli/create-nx-workspace#ci) or later using the [ci-workflow](/packages/workspace/generators/ci-workflow) generator.
 
-<div class="nx-cloud-section">
+{% nx-cloud-section %}
 
 ## Distributed CI with Nx Cloud
 
@@ -45,7 +45,7 @@ npx nx-cloud stop-all-agents
 
 Learn more about configuring your CI environment using Nx Cloud with [Distributed Caching](/nx-cloud/set-up/set-up-caching) and [Distributed Task Execution](/nx-cloud/set-up/set-up-dte) in the Nx Cloud docs.
 
-</div>
+{% /nx-cloud-section %}
 
 ## CI provider specific documentation
 
