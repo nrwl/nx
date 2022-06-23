@@ -15,8 +15,8 @@ import {
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { FilesetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
+import { InputDefinition } from '../config/workspace-json-project-json';
 import { getImportPath } from '../utils/path';
 
 /**
@@ -268,17 +268,18 @@ export class Hasher {
   }
 }
 
+const DEFAULT_INPUTS = [
+  {
+    projects: 'self',
+    fileset: 'default',
+  },
+  {
+    projects: 'dependencies',
+    input: 'default',
+  },
+];
+
 class TaskHasher {
-  private DEFAULT_FILESET_CONFIG = [
-    {
-      projects: 'self',
-      fileset: 'default',
-    },
-    {
-      projects: 'dependencies',
-      fileset: 'default',
-    },
-  ];
   private filesetHashes: {
     [taskId: string]: Promise<{ taskId: string; value: string }>;
   } = {};
@@ -303,10 +304,10 @@ class TaskHasher {
       const projectGraphDeps =
         this.projectGraph.dependencies[task.target.project] ?? [];
 
-      const filesetConfigs = this.filesetConfigs(task, projectNode);
-      const self = await this.hashSelfFilesets(filesetConfigs, projectNode);
+      const { selfInputs, depsInputs } = this.inputs(task, projectNode);
+      const self = await this.hashSelfInputs(task, selfInputs);
       const deps = await this.hashDepsTasks(
-        filesetConfigs,
+        depsInputs,
         projectGraphDeps,
         visited
       );
@@ -316,11 +317,11 @@ class TaskHasher {
       const nodes = deps.reduce((m, c) => {
         return { ...m, ...c.nodes };
       }, {});
-      self.forEach((r) => (nodes[r.taskId] = r.value));
+      nodes[self.taskId] = self.value;
 
       const value = this.hashing.hashArray([
         command,
-        ...self.map((d) => d.value),
+        self.value,
         ...deps.map((d) => d.value),
       ]);
 
@@ -329,79 +330,67 @@ class TaskHasher {
   }
 
   private async hashDepsTasks(
-    config: FilesetDependencyConfig[],
+    inputs: { input: string }[],
     projectGraphDeps: ProjectGraphDependency[],
     visited: string[]
   ) {
     return (
       await Promise.all(
-        config
-          .filter((fileset) => fileset.projects === 'dependencies')
-          .map(async (fileset) => {
-            return await Promise.all(
-              projectGraphDeps.map(async (d) => {
-                if (visited.indexOf(d.target) > -1) {
-                  return null;
-                } else {
-                  visited.push(d.target);
-                  return await this.hashTask(
-                    {
-                      id: `${d.target}:$fileset:${fileset.fileset}`,
-                      target: {
-                        project: d.target,
-                        target: '$fileset',
-                        configuration: fileset.fileset,
-                      },
-                      overrides: {},
+        inputs.map(async (input) => {
+          return await Promise.all(
+            projectGraphDeps.map(async (d) => {
+              if (visited.indexOf(d.target) > -1) {
+                return null;
+              } else {
+                visited.push(d.target);
+                return await this.hashTask(
+                  {
+                    id: `${d.target}:$input:${input.input}`,
+                    target: {
+                      project: d.target,
+                      target: '$input',
+                      configuration: input.input,
                     },
-                    visited
-                  );
-                }
-              })
-            );
-          })
+                    overrides: {},
+                  },
+                  visited
+                );
+              }
+            })
+          );
+        })
       )
     )
       .flat()
       .filter((r) => !!r);
   }
 
-  private async hashSelfFilesets(
-    config: FilesetDependencyConfig[],
-    projectNode: ProjectGraphProjectNode<any>
-  ) {
-    return await Promise.all(
-      config
-        .filter((fileset) => fileset.projects === 'self')
-        .map((fileset) =>
-          this.hashFilesetSource(projectNode.name, fileset.fileset)
-        )
+  private async hashSelfInputs(task: Task, inputs: { fileset: string }[]) {
+    return this.hashFilesetSource(
+      task,
+      inputs.map((r) => r.fileset)
     );
   }
 
-  private filesetConfigs(
+  private inputs(
     task: Task,
     projectNode: ProjectGraphProjectNode<any>
-  ): FilesetDependencyConfig[] {
-    if (task.target.target === '$fileset') {
-      return [
-        {
-          fileset: task.target.configuration,
-          projects: 'self',
-        },
-        {
-          fileset: task.target.configuration,
-          projects: 'dependencies',
-        },
-      ];
+  ): { depsInputs: { input: string }[]; selfInputs: { fileset: string }[] } {
+    if (task.target.target === '$input') {
+      return {
+        depsInputs: [{ input: task.target.configuration }],
+        selfInputs: expandNamedInput(task.target.configuration, {
+          ...this.nxJson.namedInputs,
+          ...projectNode.data.namedInputs,
+        }),
+      };
     } else {
       const targetData = projectNode.data.targets[task.target.target];
       const targetDefaults = this.nxJson.targetDefaults[task.target.target];
       // task from TaskGraph can be added here
-      return expandFilesetConfigSyntaxSugar(
-        targetData.dependsOnFilesets ||
-          targetDefaults?.dependsOnFilesets ||
-          this.DEFAULT_FILESET_CONFIG
+      return splitInputsIntoSelfAndDependencies(
+        targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
+        { ...this.nxJson.namedInputs, ...projectNode.data.namedInputs }
       );
     }
   }
@@ -452,17 +441,14 @@ class TaskHasher {
   }
 
   private async hashFilesetSource(
-    projectName: string,
-    filesetName: string
+    task: Task,
+    filesetPatterns: string[]
   ): Promise<{ taskId: string; value: string }> {
-    const mapKey = `${projectName}:$fileset:${filesetName}`;
+    const mapKey = `${task.target.project}:$filesets`;
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
-        const p = this.projectGraph.nodes[projectName];
-
-        const filesetPatterns = this.selectFilesetPatterns(p, filesetName);
+        const p = this.projectGraph.nodes[task.target.project];
         const filteredFiles = this.filterFiles(p.data.files, filesetPatterns);
-
         const fileNames = filteredFiles.map((f) => f.file);
         const values = filteredFiles.map((f) => f.hash);
 
@@ -482,26 +468,9 @@ class TaskHasher {
     return this.filesetHashes[mapKey];
   }
 
-  private selectFilesetPatterns(
-    p: ProjectGraphProjectNode,
-    filesetName: string
-  ) {
-    if (filesetName == undefined) {
-      filesetName = 'default';
-    }
-    const projectFilesets = p.data.filesets
-      ? p.data.filesets[filesetName]
-      : null;
-    const defaultFilesets = this.nxJson.filesets
-      ? this.nxJson.filesets[filesetName]
-      : null;
-    if (projectFilesets) return projectFilesets;
-    if (defaultFilesets) return defaultFilesets;
-    return null;
-  }
-
-  private filterFiles(files: FileData[], patterns: string[] | null) {
-    if (patterns === null) return files;
+  private filterFiles(files: FileData[], patterns: string[]) {
+    patterns = patterns.filter((p) => p !== 'default');
+    if (patterns.length === 0) return files;
     return files.filter(
       (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
     );
@@ -544,18 +513,62 @@ class TaskHasher {
   }
 }
 
-function expandFilesetConfigSyntaxSugar(
-  deps: (FilesetDependencyConfig | string)[]
-): FilesetDependencyConfig[] {
-  return deps.map((d) => {
+export function splitInputsIntoSelfAndDependencies(
+  inputs: (InputDefinition | string)[],
+  namedInputs: { [inputName: string]: (InputDefinition | string)[] }
+): { depsInputs: { input: string }[]; selfInputs: { fileset: string }[] } {
+  const depsInputs = [];
+  const selfInputs = [];
+  for (const d of inputs) {
     if (typeof d === 'string') {
       if (d.startsWith('^')) {
-        return { projects: 'dependencies', fileset: d.substring(1) };
+        depsInputs.push({ input: d.substring(1) });
       } else {
-        return { projects: 'self', fileset: d };
+        selfInputs.push(d);
       }
     } else {
-      return d;
+      if ((d as any).projects === 'dependencies') {
+        depsInputs.push(d as any);
+      } else {
+        selfInputs.push(d);
+      }
     }
-  });
+  }
+  return { depsInputs, selfInputs: expandSelfInputs(selfInputs, namedInputs) };
+}
+
+function expandSelfInputs(
+  inputs: (InputDefinition | string)[],
+  namedInputs: { [inputName: string]: (InputDefinition | string)[] }
+): { fileset: string }[] {
+  const expanded = [];
+  for (const d of inputs) {
+    if (typeof d === 'string') {
+      if (d.startsWith('^'))
+        throw new Error(`namedInputs definitions cannot start with ^`);
+
+      if (namedInputs[d]) {
+        expanded.push(...expandNamedInput(d, namedInputs));
+      } else {
+        expanded.push({ fileset: d });
+      }
+    } else {
+      if ((d as any).fileset) {
+        expanded.push({ fileset: (d as any).fileset });
+      } else {
+        expanded.push(...expandNamedInput((d as any).input, namedInputs));
+      }
+    }
+  }
+  return expanded;
+}
+
+export function expandNamedInput(
+  input: string,
+  namedInputs: { [inputName: string]: (InputDefinition | string)[] }
+): { fileset: string }[] {
+  if (input === 'default') return [{ fileset: 'default' }];
+  namedInputs ||= {};
+  if (!namedInputs[input]) throw new Error(`Input '${input}' is not defined`);
+  return expandSelfInputs(namedInputs[input], namedInputs);
 }

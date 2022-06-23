@@ -1,8 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getPublishedVersion,
-  isNotWindows,
   isWindows,
   newProject,
   readFile,
@@ -12,15 +10,11 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
-  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { renameSync } from 'fs';
-import { packagesWeCareAbout } from 'nx/src/command-line/report';
 
-//
 describe('Nx Running Tests', () => {
   let proj: string;
   beforeAll(() => (proj = newProject()));
