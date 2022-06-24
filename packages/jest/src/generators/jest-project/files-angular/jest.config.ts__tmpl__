@@ -14,7 +14,7 @@
   transform: {
     '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular'
   },
-  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)']<% if(!skipSerializers) { %>,
+  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$|rxjs)']<% if(!skipSerializers) { %>,
   snapshotSerializers: [
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',

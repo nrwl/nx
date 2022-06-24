@@ -1,5 +1,7 @@
 import { addDependenciesToPackageJson, readJson, Tree } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { tsquery } from '@phenomnomnominal/tsquery';
+import { PropertyAssignment } from 'typescript';
 import { JestExecutorOptions } from '../../executors/jest/schema';
 import {
   findRootJestConfig,
@@ -8,7 +10,6 @@ import {
 import { jestVersion } from '../../utils/versions';
 
 const JASMINE_TEST_RUNNER = /(testRunner:\s*['"`])(jest-jasmine2)(['"`])/g;
-
 const JSDOM_TEST_ENV = /(testEnvironment:\s*['"`])(jsdom)(['"`])/g;
 
 export function updateConfigsJest28(tree: Tree) {
@@ -18,9 +19,11 @@ export function updateConfigsJest28(tree: Tree) {
     '@nrwl/jest:jest',
     (options) => {
       if (options.jestConfig && tree.exists(options.jestConfig)) {
-        const updatedConfig = updateJestConfig(
+        let updatedConfig = updateJestConfig(
           tree.read(options.jestConfig, 'utf-8')
         );
+        updatedConfig = updateTransformPatterns(updatedConfig);
+
         tree.write(options.jestConfig, updatedConfig);
 
         const projectConfigCheck = testFileForDep(updatedConfig);
@@ -82,6 +85,23 @@ export function checkDeps(tree: Tree): Record<string, string> {
   return devDeps;
 }
 
+export function updateTransformPatterns(config: string): string {
+  if (config.includes('jest-preset-angular')) {
+    return tsquery.replace(
+      config,
+      'PropertyAssignment',
+      (node: PropertyAssignment) => {
+        if (node.name.getText() !== 'transformIgnorePatterns') {
+          return;
+        }
+
+        return node.getText().replace('.mjs$', '.mjs$|rxjs');
+      }
+    );
+  }
+  return config;
+}
+
 function testFileForDep(config: string): Record<string, string> {
   const deps = {};
   if (JASMINE_TEST_RUNNER.test(config)) {
@@ -91,6 +111,10 @@ function testFileForDep(config: string): Record<string, string> {
     deps['jest-environment-jsdom'] = jestVersion;
   }
   return deps;
+}
+
+function isAngular(config: string): boolean {
+  return;
 }
 
 export default updateConfigsJest28;
