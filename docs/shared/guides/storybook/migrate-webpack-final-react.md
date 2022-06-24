@@ -70,7 +70,7 @@ Here's the step-by-step migration process:
 
 ### 1. adjust the `main.js` file
 
-Restructure your `main.js` file s.t. it looks like in the example illustrated above.
+Restructure your `main.js` file so that it looks like in the example illustrated above.
 
 If you need to keep your root-level `.storybook/webpack.config.js` for now, then make sure you adjust the `main.js` in a way that it properly calls the root-level `webpack.config.js` to inherit all of the global configurations.
 
@@ -186,3 +186,17 @@ In case you made custom modifications to the `webpack.config.js` file, you need 
 ### 3. Remove the root-level `.storybook/webpack.config.js` file
 
 Once you've migrated all your libraries, you can think about removing the root-level `.storybook/webpack.config.js` file and migrate any custom configuration there to `.storybook/main.js` `webpackFinal` property in the very same folder.
+
+### 4. Opting in to Webpack 5
+
+If you choose to opt-in to Webpack 5, by specifying `builder: 'webpack5'` in your project's `.storybook/main.(js|ts)` (as shown above, in the example of a newly generated `main.js` file), don't forget to add the Storybook dependencies for Webpack 5 to work:
+
+```shell
+yarn add -D @storybook/builder-webpack5 @storybook/manager-webpack5
+```
+
+or if you're using `npm`:
+
+```shell
+npm install --save-dev @storybook/builder-webpack5 @storybook/manager-webpack5
+```
