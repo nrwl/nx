@@ -404,7 +404,7 @@
         "itemList": [
           {
             "name": "Using Generators",
-            "id": "using-schematics",
+            "id": "using-generators",
             "file": "shared/generators/using-generators"
           },
           {
