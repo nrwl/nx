@@ -64,6 +64,7 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
   const devDeps = {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
+    'jest-environment-jsdom': jestVersion,
 
     // because the default jest-preset uses ts-jest,
     // jest will throw an error if it's not installed
