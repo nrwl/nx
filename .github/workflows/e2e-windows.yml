@@ -30,6 +30,7 @@ jobs:
           - e2e-storybook,e2e-storybook-angular
           - e2e-workspace-create
           - e2e-add-nx-to-monorepo
+          - dep-graph-client-e2e
       fail-fast: false
 
     name: ${{ matrix.packages }}

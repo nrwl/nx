@@ -45,6 +45,7 @@ jobs:
           - e2e-react-native
           # - e2e-detox
           - e2e-add-nx-to-monorepo
+          - dep-graph-client-e2e
         exclude:
           # exclude react-native and detox from ubuntu
           - os: ubuntu-latest
