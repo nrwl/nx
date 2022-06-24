@@ -47,6 +47,12 @@
       "cli": "nx",
       "description": "Rename blacklistRE to blockList in metro.config.js",
       "factory": "./src/migrations/update-14-2-1/rename-blockList-metro-config"
+    },
+    "rename-jest-preprocessor-14-4-0": {
+      "version": "14.4.0-beta.0",
+      "cli": "nx",
+      "description": "Remove transform in jest.config",
+      "factory": "./src/migrations/update-14-4-0/update-jest-config"
     }
   },
   "packageJsonUpdates": {
@@ -729,15 +735,6 @@
         },
         "@babel/runtime": {
           "version": "7.18.6",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "14.4.0": {
-      "version": "14.4.0-beta.0",
-      "packages": {
-        "jest-jasmine2": {
-          "version": "~28.1.1",
           "alwaysAddToPackageJson": false
         }
       }

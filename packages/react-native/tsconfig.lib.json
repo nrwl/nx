@@ -6,6 +6,11 @@
     "declaration": true,
     "types": ["node"]
   },
-  "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    "plugin/jest/preprocessor.js"
+  ],
   "include": ["**/*.ts"]
 }
