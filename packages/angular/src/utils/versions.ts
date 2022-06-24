@@ -18,7 +18,7 @@ export const postcssUrlVersion = '~10.1.3';
 export const autoprefixerVersion = '^10.4.0';
 export const tsNodeVersion = '10.9.1';
 
-export const jestPresetAngularVersion = '~11.1.2';
+export const jestPresetAngularVersion = '~12.1.0';
 export const protractorVersion = '~7.0.0';
 export const karmaVersion = '~6.4.0';
 export const karmaChromeLauncherVersion = '~3.1.0';
