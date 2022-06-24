@@ -573,9 +573,9 @@ exports[`convert-tslint-to-eslint should work for Angular applications 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@angular-eslint/eslint-plugin": "~13.2.1",
-    "@angular-eslint/eslint-plugin-template": "~13.2.1",
-    "@angular-eslint/template-parser": "~13.2.1",
+    "@angular-eslint/eslint-plugin": "~14.0.0",
+    "@angular-eslint/eslint-plugin-template": "~14.0.0",
+    "@angular-eslint/template-parser": "~14.0.0",
     "@nrwl/eslint-plugin-nx": "0.0.1",
     "@nrwl/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "^5.29.0",
@@ -931,9 +931,9 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@angular-eslint/eslint-plugin": "~13.2.1",
-    "@angular-eslint/eslint-plugin-template": "~13.2.1",
-    "@angular-eslint/template-parser": "~13.2.1",
+    "@angular-eslint/eslint-plugin": "~14.0.0",
+    "@angular-eslint/eslint-plugin-template": "~14.0.0",
+    "@angular-eslint/template-parser": "~14.0.0",
     "@nrwl/eslint-plugin-nx": "0.0.1",
     "@nrwl/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "^5.29.0",
