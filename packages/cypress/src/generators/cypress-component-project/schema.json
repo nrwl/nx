@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxCypressComponentProject",
   "cli": "nx",
-  "title": "Set up Cypress component test for a project",
+  "title": "Set up Cypress component testing for a project",
   "description": "Set up Cypress component test for a project.",
   "type": "object",
   "examples": [
@@ -14,7 +14,7 @@
   "properties": {
     "project": {
       "type": "string",
-      "description": "The name of the project to convert",
+      "description": "The name of the project to add cypress component testing to",
       "$default": {
         "$source": "projectName"
       },

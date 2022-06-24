@@ -1,7 +1,7 @@
 import { nxBaseCypressPreset } from '@nrwl/cypress/plugins/cypress-preset';
 import { getCSSModuleLocalIdent } from '@nrwl/web/src/utils/web.config';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
 
 /**
  * React nx preset for Cypress Component Testing
@@ -24,13 +24,15 @@ export function nxComponentTestingPreset(pathToConfig: string) {
   return {
     ...nxBaseCypressPreset(pathToConfig),
     devServer: {
+      // cypress uses string union type,
+      // need to use const to prevent typing to string
       framework: 'react',
       bundler: 'webpack',
       webpackConfig: buildBaseWebpackConfig({
         tsConfigPath: 'tsconfig.cy.json',
         compiler: 'babel',
       }),
-    },
+    } as const,
   };
 }
 

@@ -702,7 +702,7 @@ export function checkFilesDoNotExist(...expectedFiles: string[]) {
   expectedFiles.forEach((f) => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
     if (exists(ff)) {
-      throw new Error(`File '${ff}' does exist`);
+      throw new Error(`File '${ff}' should not exist`);
     }
   });
 }

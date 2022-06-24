@@ -13,7 +13,7 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 
 > Info about [Cypress Component Testing can be found here](/cypress/cypress-component-testing)
 
-If the `@nrwl/cypress` package is not installed, install the version that matches your `@nrwl/workspace` version.
+If the `@nrwl/cypress` package is not installed, install the version that matches your `nx` package version.
 
 ```bash
 yarn add --dev @nrwl/cypress

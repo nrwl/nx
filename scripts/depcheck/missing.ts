@@ -82,8 +82,6 @@ const IGNORE_MATCHES = {
     'babel-jest',
     '@angular-devkit/core',
     '@angular-devkit/schematics',
-    // cypress component testing plugin utils, installed dynamically
-    '@cypress/webpack-dev-server',
     // TODO(caleb): remove when refactoring plugin to use @nrwl/web
     //  webpack plugins for cypress component testing dev server
     'babel-loader',

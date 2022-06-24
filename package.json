@@ -47,7 +47,6 @@
     "@angular/upgrade": "~14.0.0",
     "@babel/helper-create-regexp-features-plugin": "^7.14.5",
     "@cypress/react": "^6.0.0",
-    "@cypress/webpack-dev-server": "^2.0.0",
     "@cypress/webpack-preprocessor": "^5.12.0",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
