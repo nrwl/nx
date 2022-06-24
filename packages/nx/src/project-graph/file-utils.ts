@@ -117,9 +117,6 @@ function defaultReadFileAtRevision(
   }
 }
 
-/**
- * @deprecated This will be removed in v15, use project graph instead.
- */
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
   path?: string;

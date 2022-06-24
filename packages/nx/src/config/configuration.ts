@@ -8,7 +8,7 @@ export function readNxJson(): NxJsonConfiguration {
 }
 
 /**
- * @deprecated Use createProjectGraphAsync + readProjectsConfigurationFromProjectGraph instead, or use readWorkspaceConfig.
+ * @deprecated Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
  */
 export function readAllWorkspaceConfiguration(): ProjectsConfigurations &
   NxJsonConfiguration {
