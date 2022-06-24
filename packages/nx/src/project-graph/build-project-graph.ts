@@ -42,9 +42,9 @@ import {
 } from '../config/configuration';
 
 export async function buildProjectGraph() {
-  const workspaceJson = readAllWorkspaceConfiguration();
+  const projectConfigurations = readAllWorkspaceConfiguration();
   const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
-    workspaceJson,
+    projectConfigurations,
     defaultFileHasher.allFileData()
   );
 
@@ -52,7 +52,7 @@ export async function buildProjectGraph() {
   let cache = cacheEnabled ? readCache() : null;
   return (
     await buildProjectGraphUsingProjectFileMap(
-      workspaceJson,
+      projectConfigurations,
       projectFileMap,
       allWorkspaceFiles,
       cache,
@@ -62,7 +62,7 @@ export async function buildProjectGraph() {
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
-  workspaceJson: ProjectsConfigurations,
+  projectsConfigurations: ProjectsConfigurations,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
   cache: ProjectGraphCache | null,
@@ -73,10 +73,10 @@ export async function buildProjectGraphUsingProjectFileMap(
 }> {
   const nxJson = readNxJson();
   const projectGraphVersion = '5.0';
-  assertWorkspaceValidity(workspaceJson, nxJson);
+  assertWorkspaceValidity(projectsConfigurations, nxJson);
   const normalizedNxJson = normalizeNxJson(
     nxJson,
-    Object.keys(workspaceJson.projects)
+    Object.keys(projectsConfigurations.projects)
   );
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
@@ -88,7 +88,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     !shouldRecomputeWholeGraph(
       cache,
       packageJsonDeps,
-      workspaceJson,
+      projectsConfigurations,
       normalizedNxJson,
       rootTsConfig
     )
@@ -101,7 +101,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     cachedFileData = {};
   }
   const context = createContext(
-    workspaceJson,
+    projectsConfigurations,
     normalizedNxJson,
     projectFileMap,
     filesToProcess
@@ -352,22 +352,22 @@ function getNumberOfWorkers(): number {
 }
 
 function createContext(
-  workspaceJson: ProjectsConfigurations,
+  projectsConfigurations: ProjectsConfigurations,
   nxJson: NxJsonConfiguration,
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap
 ): ProjectGraphProcessorContext {
   const projects: Record<string, ProjectConfiguration> = Object.keys(
-    workspaceJson.projects
+    projectsConfigurations.projects
   ).reduce((map, projectName) => {
     map[projectName] = {
-      ...workspaceJson.projects[projectName],
+      ...projectsConfigurations.projects[projectName],
     };
     return map;
   }, {});
   return {
     workspace: {
-      ...workspaceJson,
+      ...projectsConfigurations,
       ...nxJson,
       projects,
     },

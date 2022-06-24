@@ -264,12 +264,8 @@ describe('project graph', () => {
       },
     ]);
 
-    expect(Object.keys(affected.nodes)).toEqual([
-      'demo',
-      'demo-e2e',
-      'ui',
-      'util',
-      'api',
-    ]);
+    expect(Object.keys(affected.nodes)).toEqual(
+      expect.arrayContaining(['demo', 'demo-e2e', 'ui', 'util', 'api'])
+    );
   });
 });

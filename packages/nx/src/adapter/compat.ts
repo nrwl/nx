@@ -5,6 +5,13 @@ import {
   Workspaces,
 } from '../config/workspaces';
 import { workspaceRoot } from '../utils/workspace-root';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { readNxJson } from '../config/configuration';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 /* eslint-disable */
 const Module = require('module');
@@ -68,12 +75,17 @@ if (!patched) {
           logger.debug(
             '[NX] Angular devkit readJsonWorkspace fell back to Nx workspaces logic'
           );
-          const w = new Workspaces(workspaceRoot);
+          const projectGraph = await createProjectGraphAsync();
+          const nxJson = readNxJson();
+
+          // Construct old workspace.json format from project graph
+          const w: ProjectsConfigurations & NxJsonConfiguration = {
+            ...nxJson,
+            ...readProjectsConfigurationFromProjectGraph(projectGraph),
+          };
 
           // Read our v1 workspace schema
-          const workspaceConfiguration = resolveOldFormatWithInlineProjects(
-            w.readWorkspaceConfiguration()
-          );
+          const workspaceConfiguration = resolveOldFormatWithInlineProjects(w);
           // readJsonWorkspace actually has AST parsing + more, so we
           // still need to call it rather than just return our file
           return originalReadJsonWorkspace.apply(this, [

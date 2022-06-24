@@ -20,6 +20,7 @@ import { ProjectGraph } from '../../config/project-graph';
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
   NX_PROJECT_GLOB_CACHE: 'false',
+  NX_CACHE_WORKSPACE_CONFIG: 'false',
 };
 
 export async function startInBackground(): Promise<ChildProcess['pid']> {

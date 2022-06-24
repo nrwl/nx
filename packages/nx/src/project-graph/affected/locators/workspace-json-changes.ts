@@ -8,7 +8,7 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 
 export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, workspaceJson): string[] => {
+> = (touchedFiles, projectGraphNodes): string[] => {
   const workspaceChange = touchedFiles.find(
     (change) => change.file === workspaceFileName()
   );
@@ -29,7 +29,7 @@ export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
       return false;
     })
   ) {
-    return Object.keys(workspaceJson.projects);
+    return Object.keys(projectGraphNodes);
   }
 
   const touched = [];
@@ -48,7 +48,7 @@ export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
       case DiffType.Deleted: {
         // We are not sure which projects used to depend on a deleted project
         // so return all projects to be safe
-        return Object.keys(workspaceJson.projects);
+        return Object.keys(projectGraphNodes);
       }
       default: {
         // Add the project name

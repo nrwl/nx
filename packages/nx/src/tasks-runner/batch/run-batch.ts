@@ -8,7 +8,10 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { combineOptionsForExecutor } from '../../utils/params';
 import { TaskGraph } from '../../config/task-graph';
 import { ExecutorContext } from '../../config/misc-interfaces';
-import { readAllWorkspaceConfiguration } from 'nx/src/config/configuration';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from 'nx/src/project-graph/project-graph';
 
 function getBatchExecutor(executorName: string) {
   const workspace = new Workspaces(workspaceRoot);
@@ -18,8 +21,9 @@ function getBatchExecutor(executorName: string) {
 
 async function runTasks(executorName: string, taskGraph: TaskGraph) {
   const input: Record<string, any> = {};
-  const workspaceConfig = readAllWorkspaceConfiguration();
-
+  const projectGraph = await createProjectGraphAsync();
+  const workspaceConfig =
+    readProjectsConfigurationFromProjectGraph(projectGraph);
   const batchExecutor = getBatchExecutor(executorName);
   const tasks = Object.values(taskGraph.tasks);
   const context: ExecutorContext = {

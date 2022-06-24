@@ -8,8 +8,8 @@ import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { readEnvironment } from './read-environment';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { readNxJson } from '../config/configuration';
 
 export async function runMany(
   args: { [k: string]: any },
@@ -19,12 +19,12 @@ export async function runMany(
   > = {}
 ) {
   performance.mark('command-execution-begins');
-  const env = readEnvironment();
+  const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'run-many',
     { printWarnings: true },
-    env.nxJson
+    nxJson
   );
 
   await connectToNxCloudUsingScan(nxArgs.scan);
@@ -35,7 +35,7 @@ export async function runMany(
   await runCommand(
     projects,
     projectGraph,
-    env,
+    { nxJson },
     nxArgs,
     overrides,
     null,

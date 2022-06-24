@@ -23,8 +23,11 @@ export class TaskOrchestrator {
   private cache = new Cache(this.options);
   private workspace = new Workspaces(workspaceRoot);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
+  private readonly nxJson = this.workspace.readNxJson();
+
   private tasksSchedule = new TasksSchedule(
     this.hasher,
+    this.nxJson,
     this.projectGraph,
     this.taskGraph,
     this.workspace,
@@ -435,8 +438,9 @@ export class TaskOrchestrator {
   private pipeOutputCapture(task: Task) {
     try {
       return (
-        getExecutorForTask(task, this.workspace).schema.outputCapture ===
-          'pipe' || process.env.NX_STREAM_OUTPUT === 'true'
+        getExecutorForTask(task, this.workspace, this.projectGraph, this.nxJson)
+          .schema.outputCapture === 'pipe' ||
+        process.env.NX_STREAM_OUTPUT === 'true'
       );
     } catch (e) {
       return false;
