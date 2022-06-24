@@ -243,7 +243,7 @@ export const mimicNxHasher: CustomHasher = async (
   task: Task,
   context: HasherContext
 ) => {
-  return context.hasher.hashTaskWithDepsAndContext(task);
+  return context.hasher.hashTask(task);
 };
 
 export default mimicNxHasher;

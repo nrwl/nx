@@ -187,7 +187,7 @@ export class TasksSchedule {
             this.projectGraph
           ),
         })
-      : this.hasher.hashTaskWithDepsAndContext(task));
+      : this.hasher.hashTask(task));
     task.hash = value;
     task.hashDetails = details;
   }

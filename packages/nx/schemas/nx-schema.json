@@ -29,6 +29,13 @@
         "$ref": "#/definitions/tasksRunnerOptions"
       }
     },
+    "namedInputs": {
+      "type": "object",
+      "description": "Named inputs used by inputs defined in targets",
+      "additionalProperties": {
+        "$ref": "#/definitions/inputs"
+      }
+    },
     "targetDefaults": {
       "type": "object",
       "description": "Target defaults",
@@ -77,6 +84,61 @@
     }
   },
   "definitions": {
+    "inputs": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "fileset": {
+                "type": "string",
+                "description": "A glob"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "type": "string",
+                "description": "The projects that the targets belong to.",
+                "enum": ["self", "dependencies"]
+              },
+              "input": {
+                "type": "string",
+                "description": "The name of the input."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "runtime": {
+                "type": "string",
+                "description": "The command that will be executed and the results of which is added to the hash"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "env": {
+                "type": "string",
+                "description": "The name of the env var which value is added to the hash"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
     "cliOptions": {
       "type": "object",
       "description": "Default generator collection.",
@@ -111,11 +173,6 @@
       },
       "additionalProperties": false
     },
-    "namedInputs": {
-      "type": "object",
-      "description": "Named inputs used by inputs defined in targets",
-      "additionalProperties": true
-    },
     "targetDependencyConfig": {
       "type": "array",
       "items": {
@@ -146,39 +203,7 @@
       "description": "Target defaults",
       "properties": {
         "inputs": {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "fileset": {
-                    "type": "string",
-                    "description": "The name of the target."
-                  }
-                },
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "projects": {
-                    "type": "string",
-                    "description": "The projects that the targets belong to.",
-                    "enum": ["self", "dependencies"]
-                  },
-                  "input": {
-                    "type": "string",
-                    "description": "The name of the input."
-                  }
-                },
-                "additionalProperties": false
-              }
-            ]
-          }
+          "$ref": "#/definitions/inputs"
         },
         "dependsOn": {
           "type": "array",

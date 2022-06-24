@@ -44,17 +44,17 @@ export interface Task {
      */
     command: string;
     /**
-     * Hashes of other nodes which are included in the hash
+     * Hashes of inputs used in the hash
      */
     nodes: { [name: string]: string };
     /**
      * Hashes of implicit dependencies which are included in the hash
      */
-    implicitDeps: { [fileName: string]: string };
+    implicitDeps?: { [fileName: string]: string };
     /**
      * Hash of the runtime environment which the task was executed
      */
-    runtime: { [input: string]: string };
+    runtime?: { [input: string]: string };
   };
 }
 

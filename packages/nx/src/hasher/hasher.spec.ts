@@ -16,10 +16,6 @@ import tsUtils = require('../utils/typescript');
 import { expandNamedInput, Hasher } from './hasher';
 
 describe('Hasher', () => {
-  const nxJson = {
-    npmScope: 'nrwl',
-  };
-
   const packageJson = {
     name: 'nrwl',
   };
@@ -62,7 +58,6 @@ describe('Hasher', () => {
   beforeEach(() => {
     vol.fromJSON(
       {
-        'nx.json': JSON.stringify(nxJson),
         'tsconfig.base.json': tsConfigBaseJson,
         'yarn.lock': 'content',
         'package.json': JSON.stringify(packageJson),
@@ -104,7 +99,7 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hash = await hasher.hashTaskWithDepsAndContext({
+    const hash = await hasher.hashTask({
       target: { project: 'parent', target: 'build' },
       id: 'parent-build',
       overrides: { prop: 'prop-value' },
@@ -122,16 +117,14 @@ describe('Hasher', () => {
     expect(hash.details.nodes).toEqual({
       'parent:$filesets':
         '/file|file.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-    });
-    expect(hash.details.implicitDeps).toMatchObject({
-      '/root/yarn.lock': 'yarn.lock.hash',
-      '/root/package-lock.json': 'package-lock.json.hash',
-      '/root/pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
-      '/root/nx.json': 'nx.json.hash',
-    });
-    expect(hash.details.runtime).toEqual({
-      'echo runtime123': 'runtime123',
-      'echo runtime456': 'runtime456',
+      '{workspaceRoot}/yarn.lock': 'yarn.lock.hash',
+      '{workspaceRoot}/package-lock.json': 'package-lock.json.hash',
+      '{workspaceRoot}/pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
+      '{workspaceRoot}/nx.json': 'nx.json.hash',
+      '{workspaceRoot}/.gitignore': '',
+      '{workspaceRoot}/.nxignore': '',
+      'runtime:echo runtime123': 'runtime123',
+      'runtime:echo runtime456': 'runtime456',
     });
   });
 
@@ -173,14 +166,14 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hash = await hasher.hashTaskWithDepsAndContext({
+    const hash = await hasher.hashTask({
       target: { project: 'parent', target: 'build' },
       id: 'parent-build',
       overrides: { prop: 'prop-value' },
     });
 
     // note that the parent hash is based on parent source files only!
-    expect(hash.details.nodes).toEqual({
+    expect(onlySourceNodes(hash.details.nodes)).toEqual({
       'child:$filesets':
         '/fileb.ts|/fileb.spec.ts|b.hash|b.spec.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'parent:$filesets':
@@ -189,18 +182,6 @@ describe('Hasher', () => {
   });
 
   it('should hash non-default filesets', async () => {
-    vol.fromJSON(
-      {
-        'nx.json': JSON.stringify({
-          namedInputs: {
-            prod: ['!**/*.spec.ts'],
-          },
-        }),
-        'tsconfig.base.json': tsConfigBaseJson,
-        'yarn.lock': 'content',
-      },
-      '/root'
-    );
     const hasher = new Hasher(
       {
         nodes: {
@@ -240,18 +221,22 @@ describe('Hasher', () => {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
       },
-      {} as any,
+      {
+        namedInputs: {
+          prod: ['!**/*.spec.ts'],
+        },
+      } as any,
       {},
       createHashing()
     );
 
-    const hash = await hasher.hashTaskWithDepsAndContext({
+    const hash = await hasher.hashTask({
       target: { project: 'parent', target: 'build' },
       id: 'parent-build',
       overrides: { prop: 'prop-value' },
     });
 
-    expect(hash.details.nodes).toEqual({
+    expect(onlySourceNodes(hash.details.nodes)).toEqual({
       'child:$filesets':
         '/fileb.ts|/fileb.spec.ts|b.hash|b.spec.hash|{"root":"libs/child","namedInputs":{"prod":["default"]},"targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'parent:$filesets':
@@ -260,24 +245,6 @@ describe('Hasher', () => {
   });
 
   it('should use targetDefaults from nx.json', async () => {
-    vol.fromJSON(
-      {
-        'nx.json': JSON.stringify({
-          namedInputs: {
-            prod: ['!**/*.spec.ts'],
-          },
-          targetDefaults: {
-            build: {
-              inputs: ['prod', '^prod'],
-            },
-          },
-        }),
-        'tsconfig.base.json': tsConfigBaseJson,
-        'yarn.lock': 'content',
-      },
-      '/root'
-    );
-
     const hasher = new Hasher(
       {
         nodes: {
@@ -312,18 +279,27 @@ describe('Hasher', () => {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
       },
-      {} as any,
+      {
+        namedInputs: {
+          prod: ['!**/*.spec.ts'],
+        },
+        targetDefaults: {
+          build: {
+            inputs: ['prod', '^prod'],
+          },
+        },
+      } as any,
       {},
       createHashing()
     );
 
-    const hash = await hasher.hashTaskWithDepsAndContext({
+    const hash = await hasher.hashTask({
       target: { project: 'parent', target: 'build' },
       id: 'parent-build',
       overrides: { prop: 'prop-value' },
     });
 
-    expect(hash.details.nodes).toEqual({
+    expect(onlySourceNodes(hash.details.nodes)).toEqual({
       'child:$filesets':
         '/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'parent:$filesets':
@@ -349,7 +325,7 @@ describe('Hasher', () => {
           parent: [],
         },
       },
-      {} as any,
+      { npmScope: 'nrwl' } as any,
       {
         runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
         selectivelyHashTsConfig: true,
@@ -357,7 +333,7 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hash = await hasher.hashTaskWithDepsAndContext({
+    const hash = await hasher.hashTask({
       target: { project: 'parent', target: 'build' },
       id: 'parent-build',
       overrides: { prop: 'prop-value' },
@@ -372,19 +348,9 @@ describe('Hasher', () => {
     expect(hash.value).toContain('runtime456'); //target
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
-    expect(hash.details.nodes).toEqual({
+    expect(onlySourceNodes(hash.details.nodes)).toEqual({
       'parent:$filesets':
         '/file|file.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"]}}}',
-    });
-    expect(hash.details.implicitDeps).toMatchObject({
-      '/root/nx.json': 'nx.json.hash',
-      '/root/yarn.lock': 'yarn.lock.hash',
-      '/root/package-lock.json': 'package-lock.json.hash',
-      '/root/pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
-    });
-    expect(hash.details.runtime).toEqual({
-      'echo runtime123': 'runtime123',
-      'echo runtime456': 'runtime456',
     });
   });
 
@@ -421,7 +387,7 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const tasksHash = await hasher.hashTaskWithDepsAndContext({
+    const tasksHash = await hasher.hashTask({
       target: { project: 'parent', target: 'build' },
       id: 'parent-build',
       overrides: { prop: 'prop-value' },
@@ -433,14 +399,14 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('prop-value'); //overrides
     expect(tasksHash.value).toContain('parent|build'); //project and target
     expect(tasksHash.value).toContain('build'); //target
-    expect(tasksHash.details.nodes).toEqual({
+    expect(onlySourceNodes(tasksHash.details.nodes)).toEqual({
       'child:$filesets':
         '/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'parent:$filesets':
         '/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
 
-    const hashb = await hasher.hashTaskWithDepsAndContext({
+    const hashb = await hasher.hashTask({
       target: { project: 'child', target: 'build' },
       id: 'child-build',
       overrides: { prop: 'prop-value' },
@@ -452,7 +418,7 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('prop-value'); //overrides
     expect(hashb.value).toContain('child|build'); //project and target
     expect(hashb.value).toContain('build'); //target
-    expect(hashb.details.nodes).toEqual({
+    expect(onlySourceNodes(hashb.details.nodes)).toEqual({
       'child:$filesets':
         '/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'parent:$filesets':
@@ -486,16 +452,14 @@ describe('Hasher', () => {
     );
 
     try {
-      await hasher.hashTaskWithDepsAndContext({
+      await hasher.hashTask({
         target: { project: 'parent', target: 'build' },
         id: 'parent-build',
         overrides: {},
       });
       fail('Should not be here');
     } catch (e) {
-      expect(e.message).toContain(
-        'Nx failed to execute runtimeCacheInputs defined in nx.json failed:'
-      );
+      expect(e.message).toContain('Nx failed to execute');
       expect(e.message).toContain('boom');
       expect(
         e.message.includes(' not found') || e.message.includes('not recognized')
@@ -538,7 +502,7 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const tasksHash = await hasher.hashTaskWithDepsAndContext({
+    const tasksHash = await hasher.hashTask({
       target: { project: 'parent', target: 'build' },
       id: 'parent-build',
       overrides: { prop: 'prop-value' },
@@ -547,60 +511,6 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('global1.hash');
     expect(tasksHash.value).toContain('global2.hash');
   });
-  // ADDRESS
-  // it('should hash projects with dependencies (exclude spec files of dependencies)', async () => {
-  //   const hasher = new Hasher(
-  //     {
-  //       nodes: {
-  //         parent: {
-  //           name: 'parent',
-  //           type: 'lib',
-  //           data: {
-  //             root: '',
-  //             files: [
-  //               { file: '/filea.ts', hash: 'a.hash' },
-  //               { file: '/filea.spec.ts', hash: 'a.spec.hash' },
-  //             ],
-  //           },
-  //         },
-  //         child: {
-  //           name: 'child',
-  //           type: 'lib',
-  //           data: {
-  //             root: '',
-  //             files: [
-  //               { file: '/fileb.ts', hash: 'b.hash' },
-  //               { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
-  //             ],
-  //           },
-  //         },
-  //       },
-  //       dependencies: {
-  //         parent: [{ source: 'parent', target: 'child', type: 'static' }],
-  //       },
-  //     },
-  //     {} as any,
-  //     {},
-  //     createHashing()
-  //   );
-  //
-  //   const hash = await hasher.hashTaskWithDepsAndContext(
-  //     {
-  //       target: { project: 'parent', target: 'build' },
-  //       id: 'parent-build',
-  //       overrides: { prop: 'prop-value' },
-  //     }
-  //   );
-  //
-  //   // note that the parent hash is based on parent source files only!
-  //   expect(hash.details.nodes).toEqual({
-  //     child:
-  //       '/fileb.ts|b.hash|{"root":"libs/child"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-  //     parent:
-  //       '/filea.ts|/filea.spec.ts|a.hash|a.spec.hash|{"root":"libs/parent"}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-  //   });
-
-  // });
 
   it('should hash npm project versions', async () => {
     const hasher = new Hasher(
@@ -638,14 +548,14 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hash = await hasher.hashTaskWithDepsAndContext({
+    const hash = await hasher.hashTask({
       target: { project: 'app', target: 'build' },
       id: 'app-build',
       overrides: { prop: 'prop-value' },
     });
 
     // note that the parent hash is based on parent source files only!
-    expect(hash.details.nodes).toEqual({
+    expect(onlySourceNodes(hash.details.nodes)).toEqual({
       'app:$filesets':
         '/filea.ts|a.hash|{"root":"apps/app","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'npm:react': '17.0.0',
@@ -683,14 +593,14 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hash = await hasher.hashTaskWithDepsAndContext({
+    const hash = await hasher.hashTask({
       target: { project: 'app', target: 'build' },
       id: 'app-build',
       overrides: { prop: 'prop-value' },
     });
 
     // note that the parent hash is based on parent source files only!
-    expect(hash.details.nodes).toEqual({
+    expect(onlySourceNodes(hash.details.nodes)).toEqual({
       'app:$filesets':
         '/filea.ts|a.hash|{"root":"apps/app","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'npm:react': '__npm:react__',
@@ -736,3 +646,13 @@ describe('Hasher', () => {
     });
   });
 });
+
+function onlySourceNodes(nodes: { [name: string]: string }) {
+  const obj = {};
+  Object.keys(nodes).forEach((n) => {
+    if (n.indexOf('$filesets') > -1 || n.startsWith('npm:')) {
+      obj[n] = nodes[n];
+    }
+  });
+  return obj;
+}

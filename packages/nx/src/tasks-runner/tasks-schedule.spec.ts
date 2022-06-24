@@ -97,7 +97,7 @@ describe('TasksSchedule', () => {
     };
 
     const hasher = {
-      hashTaskWithDepsAndContext: () => 'hash',
+      hashTask: () => 'hash',
     } as any;
 
     lifeCycle = {

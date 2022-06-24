@@ -111,7 +111,9 @@ export interface TargetDependencyConfig {
 
 export type InputDefinition =
   | { input: string; projects: 'self' | 'dependencies' }
-  | { fileset: string };
+  | { fileset: string }
+  | { runtime: string }
+  | { env: string };
 
 /**
  * Target's configuration
