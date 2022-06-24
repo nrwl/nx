@@ -1314,6 +1314,22 @@
           "alwaysAddToPackageJson": false
         },
         "@ngrx/component-store": {
+          "version": "~14.0.0"
+        }
+      }
+    },
+    "14.4.0": {
+      "version": "14.4.0-beta.1",
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
           "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         }
