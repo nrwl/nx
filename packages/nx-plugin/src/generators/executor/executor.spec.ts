@@ -158,7 +158,7 @@ describe('NxPlugin Executor Generator', () => {
          * you can consume workspace details from the context.
          */
         export const myExecutorHasher: CustomHasher = async (task, context) => {
-            return context.hasher.hashTaskWithDepsAndContext(task)
+            return context.hasher.hashTask(task)
         };
 
         export default myExecutorHasher;

@@ -16,30 +16,32 @@ export default async function run(
     workspaceConfig: ProjectsConfigurations;
   }
 ): Promise<Hash> {
+  const res = await context.hasher.hashTask(task);
   if (task.overrides['hasTypeAwareRules'] === true) {
-    return context.hasher.hashTaskWithDepsAndContext(task);
+    return res;
   }
 
-  const command = await context.hasher.hashCommand(task);
-  const source = await context.hasher.hashSource(task);
   const deps = allDeps(task.id, context.taskGraph, context.projectGraph);
   const tags = context.hasher.hashArray(
     deps.map((d) => (context.workspaceConfig.projects[d].tags || []).join('|'))
   );
-  const taskContext = await context.hasher.hashContext();
+
+  const command = res.details['command'];
+  const selfSource = res.details.nodes[`${task.target.project}:$filesets`];
+
+  const nodes = {};
+  const hashes = [] as string[];
+  for (const d of Object.keys(res.details.nodes)) {
+    if (d.indexOf('$fileset') === -1) {
+      nodes[d] = res.details.nodes[d];
+      hashes.push(res.details.nodes[d]);
+    }
+  }
   return {
-    value: context.hasher.hashArray([
-      command,
-      source,
-      tags,
-      taskContext.implicitDeps.value,
-      taskContext.runtime.value,
-    ]),
+    value: context.hasher.hashArray([command, selfSource, ...hashes, tags]),
     details: {
       command,
-      nodes: { [task.target.project]: source, tags },
-      implicitDeps: taskContext.implicitDeps.files,
-      runtime: taskContext.runtime.runtime,
+      nodes: { [task.target.project]: selfSource, tags, ...nodes },
     },
   };
 }

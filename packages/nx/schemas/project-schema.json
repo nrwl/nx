@@ -7,7 +7,9 @@
     "namedInputs": {
       "type": "object",
       "description": "Named inputs used by inputs defined in targets",
-      "additionalProperties": true
+      "additionalProperties": {
+        "$ref": "#/definitions/inputs"
+      }
     },
     "targets": {
       "type": "object",
@@ -36,39 +38,7 @@
             }
           },
           "inputs": {
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "fileset": {
-                      "type": "string",
-                      "description": "The name of the target."
-                    }
-                  },
-                  "additionalProperties": false
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "projects": {
-                      "type": "string",
-                      "description": "The projects that the targets belong to.",
-                      "enum": ["self", "dependencies"]
-                    },
-                    "input": {
-                      "type": "string",
-                      "description": "The name of the input."
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              ]
-            }
+            "$ref": "#/definitions/inputs"
           },
           "dependsOn": {
             "type": "array",
@@ -108,6 +78,63 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    }
+  },
+  "definitions": {
+    "inputs": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "fileset": {
+                "type": "string",
+                "description": "A glob used to determine a fileset."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "type": "string",
+                "description": "The projects that the input belong to.",
+                "enum": ["self", "dependencies"]
+              },
+              "input": {
+                "type": "string",
+                "description": "Named input."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "runtime": {
+                "type": "string",
+                "description": "The command that will be executed and included into the hash."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "env": {
+                "type": "string",
+                "description": "The env var that will be included into the hash."
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
       }
     }
   }

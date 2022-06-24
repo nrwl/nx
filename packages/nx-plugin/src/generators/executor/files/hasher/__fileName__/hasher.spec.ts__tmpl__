@@ -5,7 +5,7 @@ import { <%=propertyName%>Hasher } from './hasher';
 describe('<%=propertyName%>Hasher', () => {
     it('should generate hash', async () => {
         const mockHasher: Hasher = {
-            hashTaskWithDepsAndContext: jest.fn().mockReturnValue({value: 'hashed-task'})
+            hashTask: jest.fn().mockReturnValue({value: 'hashed-task'})
         } as unknown as Hasher
         const hash = await <%=propertyName%>Hasher({
             id: 'my-task-id',
