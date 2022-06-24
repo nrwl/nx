@@ -30,9 +30,9 @@
       "outputs": [],
       "options": {
         "commands": [
-          "npx nx e2e-base dep-graph-client-e2e -c dev",
-          "npx nx e2e-base dep-graph-client-e2e -c watch",
-          "npx nx e2e-base dep-graph-client-e2e -c release"
+          "npx nx e2e-base e2e-dep-graph-client -c dev",
+          "npx nx e2e-base e2e-dep-graph-client -c watch",
+          "npx nx e2e-base e2e-dep-graph-client -c release"
         ],
         "parallel": false
       }

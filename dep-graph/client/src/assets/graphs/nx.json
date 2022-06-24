@@ -2319,7 +2319,7 @@
       }
     },
     {
-      "name": "dep-graph-client-e2e",
+      "name": "e2e-dep-graph-client",
       "type": "e2e",
       "data": {
         "tags": [],
@@ -17164,14 +17164,14 @@
       { "source": "react-native", "target": "storybook", "type": "static" },
       { "source": "react-native", "target": "workspace", "type": "static" }
     ],
-    "dep-graph-client-e2e": [
+    "e2e-dep-graph-client": [
       {
-        "source": "dep-graph-client-e2e",
+        "source": "e2e-dep-graph-client",
         "target": "dep-graph-client",
         "type": "implicit"
       },
       {
-        "source": "dep-graph-client-e2e",
+        "source": "e2e-dep-graph-client",
         "target": "cypress",
         "type": "static"
       }
