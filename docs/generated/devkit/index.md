@@ -1414,7 +1414,7 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
 
-**`deprecated`** Use createProjectGraphAsync + readProjectsConfigurationFromProjectGraph instead, or use readWorkspaceConfig.
+**`deprecated`** Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
 
 #### Returns
 
