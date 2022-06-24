@@ -14,7 +14,6 @@
     "default": {
       "runner": "@nrwl/nx-cloud",
       "options": {
-        "accessToken": "YzVhYjFiNzAtYTYxZS00OWM3LTlkOGYtZjRmOGRlNDY4MTJhfHJlYWQtd3JpdGU=",
         "cacheableOperations": [
           "build",
           "build-base",
@@ -38,23 +37,23 @@
     "libsDir": "",
     "appsDir": ""
   },
-  "filesets": {
+  "namedInputs": {
     "prod": ["!**/*.spec.ts"]
   },
   "targetDefaults": {
     "build": {
       "dependsOn": ["build-base"],
-      "dependsOnFilesets": ["prod", "^prod"]
+      "inputs": ["prod", "^prod"]
     },
     "build-base": {
       "dependsOn": ["^build-base"],
-      "dependsOnFilesets": ["prod", "^prod"]
+      "inputs": ["prod", "^prod"]
     },
     "test": {
-      "dependsOnFilesets": ["default", "^prod"]
+      "inputs": ["default", "^prod"]
     },
     "e2e": {
-      "dependsOnFilesets": ["default", "^prod"]
+      "inputs": ["default", "^prod"]
     }
   }
 }
