@@ -51,6 +51,11 @@
             "output": "/"
           },
           {
+            "input": "packages/react-native",
+            "glob": "**/preprocessor.js",
+            "output": "/"
+          },
+          {
             "input": "packages/react-native/src",
             "glob": "**/*.!(ts)",
             "output": "/src"
