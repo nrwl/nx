@@ -3,31 +3,38 @@
   "sourceRoot": "dep-graph/client-e2e/src",
   "projectType": "application",
   "targets": {
-    "e2e-disabled": {
+    "e2e-base": {
       "executor": "@nrwl/cypress:cypress",
       "options": {
-        "cypressConfig": "dep-graph/client-e2e/cypress.json",
         "tsConfig": "dep-graph/client-e2e/tsconfig.e2e.json",
-        "devServerTarget": "dep-graph-client:serve-for-e2e",
         "baseUrl": "http://localhost:4200"
-      }
+      },
+      "configurations": {
+        "dev": {
+          "cypressConfig": "dep-graph/client-e2e/cypress.json",
+          "devServerTarget": "dep-graph-client:serve"
+        },
+        "watch": {
+          "cypressConfig": "dep-graph/client-e2e/cypress-watch-mode.json",
+          "devServerTarget": "dep-graph-client:serve:watch"
+        },
+        "release": {
+          "cypressConfig": "dep-graph/client-e2e/cypress-release.json",
+          "devServerTarget": "dep-graph-client:serve:release"
+        }
+      },
+      "defaultConfiguration": "dev"
     },
-    "e2e-watch-disabled": {
-      "executor": "@nrwl/cypress:cypress",
+    "e2e": {
+      "executor": "nx:run-commands",
+      "outputs": [],
       "options": {
-        "cypressConfig": "dep-graph/client-e2e/cypress-watch-mode.json",
-        "tsConfig": "dep-graph/client-e2e/tsconfig.e2e.json",
-        "devServerTarget": "dep-graph-client:serve-for-e2e:watch",
-        "baseUrl": "http://localhost:4200"
-      }
-    },
-    "e2e-release-disabled": {
-      "executor": "@nrwl/cypress:cypress",
-      "options": {
-        "cypressConfig": "dep-graph/client-e2e/cypress-release.json",
-        "tsConfig": "dep-graph/client-e2e/tsconfig.e2e.json",
-        "devServerTarget": "dep-graph-client:serve-for-e2e:release",
-        "baseUrl": "http://localhost:4200"
+        "commands": [
+          "npx nx e2e-base e2e-dep-graph-client -c dev",
+          "npx nx e2e-base e2e-dep-graph-client -c watch",
+          "npx nx e2e-base e2e-dep-graph-client -c release"
+        ],
+        "parallel": false
       }
     },
     "lint": {

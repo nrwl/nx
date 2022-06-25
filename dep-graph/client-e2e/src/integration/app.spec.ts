@@ -5,7 +5,6 @@ import {
   getGroupByFolderCheckbox,
   getImageDownloadButton,
   getIncludeProjectsInPathButton,
-  getProjectItems,
   getSearchDepthCheckbox,
   getSearchDepthIncrementButton,
   getSelectAffectedButton,
@@ -17,13 +16,17 @@ import {
   getUnfocusProjectButton,
 } from '../support/app.po';
 
-describe('dep-graph-client', () => {
-  beforeEach(() => {
-    cy.intercept('/assets/graphs/*').as('getGraph');
+import * as nxExamplesJson from '../fixtures/nx-examples.json';
+import * as affectedJson from '../fixtures/affected.json';
 
+describe('dep-graph-client', () => {
+  before(() => {
+    cy.intercept('/assets/graphs/nx.json', { fixture: 'nx-examples.json' }).as(
+      'getGraph'
+    );
     cy.visit('/');
 
-    // wait for first graph to finish loading
+    // wait for initial graph to finish loading
     cy.wait('@getGraph');
   });
 
@@ -33,9 +36,9 @@ describe('dep-graph-client', () => {
     });
 
     it('should hide when a project is selected', () => {
-      cy.contains('nx-dev').scrollIntoView().should('be.visible');
-      cy.get('[data-project="nx-dev"]').should('be.visible');
-      cy.get('[data-project="nx-dev"]').click({ force: true });
+      cy.contains('cart').scrollIntoView().should('be.visible');
+      cy.get('[data-project="cart"]').should('be.visible');
+      cy.get('[data-project="cart"]').click({ force: true });
       getSelectProjectsMessage().should('not.exist');
     });
   });
@@ -46,47 +49,55 @@ describe('dep-graph-client', () => {
     });
 
     it('should show clear button after typing', () => {
-      getTextFilterInput().type('nx-dev');
+      getTextFilterInput().type('cart');
       getTextFilterReset().should('exist');
     });
 
     it('should hide clear button after clicking', () => {
-      getTextFilterInput().type('nx-dev');
+      getTextFilterInput().type('cart');
       getTextFilterReset().click().should('not.exist');
     });
 
     it('should filter projects', () => {
-      getTextFilterInput().type('nx-dev');
-      getCheckedProjectItems().should('have.length', 15);
+      getTextFilterInput().type('cart');
+      getCheckedProjectItems().should(
+        'have.length',
+        nxExamplesJson.projects.filter((project) =>
+          project.name.includes('cart')
+        ).length
+      );
     });
 
     it('should clear selection on reset', () => {
-      getTextFilterInput().type('nx-dev');
-      getCheckedProjectItems().should('have.length', 15);
+      getTextFilterInput().type('cart');
+      getCheckedProjectItems().should(
+        'have.length',
+        nxExamplesJson.projects.filter((project) =>
+          project.name.includes('cart')
+        ).length
+      );
       getTextFilterReset().click();
       getCheckedProjectItems().should('have.length', 0);
-    });
-  });
-
-  describe('selecting a different project', () => {
-    it('should change the available projects', () => {
-      getProjectItems().should('have.length', 62);
-      cy.get('[data-cy=project-select]').select('Ocean', { force: true });
-      getProjectItems().should('have.length', 124);
     });
   });
 
   describe('select all button', () => {
     it('should check all project items', () => {
       getSelectAllButton().scrollIntoView().click({ force: true });
-      getCheckedProjectItems().should('have.length', 62);
+      getCheckedProjectItems().should(
+        'have.length',
+        nxExamplesJson.projects.length
+      );
     });
   });
 
   describe('deselect all button', () => {
     it('should uncheck all project items', () => {
       getDeselectAllButton().click();
-      getUncheckedProjectItems().should('have.length', 62);
+      getUncheckedProjectItems().should(
+        'have.length',
+        nxExamplesJson.projects.length
+      );
       getSelectProjectsMessage().should('be.visible');
     });
   });
@@ -97,41 +108,53 @@ describe('dep-graph-client', () => {
     });
 
     it('should check all affected project items', () => {
+      cy.intercept('/assets/graphs/affected.json', {
+        fixture: 'affected.json',
+      }).as('getAffectedGraph');
+
       cy.get('[data-cy=project-select]').select('Affected', { force: true });
-      cy.wait('@getGraph');
+
+      cy.wait('@getAffectedGraph');
       getSelectAffectedButton().click();
 
-      getCheckedProjectItems().should('have.length', 5);
+      getCheckedProjectItems().should(
+        'have.length',
+        affectedJson.affected.length
+      );
+
+      // switch back to Nx Examples graph before proceeding
+      cy.intercept('/assets/graphs/nx-examples.json', {
+        fixture: 'nx-examples.json',
+      }).as('getGraph');
+      cy.get('[data-cy=project-select]').select('Nx Examples', { force: true });
+      cy.wait('@getGraph');
     });
   });
 
   describe('selecting projects', () => {
     it('should select a project by clicking on the project name', () => {
-      cy.get('[data-project="nx-dev"]').should('have.data', 'active', false);
-      cy.get('[data-project="nx-dev"]').click({
+      cy.get('[data-project="cart"]').should('have.data', 'active', false);
+      cy.get('[data-project="cart"]').click({
         force: true,
       });
 
-      cy.get('[data-project="nx-dev"][data-active="true"]').should('exist');
+      cy.get('[data-project="cart"][data-active="true"]').should('exist');
     });
 
     it('should deselect a project by clicking on the project name again', () => {
-      cy.get('[data-project="nx-dev"][data-active="false"]').click({
-        force: true,
-      });
-      cy.get('[data-project="nx-dev"][data-active="true"]')
+      cy.get('[data-project="cart"][data-active="true"]')
         .should('exist')
         .click({
           force: true,
         });
-      cy.get('[data-project="nx-dev"][data-active="false"]').should('exist');
+      cy.get('[data-project="cart"][data-active="false"]').should('exist');
     });
 
     it('should select a project by clicking on the selected icon', () => {
-      cy.get('[data-project="nx-dev"][data-active="false"]').click({
+      cy.get('[data-project="cart"][data-active="false"]').click({
         force: true,
       });
-      cy.get('[data-project="nx-dev"][data-active="true"]')
+      cy.get('[data-project="cart"][data-active="true"]')
         .should('exist')
         .parent()
         .siblings()
@@ -140,40 +163,60 @@ describe('dep-graph-client', () => {
         .click({
           force: true,
         });
-      cy.get('[data-project="nx-dev"][data-active="false"]').should('exist');
+      cy.get('[data-project="cart"][data-active="false"]').should('exist');
     });
   });
 
   describe('focusing projects in sidebar', () => {
     it('should select appropriate projects', () => {
-      cy.contains('nx-dev').scrollIntoView().should('be.visible');
-      getFocusButtonForProject('nx-dev').click({ force: true });
+      cy.contains('cart').scrollIntoView().should('be.visible');
+      getFocusButtonForProject('cart').click({ force: true });
 
-      getCheckedProjectItems().should('have.length', 11);
+      const dependencies = nxExamplesJson.dependencies.cart;
+      const dependents = Object.keys(nxExamplesJson.dependencies).filter(
+        (key) =>
+          nxExamplesJson.dependencies[key]
+            .map((dependencies) => dependencies.target)
+            .includes('cart')
+      );
+      getCheckedProjectItems().should(
+        'have.length',
+        ['cart', ...dependencies, ...dependents].length
+      );
     });
   });
 
   describe('unfocus button', () => {
     it('should uncheck all project items', () => {
-      getFocusButtonForProject('nx-dev').click({ force: true });
+      getFocusButtonForProject('cart').click({ force: true });
       getUnfocusProjectButton().click();
 
-      getUncheckedProjectItems().should('have.length', 62);
+      getCheckedProjectItems().should('have.length', 0);
     });
   });
 
   describe('text filtering', () => {
     it('should filter projects by text when pressing enter', () => {
-      getTextFilterInput().type('nx-dev{enter}');
+      getTextFilterInput().type('cart{enter}');
 
-      getCheckedProjectItems().should('have.length', 15);
+      getCheckedProjectItems().should(
+        'have.length',
+        nxExamplesJson.projects.filter((project) =>
+          project.name.includes('cart')
+        ).length
+      );
     });
 
     it('should include projects in path when option is checked', () => {
-      getTextFilterInput().type('nx-dev');
+      getTextFilterInput().type('cart');
       getIncludeProjectsInPathButton().click();
 
-      getCheckedProjectItems().should('have.length', 17);
+      getCheckedProjectItems().should(
+        'have.length.gt',
+        nxExamplesJson.projects.filter((project) =>
+          project.name.includes('cart')
+        ).length
+      );
     });
   });
 
@@ -183,12 +226,12 @@ describe('dep-graph-client', () => {
     });
 
     it('should be shown when a project is selected', () => {
-      cy.get('[data-project="nx-dev"]').click({ force: true });
+      cy.get('[data-project="cart"]').click({ force: true });
       getImageDownloadButton().should('not.have.class', 'opacity-0');
     });
 
     it('should be hidden when no more projects are selected', () => {
-      cy.get('[data-project="nx-dev"]').click({ force: true });
+      cy.get('[data-project="cart"]').click({ force: true });
       getDeselectAllButton().click();
       getImageDownloadButton().should('have.class', 'opacity-0');
     });
@@ -196,10 +239,10 @@ describe('dep-graph-client', () => {
 
   describe('setting url params', () => {
     it('should set focused project', () => {
-      cy.contains('nx-dev').scrollIntoView().should('be.visible');
-      getFocusButtonForProject('nx-dev').click({ force: true });
+      cy.contains('cart').scrollIntoView().should('be.visible');
+      getFocusButtonForProject('cart').click({ force: true });
 
-      cy.url().should('contain', 'focus=nx-dev');
+      cy.url().should('contain', 'focus=cart');
     });
 
     it('should set group by folder', () => {
@@ -231,44 +274,51 @@ describe('dep-graph-client', () => {
 });
 
 describe('loading dep-graph client with url params', () => {
-  it('should focus projects', () => {
-    cy.intercept('/assets/graphs/*').as('getGraph');
+  beforeEach(() => {
+    cy.intercept('/assets/graphs/*', { fixture: 'nx-examples.json' }).as(
+      'getGraph'
+    );
+  });
 
-    cy.visit('/?focus=nx-dev');
+  it('should focus projects', () => {
+    cy.visit('/?focus=cart');
 
     // wait for first graph to finish loading
     cy.wait('@getGraph');
 
-    getCheckedProjectItems().should('have.length', 11);
+    const dependencies = nxExamplesJson.dependencies.cart;
+    const dependents = Object.keys(nxExamplesJson.dependencies).filter((key) =>
+      nxExamplesJson.dependencies[key]
+        .map((dependencies) => dependencies.target)
+        .includes('cart')
+    );
+    getCheckedProjectItems().should(
+      'have.length',
+      ['cart', ...dependencies, ...dependents].length
+    );
   });
 
   it('should focus projects with search depth', () => {
-    cy.intercept('/assets/graphs/*').as('getGraph');
-
-    cy.visit('/?focus=nx-dev&searchDepth=2');
+    cy.visit('/?focus=cart&searchDepth=2');
 
     // wait for first graph to finish loading
     cy.wait('@getGraph');
 
-    getCheckedProjectItems().should('have.length', 15);
+    getCheckedProjectItems().should('have.length', 10);
     getSearchDepthCheckbox().should('exist');
   });
 
   it('should focus projects with search depth disabled', () => {
-    cy.intercept('/assets/graphs/*').as('getGraph');
-
-    cy.visit('/?focus=nx-dev&searchDepth=0');
+    cy.visit('/?focus=cart&searchDepth=0');
 
     // wait for first graph to finish loading
     cy.wait('@getGraph');
 
-    getCheckedProjectItems().should('have.length', 15);
+    getCheckedProjectItems().should('have.length', 12);
     getSearchDepthCheckbox().should('exist');
   });
 
   it('should set group by folder', () => {
-    cy.intercept('/assets/graphs/*').as('getGraph');
-
     cy.visit('/?focus=nx-dev&searchDepth=1&groupByFolder=true');
 
     // wait for first graph to finish loading
@@ -278,25 +328,27 @@ describe('loading dep-graph client with url params', () => {
   });
 
   it('should select all projects', () => {
-    cy.intercept('/assets/graphs/*').as('getGraph');
-
     cy.visit('/?select=all');
 
     // wait for first graph to finish loading
     cy.wait('@getGraph');
 
-    getCheckedProjectItems().should('have.length', 62);
+    getCheckedProjectItems().should(
+      'have.length',
+      nxExamplesJson.projects.length
+    );
   });
 });
 
 describe('theme preferences', () => {
   let systemTheme: string;
-  beforeEach(() => {
+  before(() => {
     cy.visit('/');
     systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'dark'
       : 'light';
   });
+
   it('should initialize localstorage with default theme', () => {
     expect(localStorage.getItem('nx-dep-graph-theme')).eq('system');
   });

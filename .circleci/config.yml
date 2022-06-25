@@ -219,7 +219,7 @@ jobs:
       - run:
           name: Run E2E Tests
           command: |
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-nx-run,e2e-nx-misc,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e,e2e-nx-init --parallel=1
+            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-nx-run,e2e-nx-misc,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e,e2e-nx-init,e2e-dep-graph-client --parallel=1
           no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
