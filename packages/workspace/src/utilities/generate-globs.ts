@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments, logger } from '@nrwl/devkit';
 import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { relative, resolve } from 'path';
 import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
@@ -34,10 +34,18 @@ export function createGlobPatternsForDependencies(
 
   // generate the glob
   try {
-    const projectDirs = getSourceDirOfDependentProjects(
+    const [projectDirs, warnings] = getSourceDirOfDependentProjects(
       projectName,
       projectGraph
     );
+
+    if (warnings.length > 0) {
+      logger.warn(`
+[createGlobPatternsForDependencies] Failed to generate glob pattern for the following:
+${warnings.join('\n- ')}\n
+due to missing "sourceRoot" in the dependencies' project configuration
+      `);
+    }
 
     return projectDirs.map((sourceDir) =>
       resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
