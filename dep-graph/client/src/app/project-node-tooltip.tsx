@@ -5,6 +5,7 @@ export interface ProjectNodeToolTipProps {
   id: string;
   tags: string[];
 }
+
 function ProjectNodeToolTip({ type, id, tags }: ProjectNodeToolTipProps) {
   const depGraphService = getDepGraphService();
 

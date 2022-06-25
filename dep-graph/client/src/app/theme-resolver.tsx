@@ -1,4 +1,3 @@
-import { getEnvironmentConfig } from './hooks/use-environment-config';
 import { getGraphService } from './machines/graph.service';
 
 const htmlEl = document.documentElement;
