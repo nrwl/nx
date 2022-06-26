@@ -105,7 +105,7 @@ async function spawnProcess(
 async function getStagedFiles(path: string) {
   const { stdout: staged } = await spawnProcess(
     'git',
-    ['ls-files', '-s', '-z', '--exclude-standard', '.'],
+    ['ls-files', '--recurse-submodules', '-s', '-z', '--exclude-standard', '.'],
     path
   );
   const res = new Map();
@@ -123,7 +123,7 @@ async function getStagedFiles(path: string) {
 async function getUnstagedFiles(path: string) {
   const { stdout: unstaged } = await spawnProcess(
     'git',
-    ['ls-files', '-m', '-z', '--exclude-standard', '.'],
+    ['ls-files', '--recurse-submodules', '-m', '-z', '--exclude-standard', '.'],
     path
   );
   const lines = unstaged.split('\0').filter((f) => !!f);
@@ -133,7 +133,7 @@ async function getUnstagedFiles(path: string) {
 async function getUntrackedFiles(path: string) {
   const { stdout: untracked } = await spawnProcess(
     'git',
-    ['ls-files', '--other', '-z', '--exclude-standard', '.'],
+    ['ls-files', '--recurse-submodules', '--other', '-z', '--exclude-standard', '.'],
     path
   );
   const lines = untracked.split('\0').filter((f) => !!f);
