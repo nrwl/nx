@@ -33,6 +33,11 @@
     "cypressProject": {
       "type": "string",
       "description": "The Cypress project to generate the stories under. By default, inferred from `projectName`."
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false,

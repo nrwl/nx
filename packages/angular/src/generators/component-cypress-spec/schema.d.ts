@@ -5,4 +5,5 @@ export interface ComponentCypressSpecGeneratorOptions {
   componentPath: string;
   componentFileName: string;
   cypressProject?: string;
+  skipFormat?: boolean;
 }
