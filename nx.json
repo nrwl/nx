@@ -1,11 +1,5 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
-  "implicitDependencies": {
-    "package.json": "*",
-    ".eslintrc.json": "*",
-    ".circleci/config.yml": "*",
-    "tools/eslint-rules/**/*": "*"
-  },
   "affected": {
     "defaultBase": "master"
   },
@@ -25,10 +19,6 @@
           "sitemap"
         ],
         "useDaemonProcess": true,
-        "runtimeCacheInputs": [
-          "echo $SELECTED_CLI",
-          "echo $NX_E2E_CI_CACHE_KEY"
-        ],
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1
       }
@@ -39,22 +29,44 @@
     "appsDir": ""
   },
   "namedInputs": {
-    "prod": ["!**/*.spec.ts"]
+    "prod": ["!**/*.spec.ts"],
+    "globals": [
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/.circleci/config.yml"
+    ]
   },
   "targetDefaults": {
     "build": {
       "dependsOn": ["build-base"],
-      "inputs": ["prod", "^prod"]
+      "inputs": ["prod", "^prod", "globals"]
     },
     "build-base": {
       "dependsOn": ["^build-base"],
-      "inputs": ["prod", "^prod"]
+      "inputs": ["prod", "^prod", "globals"]
     },
     "test": {
-      "inputs": ["default", "^prod"]
+      "inputs": ["default", "^prod", "globals"]
+    },
+    "lint": {
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        "globals"
+      ]
     },
     "e2e": {
-      "inputs": ["default", "^prod"]
+      "inputs": [
+        "default",
+        "^prod",
+        "globals",
+        {
+          "env": "$SELECTED_CLI"
+        },
+        {
+          "env": "$NX_E2E_CI_CACHE_KEY"
+        }
+      ]
     }
   }
 }
