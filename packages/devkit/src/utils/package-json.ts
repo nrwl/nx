@@ -3,6 +3,19 @@ import { installPackagesTask } from '../tasks/install-packages-task';
 import type { Tree } from 'nx/src/generators/tree';
 import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 
+function filterExistingDependencies(
+  dependencies: Record<string, string>,
+  existingDependencies: Record<string, string>
+) {
+  if (!existingDependencies) {
+    return dependencies;
+  }
+
+  return Object.keys(dependencies ?? {})
+    .filter((d) => !existingDependencies[d])
+    .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
+}
+
 /**
  * Add Dependencies and Dev Dependencies to package.json
  *
@@ -26,18 +39,31 @@ export function addDependenciesToPackageJson(
 ): GeneratorCallback {
   const currentPackageJson = readJson(tree, packageJsonPath);
 
+  const filteredDependencies = filterExistingDependencies(
+    dependencies,
+    currentPackageJson.devDependencies
+  );
+  const filteredDevDependencies = filterExistingDependencies(
+    devDependencies,
+    currentPackageJson.dependencies
+  );
+
   if (
-    requiresAddingOfPackages(currentPackageJson, dependencies, devDependencies)
+    requiresAddingOfPackages(
+      currentPackageJson,
+      filteredDependencies,
+      filteredDevDependencies
+    )
   ) {
     updateJson(tree, packageJsonPath, (json) => {
       json.dependencies = {
         ...(json.dependencies || {}),
-        ...dependencies,
+        ...filteredDependencies,
         ...(json.dependencies || {}),
       };
       json.devDependencies = {
         ...(json.devDependencies || {}),
-        ...devDependencies,
+        ...filteredDevDependencies,
         ...(json.devDependencies || {}),
       };
       json.dependencies = sortObjectByKeys(json.dependencies);
