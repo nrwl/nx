@@ -62,7 +62,7 @@ exports[`lib should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.4.0
+  nx: nrwl/nx@1.5.1
 
 jobs:
   agent:
