@@ -1,7 +1,7 @@
-import { addProjectConfiguration, logger } from '@nrwl/devkit';
+import { addProjectConfiguration } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { createScam } from './create-module';
+import { convertComponentToScam } from './convert-component-to-scam';
 
 describe('Create module in the tree', () => {
   it('should create the scam inline correctly', async () => {
@@ -25,11 +25,19 @@ describe('Create module in the tree', () => {
     });
 
     // ACT
-    createScam(tree, {
-      name: 'example',
-      project: 'app1',
-      inlineScam: true,
-    });
+    convertComponentToScam(
+      tree,
+      {
+        componentDirectory: 'apps/app1/src/app/example',
+        componentFileName: 'example.component',
+        componentFilePath: 'apps/app1/src/app/example/example.component.ts',
+      },
+      {
+        name: 'example',
+        project: 'app1',
+        inlineScam: true,
+      }
+    );
 
     // ASSERT
     const componentSource = tree.read(
@@ -63,109 +71,6 @@ describe('Create module in the tree', () => {
     `);
   });
 
-  it('should skip export flag if project is application', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
-    addProjectConfiguration(tree, 'app1', {
-      projectType: 'application',
-      sourceRoot: 'apps/app1/src',
-      root: 'apps/app1',
-    });
-
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
-      name: 'example',
-      project: 'app1',
-      skipImport: true,
-      export: false,
-    });
-
-    const loggerWarnSpy = jest.spyOn(logger, 'warn');
-
-    // ACT
-    createScam(tree, {
-      name: 'example',
-      project: 'app1',
-      inlineScam: true,
-      export: true,
-    });
-
-    // ASSERT
-    expect(loggerWarnSpy).toHaveBeenCalledWith(
-      '--export=true was ignored as the project the SCAM is being generated in is not a library.'
-    );
-  });
-
-  it('should create the scam inline and export the path to the component file', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
-    addProjectConfiguration(tree, 'lib1', {
-      projectType: 'library',
-      sourceRoot: 'libs/lib1/src',
-      root: 'libs/lib1',
-    });
-
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
-      name: 'example',
-      project: 'lib1',
-      skipImport: true,
-      export: false,
-    });
-
-    tree.write('libs/lib1/src/index.ts', '');
-
-    // ACT
-    createScam(tree, {
-      name: 'example',
-      project: 'lib1',
-      inlineScam: true,
-      export: true,
-    });
-
-    // ASSERT
-    const componentSource = tree.read(
-      'libs/lib1/src/lib/example/example.component.ts',
-      'utf-8'
-    );
-    expect(componentSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
-      import { CommonModule } from '@angular/common';
-
-      @Component({
-        selector: 'example',
-        templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
-      })
-      export class ExampleComponent implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
-
-      }
-
-      @NgModule({
-        imports: [CommonModule],
-        declarations: [ExampleComponent],
-        exports: [ExampleComponent],
-      })
-      export class ExampleComponentModule {}"
-    `);
-    const entryPointSource = tree.read(`libs/lib1/src/index.ts`, 'utf-8');
-    expect(entryPointSource).toMatchInlineSnapshot(`
-      "
-        export * from \\"./lib/example/example.component\\";"
-    `);
-  });
-
   it('should create the scam separately correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
@@ -187,11 +92,19 @@ describe('Create module in the tree', () => {
     });
 
     // ACT
-    createScam(tree, {
-      name: 'example',
-      project: 'app1',
-      inlineScam: false,
-    });
+    convertComponentToScam(
+      tree,
+      {
+        componentDirectory: 'apps/app1/src/app/example',
+        componentFileName: 'example.component',
+        componentFilePath: 'apps/app1/src/app/example/example.component.ts',
+      },
+      {
+        name: 'example',
+        project: 'app1',
+        inlineScam: false,
+      }
+    );
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -234,12 +147,20 @@ describe('Create module in the tree', () => {
     });
 
     // ACT
-    createScam(tree, {
-      name: 'example',
-      project: 'app1',
-      inlineScam: true,
-      flat: true,
-    });
+    convertComponentToScam(
+      tree,
+      {
+        componentDirectory: 'apps/app1/src/app',
+        componentFileName: 'example.component',
+        componentFilePath: 'apps/app1/src/app/example.component.ts',
+      },
+      {
+        name: 'example',
+        project: 'app1',
+        inlineScam: true,
+        flat: true,
+      }
+    );
 
     // ASSERT
     const componentSource = tree.read(
@@ -295,12 +216,20 @@ describe('Create module in the tree', () => {
     });
 
     // ACT
-    createScam(tree, {
-      name: 'example',
-      project: 'app1',
-      inlineScam: false,
-      flat: true,
-    });
+    convertComponentToScam(
+      tree,
+      {
+        componentDirectory: 'apps/app1/src/app',
+        componentFileName: 'example.component',
+        componentFilePath: 'apps/app1/src/app/example.component.ts',
+      },
+      {
+        name: 'example',
+        project: 'app1',
+        inlineScam: false,
+        flat: true,
+      }
+    );
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -344,13 +273,21 @@ describe('Create module in the tree', () => {
     });
 
     // ACT
-    createScam(tree, {
-      name: 'example',
-      project: 'app1',
-      inlineScam: true,
-      flat: true,
-      type: 'random',
-    });
+    convertComponentToScam(
+      tree,
+      {
+        componentDirectory: 'apps/app1/src/app',
+        componentFileName: 'example.random',
+        componentFilePath: 'apps/app1/src/app/example.random.ts',
+      },
+      {
+        name: 'example',
+        project: 'app1',
+        inlineScam: true,
+        flat: true,
+        type: 'random',
+      }
+    );
 
     // ASSERT
     const componentSource = tree.read(
@@ -407,13 +344,21 @@ describe('Create module in the tree', () => {
     });
 
     // ACT
-    createScam(tree, {
-      name: 'example',
-      project: 'app1',
-      inlineScam: false,
-      flat: true,
-      type: 'random',
-    });
+    convertComponentToScam(
+      tree,
+      {
+        componentDirectory: 'apps/app1/src/app',
+        componentFileName: 'example.random',
+        componentFilePath: 'apps/app1/src/app/example.random.ts',
+      },
+      {
+        name: 'example',
+        project: 'app1',
+        inlineScam: false,
+        flat: true,
+        type: 'random',
+      }
+    );
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -457,13 +402,22 @@ describe('Create module in the tree', () => {
     });
 
     // ACT
-    createScam(tree, {
-      name: 'example',
-      project: 'app1',
-      flat: false,
-      path: 'apps/app1/src/app/random',
-      inlineScam: true,
-    });
+    convertComponentToScam(
+      tree,
+      {
+        componentDirectory: 'apps/app1/src/app/random/example',
+        componentFileName: 'example.component',
+        componentFilePath:
+          'apps/app1/src/app/random/example/example.component.ts',
+      },
+      {
+        name: 'example',
+        project: 'app1',
+        flat: false,
+        path: 'apps/app1/src/app/random',
+        inlineScam: true,
+      }
+    );
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -520,13 +474,21 @@ describe('Create module in the tree', () => {
     });
 
     // ACT
-    createScam(tree, {
-      name: 'example',
-      project: 'app1',
-      flat: true,
-      path: 'apps/app1/src/app/random',
-      inlineScam: true,
-    });
+    convertComponentToScam(
+      tree,
+      {
+        componentDirectory: 'apps/app1/src/app/random',
+        componentFileName: 'example.component',
+        componentFilePath: 'apps/app1/src/app/random/example.component.ts',
+      },
+      {
+        name: 'example',
+        project: 'app1',
+        flat: true,
+        path: 'apps/app1/src/app/random',
+        inlineScam: true,
+      }
+    );
 
     // ASSERT
     const componentModuleSource = tree.read(
