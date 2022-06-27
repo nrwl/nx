@@ -39,7 +39,7 @@
     "appsDir": ""
   },
   "namedInputs": {
-    "prod": ["!**/*.spec.ts"]
+    "prod": ["!**/*.spec.ts{,.snap}"]
   },
   "targetDefaults": {
     "build": {
