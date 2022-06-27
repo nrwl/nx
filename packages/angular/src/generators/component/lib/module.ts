@@ -1,7 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, normalizePath } from '@nrwl/devkit';
 import { basename, dirname } from 'path';
-import type { Schema } from '../schema';
+import type { NormalizedSchema } from '../schema';
 
 // Adapted from https://github.com/angular/angular-cli/blob/main/packages/schematics/angular/utility/find-module.ts#L29
 // to match the logic in the component schematic. It doesn't throw if it can't
@@ -11,7 +11,7 @@ const routingModuleExt = '-routing.module.ts';
 
 export function findModuleFromOptions(
   tree: Tree,
-  options: Schema,
+  options: NormalizedSchema,
   projectRoot: string
 ): string | null {
   if (!options.module) {

@@ -8,23 +8,27 @@ import {
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { pathStartsWith } from '../utils/path';
 import { exportComponentInEntryPoint } from './lib/component';
-import type { Schema } from './schema';
+import { normalizeOptions } from './lib/normalize-options';
+import type { NormalizedSchema, Schema } from './schema';
 
-export async function componentGenerator(tree: Tree, schema: Schema) {
-  checkPathUnderProjectRoot(tree, schema);
+export async function componentGenerator(tree: Tree, rawOptions: Schema) {
+  const options = normalizeOptions(tree, rawOptions);
+  const { projectSourceRoot, ...schematicOptions } = options;
+
+  checkPathUnderProjectRoot(tree, options);
 
   const angularComponentSchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'component'
   );
-  await angularComponentSchematic(tree, { ...schema });
+  await angularComponentSchematic(tree, schematicOptions);
 
-  exportComponentInEntryPoint(tree, schema);
+  exportComponentInEntryPoint(tree, options);
 
   await formatFiles(tree);
 }
 
-function checkPathUnderProjectRoot(tree: Tree, schema: Schema): void {
+function checkPathUnderProjectRoot(tree: Tree, schema: NormalizedSchema): void {
   if (!schema.path) {
     return;
   }

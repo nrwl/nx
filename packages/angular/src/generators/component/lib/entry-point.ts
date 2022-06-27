@@ -1,38 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, readJson } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { dirname } from 'path';
 import type { StringLiteral } from 'typescript';
-import { getRelativeImportToFile } from './path';
-
-export function locateLibraryEntryPointFromDirectory(
-  tree: Tree,
-  directory: string,
-  projectRoot: string,
-  projectSourceRoot: string
-): string | null {
-  const ngPackageJsonPath = joinPathFragments(directory, 'ng-package.json');
-  let entryPointFile = tree.exists(ngPackageJsonPath)
-    ? readJson(tree, ngPackageJsonPath).lib?.entryFile
-    : null;
-
-  if (entryPointFile) {
-    return joinPathFragments(directory, entryPointFile);
-  }
-
-  if (directory === projectRoot) {
-    const indexFile = joinPathFragments(projectSourceRoot, 'index.ts');
-
-    return tree.exists(indexFile) ? indexFile : null;
-  }
-
-  return locateLibraryEntryPointFromDirectory(
-    tree,
-    dirname(directory),
-    projectRoot,
-    projectSourceRoot
-  );
-}
+import { getRelativeImportToFile } from '../../utils/path';
 
 export function shouldExportInEntryPoint(
   tree: Tree,

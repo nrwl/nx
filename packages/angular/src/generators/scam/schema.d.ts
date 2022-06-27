@@ -17,3 +17,9 @@ export interface Schema {
   skipSelector?: boolean;
   export?: boolean;
 }
+
+export interface NormalizedSchema extends Schema {
+  path: string;
+  project: string;
+  projectSourceRoot: string;
+}

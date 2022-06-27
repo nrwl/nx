@@ -1,60 +1,36 @@
 import type { Tree } from '@nrwl/devkit';
-import {
-  joinPathFragments,
-  logger,
-  names,
-  normalizePath,
-  readProjectConfiguration,
-  readWorkspaceConfiguration,
-  stripIndents,
-} from '@nrwl/devkit';
-import type { Schema } from '../schema';
-import {
-  locateLibraryEntryPointFromDirectory,
-  shouldExportInEntryPoint,
-} from './entry-point';
+import { logger, readProjectConfiguration, stripIndents } from '@nrwl/devkit';
+import { getComponentFileInfo } from '../../utils/component';
+import { locateLibraryEntryPointFromDirectory } from '../../utils/entry-point';
+import { getRelativeImportToFile } from '../../utils/path';
+import type { NormalizedSchema } from '../schema';
+import { shouldExportInEntryPoint } from './entry-point';
 import { findModuleFromOptions } from './module';
-import { getRelativeImportToFile } from './path';
 
-export function exportComponentInEntryPoint(tree: Tree, schema: Schema): void {
+export function exportComponentInEntryPoint(
+  tree: Tree,
+  schema: NormalizedSchema
+): void {
   if (!schema.export || (schema.skipImport && !schema.standalone)) {
     return;
   }
 
-  const project =
-    schema.project ?? readWorkspaceConfiguration(tree).defaultProject;
-
-  const { root, sourceRoot, projectType } = readProjectConfiguration(
-    tree,
-    project
-  );
+  const { root, projectType } = readProjectConfiguration(tree, schema.project);
 
   if (projectType === 'application') {
     return;
   }
 
-  const componentNames = names(schema.name);
-
-  const componentFileName = `${componentNames.fileName}.${
-    schema.type ? names(schema.type).fileName : 'component'
-  }`;
-
-  const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
-  schema.path ??= joinPathFragments(projectSourceRoot, 'lib');
-  const componentDirectory = schema.flat
-    ? normalizePath(schema.path)
-    : joinPathFragments(schema.path, componentNames.fileName);
-
-  const componentFilePath = joinPathFragments(
-    componentDirectory,
-    `${componentFileName}.ts`
+  const { componentDirectory, componentFilePath } = getComponentFileInfo(
+    tree,
+    schema
   );
 
   const entryPointPath = locateLibraryEntryPointFromDirectory(
     tree,
     componentDirectory,
     root,
-    projectSourceRoot
+    schema.projectSourceRoot
   );
   if (!entryPointPath) {
     logger.warn(
