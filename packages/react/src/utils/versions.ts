@@ -3,7 +3,7 @@ export const nxVersion = require('../../package.json').version;
 export const reactVersion = '18.2.0';
 export const reactDomVersion = '18.2.0';
 export const reactIsVersion = '18.2.0';
-export const typesReactVersion = '18.0.13';
+export const typesReactVersion = '18.0.14';
 export const typesReactDomVersion = '18.0.5';
 export const typesReactIsVersion = '17.0.3';
 
@@ -29,8 +29,8 @@ export const reactReduxVersion = '8.0.2';
 export const reactTestRendererVersion = '18.2.0';
 
 export const eslintPluginImportVersion = '2.26.0';
-export const eslintPluginJsxA11yVersion = '6.5.1';
-export const eslintPluginReactVersion = '7.30.0';
+export const eslintPluginJsxA11yVersion = '6.6.0';
+export const eslintPluginReactVersion = '7.30.1';
 export const eslintPluginReactHooksVersion = '4.6.0';
 
 export const babelPluginStyledComponentsVersion = '1.10.7';

@@ -517,6 +517,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.3.7": {
+      "version": "14.3.7-beta.0",
+      "packages": {
+        "@types/react": {
+          "version": "18.0.14",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-jsx-a11y": {
+          "version": "6.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.30.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
