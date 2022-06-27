@@ -22,7 +22,7 @@ Below is an example of a Circle CI setup for an Nx workspace only building and t
 ```yaml
 version: 2.1
 orbs:
-  nx: nrwl/nx@1.4.0
+  nx: nrwl/nx@1.5.1
 jobs:
   main:
     docker:
@@ -64,7 +64,7 @@ In order to use distributed task execution, we need to start agents and set the 
 ```yaml
 version: 2.1
 orbs:
-  nx: nrwl/nx@1.4.0
+  nx: nrwl/nx@1.5.1
 jobs:
   agent:
     docker:
