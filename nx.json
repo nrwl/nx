@@ -61,10 +61,10 @@
         "^prod",
         "globals",
         {
-          "env": "$SELECTED_CLI"
+          "env": "SELECTED_CLI"
         },
         {
-          "env": "$NX_E2E_CI_CACHE_KEY"
+          "env": "NX_E2E_CI_CACHE_KEY"
         }
       ]
     }
