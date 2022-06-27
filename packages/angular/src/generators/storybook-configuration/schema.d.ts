@@ -8,4 +8,5 @@ export interface StorybookConfigurationOptions {
   name: string;
   cypressDirectory?: string;
   tsConfiguration?: boolean;
+  skipFormat?: boolean;
 }

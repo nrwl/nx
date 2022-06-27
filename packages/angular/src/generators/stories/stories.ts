@@ -1,5 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
-import { logger } from '@nrwl/devkit';
+import { formatFiles, logger } from '@nrwl/devkit';
 import { getProjectRootPath } from '@nrwl/workspace/src/utilities/project-type';
 import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
 import componentStoryGenerator from '../component-story/component-story';
@@ -40,6 +40,7 @@ export function angularStoriesGenerator(
       componentName: info.name,
       componentPath: info.path,
       componentFileName: info.componentFileName,
+      skipFormat: false,
     });
 
     if (options.generateCypressSpecs && e2eProject) {
@@ -50,9 +51,14 @@ export function angularStoriesGenerator(
         componentName: info.name,
         componentPath: info.path,
         componentFileName: info.componentFileName,
+        skipFormat: false,
       });
     }
   });
+
+  if (!options.skipFormat) {
+    formatFiles(tree);
+  }
 }
 
 export default angularStoriesGenerator;

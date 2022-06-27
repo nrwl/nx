@@ -1,5 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import {
+  formatFiles,
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
@@ -61,6 +62,10 @@ export function componentCypressSpecGenerator(
     props,
     tmpl: '',
   });
+
+  if (!options.skipFormat) {
+    formatFiles(tree);
+  }
 }
 
 export default componentCypressSpecGenerator;
