@@ -102,9 +102,9 @@ export function createCache(
 
 export function writeCacheIfNecessary(
   cache: ProjectGraphCache,
-  existingCache: ProjectGraphCache
+  existingCache: ProjectGraphCache | null
 ): void {
-  if (deepEquals(cache, existingCache)) {
+  if (existingCache && deepEquals(cache, existingCache)) {
     return;
   }
   performance.mark('write cache:start');

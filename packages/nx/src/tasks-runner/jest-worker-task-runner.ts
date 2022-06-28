@@ -13,7 +13,6 @@ import type * as ExecutorWorker from '../../bin/run-executor-worker';
 import { addCommandPrefixIfNeeded } from '../utils/add-command-prefix';
 import { ProjectGraph } from '../config/project-graph';
 
-// Worker threads slower for me??? 38s fork, 45s worker thread
 const useWorkerThreads =
   process.env.NX_JEST_WORKER_TASK_RUNNER_USE_THREADS === 'true';
 
@@ -37,7 +36,6 @@ export class JestWorkerTaskRunner {
             ...process.env,
             ...this.getNxEnvVariablesForForkedProcess(),
           },
-          execArgv: ['--inspect-brk'],
         },
       })) as Worker & typeof ExecutorWorker;
 

@@ -41,6 +41,7 @@ export async function executeTask(
     outputPath: options.outputPath,
     streamOutput: options.streamOutput ?? false,
     captureStderr: options.captureStderr ?? false,
+    logFileHandle: openSync(options.outputPath, 'w'),
   };
 
   try {
