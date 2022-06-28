@@ -49,9 +49,6 @@ function getHttpServerArgs(options: Schema) {
 
 function getBuildTargetCommand(options: Schema) {
   const cmd = ['nx', 'run', options.buildTarget];
-  if (options.withDeps) {
-    cmd.push(`--with-deps`);
-  }
   if (options.parallel) {
     cmd.push(`--parallel`);
   }

@@ -339,44 +339,6 @@ describe('Nx Affected and Graph Tests', () => {
       });
       compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
 
-      const resWithDeps = JSON.parse(
-        (
-          await runCLIAsync(
-            `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=build --with-deps`,
-            { silent: true }
-          )
-        ).stdout
-      );
-
-      expect(resWithDeps.tasks[0]).toMatchObject({
-        id: `${myapp}:build:production`,
-        overrides: {},
-        target: {
-          project: myapp,
-          target: 'build',
-        },
-        command: `${runNx} run ${myapp}:build:production`,
-        outputs: [`dist/apps/${myapp}`],
-      });
-
-      expect(resWithDeps.tasks[2]).toMatchObject({
-        id: `${mypublishablelib}:build`,
-        overrides: {},
-        target: {
-          project: mypublishablelib,
-          target: 'build',
-        },
-        command: `${runNx} run ${mypublishablelib}:build`,
-        outputs: [`dist/libs/${mypublishablelib}`],
-      });
-
-      compareTwoArrays(resWithDeps.projects, [
-        mylib,
-        mypublishablelib,
-        myapp,
-        `${myapp}-e2e`,
-      ]);
-
       const resWithTargetWithSelect1 = (
         await runCLIAsync(
           `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test --select=projects`,

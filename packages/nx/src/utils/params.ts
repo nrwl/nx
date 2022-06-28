@@ -4,7 +4,7 @@ import {
   TargetConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
-import { execSync } from 'child_process';
+import { output } from './output';
 
 type PropertyDescription = {
   type?: string | string[];
@@ -77,16 +77,21 @@ export async function handleErrors(isVerbose: boolean, fn: Function) {
     return await fn();
   } catch (err) {
     err ??= new Error('Unknown error caught');
-
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
       logger.error('The generator workflow failed. See above.');
-    } else if (err.message) {
-      logger.error(err.message);
     } else {
-      logger.error(err);
-    }
-    if (isVerbose && err.stack) {
-      logger.info(err.stack);
+      const lines = (err.message ? err.message : err.toString()).split('\n');
+      const bodyLines = lines.slice(1);
+      if (err.stack && !isVerbose) {
+        bodyLines.push('Pass --verbose to see the stacktrace.');
+      }
+      output.error({
+        title: lines[0],
+        bodyLines,
+      });
+      if (err.stack && isVerbose) {
+        logger.info(err.stack);
+      }
     }
     return 1;
   }

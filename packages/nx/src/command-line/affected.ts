@@ -12,7 +12,6 @@ import {
 } from '../utils/command-line-utils';
 import { performance } from 'perf_hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { withDeps } from '../project-graph/operators';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
@@ -147,12 +146,6 @@ function projectsToRun(
           nxArgs
         )
       );
-  if (!nxArgs.all && nxArgs.withDeps) {
-    affectedGraph = withDeps(
-      projectGraph,
-      Object.values(affectedGraph.nodes) as ProjectGraphProjectNode[]
-    );
-  }
 
   if (nxArgs.exclude) {
     const excludedProjects = new Set(nxArgs.exclude);

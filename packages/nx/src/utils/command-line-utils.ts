@@ -76,7 +76,6 @@ const runOne: string[] = [
   'exclude',
   'onlyFailed',
   'help',
-  'withDeps',
   'skipNxCache',
   'scan',
   'outputStyle',
@@ -120,7 +119,6 @@ export interface NxArgs {
   help?: boolean;
   version?: boolean;
   plain?: boolean;
-  withDeps?: boolean;
   projects?: string[];
   select?: string;
   skipNxCache?: boolean;

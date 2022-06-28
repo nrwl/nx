@@ -68,7 +68,7 @@ describe('utils', () => {
           getOutputsForTargetAndConfiguration(
             task,
             getNode({
-              outputs: ['{project.root}/sub', 'two'],
+              outputs: ['{projectRoot}/sub', 'two'],
               options: {
                 myVar: 'one',
               },

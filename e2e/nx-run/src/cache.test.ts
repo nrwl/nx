@@ -172,7 +172,10 @@ describe('cache', () => {
     runCLI(`generate @nrwl/js:lib ${child1}`);
     runCLI(`generate @nrwl/js:lib ${child2}`);
     updateJson(`nx.json`, (c) => {
-      c.namedInputs = { prod: ['!**/*.spec.ts'] };
+      c.namedInputs = {
+        default: ['{projectRoot}/**/*'],
+        prod: ['!{projectRoot}/**/*.spec.ts'],
+      };
       c.targetDefaults = {
         test: {
           inputs: ['default', '^prod'],
@@ -187,7 +190,7 @@ describe('cache', () => {
     });
 
     updateJson(`libs/${child1}/project.json`, (c) => {
-      c.namedInputs = { prod: ['**/*.ts'] };
+      c.namedInputs = { prod: ['{projectRoot}/**/*.ts'] };
       return c;
     });
 

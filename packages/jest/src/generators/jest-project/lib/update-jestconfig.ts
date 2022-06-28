@@ -19,6 +19,6 @@ export function updateJestConfig(host: Tree, options: JestProjectSchema) {
     host,
     findRootJestConfig(host),
     'projects',
-    `<rootDir>/${project.root}`
+    `<rootDir>/$"14.4.0-beta.5"root}`
   );
 }

@@ -1,6 +1,5 @@
 import { exec } from 'child_process';
 import * as minimatch from 'minimatch';
-import { existsSync } from 'fs';
 import { getRootTsConfigFileName } from '../utils/typescript';
 import { defaultHashing, HashingImpl } from './hashing-impl';
 import {
@@ -14,8 +13,6 @@ import { Task } from '../config/task-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { getImportPath } from '../utils/path';
-import { workspaceRoot } from '../utils/workspace-root';
-import { join } from 'path';
 
 type ExpandedSelfInput =
   | { fileset: string }
@@ -183,7 +180,7 @@ export class Hasher {
 const DEFAULT_INPUTS = [
   {
     projects: 'self',
-    fileset: 'default',
+    fileset: '{projectRoot}/**/*',
   },
   {
     projects: 'dependencies',
@@ -283,13 +280,15 @@ class TaskHasher {
     task: Task,
     projectNode: ProjectGraphProjectNode<any>
   ): { depsInputs: { input: string }[]; selfInputs: ExpandedSelfInput[] } {
+    const namedInputs = {
+      default: [{ fileset: '{projectRoot}/**/*' }],
+      ...this.nxJson.namedInputs,
+      ...projectNode.data.namedInputs,
+    };
     if (task.target.target === '$input') {
       return {
         depsInputs: [{ input: task.target.configuration }],
-        selfInputs: expandNamedInput(task.target.configuration, {
-          ...this.nxJson.namedInputs,
-          ...projectNode.data.namedInputs,
-        }),
+        selfInputs: expandNamedInput(task.target.configuration, namedInputs),
       };
     } else {
       const targetData = projectNode.data.targets[task.target.target];
@@ -299,7 +298,7 @@ class TaskHasher {
       // task from TaskGraph can be added here
       return splitInputsIntoSelfAndDependencies(
         targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
-        { ...this.nxJson.namedInputs, ...projectNode.data.namedInputs }
+        namedInputs
       );
     }
   }
@@ -340,25 +339,42 @@ class TaskHasher {
       .filter((r) => !!r['fileset'])
       .map((r) => r['fileset']);
 
-    const projectFilesets = filesets.filter(
-      (r) => !r.startsWith('{workspaceRoot}')
-    );
+    const projectFilesets = [];
+    const workspaceFilesets = [];
+    let invalidFileset = null;
 
-    const rootFilesets = filesets.filter((r) =>
-      r.startsWith('{workspaceRoot}/')
-    );
-
+    for (let f of filesets) {
+      if (f.startsWith('{projectRoot}/') || f.startsWith('!{projectRoot}/')) {
+        projectFilesets.push(f);
+      } else if (
+        f.startsWith('{workspaceRoot}/') ||
+        f.startsWith('!{workspaceRoot}/')
+      ) {
+        workspaceFilesets.push(f);
+      } else {
+        invalidFileset = f;
+      }
+    }
+    if (invalidFileset) {
+      throw new Error(
+        [
+          `"${invalidFileset}" is an invalid fileset.`,
+          'All filesets have to start with either {workspaceRoot} or {projectRoot}.',
+          'For instance: "!{projectRoot}/**/*.spec.ts" or "{workspaceRoot}/package.json".',
+          `If "${invalidFileset}" is a named input, make sure it is defined in, for instance, nx.json.`,
+        ].join('\n')
+      );
+    }
+    const notFilesets = inputs.filter((r) => !r['fileset']);
     return Promise.all([
       this.hashTaskFileset(task, projectFilesets),
       ...[
-        ...rootFilesets,
+        ...workspaceFilesets,
         ...this.legacyFilesetInputs.map((r) => r.fileset),
       ].map((fileset) => this.hashRootFileset(fileset)),
-      ...[...inputs, ...this.legacyRuntimeInputs]
-        .filter((r) => !r['fileset'])
-        .map((r) =>
-          r['runtime'] ? this.hashRuntime(r['runtime']) : this.hashEnv(r['env'])
-        ),
+      ...[...notFilesets, ...this.legacyRuntimeInputs].map((r) =>
+        r['runtime'] ? this.hashRuntime(r['runtime']) : this.hashEnv(r['env'])
+      ),
     ]);
   }
 
@@ -372,13 +388,14 @@ class TaskHasher {
           this.projectGraph.allWorkspaceFiles
             .filter((f) => minimatch(f.file, withoutWorkspaceRoot))
             .forEach((f) => {
-              parts.push(this.hashing.hashFile(join(workspaceRoot, f.file)));
+              parts.push(f.hash);
             });
         } else {
-          if (existsSync(join(workspaceRoot, withoutWorkspaceRoot))) {
-            parts.push(
-              this.hashing.hashFile(join(workspaceRoot, withoutWorkspaceRoot))
-            );
+          const matchingFile = this.projectGraph.allWorkspaceFiles.find(
+            (t) => t.file === withoutWorkspaceRoot
+          );
+          if (matchingFile) {
+            parts.push(matchingFile.hash);
           }
         }
         const value = this.hashing.hashArray(parts);
@@ -399,7 +416,14 @@ class TaskHasher {
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[task.target.project];
-        const filteredFiles = this.filterFiles(p.data.files, filesetPatterns);
+        const filesetWithExpandedProjectRoot = filesetPatterns.map((f) =>
+          f.replace('{projectRoot}', p.data.root)
+        );
+        const filteredFiles = this.filterFiles(
+          p.data.root,
+          p.data.files,
+          filesetWithExpandedProjectRoot
+        );
         const fileNames = filteredFiles.map((f) => f.file);
         const values = filteredFiles.map((f) => f.hash);
 
@@ -450,9 +474,12 @@ class TaskHasher {
     };
   }
 
-  private filterFiles(files: FileData[], patterns: string[]) {
-    patterns = patterns.filter((p) => p !== 'default');
-    if (patterns.length === 0) return files;
+  private filterFiles(
+    projectRoot: string,
+    files: FileData[],
+    patterns: string[]
+  ) {
+    if (patterns.indexOf(`${projectRoot}/**/*`) > -1) return files;
     return files.filter(
       (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
     );
@@ -545,7 +572,6 @@ export function expandNamedInput(
   input: string,
   namedInputs: { [inputName: string]: (InputDefinition | string)[] }
 ): ExpandedSelfInput[] {
-  if (input === 'default') return [{ fileset: 'default' }];
   namedInputs ||= {};
   if (!namedInputs[input]) throw new Error(`Input '${input}' is not defined`);
   return expandSelfInputs(namedInputs[input], namedInputs);
