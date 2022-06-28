@@ -73,6 +73,7 @@ describe('Hasher', () => {
   });
 
   it('should create task hash', async () => {
+    process.env.TESTENV = 'env123';
     const hasher = new Hasher(
       {
         nodes: {
@@ -82,7 +83,15 @@ describe('Hasher', () => {
             data: {
               root: 'libs/parent',
               targets: {
-                build: {},
+                build: {
+                  inputs: [
+                    'default',
+                    '^default',
+                    { runtime: 'echo runtime123' },
+                    { env: 'TESTENV' },
+                    { env: 'NONEXISTENTENV' },
+                  ],
+                },
               },
               files: [{ file: '/file', ext: '.ts', hash: 'file.hash' }],
             },
@@ -94,7 +103,7 @@ describe('Hasher', () => {
       },
       {} as any,
       {
-        runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
+        runtimeCacheInputs: ['echo runtime456'],
       },
       createHashing()
     );
@@ -110,13 +119,14 @@ describe('Hasher', () => {
     expect(hash.value).toContain('prop-value'); //overrides
     expect(hash.value).toContain('parent'); //project
     expect(hash.value).toContain('build'); //target
-    expect(hash.value).toContain('runtime123'); //target
-    expect(hash.value).toContain('runtime456'); //target
+    expect(hash.value).toContain('runtime123');
+    expect(hash.value).toContain('runtime456');
+    expect(hash.value).toContain('env123');
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
       'parent:$filesets':
-        '/file|file.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        '/file|file.hash|{"root":"libs/parent","targets":{"build":{"inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"}]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       '{workspaceRoot}/yarn.lock': 'yarn.lock.hash',
       '{workspaceRoot}/package-lock.json': 'package-lock.json.hash',
       '{workspaceRoot}/pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
@@ -125,6 +135,8 @@ describe('Hasher', () => {
       '{workspaceRoot}/.nxignore': '',
       'runtime:echo runtime123': 'runtime123',
       'runtime:echo runtime456': 'runtime456',
+      'env:TESTENV': 'env123',
+      'env:NONEXISTENTENV': '',
     });
   });
 

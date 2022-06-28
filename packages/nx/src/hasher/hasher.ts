@@ -443,9 +443,9 @@ class TaskHasher {
   }
 
   private async hashEnv(envVarName: string): Promise<PartialHash> {
-    const value = this.hashing.hashArray([process.env[envVarName]]);
+    const value = this.hashing.hashArray([process.env[envVarName] ?? '']);
     return {
-      details: { [`runtime:${envVarName}`]: value },
+      details: { [`env:${envVarName}`]: value },
       value,
     };
   }
