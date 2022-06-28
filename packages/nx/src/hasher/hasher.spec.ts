@@ -8,7 +8,6 @@ jest.doMock('../utils/workspace-root', () => {
 });
 
 jest.mock('fs', () => require('memfs').fs);
-require('fs').existsSync = () => true;
 jest.mock('../utils/typescript');
 
 import { vol } from 'memfs';
@@ -28,22 +27,21 @@ describe('Hasher', () => {
       },
     },
   });
-  let hashes = {
-    '/root/yarn.lock': 'yarn.lock.hash',
-    '/root/nx.json': 'nx.json.hash',
-    '/root/package-lock.json': 'package-lock.json.hash',
-    '/root/package.json': 'package.json.hash',
-    '/root/pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
-    '/root/tsconfig.base.json': tsConfigBaseJson,
-    '/root/workspace.json': 'workspace.json.hash',
-    '/root/global1': 'global1.hash',
-    '/root/global2': 'global2.hash',
-  };
+  const allWorkspaceFiles = [
+    { file: 'yarn.lock', hash: 'yarn.lock.hash' },
+    { file: 'nx.json', hash: 'nx.json.hash' },
+    { file: 'package-lock.json', hash: 'package-lock.json.hash' },
+    { file: 'package.json', hash: 'package.json.hash' },
+    { file: 'pnpm-lock.yaml', hash: 'pnpm-lock.yaml.hash' },
+    { file: 'tsconfig.base.json', hash: tsConfigBaseJson },
+    { file: 'workspace.json', hash: 'workspace.json.hash' },
+    { file: 'global1', hash: 'global1.hash' },
+    { file: 'global2', hash: 'global2.hash' },
+  ];
 
   function createHashing(): any {
     return {
       hashArray: (values: string[]) => values.join('|'),
-      hashFile: (path: string) => hashes[path],
     };
   }
 
@@ -100,6 +98,7 @@ describe('Hasher', () => {
         dependencies: {
           parent: [],
         },
+        allWorkspaceFiles,
       },
       {} as any,
       {
@@ -172,6 +171,7 @@ describe('Hasher', () => {
         dependencies: {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
+        allWorkspaceFiles,
       },
       {} as any,
       {},
@@ -208,8 +208,8 @@ describe('Hasher', () => {
                 },
               },
               files: [
-                { file: '/filea.ts', hash: 'a.hash' },
-                { file: '/filea.spec.ts', hash: 'a.spec.hash' },
+                { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+                { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
               ],
             },
           },
@@ -223,8 +223,8 @@ describe('Hasher', () => {
               },
               targets: { build: {} },
               files: [
-                { file: '/fileb.ts', hash: 'b.hash' },
-                { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
+                { file: 'libs/child/fileb.ts', hash: 'b.hash' },
+                { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
               ],
             },
           },
@@ -232,10 +232,11 @@ describe('Hasher', () => {
         dependencies: {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
+        allWorkspaceFiles,
       },
       {
         namedInputs: {
-          prod: ['!**/*.spec.ts'],
+          prod: ['!{projectRoot}/**/*.spec.ts'],
         },
       } as any,
       {},
@@ -250,13 +251,13 @@ describe('Hasher', () => {
 
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
       'child:$filesets':
-        '/fileb.ts|/fileb.spec.ts|b.hash|b.spec.hash|{"root":"libs/child","namedInputs":{"prod":["default"]},"targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        'libs/child/fileb.ts|libs/child/fileb.spec.ts|b.hash|b.spec.hash|{"root":"libs/child","namedInputs":{"prod":["default"]},"targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'parent:$filesets':
-        '/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{"inputs":["prod","^prod"]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        'libs/parent/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{"inputs":["prod","^prod"]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
 
-  it('should use targetDefaults from nx.json', async () => {
+  it('should use targetdefaults from nx.json', async () => {
     const hasher = new Hasher(
       {
         nodes: {
@@ -269,8 +270,8 @@ describe('Hasher', () => {
                 build: {},
               },
               files: [
-                { file: '/filea.ts', hash: 'a.hash' },
-                { file: '/filea.spec.ts', hash: 'a.spec.hash' },
+                { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+                { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
               ],
             },
           },
@@ -281,8 +282,8 @@ describe('Hasher', () => {
               root: 'libs/child',
               targets: { build: {} },
               files: [
-                { file: '/fileb.ts', hash: 'b.hash' },
-                { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
+                { file: 'libs/child/fileb.ts', hash: 'b.hash' },
+                { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
               ],
             },
           },
@@ -290,10 +291,11 @@ describe('Hasher', () => {
         dependencies: {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
+        allWorkspaceFiles,
       },
       {
         namedInputs: {
-          prod: ['!**/*.spec.ts'],
+          prod: ['!{projectRoot}/**/*.spec.ts'],
         },
         targetDefaults: {
           build: {
@@ -313,9 +315,9 @@ describe('Hasher', () => {
 
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
       'child:$filesets':
-        '/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        'libs/child/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'parent:$filesets':
-        '/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
+        'libs/parent/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
 
@@ -336,6 +338,7 @@ describe('Hasher', () => {
         dependencies: {
           parent: [],
         },
+        allWorkspaceFiles,
       },
       { npmScope: 'nrwl' } as any,
       {
@@ -393,6 +396,7 @@ describe('Hasher', () => {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
           child: [{ source: 'child', target: 'parent', type: 'static' }],
         },
+        allWorkspaceFiles,
       },
       {} as any,
       {},
@@ -455,6 +459,7 @@ describe('Hasher', () => {
         dependencies: {
           parent: [],
         },
+        allWorkspaceFiles,
       },
       {} as any,
       {
@@ -494,16 +499,7 @@ describe('Hasher', () => {
           },
         },
         dependencies: {},
-        allWorkspaceFiles: [
-          {
-            file: 'global1',
-            hash: 'hash1',
-          },
-          {
-            file: 'global2',
-            hash: 'hash2',
-          },
-        ],
+        allWorkspaceFiles,
       },
       {
         implicitDependencies: {
@@ -554,6 +550,7 @@ describe('Hasher', () => {
             { source: 'app', target: 'npm:react', type: DependencyType.static },
           ],
         },
+        allWorkspaceFiles,
       },
       {} as any,
       {},
@@ -599,6 +596,7 @@ describe('Hasher', () => {
             },
           ],
         },
+        allWorkspaceFiles,
       },
       {} as any,
       {},

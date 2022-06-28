@@ -831,10 +831,10 @@ describe('Workspace Tests', () => {
       }
 
       expect(error).toBeDefined();
-      expect(error.stderr.toString()).toContain(
+      expect(error.stdout.toString()).toContain(
         `${lib1} is still depended on by the following projects`
       );
-      expect(error.stderr.toString()).toContain(lib2);
+      expect(error.stdout.toString()).toContain(lib2);
 
       /**
        * Try force removing the project

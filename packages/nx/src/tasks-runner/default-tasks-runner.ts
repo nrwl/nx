@@ -55,10 +55,6 @@ export const defaultTasksRunner: TasksRunner<
   options.lifeCycle.startCommand();
   try {
     return await runAllTasks(tasks, options, context);
-  } catch (e) {
-    console.error('Unexpected error:');
-    console.error(e);
-    process.exit(1);
   } finally {
     options.lifeCycle.endCommand();
   }

@@ -22,7 +22,8 @@ import {
 import { Task } from '../config/task-graph';
 import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
-import { TargetDependencyConfig } from 'nx/src/config/workspace-json-project-json';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { handleErrors } from '../utils/params';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -90,81 +91,80 @@ export async function runCommand(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>
 ) {
-  const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
+  const status = await handleErrors(overrides['verbose'] === true, async () => {
+    const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  const defaultDependencyConfigs = mergeTargetDependencies(
-    nxJson.targetDefaults,
-    extraTargetDependencies
-  );
-  const projectNames = projectsToRun.map((t) => t.name);
-  const taskGraph = createTaskGraph(
-    projectGraph,
-    defaultDependencyConfigs,
-    projectNames,
-    [nxArgs.target],
-    nxArgs.configuration,
-    overrides
-  );
-
-  const cycle = findCycle(taskGraph);
-  if (cycle) {
-    if (nxArgs.nxIgnoreCycles) {
-      output.warn({
-        title: `The task graph has a circular dependency`,
-        bodyLines: [`${cycle.join(' --> ')}`],
-      });
-      makeAcyclic(taskGraph);
-    } else {
-      output.error({
-        title: `Could not execute command because the task graph has a circular dependency`,
-        bodyLines: [`${cycle.join(' --> ')}`],
-      });
-      process.exit(1);
-    }
-  }
-
-  const tasks = Object.values(taskGraph.tasks);
-  if (nxArgs.outputStyle == 'stream') {
-    process.env.NX_STREAM_OUTPUT = 'true';
-    process.env.NX_PREFIX_OUTPUT = 'true';
-  }
-  if (nxArgs.outputStyle == 'stream-without-prefixes') {
-    process.env.NX_STREAM_OUTPUT = 'true';
-  }
-  const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
-    initiatingProject,
-    projectNames,
-    tasks,
-    nxArgs,
-    overrides,
-    runnerOptions
-  );
-  const lifeCycles = [lifeCycle] as LifeCycle[];
-
-  if (process.env.NX_PERF_LOGGING) {
-    lifeCycles.push(new TaskTimingsLifeCycle());
-  }
-
-  if (process.env.NX_PROFILE) {
-    lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
-  }
-
-  const promiseOrObservable = tasksRunner(
-    tasks,
-    { ...runnerOptions, lifeCycle: new CompositeLifeCycle(lifeCycles) },
-    {
-      initiatingProject:
-        nxArgs.outputStyle === 'compact' ? null : initiatingProject,
-      target: nxArgs.target,
+    const defaultDependencyConfigs = mergeTargetDependencies(
+      nxJson.targetDefaults,
+      extraTargetDependencies
+    );
+    const projectNames = projectsToRun.map((t) => t.name);
+    const taskGraph = createTaskGraph(
       projectGraph,
-      nxJson,
-      nxArgs,
-      taskGraph,
-    }
-  );
+      defaultDependencyConfigs,
+      projectNames,
+      [nxArgs.target],
+      nxArgs.configuration,
+      overrides
+    );
 
-  let anyFailures;
-  try {
+    const cycle = findCycle(taskGraph);
+    if (cycle) {
+      if (nxArgs.nxIgnoreCycles) {
+        output.warn({
+          title: `The task graph has a circular dependency`,
+          bodyLines: [`${cycle.join(' --> ')}`],
+        });
+        makeAcyclic(taskGraph);
+      } else {
+        output.error({
+          title: `Could not execute command because the task graph has a circular dependency`,
+          bodyLines: [`${cycle.join(' --> ')}`],
+        });
+        process.exit(1);
+      }
+    }
+
+    const tasks = Object.values(taskGraph.tasks);
+    if (nxArgs.outputStyle == 'stream') {
+      process.env.NX_STREAM_OUTPUT = 'true';
+      process.env.NX_PREFIX_OUTPUT = 'true';
+    }
+    if (nxArgs.outputStyle == 'stream-without-prefixes') {
+      process.env.NX_STREAM_OUTPUT = 'true';
+    }
+    const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
+      initiatingProject,
+      projectNames,
+      tasks,
+      nxArgs,
+      overrides,
+      runnerOptions
+    );
+    const lifeCycles = [lifeCycle] as LifeCycle[];
+
+    if (process.env.NX_PERF_LOGGING) {
+      lifeCycles.push(new TaskTimingsLifeCycle());
+    }
+
+    if (process.env.NX_PROFILE) {
+      lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
+    }
+
+    const promiseOrObservable = tasksRunner(
+      tasks,
+      { ...runnerOptions, lifeCycle: new CompositeLifeCycle(lifeCycles) },
+      {
+        initiatingProject:
+          nxArgs.outputStyle === 'compact' ? null : initiatingProject,
+        target: nxArgs.target,
+        projectGraph,
+        nxJson,
+        nxArgs,
+        taskGraph,
+      }
+    );
+    let anyFailures;
     if ((promiseOrObservable as any).subscribe) {
       anyFailures = await anyFailuresInObservable(promiseOrObservable);
     } else {
@@ -172,18 +172,11 @@ export async function runCommand(
       anyFailures = await anyFailuresInPromise(promiseOrObservable as any);
     }
     await renderIsDone;
-  } catch (e) {
-    output.error({
-      title: 'Unhandled error in task executor',
-    });
-    console.error(e);
-    process.exit(1);
-  }
-
+    return anyFailures ? 1 : 0;
+  });
   // fix for https://github.com/nrwl/nx/issues/1666
   if (process.stdin['unref']) (process.stdin as any).unref();
-
-  process.exit(anyFailures ? 1 : 0);
+  process.exit(status);
 }
 
 function mergeTargetDependencies(
@@ -261,10 +254,7 @@ export function getRunner(
   let runner = nxArgs.runner;
   runner = runner || 'default';
   if (!nxJson.tasksRunnerOptions) {
-    output.error({
-      title: `Could not find any runner configurations in nx.json`,
-    });
-    process.exit(1);
+    throw new Error(`Could not find any runner configurations in nx.json`);
   }
   if (nxJson.tasksRunnerOptions[runner]) {
     let modulePath: string = nxJson.tasksRunnerOptions[runner].runner;
@@ -292,9 +282,6 @@ export function getRunner(
       },
     };
   } else {
-    output.error({
-      title: `Could not find runner configuration for ${runner}`,
-    });
-    process.exit(1);
+    throw new Error(`Could not find runner configuration for ${runner}`);
   }
 }

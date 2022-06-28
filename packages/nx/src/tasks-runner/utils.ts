@@ -97,8 +97,11 @@ export function getOutputsForTargetAndConfiguration(
     return targets.outputs
       .map((output: string) => {
         const interpolated = interpolate(output, {
+          workspaceRoot: '', // this is to make sure interpolation works
+          projectRoot: node.data.root,
+          projectName: node.data.name,
+          project: { ...node.data, name: node.data.name }, // this is legacy
           options,
-          project: { ...node.data, name: node.name },
         });
         return isRelativePath(interpolated)
           ? joinPathFragments(node.data.root, interpolated)

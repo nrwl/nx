@@ -188,7 +188,7 @@ describe('Extra Nx Misc Tests', () => {
       expect(resultArgs).toContain('camel: d');
     }, 120000);
 
-    it('should fail when a process exits non-zero', () => {
+    it('ttt should fail when a process exits non-zero', () => {
       updateProjectConfig(mylib, (config) => {
         config.targets.error = {
           executor: '@nrwl/workspace:run-commands',
@@ -203,7 +203,7 @@ describe('Extra Nx Misc Tests', () => {
         runCLI(`run ${mylib}:error`);
         fail('Should error if process errors');
       } catch (e) {
-        expect(e.stderr.toString()).toContain(
+        expect(e.stdout.toString()).toContain(
           'Something went wrong in run-commands - Command failed: exit 1'
         );
       }
