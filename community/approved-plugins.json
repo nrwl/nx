@@ -10,6 +10,11 @@
     "url": "https://github.com/codebrewlab/nx-plugins/tree/main/packages/nx-aws-cdk"
   },
   {
+    "name": "@ago-dev/nx-aws-cdk-v2",
+    "description": "An nx plugin for the aws-cdk v2.",
+    "url": "https://github.com/adrian-goe/nx-aws-cdk-v2"
+  },
+  {
     "name": "@rxap/plugin-localazy",
     "description": "An Nx plugin for localazy.com upload and download tasks.",
     "url": "https://gitlab.com/rxap/plugins/-/tree/master/libs/localazy"
