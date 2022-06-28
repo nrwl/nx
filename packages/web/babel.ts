@@ -4,7 +4,7 @@ import { dirname } from 'path';
  * Babel preset to provide TypeScript support and module/nomodule for Nx.
  */
 
-interface NxReactBabelPresetOptions {
+export interface NxWebBabelPresetOptions {
   useBuiltIns?: boolean | string;
   decorators?: {
     decoratorsBeforeExport?: boolean;
@@ -15,7 +15,7 @@ interface NxReactBabelPresetOptions {
   };
 }
 
-module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
+module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
   api.assertVersion(7);
 
   const isModern = api.caller((caller) => caller?.isModern);
