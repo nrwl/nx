@@ -1,5 +1,4 @@
 import { readFileSync } from 'fs';
-import * as dotenv from 'dotenv';
 import { ChildProcess } from 'child_process';
 import { workspaceRoot } from '../utils/workspace-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
@@ -13,23 +12,33 @@ import { BatchResults } from './batch/batch-messages';
 import type * as ExecutorWorker from '../../bin/run-executor-worker';
 import { addCommandPrefixIfNeeded } from '../utils/add-command-prefix';
 
+// Worker threads slower for me??? 38s fork, 45s worker thread
+const useWorkerThreads =
+  process.env.NX_JEST_WORKER_TASK_RUNNER_USE_THREADS === 'true';
+
 export class JestWorkerTaskRunner {
   workspaceRoot = workspaceRoot;
   cliPath = require.resolve(`../../bin/run-executor-worker.js`);
 
   private processes = new Set<ChildProcess>();
 
-  private worker = new Worker(this.cliPath, {
-    numWorkers: this.options.parallel,
-    exposedMethods: ['executeTask'],
-    forkOptions: {
-      env: {
-        ...process.env,
-        ...this.getNxEnvVariablesForForkedProcess(),
-      },
-      // execArgv: ['--inspect-brk'],
-    },
-  }) as Worker & typeof ExecutorWorker;
+  private worker = (useWorkerThreads
+    ? new Worker(this.cliPath, {
+        numWorkers: this.options.parallel,
+        enableWorkerThreads: true,
+        exposedMethods: ['executeTask'],
+      })
+    : new Worker(this.cliPath, {
+        numWorkers: this.options.parallel,
+        exposedMethods: ['executeTask'],
+        forkOptions: {
+          env: {
+            ...process.env,
+            ...this.getNxEnvVariablesForForkedProcess(),
+          },
+          // execArgv: ['--inspect-brk'],
+        },
+      })) as Worker & typeof ExecutorWorker;
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {
     this.setupOnProcessExitListener();
@@ -62,29 +71,38 @@ export class JestWorkerTaskRunner {
       }
 
       const result = await this.worker.executeTask(task, {
+        workspaceRoot: this.workspaceRoot,
         outputPath: temporaryOutputPath,
         streamOutput,
         captureStderr: this.options.captureStderr,
-        onStdout: (chunk) => {
-          if (streamOutput) {
-            process.stdout.write(
-              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
-                .content
-            );
-          }
-        },
-        onStderr: (chunk) => {
-          if (streamOutput) {
-            process.stderr.write(
-              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
-                .content
-            );
-          }
-        },
+
+        // Worker threads have trouble serializing these functions but forks don't?
+        onStdout: useWorkerThreads
+          ? undefined
+          : (chunk) => {
+              if (streamOutput) {
+                process.stdout.write(
+                  addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
+                    .content
+                );
+              }
+            },
+        onStderr: useWorkerThreads
+          ? undefined
+          : (chunk) => {
+              if (streamOutput) {
+                process.stderr.write(
+                  addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
+                    .content
+                );
+              }
+            },
       });
+
       code = result.statusCode;
       error = result.error;
     } catch (err) {
+      console.dir({ err });
       code = 1;
       error = err.toString();
     }
@@ -121,19 +139,10 @@ export class JestWorkerTaskRunner {
   private getNxEnvVariablesForForkedProcess() {
     const env: NodeJS.ProcessEnv = {
       FORCE_COLOR: 'true',
-      NX_WORKSPACE_ROOT: this.workspaceRoot,
       NX_SKIP_NX_CACHE: this.options.skipNxCache ? 'true' : undefined,
     };
 
     return env;
-  }
-
-  private getDotenvVariablesForForkedProcess() {
-    return {
-      ...parseEnv('.env'),
-      ...parseEnv('.local.env'),
-      ...parseEnv('.env.local'),
-    };
   }
 
   // endregion Environment Variables
@@ -161,11 +170,4 @@ export class JestWorkerTaskRunner {
       // will store results to the cache and will terminate this process
     });
   }
-}
-
-function parseEnv(path: string) {
-  try {
-    const envContents = readFileSync(path);
-    return dotenv.parse(envContents);
-  } catch (e) {}
 }

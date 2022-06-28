@@ -5,14 +5,10 @@ import { addCommandPrefixIfNeeded } from '../src/utils/add-command-prefix';
 
 setUpOutputWatching();
 
-if (!process.env.NX_WORKSPACE_ROOT) {
-  console.error('Invalid Nx command invocation');
-  process.exit(1);
-}
-
 process.env.NX_CLI_SET = 'true';
 
 interface ExecuteTaskOptions {
+  workspaceRoot: string;
   outputPath?: string;
   streamOutput?: boolean;
   captureStderr?: boolean;
@@ -34,7 +30,7 @@ let state:
 
 export async function executeTask(
   task: Task,
-  options: ExecuteTaskOptions = {}
+  options: ExecuteTaskOptions
 ): Promise<{ statusCode: number; error?: string }> {
   state = {
     currentTask: task,
@@ -48,7 +44,7 @@ export async function executeTask(
   try {
     const statusCode = await run(
       process.cwd(),
-      process.env.NX_WORKSPACE_ROOT,
+      options.workspaceRoot,
       task.target,
       task.overrides,
       task.overrides['verbose'] === true,
