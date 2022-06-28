@@ -118,13 +118,13 @@ export interface UsersPartialState {
   readonly [USERS_FEATURE_KEY]: UsersState;
 }
 
-export const initialState: UsersState = {
+export const initialUsersState: UsersState = {
   list: [],
   loaded: false
 };
 
-export function reducer(
-  state: UsersState = initialState, 
+export function usersReducer(
+  state: UsersState = initialUsersState,
   action: UsersAction): UsersState
 {
   switch (action.type) {
@@ -339,8 +339,8 @@ import { SuperUsersFacade } from './super-users.facade';
 import {
   SuperUsersState,
   SuperUsersEntity,
-  initialState,
-  reducer
+  initialSuperUsersState,
+  superUsersReducer
 } from './super-users.reducer';
 import { superUsersQuery } from './super-users.selectors';
 
@@ -360,7 +360,7 @@ describe('SuperUsersFacade', () => {
     beforeEach(() => {
       @NgModule({
         imports: [
-          StoreModule.forFeature('superUsers', reducer, { initialState }),
+          StoreModule.forFeature('superUsers', superUsersReducer, { initialState: initialSuperUsersState }),
           EffectsModule.forFeature([SuperUsersEffects])
         ],
         providers: [SuperUsersFacade]
@@ -429,7 +429,7 @@ describe('SuperUsersFacade', () => {
 
 exports[`NgRx generator classes syntax unit tests should generate specs for the ngrx reducer 1`] = `
 "import { SuperUsersLoaded } from './super-users.actions';
-import { SuperUsersState, SuperUsersEntity, initialState, reducer } from './super-users.reducer';
+import { SuperUsersState, SuperUsersEntity, initialSuperUsersState, superUsersReducer } from './super-users.reducer';
 
 describe('SuperUsers Reducer', () => {
   const getSuperUsersId = (it: SuperUsersEntity) => it.id;
@@ -442,7 +442,7 @@ describe('SuperUsers Reducer', () => {
     it('should return the list of known SuperUsers', () => {
       const superUsers = [createSuperUsers('PRODUCT-AAA'), createSuperUsers('PRODUCT-zzz')];
       const action = new SuperUsersLoaded(superUsers);
-      const result: SuperUsersState = reducer(initialState, action);
+      const result: SuperUsersState = superUsersReducer(initialSuperUsersState, action);
       const selId: string = getSuperUsersId(result.list[1]);
 
       expect(result.loaded).toBe(true);
@@ -454,9 +454,9 @@ describe('SuperUsers Reducer', () => {
   describe('unknown action', () => {
     it('should return the previous state', () => {
       const action = {} as any;
-      const result = reducer(initialState, action);
+      const result = superUsersReducer(initialSuperUsersState, action);
 
-      expect(result).toBe(initialState);
+      expect(result).toBe(initialSuperUsersState);
     });
   });
 });

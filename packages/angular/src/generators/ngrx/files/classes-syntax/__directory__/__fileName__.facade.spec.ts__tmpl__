@@ -11,8 +11,8 @@ import { <%= className %>Facade } from './<%= fileName %>.facade';
 import {
   <%= className %>State,
   <%= className %>Entity,
-  initialState,
-  reducer
+  initial<%= className %>State,
+  <%= propertyName %>Reducer
 } from './<%= fileName %>.reducer';
 import { <%= propertyName %>Query } from './<%= fileName %>.selectors';
 
@@ -32,7 +32,7 @@ describe('<%= className %>Facade', () => {
     beforeEach(() => {
       @NgModule({
         imports: [
-          StoreModule.forFeature('<%= propertyName %>', reducer, { initialState }),
+          StoreModule.forFeature('<%= propertyName %>', <%= propertyName %>Reducer, { initialState: initial<%= className %>State }),
           EffectsModule.forFeature([<%= className %>Effects])
         ],
         providers: [<%= className %>Facade]

@@ -24,13 +24,13 @@ export interface <%= className %>PartialState {
   readonly [<%= constantName %>_FEATURE_KEY]: <%= className %>State;
 }
 
-export const initialState: <%= className %>State = {
+export const initial<%= className %>State: <%= className %>State = {
   list: [],
   loaded: false
 };
 
-export function reducer(
-  state: <%= className %>State = initialState, 
+export function <%= propertyName %>Reducer(
+  state: <%= className %>State = initial<%= className %>State,
   action: <%= className %>Action): <%= className %>State
 {
   switch (action.type) {

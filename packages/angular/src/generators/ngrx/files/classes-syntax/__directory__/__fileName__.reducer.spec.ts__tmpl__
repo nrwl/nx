@@ -1,5 +1,5 @@
 import { <%= className %>Loaded } from './<%= fileName %>.actions';
-import { <%= className %>State, <%= className %>Entity, initialState, reducer } from './<%= fileName %>.reducer';
+import { <%= className %>State, <%= className %>Entity, initial<%= className %>State, <%= propertyName %>Reducer } from './<%= fileName %>.reducer';
 
 describe('<%= className %> Reducer', () => {
   const get<%= className %>Id = (it: <%= className %>Entity) => it.id;
@@ -12,7 +12,7 @@ describe('<%= className %> Reducer', () => {
     it('should return the list of known <%= className %>', () => {
       const <%= propertyName %> = [create<%= className %>('PRODUCT-AAA'), create<%= className %>('PRODUCT-zzz')];
       const action = new <%= className %>Loaded(<%= propertyName %>);
-      const result: <%= className %>State = reducer(initialState, action);
+      const result: <%= className %>State = <%= propertyName %>Reducer(initial<%= className %>State, action);
       const selId: string = get<%= className %>Id(result.list[1]);
 
       expect(result.loaded).toBe(true);
@@ -24,9 +24,9 @@ describe('<%= className %> Reducer', () => {
   describe('unknown action', () => {
     it('should return the previous state', () => {
       const action = {} as any;
-      const result = reducer(initialState, action);
+      const result = <%= propertyName %>Reducer(initial<%= className %>State, action);
 
-      expect(result).toBe(initialState);
+      expect(result).toBe(initial<%= className %>State);
     });
   });
 });

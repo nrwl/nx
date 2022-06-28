@@ -1,34 +1,34 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { <%= constantName %>_FEATURE_KEY, State, <%= propertyName %>Adapter } from './<%= fileName %>.reducer';
+import { <%= constantName %>_FEATURE_KEY, <%= className %>State, <%= propertyName %>Adapter } from './<%= fileName %>.reducer';
 
 // Lookup the '<%= className %>' feature state managed by NgRx
-export const get<%= className %>State = createFeatureSelector<State>(<%= constantName %>_FEATURE_KEY);
+export const get<%= className %>State = createFeatureSelector<<%= className %>State>(<%= constantName %>_FEATURE_KEY);
 
 const { selectAll, selectEntities } = <%= propertyName %>Adapter.getSelectors();
 
 export const get<%= className %>Loaded = createSelector(
   get<%= className %>State,
-  (state: State) => state.loaded
+  (state: <%= className %>State) => state.loaded
 );
 
 export const get<%= className %>Error = createSelector(
   get<%= className %>State,
-  (state: State) => state.error
+  (state: <%= className %>State) => state.error
 );
 
 export const getAll<%= className %> = createSelector(
   get<%= className %>State,
-  (state: State) => selectAll(state)
+  (state: <%= className %>State) => selectAll(state)
 );
 
 export const get<%= className %>Entities = createSelector(
   get<%= className %>State,
-  (state: State) => selectEntities(state)
+  (state: <%= className %>State) => selectEntities(state)
 );
 
 export const getSelectedId = createSelector(
   get<%= className %>State,
-  (state: State) => state.selectedId
+  (state: <%= className %>State) => state.selectedId
 );
 
 export const getSelected = createSelector(

@@ -1,7 +1,7 @@
 import { createAction, props } from '@ngrx/store';
 import { <%= className %>Entity } from './<%= fileName %>.models';
 
-export const init = createAction(
+export const init<%= className %> = createAction(
   '[<%= className %> Page] Init'
 );
 

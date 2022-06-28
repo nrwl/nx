@@ -31,7 +31,7 @@ describe('<%= className %>Effects', () => {
 
   describe('init$', () => {
     it('should work', () => {
-      actions = hot('-a-|', { a: <%= className %>Actions.init() });
+      actions = hot('-a-|', { a: <%= className %>Actions.init<%= className %>() });
 
       const expected = hot('-a-|', { a: <%= className %>Actions.load<%= className %>Success({ <%= propertyName %>: [] }) });
 
