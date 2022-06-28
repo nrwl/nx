@@ -2,6 +2,7 @@ import { run } from '../src/command-line/run';
 import { Task } from '../src/config/task-graph';
 import { appendFileSync, openSync, writeFileSync, closeSync } from 'fs';
 import { addCommandPrefixIfNeeded } from '../src/utils/add-command-prefix';
+import { ProjectGraph } from '../src/config/project-graph';
 
 setUpOutputWatching();
 
@@ -12,6 +13,7 @@ interface ExecuteTaskOptions {
   outputPath?: string;
   streamOutput?: boolean;
   captureStderr?: boolean;
+  projectGraph?: ProjectGraph;
   onStdout?: (chunk: string) => void;
   onStderr?: (chunk: string) => void;
 }
@@ -48,7 +50,8 @@ export async function executeTask(
       task.target,
       task.overrides,
       task.overrides['verbose'] === true,
-      false
+      false,
+      options.projectGraph
     );
 
     // when the process exits successfully, and we are not asked to capture stderr

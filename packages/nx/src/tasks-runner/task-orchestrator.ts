@@ -27,7 +27,7 @@ export class TaskOrchestrator {
 
   private taskRunner: ForkedProcessTaskRunner | JestWorkerTaskRunner = process
     .env.NX_JEST_WORKER_TASK_RUNNER
-    ? new JestWorkerTaskRunner(this.options)
+    ? new JestWorkerTaskRunner(this.options, this.projectGraph)
     : new ForkedProcessTaskRunner(this.options);
 
   private readonly nxJson = this.workspace.readNxJson();

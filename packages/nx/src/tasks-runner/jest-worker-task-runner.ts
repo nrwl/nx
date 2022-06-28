@@ -11,6 +11,7 @@ import { Worker } from 'jest-worker';
 import { BatchResults } from './batch/batch-messages';
 import type * as ExecutorWorker from '../../bin/run-executor-worker';
 import { addCommandPrefixIfNeeded } from '../utils/add-command-prefix';
+import { ProjectGraph } from '../config/project-graph';
 
 // Worker threads slower for me??? 38s fork, 45s worker thread
 const useWorkerThreads =
@@ -36,11 +37,14 @@ export class JestWorkerTaskRunner {
             ...process.env,
             ...this.getNxEnvVariablesForForkedProcess(),
           },
-          // execArgv: ['--inspect-brk'],
+          execArgv: ['--inspect-brk'],
         },
       })) as Worker & typeof ExecutorWorker;
 
-  constructor(private readonly options: DefaultTasksRunnerOptions) {
+  constructor(
+    private readonly options: DefaultTasksRunnerOptions,
+    private readonly projectGraph: ProjectGraph
+  ) {
     this.setupOnProcessExitListener();
   }
 
@@ -75,6 +79,7 @@ export class JestWorkerTaskRunner {
         outputPath: temporaryOutputPath,
         streamOutput,
         captureStderr: this.options.captureStderr,
+        projectGraph: this.projectGraph,
 
         // Worker threads have trouble serializing these functions but forks don't?
         onStdout: useWorkerThreads
