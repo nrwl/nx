@@ -3,6 +3,10 @@
   "affected": {
     "defaultBase": "master"
   },
+  "implicitDependencies": {
+    "nx.json": "*",
+    "package.json": "*"
+  },
   "npmScope": "nrwl",
   "tasksRunnerOptions": {
     "default": {
@@ -11,12 +15,12 @@
         "accessToken": "YzVhYjFiNzAtYTYxZS00OWM3LTlkOGYtZjRmOGRlNDY4MTJhfHJlYWQtd3JpdGU=",
         "cacheableOperations": [
           "build",
-          "build-base",
           "test",
           "lint",
-          "lint-base",
+          "build-base",
+          "sitemap",
           "e2e",
-          "sitemap"
+          "lint-base"
         ],
         "useDaemonProcess": true,
         "cacheDirectory": "/tmp/nx-cache",
