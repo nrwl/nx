@@ -15,6 +15,7 @@ import {
 import { readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { deepEquals } from '../utils/json-diff';
 
 export interface ProjectGraphCache {
   version: string;
@@ -99,7 +100,13 @@ export function createCache(
   return newValue;
 }
 
-export function writeCache(cache: ProjectGraphCache): void {
+export function writeCacheIfNecessary(
+  cache: ProjectGraphCache,
+  existingCache: ProjectGraphCache
+): void {
+  if (deepEquals(cache, existingCache)) {
+    return;
+  }
   performance.mark('write cache:start');
   writeJsonFile(nxDepsPath, cache);
   performance.mark('write cache:end');

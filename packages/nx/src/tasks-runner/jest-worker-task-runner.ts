@@ -1,0 +1,171 @@
+import { readFileSync } from 'fs';
+import * as dotenv from 'dotenv';
+import { ChildProcess } from 'child_process';
+import { workspaceRoot } from '../utils/workspace-root';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner';
+import { output } from '../utils/output';
+import { getPrintableCommandArgsForTask } from './utils';
+import { Batch } from './tasks-schedule';
+import { stripIndents } from '../utils/strip-indents';
+import { Task } from '../config/task-graph';
+import { Worker } from 'jest-worker';
+import { BatchResults } from './batch/batch-messages';
+import type * as ExecutorWorker from '../../bin/run-executor-worker';
+import { addCommandPrefixIfNeeded } from '../utils/add-command-prefix';
+
+export class JestWorkerTaskRunner {
+  workspaceRoot = workspaceRoot;
+  cliPath = require.resolve(`../../bin/run-executor-worker.js`);
+
+  private processes = new Set<ChildProcess>();
+
+  private worker = new Worker(this.cliPath, {
+    numWorkers: this.options.parallel,
+    exposedMethods: ['executeTask'],
+    forkOptions: {
+      env: {
+        ...process.env,
+        ...this.getNxEnvVariablesForForkedProcess(),
+      },
+      // execArgv: ['--inspect-brk'],
+    },
+  }) as Worker & typeof ExecutorWorker;
+
+  constructor(private readonly options: DefaultTasksRunnerOptions) {
+    this.setupOnProcessExitListener();
+  }
+
+  // TODO: vsavkin delegate terminal output printing
+  public forkProcessForBatch({
+    executorName,
+    taskGraph,
+  }: Batch): Promise<BatchResults> {
+    throw new Error('Not implemented');
+  }
+
+  public async executeTask(
+    task: Task,
+    {
+      streamOutput,
+      temporaryOutputPath,
+    }: {
+      streamOutput: boolean;
+      temporaryOutputPath: string;
+    }
+  ): Promise<{ code: number; terminalOutput: string }> {
+    let code: number | undefined;
+    let error: string | undefined;
+    try {
+      if (streamOutput) {
+        output.logCommand(getPrintableCommandArgsForTask(task).join(' '));
+        output.addNewline();
+      }
+
+      const result = await this.worker.executeTask(task, {
+        outputPath: temporaryOutputPath,
+        streamOutput,
+        captureStderr: this.options.captureStderr,
+        onStdout: (chunk) => {
+          if (streamOutput) {
+            process.stdout.write(
+              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
+                .content
+            );
+          }
+        },
+        onStderr: (chunk) => {
+          if (streamOutput) {
+            process.stderr.write(
+              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
+                .content
+            );
+          }
+        },
+      });
+      code = result.statusCode;
+      error = result.error;
+    } catch (err) {
+      code = 1;
+      error = err.toString();
+    }
+
+    // TODO if (code === null) code = this.signalToCode(signal);
+    // we didn't print any output as we were running the command
+    // print all the collected output
+    let terminalOutput = '';
+    try {
+      terminalOutput = this.readTerminalOutput(temporaryOutputPath);
+      if (!streamOutput) {
+        this.options.lifeCycle.printTaskTerminalOutput(
+          task,
+          code === 0 ? 'success' : 'failure',
+          terminalOutput
+        );
+      }
+    } catch (e) {
+      console.log(stripIndents`
+              Unable to print terminal output for Task "${task.id}".
+              Task failed with Exit Code ${code}.
+
+              Received error message:
+              ${e.message}
+            `);
+    }
+    return { code, terminalOutput: terminalOutput || error || '' };
+  }
+
+  private readTerminalOutput(outputPath: string) {
+    return readFileSync(outputPath).toString();
+  }
+
+  private getNxEnvVariablesForForkedProcess() {
+    const env: NodeJS.ProcessEnv = {
+      FORCE_COLOR: 'true',
+      NX_WORKSPACE_ROOT: this.workspaceRoot,
+      NX_SKIP_NX_CACHE: this.options.skipNxCache ? 'true' : undefined,
+    };
+
+    return env;
+  }
+
+  private getDotenvVariablesForForkedProcess() {
+    return {
+      ...parseEnv('.env'),
+      ...parseEnv('.local.env'),
+      ...parseEnv('.env.local'),
+    };
+  }
+
+  // endregion Environment Variables
+
+  private setupOnProcessExitListener() {
+    process.on('SIGINT', () => {
+      this.processes.forEach((p) => {
+        p.kill('SIGTERM');
+      });
+      // we exit here because we don't need to write anything to cache.
+      process.exit();
+    });
+    process.on('SIGTERM', () => {
+      this.processes.forEach((p) => {
+        p.kill('SIGTERM');
+      });
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
+    process.on('SIGHUP', () => {
+      this.processes.forEach((p) => {
+        p.kill('SIGTERM');
+      });
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
+  }
+}
+
+function parseEnv(path: string) {
+  try {
+    const envContents = readFileSync(path);
+    return dotenv.parse(envContents);
+  } catch (e) {}
+}

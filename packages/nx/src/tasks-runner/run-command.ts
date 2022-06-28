@@ -247,7 +247,7 @@ function shouldUseDynamicLifeCycle(
   if (isCI()) return false;
   if (outputStyle === 'static' || outputStyle === 'stream') return false;
 
-  const noForwarding = !tasks.find((t) => shouldStreamOutput(t, null, options));
+  const noForwarding = !tasks.find((t) => shouldStreamOutput(t, null));
   return noForwarding;
 }
 

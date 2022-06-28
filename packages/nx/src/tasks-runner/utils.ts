@@ -269,11 +269,7 @@ export function getSerializedArgsForTask(task: Task, isVerbose: boolean) {
 
 export function shouldStreamOutput(
   task: Task,
-  initiatingProject: string | null,
-  options: {
-    cacheableOperations?: string[] | null;
-    cacheableTargets?: string[] | null;
-  }
+  initiatingProject: string | null
 ): boolean {
   if (process.env.NX_STREAM_OUTPUT === 'true') return true;
   if (longRunningTask(task)) return true;

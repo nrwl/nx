@@ -1,7 +1,6 @@
 import { Workspaces } from '../config/workspaces';
 import { performance } from 'perf_hooks';
 import { Hasher } from '../hasher/hasher';
-import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { workspaceRoot } from '../utils/workspace-root';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
@@ -13,16 +12,24 @@ import {
   isCacheableTask,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
+  getCliPath,
 } from './utils';
 import { Batch, TasksSchedule } from './tasks-schedule';
 import { TaskMetadata } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
+import { JestWorkerTaskRunner } from './jest-worker-task-runner';
+import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);
   private workspace = new Workspaces(workspaceRoot);
-  private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
+
+  private taskRunner: ForkedProcessTaskRunner | JestWorkerTaskRunner = process
+    .env.NX_JEST_WORKER_TASK_RUNNER
+    ? new JestWorkerTaskRunner(this.options)
+    : new ForkedProcessTaskRunner(this.options);
+
   private readonly nxJson = this.workspace.readNxJson();
 
   private tasksSchedule = new TasksSchedule(
@@ -231,9 +238,7 @@ export class TaskOrchestrator {
 
   private async runBatch(batch: Batch) {
     try {
-      const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
-        batch
-      );
+      const results = await this.taskRunner.forkProcessForBatch(batch);
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
         task: this.taskGraph.tasks[taskId],
@@ -282,39 +287,35 @@ export class TaskOrchestrator {
     await this.postRunSteps(results, { groupId });
   }
 
-  private async runTaskInForkedProcess(task: Task) {
+  private async runTaskInForkedProcess(
+    task: Task
+  ): Promise<{ code: number; terminalOutput?: string }> {
     try {
       // obtain metadata
       const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-      const streamOutput = shouldStreamOutput(
-        task,
-        this.initiatingProject,
-        this.options
-      );
-
+      const streamOutput = shouldStreamOutput(task, this.initiatingProject);
       const pipeOutput = this.pipeOutputCapture(task);
 
       // execution
-      const { code, terminalOutput } = pipeOutput
-        ? await this.forkedProcessTaskRunner.forkProcessPipeOutputCapture(
-            task,
-            {
-              temporaryOutputPath,
-              streamOutput,
-            }
-          )
-        : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
-            task,
-            {
-              temporaryOutputPath,
-              streamOutput,
-            }
-          );
 
-      return {
-        code,
-        terminalOutput,
-      };
+      if (this.taskRunner instanceof JestWorkerTaskRunner) {
+        return await this.taskRunner.executeTask(task, {
+          temporaryOutputPath,
+          streamOutput,
+        });
+      }
+
+      if (pipeOutput) {
+        return await this.taskRunner.forkProcessPipeOutputCapture(task, {
+          temporaryOutputPath,
+          streamOutput,
+        });
+      }
+
+      return await this.taskRunner.forkProcessDirectOutputCapture(task, {
+        temporaryOutputPath,
+        streamOutput,
+      });
     } catch (e) {
       return {
         code: 1,

@@ -10,7 +10,7 @@ import {
   ProjectGraphCache,
   readCache,
   shouldRecomputeWholeGraph,
-  writeCache,
+  writeCacheIfNecessary,
 } from './nx-deps-cache';
 import { buildImplicitProjectDependencies } from './build-dependencies';
 import {
@@ -119,7 +119,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     rootTsConfig
   );
   if (shouldWriteCache) {
-    writeCache(projectGraphCache);
+    writeCacheIfNecessary(projectGraphCache, cache);
   }
   projectGraph.allWorkspaceFiles = allWorkspaceFiles;
   return {
