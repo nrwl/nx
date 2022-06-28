@@ -46,6 +46,11 @@
       "type": "boolean",
       "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
       "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false,

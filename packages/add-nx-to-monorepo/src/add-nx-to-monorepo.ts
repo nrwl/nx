@@ -62,7 +62,7 @@ async function askAboutNxCloud(parsedArgs: any) {
       .prompt([
         {
           name: 'NxCloud',
-          message: `Use Nx Cloud? (It's free and doesn't require registration.)`,
+          message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
           type: 'select',
           choices: [
             {

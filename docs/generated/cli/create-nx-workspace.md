@@ -77,7 +77,7 @@ Workspace name (e.g. org name)
 
 Type: boolean
 
-Use Nx Cloud
+Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)
 
 ### packageManager
 

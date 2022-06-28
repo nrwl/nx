@@ -411,6 +411,11 @@
           "cypressProject": {
             "type": "string",
             "description": "The Cypress project to generate the stories under. By default, inferred from `projectName`."
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -458,6 +463,11 @@
             "type": "string",
             "description": "Component file name without the `.ts` extension.",
             "examples": ["awesome.component"]
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -1865,6 +1875,11 @@
           "cypressProject": {
             "type": "string",
             "description": "The Cypress project to generate the stories under. This is inferred from `name` by default."
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -1924,6 +1939,11 @@
           "tsConfiguration": {
             "type": "boolean",
             "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
+            "default": false
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
             "default": false
           }
         },
@@ -2049,7 +2069,13 @@
         "description": "Change the Storybook target executors.",
         "type": "object",
         "cli": "nx",
-        "properties": {},
+        "properties": {
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          }
+        },
         "additionalProperties": false,
         "required": [],
         "presets": []

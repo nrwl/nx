@@ -4,7 +4,7 @@ version: 2.1
 #        ORBS
 # -------------------------
 orbs:
-  nx: nrwl/nx@1.4.0
+  nx: nrwl/nx@1.5.1
   node: circleci/node@5.0.2
 
 # -------------------------
