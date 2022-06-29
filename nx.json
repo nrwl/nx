@@ -29,38 +29,20 @@
     "appsDir": ""
   },
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*"
-    ],
-    "prod": [
-      "!{projectRoot}/**/*.spec.ts{,.snap}"
-    ]
+    "default": ["{projectRoot}/**/*"],
+    "prod": ["!{projectRoot}/**/*.spec.ts{,.snap}"]
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": [
-        "build-base"
-      ],
-      "inputs": [
-        "prod",
-        "^prod"
-      ]
+      "dependsOn": ["build-base"],
+      "inputs": ["prod", "^prod"]
     },
     "build-base": {
-      "dependsOn": [
-        "^build-base"
-      ],
-      "inputs": [
-        "prod",
-        "^prod"
-      ]
+      "dependsOn": ["^build-base"],
+      "inputs": ["prod", "^prod"]
     },
     "test": {
-      "inputs": [
-        "default",
-        "^prod",
-        "{workspaceRoot}/jest.config.ts"
-      ]
+      "inputs": ["default", "^prod", "{workspaceRoot}/jest.config.ts"]
     },
     "lint": {
       "inputs": [

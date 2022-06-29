@@ -185,18 +185,13 @@ export function getCustomHasher(
   nxJson: NxJsonConfiguration,
   projectGraph: ProjectGraph
 ) {
-  try {
-    const factory = getExecutorForTask(
-      task,
-      workspace,
-      projectGraph,
-      nxJson
-    ).hasherFactory;
-    return factory ? factory() : null;
-  } catch (e) {
-    console.error(e);
-    throw new Error(`Unable to load hasher for task "${task.id}"`);
-  }
+  const factory = getExecutorForTask(
+    task,
+    workspace,
+    projectGraph,
+    nxJson
+  ).hasherFactory;
+  return factory ? factory() : null;
 }
 
 export function removeTasksFromTaskGraph(
