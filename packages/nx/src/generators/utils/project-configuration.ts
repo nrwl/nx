@@ -12,7 +12,7 @@ import {
   reformattedWorkspaceJsonOrNull,
   toNewFormat,
 } from '../../config/workspaces';
-import { joinPathFragments } from '../../utils/path';
+import { joinPathFragments, normalizePath } from '../../utils/path';
 
 import type { Tree } from '../tree';
 
@@ -319,9 +319,11 @@ export function getRelativeProjectJsonSchemaPath(
   tree: Tree,
   project: ProjectConfiguration
 ): string {
-  return relative(
-    join(tree.root, project.root),
-    join(tree.root, 'node_modules/nx/schemas/project-schema.json')
+  return normalizePath(
+    relative(
+      join(tree.root, project.root),
+      join(tree.root, 'node_modules/nx/schemas/project-schema.json')
+    )
   );
 }
 
