@@ -64,7 +64,7 @@ export function AlgoliaSearch() {
       <Head>
         <link
           rel="preconnect"
-          href="https://BH4D9OD16A-dsn.algolia.net"
+          href="https://PCTGM1JTQL-dsn.algolia.net"
           crossOrigin="true"
         />
       </Head>
