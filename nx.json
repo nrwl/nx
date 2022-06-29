@@ -3,10 +3,6 @@
   "affected": {
     "defaultBase": "master"
   },
-  "implicitDependencies": {
-    "nx.json": "*",
-    "package.json": "*"
-  },
   "npmScope": "nrwl",
   "tasksRunnerOptions": {
     "default": {
@@ -33,37 +29,31 @@
     "appsDir": ""
   },
   "namedInputs": {
-    "prod": ["!**/*.spec.ts{,.snap}"],
-    "globals": [
-      "{workspaceRoot}/package.json",
-      "{workspaceRoot}/.circleci/config.yml"
-    ]
+    "prod": ["!{projectRoot}/**/*.spec.ts{,.snap}"]
   },
   "targetDefaults": {
     "build": {
       "dependsOn": ["build-base"],
-      "inputs": ["prod", "^prod", "globals"]
+      "inputs": ["prod", "^prod"]
     },
     "build-base": {
       "dependsOn": ["^build-base"],
-      "inputs": ["prod", "^prod", "globals"]
+      "inputs": ["prod", "^prod"]
     },
     "test": {
-      "inputs": ["default", "^prod", "globals"]
+      "inputs": ["default", "^prod"]
     },
     "lint": {
       "inputs": [
         "default",
         "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/tools/eslint-rules/**/*",
-        "globals"
+        "{workspaceRoot}/tools/eslint-rules/**/*"
       ]
     },
     "e2e": {
       "inputs": [
         "default",
         "^prod",
-        "globals",
         {
           "env": "SELECTED_CLI"
         },
