@@ -4,13 +4,7 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (
-  touchedFiles,
-  workspaceJson,
-  nxJson,
-  packageJson,
-  projectGraph
-): string[] => {
+> = (touchedFiles, _, nxJson, packageJson, projectGraph): string[] => {
   const packageJsonChange = touchedFiles.find((f) => f.file === 'package.json');
   if (!packageJsonChange) return [];
 
@@ -27,7 +21,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
     ) {
       // A package was deleted so mark all workspace projects as touched.
       if (c.type === DiffType.Deleted) {
-        touched = Object.keys(workspaceJson.projects);
+        touched = Object.keys(projectGraph.nodes);
         break;
       } else {
         const npmPackage = npmPackages.find(
