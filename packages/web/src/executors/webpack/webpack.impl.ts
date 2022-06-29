@@ -238,6 +238,7 @@ export async function* run(
         if (options.generateIndexHtml) {
           await writeIndexHtml({
             crossOrigin: options.crossOrigin,
+            sri: options.subresourceIntegrity,
             outputPath: join(options.outputPath, basename(options.index)),
             indexPath: join(context.root, options.index),
             files: emittedFiles1.filter((x) => x.extension === '.css'),
