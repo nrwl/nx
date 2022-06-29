@@ -29,6 +29,7 @@
     "appsDir": ""
   },
   "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
     "prod": ["!{projectRoot}/**/*.spec.ts{,.snap}"]
   },
   "targetDefaults": {

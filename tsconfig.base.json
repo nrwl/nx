@@ -9,35 +9,84 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "types": ["node", "jest"],
-    "lib": ["es2019"],
+    "types": [
+      "node",
+      "jest"
+    ],
+    "lib": [
+      "es2019"
+    ],
     "declaration": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
     "rootDir": ".",
     "paths": {
-      "@nrwl/angular": ["packages/angular"],
-      "@nrwl/angular/*": ["packages/angular/*"],
-      "@nrwl/cli": ["packages/cli"],
-      "@nrwl/cli/*": ["packages/cli/*"],
-      "@nrwl/cypress": ["packages/cypress"],
-      "@nrwl/cypress/*": ["packages/cypress/*"],
-      "@nrwl/detox": ["packages/detox"],
-      "@nrwl/devkit": ["packages/devkit"],
-      "@nrwl/devkit/ngcli-adapter": ["packages/devkit/ngcli-adapter"],
-      "@nrwl/devkit/testing": ["packages/devkit/testing"],
-      "@nrwl/e2e/utils": ["e2e/utils"],
-      "@nrwl/eslint-plugin-nx": ["packages/eslint-plugin-nx/src"],
-      "@nrwl/express": ["packages/express"],
-      "@nrwl/jest": ["packages/jest"],
-      "@nrwl/jest/*": ["packages/jest/*"],
-      "@nrwl/js": ["packages/js/src"],
-      "@nrwl/js/*": ["packages/js/*"],
-      "@nrwl/linter": ["packages/linter"],
-      "@nrwl/nest": ["packages/nest"],
-      "@nrwl/next": ["packages/next"],
-      "@nrwl/node": ["packages/node"],
-      "@nrwl/node/*": ["packages/node/*"],
+      "@nrwl/angular": [
+        "packages/angular"
+      ],
+      "@nrwl/angular/*": [
+        "packages/angular/*"
+      ],
+      "@nrwl/cli": [
+        "packages/cli"
+      ],
+      "@nrwl/cli/*": [
+        "packages/cli/*"
+      ],
+      "@nrwl/cypress": [
+        "packages/cypress"
+      ],
+      "@nrwl/cypress/*": [
+        "packages/cypress/*"
+      ],
+      "@nrwl/detox": [
+        "packages/detox"
+      ],
+      "@nrwl/devkit": [
+        "packages/devkit"
+      ],
+      "@nrwl/devkit/ngcli-adapter": [
+        "packages/devkit/ngcli-adapter"
+      ],
+      "@nrwl/devkit/testing": [
+        "packages/devkit/testing"
+      ],
+      "@nrwl/e2e/utils": [
+        "e2e/utils"
+      ],
+      "@nrwl/eslint-plugin-nx": [
+        "packages/eslint-plugin-nx/src"
+      ],
+      "@nrwl/express": [
+        "packages/express"
+      ],
+      "@nrwl/jest": [
+        "packages/jest"
+      ],
+      "@nrwl/jest/*": [
+        "packages/jest/*"
+      ],
+      "@nrwl/js": [
+        "packages/js/src"
+      ],
+      "@nrwl/js/*": [
+        "packages/js/*"
+      ],
+      "@nrwl/linter": [
+        "packages/linter"
+      ],
+      "@nrwl/nest": [
+        "packages/nest"
+      ],
+      "@nrwl/next": [
+        "packages/next"
+      ],
+      "@nrwl/node": [
+        "packages/node"
+      ],
+      "@nrwl/node/*": [
+        "packages/node/*"
+      ],
       "@nrwl/nx-dev-feature-package-schema-viewer": [
         "nx-dev/feature-package-schema-viewer/src/index.ts"
       ],
@@ -47,7 +96,9 @@
       "@nrwl/nx-dev/data-access-documents/node-only": [
         "nx-dev/data-access-documents/src/node.index.ts"
       ],
-      "@nrwl/nx-dev/data-access-menu": ["nx-dev/data-access-menu/src/index.ts"],
+      "@nrwl/nx-dev/data-access-menu": [
+        "nx-dev/data-access-menu/src/index.ts"
+      ],
       "@nrwl/nx-dev/data-access-packages": [
         "nx-dev/data-access-packages/src/index.ts"
       ],
@@ -63,37 +114,93 @@
       "@nrwl/nx-dev/feature-flavor-selection": [
         "nx-dev/feature-flavor-selection/src/index.ts"
       ],
-      "@nrwl/nx-dev/feature-search": ["nx-dev/feature-search/src/index.ts"],
-      "@nrwl/nx-dev/feature-storage": ["nx-dev/feature-storage/src/index.ts"],
+      "@nrwl/nx-dev/feature-search": [
+        "nx-dev/feature-search/src/index.ts"
+      ],
+      "@nrwl/nx-dev/feature-storage": [
+        "nx-dev/feature-storage/src/index.ts"
+      ],
       "@nrwl/nx-dev/feature-versions-and-flavors": [
         "nx-dev/feature-versions-and-flavors/src/index.ts"
       ],
-      "@nrwl/nx-dev/models-document": ["nx-dev/models-document/src/index.ts"],
-      "@nrwl/nx-dev/models-menu": ["nx-dev/models-menu/src/index.ts"],
-      "@nrwl/nx-dev/models-package": ["nx-dev/models-package/src/index.ts"],
-      "@nrwl/nx-dev/ui-commands": ["nx-dev/ui-commands/src/index.ts"],
-      "@nrwl/nx-dev/ui-common": ["nx-dev/ui-common/src/index.ts"],
-      "@nrwl/nx-dev/ui-community": ["nx-dev/ui-community/src/index.ts"],
-      "@nrwl/nx-dev/ui-conference": ["nx-dev/ui-conference/src/index.ts"],
-      "@nrwl/nx-dev/ui-home": ["nx-dev/ui-home/src/index.ts"],
-      "@nrwl/nx-dev/ui-member-card": ["nx-dev/ui-member-card/src/index.ts"],
-      "@nrwl/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
-      "@nrwl/nx-plugin": ["packages/nx-plugin"],
-      "@nrwl/react": ["packages/react"],
-      "@nrwl/react-native": ["packages/react-native"],
-      "@nrwl/react/*": ["packages/react/*"],
-      "@nrwl/storybook": ["packages/storybook"],
-      "@nrwl/storybook/*": ["packages/storybook/*"],
-      "@nrwl/tao": ["packages/tao"],
-      "@nrwl/tao/*": ["packages/tao/*"],
-      "@nrwl/typedoc-theme": ["/typedoc-theme/src/index.ts"],
-      "@nrwl/web": ["packages/web"],
-      "@nrwl/web/*": ["packages/web/*"],
-      "@nrwl/workspace": ["packages/workspace"],
-      "@nrwl/workspace/*": ["packages/workspace/*"],
-      "@nrwl/workspace/testing": ["packages/workspace/testing"],
-      "nx": ["packages/nx"],
-      "nx/*": ["packages/nx/*"]
+      "@nrwl/nx-dev/models-document": [
+        "nx-dev/models-document/src/index.ts"
+      ],
+      "@nrwl/nx-dev/models-menu": [
+        "nx-dev/models-menu/src/index.ts"
+      ],
+      "@nrwl/nx-dev/models-package": [
+        "nx-dev/models-package/src/index.ts"
+      ],
+      "@nrwl/nx-dev/ui-commands": [
+        "nx-dev/ui-commands/src/index.ts"
+      ],
+      "@nrwl/nx-dev/ui-common": [
+        "nx-dev/ui-common/src/index.ts"
+      ],
+      "@nrwl/nx-dev/ui-community": [
+        "nx-dev/ui-community/src/index.ts"
+      ],
+      "@nrwl/nx-dev/ui-conference": [
+        "nx-dev/ui-conference/src/index.ts"
+      ],
+      "@nrwl/nx-dev/ui-home": [
+        "nx-dev/ui-home/src/index.ts"
+      ],
+      "@nrwl/nx-dev/ui-member-card": [
+        "nx-dev/ui-member-card/src/index.ts"
+      ],
+      "@nrwl/nx-dev/ui-sponsor-card": [
+        "nx-dev/ui-sponsor-card/src/index.ts"
+      ],
+      "@nrwl/nx-plugin": [
+        "packages/nx-plugin"
+      ],
+      "@nrwl/react": [
+        "packages/react"
+      ],
+      "@nrwl/react-native": [
+        "packages/react-native"
+      ],
+      "@nrwl/react/*": [
+        "packages/react/*"
+      ],
+      "@nrwl/storybook": [
+        "packages/storybook"
+      ],
+      "@nrwl/storybook/*": [
+        "packages/storybook/*"
+      ],
+      "@nrwl/tao": [
+        "packages/tao"
+      ],
+      "@nrwl/tao/*": [
+        "packages/tao/*"
+      ],
+      "@nrwl/typedoc-theme": [
+        "/typedoc-theme/src/index.ts"
+      ],
+      "@nrwl/web": [
+        "packages/web"
+      ],
+      "@nrwl/web/*": [
+        "packages/web/*"
+      ],
+      "@nrwl/workspace": [
+        "packages/workspace"
+      ],
+      "@nrwl/workspace/*": [
+        "packages/workspace/*"
+      ],
+      "@nrwl/workspace/testing": [
+        "packages/workspace/testing"
+      ],
+      "nx": [
+        "packages/nx"
+      ],
+      "nx/*": [
+        "packages/nx/*"
+      ]
     }
   }
 }
