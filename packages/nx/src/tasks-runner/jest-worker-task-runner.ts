@@ -7,7 +7,7 @@ import { getPrintableCommandArgsForTask } from './utils';
 import { Batch } from './tasks-schedule';
 import { stripIndents } from '../utils/strip-indents';
 import { Task } from '../config/task-graph';
-import { Worker } from 'jest-worker';
+import { Worker, PromiseWithCustomMessage } from 'jest-worker';
 import { BatchResults } from './batch/batch-messages';
 import type * as ExecutorWorker from '../../bin/run-executor-worker';
 import { addCommandPrefixIfNeeded } from '../utils/add-command-prefix';
@@ -72,35 +72,33 @@ export class JestWorkerTaskRunner {
         output.addNewline();
       }
 
-      const result = await this.worker.executeTask(task, {
+      const promise = this.worker.executeTask(task, {
         workspaceRoot: this.workspaceRoot,
         outputPath: temporaryOutputPath,
         streamOutput,
         captureStderr: this.options.captureStderr,
         projectGraph: this.projectGraph,
+      }) as PromiseWithCustomMessage<{ statusCode: number; error?: string }>;
 
-        // Worker threads have trouble serializing these functions but forks don't?
-        onStdout: useWorkerThreads
-          ? undefined
-          : (chunk) => {
-              if (streamOutput) {
-                process.stdout.write(
-                  addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
-                    .content
-                );
-              }
-            },
-        onStderr: useWorkerThreads
-          ? undefined
-          : (chunk) => {
-              if (streamOutput) {
-                process.stderr.write(
-                  addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
-                    .content
-                );
-              }
-            },
+      promise.UNSTABLE_onCustomMessage(([msg, data]: any) => {
+        if (msg === 'stdout') {
+          if (streamOutput) {
+            process.stdout.write(
+              addCommandPrefixIfNeeded(task.target.project, data, 'utf-8')
+                .content
+            );
+          }
+        } else if (msg === 'stderr') {
+          if (streamOutput) {
+            process.stderr.write(
+              addCommandPrefixIfNeeded(task.target.project, data, 'utf-8')
+                .content
+            );
+          }
+        }
       });
+
+      const result = await promise;
 
       code = result.statusCode;
       error = result.error;

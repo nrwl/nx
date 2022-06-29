@@ -3,6 +3,7 @@ import { Task } from '../src/config/task-graph';
 import { appendFileSync, openSync, writeFileSync, closeSync } from 'fs';
 import { addCommandPrefixIfNeeded } from '../src/utils/add-command-prefix';
 import { ProjectGraph } from '../src/config/project-graph';
+import { messageParent } from 'jest-worker';
 
 setUpOutputWatching();
 
@@ -14,8 +15,6 @@ interface ExecuteTaskOptions {
   streamOutput?: boolean;
   captureStderr?: boolean;
   projectGraph?: ProjectGraph;
-  onStdout?: (chunk: string) => void;
-  onStderr?: (chunk: string) => void;
 }
 
 let state:
@@ -105,7 +104,7 @@ function setUpOutputWatching() {
         chunk,
         encoding
       );
-      state.currentOptions?.onStdout?.(chunk);
+      messageParent(['stdout', chunk]);
       stdoutWrite.apply(process.stdout, [
         updatedChunk.content,
         updatedChunk.encoding,
@@ -133,7 +132,7 @@ function setUpOutputWatching() {
         chunk,
         encoding
       );
-      state.currentOptions?.onStderr?.(chunk);
+      messageParent(['stderr', chunk]);
       stderrWrite.apply(process.stderr, [
         updatedChunk.content,
         updatedChunk.encoding,
