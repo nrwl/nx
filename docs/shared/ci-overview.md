@@ -51,9 +51,9 @@ Learn more about configuring your CI environment using Nx Cloud with [Distribute
 
 The following guides cover optimizing your CI/CD environments with affected commands and distributed caching:
 
-- [Setting up CI using Azure Pipelines](ci/monorepo-ci-azure)
-- [Setting up CI using CircleCI](ci/monorepo-ci-circle-ci)
-- [Setting up CI using GitHub Actions](ci/monorepo-ci-github-actions)
-- [Setting up CI using Jenkins](ci/monorepo-ci-jenkins)
-- [Setting up CI using GitLab](ci/monorepo-ci-gitlab)
-- [Setting up CI using Bitbucket](ci/monorepo-ci-bitbucket)
+- [Setting up CI using Azure Pipelines](/ci/monorepo-ci-azure)
+- [Setting up CI using CircleCI](/ci/monorepo-ci-circle-ci)
+- [Setting up CI using GitHub Actions](/ci/monorepo-ci-github-actions)
+- [Setting up CI using Jenkins](/ci/monorepo-ci-jenkins)
+- [Setting up CI using GitLab](/ci/monorepo-ci-gitlab)
+- [Setting up CI using Bitbucket](/ci/monorepo-ci-bitbucket)
