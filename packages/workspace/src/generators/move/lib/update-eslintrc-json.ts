@@ -1,4 +1,5 @@
 import {
+  joinPathFragments,
   offsetFromRoot,
   ProjectConfiguration,
   Tree,
@@ -28,7 +29,7 @@ function offsetFilePath(
     return pathToFile;
   }
   const pathFromRoot = join(project.root, pathToFile);
-  return join(offset, pathFromRoot);
+  return joinPathFragments(offset, pathFromRoot);
 }
 
 /**
