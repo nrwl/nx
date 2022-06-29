@@ -21,7 +21,7 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
         strictActionImmutability: true,
         strictStateImmutability: true
       }
-    }), EffectsModule.forRoot([UsersEffects]), !environment.production ? StoreDevtoolsModule.instrument() : [], StoreRouterConnectingModule.forRoot(), StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.reducer)],
+    }), EffectsModule.forRoot([UsersEffects]), !environment.production ? StoreDevtoolsModule.instrument() : [], StoreRouterConnectingModule.forRoot(), StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer)],
        declarations: [AppComponent],
        bootstrap: [AppComponent]
      })

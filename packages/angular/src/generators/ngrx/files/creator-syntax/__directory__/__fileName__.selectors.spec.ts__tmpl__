@@ -1,5 +1,5 @@
 import { <%= className %>Entity } from './<%= fileName %>.models';
-import { <%= propertyName %>Adapter, <%= className %>PartialState, initialState } from './<%= fileName %>.reducer';
+import { <%= propertyName %>Adapter, <%= className %>PartialState, initial<%= className %>State } from './<%= fileName %>.reducer';
 import * as <%= className %>Selectors from './<%= fileName %>.selectors';
 
 describe('<%= className %> Selectors', () => {
@@ -19,7 +19,7 @@ describe('<%= className %> Selectors', () => {
         create<%= className %>Entity('PRODUCT-BBB'),
         create<%= className %>Entity('PRODUCT-CCC')
       ], {
-        ...initialState,
+        ...initial<%= className %>State,
         selectedId : 'PRODUCT-BBB',
         error: ERROR_MSG,
         loaded: true
