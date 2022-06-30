@@ -11,7 +11,7 @@ import { ImplicitDependencyEntry } from '../../../config/nx-json';
 
 export const getImplicitlyTouchedProjectsByJsonChanges: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, workspaceJson, nxJson): string[] => {
+> = (touchedFiles, projects, nxJson): string[] => {
   const { implicitDependencies } = nxJson;
 
   if (!implicitDependencies) {
@@ -20,13 +20,18 @@ export const getImplicitlyTouchedProjectsByJsonChanges: TouchedProjectLocator<
 
   const touched = new Set<string>();
 
+  const allProjectNames = Object.keys(projects);
   for (const f of touchedFiles) {
     if (f.file.endsWith('.json') && implicitDependencies[f.file]) {
       const changes = f.getChanges();
       for (const c of changes) {
         if (isJsonChange(c)) {
           const projects =
-            getTouchedProjects(c.path, implicitDependencies[f.file]) || [];
+            getTouchedProjects(
+              c.path,
+              implicitDependencies[f.file],
+              allProjectNames
+            ) || [];
           projects.forEach((p) => touched.add(p));
         } else {
           const projects = getTouchedProjectsByJsonFile(
@@ -58,7 +63,8 @@ function getTouchedProjectsByJsonFile(
 
 function getTouchedProjects(
   path: string[],
-  implicitDependencyConfig: any
+  implicitDependencyConfig: any,
+  allProjects: string[]
 ): string[] {
   const flatConfig = flatten<any, any>(implicitDependencyConfig, {
     safe: true,
@@ -68,7 +74,9 @@ function getTouchedProjects(
   for (const key in flatConfig) {
     if (minimatch(flatPath, key)) {
       const value = flatConfig[key];
-      return Array.isArray(value) ? value : [];
+      if (value === '*') return allProjects;
+      if (Array.isArray(value)) return value;
+      return [];
     }
   }
 

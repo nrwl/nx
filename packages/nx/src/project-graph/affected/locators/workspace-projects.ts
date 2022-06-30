@@ -52,7 +52,9 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
     }
 
     // File change affects all projects, just return all projects.
-    if (Array.isArray(projects)) {
+    if (projects === '*') {
+      return Object.keys(projectGraphNodes);
+    } else if (Array.isArray(projects)) {
       projects.forEach((project) => touched.add(project));
     }
   }
