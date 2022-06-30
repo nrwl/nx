@@ -52,7 +52,10 @@ export function updateImports(
     from:
       fromPath ||
       normalizeSlashes(
-        getImportPath(npmScope, project.root.slice(libsDir.length + 1))
+        getImportPath(
+          npmScope,
+          project.root.slice(libsDir.length).replace(/^\/|\\/, '')
+        )
       ),
     to: schema.importPath,
   };

@@ -23,11 +23,11 @@ export function updateTsconfig(
   const tsConfigPath = getRootTsConfigPathInTree(tree);
   const defaultImportPath = getImportPath(
     npmScope,
-    project.root.slice(
-      project.projectType === 'application'
-        ? appsDir.length + 1
-        : libsDir.length + 1
-    )
+    project.root
+      .slice(
+        project.projectType === 'application' ? appsDir.length : libsDir.length
+      )
+      .replace(/^\/|\\/, '')
   );
   const importPath = schema.importPath || defaultImportPath;
   if (tree.exists(tsConfigPath)) {
