@@ -6,6 +6,7 @@ import {
 } from '@nrwl/devkit';
 import {
   DepConstraint,
+  dependentsHaveBannedImport,
   findConstraintsFor,
   findDependenciesWithTags,
   findProjectUsingImport,
@@ -376,12 +377,30 @@ export default createESLintRule<Options, MessageIds>({
           });
         }
         return;
+      } else {
+        // project => project
+        const matches = dependentsHaveBannedImport(
+          sourceProject,
+          targetProject,
+          projectGraph,
+          depConstraints
+        );
+        matches.forEach(([target, constraint]) => {
+          context.report({
+            node,
+            messageId: 'bannedExternalImportsViolation',
+            data: {
+              sourceTag: constraint.sourceTag,
+              package: target.data.packageName,
+            },
+          });
+        });
       }
 
       // check constraints between libs and apps
       // check for circular dependency
       const circularPath = checkCircularPath(
-        (global as any).projectGraph,
+        projectGraph,
         sourceProject,
         targetProject
       );
