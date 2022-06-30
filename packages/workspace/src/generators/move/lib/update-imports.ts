@@ -78,7 +78,7 @@ export function updateImports(
   }
 
   const projectRoot = {
-    from: project.root.slice(libsDir.length + 1),
+    from: project.root.slice(libsDir.length).replace(/^\/|\\/, ''),
     to: schema.destination,
   };
 
