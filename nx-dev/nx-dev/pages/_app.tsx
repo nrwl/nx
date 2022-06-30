@@ -90,7 +90,7 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
       {/* Hotjar Analytics */}
       <Script
         id="hotjar-script-loader"
-        strategy="worker"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
           (function(h,o,t,j,a,r){
