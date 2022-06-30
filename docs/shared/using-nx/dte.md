@@ -2,7 +2,7 @@
 
 > Before reading this guide, check out the [mental model guide](/using-nx/mental-model). It will help you understand how computation caching fits into the rest of Nx.
 
-<div class="nx-cloud-section">
+{% nx-cloud-section %}
 
 ## Overview
 
@@ -35,4 +35,4 @@ These are the savings you get by enabling Distributed Task Execution in your CI 
 
 ![DTE](/shared/using-nx/dte.png)
 
-</div>
+{% /nx-cloud-section %}

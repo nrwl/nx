@@ -1,6 +1,9 @@
 # React Nx Tutorial - Step 9: Project Graph
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/Dr7jI9RYcmY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/Dr7jI9RYcmY"
+title="Nx.dev Tutorial | React | Step 9: Dep Graph"
+width="100%" /%}
 
 An Nx workspace can contain dozens or hundreds of applications and libraries. As a codebase grows, it can be difficult to understand how they depend on each other and the implications of making a particular change.
 

@@ -14,8 +14,14 @@ Most developers will benefit from Nx Cloud without ever changing any of their wo
 
 The [top level organization page](https://nx.app/orgs/5e38af6de037b5000598b2d6/workspaces/5edaf12087863a0005781f17) displays recent runs and a helpful dashboard of information about commands run in the repository.
 
-<iframe src="https://nx.app/orgs/5e38af6de037b5000598b2d6/workspaces/5edaf12087863a0005781f17?hideHeader=true"></iframe>
+{% iframe
+src="https://nx.app/orgs/5e38af6de037b5000598b2d6/workspaces/5edaf12087863a0005781f17?hideHeader=true"
+title="Nx Cloud dashboard"
+width="100%" /%}
 
 Each branch in the repository has its own [dedicated page](https://nx.app/branch?workspaceId=5edaf12087863a0005781f17&branchName=master) where you can view agent utilization and a waterfall task execution graph for the most recent runs against that branch.
 
-<iframe src="https://nx.app/branch?workspaceId=5edaf12087863a0005781f17&branchName=master&hideHeader=true"></iframe>
+{% iframe
+src="https://nx.app/branch?workspaceId=5edaf12087863a0005781f17&branchName=master&hideHeader=true"
+title="Nx Cloud branch view"
+width="100%" /%}

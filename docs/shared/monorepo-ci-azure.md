@@ -40,7 +40,7 @@ jobs:
 
 The `main` job implements the CI workflow.
 
-<div class="nx-cloud-section">
+{% nx-cloud-section %}
 
 ## Distributed CI with Nx Cloud
 
@@ -97,4 +97,4 @@ jobs:
 
 You can also use our [ci-workflow generator](/packages/workspace/generators/ci-workflow) to generate the pipeline file.
 
-</div>
+{% /nx-cloud-section %}

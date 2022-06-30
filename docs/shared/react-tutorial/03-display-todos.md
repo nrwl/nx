@@ -1,6 +1,9 @@
 # React Nx Tutorial - Step 3: Display Todos
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/fNehP0WX__c" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/fNehP0WX__c"
+title="Nx.dev Tutorial | React | Step 3: Display Todos"
+width="100%" /%}
 
 Great! You have a failing E2E test. Now you can make it pass!
 

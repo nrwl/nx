@@ -2,14 +2,14 @@ import { ChipIcon, CogIcon } from '@heroicons/react/solid';
 import { Menu } from '@nrwl/nx-dev/models-menu';
 import { PackageMetadata } from '@nrwl/nx-dev/models-package';
 import { Sidebar } from '@nrwl/nx-dev/ui-common';
+import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import cx from 'classnames';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ReactComponentElement } from 'react';
+import React, { ReactComponentElement, ReactNode } from 'react';
 import { getPublicPackageName } from './get-public-package-name';
 import { Heading1, Heading2 } from './ui/headings';
-import { Markdown } from './ui/markdown/markdown';
 
 export function PackageSchemaList({
   pkg,
@@ -30,6 +30,7 @@ export function PackageSchemaList({
       readme: { content: string; filePath: string };
     };
     seo: { title: string; description: string; url: string; imageUrl: string };
+    markdown: ReactNode;
   } = {
     pkg: {
       name: getPublicPackageName(pkg.name),
@@ -52,6 +53,13 @@ export function PackageSchemaList({
         .replace('/', '')
         .replace(/\//gi, '-')}.jpg`,
       url: 'https://nx.dev' + router.asPath,
+    },
+    get markdown(): ReactNode {
+      return renderMarkdown({
+        content: this.pkg.readme.content,
+        filePath: this.pkg.readme.filePath,
+        data: {},
+      });
     },
   };
 
@@ -109,11 +117,7 @@ export function PackageSchemaList({
 
               <Heading1 title={vm.pkg.name} />
 
-              <Markdown
-                content={vm.pkg.readme.content}
-                documentFilePath={vm.pkg.readme.filePath}
-                classes="mb-16"
-              />
+              <div className="prose mb-16 max-w-none">{vm.markdown}</div>
 
               <Heading2 title="Package reference" />
 
@@ -147,10 +151,13 @@ export function PackageSchemaList({
                           </a>
                         </Link>
                       </p>
-                      <Markdown
-                        content={executors.description}
-                        classes="prose-sm"
-                      />
+                      <div className="prose-sm">
+                        {renderMarkdown({
+                          content: executors.description,
+                          data: {},
+                          filePath: '',
+                        })}
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -182,10 +189,13 @@ export function PackageSchemaList({
                           </a>
                         </Link>
                       </p>
-                      <Markdown
-                        content={generators.description}
-                        classes="prose-sm"
-                      />
+                      <div className="prose-sm">
+                        {renderMarkdown({
+                          content: generators.description,
+                          data: {},
+                          filePath: '',
+                        })}
+                      </div>
                     </div>
                   </li>
                 ))}

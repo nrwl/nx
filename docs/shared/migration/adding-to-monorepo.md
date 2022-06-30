@@ -12,7 +12,10 @@ npx add-nx-to-monorepo
 
 Here's a short video walking you through the steps of adding Nx to a Lerna & Yarn workspaces based monorepo:
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/hCm373Aq1uQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/hCm373Aq1uQ"
+title="Add Nx to a Lerna & Yarn workspaces monorepo"
+width="100%" /%}
 
 `npx add-nx-to-monorepo` does the following:
 
@@ -94,12 +97,21 @@ In addition, Nx makes a lot of things much easier, like building large apps incr
 
 ### Speeding Up Facebook React Monorepo with Nx
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/XLP2RAOwfLQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+{% youtube
+src="https://www.youtube.com/embed/XLP2RAOwfLQ"
+title="Speeding Up github.com/facebook/react with Nx"
+width="100%" /%}
 
 ### Speeding Up Remotion Monorepo with Nx
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/TXySu4dZLp0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/TXySu4dZLp0"
+title="Speeding Up Remotion Monorepo with Nx"
+width="100%" /%}
 
 ### Speeding Up Storybook Monorepo with Nx
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/3o8w6jbDr4A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allow="fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/3o8w6jbDr4A"
+title="Speeding Up Storybook Monorepo with Nx"
+width="100%" /%}

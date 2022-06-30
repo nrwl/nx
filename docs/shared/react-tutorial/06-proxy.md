@@ -1,6 +1,9 @@
 # React Nx Tutorial - Step 6: Proxy Configuration
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/xfvCz-yLeEw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/xfvCz-yLeEw"
+title="Nx.dev Tutorial | React | Step 6: Proxy"
+width="100%" /%}
 
 You passed `--frontendProject=todos` when creating the node application. What did that argument do?
 

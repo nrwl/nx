@@ -4,9 +4,12 @@
 
 The `@nrwl/js` package ships with corresponding generators and executors that best work when it comes to developing TypeScript applications and libraries.
 
-> Note, you can also opt-out of TypeScript and use plain JavaScript by passing the `--js` flag to the generators.
+> Note, you can also opt out of TypeScript and use plain JavaScript by passing the `--js` flag to the generators.
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/-OmQ-PaSY5M" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/-OmQ-PaSY5M"
+title="Develop great Typescript Packages with Nx"
+width="100%" /%}
 
 `@nrwl/js` is particularly useful if you want to
 

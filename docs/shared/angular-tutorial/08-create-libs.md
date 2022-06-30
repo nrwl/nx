@@ -1,6 +1,9 @@
 # Angular Nx Tutorial - Step 8: Create Libs
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/szaH7fNw0zg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/szaH7fNw0zg"
+title="Nx.dev Tutorial | Angular | Step 8: Create Libraries"
+width="100%" /%}
 
 Libraries are not just a way to share code in Nx. They are also useful for factoring out code into small units with a well-defined public API.
 
@@ -12,7 +15,7 @@ Every library has an `index.ts` file, which defines its public API. Other applic
 
 To illustrate how useful libraries can be, create a library of Angular components.
 
-Use the generate to scaffold a new library:
+Use the generator to scaffold a new library:
 
 ```sh
 npx nx g @nrwl/angular:lib ui

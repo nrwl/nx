@@ -1,6 +1,9 @@
 # Angular Nx Tutorial - Step 1: Create Application
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/i37yJKK8qGI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/i37yJKK8qGI"
+title="Nx.dev Tutorial | Angular | Step 1: Create Application"
+width="100%" /%}
 
 In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies like Cypress and Nest.
 

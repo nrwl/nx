@@ -1,6 +1,9 @@
 # Node Nx Tutorial - Step 3: Share Code
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/MqqwOoKa-Ho" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/MqqwOoKa-Ho"
+title="Nx.dev Tutorial | Node | Step 3: Share Code"
+width="100%" /%}
 
 Awesome! The application is working as expected!
 

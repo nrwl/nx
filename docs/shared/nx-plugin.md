@@ -4,7 +4,10 @@ Nx plugins are npm packages that contain generators and executors to extend a Nx
 > A list of custom plugins created by the community is found in the [Community](/community) section.
 > Plugins are written using Nx Devkit. **Read [Nx Devkit](/devkit/index) for more information.**
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/fC1-4fAZDP4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/fC1-4fAZDP4"
+title="Nx Tutorial: Building Custom Plugins for Nx"
+width="100%" /%}
 
 ## Generating a Plugin
 
@@ -14,7 +17,7 @@ To get started with building a Nx Plugin, run the following command:
 npx create-nx-plugin my-org --pluginName my-plugin
 ```
 
-This command creates a brand new workspace, and sets up a pre-configured plugin with the specified name.
+This command creates a brand-new workspace, and sets up a pre-configured plugin with the specified name.
 
 > Note, the command above will create a plugin the package name set to `@my-org/my-plugin`. You can pass `--importPath` to provide a different package name.
 
@@ -31,7 +34,7 @@ The created generator contains boilerplate that will do the following:
 - Add the plugin's project to the `nx.json` file
 - Add files to the disk using templates
 
-There will be a exported default function that will be the main entry for the generator.
+There will be an exported default function that will be the main entry for the generator.
 
 ### Generator options
 
@@ -175,10 +178,13 @@ We will then verify the plugin, offer suggestions or merge the pull request!
 
 ## Preset
 
-A Preset is a customization option which you provide when creating a new workspace. TS, Node, React are some of the internal presets that Nx provides by default.
+A Preset is a customization option which you provide when creating a new workspace. TS, Node, React are some internal presets that Nx provides by default.
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/yGUrF0-uqaU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
- 
+{% youtube
+src="https://www.youtube.com/embed/yGUrF0-uqaU"
+title="Develop a Nx Preset for your Nx Plugin"
+width="100%" /%}
+
 ### Custom Preset
 
 At its core a preset is a generator, which we can create inside of a plugin.

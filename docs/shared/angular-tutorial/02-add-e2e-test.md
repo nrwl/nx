@@ -1,6 +1,9 @@
 # Angular Nx Tutorial - Step 2: Add E2E Tests
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/owRAO75DIR4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/owRAO75DIR4"
+title="Nx.dev Tutorial | Angular | Step 2: Add E2E Test"
+width="100%" /%}
 
 By default, Nx uses [Cypress](/cypress/overview) to run E2E tests.
 

@@ -1,6 +1,9 @@
 # Angular Nx Tutorial - Step 6: Proxy
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/7d6jDAbmVnE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/7d6jDAbmVnE"
+title="Nx.dev Tutorial | Angular | Step 6: Configure Proxy"
+width="100%" /%}
 
 You passed `--frontendProject=todos` when creating the node application. What did that argument do?
 

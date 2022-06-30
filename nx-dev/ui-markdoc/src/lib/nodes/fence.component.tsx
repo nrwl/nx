@@ -3,16 +3,23 @@ import React, { useEffect, useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 
-export function CodeBlock({
-  text,
+function resolveLanguage(lang: string) {
+  switch (lang) {
+    case 'ts':
+      return 'typescript';
+    case 'js':
+      return 'javascript';
+    default:
+      return lang;
+  }
+}
+
+export function Fence({
+  children,
   language,
-  callback,
-  ...rest
 }: {
-  text: string;
+  children: string;
   language: string;
-  [key: string]: any;
-  callback: (text: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
@@ -29,15 +36,14 @@ export function CodeBlock({
   return (
     <div className="code-block group relative">
       <CopyToClipboard
-        text={text}
+        text={children}
         onCopy={() => {
           setCopied(true);
-          callback(text);
         }}
       >
         <button
           type="button"
-          className="absolute top-2 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
+          className="not-prose absolute top-2 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -59,10 +65,8 @@ export function CodeBlock({
       <SyntaxHighlighter
         showLineNumbers={!['bash', 'text', 'treeview'].includes(language)}
         useInlineStyles={false}
-        language={language}
-        children={text}
-        style=""
-        {...rest}
+        language={resolveLanguage(language)}
+        children={children}
       />
     </div>
   );
