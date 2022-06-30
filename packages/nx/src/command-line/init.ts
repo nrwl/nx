@@ -1,14 +1,14 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
+import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
-import { readJsonFile, writeJsonFile, fileExists } from '../utils/fileutils';
 
 export function initHandler() {
   const nxIsInstalled = !!execSync(getPackageManagerCommand().list)
     .toString()
     .split('\n')
-    .find((line) => line.indexOf(' nx@') > -1);
+    .find((line) => line.search(/\s?nx(\s|@)\d+.\d+.\d+(-\w+.\d+)?/) > -1);
 
   if (nxIsInstalled) {
     output.log({
