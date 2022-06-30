@@ -49,6 +49,7 @@ export class DocumentsApi {
     const originalContent = readFileSync(docPath, 'utf8');
     const file = matter(originalContent);
 
+    // TODO@ben: use markdoc instead
     // Set default title if not provided in front-matter section.
     if (!file.data.title) {
       file.data.title = extractTitle(originalContent) ?? path[path.length - 1];
