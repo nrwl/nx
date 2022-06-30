@@ -11,22 +11,18 @@ process.env.NX_CLI_SET = 'true';
 
 interface ExecuteTaskOptions {
   workspaceRoot: string;
-  outputPath?: string;
-  streamOutput?: boolean;
-  captureStderr?: boolean;
+  outputPath: string;
+  streamOutput: boolean;
+  captureStderr: boolean;
   projectGraph?: ProjectGraph;
 }
 
 let state:
-  | {
+  | (ExecuteTaskOptions & {
       currentTask: Task;
       onlyStdout: string[];
-      currentOptions: ExecuteTaskOptions;
-      outputPath: string;
-      streamOutput: boolean;
-      captureStderr: boolean;
-      logFileHandle?: number;
-    }
+      logFileHandle: number;
+    })
   | undefined;
 
 export async function executeTask(
@@ -36,11 +32,8 @@ export async function executeTask(
   state = {
     currentTask: task,
     onlyStdout: [],
-    currentOptions: options,
-    outputPath: options.outputPath,
-    streamOutput: options.streamOutput ?? false,
-    captureStderr: options.captureStderr ?? false,
     logFileHandle: openSync(options.outputPath, 'w'),
+    ...options,
   };
 
   try {
@@ -84,27 +77,23 @@ export async function executeTask(
  */
 function setUpOutputWatching() {
   const stdoutWrite = process.stdout._write;
+  const stdoutWritev = process.stdout._writev;
   const stderrWrite = process.stderr._write;
+  const stderrWritev = process.stderr._writev;
 
-  process.stdout._write = (
-    chunk: any,
-    encoding: string,
-    callback: Function
-  ) => {
-    state?.onlyStdout.push(chunk);
-    if (state?.outputPath) {
-      if (!state.logFileHandle) {
-        state.logFileHandle = openSync(state.outputPath, 'w');
-      }
+  process.stdout._write = (chunk, encoding, callback) => {
+    if (state) {
+      state.onlyStdout.push(chunk);
       appendFileSync(state.logFileHandle, chunk);
     }
+
     if (state?.streamOutput) {
       const updatedChunk = addCommandPrefixIfNeeded(
         state.currentTask.target.project,
         chunk,
         encoding
       );
-      messageParent(['stdout', chunk]);
+      messageParent(['stdout', updatedChunk.content]);
       stdoutWrite.apply(process.stdout, [
         updatedChunk.content,
         updatedChunk.encoding,
@@ -115,24 +104,46 @@ function setUpOutputWatching() {
     }
   };
 
-  process.stderr._write = (
-    chunk: any,
-    encoding: string,
-    callback: Function
-  ) => {
-    if (state?.outputPath) {
-      if (!state.logFileHandle) {
-        state.logFileHandle = openSync(state.outputPath, 'w');
+  if (stdoutWritev) {
+    process.stdout._writev = (chunks, callback) => {
+      if (state) {
+        for (const { chunk, encoding } of chunks) {
+          state.onlyStdout.push(chunk);
+          appendFileSync(state.logFileHandle, chunk, { encoding: encoding });
+        }
       }
+
+      if (state?.streamOutput) {
+        const updatedChunks = chunks.map(({ chunk, encoding }) =>
+          addCommandPrefixIfNeeded(
+            state.currentTask.target.project,
+            chunk,
+            encoding
+          )
+        );
+        for (const { content } of updatedChunks) {
+          messageParent(['stdout', content]);
+        }
+
+        stdoutWritev.apply(process.stdout, [updatedChunks, callback]);
+      } else {
+        callback();
+      }
+    };
+  }
+
+  process.stderr._write = (chunk, encoding, callback) => {
+    if (state) {
       appendFileSync(state.logFileHandle, chunk);
     }
+
     if (state?.streamOutput) {
       const updatedChunk = addCommandPrefixIfNeeded(
         state.currentTask.target.project,
         chunk,
         encoding
       );
-      messageParent(['stderr', chunk]);
+      messageParent(['stderr', updatedChunk.content]);
       stderrWrite.apply(process.stderr, [
         updatedChunk.content,
         updatedChunk.encoding,
@@ -142,4 +153,31 @@ function setUpOutputWatching() {
       callback();
     }
   };
+
+  if (stderrWritev) {
+    process.stderr._writev = (chunks, callback) => {
+      if (state) {
+        for (const { chunk, encoding } of chunks) {
+          appendFileSync(state.logFileHandle, chunk, { encoding: encoding });
+        }
+      }
+
+      if (state?.streamOutput) {
+        const updatedChunks = chunks.map(({ chunk, encoding }) =>
+          addCommandPrefixIfNeeded(
+            state.currentTask.target.project,
+            chunk,
+            encoding
+          )
+        );
+        for (const { content } of updatedChunks) {
+          messageParent(['stderr', content]);
+        }
+
+        stderrWritev.apply(process.stderr, [updatedChunks, callback]);
+      } else {
+        callback();
+      }
+    };
+  }
 }
