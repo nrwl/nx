@@ -10,7 +10,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { join } from 'path';
 
-describe('react native', () => {
+describe('react native minor change', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));

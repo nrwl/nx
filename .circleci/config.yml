@@ -79,27 +79,27 @@ commands:
         type: string
     steps:
       - checkout
-      # - when:
-      #     condition:
-      #       equal: [<< parameters.os >>, macos]
-      #     steps:
-      #       - restore_cache:
-      #           name: Restore Homebrew packages
-      #           keys:
-      #             - nrwl-nx-homebrew-packages
-      #       - run:
-      #           name: Configure Detox Environment, Install applesimutils
-      #           command: |
-      #             HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-      #             HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-      #             xcrun simctl shutdown all && xcrun simctl erase all
-      #           no_output_timeout: 20m
-      #       - save_cache:
-      #           name: Save Homebrew Cache
-      #           key: nrwl-nx-homebrew-packages
-      #           paths:
-      #             - /usr/local/Homebrew
-      #             - ~/Library/Caches/Homebrew
+      - when:
+          condition:
+            equal: [<< parameters.os >>, macos]
+          steps:
+            - restore_cache:
+                name: Restore Homebrew packages
+                keys:
+                  - nrwl-nx-homebrew-packages
+            - run:
+                name: Configure Detox Environment, Install applesimutils
+                command: |
+                  HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+                  HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+                  xcrun simctl shutdown all && xcrun simctl erase all
+                no_output_timeout: 20m
+            - save_cache:
+                name: Save Homebrew Cache
+                key: nrwl-nx-homebrew-packages
+                paths:
+                  - /usr/local/Homebrew
+                  - ~/Library/Caches/Homebrew
 
       - run-yarn-install:
           os: << parameters.os >>
@@ -217,7 +217,7 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'master'
       - run:
-          name: Check if detox or react-native was touched in the commit
+          name: Check if "detox" or "react-native" were modified directly
           command: |
             COUNT=`git diff --name-only $NX_BASE $NX_HEAD | (grep -E 'packages/detox|packages/react-native|e2e/detox|e2e/react-native' || true) | wc -l`
             if [[ $COUNT -gt 0 ]]; then
@@ -230,7 +230,6 @@ jobs:
       - run:
           name: Run E2E Tests
           command: |
-            echo "Check if affected: $E2E_AFFECTED"
             if $E2E_AFFECTED; then
               npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-nx-run,e2e-nx-misc,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e,e2e-nx-init,e2e-dep-graph-client --parallel=1;
             else
