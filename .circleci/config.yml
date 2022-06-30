@@ -248,22 +248,22 @@ workflows:
 
   build:
     jobs:
-      # - agent:
-      #     name: 'agent1'
-      # - agent:
-      #     name: 'agent2'
-      # - agent:
-      #     name: 'agent3'
-      # - agent:
-      #     name: 'agent4'
-      # - agent:
-      #     name: 'agent5'
-      # - agent:
-      #     name: 'agent6'
-      # - agent:
-      #     name: 'agent7'
-      # - agent:
-      #     name: 'agent8'
+      - agent:
+          name: 'agent1'
+      - agent:
+          name: 'agent2'
+      - agent:
+          name: 'agent3'
+      - agent:
+          name: 'agent4'
+      - agent:
+          name: 'agent5'
+      - agent:
+          name: 'agent6'
+      - agent:
+          name: 'agent7'
+      - agent:
+          name: 'agent8'
       - agent:
           name: 'agent9'
           pm: 'npm'
@@ -272,6 +272,6 @@ workflows:
           name: 'agent10'
           pm: 'npm'
           os: 'macos'
-      # - main-linux
+      - main-linux
       - mainmacos:
           name: main-macos-e2e
