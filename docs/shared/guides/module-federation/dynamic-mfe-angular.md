@@ -50,7 +50,9 @@ You'll also be prompted if you would like to setup Nx Cloud. For this tutorial s
 
 To add Angular-related features to our newly created monorepo we need to install the Angular Plugin. Again, this is pretty easy to do:
 
-_**NOTE:** Check that you are now at the root of your monorepo in your terminal. If not, run `cd ng-mfe`_
+{% callout type="warning" title="Be at the root" %}
+Check that you are now at the root of your monorepo in your terminal. If not, run `cd ng-mfe`.
+{% /callout %}
 
 ```bash
 # Npm
@@ -94,9 +96,13 @@ npx nx g @nrwl/angular:remote login --host=dashboard
 yarn nx g @nrwl/angular:remote login --host=dashboard
 ```
 
-_**Note:** We provided `--host=dashboard` as an option. This tells the generator that this remote application will be consumed by the Dashboard application. The generator will automatically link these two applications together in the `module-federation.config.js` that gets used in the `webpack.config.js`._
+{% callout type="note" title="--host" %}
+We provided `--host=dashboard` as an option. This tells the generator that this remote application will be consumed by the Dashboard application. The generator will automatically link these two applications together in the `module-federation.config.js` that gets used in the `webpack.config.js`.\_
+{% /callout %}
 
-_**Note**: The `RemoteEntryModule` generated will be imported in `app.module.ts` file, however, it is not used in the `AppModule` itself. This is to allow TS to find the Module during compilation, allowing it to be included in the built bundle. This is required for the Module Federation Plugin to expose the Module correctly. You can choose to import the `RemoteEntryModule` in the `AppModule` if you wish, however, it is not necessary._
+{% callout type="note" title="More details" %}
+The `RemoteEntryModule` generated will be imported in `app.module.ts` file, however, it is not used in the `AppModule` itself. This is to allow TS to find the Module during compilation, allowing it to be included in the built bundle. This is required for the Module Federation Plugin to expose the Module correctly. You can choose to import the `RemoteEntryModule` in the `AppModule` if you wish, however, it is not necessary.\_
+{% /callout %}
 
 ## What was generated?
 
@@ -281,7 +287,9 @@ export class RemoteEntryComponent {
 }
 ```
 
-_**Note:** This could be improved with error handling etc. but for the purposes of this tutorial, we'll keep it simple._
+{% callout type="note" title="More details" %}
+This could be improved with error handling etc. but for the purposes of this tutorial, we'll keep it simple.
+{% /callout %}
 
 Let's add a route to our Login application so that we can render the `RemoteEntryComponent`.  
 Open `app.module.ts` and add the following route to the `RouterMoodule.forRoot(...)` declaration.
@@ -318,7 +326,9 @@ Now let's create the Dashboard application where we'll hide some content if the 
 For this to work, the state within `UserService` must be shared across both applications. Usually, with Module Federation in Webpack, you have to specify the packages to share between all the applications in your Micro Frontend solution.  
 However, by taking advantage of Nx's project graph, Nx will automatically find and share the dependencies of your applications.
 
-_**Note:** This helps to enforce a single version policy and reduces the risk of [Micro Frontend Anarchy](https://www.thoughtworks.com/radar/techniques/micro-frontend-anarchy)_
+{% callout type="note" title="More details" %}
+This helps to enforce a single version policy and reduces the risk of [Micro Frontend Anarchy](https://www.thoughtworks.com/radar/techniques/micro-frontend-anarchy)\_
+{% /callout %}
 
 Now, let's delete the `app.component.html` and `app.component.css` files in the Dashboard application. They will not be needed for this tutorial.
 

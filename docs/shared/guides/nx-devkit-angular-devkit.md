@@ -1,6 +1,8 @@
 # Nx Devkit and Angular Devkit
 
-> Note: this document covers the difference between Nx Devkit and Angular Devkit. See the [Nx Devkit](/devkit/index) guide for more in-depth details about Nx Devkit.
+{% callout type="note" title="Nx & Angular" %}
+This document covers the difference between Nx Devkit and Angular Devkit. See the [Nx Devkit](/devkit/index) guide for more in-depth details about Nx Devkit.
+{% /callout %}
 
 Nx comes with a devkit to write generators and executors, but you can also use Angular devkit (schematics and builders). In other words, you can use an Angular schematic to implement a generator, and you can use an Angular builder to implement an executor.
 

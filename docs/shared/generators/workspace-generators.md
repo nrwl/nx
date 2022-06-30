@@ -1,8 +1,16 @@
-> In Nx 13.10, we introduced the ability to run generators from Nx plugins in the workspace they were created in. By using a "local" plugin, you can set the plugin as your workspace's default collection and get several other affordances that are not provided to workspace generators. This is the preferred method for "workspace generators", and existing generators will eventually be transitioned to use a local plugin. Check the [nx-plugin guide](/packages/nx-plugin) for information on creating a new plugin.
+{% callout type="check" title="Local Nx plugins" %}
+In Nx 13.10, we introduced the ability to run generators from Nx plugins in the workspace they were created in.
+
+By using a "local" plugin, you can set the plugin as your workspace's default collection and get several other affordances that are not provided to workspace generators. This is the preferred method for "workspace generators", and existing generators will eventually be transitioned to use a local plugin.
+
+Check the [nx-plugin guide](/packages/nx-plugin) for information on creating a new plugin.
+{% /callout %}
 
 # Workspace Generators
 
-Workspace generators provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, or ensuring libraries are generated and structured in a certain way, generators help you standardize these tasks in a consistent, and predictable manner. Nx provides tooling around creating, and running custom generators from within your workspace. This guide shows you how to create, run, and customize workspace generators within your Nx workspace.
+Workspace generators provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, or ensuring libraries are generated and structured in a certain way, generators help you standardize these tasks in a consistent, and predictable manner.
+
+Nx provides tooling around creating, and running custom generators from within your workspace. This guide shows you how to create, run, and customize workspace generators within your Nx workspace.
 
 ## Creating a workspace generator
 

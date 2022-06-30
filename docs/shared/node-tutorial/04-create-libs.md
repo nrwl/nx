@@ -21,7 +21,9 @@ Run
 nx g @nrwl/nest:lib auth --controller
 ```
 
-> We added the `--controller` flag here to generate a controller along with the library scaffolding.
+{% callout type="note" title="--controller" %}
+We added the `--controller` flag here to generate a controller along with the library scaffolding.
+{% /callout %}
 
 You should see the following:
 
@@ -65,7 +67,9 @@ export class AuthController {
 }
 ```
 
-> In code destined for production, you would actually have a proper authentication check here.
+{% callout type="note" title="We keep things simple here" %}
+In code destined for production, you would actually have a proper authentication check here.
+{% /callout %}
 
 ## Use the new library
 
@@ -87,7 +91,7 @@ import { AuthModule } from '@myorg/auth';
 export class AppModule {}
 ```
 
-**Restart `nx serve todos` then go to http://localhost:3333/auth. You should see `{ authenticated: true }`**
+Restart `nx serve todos` then go to http://localhost:3333/auth. You should see `{ authenticated: true }`.
 
 ## What's Next
 

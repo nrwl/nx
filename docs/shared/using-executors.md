@@ -43,7 +43,9 @@ The executors that are available for each project are defined and configured in 
 
 Each project has its executors defined in the `targets` property. In this snippet, `cart` has two executors defined - `build` and `test`.
 
-> Note: `build` and `test` can be any strings you choose. For the sake of consistency, we make `test` run unit tests for every project and `build` produce compiled code for the projects which can be built.
+{% callout type="note" title="More details" %}
+`build` and `test` can be any strings you choose. For the sake of consistency, we make `test` run unit tests for every project and `build` produce compiled code for the projects which can be built.
+{% /callout %}
 
 Each executor definition has an `executor` property and, optionally, an `options` and a `configurations` property.
 
@@ -233,11 +235,13 @@ The `runExecutor` utility will find the target in the configuration, find the ex
 
 ### Devkit helper functions
 
-- `logger` -- Wraps `console` to add some formatting.
-- `getPackageManagerCommand` -- Returns commands for the package manager used in the workspace.
-- `parseTargetString` -- Parses a target string into {project, target, configuration}.
-- `readTargetOptions` -- Reads and combines options for a given target.
-- `runExecutor` -- Constructs options and invokes an executor.
+| Property                 | Description                                                    |
+| ------------------------ | -------------------------------------------------------------- |
+| logger                   | Wraps `console` to add some formatting                         |
+| getPackageManagerCommand | Returns commands for the package manager used in the workspace |
+| parseTargetString        | Parses a target string into `{project, target, configuration}` |
+| readTargetOptions        | Reads and combines options for a given target                  |
+| runExecutor              | Constructs options and invokes an executor                     |
 
 See more helper functions in the [Devkit API Docs](/devkit/index#functions)
 

@@ -14,7 +14,9 @@ For this example, you’ll be migrating the [Real World AngularJS](https://githu
 
 There is also a [repo](https://github.com/nrwl/nx-migrate-angularjs-example) that shows a completed example of this guide.
 
-> The RealWorld app is a great example of an AngularJS app, but it probably doesn’t have the complexity of your own codebase. As you go along, I’ll include some recommendations on how you might apply this example to your larger, more complex application.
+{% callout type="note" title="RealWorld app vs reality" %}
+The RealWorld app is a great example of an AngularJS app, but it probably doesn’t have the complexity of your own codebase. As you go along, I’ll include some recommendations on how you might apply this example to your larger, more complex application.
+{% /callout %}
 
 ## Creating your workspace
 
@@ -43,7 +45,9 @@ npm install -D @nrwl/angular
 
 For this example, we will use Karma and Protractor, the most common unit test runner and e2e test runner for AngularJS.
 
-> Codebases with existing unit and e2e tests should continue to use whatever runner they need. We’ve chosen Karma and Protractor here because it’s the most common. If you’re going to be adding unit testing or e2e as part of this transition and are starting fresh, we recommend starting with Jest and Cypress (the default if no arguments are passed to the above command).
+{% callout type="note" title="Unit & E2E tests" %}
+Codebases with existing unit and e2e tests should continue to use whatever runner they need. We’ve chosen Karma and Protractor here because it’s the most common. If you’re going to be adding unit testing or e2e as part of this transition and are starting fresh, we recommend starting with Jest and Cypress (the default if no arguments are passed to the above command).
+{% /callout %}
 
 With the Angular capability added, generate your application:
 
@@ -58,7 +62,9 @@ Accept the default options for each prompt:
 ? Would you like to configure routing for this application? No
 ```
 
-> The RealWorld app doesn’t have any styles to actually bundle here. They’re all downloaded from a CDN that all of the RealWorld apps use. If your codebase uses something other than CSS, like Sass, you can choose that here.
+{% callout type="note" title="About styles" %}
+The RealWorld app doesn’t have any styles to actually bundle here. They’re all downloaded from a CDN that all the RealWorld apps use. If your codebase uses something other than CSS, like Sass, you can choose that here.
+{% /callout %}
 
 ## Migrating dependencies
 
@@ -142,7 +148,9 @@ Your `package.json` should now look like this:
 
 Run `npm install` to install all of your new dependencies.
 
-> For your own project, you’ll need to switch to NPM if you’re using another package manager like bower. [Learn more about switching away from bower](https://bower.io/blog/2017/how-to-migrate-away-from-bower/)
+{% callout type="caution" title="Using Bower?" %}
+For your own project, you’ll need to switch to NPM if you’re using another package manager like bower. [Learn more about switching away from bower](https://bower.io/blog/2017/how-to-migrate-away-from-bower/)
+{% /callout %}
 
 ## Migrating application code
 
@@ -177,7 +185,9 @@ apps
 | | |____test.ts
 ```
 
-> You most likely have your own AngularJS project written in JavaScript as well. While you’ll continue to use JavaScript through the rest of this example, we strongly recommend switching AngularJS projects to TypeScript, especially if you’re planning an upgrade to Angular.
+{% callout type="warning" title="Javscript vs Typescript" %}
+You most likely have your own AngularJS project written in JavaScript as well. While you’ll continue to use JavaScript through the rest of this example, we strongly recommend switching AngularJS projects to TypeScript, especially if you’re planning an upgrade to Angular.
+{% /callout %}
 
 ## Modifying index.html and main.ts
 
@@ -195,11 +205,15 @@ And re-name it to `main.js`. This will import the existing app.js file from the 
 
 If you’re looking at the example repo, the code for this section is available on branch `initial-migration`. This section is an interim step that continues to use gulp to build and serve the app locally, so we can validate everything works before continuing with the migration. You’ll replace gulp in the next section.
 
-> The RealWorld app uses gulp 3.9.1 to build. This version is not supported anymore and doesn’t run on any version of Node greater than 10.\*. To build this app using gulp, you need to install an appropriate version of Node and make sure you re-install your dependencies. If this isn’t possible (or you just don’t want to), feel free to skip to the next section. The webpack build process should run in any modern Node version.
+{% callout type="warning" title="Tools & node versions" %}
+The RealWorld app uses gulp 3.9.1 to build. This version is not supported anymore and doesn’t run on any version of Node greater than 10.\*. To build this app using gulp, you need to install an appropriate version of Node and make sure you re-install your dependencies. If this isn’t possible (or you just don’t want to), feel free to skip to the next section. The webpack build process should run in any modern Node version.
+{% /callout %}
 
 The RealWorld app uses gulp to build the application, as well as provide a development server. To verify that the migration has worked, stay with that build process for now.
 
-> During migration, you should take a small step and confirm that things work before moving ahead. Stopping and checking to see that your app still builds and functions is essential to a successful migration.
+{% callout type="caution" title="Verify your changes" %}
+During migration, you should take a small step and confirm that things work before moving ahead. Stopping and checking to see that your app still builds and functions is essential to a successful migration.
+{% /callout %}
 
 Copy the `gulpfile.js` over from the RealWorld app and put it in `apps/realworld`. This is where all configuration files reside for the application. Make some adjustments to this file so that your build artifacts land in a different place. In an Nx workspace, all build artifacts should be sent to an app-specific folder in the `dist` folder at the root of your workspace. Your `gulpfile.js` should look like this:
 
@@ -335,7 +349,9 @@ nx serve realworld
 
 Navigate around the application and see that things work.
 
-> Your own project might not be using gulp. If you’re using webpack, you can follow the next section and substitute your own webpack configuration. If you’re using something else like grunt or a home-grown solution, you can follow the same steps here to use it. You’ll use the `run-commands` executor and substitute in the commands for your project.
+{% callout type="warning" title="Not using Gulp" %}
+Your own project might not be using gulp. If you’re using webpack, you can follow the next section and substitute your own webpack configuration. If you’re using something else like grunt or a home-grown solution, you can follow the same steps here to use it. You’ll use the `run-commands` executor and substitute in the commands for your project.
+{% /callout %}
 
 ## Switching to webpack
 
@@ -380,7 +396,9 @@ module.exports = (config, context) => {
 };
 ```
 
-> This webpack configuration is deliberately simplified for this tutorial. A real production-ready webpack config for your project will be much more involved. See [this project](https://github.com/preboot/angularjs-webpack) for an example.
+{% callout type="note" title="Webpack configuration" %}
+This webpack configuration is deliberately simplified for this tutorial. A real production-ready webpack config for your project will be much more involved. See [this project](https://github.com/preboot/angularjs-webpack) for an example.
+{% /callout %}
 
 To use webpack instead of gulp, go back to your `apps/realworld/project.json` file and modify the `build` and `serve` commands again:
 
@@ -483,7 +501,9 @@ This change loads the HTML code directly and sets it to the template attribute o
 
 Now, go through each component of the application and make this change. To make sure that you’ve really modified every component correctly, delete the template cache file (`config/app.templates.js`) that gulp generated earlier.
 
-> In an example like this, it’s easy enough to make this kind of change by hand. In a larger codebase, doing this manually could be very time-intensive. You’ll want to look into an automated tool to do this for you, such as js-codemod or generators.
+{% callout type="check" title="Automate the work" %}
+In an example like this, it’s easy enough to make this kind of change by hand. In a larger codebase, doing this manually could be very time-intensive. You’ll want to look into an automated tool to do this for you, such as js-codemod or generators.
+{% /callou %}
 
 We also need to modify the `app.js` and remove the import of `config/app.templates.js`. Modify it like this:
 

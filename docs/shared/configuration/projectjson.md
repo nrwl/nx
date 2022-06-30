@@ -7,7 +7,9 @@ Projects can be configured in `package.json` (if you use npm scripts and not Nx 
 use Nx executors). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
 files to get each project's configuration. This guide covers the `project.json` case.
 
-> Angular developers can also configure projects in angular.json. Read [this guide](/getting-started/nx-and-angular#angularjson) for more information.
+{% callout type="note" title="Using Angular?" %}
+Angular developers can also configure projects in angular.json. [Read this guide for more information](/getting-started/nx-and-angular#angularjson).
+{% /callout %}
 
 ## Project Configuration
 
@@ -426,19 +428,16 @@ named "default" is used by default. Specify a different one like this `nx run-ma
 Tasks runners can accept different options. The following are the options supported
 by `"nx/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 
-- `cacheableOperations` defines the list of targets/operations that are cached by Nx.
-- `parallel` defines the max number of targets ran in parallel (in older versions of Nx you had to
-  pass `--parallel --maxParallel=3` instead of `--parallel=3`).
-- `captureStderr` defines whether the cache captures stderr or just stdout.
-- `skipNxCache` defines whether the Nx Cache should be skipped. Defaults to `false`.
-- `cacheDirectory` defines where the local cache is stored, which is `node_modules/.cache/nx` by default.
-- `encryptionKey` (when using `"@nrwl/nx-cloud"` only) defines an encryption key to support end-to-end encryption of
-  your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an
-  encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable.
-- `runtimeCacheInputs` defines the list of commands that are run by the runner to include into the computation hash
-  value.
-- `selectivelyHashTsConfig` only hash the path mapping of the active project in the `tsconfig.base.json` (e.g.,
-  adding/removing projects doesn't affect the hash of existing projects). Defaults to `false`
+| Property                | Descrtipion                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cacheableOperations     | defines the list of targets/operations that are cached by Nx                                                                                                                                                                                                                                                                                  |
+| parallel                | defines the max number of targets ran in parallel (in older versions of Nx you had to pass `--parallel --maxParallel=3` instead of `--parallel=3`)                                                                                                                                                                                            |
+| captureStderr           | defines whether the cache captures stderr or just stdout                                                                                                                                                                                                                                                                                      |
+| skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                          |
+| cacheDirectory          | defines where the local cache is stored (defaults to `node_modules/.cache/nx`)                                                                                                                                                                                                                                                                |
+| encryptionKey           | (when using `"@nrwl/nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
+| runtimeCacheInputs      | defines the list of commands that are run by the runner to include into the computation hash value                                                                                                                                                                                                                                            |
+| selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                              |
 
 `runtimeCacheInputs` are set as follows:
 

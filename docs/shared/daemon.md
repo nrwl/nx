@@ -14,7 +14,9 @@ This helps quite a bit, but the recomputation is not very surgical because there
 
 The Nx Daemon is a process which runs in the background on your local machine. There is one unique Nx Daemon per Nx workspace meaning if you have multiple Nx workspaces on your machine active at the same time, the corresponding Nx Daemon instances will operate independently of one another and can be on different versions of Nx.
 
-> On macOS and linux, the server runs as a unix socket, and on Windows it runs as a named pipe.
+{% callout type="note" title="Mac & Linux" %}
+On macOS and linux, the server runs as a unix socket, and on Windows it runs as a named pipe.
+{% /callout %}
 
 The Nx Daemon is more efficient at recomputing the project graph because it watches the files in your workspaces and updates the project graph right away (intelligently throttling to ensure minimal recomputation). It also keeps everything in memory, so the response tends to be a lot faster.
 

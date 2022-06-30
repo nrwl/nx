@@ -109,4 +109,8 @@ The solution is to update our config once more, this time to set `parserOptions.
 
 And that's it! Now any rules requiring type information will run correctly when we run `nx lint tuskdesk`.
 
-> NOTE: As well as adapting the path to match your project's real path, please be aware that if you apply the above to a **Next.js** application, you should change the glob pattern at the end to be `tsconfig(.*)?.json`. E.g. if `tuskdesk` had been a Next.js app, we would have written: `"project": ["apps/tuskdesk/tsconfig(.*)?.json"]`
+{% callout type="warning" title="Using Next.js" %}
+As well as adapting the path to match your project's real path, please be aware that if you apply the above to a **Next.js** application, you should change the glob pattern at the end to be `tsconfig(.*)?.json`.
+
+E.g. if `tuskdesk` had been a Next.js app, we would have written: `"project": ["apps/tuskdesk/tsconfig(.*)?.json"]`
+{% /callout %}

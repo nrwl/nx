@@ -1,6 +1,8 @@
 # Integrating Nx and Lerna
 
-> In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This opens up a range of new opportunities for integrating the two. Continue reading to learn more.
+{% callout type="check" title="Nrwl took over stewardship of Lerna" %}
+[In case you missed it, Nrwl, the company behind Nx, took over stewardship of Lerna. This opens up a range of new opportunities for integrating the two. Continue reading to learn more](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9).
+{% /callout %}
 
 [Lerna](https://lerna.js.org/) is a popular JavaScript monorepo management tool and which can be used in combination with Nx. Lerna does three main things:
 
@@ -10,7 +12,7 @@
 
 While Lerna is good at managing dependencies and publishing, it can quickly become painful to scale Lerna based monorepos, simply because Lerna is slow. That's where Nx shines and where it can really speed up your monorepo.
 
-If you are about to setup a new monorepo from scratch, you can directly [go with Nx](/getting-started/nx-setup). If you have an existing Lerna monorepo, you can easily integrate the two.
+If you are about to set up a new monorepo from scratch, you can directly [go with Nx](/getting-started/nx-setup). If you have an existing Lerna monorepo, you can easily integrate the two.
 
 For a discussion on #2, see [dependency management](#dependency-management) below. For a discussion on #3, see [version management](#version-Management--publishing) below.
 
@@ -81,7 +83,9 @@ Nx works even without `nx.json` but to configure some more details such as the `
 
 Having done these steps, you can now keep using your Lerna repository as you did before. All the commands will work in a backwards compatible way but will be a lot faster. [Read our blog post for some benchmarks](https://blog.nrwl.io/lerna-used-to-walk-now-it-can-fly-eab7a0fe7700?source=friends_link&sk=6c827ec7c9adfc1c760ff2e3f3e05cc7).
 
-> Note, this does not include distributed caching or distributed task execution powered by Nx Cloud. But you can easily add support for it if wanted. All that's required is `npx nx connect-to-nx-cloud`.
+{% callout type="note" title="Enable remote caching?" %}
+This does not include distributed caching or distributed task execution powered by Nx Cloud. But you can easily add support for it if wanted. All that's required is `npx nx connect-to-nx-cloud`.
+{% /callout %}
 
 ### Switch to the Nx native commands in your Lerna workspace
 

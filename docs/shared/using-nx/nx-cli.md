@@ -23,7 +23,9 @@ nx run my-js-app:build
 nx build my-js-app
 ```
 
-> Nx also automatically caches the output of running targets so re-running the same target on the same project source code will be instant.
+{% callout type="check" title="Nx saves you time" %}
+Nx also automatically caches the output of running targets so re-running the same target on the same project source code will be instant.
+{% /callout %}
 
 However, `nx build` is only an abstraction over what it means to "build" projects rather than tied to a certain
 implementation. For instance, if you have a `project.json` file defining `build` using
@@ -91,7 +93,9 @@ understand the architecture of the codebase.
 The [`nx graph` command](/cli/dep-graph) displays this project graph in a web browser for you to
 explore.
 
-Note: In older versions of Nx, the project graph was launched with `nx dep-graph`. For backward compatibility, that command is aliased to `nx graph`.
+{% callout type="note" title="Previously" %}
+In older versions of Nx, the project graph was launched with `nx dep-graph`. For backward compatibility, that command is aliased to `nx graph`.
+{% /callout %}
 
 ```bash
 nx graph
@@ -113,7 +117,8 @@ nx list @nrwl/react # Lists capabilities in the @nrwl/react plugin
 
 There are some environment variables that you can set to log additional information from Nx.
 
-- Setting **NX_VERBOSE_LOGGING=true** will print debug information useful for troubleshooting.
-- Setting **NX_PERF_LOGGING=true** will print debug information useful for profiling executors and Nx itself.
-- Setting **NX_TASKS_RUNNER_DYNAMIC_OUTPUT=false** will use non-dynamic terminal output strategy (what you see in CI),
-  even when you terminal can support the dynamic version.
+| Property                       | Type    | Description                                                                                                                                   |
+| ------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| NX_VERBOSE_LOGGING             | boolean | If set to `true`, will print debug information useful for troubleshooting                                                                     |
+| NX_PERF_LOGGING                | boolean | If set to `true`, will print debug information useful for for profiling executors and Nx itself                                               |
+| NX_TASKS_RUNNER_DYNAMIC_OUTPUT | boolean | If set to `false`, will use non-dynamic terminal output strategy (what you see in CI), even when you terminal can support the dynamic version |

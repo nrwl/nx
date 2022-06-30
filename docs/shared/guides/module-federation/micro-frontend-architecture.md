@@ -127,7 +127,9 @@ module.exports = {
 };
 ```
 
-**Note:** You can return any configuration [object that webpack's Module Federation supports](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
+{% callout type="note" title="More details" %}
+You can return any configuration [object that webpack's Module Federation supports](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
+{% /callout %}
 
 There are downsides to not sharing a library (such as increasing network traffic due to duplication), so consider what
 you share carefully. If you are not sure, then start with a small set of core libraries, and expand it as needed.

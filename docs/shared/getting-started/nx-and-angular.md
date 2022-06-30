@@ -13,7 +13,9 @@ Check out the following guides to get started:
 - [Adding Nx to an Angular CLI project](/migration/migration-angular)
 - [Migrating from AngularJS](/migration/migration-angularjs)
 
+{% callout type="note" title="Going deeper" %}
 It is also a good idea to read the [mental model guide](/using-nx/mental-model) to understand how Nx works.
+{% /callout %}
 
 ## Nx and Angular Plugins
 
@@ -33,7 +35,9 @@ Check out the following to get started:
 
 ## Nx and Angular CLI
 
-**If you add Nx to an Angular CLI project, `ng` and `nx` are interchangeable (they invoke the same command). So anywhere you see `"nx build"` or `"nx affected"`, you can also use `"ng build"` or `"ng affected"`.**
+{% callout type="check" title="Nx and AngularCLI commands are interchangeable" %}
+If you add Nx to an Angular CLI project, `ng` and `nx` are interchangeable (they invoke the same command). So anywhere you see `"nx build"` or `"nx affected"`, you can also use `"ng build"` or `"ng affected"`.
+{% /callout %}
 
 Nx integrates well with the Angular CLI:
 
@@ -56,7 +60,9 @@ What we recommend instead is to split `angular.json` into multiple `project.json
 - Run `nx format`
 - Run `nx generate @nrwl/workspace:convert-to-nx-project --all=true`
 
-**But regardless of whether you use `angular.json` or `project.json`, the configuration remains the same. So anything written about `project.json` or `workspace.json` applies to `angular.json` in the same way. For instance, everything in [project.json and nx.json](/configuration/projectjson) applies to `angular.json` in the same way.**
+{% callout type="check" title="Nx and AngularCLI are compatible" %}
+But regardless of whether you use `angular.json` or `project.json`, the configuration remains the same. So anything written about `project.json` or `workspace.json` applies to `angular.json` in the same way. For instance, everything in [project.json and nx.json](/configuration/projectjson) applies to `angular.json` in the same way.
+{% /callout %}
 
 Note that even though the configuration is split, everything works the same way. All migrations and schematics that expect a single `angular.json` file, will receive a single file. Nx is smart, so it merges all the files in memory to make those migrations and schematics work.
 

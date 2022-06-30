@@ -22,7 +22,9 @@ CREATE apps/todos/src/app/todos/todos.service.ts (89 bytes)
 UPDATE apps/todos/src/app/app.module.ts (318 bytes)
 ```
 
-> Services are not the only things that the `@nrwl/nest` plugin can create. Run `nx list @nrwl/nest` to see other capabilities that the plugin provides.
+{% callout type="check" title="Get more info on plugins" %}
+Services are not the only things that the `@nrwl/nest` plugin can create. Run `nx list @nrwl/nest` to see other capabilities that the plugin provides.
+{% /callout %}
 
 Open the newly created file in `apps/todos/src/app/todos/todos.service.ts` and paste the following code:
 
@@ -47,7 +49,9 @@ export class TodosService {
 }
 ```
 
-> Usually services should call some kind of data source (like a database or even a file) but for this tutorial, just populate todos manually.
+{% callout type="note" title="We keep things simple here" %}
+Usually services should call some kind of data source (like a database or even a file) but for this tutorial, just populate todos manually.
+{% /callout %}
 
 You now have your Todos service ready!
 
@@ -55,15 +59,22 @@ You now have your Todos service ready!
 
 In order to render some views, you need to install a template engine:
 
+{% tabs %}
+{% tab label="yarn" %}
+
 ```bash
 yarn add hbs
 ```
 
-or
+{% /tab %}
+{% tab label="npm" %}
 
 ```bash
 npm install --save hbs
 ```
+
+{% /tab %}
+{% /tabs %}
 
 Once the installation process is complete, you need to configure the `main.ts` file with the following code:
 
@@ -147,7 +158,9 @@ export class AppController {
 You changed the `@Get` decorator for the `getData` function to point to the `api` route. You also changed this to call the `todosService.getTodos()` method. \
 Then you added the `root` function which renders the `index` file from our `views` directory.
 
-> The serve process should still be running. If it isn't, restart the process with `nx serve todos`
+{% callout type="note" title="Serve is running" %}
+The serve process should still be running. If it isn't, restart the process with `nx serve todos`
+{% /callout %}
 
 ## What's Next
 

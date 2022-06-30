@@ -1,4 +1,6 @@
-> In Nx 13.10+, local nx plugins can contain executors that are used in the workspace. When creating a custom executor for your workspace, look into the [nx-plugin guide](/packages/nx-plugin) to simplify the build process.
+{% callout type="check" title="Local Nx plugins" %}
+In Nx 13.10+, local nx plugins can contain executors that are used in the workspace. When creating a custom executor for your workspace, look into the [nx-plugin guide](/packages/nx-plugin) to simplify the build process.
+{% /callout %}
 
 # Creating Custom Executors
 

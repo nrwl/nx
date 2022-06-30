@@ -16,7 +16,7 @@ export function Tabs({
   return (
     <TabContext.Provider value={currentTab}>
       <section className="mb-8 py-4">
-        <div className="not-prose hidden sm:block">
+        <div className="not-prose ">
           <div className="border-b border-gray-100">
             <nav className="-mb-px flex space-x-8" aria-label="Tabs">
               {labels.map((label: string) => (

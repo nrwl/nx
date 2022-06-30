@@ -2,12 +2,12 @@ import {
   CheckCircleIcon,
   ExclamationIcon,
   InformationCircleIcon,
-  XCircleIcon,
+  HandIcon,
 } from '@heroicons/react/outline';
 import cx from 'classnames';
 import { ReactNode } from 'react';
 
-type CalloutType = 'note' | 'warning' | 'check' | 'error';
+type CalloutType = 'note' | 'warning' | 'check' | 'caution';
 const typeMap: Record<
   CalloutType,
   {
@@ -48,8 +48,8 @@ const typeMap: Record<
     titleColor: 'text-green-600',
     textColor: 'text-green-700',
   },
-  error: {
-    icon: <XCircleIcon className="h-5 w-5 text-red-500" aria-hidden="true" />,
+  caution: {
+    icon: <HandIcon className="h-5 w-5 text-red-500" aria-hidden="true" />,
     backgroundColor: 'bg-red-50',
     borderColor: 'ring-red-100',
     titleColor: 'text-red-600',
@@ -71,7 +71,7 @@ export function Callout({
   return (
     <aside
       className={cx(
-        'not-prose mb-6 rounded-md p-4 ring-1',
+        'my-6 rounded-md p-4 ring-1',
         ui.backgroundColor,
         ui.borderColor
       )}
@@ -82,7 +82,7 @@ export function Callout({
           <h5 className={cx('mt-0 text-sm font-medium', ui.titleColor)}>
             {title}
           </h5>
-          <div className={cx('mt-2 text-sm', ui.textColor)}>{children}</div>
+          <div className={cx('prose-sm mt-2', ui.textColor)}>{children}</div>
         </div>
       </div>
     </aside>

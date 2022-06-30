@@ -4,7 +4,7 @@ Within an Nx workspace, you gain many capabilities that help you build applicati
 
 ## Prerequisites
 
-- The major version of your `Angular CLI` must align with the version of `Nx` you are upgrading to. For example, if you're using Angular CLI version 7, you must transition using the latest version 7 release of Nx.
+**The major version of your `Angular CLI` must align with the version of `Nx` you are upgrading to**. For example, if you're using Angular CLI version 7, you must transition using the latest version 7 release of Nx.
 
 ## Using the Nx CLI while preserving the existing structure
 

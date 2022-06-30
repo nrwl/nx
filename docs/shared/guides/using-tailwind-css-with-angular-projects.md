@@ -22,7 +22,9 @@ The generation for existing or new projects will perform the following steps:
   - Applications: update the application styles entry point file located at `apps/app1/src/styles.css` by including the Tailwind CSS base styles
   - Libraries: add the `tailwind.config.js` file path to the `build` target configuration
 
-> **Note**: When Tailwind CSS has not been installed yet, the generator will install Tailwind CSS v3. Only if Tailwind CSS v2 is installed, the generator will use it and generate the configuration accordingly.
+{% callout type="note" title="More details" %}
+When Tailwind CSS has not been installed yet, the generator will install Tailwind CSS v3. Only if Tailwind CSS v2 is installed, the generator will use it and generate the configuration accordingly.
+{% /callout %}
 
 > All the examples in this guide will use Tailwind CSS v3, but the guide will work the same for v2. To convert the examples to v2, check the [Tailwind CSS upgrade guide](https://tailwindcss.com/docs/upgrade-guide#migrating-to-the-jit-engine) to understand the differences between the configuration for both versions.
 
@@ -145,7 +147,9 @@ module.exports = {
 };
 ```
 
-> **Note**: The `content` property shouldn't be specified in the preset because its value is not common for multiple projects.
+{% callout type="note" title="More details" %}
+The `content` property shouldn't be specified in the preset because its value is not common for multiple projects.
+{% /callout %}
 
 Add the project configuration for the project:
 
@@ -238,9 +242,13 @@ To configure Tailwind CSS for multiple applications that use different themes an
 
 A key aspect in this scenario is that because the same buildable libraries are shared by multiple applications, you need to make sure those libraries use Tailwind CSS utility classes and/or theme keys that are common to all the applications that consume them.
 
-> **Note**: Different applications can still have some extra configuration unique to them, but the unique configuration can't be used by shared libraries, because it's not going to be available for other applications.
+{% callout type="note" title="Configuration" %}
+Different applications can still have some extra configuration unique to them, but the unique configuration can't be used by shared libraries, because it's not going to be available for other applications.
+{% /callout %}
 
-> **Note**: As explained in [this section](#configure-tailwind-css-for-an-application-with-non-buildable-libraries-as-dependencies), non-buildable libraries are processed as part of the application build process and therefore, they just use the same configuration the application uses.
+{% callout type="note" title="Non buildable libraries" %}
+As explained in [this section](#configure-tailwind-css-for-an-application-with-non-buildable-libraries-as-dependencies), non-buildable libraries are processed as part of the application build process and therefore, they just use the same configuration the application uses.
+{% /callout %}
 
 Create a new folder `libs/tailwind-preset` with a `tailwind.config.js` file in it with your shared configuration:
 
@@ -440,7 +448,9 @@ To build and share a theme, you can create a theme file in the library like the 
 }
 ```
 
-> **Note**: This section assume you've already followed one of the previous sections setup and have the library with Tailwind CSS configured.
+{% callout type="note" title="More details" %}
+This section assume you've already followed one of the previous sections setup and have the library with Tailwind CSS configured.
+{% /callout %}
 
 Next, you need to configure your project to build the theme when you build the library. Edit the project configuration to have the following targets:
 
@@ -508,7 +518,9 @@ Next, you need to configure your project to build the theme when you build the l
 
 In the above, you are configuring the library build and the Tailwind CSS processing to happen in parallel. Also, you are going to disable the automatic deletion of the output folder that `ng-packagr` does because that can cause the theme to be deleted. Instead, you configured the `build` target to delete the output folder and then kick off the library build.
 
-> **Note**: You can have more themes and simply add them to be built in the `build-lib` target commands.
+{% callout type="note" title="Need more?" %}
+You can have more themes and simply add them to be built in the `build-lib` target commands.
+{% /callout %}
 
 Update the `libs/lib1/ng-package.json` file to set the `deleteDestPath` property to `false`:
 
@@ -526,4 +538,6 @@ One important thing to keep in mind is that if you use the default Tailwind CSS 
 - Add a unique [prefix](https://tailwindcss.com/docs/configuration#prefix) to your Tailwind CSS utility classes.
 - Create unique CSS classes for your components and theme in general using a Tailwind CSS directive like [`@apply`](https://tailwindcss.com/docs/functions-and-directives#apply) or a function like [`theme()`](https://tailwindcss.com/docs/functions-and-directives#theme).
 
-> **Note**: If you decide to use a unique prefix, remember to change the utility classes used in your components to use the prefix.
+{% callout type="note" title="Prefix" %}
+If you decide to use a unique prefix, remember to change the utility classes used in your components to use the prefix.
+{% /callout %}

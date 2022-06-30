@@ -24,9 +24,7 @@ export function NxCloudSection({ children }: { children: ReactNode }) {
               />
             </svg>
           </span>
-          <p className="ml-4 flex text-base">
-            This section is about Nx Cloud specifically.
-          </p>
+          <p className="ml-4 flex text-base">This section is about Nx Cloud.</p>
         </div>
         <div className="order-3 mt-2 w-full flex-shrink-0 sm:order-2 sm:mt-0 sm:w-auto">
           <a

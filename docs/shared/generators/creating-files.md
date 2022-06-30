@@ -63,7 +63,9 @@ The exported function first creates the library, then creates the additional fil
 
 Next, run the generator:
 
-> Use the `-d` or `--dry-run` flag to see your changes without applying them.
+{% callout type="warning" title="Always do a dry-run" %}
+Use the `-d` or `--dry-run` flag to see your changes without applying them. This will let you see what the command will do to your workspace.
+{% /callout %}
 
 ```bash
 nx workspace-generator my-generator mylib

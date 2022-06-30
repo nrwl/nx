@@ -31,29 +31,26 @@ Take a tour of your [Nx workspace](/getting-started/nx-setup). There are some im
 
 The `apps` directory is the place where your top-level applications will be stored. You should always begin your migration journey by adding an application.
 
-For Angular applications:
+{% tabs %}
+{% tab label="Angular" %}
 
 ```bash
 npm install --save-dev @nrwl/angular
-```
-
-and
-
-```bash
+# then
 nx generate @nrwl/angular:application my-application
 ```
 
-For React applications:
+{% /tab %}
+{% tab label="React" %}
 
 ```bash
 npm install --save-dev @nrwl/react
-```
-
-and
-
-```bash
+# then
 nx generate @nrwl/react:application my-application
 ```
+
+{% /tab %}
+{% /tabs %}
 
 There are a lot of options when creating your application. If you want to follow Nx recommendations, you can accept the defaults. If you have a well-established codebase, you can configure those options at the time of application generation. You can find documentation for these options for the different frameworks here:
 
@@ -182,19 +179,26 @@ Your use-case may also be covered by one of our community plugins. Plugin author
 
 If your code is divided into libraries, you should also generate libraries for your code to migrate into:
 
-For Angular libraries:
+{% tabs %}
+{% tab label="Angular" %}
 
 ```bash
 nx generate @nrwl/angular:library
 ```
 
-For React libraries:
+{% /tab %}
+{% tab label="React" %}
 
 ```bash
 nx generate @nrwl/react:library
 ```
 
+{% /tab %}
+{% /tabs %}
+
+{% callout type="caution" title="Be mindful about where the code lives" %}
 It’s important to remember: don’t just drop your code anywhere! Always generate an app or a library for that code before migration. Without the project configuration, you’ll miss out on key functionalities of Nx provided by the project graph generation and affected code detection.
+{% /callout %}
 
 ### Establishing code boundaries
 

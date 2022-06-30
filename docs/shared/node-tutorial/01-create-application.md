@@ -7,7 +7,9 @@ width="100%" /%}
 
 In this tutorial you use Nx to build a server application out of common libraries using modern technologies.
 
-> This tutorial uses several Nx plugins to provide a rich dev experience. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+{% callout type="note" title="Plugins for a rich developer experience" %}
+In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+{% /callout %}
 
 ## Create a New Workspace
 
@@ -71,27 +73,41 @@ Depending on how your dev env is set up, the command above might result in `Comm
 
 To fix it, you can either install the `nx` cli globally by running:
 
-```bash
-npm install -g nx
-```
-
-or
+{% tabs %}
+{% tab label="yarn" %}
 
 ```bash
 yarn global add nx
 ```
 
+{% /tab %}
+{% tab label="npm" %}
+
+```bash
+npm install -g nx
+```
+
+{% /tab %}
+{% /tabs %}
+
 Or you can prepend every command with `npm run`:
+
+{% tabs %}
+{% tab label="yarn" %}
+
+```bash
+yarn nx serve todos
+```
+
+{% /tab %}
+{% tab label="npm" %}
 
 ```bash
 npx nx serve todos
 ```
 
-or
-
-```bash
-yarn nx serve todos
-```
+{% /tab %}
+{% /tabs %}
 
 ## Project.json, Targets, Executors
 
