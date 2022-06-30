@@ -11,7 +11,7 @@ export interface AffectedProjectGraphContext {
     string,
     ProjectGraphProjectNode<ProjectConfiguration>
   >;
-  nxJson: NxJsonConfiguration<string[]>;
+  nxJson: NxJsonConfiguration<any>;
   touchedProjects: string[];
 }
 
@@ -22,7 +22,7 @@ export interface TouchedProjectLocator<T extends Change = Change> {
       string,
       ProjectGraphProjectNode<ProjectConfiguration>
     >,
-    nxJson?: NxJsonConfiguration<string[]>,
+    nxJson?: NxJsonConfiguration<any>,
     packageJson?: any,
     projectGraph?: ProjectGraph
   ): string[];

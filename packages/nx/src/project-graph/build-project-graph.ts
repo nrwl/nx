@@ -3,7 +3,6 @@ import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
 import { FileData } from './file-utils';
-import { normalizeNxJson } from './normalize-nx-json';
 import {
   createCache,
   extractCachedFileData,
@@ -74,10 +73,6 @@ export async function buildProjectGraphUsingProjectFileMap(
   const nxJson = readNxJson();
   const projectGraphVersion = '5.0';
   assertWorkspaceValidity(projectsConfigurations, nxJson);
-  const normalizedNxJson = normalizeNxJson(
-    nxJson,
-    Object.keys(projectsConfigurations.projects)
-  );
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
@@ -89,7 +84,7 @@ export async function buildProjectGraphUsingProjectFileMap(
       cache,
       packageJsonDeps,
       projectsConfigurations,
-      normalizedNxJson,
+      nxJson,
       rootTsConfig
     )
   ) {
@@ -102,7 +97,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   }
   const context = createContext(
     projectsConfigurations,
-    normalizedNxJson,
+    nxJson,
     projectFileMap,
     filesToProcess
   );

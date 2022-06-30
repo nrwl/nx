@@ -18,7 +18,7 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
   let workspaceJson;
   let nxJson: NxJsonConfiguration<string[]>;
   beforeEach(() => {
-    workspaceJson = null;
+    workspaceJson = {};
     nxJson = {
       implicitDependencies: {
         'package.json': {

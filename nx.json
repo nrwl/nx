@@ -12,11 +12,11 @@
         "cacheableOperations": [
           "build",
           "test",
+          "lint-base",
           "lint",
           "build-base",
           "sitemap",
-          "e2e",
-          "lint-base"
+          "e2e"
         ],
         "useDaemonProcess": true,
         "cacheDirectory": "/tmp/nx-cache",
