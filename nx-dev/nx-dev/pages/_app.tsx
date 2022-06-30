@@ -64,7 +64,7 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
       {/* Global Site Tag (gtag.js) - Google Analytics */}
       <Script
         id="gtag-script-dependency"
-        strategy="worker"
+        strategy="afterInteractive"
         src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
       />
       <Script
