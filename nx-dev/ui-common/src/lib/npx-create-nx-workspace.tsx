@@ -511,7 +511,8 @@ export function NpxCreateNxWorkspaceAnimation({
                   initial={{ opacity: 0 }}
                   animate={nxCloudSelectionTitle}
                 >
-                  Use Nx Cloud? (It's free and doesn't require registration.){' '}
+                  Set up distributed caching using Nx Cloud (It's free and
+                  doesn't require registration.){' '}
                   <motion.span
                     className="text-green-nx-base"
                     initial={{ opacity: 0 }}

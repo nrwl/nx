@@ -30,7 +30,7 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 
 ```bash
 ? What to create in the new workspace empty             [an empty workspace with a layout that works best for building apps]
-? Use Nx Cloud? (It's free and doesn't require registration.) Yes [Faster builds, run details, GitHub integration. Learn more at https://nx.app]
+? Set up distributed caching using Nx Cloud (It's free and doesn't require registration.) Yes [Faster builds, run details, GitHub integration. Learn more at https://nx.app]
 ```
 
 ## Creating your app

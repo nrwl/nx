@@ -5,7 +5,7 @@
 You can enable Nx Cloud when creating a new workspace with `npx create-nx-workspace`.
 
 ```bash
-? Use Nx Cloud? (It's free and doesn't require registration.)
+? Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)
   (Use arrow keys)
 ❯ Yes [Faster builds, run details, Github integration. Learn
   more at https://nx.app]
