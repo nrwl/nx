@@ -7,3 +7,10 @@ export interface Schema {
   flat?: boolean;
   export?: boolean;
 }
+
+export interface NormalizedSchema extends Schema {
+  flat: boolean;
+  path: string;
+  project: string;
+  projectSourceRoot: string;
+}

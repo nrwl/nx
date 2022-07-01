@@ -17,17 +17,15 @@ describe('exportScam', () => {
       exportScam(
         tree,
         {
-          componentDirectory: 'apps/app1/src/app/example',
-          componentFileName: 'example.component',
-          componentFilePath: 'apps/app1/src/example/example.component.ts',
+          directory: 'apps/app1/src/app/example',
+          fileName: 'example.component',
+          filePath: 'apps/app1/src/example/example.component.ts',
         },
         {
           name: 'example',
           project: 'app1',
           inlineScam: true,
           export: true,
-          path: 'apps/app1/src/app',
-          projectSourceRoot: 'apps/app1/src',
         }
       )
     ).not.toThrow();
@@ -47,17 +45,15 @@ describe('exportScam', () => {
     exportScam(
       tree,
       {
-        componentDirectory: 'libs/lib1/src/lib/example',
-        componentFileName: 'example.component',
-        componentFilePath: 'libs/lib1/src/lib/example/example.component.ts',
+        directory: 'libs/lib1/src/lib/example',
+        fileName: 'example.component',
+        filePath: 'libs/lib1/src/lib/example/example.component.ts',
       },
       {
         name: 'example',
         project: 'lib1',
         inlineScam: true,
         export: true,
-        path: 'libs/lib1/src/lib',
-        projectSourceRoot: 'libs/lib1/src',
       }
     );
 
@@ -82,17 +78,15 @@ describe('exportScam', () => {
     exportScam(
       tree,
       {
-        componentDirectory: 'libs/lib1/src/lib/example',
-        componentFileName: 'example.component',
-        componentFilePath: 'libs/lib1/src/lib/example/example.component.ts',
+        directory: 'libs/lib1/src/lib/example',
+        fileName: 'example.component',
+        filePath: 'libs/lib1/src/lib/example/example.component.ts',
       },
       {
         name: 'example',
         project: 'lib1',
         inlineScam: false,
         export: true,
-        path: 'libs/lib1/src/lib',
-        projectSourceRoot: 'libs/lib1/src',
       }
     );
 
@@ -122,18 +116,15 @@ describe('exportScam', () => {
     exportScam(
       tree,
       {
-        componentDirectory: 'libs/lib1/feature/src/lib/example',
-        componentFileName: 'example.component',
-        componentFilePath:
-          'libs/lib1/feature/src/lib/example/example.component.ts',
+        directory: 'libs/lib1/feature/src/lib/example',
+        fileName: 'example.component',
+        filePath: 'libs/lib1/feature/src/lib/example/example.component.ts',
       },
       {
         name: 'example',
         project: 'lib1',
         inlineScam: true,
         export: true,
-        path: 'libs/lib1/feature/src/lib',
-        projectSourceRoot: 'libs/lib1/src',
       }
     );
 

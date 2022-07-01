@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { logger, readProjectConfiguration, stripIndents } from '@nrwl/devkit';
-import { getComponentFileInfo } from '../../utils/component';
+import { getComponentFileInfo } from '../../utils/file-info';
 import { locateLibraryEntryPointFromDirectory } from '../../utils/entry-point';
 import { getRelativeImportToFile } from '../../utils/path';
 import type { NormalizedSchema } from '../schema';
@@ -21,14 +21,11 @@ export function exportComponentInEntryPoint(
     return;
   }
 
-  const { componentDirectory, componentFilePath } = getComponentFileInfo(
-    tree,
-    schema
-  );
+  const { directory, filePath } = getComponentFileInfo(tree, schema);
 
   const entryPointPath = locateLibraryEntryPointFromDirectory(
     tree,
-    componentDirectory,
+    directory,
     root,
     schema.projectSourceRoot
   );
@@ -50,7 +47,7 @@ export function exportComponentInEntryPoint(
 
   const relativePathFromEntryPoint = getRelativeImportToFile(
     entryPointPath,
-    componentFilePath
+    filePath
   );
   const updateEntryPointContent = stripIndents`${tree.read(
     entryPointPath,
