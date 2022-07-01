@@ -1,10 +1,9 @@
 import type { Tree } from '@nrwl/devkit';
-import type { Schema } from '../schema';
-
 import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import type { Schema } from '../schema';
 
 export function setupServeTarget(host: Tree, options: Schema) {
   const appConfig = readProjectConfiguration(host, options.appName);
@@ -12,7 +11,7 @@ export function setupServeTarget(host: Tree, options: Schema) {
   appConfig.targets['serve'] = {
     ...appConfig.targets['serve'],
     executor:
-      options.mfeType === 'host'
+      options.mfType === 'host'
         ? '@nrwl/angular:module-federation-dev-server'
         : '@nrwl/angular:webpack-server',
     options: {
@@ -22,7 +21,7 @@ export function setupServeTarget(host: Tree, options: Schema) {
     },
   };
 
-  if (options.mfeType === 'remote') {
+  if (options.mfType === 'remote') {
     appConfig.targets['serve-static'] = {
       executor: '@nrwl/angular:file-server',
       defaultConfiguration: 'development',

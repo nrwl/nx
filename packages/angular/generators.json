@@ -121,9 +121,9 @@
       "schema": "./src/generators/scam-pipe/schema.json",
       "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM)."
     },
-    "setup-mfe": {
-      "factory": "./src/generators/setup-mfe/setup-mfe.compat",
-      "schema": "./src/generators/setup-mfe/schema.json",
+    "setup-mf": {
+      "factory": "./src/generators/setup-mf/setup-mf.compat",
+      "schema": "./src/generators/setup-mf/schema.json",
       "description": "Generate a Module Federation configuration for a given Angular application."
     },
     "setup-tailwind": {
@@ -277,9 +277,9 @@
       "schema": "./src/generators/scam-pipe/schema.json",
       "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM)."
     },
-    "setup-mfe": {
-      "factory": "./src/generators/setup-mfe/setup-mfe",
-      "schema": "./src/generators/setup-mfe/schema.json",
+    "setup-mf": {
+      "factory": "./src/generators/setup-mf/setup-mf",
+      "schema": "./src/generators/setup-mf/schema.json",
       "description": "Generate a Module Federation configuration for a given Angular application."
     },
     "setup-tailwind": {

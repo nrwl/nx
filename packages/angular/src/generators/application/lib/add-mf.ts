@@ -1,12 +1,12 @@
 import type { Tree } from '@nrwl/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
-import { setupMfe } from '../../setup-mfe/setup-mfe';
+import { setupMf } from '../../setup-mf/setup-mf';
 
-export async function addMfe(host: Tree, options: NormalizedSchema) {
-  await setupMfe(host, {
+export async function addMf(host: Tree, options: NormalizedSchema) {
+  await setupMf(host, {
     appName: options.name,
-    mfeType: options.mfeType,
+    mfType: options.mfType,
     port: options.port,
     remotes: options.remotes,
     host: options.host,

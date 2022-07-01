@@ -1,10 +1,10 @@
-import { readJson, Tree } from '@nrwl/devkit';
-import { readProjectConfiguration } from '@nrwl/devkit';
+import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
-import { setupMfe } from './setup-mfe';
+import { setupMf } from './setup-mf';
 import applicationGenerator from '../application/application';
-describe('Init MFE', () => {
+
+describe('Init MF', () => {
   let tree: Tree;
 
   beforeEach(async () => {
@@ -23,12 +23,12 @@ describe('Init MFE', () => {
     ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
-    'should create webpack and mfe configs correctly',
+    'should create webpack and mf configs correctly',
     async (app, type: 'host' | 'remote') => {
       // ACT
-      await setupMfe(tree, {
+      await setupMf(tree, {
         appName: app,
-        mfeType: type,
+        mfType: type,
       });
 
       // ASSERT
@@ -44,11 +44,11 @@ describe('Init MFE', () => {
       );
       expect(webpackContents).toMatchSnapshot();
 
-      const mfeConfigContents = tree.read(
+      const mfConfigContents = tree.read(
         `apps/${app}/module-federation.config.js`,
         'utf-8'
       );
-      expect(mfeConfigContents).toMatchSnapshot();
+      expect(mfConfigContents).toMatchSnapshot();
     }
   );
 
@@ -62,9 +62,9 @@ describe('Init MFE', () => {
       const mainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
 
       // ACT
-      await setupMfe(tree, {
+      await setupMf(tree, {
         appName: app,
-        mfeType: type,
+        mfType: type,
       });
 
       // ASSERT
@@ -89,9 +89,9 @@ describe('Init MFE', () => {
       const mainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
 
       // ACT
-      await setupMfe(tree, {
+      await setupMf(tree, {
         appName: app,
-        mfeType: type,
+        mfType: type,
       });
 
       // ASSERT
@@ -111,9 +111,9 @@ describe('Init MFE', () => {
     'should change the build and serve target and set correct path to webpack config',
     async (app, type: 'host' | 'remote') => {
       // ACT
-      await setupMfe(tree, {
+      await setupMf(tree, {
         appName: app,
-        mfeType: type,
+        mfType: type,
       });
 
       // ASSERT
@@ -133,9 +133,9 @@ describe('Init MFE', () => {
 
   it('should generate the remote entry module and component correctly', async () => {
     // ACT
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'remote1',
-      mfeType: 'remote',
+      mfType: 'remote',
       prefix: 'my-org',
     });
 
@@ -150,7 +150,7 @@ describe('Init MFE', () => {
 
   it('should generate the remote entry component correctly when prefix is not provided', async () => {
     // ACT
-    await setupMfe(tree, { appName: 'remote1', mfeType: 'remote' });
+    await setupMf(tree, { appName: 'remote1', mfType: 'remote' });
 
     // ASSERT
     expect(
@@ -160,41 +160,41 @@ describe('Init MFE', () => {
 
   it('should add the remote config to the host when --remotes flag supplied', async () => {
     // ACT
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'app1',
-      mfeType: 'host',
+      mfType: 'host',
       remotes: ['remote1'],
     });
 
     // ASSERT
-    const mfeConfigContents = tree.read(
+    const mfConfigContents = tree.read(
       `apps/app1/module-federation.config.js`,
       'utf-8'
     );
 
-    expect(mfeConfigContents).toContain(`'remote1'`);
+    expect(mfConfigContents).toContain(`'remote1'`);
   });
 
   it('should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it', async () => {
     // ARRANGE
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'app1',
-      mfeType: 'host',
+      mfType: 'host',
     });
 
     // ACT
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'remote1',
-      mfeType: 'remote',
+      mfType: 'remote',
       host: 'app1',
     });
 
     // ASSERT
-    const hostMfeConfig = tree.read(
+    const hostMfConfig = tree.read(
       'apps/app1/module-federation.config.js',
       'utf-8'
     );
-    expect(hostMfeConfig).toMatchSnapshot();
+    expect(hostMfConfig).toMatchSnapshot();
   });
 
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
@@ -203,32 +203,32 @@ describe('Init MFE', () => {
       name: 'remote2',
     });
 
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'app1',
-      mfeType: 'host',
+      mfType: 'host',
     });
 
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'remote1',
-      mfeType: 'remote',
+      mfType: 'remote',
       host: 'app1',
       port: 4201,
     });
 
     // ACT
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'remote2',
-      mfeType: 'remote',
+      mfType: 'remote',
       host: 'app1',
       port: 4202,
     });
 
     // ASSERT
-    const hostMfeConfig = tree.read(
+    const hostMfConfig = tree.read(
       'apps/app1/module-federation.config.js',
       'utf-8'
     );
-    expect(hostMfeConfig).toMatchSnapshot();
+    expect(hostMfConfig).toMatchSnapshot();
   });
 
   it('should add a remote application and add it to a specified host applications router config', async () => {
@@ -238,24 +238,24 @@ describe('Init MFE', () => {
       routing: true,
     });
 
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'app1',
-      mfeType: 'host',
+      mfType: 'host',
       routing: true,
     });
 
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'remote1',
-      mfeType: 'remote',
+      mfType: 'remote',
       host: 'app1',
       port: 4201,
       routing: true,
     });
 
     // ACT
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'remote2',
-      mfeType: 'remote',
+      mfType: 'remote',
       host: 'app1',
       port: 4202,
       routing: true,
@@ -274,9 +274,9 @@ describe('Init MFE', () => {
     });
 
     // ACT
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'test-app',
-      mfeType: 'host',
+      mfType: 'host',
       routing: true,
     });
 
@@ -293,9 +293,9 @@ describe('Init MFE', () => {
   describe('--federationType=dynamic', () => {
     it('should create a host with the correct configurations', async () => {
       // ARRANGE & ACT
-      await setupMfe(tree, {
+      await setupMf(tree, {
         appName: 'app1',
-        mfeType: 'host',
+        mfType: 'host',
         routing: true,
         federationType: 'dynamic',
       });
@@ -313,17 +313,17 @@ describe('Init MFE', () => {
 
   it('should add a remote to dynamic host correctly', async () => {
     // ARRANGE
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'app1',
-      mfeType: 'host',
+      mfType: 'host',
       routing: true,
       federationType: 'dynamic',
     });
 
     // ACT
-    await setupMfe(tree, {
+    await setupMf(tree, {
       appName: 'remote1',
-      mfeType: 'remote',
+      mfType: 'remote',
       port: 4201,
       host: 'app1',
       routing: true,

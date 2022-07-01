@@ -12,7 +12,7 @@ export * from './src/generators/setup-tailwind/setup-tailwind';
 export * from './src/generators/stories/stories';
 export * from './src/generators/storybook-configuration/storybook-configuration';
 export * from './src/generators/upgrade-module/upgrade-module';
-export * from './src/generators/setup-mfe/setup-mfe';
+export * from './src/generators/setup-mf/setup-mf';
 export * from './src/generators/host/host';
 export * from './src/generators/scam/scam';
 export * from './src/generators/scam-directive/scam-directive';

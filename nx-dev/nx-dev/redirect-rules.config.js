@@ -33,14 +33,20 @@ const schemaUrls = {
   '/angular/library': '/packages/angular/generators/library',
   '/angular/library-secondary-entry-point':
     '/packages/angular/generators/library-secondary-entry-point',
-  '/angular/mfe-host': '/packages/angular/generators/mfe-host',
-  '/angular/mfe-remote': '/packages/angular/generators/mfe-remote',
+  '/angular/mfe-host': '/packages/angular/generators/mf-host',
+  '/angular/mfe-remote': '/packages/angular/generators/mf-remote',
+  '/packages/angular/generators/mfe-host':
+    '/packages/angular/generators/mf-host',
+  '/packages/angular/generators/mfe-remote':
+    '/packages/angular/generators/mf-remote',
   '/angular/move': '/packages/angular/generators/move',
   '/angular/ngrx': '/packages/angular/generators/ngrx',
   '/angular/scam': '/packages/angular/generators/scam',
   '/angular/scam-directive': '/packages/angular/generators/scam-directive',
   '/angular/scam-pipe': '/packages/angular/generators/scam-pipe',
-  '/angular/setup-mfe': '/packages/angular/generators/setup-mfe',
+  '/angular/setup-mfe': '/packages/angular/generators/setup-mf',
+  '/packages/angular/generators/setup-mfe':
+    '/packages/angular/generators/setup-mf',
   '/angular/setup-tailwind': '/packages/angular/generators/setup-tailwind',
   '/angular/stories': '/packages/angular/generators/stories',
   '/angular/storybook-configuration':

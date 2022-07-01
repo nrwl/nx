@@ -34,12 +34,12 @@ To start with, we need to create a new Nx Workspace. We can do this easily with:
 
 ```bash
 # Npm
-npx create-nx-workspace ng-mfe
+npx create-nx-workspace ng-mf
 ```
 
 ```bash
 # Yarn
-yarn create nx-workspace ng-mfe --packageManager=yarn
+yarn create nx-workspace ng-mf --packageManager=yarn
 ```
 
 You'll be prompted for a preset. We recommend selecting `empty` as it will allow you finer control over your workspace configuration.
@@ -232,7 +232,7 @@ Next we want to set up our `entry.component.ts` file so that it renders a login 
 import { Component } from '@angular/core';
 import { UserService } from '@ng-mfe/shared/data-access-user';
 @Component({
-  selector: 'ng-mfe-login-entry',
+  selector: 'ng-mf-login-entry',
   template: `
     <div class="login-app">
       <form class="login-form" (ngSubmit)="login()">
@@ -330,7 +330,7 @@ import { Router } from '@angular/router';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { UserService } from '@ng-mfe/shared/data-access-user';
 @Component({
-  selector: 'ng-mfe-root',
+  selector: 'ng-mf-root',
   template: `
     <div class="dashboard-nav">Admin Dashboard</div>
     <div *ngIf="isLoggedIn$ | async; else signIn">
@@ -399,7 +399,7 @@ We’ll start by creating this file. Add a `module-federation.manifest.json` fil
 Next, open `main.ts` under the `src/`folder and replace it with the following:
 
 ```typescript
-import { setRemoteDefinitions } from '@nrwl/angular/mfe';
+import { setRemoteDefinitions } from '@nrwl/angular/mf';
 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
@@ -453,7 +453,7 @@ Replace it with the following:
 You will also need to add the following import to the top of the file:
 
 ```typescript
-import { loadRemoteModule } from '@nrwl/angular/mfe';
+import { loadRemoteModule } from '@nrwl/angular/mf';
 ```
 
 The `loadRemoteModule` helper method simply hides some logic that will check if the Remote application has been loaded, and if not, load it, and then requests the correct exposed module from it.

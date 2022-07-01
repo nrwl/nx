@@ -1,18 +1,18 @@
 import {
   checkFilesExist,
+  cleanupProject,
   getSize,
   killPorts,
   newProject,
-  cleanupProject,
+  promisifiedTreeKill,
+  readFile,
   runCLI,
+  runCommandUntil,
+  runCypressTests,
   tmpProjPath,
   uniq,
   updateFile,
-  runCypressTests,
   updateProjectConfig,
-  readFile,
-  runCommandUntil,
-  promisifiedTreeKill,
 } from '@nrwl/e2e/utils';
 import { ChildProcess } from 'child_process';
 
@@ -222,7 +222,7 @@ describe('Angular Projects', () => {
     expect(buildOutput).toContain('Successfully ran target build');
   });
 
-  it('MFE - should serve the host and remote apps successfully, even with a shared library with a secondary entry point between them', async () => {
+  it('MF - should serve the host and remote apps successfully, even with a shared library with a secondary entry point between them', async () => {
     // ACT + ASSERT
     const port1 = 4200;
     const port2 = 4206;
@@ -343,7 +343,7 @@ describe('Angular Projects', () => {
     }
   }, 300000);
 
-  it('MFE - should build the host app successfully', async () => {
+  it('MF - should build the host app successfully', async () => {
     // ARRANGE
     const hostApp = uniq('app');
     const remoteApp1 = uniq('remote');

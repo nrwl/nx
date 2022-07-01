@@ -1,7 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
-import type { Schema } from '../schema';
-
 import { joinPathFragments } from '@nrwl/devkit';
+import type { Schema } from '../schema';
 
 export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
   const mainFilePath = joinPathFragments(appRoot, 'src/main.ts');
@@ -10,7 +9,7 @@ export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
 
   const bootstrapImportCode = `import('./bootstrap').catch(err => console.error(err))`;
 
-  const fetchMFManifestCode = `import { setRemoteDefinitions } from '@nrwl/angular/mfe';
+  const fetchMFManifestCode = `import { setRemoteDefinitions } from '@nrwl/angular/mf';
 
   fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
@@ -19,7 +18,7 @@ export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
 
   tree.write(
     mainFilePath,
-    options.mfeType === 'host' && options.federationType === 'dynamic'
+    options.mfType === 'host' && options.federationType === 'dynamic'
       ? fetchMFManifestCode
       : bootstrapImportCode
   );

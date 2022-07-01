@@ -23,8 +23,8 @@ export interface Schema {
   backendProject?: string;
   strict?: boolean;
   standaloneConfig?: boolean;
-  mfe?: boolean;
-  mfeType?: 'host' | 'remote';
+  mf?: boolean;
+  mfType?: 'host' | 'remote';
   remotes?: string[];
   port?: number;
   host?: string;
