@@ -105,7 +105,8 @@ export async function buildProjectGraphUsingProjectFileMap(
     nxJson,
     context,
     cachedFileData,
-    projectGraphVersion
+    projectGraphVersion,
+    packageJsonDeps
   );
   const projectGraphCache = createCache(
     nxJson,
@@ -132,7 +133,8 @@ async function buildProjectGraphUsingContext(
   nxJson: NxJsonConfiguration,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
-  projectGraphVersion: string
+  projectGraphVersion: string,
+  packageJsonDeps: { [packageName: string]: string }
 ) {
   performance.mark('build project graph:start');
 
@@ -149,7 +151,11 @@ async function buildProjectGraphUsingContext(
     }
   }
 
-  await buildExplicitDependencies(jsPluginConfig(nxJson), ctx, builder);
+  await buildExplicitDependencies(
+    jsPluginConfig(nxJson, packageJsonDeps),
+    ctx,
+    builder
+  );
 
   buildImplicitProjectDependencies(ctx, builder);
   builder.setVersion(projectGraphVersion);
@@ -172,8 +178,18 @@ interface NrwlJsPluginConfig {
   analyzePackageJson?: boolean;
 }
 
-function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
-  return nxJson?.pluginsConfig?.['@nrwl/js'] ?? {};
+function jsPluginConfig(
+  nxJson: NxJsonConfiguration,
+  packageJsonDeps: { [packageName: string]: string }
+): NrwlJsPluginConfig {
+  if (nxJson?.pluginsConfig?.['@nrwl/js']) {
+    return nxJson?.pluginsConfig?.['@nrwl/js'];
+  }
+  if (packageJsonDeps['@nrwl/workspace'] || packageJsonDeps['@nrwl/js']) {
+    return { analyzePackageJson: true, analyzeSourceFiles: true };
+  } else {
+    return { analyzePackageJson: true, analyzeSourceFiles: false };
+  }
 }
 
 function buildExplicitDependencies(
