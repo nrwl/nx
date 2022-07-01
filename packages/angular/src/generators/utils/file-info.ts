@@ -7,23 +7,38 @@ import {
   Tree,
 } from '@nrwl/devkit';
 
-export type ComponentGenerationOptions = {
+export type GenerationOptions = {
   name: string;
   flat?: boolean;
   path?: string;
   project?: string;
   type?: string;
 };
-export type ComponentFileInfo = {
-  componentDirectory: string;
-  componentFileName: string;
-  componentFilePath: string;
+export type FileInfo = {
+  directory: string;
+  fileName: string;
+  filePath: string;
 };
 
 export function getComponentFileInfo(
   tree: Tree,
-  options: ComponentGenerationOptions
-): ComponentFileInfo {
+  options: GenerationOptions
+): FileInfo {
+  return getFileInfo(tree, options, 'component');
+}
+
+export function getPipeFileInfo(
+  tree: Tree,
+  options: GenerationOptions
+): FileInfo {
+  return getFileInfo(tree, options, 'pipe');
+}
+
+function getFileInfo(
+  tree: Tree,
+  options: GenerationOptions,
+  defaultType: string
+): FileInfo {
   const project =
     options.project ?? readWorkspaceConfiguration(tree).defaultProject;
   const { root, sourceRoot, projectType } = readProjectConfiguration(
@@ -32,8 +47,8 @@ export function getComponentFileInfo(
   );
   const { fileName: normalizedName } = names(options.name);
 
-  const componentFileName = `${normalizedName}.${
-    options.type ? names(options.type).fileName : 'component'
+  const fileName = `${normalizedName}.${
+    options.type ? names(options.type).fileName : defaultType
   }`;
 
   const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
@@ -43,14 +58,11 @@ export function getComponentFileInfo(
       projectSourceRoot,
       projectType === 'application' ? 'app' : 'lib'
     );
-  const componentDirectory = options.flat
+  const directory = options.flat
     ? normalizePath(path)
     : joinPathFragments(path, normalizedName);
 
-  const componentFilePath = joinPathFragments(
-    componentDirectory,
-    `${componentFileName}.ts`
-  );
+  const filePath = joinPathFragments(directory, `${fileName}.ts`);
 
-  return { componentDirectory, componentFileName, componentFilePath };
+  return { directory, fileName, filePath };
 }

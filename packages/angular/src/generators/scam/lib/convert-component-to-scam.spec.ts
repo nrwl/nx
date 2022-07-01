@@ -3,7 +3,7 @@ import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { convertComponentToScam } from './convert-component-to-scam';
 
-describe('Create module in the tree', () => {
+describe('convertComponentToScam', () => {
   it('should create the scam inline correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
@@ -28,14 +28,16 @@ describe('Create module in the tree', () => {
     convertComponentToScam(
       tree,
       {
-        componentDirectory: 'apps/app1/src/app/example',
-        componentFileName: 'example.component',
-        componentFilePath: 'apps/app1/src/app/example/example.component.ts',
+        directory: 'apps/app1/src/app/example',
+        fileName: 'example.component',
+        filePath: 'apps/app1/src/app/example/example.component.ts',
       },
       {
         name: 'example',
         project: 'app1',
         inlineScam: true,
+        path: 'apps/app1/src/app',
+        projectSourceRoot: 'apps/app1/src',
       }
     );
 
@@ -95,14 +97,16 @@ describe('Create module in the tree', () => {
     convertComponentToScam(
       tree,
       {
-        componentDirectory: 'apps/app1/src/app/example',
-        componentFileName: 'example.component',
-        componentFilePath: 'apps/app1/src/app/example/example.component.ts',
+        directory: 'apps/app1/src/app/example',
+        fileName: 'example.component',
+        filePath: 'apps/app1/src/app/example/example.component.ts',
       },
       {
         name: 'example',
         project: 'app1',
         inlineScam: false,
+        path: 'apps/app1/src/app',
+        projectSourceRoot: 'apps/app1/src',
       }
     );
 
@@ -150,15 +154,17 @@ describe('Create module in the tree', () => {
     convertComponentToScam(
       tree,
       {
-        componentDirectory: 'apps/app1/src/app',
-        componentFileName: 'example.component',
-        componentFilePath: 'apps/app1/src/app/example.component.ts',
+        directory: 'apps/app1/src/app',
+        fileName: 'example.component',
+        filePath: 'apps/app1/src/app/example.component.ts',
       },
       {
         name: 'example',
         project: 'app1',
         inlineScam: true,
         flat: true,
+        path: 'apps/app1/src/app',
+        projectSourceRoot: 'apps/app1/src',
       }
     );
 
@@ -219,15 +225,17 @@ describe('Create module in the tree', () => {
     convertComponentToScam(
       tree,
       {
-        componentDirectory: 'apps/app1/src/app',
-        componentFileName: 'example.component',
-        componentFilePath: 'apps/app1/src/app/example.component.ts',
+        directory: 'apps/app1/src/app',
+        fileName: 'example.component',
+        filePath: 'apps/app1/src/app/example.component.ts',
       },
       {
         name: 'example',
         project: 'app1',
         inlineScam: false,
         flat: true,
+        path: 'apps/app1/src/app',
+        projectSourceRoot: 'apps/app1/src',
       }
     );
 
@@ -276,9 +284,9 @@ describe('Create module in the tree', () => {
     convertComponentToScam(
       tree,
       {
-        componentDirectory: 'apps/app1/src/app',
-        componentFileName: 'example.random',
-        componentFilePath: 'apps/app1/src/app/example.random.ts',
+        directory: 'apps/app1/src/app',
+        fileName: 'example.random',
+        filePath: 'apps/app1/src/app/example.random.ts',
       },
       {
         name: 'example',
@@ -286,6 +294,8 @@ describe('Create module in the tree', () => {
         inlineScam: true,
         flat: true,
         type: 'random',
+        path: 'apps/app1/src/app',
+        projectSourceRoot: 'apps/app1/src',
       }
     );
 
@@ -347,9 +357,9 @@ describe('Create module in the tree', () => {
     convertComponentToScam(
       tree,
       {
-        componentDirectory: 'apps/app1/src/app',
-        componentFileName: 'example.random',
-        componentFilePath: 'apps/app1/src/app/example.random.ts',
+        directory: 'apps/app1/src/app',
+        fileName: 'example.random',
+        filePath: 'apps/app1/src/app/example.random.ts',
       },
       {
         name: 'example',
@@ -357,6 +367,8 @@ describe('Create module in the tree', () => {
         inlineScam: false,
         flat: true,
         type: 'random',
+        path: 'apps/app1/src/app',
+        projectSourceRoot: 'apps/app1/src',
       }
     );
 
@@ -405,17 +417,17 @@ describe('Create module in the tree', () => {
     convertComponentToScam(
       tree,
       {
-        componentDirectory: 'apps/app1/src/app/random/example',
-        componentFileName: 'example.component',
-        componentFilePath:
-          'apps/app1/src/app/random/example/example.component.ts',
+        directory: 'apps/app1/src/app/random/example',
+        fileName: 'example.component',
+        filePath: 'apps/app1/src/app/random/example/example.component.ts',
       },
       {
         name: 'example',
         project: 'app1',
         flat: false,
-        path: 'apps/app1/src/app/random',
         inlineScam: true,
+        path: 'apps/app1/src/app/random',
+        projectSourceRoot: 'apps/app1/src',
       }
     );
 
@@ -477,16 +489,17 @@ describe('Create module in the tree', () => {
     convertComponentToScam(
       tree,
       {
-        componentDirectory: 'apps/app1/src/app/random',
-        componentFileName: 'example.component',
-        componentFilePath: 'apps/app1/src/app/random/example.component.ts',
+        directory: 'apps/app1/src/app/random',
+        fileName: 'example.component',
+        filePath: 'apps/app1/src/app/random/example.component.ts',
       },
       {
         name: 'example',
         project: 'app1',
         flat: true,
-        path: 'apps/app1/src/app/random',
         inlineScam: true,
+        path: 'apps/app1/src/app/random',
+        projectSourceRoot: 'apps/app1/src',
       }
     );
 

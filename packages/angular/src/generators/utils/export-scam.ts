@@ -6,21 +6,31 @@ import {
   readProjectConfiguration,
   stripIndents,
 } from '@nrwl/devkit';
-import type { ComponentFileInfo } from '../../utils/component';
-import { locateLibraryEntryPointFromDirectory } from '../../utils/entry-point';
-import { getRelativeImportToFile } from '../../utils/path';
-import type { NormalizedSchema } from '../schema';
+import { locateLibraryEntryPointFromDirectory } from './entry-point';
+import type { FileInfo } from './file-info';
+import { getRelativeImportToFile } from './path';
+
+export type GenerationOptions = {
+  name: string;
+  project: string;
+  export?: boolean;
+  inlineScam?: boolean;
+};
 
 export function exportScam(
   tree: Tree,
-  { componentDirectory, componentFilePath }: ComponentFileInfo,
-  options: NormalizedSchema
+  fileInfo: FileInfo,
+  options: GenerationOptions
 ): void {
   if (!options.export) {
     return;
   }
 
-  const { root, projectType } = readProjectConfiguration(tree, options.project);
+  const { projectType, root, sourceRoot } = readProjectConfiguration(
+    tree,
+    options.project
+  );
+  const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
 
   if (projectType === 'application') {
     logger.warn(
@@ -32,9 +42,9 @@ export function exportScam(
 
   const entryPointPath = locateLibraryEntryPointFromDirectory(
     tree,
-    componentDirectory,
+    fileInfo.directory,
     root,
-    options.projectSourceRoot
+    projectSourceRoot
   );
   if (!entryPointPath) {
     // Let's not error, simply warn the user
@@ -49,7 +59,7 @@ export function exportScam(
 
   const relativePathFromEntryPoint = getRelativeImportToFile(
     entryPointPath,
-    componentFilePath
+    fileInfo.filePath
   );
   const entryPointContent = tree.read(entryPointPath, 'utf-8');
   let updatedEntryPointContent = stripIndents`${entryPointContent}
@@ -57,7 +67,7 @@ export function exportScam(
 
   if (!options.inlineScam) {
     const moduleFilePath = joinPathFragments(
-      componentDirectory,
+      fileInfo.directory,
       `${names(options.name).fileName}.module.ts`
     );
     const relativePathFromModule = getRelativeImportToFile(
@@ -65,7 +75,7 @@ export function exportScam(
       moduleFilePath
     );
     updatedEntryPointContent = stripIndents`${updatedEntryPointContent}
-      export * from "${relativePathFromModule}";`;
+        export * from "${relativePathFromModule}";`;
   }
 
   tree.write(entryPointPath, updatedEntryPointContent);

@@ -6,9 +6,10 @@ import {
   readWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { exportScam } from '../utils/export-scam';
+import { getComponentFileInfo } from '../utils/file-info';
 import { pathStartsWith } from '../utils/path';
-import { convertComponentToScam, exportScam, normalizeOptions } from './lib';
-import { getComponentFileInfo } from '../utils/component';
+import { convertComponentToScam, normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function scamGenerator(tree: Tree, rawOptions: Schema) {

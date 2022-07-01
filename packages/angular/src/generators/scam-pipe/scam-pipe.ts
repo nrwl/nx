@@ -1,18 +1,20 @@
 import type { Tree } from '@nrwl/devkit';
-import type { Schema } from './schema';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import {
   formatFiles,
-  readWorkspaceConfiguration,
-  readProjectConfiguration,
   normalizePath,
+  readProjectConfiguration,
+  readWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { createScamPipe } from './lib/create-module';
-import { normalize } from 'path';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { exportScam } from '../utils/export-scam';
+import { getPipeFileInfo } from '../utils/file-info';
 import { pathStartsWith } from '../utils/path';
+import { convertPipeToScam, normalizeOptions } from './lib';
+import type { Schema } from './schema';
 
-export async function scamPipeGenerator(tree: Tree, schema: Schema) {
-  const { inlineScam, ...options } = schema;
+export async function scamPipeGenerator(tree: Tree, rawOptions: Schema) {
+  const options = normalizeOptions(tree, rawOptions);
+  const { inlineScam, projectSourceRoot, ...schematicOptions } = options;
 
   checkPathUnderProjectRoot(tree, options);
 
@@ -21,12 +23,14 @@ export async function scamPipeGenerator(tree: Tree, schema: Schema) {
     'pipe'
   );
   await angularPipeSchematic(tree, {
-    ...options,
+    ...schematicOptions,
     skipImport: true,
     export: false,
   });
 
-  createScamPipe(tree, schema);
+  const pipeFileInfo = getPipeFileInfo(tree, options);
+  convertPipeToScam(tree, pipeFileInfo, options);
+  exportScam(tree, pipeFileInfo, options);
 
   await formatFiles(tree);
 }
