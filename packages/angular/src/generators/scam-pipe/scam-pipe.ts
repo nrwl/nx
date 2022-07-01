@@ -26,6 +26,7 @@ export async function scamPipeGenerator(tree: Tree, rawOptions: Schema) {
     ...schematicOptions,
     skipImport: true,
     export: false,
+    standalone: false,
   });
 
   const pipeFileInfo = getPipeFileInfo(tree, options);

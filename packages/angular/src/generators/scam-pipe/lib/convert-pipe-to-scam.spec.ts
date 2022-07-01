@@ -1,4 +1,4 @@
-import { addProjectConfiguration, logger } from '@nrwl/devkit';
+import { addProjectConfiguration } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { convertPipeToScam } from './convert-pipe-to-scam';
@@ -36,6 +36,7 @@ describe('convertPipeToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         flat: false,
         inlineScam: true,
         path: 'apps/app1/src/app',
@@ -104,6 +105,7 @@ describe('convertPipeToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         flat: false,
         inlineScam: false,
         path: 'apps/app1/src/app',
@@ -162,6 +164,7 @@ describe('convertPipeToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         inlineScam: true,
         flat: true,
         path: 'apps/app1/src/app',
@@ -227,6 +230,7 @@ describe('convertPipeToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         inlineScam: false,
         flat: true,
         path: 'apps/app1/src/app',
@@ -286,6 +290,7 @@ describe('convertPipeToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         flat: false,
         inlineScam: true,
         path: 'apps/app1/src/app/random',
@@ -355,6 +360,7 @@ describe('convertPipeToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         flat: true,
         inlineScam: true,
         path: 'apps/app1/src/app/random',

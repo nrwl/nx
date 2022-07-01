@@ -27,6 +27,13 @@ export function getComponentFileInfo(
   return getFileInfo(tree, options, 'component');
 }
 
+export function getDirectiveFileInfo(
+  tree: Tree,
+  options: GenerationOptions
+): FileInfo {
+  return getFileInfo(tree, options, 'directive');
+}
+
 export function getPipeFileInfo(
   tree: Tree,
   options: GenerationOptions
