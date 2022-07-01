@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 import ExperimentalFeature from '../experimental-feature';
 import { useDepGraphService } from '../hooks/use-dep-graph';
 import { useDepGraphSelector } from '../hooks/use-dep-graph-selector';
-import { useEnvironmentConfig } from '../hooks/use-environment-config';
 import {
   collapseEdgesSelector,
   focusedProjectNameSelector,

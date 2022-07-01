@@ -4,12 +4,9 @@ import type {
   ProjectGraphProjectNode,
 } from '@nrwl/devkit';
 import type { VirtualElement } from '@popperjs/core';
-import { default as cy } from 'cytoscape';
-import { default as cytoscapeDagre } from 'cytoscape-dagre';
-import { default as popper } from 'cytoscape-popper';
-import type { Instance } from 'tippy.js';
-import EdgeNodeTooltip from '../edge-tooltip';
-import ProjectNodeToolTip from '../project-node-tooltip';
+import cy from 'cytoscape';
+import cytoscapeDagre from 'cytoscape-dagre';
+import popper from 'cytoscape-popper';
 import { edgeStyles, nodeStyles } from '../styles-graph';
 import { selectValueByThemeStatic } from '../theme-resolver';
 import { GraphTooltipService } from '../tooltip-service';
@@ -25,7 +22,6 @@ export class GraphService {
   private traversalGraph: cy.Core;
   private renderGraph: cy.Core;
 
-  private openTooltip: Instance = null;
   private collapseEdges = false;
 
   constructor(
@@ -441,10 +437,7 @@ export class GraphService {
     }
 
     this.renderGraph.on('zoom', () => {
-      if (this.openTooltip) {
-        this.openTooltip.hide();
-        this.openTooltip = null;
-      }
+      this.tooltipService.hideAll();
     });
 
     this.listenForProjectNodeClicks();
@@ -597,13 +590,11 @@ export class GraphService {
 
       let ref: VirtualElement = node.popperRef(); // used only for positioning
 
-      const content = ProjectNodeToolTip({
+      this.tooltipService.openProjectNodeToolTip(ref, {
         id: node.id(),
         type: node.data('type'),
         tags: node.data('tags'),
       });
-
-      this.openTooltip = this.tooltipService.open(ref, content);
     });
   }
 
@@ -612,7 +603,7 @@ export class GraphService {
       const edge: cy.EdgeSingular = event.target;
       let ref: VirtualElement = edge.popperRef(); // used only for positioning
 
-      const tooltipContent = EdgeNodeTooltip({
+      this.tooltipService.openEdgeToolTip(ref, {
         type: edge.data('type'),
         source: edge.source().id(),
         target: edge.target().id(),
@@ -627,8 +618,6 @@ export class GraphService {
             };
           }),
       });
-
-      this.openTooltip = this.tooltipService.open(ref, tooltipContent);
     });
   }
 
