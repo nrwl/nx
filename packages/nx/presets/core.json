@@ -6,10 +6,5 @@
         "cacheableOperations": []
       }
     }
-  },
-  "pluginsConfig": {
-    "@nrwl/js": {
-      "analyzeSourceFiles": false
-    }
   }
 }
