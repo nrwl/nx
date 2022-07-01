@@ -26,6 +26,8 @@ export function normalizeOptions(
 
   return {
     ...options,
+    export: options.export ?? true,
+    inlineScam: options.inlineScam ?? true,
     path,
     project,
     projectSourceRoot,

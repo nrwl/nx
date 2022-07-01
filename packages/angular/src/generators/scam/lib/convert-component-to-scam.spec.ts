@@ -35,6 +35,7 @@ describe('convertComponentToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         inlineScam: true,
         path: 'apps/app1/src/app',
         projectSourceRoot: 'apps/app1/src',
@@ -104,6 +105,7 @@ describe('convertComponentToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         inlineScam: false,
         path: 'apps/app1/src/app',
         projectSourceRoot: 'apps/app1/src',
@@ -161,6 +163,7 @@ describe('convertComponentToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         inlineScam: true,
         flat: true,
         path: 'apps/app1/src/app',
@@ -232,6 +235,7 @@ describe('convertComponentToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         inlineScam: false,
         flat: true,
         path: 'apps/app1/src/app',
@@ -291,6 +295,7 @@ describe('convertComponentToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         inlineScam: true,
         flat: true,
         type: 'random',
@@ -364,6 +369,7 @@ describe('convertComponentToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         inlineScam: false,
         flat: true,
         type: 'random',
@@ -424,6 +430,7 @@ describe('convertComponentToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         flat: false,
         inlineScam: true,
         path: 'apps/app1/src/app/random',
@@ -496,6 +503,7 @@ describe('convertComponentToScam', () => {
       {
         name: 'example',
         project: 'app1',
+        export: false,
         flat: true,
         inlineScam: true,
         path: 'apps/app1/src/app/random',

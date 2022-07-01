@@ -26,6 +26,7 @@ export async function scamGenerator(tree: Tree, rawOptions: Schema) {
     ...schematicOptions,
     skipImport: true,
     export: false,
+    standalone: false,
   });
 
   const componentFileInfo = getComponentFileInfo(tree, options);

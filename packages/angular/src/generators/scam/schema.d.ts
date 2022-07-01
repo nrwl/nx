@@ -19,6 +19,8 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
+  export: boolean;
+  inlineScam: boolean;
   path: string;
   project: string;
   projectSourceRoot: string;
