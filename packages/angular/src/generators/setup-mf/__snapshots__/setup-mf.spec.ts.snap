@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Init MFE --federationType=dynamic should create a host with the correct configurations 1`] = `
-"import { setRemoteDefinitions } from '@nrwl/angular/mfe';
+exports[`Init MF --federationType=dynamic should create a host with the correct configurations 1`] = `
+"import { setRemoteDefinitions } from '@nrwl/angular/mf';
 
   fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
@@ -9,7 +9,7 @@ exports[`Init MFE --federationType=dynamic should create a host with the correct
   .then(() => import('./bootstrap').catch(err => console.error(err)))"
 `;
 
-exports[`Init MFE should add a remote application and add it to a specified host applications router config 1`] = `
+exports[`Init MF should add a remote application and add it to a specified host applications router config 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
@@ -39,28 +39,28 @@ export class AppModule { }
 "
 `;
 
-exports[`Init MFE should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
+exports[`Init MF should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
 "module.exports = {
   name: 'app1',
   remotes: ['remote1','remote2',]
 }"
 `;
 
-exports[`Init MFE should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it 1`] = `
+exports[`Init MF should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it 1`] = `
 "module.exports = {
   name: 'app1',
   remotes: ['remote1',]
 }"
 `;
 
-exports[`Init MFE should add a remote to dynamic host correctly 1`] = `
+exports[`Init MF should add a remote to dynamic host correctly 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';
 import { RouterModule } from '@angular/router';
-import { loadRemoteModule } from '@nrwl/angular/mfe';
+import { loadRemoteModule } from '@nrwl/angular/mf';
 
 @NgModule({
   declarations: [
@@ -81,26 +81,26 @@ export class AppModule { }
 "
 `;
 
-exports[`Init MFE should create webpack and mfe configs correctly 1`] = `
+exports[`Init MF should create webpack and mf configs correctly 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
-exports[`Init MFE should create webpack and mfe configs correctly 2`] = `
+exports[`Init MF should create webpack and mf configs correctly 2`] = `
 "module.exports = {
   name: 'app1',
   remotes: []
 }"
 `;
 
-exports[`Init MFE should create webpack and mfe configs correctly 3`] = `
+exports[`Init MF should create webpack and mf configs correctly 3`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
-exports[`Init MFE should create webpack and mfe configs correctly 4`] = `
+exports[`Init MF should create webpack and mf configs correctly 4`] = `
 "module.exports = {
   name: 'remote1',
   exposes: {
@@ -109,7 +109,7 @@ exports[`Init MFE should create webpack and mfe configs correctly 4`] = `
 }"
 `;
 
-exports[`Init MFE should generate the remote entry component correctly when prefix is not provided 1`] = `
+exports[`Init MF should generate the remote entry component correctly when prefix is not provided 1`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -120,7 +120,7 @@ export class RemoteEntryComponent {}
 "
 `;
 
-exports[`Init MFE should generate the remote entry module and component correctly 1`] = `
+exports[`Init MF should generate the remote entry module and component correctly 1`] = `
 "import { Component } from '@angular/core';
 
 @Component({
@@ -131,7 +131,7 @@ export class RemoteEntryComponent {}
 "
 `;
 
-exports[`Init MFE should generate the remote entry module and component correctly 2`] = `
+exports[`Init MF should generate the remote entry module and component correctly 2`] = `
 "import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 

@@ -12,7 +12,7 @@ import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
   addE2e,
   addLinting,
-  addMfe,
+  addMf,
   addProxyConfig,
   addRouterRootConfiguration,
   addUnitTestRunner,
@@ -126,8 +126,8 @@ export async function applicationGenerator(
     });
   }
 
-  if (options.mfe) {
-    await addMfe(host, options);
+  if (options.mf) {
+    await addMf(host, options);
   }
 
   if (!options.skipFormat) {

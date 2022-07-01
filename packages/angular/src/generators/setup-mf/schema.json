@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "GeneratorAngularMFESetup",
+  "$id": "GeneratorAngularMFSetup",
   "cli": "nx",
   "title": "Generate Module Federation Setup for Angular App",
   "description": "Create Module Federation configuration files for given Angular Application.",
@@ -15,7 +15,7 @@
       },
       "x-prompt": "What app would you like to generate a Module Federation configuration for?"
     },
-    "mfeType": {
+    "mfType": {
       "type": "string",
       "enum": ["host", "remote"],
       "description": "Type of application to generate the Module Federation configuration for.",
@@ -61,6 +61,6 @@
       "description": "The prefix to use for any generated component."
     }
   },
-  "required": ["appName", "mfeType"],
+  "required": ["appName", "mfType"],
   "additionalProperties": false
 }

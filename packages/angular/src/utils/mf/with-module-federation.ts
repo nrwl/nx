@@ -3,7 +3,7 @@ import {
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from './mfe-webpack';
+} from './mf-webpack';
 import {
   createProjectGraphAsync,
   ProjectGraph,
@@ -16,10 +16,10 @@ import {
 import { ParsedCommandLine } from 'typescript';
 import { readRootPackageJson } from './utils';
 import { extname, join } from 'path';
-import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
-export type MFERemotes = string[] | [remoteName: string, remoteUrl: string][];
+export type MFRemotes = string[] | [remoteName: string, remoteUrl: string][];
 
 type SharedFunction = (
   libraryName: string,
@@ -31,9 +31,9 @@ type AdditionalSharedConfig = Array<
   | { libraryName: string; sharedConfig: SharedLibraryConfig }
 >;
 
-export interface MFEConfig {
+export interface MFConfig {
   name: string;
-  remotes?: MFERemotes;
+  remotes?: MFRemotes;
   exposes?: Record<string, string>;
   shared?: SharedFunction;
   additionalShared?: AdditionalSharedConfig;
@@ -134,7 +134,7 @@ function determineRemoteUrl(remote: string) {
   }/remoteEntry.mjs`;
 }
 
-function mapRemotes(remotes: MFERemotes) {
+function mapRemotes(remotes: MFRemotes) {
   const mappedRemotes = {};
 
   for (const remote of remotes) {
@@ -233,8 +233,8 @@ function applyDefaultEagerPackages(
   }
 }
 
-export async function withModuleFederation(options: MFEConfig) {
-  const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mfe'];
+export async function withModuleFederation(options: MFConfig) {
+  const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mf'];
 
   let projectGraph: ProjectGraph<any>;
   try {

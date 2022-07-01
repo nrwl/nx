@@ -8,7 +8,7 @@ export function readRootPackageJson(): {
   const pkgJsonPath = joinPathFragments(workspaceRoot, 'package.json');
   if (!existsSync(pkgJsonPath)) {
     throw new Error(
-      'NX MFE: Could not find root package.json to determine dependency versions.'
+      'NX MF: Could not find root package.json to determine dependency versions.'
     );
   }
 

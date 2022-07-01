@@ -4,9 +4,9 @@ import * as fs from 'fs';
 import * as tsUtils from '@nrwl/workspace/src/utilities/typescript';
 
 import * as devkit from '@nrwl/devkit';
-import { sharePackages, shareWorkspaceLibraries } from './mfe-webpack';
+import { sharePackages, shareWorkspaceLibraries } from './mf-webpack';
 
-describe('MFE Webpack Utils', () => {
+describe('MF Webpack Utils', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('ShareWorkspaceLibraries', () => {
@@ -20,7 +20,7 @@ describe('MFE Webpack Utils', () => {
       } catch (error) {
         // ASSERT
         expect(error.message).toContain(
-          'NX MFE: TsConfig Path for workspace libraries does not exist!'
+          'NX MF: TsConfig Path for workspace libraries does not exist!'
         );
       }
     });
@@ -79,7 +79,7 @@ describe('MFE Webpack Utils', () => {
       } catch (error) {
         // ASSERT
         expect(error.message).toEqual(
-          'NX MFE: Could not find root package.json to determine dependency versions.'
+          'NX MF: Could not find root package.json to determine dependency versions.'
         );
       }
     });

@@ -77,8 +77,8 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/angular/generators/scam-pipe',
     },
     {
-      title: '@nrwl/angular:setup-mfe',
-      path: '/packages/angular/generators/setup-mfe',
+      title: '@nrwl/angular:setup-mf',
+      path: '/packages/angular/generators/setup-mf',
     },
     {
       title: '@nrwl/angular:setup-tailwind',

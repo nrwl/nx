@@ -25,7 +25,7 @@ export function generateWebpackConfig(
     appRoot,
     {
       tmpl: '',
-      type: options.mfeType,
+      type: options.mfType,
       name: options.appName,
       remotes: remotesWithPorts ?? [],
       projectRoot: appRoot,

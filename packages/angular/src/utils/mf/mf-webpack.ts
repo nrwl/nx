@@ -87,7 +87,7 @@ export function shareWorkspaceLibraries(
 ) {
   if (!existsSync(tsConfigPath)) {
     throw new Error(
-      `NX MFE: TsConfig Path for workspace libraries does not exist! (${tsConfigPath})`
+      `NX MF: TsConfig Path for workspace libraries does not exist! (${tsConfigPath})`
     );
   }
 

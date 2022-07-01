@@ -1,6 +1,6 @@
 export interface Schema {
   appName: string;
-  mfeType: 'host' | 'remote';
+  mfType: 'host' | 'remote';
   port?: number;
   remotes?: string[];
   host?: string;

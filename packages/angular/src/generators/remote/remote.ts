@@ -10,11 +10,11 @@ import { getMFProjects } from '../../utils/get-mf-projects';
 import { normalizeProjectName } from '../utils/project';
 
 function findNextAvailablePort(tree: Tree) {
-  const mfeProjects = getMFProjects(tree);
+  const mfProjects = getMFProjects(tree);
 
   const ports = new Set<number>([4200]);
-  for (const mfeProject of mfeProjects) {
-    const { targets } = readProjectConfiguration(tree, mfeProject);
+  for (const mfProject of mfProjects) {
+    const { targets } = readProjectConfiguration(tree, mfProject);
     const port = targets?.serve?.options?.port ?? 4200;
     ports.add(port);
   }
@@ -34,8 +34,8 @@ export default async function remote(tree: Tree, options: Schema) {
 
   const installTask = await applicationGenerator(tree, {
     ...options,
-    mfe: true,
-    mfeType: 'remote',
+    mf: true,
+    mfType: 'remote',
     routing: true,
     host: options.host,
     port: options.port ?? findNextAvailablePort(tree),

@@ -133,13 +133,13 @@
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     },
-    "mfe": {
+    "mf": {
       "description": "Generate a Module Federation configuration for the application",
       "type": "boolean",
       "default": false,
       "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
     },
-    "mfeType": {
+    "mfType": {
       "type": "string",
       "enum": ["host", "remote"],
       "description": "Type of application to generate the Module Federation configuration for.",

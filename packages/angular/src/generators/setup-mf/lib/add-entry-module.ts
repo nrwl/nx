@@ -4,10 +4,10 @@ import type { Schema } from '../schema';
 
 export function addEntryModule(
   host: Tree,
-  { appName, routing, mfeType, prefix }: Schema,
+  { appName, routing, mfType, prefix }: Schema,
   appRoot: string
 ) {
-  if (mfeType === 'remote') {
+  if (mfType === 'remote') {
     generateFiles(
       host,
       joinPathFragments(__dirname, '../files/entry-module-files'),

@@ -1,7 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
+import { formatFiles, readProjectConfiguration } from '@nrwl/devkit';
 import type { Schema } from './schema';
-
-import { readProjectConfiguration, formatFiles } from '@nrwl/devkit';
 
 import {
   addCypressOnErrorWorkaround,
@@ -11,12 +10,12 @@ import {
   fixBootstrap,
   generateWebpackConfig,
   getRemotesWithPorts,
-  setupServeTarget,
   setupHostIfDynamic,
+  setupServeTarget,
   updateTsConfigTarget,
 } from './lib';
 
-export async function setupMfe(tree: Tree, options: Schema) {
+export async function setupMf(tree: Tree, options: Schema) {
   const projectConfig = readProjectConfiguration(tree, options.appName);
 
   options.federationType = options.federationType ?? 'static';
@@ -43,4 +42,4 @@ export async function setupMfe(tree: Tree, options: Schema) {
   }
 }
 
-export default setupMfe;
+export default setupMf;

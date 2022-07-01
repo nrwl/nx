@@ -13,8 +13,8 @@ import { ArrayLiteralExpression } from 'typescript';
 import { addRoute } from '../../../utils/nx-devkit/ast-utils';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 
-export function checkIsCommaNeeded(mfeRemoteText: string) {
-  const remoteText = mfeRemoteText.replace(/\s+/g, '');
+export function checkIsCommaNeeded(mfRemoteText: string) {
+  const remoteText = mfRemoteText.replace(/\s+/g, '');
   return !remoteText.endsWith(',]')
     ? remoteText === '[]'
       ? false
@@ -23,7 +23,7 @@ export function checkIsCommaNeeded(mfeRemoteText: string) {
 }
 
 export function addRemoteToHost(tree: Tree, options: Schema) {
-  if (options.mfeType === 'remote' && options.host) {
+  if (options.mfType === 'remote' && options.host) {
     const hostProject = readProjectConfiguration(tree, options.host);
     const pathToMFManifest = joinPathFragments(
       hostProject.sourceRoot,
@@ -57,9 +57,9 @@ export function addRemoteToHost(tree: Tree, options: Schema) {
 
 function determineHostFederationType(
   tree: Tree,
-  pathToMfeManifest: string
+  pathToMfManifest: string
 ): 'dynamic' | 'static' {
-  return tree.exists(pathToMfeManifest) ? 'dynamic' : 'static';
+  return tree.exists(pathToMfManifest) ? 'dynamic' : 'static';
 }
 
 function addRemoteToStaticHost(
@@ -99,9 +99,9 @@ function addRemoteToStaticHost(
 function addRemoteToDynamicHost(
   tree: Tree,
   options: Schema,
-  pathToMfeManifest: string
+  pathToMfManifest: string
 ) {
-  updateJson(tree, pathToMfeManifest, (manifest) => {
+  updateJson(tree, pathToMfManifest, (manifest) => {
     return {
       ...manifest,
       [options.appName]: `http://localhost:${options.port}`,
@@ -139,7 +139,7 @@ function addLazyLoadedRouteToHostAppModule(
       sourceFile,
       pathToHostAppModule,
       'loadRemoteModule',
-      '@nrwl/angular/mfe'
+      '@nrwl/angular/mf'
     );
   }
   const routeToAdd =

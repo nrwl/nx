@@ -3,8 +3,8 @@ import remote from './remote';
 import applicationGenerator from '../application/application';
 import { readProjectConfiguration } from '@nrwl/devkit';
 
-describe('MFE Remote App Generator', () => {
-  it('should generate a remote mfe app with no host', async () => {
+describe('MF Remote App Generator', () => {
+  it('should generate a remote mf app with no host', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
 
@@ -18,14 +18,14 @@ describe('MFE Remote App Generator', () => {
     expect(tree.read('apps/test/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should generate a remote mfe app with a host', async () => {
+  it('should generate a remote mf app with a host', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
 
     await applicationGenerator(tree, {
       name: 'host',
-      mfe: true,
-      mfeType: 'host',
+      mf: true,
+      mfType: 'host',
       routing: true,
     });
 
@@ -60,7 +60,7 @@ describe('MFE Remote App Generator', () => {
     }
   });
 
-  it('should generate a remote mfe app and automatically find the next port available', async () => {
+  it('should generate a remote mf app and automatically find the next port available', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
     await remote(tree, {
@@ -78,7 +78,7 @@ describe('MFE Remote App Generator', () => {
     expect(project.targets.serve.options.port).toEqual(4202);
   });
 
-  it('should generate a remote mfe app and automatically find the next port available even when there are no other targets', async () => {
+  it('should generate a remote mf app and automatically find the next port available even when there are no other targets', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace(2);
 
