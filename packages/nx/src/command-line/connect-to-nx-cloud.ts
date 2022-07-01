@@ -61,7 +61,7 @@ async function connectToNxCloudPrompt(prompt?: string) {
         name: 'NxCloud',
         message:
           prompt ??
-          `Connect to Nx Cloud? (It's free and doesn't require registration.)`,
+          `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
         type: 'select',
         choices: [
           {
