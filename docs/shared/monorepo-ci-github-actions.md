@@ -3,7 +3,7 @@
 The `GitHub` can track the last successful run on `main` branch and use this as a reference point for the `BASE`. The `Nx Set SHAs` provides convenient implementation of this functionality which you can drop into you existing CI config.
 To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation at Actions's docs](https://github.com/marketplace/actions/nx-set-shas#background).
 
-Below is an example of a GitHub setup for an Nx workspace only building and testing what is affected. For more details on how the orb is used, head over to the [official docs](https://github.com/marketplace/actions/nx-set-shas).
+Below is an example of a GitHub setup for an Nx workspace only building and testing what is affected. For more details on how the action is used, head over to the [official docs](https://github.com/marketplace/actions/nx-set-shas).
 
 ```yaml
 name: CI
