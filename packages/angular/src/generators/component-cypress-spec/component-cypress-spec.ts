@@ -21,6 +21,7 @@ export function componentCypressSpecGenerator(
     componentPath,
     componentFileName,
     componentName,
+    specDirectory,
   } = options;
   const e2eProjectName = cypressProject || `${projectName}-e2e`;
   const e2eProjectRoot = readProjectConfiguration(
@@ -35,7 +36,7 @@ export function componentCypressSpecGenerator(
   const templatesDir = joinPathFragments(__dirname, 'files');
   const destinationDir = joinPathFragments(
     e2eLibIntegrationFolderPath,
-    componentPath
+    specDirectory ?? componentPath
   );
   const storyFile = joinPathFragments(
     destinationDir,

@@ -412,6 +412,10 @@
             "type": "string",
             "description": "The Cypress project to generate the stories under. By default, inferred from `projectName`."
           },
+          "specDirectory": {
+            "type": "string",
+            "description": "Directory where to place the generated spec file. By default matches the value of the `componentPath` option."
+          },
           "skipFormat": {
             "description": "Skip formatting files.",
             "type": "boolean",
