@@ -32,6 +32,12 @@
     "default": ["{projectRoot}/**/*"],
     "prod": ["!{projectRoot}/**/*.spec.ts{,.snap}"]
   },
+  "pluginsConfig": {
+    "@nrwl/js": {
+      "analyzePackageJson": true,
+      "analyzeSourceFiles": true
+    }
+  },
   "targetDefaults": {
     "build": {
       "dependsOn": ["build-base"],
