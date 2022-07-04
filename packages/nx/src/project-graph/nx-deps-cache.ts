@@ -21,6 +21,7 @@ export interface ProjectGraphCache {
   deps: Record<string, string>;
   pathMappings: Record<string, any>;
   nxJsonPlugins: { name: string; version: string }[];
+  pluginsConfig: any;
   nodes: Record<string, ProjectGraphNode>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
 
@@ -92,6 +93,7 @@ export function createCache(
     // compilerOptions may not exist, especially for repos converted through add-nx-to-monorepo
     pathMappings: tsConfig?.compilerOptions?.paths || {},
     nxJsonPlugins,
+    pluginsConfig: nxJson.pluginsConfig,
     nodes: projectGraph.nodes,
     externalNodes: projectGraph.externalNodes,
     dependencies: projectGraph.dependencies,
@@ -117,6 +119,9 @@ export function shouldRecomputeWholeGraph(
     return true;
   }
   if (cache.deps['@nrwl/workspace'] !== packageJsonDeps['@nrwl/workspace']) {
+    return true;
+  }
+  if (cache.deps['nx'] !== packageJsonDeps['nx']) {
     return true;
   }
 
@@ -160,6 +165,12 @@ export function shouldRecomputeWholeGraph(
       if (!matchingPlugin) return true;
       return matchingPlugin.version !== packageJsonDeps[t];
     })
+  ) {
+    return true;
+  }
+
+  if (
+    JSON.stringify(nxJson.pluginsConfig) !== JSON.stringify(cache.pluginsConfig)
   ) {
     return true;
   }
