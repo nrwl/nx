@@ -3,7 +3,9 @@
 In this guide we’ll specifically look into which changes need to be made to enable incremental builds for Angular
 applications.
 
-> Incremental builds requires Nx version 10.4.0 or later.
+{% callout type="caution" title="Nx > 10.4.0" %}
+Incremental builds requires Nx version 10.4.0 or later.
+{% /callout %}
 
 ## Requirements
 
@@ -23,11 +25,9 @@ must have already been run. You can check your `package.json` and make sure you 
 }
 ```
 
-> Please note that `ngcc` doesn’t
-> support `pnpm` ([#32087](https://github.com/angular/angular/issues/32087#issuecomment-523225437)
-> and [#38023](https://github.com/angular/angular/issues/38023#issuecomment-732423078)), so you need to use
-> either `yarn`
-> or `npm`.
+{% callout type="warning" title="ngcc limitations" %}
+Please note that `ngcc` doesn’t support `pnpm` ([#32087](https://github.com/angular/angular/issues/32087#issuecomment-523225437) and [#38023](https://github.com/angular/angular/issues/38023#issuecomment-732423078)), so you need to use either `yarn` or `npm`.
+{% /callout %}
 
 ## Use buildable libraries
 
@@ -66,14 +66,11 @@ builds scenario:
 },
 ```
 
-> Please note that it is important to keep the `outputs` property in sync with the `dest` property in the
-> file `ng-package.json` located inside the library root. When a library is generated, this is configured correctly, but
-> if the path is later changed in `ng-package.json`, it needs to be updated as well in the project configuration.
+{% callout type="warning" title="More details" %}
+Please note that it is important to keep the `outputs` property in sync with the `dest` property in the file `ng-package.json` located inside the library root. When a library is generated, this is configured correctly, but if the path is later changed in `ng-package.json`, it needs to be updated as well in the project configuration.
 
-> The `@nrwl/angular:package` executor also supports incremental builds. It is used to build and package an Angular
-> library to be distributed as an NPM package following the Angular Package Format (APF) specification. It will be
-> automatically configured when generating a publishable
-> library (`nx g @nrwl/angular:lib my-lib --publishable --importPath my-lib`).
+The `@nrwl/angular:package` executor also supports incremental builds. It is used to build and package an Angular library to be distributed as an NPM package following the Angular Package Format (APF) specification. It will be automatically configured when generating a publishable library (`nx g @nrwl/angular:lib my-lib --publishable --importPath my-lib`).
+{% /callout %}
 
 ## Adjust the application executor
 

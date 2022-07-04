@@ -1,8 +1,8 @@
 # Adding Nx to Lerna/Yarn/PNPM/NPM Workspace
 
-> Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Nrwl, the
-> company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9).
-> This allows for a much better integration between the two. [Read more in our dedicated guide](/guides/lerna-and-nx).
+{% callout type="note" title="Migrating from Lerna?" %}
+Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This allows for a much better integration between the two. [Read more in our dedicated guide](/guides/lerna-and-nx).
+{% /callout %}
 
 **Short story:** you can use Nx easily together with your current Lerna/Yarn/PNPM/NPM monorepo setup. Why? To speed up
 your tasks by leveraging Nx's powerful scheduling and caching capabilities.
@@ -28,8 +28,9 @@ width="100%" /%}
 2. Create `nx.json`, containing all the necessary configuration for Nx.
 3. Set up [Nx Cloud](https://nx.app) (if you chose "yes").
 
-> If you are familiar with Turborepo, check out [this guide](/guides/turbo-and-nx). At this point, Nx can do anything
-> Turbo can, and much more.
+{% callout type="note" title="Familiar with Turborepo?" %}
+If you are familiar with Turborepo, check out [this guide](/guides/turbo-and-nx). At this point, Nx can do anything Turbo can, and much more.
+{% /callout %}
 
 ## What You Get Right Away
 

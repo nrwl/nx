@@ -1,6 +1,8 @@
 # Extending the Project Graph of Nx
 
-> This API is experimental and might change.
+{% callout type="caution" title="Experimental" %}
+This API is experimental and might change.
+{% /callout %}
 
 The Project Graph is the representation of the source code in your repo. Projects can have files associated with them. Projects can have dependencies on each other.
 
@@ -72,7 +74,9 @@ builder.addNode({
 });
 ```
 
-> Note: You can designate any type for the node. This differentiates third party projects from projects in the workspace. If you are writing a plugin for a different language, it's common to use IPC to get the list of nodes which you can then add using the builder.
+{% callout type="note" title="More details" %}
+You can designate any type for the node. This differentiates third party projects from projects in the workspace. If you are writing a plugin for a different language, it's common to use IPC to get the list of nodes which you can then add using the builder.
+{% /callout %}
 
 ## Adding New Dependencies to the Project Graph
 
@@ -91,7 +95,9 @@ import { DependencyType } from '@nrwl/devkit';
 builder.addImplicitDependency('existing-project', 'new-project');
 ```
 
-> Note: Even though the plugin is written in JavaScript, resolving dependencies of different languages will probably be more easily written in their native language. Therefore, a common approach is to spawn a new process and communicate via IPC or `stdout`.
+{% callout type="note" title="More details" %}
+Even though the plugin is written in JavaScript, resolving dependencies of different languages will probably be more easily written in their native language. Therefore, a common approach is to spawn a new process and communicate via IPC or `stdout`.
+{% /callout %}
 
 Because an implicit dependency is not associated with any file, Nx doesn't know when it might change, so it will be recomputed every time.
 
@@ -114,7 +120,9 @@ If a file hasn't changed since the last invocation, it doesn't need to be reanal
 
 ## Visualizing the Project Graph
 
-You can then visualize the project graph as described [here](/structure/dependency-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`. It might also be a good idea to ensure that the dep graph is not running on the nx daemon by setting `NX_DAEMON=false`, as this will ensure you will be able to see any `console.log` statements you add as you're developing.
+You can then visualize the project graph as described [here](/structure/dependency-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
+
+It might also be a good idea to ensure that the dep graph is not running on the nx daemon by setting `NX_DAEMON=false`, as this will ensure you will be able to see any `console.log` statements you add as you're developing.
 
 ## Example Project Graph Plugin
 

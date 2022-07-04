@@ -47,17 +47,26 @@ Which tells yarn (or npm) and Nx to look in the `packages` folder for projects t
 
 To install Eleventy run:
 
+{% tabs %}
+{% tab label="yarn" %}
+
 ```bash
 yarn add -D @11ty/eleventy@1.0.0
 ```
 
-or
+{% /tab %}
+{% tab label="npm" %}
 
 ```bash
-npm add -D @11ty/eleventy@1.0.0
+nx generate @nrwl/react:library
 ```
 
-Note: We are intentionally installing the package at the root of the workspace because this forces the organization to have the upfront cost of agreeing on the same versions of dependencies rather than the delayed cost of having projects using multiple different incompatible versions of dependencies. This is not a requirement of Nx, just a suggestion to help you maintain a growing repo.
+{% /tab %}
+{% /tabs %}
+
+{% callout type="check" title="Installing in workspace's root" %}
+We are intentionally installing the package at the root of the workspace because this forces the organization to have the upfront cost of agreeing on the same versions of dependencies rather than the delayed cost of having projects using multiple different incompatible versions of dependencies. This is not a requirement of Nx, just a suggestion to help you maintain a growing repo.
+{% /callout %}
 
 **Eleventy Hello World**
 

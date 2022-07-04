@@ -64,8 +64,6 @@ The downsides of incremental builds:
 
 If you are only planning to use incremental builds to speed up your CI, then the watch mode concern is irrelevant, and the only thing you need to assess is whether the benefits of skipping the compilation outweigh the costs of initializing the TypeScript compiler several times.
 
-> For a given workspace you can use Nx batch mode executors to compile all the libs using a single TS program. It can be made to work for a single workspace, but it's hard to generalize. With this, there is only one TS program created, so there is no extra cost associated with incremental builds.
-
 ## Custom Serve Target
 
 If you are implementing a custom serve command, you can use `WebpackNxBuildCoordinationPlugin` provided by `@nrwl/web`. It's a webpack plugin you can use to coordinate the compiling of the libs and the webpack linking.

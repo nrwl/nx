@@ -44,17 +44,26 @@ Nx is an extensible framework with plugins for many modern tools and frameworks.
 
 **Add the dependency:**
 
-```bash
-npm install --save-dev @nrwl/nest
-```
-
-or
+{% tabs %}
+{% tab label="yarn" %}
 
 ```bash
 yarn add --dev @nrwl/nest
 ```
 
-> `@nrwl/nest` also added `@nrwl/node`. Run `nx list @nrwl/nest` and `nx list @nrwl/node` to see what those plugins provide.
+{% /tab %}
+{% tab label="npm" %}
+
+```bash
+npm install --save-dev @nrwl/nest
+```
+
+{% /tab %}
+{% /tabs %}
+
+{% callout type="check" title="List plugins" %}
+When installing `@nrwl/nest`, it also automatically added `@nrwl/node` for you. Run `npx nx list @nrwl/nest` and `npx nx list @nrwl/node` to see what those plugins provide.
+{% /callout %}
 
 ## Create a NestJS application
 
@@ -103,9 +112,11 @@ The `apps` directory is where Nx places anything you can run: frontend applicati
 
 You can run:
 
-- `npx nx serve api` to serve the application
-- `npx nx build api` to build the application
-- `npx nx test api` to test the application
+| Command          | Description           |
+| ---------------- | --------------------- |
+| npx nx serve api | serve the application |
+| npx nx build api | build the application |
+| npx nx test api  | test the application  |
 
 **Open `apps/api/src/app/app.module.ts`.**
 

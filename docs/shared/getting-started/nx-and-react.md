@@ -12,7 +12,9 @@ Check out the following guides to get started:
 - [Adding Nx to an existing monorepo](/migration/adding-to-monorepo)
 - [Migrating from CRA](/migration/migration-cra)
 
+{% callout type="note" title="Going deeper" %}
 It is also a good idea to read the [mental model guide](/using-nx/mental-model) to understand how Nx works.
+{% /callout %}
 
 ## Nx and React Plugins
 

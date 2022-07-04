@@ -149,7 +149,7 @@ Projects without any tags cannot depend on any other projects. If you add the fo
 }
 ```
 
-If you try to violate the constrains, you will get an error:
+If you try to violate the constraints, you will get an error:
 
 ```bash
 A project tagged with "scope:admin" can only depend on projects tagged with "scoped:shared" or "scope:admin".

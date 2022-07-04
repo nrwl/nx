@@ -257,8 +257,9 @@ For example in `project.json` (or `angular.json`),
 }
 ```
 
-> You can also customize your webpack configuration, similar to using `DefinePlugin` above. This approach will require
-> post-processing the `index.html` file, and is out of scope for this guide.
+{% callout type="note" title="Optimize" %}
+You can also customize your webpack configuration, similar to using `DefinePlugin` above. This approach will require post-processing the `index.html` file, and is out of scope for this guide.
+{% /callout %}
 
 ## Summary
 

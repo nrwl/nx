@@ -14,6 +14,10 @@ Therefore, consuming libraries is very straightforward, and similar to what you 
 
 Having a dedicated library project is a much stronger boundary compared to just separating code into folders, though. Each Nx library has a so-called _"public API"_, represented by an `index.ts` barrel file. This forces developers into an _"API thinking"_ of what should be exposed and thus be made available for others to consume, and what on the others side should remain private within the library itself.
 
+{% callout type="caution" title="Library !== published artefact" %}
+[This is a common misconception, moving code into libraries can be done from a pure code organization perspective](#misconception).
+{% /callout %}
+
 ## Mental model
 
 A common mental model is to **see the application as "containers"** that link, bundle and compile functionality implemented in libraries for being deployed.

@@ -4,7 +4,9 @@
 
 The `@nrwl/js` package ships with corresponding generators and executors that best work when it comes to developing TypeScript applications and libraries.
 
-> Note, you can also opt out of TypeScript and use plain JavaScript by passing the `--js` flag to the generators.
+{% callout type="note" title="Want to use plane Javascript instead?" %}
+Note, you can also opt out of TypeScript and use plain JavaScript by passing the `--js` flag to the generators.
+{% /callout %}
 
 {% youtube
 src="https://www.youtube.com/embed/-OmQ-PaSY5M"
@@ -199,7 +201,9 @@ nx publish publish-me --ver=<required-version> --tag=[custom-tag]
 
 Thanks to [“Target Dependencies” (`dependsOn`)](/configuration/projectjson#dependson) property under the `publish` target, Nx runs the `build` target automatically before Nx runs `publish`. And of course, if `build` has already run, it won't execute again, thanks to [Nx computation caching](/using-nx/caching).
 
-> The generated `publish.mjs` script is a minimal version of what a publishing process looks like. You can definitely add more to it as you see fit for your project. For example: you can add a capability to automatic increment the version
+{% callout type="note" title="Only to get you started" %}
+The generated `publish.mjs` script is a minimal version of what a publishing process looks like. You can definitely add more to it as you see fit for your project. For example: you can add a capability to automatic increment the version.
+{% /callout %}
 
 ### Manual setup
 

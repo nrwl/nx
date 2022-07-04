@@ -10,7 +10,9 @@ Some things, however, are much more important for large companies:
 - Developer workflow
 - Deployment flexibility
 
-> Everything below are just recommendations. Every large organization has unique needs, so treat this document as a starting point not the definite list of what you must and must not do.
+{% callout type="note" title="Do what is best for you" %}
+Everything below are just recommendations. Every large organization has unique needs, so treat this document as a starting point not the definite list of what you must and must not do.
+{% /callout %}
 
 ## Code Organization & Naming Conventions
 
@@ -194,4 +196,4 @@ Monorepo-style development works best when used with trunk-based development.
 When using trunk-based development, we have a single main branch (say `main`) where every team submits their code. And
 they do it as soon as possible. So if someone works on a large feature, they split it into a few small changes that can be integrated into main in a week. In other words, when using trunk-based development, teams can create branches, but they are short-lived and focus on a specific user story.
 
-One issue folks often raise in regards to trunk-based development is "things change under you while you are trying to create a release". This can definitely happen, especially when manual testing is involved. To mitigate we can create a release branch where we would cherry-pick commits from `main` to. With this, we can still frequently merge code into `main` and have our release isolated from changes made by other teams.
+One issue folks often raise in regard to trunk-based development is "things change under you while you are trying to create a release". This can definitely happen, especially when manual testing is involved. To mitigate we can create a release branch where we would cherry-pick commits from `main` to. With this, we can still frequently merge code into `main` and have our release isolated from changes made by other teams.
