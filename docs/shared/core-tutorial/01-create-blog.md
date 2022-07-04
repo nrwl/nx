@@ -14,7 +14,7 @@ You then receive the following prompts in your command line:
 
 ```bash
 Workspace name (e.g., org name)         myorg
-What to create in the new workspace     core
+What to create in the new workspace     npm
 ```
 
 > You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
