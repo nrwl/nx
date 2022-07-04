@@ -29,8 +29,8 @@ export type MappedProjectGraph<T = any> = ProjectGraph<T> & {
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
   sourceTag: string;
-  onlyDependOnLibsWithTags: string[];
-  notDependOnLibsWithTags: string[];
+  onlyDependOnLibsWithTags?: string[];
+  notDependOnLibsWithTags?: string[];
   bannedExternalImports?: string[];
 };
 
@@ -210,11 +210,30 @@ export function getSourceFilePath(sourceFileName: string, projectPath: string) {
   return normalizePath(relative(projectPath, sourceFileName));
 }
 
+/**
+ * Find constraint (if any) that explicitly banns the given target npm project
+ * @param externalProject
+ * @param depConstraints
+ * @returns
+ */
+function findConstraintBanningGivenTarget(
+  externalProject: ProjectGraphExternalNode,
+  depConstraints: DepConstraint[]
+): DepConstraint | undefined {
+  return depConstraints.find((constraint) =>
+    constraint.bannedExternalImports.some((importDefinition) =>
+      parseImportWildcards(importDefinition).test(
+        externalProject.data.packageName
+      )
+    )
+  );
+}
+
 export function hasBannedImport(
   source: ProjectGraphProjectNode,
   target: ProjectGraphExternalNode,
   depConstraints: DepConstraint[]
-): DepConstraint | null {
+): DepConstraint | undefined {
   // return those constraints that match source project and have `bannedExternalImports` defined
   depConstraints = depConstraints.filter(
     (c) =>
@@ -222,18 +241,7 @@ export function hasBannedImport(
       c.bannedExternalImports &&
       c.bannedExternalImports.length
   );
-  return findViolatedConstraintWithBannedExternalImport(target, depConstraints);
-}
-
-function findViolatedConstraintWithBannedExternalImport(
-  target: ProjectGraphExternalNode,
-  depConstraints: DepConstraint[]
-): DepConstraint | null {
-  return depConstraints.find((constraint) =>
-    constraint.bannedExternalImports.some((importDefinition) =>
-      parseImportWildcards(importDefinition).test(target.data.packageName)
-    )
-  );
+  return findConstraintBanningGivenTarget(target, depConstraints);
 }
 
 export function dependentsHaveBannedImport(
@@ -241,12 +249,14 @@ export function dependentsHaveBannedImport(
   target: ProjectGraphProjectNode,
   graph: ProjectGraph,
   depConstraints: DepConstraint[]
-): Array<[ProjectGraphExternalNode, DepConstraint]> | null {
+):
+  | Array<[ProjectGraphExternalNode, ProjectGraphProjectNode, DepConstraint]>
+  | undefined {
   const allReachableProjects = Object.keys(graph.nodes).filter((projectName) =>
     pathExists(graph, target.name, projectName)
   );
 
-  const externalDependencies: Set<ProjectGraphExternalNode> = new Set(
+  const externalDependencies: Set<ProjectGraphDependency> = new Set(
     allReachableProjects
       .map((project) =>
         graph.dependencies[project].filter(
@@ -255,7 +265,6 @@ export function dependentsHaveBannedImport(
       )
       .filter((deps) => deps.length)
       .flat(1)
-      .map((dep) => graph.externalNodes?.[dep.target])
   );
 
   depConstraints = depConstraints.filter(
@@ -269,11 +278,19 @@ export function dependentsHaveBannedImport(
     .map(
       (dep) =>
         [
-          dep,
-          findViolatedConstraintWithBannedExternalImport(dep, depConstraints),
-        ] as [ProjectGraphExternalNode, DepConstraint | null]
+          graph.externalNodes[dep.target],
+          graph.nodes[dep.source],
+          findConstraintBanningGivenTarget(
+            graph.externalNodes[dep.target],
+            depConstraints
+          ),
+        ] as [
+          ProjectGraphExternalNode,
+          ProjectGraphProjectNode,
+          DepConstraint | null
+        ]
     )
-    .filter(([dep, depConstraint]) => depConstraint);
+    .filter(([dep, source, depConstraint]) => depConstraint);
 }
 
 export function isDirectDependency(target: ProjectGraphExternalNode): boolean {
