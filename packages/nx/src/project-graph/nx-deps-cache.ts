@@ -21,7 +21,7 @@ export interface ProjectGraphCache {
   deps: Record<string, string>;
   pathMappings: Record<string, any>;
   nxJsonPlugins: { name: string; version: string }[];
-  pluginsConfig: any;
+  pluginsConfig?: any;
   nodes: Record<string, ProjectGraphNode>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
 
