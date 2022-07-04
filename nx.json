@@ -13,8 +13,8 @@
           "build",
           "test",
           "lint-base",
-          "lint",
           "build-base",
+          "lint",
           "sitemap",
           "e2e"
         ],

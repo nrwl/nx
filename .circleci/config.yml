@@ -165,26 +165,11 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud record yarn check-imports
-      - run: npx nx-cloud record yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: npx nx-cloud record yarn check-commit
-      - run: npx nx-cloud record yarn depcheck
-      - run:
-          name: Check Documentation
-          command: npx nx-cloud record yarn documentation
-          no_output_timeout: 20m
       - run:
           name: Run Lint/Test/Build
           command: |
             pids=()
-
-            npx nx-cloud record yarn nx workspace-lint &
-            pids+=($!)
-            yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
-            pids+=($!)
-            yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
+            yarn nx build jest --parallel=1 &
             pids+=($!)
             for pid in "${pids[@]}"; do
               wait "$pid"
@@ -263,5 +248,3 @@ workflows:
       - agent:
           name: 'agent8'
       - main-linux
-      - mainmacos:
-          name: main-macos-e2e
