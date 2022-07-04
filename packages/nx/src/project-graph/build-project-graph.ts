@@ -185,7 +185,15 @@ function jsPluginConfig(
   if (nxJson?.pluginsConfig?.['@nrwl/js']) {
     return nxJson?.pluginsConfig?.['@nrwl/js'];
   }
-  if (packageJsonDeps['@nrwl/workspace'] || packageJsonDeps['@nrwl/js']) {
+  if (
+    packageJsonDeps['@nrwl/workspace'] ||
+    packageJsonDeps['@nrwl/js'] ||
+    packageJsonDeps['@nrwl/node'] ||
+    packageJsonDeps['@nrwl/next'] ||
+    packageJsonDeps['@nrwl/react'] ||
+    packageJsonDeps['@nrwl/angular'] ||
+    packageJsonDeps['@nrwl/web']
+  ) {
     return { analyzePackageJson: true, analyzeSourceFiles: true };
   } else {
     return { analyzePackageJson: true, analyzeSourceFiles: false };
