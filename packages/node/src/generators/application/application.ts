@@ -79,6 +79,11 @@ function getServeConfig(options: NormalizedSchema): TargetConfiguration {
     options: {
       buildTarget: `${options.name}:build`,
     },
+    configurations: {
+      production: {
+        buildTarget: `${options.name}:build:production`,
+      },
+    },
   };
 }
 
