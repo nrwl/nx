@@ -1,6 +1,9 @@
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import { TargetConfiguration } from '../config/workspace-json-project-json';
+import {
+  InputDefinition,
+  TargetConfiguration,
+} from '../config/workspace-json-project-json';
 import { readJsonFile } from './fileutils';
 import { workspaceRoot } from './workspace-root';
 
@@ -12,6 +15,7 @@ export type PackageJsonTargetConfiguration = Omit<
 export interface NxProjectPackageJsonConfiguration {
   implicitDependencies?: string[];
   tags?: string[];
+  namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
   targets?: Record<string, PackageJsonTargetConfiguration>;
 }
 

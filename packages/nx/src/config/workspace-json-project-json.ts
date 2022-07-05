@@ -89,6 +89,11 @@ export interface ProjectConfiguration {
   implicitDependencies?: string[];
 
   /**
+   * Named inputs targets can refer to reduce duplication
+   */
+  namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
+
+  /**
    * List of tags used by nx-enforce-module-boundaries / project graph
    */
   tags?: string[];

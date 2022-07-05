@@ -34,6 +34,9 @@ export function buildWorkspaceProjectNodes(
           ...nx.implicitDependencies,
         ];
       }
+      if (nx?.namedInputs) {
+        p.namedInputs = { ...(p.namedInputs || {}), ...nx.namedInputs };
+      }
     }
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,
