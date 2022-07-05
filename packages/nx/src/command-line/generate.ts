@@ -284,8 +284,12 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   const ws = new Workspaces(workspaceRoot);
   const nxJson = readNxJson();
   const projectGraph = await createProjectGraphAsync();
-  const workspaceConfiguration =
+  const projectsConfiguration =
     readProjectsConfigurationFromProjectGraph(projectGraph);
+  const workspaceConfiguration = {
+    ...nxJson,
+    ...projectsConfiguration,
+  };
   const isVerbose = args['verbose'];
 
   return handleErrors(isVerbose, async () => {
