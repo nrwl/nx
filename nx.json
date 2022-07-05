@@ -12,10 +12,10 @@
         "cacheableOperations": [
           "build",
           "test",
+          "sitemap",
           "lint-base",
           "lint",
           "build-base",
-          "sitemap",
           "e2e"
         ],
         "useDaemonProcess": true,
