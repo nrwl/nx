@@ -31,11 +31,10 @@ export async function runOne(
   const nxJson = readNxJson();
   const projectGraph = await createProjectGraphAsync();
 
-  const opts = parseRunOneOptions(
-    cwd,
-    args,
-    readProjectsConfigurationFromProjectGraph(projectGraph)
-  );
+  const opts = parseRunOneOptions(cwd, args, {
+    ...readProjectsConfigurationFromProjectGraph(projectGraph),
+    ...nxJson,
+  });
 
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     {
