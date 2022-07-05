@@ -170,7 +170,7 @@ function addStringDependencyToSharedConfig(
 ): void {
   if (projectGraph.nodes[dependency]) {
     sharedConfig[dependency] = { requiredVersion: false };
-  } else if (projectGraph.externalNodes?.[dependency]) {
+  } else if (projectGraph.externalNodes?.[`npm:${dependency}`]) {
     const pkgJson = readRootPackageJson();
     const config = getNpmPackageSharedConfig(
       dependency,
