@@ -17469,10 +17469,10 @@ methods@~1.1.2:
   resolved "https://registry.yarnpkg.com/methods/-/methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee"
   integrity sha1-VSmk1nZUE07cxSZmVoNbD4Ua/O4=
 
-metro-resolver@^0.71.1:
-  version "0.71.1"
-  resolved "https://registry.yarnpkg.com/metro-resolver/-/metro-resolver-0.71.1.tgz#50fa4eabf1e2cd51e13967eeff7a3ec15f6bbd94"
-  integrity sha512-5pW5p/Kt54Z4YJ7s1VyxSbXOvU4ikjjIqD+2wkdzngTVm7pYxKQfauApe22ep7oxTFU55HeAwbjmjiM/ngFN2g==
+metro-resolver@^0.71.2:
+  version "0.71.2"
+  resolved "https://registry.yarnpkg.com/metro-resolver/-/metro-resolver-0.71.2.tgz#4b136ef112656e75c268b880a436c30a20e7c1e9"
+  integrity sha512-kqP8hXUSyjfNtMlWw/E5m80KAerqRBlhO/Pc4EBORPlJXZz7b/OdzWrpJKclO6bTg7i/IHO/ThIH+jSjh1K5Cg==
   dependencies:
     absolute-path "^0.0.0"
 

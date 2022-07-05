@@ -9,7 +9,7 @@ buildscript {
         compileSdkVersion = 31
         targetSdkVersion = 31
         <% if (e2eTestRunner === 'detox') { %>
-        kotlinVersion = '1.6.21'
+        kotlinVersion = '1.7.0'
         <% } %>
 
         if (System.properties['os.arch'] == "aarch64") {
@@ -25,9 +25,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.0.4")
+        classpath("com.android.tools.build:gradle:7.1.1")
         classpath("com.facebook.react:react-native-gradle-plugin")
-        classpath("de.undercouch:gradle-download-task:4.1.2")
+        classpath("de.undercouch:gradle-download-task:5.0.1")
         <% if (e2eTestRunner === 'detox') { %>
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         <% } %>
