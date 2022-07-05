@@ -127,7 +127,7 @@ function parseRunOneOptions(
     project = defaultProjectName;
   }
   if (!project || !target) {
-    throw new Error(`Both project and target to have to be specified`);
+    throw new Error(`Both project and target have to be specified`);
   }
   if (targetAliases[target]) {
     target = targetAliases[target];
