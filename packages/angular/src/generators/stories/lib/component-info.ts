@@ -1,6 +1,7 @@
 import {
   joinPathFragments,
   logger,
+  normalizePath,
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
@@ -9,6 +10,7 @@ import { basename, dirname, extname, relative } from 'path';
 import type { Identifier, SourceFile, Statement } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
+import type { EntryPoint } from './entry-point';
 import { getModuleDeclaredComponents } from './module-info';
 import { getAllFilesRecursivelyFromDir } from './tree-utilities';
 
@@ -17,10 +19,12 @@ export interface ComponentInfo {
   moduleFolderPath: string;
   name: string;
   path: string;
+  entryPointName: string;
 }
 
 export function getComponentsInfo(
   tree: Tree,
+  entryPoint: EntryPoint,
   moduleFilePaths: string[],
   projectName: string
 ): ComponentInfo[] {
@@ -40,7 +44,14 @@ export function getComponentsInfo(
     );
 
     const componentsInfo = declaredComponents.map((componentName) =>
-      getComponentInfo(tree, file, imports, moduleFilePath, componentName)
+      getComponentInfo(
+        tree,
+        entryPoint,
+        file,
+        imports,
+        moduleFilePath,
+        componentName
+      )
     );
 
     return componentsInfo;
@@ -49,26 +60,43 @@ export function getComponentsInfo(
 
 export function getStandaloneComponentsInfo(
   tree: Tree,
-  projectPath: string
+  entryPoint: EntryPoint
 ): ComponentInfo[] {
   const componentsInfo: ComponentInfo[] = [];
 
-  visitNotIgnoredFiles(tree, projectPath, (filePath: string) => {
-    if (extname(filePath) !== '.ts') {
+  visitNotIgnoredFiles(tree, entryPoint.path, (filePath: string) => {
+    const normalizedFilePath = normalizePath(filePath);
+
+    if (
+      entryPoint.excludeDirs?.some((excludeDir) =>
+        normalizedFilePath.startsWith(excludeDir)
+      )
+    ) {
       return;
     }
 
-    const standaloneComponents = getStandaloneComponents(tree, filePath);
+    if (
+      extname(normalizedFilePath) !== '.ts' ||
+      normalizedFilePath.includes('.storybook')
+    ) {
+      return;
+    }
+
+    const standaloneComponents = getStandaloneComponents(
+      tree,
+      normalizedFilePath
+    );
     if (!standaloneComponents.length) {
       return;
     }
 
     standaloneComponents.forEach((componentName) => {
       componentsInfo.push({
-        componentFileName: basename(filePath, '.ts'),
-        moduleFolderPath: projectPath,
+        componentFileName: basename(normalizedFilePath, '.ts'),
+        moduleFolderPath: entryPoint.path,
         name: componentName,
-        path: dirname(relative(projectPath, filePath)),
+        path: dirname(relative(entryPoint.path, normalizedFilePath)),
+        entryPointName: entryPoint.name,
       });
     });
   });
@@ -122,6 +150,7 @@ function getComponentImportPath(
 
 function getComponentInfo(
   tree: Tree,
+  entryPoint: EntryPoint,
   sourceFile: SourceFile,
   imports: Statement[],
   moduleFilePath: string,
@@ -143,6 +172,7 @@ function getComponentInfo(
         moduleFolderPath,
         name: componentName,
         path: '.',
+        entryPointName: entryPoint.name,
       };
     }
 
@@ -159,6 +189,7 @@ function getComponentInfo(
     if (tree.exists(componentImportPath) && !tree.isFile(componentImportPath)) {
       return getComponentInfoFromDir(
         tree,
+        entryPoint,
         componentImportPath,
         componentName,
         moduleFolderPath
@@ -168,7 +199,13 @@ function getComponentInfo(
     const path = dirname(componentFilePathRelativeToModule);
     const componentFileName = basename(componentFilePathRelativeToModule);
 
-    return { componentFileName, moduleFolderPath, name: componentName, path };
+    return {
+      componentFileName,
+      moduleFolderPath,
+      name: componentName,
+      path,
+      entryPointName: entryPoint.name,
+    };
   } catch (ex) {
     logger.warn(
       `Could not generate a story for ${componentName}. Error: ${ex}`
@@ -179,6 +216,7 @@ function getComponentInfo(
 
 function getComponentInfoFromDir(
   tree: Tree,
+  entryPoint: EntryPoint,
   dir: string,
   componentName: string,
   moduleFolderPath: string
@@ -212,7 +250,13 @@ function getComponentInfoFromDir(
     );
   }
 
-  return { componentFileName, moduleFolderPath, name: componentName, path };
+  return {
+    componentFileName,
+    moduleFolderPath,
+    name: componentName,
+    path,
+    entryPointName: entryPoint.name,
+  };
 }
 
 function getFullComponentFilePath(

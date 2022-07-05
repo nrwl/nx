@@ -1,7 +1,9 @@
 import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments, writeJson } from '@nrwl/devkit';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { Linter } from 'packages/linter/src/generators/utils/linter';
+import { componentGenerator } from '../component/component';
+import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
 import type { StorybookConfigurationOptions } from './schema';
 import { storybookConfigurationGenerator } from './storybook-configuration';
@@ -147,6 +149,34 @@ describe('StorybookConfiguration generator', () => {
   });
 
   it('should generate the right files', async () => {
+    // add standalone component
+    await componentGenerator(tree, {
+      name: 'standalone',
+      project: libName,
+      standalone: true,
+    });
+    // add secondary entrypoint
+    writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+    await librarySecondaryEntryPointGenerator(tree, {
+      library: libName,
+      name: 'secondary-entry-point',
+    });
+    // add a regular component to the secondary entrypoint
+    await componentGenerator(tree, {
+      name: 'secondary-button',
+      project: libName,
+      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      export: true,
+    });
+    // add a standalone component to the secondary entrypoint
+    await componentGenerator(tree, {
+      name: 'secondary-standalone',
+      project: libName,
+      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      standalone: true,
+      export: true,
+    });
+
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
       name: libName,
       configureCypress: true,
@@ -158,6 +188,34 @@ describe('StorybookConfiguration generator', () => {
   });
 
   it('should generate in the correct folder', async () => {
+    // add standalone component
+    await componentGenerator(tree, {
+      name: 'standalone',
+      project: libName,
+      standalone: true,
+    });
+    // add secondary entrypoint
+    writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+    await librarySecondaryEntryPointGenerator(tree, {
+      library: libName,
+      name: 'secondary-entry-point',
+    });
+    // add a regular component to the secondary entrypoint
+    await componentGenerator(tree, {
+      name: 'secondary-button',
+      project: libName,
+      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      export: true,
+    });
+    // add a standalone component to the secondary entrypoint
+    await componentGenerator(tree, {
+      name: 'secondary-standalone',
+      project: libName,
+      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      standalone: true,
+      export: true,
+    });
+
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
       name: libName,
       configureCypress: true,

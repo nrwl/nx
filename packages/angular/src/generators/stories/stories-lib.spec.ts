@@ -1,8 +1,10 @@
 import type { Tree } from '@nrwl/devkit';
+import { writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { cypressProjectGenerator } from '@nrwl/storybook';
 import { componentGenerator } from '../component/component';
+import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { libraryGenerator } from '../library/library';
 import { scamGenerator } from '../scam/scam';
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
@@ -36,7 +38,20 @@ describe('angularStories generator: libraries', () => {
       tree = await createStorybookTestWorkspaceForLib(libName);
     });
 
-    it('should generate stories.ts files', () => {
+    it('should generate stories.ts files', async () => {
+      // add secondary entrypoint
+      writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+      await librarySecondaryEntryPointGenerator(tree, {
+        library: libName,
+        name: 'secondary-entry-point',
+      });
+      // add a standalone component to the secondary entrypoint
+      await componentGenerator(tree, {
+        name: 'secondary-button',
+        project: libName,
+        path: `libs/${libName}/secondary-entry-point/src/lib`,
+      });
+
       angularStoriesGenerator(tree, { name: libName });
 
       expect(
@@ -65,6 +80,11 @@ describe('angularStories generator: libraries', () => {
           'utf-8'
         )
       ).toMatchSnapshot();
+      expect(
+        tree.exists(
+          `libs/${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button.component.stories.ts`
+        )
+      ).toBeTruthy();
     });
 
     it('should generate cypress spec files', async () => {
@@ -261,10 +281,24 @@ describe('angularStories generator: libraries', () => {
       ).toBeTruthy();
     });
 
-    it('should generate stories file for standalone component', async () => {
+    it('should generate stories file for standalone components', async () => {
+      // add standalone component
       await componentGenerator(tree, {
         name: 'standalone',
         project: libName,
+        standalone: true,
+      });
+      // add secondary entrypoint
+      writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+      await librarySecondaryEntryPointGenerator(tree, {
+        library: libName,
+        name: 'secondary-entry-point',
+      });
+      // add a standalone component to the secondary entrypoint
+      await componentGenerator(tree, {
+        name: 'secondary-standalone',
+        project: libName,
+        path: `libs/${libName}/secondary-entry-point/src/lib`,
         standalone: true,
       });
 
@@ -278,6 +312,17 @@ describe('angularStories generator: libraries', () => {
       expect(
         tree.read(
           `libs/${libName}/src/lib/standalone/standalone.component.stories.ts`,
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+      expect(
+        tree.exists(
+          `libs/${libName}/secondary-entry-point/src/lib/secondary-standalone/secondary-standalone.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.read(
+          `libs/${libName}/secondary-entry-point/src/lib/secondary-standalone/secondary-standalone.component.stories.ts`,
           'utf-8'
         )
       ).toMatchSnapshot();
