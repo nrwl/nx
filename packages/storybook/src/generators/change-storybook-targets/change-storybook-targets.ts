@@ -34,13 +34,19 @@ export async function changeStorybookTargetsGenerator(tree: Tree) {
       );
       changesMade = true;
       changesMadeToAtLeastOne = true;
-      projectConfiguration.targets[storybookBuildTarget] =
-        updateStorybookBuildTarget(
-          projectConfiguration,
-          projectName,
-          ngBuildTarget,
-          storybookBuildTarget
+      if (storybookBuildTarget) {
+        projectConfiguration.targets[storybookBuildTarget] =
+          updateStorybookBuildTarget(
+            projectConfiguration,
+            projectName,
+            ngBuildTarget,
+            storybookBuildTarget
+          );
+      } else {
+        logger.info(
+          `Project ${projectName} does not have a build target configured for Storybook.`
         );
+      }
     } else {
       logger.warn(`Could not find a Storybook target for ${projectName}.`);
     }
@@ -111,10 +117,6 @@ function updateStorybookBuildTarget(
 ): TargetConfiguration {
   const oldStorybookBuildTargetConfig: TargetConfiguration =
     projectConfiguration.targets[storybookBuildTarget];
-  if (!oldStorybookBuildTargetConfig?.options) {
-    logger.warn(`Could not find a Storybook build target for ${projectName}.`);
-    return;
-  }
   const newStorybookBuildTargetConfig: TargetConfiguration = {
     executor: '@storybook/angular:build-storybook',
     outputs: oldStorybookBuildTargetConfig.outputs,
