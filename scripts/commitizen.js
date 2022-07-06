@@ -24,6 +24,7 @@ const scopes = [
 
 /** @type {import('cz-git').CommitizenGitOptions} */
 module.exports = {
+  /** @usage `yarn commit :f` */ 
   alias: {
     f: 'docs(core): fix typos',
     b: 'chore(repo): bump dependencies',
