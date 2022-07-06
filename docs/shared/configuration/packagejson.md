@@ -34,12 +34,22 @@ You can add Nx-specific configuration as follows:
     "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
   },
   "nx": {
+    "namedInputs": {
+      "default": [
+        "{projectRoot}/**/*"
+      ],
+      "prod": [
+        "!{projectRoot}/**/*.spec.tsx"
+      ]
+    },
     "targets": {
       "build": {
+        "inputs": ["prod", "^prod"],
         "outputs": ["dist/libs/mylib"],
         "dependsOn": ["^build"]
       },
       "test": {
+        "inputs": ["default", "^prod"],
         "outputs": [],
         "dependsOn": ["build"]
       }
@@ -47,6 +57,66 @@ You can add Nx-specific configuration as follows:
   }
 }
 ```
+
+### inputs & namedInputs
+
+The `inputs` array tells Nx what to consider to determine whether a particular invocation of a script should be a cache
+hit or not. There are three types of inputs:
+
+_Filesets_
+
+Examples:
+
+- `{projectRoot}/**.*.ts`
+- same as `{fileset: "{projectRoot}/**/*.ts"}`
+- `{workspaceRoot}/jest.config.ts`
+- same as `{fileset: "{workspaceRoot}/jest.config.ts}`
+
+_Runtime Inputs_
+
+Examples:
+
+- `{runtime: "node -v"}`
+
+Node the result value is hashed, so it is never displayed.
+
+_Env Variables_
+
+Examples:
+
+- `{env: "MY_ENV_VAR"}`
+
+Node the result value is hashed, so it is never displayed.
+
+_Named Inputs_
+
+Examples:
+
+- `inputs: ["prod"]`
+- same as `inputs: [{input: "prod", projects: "self"}]`
+
+Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
+keeping them in sync is error-prone, we recommend defining named inputs, which you can then reference in all of those
+places.
+
+#### Using ^
+
+Examples:
+
+- `inputs: ["^prod"]`
+- same as `inputs: [{input: "prod", projects: "dependencies"}]`
+
+Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
+an example.
+
+```
+"test": {
+  "inputs": [ "default", "^prod" ]
+}
+```
+
+The configuration above means that the test target depends on all source files of a given project and only prod
+sources (non-test sources) of its dependencies. In other words, it treats test sources as private.
 
 ### outputs
 
@@ -63,20 +133,22 @@ Targets can depend on other targets. This is the relevant portion of the configu
 
 ```json
 "build": {
-  "dependsOn": ["^build"]
+"dependsOn": ["^build"]
 },
 "test": {
-  "dependsOn": ["build"]
+"dependsOn": ["build"]
 }
 ```
 
 A common scenario is having to build dependencies of a project first before building the project. This is what
-the `"dependsOn": ["^build"]` property of the `build` target configures. It tells Nx that before it can build `mylib` it needs to make
+the `"dependsOn": ["^build"]` property of the `build` target configures. It tells Nx that before it can build `mylib` it
+needs to make
 sure that `mylib`'s dependencies are built as well. This doesn't mean Nx is going to rerun those builds. If the right
 artifacts are already in the right place, Nx will do nothing. If they aren't in the right place, but they are available
 in the cache, Nx will retrieve them from the cache.
 
-Another common scenario is for a target to depend on another target of the same project. For instance, `"dependsOn": ["build"]` of
+Another common scenario is for a target to depend on another target of the same project. For
+instance, `"dependsOn": ["build"]` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
@@ -84,10 +156,10 @@ result in `mylib`'s dependencies being built as well.
 
 ```json
 "build": {
-  "dependsOn": [{ projects: "dependencies", target: "build"}]
+"dependsOn": [{projects: "dependencies", target: "build"}]
 },
 "test": {
-  "dependsOn": [{ projects: "self", target: "build"}]
+"dependsOn": [{projects: "self", target: "build"}]
 }
 ```
 
@@ -192,8 +264,13 @@ The following is an expanded version showing all options. Your `nx.json` will li
     "tsconfig.base.json": "*",
     "nx.json": "*"
   },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "prod": ["!{projectRoot}/**/*.spec.tsx"]
+  },
   "targetDefaults": {
     "build": {
+      "inputs": ["prod", "^prod"],
       "dependsOn": ["^build"]
     }
   },
@@ -276,6 +353,49 @@ In the example above:
 - Changing `globalFile` only affects `myapp`.
 - Changing any CSS file inside the `styles` directory only affects `myapp`.
 
+### inputs & namedInputs
+
+Named inputs defined in `nx.json` are merged with the named inputs defined in each project's package.json.
+In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsPackageJson}`.
+
+Defining `inputs` for a given target would replace the set of inputs for that target name defined in `nx.json`.
+Using pseudocode `inputs = packageJson.targets.build.inputs || nxJson.targetDefaults.build.inputs`.
+
+You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things
+like this (which applies to every project):
+
+```
+"test": {
+  "inputs": [
+    "default",
+    "^prod"
+  ]
+}
+```
+
+And projects can define their prod fileset, without having to redefine the inputs for the `test` target.
+
+```json title="package.json"
+{
+  "name": "parent",
+  "scripts": {
+    "build": "...",
+    "test": "..."
+  },
+  "dependencies": {...},
+  "nx": {
+    "namedInputs": {
+      "prod": [
+        "!{projectRoot}/**/*.test.js",
+        "{workspacRoot}/jest.config.js"
+      ]
+    }
+  }
+}
+```
+
+In this case Nx will use the right `prod` input for each project.
+
 ### Target Defaults
 
 Targets can depend on other targets. A common scenario is having to build dependencies of a project first before
@@ -303,14 +423,15 @@ Another target default you can configure is `outputs`:
 {
   "targetDefaults": {
     "build": {
-      "outputs": ["./custom-dist"]
+      "outputs": ["{projectRoot}/custom-dist"]
     }
   }
 }
 ```
 
 {% callout type="warning" title="Nx < 14.3.4" %}
-Previous versions of Nx (before 14.3.4) supported `targetDependencies` to configure dependencies in `nx.json`. `targetDefaults` is the same mechanism but generalized to support other properties.
+Previous versions of Nx (before 14.3.4) supported `targetDependencies` to configure dependencies in `nx.json`
+. `targetDefaults` is the same mechanism but generalized to support other properties.
 {% /callout %}
 
 ### CLI Options
