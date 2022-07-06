@@ -1,7 +1,6 @@
 import { XCircleIcon } from '@heroicons/react/solid';
 import { getSchemaFromReference } from '@nrwl/nx-dev/data-access-packages';
 import { JsonSchema1, NxSchema } from '@nrwl/nx-dev/models-package';
-import { Breadcrumbs } from '@nrwl/nx-dev/ui-common';
 import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -94,7 +93,7 @@ export function Content({
 
   return (
     <>
-      <div className="min-w-0 flex-auto px-4 pt-8 pb-24 sm:px-6 lg:pb-16 xl:px-8">
+      <div className="min-w-0 flex-auto pt-8 pb-24 lg:pb-16">
         <div className="mb-8 flex w-full items-center space-x-2">
           <div className="w-full flex-grow">
             <div
@@ -132,12 +131,6 @@ export function Content({
             <div className="prose max-w-none">{vm.markdown}</div>
             <div className="h-12">{/* SPACER */}</div>
           </>
-        )}
-
-        {schemaViewModel.subReference && (
-          <div className="mt-12 rounded-md bg-gray-100 p-4">
-            <Breadcrumbs pages={vm.pages} />
-          </div>
         )}
 
         {/*TODO@ben: create new component*/}

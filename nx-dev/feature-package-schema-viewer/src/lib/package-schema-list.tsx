@@ -1,24 +1,19 @@
 import { ChipIcon, CogIcon } from '@heroicons/react/solid';
-import { Menu } from '@nrwl/nx-dev/models-menu';
 import { PackageMetadata } from '@nrwl/nx-dev/models-package';
-import { Sidebar } from '@nrwl/nx-dev/ui-common';
 import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import cx from 'classnames';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { ReactComponentElement, ReactNode } from 'react';
+import { Breadcrumbs } from '@nrwl/nx-dev/ui-common';
 import { getPublicPackageName } from './get-public-package-name';
 import { Heading1, Heading2 } from './ui/headings';
 
 export function PackageSchemaList({
   pkg,
-  menu,
-  navIsOpen,
 }: {
   pkg: PackageMetadata;
-  menu: Menu;
-  navIsOpen?: boolean;
 }): ReactComponentElement<any> {
   const router = useRouter();
 
@@ -86,18 +81,23 @@ export function PackageSchemaList({
       />
       <div className="mx-auto w-full max-w-screen-lg">
         <div className="lg:flex">
-          <Sidebar menu={menu} navIsOpen={navIsOpen} />
           <div
             id="content-wrapper"
             className={cx(
-              'w-full min-w-0 flex-auto flex-col pt-16 md:pl-4 lg:static lg:max-h-full lg:overflow-visible',
-              navIsOpen && 'fixed max-h-screen overflow-hidden'
+              'w-full min-w-0 flex-auto flex-col pt-16 md:pl-4 lg:static lg:max-h-full lg:overflow-visible'
             )}
           >
-            <div className="min-w-0 flex-auto px-4 pt-8 pb-24 sm:px-6 lg:pb-16 xl:px-8">
+            <div className="min-w-0 flex-auto px-4 pb-24 sm:px-6 lg:pb-16 xl:px-8">
+              <div className="mb-12 block w-full">
+                <Breadcrumbs path={router.asPath} />
+              </div>
               <div className="mb-8 flex w-full items-center space-x-2">
                 <div className="w-full flex-grow">
-                  <div className="relative inline-flex rounded-md border border-gray-200 bg-white px-4 py-2 text-xs font-medium uppercase text-gray-600">
+                  <div
+                    className="relative inline-flex rounded-md border border-gray-200 bg-white px-4 py-2 text-xs font-medium uppercase text-gray-600"
+                    aria-hidden="true"
+                    data-tooltip="Installable package"
+                  >
                     Package
                   </div>
                 </div>
