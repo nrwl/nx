@@ -4,7 +4,7 @@
 
 The `@nrwl/js` package ships with corresponding generators and executors that best work when it comes to developing TypeScript applications and libraries.
 
-{% callout type="note" title="Want to use plane Javascript instead?" %}
+{% callout type="note" title="Want to use plain Javascript instead?" %}
 Note, you can also opt out of TypeScript and use plain JavaScript by passing the `--js` flag to the generators.
 {% /callout %}
 
