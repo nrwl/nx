@@ -30,6 +30,13 @@ describe('dep-graph-client', () => {
     cy.wait('@getGraph');
   });
 
+  afterEach(() => {
+    // clean up by hiding all projects and clearing text input
+    getDeselectAllButton().click();
+    getTextFilterInput().clear();
+    getCheckedProjectItems().should('have.length', 0);
+  });
+
   describe('select projects message', () => {
     it('should display on load', () => {
       getSelectProjectsMessage().should('be.visible');
@@ -53,21 +60,6 @@ describe('dep-graph-client', () => {
       getTextFilterReset().should('exist');
     });
 
-    it('should hide clear button after clicking', () => {
-      getTextFilterInput().type('cart');
-      getTextFilterReset().click().should('not.exist');
-    });
-
-    it('should filter projects', () => {
-      getTextFilterInput().type('cart');
-      getCheckedProjectItems().should(
-        'have.length',
-        nxExamplesJson.projects.filter((project) =>
-          project.name.includes('cart')
-        ).length
-      );
-    });
-
     it('should clear selection on reset', () => {
       getTextFilterInput().type('cart');
       getCheckedProjectItems().should(
@@ -78,6 +70,44 @@ describe('dep-graph-client', () => {
       );
       getTextFilterReset().click();
       getCheckedProjectItems().should('have.length', 0);
+    });
+
+    it('should hide clear button after clicking', () => {
+      getTextFilterInput().type('cart');
+      getTextFilterReset().click().should('not.exist');
+    });
+
+    it('should filter projects by text when pressing enter', () => {
+      getTextFilterInput().type('cart{enter}');
+
+      getCheckedProjectItems().should(
+        'have.length',
+        nxExamplesJson.projects.filter((project) =>
+          project.name.includes('cart')
+        ).length
+      );
+    });
+
+    it('should filter projects by text after debounce', () => {
+      getTextFilterInput().type('cart');
+      getCheckedProjectItems().should(
+        'have.length',
+        nxExamplesJson.projects.filter((project) =>
+          project.name.includes('cart')
+        ).length
+      );
+    });
+
+    it('should include projects in path when option is checked', () => {
+      getTextFilterInput().type('cart');
+      getIncludeProjectsInPathButton().click();
+
+      getCheckedProjectItems().should(
+        'have.length.gt',
+        nxExamplesJson.projects.filter((project) =>
+          project.name.includes('cart')
+        ).length
+      );
     });
   });
 
@@ -142,6 +172,10 @@ describe('dep-graph-client', () => {
     });
 
     it('should deselect a project by clicking on the project name again', () => {
+      cy.get('[data-project="cart"]').click({
+        force: true,
+      });
+
       cy.get('[data-project="cart"][data-active="true"]')
         .should('exist')
         .click({
@@ -192,31 +226,6 @@ describe('dep-graph-client', () => {
       getUnfocusProjectButton().click();
 
       getCheckedProjectItems().should('have.length', 0);
-    });
-  });
-
-  describe('text filtering', () => {
-    it('should filter projects by text when pressing enter', () => {
-      getTextFilterInput().type('cart{enter}');
-
-      getCheckedProjectItems().should(
-        'have.length',
-        nxExamplesJson.projects.filter((project) =>
-          project.name.includes('cart')
-        ).length
-      );
-    });
-
-    it('should include projects in path when option is checked', () => {
-      getTextFilterInput().type('cart');
-      getIncludeProjectsInPathButton().click();
-
-      getCheckedProjectItems().should(
-        'have.length.gt',
-        nxExamplesJson.projects.filter((project) =>
-          project.name.includes('cart')
-        ).length
-      );
     });
   });
 

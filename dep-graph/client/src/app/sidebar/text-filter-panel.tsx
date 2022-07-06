@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { useDebounce } from '../hooks/use-debounce';
 
 export interface TextFilterPanelProps {
@@ -18,9 +19,12 @@ export function TextFilterPanel({
 }: TextFilterPanelProps) {
   const [currentTextFilter, setCurrentTextFilter] = useState('');
 
-  const debouncedTextFilter = useDebounce(currentTextFilter, 500);
+  const [debouncedValue, setDebouncedValue] = useDebounce(
+    currentTextFilter,
+    500
+  );
 
-  function onTextFilterKeyUp(event: React.KeyboardEvent<HTMLInputElement>) {
+  function onTextFilterKeyUp(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Enter') {
       updateTextFilter(event.currentTarget.value);
     }
@@ -29,6 +33,8 @@ export function TextFilterPanel({
   function onTextInputChange(change: string) {
     if (change === '') {
       setCurrentTextFilter('');
+      setDebouncedValue('');
+
       resetTextFilter();
     } else {
       setCurrentTextFilter(change);
@@ -37,14 +43,14 @@ export function TextFilterPanel({
 
   function resetClicked() {
     setCurrentTextFilter('');
+    setDebouncedValue('');
+
     resetTextFilter();
   }
 
   useEffect(() => {
-    if (debouncedTextFilter !== '') {
-      updateTextFilter(debouncedTextFilter);
-    }
-  }, [debouncedTextFilter, updateTextFilter]);
+    updateTextFilter(debouncedValue);
+  }, [debouncedValue, updateTextFilter]);
 
   return (
     <div>
