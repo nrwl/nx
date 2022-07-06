@@ -62,7 +62,8 @@ function updateStorybookTarget(
   storybookBuildTarget: string
 ): TargetConfiguration {
   const oldStorybookTargetConfig: TargetConfiguration =
-    projectConfiguration?.targets?.[storybookTarget];
+    projectConfiguration.targets[storybookTarget];
+
   const newStorybookTargetConfig: TargetConfiguration = {
     executor: '@storybook/angular:start-storybook',
     options: {
@@ -109,7 +110,11 @@ function updateStorybookBuildTarget(
   storybookBuildTarget: string
 ): TargetConfiguration {
   const oldStorybookBuildTargetConfig: TargetConfiguration =
-    projectConfiguration?.targets?.[storybookBuildTarget];
+    projectConfiguration.targets[storybookBuildTarget];
+  if (!oldStorybookBuildTargetConfig?.options) {
+    logger.warn(`Could not find a Storybook build target for ${projectName}.`);
+    return;
+  }
   const newStorybookBuildTargetConfig: TargetConfiguration = {
     executor: '@storybook/angular:build-storybook',
     outputs: oldStorybookBuildTargetConfig.outputs,
