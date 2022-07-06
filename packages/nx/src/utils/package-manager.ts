@@ -65,11 +65,13 @@ export function getPackageManagerCommand(
       const pnpmVersion = getPackageManagerVersion('pnpm');
       const useExec = gte(pnpmVersion, '6.13.0');
       const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
+      const isPnpmWorkspace = existsSync('pnpm-workspace.yaml');
+
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
-        add: 'pnpm add',
-        addDev: 'pnpm add -D',
+        add: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
+        addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
         addGlobal: 'pnpm add -g',
         rm: 'pnpm rm',
         exec: useExec ? 'pnpm exec' : 'pnpx',
