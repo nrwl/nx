@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { types, scopes } = require('../.cz-config.js');
+const { types, scopes } = require('./commitizen.js');
 
 console.log('🐟🐟🐟 Validating git commit message 🐟🐟🐟');
 const gitMessage = require('child_process')
@@ -9,7 +9,7 @@ const gitMessage = require('child_process')
   .trim();
 
 const allowedTypes = types.map((type) => type.value);
-const allowedScopes = scopes.map((scope) => scope.name);
+const allowedScopes = scopes.map((scope) => scope.value);
 
 const commitMsgRegex = `(${allowedTypes.join('|')})\\((${allowedScopes.join(
   '|'

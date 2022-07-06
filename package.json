@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "nx run-many --target build --all --parallel 8 --exclude nx-dev,typedoc-theme",
-    "commit": "git-cz",
+    "commit": "czg",
     "check-commit": "node ./scripts/commit-lint.js",
     "check-format": "nx format:check --all",
     "check-imports": "node ./scripts/check-imports.js",
@@ -121,7 +121,6 @@
     "babel-jest": "27.5.1",
     "chalk": "4.1.0",
     "chokidar": "^3.5.1",
-    "commitizen": "^4.0.3",
     "confusing-browser-globals": "^1.0.9",
     "conventional-changelog-cli": "^2.0.23",
     "copy-webpack-plugin": "^9.0.1",
@@ -131,8 +130,8 @@
     "cytoscape": "^3.18.2",
     "cytoscape-dagre": "^2.4.0",
     "cytoscape-popper": "^2.0.0",
-    "cz-conventional-changelog": "^3.0.2",
-    "cz-customizable": "^6.2.0",
+    "cz-git": "^1.3.9",
+    "czg": "^1.3.9",
     "depcheck": "^1.3.1",
     "dotenv": "~10.0.0",
     "ejs": "^3.1.7",
@@ -260,7 +259,8 @@
   "license": "MIT",
   "config": {
     "commitizen": {
-      "path": "./node_modules/cz-customizable"
+      "path": "./node_modules/cz-git",
+      "czConfig": "./scripts/commitizen.js"
     }
   },
   "dependencies": {
