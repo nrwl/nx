@@ -64,6 +64,7 @@
     "nx-dev-ui-home": "nx-dev/ui-home",
     "nx-dev-ui-markdoc": "nx-dev/ui-markdoc",
     "nx-dev-ui-member-card": "nx-dev/ui-member-card",
+    "nx-dev-ui-references": "nx-dev/ui-references",
     "nx-dev-ui-sponsor-card": "nx-dev/ui-sponsor-card",
     "nx-plugin": "packages/nx-plugin",
     "react": "packages/react",

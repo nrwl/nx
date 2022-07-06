@@ -61,7 +61,7 @@ export default function DocumentationPage({
   const vm: { entryComponent: JSX.Element } = {
     entryComponent: (
       <DocViewer
-        document={document}
+        document={document || ({} as any)}
         menu={menu}
         toc={null}
         navIsOpen={navIsOpen}

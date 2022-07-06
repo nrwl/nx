@@ -45,7 +45,7 @@ export class MenuApi {
   }
 
   getReferenceApiMenuSection(
-    packageDocuments: DocumentMetadata[]
+    packageDocuments: DocumentMetadata[] = this.packageDocuments
   ): MenuSection {
     const documents: DocumentMetadata = {
       id: 'packages',
