@@ -25,7 +25,7 @@ const scopes = [
 /** @type {import('cz-git').CommitizenGitOptions} */
 module.exports = {
   alias: {
-    f: 'docs(storybook): fix typos',
+    f: 'docs(core): fix typos',
     b: 'chore(repo): bump dependencies',
   },
   maxSubjectLength: 100,
