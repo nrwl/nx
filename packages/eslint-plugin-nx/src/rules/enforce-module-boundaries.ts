@@ -6,14 +6,15 @@ import {
 } from '@nrwl/devkit';
 import {
   DepConstraint,
-  dependentsHaveBannedImport,
   findConstraintsFor,
   findDependenciesWithTags,
   findProjectUsingImport,
   findSourceProject,
+  findTransitiveExternalDependencies,
   getSourceFilePath,
   getTargetProjectBasedOnRelativeImport,
   groupImports,
+  hasBannedDependencies,
   hasBannedImport,
   hasBuildExecutor,
   hasNoneOfTheseTags,
@@ -42,10 +43,7 @@ import {
   getBarrelEntryPointProjectNode,
   getRelativeImportPath,
 } from '../utils/ast-utils';
-import {
-  ensureGlobalProjectGraph,
-  readProjectGraph,
-} from '../utils/project-graph-utils';
+import { readProjectGraph } from '../utils/project-graph-utils';
 
 type Options = [
   {
@@ -378,25 +376,6 @@ export default createESLintRule<Options, MessageIds>({
           });
         }
         return;
-      } else {
-        // project => project
-        const matches = dependentsHaveBannedImport(
-          sourceProject,
-          targetProject,
-          projectGraph,
-          depConstraints
-        );
-        matches.forEach(([target, violatingSource, constraint]) => {
-          context.report({
-            node,
-            messageId: 'bannedExternalImportsViolation',
-            data: {
-              sourceTag: constraint.sourceTag,
-              childProjectName: violatingSource.name,
-              package: target.data.packageName,
-            },
-          });
-        });
       }
 
       // check constraints between libs and apps
@@ -506,6 +485,11 @@ export default createESLintRule<Options, MessageIds>({
           return;
         }
 
+        const transitiveExternalDeps = findTransitiveExternalDependencies(
+          projectGraph,
+          targetProject
+        );
+
         for (let constraint of constraints) {
           if (
             constraint.onlyDependOnLibsWithTags &&
@@ -548,6 +532,30 @@ export default createESLintRule<Options, MessageIds>({
                     )
                     .join('\n'),
                 },
+              });
+              return;
+            }
+          }
+          if (
+            constraint.bannedExternalImports &&
+            constraint.bannedExternalImports.length
+          ) {
+            const matches = hasBannedDependencies(
+              transitiveExternalDeps,
+              projectGraph,
+              constraint
+            );
+            if (matches.length > 0) {
+              matches.forEach(([target, violatingSource, constraint]) => {
+                context.report({
+                  node,
+                  messageId: 'bannedExternalImportsViolation',
+                  data: {
+                    sourceTag: constraint.sourceTag,
+                    childProjectName: violatingSource.name,
+                    package: target.data.packageName,
+                  },
+                });
               });
               return;
             }

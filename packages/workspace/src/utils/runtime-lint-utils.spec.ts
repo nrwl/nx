@@ -198,7 +198,7 @@ describe('dependentsHaveBannedImport', () => {
     ];
 
     expect(
-      dependentsHaveBannedImport(source, target, graph, constraints)
+      dependentsHaveBannedImport(target, graph, constraints)
     ).toStrictEqual([[bannedTarget, d, constraints[1]]]);
   });
 
@@ -212,7 +212,7 @@ describe('dependentsHaveBannedImport', () => {
     ];
 
     expect(
-      dependentsHaveBannedImport(source, target, graph, constraints)
+      dependentsHaveBannedImport(target, graph, constraints)
     ).toStrictEqual([
       [nonBannedTarget, target, constraints[1]],
       [nonBannedTarget, c, constraints[1]],
@@ -224,8 +224,8 @@ describe('dependentsHaveBannedImport', () => {
       { sourceTag: 'a', bannedExternalImports: ['angular'] },
     ];
 
-    expect(
-      dependentsHaveBannedImport(source, target, graph, constraints).length
-    ).toBe(0);
+    expect(dependentsHaveBannedImport(target, graph, constraints).length).toBe(
+      0
+    );
   });
 });
