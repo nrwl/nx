@@ -43,6 +43,37 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Nx Private Cloud
 
+## 2.4.6
+
+- Fix: issue with navigating to orgs/workspaces in the web app
+
+## 2.4.5
+
+- Feat: filters to branch and run list pages
+- Fix: improved MD5 cache artifact archiving
+- Misc: various UI and UX improvements to the NxCloud dashboards
+
+## 2.4.4
+
+- Fix: Missing artefact retrieval error when using read-tokens
+- Fix: Performance improvements to the branch page and run groups sorting
+- Fix: better handling of artefact .tar archiving
+
+## 2.4.3
+
+- Feat: Billing page messaging improvements
+- Fix: runs sorting on branch page
+
+## 2.4.2
+
+- Feat: DTE post-run report
+- Feat: Hash Detail tool flow improvements
+
+## 2.4.1
+
+- Feat: Admins can now easily export debug info for error investigation
+- Fix: branch screen run group sorting
+
 ## 2.4.0
 
 - Feat: [GitLab Auth Support](https://nx.app/docs/private-cloud-gitlab-auth)/private-cloud-gitlab-auth

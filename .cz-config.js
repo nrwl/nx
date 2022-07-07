@@ -29,6 +29,7 @@ module.exports = {
     { name: 'web', description: 'anything Web specific' },
     { name: 'linter', description: 'anything Linter specific' },
     { name: 'storybook', description: 'anything Storybook specific' },
+    { name: 'nx-cloud', description: 'anything NxCloud specific' },
     { name: 'dep-graph', description: 'anything dep-graph app specific' },
     {
       name: 'testing',
