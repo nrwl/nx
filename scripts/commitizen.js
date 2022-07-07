@@ -22,9 +22,19 @@ const scopes = [
   { value: 'devkit',        name: 'devkit:        devkit-related changes' },
 ];
 
+// precomputed scope
+const scopeComplete = require('child_process')
+  .execSync('git status --porcelain || true')
+  .toString()
+  .trim()
+  .split('\n')
+  .find((r) => ~r.indexOf('M  packages'))
+  ?.replace(/(\/)/g, '%%')
+  ?.match(/packages%%((\w|-)*)/)?.[1];
+
 /** @type {import('cz-git').CommitizenGitOptions} */
 module.exports = {
-  /** @usage `yarn commit :f` */ 
+  /** @usage `yarn commit :f` */
   alias: {
     f: 'docs(core): fix typos',
     b: 'chore(repo): bump dependencies',
@@ -34,6 +44,7 @@ module.exports = {
   allowEmptyScopes: false,
   allowCustomIssuePrefixs: false,
   allowEmptyIssuePrefixs: false,
+  defaultScope: scopeComplete,
   scopes: [...scopes],
   types: [
     { value: 'feat', name: 'feat:     A new feature' },
