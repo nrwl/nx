@@ -1,5 +1,49 @@
 # `@nrwl/nx-cloud`
 
+## 14.2.0
+
+- Feat: Add NX_CLOUD_SILENT_RECORD environment variable for use with `nx-cloud record`
+- Feat: Add NX_CLOUD_AGENT_TIMEOUT_MS environment variable to configure task timeouts
+
+## 14.1.2
+
+- Fix: Provider nicer failure message when version of Nx is incompatible with @nrwl/nx-cloud
+- Fix: Use Nx task graph if provided
+
+## 14.1.1
+
+- Fix: Handle **overrides_unparsed** property for nx:run-commands executor
+
+## 14.1.0
+
+- Fix: Gracefully handle errors with corrupted tarballs
+- Fix: Resolve issue where tasks run with read-only DTE would cause 404s on artifact retrieval
+- Feat: Allow specifying Nx Cloud installation source through generator
+
+## 14.0.5
+
+- Fix: Workspace name for new Nx Cloud workspaces is pulled from package.json instead of nx.json
+- Fix: @nrwl/nx-cloud can be run from directories other than workspace root
+- Fix: Correctly infer NX_BRANCH and NX_RUN_GROUP from Jenkins
+- Fix: Ignore errors related to excess whitespace in tarballs
+
+## 14.0.3
+
+- Fix: Enable caching for all inner commands
+
+## 14.0.2
+
+- Fix: Remove dependency on @nrwl/devkit for init generator
+
+## 14.0.1
+
+- Fix: Correctly infer NX_BRANCH and NX_RUN_GROUP from Vercel
+
+## 14.0.0
+
+- Feat: Nx 14 Compatibility
+- Fix: Exit with status code of child process when recording commands with `nx-cloud record`
+
 ## 13.3.1
 
 - Feat: Store output for non-Nx commands in Nx Cloud. Check out https://nx.dev/nx-cloud/set-up/record-commands for more information.
