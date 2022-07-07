@@ -44,7 +44,9 @@ export async function format(
     readNxJson()
   );
   const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
-    (p) => `"${p}"`
+    // prettier removes one of the \
+    // prettier-ignore
+    (p) => `"${p.replace("$", "\\\$")}"`
   );
 
   // Chunkify the patterns array to prevent crashing the windows terminal
