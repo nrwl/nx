@@ -19,6 +19,7 @@ DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
+**/ios/.xcode.env.local
 
 # Android/IntelliJ
 #
@@ -48,9 +49,10 @@ buck-out/
 # For more information about the recommended setup visit:
 # https://docs.fastlane.tools/best-practices/source-control/
 
-*/fastlane/report.xml
-*/fastlane/Preview.html
-*/fastlane/screenshots
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
 
 # Bundle artifact
 *.jsbundle

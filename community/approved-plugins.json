@@ -283,5 +283,10 @@
     "name": "@computas/nx-yarn",
     "description": "A plugin to help make nx with yarn a pleasant experience.",
     "url": "https://github.com/computas/nx-yarn"
+  },
+  {
+    "name": "@theunderscorer/nx-semantic-release",
+    "description": "Nx plugin for automated releases using semantic-release.",
+    "url": "https://github.com/TheUnderScorer/nx-semantic-release"
   }
 ]

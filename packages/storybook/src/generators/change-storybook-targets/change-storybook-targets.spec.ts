@@ -5,6 +5,8 @@ import * as defaultConfig from './test-configs/default-config.json';
 import * as customNames from './test-configs/custom-names-config.json';
 import * as nonAngular from './test-configs/non-angular.json';
 import * as extraOptions from './test-configs/extra-options-for-storybook.json';
+import * as noStorybookBuildTarget from './test-configs/no-build-storybook-target.json';
+import * as noStorybook from './test-configs/no-storybook-targets.json';
 
 describe('Change the Storybook targets for Angular projects to use native Storybooke executor', () => {
   let tree: Tree;
@@ -28,6 +30,17 @@ describe('Change the Storybook targets for Angular projects to use native Storyb
 
     it(`should keep any extra options added in the target`, async () => {
       writeJson(tree, 'workspace.json', extraOptions);
+      await changeStorybookTargetsGenerator(tree);
+      expect(readWorkspaceConfiguration(tree)).toMatchSnapshot();
+    });
+    it(`should work even if build-storybook does not exist`, async () => {
+      writeJson(tree, 'workspace.json', noStorybookBuildTarget);
+      await changeStorybookTargetsGenerator(tree);
+      expect(readWorkspaceConfiguration(tree)).toMatchSnapshot();
+    });
+
+    it(`should not throw an error if no Storybook exists`, async () => {
+      writeJson(tree, 'workspace.json', noStorybook);
       await changeStorybookTargetsGenerator(tree);
       expect(readWorkspaceConfiguration(tree)).toMatchSnapshot();
     });

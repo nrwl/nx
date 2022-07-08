@@ -37,7 +37,7 @@ export const link = {
       description:
         'Update the path of the current page without rerunning getStaticProps, getServerSideProps or getInitialProps.',
       type: Boolean,
-      default: true,
+      default: false,
     },
     locale: {
       description: 'The active locale is automatically prepended.',

@@ -1,5 +1,49 @@
 # `@nrwl/nx-cloud`
 
+## 14.2.0
+
+- Feat: Add NX_CLOUD_SILENT_RECORD environment variable for use with `nx-cloud record`
+- Feat: Add NX_CLOUD_AGENT_TIMEOUT_MS environment variable to configure task timeouts
+
+## 14.1.2
+
+- Fix: Provider nicer failure message when version of Nx is incompatible with @nrwl/nx-cloud
+- Fix: Use Nx task graph if provided
+
+## 14.1.1
+
+- Fix: Handle **overrides_unparsed** property for nx:run-commands executor
+
+## 14.1.0
+
+- Fix: Gracefully handle errors with corrupted tarballs
+- Fix: Resolve issue where tasks run with read-only DTE would cause 404s on artifact retrieval
+- Feat: Allow specifying Nx Cloud installation source through generator
+
+## 14.0.5
+
+- Fix: Workspace name for new Nx Cloud workspaces is pulled from package.json instead of nx.json
+- Fix: @nrwl/nx-cloud can be run from directories other than workspace root
+- Fix: Correctly infer NX_BRANCH and NX_RUN_GROUP from Jenkins
+- Fix: Ignore errors related to excess whitespace in tarballs
+
+## 14.0.3
+
+- Fix: Enable caching for all inner commands
+
+## 14.0.2
+
+- Fix: Remove dependency on @nrwl/devkit for init generator
+
+## 14.0.1
+
+- Fix: Correctly infer NX_BRANCH and NX_RUN_GROUP from Vercel
+
+## 14.0.0
+
+- Feat: Nx 14 Compatibility
+- Fix: Exit with status code of child process when recording commands with `nx-cloud record`
+
 ## 13.3.1
 
 - Feat: Store output for non-Nx commands in Nx Cloud. Check out https://nx.dev/nx-cloud/set-up/record-commands for more information.
@@ -42,6 +86,37 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 - Fix: DTE could get stuck when trying to execute tasks with different configurations
 
 # Nx Private Cloud
+
+## 2.4.6
+
+- Fix: issue with navigating to orgs/workspaces in the web app
+
+## 2.4.5
+
+- Feat: filters to branch and run list pages
+- Fix: improved MD5 cache artifact archiving
+- Misc: various UI and UX improvements to the NxCloud dashboards
+
+## 2.4.4
+
+- Fix: Missing artefact retrieval error when using read-tokens
+- Fix: Performance improvements to the branch page and run groups sorting
+- Fix: better handling of artefact .tar archiving
+
+## 2.4.3
+
+- Feat: Billing page messaging improvements
+- Fix: runs sorting on branch page
+
+## 2.4.2
+
+- Feat: DTE post-run report
+- Feat: Hash Detail tool flow improvements
+
+## 2.4.1
+
+- Feat: Admins can now easily export debug info for error investigation
+- Fix: branch screen run group sorting
 
 ## 2.4.0
 

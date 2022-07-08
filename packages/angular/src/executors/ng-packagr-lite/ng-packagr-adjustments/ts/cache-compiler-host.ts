@@ -45,8 +45,12 @@ export function cacheCompilerHost(
     entryPoint.dependsOn(node);
   };
 
-  const { flatModuleFile, entryFile } = entryPoint.data.entryPoint;
+  const { flatModuleFile, destinationPath, entryFile } =
+    entryPoint.data.entryPoint;
   const flatModuleFileDtsFilename = `${flatModuleFile}.d.ts`;
+  const flatModuleFileDtsPath = ensureUnixPath(
+    path.join(destinationPath, flatModuleFileDtsFilename)
+  );
   const hasIndexEntryFile =
     path.basename(entryFile.toLowerCase()) === 'index.ts';
 
@@ -85,13 +89,19 @@ export function cacheCompilerHost(
       sourceFiles?: ReadonlyArray<ts.SourceFile>
     ) => {
       if (fileName.endsWith('.d.ts')) {
-        if (
-          hasIndexEntryFile &&
-          path.basename(fileName) === flatModuleFileDtsFilename
-        ) {
-          // In case the entry file is index.ts, we should not emit the `d.ts` which are a re-export of the `index.ts`.
-          // Because it will cause a conflict.
-          return;
+        if (fileName === flatModuleFileDtsPath) {
+          if (hasIndexEntryFile) {
+            // In case the entry file is index.ts, we should not emit the `d.ts` which are a re-export of the `index.ts`.
+            // Because it will cause a conflict.
+            return;
+          } else {
+            // Rename file to index.d.ts so that TypeScript can resolve types without
+            // them needing to be referenced in the package.json manifest.
+            fileName = fileName.replace(
+              flatModuleFileDtsFilename,
+              'index.d.ts'
+            );
+          }
         }
 
         // Rename file to index.d.ts so that TypeScript can resolve types without

@@ -27,9 +27,14 @@ Let's look at the following `project.json`:
   "root": "libs/mylib/",
   "sourceRoot": "libs/mylib/src",
   "projectType": "library",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "prod": ["!{projectRoot}/**/*.spec.tsx"]
+  },
   "targets": {
     "test": {
       "executor": "@nrwl/jest:jest",
+      "inputs": ["default", "^prod"],
       "outputs": [],
       "dependsOn": ["build"],
       "options": {
@@ -39,6 +44,7 @@ Let's look at the following `project.json`:
     },
     "build": {
       "executor": "@nrwl/js:tsc",
+      "inputs": ["prod", "^prod"],
       "outputs": ["dist/libs/mylib"],
       "dependsOn": ["^build"],
       "options": {
@@ -61,6 +67,66 @@ Let's look at the following `project.json`:
 - `sourceRoot` tells Nx the location of the library's source files.
 - `projectType` is either 'application' or 'library'. The project type is used in project graph viz and in a few aux
   commands.
+
+### inputs & namedInputs
+
+The `inputs` array tells Nx what to consider to determine whether a particular invocation of a script should be a cache
+hit or not. There are three types of inputs:
+
+_Filesets_
+
+Examples:
+
+- `{projectRoot}/**.*.ts`
+- same as `{fileset: "{projectRoot}/**/*.ts"}`
+- `{workspaceRoot}/jest.config.ts`
+- same as `{fileset: "{workspaceRoot}/jest.config.ts}`
+
+_Runtime Inputs_
+
+Examples:
+
+- `{runtime: "node -v"}`
+
+Node the result value is hashed, so it is never displayed.
+
+_Env Variables_
+
+Examples:
+
+- `{env: "MY_ENV_VAR"}`
+
+Node the result value is hashed, so it is never displayed.
+
+_Named Inputs_
+
+Examples:
+
+- `inputs: ["prod"]`
+- same as `inputs: [{input: "prod", projects: "self"}]`
+
+Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
+keeping them in sync is error-prone, we recommend defining named inputs, which you can then reference in all of those
+places.
+
+#### Using ^
+
+Examples:
+
+- `inputs: ["^prod"]`
+- same as `inputs: [{input: "prod", projects: "dependencies"}]`
+
+Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
+an example.
+
+```
+"test": {
+  "inputs": [ "default", "^prod" ]
+}
+```
+
+The configuration above means that the test target depends on all source files of a given project and only prod
+sources (non-test sources) of its dependencies. In other words, it treats test sources as private.
 
 ### Targets
 
@@ -142,6 +208,66 @@ require(`@nrwl/jest`).executors['jest']({
 
 The selected configuration adds/overrides the default options, and the provided command line args add/override the
 configuration options.
+
+### inputs & namedInputs
+
+The `inputs` array tells Nx what to consider to determine whether a particular invocation of a script should be a cache
+hit or not. There are three types of inputs:
+
+_Filesets_
+
+Examples:
+
+- `{projectRoot}/**.*.ts`
+- same as `{fileset: "{projectRoot}/**/*.ts"}`
+- `{workspaceRoot}/jest.config.ts`
+- same as `{fileset: "{workspaceRoot}/jest.config.ts}`
+
+_Runtime Inputs_
+
+Examples:
+
+- `{runtime: "node -v"}`
+
+Node the result value is hashed, so it is never displayed.
+
+_Env Variables_
+
+Examples:
+
+- `{env: "MY_ENV_VAR"}`
+
+Node the result value is hashed, so it is never displayed.
+
+_Named Inputs_
+
+Examples:
+
+- `inputs: ["prod"]`
+- same as `inputs: [{input: "prod", projects: "self"}]`
+
+Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
+keeping them in sync is error-prone, we recommend defining named inputs, which you can then reference in all of those
+places.
+
+#### Using ^
+
+Examples:
+
+- `inputs: ["^prod"]`
+- same as `inputs: [{input: "prod", projects: "dependencies"}]`
+
+Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
+an example.
+
+```
+"test": {
+  "inputs": [ "default", "^prod" ]
+}
+```
+
+The configuration above means that the test target depends on all source files of a given project and only prod
+sources (non-test sources) of its dependencies. In other words, it treats test sources as private.
 
 ### Outputs
 
@@ -273,8 +399,13 @@ The following is an expanded version showing all options. Your `nx.json` will li
     "tsconfig.base.json": "*",
     "nx.json": "*"
   },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "prod": ["!{projectRoot}/**/*.spec.tsx"]
+  },
   "targetDefaults": {
     "build": {
+      "inputs": ["prod", "^prod"],
       "dependsOn": ["^build"]
     }
   },
@@ -356,6 +487,38 @@ In the example above:
 - Changing any of the custom check `scripts` in `package.json` affects every project.
 - Changing `globalFile` only affects `myapp`.
 - Changing any CSS file inside the `styles` directory only affects `myapp`.
+
+### inputs & namedInputs
+
+Named inputs defined in `nx.json` are merged with the named inputs defined in each project's project.json.
+In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
+
+Defining `inputs` for a given target would replace the set of inputs for that target name defined in `nx.json`.
+Using pseudocode `inputs = projectJson.targets.build.inputs || nxJson.targetDefaults.build.inputs`.
+
+You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things
+like this (which applies to every project):
+
+```
+"test": {
+  "inputs": [
+    "default",
+    "^prod"
+  ]
+}
+```
+
+And projects can define their prod fileset, without having to redefine the inputs for the `test` target.
+
+```json title="project.json"
+{
+  "namedInputs": {
+    "prod": ["!{projectRoot}/**/*.test.js", "{workspacRoot}/jest.config.js"]
+  }
+}
+```
+
+In this case Nx will use the right `prod` input for each project.
 
 ### Target Defaults
 

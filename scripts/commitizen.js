@@ -14,6 +14,7 @@ const scopes = [
   { value: 'detox',         name: 'detox:         anything Detox specific' },
   { value: 'web',           name: 'web:           anything Web specific' },
   { value: 'linter',        name: 'linter:        anything Linter specific' },
+  { value: 'nx-cloud',      name: 'nx-cloud:      anything NxCloud specific' },
   { value: 'storybook',     name: 'storybook:     anything Storybook specific' },
   { value: 'dep-graph',     name: 'dep-graph:     anything dep-graph app specific' },
   { value: 'testing',       name: 'testing:       anything testing specific (e.g. jest or cypress)' },
