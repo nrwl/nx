@@ -17,7 +17,7 @@ You can optionally pass in `--generate-tests` to create component tests for all 
 Run `nx component-test your-lib` to execute the component tests with Cypress.
 
 By default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your
-terminal. Screenshots and videos will be accessible in `dist/libs/your-lib/screenshots` and `dist/libs/your-lib/videos`.
+terminal. Screenshots and videos will be accessible in `dist/cypress/libs/your-lib/screenshots` and `dist/cypress/libs/your-lib/videos`.
 
 ## Watching for Changes (Headed Mode)
 

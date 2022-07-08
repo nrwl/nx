@@ -58,7 +58,7 @@ nx e2e frontend-e2e --prod
 ```
 
 By default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your
-terminal. Screenshots and videos will be accessible in `dist/apps/frontend/screenshots` and `dist/apps/frontend/videos`.
+terminal. Screenshots and videos will be accessible in `dist/cypress/apps/frontend/screenshots` and `dist/cypress/apps/frontend/videos`.
 
 ### Watching for Changes (Headed Mode)
 
