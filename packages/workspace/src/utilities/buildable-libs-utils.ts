@@ -48,6 +48,9 @@ export function calculateProjectDependencies(
     .map(({ name: dep, isTopLevel }) => {
       let project: DependentBuildableProjectNode = null;
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
+      if (!depNode) {
+        throw new Error(`Unable to find dependency ${dep} in project graph.`);
+      }
       if (depNode.type === 'lib') {
         if (isBuildable(targetName, depNode)) {
           const libPackageJsonPath = join(
