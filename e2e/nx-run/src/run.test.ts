@@ -356,7 +356,7 @@ describe('Nx Running Tests', () => {
       expect(buildParallel).toContain('Successfully ran target build');
 
       // testing run many --all starting
-      const buildAllParallel = runCLI(`run-many --target=build --all`);
+      const buildAllParallel = runCLI(`run-many --target=build`);
       expect(buildAllParallel).toContain(
         `Running target build for 4 project(s):`
       );
@@ -393,7 +393,7 @@ describe('Nx Running Tests', () => {
       expect(buildConfig).toContain('Successfully ran target build');
 
       // testing run many with daemon enabled
-      const buildWithDaemon = runCLI(`run-many --target=build --all`, {
+      const buildWithDaemon = runCLI(`run-many --target=build`, {
         env: { ...process.env, NX_DAEMON: 'true' },
       });
       expect(buildWithDaemon).toContain(`Successfully ran target build`);

@@ -20,7 +20,7 @@ nx run-many
 Test all projects:
 
 ```bash
-nx run-many --target=test --all
+nx run-many --target=test
 ```
 
 Test proj1 and proj2:
@@ -41,7 +41,9 @@ nx run-many --target=test --projects=proj1,proj2 --parallel=2
 
 Type: boolean
 
-Run the target on all projects in the workspace
+Default: true
+
+[deprecated] Run the target on all projects in the workspace
 
 ### configuration
 
