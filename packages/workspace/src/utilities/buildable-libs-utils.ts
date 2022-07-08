@@ -44,13 +44,22 @@ export function calculateProjectDependencies(
   // gather the library dependencies
   const nonBuildableDependencies = [];
   const topLevelDependencies: DependentBuildableProjectNode[] = [];
-  const dependencies = collectDependencies(projectName, projGraph, [], shallow)
+  const collectedDeps = collectDependencies(projectName, projGraph, [], shallow);
+  const missing = collectedDeps.reduce((missing: string[] | undefined, { name: dep}) => {
+    const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
+    if (!depNode) {
+      missing = missing || [];
+      missing.push(dep);
+    }
+    return missing;
+  }, null);
+  if (missing) {
+    throw new Error(`Unable to find ${missing.join(', ')} in project graph.`);
+  }
+  const dependencies = collectedDeps
     .map(({ name: dep, isTopLevel }) => {
       let project: DependentBuildableProjectNode = null;
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
-      if (!depNode) {
-        throw new Error(`Unable to find dependency ${dep} in project graph.`);
-      }
       if (depNode.type === 'lib') {
         if (isBuildable(targetName, depNode)) {
           const libPackageJsonPath = join(

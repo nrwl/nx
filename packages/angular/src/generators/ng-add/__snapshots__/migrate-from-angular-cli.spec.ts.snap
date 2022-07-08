@@ -3,7 +3,7 @@
 exports[`workspace --preserve-angular-cli-layout should create nx.json 1`] = `
 Object {
   "affected": Object {
-    "defaultBase": "main",
+    "defaultBase": "master",
   },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
@@ -42,7 +42,7 @@ Object {
 exports[`workspace --preserve-angular-cli-layout should support multiple projects 1`] = `
 Object {
   "affected": Object {
-    "defaultBase": "main",
+    "defaultBase": "master",
   },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",

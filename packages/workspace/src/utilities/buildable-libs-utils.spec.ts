@@ -84,3 +84,34 @@ describe('calculateProjectDependencies', () => {
     });
   });
 });
+
+describe('missingDependencies', () => {
+  it('should throw an error if dependency is missing', async () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        example: {
+          type: 'lib',
+          name: 'example',
+          data: {
+            files: [],
+            root: '/root/example',
+          },
+        },
+      },
+      externalNodes: {},
+      dependencies: {
+        example: [
+          {
+            source: 'example',
+            target: 'npm:formik',
+            type: DependencyType.static,
+          },
+        ],
+      },
+    };
+
+    expect(() =>
+      calculateProjectDependencies(graph, 'root', 'example', 'build', undefined)
+    ).toThrow();
+  });
+});
