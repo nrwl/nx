@@ -15,6 +15,9 @@ jobs:
     - name: Run a security audit
       run: npx audit-ci --critical --report-type summary
 
+    - name: Run Dependency confusion supply chain check
+      run: npx snync -d .
+
     - name: Report Status
       if: ${{ always() && github.repository_owner == 'nrwl' }}
       uses: ravsamhq/notify-slack-action@v1
