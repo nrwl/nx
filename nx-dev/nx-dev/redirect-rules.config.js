@@ -182,10 +182,37 @@ const overviewUrls = {
 };
 
 /**
+ * API removing CLI and putting the content into Nx
+ */
+const cliUrls = {
+  '/cli/create-nx-workspace': '/nx/create-nx-workspace',
+  '/cli/generate': '/nx/generate',
+  '/cli/run': '/nx/run',
+  '/cli/daemon': '/nx/daemon',
+  '/cli/dep-graph': '/nx/dep-graph',
+  '/cli/run-many': '/nx/run-many',
+  '/cli/affected': '/nx/affected',
+  '/cli/affected-dep-graph': '/nx/affected-dep-graph',
+  '/cli/affected-apps': '/nx/affected-apps',
+  '/cli/affected-libs': '/nx/affected-libs',
+  '/cli/print-affected': '/nx/print-affected',
+  '/cli/format-check': '/nx/format-check',
+  '/cli/format-write': '/nx/format-write',
+  '/cli/migrate': '/nx/migrate',
+  '/cli/report': '/nx/report',
+  '/cli/list': '/nx/list',
+  '/cli/workspace-lint': '/nx/workspace-lint',
+  '/cli/workspace-generator': '/nx/workspace-generator',
+  '/cli/connect-to-nx-cloud': '/nx/connect-to-nx-cloud',
+  '/cli/reset': '/nx/reset',
+};
+
+/**
  * Public export API
  */
 module.exports = {
   schemaUrls,
   guideUrls,
   overviewUrls,
+  cliUrls,
 };

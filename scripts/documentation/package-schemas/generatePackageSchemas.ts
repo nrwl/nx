@@ -33,9 +33,10 @@ function pathResolver(root: string): (path: string) => string {
   return (path) => join(root, path.replace('schema.json', ''));
 }
 
-export function generatePackageSchemas(): void {
+export function generatePackageSchemas(): Promise<void>[] {
   console.log(`${chalk.blue('i')} Generating Package Schemas`);
   const absoluteRoot = resolve(join(__dirname, '../../../'));
+
   const packages = getPackageMetadataList(absoluteRoot, 'packages', 'docs').map(
     (packageMetadata) => {
       const getCurrentSchemaPath = pathResolver(absoluteRoot);
@@ -79,7 +80,7 @@ export function generatePackageSchemas(): void {
   /**
    * Generates each package metadata in an `/packages` sub-folder.
    */
-  packages.forEach(
+  return packages.map(
     (p): Promise<void> =>
       generateJsonFile(
         join(outputPath, 'generated', 'packages', p.name + '.json'),
