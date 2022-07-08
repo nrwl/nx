@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxCypressMigrateToTen",
+  "cli": "nx",
+  "title": "Migrate e2e project to Cypress 10",
+  "description": "Migrate Cypress e2e project from v8/v9 to Cypress v10.",
+  "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nrwl/cypress:migrate-to-cypress-10",
+      "description": "Migrate existing cypress projects to Cypress v10"
+    }
+  ],
+  "properties": {}
+}

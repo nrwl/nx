@@ -74,7 +74,12 @@
     "path": "generated/packages/cypress.json",
     "schemas": {
       "executors": ["cypress"],
-      "generators": ["init", "cypress-project"]
+      "generators": [
+        "init",
+        "cypress-project",
+        "cypress-component-project",
+        "migrate-to-cypress-10"
+      ]
     }
   },
   {
@@ -210,7 +215,9 @@
         "component-cypress-spec",
         "hook",
         "host",
-        "remote"
+        "remote",
+        "cypress-component-configuration",
+        "component-test"
       ]
     }
   },

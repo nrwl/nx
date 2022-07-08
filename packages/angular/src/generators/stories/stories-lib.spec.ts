@@ -1,3 +1,4 @@
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import type { Tree } from '@nrwl/devkit';
 import { writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
@@ -9,9 +10,18 @@ import { libraryGenerator } from '../library/library';
 import { scamGenerator } from '../scam/scam';
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
-
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe('angularStories generator: libraries', () => {
   const libName = 'test-ui-lib';
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
+
+  beforeEach(() => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+  });
 
   describe('Stories for empty Angular library', () => {
     let tree: Tree;
@@ -100,27 +110,27 @@ describe('angularStories generator: libraries', () => {
 
       expect(
         tree.exists(
-          `apps/${libName}-e2e/src/integration/barrel-button/barrel-button.component.spec.ts`
+          `apps/${libName}-e2e/src/e2e/barrel-button/barrel-button.component.cy.ts`
         )
       ).toBeTruthy();
       expect(
         tree.exists(
-          `apps/${libName}-e2e/src/integration/nested-button/nested-button.component.spec.ts`
+          `apps/${libName}-e2e/src/e2e/nested-button/nested-button.component.cy.ts`
         )
       ).toBeTruthy();
       expect(
         tree.exists(
-          `apps/${libName}-e2e/src/integration/test-button/test-button.component.spec.ts`
+          `apps/${libName}-e2e/src/e2e/test-button/test-button.component.cy.ts`
         )
       ).toBeTruthy();
       expect(
         tree.exists(
-          `apps/${libName}-e2e/src/integration/test-other/test-other.component.spec.ts`
+          `apps/${libName}-e2e/src/e2e/test-other/test-other.component.cy.ts`
         )
       ).toBeTruthy();
       expect(
         tree.read(
-          `apps/${libName}-e2e/src/integration/test-button/test-button.component.spec.ts`,
+          `apps/${libName}-e2e/src/e2e/test-button/test-button.component.cy.ts`,
           'utf-8'
         )
       ).toMatchSnapshot();
@@ -166,12 +176,12 @@ describe('angularStories generator: libraries', () => {
       ).toBeTruthy();
       expect(
         tree.exists(
-          `apps/${libName}-e2e/src/integration/variable-declare-button/variable-declare-button.component.spec.ts`
+          `apps/${libName}-e2e/src/e2e/variable-declare-button/variable-declare-button.component.cy.ts`
         )
       ).toBeTruthy();
       expect(
         tree.exists(
-          `apps/${libName}-e2e/src/integration/variable-declare-view/variable-declare-view.component.spec.ts`
+          `apps/${libName}-e2e/src/e2e/variable-declare-view/variable-declare-view.component.cy.ts`
         )
       ).toBeTruthy();
     });
@@ -205,17 +215,17 @@ describe('angularStories generator: libraries', () => {
 
       expect(
         tree.exists(
-          `apps/${libName}-e2e/src/integration/variable-spread-declare-button/variable-spread-declare-button.component.spec.ts`
+          `apps/${libName}-e2e/src/e2e/variable-spread-declare-button/variable-spread-declare-button.component.cy.ts`
         )
       ).toBeTruthy();
       expect(
         tree.exists(
-          `apps/${libName}-e2e/src/integration/variable-spread-declare-view/variable-spread-declare-view.component.spec.ts`
+          `apps/${libName}-e2e/src/e2e/variable-spread-declare-view/variable-spread-declare-view.component.cy.ts`
         )
       ).toBeTruthy();
       expect(
         tree.exists(
-          `apps/${libName}-e2e/src/integration/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.spec.ts`
+          `apps/${libName}-e2e/src/e2e/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.cy.ts`
         )
       ).toBeTruthy();
     });
@@ -242,14 +252,10 @@ describe('angularStories generator: libraries', () => {
         )
       ).toBeTruthy();
       expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/integration/cmp1/cmp1.component.spec.ts`
-        )
+        tree.exists(`apps/${libName}-e2e/src/e2e/cmp1/cmp1.component.cy.ts`)
       ).toBeTruthy();
       expect(
-        tree.exists(
-          `apps/${libName}-e2e/src/integration/cmp2/cmp2.component.spec.ts`
-        )
+        tree.exists(`apps/${libName}-e2e/src/e2e/cmp2/cmp2.component.cy.ts`)
       ).toBeTruthy();
     });
 

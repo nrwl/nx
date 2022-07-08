@@ -19,7 +19,8 @@
     "tsconfig-paths",
     "semver",
     "webpack",
-    "http-server"
+    "http-server",
+    "magic-string"
   ],
   "keepLifecycleScripts": true
 }

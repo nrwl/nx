@@ -1,15 +1,19 @@
-import { Tree } from '@nrwl/devkit';
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import { logger, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import libraryGenerator from '../library/library';
 import { Linter } from '@nrwl/linter';
-import { logger } from '@nrwl/devkit';
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
+import libraryGenerator from '../library/library';
 import storybookConfigurationGenerator from './configuration';
-
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe('react:storybook-configuration', () => {
   let appTree;
-
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
   beforeEach(async () => {
     // jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
     //   devDependencies: {
@@ -17,7 +21,7 @@ describe('react:storybook-configuration', () => {
     //     '@storybook/react': '^6.0.21',
     //   },
     // });
-
+    mockedInstalledCypressVersion.mockReturnValue(10);
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
   });
@@ -38,7 +42,9 @@ describe('react:storybook-configuration', () => {
     expect(
       appTree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();
-    expect(appTree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeTruthy();
+    expect(
+      appTree.exists('apps/test-ui-lib-e2e/cypress.config.ts')
+    ).toBeTruthy();
   });
 
   it('should generate stories for components', async () => {
@@ -147,14 +153,14 @@ describe('react:storybook-configuration', () => {
       standaloneConfig: false,
     });
     [
-      'apps/one/two/test-ui-lib-e2e/cypress.json',
+      'apps/one/two/test-ui-lib-e2e/cypress.config.ts',
       'apps/one/two/test-ui-lib-e2e/src/fixtures/example.json',
       'apps/one/two/test-ui-lib-e2e/src/support/commands.ts',
-      'apps/one/two/test-ui-lib-e2e/src/support/index.ts',
+      'apps/one/two/test-ui-lib-e2e/src/support/e2e.ts',
       'apps/one/two/test-ui-lib-e2e/tsconfig.json',
       'apps/one/two/test-ui-lib-e2e/.eslintrc.json',
-      'apps/one/two/test-ui-lib-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts',
-      'apps/one/two/test-ui-lib-e2e/src/integration/my-component/my-component.spec.ts',
+      'apps/one/two/test-ui-lib-e2e/src/e2e/test-ui-lib/test-ui-lib.cy.ts',
+      'apps/one/two/test-ui-lib-e2e/src/e2e/my-component/my-component.cy.ts',
     ].forEach((file) => {
       expect(appTree.exists(file)).toBeTruthy();
     });

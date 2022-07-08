@@ -139,8 +139,9 @@ Object {
         },
       },
       "options": Object {
-        "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
+        "cypressConfig": "apps/my-dir/my-app-e2e/cypress.config.ts",
         "devServerTarget": "my-dir-my-app:serve:development",
+        "testingType": "e2e",
       },
     },
     "lint": Object {
@@ -192,6 +193,7 @@ Object {
   "include": Array [
     "src/**/*.ts",
     "src/**/*.js",
+    "cypress.config.ts",
   ],
 }
 `;
@@ -309,8 +311,9 @@ Object {
         },
       },
       "options": Object {
-        "cypressConfig": "apps/my-app-e2e/cypress.json",
+        "cypressConfig": "apps/my-app-e2e/cypress.config.ts",
         "devServerTarget": "my-app:serve:development",
+        "testingType": "e2e",
       },
     },
     "lint": Object {

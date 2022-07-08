@@ -1,3 +1,4 @@
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import {
@@ -18,11 +19,16 @@ import {
 } from '../../utils/versions';
 import { applicationGenerator } from './application';
 import type { Schema } from './schema';
-
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe('app', () => {
   let appTree: Tree;
-
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
   beforeEach(() => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
   });
 
@@ -104,7 +110,7 @@ describe('app', () => {
       );
       expect(eslintrcJson.extends).toEqual(['../../.eslintrc.json']);
 
-      expect(appTree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
+      expect(appTree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = parseJson(
         appTree.read('apps/my-app-e2e/tsconfig.json', 'utf-8')
       );
@@ -277,7 +283,7 @@ describe('app', () => {
         'apps/my-dir/my-app/src/main.ts',
         'apps/my-dir/my-app/src/app/app.module.ts',
         'apps/my-dir/my-app/src/app/app.component.ts',
-        'apps/my-dir/my-app-e2e/cypress.json',
+        'apps/my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
         expect(appTree.exists(path)).toBeTruthy();
       });
@@ -360,7 +366,7 @@ describe('app', () => {
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app.module.ts',
         'my-dir/my-app/src/app/app.component.ts',
-        'my-dir/my-app-e2e/cypress.json',
+        'my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
         expect(appTree.exists(path)).toBeTruthy();
       });

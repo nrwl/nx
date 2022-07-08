@@ -8,9 +8,9 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
-import { updateCypressJson } from './update-cypress-json';
+import { updateCypressConfig } from './update-cypress-config';
 
-describe('updateCypressJson', () => {
+describe('updateCypressConfig', () => {
   let tree: Tree;
   let schema: NormalizedSchema;
   let projectConfig: ProjectConfiguration;
@@ -32,7 +32,7 @@ describe('updateCypressJson', () => {
 
   it('should handle cypress.json not existing', async () => {
     expect(() => {
-      updateCypressJson(tree, schema, projectConfig);
+      updateCypressConfig(tree, schema, projectConfig);
     }).not.toThrow();
   });
 
@@ -50,12 +50,42 @@ describe('updateCypressJson', () => {
     };
     writeJson(tree, '/libs/my-destination/cypress.json', cypressJson);
 
-    updateCypressJson(tree, schema, projectConfig);
+    updateCypressConfig(tree, schema, projectConfig);
 
     expect(readJson(tree, '/libs/my-destination/cypress.json')).toEqual({
       ...cypressJson,
       videosFolder: '../../dist/cypress/libs/my-destination/videos',
       screenshotsFolder: '../../dist/cypress/libs/my-destination/screenshots',
     });
+  });
+
+  it('should handle updating cypress.config.ts', async () => {
+    tree.write(
+      '/libs/my-destination/cypress.config.ts',
+      `
+import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+    nxE2EPreset(__dirname),
+    videosFolder: '../../dist/cypress/libs/my-lib/videos',
+    screenshotsFolder: '../../dist/cypress/libs/my-lib/screenshots',
+  }
+});
+    `
+    );
+
+    updateCypressConfig(tree, schema, projectConfig);
+    const fileContent = tree.read(
+      '/libs/my-destination/cypress.config.ts',
+      'utf-8'
+    );
+    expect(fileContent).toContain(
+      `videosFolder: '../../dist/cypress/libs/my-destination/videos'`
+    );
+    expect(fileContent).toContain(
+      `screenshotsFolder: '../../dist/cypress/libs/my-destination/screenshots'`
+    );
   });
 });

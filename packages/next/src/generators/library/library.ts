@@ -1,5 +1,3 @@
-import { libraryGenerator as reactLibraryGenerator } from '@nrwl/react';
-import { nextInitGenerator } from '../init/init';
 import {
   convertNxGenerator,
   GeneratorCallback,
@@ -9,8 +7,10 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { Schema } from './schema';
+import { libraryGenerator as reactLibraryGenerator } from '@nrwl/react';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { nextInitGenerator } from '../init/init';
+import { Schema } from './schema';
 
 export async function libraryGenerator(host: Tree, options: Schema) {
   const name = names(options.name).fileName;

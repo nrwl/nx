@@ -82,8 +82,17 @@ const IGNORE_MATCHES = {
     'babel-jest',
     '@angular-devkit/core',
     '@angular-devkit/schematics',
-    '@swc/jest',
-    'babel-jest',
+    // TODO(caleb): remove when refactoring plugin to use @nrwl/web
+    //  webpack plugins for cypress component testing dev server
+    'babel-loader',
+    'css-loader',
+    'less-loader',
+    'sass',
+    'sass-loader',
+    'style-loader',
+    'stylus-loader',
+    'swc-loader',
+    'tsconfig-paths-webpack-plugin',
   ],
   storybook: [
     '@angular-devkit/architect',

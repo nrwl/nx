@@ -1,6 +1,214 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`schematic:cypress-project Cypress Project nested should set right path names in \`tsconfig.e2e.json\` 1`] = `
+exports[`Cypress Project < v7 --linter eslint should add eslint-plugin-cypress 1`] = `
+Object {
+  "extends": Array [
+    "plugin:cypress/recommended",
+    "../../.eslintrc.json",
+  ],
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "src/plugins/index.js",
+      ],
+      "rules": Object {
+        "@typescript-eslint/no-var-requires": "off",
+        "no-undef": "off",
+      },
+    },
+  ],
+}
+`;
+
+exports[`Cypress Project < v7 nested should update workspace.json 1`] = `
+Object {
+  "e2e": Object {
+    "builder": "@nrwl/cypress:cypress",
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "my-dir-my-app:serve:production",
+      },
+    },
+    "options": Object {
+      "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
+      "devServerTarget": "my-dir-my-app:serve",
+      "testingType": "e2e",
+      "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.json",
+    },
+  },
+  "lint": Object {
+    "builder": "@angular-devkit/build-angular:tslint",
+    "options": Object {
+      "exclude": Array [
+        "**/node_modules/**",
+        "!apps/my-dir/my-app-e2e/**/*",
+      ],
+      "tsConfig": Array [
+        "apps/my-dir/my-app-e2e/tsconfig.json",
+      ],
+    },
+  },
+}
+`;
+
+exports[`Cypress Project < v7 project with directory in its name should set right path names in \`cypress.json\` 1`] = `
+"{
+  \\"fileServerFolder\\": \\".\\",
+  \\"fixturesFolder\\": \\"./src/fixtures\\",
+  \\"integrationFolder\\": \\"./src/integration\\",
+  \\"modifyObstructiveCode\\": false,
+  \\"supportFile\\": \\"./src/support/index.ts\\",
+  \\"pluginsFile\\": \\"./src/plugins/index\\",
+  \\"video\\": true,
+  \\"videosFolder\\": \\"../../../dist/cypress/apps/my-dir/my-app-e2e/videos\\",
+  \\"screenshotsFolder\\": \\"../../../dist/cypress/apps/my-dir/my-app-e2e/screenshots\\",
+  \\"chromeWebSecurity\\": false
+}
+"
+`;
+
+exports[`Cypress Project < v7 project with directory in its name should update workspace.json 1`] = `
+Object {
+  "e2e": Object {
+    "builder": "@nrwl/cypress:cypress",
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "my-dir-my-app:serve:production",
+      },
+    },
+    "options": Object {
+      "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
+      "devServerTarget": "my-dir-my-app:serve",
+      "testingType": "e2e",
+      "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.json",
+    },
+  },
+  "lint": Object {
+    "builder": "@angular-devkit/build-angular:tslint",
+    "options": Object {
+      "exclude": Array [
+        "**/node_modules/**",
+        "!apps/my-dir/my-app-e2e/**/*",
+      ],
+      "tsConfig": Array [
+        "apps/my-dir/my-app-e2e/tsconfig.json",
+      ],
+    },
+  },
+}
+`;
+
+exports[`Cypress Project < v7 should add update \`workspace.json\` file (baseUrl) 1`] = `
+Object {
+  "e2e": Object {
+    "builder": "@nrwl/cypress:cypress",
+    "options": Object {
+      "baseUrl": "http://localhost:3000",
+      "cypressConfig": "apps/my-app-e2e/cypress.json",
+      "testingType": "e2e",
+      "tsConfig": "apps/my-app-e2e/tsconfig.json",
+    },
+  },
+  "lint": Object {
+    "builder": "@angular-devkit/build-angular:tslint",
+    "options": Object {
+      "exclude": Array [
+        "**/node_modules/**",
+        "!apps/my-app-e2e/**/*",
+      ],
+      "tsConfig": Array [
+        "apps/my-app-e2e/tsconfig.json",
+      ],
+    },
+  },
+}
+`;
+
+exports[`Cypress Project < v7 should add update \`workspace.json\` file 1`] = `
+Object {
+  "e2e": Object {
+    "builder": "@nrwl/cypress:cypress",
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "my-app:serve:production",
+      },
+    },
+    "options": Object {
+      "cypressConfig": "apps/my-app-e2e/cypress.json",
+      "devServerTarget": "my-app:serve",
+      "testingType": "e2e",
+      "tsConfig": "apps/my-app-e2e/tsconfig.json",
+    },
+  },
+  "lint": Object {
+    "builder": "@angular-devkit/build-angular:tslint",
+    "options": Object {
+      "exclude": Array [
+        "**/node_modules/**",
+        "!apps/my-app-e2e/**/*",
+      ],
+      "tsConfig": Array [
+        "apps/my-app-e2e/tsconfig.json",
+      ],
+    },
+  },
+}
+`;
+
+exports[`Cypress Project < v7 should add update \`workspace.json\` file for a project with a defaultConfiguration 1`] = `
+Object {
+  "e2e": Object {
+    "builder": "@nrwl/cypress:cypress",
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "my-app:serve:production",
+      },
+    },
+    "options": Object {
+      "cypressConfig": "apps/my-app-e2e/cypress.json",
+      "devServerTarget": "my-app:serve:development",
+      "testingType": "e2e",
+      "tsConfig": "apps/my-app-e2e/tsconfig.json",
+    },
+  },
+  "lint": Object {
+    "builder": "@angular-devkit/build-angular:tslint",
+    "options": Object {
+      "exclude": Array [
+        "**/node_modules/**",
+        "!apps/my-app-e2e/**/*",
+      ],
+      "tsConfig": Array [
+        "apps/my-app-e2e/tsconfig.json",
+      ],
+    },
+  },
+}
+`;
+
+exports[`Cypress Project > v10 nested should set right path names in \`cypress.config.ts\` 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: nxE2EPreset(__dirname)
+});
+"
+`;
+
+exports[`Cypress Project > v10 nested should set right path names in \`tsconfig.e2e.json\` 1`] = `
 Object {
   "compilerOptions": Object {
     "allowJs": true,
@@ -15,11 +223,36 @@ Object {
   "include": Array [
     "src/**/*.ts",
     "src/**/*.js",
+    "cypress.config.ts",
   ],
 }
 `;
 
-exports[`schematic:cypress-project Cypress Project should set right path names in \`tsconfig.e2e.json\` 1`] = `
+exports[`Cypress Project > v10 should add update \`workspace.json\` file properly when eslint is passed 1`] = `
+Object {
+  "builder": "@nrwl/linter:eslint",
+  "options": Object {
+    "lintFilePatterns": Array [
+      "apps/my-app-e2e/**/*.{js,ts}",
+    ],
+  },
+  "outputs": Array [
+    "{options.outputFile}",
+  ],
+}
+`;
+
+exports[`Cypress Project > v10 should set right path names in \`cypress.config.ts\` 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: nxE2EPreset(__dirname)
+});
+"
+`;
+
+exports[`Cypress Project > v10 should set right path names in \`tsconfig.e2e.json\` 1`] = `
 Object {
   "compilerOptions": Object {
     "allowJs": true,
@@ -34,6 +267,7 @@ Object {
   "include": Array [
     "src/**/*.ts",
     "src/**/*.js",
+    "cypress.config.ts",
   ],
 }
 `;
