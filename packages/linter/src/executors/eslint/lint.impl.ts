@@ -45,9 +45,7 @@ export default async function run(
    * We want users to have the option of not specifying the config path, and let
    * eslint automatically resolve the `.eslintrc.json` files in each folder.
    */
-  const eslintConfigPath = options.eslintConfig
-    ? resolve(systemRoot, options.eslintConfig)
-    : undefined;
+  const eslintConfigPath = options.eslintConfig ?? undefined
 
   options.cacheLocation = options.cacheLocation
     ? join(options.cacheLocation, projectName)
