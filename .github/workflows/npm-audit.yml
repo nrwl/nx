@@ -15,8 +15,11 @@ jobs:
     - name: Run a security audit
       run: npx audit-ci --critical --report-type summary
 
+    - name: Check lock file for invalid hosts
+      run: yarn lockfile-lint -s -n -p yarn.lock -a hosts yarn npm
+      
     - name: Run Dependency confusion supply chain check
-      run: npx snync -d .
+      run: npx snync -d .      
 
     - name: Report Status
       if: ${{ always() && github.repository_owner == 'nrwl' }}
