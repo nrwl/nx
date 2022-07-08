@@ -1,5 +1,4 @@
 import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
-import { AnnouncementBanner } from '@nrwl/nx-dev/ui-common';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -58,7 +57,6 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
         Skip to content
       </a>
       <div className="documentation-app bg-white text-gray-700 antialiased">
-        <AnnouncementBanner />
         <Component {...pageProps} />
       </div>
       {/* Global Site Tag (gtag.js) - Google Analytics */}
