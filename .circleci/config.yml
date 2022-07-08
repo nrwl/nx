@@ -100,7 +100,12 @@ commands:
                 paths:
                   - /usr/local/Homebrew
                   - ~/Library/Caches/Homebrew
-
+      - when:
+          condition:
+            equal: [<< parameters.os >>, linux]
+          steps:
+            - run:
+                command: sudo apt-get install -y ca-certificates
       - run-yarn-install:
           os: << parameters.os >>
       - when:
