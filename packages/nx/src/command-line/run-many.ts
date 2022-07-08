@@ -49,7 +49,8 @@ function projectsToRun(
 ): ProjectGraphProjectNode[] {
   const allProjects = Object.values(projectGraph.nodes);
   const excludedProjects = new Set(nxArgs.exclude ?? []);
-  if (nxArgs.all) {
+  // --all is default now, if --projects is provided, it'll override the --all
+  if (nxArgs.all && nxArgs.projects.length === 0) {
     const res = runnableForTarget(allProjects, nxArgs.target).filter(
       (proj) => !excludedProjects.has(proj.name)
     );
