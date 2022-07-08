@@ -173,6 +173,7 @@ jobs:
       - run: npx nx-cloud record yarn check-imports
       - run: npx nx-cloud record yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx-cloud record yarn check-commit
+      - run: npx nx-cloud record yarn check-lock-files
       - run: npx nx-cloud record yarn depcheck
       - run:
           name: Check Documentation

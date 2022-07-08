@@ -15,6 +15,9 @@ jobs:
     - name: Run a security audit
       run: npx audit-ci --critical --report-type summary
 
+    - name: Check lock file for invalid hosts
+      run: yarn lockfile-lint -s -n -p yarn.lock -a hosts yarn npm
+
     - name: Report Status
       if: ${{ always() && github.repository_owner == 'nrwl' }}
       uses: ravsamhq/notify-slack-action@v1

@@ -182,6 +182,7 @@
     "less-loader": "^10.1.0",
     "license-webpack-plugin": "^4.0.2",
     "loader-utils": "1.2.3",
+    "lockfile-lint": "^4.7.6",
     "memfs": "^3.0.1",
     "metro-resolver": "^0.71.2",
     "mime": "2.4.4",
@@ -305,4 +306,3 @@
     "minimist": "^1.2.6"
   }
 }
-
