@@ -38,7 +38,7 @@ export function getPublishedVersion(): string {
     readJsonFile(`./build/packages/nx/package.json`).version ||
     // fallback to latest if built nx package is missing
     'latest';
-  return process.env.PUBLISHED_VERSION;
+  return process.env.PUBLISHED_VERSION as string;
 }
 
 export function detectPackageManager(dir: string = ''): PackageManager {
@@ -59,7 +59,7 @@ export const promisifiedTreeKill: (
 
 interface RunCmdOpts {
   silenceError?: boolean;
-  env?: Record<string, string>;
+  env?: Record<string, string | undefined>;
   cwd?: string;
   silent?: boolean;
 }
@@ -402,7 +402,7 @@ export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: null,
+    env: undefined,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
@@ -455,8 +455,8 @@ export function runCommandUntil(
       }
     }
 
-    p.stdout.on('data', checkCriteria);
-    p.stderr.on('data', checkCriteria);
+    p.stdout?.on('data', checkCriteria);
+    p.stderr?.on('data', checkCriteria);
     p.on('exit', (code) => {
       if (!complete) {
         rej(`Exited with ${code}`);
@@ -488,13 +488,13 @@ export function runNgAdd(
   version: string = getPublishedVersion(),
   opts: RunCmdOpts = {
     silenceError: false,
-    env: null,
+    env: undefined,
     cwd: tmpProjPath(),
   }
 ): string {
   try {
     const pmc = getPackageManagerCommand();
-    packageInstall(packageName, null, version);
+    packageInstall(packageName, undefined, version);
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
       env: { ...(opts.env || process.env) },
@@ -519,10 +519,10 @@ export function runNgAdd(
 }
 
 export function runCLI(
-  command?: string,
+  command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: null,
+    env: undefined,
   }
 ): string {
   try {
@@ -802,17 +802,18 @@ export function getPackageManagerCommand({
   run: (script: string, args: string) => string;
   runNx: string;
   runNxSilent: string;
-  runUninstalledPackage?: string | undefined;
+  runUninstalledPackage: string;
   addDev: string;
   list: string;
 } {
   const npmMajorVersion = getNpmMajorVersion();
+  const publishedVersion = getPublishedVersion();
 
   return {
     npm: {
       createWorkspace: `npx ${
         +npmMajorVersion >= 7 ? '--yes' : ''
-      } create-nx-workspace@${getPublishedVersion()}`,
+      } create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `npm run ${script} -- ${args}`,
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
@@ -822,7 +823,7 @@ export function getPackageManagerCommand({
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@${getPublishedVersion()} && create-nx-workspace`,
+      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
@@ -832,7 +833,7 @@ export function getPackageManagerCommand({
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
-      createWorkspace: `pnpm dlx create-nx-workspace@${getPublishedVersion()}`,
+      createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
@@ -840,7 +841,7 @@ export function getPackageManagerCommand({
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },
-  }[packageManager.trim()];
+  }[packageManager.trim() as PackageManager];
 }
 
 function getNpmMajorVersion(): string {
