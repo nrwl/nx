@@ -288,5 +288,10 @@
     "name": "@theunderscorer/nx-semantic-release",
     "description": "Nx plugin for automated releases using semantic-release.",
     "url": "https://github.com/TheUnderScorer/nx-semantic-release"
+  },
+  {
+    "name": "nx-pwm",
+    "description": "Nx plugin and CLI to help maintain packages, inspired by NX repo tooling",
+    "url": "https://github.com/gioragutt/nx-pwm"
   }
 ]
