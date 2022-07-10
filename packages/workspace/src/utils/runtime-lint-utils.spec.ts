@@ -5,7 +5,8 @@ import {
 } from '@nrwl/devkit';
 import {
   DepConstraint,
-  dependentsHaveBannedImport,
+  findTransitiveExternalDependencies,
+  hasBannedDependencies,
   hasBannedImport,
 } from './runtime-lint-utils';
 
@@ -96,7 +97,7 @@ describe('hasBannedImport', () => {
   });
 });
 
-describe('dependentsHaveBannedImport', () => {
+describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () => {
   const source: ProjectGraphProjectNode = {
     type: 'lib',
     name: 'aLib',
@@ -188,44 +189,63 @@ describe('dependentsHaveBannedImport', () => {
     },
   };
 
+  const externalDependencies = [
+    graph.dependencies.aLib[1],
+    graph.dependencies.bLib[0],
+    graph.dependencies.bLib[1],
+    graph.dependencies.cLib[0],
+    graph.dependencies.dLib[0],
+  ];
+
+  it('should findTransitiveExternalDependencies', () => {
+    expect(findTransitiveExternalDependencies(graph, source)).toStrictEqual(
+      externalDependencies
+    );
+  });
+
   it('should return target and constraint pair if any dependents have banned import', () => {
-    const constraints: DepConstraint[] = [
-      { sourceTag: 'a', bannedExternalImports: ['angular'] },
-      {
+    expect(
+      hasBannedDependencies(externalDependencies.slice(1), graph, {
         sourceTag: 'a',
-        bannedExternalImports: ['react-native'],
-      },
-    ];
+        bannedExternalImports: ['angular'],
+      })
+    ).toStrictEqual([]);
+  });
+
+  it('should return target and constraint pair if any dependents have banned import', () => {
+    const constraint: DepConstraint = {
+      sourceTag: 'a',
+      bannedExternalImports: ['react-native'],
+    };
 
     expect(
-      dependentsHaveBannedImport(target, graph, constraints)
-    ).toStrictEqual([[bannedTarget, d, constraints[1]]]);
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
+    ).toStrictEqual([[bannedTarget, d, constraint]]);
   });
 
   it('should return multiple target and constraint pairs if any dependents have banned import', () => {
-    const constraints: DepConstraint[] = [
-      { sourceTag: 'a', bannedExternalImports: ['angular'] },
-      {
-        sourceTag: 'a',
-        bannedExternalImports: ['react'],
-      },
-    ];
+    const constraint: DepConstraint = {
+      sourceTag: 'a',
+      bannedExternalImports: ['react'],
+    };
 
     expect(
-      dependentsHaveBannedImport(target, graph, constraints)
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
     ).toStrictEqual([
-      [nonBannedTarget, target, constraints[1]],
-      [nonBannedTarget, c, constraints[1]],
+      [nonBannedTarget, target, constraint],
+      [nonBannedTarget, c, constraint],
     ]);
   });
 
   it('should return undefined if no baneed external imports found', () => {
-    const constraints: DepConstraint[] = [
-      { sourceTag: 'a', bannedExternalImports: ['angular'] },
-    ];
+    const constraint: DepConstraint = {
+      sourceTag: 'a',
+      bannedExternalImports: ['angular'],
+    };
 
-    expect(dependentsHaveBannedImport(target, graph, constraints).length).toBe(
-      0
-    );
+    expect(
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
+        .length
+    ).toBe(0);
   });
 });
