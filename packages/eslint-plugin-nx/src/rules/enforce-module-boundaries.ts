@@ -52,6 +52,7 @@ type Options = [
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
     banTransitiveDependencies: boolean;
+    checkNestedExternalImports: boolean;
   }
 ];
 export type MessageIds =
@@ -86,6 +87,7 @@ export default createESLintRule<Options, MessageIds>({
           enforceBuildableLibDependency: { type: 'boolean' },
           allowCircularSelfDependency: { type: 'boolean' },
           banTransitiveDependencies: { type: 'boolean' },
+          checkNestedExternalImports: { type: 'boolean' },
           allow: [{ type: 'string' }],
           depConstraints: [
             {
@@ -127,6 +129,7 @@ export default createESLintRule<Options, MessageIds>({
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
       banTransitiveDependencies: false,
+      checkNestedExternalImports: false,
     },
   ],
   create(
@@ -138,6 +141,7 @@ export default createESLintRule<Options, MessageIds>({
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
         banTransitiveDependencies,
+        checkNestedExternalImports,
       },
     ]
   ) {
@@ -485,10 +489,9 @@ export default createESLintRule<Options, MessageIds>({
           return;
         }
 
-        const transitiveExternalDeps = findTransitiveExternalDependencies(
-          projectGraph,
-          targetProject
-        );
+        const transitiveExternalDeps = checkNestedExternalImports
+          ? findTransitiveExternalDependencies(projectGraph, targetProject)
+          : [];
 
         for (let constraint of constraints) {
           if (
@@ -537,6 +540,7 @@ export default createESLintRule<Options, MessageIds>({
             }
           }
           if (
+            checkNestedExternalImports &&
             constraint.bannedExternalImports &&
             constraint.bannedExternalImports.length
           ) {
