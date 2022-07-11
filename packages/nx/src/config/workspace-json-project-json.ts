@@ -112,6 +112,11 @@ export interface TargetDependencyConfig {
    * The name of the target
    */
   target: string;
+
+  /**
+   * Configuration for params handling.
+   */
+  params?: 'ignore' | 'forward';
 }
 
 export type InputDefinition =

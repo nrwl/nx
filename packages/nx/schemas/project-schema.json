@@ -58,9 +58,16 @@
                     "target": {
                       "type": "string",
                       "description": "The name of the target."
+                    },
+                    "params": {
+                      "type": "string",
+                      "description": "Configuration for params handling.",
+                      "enum": ["ignore", "forward"],
+                      "default": "ignore"
                     }
                   },
-                  "additionalProperties": false
+                  "additionalProperties": false,
+                  "required": ["projects", "target"]
                 }
               ]
             }

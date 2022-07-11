@@ -298,14 +298,32 @@ Another common scenario is for a target to depend on another target of the same 
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
-> You can also express the same configuration using
+You can also express the same configuration using:
 
 ```json
 "build": {
-  "dependsOn": [{ projects: "dependencies", target: "build"}]
+  "dependsOn": [{ "projects": "dependencies", "target": "build" }]
 },
 "test": {
-  "dependsOn": [{ projects: "self", target: "build"}]
+  "dependsOn": [{ "projects": "self", "target": "build" }]
+}
+```
+
+With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target
+dependencies. You can either forward them to the dependency target, or you can ignore them (default).
+
+```json
+"build": {
+   // forward params passed to this target to the dependency targets
+  "dependsOn": [{ "projects": "dependencies", "target": "build", "params": "forward" }]
+},
+"test": {
+  // ignore params passed to this target, won't be forwarded to the dependency targets
+  "dependsOn": [{ "projects": "self", "target": "build", "params": "ignore" }]
+}
+"lint": {
+  // ignore params passed to this target, won't be forwarded to the dependency targets
+  "dependsOn": [{ "projects": "self", "target": "build" }]
 }
 ```
 
