@@ -1,6 +1,9 @@
-import { joinPathFragments, readJsonFile } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  ProjectGraphProjectNode,
+  readJsonFile,
+} from '@nrwl/devkit';
 import { findNodes } from '@nrwl/workspace/src/utilities/typescript';
-import { MappedProjectGraphNode } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { existsSync, readFileSync } from 'fs';
 import { dirname } from 'path';
 import ts = require('typescript');
@@ -29,7 +32,7 @@ export function getBarrelEntryPointByImportScope(
 }
 
 export function getBarrelEntryPointProjectNode(
-  projectNode: MappedProjectGraphNode<any>
+  projectNode: ProjectGraphProjectNode<any>
 ): { path: string; importScope: string }[] | null {
   const tsConfigBase = tryReadBaseJson();
 
