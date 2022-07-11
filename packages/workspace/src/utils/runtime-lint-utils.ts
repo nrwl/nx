@@ -254,24 +254,32 @@ export function findTransitiveExternalDependencies(
   graph: ProjectGraph,
   source: ProjectGraphProjectNode
 ): ProjectGraphDependency[] {
-  const allReachableProjects = Object.keys(graph.nodes).filter(
-    (projectName) =>
-      pathExists(graph, source.name, projectName) &&
-      graph.dependencies[projectName]
-  );
+  if (!graph.externalNodes) {
+    return [];
+  }
+  const allReachableProjects = [];
+  const allProjects = Object.keys(graph.nodes);
 
-  const externalDependencies: Set<ProjectGraphDependency> = new Set(
-    allReachableProjects
-      .map((project) =>
-        graph.dependencies[project].filter(
-          (dep) => graph.externalNodes?.[dep.target]
-        )
-      )
-      .filter((deps) => deps.length)
-      .flat(1)
-  );
+  for (let i = 0; i < allProjects.length; i++) {
+    if (pathExists(graph, source.name, allProjects[i])) {
+      allReachableProjects.push(allProjects[i]);
+    }
+  }
 
-  return Array.from(externalDependencies);
+  const externalDependencies = [];
+  for (let i = 0; i < allReachableProjects.length; i++) {
+    const dependencies = graph.dependencies[allReachableProjects[i]];
+    if (dependencies) {
+      for (let d = 0; d < dependencies.length; d++) {
+        const dependency = dependencies[d];
+        if (graph.externalNodes[dependency.target]) {
+          externalDependencies.push(dependency);
+        }
+      }
+    }
+  }
+
+  return externalDependencies;
 }
 
 /**
