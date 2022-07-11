@@ -1,5 +1,4 @@
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { getDependencyConfigs, interpolate } from './utils';
 import {
   projectHasTarget,
@@ -45,7 +44,15 @@ export class ProcessTasks {
     }
     for (const taskId of Object.keys(this.tasks)) {
       const task = this.tasks[taskId];
-      this.processTask(task, task.target.project, configuration);
+      this.processTask(
+        task,
+        task.target.project,
+        configuration,
+        overrides,
+        this.projectGraph.nodes[task.target.project].data.targets?.[
+          task.target.target
+        ]?.executor
+      );
     }
     return Object.keys(this.dependencies).filter(
       (d) => this.dependencies[d].length === 0
@@ -55,7 +62,9 @@ export class ProcessTasks {
   processTask(
     task: Task,
     projectUsedToDeriveDependencies: string,
-    configuration: string
+    configuration: string,
+    overrides: Object,
+    originalExecutor: string | undefined
   ) {
     const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
     if (this.seen.has(seenKey)) {
@@ -101,15 +110,32 @@ export class ProcessTasks {
                 depProject,
                 dependencyConfig.target,
                 resolvedConfiguration,
-                { __overrides_unparsed__: [] }
+                getOverridesForTask(
+                  depProject,
+                  dependencyConfig.target,
+                  originalExecutor,
+                  overrides
+                )
               );
               this.tasks[depTargetId] = newTask;
               this.dependencies[depTargetId] = [];
 
-              this.processTask(newTask, newTask.target.project, configuration);
+              this.processTask(
+                newTask,
+                newTask.target.project,
+                configuration,
+                overrides,
+                originalExecutor
+              );
             }
           } else {
-            this.processTask(task, depProject.name, configuration);
+            this.processTask(
+              task,
+              depProject.name,
+              configuration,
+              overrides,
+              originalExecutor
+            );
           }
         }
       } else {
@@ -137,11 +163,22 @@ export class ProcessTasks {
               selfProject,
               dependencyConfig.target,
               resolvedConfiguration,
-              { __overrides_unparsed__: [] }
+              getOverridesForTask(
+                selfProject,
+                dependencyConfig.target,
+                originalExecutor,
+                overrides
+              )
             );
             this.tasks[selfTaskId] = newTask;
             this.dependencies[selfTaskId] = [];
-            this.processTask(newTask, newTask.target.project, configuration);
+            this.processTask(
+              newTask,
+              newTask.target.project,
+              configuration,
+              overrides,
+              originalExecutor
+            );
           }
         }
       }
@@ -228,4 +265,15 @@ function interpolateOverrides<T = any>(
         : value;
   });
   return interpolatedArgs;
+}
+
+function getOverridesForTask(
+  project: ProjectGraphProjectNode,
+  target: string,
+  originalTargetExecutor: string,
+  originalTargetOverrides: Object
+): Object {
+  return project.data.targets?.[target]?.executor === originalTargetExecutor
+    ? originalTargetOverrides
+    : { __overrides_unparsed__: [] };
 }

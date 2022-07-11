@@ -167,6 +167,115 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should forward overrides to tasks with the same target executor', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            files: [],
+            targets: {
+              prebuild: { executor: 'executor2' },
+              build: {
+                dependsOn: [
+                  { projects: 'dependencies', target: 'build' },
+                  { projects: 'self', target: 'prebuild' },
+                ],
+                executor: 'executor1',
+              },
+              test: {},
+              serve: {},
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            files: [],
+            targets: { build: { executor: 'executor1' }, test: {} },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            files: [],
+            targets: { build: { executor: 'executor2' } },
+          },
+        },
+      },
+      dependencies: {
+        app1: [
+          { source: 'app1', target: 'lib1', type: 'static' },
+          { source: 'app1', target: 'lib2', type: 'static' },
+        ],
+        lib1: [],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'development',
+      { myFlag: 'flag value' }
+    );
+
+    expect(taskGraph).toEqual({
+      roots: ['lib1:build', 'lib2:build', 'app1:prebuild'],
+      tasks: {
+        'app1:build': {
+          id: 'app1:build',
+          target: {
+            project: 'app1',
+            target: 'build',
+          },
+          overrides: { myFlag: 'flag value' },
+          projectRoot: 'app1-root',
+        },
+        'app1:prebuild': {
+          id: 'app1:prebuild',
+          target: {
+            project: 'app1',
+            target: 'prebuild',
+          },
+          overrides: { __overrides_unparsed__: [] },
+          projectRoot: 'app1-root',
+        },
+        'lib1:build': {
+          id: 'lib1:build',
+          target: {
+            project: 'lib1',
+            target: 'build',
+          },
+          overrides: { myFlag: 'flag value' },
+          projectRoot: 'lib1-root',
+        },
+        'lib2:build': {
+          id: 'lib2:build',
+          target: {
+            project: 'lib2',
+            target: 'build',
+          },
+          overrides: { __overrides_unparsed__: [] },
+          projectRoot: 'lib2-root',
+        },
+      },
+      dependencies: {
+        'app1:build': ['lib1:build', 'lib2:build', 'app1:prebuild'],
+        'app1:prebuild': [],
+        'lib1:build': [],
+        'lib2:build': [],
+      },
+    });
+  });
+
   it('should create graphs with dependencies', () => {
     const taskGraph = createTaskGraph(
       projectGraph,
