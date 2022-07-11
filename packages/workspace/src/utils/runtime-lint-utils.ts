@@ -127,7 +127,14 @@ export function findProjectUsingFile<T>(
   projectGraph: MappedProjectGraph<T>,
   file: string
 ): MappedProjectGraphNode {
-  return Object.values(projectGraph.nodes).find((n) => n.data.files[file]);
+  const projects = Object.keys(projectGraph.nodes);
+  for (let i = 0; i < projects.length; i++) {
+    const node = projectGraph.nodes[projects[i]];
+    if (node.data.files[file]) {
+      return node;
+    }
+  }
+  return undefined;
 }
 
 export function findSourceProject(
@@ -207,7 +214,8 @@ export function onlyLoadChildren(
 }
 
 export function getSourceFilePath(sourceFileName: string, projectPath: string) {
-  return normalizePath(relative(projectPath, sourceFileName));
+  const relativePath = sourceFileName.slice(projectPath.length + 1);
+  return normalizePath(relativePath);
 }
 
 /**
