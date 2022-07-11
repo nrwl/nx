@@ -21,15 +21,38 @@ jobs:
     - name: Run Dependency confusion supply chain check
       run: npx snync -d .
 
-    - name: Report Status
-      if: ${{ always() && github.repository_owner == 'nrwl' }}
-      uses: ravsamhq/notify-slack-action@v1
-      with:
-        status: ${{ job.status }}
-        message_format: '{emoji} *{workflow}* {status_message} on <{commit_url}|{commit_sha}>'
-        notification_title: '{workflow} has {status_message}'
-        footer: 'From <{repo_url}|{repo}>'
-        mention_users: 'U01UELKLYF2'
-        mention_users_when: 'failure,warnings'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+  report:
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: audit
+    runs-on: ubuntu-latest
+    name: Report status
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v1
+        with:
+          status: ${{ needs.audit.result }}
+          message_format: '{emoji} *{workflow}* {status_message} (last commit <{commit_url}|{commit_sha}>)'
+          notification_title: '{workflow} has {status_message}'
+          footer: '<{run_url}|View Run>'
+          mention_users: 'U01UELKLYF2,U9NPA6C90'
+          mention_users_when: 'failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
+  report-success:
+    if: ${{ github.repository_owner == 'nrwl' && github.event_name == 'workflow_dispatch' }} # only once it's fixed on manual dispatch
+    needs: audit
+    runs-on: ubuntu-latest
+    name: Report success
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v1
+        with:
+          status: ${{ needs.audit.result }}
+          message_format: '{emoji} *{workflow}* {status_message} (last commit <{commit_url}|{commit_sha}>)'
+          notification_title: '{workflow} has {status_message}'
+          footer: '<{run_url}|View Run>'
+          mention_users: 'U01UELKLYF2,U9NPA6C90'
+          mention_users_when: 'failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
