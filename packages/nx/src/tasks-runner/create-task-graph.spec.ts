@@ -3,6 +3,7 @@ import { createTaskGraph } from 'nx/src/tasks-runner/create-task-graph';
 
 describe('createTaskGraph', () => {
   let projectGraph: ProjectGraph;
+
   beforeEach(() => {
     projectGraph = {
       nodes: {
@@ -163,6 +164,133 @@ describe('createTaskGraph', () => {
       },
       dependencies: {
         'app1:test': [],
+      },
+    });
+  });
+
+  it('should forward args when configured', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            files: [],
+            targets: {
+              'prebuild-base': {},
+              prebuild: {},
+              build: {
+                dependsOn: [
+                  {
+                    projects: 'dependencies',
+                    target: 'build',
+                    params: 'forward',
+                  },
+                  { projects: 'self', target: 'prebuild', params: 'forward' },
+                ],
+              },
+              test: {},
+              serve: {},
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            files: [],
+            targets: {
+              build: {
+                dependsOn: [
+                  {
+                    projects: 'dependencies',
+                    target: 'build',
+                    params: 'ignore',
+                  },
+                ],
+              },
+              test: {},
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            files: [],
+            targets: { build: {}, test: {} },
+          },
+        },
+      },
+      dependencies: {
+        app1: [
+          { source: 'app1', target: 'lib1', type: 'static' },
+          { source: 'app1', target: 'lib2', type: 'static' },
+        ],
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [],
+      },
+    };
+
+    const taskResult = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'development',
+      {
+        myFlag: 'flag value',
+      }
+    );
+
+    expect(taskResult).toEqual({
+      roots: ['lib2:build', 'app1:prebuild'],
+      tasks: {
+        'app1:build': {
+          id: 'app1:build',
+          target: {
+            project: 'app1',
+            target: 'build',
+          },
+          overrides: { myFlag: 'flag value' },
+          projectRoot: 'app1-root',
+        },
+        'app1:prebuild': {
+          id: 'app1:prebuild',
+          target: {
+            project: 'app1',
+            target: 'prebuild',
+          },
+          overrides: { myFlag: 'flag value' },
+          projectRoot: 'app1-root',
+        },
+        'lib1:build': {
+          id: 'lib1:build',
+          target: {
+            project: 'lib1',
+            target: 'build',
+          },
+          overrides: { myFlag: 'flag value' },
+          projectRoot: 'lib1-root',
+        },
+        'lib2:build': {
+          id: 'lib2:build',
+          target: {
+            project: 'lib2',
+            target: 'build',
+          },
+          overrides: { __overrides_unparsed__: [] },
+          projectRoot: 'lib2-root',
+        },
+      },
+      dependencies: {
+        'app1:build': ['lib1:build', 'lib2:build', 'app1:prebuild'],
+        'app1:prebuild': [],
+        'lib1:build': ['lib2:build'],
+        'lib2:build': [],
       },
     });
   });
