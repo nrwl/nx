@@ -20,7 +20,10 @@
       "type": "string",
       "description": "The name of the library to create the secondary entry point for.",
       "x-prompt": "What library would you like to create the secondary entry point for?",
-      "pattern": "^[a-zA-Z].*$"
+      "pattern": "^[a-zA-Z].*$",
+      "$default": {
+        "$source": "projectName"
+      }
     },
     "skipModule": {
       "type": "boolean",

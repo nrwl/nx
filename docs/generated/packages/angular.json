@@ -906,7 +906,8 @@
             "type": "string",
             "description": "The name of the library to create the secondary entry point for.",
             "x-prompt": "What library would you like to create the secondary entry point for?",
-            "pattern": "^[a-zA-Z].*$"
+            "pattern": "^[a-zA-Z].*$",
+            "$default": { "$source": "projectName" }
           },
           "skipModule": {
             "type": "boolean",
@@ -948,7 +949,8 @@
           },
           "host": {
             "type": "string",
-            "description": "The name of the host app to attach this remote app to."
+            "description": "The name of the host app to attach this remote app to.",
+            "$default": { "$source": "projectName" }
           },
           "port": {
             "type": "number",
@@ -1750,7 +1752,8 @@
             "type": "string",
             "description": "The name of the application to generate the Module Federation configuration for.",
             "$default": { "$source": "argv", "index": 0 },
-            "x-prompt": "What app would you like to generate a Module Federation configuration for?"
+            "x-prompt": "What app would you like to generate a Module Federation configuration for?",
+            "x-dropdown": "projects"
           },
           "mfType": {
             "type": "string",
@@ -1869,7 +1872,8 @@
             "type": "string",
             "description": "The name of the project.",
             "$default": { "$source": "argv", "index": 0 },
-            "x-prompt": "What's the name of the project for which you want to generate stories?"
+            "x-prompt": "What's the name of the project for which you want to generate stories?",
+            "x-dropdown": "projects"
           },
           "generateCypressSpecs": {
             "type": "boolean",
@@ -1910,7 +1914,8 @@
           "name": {
             "type": "string",
             "description": "The name of the project.",
-            "$default": { "$source": "argv", "index": 0 }
+            "$default": { "$source": "argv", "index": 0 },
+            "x-dropdown": "projects"
           },
           "configureCypress": {
             "type": "boolean",
