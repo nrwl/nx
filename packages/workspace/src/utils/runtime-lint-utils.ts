@@ -10,7 +10,7 @@ import {
   joinPathFragments,
   FileData,
 } from '@nrwl/devkit';
-import { join, relative } from 'path';
+import { join } from 'path';
 import { workspaceRoot } from './app-root';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
@@ -115,10 +115,11 @@ export function getTargetProjectBasedOnRelativeImport(
   if (!isRelative(imp)) {
     return undefined;
   }
+  const sourceDir = path.dirname(sourceFilePath);
 
-  const targetFile = normalizePath(
-    path.resolve(path.join(projectPath, path.dirname(sourceFilePath)), imp)
-  ).substring(projectPath.length + 1);
+  const targetFile = normalizePath(path.resolve(sourceDir, imp)).substring(
+    projectPath.length + 1
+  );
 
   return findTargetProject(projectGraph, targetFile);
 }
