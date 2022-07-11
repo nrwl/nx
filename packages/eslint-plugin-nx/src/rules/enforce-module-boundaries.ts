@@ -10,16 +10,17 @@ import {
   findDependenciesWithTags,
   findProjectUsingImport,
   findSourceProject,
+  findTransitiveExternalDependencies,
   getSourceFilePath,
   getTargetProjectBasedOnRelativeImport,
   groupImports,
+  hasBannedDependencies,
   hasBannedImport,
   hasBuildExecutor,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isAngularSecondaryEntrypoint,
   isDirectDependency,
-  MappedProjectGraph,
   MappedProjectGraphNode,
   matchImportWithWildcard,
   onlyLoadChildren,
@@ -42,10 +43,7 @@ import {
   getBarrelEntryPointProjectNode,
   getRelativeImportPath,
 } from '../utils/ast-utils';
-import {
-  ensureGlobalProjectGraph,
-  readProjectGraph,
-} from '../utils/project-graph-utils';
+import { readProjectGraph } from '../utils/project-graph-utils';
 
 type Options = [
   {
@@ -54,6 +52,7 @@ type Options = [
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
     banTransitiveDependencies: boolean;
+    checkNestedExternalImports: boolean;
   }
 ];
 export type MessageIds =
@@ -66,6 +65,7 @@ export type MessageIds =
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
   | 'bannedExternalImportsViolation'
+  | 'nestedBannedExternalImportsViolation'
   | 'noTransitiveDependencies'
   | 'onlyTagsConstraintViolation'
   | 'notTagsConstraintViolation';
@@ -87,6 +87,7 @@ export default createESLintRule<Options, MessageIds>({
           enforceBuildableLibDependency: { type: 'boolean' },
           allowCircularSelfDependency: { type: 'boolean' },
           banTransitiveDependencies: { type: 'boolean' },
+          checkNestedExternalImports: { type: 'boolean' },
           allow: [{ type: 'string' }],
           depConstraints: [
             {
@@ -115,6 +116,7 @@ export default createESLintRule<Options, MessageIds>({
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
+      nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package. Nested import found at {{childProjectName}}`,
       noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
       onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
       notTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can not depend on libs tagged with {{tags}}\n\nViolation detected in:\n{{projects}}`,
@@ -127,6 +129,7 @@ export default createESLintRule<Options, MessageIds>({
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
       banTransitiveDependencies: false,
+      checkNestedExternalImports: false,
     },
   ],
   create(
@@ -138,6 +141,7 @@ export default createESLintRule<Options, MessageIds>({
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
         banTransitiveDependencies,
+        checkNestedExternalImports,
       },
     ]
   ) {
@@ -381,7 +385,7 @@ export default createESLintRule<Options, MessageIds>({
       // check constraints between libs and apps
       // check for circular dependency
       const circularPath = checkCircularPath(
-        (global as any).projectGraph,
+        projectGraph,
         sourceProject,
         targetProject
       );
@@ -485,6 +489,10 @@ export default createESLintRule<Options, MessageIds>({
           return;
         }
 
+        const transitiveExternalDeps = checkNestedExternalImports
+          ? findTransitiveExternalDependencies(projectGraph, targetProject)
+          : [];
+
         for (let constraint of constraints) {
           if (
             constraint.onlyDependOnLibsWithTags &&
@@ -527,6 +535,31 @@ export default createESLintRule<Options, MessageIds>({
                     )
                     .join('\n'),
                 },
+              });
+              return;
+            }
+          }
+          if (
+            checkNestedExternalImports &&
+            constraint.bannedExternalImports &&
+            constraint.bannedExternalImports.length
+          ) {
+            const matches = hasBannedDependencies(
+              transitiveExternalDeps,
+              projectGraph,
+              constraint
+            );
+            if (matches.length > 0) {
+              matches.forEach(([target, violatingSource, constraint]) => {
+                context.report({
+                  node,
+                  messageId: 'bannedExternalImportsViolation',
+                  data: {
+                    sourceTag: constraint.sourceTag,
+                    childProjectName: violatingSource.name,
+                    package: target.data.packageName,
+                  },
+                });
               });
               return;
             }
