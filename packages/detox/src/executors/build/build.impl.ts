@@ -37,7 +37,7 @@ export function runCliBuild(
       join(workspaceRoot, './node_modules/detox/local-cli/cli.js'),
       ['build', ...createDetoxBuildOptions(options)],
       {
-        cwd: projectRoot,
+        cwd: join(workspaceRoot, projectRoot),
       }
     );
 

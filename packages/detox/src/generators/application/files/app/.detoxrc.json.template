@@ -12,6 +12,18 @@
       "build": "cd ../<%= appFileName %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
       "binaryPath": "../<%= appFileName %>/ios/build/Build/Products/Release-iphonesimulator/<%= appClassName %>.app"
     },
+<% if (framework === 'expo') { %>
+    "ios.eas": {
+      "type": "ios.app",
+      "build": "<%= exec %> nx run <%= appFileName %>:download --platform ios --distribution simulator --output=<%= projectDirectory %>/<%= appFileName %>/dist/",
+      "binaryPath": "../<%= appFileName %>/dist/<%= appDisplayName %>.app"
+    },
+    "ios.local": {
+      "type": "ios.app",
+      "build": "<%= exec %> nx run <%= appFileName %>:build --platform ios --profile preview --wait --local --no-interactive --output=<%= projectDirectory %>/<%= appFileName %>/dist/",
+      "binaryPath": "../<%= appFileName %>/dist/<%= appDisplayName %>.app"
+    },
+<% } %>
     "android.debug": {
       "type": "android.apk",
       "build": "cd ../<%= appFileName %>/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug",
@@ -21,7 +33,19 @@
       "type": "android.apk",
       "build": "cd ../<%= appFileName %>/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release",
       "binaryPath": "../<%= appFileName %>/android/app/build/outputs/apk/release/app-release.apk"
-    }
+    },
+<% if (framework === 'expo') { %>
+    "android.eas": {
+      "type": "ios.app",
+      "build": "<%= exec %> nx run <%= appFileName %>:download --platform android --output=<%= projectDirectory %>/<%= appFileName %>/dist/",
+      "binaryPath": "../<%= appFileName %>/dist/<%= appDisplayName %>.apk"
+    },
+    "android.local": {
+      "type": "ios.app",
+      "build": "<%= exec %> nx run <%= appFileName %>:build --platform android --profile preview --wait --local --no-interactive --output=<%= projectDirectory %>/<%= appFileName %>/dist/",
+      "binaryPath": "../<%= appFileName %>/dist/<%= appDisplayName %>.apk"
+    },
+<% } %>
   },
   "devices": {
     "simulator": {
@@ -46,6 +70,16 @@
       "device": "simulator",
       "app": "ios.debug"
     },
+<% if (framework === 'expo') { %>
+    "ios.sim.eas": {
+      "device": "simulator",
+      "app": "ios.eas"
+    },
+    "ios.sim.local": {
+      "device": "simulator",
+      "app": "ios.local"
+    },
+<% } %>
     "android.emu.release": {
       "device": "emulator",
       "app": "android.release"
@@ -53,6 +87,16 @@
     "android.emu.debug": {
       "device": "emulator",
       "app": "android.debug"
-    }
+    },
+<% if (framework === 'expo') { %>
+    "android.sim.eas": {
+      "device": "simulator",
+      "app": "android.eas"
+    },
+    "android.sim.local": {
+      "device": "simulator",
+      "app": "android.local"
+    },
+<% } %>
   }
 }

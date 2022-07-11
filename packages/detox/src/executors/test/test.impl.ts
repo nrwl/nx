@@ -58,7 +58,7 @@ function runCliTest(
       join(workspaceRoot, './node_modules/detox/local-cli/cli.js'),
       ['test', ...createDetoxTestOptions(options)],
       {
-        cwd: projectRoot,
+        cwd: join(workspaceRoot, projectRoot),
       }
     );
 

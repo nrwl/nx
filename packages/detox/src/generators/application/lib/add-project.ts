@@ -3,6 +3,12 @@ import {
   TargetConfiguration,
   Tree,
 } from '@nrwl/devkit';
+import {
+  expoBuildTarget,
+  expoTestTarget,
+  reactNativeBuildTarget,
+  reactNativeTestTarget,
+} from './get-targets';
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
@@ -17,59 +23,35 @@ export function addProject(host: Tree, options: NormalizedSchema) {
 }
 
 function getTargets(options: NormalizedSchema) {
-  const architect: { [key: string]: TargetConfiguration } = {};
+  const targets: { [key: string]: TargetConfiguration } = {};
 
-  architect['build-ios'] = {
+  targets['build-ios'] = {
     executor: '@nrwl/detox:build',
-    options: {
-      detoxConfiguration: 'ios.sim.debug',
-    },
-    configurations: {
-      production: {
-        detoxConfiguration: 'ios.sim.release',
-      },
-    },
+    ...(options.framework === 'react-native'
+      ? reactNativeBuildTarget('ios')
+      : expoBuildTarget('ios')),
   };
 
-  architect['test-ios'] = {
+  targets['test-ios'] = {
     executor: '@nrwl/detox:test',
-    options: {
-      detoxConfiguration: 'ios.sim.debug',
-      buildTarget: `${options.name}:build-ios`,
-    },
-    configurations: {
-      production: {
-        detoxConfiguration: 'ios.sim.release',
-        buildTarget: `${options.name}:build-ios:prod`,
-      },
-    },
+    ...(options.framework === 'react-native'
+      ? reactNativeTestTarget('ios', options.name)
+      : expoTestTarget('ios', options.name)),
   };
 
-  architect['build-android'] = {
+  targets['build-android'] = {
     executor: '@nrwl/detox:build',
-    options: {
-      detoxConfiguration: 'android.emu.debug',
-    },
-    configurations: {
-      production: {
-        detoxConfiguration: 'android.emu.release',
-      },
-    },
+    ...(options.framework === 'react-native'
+      ? reactNativeBuildTarget('android')
+      : expoBuildTarget('android')),
   };
 
-  architect['test-android'] = {
+  targets['test-android'] = {
     executor: '@nrwl/detox:test',
-    options: {
-      detoxConfiguration: 'android.emu.debug',
-      buildTarget: `${options.name}:build-android`,
-    },
-    configurations: {
-      production: {
-        detoxConfiguration: 'android.emu.release',
-        buildTarget: `${options.name}:build-android:prod`,
-      },
-    },
+    ...(options.framework === 'react-native'
+      ? reactNativeTestTarget('android', options.name)
+      : expoTestTarget('android', options.name)),
   };
 
-  return architect;
+  return targets;
 }
