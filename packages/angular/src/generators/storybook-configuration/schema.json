@@ -12,7 +12,8 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "x-dropdown": "projects"
     },
     "configureCypress": {
       "type": "boolean",
