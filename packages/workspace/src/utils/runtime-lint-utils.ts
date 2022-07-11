@@ -115,7 +115,7 @@ export function getTargetProjectBasedOnRelativeImport(
   if (!isRelative(imp)) {
     return undefined;
   }
-  const sourceDir = path.dirname(sourceFilePath);
+  const sourceDir = path.join(projectPath, path.dirname(sourceFilePath));
 
   const targetFile = normalizePath(path.resolve(sourceDir, imp)).substring(
     projectPath.length + 1
