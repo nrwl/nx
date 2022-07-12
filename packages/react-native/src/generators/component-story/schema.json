@@ -8,7 +8,8 @@
   "properties": {
     "project": {
       "type": "string",
-      "description": "The project name where to add the components.",
+      "aliases": ["name", "projectName"],
+      "description": "The project where to add the components.",
       "examples": ["shared-ui-component"],
       "$default": {
         "$source": "projectName",

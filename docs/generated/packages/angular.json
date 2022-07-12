@@ -1870,7 +1870,8 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the project.",
+            "aliases": ["project", "projectName"],
+            "description": "Project for which to generate stories.",
             "$default": { "$source": "argv", "index": 0 },
             "x-prompt": "What's the name of the project for which you want to generate stories?",
             "x-dropdown": "projects"
@@ -1913,8 +1914,10 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the project.",
+            "aliases": ["project", "projectName"],
+            "description": "Project for which to generate Storybook configuration.",
             "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "For which project do you want to generate Storybook configuration?",
             "x-dropdown": "projects"
           },
           "configureCypress": {
