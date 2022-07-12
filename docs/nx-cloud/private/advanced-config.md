@@ -23,7 +23,7 @@ Example:
     -v /data/private-cloud:/data nxprivatecloud/nxcloud:latest
 ```
 
-The right amount of RAM depends heavily on how you run Nx Cloud.
+The right amount of RAM depends heavily on how you run Nx Cloud..
 
 - The `NX_CLOUD_FILE_SERVER_MEMORY_LIMIT` value is only relevant if you use the built-in file server.
 - The `NX_CLOUD_DATABASE_MEMORY_LIMIT` value is only relevant if you use the built-in database.
