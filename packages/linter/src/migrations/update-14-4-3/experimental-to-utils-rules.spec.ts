@@ -1,6 +1,6 @@
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import experimentalToUtilsUpdate from './experimental-to-utils-update';
+import experimentalToUtilsUpdate from './experimental-to-utils-rules';
 
 describe('experimentalToUtilsUpdate()', () => {
   let tree: Tree;

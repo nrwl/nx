@@ -17,7 +17,7 @@ exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a
  * https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin/src/rules
  */
 
-import { ESLintUtils } from '@typescript-eslint/experimental-utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 // NOTE: The rule will be available in ESLint configs as \\"@nrwl/nx/workspace/another-rule\\"
 export const RULE_NAME = 'another-rule';
@@ -42,7 +42,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 `;
 
 exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory 2`] = `
-"import { TSESLint } from '@typescript-eslint/experimental-utils';
+"import { TSESLint } from '@typescript-eslint/utils';
 import { rule, RULE_NAME } from './another-rule';
 
 const ruleTester = new TSESLint.RuleTester({
@@ -73,7 +73,7 @@ exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a
  * https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin/src/rules
  */
 
-import { ESLintUtils } from '@typescript-eslint/experimental-utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 // NOTE: The rule will be available in ESLint configs as \\"@nrwl/nx/workspace/one-more-rule\\"
 export const RULE_NAME = 'one-more-rule';
@@ -98,7 +98,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 `;
 
 exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory with multiple levels of nesting 2`] = `
-"import { TSESLint } from '@typescript-eslint/experimental-utils';
+"import { TSESLint } from '@typescript-eslint/utils';
 import { rule, RULE_NAME } from './one-more-rule';
 
 const ruleTester = new TSESLint.RuleTester({
@@ -129,7 +129,7 @@ exports[`@nrwl/linter:workspace-rule should generate the required files 1`] = `
  * https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin/src/rules
  */
 
-import { ESLintUtils } from '@typescript-eslint/experimental-utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 // NOTE: The rule will be available in ESLint configs as \\"@nrwl/nx/workspace/my-rule\\"
 export const RULE_NAME = 'my-rule';
@@ -154,7 +154,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 `;
 
 exports[`@nrwl/linter:workspace-rule should generate the required files 2`] = `
-"import { TSESLint } from '@typescript-eslint/experimental-utils';
+"import { TSESLint } from '@typescript-eslint/utils';
 import { rule, RULE_NAME } from './my-rule';
 
 const ruleTester = new TSESLint.RuleTester({

@@ -1,10 +1,15 @@
 import {
-  workspaceRoot,
   joinPathFragments,
   normalizePath,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
+  workspaceRoot,
 } from '@nrwl/devkit';
+import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
+import {
+  checkCircularPath,
+  findFilesInCircularPath,
+} from '@nrwl/workspace/src/utils/graph-utils';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -26,23 +31,15 @@ import {
   onlyLoadChildren,
   stringifyTags,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
-import {
-  AST_NODE_TYPES,
-  TSESTree,
-} from '@typescript-eslint/experimental-utils';
-import { createESLintRule } from '../utils/create-eslint-rule';
+import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
-import {
-  checkCircularPath,
-  findFilesInCircularPath,
-} from '@nrwl/workspace/src/utils/graph-utils';
-import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
 import { basename, dirname, relative } from 'path';
 import {
   getBarrelEntryPointByImportScope,
   getBarrelEntryPointProjectNode,
   getRelativeImportPath,
 } from '../utils/ast-utils';
+import { createESLintRule } from '../utils/create-eslint-rule';
 import { readProjectGraph } from '../utils/project-graph-utils';
 
 type Options = [

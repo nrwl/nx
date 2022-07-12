@@ -6722,6 +6722,18 @@
     eslint-scope "^5.1.1"
     eslint-utils "^3.0.0"
 
+"@typescript-eslint/utils@^5.29.0":
+  version "5.30.6"
+  resolved "https://registry.yarnpkg.com/@typescript-eslint/utils/-/utils-5.30.6.tgz#1de2da14f678e7d187daa6f2e4cdb558ed0609dc"
+  integrity sha512-xFBLc/esUbLOJLk9jKv0E9gD/OH966M40aY9jJ8GiqpSkP2xOV908cokJqqhVd85WoIvHVHYXxSFE4cCSDzVvA==
+  dependencies:
+    "@types/json-schema" "^7.0.9"
+    "@typescript-eslint/scope-manager" "5.30.6"
+    "@typescript-eslint/types" "5.30.6"
+    "@typescript-eslint/typescript-estree" "5.30.6"
+    eslint-scope "^5.1.1"
+    eslint-utils "^3.0.0"
+
 "@typescript-eslint/visitor-keys@5.10.1":
   version "5.10.1"
   resolved "https://registry.yarnpkg.com/@typescript-eslint/visitor-keys/-/visitor-keys-5.10.1.tgz#29102de692f59d7d34ecc457ed59ab5fc558010b"
