@@ -10,20 +10,15 @@ import {
   joinPathFragments,
   FileData,
 } from '@nrwl/devkit';
-import { join, relative } from 'path';
+import { join } from 'path';
 import { workspaceRoot } from './app-root';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 
-export type MappedProjectGraphNode<T = any> = ProjectGraphProjectNode<T> & {
-  data: {
-    files: Record<string, FileData>;
-  };
-};
 export type MappedProjectGraph<T = any> = ProjectGraph<T> & {
-  nodes: Record<string, MappedProjectGraphNode<T>>;
+  allFiles: Record<string, string>;
 };
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
@@ -111,14 +106,15 @@ export function getTargetProjectBasedOnRelativeImport(
   projectPath: string,
   projectGraph: MappedProjectGraph,
   sourceFilePath: string
-): MappedProjectGraphNode<any> | undefined {
+): ProjectGraphProjectNode<any> | undefined {
   if (!isRelative(imp)) {
     return undefined;
   }
+  const sourceDir = path.join(projectPath, path.dirname(sourceFilePath));
 
-  const targetFile = normalizePath(
-    path.resolve(path.join(projectPath, path.dirname(sourceFilePath)), imp)
-  ).substring(projectPath.length + 1);
+  const targetFile = normalizePath(path.resolve(sourceDir, imp)).substring(
+    projectPath.length + 1
+  );
 
   return findTargetProject(projectGraph, targetFile);
 }
@@ -126,8 +122,8 @@ export function getTargetProjectBasedOnRelativeImport(
 export function findProjectUsingFile<T>(
   projectGraph: MappedProjectGraph<T>,
   file: string
-): MappedProjectGraphNode {
-  return Object.values(projectGraph.nodes).find((n) => n.data.files[file]);
+): ProjectGraphProjectNode {
+  return projectGraph.nodes[projectGraph.allFiles[file]];
 }
 
 export function findSourceProject(
@@ -175,7 +171,7 @@ export function findProjectUsingImport(
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string
-): MappedProjectGraphNode | ProjectGraphExternalNode {
+): ProjectGraphProjectNode | ProjectGraphExternalNode {
   const target = targetProjectLocator.findProjectWithImport(imp, filePath);
   return projectGraph.nodes[target] || projectGraph.externalNodes?.[target];
 }
@@ -207,7 +203,8 @@ export function onlyLoadChildren(
 }
 
 export function getSourceFilePath(sourceFileName: string, projectPath: string) {
-  return normalizePath(relative(projectPath, sourceFileName));
+  const relativePath = sourceFileName.slice(projectPath.length + 1);
+  return normalizePath(relativePath);
 }
 
 /**
@@ -362,22 +359,19 @@ export function mapProjectGraphFiles<T>(
   if (!projectGraph) {
     return null;
   }
-  const nodes: Record<string, MappedProjectGraphNode> = {};
+  const allFiles: Record<string, string> = {};
   Object.entries(
     projectGraph.nodes as Record<string, ProjectGraphProjectNode>
   ).forEach(([name, node]) => {
-    const files: Record<string, FileData> = {};
-    node.data.files.forEach(({ file, hash, deps }) => {
-      files[removeExt(file)] = { file, hash, ...(deps && { deps }) };
+    node.data.files.forEach(({ file }) => {
+      const fileName = removeExt(file);
+      allFiles[fileName] = name;
     });
-    const data = { ...node.data, files };
-
-    nodes[name] = { ...node, data };
   });
 
   return {
     ...projectGraph,
-    nodes,
+    allFiles,
   };
 }
 

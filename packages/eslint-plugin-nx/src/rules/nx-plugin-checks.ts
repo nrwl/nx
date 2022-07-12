@@ -1,11 +1,14 @@
 import type { AST } from 'jsonc-eslint-parser';
 import type { TSESLint } from '@typescript-eslint/utils';
 
-import { readJsonFile, workspaceRoot } from '@nrwl/devkit';
+import {
+  ProjectGraphProjectNode,
+  readJsonFile,
+  workspaceRoot,
+} from '@nrwl/devkit';
 import {
   findSourceProject,
   getSourceFilePath,
-  MappedProjectGraphNode,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { existsSync } from 'fs';
 import { registerTsProject } from 'nx/src/utils/register';
@@ -133,7 +136,7 @@ export default createESLintRule<Options, MessageIds>({
 });
 
 function normalizeOptions(
-  sourceProject: MappedProjectGraphNode<{}>,
+  sourceProject: ProjectGraphProjectNode<{}>,
   options: Options[0]
 ): Options[0] {
   const base = { ...DEFAULT_OPTIONS, ...options };
