@@ -349,8 +349,11 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Project name.",
-            "$default": { "$source": "argv", "index": 0 }
+            "aliases": ["project", "projectName"],
+            "description": "Project for which to generate Storybook configuration.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "For which project do you want to generate Storybook configuration?",
+            "x-dropdown": "projects"
           },
           "generateStories": {
             "type": "boolean",
@@ -401,7 +404,8 @@
         "properties": {
           "project": {
             "type": "string",
-            "description": "The project name where to add the components.",
+            "aliases": ["name", "projectName"],
+            "description": "The project where to add the components.",
             "examples": ["shared-ui-component"],
             "$default": { "$source": "projectName", "index": 0 },
             "x-prompt": "What's the name of the project where the component lives?"
@@ -429,15 +433,16 @@
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
         "$id": "NxReactNativeStorybookStories",
-        "title": "React native Storybook stories",
-        "description": "React native Storybook stories.",
+        "title": "Generate React Native Storybook stories",
+        "description": "Generate stories/specs for all components declared in a React Native project.",
         "type": "object",
         "properties": {
           "project": {
             "type": "string",
-            "description": "Library or application name.",
+            "aliases": ["name", "projectName"],
+            "description": "Project for which to generate stories.",
             "$default": { "$source": "projectName", "index": 0 },
-            "x-prompt": "What's the name of the project for which you want to generate stories?"
+            "x-prompt": "For which project do you want to generate stories?"
           }
         },
         "required": ["project"],
