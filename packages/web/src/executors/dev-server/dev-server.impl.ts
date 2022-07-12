@@ -37,6 +37,7 @@ export interface WebDevServerOptions {
   maxWorkers?: number;
   memoryLimit?: number;
   baseHref?: string;
+  webpackConfig?: string;
 }
 
 export default async function* devServerExecutor(
