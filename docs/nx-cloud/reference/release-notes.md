@@ -200,7 +200,7 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 ## 2.2.3
 
 - Fix: Reset the memory limits to best work on an instance with 8GB of RAM.
-- Fix: Set the default `NX_CLOUD_MODE` to "community".
+- Fix: Set the default `NX_CLOUD_MODE` to "community"..
 
 ## 2.2
 
