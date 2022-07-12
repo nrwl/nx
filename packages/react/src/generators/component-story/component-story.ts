@@ -11,28 +11,12 @@ import * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
-  getComponentPropsInterface,
 } from '../../utils/ast-utils';
+import { getDefaultsForComponent } from '../../utils/component-props';
 
 export interface CreateComponentStoriesFileSchema {
   project: string;
   componentPath: string;
-}
-
-// TODO: candidate to refactor with the angular component story
-export function getArgsDefaultValue(property: ts.SyntaxKind): string {
-  const typeNameToDefault: Record<number, any> = {
-    [ts.SyntaxKind.StringKeyword]: "''",
-    [ts.SyntaxKind.NumberKeyword]: 0,
-    [ts.SyntaxKind.BooleanKeyword]: false,
-  };
-
-  const resolvedValue = typeNameToDefault[property];
-  if (typeof resolvedValue === undefined) {
-    return "''";
-  } else {
-    return resolvedValue;
-  }
 }
 
 export function createComponentStoriesFile(
@@ -123,37 +107,10 @@ export function findPropsAndGenerateFile(
   fileExt: string,
   fromNodeArray?: boolean
 ) {
-  const propsInterface = getComponentPropsInterface(sourceFile, cmpDeclaration);
-
-  let propsTypeName: string = null;
-  let props: {
-    name: string;
-    defaultValue: any;
-  }[] = [];
-  let argTypes: {
-    name: string;
-    type: string;
-    actionText: string;
-  }[] = [];
-
-  if (propsInterface) {
-    propsTypeName = propsInterface.name.text;
-    props = propsInterface.members.map((member: ts.PropertySignature) => {
-      if (member.type.kind === ts.SyntaxKind.FunctionType) {
-        argTypes.push({
-          name: (member.name as ts.Identifier).text,
-          type: 'action',
-          actionText: `${(member.name as ts.Identifier).text} executed!`,
-        });
-      } else {
-        return {
-          name: (member.name as ts.Identifier).text,
-          defaultValue: getArgsDefaultValue(member.type.kind),
-        };
-      }
-    });
-    props = props.filter((p) => p && p.defaultValue !== undefined);
-  }
+  const { propsTypeName, props, argTypes } = getDefaultsForComponent(
+    sourceFile,
+    cmpDeclaration
+  );
 
   generateFiles(
     host,

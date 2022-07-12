@@ -1,6 +1,3 @@
-import 'dotenv/config';
-import { basename, dirname, join } from 'path';
-import { installedCypressVersion } from '../../utils/cypress-version';
 import {
   ExecutorContext,
   logger,
@@ -9,6 +6,9 @@ import {
   runExecutor,
   stripIndents,
 } from '@nrwl/devkit';
+import 'dotenv/config';
+import { basename, dirname, join } from 'path';
+import { installedCypressVersion } from '../../utils/cypress-version';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
 
@@ -47,6 +47,7 @@ export default async function cypressExecutor(
   options = normalizeOptions(options, context);
 
   let success;
+
   for await (const baseUrl of startDevServer(options, context)) {
     try {
       success = await runCypress(baseUrl, options);
@@ -73,6 +74,7 @@ function normalizeOptions(
   }
   checkSupportedBrowser(options);
   warnDeprecatedHeadless(options);
+  warnDeprecatedCypressVersion();
   return options;
 }
 
@@ -117,6 +119,16 @@ function warnDeprecatedHeadless({ headless }: CypressExecutorOptions) {
     You can now remove the use of the '--headless' flag during 'cypress run' as this is the default for all browsers.`;
 
     logger.warn(deprecatedMsg);
+  }
+}
+
+function warnDeprecatedCypressVersion() {
+  if (installedCypressVersion() < 10) {
+    logger.warn(stripIndents`
+NOTE:
+Support for Cypress versions < 10 is deprecated. Please upgrade to at least Cypress version 10. 
+A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v10-migration-guide
+`);
   }
 }
 
@@ -169,7 +181,6 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
     project: projectFolderPath,
     configFile: basename(opts.cypressConfig),
   };
-
   // If not, will use the `baseUrl` normally from `cypress.json`
   if (baseUrl) {
     options.config = { baseUrl };

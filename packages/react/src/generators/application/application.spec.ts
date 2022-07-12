@@ -1,3 +1,4 @@
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import {
   getProjects,
   readJson,
@@ -5,10 +6,12 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Linter } from '@nrwl/linter';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
-import { Linter } from '@nrwl/linter';
-
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe('app', () => {
   let appTree: Tree;
   let schema: Schema = {
@@ -22,8 +25,11 @@ describe('app', () => {
     strict: true,
     standaloneConfig: false,
   };
-
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
   beforeEach(() => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
   });
 
@@ -108,26 +114,27 @@ describe('app', () => {
         '../../.eslintrc.json',
       ]);
 
-      expect(appTree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
+      expect(appTree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(appTree, 'apps/my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchInlineSnapshot(`
-Object {
-  "compilerOptions": Object {
-    "allowJs": true,
-    "outDir": "../../dist/out-tsc",
-    "sourceMap": false,
-    "types": Array [
-      "cypress",
-      "node",
-    ],
-  },
-  "extends": "../../tsconfig.base.json",
-  "include": Array [
-    "src/**/*.ts",
-    "src/**/*.js",
-  ],
-}
-`);
+        Object {
+          "compilerOptions": Object {
+            "allowJs": true,
+            "outDir": "../../dist/out-tsc",
+            "sourceMap": false,
+            "types": Array [
+              "cypress",
+              "node",
+            ],
+          },
+          "extends": "../../tsconfig.base.json",
+          "include": Array [
+            "src/**/*.ts",
+            "src/**/*.js",
+            "cypress.config.ts",
+          ],
+        }
+      `);
     });
 
     it('should extend from root tsconfig.base.json', async () => {
@@ -368,18 +375,18 @@ Object {
       const workspaceJson = getProjects(appTree);
       expect(workspaceJson.get('my-app').targets.test).toBeUndefined();
       expect(workspaceJson.get('my-app').targets.lint).toMatchInlineSnapshot(`
-Object {
-  "executor": "@nrwl/linter:eslint",
-  "options": Object {
-    "lintFilePatterns": Array [
-      "apps/my-app/**/*.{ts,tsx,js,jsx}",
-    ],
-  },
-  "outputs": Array [
-    "{options.outputFile}",
-  ],
-}
-`);
+        Object {
+          "executor": "@nrwl/linter:eslint",
+          "options": Object {
+            "lintFilePatterns": Array [
+              "apps/my-app/**/*.{ts,tsx,js,jsx}",
+            ],
+          },
+          "outputs": Array [
+            "{options.outputFile}",
+          ],
+        }
+      `);
     });
   });
 

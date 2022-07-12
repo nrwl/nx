@@ -1167,6 +1167,91 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/react/src/generators/remote/schema.json"
+    },
+    {
+      "name": "cypress-component-configuration",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactCypressComponentTestConfiguration",
+        "title": "Add Cypress component testing",
+        "description": "Add a Cypress component testing configuration to an existing project.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/react:cypress-component-configuration --project=my-react-project",
+            "description": "Add component testing to your react project"
+          },
+          {
+            "command": "nx g @nrwl/react:cypress-component-configuration --project=my-react-project --generate-tests",
+            "description": "Add component testing to your react project and generate component tests for your existing components"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project to add cypress component testing configuration to",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What project should we add Cypress component testing to?"
+          },
+          "generateTests": {
+            "type": "boolean",
+            "description": "Generate default component tests for existing components in the project",
+            "default": false
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting files",
+            "default": false
+          }
+        },
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Setup Cypress component testing for a React project",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/cypress-component-configuration/schema.json"
+    },
+    {
+      "name": "component-test",
+      "factory": "./src/generators/component-test/component-test#componentTestGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactCypressComponentTest",
+        "title": "Add Cypress component test",
+        "description": "Add a Cypress component test for a component.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/react:component-test --project=my-react-project --component-path=src/lib/fancy-component.tsx",
+            "description": "Create a cypress component test for FancyComponent"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project the component is apart of",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What project is this component apart of?"
+          },
+          "componentPath": {
+            "type": "string",
+            "description": "Path to component, from the project source root",
+            "x-prompt": "What is the path to the component?"
+          }
+        },
+        "required": ["project", "componentPath"],
+        "presets": []
+      },
+      "description": "Generate a Cypress component test for a React component",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/component-test/component-test#componentTestGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/component-test/schema.json"
     }
   ],
   "executors": [

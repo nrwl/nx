@@ -1,0 +1,278 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`convertToCypressTen convertCypressProject should handle custom target names 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+...cypressJsonConfig,
+
+}
+})"
+`;
+
+exports[`convertToCypressTen convertCypressProject should handle multiple configurations 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+...cypressJsonConfig,
+
+}
+})"
+`;
+
+exports[`convertToCypressTen convertCypressProject should handle multiple configurations 2`] = `
+Object {
+  "configurations": Object {
+    "production": Object {
+      "devServerTarget": "target:serve:production",
+    },
+    "static": Object {
+      "baseUrl": "http://localhost:3000",
+    },
+  },
+  "executor": "@nrwl/cypress:cypress",
+  "options": Object {
+    "cypressConfig": "apps/app-e2e/cypress.config.ts",
+    "devServerTarget": "app:serve",
+    "testingType": "e2e",
+  },
+}
+`;
+
+exports[`convertToCypressTen convertCypressProject should infer targets with --all flag 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+...cypressJsonConfig,
+
+}
+})"
+`;
+
+exports[`convertToCypressTen convertCypressProject should infer targets with --all flag 2`] = `
+Object {
+  "e2e": Object {
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "app:serve:production",
+      },
+    },
+    "executor": "@nrwl/cypress:cypress",
+    "options": Object {
+      "cypressConfig": "apps/app-e2e/cypress.config.ts",
+      "devServerTarget": "app:serve",
+      "testingType": "e2e",
+    },
+  },
+  "e2e-custom": Object {
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "app:serve:production",
+      },
+    },
+    "executor": "@nrwl/cypress:cypress",
+    "options": Object {
+      "cypressConfig": "apps/app-e2e/cypress.config.ts",
+      "devServerTarget": "app:serve",
+      "testingType": "e2e",
+    },
+  },
+  "lint": Object {
+    "executor": "@nrwl/linter:eslint",
+    "options": Object {
+      "lintFilePatterns": Array [
+        "apps/app-e2e/**/*.{js,ts}",
+      ],
+    },
+    "outputs": Array [
+      "{options.outputFile}",
+    ],
+  },
+}
+`;
+
+exports[`convertToCypressTen convertCypressProject should not break when an invalid target is passed in 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+...cypressJsonConfig,
+
+}
+})"
+`;
+
+exports[`convertToCypressTen convertCypressProject should not break when an invalid target is passed in 2`] = `
+Object {
+  "e2e": Object {
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "app:serve:production",
+      },
+    },
+    "executor": "@nrwl/cypress:cypress",
+    "options": Object {
+      "cypressConfig": "apps/app-e2e/cypress.config.ts",
+      "devServerTarget": "app:serve",
+      "testingType": "e2e",
+    },
+  },
+  "e2e-custom": Object {
+    "configurations": Object {
+      "production": Object {
+        "devServerTarget": "app:serve:production",
+      },
+    },
+    "executor": "@nrwl/cypress:cypress",
+    "options": Object {
+      "cypressConfig": "apps/app-e2e/cypress.config.ts",
+      "devServerTarget": "app:serve",
+      "testingType": "e2e",
+    },
+  },
+  "lint": Object {
+    "executor": "@nrwl/linter:eslint",
+    "options": Object {
+      "lintFilePatterns": Array [
+        "apps/app-e2e/**/*.{js,ts}",
+      ],
+    },
+    "outputs": Array [
+      "{options.outputFile}",
+    ],
+  },
+}
+`;
+
+exports[`convertToCypressTen convertCypressProject should update project w/customized config 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import setupNodeEvents from './src/plugins/index.js';
+
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"baseUrl\\": \\"http://localhost:4200\\",
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": false
+}
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+...cypressJsonConfig,
+setupNodeEvents
+}
+})"
+`;
+
+exports[`convertToCypressTen convertCypressProject should update project w/defaults 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+...cypressJsonConfig,
+
+}
+})"
+`;
+
+exports[`convertToCypressTen updateImports should update imports 1`] = `
+"
+import { getGreeting } from '../support/app.po';
+
+import { blah } from '../support/e2e';
+const eh = require('../support/e2e')
+
+import { blah } from '../support/e2e';
+const eh = require('../support/e2e')
+
+describe('a', () => {
+  beforeEach(() => {
+    cy.visit('/')
+    blah()
+    eh()
+  });
+
+  it('should display welcome message', () => {
+    // Custom command example, see \\\\\`../support/commands.ts\\\\\` file
+    cy.login('my-email@something.com', 'myPassword');
+
+    // Function helper example, see \\\\\`../support/app.po.ts\\\\\` file
+    getGreeting().contains('Welcome a');
+  });
+});
+
+"
+`;

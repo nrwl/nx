@@ -1,0 +1,133 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`e2e migrator cypress with project root at "" cypress version >=10 should add paths to the e2e config from the global config when they differ from the nx preset defaults 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  fixturesFolder: 'src/my-fixtures',
+  specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
+  e2e: {...nxE2EPreset(__dirname),fixturesFolder: 'src/my-fixtures',specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
+    baseUrl: 'http://localhost:4200',
+  },
+});"
+`;
+
+exports[`e2e migrator cypress with project root at "" cypress version >=10 should keep paths in the e2e config when they differ from the nx preset defaults 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {...nxE2EPreset(__dirname),
+    baseUrl: 'http://localhost:4200',
+    fixturesFolder: 'src/my-fixtures',
+    specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
+  },
+});"
+`;
+
+exports[`e2e migrator cypress with project root at "" cypress version >=10 should remove paths in the e2e config when they match the nx preset defaults 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {...nxE2EPreset(__dirname),
+    baseUrl: 'http://localhost:4200',
+  },
+});"
+`;
+
+exports[`e2e migrator cypress with project root at "" cypress version >=10 should update e2e config with the nx preset 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {...nxE2EPreset(__dirname),
+    baseUrl: 'http://localhost:4200'
+  },
+});"
+`;
+
+exports[`e2e migrator cypress with project root at "" cypress version >=10 should update paths in the config 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  fixturesFolder: 'src/fixtures',
+  specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
+  e2e: {...nxE2EPreset(__dirname),
+    baseUrl: 'http://localhost:4200',
+    fixturesFolder: 'src/test-data',
+    specPattern: 'src/e2e/**/*.cy.ts',
+  },
+  component: {
+    supportFile: 'src/support/component.ts',
+  }
+});"
+`;
+
+exports[`e2e migrator cypress with project root at "projects/app1" cypress version >=10 should add paths to the e2e config from the global config when they differ from the nx preset defaults 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  fixturesFolder: 'src/my-fixtures',
+  specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
+  e2e: {...nxE2EPreset(__dirname),fixturesFolder: 'src/my-fixtures',specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
+    baseUrl: 'http://localhost:4200',
+  },
+});"
+`;
+
+exports[`e2e migrator cypress with project root at "projects/app1" cypress version >=10 should keep paths in the e2e config when they differ from the nx preset defaults 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {...nxE2EPreset(__dirname),
+    baseUrl: 'http://localhost:4200',
+    fixturesFolder: 'src/my-fixtures',
+    specPattern: 'src/e2e/**/*.cy.{js,jsx,ts,tsx}',
+  },
+});"
+`;
+
+exports[`e2e migrator cypress with project root at "projects/app1" cypress version >=10 should remove paths in the e2e config when they match the nx preset defaults 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {...nxE2EPreset(__dirname),
+    baseUrl: 'http://localhost:4200',
+  },
+});"
+`;
+
+exports[`e2e migrator cypress with project root at "projects/app1" cypress version >=10 should update e2e config with the nx preset 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {...nxE2EPreset(__dirname),
+    baseUrl: 'http://localhost:4200'
+  },
+});"
+`;
+
+exports[`e2e migrator cypress with project root at "projects/app1" cypress version >=10 should update paths in the config 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  fixturesFolder: 'src/fixtures',
+  specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
+  e2e: {...nxE2EPreset(__dirname),
+    baseUrl: 'http://localhost:4200',
+    fixturesFolder: 'src/test-data',
+    specPattern: 'src/e2e/**/*.cy.ts',
+  },
+  component: {
+    supportFile: 'src/support/component.ts',
+  }
+});"
+`;

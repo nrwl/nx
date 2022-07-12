@@ -26,6 +26,11 @@
           },
           {
             "input": "packages/storybook",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
             "glob": "**/root-files/.storybook/**",
             "output": "/"
           },

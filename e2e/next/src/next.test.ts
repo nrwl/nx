@@ -1,4 +1,3 @@
-import { stringUtils } from '@nrwl/workspace';
 import {
   checkFilesExist,
   cleanupProject,
@@ -18,6 +17,7 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { stringUtils } from '@nrwl/workspace';
 import * as http from 'http';
 
 describe('Next.js Applications', () => {
@@ -112,7 +112,7 @@ describe('Next.js Applications', () => {
           )}`
     );
 
-    const e2eTestPath = `apps/${appName}-e2e/src/integration/app.spec.ts`;
+    const e2eTestPath = `apps/${appName}-e2e/src/e2e/app.cy.ts`;
     const e2eContent = readFile(e2eTestPath);
     updateFile(
       e2eTestPath,

@@ -52,6 +52,7 @@
     "http-server": "^14.1.0",
     "ignore": "^5.0.4",
     "jasmine-marbles": "~0.8.4",
+    "magic-string": "~0.26.2",
     "rxjs-for-await": "0.0.2",
     "semver": "7.3.4",
     "ts-node": "~10.8.0",

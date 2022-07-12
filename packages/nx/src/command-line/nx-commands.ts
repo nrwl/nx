@@ -469,14 +469,9 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'string',
     })
     .option('all', {
-      describe: 'Run the target on all projects in the workspace',
+      describe: '[deprecated] Run the target on all projects in the workspace',
       type: 'boolean',
-      default: undefined,
-    })
-    .check(({ all, projects }) => {
-      if ((all && projects) || (!all && !projects))
-        throw new Error('You must provide either --all or --projects');
-      return true;
+      default: true,
     })
     .options('runner', {
       describe: 'Override the tasks runner in `nx.json`',
@@ -518,9 +513,6 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'Ignore cycles in the task graph',
       type: 'boolean',
       default: false,
-    })
-    .conflicts({
-      all: 'projects',
     });
 }
 

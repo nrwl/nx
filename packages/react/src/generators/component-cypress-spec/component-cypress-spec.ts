@@ -1,17 +1,17 @@
 import {
-  findExportDeclarationsForJsx,
-  getComponentNode,
-  getComponentPropsInterface,
-} from '../../utils/ast-utils';
-
-import * as ts from 'typescript';
-import {
   convertNxGenerator,
   generateFiles,
   getProjects,
   joinPathFragments,
   Tree,
 } from '@nrwl/devkit';
+import { basename, join } from 'path';
+import * as ts from 'typescript';
+import {
+  findExportDeclarationsForJsx,
+  getComponentNode,
+  getComponentPropsInterface,
+} from '../../utils/ast-utils';
 
 export interface CreateComponentSpecFileSchema {
   project: string;
@@ -51,9 +51,14 @@ export function createComponentSpecFile(
 ) {
   const e2eProjectName = cypressProject || `${project}-e2e`;
   const projects = getProjects(tree);
-  const e2eLibIntegrationFolderPath = `${
-    projects.get(e2eProjectName).sourceRoot
-  }/integration`;
+  const e2eProject = projects.get(e2eProjectName);
+  // cypress >= v10 will have a cypress.config.ts < v10 will have a cypress.json
+  const isCypressV10 = tree.exists(join(e2eProject.root, 'cypress.config.ts'));
+
+  const e2eLibIntegrationFolderPath = join(
+    e2eProject.sourceRoot,
+    isCypressV10 ? 'e2e' : 'integration'
+  );
 
   const proj = projects.get(project);
   const componentFilePath = joinPathFragments(proj.sourceRoot, componentPath);
@@ -135,6 +140,9 @@ function findPropsAndGenerateFileForCypress(
     });
   }
 
+  const isCypressV10 = basename(e2eLibIntegrationFolderPath) === 'e2e';
+  const cyFilePrefix = isCypressV10 ? 'cy' : 'spec';
+
   generateFiles(
     tree,
     joinPathFragments(__dirname, './files'),
@@ -148,7 +156,7 @@ function findPropsAndGenerateFileForCypress(
       componentName,
       componentSelector: (cmpDeclaration as any).name.text,
       props,
-      fileExt: js ? 'js' : 'ts',
+      fileExt: js ? `${cyFilePrefix}.js` : `${cyFilePrefix}.ts`,
     }
   );
 }

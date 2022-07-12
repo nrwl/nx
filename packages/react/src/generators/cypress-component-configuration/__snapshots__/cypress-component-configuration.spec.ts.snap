@@ -1,0 +1,75 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 1`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import SomeCmp from './some-cmp'
+
+
+describe(SomeCmp.name, () => {
+  it('renders', () => {
+    mount(<SomeCmp />)
+  })
+})
+
+"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 2`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import AnotherCmp from './another-cmp'
+
+
+describe(AnotherCmp.name, () => {
+  it('renders', () => {
+    mount(<AnotherCmp />)
+  })
+})
+
+"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 1`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import SomeLib, { SomeLibProps } from './some-lib'
+
+
+describe(SomeLib.name, () => {
+  let props: SomeLibProps;
+
+  beforeEach(() => {
+    props = {
+    }
+  })
+
+  it('renders', () => {
+    mount(<SomeLib {...props}/>)
+  })
+})
+
+"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 2`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import AnotherCmp, { AnotherCmpProps } from './another-cmp'
+
+
+describe(AnotherCmp.name, () => {
+  let props: AnotherCmpProps;
+
+  beforeEach(() => {
+    props = {
+    }
+  })
+
+  it('renders', () => {
+    mount(<AnotherCmp {...props}/>)
+  })
+})
+
+"
+`;

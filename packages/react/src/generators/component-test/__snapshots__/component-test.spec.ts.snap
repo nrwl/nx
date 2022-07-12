@@ -1,0 +1,232 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`componentTestGenerator multiple components per file should handle default export 1`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import AnotherCmp, { AnotherCmpProps, AnotherCmp2 } from './some-lib'
+
+
+describe(AnotherCmp.name, () => {
+  let props: AnotherCmpProps;
+
+  beforeEach(() => {
+    props = {
+      text: '',
+      count: 0,
+      isOkay: false,
+      handleClick: undefined
+    }
+  })
+
+  it('renders', () => {
+    mount(<AnotherCmp {...props}/>)
+  })
+})
+
+describe(AnotherCmp2.name, () => {
+  it('renders', () => {
+    mount(<AnotherCmp2 />)
+  })
+})
+
+"
+`;
+
+exports[`componentTestGenerator multiple components per file should handle named exports 1`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import { AnotherCmpProps, AnotherCmp, AnotherCmp2 } from './some-lib'
+
+
+describe(AnotherCmp.name, () => {
+  let props: AnotherCmpProps;
+
+  beforeEach(() => {
+    props = {
+      text: '',
+      count: 0,
+      isOkay: false,
+      handleClick: undefined
+    }
+  })
+
+  it('renders', () => {
+    mount(<AnotherCmp {...props}/>)
+  })
+})
+
+describe(AnotherCmp2.name, () => {
+  it('renders', () => {
+    mount(<AnotherCmp2 />)
+  })
+})
+
+"
+`;
+
+exports[`componentTestGenerator multiple components per file should handle no props 1`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import SomeLib, { SomeLibProps, AnotherCmp } from './some-lib'
+
+
+describe(SomeLib.name, () => {
+  let props: SomeLibProps;
+
+  beforeEach(() => {
+    props = {
+    }
+  })
+
+  it('renders', () => {
+    mount(<SomeLib {...props}/>)
+  })
+})
+
+describe(AnotherCmp.name, () => {
+  it('renders', () => {
+    mount(<AnotherCmp />)
+  })
+})
+
+"
+`;
+
+exports[`componentTestGenerator multiple components per file should handle props 1`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import SomeLib, { SomeLibProps, AnotherCmpProps, AnotherCmp } from './some-lib'
+
+
+describe(SomeLib.name, () => {
+  let props: SomeLibProps;
+
+  beforeEach(() => {
+    props = {
+    }
+  })
+
+  it('renders', () => {
+    mount(<SomeLib {...props}/>)
+  })
+})
+
+describe(AnotherCmp.name, () => {
+  let props: AnotherCmpProps;
+
+  beforeEach(() => {
+    props = {
+      text: '',
+      count: 0,
+      isOkay: false,
+      handleClick: undefined
+    }
+  })
+
+  it('renders', () => {
+    mount(<AnotherCmp {...props}/>)
+  })
+})
+
+"
+`;
+
+exports[`componentTestGenerator single component per file should handle default export 1`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import AnotherCmp, { AnotherCmpProps } from './some-lib'
+
+
+describe(AnotherCmp.name, () => {
+  let props: AnotherCmpProps;
+
+  beforeEach(() => {
+    props = {
+      text: '',
+      count: 0,
+      isOkay: false,
+      handleClick: undefined
+    }
+  })
+
+  it('renders', () => {
+    mount(<AnotherCmp {...props}/>)
+  })
+})
+
+"
+`;
+
+exports[`componentTestGenerator single component per file should handle named exports 1`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import { AnotherCmpProps, AnotherCmp } from './some-lib'
+
+
+describe(AnotherCmp.name, () => {
+  let props: AnotherCmpProps;
+
+  beforeEach(() => {
+    props = {
+      text: '',
+      count: 0,
+      isOkay: false,
+      handleClick: undefined
+    }
+  })
+
+  it('renders', () => {
+    mount(<AnotherCmp {...props}/>)
+  })
+})
+
+"
+`;
+
+exports[`componentTestGenerator single component per file should handle no props 1`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import SomeLib, { SomeLibProps } from './some-lib'
+
+
+describe(SomeLib.name, () => {
+  let props: SomeLibProps;
+
+  beforeEach(() => {
+    props = {
+    }
+  })
+
+  it('renders', () => {
+    mount(<SomeLib {...props}/>)
+  })
+})
+
+"
+`;
+
+exports[`componentTestGenerator single component per file should handle props 1`] = `
+"import * as React from 'react'
+import { mount } from 'cypress/react'
+import { AnotherCmpProps, AnotherCmp } from './some-lib'
+
+
+describe(AnotherCmp.name, () => {
+  let props: AnotherCmpProps;
+
+  beforeEach(() => {
+    props = {
+      text: '',
+      count: 0,
+      isOkay: false,
+      handleClick: undefined
+    }
+  })
+
+  it('renders', () => {
+    mount(<AnotherCmp {...props}/>)
+  })
+})
+
+"
+`;
