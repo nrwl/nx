@@ -3,6 +3,7 @@ import {
   readJson,
   readWorkspaceConfiguration,
   Tree,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from './application';
@@ -37,6 +38,28 @@ describe('app', () => {
       expect(projects.get('my-app').root).toEqual('apps/my-app');
       expect(projects.get('my-app-e2e').root).toEqual('apps/my-app-e2e');
       expect(workspaceJson.defaultProject).toEqual('my-app');
+    });
+
+    it('should not overwrite default project if already set', async () => {
+      const workspace = readWorkspaceConfiguration(appTree);
+      workspace.defaultProject = 'some-awesome-project';
+      updateWorkspaceConfiguration(appTree, workspace);
+
+      await applicationGenerator(appTree, schema);
+
+      const { defaultProject } = readWorkspaceConfiguration(appTree);
+      expect(defaultProject).toBe('some-awesome-project');
+    });
+
+    it('should not set defaultProject when "--skip-default-project=true"', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipDefaultProject: true,
+      });
+
+      const { defaultProject } = readWorkspaceConfiguration(appTree);
+
+      expect(defaultProject).toBeUndefined();
     });
 
     it('should update tags and implicit dependencies', async () => {
