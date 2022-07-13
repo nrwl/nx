@@ -1,3 +1,8 @@
+/**
+ * Check the integrity of `map.json` file.
+ * - Error if `map.json` reference a markdown file that does not exist
+ * - Error if a markdown file exists without reference in `map.json`
+ */
 import { readJsonSync } from 'fs-extra';
 import * as glob from 'glob';
 import * as chalk from 'chalk';
