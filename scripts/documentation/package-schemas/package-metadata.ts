@@ -90,44 +90,49 @@ export function getPackageMetadataList(
   ).itemList;
 
   // Do not use map.json, but add a documentation property on the package.json directly that can be easily resolved
-  return sync(`${packagesDir}/*`).map((folderPath): PackageMetadata => {
-    const folderName = folderPath.substring(packagesDir.length + 1);
-    const relativeFolderPath = folderPath.replace(absoluteRoot, '');
-    const packageJson = readJsonSync(join(folderPath, 'package.json'), 'utf8');
-    const hasDocumentation = additionalApiReferences.find(
-      (pkg) => pkg.id === folderName
-    );
+  return sync(`${packagesDir}/*`, { ignore: [`${packagesDir}/cli`] }).map(
+    (folderPath): PackageMetadata => {
+      const folderName = folderPath.substring(packagesDir.length + 1);
+      const relativeFolderPath = folderPath.replace(absoluteRoot, '');
+      const packageJson = readJsonSync(
+        join(folderPath, 'package.json'),
+        'utf8'
+      );
+      const hasDocumentation = additionalApiReferences.find(
+        (pkg) => pkg.id === folderName
+      );
 
-    return {
-      githubRoot: 'https://github.com/nrwl/nx/blob/master',
-      name: folderName,
-      description: packageJson.description,
-      root: relativeFolderPath,
-      source: join(relativeFolderPath, '/src'),
-      documentation: !!hasDocumentation
-        ? hasDocumentation.itemList.map((item) => ({
-            ...item,
-            path: item.path,
-            file: item.file,
-            content: readFileSync(join('docs', item.file + '.md'), 'utf8'),
-          }))
-        : [],
-      generators: getSchemaList(
-        {
-          absoluteRoot,
-          folderName,
-          root: relativeFolderPath,
-        },
-        'generators'
-      ),
-      executors: getSchemaList(
-        {
-          absoluteRoot,
-          folderName,
-          root: relativeFolderPath,
-        },
-        'executors'
-      ),
-    };
-  });
+      return {
+        githubRoot: 'https://github.com/nrwl/nx/blob/master',
+        name: folderName,
+        description: packageJson.description,
+        root: relativeFolderPath,
+        source: join(relativeFolderPath, '/src'),
+        documentation: !!hasDocumentation
+          ? hasDocumentation.itemList.map((item) => ({
+              ...item,
+              path: item.path,
+              file: item.file,
+              content: readFileSync(join('docs', item.file + '.md'), 'utf8'),
+            }))
+          : [],
+        generators: getSchemaList(
+          {
+            absoluteRoot,
+            folderName,
+            root: relativeFolderPath,
+          },
+          'generators'
+        ),
+        executors: getSchemaList(
+          {
+            absoluteRoot,
+            folderName,
+            root: relativeFolderPath,
+          },
+          'executors'
+        ),
+      };
+    }
+  );
 }

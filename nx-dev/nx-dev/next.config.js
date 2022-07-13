@@ -136,6 +136,14 @@ module.exports = withNx({
         permanent: true,
       });
     }
+    // Api CLI redirection to Nx
+    for (let s of Object.keys(redirectRules.cliUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.cliUrls[s],
+        permanent: true,
+      });
+    }
 
     // Landing pages
     rules.push({
