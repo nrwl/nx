@@ -81,5 +81,5 @@ Read more about:
 - [Setup Module Federation with Angular and Nx](/module-federation/faster-builds)
 - [Using NgRx](/guides/misc-ngrx)
 - [Using DataPersistence](/guides/misc-data-persistence)
-- [Upgrading an AngularJS application to Angular](/guides/misc-upgrade)
+- [Upgrading an AngularJS application to Angular](/migration/migration-angularjs)
 - [Using Tailwind CSS with Angular projects](/guides/using-tailwind-css-with-angular-projects)

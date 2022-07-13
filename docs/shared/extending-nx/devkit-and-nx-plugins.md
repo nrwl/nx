@@ -77,7 +77,7 @@ As with most things in Nx, the core of Nx Devkit is very simple. It only uses la
 objects (the tree being the only exception). See [Simplest Generator](/generators/creating-files)
 and [Simplest Executor](/executors/using-builders#simplest-executor) for examples on creating generators
 and executors. The [Using Executors](/executors/using-builders)
-and [Using Generators](/generators/using-schematics) guides also have additional information on executors
+and [Using Generators](/generators/using-generators) guides also have additional information on executors
 and generators.
 
 ## Learn more

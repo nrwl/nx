@@ -9,7 +9,7 @@ Codifying your organization's best practices into workspace generators is a grea
 ## Reorganizing Projects
 
 After some time of working within a workspace, projects might need to be moved or sometimes even removed.
-The workspace plugin provides the [`@nrwl/workspace:move`](/workspace/move) and [`@nrwl/workspace:remove`](/workspace/remove) generators to help aid with this.
+The workspace plugin provides the [`@nrwl/workspace:move`](/packages/workspace/generators/move) and [`@nrwl/workspace:remove`](/packages/workspace/generators/remove) generators to help aid with this.
 
 ### Moving Projects
 
@@ -22,9 +22,9 @@ Moving the files manually can be done easily but a lot of steps are often missed
 3. The path mapping in `tsconfig.base.json` will be changed to `@npmScope/new/location/my-lib`
 4. Imports in other projects will be changed to `@npmScope/new/location/my-lib`
 5. Paths in target options such as output path will be changed
-6. Other configuration will be updated too such as `extends` in `tsconfig.json`, the name of the project in `jest.config.js`, and the extends in `.eslintrc.json`
+6. Other configuration will be updated too, such as `extends` in `tsconfig.json`, the name of the project in `jest.config.js`, and the extends in `.eslintrc.json`
 
-> See more about [`@nrwl/workspace:move`](/workspace/move)
+> See more about [`@nrwl/workspace:move`](/packages/workspace/generators/move)
 
 ### Removing Projects
 
@@ -37,7 +37,7 @@ Like when moving projects, some steps are often missed when removing projects. T
 3. The project's configuration will be removed.
 4. The path mapping in `tsconfig.base.json` will be removed.
 
-> See more about [`@nrwl/workspace:remove`](/workspace/remove)
+> See more about [`@nrwl/workspace:remove`](/packages/workspace/generators/remove)
 
 ## Running custom commands
 

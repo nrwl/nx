@@ -1,7 +1,7 @@
 # Adding Nx to Lerna/Yarn/PNPM/NPM Workspace
 
 {% callout type="note" title="Migrating from Lerna?" %}
-Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This allows for a much better integration between the two. [Read more in our dedicated guide](/guides/lerna-and-nx).
+Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This allows for a much better integration between the two. [Read more in our dedicated guide](/migration/lerna-and-nx).
 {% /callout %}
 
 **Short story:** you can use Nx easily together with your current Lerna/Yarn/PNPM/NPM monorepo setup. Why? To speed up
@@ -37,9 +37,9 @@ If you are familiar with Turborepo, check out [this guide](/guides/turbo-and-nx)
 This sets up [Nx core](/getting-started/nx-core) in your existing monorepo which comes with a series of interesting
 features that help intelligenty schedule tasks and make sure operations are quick:
 
-- **Run any npm script -** with Nx installed, you can use it's powerful task scheduler which automatically picks up your
+- **Run any npm script -** with Nx installed, you can use its powerful task scheduler which automatically picks up your
   npm scripts from your package's script section. For instance if package `myproj` has a `build` script, you can just
-  run it using `nx build myproj`. Similarly for running tests use `nx test myproj` and so on.
+  run it using `nx build myproj`. Similarly, for running tests use `nx test myproj` and so on.
 - **Parallelization and task dependencies -** Nx
   automatically [knows how your projects relate to each other](/structure/dependency-graph). As a result, if `project-a`
   depends on `project-b` and you run `nx build project-a`, Nx first runs the builds for all of `project-a`'s
@@ -63,7 +63,7 @@ features that help intelligenty schedule tasks and make sure operations are quic
 
 ## Looking for integrating Lerna and Nx?
 
-Check out our dedicated guide: [Lerna and Nx](/guides/lerna-and-nx)
+Check out our dedicated guide: [Lerna and Nx](/migration/lerna-and-nx)
 
 ## Further customizations
 
