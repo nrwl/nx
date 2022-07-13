@@ -39,6 +39,7 @@ export default async function remote(tree: Tree, options: Schema) {
     routing: true,
     host: options.host,
     port: options.port ?? findNextAvailablePort(tree),
+    skipDefaultProject: true,
   });
 
   removeDeadCode(tree, options);

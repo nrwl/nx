@@ -234,6 +234,15 @@ describe('app', () => {
       const { defaultProject } = readWorkspaceConfiguration(appTree);
       expect(defaultProject).toBe('some-awesome-project');
     });
+
+    it('should not set default project when "--skip-default-project=true"', async () => {
+      // ACT
+      await generateApp(appTree, 'my-app', { skipDefaultProject: true });
+
+      // ASSERT
+      const { defaultProject } = readWorkspaceConfiguration(appTree);
+      expect(defaultProject).toBeUndefined();
+    });
   });
 
   describe('nested', () => {

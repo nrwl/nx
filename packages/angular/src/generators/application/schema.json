@@ -176,6 +176,11 @@
       "type": "boolean",
       "description": "Whether to configure Tailwind CSS for the application.",
       "default": false
+    },
+    "skipDefaultProject": {
+      "description": "Skip setting the project as the default project. When `false` (the default), the project is set as the default project only if there is no default project already set.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false,
