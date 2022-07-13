@@ -56,4 +56,4 @@ To run the executor for all affected projects:
 nx affected --target=make
 ```
 
-For more information, see the [nx affected](/cli/affected).
+For more information, see the [nx affected](/nx/affected).

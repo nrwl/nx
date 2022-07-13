@@ -55,7 +55,7 @@ Each executor definition has an `executor` property and, optionally, an `options
 
 ## Running executors
 
-The [`nx run`](/cli/run) cli command (or the shorthand versions) can be used to run executors.
+The [`nx run`](/nx/run) cli command (or the shorthand versions) can be used to run executors.
 
 ```bash
 nx run [project]:[command]
@@ -272,5 +272,5 @@ export default async function (opts) {
 
 ## See Also
 
-- [`nx affected`](/cli/affected)
-- [`nx run-many`](/cli/run-many)
+- [`nx affected`](/nx/affected)
+- [`nx run-many`](/nx/run-many)

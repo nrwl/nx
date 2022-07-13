@@ -14,7 +14,7 @@ But they come with their own technical challenges. The more code you add into yo
 
 Adding Nx to your CI pipeline makes this more efficient.
 
-Nx provides out-of-the-box implementation of CI workflows for `GitHub`, `Azure` and `CircleCI` during the [creation of the Nx workspace](/cli/create-nx-workspace#ci) or later using the [ci-workflow](/packages/workspace/generators/ci-workflow) generator.
+Nx provides out-of-the-box implementation of CI workflows for `GitHub`, `Azure` and `CircleCI` during the [creation of the Nx workspace](/nx/create-nx-workspace#ci) or later using the [ci-workflow](/packages/workspace/generators/ci-workflow) generator.
 
 {% nx-cloud-section %}
 
@@ -56,4 +56,4 @@ The following guides cover optimizing your CI/CD environments with affected comm
 - [Setting up CI using GitHub Actions](/ci/monorepo-ci-github-actions)
 - [Setting up CI using Jenkins](/ci/monorepo-ci-jenkins)
 - [Setting up CI using GitLab](/ci/monorepo-ci-gitlab)
-- [Setting up CI using Bitbucket](/ci/monorepo-ci-bitbucket)
+- [Setting up CI using Bitbucket](/ci/monorepo-ci-bitbucket-pipelines)

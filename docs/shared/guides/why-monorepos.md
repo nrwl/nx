@@ -3,7 +3,7 @@
 A monorepo is a single git repository that holds the source code for multiple applications and libraries, along with the tooling for them.
 
 {% callout type="note" title="Lerna users" %}
-If you are familiar with Lerna or Yarn workspaces, check out [this guide](/guides/lerna-and-nx) (with a quick video) showing how to add Nx to a Lerna/Yarn workspace, what the difference is, when to use both and when to use just Nx.
+If you are familiar with Lerna or Yarn workspaces, check out [this guide](/migration/lerna-and-nx) (with a quick video) showing how to add Nx to a Lerna/Yarn workspace, what the difference is, when to use both and when to use just Nx.
 {% /callout %}
 
 ## What are the benefits of a monorepo?
@@ -38,7 +38,7 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 
 - **Consistent Code Generation** - Generators allow you to customize and standardize organizational conventions and structure, removing the need to perform the same manual setup tasks repetitively.
 
-- **Affected Commands** - [Nx’s affected commands](/cli/affected) analyze your source code, the context of the changes, and only runs tasks on the affected projects impacted by the source code changes.
+- **Affected Commands** - [Nx’s affected commands](/nx/affected) analyze your source code, the context of the changes, and only runs tasks on the affected projects impacted by the source code changes.
 
 - **Distributed Caching** - Nx provides local caching and support for distributed caching of command executions. With distributed caching, when someone on your team runs a command, everyone else gets access to those artifacts to speed up their command executions, bringing them down from minutes to seconds. Nx helps you scale your development to massive applications and libraries even more with distributed task execution and incremental builds.
 
@@ -46,6 +46,6 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 
 - **Controlled Code Sharing** - While sharing code becomes much easier to share, there should also be constraints of when and how code should be depended on. Libraries are defined with specific enforced APIs. Rules should be put in place to define which libraries can depend on each other. Also, even though everyone has access to the repo does not mean that anyone should change any project. Projects should have owners such that changes to that project requires their approval. This can be defined using a `CODEOWNERS` file.
 
-- **Consistent Code Generation** - Generators allow you to automate code creation and modification tasks. Instead of writing a 7 step guide in a readme file, you can create a generator to prompt the developer for inputs and modify the code directly. Nrwl provides plugins containing useful executors and generators for many popular tools. Also, Nx workspaces are extended further through a growing number of community-provided plugins.
+- **Consistent Code Generation** - Generators allow you to automate code creation and modification tasks. Instead of writing a 7 steps guide in a readme file, you can create a generator to prompt the developer for inputs and modify the code directly. Nrwl provides plugins containing useful executors and generators for many popular tools. Also, Nx workspaces are extended further through a growing number of community-provided plugins.
 
 - **Accurate Architecture Diagram** - Most architecture diagrams become obsolete in an instant. And every diagram becomes out of date as soon as the code changes. Because Nx understands your code, it generates an up-to-date and accurate diagram of how projects depend on each other. The Nx project dependencies are also pluggable to extend to other programming languages and ecosystems.
