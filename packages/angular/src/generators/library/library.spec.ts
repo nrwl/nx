@@ -858,8 +858,6 @@ describe('lib', () => {
         const moduleContents = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
-
-        const tsConfigAppJson = readJson(tree, 'apps/myapp/tsconfig.app.json');
         const tsConfigLibJson = parseJson(
           tree.read('libs/my-dir/my-lib/tsconfig.lib.json').toString()
         );
@@ -876,10 +874,6 @@ describe('lib', () => {
         const moduleContents2 = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
-
-        const tsConfigAppJson2 = parseJson(
-          tree.read('apps/myapp/tsconfig.app.json').toString()
-        );
         const tsConfigLibJson2 = parseJson(
           tree.read('libs/my-dir/my-lib2/tsconfig.lib.json').toString()
         );
@@ -896,11 +890,6 @@ describe('lib', () => {
         const moduleContents3 = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
-
-        const tsConfigAppJson3 = parseJson(
-          tree.read('apps/myapp/tsconfig.app.json').toString()
-        );
-
         const tsConfigLibJson3 = parseJson(
           tree.read('libs/my-dir/my-lib3/tsconfig.lib.json').toString()
         );
@@ -911,10 +900,6 @@ describe('lib', () => {
           `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}`
         );
 
-        expect(tsConfigAppJson.include).toEqual([
-          '**/*.ts',
-          '../../libs/my-dir/my-lib/src/index.ts',
-        ]);
         expect(tsConfigLibJson.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
@@ -929,11 +914,6 @@ describe('lib', () => {
           `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(module => module.MyLib2Module)}`
         );
 
-        expect(tsConfigAppJson2.include).toEqual([
-          '**/*.ts',
-          '../../libs/my-dir/my-lib/src/index.ts',
-          '../../libs/my-dir/my-lib2/src/index.ts',
-        ]);
         expect(tsConfigLibJson2.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
@@ -951,12 +931,6 @@ describe('lib', () => {
           `{path: 'my-lib3', loadChildren: () => import('@proj/my-dir/my-lib3').then(module => module.MyLib3Module)}`
         );
 
-        expect(tsConfigAppJson3.include).toEqual([
-          '**/*.ts',
-          '../../libs/my-dir/my-lib/src/index.ts',
-          '../../libs/my-dir/my-lib2/src/index.ts',
-          '../../libs/my-dir/my-lib3/src/index.ts',
-        ]);
         expect(tsConfigLibJson3.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
