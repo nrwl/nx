@@ -127,15 +127,16 @@ export default async function (tree: Tree) {
   visitNotIgnoredFiles(tree, '/', (path) => {
     const pathExtName = extname(path);
 
-    let fileContents = tree.read(path, 'utf-8');
-    if (pathExtName === '.ts' || pathExtName === '.js') {
-      fileContents = replaceNrwlAngularMfImport(fileContents);
+    if (pathExtName !== '.ts' && pathExtName !== '.js') {
+      return;
     }
+
+    let fileContents = tree.read(path, 'utf-8');
+    fileContents = replaceNrwlAngularMfImport(fileContents);
 
     if (pathExtName === '.ts') {
       // Only TS files can import types and interfaces
       fileContents = replaceExportedMFETypes(fileContents);
-
       fileContents = renameSetupMfeGeneratorUsages(fileContents);
     }
 
