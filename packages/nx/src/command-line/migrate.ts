@@ -394,14 +394,14 @@ function parseTargetPackageAndVersion(args: string) {
     }
   } else {
     if (
-      args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/) ||
       args === 'latest' ||
-      args === 'next'
+      args === 'next' ||
+      valid(args) ||
+      args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/)
     ) {
       const targetVersion = normalizeVersionWithTagCheck(args);
       const targetPackage =
-        args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/) &&
-        lt(targetVersion, '14.0.0-beta.0')
+        !['latest', 'next'].includes(args) && lt(targetVersion, '14.0.0-beta.0')
           ? '@nrwl/workspace'
           : 'nx';
 
