@@ -3,10 +3,8 @@ import {
   listFiles,
   newProject,
   readFile,
-  removeFile,
   rmDist,
   runCLI,
-  runCLIAsync,
   uniq,
   updateFile,
   updateJson,
@@ -179,6 +177,10 @@ describe('cache', () => {
             'mkdir dist',
             'echo a > dist/a.txt',
             'echo b > dist/b.txt',
+            'echo c > dist/c.txt',
+            'echo d > dist/d.txt',
+            'echo e > dist/e.txt',
+            'echo f > dist/f.txt',
           ],
           parallel: false,
         },
@@ -198,6 +200,10 @@ describe('cache', () => {
     const outputsWithUntouchedOutputs = listFiles('dist');
     expect(outputsWithUntouchedOutputs).toContain('a.txt');
     expect(outputsWithUntouchedOutputs).toContain('b.txt');
+    expect(outputsWithUntouchedOutputs).toContain('c.txt');
+    expect(outputsWithUntouchedOutputs).toContain('d.txt');
+    expect(outputsWithUntouchedOutputs).toContain('e.txt');
+    expect(outputsWithUntouchedOutputs).toContain('f.txt');
 
     // Create a file in the dist that does not match output glob
     updateFile('dist/c.ts', '');
@@ -210,6 +216,10 @@ describe('cache', () => {
     const outputsAfterAddingUntouchedFileAndRerunning = listFiles('dist');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('a.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('b.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('c.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('d.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('e.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('f.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('c.ts');
 
     // Clear Dist
@@ -221,6 +231,10 @@ describe('cache', () => {
     const outputsWithoutOutputs = listFiles('dist');
     expect(outputsWithoutOutputs).toContain('a.txt');
     expect(outputsWithoutOutputs).toContain('b.txt');
+    expect(outputsWithoutOutputs).toContain('c.txt');
+    expect(outputsWithoutOutputs).toContain('d.txt');
+    expect(outputsWithoutOutputs).toContain('e.txt');
+    expect(outputsWithoutOutputs).toContain('f.txt');
     expect(outputsWithoutOutputs).not.toContain('c.ts');
   });
 

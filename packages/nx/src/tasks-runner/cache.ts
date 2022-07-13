@@ -27,16 +27,6 @@ export type CachedResult = {
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
-/**
- * Heuristic to prevent spawning too many cp processes which makes it slower than just using fs-extra
- */
-const MAX_CP_PROCESSES = 4;
-
-/**
- * Heuristic to prevent writing too many hash files
- */
-const MAX_OUTPUTS_TO_CHECK_HASHES = 5;
-
 export class Cache {
   root = workspaceRoot;
   cachePath = this.createCacheDir();
@@ -106,9 +96,7 @@ export class Cache {
 
       await mkdir(join(td, 'outputs'));
       const expandedOutputs = await this.expandOutputsInWorkspace(outputs);
-      const forceFsExtras = expandedOutputs.length > MAX_CP_PROCESSES;
-      const unchangedOptimizationEnabled =
-        expandedOutputs.length < MAX_OUTPUTS_TO_CHECK_HASHES;
+      const collapsedOutputs = collapseExpandedOutputs(expandedOutputs);
 
       await Promise.all(
         expandedOutputs.map(async (f) => {
@@ -119,7 +107,7 @@ export class Cache {
             const cached = join(td, 'outputs', f);
             const directory = isFile ? dirname(cached) : cached;
             await mkdir(directory, { recursive: true });
-            await this.copy(src, cached, forceFsExtras);
+            await this.copy(src, cached);
           }
         })
       );
@@ -134,39 +122,13 @@ export class Cache {
         await this.options.remoteCache.store(task.hash, this.cachePath);
       }
 
-      if (unchangedOptimizationEnabled) {
-        await this.recordOutputsHash(expandedOutputs, task.hash);
-      }
+      await this.recordOutputsHash(collapsedOutputs, task.hash);
 
       if (terminalOutput) {
         const outputPath = this.temporaryOutputPath(task);
         await writeFile(outputPath, terminalOutput);
       }
     });
-  }
-
-  private async expandOutputsInWorkspace(outputs: string[]) {
-    return this._expandOutputs(outputs, workspaceRoot);
-  }
-
-  private async expandOutputsInCache(
-    outputs: string[],
-    cachedResult: CachedResult
-  ) {
-    return this._expandOutputs(outputs, cachedResult.outputsPath);
-  }
-
-  private async _expandOutputs(outputs: string[], cwd: string) {
-    return (
-      await Promise.all(
-        outputs.map(async (entry) => {
-          if (await pathExists(join(cwd, entry))) {
-            return entry;
-          }
-          return fastGlob(entry, { cwd });
-        })
-      )
-    ).flat();
   }
 
   async copyFilesFromCache(
@@ -179,13 +141,9 @@ export class Cache {
         outputs,
         cachedResult
       );
-      const forceFsExtras = expandedOutputs.length > MAX_CP_PROCESSES;
-      const unchangedOptimizationEnabled =
-        expandedOutputs.length < MAX_OUTPUTS_TO_CHECK_HASHES;
+      const collapsedOutputs = collapseExpandedOutputs(expandedOutputs);
 
-      if (unchangedOptimizationEnabled) {
-        await this.removeRecordedOutputsHashes(expandedOutputs);
-      }
+      await this.removeRecordedOutputsHashes(collapsedOutputs);
 
       await Promise.all(
         expandedOutputs.map(async (f) => {
@@ -193,17 +151,16 @@ export class Cache {
           if (await pathExists(cached)) {
             const isFile = (await lstat(cached)).isFile();
             const src = join(this.root, f);
-            await this.remove(src, forceFsExtras);
+            await this.remove(src);
             // Ensure parent directory is created if src is a file
             const directory = isFile ? resolve(src, '..') : src;
             await mkdir(directory, { recursive: true });
-            await this.copy(cached, src, forceFsExtras);
+            await this.copy(cached, src);
           }
         })
       );
-      if (unchangedOptimizationEnabled) {
-        await this.recordOutputsHash(expandedOutputs, hash);
-      }
+
+      await this.recordOutputsHash(collapsedOutputs, hash);
     });
   }
 
@@ -232,13 +189,11 @@ export class Cache {
       this.expandOutputsInWorkspace(outputs),
     ]);
 
-    if (outputsInCache.length > MAX_OUTPUTS_TO_CHECK_HASHES) {
-      return false;
-    }
+    const collapsedOutputsInCache = collapseExpandedOutputs(outputsInCache);
 
     const [latestHashesDifferent, outputMissing] = await Promise.all([
       this.areLatestOutputsHashesDifferentThanTaskHash(
-        outputsInCache,
+        collapsedOutputsInCache,
         taskWithCachedResult
       ),
       this.haveOutputsBeenAddedOrRemoved(
@@ -250,12 +205,32 @@ export class Cache {
     return latestHashesDifferent || outputMissing;
   }
 
-  private async copy(
-    src: string,
-    destination: string,
-    forceFsExtras?: boolean
-  ): Promise<void> {
-    if (forceFsExtras || this.useFsExtraToCopyAndRemove) {
+  private async expandOutputsInWorkspace(outputs: string[]) {
+    return this._expandOutputs(outputs, workspaceRoot);
+  }
+
+  private async expandOutputsInCache(
+    outputs: string[],
+    cachedResult: CachedResult
+  ) {
+    return this._expandOutputs(outputs, cachedResult.outputsPath);
+  }
+
+  private async _expandOutputs(outputs: string[], cwd: string) {
+    return (
+      await Promise.all(
+        outputs.map(async (entry) => {
+          if (await pathExists(join(cwd, entry))) {
+            return entry;
+          }
+          return fastGlob(entry, { cwd });
+        })
+      )
+    ).flat();
+  }
+
+  private async copy(src: string, destination: string): Promise<void> {
+    if (this.useFsExtraToCopyAndRemove) {
       return copy(src, destination);
     }
     return new Promise((res, rej) => {
@@ -270,8 +245,8 @@ export class Cache {
     });
   }
 
-  private async remove(path: string, forceFsExtras?: boolean): Promise<void> {
-    if (forceFsExtras || this.useFsExtraToCopyAndRemove) {
+  private async remove(path: string): Promise<void> {
+    if (this.useFsExtraToCopyAndRemove) {
       return remove(path);
     }
 
@@ -305,14 +280,14 @@ export class Cache {
   }
 
   private async areLatestOutputsHashesDifferentThanTaskHash(
-    expandedOutputs: string[],
+    outputs: string[],
     { task }: TaskWithCachedResult
   ) {
     const latestExistingOutputHashes = (
       await readdir(this.latestOutputsHashesDir)
     ).map((m) => m.substring(0, m.length - 5));
     // Purposely blocking
-    for (const output of expandedOutputs) {
+    for (const output of outputs) {
       const latestOutputFilename = this.getLatestOutputHashFilename(output);
 
       const conflicts = latestExistingOutputHashes.filter((w) => {
@@ -360,12 +335,12 @@ export class Cache {
 
   private async haveOutputsBeenAddedOrRemoved(
     result: TaskWithCachedResult,
-    cachedFiles: string[],
+    cachedOutputs: string[],
     workspaceFiles: string[]
   ): Promise<boolean> {
     const workspaceSet = new Set(workspaceFiles);
 
-    for (const path of cachedFiles) {
+    for (const path of cachedOutputs) {
       if (!(await pathExists(join(workspaceRoot, path)))) {
         return true;
       }
@@ -493,4 +468,52 @@ export class Cache {
     };
     return _try();
   }
+}
+
+/**
+ * Heuristic to prevent writing too many hash files
+ */
+const MAX_OUTPUTS_TO_CHECK_HASHES = 5;
+
+/**
+ * Collapse Expanded Outputs back into a smaller set of directories/files to track
+ * Note: DO NOT USE, Only exported for unit testing
+ * */
+export function collapseExpandedOutputs(expandedOutputs: string[]) {
+  const tree: Set<string>[] = [];
+
+  // Create a Tree of directories/files
+  for (const output of expandedOutputs) {
+    const pathParts = [];
+    pathParts.unshift(output);
+    let dir = dirname(output);
+    while (dir !== dirname(dir)) {
+      pathParts.unshift(dir);
+
+      dir = dirname(dir);
+    }
+
+    for (let i = 0; i < pathParts.length; i++) {
+      tree[i] ??= new Set<string>();
+      tree[i].add(pathParts[i]);
+    }
+  }
+
+  // Find a level in the tree that has too many outputs
+  if (tree.length === 0) {
+    return [];
+  }
+
+  let j = 0;
+  let level = tree[j];
+  for (j = 0; j < tree.length; j++) {
+    level = tree[j];
+    if (level.size > MAX_OUTPUTS_TO_CHECK_HASHES) {
+      break;
+    }
+  }
+
+  // Return the level before the level with too many outputs
+  // If the first level has too many outputs, return that one.
+  return Array.from(tree[Math.max(0, j - 1)]);
 }
