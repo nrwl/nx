@@ -9,6 +9,7 @@
     "<%= offsetFromRoot %>../node_modules/@nrwl/react/typings/cssmodule.d.ts",
     "<%= offsetFromRoot %>../node_modules/@nrwl/react/typings/image.d.ts"
   ],<% } %>
+  <% if(uiFramework === '@storybook/angular' && projectType === 'application') { %>"files": ["../src/polyfills.ts"],<% } %>
   "exclude": ["../**/*.spec.ts" <% if(uiFramework === '@storybook/react') { %>, "../**/*.spec.js", "../**/*.spec.tsx", "../**/*.spec.jsx"<% } %>],
   "include": [
     "../<%= mainDir %>/**/*.stories.ts", 
