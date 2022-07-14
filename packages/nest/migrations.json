@@ -95,6 +95,10 @@
           "version": "^9.0.0",
           "alwaysAddToPackageJson": false
         },
+        "@nestjs/swagger": {
+          "version": "^6.0.0",
+          "alwaysAddToPackageJson": false
+        },
         "@nestjs/testing": {
           "version": "^9.0.0",
           "alwaysAddToPackageJson": false
