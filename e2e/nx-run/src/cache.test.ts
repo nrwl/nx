@@ -99,7 +99,7 @@ describe('cache', () => {
     expect(outputWithBothLintTasksCached).toContain(
       'read the output from the cache'
     );
-    expectCached(outputWithBothLintTasksCached, [
+    expectMatchedOutput(outputWithBothLintTasksCached, [
       myapp1,
       myapp2,
       `${myapp1}-e2e`,
@@ -163,6 +163,80 @@ describe('cache', () => {
     // --------------------------------------------
     updateFile('nx.json', (c) => originalNxJson);
   }, 120000);
+
+  it('should support using globs as outputs', async () => {
+    const mylib = uniq('mylib');
+    runCLI(`generate @nrwl/workspace:library ${mylib}`);
+    updateProjectConfig(mylib, (c) => {
+      c.targets.build = {
+        executor: 'nx:run-commands',
+        outputs: ['dist/*.txt'],
+        options: {
+          commands: [
+            'rm -rf dist',
+            'mkdir dist',
+            'echo a > dist/a.txt',
+            'echo b > dist/b.txt',
+            'echo c > dist/c.txt',
+            'echo d > dist/d.txt',
+            'echo e > dist/e.txt',
+            'echo f > dist/f.txt',
+          ],
+          parallel: false,
+        },
+      };
+      return c;
+    });
+
+    // Run without cache
+    const runWithoutCache = runCLI(`build ${mylib}`);
+    expect(runWithoutCache).not.toContain('read the output from the cache');
+
+    // Rerun without touching anything
+    const rerunWithUntouchedOutputs = runCLI(`build ${mylib}`);
+    expect(rerunWithUntouchedOutputs).toContain(
+      'existing outputs match the cache'
+    );
+    const outputsWithUntouchedOutputs = listFiles('dist');
+    expect(outputsWithUntouchedOutputs).toContain('a.txt');
+    expect(outputsWithUntouchedOutputs).toContain('b.txt');
+    expect(outputsWithUntouchedOutputs).toContain('c.txt');
+    expect(outputsWithUntouchedOutputs).toContain('d.txt');
+    expect(outputsWithUntouchedOutputs).toContain('e.txt');
+    expect(outputsWithUntouchedOutputs).toContain('f.txt');
+
+    // Create a file in the dist that does not match output glob
+    updateFile('dist/c.ts', '');
+
+    // Rerun
+    const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
+    expect(rerunWithNewUnrelatedFile).toContain(
+      'existing outputs match the cache'
+    );
+    const outputsAfterAddingUntouchedFileAndRerunning = listFiles('dist');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('a.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('b.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('c.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('d.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('e.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('f.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('c.ts');
+
+    // Clear Dist
+    rmDist();
+
+    // Rerun
+    const rerunWithoutOutputs = runCLI(`build ${mylib}`);
+    expect(rerunWithoutOutputs).toContain('read the output from the cache');
+    const outputsWithoutOutputs = listFiles('dist');
+    expect(outputsWithoutOutputs).toContain('a.txt');
+    expect(outputsWithoutOutputs).toContain('b.txt');
+    expect(outputsWithoutOutputs).toContain('c.txt');
+    expect(outputsWithoutOutputs).toContain('d.txt');
+    expect(outputsWithoutOutputs).toContain('e.txt');
+    expect(outputsWithoutOutputs).toContain('f.txt');
+    expect(outputsWithoutOutputs).not.toContain('c.ts');
+  });
 
   it('should use consider filesets when hashing', async () => {
     const parent = uniq('parent');
