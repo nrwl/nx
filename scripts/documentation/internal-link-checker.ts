@@ -45,6 +45,22 @@ function extractAllLinks(basePath: string): Record<string, string[]> {
     return acc;
   }, {});
 }
+function readSiteMapIndex(directoryPath: string, filename: string): string[] {
+  const parser = new XMLParser();
+  const sitemapIndex: {
+    sitemapindex: {
+      sitemap: {
+        loc: string;
+      };
+    };
+  } = parser.parse(readFileContents(join(directoryPath, filename)));
+  return [
+    join(
+      directoryPath,
+      sitemapIndex.sitemapindex.sitemap.loc.replace('https://nx.dev', '')
+    ),
+  ];
+}
 function readSiteMapLinks(filePath: string): string[] {
   const parser = new XMLParser();
   const sitemap: {
@@ -62,9 +78,10 @@ function readSiteMapLinks(filePath: string): string[] {
 
 // Main
 const documentLinks = extractAllLinks(join(workspaceRoot, 'docs'));
-const sitemapLinks = readSiteMapLinks(
-  join(workspaceRoot, 'dist/nx-dev/nx-dev/public/sitemap.xml')
-);
+const sitemapLinks = readSiteMapIndex(
+  join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
+  'sitemap.xml'
+).flatMap((path) => readSiteMapLinks(path));
 const errors = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
