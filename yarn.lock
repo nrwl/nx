@@ -2376,10 +2376,10 @@
   dependencies:
     chalk "^4.0.0"
 
-"@corex/deepmerge@^2.6.148":
-  version "2.6.148"
-  resolved "https://registry.yarnpkg.com/@corex/deepmerge/-/deepmerge-2.6.148.tgz#8fa825d53ffd1cbcafce1b6a830eefd3dcc09dd5"
-  integrity sha512-6QMz0/2h5C3ua51iAnXMPWFbb1QOU1UvSM4bKBw5mzdT+WtLgjbETBBIQZ+Sh9WvEcGwlAt/DEdRpIC3XlDBMA==
+"@corex/deepmerge@^4.0.29":
+  version "4.0.29"
+  resolved "https://registry.yarnpkg.com/@corex/deepmerge/-/deepmerge-4.0.29.tgz#af9debf07d7f6b0d2a9d04a266abf2c1418ed2f6"
+  integrity sha512-q/yVUnqckA8Do+EvAfpy7RLdumnBy9ZsducMUtZTvpdbJC7azEf1hGtnYYxm0QfphYxjwggv6XtH64prvS1W+A==
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
@@ -17804,13 +17804,13 @@ next-seo@^4.28.1:
   resolved "https://registry.yarnpkg.com/next-seo/-/next-seo-4.29.0.tgz#d281e95ba47914117cc99e9e468599f0547d9b9b"
   integrity sha512-xmwzcz4uHaYJ8glbuhs6FSBQ7z3irmdPYdJJ5saWm72Uy3o+mPKGaPCXQetTCE6/xxVnpoDV4yFtFlEjUcljSg==
 
-next-sitemap@^1.6.108:
-  version "1.9.12"
-  resolved "https://registry.yarnpkg.com/next-sitemap/-/next-sitemap-1.9.12.tgz#288c2dfc907039892e21eb1b0c7a94d288f323d9"
-  integrity sha512-kHXf4ZNAGLJyK16HbjzE5X9JlKwXtxW+9J4dh3oT7LSbU/+3bN+VqWjNw/776Otbanf7EJsvl51oQ78qQW5XBQ==
+next-sitemap@^3.1.10:
+  version "3.1.10"
+  resolved "https://registry.yarnpkg.com/next-sitemap/-/next-sitemap-3.1.10.tgz#876d0373330874e48c86a849eab94dc1bb439e17"
+  integrity sha512-IslH1nxY5p/3+cdjFiXDFSfchUJ0R+Flvm/T/01y7xokA/hd4rnuU+Jh0ZEZ92j7zBgwPUp1KTg0B41zuSpVHw==
   dependencies:
-    "@corex/deepmerge" "^2.6.148"
-    minimist "^1.2.5"
+    "@corex/deepmerge" "^4.0.29"
+    minimist "^1.2.6"
 
 next-tick@1, next-tick@^1.1.0:
   version "1.1.0"
