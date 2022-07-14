@@ -2,7 +2,6 @@ export interface DocumentData {
   filePath: string;
   data: { [key: string]: any };
   content: string;
-  excerpt?: string;
 }
 
 export interface DocumentMetadata {

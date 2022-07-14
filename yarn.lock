@@ -13693,16 +13693,6 @@ graphlib@^2.1.8:
   dependencies:
     lodash "^4.17.15"
 
-gray-matter@^4.0.3:
-  version "4.0.3"
-  resolved "https://registry.yarnpkg.com/gray-matter/-/gray-matter-4.0.3.tgz#e893c064825de73ea1f5f7d88c7a9f7274288798"
-  integrity sha512-5v6yZd4JK3eMI3FqqCouswVqwugaA9r4dNZB1wwcmrD02QkV5H0y7XBQW8QwQqEaZY1pM9aqORSORhJRdNK44Q==
-  dependencies:
-    js-yaml "^3.13.1"
-    kind-of "^6.0.2"
-    section-matter "^1.0.0"
-    strip-bom-string "^1.0.0"
-
 handle-thing@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/handle-thing/-/handle-thing-2.0.1.tgz#857f79ce359580c340d43081cc648970d0bb234e"
@@ -21558,14 +21548,6 @@ scss-parser@^1.0.4:
   dependencies:
     invariant "2.2.4"
 
-section-matter@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/section-matter/-/section-matter-1.0.0.tgz#e9041953506780ec01d59f292a19c7b850b84167"
-  integrity sha512-vfD3pmTzGpufjScBh50YHKzEu2lxBWhVEHsNGoEXmCmn2hKGfeNLYMzCJpe8cD7gqX7TJluOVpBkAequ6dgMmA==
-  dependencies:
-    extend-shallow "^2.0.1"
-    kind-of "^6.0.0"
-
 secure-compare@3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/secure-compare/-/secure-compare-3.0.1.tgz#f1a0329b308b221fae37b9974f3d578d0ca999e3"
@@ -22541,11 +22523,6 @@ strip-ansi@^7.0.0:
   integrity sha512-cXNxvT8dFNRVfhVME3JAe98mkXDYN2O1l7jmcwMnOslDeESg1rF/OZMtK0nRAhiari1unG5cD4jG3rapUAkLbw==
   dependencies:
     ansi-regex "^6.0.1"
-
-strip-bom-string@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/strip-bom-string/-/strip-bom-string-1.0.0.tgz#e5211e9224369fbb81d633a2f00044dc8cedad92"
-  integrity sha512-uCC2VHvQRYu+lMh4My/sFNmF2klFymLX1wHJeXnbEJERpV/ZsVuonzerjfrGpIGF7LBVa1O7i9kjiWvJiFck8g==
 
 strip-bom@4.0.0, strip-bom@^4.0.0:
   version "4.0.0"

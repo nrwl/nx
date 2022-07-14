@@ -21,7 +21,6 @@ export const getImageSchema = (document: DocumentData): Schema => ({
 
     return new Tag(
       this.render,
-      // `h${node.attributes['level']}`,
       { ...attributes, src, loading: 'lazy' },
       children
     );
