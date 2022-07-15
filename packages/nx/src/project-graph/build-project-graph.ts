@@ -140,7 +140,7 @@ async function buildProjectGraphUsingContext(
 
   const builder = new ProjectGraphBuilder();
 
-  buildWorkspaceProjectNodes(ctx, builder);
+  buildWorkspaceProjectNodes(ctx, builder, nxJson);
   buildNpmPackageNodes(builder);
   for (const proj of Object.keys(cachedFileData)) {
     for (const f of builder.graph.nodes[proj].data.files) {
