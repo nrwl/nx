@@ -84,6 +84,12 @@
       "version": "14.0.0-beta.0",
       "description": "Add a default development configuration for build and serve targets.",
       "factory": "./src/migrations/update-14-0-0/add-default-development-configurations"
+    },
+    "add-dev-output-path": {
+      "cli": "nx",
+      "version": "14.4.3-beta.0",
+      "description": "Add a development outputPath to avoid conflict with the production build.",
+      "factory": "./src/migrations/update-14-4-3/add-dev-output-path"
     }
   },
   "packageJsonUpdates": {
