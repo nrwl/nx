@@ -87,6 +87,12 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Nx Private Cloud
 
+## 2.4.7
+
+- Misc: performance improvements to DB indexes
+- Misc: improvements to hash differ to use regex
+- Misc: export more collections for debug purposes (workspaces and organizations)
+
 ## 2.4.6
 
 - Fix: issue with navigating to orgs/workspaces in the web app
