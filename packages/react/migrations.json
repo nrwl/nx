@@ -534,6 +534,27 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.4.3": {
+      "version": "14.4.3-beta.0",
+      "packages": {
+        "@types/react": {
+          "version": "18.0.15",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "18.0.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/node": {
+          "version": "18.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@reduxjs/toolkit": {
+          "version": "1.8.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
