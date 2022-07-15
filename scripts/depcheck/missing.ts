@@ -2,15 +2,7 @@ import * as depcheck from 'depcheck';
 
 // Ignore packages that are defined here per package
 const IGNORE_MATCHES = {
-  '*': [
-    'nx',
-    '@nrwl/cli',
-    '@nrwl/workspace',
-    'prettier',
-    'typescript',
-    'dotenv',
-    'rxjs',
-  ],
+  '*': ['nx', '@nrwl/cli', '@nrwl/workspace', 'prettier', 'typescript', 'rxjs'],
   angular: [
     '@angular-devkit/architect',
     '@angular-devkit/build-angular',

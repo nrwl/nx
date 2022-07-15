@@ -43,6 +43,7 @@
     "@nrwl/workspace": "file:../workspace",
     "@svgr/webpack": "^6.1.2",
     "chalk": "4.1.0",
+    "dotenv": "~10.0.0",
     "eslint-config-next": "^12.1.0",
     "fs-extra": "^10.1.0",
     "ts-node": "~10.8.0",

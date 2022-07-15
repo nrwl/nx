@@ -37,6 +37,7 @@
     "@nrwl/workspace": "file:../workspace",
     "chalk": "4.1.0",
     "copy-webpack-plugin": "^9.0.1",
+    "dotenv": "~10.0.0",
     "enhanced-resolve": "^5.8.3",
     "fork-ts-checker-webpack-plugin": "6.2.10",
     "fs-extra": "^10.1.0",
