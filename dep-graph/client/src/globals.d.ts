@@ -1,6 +1,7 @@
 // nx-ignore-next-line
 import type { DepGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { AppConfig } from './app/interfaces';
+import { ExternalApi } from './app/machines/externalApi';
 
 export declare global {
   export interface Window {
@@ -8,9 +9,10 @@ export declare global {
     watch: boolean;
     localMode: 'serve' | 'build';
     projectGraphResponse?: DepGraphClientResponse;
-    environment: 'dev' | 'watch' | 'release';
+    environment: 'dev' | 'watch' | 'release' | 'nx-console';
     appConfig: AppConfig;
     useXstateInspect: boolean;
+    externalApi?: ExternalApi;
   }
 }
 
