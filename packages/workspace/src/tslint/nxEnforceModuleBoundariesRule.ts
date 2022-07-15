@@ -4,6 +4,7 @@ import * as ts from 'typescript';
 import type {
   NxJsonConfiguration,
   ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
 } from '@nrwl/devkit';
 import {
   workspaceRoot,
@@ -26,7 +27,6 @@ import {
   onlyLoadChildren,
   stringifyTags,
   hasNoneOfTheseTags,
-  MappedProjectGraphNode,
   isAngularSecondaryEntrypoint,
 } from '../utils/runtime-lint-utils';
 import { normalize } from 'path';
@@ -142,7 +142,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       super.visitImportDeclaration(node);
       return;
     }
-    let targetProject: MappedProjectGraphNode | ProjectGraphExternalNode =
+    let targetProject: ProjectGraphProjectNode | ProjectGraphExternalNode =
       getTargetProjectBasedOnRelativeImport(
         imp,
         this.projectPath,

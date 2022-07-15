@@ -330,6 +330,7 @@ export function createProjectStorybookDir(
       uiFramework === '@storybook/angular' ||
       uiFramework === '@storybook/react',
     existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
+    projectType,
     mainDir: isNextJs && projectType === 'application' ? 'components' : 'src',
     isNextJs: isNextJs && projectType === 'application',
     usesSwc,

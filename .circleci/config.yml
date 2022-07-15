@@ -203,6 +203,7 @@ jobs:
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
+          when: always
 
   # -------------------------
   #     JOBS: Main-MacOS
@@ -243,6 +244,7 @@ jobs:
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
+          when: always
 
 # -------------------------
 #        WORKFLOWS(JOBS)

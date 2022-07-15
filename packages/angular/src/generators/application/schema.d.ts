@@ -32,4 +32,5 @@ export interface Schema {
   skipPackageJson?: boolean;
   skipPostInstall?: boolean;
   federationType?: 'static' | 'dynamic';
+  skipDefaultProject?: boolean;
 }

@@ -30,7 +30,7 @@ npx create-nx-workspace --preset=react-native
 npx create-nx-workspace --preset=angular
 ```
 
-For more information about possible options see the [create-nx-workspace command](/cli/create-nx-workspace).
+For more information about possible options see the [create-nx-workspace command](/nx/create-nx-workspace).
 
 ## Add Nx to an Existing Project
 

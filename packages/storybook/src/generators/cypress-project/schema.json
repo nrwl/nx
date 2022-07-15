@@ -8,11 +8,14 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Library or application name.",
+      "aliases": ["project", "projectName"],
+      "description": "Project for which to generate the cypress E2E app.",
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "x-prompt": "For which project do you want to generate the Cypress E2E app?",
+      "x-dropdown": "projects"
     },
     "js": {
       "type": "boolean",

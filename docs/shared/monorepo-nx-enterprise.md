@@ -187,7 +187,7 @@ Note `all the projects affected by a PR/commit`. This is very important. Monorep
 - The performance of CI checks will degrade over time. The time it takes to run the CI checks should be proportional to the impact of the change, not the size of the repo.
 - We will be affected by the code your change didn’t touch
 
-We should utilize `affected:*` commands to build and test projects. Read more about them [here](/cli/affected).
+We should utilize `affected:*` commands to build and test projects. Read more about them [here](/nx/affected).
 
 ### Trunk-based development
 

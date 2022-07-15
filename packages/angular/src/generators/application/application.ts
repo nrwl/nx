@@ -107,7 +107,10 @@ export async function applicationGenerator(
   await addUnitTestRunner(host, options);
   await addE2e(host, options);
   updateEditorTsConfig(host, options);
-  setDefaultProject(host, options);
+
+  if (!options.skipDefaultProject) {
+    setDefaultProject(host, options);
+  }
 
   if (options.backendProject) {
     addProxyConfig(host, options);

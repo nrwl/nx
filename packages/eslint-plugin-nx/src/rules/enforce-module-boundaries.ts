@@ -3,6 +3,7 @@ import {
   joinPathFragments,
   normalizePath,
   ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
 } from '@nrwl/devkit';
 import {
   DepConstraint,
@@ -21,7 +22,6 @@ import {
   isAbsoluteImportIntoAnotherProject,
   isAngularSecondaryEntrypoint,
   isDirectDependency,
-  MappedProjectGraphNode,
   matchImportWithWildcard,
   onlyLoadChildren,
   stringifyTags,
@@ -206,7 +206,7 @@ export default createESLintRule<Options, MessageIds>({
       }
 
       // check for relative and absolute imports
-      let targetProject: MappedProjectGraphNode | ProjectGraphExternalNode =
+      let targetProject: ProjectGraphProjectNode | ProjectGraphExternalNode =
         getTargetProjectBasedOnRelativeImport(
           imp,
           projectPath,
@@ -223,7 +223,7 @@ export default createESLintRule<Options, MessageIds>({
           fix(fixer) {
             if (targetProject) {
               const indexTsPaths = getBarrelEntryPointProjectNode(
-                targetProject as MappedProjectGraphNode
+                targetProject as ProjectGraphProjectNode
               );
 
               if (indexTsPaths && indexTsPaths.length > 0) {

@@ -29,7 +29,10 @@ export function addModuleFederationFiles(
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
-  const initApp = await applicationGenerator(host, options);
+  const initApp = await applicationGenerator(host, {
+    ...options,
+    skipDefaultProject: true,
+  });
 
   if (schema.host) {
     updateHostWithRemote(host, schema.host, options.name);

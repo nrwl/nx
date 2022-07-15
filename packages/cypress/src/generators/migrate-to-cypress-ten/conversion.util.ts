@@ -70,7 +70,6 @@ export function createNewCypressConfig(
   cypressConfigTs: Record<string, any>;
   cypressConfigJson: Record<string, any>;
 } {
-  console.log({ cypressConfigPathJson });
   const cypressConfigJson = readJson(tree, cypressConfigPathJson);
 
   const {

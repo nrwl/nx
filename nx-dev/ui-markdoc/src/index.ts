@@ -1,4 +1,4 @@
-import Markdoc from '@markdoc/markdoc';
+import { parse, renderers, transform, Node } from '@markdoc/markdoc';
 import { DocumentData } from '@nrwl/nx-dev/models-document';
 import React, { ReactNode } from 'react';
 import { Fence } from './lib/nodes/fence.component';
@@ -55,16 +55,15 @@ export const getMarkdocCustomConfig = (
   },
 });
 
+export const parseMarkdown: (markdown: string) => Node = (markdown) =>
+  parse(markdown);
+
 export const renderMarkdown: (document: DocumentData) => ReactNode = (
   document: DocumentData
 ): ReactNode => {
+  const ast = parseMarkdown(document.content.toString());
   const configuration = getMarkdocCustomConfig(document);
-  const ast = Markdoc.parse(document.content.toString());
-  return Markdoc.renderers.react(
-    Markdoc.transform(ast, configuration.config),
-    React,
-    {
-      components: configuration.components,
-    }
-  );
+  return renderers.react(transform(ast, configuration.config), React, {
+    components: configuration.components,
+  });
 };

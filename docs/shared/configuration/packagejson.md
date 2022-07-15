@@ -120,12 +120,49 @@ sources (non-test sources) of its dependencies. In other words, it treats test s
 
 ### outputs
 
-`"outputs": ["dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts. The provided value
-is actually the default, so we can omit it in this case. `"outputs": []` tells Nx that the `test` target doesn't create
-any artifacts on disk.
+Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
 
-This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
-configuration above.
+This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the configuration above.
+
+#### Basic Example
+
+Usually, a target writes to a specific directory or a file. The following instructs Nx to cache `dist/libs/mylib` and `build/libs/mylib/main.js`:
+
+```json
+{
+  "build": {
+    "outputs": ["dist/libs/mylib", "build/libs/mylib/main.js"]
+  }
+}
+```
+
+#### Specifying Globs
+
+Sometimes, multiple targets might write to the same directory. When possible it is recommended to direct these targets into separate directories.
+
+```json
+{
+  "build-js": {
+    "outputs": ["dist/libs/mylib/js"]
+  },
+  "build-css": {
+    "outputs": ["dist/libs/mylib/css"]
+  }
+}
+```
+
+But if the above is not possible, globs can be specified as outputs to only cache a set of files rather than the whole directory.
+
+```json
+{
+  "build-js": {
+    "outputs": ["dist/libs/mylib/**/*.js"]
+  },
+  "build-css": {
+    "outputs": ["dist/libs/mylib/**/*.css"]
+  }
+}
+```
 
 ### dependsOn
 
@@ -133,10 +170,10 @@ Targets can depend on other targets. This is the relevant portion of the configu
 
 ```json
 "build": {
-"dependsOn": ["^build"]
+  "dependsOn": ["^build"]
 },
 "test": {
-"dependsOn": ["build"]
+  "dependsOn": ["build"]
 }
 ```
 
@@ -152,14 +189,32 @@ instance, `"dependsOn": ["build"]` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
-> You can also express the same configuration using
+You can also express the same configuration using:
 
 ```json
 "build": {
-"dependsOn": [{projects: "dependencies", target: "build"}]
+  "dependsOn": [{ "projects": "dependencies", "target": "build" }]
 },
 "test": {
-"dependsOn": [{projects: "self", target: "build"}]
+  "dependsOn": [{ "projects": "self", "target": "build" }]
+}
+```
+
+With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target
+dependencies. You can either forward them to the dependency target, or you can ignore them (default).
+
+```json
+"build": {
+   // forward params passed to this target to the dependency targets
+  "dependsOn": [{ "projects": "dependencies", "target": "build", "params": "forward" }]
+},
+"test": {
+  // ignore params passed to this target, won't be forwarded to the dependency targets
+  "dependsOn": [{ "projects": "self", "target": "build", "params": "ignore" }]
+}
+"lint": {
+  // ignore params passed to this target, won't be forwarded to the dependency targets
+  "dependsOn": [{ "projects": "self", "target": "build" }]
 }
 ```
 
