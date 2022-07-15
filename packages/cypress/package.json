@@ -42,6 +42,7 @@
     "@phenomnomnominal/tsquery": "4.1.1",
     "babel-loader": "^8.0.2",
     "chalk": "4.1.0",
+    "dotenv": "~10.0.0",
     "enhanced-resolve": "^5.8.3",
     "fork-ts-checker-webpack-plugin": "6.2.10",
     "rxjs": "^6.5.4",
