@@ -96,7 +96,7 @@ function mergeNxDefaultTargetsWithNxTargets(
   defaultTargets: NxJsonConfiguration['targetDefaults']
 ) {
   for (const targetName in defaultTargets) {
-    const target = targets[targetName];
+    const target = targets?.[targetName];
     if (!target) {
       continue;
     }
