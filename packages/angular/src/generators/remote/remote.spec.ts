@@ -1,7 +1,10 @@
+import {
+  readProjectConfiguration,
+  readWorkspaceConfiguration,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import remote from './remote';
 import applicationGenerator from '../application/application';
-import { readProjectConfiguration } from '@nrwl/devkit';
+import remote from './remote';
 
 describe('MF Remote App Generator', () => {
   it('should generate a remote mf app with no host', async () => {
@@ -90,5 +93,20 @@ describe('MF Remote App Generator', () => {
     // ASSERT
     const project = readProjectConfiguration(tree, 'test');
     expect(project.targets.serve.options.port).toEqual(4201);
+  });
+
+  it('should not set the remote as the default project', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+
+    // ACT
+    await remote(tree, {
+      name: 'test',
+      port: 4201,
+    });
+
+    // ASSERT
+    const { defaultProject } = readWorkspaceConfiguration(tree);
+    expect(defaultProject).toBeUndefined();
   });
 });

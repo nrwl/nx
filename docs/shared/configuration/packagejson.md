@@ -120,12 +120,49 @@ sources (non-test sources) of its dependencies. In other words, it treats test s
 
 ### outputs
 
-`"outputs": ["dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts. The provided value
-is actually the default, so we can omit it in this case. `"outputs": []` tells Nx that the `test` target doesn't create
-any artifacts on disk.
+Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
 
-This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
-configuration above.
+This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the configuration above.
+
+#### Basic Example
+
+Usually, a target writes to a specific directory or a file. The following instructs Nx to cache `dist/libs/mylib` and `build/libs/mylib/main.js`:
+
+```json
+{
+  "build": {
+    "outputs": ["dist/libs/mylib", "build/libs/mylib/main.js"]
+  }
+}
+```
+
+#### Specifying Globs
+
+Sometimes, multiple targets might write to the same directory. When possible it is recommended to direct these targets into separate directories.
+
+```json
+{
+  "build-js": {
+    "outputs": ["dist/libs/mylib/js"]
+  },
+  "build-css": {
+    "outputs": ["dist/libs/mylib/css"]
+  }
+}
+```
+
+But if the above is not possible, globs can be specified as outputs to only cache a set of files rather than the whole directory.
+
+```json
+{
+  "build-js": {
+    "outputs": ["dist/libs/mylib/**/*.js"]
+  },
+  "build-css": {
+    "outputs": ["dist/libs/mylib/**/*.css"]
+  }
+}
+```
 
 ### dependsOn
 

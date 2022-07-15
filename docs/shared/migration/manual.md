@@ -103,8 +103,6 @@ nx serve my-application
 
 If this doesn’t work for you, you may need to add or modify some configuration on the `build` task in your workspace configuration file.
 
-[Learn more about local serving](/cli/serve)
-
 ### Unit tests
 
 Each application will have a unit test process defined by your choices (Jest or Karma) during the creation of the application. To run tests for your application:
@@ -117,8 +115,6 @@ It is recommended that unit tests live next to the code they exercise and code s
 
 Testing configuration files can be found in the root of your application as well as the workspace configuration file.
 
-[Learn more about unit testing](/cli/test)
-
 ### End to End Tests
 
 Each application will have an e2e configuration created as a separate application, appended with `-e2e`. In our example, you’ll see `my-application-e2e`. This `e2e` task uses the test runner you chose during generation, Protractor or Cypress. Your application’s e2e tests should be migrated to this directory. There will be an e2e test scaffolded for you to make sure everything works before you start adding your own. To run the e2e tests:
@@ -127,9 +123,7 @@ Each application will have an e2e configuration created as a separate applicatio
 nx e2e my-application-e2e
 ```
 
-All of the configuration for your e2e tests should be in this directory.
-
-[Learn more about end-to-end testing](/cli/e2e)
+All the configuration for your e2e tests should be in this directory.
 
 ### Linting
 
@@ -149,8 +143,6 @@ nx lint my-application
 
 Global configuration files for linting will be at the root of your workspace. Each application and library will extend those configuration files. Global configuration changes should be made in the root, while application-or-library-specific changes should occur in the application or library configuration files.
 
-[Learn more about linting](/cli/lint)
-
 ### Formatting
 
 Nx uses Prettier to ensure standard formatting across your codebase. Prettier configuration files are located in the root of the workspace. To format your workspace run:
@@ -159,7 +151,7 @@ Nx uses Prettier to ensure standard formatting across your codebase. Prettier co
 nx format:write
 ```
 
-[Learn more about formatting](/cli/format-write)
+[Learn more about formatting](/nx/format-write)
 
 ### Adding tasks
 

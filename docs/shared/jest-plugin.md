@@ -100,7 +100,7 @@ Primary configurations for Jest will be via the `jest.config.js` file that gener
 
 ### Nx
 
-Nx Jest Plugin options can be configured via the [project config file](/docs/shared/configuration/projectjson.md) or via the [command line flags](/jest/jest).
+Nx Jest Plugin options can be configured via the [project config file](/docs/shared/configuration/projectjson.md) or via the [command line flags](/packages/jest).
 
 > Hint: Use `--help` to see all available options
 >
@@ -146,4 +146,4 @@ Enter [chrome://inspect](chrome://inspect) in Chrome address bar and inspect the
 ## More Documentation
 
 - [Jest Docs](https://jestjs.io/)
-- [@nrwl/jest options](/jest/jest)
+- [@nrwl/jest options](/packages/jest)

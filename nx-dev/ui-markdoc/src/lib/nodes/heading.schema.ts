@@ -4,8 +4,8 @@ function generateID(
   children: RenderableTreeNode[],
   attributes: Record<string, any>
 ) {
-  if (attributes.id && typeof attributes.id === 'string') {
-    return attributes.id;
+  if (attributes['id'] && typeof attributes['id'] === 'string') {
+    return attributes['id'];
   }
   return children
     .filter((child) => typeof child === 'string')

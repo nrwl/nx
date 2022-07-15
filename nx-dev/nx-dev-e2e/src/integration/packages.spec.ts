@@ -128,7 +128,6 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/angular:file-server',
       path: '/packages/angular/executors/file-server',
     },
-    { title: '@nrwl/cli', path: '/packages/cli' },
     { title: '@nrwl/cra-to-nx', path: '/packages/cra-to-nx' },
     { title: '@nrwl/create-nx-plugin', path: '/packages/create-nx-plugin' },
     {

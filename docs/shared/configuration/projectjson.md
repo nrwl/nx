@@ -271,9 +271,85 @@ sources (non-test sources) of its dependencies. In other words, it treats test s
 
 ### Outputs
 
-`"outputs": ["dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts. The provided value
-is actually the default, so we can omit it in this case. `"outputs": []` tells Nx that the `test` target doesn't create
-any artifacts on disk.
+Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
+
+#### Basic Example
+
+Usually, a target writes to a specific directory or a file. The following instructs Nx to cache `dist/libs/mylib` and `build/libs/mylib/main.js`:
+
+```json
+  {
+    "build": {
+      ...,
+      "outputs": ["dist/libs/mylib", "build/libs/mylib/main.js"],
+      "options": {
+        ...
+      },
+    }
+  }
+```
+
+#### Referencing Options
+
+Most commonly, targets have an option for an output file or directory. Rather than duplicating the information as seen above, options can be referenced using the below syntax:
+
+> When the `outputPath` option is changed, Nx will start caching the new path as well.
+
+```json
+{
+  "build": {
+    ...,
+    "outputs": ["{options.outputPath}"],
+    "options": {
+      "outputPath": "dist/libs/mylib"
+    }
+  }
+}
+```
+
+#### Specifying Globs
+
+Sometimes, multiple targets might write to the same directory. When possible it is recommended to direct these targets into separate directories.
+
+```json
+{
+  "build-js": {
+    ...,
+    "outputs": ["dist/libs/mylib/js"],
+    "options": {
+      "outputPath": "dist/libs/mylib/js"
+    }
+  },
+  "build-css": {
+    ...,
+    "outputs": ["dist/libs/mylib/css"],
+    "options": {
+      "outputPath": "dist/libs/mylib/css"
+    }
+  }
+}
+```
+
+But if the above is not possible, globs can be specified as outputs to only cache a set of files rather than the whole directory.
+
+```json
+{
+  "build-js": {
+    ...,
+    "outputs": ["dist/libs/mylib/**/*.js"],
+    "options": {
+      "outputPath": "dist/libs/mylib"
+    }
+  },
+  "build-css": {
+    ...,
+    "outputs": ["dist/libs/mylib/**/*.css"],
+    "options": {
+      "outputPath": "dist/libs/mylib"
+    }
+  }
+}
+```
 
 ### dependsOn
 
@@ -655,7 +731,7 @@ a [`.gitignore` file](https://git-scm.com/book/en/v2/Git-Basics-Recording-Change
 ## Validating the configuration
 
 If at any point in time you want to check if your configuration is in sync, you can use
-the [workspace-lint](/cli/workspace-lint) executor:
+the [workspace-lint](/nx/workspace-lint) executor:
 
 ```bash
 nx workspace-lint

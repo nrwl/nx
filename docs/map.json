@@ -852,8 +852,8 @@
     "id": "additional-api-references",
     "itemList": [
       {
-        "name": "cli",
-        "id": "cli",
+        "name": "nx",
+        "id": "nx",
         "itemList": [
           {
             "name": "create-nx-workspace",
@@ -943,6 +943,34 @@
             "id": "overview",
             "path": "/packages/workspace",
             "file": "shared/workspace-plugin"
+          }
+        ]
+      },
+      {
+        "name": "Nx Plugin",
+        "id": "nx-plugin",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "path": "/packages/nx-plugin",
+            "file": "shared/nx-plugin"
+          }
+        ]
+      },
+      {
+        "name": "Nx Devkit",
+        "id": "devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "Overview",
+            "file": "generated/devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "Ng CLI Adapter",
+            "file": "generated/devkit/ngcli_adapter"
           }
         ]
       },
@@ -1178,34 +1206,6 @@
             "name": "Overview",
             "path": "/packages/react-native",
             "file": "shared/react-native-plugin"
-          }
-        ]
-      },
-      {
-        "name": "Nx Plugin",
-        "id": "nx-plugin",
-        "itemList": [
-          {
-            "id": "overview",
-            "name": "Overview",
-            "path": "/packages/nx-plugin",
-            "file": "shared/nx-plugin"
-          }
-        ]
-      },
-      {
-        "name": "Nx Devkit",
-        "id": "devkit",
-        "itemList": [
-          {
-            "id": "index",
-            "name": "Overview",
-            "file": "generated/devkit/index"
-          },
-          {
-            "id": "ngcli_adapter",
-            "name": "Ng CLI Adapter",
-            "file": "generated/devkit/ngcli_adapter"
           }
         ]
       }

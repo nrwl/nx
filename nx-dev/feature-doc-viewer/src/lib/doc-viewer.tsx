@@ -25,10 +25,15 @@ export function DocViewer({
     <>
       <NextSeo
         title={document.data.title + ' | Nx'}
+        description={
+          document.data.description ??
+          'Next generation build system with first class monorepo support and powerful integrations.'
+        }
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: document.data.title,
           description:
+            document.data.description ??
             'Next generation build system with first class monorepo support and powerful integrations.',
           images: [
             {

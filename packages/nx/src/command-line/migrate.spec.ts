@@ -769,6 +769,12 @@ describe('Migration', () => {
         }
       );
       expect(
+        parseMigrationsOptions({ packageAndVersion: '8.12.0-beta.0' })
+      ).toMatchObject({
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '8.12.0-beta.0',
+      });
+      expect(
         parseMigrationsOptions({ packageAndVersion: 'next' })
       ).toMatchObject({
         targetPackage: 'nx',
