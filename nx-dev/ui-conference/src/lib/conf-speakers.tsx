@@ -143,18 +143,18 @@ export function ConfSpeakers(): JSX.Element {
   }
   const rows = chunkList(speakers, 2);
   return (
-    <div className="border-t border-gray-600">
+    <div className="border-t border-slate-200 dark:border-slate-700">
       {rows.map((row, rowIndex) => (
         <div
           key={'speaker-row--' + rowIndex}
-          className="border-b border-gray-600"
+          className="border-b border-slate-200 dark:border-slate-700"
         >
-          <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
+          <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
             <div className="grid grid-cols-1 md:grid-cols-2">
               {row.map((speaker) => (
                 <div
                   key={speaker.name}
-                  className="border-gray-600 py-8 odd:border-b md:odd:border-r md:odd:border-b-0 md:odd:pr-12 md:even:pl-12"
+                  className="border-slate-200 py-8 odd:border-b dark:border-slate-700 md:odd:border-r md:odd:border-b-0 md:odd:pr-12 md:even:pl-12"
                 >
                   <div className="px-5">
                     <MemberCard

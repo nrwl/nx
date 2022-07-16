@@ -84,18 +84,48 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
 }
 
 export function getPackageApiSection(items: MenuItem[]): MenuSection {
+  const getGuides = (menu: MenuItem) =>
+    menu.itemList?.filter(
+      (x) => !x.path?.includes('executors') && !x.path?.includes('generators')
+    ) || [];
+  const getExecutors = (menu: MenuItem) =>
+    menu.itemList?.filter((x) => x.path?.includes('executors')) || [];
+  const getGenerators = (menu: MenuItem) =>
+    menu.itemList?.filter((x) => x.path?.includes('generators')) || [];
+
   return {
     id: 'official-packages',
     name: 'Reference',
-    itemList: items.filter(
-      (m) =>
-        m.id !== 'add-nx-to-monorepo' &&
-        m.id !== 'cra-to-nx' &&
-        m.id !== 'create-nx-plugin' &&
-        m.id !== 'create-nx-workspace' &&
-        m.id !== 'make-angular-cli-faster' &&
-        m.id !== 'tao'
-    ),
+    itemList: items
+      .filter(
+        (m) =>
+          m.id !== 'add-nx-to-monorepo' &&
+          m.id !== 'cra-to-nx' &&
+          m.id !== 'create-nx-plugin' &&
+          m.id !== 'create-nx-workspace' &&
+          m.id !== 'make-angular-cli-faster' &&
+          m.id !== 'tao'
+      )
+      .map((m) => ({
+        ...m,
+        itemList: [
+          {
+            id: m.id + '-guides',
+            name: 'Guides',
+            itemList: getGuides(m),
+          },
+          {
+            id: m.id + '-executors',
+            name: 'Executors',
+            itemList: getExecutors(m),
+          },
+          {
+            id: m.id + '-generators',
+            name: 'Generators',
+            itemList: getGenerators(m),
+          },
+        ],
+      })),
   };
 }
 

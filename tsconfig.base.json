@@ -81,6 +81,7 @@
       "@nrwl/nx-dev/ui-member-card": ["nx-dev/ui-member-card/src/index.ts"],
       "@nrwl/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
       "@nrwl/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
+      "@nrwl/nx-dev/ui-theme": ["nx-dev/ui-theme/src/index.ts"],
       "@nrwl/nx-plugin": ["packages/nx-plugin"],
       "@nrwl/react": ["packages/react"],
       "@nrwl/react-native": ["packages/react-native"],

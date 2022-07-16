@@ -1,5 +1,9 @@
 import { Menu, Transition } from '@headlessui/react';
-import { DesktopComputerIcon, MoonIcon, SunIcon } from '@heroicons/react/solid';
+import {
+  ComputerDesktopIcon,
+  MoonIcon,
+  SunIcon,
+} from '@heroicons/react/24/solid';
 import classNames from 'classnames';
 import { Fragment, useEffect, useState } from 'react';
 import { localStorageThemeKey, Theme, themeResolver } from '../theme-resolver';
@@ -22,7 +26,7 @@ export default function ThemePanel() {
         >
           <span className="sr-only">Theme switcher</span>
           {theme === 'system' && (
-            <DesktopComputerIcon className="h-5 w-5" aria-hidden="true" />
+            <ComputerDesktopIcon className="h-5 w-5" aria-hidden="true" />
           )}
           {theme === 'light' && (
             <SunIcon className="h-5 w-5" aria-hidden="true" />
@@ -54,7 +58,7 @@ export default function ThemePanel() {
                   )}
                   onClick={() => setTheme('system')}
                 >
-                  <DesktopComputerIcon
+                  <ComputerDesktopIcon
                     className="mr-2 h-5 w-5"
                     aria-hidden="true"
                   />

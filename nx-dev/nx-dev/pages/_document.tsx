@@ -2,10 +2,7 @@ import { Head, Html, Main, NextScript } from 'next/document';
 
 export default function Document(): JSX.Element {
   return (
-    <Html
-      className="selection:bg-blue-nx-base scroll-smooth selection:text-white"
-      lang="en"
-    >
+    <Html className="h-full scroll-smooth" lang="en">
       <Head>
         <meta charSet="utf-8" />
         <link
@@ -31,8 +28,25 @@ export default function Document(): JSX.Element {
           href="/images/safari-pinned-tab.svg"
           color="#5bbad5"
         />
+        <meta name="apple-mobile-web-app-title" content="Nx" />
+        <meta name="application-name" content="Nx" />
+        <meta name="msapplication-TileColor" content="#3B82F6" />
+        <meta name="theme-color" content="#FFFFFF" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+                try {
+                  if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark')
+                  } else {
+                    document.documentElement.classList.remove('dark')
+                  }
+                } catch (_) {}
+              `,
+          }}
+        />
       </Head>
-      <body>
+      <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
         <Main />
         <NextScript />
       </body>

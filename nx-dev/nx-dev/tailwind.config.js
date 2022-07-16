@@ -2,7 +2,11 @@ const path = require('path');
 const { createGlobPatternsForDependencies } = require('@nrwl/next/tailwind');
 
 module.exports = {
+  experimental: {
+    optimizeUniversalDefaults: true,
+  },
   mode: 'jit',
+  darkMode: 'class',
   content: [
     path.join(__dirname, 'pages/**/*.{js,ts,jsx,tsx}'),
     ...createGlobPatternsForDependencies(__dirname),

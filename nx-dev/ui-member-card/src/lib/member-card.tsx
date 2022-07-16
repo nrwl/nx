@@ -21,7 +21,7 @@ export function MemberCard(data: Member): JSX.Element {
       </div>
       <div className="col-span-3 md:col-span-2">
         <h5 className="font-input-mono mb-3">{data.name}</h5>
-        <p className="text-gray-400">{data.description}</p>
+        <p>{data.description}</p>
         {data.twitter ? (
           <a
             className="font-input-mono mt-6 block"

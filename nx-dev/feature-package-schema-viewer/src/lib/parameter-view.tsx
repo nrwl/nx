@@ -24,23 +24,23 @@ export const ParameterView = (props: {
         {props.alias && (
           <span
             data-tooltip="Property alias"
-            className="relative -top-0.5 inline-flex rounded-md border px-2 text-xs font-semibold uppercase leading-5 text-gray-600"
+            className="relative -top-0.5 inline-flex rounded-md px-2 text-xs font-semibold uppercase leading-5 dark:bg-slate-700"
           >
             {props.alias}
           </span>
         )}
         {props.required && (
-          <span className="relative -top-0.5 inline-flex rounded-md bg-gray-300 px-2 text-xs font-semibold uppercase leading-5 text-gray-800">
+          <span className="relative -top-0.5 inline-flex rounded-md bg-slate-100 px-2 text-xs font-semibold uppercase leading-5 dark:bg-slate-700">
             Required
           </span>
         )}
         {props.deprecated && (
-          <span className="relative -top-0.5 inline-flex rounded-md bg-red-100 px-2 text-xs font-semibold uppercase leading-5 text-gray-800">
+          <span className="relative -top-0.5 inline-flex rounded-md bg-red-100 px-2 text-xs font-semibold uppercase leading-5 text-red-800 dark:bg-red-800 dark:text-red-100">
             Deprecated
           </span>
         )}
         {((props.schema as any)['hidden'] as boolean) && (
-          <span className="relative -top-0.5 inline-flex rounded-md bg-yellow-300 px-2 text-xs font-semibold uppercase leading-5 text-yellow-800">
+          <span className="relative -top-0.5 inline-flex rounded-md bg-yellow-300 px-2 text-xs font-semibold uppercase leading-5 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100">
             Hidden
           </span>
         )}
@@ -60,7 +60,7 @@ export const ParameterView = (props: {
       )}
     </div>
 
-    <div className="prose">
+    <div className="prose prose-slate dark:prose-invert">
       {renderMarkdown({
         content: props.description,
         data: {},
@@ -69,7 +69,7 @@ export const ParameterView = (props: {
     </div>
 
     {props.deprecated && !!props.schema['x-deprecated'] && (
-      <div className="prose mt-2 rounded-md bg-red-100 p-4">
+      <div className="prose prose-slate dark:prose-invert mt-2 rounded-md bg-red-100 px-4 text-red-800 dark:bg-red-800 dark:text-red-100">
         {renderMarkdown({
           content: props.schema['x-deprecated'] as string,
           data: {},

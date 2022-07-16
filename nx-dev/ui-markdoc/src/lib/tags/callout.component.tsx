@@ -1,9 +1,9 @@
 import {
   CheckCircleIcon,
-  ExclamationIcon,
-  HandIcon,
+  ExclamationCircleIcon,
+  HandRaisedIcon,
   InformationCircleIcon,
-} from '@heroicons/react/outline';
+} from '@heroicons/react/24/outline';
 import cx from 'classnames';
 import { ReactNode } from 'react';
 
@@ -21,39 +21,47 @@ const typeMap: Record<
   note: {
     icon: (
       <InformationCircleIcon
-        className="h-5 w-5 text-slate-500"
+        className="h-5 w-5 text-slate-500 dark:text-slate-300"
         aria-hidden="true"
       />
     ),
-    backgroundColor: 'bg-slate-50',
-    borderColor: 'ring-slate-100',
-    titleColor: 'text-slate-600',
-    textColor: 'text-slate-700',
+    backgroundColor: 'bg-slate-50 dark:bg-slate-800/40',
+    borderColor: 'ring-slate-100 dark:ring-slate-700',
+    titleColor: 'text-slate-600 dark:text-slate-300',
+    textColor: 'text-slate-700 dark:text-slate-400',
   },
   warning: {
     icon: (
-      <ExclamationIcon className="h-5 w-5 text-yellow-500" aria-hidden="true" />
+      <ExclamationCircleIcon
+        className="h-5 w-5 text-yellow-500 dark:text-yellow-400"
+        aria-hidden="true"
+      />
     ),
-    backgroundColor: 'bg-yellow-50',
-    borderColor: 'ring-yellow-100',
-    titleColor: 'text-yellow-600',
-    textColor: 'text-yellow-700',
+    backgroundColor: 'bg-yellow-50 dark:bg-yellow-900/30',
+    borderColor: 'ring-yellow-100 dark:ring-yellow-900',
+    titleColor: 'text-yellow-600 dark:text-yellow-400',
+    textColor: 'text-yellow-700 dark:text-yellow-600',
   },
   check: {
     icon: (
-      <CheckCircleIcon className="h-5 w-5 text-green-500" aria-hidden="true" />
+      <CheckCircleIcon
+        className="h-5 w-5 text-green-500 dark:text-green-400"
+        aria-hidden="true"
+      />
     ),
-    backgroundColor: 'bg-green-50',
-    borderColor: 'ring-green-100',
-    titleColor: 'text-green-600',
-    textColor: 'text-green-700',
+    backgroundColor: 'bg-green-50 dark:bg-green-900/30',
+    borderColor: 'ring-green-100 dark:ring-green-900',
+    titleColor: 'text-green-600 dark:text-green-400',
+    textColor: 'text-green-700 dark:text-green-600',
   },
   caution: {
-    icon: <HandIcon className="h-5 w-5 text-red-500" aria-hidden="true" />,
-    backgroundColor: 'bg-red-50',
-    borderColor: 'ring-red-100',
-    titleColor: 'text-red-600',
-    textColor: 'text-red-700',
+    icon: (
+      <HandRaisedIcon className="h-5 w-5 text-red-500" aria-hidden="true" />
+    ),
+    backgroundColor: 'bg-red-50 dark:bg-red-900/30',
+    borderColor: 'ring-red-100 dark:ring-red-900',
+    titleColor: 'text-red-600 dark:text-red-400',
+    textColor: 'text-red-700 dark:text-red-600',
   },
 };
 

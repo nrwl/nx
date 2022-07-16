@@ -1,8 +1,8 @@
 import {
-  DocumentSearchIcon,
+  DocumentMagnifyingGlassIcon,
   FlagIcon,
-  LocationMarkerIcon,
-} from '@heroicons/react/solid';
+  MapPinIcon,
+} from '@heroicons/react/24/solid';
 // nx-ignore-next-line
 import type { ProjectGraphNode } from '@nrwl/devkit';
 import { useDepGraphService } from '../hooks/use-dep-graph';
@@ -92,7 +92,7 @@ function ProjectListItem({
           title="Focus on this library"
           onClick={() => focusProject(project.projectGraphNode.name)}
         >
-          <DocumentSearchIcon className="h-5 w-5" />
+          <DocumentMagnifyingGlassIcon className="h-5 w-5" />
         </button>
 
         <ExperimentalFeature>
@@ -108,7 +108,7 @@ function ProjectListItem({
                   : 'ring-slate-200 dark:ring-slate-600'
               } flex items-center rounded-l-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
             >
-              <LocationMarkerIcon className="h-5 w-5" />
+              <MapPinIcon className="h-5 w-5" />
             </button>
 
             <button
