@@ -1,4 +1,7 @@
-import { ArrowCircleLeftIcon, DownloadIcon } from '@heroicons/react/solid';
+import {
+  ArrowLeftCircleIcon,
+  ArrowDownTrayIcon,
+} from '@heroicons/react/24/solid';
 import Tippy from '@tippyjs/react';
 import classNames from 'classnames';
 // nx-ignore-next-line
@@ -130,7 +133,7 @@ export function Shell() {
             id="no-projects-chosen"
             className="flex text-slate-700 dark:text-slate-400"
           >
-            <ArrowCircleLeftIcon className="mr-4 h-6 w-6" />
+            <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
             <h4>Please select projects in the sidebar.</h4>
           </div>
         ) : null}
@@ -170,7 +173,7 @@ export function Shell() {
               data-cy="downloadImageButton"
               onClick={downloadImage}
             >
-              <DownloadIcon className="absolute top-1/2 left-1/2 -mt-3 -ml-3 h-6 w-6" />
+              <ArrowDownTrayIcon className="absolute top-1/2 left-1/2 -mt-3 -ml-3 h-6 w-6" />
             </button>
           </Tippy>
         </div>

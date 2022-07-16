@@ -115,7 +115,7 @@ export function ConfScheduleShort(): JSX.Element {
     {
       type: 'break',
       time: '12:45 - 2:00pm (UTC-07:00)',
-      title: 'LUNCH',
+      title: 'Lunch',
       description: '',
       speakers: [],
       videoUrl: '',
@@ -192,9 +192,9 @@ export function ConfScheduleShort(): JSX.Element {
   ];
 
   return (
-    <div className="border-t border-gray-600">
-      <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
-        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-gray-600">
+    <div className="border-t border-slate-200 dark:border-slate-700">
+      <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
+        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
           <div className="p-8 text-center">Sunday, October 16th</div>
         </div>
       </div>
@@ -208,7 +208,7 @@ export function ConfScheduleShort(): JSX.Element {
           <div className="p-8 text-center">Monday, October 17th</div>
         </div>
       </div>
-      <section className="w-full divide-y divide-gray-600 border-t border-b border-gray-600">
+      <section className="w-full divide-y divide-slate-200 border-t border-b border-slate-200 dark:divide-slate-700 dark:border-slate-700">
         {scheduleItemsForMonday17.map((item) =>
           item.type === 'event' ? scheduleRow(item) : breakRow(item)
         )}
@@ -229,11 +229,11 @@ export function ConfScheduleShort(): JSX.Element {
 
 const scheduleRow = (item: ScheduleItem): JSX.Element => (
   <div key={item.title + item.time} className="w-full">
-    <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
-      <article className="grid w-full grid-cols-1 md:grid-cols-5 md:divide-x md:divide-gray-600">
+    <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
+      <article className="grid w-full grid-cols-1 md:grid-cols-5 md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
         <div className="font-input-mono px-5 pt-12 pb-8 md:py-12">
           <span className="hidden md:block">{item.time}</span>
-          <span className="bg-blue-nx-dark mb-4 rounded-md py-4 px-6 md:hidden">
+          <span className="mb-4 rounded-md py-4 px-6 md:hidden">
             {item.time}
           </span>
         </div>
@@ -247,11 +247,9 @@ const scheduleRow = (item: ScheduleItem): JSX.Element => (
           ) : (
             <h3 className="mb-4">{item.title}</h3>
           )}
-          <div className="text-sm text-slate-300">
-            {item.speakers.join(' & ')}
-          </div>
+          <div className="text-sm">{item.speakers.join(' & ')}</div>
         </div>
-        <p className="col-span-2 px-5 pt-8 pb-12 text-slate-300 md:py-12 md:px-8">
+        <p className="col-span-2 px-5 pt-8 pb-12 md:py-12 md:px-8">
           {item.description}
         </p>
       </article>
@@ -261,15 +259,15 @@ const scheduleRow = (item: ScheduleItem): JSX.Element => (
 
 const breakRow = (item: ScheduleItem): JSX.Element => (
   <div key={item.title + item.time} className="w-full">
-    <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
+    <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
       <div className="grid w-full grid-cols-1 md:grid-cols-5">
         <div className="font-input-mono px-5 pt-12 pb-8 md:py-12">
           <span className="hidden md:block">{item.time}</span>
-          <span className="bg-blue-nx-dark mb-4 rounded-md py-4 px-6 md:hidden">
+          <span className="mb-4 rounded-md py-4 px-6 md:hidden">
             {item.time}
           </span>
         </div>
-        <div className="px-5 pb-12 md:col-span-4 md:border-l md:border-gray-600 md:py-12 md:px-8">
+        <div className="px-5 pb-12 md:col-span-4 md:border-l md:border-slate-200 md:py-12 md:px-8 md:dark:border-slate-700">
           {item.videoUrl ? (
             <h3 className="font-input-mono underline">
               <a href={item.videoUrl} target="_blank" rel="noreferrer">

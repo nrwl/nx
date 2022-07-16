@@ -1,17 +1,17 @@
-import { MailIcon } from '@heroicons/react/solid';
+import { EnvelopeIcon } from '@heroicons/react/24/solid';
 
 export function ConnectWithUs(): JSX.Element {
   return (
     <article
       id="community"
-      className="flex flex-col space-y-12 p-4 lg:mx-auto lg:max-w-7xl lg:flex-row lg:items-center lg:space-y-0 lg:space-x-20 lg:px-8"
+      className="mx-auto flex max-w-7xl flex-col space-y-12 py-12 px-4 sm:px-6 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-20 lg:py-16 lg:px-8"
     >
       <header className="space-y-10 md:py-12 lg:w-5/12 xl:w-5/12">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
             Let's connect together!
           </h1>
-          <p className="mt-4 text-lg text-gray-500">
+          <p className="mt-4">
             There are many ways you can connect with the open-source Nx
             community. Let's connect together!
           </p>
@@ -21,13 +21,13 @@ export function ConnectWithUs(): JSX.Element {
       <div className="relative flex-none lg:w-7/12 xl:w-7/12">
         <div className="relative flex flex-col space-y-6 md:flex-row md:space-x-6 md:space-y-0">
           <div className="space-y-6 md:mt-24 md:w-1/2">
-            <div className="group relative rounded-2xl border-2 border-gray-100 bg-white p-5 transition duration-200 ease-out hover:border-violet-300">
+            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-violet-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-violet-900 dark:hover:bg-slate-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
-                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-violet-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105"></div>
-                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#4A154B] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105"></div>
+                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-violet-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-violet-900" />
+                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#4A154B] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
                 <svg
                   fill="currentColor"
-                  className="hi-solid hi-adjustments relative inline-block h-5 w-5 transform text-white transition duration-200 ease-out group-hover:scale-110"
+                  className="relative inline-block h-5 w-5 transform text-white transition duration-200 ease-out group-hover:scale-110"
                   role="img"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +45,7 @@ export function ConnectWithUs(): JSX.Element {
                 className="focus:outline-none"
               >
                 <span className="absolute inset-0" aria-hidden="true"></span>
-                <p className="leading-relaxed text-gray-600">
+                <p className="leading-relaxed">
                   Join the Nx Community Slack to meet a friendly community of Nx
                   users. With more than{' '}
                   <span className="font-semibold">4k+ users</span>, this is a
@@ -53,10 +53,10 @@ export function ConnectWithUs(): JSX.Element {
                 </p>
               </a>
             </div>
-            <div className="group relative rounded-2xl border-2 border-gray-100 bg-white p-5 transition duration-200 ease-out hover:border-red-300">
+            <div className="group relative rounded-lg border border-gray-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-red-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-red-900 dark:hover:bg-slate-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
-                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-red-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105"></div>
-                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#FF0000] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105"></div>
+                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-red-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-red-900" />
+                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#FF0000] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
                 <svg
                   fill="currentColor"
                   className="hi-solid hi-chart-pie relative inline-block h-5 w-5 transform text-white transition duration-200 ease-out group-hover:scale-110"
@@ -77,7 +77,7 @@ export function ConnectWithUs(): JSX.Element {
                 className="focus:outline-none"
               >
                 <span className="absolute inset-0" aria-hidden="true"></span>
-                <p className="leading-relaxed text-gray-600">
+                <p className="leading-relaxed">
                   Get access to live Q&A sessions, podcasts and tutorials on our
                   Youtube channel updated regularly! Do not forget to subscribe
                   to the Nx Show animated by Nx core team's members!
@@ -86,10 +86,10 @@ export function ConnectWithUs(): JSX.Element {
             </div>
           </div>
           <div className="space-y-6 md:w-1/2">
-            <div className="group relative rounded-2xl border-2 border-gray-100 bg-white p-5 transition duration-200 ease-out hover:border-blue-300">
+            <div className="group relative rounded-lg border border-gray-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-blue-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-blue-900 dark:hover:bg-slate-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
-                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-blue-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105"></div>
-                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#1DA1F2] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105"></div>
+                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-blue-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-blue-800" />
+                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#1DA1F2] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
                 <svg
                   fill="currentColor"
                   className="inline-block h-5 w-5 transform text-white transition duration-200 ease-out group-hover:scale-110"
@@ -110,17 +110,17 @@ export function ConnectWithUs(): JSX.Element {
                 className="focus:outline-none"
               >
                 <span className="absolute inset-0" aria-hidden="true"></span>
-                <p className="leading-relaxed text-gray-600">
+                <p className="leading-relaxed">
                   Stay up to date on everything about Nx by following
                   @NxDevTools on Twitter.
                 </p>
               </a>
             </div>
-            <div className="hover:border-green-nx-base group relative rounded-2xl border-2 border-gray-100 bg-white p-5 transition duration-200 ease-out">
+            <div className="group relative rounded-lg border border-gray-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-green-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-green-900 dark:hover:bg-slate-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
-                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-green-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105"></div>
-                <div className="bg-green-nx-base absolute inset-0 -rotate-6 transform rounded-2xl bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105"></div>
-                <MailIcon className="inline-block h-5 w-5 transform text-white transition duration-200 ease-out group-hover:scale-110" />
+                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-green-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-green-800" />
+                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-green-500 bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
+                <EnvelopeIcon className="inline-block h-5 w-5 transform text-white transition duration-200 ease-out group-hover:scale-110" />
               </div>
               <h4 className="mb-2 text-lg font-bold">Nx monthly newsletter</h4>
               <a
@@ -131,7 +131,7 @@ export function ConnectWithUs(): JSX.Element {
                 className="focus:outline-none"
               >
                 <span className="absolute inset-0" aria-hidden="true"></span>
-                <p className="leading-relaxed text-gray-600">
+                <p className="leading-relaxed">
                   Subscribe and receive news about Nx releases, posts about new
                   Nx features, details about new plugins, links to community
                   resources, and additional Nx content.

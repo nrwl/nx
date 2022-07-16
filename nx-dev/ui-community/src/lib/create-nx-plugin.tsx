@@ -1,8 +1,8 @@
 import {
   BookOpenIcon,
-  DocumentAddIcon,
+  DocumentPlusIcon,
   ShareIcon,
-} from '@heroicons/react/solid';
+} from '@heroicons/react/24/solid';
 import Link from 'next/link';
 
 export function CreateNxPlugin(): JSX.Element {
@@ -12,43 +12,37 @@ export function CreateNxPlugin(): JSX.Element {
       className="items-center p-4 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8"
     >
       <header className="mx-auto max-w-xl lg:col-start-1 lg:mx-0 lg:max-w-none">
-        <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900">
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
           <span className="sr-only">Nx </span>Community Plugins
         </h1>
-        <p className="mb-4 text-lg text-gray-500">
+        <p className="mt-8">
           Core Nx plugins are created and maintained by the Nx team at Nrwl and
           you can see all the available plugins when you run the{' '}
-          <code className="break-normal rounded border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-sm leading-6 text-gray-600">
+          <code className="break-normal rounded-md border border-slate-200 bg-slate-50 px-2 py-1 font-mono text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
             nx list
           </code>{' '}
           command in your workspace.
         </p>
-        <p className="mb-4 text-lg text-gray-500">
+        <p className="mt-8">
           The community plugins are created and maintained by members of the Nx
           community, will allow you to use the full power of the workspace while
           using different technologies!
         </p>
 
-        <ul className="mx-4 mb-4 list-disc">
-          <li className="mb-2">
+        <ul className="mx-4 mt-8 list-disc">
+          <li className="mt-2">
             <Link href="/packages/nx-plugin#generating-a-plugin">
-              <a className="text-lg font-normal  text-gray-500 hover:underline">
-                Create your Nx Plugin
-              </a>
+              <a className="hover:underline">Create your Nx Plugin</a>
             </Link>
           </li>
-          <li className="mb-2">
+          <li className="mt-2">
             <Link href="/packages/nx-plugin#testing-your-plugin">
-              <a className="text-lg font-normal text-gray-500 hover:underline">
-                Test your plugin
-              </a>
+              <a className="hover:underline">Test your plugin</a>
             </Link>
           </li>
-          <li className="mb-2">
+          <li className="mt-2">
             <Link href="/packages/nx-plugin#generating-a-plugin">
-              <a className="text-lg font-normal text-gray-500 hover:underline">
-                Publish your Nx Plugin
-              </a>
+              <a className="hover:underline">Publish your Nx Plugin</a>
             </Link>
           </li>
         </ul>
@@ -57,24 +51,23 @@ export function CreateNxPlugin(): JSX.Element {
         <div className="relative flex flex-col items-center justify-center lg:h-full">
           <iframe
             loading="lazy"
-            className="max-w-screen-sm"
+            className="max-w-screen-sm rounded-lg shadow-lg"
             width="100%"
-            height="315"
             src="https://www.youtube.com/embed/XYO689PAhow"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           />
           <div className="mt-6 grid w-full grid-cols-1 items-center gap-4 lg:grid-cols-2">
-            <div className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50">
+            <div className="relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-800">
               <div className="flex w-full px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <Link href="/packages/nx-plugin#generating-a-plugin">
                     <a className="focus:outline-none">
                       <span className="absolute inset-0" aria-hidden="true" />
-                      <p className="text-md mb-0.5 font-bold text-gray-600">
+                      <p className="text-md mb-1 font-bold text-slate-600 dark:text-slate-300">
                         Create an Nx Plugin
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         Follow this guide to generate an Nx plugin to fit your
                         needs
                       </p>
@@ -82,26 +75,26 @@ export function CreateNxPlugin(): JSX.Element {
                   </Link>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="rounded-full border border-gray-100 bg-white p-2 text-white">
-                    <DocumentAddIcon className="text-blue-nx-base h-6 w-6" />
+                  <div className="rounded-full border border-slate-100 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                    <DocumentPlusIcon className="h-6 w-6 text-slate-600 dark:text-slate-300" />
                   </div>
                 </div>
               </div>
-              <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
+              <div className="mt-2 flex w-full items-center space-x-2 border-t border-slate-200 bg-slate-50 px-4 py-3 text-slate-400 dark:border-slate-700 dark:bg-slate-800">
                 <BookOpenIcon className="h-4 w-4" />
                 <p className="text-xs font-bold">packages/nx-plugin</p>
               </div>
             </div>
-            <div className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50">
+            <div className="relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-800">
               <div className="flex w-full px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <Link href="/packages/nx-plugin#publishing-your-nx-plugin">
                     <a className="focus:outline-none">
                       <span className="absolute inset-0" aria-hidden="true" />
-                      <p className="text-md mb-0.5 font-bold text-gray-600">
+                      <p className="text-md mb-1 font-bold text-slate-600 dark:text-slate-300">
                         Publish an Nx Plugin
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         Follow this guide to publish your new and shiny Nx
                         plugin
                       </p>
@@ -109,12 +102,12 @@ export function CreateNxPlugin(): JSX.Element {
                   </Link>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="rounded-full border border-gray-100 bg-white p-2 text-white">
-                    <ShareIcon className="text-blue-nx-base h-6 w-6" />
+                  <div className="rounded-full border border-slate-100 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                    <ShareIcon className="h-6 w-6 text-slate-600 dark:text-slate-300" />
                   </div>
                 </div>
               </div>
-              <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
+              <div className="mt-2 flex w-full items-center space-x-2 border-t border-slate-200 bg-slate-50 px-4 py-3 text-slate-400 dark:border-slate-700 dark:bg-slate-800">
                 <BookOpenIcon className="h-4 w-4" />
                 <p className="text-xs font-bold">packages/nx-plugin</p>
               </div>

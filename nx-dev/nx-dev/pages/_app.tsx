@@ -1,5 +1,5 @@
 import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
-import { AnnouncementBanner } from '@nrwl/nx-dev/ui-common';
+import { ThemeProvider } from '@nrwl/nx-dev/ui-theme';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -21,60 +21,59 @@ export default function CustomApp({
     return () => router.events.off('routeChangeStart', handleRouteChange);
   }, [router]);
   return (
-    <>
-      <DefaultSeo
-        title="Nx: Smart, Fast and Extensible Build System"
-        description="Next generation build system with first class monorepo support and powerful integrations."
-        openGraph={{
-          url: 'https://nx.dev' + router.asPath,
-          title: 'Nx: Smart, Fast and Extensible Build System',
-          description:
-            'Next generation build system with first class monorepo support and powerful integrations.',
-          images: [
-            {
-              url: 'https://nx.dev/images/nx-media.jpg',
-              width: 800,
-              height: 400,
-              alt: 'Nx: Smart, Fast and Extensible Build System',
-              type: 'image/jpeg',
-            },
-          ],
-          site_name: 'Nx',
-        }}
-        twitter={{
-          handle: '@nrwl_io',
-          site: '@nxdevtools',
-          cardType: 'summary_large_image',
-        }}
-      />
-      <Head>
-        <meta name="msapplication-TileColor" content="#da532c" />
-        <meta name="theme-color" content="#ffffff" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-      <a
-        id="skip-to-content-link"
-        href="#main"
-        tabIndex={0}
-        className="bg-green-nx-base absolute top-3 left-8 -translate-y-24 rounded-md px-4 py-2 text-white transition focus:translate-y-0"
-      >
-        Skip to content
-      </a>
-      <div className="documentation-app bg-white text-gray-700 antialiased">
-        <AnnouncementBanner />
+    <ThemeProvider>
+      <>
+        <Head>
+          <meta name="msapplication-TileColor" content="#da532c" />
+          <meta name="theme-color" content="#ffffff" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>Nx: Smart, Fast and Extensible Build System</title>
+        </Head>
+        <DefaultSeo
+          title="Nx: Smart, Fast and Extensible Build System"
+          description="Next generation build system with first class monorepo support and powerful integrations."
+          openGraph={{
+            url: 'https://nx.dev' + router.asPath,
+            title: 'Nx: Smart, Fast and Extensible Build System',
+            description:
+              'Next generation build system with first class monorepo support and powerful integrations.',
+            images: [
+              {
+                url: 'https://nx.dev/images/nx-media.jpg',
+                width: 800,
+                height: 400,
+                alt: 'Nx: Smart, Fast and Extensible Build System',
+                type: 'image/jpeg',
+              },
+            ],
+            site_name: 'Nx',
+          }}
+          twitter={{
+            handle: '@nrwl_io',
+            site: '@nxdevtools',
+            cardType: 'summary_large_image',
+          }}
+        />
+        <a
+          id="skip-to-content-link"
+          href="#main"
+          tabIndex={0}
+          className="absolute top-3 left-8 -translate-y-24 rounded-md bg-green-400 px-4 py-2 text-white transition focus:translate-y-0"
+        >
+          Skip to content
+        </a>
         <Component {...pageProps} />
-      </div>
-      {/* Global Site Tag (gtag.js) - Google Analytics */}
-      <Script
-        id="gtag-script-dependency"
-        strategy="afterInteractive"
-        src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
-      />
-      <Script
-        id="gtag-script-loader"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
+        {/* Global Site Tag (gtag.js) - Google Analytics */}
+        <Script
+          id="gtag-script-dependency"
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+        />
+        <Script
+          id="gtag-script-loader"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){ dataLayer.push(arguments); }
             gtag('js', new Date());
@@ -82,20 +81,20 @@ export default function CustomApp({
               page_path: window.location.pathname,
             });
           `,
-        }}
-      />
-      {/* HubSpot Analytics */}
-      <Script
-        id="hs-script-loader"
-        strategy="worker"
-        src="https://js.hs-scripts.com/2757427.js"
-      />
-      {/* Hotjar Analytics */}
-      <Script
-        id="hotjar-script-loader"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
+          }}
+        />
+        {/* HubSpot Analytics */}
+        <Script
+          id="hs-script-loader"
+          strategy="worker"
+          src="https://js.hs-scripts.com/2757427.js"
+        />
+        {/* Hotjar Analytics */}
+        <Script
+          id="hotjar-script-loader"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
           (function(h,o,t,j,a,r){
           h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
           h._hjSettings={hjid:2774127,hjsv:6};
@@ -104,8 +103,9 @@ export default function CustomApp({
           r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
           a.appendChild(r);
         })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');`,
-        }}
-      />
-    </>
+          }}
+        />
+      </>
+    </ThemeProvider>
   );
 }

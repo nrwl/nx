@@ -1,5 +1,6 @@
 import Editor, { useMonaco } from '@monaco-editor/react';
 import { JsonSchema } from '@nrwl/nx-dev/models-package';
+import { useTheme } from '@nrwl/nx-dev/ui-theme';
 import { useEffect } from 'react';
 
 export const SchemaEditor = ({
@@ -15,6 +16,7 @@ export const SchemaEditor = ({
   content: Record<string, any>;
   schema: JsonSchema;
 }): JSX.Element => {
+  const [theme] = useTheme();
   const monaco = useMonaco();
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export const SchemaEditor = ({
         JSON.stringify(content, null, 2)
       }
       path="a://b/example.json"
-      theme="vs-light"
+      theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
       options={{ scrollBeyondLastLine: false }}
       saveViewState={false}
     />

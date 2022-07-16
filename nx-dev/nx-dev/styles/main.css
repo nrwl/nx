@@ -1,13 +1,12 @@
 @tailwind base;
 
 /*! purgecss start ignore */
-@import 'highlight.js/styles/github-gist.css';
+@import 'nx-dev/feature-search/src/lib/algolia-search.global.css';
+@import './syntax-highlight.css';
 /*! purgecss end ignore */
 
 @tailwind components;
 @tailwind utilities;
-
-@import 'nx-dev/feature-search/src/lib/algolia-search.global.css';
 
 svg {
   shape-rendering: auto;
@@ -32,13 +31,22 @@ pre,
   font-family: 'InputMono', monospace;
 }
 
+/** Layout **/
+#__next {
+  height: 100%;
+}
+
+/** Theme Switcher **/
+.changing-theme,
+.changing-theme * {
+  transition: none !important;
+}
+
 /*
   General CSS rules for markdown iframes and img
  */
 iframe[src*='youtube'] {
   aspect-ratio: 16 / 9;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  border-radius: 0.375rem;
 }
 .prose iframe,
 .prose img {
@@ -56,9 +64,6 @@ iframe[src*='youtube'] {
 .prose iframe[src^="https://staging.nx.app"],
 .prose iframe[src^="https://nx.app"]
 {
-  border: 1px solid hsla(0, 0%, 85%, 1);
-  border-radius: 0.375rem;
-  box-shadow: 0 2px 6px hsla(0, 0%, 95%, 1);
   height: 80vh;
   max-width: 100%;
   overflow: hidden;

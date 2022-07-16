@@ -1,20 +1,20 @@
 export function ConfWorkshop(): JSX.Element {
   return (
-    <div className="border-t border-b border-gray-600">
-      <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
-        <article className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-gray-600">
+    <div className="border-t border-b border-slate-200 dark:border-slate-700">
+      <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
+        <article className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
           <div className="px-5 py-12 md:pr-12">
-            <div className="font-input-mono text-green-nx-base">
+            <div className="font-input-mono text-slate-700 dark:text-slate-300">
               Day 1 - Sunday, Oct. 16 | Day 2 - Tuesday, Oct. 18
             </div>
             <h2 className="font-input-mono pt-8 pb-2 text-2xl">
               Learn from the Creators of Nx, First Hand!
             </h2>
-            <p className="text-md mb-8 text-slate-300">
+            <p className="text-md mb-8">
               Attendees can register for both days of the workshop or just Day 2
               for more advanced Nx users.
             </p>
-            <p className="text-slate-300">
+            <p>
               This is your chance to get first-hand knowledge from Nrwl
               engineers and Nx Core team members. Get your questions answered,
               uncover the secrets of Nx and its powerful plugin system to
@@ -25,22 +25,22 @@ export function ConfWorkshop(): JSX.Element {
             <h4 className="font-input-mono mt-8 mb-4 text-lg">
               $800 All-Inclusive / $400 Day 2 only
             </h4>
-            <p className="mb-4 text-slate-300">
+            <p className="mb-4">
               To help you better learn and apply various concepts in your
               projects, we're going to create a more "real-world" example,
               building a store for a fictional board game company called "The
               Board Game Hoard".
             </p>
             <h4 className="font-input-mono mb-2 text-lg">Day 1</h4>
-            <p className="mb-2 text-xs italic text-slate-300">
+            <p className="mb-2 text-xs italic">
               (9am-5pm; environment setup starting at 8am)
             </p>
-            <p className="mb-4 text-sm text-slate-300">
+            <p className="mb-4 text-sm">
               This introductory workshop will give you all you need to get set
               up and running with your brand new Nx workspace, covering topics
               around:
             </p>
-            <ul className="mb-4 list-disc text-sm text-slate-300">
+            <ul className="mb-4 list-disc text-sm">
               <li>Generating a pristine Nx workspace</li>
               <li>
                 Generating frontend Angular apps and backend APIs inside your
@@ -60,14 +60,14 @@ export function ConfWorkshop(): JSX.Element {
             </ul>
 
             <h4 className="font-input-mono mb-2 text-lg">Day 2</h4>
-            <p className="mb-2 text-xs italic text-slate-300">
+            <p className="mb-2 text-xs italic">
               (9am-5pm; environment setup starting at 8am)
             </p>
-            <p className="mb-4 text-sm text-slate-300">
+            <p className="mb-4 text-sm">
               Take a deep dive into advanced Nx concepts that help you leverage
               Nx to its fullest, covering topics around:
             </p>
-            <ul className="mb-4 list-disc text-sm text-slate-300">
+            <ul className="mb-4 list-disc text-sm">
               <li>
                 How to set boundaries between the different scopes in your
                 project
@@ -98,12 +98,12 @@ export function ConfWorkshop(): JSX.Element {
                 and/or Lerna workspace)
               </li>
             </ul>
-            <p className="mb-4 text-sm text-slate-300">
+            <p className="mb-4 text-sm">
               If you're only attending day 2, please plan to arrive at 8am to
               set up your example workspace.
             </p>
           </div>
-          <div className="divide-y divide-gray-600 py-12">
+          <div className="divide-y divide-slate-200 py-12 dark:divide-slate-700">
             {/*<div className="px-5 pb-12 md:w-4/5 md:pl-12">
               <h3 className="font-input-mono mb-8 text-xl">Instructors</h3>
               <MemberCard
@@ -152,7 +152,7 @@ export function ConfWorkshop(): JSX.Element {
             </div>*/}
             <div className="px-5 py-12 md:pl-12">
               <a
-                className="font-input-mono group flex w-full items-center sm:text-xl"
+                className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
                 href="https://ti.to/nx-conf/nx-conf-2022?utm_source=nxdev"
               >
                 <span className="group-hover:underline">Save your ticket!</span>

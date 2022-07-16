@@ -1,8 +1,8 @@
 import {
   BeakerIcon,
-  ChatIcon,
-  ClipboardListIcon,
-} from '@heroicons/react/solid';
+  ChatBubbleLeftEllipsisIcon,
+  ClipboardIcon,
+} from '@heroicons/react/24/solid';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import {
   ConnectWithUs,
@@ -87,20 +87,20 @@ export default function Community(props: CommunityProps): JSX.Element {
           type: 'website',
         }}
       />
-      <Header useDarkBackground={false} />
+      <Header />
       <main id="main" role="main">
         <div className="w-full">
           <article
             id="getting-started"
-            className="relative bg-gray-50 pt-16 sm:pt-24 lg:pt-32"
+            className="relative pt-28 pt-16 sm:pt-24 lg:pt-32"
           >
             <header className="mx-auto max-w-prose px-4 text-center sm:max-w-3xl sm:px-6 lg:px-8">
               <div>
-                <h1 className="text-blue-nx-base text-base font-semibold uppercase tracking-wider">
+                <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
                   <span className="sr-only">Nx has </span> A strong and dynamic
                   community
                 </h1>
-                <p className="mt-2 text-4xl font-extrabold tracking-tight text-gray-800 sm:text-6xl">
+                <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
                   It's always better when we're together.
                 </p>
               </div>
@@ -108,41 +108,43 @@ export default function Community(props: CommunityProps): JSX.Element {
 
             <div className="mx-auto px-4 py-16 lg:px-8 lg:py-32 xl:max-w-7xl">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="hover:border-green-nx-base relative rounded-lg border-2 border-white bg-white p-5 shadow-sm transition">
-                  <ChatIcon className="text-green-nx-base mb-5 inline-block h-10 w-10" />
-                  <h4 className="mb-2 text-lg font-bold">Community</h4>
+                <div className="relative rounded-lg border border-slate-200 bg-white/60 p-5 shadow-sm transition hover:border-green-500 hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-green-500 dark:hover:bg-slate-800">
+                  <ChatBubbleLeftEllipsisIcon className="mb-5 inline-block h-10 w-10 text-green-500" />
+                  <h4 className="mb-2 text-lg font-bold dark:text-slate-300">
+                    Community
+                  </h4>
                   <a className="focus:outline-none" href="#community">
                     <span className="absolute inset-0" aria-hidden="true" />
-                    <p className="leading-relaxed text-gray-600">
+                    <p className="leading-relaxed">
                       There are many ways you can connect with the open-source
                       Nx community: Slack, Youtube, Twitter and email newsletter
                       are available to keep you on top of all the Nx things!
                     </p>
                   </a>
                 </div>
-                <div className="relative rounded-lg border-2 border-white bg-white p-5 shadow-sm transition hover:border-blue-500">
-                  <BeakerIcon className="mb-5 inline-block h-10 w-10 text-blue-500" />
+                <div className="relative rounded-lg border border-slate-200 bg-white/60 p-5 shadow-sm transition hover:border-blue-500 hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-sky-500 dark:hover:bg-slate-800">
+                  <BeakerIcon className="mb-5 inline-block h-10 w-10 text-blue-500 dark:text-sky-500" />
                   <h4 className="mb-2 text-lg font-bold">
                     Create and Share your own{' '}
                     <span className="sr-only">Nx plugin</span>
                   </h4>
                   <a className="focus:outline-none" href="#create-nx-plugin">
                     <span className="absolute inset-0" aria-hidden="true" />
-                    <p className="leading-relaxed text-gray-600">
+                    <p className="leading-relaxed">
                       Core Nx plugins are created and maintained by the Nx team
                       at Nrwl but you can easily create your own! Follow our
                       documentation on how to create your own plugin.
                     </p>
                   </a>
                 </div>
-                <div className="relative rounded-lg border-2 border-white bg-white p-5 shadow-sm transition hover:border-pink-500 sm:col-span-2 lg:col-span-1">
-                  <ClipboardListIcon className="mb-5 inline-block h-10 w-10 text-pink-500" />
+                <div className="relative rounded-lg border border-slate-200 bg-white/60 p-5 shadow-sm transition hover:border-pink-500 hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-pink-500 dark:hover:bg-slate-800">
+                  <ClipboardIcon className="mb-5 inline-block h-10 w-10 text-pink-500" />
                   <h4 className="mb-2 text-lg font-bold">
                     Browse the community plugin directory
                   </h4>
                   <a className="focus:outline-none" href="#plugin-directory">
                     <span className="absolute inset-0" aria-hidden="true" />
-                    <p className="leading-relaxed text-gray-600">
+                    <p className="leading-relaxed">
                       Check all the community plugins available for Nx! These
                       plugins have been approved by the Nx core team, are well
                       maintained and regularly updated to make sure they work
@@ -154,20 +156,20 @@ export default function Community(props: CommunityProps): JSX.Element {
             </div>
           </article>
 
-          <div id="connect-with-us" className="relative overflow-hidden py-24">
+          <div id="connect-with-us" className="py-28">
             <ConnectWithUs />
           </div>
 
-          <div id="create-nx-plugin" className="relative overflow-hidden py-24">
+          <div id="create-nx-plugin" className="py-28">
             <CreateNxPlugin />
           </div>
 
-          <div id="plugin-directory" className="relative overflow-hidden py-24">
+          <div id="plugin-directory" className="py-28">
             <PluginDirectory pluginList={props.pluginList} />
           </div>
         </div>
       </main>
-      <Footer useDarkBackground={false} />
+      <Footer />
     </>
   );
 }

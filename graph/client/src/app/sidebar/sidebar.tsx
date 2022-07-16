@@ -1,4 +1,4 @@
-import { InformationCircleIcon } from '@heroicons/react/solid';
+import { InformationCircleIcon } from '@heroicons/react/24/solid';
 import { useCallback } from 'react';
 import ExperimentalFeature from '../experimental-feature';
 import { useDepGraphService } from '../hooks/use-dep-graph';

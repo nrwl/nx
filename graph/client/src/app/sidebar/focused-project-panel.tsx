@@ -1,4 +1,4 @@
-import { ArrowCircleRightIcon, XCircleIcon } from '@heroicons/react/solid';
+import { ArrowRightCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
 import { memo } from 'react';
 
 export interface FocusedProjectPanelProps {
@@ -16,7 +16,7 @@ export const FocusedProjectPanel = memo(
           onClick={() => resetFocus()}
         >
           <p className="truncate transition duration-200 ease-in-out group-hover:opacity-60">
-            <ArrowCircleRightIcon className="-mt-1 mr-1 inline h-6 w-6" />
+            <ArrowRightCircleIcon className="-mt-1 mr-1 inline h-6 w-6" />
             <span id="focused-project-name">Focused on {focusedProject}</span>
           </p>
           <div className="absolute right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-500 transition-all duration-200 ease-in-out group-hover:translate-x-0 dark:bg-slate-800 dark:text-slate-300">
