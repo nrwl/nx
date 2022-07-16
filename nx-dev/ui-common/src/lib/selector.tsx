@@ -1,5 +1,5 @@
 import { Listbox, Transition } from '@headlessui/react';
-import { CheckIcon, SelectorIcon } from '@heroicons/react/solid';
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/solid';
 import { Fragment } from 'react';
 
 export interface SelectorProps<T> {
@@ -21,7 +21,7 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
               <Listbox.Button className="relative w-full cursor-pointer rounded border border-gray-200 bg-white py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm">
                 <span className="block truncate">{props.selected.label}</span>
                 <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                  <SelectorIcon
+                  <ChevronUpDownIcon
                     className="h-5 w-5 text-gray-500"
                     aria-hidden="true"
                   />

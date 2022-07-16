@@ -6,7 +6,7 @@ export function FourOhFour(): JSX.Element {
   return (
     <>
       <NextSeo title="Page not found" noindex={true} />
-      <Header useDarkBackground={false} />
+      <Header />
       <main id="main" role="main">
         <div className="w-full">
           <article

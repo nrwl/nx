@@ -1,4 +1,4 @@
-import { SearchIcon } from '@heroicons/react/solid';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import { PluginCard } from '@nrwl/nx-dev/ui-common';
 import { useState } from 'react';
 
@@ -30,12 +30,12 @@ export function PluginDirectory({
           </label>
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <SearchIcon className="h-5 w-5 text-gray-400" />
+              <MagnifyingGlassIcon className="h-5 w-5 text-slate-500" />
             </div>
             <input
               id="search"
               name="search"
-              className="focus:border-blue-nx-base focus:ring-blue-nx-base block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:text-gray-900 focus:placeholder-gray-400 focus:outline-none focus:ring-1 sm:text-sm"
+              className="block w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-slate-500 transition focus:placeholder-slate-400 dark:border-slate-900 dark:bg-slate-700"
               placeholder="Quick search"
               onChange={(event) => setSearchTerm(event.target.value)}
               type="search"

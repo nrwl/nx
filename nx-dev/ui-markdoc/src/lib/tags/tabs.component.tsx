@@ -17,7 +17,7 @@ export function Tabs({
     <TabContext.Provider value={currentTab}>
       <section className="mb-8 py-4">
         <div className="not-prose ">
-          <div className="border-b border-gray-100">
+          <div className="border-b border-slate-100 dark:border-slate-800">
             <nav className="-mb-px flex space-x-8" aria-label="Tabs">
               {labels.map((label: string) => (
                 <button
@@ -28,8 +28,8 @@ export function Tabs({
                   className={cx(
                     'whitespace-nowrap border-b-2 border-transparent py-4 px-2 text-sm font-medium',
                     label === currentTab
-                      ? 'border-slate-500 text-slate-800'
-                      : 'text-slate-500 hover:border-slate-500 hover:text-slate-800'
+                      ? 'border-blue-500 text-slate-800 dark:border-sky-500 dark:text-slate-300'
+                      : 'text-slate-500 hover:border-blue-500 hover:text-slate-800 dark:text-slate-400 dark:hover:border-sky-500 dark:hover:text-slate-300'
                   )}
                 >
                   {label}
@@ -57,5 +57,5 @@ export function Tab({
     return null;
   }
 
-  return <div className="prose">{children}</div>;
+  return <div className="prose prose-slate dark:prose-invert">{children}</div>;
 }

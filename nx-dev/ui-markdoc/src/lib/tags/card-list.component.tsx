@@ -8,7 +8,7 @@ export function CardList({ items }: { items: string }) {
       {parsedItems.map((item) => (
         <div
           key={item.name}
-          className="relative rounded-md border border-slate-100 bg-slate-50 p-4 shadow transition hover:bg-slate-100"
+          className="relative flex items-start rounded-md border border-slate-200 bg-slate-50/40 p-4 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
         >
           <a href={item.path} title={item.name}>
             <span className="absolute inset-0" aria-hidden="true"></span>

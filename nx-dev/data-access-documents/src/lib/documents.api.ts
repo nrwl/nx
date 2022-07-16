@@ -70,21 +70,29 @@ export class DocumentsApi {
 
     if (!found) return null;
 
-    const cardListItems = items?.map((i) => ({
-      name: i.name,
-      path: i.path ?? '/' + path.concat(i.id).join('/'),
-    }));
+    const cardsTemplate = items
+      ?.map((i) => ({
+        title: i.name,
+        description: i.description ?? '',
+        url: i.path ?? '/' + path.concat(i.id).join('/'),
+      }))
+      .map(
+        (card) =>
+          `{% card title="${card.title}" description="${card.description}" url="${card.url}" /%}\n`
+      )
+      .join('');
 
     return {
       filePath: '',
       data: {
         title: found?.name,
       },
-      content: `# ${found?.name}\n\n ${
-        found?.description ?? ''
-      }\n\n {% card-list items="${encodeURI(
-        JSON.stringify(cardListItems)
-      )}" /%}`,
+      content: [
+        `# ${found?.name}\n\n ${found?.description ?? ''}\n\n`,
+        '{% cards %}\n',
+        cardsTemplate,
+        '{% /cards %}\n\n',
+      ].join(''),
     };
   }
 
@@ -214,8 +222,9 @@ export class DocumentsApi {
   /**
    * Displays a list of all concepts, recipes or reference documents that are tagged with the specified tag
    * Tags are defined in map.json
-   * @param tag
    * @returns
+   * @param tags
+   * @param path
    */
   private getRelatedDocumentsSection(tags: string[], path: string[]): string {
     let relatedConcepts: MenuItem[] = [];

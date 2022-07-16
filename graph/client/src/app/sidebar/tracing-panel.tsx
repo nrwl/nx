@@ -1,9 +1,9 @@
 import {
-  DotsVerticalIcon,
+  EllipsisVerticalIcon,
   FlagIcon,
-  LocationMarkerIcon,
+  MapPinIcon,
   XCircleIcon,
-} from '@heroicons/react/solid';
+} from '@heroicons/react/24/solid';
 import { memo } from 'react';
 import { TracingAlgorithmType } from '../machines/interfaces';
 
@@ -55,7 +55,7 @@ export const TracingPanel = memo(
           </div>
 
           <div className="flex flex-row items-center truncate ">
-            <LocationMarkerIcon className="mr-2 h-5 w-5 text-slate-500 dark:text-slate-400" />
+            <MapPinIcon className="mr-2 h-5 w-5 text-slate-500 dark:text-slate-400" />
             {start ? (
               <div
                 className="group relative flex-1 cursor-pointer flex-col items-center overflow-hidden"
@@ -79,7 +79,7 @@ export const TracingPanel = memo(
           </div>
 
           <div>
-            <DotsVerticalIcon className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+            <EllipsisVerticalIcon className="h-5 w-5 text-slate-500 dark:text-slate-400" />
           </div>
 
           <div className="flex flex-row items-center truncate ">

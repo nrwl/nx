@@ -1,4 +1,4 @@
-import { ChevronRightIcon } from '@heroicons/react/outline';
+import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import { MenuItem } from '@nrwl/nx-dev/models-menu';
 
 export function ReferencesNavList({
@@ -9,7 +9,7 @@ export function ReferencesNavList({
     title: string;
     icon: JSX.Element;
   };
-  links: MenuItem[];
+  links: MenuItem;
 }): JSX.Element {
   return (
     <nav className="relative">
@@ -18,7 +18,7 @@ export function ReferencesNavList({
         {header.title}
       </h4>
       <ul className="space-y-0.5 text-sm">
-        {links.map((item, subIndex) => (
+        {links.itemList?.map((item, subIndex) => (
           <li key={[item.id, subIndex].join('-')}>
             <a
               href={item.path}
