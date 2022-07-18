@@ -13,6 +13,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.5.0": {
+      "version": "14.5.0-beta.4",
+      "packages": {
+        "express": {
+          "version": "^4.18.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
