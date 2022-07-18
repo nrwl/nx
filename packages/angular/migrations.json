@@ -1341,8 +1341,8 @@
         }
       }
     },
-    "14.4.0": {
-      "version": "14.4.0-beta.1",
+    "14.6.0": {
+      "version": "14.6.0-beta.0",
       "packages": {
         "jest-preset-angular": {
           "version": "~12.1.0",

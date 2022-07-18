@@ -55,16 +55,16 @@
       "factory": "./src/migrations/update-14-1-5/update-exports-jest-config"
     },
     "update-configs-jest-28": {
-      "version": "14.4.0-beta.1",
+      "version": "14.6.0-beta.0",
       "cli": "nx",
       "description": "Update jest configs to support jest 28 changes (https://jestjs.io/docs/upgrading-to-jest28#configuration-options)",
-      "factory": "./src/migrations/update-14-4-0/update-configs-jest-28"
+      "factory": "./src/migrations/update-14-6-0/update-configs-jest-28"
     },
     "update-tests-jest-28": {
-      "version": "14.4.0-beta.1",
+      "version": "14.6.0-beta.0",
       "cli": "nx",
       "description": "Update jest test files  to support jest 28 changes (https://jestjs.io/docs/upgrading-to-jest28)",
-      "factory": "./src/migrations/update-14-4-0/update-tests-jest-28"
+      "factory": "./src/migrations/update-14-6-0/update-tests-jest-28"
     }
   },
   "packageJsonUpdates": {
@@ -149,8 +149,8 @@
         }
       }
     },
-    "14.4.0": {
-      "version": "14.4.0-beta.1",
+    "14.6.0": {
+      "version": "14.6.0-beta.0",
       "packages": {
         "jest": {
           "version": "~28.1.1",

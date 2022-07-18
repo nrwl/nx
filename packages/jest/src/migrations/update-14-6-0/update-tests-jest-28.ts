@@ -5,13 +5,7 @@ import {
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import {
-  CallExpression,
-  isCallExpression,
-  type StringLiteral,
-  SyntaxKind,
-  TypeReferenceNode,
-} from 'typescript';
+import * as ts from 'typescript';
 import { JestExecutorOptions } from '../../executors/jest/schema';
 
 export function updateTestsJest28(tree: Tree) {
@@ -61,7 +55,7 @@ export function updateJestTimers(
   return tsquery.replace(
     fileContents,
     'CallExpression',
-    (node: StringLiteral) => {
+    (node: ts.StringLiteral) => {
       if (!node?.getText().startsWith('jest.useFakeTimers')) {
         return;
       }
@@ -85,8 +79,8 @@ export function updateJestTimers(
 /**
  * make sure using jest.fn<T>
  */
-function isTypedJestFnMock(node: CallExpression): boolean {
-  return isCallExpression(node) && node.getText().startsWith('jest.fn<');
+function isTypedJestFnMock(node: ts.CallExpression): boolean {
+  return ts.isCallExpression(node) && node.getText().startsWith('jest.fn<');
 }
 
 /**
@@ -96,11 +90,11 @@ function isTypedJestFnMock(node: CallExpression): boolean {
  * jest.fn<number, MyType[]>()
  * jest.fn<number, [string, number, SomeType]>()
  */
-function isValid2Args(node: CallExpression): boolean {
+function isValid2Args(node: ts.CallExpression): boolean {
   const r =
     node?.typeArguments.length === 2 &&
-    (node.typeArguments[1]?.kind === SyntaxKind.TupleType ||
-      node.typeArguments[1]?.kind === SyntaxKind.ArrayType);
+    (node.typeArguments[1]?.kind === ts.SyntaxKind.TupleType ||
+      node.typeArguments[1]?.kind === ts.SyntaxKind.ArrayType);
   return r;
 }
 
@@ -111,11 +105,11 @@ function isValid2Args(node: CallExpression): boolean {
  * jest.fn<string>()
  * jest.fn<() => Promise<string>>() is already valid, don't change it.
  */
-function isValid1Arg(node: CallExpression): boolean {
+function isValid1Arg(node: ts.CallExpression): boolean {
   const r =
     node?.typeArguments.length === 1 &&
-    node.typeArguments[0]?.kind !== SyntaxKind.FunctionType &&
-    node.typeArguments[0]?.kind !== SyntaxKind.TypeQuery;
+    node.typeArguments[0]?.kind !== ts.SyntaxKind.FunctionType &&
+    node.typeArguments[0]?.kind !== ts.SyntaxKind.TypeQuery;
   return r;
 }
 
@@ -123,22 +117,22 @@ function isValid1Arg(node: CallExpression): boolean {
  * has a type reference as a type args
  * jest.fn<ReturnType<typeof add>, Parameters<typeof add>>();
  */
-function isValidTypeRef(node: CallExpression): boolean {
+function isValidTypeRef(node: ts.CallExpression): boolean {
   const r =
-    node.typeArguments[0].kind === SyntaxKind.TypeReference &&
-    !!(node.typeArguments?.[0] as TypeReferenceNode)?.typeArguments;
+    node.typeArguments[0].kind === ts.SyntaxKind.TypeReference &&
+    !!(node.typeArguments?.[0] as ts.TypeReferenceNode)?.typeArguments;
   return r;
 }
 
 /**
  * has valid type args. prevent converting an already converted jest.fn<T>()
  */
-function isValidType(node: CallExpression): boolean {
+function isValidType(node: ts.CallExpression): boolean {
   const r =
     node?.typeArguments.length === 1 &&
-    (node.typeArguments[0]?.kind === SyntaxKind.FunctionType ||
-      node.typeArguments[0]?.kind === SyntaxKind.TypeReference ||
-      node.typeArguments[0]?.kind === SyntaxKind.TypeQuery ||
+    (node.typeArguments[0]?.kind === ts.SyntaxKind.FunctionType ||
+      node.typeArguments[0]?.kind === ts.SyntaxKind.TypeReference ||
+      node.typeArguments[0]?.kind === ts.SyntaxKind.TypeQuery ||
       node.parent.getText().includes('/** TODO:')); // has already been marked by a previous run.
   return r;
 }
@@ -153,7 +147,7 @@ export function updateJestFnMocks(fileContents: string): string {
   return tsquery.replace(
     fileContents,
     'CallExpression',
-    (node: CallExpression) => {
+    (node: ts.CallExpression) => {
       if (!isTypedJestFnMock(node) || isValidType(node)) {
         return;
       }
@@ -165,7 +159,7 @@ export function updateJestFnMocks(fileContents: string): string {
       }
 
       if (isValidTypeRef(node)) {
-        const innerType = (node.typeArguments[0] as TypeReferenceNode)
+        const innerType = (node.typeArguments[0] as ts.TypeReferenceNode)
           .typeArguments;
         return `${node.getText().split('<')[0]}<${innerType[0].getText()}>()`;
       }
@@ -178,20 +172,29 @@ export function updateJestFnMocks(fileContents: string): string {
 /**
  * import expect from 'expect' -> import { expect } from 'expect'
  * const expect = require('expect') -> const { expect } = require('expect')
+ * import { mocked } from 'ts-jest/utils' => import { mocked } from 'jest-mock';
+ * const { mocked } = require('ts-jest/utils'); => const { mocked } = require('jest-mock');
  */
 export function updateJestImports(content: string): string {
-  const updatedImport = tsquery.replace(
+  const mockUpdatedImports = tsquery.replace(
     content,
-    'ImportClause > Identifier[name="expect"]',
+    ':matches(ImportDeclaration:has(Identifier[name="mocked"]) StringLiteral[value="ts-jest/utils"], VariableStatement:has(Identifier[name="mocked"]) StringLiteral[value="ts-jest/utils"])',
     () => {
-      return `{ expect }`;
+      return "'jest-mock'";
     }
   );
+
   return tsquery.replace(
-    updatedImport,
-    'VariableDeclaration > Identifier[name="expect"]',
-    () => {
-      return `{ expect }`;
+    mockUpdatedImports,
+    ':declaration:has(StringLiteral[value="expect"])',
+    (node: ts.ImportDeclaration | ts.VariableDeclaration) => {
+      if (ts.isImportDeclaration(node)) {
+        return `import { expect } from 'expect';`;
+      }
+      if (ts.isVariableDeclaration(node)) {
+        return `{ expect } = require('expect')`; // this query doesn't include the ; so we don't need to add it.
+      }
+      return;
     }
   );
 }

@@ -30,9 +30,9 @@ describe('Jest Migration - jest 28 test files', () => {
     tree.write(
       'libs/blah/src/lib/something/something.spec.ts',
       `
-     import expect from 'expect'
-     import { something } from './something'
-     import { jest } from '@jest/globals'
+     import expect from 'expect';
+     import { something } from './something';
+     import { jest } from '@jest/globals';
      describe('my cool test', () => {
         it('should do something', () => {
           jest.useFakeTimers('modern')
@@ -54,8 +54,8 @@ describe('Jest Migration - jest 28 test files', () => {
     tree.write(
       'libs/blah/src/lib/something/another.spec.ts',
       `
-     import expect from 'expect'
-     import { something } from './something'
+     import expect from 'expect';
+     import { something } from './something';
      describe('my cool test', () => {
         it('should do something', () => {
           jest.useFakeTimers('modern')
@@ -87,9 +87,9 @@ describe('Jest Migration - jest 28 test files', () => {
 
     expect(tree.read('libs/blah/src/lib/something/something.spec.ts', 'utf-8'))
       .toEqual(`
-     import { expect } from 'expect'
-     import { something } from './something'
-     import { jest } from '@jest/globals'
+     import { expect } from 'expect';
+     import { something } from './something';
+     import { jest } from '@jest/globals';
      describe('my cool test', () => {
         it('should do something', () => {
           jest.useFakeTimers()
@@ -108,8 +108,8 @@ describe('Jest Migration - jest 28 test files', () => {
      })`);
     expect(tree.read('libs/blah/src/lib/something/another.spec.ts', 'utf-8'))
       .toEqual(`
-     import { expect } from 'expect'
-     import { something } from './something'
+     import { expect } from 'expect';
+     import { something } from './something';
      describe('my cool test', () => {
         it('should do something', () => {
           jest.useFakeTimers()
@@ -128,13 +128,17 @@ describe('Jest Migration - jest 28 test files', () => {
      })`);
   });
 
-  it('should update "expect" default import to named import', () => {
-    // import expect from 'expect' => import { expect } from 'expect'
-    // const expect = require('expect') => const { expect } = require('expect')
+  it('should update ts-jest/utils to jest-mock', () => {
+    // import { mocked } from 'ts-jest/utils' => import { mocked } from 'jest-mock';
+    // const { mocked } = require('ts-jest/utils'); => const { mocked } = require('jest-mock');
+
     const actual = updateJestImports(`
-    import expect from 'expect'
-    const expect = require('expect')
-    import somethingExpected from 'my-expect'
+    import { mocked } from 'ts-jest/utils';
+    import { somethingElse } from 'ts-jest/utils';
+    const { mocked } = require('ts-jest/utils');
+    const { somethingElse } = require('ts-jest/utils');
+    import * from ts from 'typescript'
+    const mockTs = mocked(ts);
     
     describe('something expected', () => {
       it('should do something', () => {
@@ -145,10 +149,45 @@ describe('Jest Migration - jest 28 test files', () => {
     `);
 
     const expected = `
-    import { expect } from 'expect'
-    const { expect } = require('expect')
-    import somethingExpected from 'my-expect'
+    import { mocked } from 'jest-mock';
+    import { somethingElse } from 'ts-jest/utils';
+    const { mocked } = require('jest-mock');
+    const { somethingElse } = require('ts-jest/utils');
+    import * from ts from 'typescript'
+    const mockTs = mocked(ts);
     
+    describe('something expected', () => {
+      it('should do something', () => {
+        const actual = somethingExpected('abc'); 
+        expect(1 + 1).toBe(2);
+      });
+    })
+    `;
+    expect(actual).toEqual(expected);
+  });
+  it('should update "expect" default import to named import', () => {
+    // import expect from 'expect' => import { expect } from 'expect'
+    // const expect = require('expect') => const { expect } = require('expect')
+    const actual = updateJestImports(`
+    import expect from 'expect';
+    const expect = require('expect');
+    const expect = require('something-else');
+    import somethingExpected from 'my-expect';
+
+    describe('something expected', () => {
+      it('should do something', () => {
+        const actual = somethingExpected('abc'); 
+        expect(1 + 1).toBe(2);
+      });
+    })
+    `);
+
+    const expected = `
+    import { expect } from 'expect';
+    const { expect } = require('expect');
+    const expect = require('something-else');
+    import somethingExpected from 'my-expect';
+
     describe('something expected', () => {
       it('should do something', () => {
         const actual = somethingExpected('abc'); 
