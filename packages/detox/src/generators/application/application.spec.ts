@@ -27,6 +27,7 @@ describe('detox application generator', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.None,
+        framework: 'react-native',
       });
     });
 
@@ -60,6 +61,7 @@ describe('detox application generator', () => {
         directory: 'my-dir',
         project: 'my-dir-my-app',
         linter: Linter.None,
+        framework: 'react-native',
       });
     });
 
@@ -94,6 +96,7 @@ describe('detox application generator', () => {
         name: 'my-dir/my-app-e2e',
         project: 'my-dir-my-app',
         linter: Linter.None,
+        framework: 'react-native',
       });
     });
 
@@ -128,6 +131,7 @@ describe('detox application generator', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.None,
+        framework: 'react-native',
       });
 
       const tsConfig = readJson(tree, 'apps/my-app-e2e/tsconfig.json');
@@ -141,6 +145,7 @@ describe('detox application generator', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.None,
+        framework: 'react-native',
       });
 
       const tsConfig = readJson(tree, 'apps/my-app-e2e/tsconfig.json');

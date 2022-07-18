@@ -21,6 +21,12 @@
       },
       "x-prompt": "What name would you like to use for the E2E project?"
     },
+    "framework": {
+      "type": "string",
+      "description": "App framework to test",
+      "enum": ["react-native", "expo"],
+      "x-prompt": "What app framework should detox test?"
+    },
     "directory": {
       "type": "string",
       "description": "A directory where the project is placed."
@@ -47,5 +53,5 @@
       "default": false
     }
   },
-  "required": ["name", "project"]
+  "required": ["name", "project", "framework"]
 }

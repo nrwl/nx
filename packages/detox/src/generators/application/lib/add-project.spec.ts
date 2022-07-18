@@ -31,11 +31,14 @@ describe('Add Project', () => {
       addProject(tree, {
         name: 'my-app-e2e',
         projectName: 'my-app-e2e',
+        projectDirectory: 'apps',
         projectRoot: 'apps/my-app-e2e',
         project: 'my-app',
         appFileName: 'my-app',
         appClassName: 'MyApp',
+        appDisplayName: 'MyApp',
         linter: Linter.EsLint,
+        framework: 'react-native',
       });
     });
 
@@ -76,11 +79,14 @@ describe('Add Project', () => {
       addProject(tree, {
         name: 'my-dir-my-app-e2e',
         projectName: 'my-dir-my-app-e2e',
+        projectDirectory: 'apps',
         projectRoot: 'apps/my-dir/my-app-e2e',
         project: 'my-dir-my-app',
         appFileName: 'my-app',
         appClassName: 'MyApp',
+        appDisplayName: 'MyApp',
         linter: Linter.EsLint,
+        framework: 'react-native',
       });
     });
 
