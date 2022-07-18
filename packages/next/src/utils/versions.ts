@@ -7,3 +7,4 @@ export const lessLoader = '11.0.0';
 export const stylusLoader = '7.0.0';
 export const emotionServerVersion = '11.4.0';
 export const babelPluginStyledComponentsVersion = '1.10.7';
+export const tsLibVersion = '^2.3.0';

@@ -17,6 +17,7 @@ import {
   jestPresetAngularVersion,
   rxjsVersion,
   tsNodeVersion,
+  tsLibVersion,
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
@@ -109,7 +110,7 @@ function updateDependencies(host: Tree): GeneratorCallback {
       '@angular/platform-browser-dynamic': angularVersion,
       '@angular/router': angularVersion,
       rxjs: rxjsVersion,
-      tslib: '^2.0.0',
+      tslib: tsLibVersion,
       'zone.js': '~0.11.4',
     },
     {

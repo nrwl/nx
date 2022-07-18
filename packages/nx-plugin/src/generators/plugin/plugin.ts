@@ -15,7 +15,7 @@ import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies'
 import { swcNodeVersion } from 'nx/src/utils/versions';
 import * as path from 'path';
 
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, tsLibVersion } from '../../utils/versions';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import { executorGenerator } from '../executor/executor';
 import { generatorGenerator } from '../generator/generator';
@@ -105,7 +105,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       '@nrwl/jest': nxVersion,
       '@nrwl/js': nxVersion,
       '@swc-node/register': swcNodeVersion,
-      tslib: '^2.0.0',
+      tslib: tsLibVersion,
     }
   );
 
