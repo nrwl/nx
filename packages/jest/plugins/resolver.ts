@@ -1,6 +1,6 @@
+import type defaultResolver from 'jest-resolve/build/defaultResolver';
 import { dirname, extname } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
-import type defaultResolver from 'jest-resolve/build/defaultResolver';
 
 interface ResolveOptions {
   rootDir: string;
@@ -37,7 +37,29 @@ function getCompilerSetup(rootDir: string) {
   const host = ts.createCompilerHost(compilerOptions, true);
   return { compilerOptions, host };
 }
-
+// https://jestjs.io/docs/upgrading-to-jest28#packagejson-exports
+const pkgNamesToTarget = new Set([
+  'nanoid',
+  'uuid',
+  'rxjs',
+  '@firebase/auth',
+  '@firebase/storage',
+  '@firebase/functions',
+  '@firebase/database',
+  '@firebase/auth-compat',
+  '@firebase/database-compat',
+  '@firebase/app-compat',
+  '@firebase/firestore',
+  '@firebase/firestore-compat',
+  '@firebase/messaging',
+  '@firebase/util',
+  ...(process.env.NX_JEST_PACKAGE_NAMES
+    ? process.env.NX_JEST_PACKAGE_NAMES.split(',')
+    : []
+  )
+    .map((p) => p.trim())
+    .filter((p) => p),
+]);
 module.exports = function (path: string, options: ResolveOptions) {
   const ext = extname(path);
   if (
@@ -52,7 +74,16 @@ module.exports = function (path: string, options: ResolveOptions) {
   try {
     try {
       // Try to use the defaultResolver with default options
-      return options.defaultResolver(path, options);
+      return options.defaultResolver(path, {
+        ...options,
+        packageFilter: (pkg) => {
+          if (pkgNamesToTarget.has(pkg.name as string)) {
+            delete pkg.exports;
+            delete pkg.module;
+          }
+          return pkg;
+        },
+      });
     } catch {
       // Try to use the defaultResolver with a packageFilter
       return options.defaultResolver(path, {
