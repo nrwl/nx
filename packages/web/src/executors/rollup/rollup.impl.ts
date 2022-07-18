@@ -4,7 +4,7 @@ import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import { join } from 'path';
 import { from, Observable, of } from 'rxjs';
 import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
-import { eachValueFrom } from 'rxjs-for-await';
+import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
 import type { ExecutorContext } from '@nrwl/devkit';
 import {

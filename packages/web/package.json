@@ -89,7 +89,6 @@
     "rollup-plugin-postcss": "^4.0.1",
     "rollup-plugin-typescript2": "^0.31.1",
     "rxjs": "^6.5.4",
-    "rxjs-for-await": "0.0.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.2.0",
     "semver": "7.3.4",
