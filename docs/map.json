@@ -626,7 +626,7 @@
             "file": "shared/guides/misc-ngrx"
           },
           {
-            "name": "Using DataPersistence",
+            "name": "Using Data Persistence operators",
             "id": "misc-data-persistence",
             "file": "shared/guides/misc-data-persistence"
           },

@@ -1,4 +1,4 @@
-# Using DataPersistence
+# Using Data Persistence operators
 
 Managing state is a hard problem. We need to coordinate multiple backends, web workers, and UI components, all of which update the state concurrently.
 
