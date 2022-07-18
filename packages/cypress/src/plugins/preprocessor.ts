@@ -62,7 +62,6 @@ export function getWebpackConfig(config: any) {
     plugins: [
       new ForkTsCheckerWebpackPlugin({
         typescript: {
-          enabled: true,
           configFile: config.env.tsConfig,
         },
       }),

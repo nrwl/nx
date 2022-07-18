@@ -40,7 +40,7 @@
     "@nrwl/storybook": "file:../storybook",
     "@nrwl/web": "file:../web",
     "@nrwl/workspace": "file:../workspace",
-    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@storybook/node-logger": "6.1.20",
     "@svgr/webpack": "^6.1.2",
     "chalk": "4.1.0",
