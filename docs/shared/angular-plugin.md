@@ -80,6 +80,6 @@ Read more about:
 - [Angular Nx Tutorial](/angular-tutorial/01-create-application)
 - [Setup Module Federation with Angular and Nx](/module-federation/faster-builds)
 - [Using NgRx](/guides/misc-ngrx)
-- [Using DataPersistence](/guides/misc-data-persistence)
+- [Using Data Persistence operators](/guides/misc-data-persistence)
 - [Upgrading an AngularJS application to Angular](/migration/migration-angularjs)
 - [Using Tailwind CSS with Angular projects](/guides/using-tailwind-css-with-angular-projects)
