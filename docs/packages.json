@@ -212,7 +212,8 @@
         "host",
         "remote",
         "cypress-component-configuration",
-        "component-test"
+        "component-test",
+        "setup-tailwind"
       ]
     }
   },
