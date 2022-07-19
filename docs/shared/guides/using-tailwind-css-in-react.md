@@ -91,3 +91,31 @@ Next, import tailwind styles to the application's base `styles.css` or `styles.s
 @tailwind base;
 @tailwind utilities;
 ```
+
+## Step 4: Applying configuration to libraries
+
+Lastly, let's update the application's project configuration to point to the `postcss.config.js` file that we created in [step 2](#step-2:-initialize-tailwind).
+
+Open up the `apps/{your app here}/project.json` file and add the following to the build target.
+
+```json lines
+{
+  // ...
+  "targets": {
+    "build": {
+      "executor": "@nrwl/web:webpack",
+      "options": {
+        // ...
+        "postcssConfig": "apps/{your app here}/postcss.config.js"
+      }
+    }
+  }
+  // ...
+}
+```
+
+By specifying the `postcssConfig` option, the PostCSS and Tailwind configuration will be applied to all libraries used by the application as well.
+
+{% callout type="note" title="Using library-specific configuration files" %}
+If your libraries have their own `postcss.config.js` and `tailwind.config.js` files then you should not use the `postcssConfig` option. Doing so will ignore the library-specific configuration and apply the application's configuration to everything.
+{%/ callout %}
