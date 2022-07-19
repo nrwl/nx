@@ -182,7 +182,6 @@ export function getBaseWebpackPartial(
     extraPlugins.push(
       new ForkTsCheckerWebpackPlugin({
         typescript: {
-          enabled: true,
           configFile: builderOptions.tsConfig,
           memoryLimit: builderOptions.memoryLimit || 2018,
         },

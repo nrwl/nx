@@ -224,7 +224,10 @@ function applyAdditionalShared(
 function applyDefaultEagerPackages(
   sharedConfig: Record<string, SharedLibraryConfig>
 ) {
-  const DEFAULT_PACKAGES_TO_LOAD_EAGERLY = ['@angular/localize/init'];
+  const DEFAULT_PACKAGES_TO_LOAD_EAGERLY = [
+    '@angular/localize',
+    '@angular/localize/init',
+  ];
   for (const pkg of DEFAULT_PACKAGES_TO_LOAD_EAGERLY) {
     sharedConfig[pkg] = {
       ...(sharedConfig[pkg] ?? {}),

@@ -39,7 +39,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     () => reactEslintJson
   );
 
-  const installTask = await addDependenciesToPackageJson(
+  const installTask = addDependenciesToPackageJson(
     host,
     extraEslintDependencies.dependencies,
     extraEslintDependencies.devDependencies

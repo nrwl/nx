@@ -36,7 +36,6 @@ Run your container with all the configuration options we generated above:
 ```bash
 > docker run --name cloud \
     -p 80:8081 \
-    -e NX_CLOUD_MODE=private-community \
     -e NX_CLOUD_APP_URL="https://cloud.myorg.com" \
     -e ADMIN_PASSWORD=admin \
     -e GITHUB_WEBHOOK_SECRET=SECRET_YOU_PROVISIONED \

@@ -41,10 +41,6 @@ Third, configure the following env variables:
   {
     "name": "NX_CLOUD_APP_URL",
     "value": "url-accessible-from-ci-and-dev-machines"
-  },
-  {
-    "name": "NX_CLOUD_MODE",
-    "value": "private-community"
   }
 ]
 ```
@@ -103,10 +99,6 @@ For reference, here is an example complete task definition:
         {
           "name": "NX_CLOUD_APP_URL",
           "value": "url-accessible-from-ci-and-dev-machines"
-        },
-        {
-          "name": "NX_CLOUD_MODE",
-          "value": "private-community"
         }
       ],
       "resourceRequirements": null,

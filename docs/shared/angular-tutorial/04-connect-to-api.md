@@ -1,7 +1,7 @@
 # Angular Nx Tutorial - Step 4: Connect to an API
 
 {% youtube
-src="https://www.youtube.com/embed/JlKAwGXmpac"
+src="https://www.youtube.com/embed/digMpZzPtg8"
 title="Nx.dev Tutorial | Angular | Step 4: Connect to API"
 width="100%" /%}
 

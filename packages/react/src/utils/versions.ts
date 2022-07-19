@@ -3,11 +3,11 @@ export const nxVersion = require('../../package.json').version;
 export const reactVersion = '18.2.0';
 export const reactDomVersion = '18.2.0';
 export const reactIsVersion = '18.2.0';
-export const typesReactVersion = '18.0.14';
-export const typesReactDomVersion = '18.0.5';
+export const typesReactVersion = '18.0.15';
+export const typesReactDomVersion = '18.0.6';
 export const typesReactIsVersion = '17.0.3';
 
-export const typesNodeVersion = '18.0.0';
+export const typesNodeVersion = '18.0.4';
 
 export const styledComponentsVersion = '5.3.5';
 export const typesStyledComponentsVersion = '5.1.25';
@@ -24,7 +24,7 @@ export const typesReactRouterDomVersion = '5.3.3';
 
 export const testingLibraryReactVersion = '13.3.0';
 
-export const reduxjsToolkitVersion = '1.8.2';
+export const reduxjsToolkitVersion = '1.8.3';
 export const reactReduxVersion = '8.0.2';
 export const reactTestRendererVersion = '18.2.0';
 

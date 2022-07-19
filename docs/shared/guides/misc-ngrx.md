@@ -36,7 +36,6 @@ The `name` and the `--module=` arguments are required. The `no-interactive` opti
 The most common additional options are:
 
 - `root` - Set up the initial NgModule imports for NgRx Store, Effects, Router-Store, and Store DevTools.
-- `syntax` - NgRx introduced new creator functions for actions, reducers, and effects that provide the same type-safety with less code than action classes.
 - `facade` - Optional. If you prefer to further encapsulate NgRx from your components, add an injectable facade. See the blog [Better State Management with Facades](https://blog.nrwl.io/nrwl-nx-6-2-angular-6-1-and-better-state-management-e139da2cd074#cb93) for details.
 
 See the [API Docs](/packages/angular/generators/ngrx) for detailed descriptions of all the available options. Also visit the [NgRx](https://ngrx.io) website for more guides and documentation about the libraries.

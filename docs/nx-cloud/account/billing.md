@@ -1,6 +1,6 @@
 # Billing and Utilization
 
-When connected to Nx Cloud, every workspace can start using the Distributed Computation Cache and Distributed Task Execution right away, without having to set up any billing information.
+When connected to Nx Cloud every workspace can start using the Distributed Computation Cache and Distributed Task Execution right away, without having to set up any billing information.
 
 However, some large workspaces or those using Nx Private Cloud will need to have a subscription set up.
 
@@ -28,7 +28,7 @@ Some organizations prefer flat pricing because of its predictability, and this i
 
 ## Coupons and Subscriptions
 
-If you use the public version of Nx Cloud or Nx Private Cloud, there are two ways to set up billing:
+There are two ways to set up billing:
 
 1. You can purchase credit using a credit card. This is useful if you want to try Nx Cloud for a longer period of time or if you run out of Nx Cloud credits.
 2. You can set up a subscription with a monthly spending limit. If you reach the limit, the Distributed Computation Cache and Distributed Task Execution features will be paused until the next billing cycle. Both the credit card and invoice payment methods are supported.
