@@ -13,6 +13,7 @@ import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import {
   createSupportFileImport,
   updateImports,
+  updatePluginFile,
   updateProjectPaths,
 } from './conversion.util';
 import { migrateCypressProject } from './migrate-to-cypress-ten';
@@ -445,6 +446,91 @@ describe('a', () => {
         oldImportPathLeaf: 'support/something/neat',
         newImportPathLeaf: 'support/e2e',
       });
+    });
+  });
+
+  describe(updatePluginFile.name, () => {
+    it('should update module.exports for ts files', () => {
+      tree.write(
+        'apps/app-e2e/src/plugins/index.ts',
+        `
+function myCoolFunction() {
+  console.log('cool') 
+}
+
+module.exports = function(on, config) {
+  // do stuff
+}
+
+module.exports.blah = myCoolFunction;
+`
+      );
+      const actual = updatePluginFile(
+        tree,
+        { root: 'apps/app-e2e' },
+        {
+          cypressConfigJson: {},
+          cypressConfigTs: { e2e: { pluginsFile: './src/plugins/index.ts' } },
+        }
+      );
+
+      expect(actual.cypressConfigTs.e2e.pluginsFile).toEqual(
+        './src/plugins/index'
+      );
+      expect(tree.read('apps/app-e2e/src/plugins/index.ts', 'utf-8')).toEqual(`
+function myCoolFunction() {
+  console.log('cool') 
+}
+
+export default function(on, config) {
+  // do stuff
+}
+
+export const blah = myCoolFunction;
+`);
+    });
+    it('should not update .js file', () => {
+      const pluginFileContent = `
+function myCoolFunction() {
+  console.log('cool') 
+}
+
+module.exports = function(on, config) {
+  // do stuff
+}
+
+module.exports.blah = myCoolFunction;
+`;
+      tree.write('apps/app-e2e/src/plugins/index.js', pluginFileContent);
+      const actual = updatePluginFile(
+        tree,
+        { root: 'apps/app-e2e' },
+        {
+          cypressConfigJson: {},
+          cypressConfigTs: { e2e: { pluginsFile: './src/plugins/index.js' } },
+        }
+      );
+
+      expect(actual.cypressConfigTs.e2e.pluginsFile).toEqual(
+        './src/plugins/index'
+      );
+      expect(tree.read('apps/app-e2e/src/plugins/index.js', 'utf-8')).toEqual(
+        pluginFileContent
+      );
+    });
+
+    it('should not update if no file is preset', () => {
+      const actual = updatePluginFile(
+        tree,
+        { root: 'apps/app-e2e' },
+        {
+          cypressConfigJson: {},
+          cypressConfigTs: { e2e: { pluginsFile: false } },
+        }
+      );
+
+      expect(actual.cypressConfigTs.e2e.pluginsFile).toBeFalsy();
+      expect(tree.exists('apps/app-e2e/src/plugins/index.ts')).toBeFalsy();
     });
   });
 });

@@ -344,3 +344,45 @@ export function addConfigToTsConfig(
     );
   }
 }
+
+export function updatePluginFile(
+  tree: Tree,
+  projectConfig: ProjectConfiguration,
+  cypressConfigs: {
+    cypressConfigTs: Record<string, any>;
+    cypressConfigJson: Record<string, any>;
+  }
+) {
+  // if ts file change module.exports = to export default
+  // if js file don't do anything
+  // update cypressConfigTs.e2e to remove file extension
+  const pluginsFile = cypressConfigs.cypressConfigTs?.e2e?.pluginsFile;
+  if (!pluginsFile) {
+    return cypressConfigs;
+  }
+  const ext = extname(pluginsFile);
+  const updatedCypressConfigs = {
+    ...cypressConfigs,
+    cypressConfigTs: {
+      e2e: {
+        ...cypressConfigs.cypressConfigTs.e2e,
+        pluginsFile: pluginsFile.replace(ext, ''),
+      },
+    },
+  };
+
+  const pluginFilePath = joinPathFragments(projectConfig.root, pluginsFile);
+
+  if (ext === '.ts' && tree.exists(pluginFilePath)) {
+    const pluginFileContent = tree.read(pluginFilePath, 'utf-8');
+
+    tree.write(
+      pluginFilePath,
+      pluginFileContent
+        .replace('module.exports =', 'export default')
+        .replace(/module\.exports\.(.*?)=/g, 'export const $1=')
+    );
+  }
+
+  return updatedCypressConfigs;
+}
