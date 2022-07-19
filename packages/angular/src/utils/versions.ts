@@ -10,4 +10,5 @@ export const angularEslintVersion = '~14.0.0';
 export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';
 export const autoprefixerVersion = '^10.4.0';
+export const tsLibVersion = '^2.3.0';
 export const tsNodeVersion = '~10.8.0';

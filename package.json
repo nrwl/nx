@@ -239,7 +239,6 @@
     "ts-node": "10.8.1",
     "tsconfig-paths": "^3.9.0",
     "tsconfig-paths-webpack-plugin": "3.5.2",
-    "tslib": "^2.3.0",
     "tslint": "6.1.3",
     "tslint-to-eslint-config": "^2.13.0",
     "typedoc": "0.22.9",

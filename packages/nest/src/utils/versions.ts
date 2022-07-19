@@ -9,3 +9,5 @@ export const rxjsVersion6 = '~6.6.3';
 export const rxjsVersion7 = '^7.0.0';
 
 export const reflectMetadataVersion = '^0.1.13';
+
+export const tsLibVersion = '^2.3.0';
