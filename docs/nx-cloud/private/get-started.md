@@ -199,11 +199,11 @@ If you are using a local S3 installation (e.g., Minio), you can set the endpoint
 -e AWS_S3_BUCKET="nx-cache-bucket-name"
 ```
 
-**Note:** Remember to
-set [a cache item expiration time](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-expire-general-considerations.html)
-. The default is currently 4 weeks. If you would like to keep items for longer, for example for 8 weeks, please remember
+{% callout type="note" title="On cache item expiration time" %}
+Remember to set [a cache item expiration time](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-expire-general-considerations.html). The default is currently 4 weeks. If you would like to keep items for longer, for example for 8 weeks, please remember
 to set the `NX_CACHE_EXPIRATION_PERIOD_IN_DAYS=56` env variable as well, so the container knows when to expire the Mongo
 cache entries as well.
+{% /callout %}
 
 ### Using Azure
 
@@ -220,5 +220,6 @@ need to create a container in your storage account before starting the Nx Cloud 
 
 If you use an external file storage and an external MongoDB instance, you don't have to provision the volume.
 
-**Note:** See note above about setting a cache expiration time. For Azure blob
-storage, [see this guide](https://docs.microsoft.com/en-us/azure/cdn/cdn-manage-expiration-of-blob-content).
+{% callout type="note" title="Cache expiration time" %}
+See note above about setting a cache expiration time. For Azure blob storage, [see this guide](https://docs.microsoft.com/en-us/azure/cdn/cdn-manage-expiration-of-blob-content).
+{% /callout %}

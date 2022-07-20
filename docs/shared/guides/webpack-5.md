@@ -32,8 +32,9 @@ To opt into webpack 5 your can run the migration generator from:
 npx nx g @nrwl/node:webpack5
 ```
 
-**Note:** If you already ran the `@nrwl/web:webpack5` generator, there is no need to also run the `@nrwl/node:webpack`
-generator. They both install the same packages and are interchangeable.
+{% callout type="note" title="Note" %}
+If you already ran the `@nrwl/web:webpack5` generator, there is no need to also run the `@nrwl/node:webpack` generator. They both install the same packages and are interchangeable.
+{% /callout %}
 
 ### Webpack 5 for Next.js Apps
 
