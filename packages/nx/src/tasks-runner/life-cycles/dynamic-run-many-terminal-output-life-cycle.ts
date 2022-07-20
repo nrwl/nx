@@ -60,6 +60,7 @@ export async function createRunManyDynamicOutputRenderer({
   const totalProjects = projectNames.length;
   const totalDependentTasks = totalTasks - totalProjects;
   const targetName = args.target;
+  const configuration = args.configuration;
   const projectRows = projectNames.map((projectName) => {
     return {
       projectName,
@@ -206,7 +207,10 @@ export async function createRunManyDynamicOutputRenderer({
           `   ${output.dim.cyan(
             dots.frames[projectRowsCurrentFrame]
           )}    ${output.formatCommand(
-            projectRow.projectName + ':' + targetName
+            projectRow.projectName +
+              ':' +
+              targetName +
+              (configuration ? ':' + configuration : '')
           )}`
         );
       }
