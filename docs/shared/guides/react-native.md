@@ -16,7 +16,9 @@ npx create-nx-workspace happynrwl \
 --appName=mobile
 ```
 
-**Note:** You can also run the command without arguments to go through the interactive prompts.
+{% callout type="note" title="Don't know what you need?" %}
+You can also run the command without arguments to go through the interactive prompts.
+{% /callout %}
 
 ```bash
 npx create-nx-workspace happynrwl
