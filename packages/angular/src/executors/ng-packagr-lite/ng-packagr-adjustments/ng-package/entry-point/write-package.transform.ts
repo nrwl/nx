@@ -21,7 +21,14 @@ import {
 } from 'ng-packagr/lib/ng-package/nodes';
 import { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
 import { NgPackage } from 'ng-packagr/lib/ng-package/package';
-import { copyFile, rmdir, stat, writeFile } from 'ng-packagr/lib/utils/fs';
+import {
+  copyFile,
+  exists,
+  readFile,
+  rmdir,
+  stat,
+  writeFile,
+} from 'ng-packagr/lib/utils/fs';
 import { globFiles } from 'ng-packagr/lib/utils/glob';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
 import { AssetPattern } from 'ng-packagr/ng-package.schema';
@@ -70,7 +77,28 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
       } catch (error) {
         throw error;
       }
+    } else if (options.watch) {
+      // update the watch version of the primary entry point `package.json` file.
+      // this is needed because of Webpack's 5 `cachemanagedpaths`
+      // https://github.com/ng-packagr/ng-packagr/issues/2069
+      const primary = ngPackageNode.data.primary;
+      const packageJsonPath = path.join(
+        primary.destinationPath,
+        'package.json'
+      );
+
+      if (await exists(packageJsonPath)) {
+        const packageJson = JSON.parse(
+          await readFile(packageJsonPath, { encoding: 'utf8' })
+        );
+        packageJson.version = generateWatchVersion();
+        await writeFile(
+          path.join(primary.destinationPath, 'package.json'),
+          JSON.stringify(packageJson, undefined, 2)
+        );
+      }
     }
+
     logger.info(`Built ${ngEntryPoint.moduleId}`);
 
     return graph;
@@ -195,7 +223,7 @@ async function writePackageJson(
   if (isWatchMode) {
     // Needed because of Webpack's 5 `cachemanagedpaths`
     // https://github.com/angular/angular-cli/issues/20962
-    packageJson.version = `0.0.0-watch+${Date.now()}`;
+    packageJson.version = generateWatchVersion();
   }
 
   if (
@@ -380,4 +408,11 @@ function generatePackageExports(
   }
 
   return exports;
+}
+
+/**
+ * Generates a new version for the package `package.json` when runing in watch mode.
+ */
+function generateWatchVersion() {
+  return `0.0.0-watch+${Date.now()}`;
 }
