@@ -1,10 +1,7 @@
 import 'dotenv/config';
-import { ExecutorContext } from '@nrwl/devkit';
-
-import { readCachedProjectGraph } from '@nrwl/devkit';
+import { ExecutorContext, readCachedProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { getRootTsConfigPath } from '@nrwl/workspace/src/utilities/typescript';
@@ -65,17 +62,6 @@ export async function* webpackExecutor(
       target.data.root,
       dependencies
     );
-
-    if (
-      !checkDependentProjectsHaveBeenBuilt(
-        context.root,
-        context.projectName,
-        context.targetName,
-        dependencies
-      )
-    ) {
-      return { success: false } as any;
-    }
   }
 
   // Delete output path before bundling
