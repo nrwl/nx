@@ -79,15 +79,15 @@
     },
     "experimental-to-utils-deps": {
       "cli": "nx",
-      "version": "14.4.3",
+      "version": "14.4.4",
       "description": "Adds @typescript-eslint/utils as a dev dep",
-      "factory": "./src/migrations/update-14-4-3/experimental-to-utils-deps"
+      "factory": "./src/migrations/update-14-4-4/experimental-to-utils-deps"
     },
     "experimental-to-utils-rules": {
       "cli": "nx",
-      "version": "14.4.3",
+      "version": "14.4.4",
       "description": "Switch from  @typescript-eslint/experimental-utils to @typescript-eslint/utils in all rules and rules.spec files",
-      "factory": "./src/migrations/update-14-4-3/experimental-to-utils-rules"
+      "factory": "./src/migrations/update-14-4-4/experimental-to-utils-rules"
     }
   },
   "packageJsonUpdates": {
@@ -258,17 +258,11 @@
         }
       }
     },
-    "14.4.3": {
-      "version": "14.4.3",
+    "14.4.4": {
+      "version": "14.4.4",
       "packages": {
-        "@typescript-eslint/parser": {
-          "version": "^5.30.0"
-        },
-        "@typescript-eslint/eslint-plugin": {
-          "version": "^5.30.0"
-        },
         "@typescript-eslint/utils": {
-          "version": "^5.30.0"
+          "version": "^5.29.0"
         }
       }
     }
