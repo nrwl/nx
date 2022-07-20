@@ -33,3 +33,7 @@ If you remove the `accessToken` property from the configuration, the runner will
 ## Setting a Different Access Token in CI
 
 You can also configure the access token by setting the `NX_CLOUD_ACCESS_TOKEN` environment variable. `NX_CLOUD_ACCESS_TOKEN` takes precedence over the `accessToken` property. It's common to have a read-only token stored in `nx.json` and a read-write token set via `NX_CLOUD_ACCESS_TOKEN` in CI.
+
+## Using `nx-cloud.env`
+
+You can set locally an environment variable via the `nx-cloud.env` file. Nx Cloud CLI will be looking into this file to load custom configuration like `NX_CLOUD_ACCESS_TOKEN`. These environment variables will take precedence over the configuration in `nx.json`.
