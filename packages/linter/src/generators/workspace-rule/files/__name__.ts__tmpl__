@@ -14,7 +14,7 @@
  * https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin/src/rules
  */
 
-import { ESLintUtils } from '@typescript-eslint/experimental-utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 // NOTE: The rule will be available in ESLint configs as "@nrwl/nx/workspace/<%= name %>"
 export const RULE_NAME = '<%= name %>';

@@ -1,4 +1,4 @@
-import { TSESLint } from '@typescript-eslint/experimental-utils';
+import { TSESLint } from '@typescript-eslint/utils';
 import { rule, RULE_NAME } from './<%= name %>';
 
 const ruleTester = new TSESLint.RuleTester({
