@@ -27,11 +27,7 @@ function buildMatrix(graph: ProjectGraph) {
     const v = nodes[i];
     adjList[v] = [];
     // meeroslav: turns out this is 10x faster than spreading the pre-generated initMatrixValues
-    const nodeValues = {};
-    for (let j = 0; j < nodesLength; j++) {
-      nodeValues[nodes[j]] = false;
-    }
-    matrix[v] = nodeValues;
+    matrix[v] = {};
   }
 
   const projectsWithDependencies = Object.keys(graph.dependencies);
@@ -48,9 +44,10 @@ function buildMatrix(graph: ProjectGraph) {
   const traverse = (s: string, v: string) => {
     matrix[s][v] = true;
 
-    for (let i = 0; i < adjList[v].length; i++) {
+    const adjListLength = adjList[v].length;
+    for (let i = 0; i < adjListLength; i++) {
       const adj = adjList[v][i];
-      if (matrix[s][adj] === false) {
+      if (!matrix[s][adj]) {
         traverse(s, adj);
       }
     }
@@ -125,7 +122,7 @@ export function pathExists(
     reach.adjList = adjList;
   }
 
-  return reach.matrix[sourceProjectName][targetProjectName];
+  return !!reach.matrix[sourceProjectName][targetProjectName];
 }
 
 export function checkCircularPath(
