@@ -8,7 +8,6 @@ import {
   parseJson,
   ProjectGraphExternalNode,
   joinPathFragments,
-  FileData,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { workspaceRoot } from './app-root';
