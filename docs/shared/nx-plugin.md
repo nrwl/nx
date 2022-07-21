@@ -40,7 +40,9 @@ There will be an exported default function that will be the main entry for the g
 
 The `schema.d.ts` file contains all the options that the generator supports. By default, it includes `directory`, `tags`, and `name` as the options. If more options need to be added, please update this file and the `schema.json` file.
 
-> Note: The `schema.d.ts` file is used for type checking inside the implementation file. It should match the properties in `schema.json`.
+{% callout type="note" title="More details" %}
+The `schema.d.ts` file is used for type checking inside the implementation file. It should match the properties in `schema.json`.
+{% /callout %}
 
 ### Adding more generators
 
@@ -158,7 +160,9 @@ In order to use your plugin in other workspaces or share it with the community, 
 1. `npm publish ./dist/package/my-plugin` and follow the prompts from npm.
 1. That's it!
 
-> Note: currently you will have to modify the `package.json` version by yourself or with a tool.
+{% callout type="warning" title="Version bump" %}
+Currently you will have to modify the `package.json` version by yourself or with a tool.
+{% /callout %}
 
 After that, you can then install your plugin like any other npm package,
 `npm i -D @my-org/my-plugin` or `yarn add -D @my-org/my-plugin`.
@@ -200,7 +204,9 @@ To create our preset inside of our plugin we can run
   nx generate @nrwl/nx-plugin:generator --name=preset --project=happynrwl
 ```
 
-> Note: the word `preset` is required for the name of this generator
+{% callout type="warning" title="Double check" %}
+The word `preset` is required for the name of this generator
+{% /callout %}
 
 You should have a similar structure to this:
 

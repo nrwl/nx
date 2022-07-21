@@ -167,4 +167,6 @@ git reset --hard # Reset any changes
 git clean -fd # Delete newly added files and directories
 ```
 
-(NOTE: If using `--create-commits` you will need to first retrieve the SHA of the commit before your first automated migration commit in order to jump back to the point before the migrations ran, e.g. `git reset --hard YOUR_APPROPRIATE_SHA_HERE`)
+{% callout type="warning" title="--create-commits" %}
+If using `--create-commits`, you will need to first retrieve the SHA of the commit before your first automated migration commit in order to jump back to the point before the migrations ran, e.g. `git reset --hard YOUR_APPROPRIATE_SHA_HERE`)
+{% /callout %}

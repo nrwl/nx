@@ -18,7 +18,9 @@ If you just want to try out private cloud and set-up full membership management 
 
 [While setting up your container](/nx-cloud/private-cloud/get-started) you can pass it the `ADMIN_PASSWORD` environment variable. This will set-up a default admin user for you, which you can use to manage your workspace on the NxCloud web app.
 
-Note: Even if you can make your organisation public, we still recommend setting up GitHub authentication and inviting more than 1 admin to your workspace, to reduce the chance of losing access to it.
+{% callout type="note" title="Preventing access loss" %}
+Even if you can make your organisation public, we still recommend setting up GitHub authentication and inviting more than 1 admin to your workspace, to reduce the chance of losing access to it.
+{% /callout %}
 
 ## Setting up third-party auth providers
 

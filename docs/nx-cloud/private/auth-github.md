@@ -53,4 +53,6 @@ If you are running an on-premise version of GitHub (Enterprise Server), you will
 
 This will point all auth endpoints to your GitHub server (rather the public one).
 
-Note: the above environment variable, also helps with setting up the GitHub app integration, so you can have NxCloud build stats directly on your pull request. See full set-up instructions [here](/nx-cloud/private-cloud/github).
+{% callout type="check" title="Good to know!" %}
+The above environment variable, also helps with setting up the GitHub app integration, so you can have NxCloud build stats directly on your pull request. See full set-up instructions [here](/nx-cloud/private-cloud/github).
+{% /callout %}

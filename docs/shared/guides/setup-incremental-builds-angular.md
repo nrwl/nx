@@ -126,8 +126,10 @@ To serve an application incrementally use this command:
 nx serve my-app --parallel
 ```
 
-Note: you can specify the `--parallel` flags as part of the options property on the file-server executor in
+{% callout type="note" title="Project configuration option" %}
+You can specify the `--parallel` flags as part of the options property on the file-server executor in
 your `project.json` file. The file-server executor will pass those to the `nx build` command it invokes.
+{% /callout %}
 
 ```json
 {
