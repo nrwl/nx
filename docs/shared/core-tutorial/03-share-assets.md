@@ -16,7 +16,9 @@ You can make a library project just for holding the ASCII asset files. Let Nx kn
 }
 ```
 
-Note: You could choose to make a `package.json` file here instead, if you prefer.
+{% callout type="note" title="Prefer a `package.json` file?" %}
+You could choose to make a `package.json` file here instead, if you prefer.
+{% /callout %}
 
 Then move `cow.txt` out of the `cli` project to:
 
