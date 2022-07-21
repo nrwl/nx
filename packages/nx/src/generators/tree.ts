@@ -5,9 +5,11 @@ import {
   writeFileSync,
   ensureDirSync,
   removeSync,
+  renameSync,
   chmodSync,
 } from 'fs-extra';
 import type { Mode } from 'fs';
+import { execSync } from 'child_process';
 import { logger } from '../utils/logger';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
@@ -22,6 +24,16 @@ export interface TreeWriteOptions {
    * See https://nodejs.org/api/fs.html#fs_file_modes
    */
   mode?: Mode;
+}
+
+/**
+ * Options to set when renaming a file/folder in the Virtual file system tree.
+ */
+ export interface TreeRenameOptions {
+  /**
+   * This should correspond to the type of rename action to perform
+   */
+  mode?: 'fs' | 'git';
 }
 
 /**
@@ -106,16 +118,26 @@ export interface FileChange {
   /**
    * Type of change: 'CREATE' | 'DELETE' | 'UPDATE'
    */
-  type: 'CREATE' | 'DELETE' | 'UPDATE';
+  type: 'CREATE' | 'DELETE' | 'UPDATE' | 'RENAME';
 
   /**
    * The content of the file or null in case of delete.
    */
   content: Buffer | null;
   /**
-   * Options to set on the file being created or updated.
+   * Options to set on the file being created or updated, or options for the rename operation.
    */
-  options?: TreeWriteOptions;
+  options?: TreeWriteOptions | TreeRenameOptions;
+
+  /**
+   * Original path of the file rename.
+   */
+  origin?: string;
+
+  /**
+   * Specifies that this record is for presentation and internal tracking only
+   */
+  noop?: boolean;
 }
 
 export class FsTree implements Tree {
@@ -123,8 +145,15 @@ export class FsTree implements Tree {
     [path: string]: {
       content: Buffer | null;
       isDeleted: boolean;
-      options?: TreeWriteOptions;
+      options?: TreeWriteOptions | TreeRenameOptions;
+      origin?: string;
+      noop?: boolean;
     };
+  } = {};
+
+  // Used to track renames by mapping original path to new path
+  private renameChanges: {
+    [path: string]: string;
   } = {};
 
   constructor(readonly root: string, private readonly isVerbose: boolean) {}
@@ -135,8 +164,25 @@ export class FsTree implements Tree {
     filePath = this.normalize(filePath);
     try {
       let content: Buffer;
-      if (this.recordedChanges[this.rp(filePath)]) {
-        content = this.recordedChanges[this.rp(filePath)].content;
+      if (this.renameChanges[this.rp(filePath)]) {
+        return null;
+      } else if (this.recordedChanges[this.rp(filePath)]) {
+        // If renamed file
+        if (this.recordedChanges[this.rp(filePath)].origin) {
+
+          // Use the content of recordedChange for the origin file, if exists
+          if (this.recordedChanges[this.recordedChanges[this.rp(filePath)].origin]) {
+            content = this.recordedChanges[this.recordedChanges[this.rp(filePath)].origin].content;
+          }
+
+          // Or, read the origin file from fs, if content is null or undefined
+          if (content === null || content === void(0)) {
+            content = this.fsReadFile(this.recordedChanges[this.rp(filePath)].origin);
+          }
+
+        } else {
+          content = this.recordedChanges[this.rp(filePath)].content;
+        }
       } else {
         content = this.fsReadFile(filePath);
       }
@@ -188,17 +234,17 @@ export class FsTree implements Tree {
 
   delete(filePath: string): void {
     filePath = this.normalize(filePath);
-    if (this.filesForDir(this.rp(filePath)).length > 0) {
-      this.filesForDir(this.rp(filePath)).forEach(
-        (f) => (this.recordedChanges[f] = { content: null, isDeleted: true })
-      );
-    }
+
+    this.filesForDir(this.rp(filePath)).forEach(
+      (f) => (this.recordedChanges[f] = { content: null, isDeleted: true })
+    );
+
     this.recordedChanges[this.rp(filePath)] = {
       content: null,
       isDeleted: true,
     };
 
-    // Delete directories when
+    // Delete directories when empty
     if (this.children(dirname(this.rp(filePath))).length < 1) {
       this.delete(dirname(this.rp(filePath)));
     }
@@ -209,6 +255,8 @@ export class FsTree implements Tree {
     try {
       if (this.recordedChanges[this.rp(filePath)]) {
         return !this.recordedChanges[this.rp(filePath)].isDeleted;
+      } else if (this.renameChanges[this.rp(filePath)]) {
+        return false;
       } else if (this.filesForDir(this.rp(filePath)).length > 0) {
         return true;
       } else {
@@ -220,11 +268,37 @@ export class FsTree implements Tree {
   }
 
   rename(from: string, to: string): void {
-    from = this.normalize(from);
-    to = this.normalize(to);
-    const content = this.read(this.rp(from));
-    this.delete(this.rp(from));
-    this.write(this.rp(to), content);
+    from = this.rp(this.normalize(from));
+    to = this.rp(this.normalize(to));
+
+    if (this.exists(from)) {
+      const mode = this.fsIsInGitIndex(from) ? 'git' : 'fs';
+
+      this.recordedChanges[to] = {
+        content: null,
+        origin: from,
+        isDeleted: false,
+        options: { mode } as TreeRenameOptions
+      };
+
+      this.renameChanges[from] = to;
+
+      this.filesForDir(from).forEach((f) => {
+        this.renameChanges[f] = this.rp(f.replace(dirname(f) , to));
+
+        this.recordedChanges[this.renameChanges[f]] = {
+          content: null,
+          origin: this.rp(f),
+          isDeleted: false,
+          noop: true,
+        };   
+      });
+
+      // Delete directories when empty
+      if (this.children(dirname(from)).length < 1) {
+        this.delete(dirname(from));
+      }
+    }
   }
 
   isFile(filePath: string): boolean {
@@ -246,8 +320,8 @@ export class FsTree implements Tree {
 
     res = [...res, ...this.directChildrenOfDir(this.rp(dirPath))];
     res = res.filter((q) => {
-      const r = this.recordedChanges[join(this.rp(dirPath), q)];
-      return !r?.isDeleted;
+      const p = join(this.rp(dirPath), q);
+      return !this.renameChanges[p] && !this.recordedChanges[p]?.isDeleted;
     });
     // Dedupe
     return Array.from(new Set(res));
@@ -255,13 +329,21 @@ export class FsTree implements Tree {
 
   listChanges(): FileChange[] {
     const res = [] as FileChange[];
-    Object.keys(this.recordedChanges).forEach((f) => {
+    Object.keys(this.recordedChanges).forEach((f) => {      
       if (this.recordedChanges[f].isDeleted) {
         if (this.fsExists(f)) {
           res.push({ path: f, type: 'DELETE', content: null });
         }
       } else {
-        if (this.fsExists(f)) {
+        if (this.recordedChanges[f].origin) {
+          res.push({
+            path: f,
+            type: 'RENAME',
+            content: null,
+            origin: this.recordedChanges[f].origin,
+            options: this.recordedChanges[f].options,
+          });
+        } else if (this.fsExists(f)) {
           res.push({
             path: f,
             type: 'UPDATE',
@@ -340,9 +422,18 @@ export class FsTree implements Tree {
     }
   }
 
+  private fsIsInGitIndex(filePath: string): boolean {
+    try {
+      // TODO: consider nodegit?
+      return !!execSync(`git ls-files ${filePath}`).toString();
+    } catch(e) {
+      return false;
+    }
+  }
+
   private filesForDir(path: string): string[] {
     return Object.keys(this.recordedChanges).filter(
-      (f) => f.startsWith(`${path}/`) && !this.recordedChanges[f].isDeleted
+      (f) => f.startsWith(`${path}/`) && !this.recordedChanges[f].isDeleted && !this.renameChanges[f]
     );
   }
 
@@ -370,6 +461,9 @@ export class FsTree implements Tree {
 
 export function flushChanges(root: string, fileChanges: FileChange[]): void {
   fileChanges.forEach((f) => {
+    // Ignore noops
+    if (f.noop) return;
+
     const fpath = join(root, f.path);
     if (f.type === 'CREATE') {
       ensureDirSync(dirname(fpath));
@@ -380,6 +474,12 @@ export function flushChanges(root: string, fileChanges: FileChange[]): void {
       if (f.options?.mode) chmodSync(fpath, f.options.mode);
     } else if (f.type === 'DELETE') {
       removeSync(fpath);
+    } else if (f.type === 'RENAME') {
+      if (f.options?.mode === 'fs') {
+        renameSync(join(root, f.origin), fpath);
+      } else if (f.options?.mode === 'git') {
+        execSync(`git mv ${join(root, f.origin)} ${fpath}`);
+      }
     }
   });
 }
@@ -392,6 +492,8 @@ export function printChanges(fileChanges: FileChange[]): void {
       console.log(`${chalk.white('UPDATE')} ${f.path}`);
     } else if (f.type === 'DELETE') {
       console.log(`${chalk.yellow('DELETE')} ${f.path}`);
+    } else if (f.type === 'RENAME') {
+      console.log(`${chalk.cyan('RENAME')} ${f.origin} -> ${f.path}`);
     }
   });
 }

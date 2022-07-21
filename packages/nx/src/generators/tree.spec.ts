@@ -1,11 +1,13 @@
 import { lstatSync, Mode, readFileSync, writeFileSync } from 'fs';
 import { removeSync, ensureDirSync } from 'fs-extra';
+import { execSync } from 'child_process';
 import { dirSync } from 'tmp';
 import * as path from 'path';
 import { FileChange, FsTree, flushChanges, TreeWriteOptions } from './tree';
 
 describe('tree', () => {
   describe('FsTree', () => {
+    const cwd = process.cwd();
     let dir: string;
     let tree: FsTree;
 
@@ -258,15 +260,23 @@ describe('tree', () => {
 
       expect(s(tree.listChanges())).toEqual([
         {
-          path: 'renamed-new-child-file.txt',
+          path: 'parent/new-child/new-child-file.txt',
           type: 'CREATE',
           content: 'new child content',
         },
-        { path: 'root-file.txt', type: 'DELETE', content: null },
+        {
+          path: 'renamed-new-child-file.txt',
+          type: 'RENAME',
+          content: null,
+          origin: 'parent/new-child/new-child-file.txt',
+          options: { mode: 'fs' }
+        },
         {
           path: 'renamed-root-file.txt',
-          type: 'CREATE',
-          content: 'root content',
+          type: 'RENAME',
+          content: null,
+          origin: 'root-file.txt',
+          options: { mode: 'fs' }
         },
       ]);
 
@@ -385,7 +395,101 @@ describe('tree', () => {
     });
 
     it('should be able to rename dirs', () => {
-      // not supported yet
+      tree.write('parent/child/child-file.txt', 'The child content');
+      tree.rename('parent/child', 'parent/new-child');
+
+      expect(tree.children('parent')).toEqual([
+        "parent-file-with-write-options.txt",
+        "parent-file.txt",
+        'new-child',
+      ]);
+      expect(tree.children('parent/new-child')).toEqual(['child-file.txt']);
+      expect(tree.read('parent/new-child/child-file.txt', 'utf-8')).toEqual('The child content');
+
+      expect(s(tree.listChanges())).toEqual([
+        {
+          path: 'parent/child/child-file.txt',
+          type: 'UPDATE',
+          content: 'The child content',
+        },
+        {
+          path: 'parent/new-child',
+          type: 'RENAME',
+          content: null,
+          origin: 'parent/child',
+          options: { mode: 'fs' },
+        },
+        {
+          path: 'parent/new-child/child-file.txt',
+          type: 'RENAME',
+          content: null,
+          origin: 'parent/child/child-file.txt',
+        },
+      ]);
+
+      flushChanges(dir, tree.listChanges());
+    });
+
+    describe('in git repos', () => {
+      // `dir` is defined in beforeEach so this must also run in beforeEach
+      beforeEach(() => {
+        process.chdir(dir);
+        execSync('git init -q');
+      });
+
+      afterEach(() => {
+        process.chdir(cwd);
+      });
+
+      it('should be able to rename dirs', () => {
+        tree.write('parent/child/child-file.txt', 'The child content');
+
+        execSync('git add parent/child/child-file.txt');
+
+        tree.rename('parent/child', 'parent/new-child');
+  
+        expect(tree.children('parent')).toEqual([
+          "parent-file-with-write-options.txt",
+          "parent-file.txt",
+          "new-child",
+        ]);
+        expect(tree.children('parent/new-child')).toEqual(['child-file.txt']);
+        expect(tree.read('parent/new-child/child-file.txt', 'utf-8')).toEqual('The child content');
+  
+        const changes = tree.listChanges();
+
+        expect(s(changes)).toEqual([
+          {
+            path: 'parent/child/child-file.txt',
+            type: 'UPDATE',
+            content: 'The child content',
+          },
+          {
+            path: 'parent/new-child',
+            type: 'RENAME',
+            content: null,
+            origin: 'parent/child',
+            options: { mode: 'git' },
+          },
+          {
+            path: 'parent/new-child/child-file.txt',
+            type: 'RENAME',
+            content: null,
+            origin: 'parent/child/child-file.txt',
+          },
+        ]);
+  
+        flushChanges(dir, changes);
+
+        expect(tree.children('parent')).toEqual([
+          "new-child",
+          "parent-file-with-write-options.txt",
+          "parent-file.txt",
+        ]);
+
+        expect(tree.read('parent/new-child/child-file.txt', 'utf-8')).toEqual('The child content');
+        expect(tree.read('parent/child/child-file.txt')).toEqual(null);
+      });
     });
 
     describe('changePermissions', () => {
