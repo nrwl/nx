@@ -88,8 +88,8 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
 
 export function getPackageApiSection(items: MenuItem[]): MenuSection {
   return {
-    id: 'official-plugins',
-    name: 'Official Plugins',
+    id: 'official-packages',
+    name: 'Reference',
     itemList: items.filter(
       (m) =>
         m.id !== 'add-nx-to-monorepo' &&
