@@ -13,4 +13,5 @@ export interface NodeExecutorOptions {
   host: string;
   port: number;
   watch?: boolean;
+  skipCalculateMappings?: boolean;
 }

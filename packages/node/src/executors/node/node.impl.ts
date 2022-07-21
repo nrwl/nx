@@ -50,7 +50,9 @@ export async function* nodeExecutor(
     }
   }
 
-  const mappings = calculateResolveMappings(context, options);
+  const mappings = options.skipCalculateMappings
+    ? {}
+    : calculateResolveMappings(context, options);
   for await (const event of startBuild(options, context)) {
     if (!event.success) {
       logger.error('There was an error with the build. See above.');

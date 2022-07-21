@@ -580,6 +580,11 @@
             "type": "boolean",
             "description": "Enable re-building when files change.",
             "default": true
+          },
+          "skipCalculateMappings": {
+            "type": "boolean",
+            "description": "Skip logic of resolving mappings for Nx workspaces. Yarn/NPM/PNPM workspaces where packages are installed as node_modules can disable this",
+            "default": false
           }
         },
         "additionalProperties": false,
