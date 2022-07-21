@@ -29,7 +29,7 @@ export interface TreeWriteOptions {
 /**
  * Options to set when renaming a file/folder in the Virtual file system tree.
  */
- export interface TreeRenameOptions {
+export interface TreeRenameOptions {
   /**
    * This should correspond to the type of rename action to perform
    */
@@ -169,17 +169,22 @@ export class FsTree implements Tree {
       } else if (this.recordedChanges[this.rp(filePath)]) {
         // If renamed file
         if (this.recordedChanges[this.rp(filePath)].origin) {
-
           // Use the content of recordedChange for the origin file, if exists
-          if (this.recordedChanges[this.recordedChanges[this.rp(filePath)].origin]) {
-            content = this.recordedChanges[this.recordedChanges[this.rp(filePath)].origin].content;
+          if (
+            this.recordedChanges[this.recordedChanges[this.rp(filePath)].origin]
+          ) {
+            content =
+              this.recordedChanges[
+                this.recordedChanges[this.rp(filePath)].origin
+              ].content;
           }
 
           // Or, read the origin file from fs, if content is null or undefined
-          if (content === null || content === void(0)) {
-            content = this.fsReadFile(this.recordedChanges[this.rp(filePath)].origin);
+          if (content === null || content === void 0) {
+            content = this.fsReadFile(
+              this.recordedChanges[this.rp(filePath)].origin
+            );
           }
-
         } else {
           content = this.recordedChanges[this.rp(filePath)].content;
         }
@@ -278,20 +283,20 @@ export class FsTree implements Tree {
         content: null,
         origin: from,
         isDeleted: false,
-        options: { mode } as TreeRenameOptions
+        options: { mode } as TreeRenameOptions,
       };
 
       this.renameChanges[from] = to;
 
       this.filesForDir(from).forEach((f) => {
-        this.renameChanges[f] = this.rp(f.replace(dirname(f) , to));
+        this.renameChanges[f] = this.rp(f.replace(dirname(f), to));
 
         this.recordedChanges[this.renameChanges[f]] = {
           content: null,
           origin: this.rp(f),
           isDeleted: false,
           noop: true,
-        };   
+        };
       });
 
       // Delete directories when empty
@@ -329,7 +334,7 @@ export class FsTree implements Tree {
 
   listChanges(): FileChange[] {
     const res = [] as FileChange[];
-    Object.keys(this.recordedChanges).forEach((f) => {      
+    Object.keys(this.recordedChanges).forEach((f) => {
       if (this.recordedChanges[f].isDeleted) {
         if (this.fsExists(f)) {
           res.push({ path: f, type: 'DELETE', content: null });
@@ -426,14 +431,17 @@ export class FsTree implements Tree {
     try {
       // TODO: consider nodegit?
       return !!execSync(`git ls-files ${filePath}`).toString();
-    } catch(e) {
+    } catch (e) {
       return false;
     }
   }
 
   private filesForDir(path: string): string[] {
     return Object.keys(this.recordedChanges).filter(
-      (f) => f.startsWith(`${path}/`) && !this.recordedChanges[f].isDeleted && !this.renameChanges[f]
+      (f) =>
+        f.startsWith(`${path}/`) &&
+        !this.recordedChanges[f].isDeleted &&
+        !this.renameChanges[f]
     );
   }
 

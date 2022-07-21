@@ -269,14 +269,14 @@ describe('tree', () => {
           type: 'RENAME',
           content: null,
           origin: 'parent/new-child/new-child-file.txt',
-          options: { mode: 'fs' }
+          options: { mode: 'fs' },
         },
         {
           path: 'renamed-root-file.txt',
           type: 'RENAME',
           content: null,
           origin: 'root-file.txt',
-          options: { mode: 'fs' }
+          options: { mode: 'fs' },
         },
       ]);
 
@@ -399,12 +399,14 @@ describe('tree', () => {
       tree.rename('parent/child', 'parent/new-child');
 
       expect(tree.children('parent')).toEqual([
-        "parent-file-with-write-options.txt",
-        "parent-file.txt",
+        'parent-file-with-write-options.txt',
+        'parent-file.txt',
         'new-child',
       ]);
       expect(tree.children('parent/new-child')).toEqual(['child-file.txt']);
-      expect(tree.read('parent/new-child/child-file.txt', 'utf-8')).toEqual('The child content');
+      expect(tree.read('parent/new-child/child-file.txt', 'utf-8')).toEqual(
+        'The child content'
+      );
 
       expect(s(tree.listChanges())).toEqual([
         {
@@ -447,15 +449,17 @@ describe('tree', () => {
         execSync('git add parent/child/child-file.txt');
 
         tree.rename('parent/child', 'parent/new-child');
-  
+
         expect(tree.children('parent')).toEqual([
-          "parent-file-with-write-options.txt",
-          "parent-file.txt",
-          "new-child",
+          'parent-file-with-write-options.txt',
+          'parent-file.txt',
+          'new-child',
         ]);
         expect(tree.children('parent/new-child')).toEqual(['child-file.txt']);
-        expect(tree.read('parent/new-child/child-file.txt', 'utf-8')).toEqual('The child content');
-  
+        expect(tree.read('parent/new-child/child-file.txt', 'utf-8')).toEqual(
+          'The child content'
+        );
+
         const changes = tree.listChanges();
 
         expect(s(changes)).toEqual([
@@ -478,16 +482,18 @@ describe('tree', () => {
             origin: 'parent/child/child-file.txt',
           },
         ]);
-  
+
         flushChanges(dir, changes);
 
         expect(tree.children('parent')).toEqual([
-          "new-child",
-          "parent-file-with-write-options.txt",
-          "parent-file.txt",
+          'new-child',
+          'parent-file-with-write-options.txt',
+          'parent-file.txt',
         ]);
 
-        expect(tree.read('parent/new-child/child-file.txt', 'utf-8')).toEqual('The child content');
+        expect(tree.read('parent/new-child/child-file.txt', 'utf-8')).toEqual(
+          'The child content'
+        );
         expect(tree.read('parent/child/child-file.txt')).toEqual(null);
       });
     });
