@@ -15,7 +15,7 @@ Import the TypeScript schema into your generator file and replace the any in you
 
 ```typescript
 import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/workspace';
+import { libraryGenerator } from '@nrwl/workspace/generators';
 
 export default async function (tree: Tree, schema: GeneratorOptions) {
   await libraryGenerator(tree, { name: `${schema.name}-${schema.type || ''}` });

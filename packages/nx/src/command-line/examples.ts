@@ -280,7 +280,7 @@ export const examples: Record<string, Example[]> = {
   ],
   'run-many': [
     {
-      command: 'run-many --target=test --all',
+      command: 'run-many --target=test',
       description: 'Test all projects',
     },
     {

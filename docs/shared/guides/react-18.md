@@ -4,7 +4,9 @@
 
 Workspaces that upgrade to `@nrwl/react` 14 will be automatically migrated to React 18. This migration will also include an upgrade to React Router v6, if it is used in the workspace, as well as the removal of the deprecated `@testing-library/react-hook` package. Keep reading for more details.
 
-**Note:** If you use npm v7/v8, you will need to use `npm install --force` after running `nx migrate 14.0.0` since `@testing-library/react-hook` does not support React 18. Don't worry, this package will be removed in the migration.
+{% callout type="note" title="Using NPM v7/v8?" %}
+If you use npm v7/v8, you will need to use `npm install --force` after running `nx migrate 14.0.0` since `@testing-library/react-hook` does not support React 18. Don't worry, this package will be removed in the migration.
+{% /callout %}
 
 ## New `react-dom/client` API
 
@@ -159,4 +161,8 @@ Nx will also update your workspace to React Native v0.68. There are breaking cha
 Because typical React Native projects are essentially made up of a JavaScript project and native code projects (an Android project, an iOS project). For native code, you can either upgrade manually using [React Native Upgrade Helper](https://react-native-community.github.io/upgrade-helper/ or using the `@nrwl/react-native:upgrade-native` generator.
 
 For manual update, go to [React Native Upgrade Helper](https://react-native-community.github.io/upgrade-helper/) and copy the diff to your native code one by one.
-Nevertheless, you can use Nx's command `nx g @nrwl/react-native:upgrade-native <your project name>` to replace your iOS and Android folder with the latest code. (Note: this command is destructive, do NOT use it if you got customized native code.)
+Nevertheless, you can use Nx's command `nx g @nrwl/react-native:upgrade-native <your project name>` to replace your iOS and Android folder with the latest code.
+
+{% callout type="caution" title="Be careful" %}
+Nx's command `nx g @nrwl/react-native:upgrade-native <your project name>` is destructive, do **NOT** use it if you got customized native code.)
+{% /callout %}

@@ -1,6 +1,9 @@
 # Angular Nx Tutorial - Step 9: Using the Project Graph
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/8fr2RukmfW0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/8fr2RukmfW0"
+title="Nx.dev Tutorial | Angular | Step 9: Dep Graph"
+width="100%" /%}
 
 An Nx workspace can contain dozens or hundreds of applications and libraries. As a codebase grows, it becomes more difficult to understand how they depend on each other and the implications of making a particular change.
 

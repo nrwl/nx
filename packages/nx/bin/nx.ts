@@ -8,11 +8,17 @@ import { initLocal } from './init-local';
 import { detectPackageManager } from '../src/utils/package-manager';
 import { output } from '../src/utils/output';
 
+const workspace = findWorkspaceRoot(process.cwd());
 // new is a special case because there is no local workspace to load
-if (process.argv[2] === 'new' || process.argv[2] === '_migrate') {
+if (
+  process.argv[2] === 'new' ||
+  process.argv[2] === '_migrate' ||
+  process.argv[2] === 'init' ||
+  (process.argv[2] === 'graph' && !workspace)
+) {
+  process.env.NX_DAEMON = 'false';
   require('nx/src/command-line/nx-commands').commandsObject.argv;
 } else {
-  const workspace = findWorkspaceRoot(process.cwd());
   if (workspace && workspace.type === 'nx') {
     require('v8-compile-cache');
   }
@@ -27,6 +33,12 @@ if (process.argv[2] === 'new' || process.argv[2] === '_migrate') {
       bodyLines: [
         `To create a workspace run:`,
         chalk.bold.white(`npx create-nx-workspace@latest <workspace name>`),
+        '',
+        `To add Nx to existing workspace run with a workspace-specific nx.json:`,
+        chalk.bold.white(`npx add-nx-to-monorepo@latest`),
+        '',
+        `To add the default nx.json file run:`,
+        chalk.bold.white(`nx init`),
       ],
     });
 

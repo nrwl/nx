@@ -48,7 +48,7 @@ const argv = require('yargs')
       .map((name) => ({ name }))
       .map(async (project) => {
         const projectPath = join(packagesDirectory, project.name);
-        const { dependencies } = JSON.parse(
+        const { dependencies, peerDependencies } = JSON.parse(
           readFileSync(`${projectPath}/package.json`).toString()
         );
 
@@ -56,7 +56,7 @@ const argv = require('yargs')
           ? await getMissingDependencies(
               project.name,
               projectPath,
-              dependencies,
+              { ...dependencies, ...(peerDependencies || {}) },
               argv.verbose
             )
           : [];

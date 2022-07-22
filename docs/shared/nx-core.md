@@ -17,7 +17,6 @@ This is what is generated:
 ```text
 packages/
 nx.json
-workspace.json
 tsconfig.base.json
 package.json
 ```
@@ -42,8 +41,7 @@ package.json
 
 ```json
 {
-  "extends": "nx/presets/core.json",
-  "npmScope": "myorg",
+  "extends": "nx/presets/npm.json",
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx/tasks-runners/default",
@@ -149,7 +147,7 @@ Running `nx test complex` should work now.
 This example uses Yarn to connect the two packages. Most of the time, however, there are better ways to do it. The React,
 Node and Angular plugins for Nx allow different projects in your workspace to import each other without having to maintain
 cumbersome `package.json` files. Instead, they use Webpack, Rollup and Jest plugins to enable this use case in a more
-elegant way. [Read about the relationship between Nx and Yarn/Lerna/PNPM](/guides/lerna-and-nx).
+elegant way. [Read about the relationship between Nx and Yarn/Lerna/PNPM](/migration/lerna-and-nx).
 
 ## What Nx Core Provides
 
@@ -188,4 +186,7 @@ what `build` means. It can be an npm script, a custom Nx executor, a Gradle task
 As you can see, the core of Nx is generic, simple, and unobtrusive. Nx Plugins are completely optional, but they can
 really level up your developer experience. Watch this video to see the plugins in action.
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/BO1rwynFBLM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/BO1rwynFBLM"
+title="Lerna/Yarn to Nx: Faster Build Times + Better Dev Ergonomics"
+width="100%" /%}

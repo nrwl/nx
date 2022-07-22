@@ -31,34 +31,31 @@ Take a tour of your [Nx workspace](/getting-started/nx-setup). There are some im
 
 The `apps` directory is the place where your top-level applications will be stored. You should always begin your migration journey by adding an application.
 
-For Angular applications:
+{% tabs %}
+{% tab label="Angular" %}
 
 ```bash
 npm install --save-dev @nrwl/angular
-```
-
-and
-
-```bash
+# then
 nx generate @nrwl/angular:application my-application
 ```
 
-For React applications:
+{% /tab %}
+{% tab label="React" %}
 
 ```bash
 npm install --save-dev @nrwl/react
-```
-
-and
-
-```bash
+# then
 nx generate @nrwl/react:application my-application
 ```
 
+{% /tab %}
+{% /tabs %}
+
 There are a lot of options when creating your application. If you want to follow Nx recommendations, you can accept the defaults. If you have a well-established codebase, you can configure those options at the time of application generation. You can find documentation for these options for the different frameworks here:
 
-- [Angular](/angular/application)
-- [React](/react/application)
+- [Angular](/packages/angular/generators/application)
+- [React](/packages/react/generators/application)
 
 You may also find it useful to use the [Nx Console](/using-nx/console) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
 
@@ -106,8 +103,6 @@ nx serve my-application
 
 If this doesn’t work for you, you may need to add or modify some configuration on the `build` task in your workspace configuration file.
 
-[Learn more about local serving](/cli/serve)
-
 ### Unit tests
 
 Each application will have a unit test process defined by your choices (Jest or Karma) during the creation of the application. To run tests for your application:
@@ -120,8 +115,6 @@ It is recommended that unit tests live next to the code they exercise and code s
 
 Testing configuration files can be found in the root of your application as well as the workspace configuration file.
 
-[Learn more about unit testing](/cli/test)
-
 ### End to End Tests
 
 Each application will have an e2e configuration created as a separate application, appended with `-e2e`. In our example, you’ll see `my-application-e2e`. This `e2e` task uses the test runner you chose during generation, Protractor or Cypress. Your application’s e2e tests should be migrated to this directory. There will be an e2e test scaffolded for you to make sure everything works before you start adding your own. To run the e2e tests:
@@ -130,9 +123,7 @@ Each application will have an e2e configuration created as a separate applicatio
 nx e2e my-application-e2e
 ```
 
-All of the configuration for your e2e tests should be in this directory.
-
-[Learn more about end-to-end testing](/cli/e2e)
+All the configuration for your e2e tests should be in this directory.
 
 ### Linting
 
@@ -152,8 +143,6 @@ nx lint my-application
 
 Global configuration files for linting will be at the root of your workspace. Each application and library will extend those configuration files. Global configuration changes should be made in the root, while application-or-library-specific changes should occur in the application or library configuration files.
 
-[Learn more about linting](/cli/lint)
-
 ### Formatting
 
 Nx uses Prettier to ensure standard formatting across your codebase. Prettier configuration files are located in the root of the workspace. To format your workspace run:
@@ -162,7 +151,7 @@ Nx uses Prettier to ensure standard formatting across your codebase. Prettier co
 nx format:write
 ```
 
-[Learn more about formatting](/cli/format-write)
+[Learn more about formatting](/nx/format-write)
 
 ### Adding tasks
 
@@ -182,19 +171,26 @@ Your use-case may also be covered by one of our community plugins. Plugin author
 
 If your code is divided into libraries, you should also generate libraries for your code to migrate into:
 
-For Angular libraries:
+{% tabs %}
+{% tab label="Angular" %}
 
 ```bash
 nx generate @nrwl/angular:library
 ```
 
-For React libraries:
+{% /tab %}
+{% tab label="React" %}
 
 ```bash
 nx generate @nrwl/react:library
 ```
 
+{% /tab %}
+{% /tabs %}
+
+{% callout type="caution" title="Be mindful about where the code lives" %}
 It’s important to remember: don’t just drop your code anywhere! Always generate an app or a library for that code before migration. Without the project configuration, you’ll miss out on key functionalities of Nx provided by the project graph generation and affected code detection.
+{% /callout %}
 
 ### Establishing code boundaries
 

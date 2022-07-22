@@ -7,6 +7,7 @@ import {
   ChangeType,
 } from '@nrwl/devkit';
 import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
+import { getTsSourceFile } from '../../utils/utilities';
 import ts = require('typescript');
 
 let needsInstall = false;
@@ -132,22 +133,6 @@ function editRootMainJs(tree: Tree) {
   if (!alreadyHasAddonEssentials) {
     tree.write(`.storybook/main.js`, newContents);
   }
-}
-
-function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
-  const buffer = host.read(path);
-  if (!buffer) {
-    throw new Error(`Could not read TS file (${path}).`);
-  }
-  const content = buffer.toString();
-  const source = ts.createSourceFile(
-    path,
-    content,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  return source;
 }
 
 export default async function (tree: Tree) {

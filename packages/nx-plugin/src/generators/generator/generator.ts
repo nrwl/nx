@@ -1,4 +1,9 @@
-import type { Tree } from '@nrwl/devkit';
+import {
+  GeneratorsJson,
+  joinPathFragments,
+  Tree,
+  writeJson,
+} from '@nrwl/devkit';
 import {
   convertNxGenerator,
   generateFiles,
@@ -8,6 +13,7 @@ import {
   readProjectConfiguration,
   updateJson,
 } from '@nrwl/devkit';
+import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 import type { Schema } from './schema';
 
@@ -80,15 +86,43 @@ function addFiles(host: Tree, options: NormalizedSchema) {
   }
 }
 
+function createGeneratorsJson(host: Tree, options: NormalizedSchema) {
+  updateJson<PackageJson>(
+    host,
+    joinPathFragments(options.projectRoot, 'package.json'),
+    (json) => {
+      json.generators ??= 'generators.json';
+      return json;
+    }
+  );
+  writeJson<GeneratorsJson>(
+    host,
+    joinPathFragments(options.projectRoot, 'generators.json'),
+    {
+      generators: {},
+    }
+  );
+}
+
 function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
-  let generatorPath: string;
-  if (host.exists(path.join(options.projectRoot, 'generators.json'))) {
-    generatorPath = path.join(options.projectRoot, 'generators.json');
-  } else {
-    generatorPath = path.join(options.projectRoot, 'collection.json');
+  const packageJson = readJson<PackageJson>(
+    host,
+    joinPathFragments(options.projectRoot, 'package.json')
+  );
+  const packageJsonGenerators =
+    packageJson.generators ?? packageJson.schematics;
+  let generatorsPath = packageJsonGenerators
+    ? joinPathFragments(options.projectRoot, packageJsonGenerators)
+    : null;
+
+  if (!generatorsPath) {
+    generatorsPath = joinPathFragments(options.projectRoot, 'generators.json');
+  }
+  if (!host.exists(generatorsPath)) {
+    createGeneratorsJson(host, options);
   }
 
-  return updateJson(host, generatorPath, (json) => {
+  return updateJson(host, generatorsPath, (json) => {
     let generators = json.generators ?? json.schematics;
     generators = generators || {};
     generators[options.name] = {

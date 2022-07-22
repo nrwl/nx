@@ -10,9 +10,9 @@ import { <%= className %>Effects } from './<%= fileName %>.effects';
 import { <%= className %>Facade } from './<%= fileName %>.facade';
 import {
   <%= className %>State,
-  Entity,
-  initialState,
-  reducer
+  <%= className %>Entity,
+  initial<%= className %>State,
+  <%= propertyName %>Reducer
 } from './<%= fileName %>.reducer';
 import { <%= propertyName %>Query } from './<%= fileName %>.selectors';
 
@@ -23,7 +23,7 @@ interface TestSchema {
 describe('<%= className %>Facade', () => {
   let facade: <%= className %>Facade;
   let store: Store<TestSchema>;
-  const create<%= className %> = (id: string, name?: string): Entity => ({
+  const create<%= className %> = (id: string, name?: string): <%= className %>Entity => ({
     id,
     name: name || `name-${id}`
   });
@@ -32,7 +32,7 @@ describe('<%= className %>Facade', () => {
     beforeEach(() => {
       @NgModule({
         imports: [
-          StoreModule.forFeature('<%= propertyName %>', reducer, { initialState }),
+          StoreModule.forFeature('<%= propertyName %>', <%= propertyName %>Reducer, { initialState: initial<%= className %>State }),
           EffectsModule.forFeature([<%= className %>Effects])
         ],
         providers: [<%= className %>Facade]

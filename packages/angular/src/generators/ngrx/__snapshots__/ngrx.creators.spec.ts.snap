@@ -14,7 +14,7 @@ exports[`NgRx generator creators syntax should generate the ngrx actions 1`] = `
 "import { createAction, props } from '@ngrx/store';
 import { UsersEntity } from './users.models';
 
-export const init = createAction(
+export const initUsers = createAction(
   '[Users Page] Init'
 );
 
@@ -41,7 +41,7 @@ import * as UsersFeature from './users.reducer';
 @Injectable()
 export class UsersEffects {
   init$ = createEffect(() => this.actions$.pipe(
-    ofType(UsersActions.init),
+    ofType(UsersActions.initUsers),
     fetch({
       run: action => {
         // Your custom service 'load' logic goes here. For now just return a success action...
@@ -86,7 +86,7 @@ export class UsersFacade {
    * or more tasks in your Effects.
    */
   init() {
-    this.store.dispatch(UsersActions.init());
+    this.store.dispatch(UsersActions.initUsers());
   }
 }
 "
@@ -101,26 +101,26 @@ import { UsersEntity } from './users.models';
 
 export const USERS_FEATURE_KEY = 'users';
 
-export interface State extends EntityState<UsersEntity> {
+export interface UsersState extends EntityState<UsersEntity> {
   selectedId?: string | number; // which Users record has been selected
   loaded: boolean; // has the Users list been loaded
   error?: string | null; // last known error (if any)
 }
 
 export interface UsersPartialState {
-  readonly [USERS_FEATURE_KEY]: State;
+  readonly [USERS_FEATURE_KEY]: UsersState;
 }
 
 export const usersAdapter: EntityAdapter<UsersEntity> = createEntityAdapter<UsersEntity>();
 
-export const initialState: State = usersAdapter.getInitialState({
+export const initialUsersState: UsersState = usersAdapter.getInitialState({
   // set initial required properties
   loaded: false
 });
 
-const usersReducer = createReducer(
-  initialState,
-  on(UsersActions.init,
+const reducer = createReducer(
+  initialUsersState,
+  on(UsersActions.initUsers,
     state => ({ ...state, loaded: false, error: null })
   ),
   on(UsersActions.loadUsersSuccess,
@@ -131,44 +131,44 @@ const usersReducer = createReducer(
   ),
 );
 
-export function reducer(state: State | undefined, action: Action) {
-  return usersReducer(state, action);
+export function usersReducer(state: UsersState | undefined, action: Action) {
+  return reducer(state, action);
 }
 "
 `;
 
 exports[`NgRx generator creators syntax should generate the ngrx selectors 1`] = `
 "import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { USERS_FEATURE_KEY, State, usersAdapter } from './users.reducer';
+import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
 // Lookup the 'Users' feature state managed by NgRx
-export const getUsersState = createFeatureSelector<State>(USERS_FEATURE_KEY);
+export const getUsersState = createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
 
 const { selectAll, selectEntities } = usersAdapter.getSelectors();
 
 export const getUsersLoaded = createSelector(
   getUsersState,
-  (state: State) => state.loaded
+  (state: UsersState) => state.loaded
 );
 
 export const getUsersError = createSelector(
   getUsersState,
-  (state: State) => state.error
+  (state: UsersState) => state.error
 );
 
 export const getAllUsers = createSelector(
   getUsersState,
-  (state: State) => selectAll(state)
+  (state: UsersState) => selectAll(state)
 );
 
 export const getUsersEntities = createSelector(
   getUsersState,
-  (state: State) => selectEntities(state)
+  (state: UsersState) => selectEntities(state)
 );
 
 export const getSelectedId = createSelector(
   getUsersState,
-  (state: State) => state.selectedId
+  (state: UsersState) => state.selectedId
 );
 
 export const getSelected = createSelector(
@@ -227,12 +227,12 @@ import * as UsersFeature from './users.reducer';
 
 @Injectable()
 export class UsersEffects {
-  init$ = createEffect(() => this.dataPersistence.fetch(UsersActions.init, {
-    run: (action: ReturnType<typeof UsersActions.init>, state: UsersFeature.UsersPartialState) => {
+  init$ = createEffect(() => this.dataPersistence.fetch(UsersActions.Usersinit, {
+    run: (action: ReturnType<typeof UsersActions.initUsers>, state: UsersFeature.UsersPartialState) => {
       // Your custom service 'load' logic goes here. For now just return a success action...
       return UsersActions.loadUsersSuccess({ users: [] });
     },
-    onError: (action: ReturnType<typeof UsersActions.init>, error) => {
+    onError: (action: ReturnType<typeof UsersActions.initUsers>, error) => {
       console.error('Error', error);
       return UsersActions.loadUsersFailure({ error });
     }
@@ -279,7 +279,7 @@ describe('SuperUsersEffects', () => {
 
   describe('init$', () => {
     it('should work', () => {
-      actions = hot('-a-|', { a: SuperUsersActions.init() });
+      actions = hot('-a-|', { a: SuperUsersActions.initSuperUsers() });
 
       const expected = hot('-a-|', { a: SuperUsersActions.loadSuperUsersSuccess({ superUsers: [] }) });
 
@@ -324,7 +324,7 @@ describe('SuperUsersEffects', () => {
 
   describe('init$', () => {
     it('should work', () => {
-      actions = hot('-a-|', { a: SuperUsersActions.init() });
+      actions = hot('-a-|', { a: SuperUsersActions.initSuperUsers() });
 
       const expected = hot('-a-|', { a: SuperUsersActions.loadSuperUsersSuccess({ superUsers: [] }) });
 
@@ -349,14 +349,14 @@ import { SuperUsersFacade } from './super-users.facade';
 import { SuperUsersEntity } from './super-users.models';
 import {
   SUPER_USERS_FEATURE_KEY,
-  State,
-  initialState,
-  reducer
+  SuperUsersState,
+  initialSuperUsersState,
+  superUsersReducer
 } from './super-users.reducer';
 import * as SuperUsersSelectors from './super-users.selectors';
 
 interface TestSchema {
-  superUsers: State;
+  superUsers: SuperUsersState;
 }
 
 describe('SuperUsersFacade', () => {
@@ -371,7 +371,7 @@ describe('SuperUsersFacade', () => {
     beforeEach(() => {
       @NgModule({
         imports: [
-          StoreModule.forFeature(SUPER_USERS_FEATURE_KEY, reducer),
+          StoreModule.forFeature(SUPER_USERS_FEATURE_KEY, superUsersReducer),
           EffectsModule.forFeature([SuperUsersEffects])
         ],
         providers: [SuperUsersFacade]
@@ -445,7 +445,7 @@ exports[`NgRx generator creators syntax unit tests should generate specs for the
 
 import * as SuperUsersActions from './super-users.actions';
 import { SuperUsersEntity } from './super-users.models';
-import { State, initialState, reducer } from './super-users.reducer';
+import { SuperUsersState, initialSuperUsersState, superUsersReducer } from './super-users.reducer';
 
 describe('SuperUsers Reducer', () => {
   const createSuperUsersEntity = (id: string, name = ''): SuperUsersEntity => ({
@@ -461,7 +461,7 @@ describe('SuperUsers Reducer', () => {
       ];
       const action = SuperUsersActions.loadSuperUsersSuccess({ superUsers });
 
-      const result: State = reducer(initialState, action);
+      const result: SuperUsersState = superUsersReducer(initialSuperUsersState, action);
 
       expect(result.loaded).toBe(true);
       expect(result.ids.length).toBe(2);
@@ -472,9 +472,9 @@ describe('SuperUsers Reducer', () => {
     it('should return the previous state', () => {
       const action = {} as Action;
 
-      const result = reducer(initialState, action);
+      const result = superUsersReducer(initialSuperUsersState, action);
 
-      expect(result).toBe(initialState);
+      expect(result).toBe(initialSuperUsersState);
     });
   });
 });
@@ -483,7 +483,7 @@ describe('SuperUsers Reducer', () => {
 
 exports[`NgRx generator creators syntax unit tests should generate specs for the ngrx selectors 1`] = `
 "import { SuperUsersEntity } from './super-users.models';
-import { superUsersAdapter, SuperUsersPartialState, initialState } from './super-users.reducer';
+import { superUsersAdapter, SuperUsersPartialState, initialSuperUsersState } from './super-users.reducer';
 import * as SuperUsersSelectors from './super-users.selectors';
 
 describe('SuperUsers Selectors', () => {
@@ -503,7 +503,7 @@ describe('SuperUsers Selectors', () => {
         createSuperUsersEntity('PRODUCT-BBB'),
         createSuperUsersEntity('PRODUCT-CCC')
       ], {
-        ...initialState,
+        ...initialSuperUsersState,
         selectedId : 'PRODUCT-BBB',
         error: ERROR_MSG,
         loaded: true

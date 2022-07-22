@@ -1,4 +1,5 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/storybook",
   "projectType": "library",
   "targets": {
@@ -25,23 +26,28 @@
           },
           {
             "input": "packages/storybook",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
             "glob": "**/root-files/.storybook/**",
             "output": "/"
           },
           {
             "input": "packages/storybook",
-            "glob": "**/project-files-5/.storybook/**",
+            "glob": "**/project-files-ts/.storybook/**",
             "output": "/"
           },
           {
             "input": "packages/storybook",
-            "glob": "**/root-files-5/.storybook/**",
+            "glob": "**/root-files-ts/.storybook/**",
             "output": "/"
           },
           {
             "input": "packages/storybook",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json"],
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"
           },
           {
@@ -65,7 +71,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["build/packages/storybook"],
       "options": {
         "command": "node ./scripts/copy-readme.js storybook"
@@ -83,7 +89,11 @@
           "packages/storybook/**/*.spec.jsx",
           "packages/storybook/**/*.d.ts",
           "packages/storybook/**/executors/**/schema.json",
-          "packages/storybook/**/generators/**/schema.json"
+          "packages/storybook/**/generators/**/schema.json",
+          "packages/storybook/generators.json",
+          "packages/storybook/executors.json",
+          "packages/storybook/package.json",
+          "packages/storybook/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

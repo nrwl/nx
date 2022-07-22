@@ -1,8 +1,8 @@
 export enum Preset {
   Apps = 'apps',
   Empty = 'empty', // same as apps, deprecated
-  Core = 'core',
-  NPM = 'npm', // same as core, deprecated
+  Core = 'core', // same as npm, deprecated
+  NPM = 'npm',
   TS = 'ts',
   WebComponents = 'web-components',
   Angular = 'angular',

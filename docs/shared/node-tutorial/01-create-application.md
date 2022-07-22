@@ -1,10 +1,15 @@
 # Node Nx Tutorial - Step 1: Create Application
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/UcBSBQYNlhE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/UcBSBQYNlhE"
+title="Nx.dev Tutorial | Node | Step 1: Create Application"
+width="100%" /%}
 
 In this tutorial you use Nx to build a server application out of common libraries using modern technologies.
 
-> This tutorial uses several Nx plugins to provide a rich dev experience. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+{% callout type="note" title="Plugins for a rich developer experience" %}
+In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+{% /callout %}
 
 ## Create a New Workspace
 
@@ -68,27 +73,41 @@ Depending on how your dev env is set up, the command above might result in `Comm
 
 To fix it, you can either install the `nx` cli globally by running:
 
-```bash
-npm install -g nx
-```
-
-or
+{% tabs %}
+{% tab label="yarn" %}
 
 ```bash
 yarn global add nx
 ```
 
+{% /tab %}
+{% tab label="npm" %}
+
+```bash
+npm install -g nx
+```
+
+{% /tab %}
+{% /tabs %}
+
 Or you can prepend every command with `npm run`:
+
+{% tabs %}
+{% tab label="yarn" %}
+
+```bash
+yarn nx serve todos
+```
+
+{% /tab %}
+{% tab label="npm" %}
 
 ```bash
 npx nx serve todos
 ```
 
-or
-
-```bash
-yarn nx serve todos
-```
+{% /tab %}
+{% /tabs %}
 
 ## Project.json, Targets, Executors
 
@@ -115,7 +134,7 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](https://nx.dev/l/node/using-nx/console#nx-console-for-vscode)).
+It helps with good editor integration (see [VSCode Support](/using-nx/console#nx-console-for-vscode)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
 

@@ -1,6 +1,9 @@
 # React Nx Tutorial - Step 2: Add E2E Tests
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/3HSzqt3WiVg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/3HSzqt3WiVg"
+title="Nx.dev Tutorial | React | Step 2: Add E2E Tests"
+width="100%" /%}
 
 By default, Nx uses [Cypress](https://cypress.io) to run E2E tests.
 

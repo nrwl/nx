@@ -6,7 +6,7 @@ export async function promptForNxCloud(): Promise<boolean> {
   const { useNxCloud } = await prompt<{ useNxCloud: 'Yes' | 'No' }>([
     {
       name: 'useNxCloud',
-      message: `Use Nx Cloud? (It's free and doesn't require registration.)`,
+      message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
       type: 'select',
       choices: [
         {
@@ -23,7 +23,12 @@ export async function promptForNxCloud(): Promise<boolean> {
 }
 
 export function initNxCloud(): void {
-  execSync(`${getPackageManagerCommand().exec} nx g @nrwl/nx-cloud:init`, {
-    stdio: [0, 1, 2],
-  });
+  execSync(
+    `${
+      getPackageManagerCommand().exec
+    } nx g @nrwl/nx-cloud:init --installationSource=make-angular-cli-faster`,
+    {
+      stdio: [0, 1, 2],
+    }
+  );
 }

@@ -17,3 +17,11 @@ export interface Schema {
   skipSelector?: boolean;
   export?: boolean;
 }
+
+export interface NormalizedSchema extends Schema {
+  export: boolean;
+  inlineScam: boolean;
+  path: string;
+  project: string;
+  projectSourceRoot: string;
+}

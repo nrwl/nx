@@ -2,7 +2,10 @@
 
 Nx 12.7 comes with a dedicated Storybook preset for React which drammatically simplifies the Storybook setup and makes sure that Storybook uses the same webpack configuration as your React applications running within an Nx workspace.
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/oUE74McS_NY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/oUE74McS_NY"
+title="New in Nx 12.7: React Storybook Preset"
+width="100%" /%}
 
 Here are the main differences to the previous versions of Nx:
 
@@ -70,7 +73,7 @@ Here's the step-by-step migration process:
 
 ### 1. adjust the `main.js` file
 
-Restructure your `main.js` file s.t. it looks like in the example illustrated above.
+Restructure your `main.js` file so that it looks like in the example illustrated above.
 
 If you need to keep your root-level `.storybook/webpack.config.js` for now, then make sure you adjust the `main.js` in a way that it properly calls the root-level `webpack.config.js` to inherit all of the global configurations.
 
@@ -94,7 +97,9 @@ module.exports = {
 };
 ```
 
-**Note:** The easiest way is probably to generate a new library and Storybook configuration and then copy & paste the `main.js`.
+{% callout type="note" title="Tip!" %}
+The easiest way is probably to generate a new library and Storybook configuration and then copy & paste the `main.js`.
+{% /callout %}
 
 ### 2. Move any custom webpack configuration to `webpackFinal`
 
@@ -186,3 +191,17 @@ In case you made custom modifications to the `webpack.config.js` file, you need 
 ### 3. Remove the root-level `.storybook/webpack.config.js` file
 
 Once you've migrated all your libraries, you can think about removing the root-level `.storybook/webpack.config.js` file and migrate any custom configuration there to `.storybook/main.js` `webpackFinal` property in the very same folder.
+
+### 4. Opting in to Webpack 5
+
+If you choose to opt-in to Webpack 5, by specifying `builder: 'webpack5'` in your project's `.storybook/main.(js|ts)` (as shown above, in the example of a newly generated `main.js` file), don't forget to add the Storybook dependencies for Webpack 5 to work:
+
+```shell
+yarn add -D @storybook/builder-webpack5 @storybook/manager-webpack5
+```
+
+or if you're using `npm`:
+
+```shell
+npm install --save-dev @storybook/builder-webpack5 @storybook/manager-webpack5
+```

@@ -1,5 +1,8 @@
-import { readNxJson, readWorkspaceJson } from '../project-graph/file-utils';
 import { NxJsonConfiguration } from '../config/nx-json';
+import {
+  readNxJson,
+  readAllWorkspaceConfiguration,
+} from '../config/configuration';
 
 export interface Environment {
   nxJson: NxJsonConfiguration;
@@ -12,8 +15,11 @@ export interface Environment {
   workspaceResults: any;
 }
 
+/**
+ * @deprecated Read workspaceJson from projectGraph, and use readNxJson on its own.
+ */
 export function readEnvironment(): Environment {
   const nxJson = readNxJson();
-  const workspaceJson = readWorkspaceJson();
+  const workspaceJson = readAllWorkspaceConfiguration();
   return { nxJson, workspaceJson, workspaceResults: null } as any;
 }

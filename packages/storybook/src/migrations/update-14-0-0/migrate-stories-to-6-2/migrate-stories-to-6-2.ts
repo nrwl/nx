@@ -8,6 +8,7 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
+import { getTsSourceFile } from '@nrwl/storybook/src/utils/utilities';
 import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
 import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
 import { join, normalize } from 'path';
@@ -69,15 +70,13 @@ export function findAllAngularProjectsWithStorybookConfiguration(tree: Tree): {
         '@storybook/angular'
     )
     ?.map(([projectName, projectConfig]) => {
-      if (projectConfig?.targets?.storybook) {
-        return {
-          name: projectName,
-          configFolder:
-            projectConfig.targets.storybook?.options?.config?.configFolder,
-          projectRoot: projectConfig.root,
-          projectSrc: projectConfig.sourceRoot,
-        };
-      }
+      return {
+        name: projectName,
+        configFolder:
+          projectConfig.targets.storybook?.options?.config?.configFolder,
+        projectRoot: projectConfig.root,
+        projectSrc: projectConfig.sourceRoot,
+      };
     });
   return projectsThatHaveStorybookConfiguration;
 }
@@ -281,22 +280,6 @@ function findAllComponentsWithStoriesForSpecificProject(
     }
   });
   return componentFileInfos;
-}
-
-export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
-  const buffer = host.read(path);
-  if (!buffer) {
-    throw new Error(`Could not read TS file (${path}).`);
-  }
-  const content = buffer.toString();
-  const source = ts.createSourceFile(
-    path,
-    content,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  return source;
 }
 
 async function changeSyntaxOfStory(tree: Tree, storyFilePath: string) {

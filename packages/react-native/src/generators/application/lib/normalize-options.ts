@@ -1,4 +1,9 @@
-import { names } from '@nrwl/devkit';
+import {
+  getWorkspaceLayout,
+  joinPathFragments,
+  names,
+  Tree,
+} from '@nrwl/devkit';
 import { join } from 'path';
 import { Schema } from '../schema';
 
@@ -13,8 +18,12 @@ export interface NormalizedSchema extends Schema {
   entryFile: string;
 }
 
-export function normalizeOptions(options: Schema): NormalizedSchema {
+export function normalizeOptions(
+  host: Tree,
+  options: Schema
+): NormalizedSchema {
   const { fileName, className } = names(options.name);
+  const { appsDir } = getWorkspaceLayout(host);
 
   const directoryName = options.directory
     ? names(options.directory).fileName
@@ -25,7 +34,7 @@ export function normalizeOptions(options: Schema): NormalizedSchema {
 
   const appProjectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
 
-  const appProjectRoot = `apps/${projectDirectory}`;
+  const appProjectRoot = joinPathFragments(appsDir, projectDirectory);
   const iosProjectRoot = join(appProjectRoot, 'ios');
   const androidProjectRoot = join(appProjectRoot, 'android');
 

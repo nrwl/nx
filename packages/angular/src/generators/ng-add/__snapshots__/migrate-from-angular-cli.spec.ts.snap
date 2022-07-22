@@ -12,14 +12,12 @@ Object {
       "devDependencies": "*",
     },
   },
-  "npmScope": "my-scope",
-  "targetDependencies": Object {
-    "build": Array [
-      Object {
-        "projects": "dependencies",
-        "target": "build",
-      },
-    ],
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+    },
   },
   "tasksRunnerOptions": Object {
     "default": Object {
@@ -53,14 +51,12 @@ Object {
       "devDependencies": "*",
     },
   },
-  "npmScope": "my-scope",
-  "targetDependencies": Object {
-    "build": Array [
-      Object {
-        "projects": "dependencies",
-        "target": "build",
-      },
-    ],
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+    },
   },
   "tasksRunnerOptions": Object {
     "default": Object {
@@ -165,9 +161,6 @@ Object {
   "affected": Object {
     "defaultBase": "main",
   },
-  "cli": Object {
-    "defaultCollection": "@nrwl/angular",
-  },
   "defaultProject": "myApp",
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
@@ -177,13 +170,12 @@ Object {
     },
   },
   "npmScope": "my-org",
-  "targetDependencies": Object {
-    "build": Array [
-      Object {
-        "projects": "dependencies",
-        "target": "build",
-      },
-    ],
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+    },
   },
   "tasksRunnerOptions": Object {
     "default": Object {

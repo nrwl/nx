@@ -1,4 +1,5 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/react-native/src",
   "projectType": "library",
   "targets": {
@@ -13,7 +14,11 @@
           "packages/react-native/**/*.spec.jsx",
           "packages/react-native/**/*.d.ts",
           "packages/react-native/**/executors/**/schema.json",
-          "packages/react-native/**/generators/**/schema.json"
+          "packages/react-native/**/generators/**/schema.json",
+          "packages/react-native/generators.json",
+          "packages/react-native/executors.json",
+          "packages/react-native/package.json",
+          "packages/react-native/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]
@@ -76,7 +81,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["build/packages/react-native"],
       "options": {
         "command": "node ./scripts/copy-readme.js react-native"

@@ -1,4 +1,4 @@
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
 import { getFileHashes, getGitHashForFiles } from './git-hasher';
 import { existsSync, readFileSync } from 'fs';

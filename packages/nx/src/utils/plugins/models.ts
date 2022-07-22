@@ -1,21 +1,12 @@
-export interface PluginGenerator {
-  factory: string;
-  schema: string;
-  description: string;
-  aliases: string;
-  hidden: boolean;
-}
-
-export interface PluginExecutor {
-  implementation: string;
-  schema: string;
-  description: string;
-}
+import {
+  ExecutorsJsonEntry,
+  GeneratorsJsonEntry,
+} from '../../config/misc-interfaces';
 
 export interface PluginCapabilities {
   name: string;
-  executors: { [name: string]: PluginExecutor };
-  generators: { [name: string]: PluginGenerator };
+  executors: { [name: string]: ExecutorsJsonEntry };
+  generators: { [name: string]: GeneratorsJsonEntry };
 }
 
 export interface CorePlugin {

@@ -33,9 +33,10 @@ function pathResolver(root: string): (path: string) => string {
   return (path) => join(root, path.replace('schema.json', ''));
 }
 
-export function generatePackageSchemas(): void {
+export function generatePackageSchemas(): Promise<void>[] {
   console.log(`${chalk.blue('i')} Generating Package Schemas`);
   const absoluteRoot = resolve(join(__dirname, '../../../'));
+
   const packages = getPackageMetadataList(absoluteRoot, 'packages', 'docs').map(
     (packageMetadata) => {
       const getCurrentSchemaPath = pathResolver(absoluteRoot);
@@ -79,35 +80,11 @@ export function generatePackageSchemas(): void {
   /**
    * Generates each package metadata in an `/packages` sub-folder.
    */
-  packages.forEach(
+  return packages.map(
     (p): Promise<void> =>
       generateJsonFile(
         join(outputPath, 'generated', 'packages', p.name + '.json'),
         p
       )
   );
-}
-
-// Temp, rework map API-reference
-function updateMenuPathsInMapJson(): void {
-  const absoluteRoot = resolve(join(__dirname, '../../../'));
-  const outputPath: string = join(absoluteRoot, 'docs');
-  const jsonFile = readJsonSync(join(outputPath, 'map.json'));
-
-  jsonFile[0].itemList.forEach((itemA, indexA) => {
-    itemA.itemList.forEach((itemB, indexB) => {
-      if (
-        itemB.file &&
-        itemB.file.includes('generated/api-') &&
-        !itemB.file.include('api-nx-devkit')
-      ) {
-        jsonFile[0].itemList[indexA].itemList[indexB] = {
-          ...itemB,
-          path: '/packages/' + itemB.file.replace('generated/api-', ''),
-        };
-      }
-    });
-  });
-
-  writeJSONSync(join(outputPath, 'map.json'), jsonFile, 'utf-8');
 }

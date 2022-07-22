@@ -81,6 +81,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipFormat: false,
     unitTestRunner: 'none',
     name: `${libName}-e2e`,
+    install: false,
   });
   return appTree;
 }

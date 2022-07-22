@@ -3,13 +3,13 @@ import type { JsonParseOptions, JsonSerializeOptions } from './json';
 import {
   createReadStream,
   createWriteStream,
+  PathLike,
   readFileSync,
   writeFileSync,
+  mkdirSync,
+  statSync,
 } from 'fs';
 import { dirname } from 'path';
-import { ensureDirSync } from 'fs-extra';
-import { mkdirSync, statSync } from 'fs';
-import { resolve as pathResolve } from 'path';
 import * as tar from 'tar-stream';
 import { createGunzip } from 'zlib';
 
@@ -64,7 +64,7 @@ export function writeJsonFile<T extends object = object>(
   data: T,
   options?: JsonWriteOptions
 ): void {
-  ensureDirSync(dirname(path));
+  mkdirSync(dirname(path), { recursive: true });
   const serializedJson = serializeJson(data, options);
   const content = options?.appendNewLine
     ? `${serializedJson}\n`
@@ -72,30 +72,32 @@ export function writeJsonFile<T extends object = object>(
   writeFileSync(path, content, { encoding: 'utf-8' });
 }
 
-export function directoryExists(name) {
+/**
+ * Check if a directory exists
+ * @param path Path to directory
+ */
+export function directoryExists(path: PathLike): boolean {
   try {
-    return statSync(name).isDirectory();
-  } catch (e) {
+    return statSync(path).isDirectory();
+  } catch {
     return false;
   }
 }
 
-export function fileExists(filePath: string): boolean {
+/**
+ * Check if a file exists.
+ * @param path Path to file
+ */
+export function fileExists(path: PathLike): boolean {
   try {
-    return statSync(filePath).isFile();
-  } catch (err) {
+    return statSync(path).isFile();
+  } catch {
     return false;
   }
 }
 
-export function createDirectory(directoryPath: string) {
-  const parentPath = pathResolve(directoryPath, '..');
-  if (!directoryExists(parentPath)) {
-    createDirectory(parentPath);
-  }
-  if (!directoryExists(directoryPath)) {
-    mkdirSync(directoryPath);
-  }
+export function createDirectory(path: PathLike) {
+  mkdirSync(path, { recursive: true });
 }
 
 export function isRelativePath(path: string): boolean {
@@ -120,7 +122,7 @@ export async function extractFileFromTarball(
   destinationFilePath: string
 ) {
   return new Promise<string>((resolve, reject) => {
-    ensureDirSync(dirname(destinationFilePath));
+    mkdirSync(dirname(destinationFilePath), { recursive: true });
     var tarExtractStream = tar.extract();
     const destinationFileStream = createWriteStream(destinationFilePath);
 

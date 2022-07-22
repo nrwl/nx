@@ -1,0 +1,154 @@
+{
+  "projects": {
+    "ui-one": {
+      "projectType": "library",
+      "root": "libs/ui/one",
+      "sourceRoot": "libs/ui/one/src",
+      "targets": {
+        "trthrngb": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "port": 4400,
+            "config": {
+              "configFolder": "libs/ui/one/.storybook"
+            },
+            "projectBuildConfig": "ui-one:asdgsdfg"
+          }
+        },
+        "asdgsdfg": {
+          "executor": "@nrwl/storybook:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "outputPath": "dist/storybook/ui/one",
+            "config": {
+              "configFolder": "libs/ui/one/.storybook"
+            },
+            "projectBuildConfig": "ui-one:asdgsdfg"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    },
+    "ui-two": {
+      "projectType": "library",
+      "root": "libs/ui/two",
+      "sourceRoot": "libs/ui/two/src",
+      "targets": {
+        "sdft": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "port": 4400,
+            "config": {
+              "configFolder": "libs/ui/two/.storybook"
+            },
+            "projectBuildConfig": "ui-two:thjkkb"
+          }
+        },
+        "thjkkb": {
+          "executor": "@nrwl/storybook:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "outputPath": "dist/storybook/ui/two",
+            "config": {
+              "configFolder": "libs/ui/two/.storybook"
+            },
+            "projectBuildConfig": "ui-two:thjkkb"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    },
+    "ui-three": {
+      "projectType": "library",
+      "root": "libs/ui/three",
+      "sourceRoot": "libs/ui/three/src",
+      "targets": {
+        "nmkgd": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "port": 4400,
+            "config": {
+              "configFolder": "libs/ui/three/.storybook"
+            },
+            "projectBuildConfig": "ui-three:aaaa"
+          }
+        },
+        "aaaa": {
+          "executor": "@nrwl/storybook:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "outputPath": "dist/storybook/ui/three",
+            "config": {
+              "configFolder": "libs/ui/three/.storybook"
+            },
+            "projectBuildConfig": "ui-three:aaaa"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    },
+    "main-app": {
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
+      "prefix": "katst",
+      "architect": {
+        "njdfvndfjnv": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "outputs": ["{options.outputPath}"]
+        },
+        "lmfkcn": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "port": 4400,
+            "config": {
+              "configFolder": "apps/main-app/.storybook"
+            },
+            "projectBuildConfig": "main-app"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        },
+        "odmwjbc": {
+          "builder": "@nrwl/storybook:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "outputPath": "dist/storybook/main-app",
+            "config": {
+              "configFolder": "apps/main-app/.storybook"
+            },
+            "projectBuildConfig": "main-app"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

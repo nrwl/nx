@@ -5,17 +5,15 @@ import {
 } from './webpack-utils';
 import {
   createProjectGraphAsync,
+  ProjectConfiguration,
   ProjectGraph,
   readCachedProjectGraph,
-  workspaceRoot,
-  Workspaces,
 } from '@nrwl/devkit';
 import {
   getRootTsConfigPath,
   readTsConfig,
 } from '@nrwl/workspace/src/utilities/typescript';
 import { ParsedCommandLine } from 'typescript';
-import { readWorkspaceJson } from 'nx/src/project-graph/file-utils';
 import {
   AdditionalSharedConfig,
   ModuleFederationConfig,
@@ -23,8 +21,9 @@ import {
   SharedFunction,
   SharedLibraryConfig,
 } from './models';
-import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 import { readRootPackageJson } from './package-json';
+import { extname, join } from 'path';
+import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 function collectDependencies(
   projectGraph: ProjectGraph,
@@ -55,11 +54,10 @@ function collectDependencies(
   return dependencies;
 }
 
-function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
-  const { projects } = new Workspaces(
-    workspaceRoot
-  ).readWorkspaceConfiguration();
-
+function mapWorkspaceLibrariesToTsConfigImport(
+  workspaceLibraries: string[],
+  { nodes }: ProjectGraph
+) {
   const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath();
   const tsConfig: ParsedCommandLine = readTsConfig(tsConfigPath);
 
@@ -71,7 +69,7 @@ function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
 
   const mappedLibraries = [];
   for (const lib of workspaceLibraries) {
-    const sourceRoot = projects[lib].sourceRoot;
+    const sourceRoot = nodes[lib].data.sourceRoot;
     let found = false;
 
     for (const [key, value] of Object.entries(tsconfigPathAliases)) {
@@ -100,16 +98,17 @@ async function getDependentPackagesForProject(
   );
 
   return {
-    workspaceLibraries: mapWorkspaceLibrariesToTsConfigImport([
-      ...workspaceLibraries,
-    ]),
+    workspaceLibraries: mapWorkspaceLibrariesToTsConfigImport(
+      [...workspaceLibraries],
+      projectGraph
+    ),
     npmPackages: [...npmPackages],
   };
 }
 
-function determineRemoteUrl(remote: string) {
-  const workspace = readWorkspaceJson();
-  const serveTarget = workspace.projects[remote]?.targets?.serve;
+function determineRemoteUrl(remote: string, projectGraph: ProjectGraph) {
+  const remoteConfiguration = projectGraph.nodes[remote].data;
+  const serveTarget = remoteConfiguration?.targets?.serve;
 
   if (!serveTarget) {
     throw new Error(
@@ -125,22 +124,18 @@ function determineRemoteUrl(remote: string) {
   }:${port}/remoteEntry.js`;
 }
 
-function mapRemotes(remotes: Remotes) {
+function mapRemotes(remotes: Remotes, projectGraph: ProjectGraph) {
   const mappedRemotes = {};
 
   for (const remote of remotes) {
     if (Array.isArray(remote)) {
       let [remoteName, remoteLocation] = remote;
-      if (!remoteLocation.match(/remoteEntry\.(js|mjs)$/)) {
-        remoteLocation = `${
-          remoteLocation.endsWith('/')
-            ? remoteLocation.slice(0, -1)
-            : remoteLocation
-        }/remoteEntry.js`;
-      }
-      mappedRemotes[remoteName] = remoteLocation;
+      const remoteLocationExt = extname(remoteLocation);
+      mappedRemotes[remoteName] = ['.js', '.mjs'].includes(remoteLocationExt)
+        ? remoteLocation
+        : join(remoteLocation, 'remoteEntry.js');
     } else if (typeof remote === 'string') {
-      mappedRemotes[remote] = determineRemoteUrl(remote);
+      mappedRemotes[remote] = determineRemoteUrl(remote, projectGraph);
     }
   }
 
@@ -175,7 +170,7 @@ function addStringDependencyToSharedConfig(
 ): void {
   if (projectGraph.nodes[dependency]) {
     sharedConfig[dependency] = { requiredVersion: false };
-  } else if (projectGraph.externalNodes?.[dependency]) {
+  } else if (projectGraph.externalNodes?.[`npm:${dependency}`]) {
     const pkgJson = readRootPackageJson();
     const config = getNpmPackageSharedConfig(
       dependency,
@@ -218,20 +213,19 @@ function applyAdditionalShared(
 
 export async function withModuleFederation(options: ModuleFederationConfig) {
   const reactWebpackConfig = require('../../plugins/webpack');
-  const ws = readWorkspaceJson();
-  const project = ws.projects[options.name];
+  let projectGraph: ProjectGraph<ProjectConfiguration>;
+  try {
+    projectGraph = readCachedProjectGraph();
+  } catch (e) {
+    projectGraph = await createProjectGraphAsync();
+  }
+
+  const project = projectGraph.nodes[options.name].data;
 
   if (!project) {
     throw Error(
       `Cannot find project "${options.name}". Check that the name is correct in module-federation.config.js`
     );
-  }
-
-  let projectGraph: ProjectGraph<any>;
-  try {
-    projectGraph = readCachedProjectGraph();
-  } catch (e) {
-    projectGraph = await createProjectGraphAsync();
   }
 
   const dependencies = await getDependentPackagesForProject(
@@ -274,7 +268,7 @@ export async function withModuleFederation(options: ModuleFederationConfig) {
     const mappedRemotes =
       !options.remotes || options.remotes.length === 0
         ? {}
-        : mapRemotes(options.remotes);
+        : mapRemotes(options.remotes, projectGraph);
 
     config.plugins.push(
       new ModuleFederationPlugin({

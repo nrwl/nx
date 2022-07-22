@@ -1,12 +1,19 @@
 # React Nx Tutorial - Step 1: Create Application
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/HcQE5R6ucng" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/HcQE5R6ucng"
+title="Nx.dev Tutorial | React | Step 1: Create Application"
+width="100%" /%}
 
 In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies.
 
-> Next.js: Nx also has first-class Next.js support. Read more about it [here](/next/overview)
+{% callout type="check" title="Nx has first-class Next.js support" %}
+Nx has first-class Next.js support, if you are looking to try or use it for your project. Read more about it [here](/next/overview)
+{% /callout %}
 
-> This tutorial uses several Nx plugins to provide a rich dev experience. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+{% callout type="note" title="Plugins for a rich developer experience" %}
+In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+{% /callout %}
 
 ## Create a new workspace
 
@@ -95,7 +102,7 @@ npx nx serve todos
 
 ## Note on the Nx CLI
 
-If you would prefer to run using a global installation of Nx, you can run:
+If you prefer to run using a global installation of Nx, you can run:
 
 ```bash
 nx serve todos
@@ -105,27 +112,41 @@ Depending on how your dev env is set up, the command above might result in `Comm
 
 To fix it, you can either install the `nx` cli globally by running:
 
-```bash
-npm install -g nx
-```
-
-or
+{% tabs %}
+{% tab label="yarn" %}
 
 ```bash
 yarn global add nx
 ```
 
+{% /tab %}
+{% tab label="npm" %}
+
+```bash
+npm install -g nx
+```
+
+{% /tab %}
+{% /tabs %}
+
 Alternatively, you can run the local installation of Nx by prepending every command with `npx`:
+
+{% tabs %}
+{% tab label="yarn" %}
+
+```bash
+yarn nx serve todos
+```
+
+{% /tab %}
+{% tab label="npm" %}
 
 ```bash
 npx nx serve todos
 ```
 
-or
-
-```bash
-yarn nx serve todos
-```
+{% /tab %}
+{% /tabs %}
 
 ## What's Next
 

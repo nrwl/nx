@@ -7,6 +7,7 @@ import type { LifeCycle } from '../life-cycle';
 import type { TaskStatus } from '../tasks-runner';
 import { Task } from '../../config/task-graph';
 import { prettyTime } from './pretty-time';
+import { formatFlags } from './formatting-utils';
 
 /**
  * The following function is responsible for creating a life cycle with dynamic
@@ -59,6 +60,7 @@ export async function createRunManyDynamicOutputRenderer({
   const totalProjects = projectNames.length;
   const totalDependentTasks = totalTasks - totalProjects;
   const targetName = args.target;
+  const configuration = args.configuration;
   const projectRows = projectNames.map((projectName) => {
     return {
       projectName,
@@ -117,8 +119,8 @@ export async function createRunManyDynamicOutputRenderer({
         writeLine(
           `${
             output.colors.green(figures.tick) +
-            output.dim('  nx run ') +
-            task.id
+            '  ' +
+            output.formatCommand(task.id)
           }  ${output.dim('[local cache]')}`
         );
         if (isVerbose) {
@@ -129,8 +131,8 @@ export async function createRunManyDynamicOutputRenderer({
         writeLine(
           `${
             output.colors.green(figures.tick) +
-            output.dim('  nx run ') +
-            task.id
+            '  ' +
+            output.formatCommand(task.id)
           }  ${output.dim('[existing outputs match the cache, left as is]')}`
         );
         if (isVerbose) {
@@ -141,8 +143,8 @@ export async function createRunManyDynamicOutputRenderer({
         writeLine(
           `${
             output.colors.green(figures.tick) +
-            output.dim('  nx run ') +
-            task.id
+            '  ' +
+            output.formatCommand(task.id)
           }  ${output.dim('[remote cache]')}`
         );
         if (isVerbose) {
@@ -155,8 +157,8 @@ export async function createRunManyDynamicOutputRenderer({
         );
         writeLine(
           output.colors.green(figures.tick) +
-            output.dim('  nx run ') +
-            task.id +
+            '  ' +
+            output.formatCommand(task.id) +
             output.dim(` (${timeTakenText})`)
         );
         if (isVerbose) {
@@ -168,8 +170,8 @@ export async function createRunManyDynamicOutputRenderer({
         output.addNewline();
         writeLine(
           output.colors.red(figures.cross) +
-            output.dim('  nx run ') +
-            output.colors.red(task.id)
+            '  ' +
+            output.formatCommand(output.colors.red(task.id))
         );
         writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
         break;
@@ -202,9 +204,14 @@ export async function createRunManyDynamicOutputRenderer({
       additionalFooterRows.push('');
       for (const projectRow of runningTasks) {
         additionalFooterRows.push(
-          `   ${output.dim.cyan(dots.frames[projectRowsCurrentFrame])}    ${
-            output.dim('nx run ') + projectRow.projectName + ':' + targetName
-          }`
+          `   ${output.dim.cyan(
+            dots.frames[projectRowsCurrentFrame]
+          )}    ${output.formatCommand(
+            projectRow.projectName +
+              ':' +
+              targetName +
+              (configuration ? ':' + configuration : '')
+          )}`
         );
       }
       /**
@@ -271,7 +278,7 @@ export async function createRunManyDynamicOutputRenderer({
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.cyan(`${leftPadding}  --${flag}=${value}`)
+            output.dim.cyan(formatFlags(leftPadding, flag, value))
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -333,7 +340,7 @@ export async function createRunManyDynamicOutputRenderer({
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.green(`${leftPadding}  --${flag}=${value}`)
+            output.dim.green(formatFlags(leftPadding, flag, value))
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -372,7 +379,7 @@ export async function createRunManyDynamicOutputRenderer({
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.red(`${leftPadding}  --${flag}=${value}`)
+            output.dim.red(formatFlags(leftPadding, flag, value))
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -403,7 +410,9 @@ export async function createRunManyDynamicOutputRenderer({
         `${failedTasksForPrinting
           .map(
             (t) =>
-              `        ${output.colors.red('-')} ${output.dim('nx run')} ${t}`
+              `        ${output.colors.red('-')} ${output.formatCommand(
+                t.toString()
+              )}`
           )
           .join('\n ')}`,
       ];

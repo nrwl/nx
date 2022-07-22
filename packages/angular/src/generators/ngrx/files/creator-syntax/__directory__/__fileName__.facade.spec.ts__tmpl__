@@ -11,14 +11,14 @@ import { <%= className %>Facade } from './<%= fileName %>.facade';
 import { <%= className %>Entity } from './<%= fileName %>.models';
 import {
   <%= constantName %>_FEATURE_KEY,
-  State,
-  initialState,
-  reducer
+  <%= className %>State,
+  initial<%= className %>State,
+  <%= propertyName %>Reducer
 } from './<%= fileName %>.reducer';
 import * as <%= className %>Selectors from './<%= fileName %>.selectors';
 
 interface TestSchema {
-  <%= propertyName %>: State;
+  <%= propertyName %>: <%= className %>State;
 }
 
 describe('<%= className %>Facade', () => {
@@ -33,7 +33,7 @@ describe('<%= className %>Facade', () => {
     beforeEach(() => {
       @NgModule({
         imports: [
-          StoreModule.forFeature(<%= constantName %>_FEATURE_KEY, reducer),
+          StoreModule.forFeature(<%= constantName %>_FEATURE_KEY, <%= propertyName %>Reducer),
           EffectsModule.forFeature([<%= className %>Effects])
         ],
         providers: [<%= className %>Facade]

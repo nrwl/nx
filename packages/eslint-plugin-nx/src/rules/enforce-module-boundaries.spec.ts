@@ -1,13 +1,13 @@
 import type { FileData, ProjectGraph } from '@nrwl/devkit';
 import { DependencyType } from '@nrwl/devkit';
-import { TSESLint } from '@typescript-eslint/experimental-utils';
+import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import * as parser from '@typescript-eslint/parser';
+import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
-import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
-import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -16,7 +16,7 @@ jest.mock('@nrwl/devkit', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 

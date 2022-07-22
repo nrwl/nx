@@ -1,0 +1,34 @@
+{
+  "projects": {
+    "ui-one": {
+      "projectType": "library",
+      "root": "libs/ui/one",
+      "sourceRoot": "libs/ui/one/src",
+      "targets": {}
+    },
+    "ui-two": {
+      "projectType": "library",
+      "root": "libs/ui/two",
+      "sourceRoot": "libs/ui/two/src",
+      "targets": {}
+    },
+    "ui-three": {
+      "projectType": "library",
+      "root": "libs/ui/three",
+      "sourceRoot": "libs/ui/three/src",
+      "targets": {}
+    },
+    "main-app": {
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
+      "prefix": "katst",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "outputs": ["{options.outputPath}"]
+        }
+      }
+    }
+  }
+}

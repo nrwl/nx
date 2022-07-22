@@ -1,4 +1,8 @@
-import type { Tree } from '@nrwl/devkit';
+import {
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { joinPathFragments, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { storybookVersion } from '@nrwl/storybook';
@@ -6,14 +10,12 @@ import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { nxVersion } from '../../../utils/versions';
-import {
-  getTsSourceFile,
-  migrateStoriesTo62Generator,
-} from './migrate-stories-to-6-2';
+import { migrateStoriesTo62Generator } from './migrate-stories-to-6-2';
 import {
   overrideCollectionResolutionForTesting,
   wrapAngularDevkitSchematic,
 } from '@nrwl/devkit/ngcli-adapter';
+import { getTsSourceFile } from '@nrwl/storybook/src/utils/utilities';
 
 const componentSchematic = wrapAngularDevkitSchematic(
   '@schematics/angular',
@@ -98,6 +100,23 @@ describe('migrate-stories-to-6-2 schematic', () => {
           });
       `
       );
+
+      /**
+       * This needs to be updated for the following reason:
+       * - runAngularStorybookSchematic now generates the Storybook targets in
+       *   the project configuration using the @storybook/angular executors
+       * - this means that the uiFramework property is not used any more
+       * - that property was used in versions before that so the migration script looks for it
+       * - the migrate-stories-to-6-2 migrator should have already taken effect in previous versions
+       *   so there is no need to update the generator to look for the new executor as well
+       */
+      const projectConfig = readProjectConfiguration(appTree, 'test-ui-lib');
+      projectConfig.targets.storybook.options.uiFramework =
+        '@storybook/angular';
+      projectConfig.targets.storybook.options.config = {
+        configFolder: projectConfig.targets.storybook.options.configDir,
+      };
+      updateProjectConfiguration(appTree, 'test-ui-lib', projectConfig);
     });
 
     it('should move the component from the story to parameters.component', async () => {

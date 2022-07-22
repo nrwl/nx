@@ -2,24 +2,39 @@ import { runCommand } from '../tasks-runner/run-command';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
-import { createProjectGraphAsync } from '../project-graph/project-graph';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { splitTarget } from '../utils/split-target';
 import { output } from '../utils/output';
-import { readEnvironment } from './read-environment';
-import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
+import {
+  ProjectsConfigurations,
+  TargetDependencyConfig,
+} from '../config/workspace-json-project-json';
+import { readNxJson } from '../config/configuration';
 
 export async function runOne(
   cwd: string,
-  args: { [k: string]: any }
+  args: { [k: string]: any },
+  extraTargetDependencies: Record<
+    string,
+    (TargetDependencyConfig | string)[]
+  > = {}
 ): Promise<void> {
   performance.mark('command-execution-begins');
   performance.measure('code-loading', 'init-local', 'command-execution-begins');
 
-  const env = readEnvironment();
-  const opts = parseRunOneOptions(cwd, args, env.workspaceJson);
+  const nxJson = readNxJson();
+  const projectGraph = await createProjectGraphAsync();
+
+  const opts = parseRunOneOptions(cwd, args, {
+    ...readProjectsConfigurationFromProjectGraph(projectGraph),
+    ...nxJson,
+  });
 
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     {
@@ -27,17 +42,17 @@ export async function runOne(
       configuration: opts.configuration,
       target: opts.target,
     },
-    'run-one'
+    'run-one',
+    { printWarnings: true },
+    nxJson
   );
 
   if (nxArgs.help) {
     await (
       await import('./run')
-    ).run(cwd, workspaceRoot, opts, {}, false, true);
+    ).run(cwd, workspaceRoot, opts, {}, false, true, projectGraph);
     process.exit(0);
   }
-
-  const projectGraph = await createProjectGraphAsync();
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
@@ -46,10 +61,11 @@ export async function runOne(
   await runCommand(
     projects,
     projectGraph,
-    env,
+    { nxJson },
     nxArgs,
     overrides,
-    opts.project
+    opts.project,
+    extraTargetDependencies
   );
 }
 
@@ -71,8 +87,6 @@ function getProjects(projectGraph: ProjectGraph, project: string): any {
 const targetAliases = {
   b: 'build',
   e: 'e2e',
-  'i18n-extract': 'extract-i18n',
-  xi18n: 'extract-i18n',
   l: 'lint',
   s: 'serve',
   t: 'test',
@@ -81,7 +95,7 @@ const targetAliases = {
 function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
-  workspaceConfiguration: WorkspaceJsonConfiguration & NxJsonConfiguration
+  workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
 ): { project; target; configuration; parsedArgs } {
   const defaultProjectName = calculateDefaultProjectName(
     cwd,
@@ -98,6 +112,11 @@ function parseRunOneOptions(
     [project, target, configuration] = splitTarget(
       parsedArgs['project:target:configuration']
     );
+    // this is to account for "nx npmsript:dev"
+    if (project && !target && defaultProjectName) {
+      target = project;
+      project = defaultProjectName;
+    }
   } else {
     target = parsedArgs['project:target:configuration'];
   }
@@ -108,7 +127,7 @@ function parseRunOneOptions(
     project = defaultProjectName;
   }
   if (!project || !target) {
-    throw new Error(`Both project and target to have to be specified`);
+    throw new Error(`Both project and target have to be specified`);
   }
   if (targetAliases[target]) {
     target = targetAliases[target];
@@ -132,7 +151,7 @@ function parseRunOneOptions(
 function calculateDefaultProjectName(
   cwd: string,
   root: string,
-  workspaceConfiguration: WorkspaceJsonConfiguration & NxJsonConfiguration
+  workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
 ) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
   if (relativeCwd) {

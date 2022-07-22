@@ -233,11 +233,9 @@ class CLIOutput {
   log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
     this.addNewline();
 
-    color = color || 'white';
-
     this.writeOutputTitle({
       color: 'cyan',
-      title: chalk[color](title),
+      title: color ? chalk[color](title) : title,
     });
 
     this.writeOptionalOutputBody(bodyLines);

@@ -1,9 +1,4 @@
-import {
-  FileChange,
-  readNxJson,
-  readPackageJson,
-  readWorkspaceJson,
-} from '../file-utils';
+import { FileChange, readPackageJson } from '../file-utils';
 import {
   getImplicitlyTouchedProjects,
   getTouchedProjects,
@@ -14,25 +9,20 @@ import {
   AffectedProjectGraphContext,
   TouchedProjectLocator,
 } from './affected-project-graph-models';
-import { normalizeNxJson } from '../normalize-nx-json';
 import { getTouchedProjectsInWorkspaceJson } from './locators/workspace-json-changes';
 import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
-import { WorkspaceJsonConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { readNxJson } from '../../config/configuration';
 
 export function filterAffected(
-  graph: ProjectGraph,
+  graph: ProjectGraph<ProjectConfiguration>,
   touchedFiles: FileChange[],
-  workspaceJson: WorkspaceJsonConfiguration = readWorkspaceJson(),
   nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {
-  const normalizedNxJson = normalizeNxJson(
-    nxJson,
-    Object.keys(workspaceJson.projects)
-  );
   // Additional affected logic should be in this array.
   const touchedProjectLocators: TouchedProjectLocator[] = [
     getTouchedProjects,
@@ -43,14 +33,12 @@ export function filterAffected(
     getTouchedProjectsFromTsConfig,
   ];
   const touchedProjects = touchedProjectLocators.reduce((acc, f) => {
-    return acc.concat(
-      f(touchedFiles, workspaceJson, normalizedNxJson, packageJson, graph)
-    );
+    return acc.concat(f(touchedFiles, graph.nodes, nxJson, packageJson, graph));
   }, [] as string[]);
 
   return filterAffectedProjects(graph, {
-    workspaceJson,
-    nxJson: normalizedNxJson,
+    projectGraphNodes: graph.nodes,
+    nxJson,
     touchedProjects,
   });
 }

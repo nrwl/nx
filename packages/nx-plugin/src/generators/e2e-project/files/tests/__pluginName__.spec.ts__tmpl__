@@ -23,6 +23,8 @@ describe('<%= pluginName %> e2e', () => {
     runNxCommandAsync('reset');
   });
 
+  <% if(!minimal) { %>
+
   it('should create <%= pluginName %>', async () => {
     const project = uniq('<%= pluginName %>');
     await runNxCommandAsync(
@@ -55,4 +57,5 @@ describe('<%= pluginName %> e2e', () => {
       expect(project.tags).toEqual(['e2etag', 'e2ePackage']);
     }, 120000);
   });
+  <% } %>
 });

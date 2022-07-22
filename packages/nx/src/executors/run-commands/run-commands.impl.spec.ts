@@ -1,8 +1,12 @@
 import { readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
-import runCommands, { LARGE_BUFFER } from './run-commands.impl';
+import runCommands, {
+  interpolateArgsIntoCommand,
+  LARGE_BUFFER,
+} from './run-commands.impl';
 import { env } from 'npm-run-path';
+
 const {
   devDependencies: { nx: version },
 } = require('package.json');
@@ -10,6 +14,7 @@ const {
 function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;
 }
+
 function readFile(f: string) {
   return readFileSync(f).toString().replace(/\s/g, '');
 }
@@ -21,17 +26,14 @@ describe('Run Commands', () => {
     jest.clearAllMocks();
   });
 
-  it('should run one command', async () => {
-    const f = fileSync().name;
-    const result = await runCommands({ command: `echo 1 >> ${f}` }, context);
-    expect(result).toEqual(expect.objectContaining({ success: true }));
-    expect(readFile(f)).toEqual('1');
-  });
-
   it('should interpolate provided --args', async () => {
     const f = fileSync().name;
     const result = await runCommands(
-      { command: `echo {args.key} >> ${f}`, args: '--key=123' },
+      {
+        command: `echo {args.key} >> ${f}`,
+        args: '--key=123',
+        __unparsed__: [],
+      },
       context
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -44,169 +46,12 @@ describe('Run Commands', () => {
       {
         command: `echo {args.key} >> ${f}`,
         key: 123,
+        __unparsed__: [],
       },
       context
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('123');
-  });
-
-  it('should add all args to the command if no interpolation in the command', async () => {
-    const exec = jest.spyOn(require('child_process'), 'execSync');
-
-    await runCommands(
-      {
-        command: `echo`,
-        a: 123,
-        b: 456,
-      },
-      context
-    );
-    expect(exec).toHaveBeenCalledWith(`echo --a=123 --b=456`, {
-      stdio: ['inherit', 'inherit', 'inherit'],
-      cwd: undefined,
-      env: {
-        ...process.env,
-        ...env(),
-      },
-      maxBuffer: LARGE_BUFFER,
-    });
-  });
-
-  it('should add args containing spaces to in the command', async () => {
-    const exec = jest.spyOn(require('child_process'), 'execSync');
-
-    await runCommands(
-      {
-        command: `echo`,
-        a: 123,
-        b: '4 5 6',
-        c: '4 "5" 6',
-      },
-      context
-    );
-    expect(exec).toHaveBeenCalledWith(
-      `echo --a=123 --b="4 5 6" --c="4 \"5\" 6"`,
-      {
-        stdio: ['inherit', 'inherit', 'inherit'],
-        cwd: undefined,
-        env: {
-          ...process.env,
-          ...env(),
-        },
-        maxBuffer: LARGE_BUFFER,
-      }
-    );
-  });
-
-  it('should forward args by default when using commands (plural)', async () => {
-    const exec = jest.spyOn(require('child_process'), 'exec');
-
-    await runCommands(
-      {
-        commands: [{ command: 'echo' }, { command: 'echo foo' }],
-        parallel: true,
-        a: 123,
-        b: 456,
-      },
-      context
-    );
-
-    expect(exec).toHaveBeenCalledTimes(2);
-    expect(exec).toHaveBeenNthCalledWith(1, 'echo --a=123 --b=456', {
-      maxBuffer: LARGE_BUFFER,
-      env: {
-        ...process.env,
-        ...env(),
-      },
-    });
-    expect(exec).toHaveBeenNthCalledWith(2, 'echo foo --a=123 --b=456', {
-      maxBuffer: LARGE_BUFFER,
-      env: {
-        ...process.env,
-        ...env(),
-      },
-    });
-  });
-
-  it('should forward args when forwardAllArgs is set to true', async () => {
-    const exec = jest.spyOn(require('child_process'), 'exec');
-
-    await runCommands(
-      {
-        commands: [
-          { command: 'echo', forwardAllArgs: true },
-          { command: 'echo foo', forwardAllArgs: true },
-        ],
-        parallel: true,
-        a: 123,
-        b: 456,
-      },
-      context
-    );
-
-    expect(exec).toHaveBeenCalledTimes(2);
-    expect(exec).toHaveBeenNthCalledWith(1, 'echo --a=123 --b=456', {
-      maxBuffer: LARGE_BUFFER,
-      env: {
-        ...process.env,
-        ...env(),
-      },
-    });
-    expect(exec).toHaveBeenNthCalledWith(2, 'echo foo --a=123 --b=456', {
-      maxBuffer: LARGE_BUFFER,
-      env: {
-        ...process.env,
-        ...env(),
-      },
-    });
-  });
-
-  it('should not forward args when forwardAllArgs is set to false', async () => {
-    const exec = jest.spyOn(require('child_process'), 'exec');
-
-    await runCommands(
-      {
-        commands: [
-          { command: 'echo', forwardAllArgs: false },
-          { command: 'echo foo', forwardAllArgs: false },
-        ],
-        parallel: true,
-        a: 123,
-        b: 456,
-      },
-      context
-    );
-
-    expect(exec).toHaveBeenCalledTimes(2);
-    expect(exec).toHaveBeenNthCalledWith(1, 'echo', {
-      maxBuffer: LARGE_BUFFER,
-      env: {
-        ...process.env,
-        ...env(),
-      },
-    });
-    expect(exec).toHaveBeenNthCalledWith(2, 'echo foo', {
-      maxBuffer: LARGE_BUFFER,
-      env: {
-        ...process.env,
-        ...env(),
-      },
-    });
-  });
-
-  it('should throw when invalid args', async () => {
-    try {
-      await runCommands(
-        {
-          command: `echo {args.key}`,
-          args: 'key=value',
-        },
-        context
-      );
-    } catch (e) {
-      expect(e.message).toEqual('Invalid args: key=value');
-    }
   });
 
   it('should run commands serially', async () => {
@@ -215,6 +60,7 @@ describe('Run Commands', () => {
       {
         commands: [`sleep 0.2 && echo 1 >> ${f}`, `echo 2 >> ${f}`],
         parallel: false,
+        __unparsed__: [],
       },
       context
     );
@@ -235,6 +81,7 @@ describe('Run Commands', () => {
           },
         ],
         parallel: true,
+        __unparsed__: [],
       },
       context
     );
@@ -252,6 +99,7 @@ describe('Run Commands', () => {
             commands: [{ command: 'echo foo' }, { command: 'echo bar' }],
             parallel: false,
             readyWhen: 'READY',
+            __unparsed__: [],
           },
           context
         );
@@ -270,7 +118,9 @@ describe('Run Commands', () => {
           commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
           parallel: true,
           readyWhen: 'READY',
+          __unparsed__: [],
         },
+
         context
       );
       expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -290,12 +140,25 @@ describe('Run Commands', () => {
         {
           commands: [`echo 1 >> ${f} && exit 1`, `echo 2 >> ${f}`],
           parallel: false,
+          __unparsed__: [],
         },
         context
       );
       fail('should fail when a command fails');
     } catch (e) {}
     expect(readFile(f)).toEqual('1');
+  });
+
+  describe('interpolateArgsIntoCommand', () => {
+    it('should add all unparsed args when forwardAllArgs is true', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { __unparsed__: ['one', '-a=b'] } as any,
+          true
+        )
+      ).toEqual('echo one -a=b');
+    });
   });
 
   describe('--color', () => {
@@ -305,6 +168,7 @@ describe('Run Commands', () => {
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
           parallel: true,
+          __unparsed__: [],
         },
         context
       );
@@ -333,6 +197,7 @@ describe('Run Commands', () => {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
           parallel: true,
           color: true,
+          __unparsed__: [],
         },
         context
       );
@@ -363,6 +228,7 @@ describe('Run Commands', () => {
           ],
           parallel: true,
           cwd: process.cwd(),
+          __unparsed__: [],
         },
         { root } as any
       );
@@ -382,7 +248,9 @@ describe('Run Commands', () => {
             },
           ],
           parallel: true,
+          __unparsed__: [],
         },
+
         { root } as any
       );
 
@@ -405,6 +273,7 @@ describe('Run Commands', () => {
           ],
           cwd,
           parallel: true,
+          __unparsed__: [],
         },
         { root } as any
       );
@@ -427,6 +296,7 @@ describe('Run Commands', () => {
           ],
           cwd: childFolder,
           parallel: true,
+          __unparsed__: [],
         },
         { root } as any
       );
@@ -459,6 +329,7 @@ describe('Run Commands', () => {
               command: `echo $NRWL_SITE >> ${f}`,
             },
           ],
+          __unparsed__: [],
         },
         context
       );
@@ -479,6 +350,7 @@ describe('Run Commands', () => {
             },
           ],
           envFile: devEnv,
+          __unparsed__: [],
         },
         context
       );
@@ -498,7 +370,9 @@ describe('Run Commands', () => {
               },
             ],
             envFile: '/somePath/.fakeEnv',
+            __unparsed__: [],
           },
+
           context
         );
         fail('should not reach');

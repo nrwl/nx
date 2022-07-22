@@ -1,18 +1,20 @@
 import type { Tree } from '@nrwl/devkit';
-import type { Schema } from './schema';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import {
   formatFiles,
-  readWorkspaceConfiguration,
-  readProjectConfiguration,
   normalizePath,
+  readProjectConfiguration,
+  readWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { createScamDirective } from './lib/create-module';
-import { normalize } from 'path';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { exportScam } from '../utils/export-scam';
+import { getDirectiveFileInfo } from '../utils/file-info';
 import { pathStartsWith } from '../utils/path';
+import { convertDirectiveToScam, normalizeOptions } from './lib';
+import type { Schema } from './schema';
 
-export async function scamDirectiveGenerator(tree: Tree, schema: Schema) {
-  const { inlineScam, ...options } = schema;
+export async function scamDirectiveGenerator(tree: Tree, rawOptions: Schema) {
+  const options = normalizeOptions(tree, rawOptions);
+  const { inlineScam, projectSourceRoot, ...schematicOptions } = options;
 
   checkPathUnderProjectRoot(tree, options);
 
@@ -21,12 +23,15 @@ export async function scamDirectiveGenerator(tree: Tree, schema: Schema) {
     'directive'
   );
   await angularDirectiveSchematic(tree, {
-    ...options,
+    ...schematicOptions,
     skipImport: true,
     export: false,
+    standalone: false,
   });
 
-  createScamDirective(tree, schema);
+  const pipeFileInfo = getDirectiveFileInfo(tree, options);
+  convertDirectiveToScam(tree, pipeFileInfo, options);
+  exportScam(tree, pipeFileInfo, options);
 
   await formatFiles(tree);
 }

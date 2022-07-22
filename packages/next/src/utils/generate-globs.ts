@@ -16,7 +16,16 @@ export function createGlobPatternsOfDependentProjects(
   );
 
   try {
-    const projectDirs = getSourceDirOfDependentProjects(projectName);
+    const [projectDirs, warnings] =
+      getSourceDirOfDependentProjects(projectName);
+
+    if (warnings.length > 0) {
+      logger.warn(`
+[createGlobPatternsForDependencies] Failed to generate glob pattern for the following:
+${warnings.join('\n- ')}\n
+due to missing "sourceRoot" in the dependencies' project configuration
+      `);
+    }
 
     return projectDirs.map((sourceDir) =>
       resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))

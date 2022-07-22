@@ -1,4 +1,5 @@
 import type { Target } from 'nx/src/command-line/run';
+import { splitTarget } from 'nx/src/utils/split-target';
 
 /**
  * Parses a target string into {project, target, configuration}
@@ -12,7 +13,7 @@ import type { Target } from 'nx/src/command-line/run';
  * @param targetString - target reference
  */
 export function parseTargetString(targetString: string): Target {
-  const [project, target, configuration] = targetString.split(':');
+  const [project, target, configuration] = splitTarget(targetString);
   if (!project || !target) {
     throw new Error(`Invalid Target String: ${targetString}`);
   }
@@ -40,7 +41,7 @@ export function targetToTargetString({
   target,
   configuration,
 }: Target): string {
-  return `${project}:${target}${
+  return `${project}:${target.indexOf(':') > -1 ? `"${target}"` : target}${
     configuration !== undefined ? ':' + configuration : ''
   }`;
 }

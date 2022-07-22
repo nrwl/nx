@@ -5,24 +5,25 @@ import * as path from 'path';
 import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
 import { logger } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
+import * as yaml from 'js-yaml';
 
 import type { NxJsonConfiguration } from './nx-json';
 import {
   ProjectConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from './workspace-json-project-json';
 import {
+  CustomHasher,
   Executor,
   ExecutorConfig,
-  TaskGraphExecutor,
+  ExecutorsJson,
   Generator,
   GeneratorsJson,
-  ExecutorsJson,
-  CustomHasher,
+  TaskGraphExecutor,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
@@ -38,8 +39,7 @@ export function workspaceConfigName(root: string) {
 }
 
 export class Workspaces {
-  private cachedWorkspaceConfig: WorkspaceJsonConfiguration &
-    NxJsonConfiguration;
+  private cachedWorkspaceConfig: ProjectsConfigurations & NxJsonConfiguration;
 
   constructor(private root: string) {}
 
@@ -49,7 +49,7 @@ export class Workspaces {
 
   calculateDefaultProjectName(
     cwd: string,
-    wc: WorkspaceJsonConfiguration & NxJsonConfiguration
+    wc: ProjectsConfigurations & NxJsonConfiguration
   ) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
@@ -67,10 +67,13 @@ export class Workspaces {
 
   readWorkspaceConfiguration(opts?: {
     _ignorePluginInference?: boolean;
-  }): WorkspaceJsonConfiguration & NxJsonConfiguration {
-    if (this.cachedWorkspaceConfig) return this.cachedWorkspaceConfig;
-    const nxJsonPath = path.join(this.root, 'nx.json');
-    const nxJson = readNxJson(nxJsonPath);
+  }): ProjectsConfigurations & NxJsonConfiguration {
+    if (
+      this.cachedWorkspaceConfig &&
+      process.env.NX_CACHE_WORKSPACE_CONFIG !== 'false'
+    )
+      return this.cachedWorkspaceConfig;
+    const nxJson = this.readNxJson();
     const workspaceFile = workspaceConfigName(this.root);
     const workspacePath = workspaceFile
       ? path.join(this.root, workspaceFile)
@@ -89,8 +92,35 @@ export class Workspaces {
           );
 
     assertValidWorkspaceConfiguration(nxJson);
-    this.cachedWorkspaceConfig = { ...workspace, ...nxJson };
+    this.cachedWorkspaceConfig = {
+      ...this.mergeTargetDefaultsIntoProjectDescriptions(workspace, nxJson),
+      ...nxJson,
+    };
     return this.cachedWorkspaceConfig;
+  }
+
+  private mergeTargetDefaultsIntoProjectDescriptions(
+    config: ProjectsConfigurations,
+    nxJson: NxJsonConfiguration
+  ) {
+    for (const proj of Object.values(config.projects)) {
+      if (proj.targets) {
+        for (const targetName of Object.keys(proj.targets)) {
+          if (nxJson.targetDefaults[targetName]) {
+            const projectTargetDefinition = proj.targets[targetName];
+            if (!projectTargetDefinition.outputs) {
+              projectTargetDefinition.outputs =
+                nxJson.targetDefaults[targetName].outputs;
+            }
+            if (!projectTargetDefinition.dependsOn) {
+              projectTargetDefinition.dependsOn =
+                nxJson.targetDefaults[targetName].dependsOn;
+            }
+          }
+        }
+      }
+    }
+    return config;
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
@@ -149,8 +179,12 @@ export class Workspaces {
 
   readGenerator(collectionName: string, generatorName: string) {
     try {
-      const { generatorsFilePath, generatorsJson, normalizedGeneratorName } =
-        this.readGeneratorsJson(collectionName, generatorName);
+      const {
+        generatorsFilePath,
+        generatorsJson,
+        resolvedCollectionName,
+        normalizedGeneratorName,
+      } = this.readGeneratorsJson(collectionName, generatorName);
       const generatorsDir = path.dirname(generatorsFilePath);
       const generatorConfig =
         generatorsJson.generators?.[normalizedGeneratorName] ||
@@ -167,6 +201,7 @@ export class Workspaces {
         generatorsDir
       );
       return {
+        resolvedCollectionName,
         normalizedGeneratorName,
         schema,
         implementationFactory,
@@ -177,6 +212,57 @@ export class Workspaces {
         `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
       );
     }
+  }
+
+  readNxJson(): NxJsonConfiguration {
+    const nxJson = path.join(this.root, 'nx.json');
+    if (existsSync(nxJson)) {
+      const nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
+      if (nxJsonConfig.extends) {
+        const extendedNxJsonPath = require.resolve(nxJsonConfig.extends, {
+          paths: [dirname(nxJson)],
+        });
+        const baseNxJson =
+          readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
+        return this.mergeTargetDefaultsAndTargetDependencies({
+          ...baseNxJson,
+          ...nxJsonConfig,
+        });
+      } else {
+        return this.mergeTargetDefaultsAndTargetDependencies(nxJsonConfig);
+      }
+    } else {
+      try {
+        return this.mergeTargetDefaultsAndTargetDependencies(
+          readJsonFile(join(__dirname, '..', '..', 'presets', 'core.json'))
+        );
+      } catch (e) {
+        return {};
+      }
+    }
+  }
+
+  private mergeTargetDefaultsAndTargetDependencies(
+    nxJson: NxJsonConfiguration
+  ) {
+    if (!nxJson.targetDefaults) {
+      nxJson.targetDefaults = {};
+    }
+    if (nxJson.targetDependencies) {
+      for (const targetName of Object.keys(nxJson.targetDependencies)) {
+        if (!nxJson.targetDefaults[targetName]) {
+          nxJson.targetDefaults[targetName] = {};
+        }
+        if (!nxJson.targetDefaults[targetName].dependsOn) {
+          nxJson.targetDefaults[targetName].dependsOn = [];
+        }
+        nxJson.targetDefaults[targetName].dependsOn = [
+          ...nxJson.targetDefaults[targetName].dependsOn,
+          ...nxJson.targetDependencies[targetName],
+        ];
+      }
+    }
+    return nxJson;
   }
 
   private getImplementationFactory<T>(
@@ -232,6 +318,7 @@ export class Workspaces {
     generatorsFilePath: string;
     generatorsJson: GeneratorsJson;
     normalizedGeneratorName: string;
+    resolvedCollectionName: string;
   } {
     let generatorsFilePath;
     if (collectionName.endsWith('.json')) {
@@ -270,7 +357,12 @@ export class Workspaces {
         `Cannot find generator '${generator}' in ${generatorsFilePath}.`
       );
     }
-    return { generatorsFilePath, generatorsJson, normalizedGeneratorName };
+    return {
+      generatorsFilePath,
+      generatorsJson,
+      normalizedGeneratorName,
+      resolvedCollectionName: collectionName,
+    };
   }
 
   private resolvePaths() {
@@ -326,7 +418,7 @@ export function reformattedWorkspaceJsonOrNull(w: any) {
   return workspaceJson;
 }
 
-export function toNewFormat(w: any): WorkspaceJsonConfiguration {
+export function toNewFormat(w: any): ProjectsConfigurations {
   const f = toNewFormatOrNull(w);
   return f ?? w;
 }
@@ -431,22 +523,6 @@ function inlineProjectConfigurations(w: any, root: string = workspaceRoot) {
 /**
  * Reads an nx.json file from a given path or extends a local nx.json config.
  */
-function readNxJson(nxJson: string): NxJsonConfiguration {
-  let nxJsonConfig: NxJsonConfiguration;
-  if (existsSync(nxJson)) {
-    nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
-  } else {
-    nxJsonConfig = {} as NxJsonConfiguration;
-  }
-  if (nxJsonConfig.extends) {
-    const extendedNxJsonPath = require.resolve(nxJsonConfig.extends, {
-      paths: [dirname(nxJson)],
-    });
-    const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
-    nxJsonConfig = { ...baseNxJson, ...nxJsonConfig };
-  }
-  return nxJsonConfig;
-}
 
 /**
  * Pulled from toFileName in names from @nrwl/devkit.
@@ -490,22 +566,34 @@ function getGlobPatternsFromPlugins(nxJson: NxJsonConfiguration): string[] {
  * Get the package.json globs from package manager workspaces
  */
 function getGlobPatternsFromPackageManagerWorkspaces(root: string): string[] {
-  // TODO: add support for pnpm
   try {
-    const { workspaces } = readJsonFile<PackageJson>(
-      join(root, 'package.json')
-    );
-    const packages = Array.isArray(workspaces)
-      ? workspaces
-      : workspaces?.packages;
-    return (
-      packages?.map((pattern) => pattern + '/package.json') ?? [
-        '**/package.json',
-      ]
-    );
+    try {
+      const obj = yaml.load(readFileSync(join(root, 'pnpm-workspace.yaml')));
+      return normalizePatterns(obj.packages);
+    } catch {
+      const { workspaces } = readJsonFile<PackageJson>(
+        join(root, 'package.json')
+      );
+      return normalizePatterns(
+        Array.isArray(workspaces) ? workspaces : workspaces?.packages
+      );
+    }
   } catch {
     return ['**/package.json'];
   }
+}
+
+function normalizePatterns(patterns: string[]): string[] {
+  if (patterns === undefined) return ['**/package.json'];
+  return patterns.map((pattern) =>
+    removeRelativePath(
+      pattern.endsWith('/package.json') ? pattern : `${pattern}/package.json`
+    )
+  );
+}
+
+function removeRelativePath(pattern: string): string {
+  return pattern.startsWith('./') ? pattern.substring(2) : pattern;
 }
 
 export function globForProjectFiles(
@@ -519,14 +607,26 @@ export function globForProjectFiles(
     process.env.NX_PROJECT_GLOB_CACHE !== 'false' &&
     projectGlobCache &&
     cacheKey === projectGlobCacheKey
-  )
+  ) {
     return projectGlobCache;
+  }
   projectGlobCacheKey = cacheKey;
+
+  const globPatternsFromPackageManagerWorkspaces =
+    getGlobPatternsFromPackageManagerWorkspaces(root);
+
+  const globsToInclude = globPatternsFromPackageManagerWorkspaces.filter(
+    (glob) => !glob.startsWith('!')
+  );
+
+  const globsToExclude = globPatternsFromPackageManagerWorkspaces
+    .filter((glob) => glob.startsWith('!'))
+    .map((glob) => glob.substring(1));
 
   const projectGlobPatterns: string[] = [
     'project.json',
     '**/project.json',
-    ...getGlobPatternsFromPackageManagerWorkspaces(root),
+    ...globsToInclude,
   ];
 
   if (!ignorePluginInference) {
@@ -544,11 +644,12 @@ export function globForProjectFiles(
    * Other ignored entries will need to be determined dynamically by reading and evaluating the user's
    * .gitignore and .nxignore files below.
    */
+
   const ALWAYS_IGNORE = [
-    join(root, 'node_modules'),
+    '/node_modules',
     '**/node_modules',
-    join(root, 'dist'),
-    join(root, '.git'),
+    '/dist',
+    ...globsToExclude,
   ];
 
   /**
@@ -567,6 +668,7 @@ export function globForProjectFiles(
     ignore: ALWAYS_IGNORE,
     absolute: false,
     cwd: root,
+    dot: true,
   });
   projectGlobCache = deduplicateProjectFiles(globResults, ig);
   performance.mark('finish-glob-for-projects');
@@ -641,7 +743,7 @@ export function buildWorkspaceConfigurationFromGlobs(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: (string) => any = readJsonFile // making this an arg allows us to reuse in devkit
-): WorkspaceJsonConfiguration {
+): ProjectsConfigurations {
   const projects: Record<string, ProjectConfiguration> = {};
 
   for (const file of projectFiles) {

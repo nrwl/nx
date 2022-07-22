@@ -27,6 +27,13 @@
           "@nrwl/workspace"
         ]
       }
+    },
+    {
+      "files": ["./package.json", "./generators.json", "./migrations.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nrwl/nx/nx-plugin-checks": "error"
+      }
     }
   ]
 }

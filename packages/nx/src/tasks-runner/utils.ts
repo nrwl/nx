@@ -12,6 +12,10 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { workspaceRoot } from '../utils/workspace-root';
+import { isRelativePath } from 'nx/src/utils/fileutils';
+import { joinPathFragments } from 'nx/src/utils/path';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export function getCommandAsString(task: Task) {
   const execCommand = getPackageManagerCommand().exec;
@@ -52,7 +56,11 @@ function expandDependencyConfigSyntaxSugar(
 ): TargetDependencyConfig[] {
   return deps.map((d) => {
     if (typeof d === 'string') {
-      return { projects: 'self', target: d };
+      if (d.startsWith('^')) {
+        return { projects: 'dependencies', target: d.substring(1) };
+      } else {
+        return { projects: 'self', target: d };
+      }
     } else {
       return d;
     }
@@ -87,7 +95,18 @@ export function getOutputsForTargetAndConfiguration(
 
   if (targets?.outputs) {
     return targets.outputs
-      .map((output: string) => interpolateOutputs(output, options))
+      .map((output: string) => {
+        const interpolated = interpolate(output, {
+          workspaceRoot: '', // this is to make sure interpolation works
+          projectRoot: node.data.root,
+          projectName: node.data.name,
+          project: { ...node.data, name: node.data.name }, // this is legacy
+          options,
+        });
+        return isRelativePath(interpolated)
+          ? joinPathFragments(node.data.root, interpolated)
+          : interpolated;
+      })
       .filter((output) => !!output);
   }
 
@@ -108,73 +127,35 @@ export function getOutputsForTargetAndConfiguration(
   }
 }
 
-export function unparse(options: Object): string[] {
-  const unparsed = [];
-  for (const key of Object.keys(options)) {
-    const value = options[key];
-    unparseOption(key, value, unparsed);
-  }
-
-  return unparsed;
-}
-
-function unparseOption(key: string, value: any, unparsed: string[]) {
-  if (value === true) {
-    unparsed.push(`--${key}`);
-  } else if (value === false) {
-    unparsed.push(`--no-${key}`);
-  } else if (Array.isArray(value)) {
-    value.forEach((item) => unparseOption(key, item, unparsed));
-  } else if (Object.prototype.toString.call(value) === '[object Object]') {
-    const flattened = flatten<any, any>(value, { safe: true });
-    for (const flattenedKey in flattened) {
-      unparseOption(
-        `${key}.${flattenedKey}`,
-        flattened[flattenedKey],
-        unparsed
-      );
-    }
-  } else if (
-    typeof value === 'string' &&
-    stringShouldBeWrappedIntoQuotes(value)
-  ) {
-    const sanitized = value.replace(/"/g, String.raw`\"`);
-    unparsed.push(`--${key}="${sanitized}"`);
-  } else if (value != null) {
-    unparsed.push(`--${key}=${value}`);
-  }
-}
-
-function stringShouldBeWrappedIntoQuotes(str: string) {
-  return str.includes(' ') || str.includes('{') || str.includes('"');
-}
-
-function interpolateOutputs(template: string, data: any): string {
+export function interpolate(template: string, data: any): string {
   return template.replace(/{([\s\S]+?)}/g, (match: string) => {
     let value = data;
-    let path = match.slice(1, -1).trim().split('.').slice(1);
+    let path = match.slice(1, -1).trim().split('.');
     for (let idx = 0; idx < path.length; idx++) {
       if (!value[path[idx]]) {
         return;
       }
       value = value[path[idx]];
     }
-
     return value;
   });
 }
 
-export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
-  const workspaceConfiguration = workspace.readWorkspaceConfiguration();
-  const project = workspaceConfiguration.projects[task.target.project];
+export function getExecutorNameForTask(
+  task: Task,
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+) {
+  const project = projectGraph.nodes[task.target.project].data;
 
-  if (existsSync(join(project.root, 'package.json'))) {
-    project.targets = mergeNpmScriptsWithTargets(project.root, project.targets);
+  const projectRoot = join(workspaceRoot, project.root);
+  if (existsSync(join(projectRoot, 'package.json'))) {
+    project.targets = mergeNpmScriptsWithTargets(projectRoot, project.targets);
   }
   project.targets = mergePluginTargetsWithNxTargets(
     project.root,
     project.targets,
-    loadNxPlugins(workspaceConfiguration.plugins)
+    loadNxPlugins(nxJson.plugins)
   );
 
   if (!project.targets[task.target.target]) {
@@ -186,21 +167,31 @@ export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
   return project.targets[task.target.target].executor;
 }
 
-export function getExecutorForTask(task: Task, workspace: Workspaces) {
-  const executor = getExecutorNameForTask(task, workspace);
+export function getExecutorForTask(
+  task: Task,
+  workspace: Workspaces,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+) {
+  const executor = getExecutorNameForTask(task, nxJson, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
   return workspace.readExecutor(nodeModule, executorName);
 }
 
-export function getCustomHasher(task: Task, workspace: Workspaces) {
-  try {
-    const factory = getExecutorForTask(task, workspace).hasherFactory;
-    return factory ? factory() : null;
-  } catch (e) {
-    console.error(e);
-    throw new Error(`Unable to load hasher for task "${task.id}"`);
-  }
+export function getCustomHasher(
+  task: Task,
+  workspace: Workspaces,
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+) {
+  const factory = getExecutorForTask(
+    task,
+    workspace,
+    projectGraph,
+    nxJson
+  ).hasherFactory;
+  return factory ? factory() : null;
 }
 
 export function removeTasksFromTaskGraph(
@@ -244,15 +235,12 @@ export function calculateReverseDeps(
   return reverseTaskDeps;
 }
 
-export function getCliPath(workspaceRoot: string) {
-  const cli = require.resolve(`nx/bin/run-executor.js`, {
-    paths: [workspaceRoot],
-  });
-  return `${cli}`;
+export function getCliPath() {
+  return require.resolve(`../../bin/run-executor.js`);
 }
 
 export function getPrintableCommandArgsForTask(task: Task) {
-  const args: string[] = unparse(task.overrides || {});
+  const args: string[] = task.overrides['__overrides_unparsed__'];
 
   const target = task.target.target.includes(':')
     ? `"${task.target.target}"`
@@ -311,4 +299,46 @@ function longRunningTask(task: Task) {
   return (
     !!task.overrides['watch'] || t === 'serve' || t === 'dev' || t === 'start'
   );
+}
+
+// TODO: vsavkin remove when nx-cloud doesn't depend on it
+export function unparse(options: Object): string[] {
+  const unparsed = [];
+  for (const key of Object.keys(options)) {
+    const value = options[key];
+    unparseOption(key, value, unparsed);
+  }
+
+  return unparsed;
+}
+
+function unparseOption(key: string, value: any, unparsed: string[]) {
+  if (value === true) {
+    unparsed.push(`--${key}`);
+  } else if (value === false) {
+    unparsed.push(`--no-${key}`);
+  } else if (Array.isArray(value)) {
+    value.forEach((item) => unparseOption(key, item, unparsed));
+  } else if (Object.prototype.toString.call(value) === '[object Object]') {
+    const flattened = flatten<any, any>(value, { safe: true });
+    for (const flattenedKey in flattened) {
+      unparseOption(
+        `${key}.${flattenedKey}`,
+        flattened[flattenedKey],
+        unparsed
+      );
+    }
+  } else if (
+    typeof value === 'string' &&
+    stringShouldBeWrappedIntoQuotes(value)
+  ) {
+    const sanitized = value.replace(/"/g, String.raw`\"`);
+    unparsed.push(`--${key}="${sanitized}"`);
+  } else if (value != null) {
+    unparsed.push(`--${key}=${value}`);
+  }
+}
+
+function stringShouldBeWrappedIntoQuotes(str: string) {
+  return str.includes(' ') || str.includes('{') || str.includes('"');
 }

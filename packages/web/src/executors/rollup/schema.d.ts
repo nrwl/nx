@@ -10,7 +10,7 @@ export interface WebRollupOptions {
   tsConfig: string;
   project: string;
   entryFile: string;
-  extractCss?: boolean;
+  extractCss?: boolean | string;
   globals?: Globals[];
   external?: string[];
   rollupConfig?: string | string[];
@@ -22,4 +22,8 @@ export interface WebRollupOptions {
   deleteOutputPath?: boolean;
   format: string[];
   compiler?: Compiler;
+  javascriptEnabled?: boolean;
+  // TODO(jack): remove this for Nx 15
+  skipTypeField?: boolean;
+  generateExportsField?: boolean;
 }

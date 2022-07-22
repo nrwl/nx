@@ -1,6 +1,6 @@
 # Setting up Storybook Composition with Nx
 
-## What is Storybook Compotision
+## What is Storybook Composition
 
 As explained in the [Storybook official docs](https://storybook.js.org/docs/angular/workflows/storybook-composition), Storybook Composition allows you to embed components from any Storybook inside your local Storybook. If you want to learn more about Storybook Composition, please take a look at the following articles, which explain it in detail:
 

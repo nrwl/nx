@@ -1,4 +1,4 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
+import { formatFiles, GeneratorCallback, Tree } from '@nrwl/devkit';
 import { assertCompatibleStorybookVersion } from './lib/assert-compatible-storybook-version';
 import { generateStories } from './lib/generate-stories';
 import { generateStorybookConfiguration } from './lib/generate-storybook-configuration';
@@ -18,7 +18,11 @@ export async function storybookConfigurationGenerator(
   );
 
   if (options.generateStories) {
-    generateStories(tree, options);
+    generateStories(tree, { ...options, skipFormat: false });
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 
   return () => {

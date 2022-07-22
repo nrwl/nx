@@ -25,6 +25,6 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "nx": "*"
+    "nx": "file:../nx"
   }
 }

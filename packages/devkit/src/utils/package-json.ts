@@ -45,10 +45,11 @@ export function addDependenciesToPackageJson(
 
       return json;
     });
+    return (): void => {
+      installPackagesTask(tree);
+    };
   }
-  return (): void => {
-    installPackagesTask(tree);
-  };
+  return () => {};
 }
 
 /**

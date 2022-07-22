@@ -1,6 +1,8 @@
 # Computation Caching
 
-> Before reading this guide, check out the [mental model guide](/using-nx/mental-model). It will help you understand how computation caching fits into the rest of Nx.
+{% callout type="note" title="First thing!" %}
+Before reading this guide, [check out the mental model guide](/using-nx/mental-model). It will help you understand how computation caching fits into the rest of Nx.
+{% /callout %}
 
 ## Overview
 
@@ -13,10 +15,10 @@ By default, the computation hash for say `nx test app1` includes:
 - All the source files of `app1` and its dependencies
 - Relevant global configuration
 - Versions of external dependencies
-- Runtime values provisioned by the user such as the version of Node
+- [Runtime values provisioned by the user](#runtime-hash-inputs)
 - CLI Command flags
 
-![computation-hashing](/shared/mental-model/computation-hashing.png)
+![computation-hashing](/shared/mental-model/computation-hashing-v2.png)
 
 This behavior is customizable. For instance, lint checks may only depend on the source code of the project and global
 configs. Builds can depend on the dts files of the compiled libs instead of their source.
@@ -179,7 +181,7 @@ nx affected --target=build --skip-nx-cache
 
 ## Customizing the Cache Location
 
-The cache is stored in `node_modules/.cache/nx` by default. To change the cache location, update the `cacheDirectory` option for the task runner:
+The cache is stored in `node_modules/.cache/nx` by default. To change the cache location, set a `NX_CACHE_DIRECTORY` environment variable or update the `cacheDirectory` option for the task runner:
 
 ```json
 {
@@ -199,6 +201,8 @@ The cache is stored in `node_modules/.cache/nx` by default. To change the cache 
 
 By default, Nx uses a local computation cache. Nx stores the cached values only for a week, after which they are deleted. To clear the cache run `nx reset`, and Nx creates a new one the next time it tries to access it.
 
+{% nx-cloud-section %}
+
 ## Distributed Computation Caching
 
 The computation cache provided by Nx can be distributed across multiple machines. Nx Cloud is a product that allows you to share the results of running build/test with everyone else working in the same workspace. Learn more at [https://nx.app](https://nx.app).
@@ -209,7 +213,39 @@ You can connect your workspace to Nx Cloud by running:
 nx connect-to-nx-cloud
 ```
 
-You can also distribute the cache manually using your own storage mechanisms.
+You can also distribute the cache manually using your own storage mechanisms. Be warned, it is not as simple as it might sound initially.
+
+- _If possible_, pull a copy of the cache which doesn't mutate the cache currently in use by other consumers. Push an updated copy afterwards.
+- By default, Nx also caches some computations necessary for calculating the project graph in the cache directory as well.
+  - If you are using a shared volume where mutations to the cache are reflected immediately in other consumers, you should set `NX_PROJECT_GRAPH_CACHE_DIRECTORY` to a separate directory to separate it from the computation cache.
+
+## Caching Priority
+
+Whenever you run a cacheable command with Nx, Nx attempts to fulfill that command using the first successful strategy in the following list:
+
+1. Check the local cache. If the command is cached there, replay the cached output.
+2. Check the Nx Cloud distributed cache. If the command is cached there, store the cache locally and replay the cached output.
+3. Run the command locally. Store the output in local cache. If you have a read-write access token, store the output in the Nx Cloud distributed cache.
+
+This algorithm optimizes for speed locally and minimizes unnecessary use of the distributed cache.
+
+## When is a Distributed Cache Helpful?
+
+Generally speaking, the bigger the organization, the more helpful a distributed cache becomes. However, distributed cache is still useful even in the following scenarios with two developers and a CI/CD machine.
+
+### Scenario 1: Help Me Fix This Bug
+
+Perry works on a feature, but he can't figure out why it isn't working the way he expects. Neelam checks out that branch to help. Neelam doesn't need to re-run all the tests that Perry already ran.
+
+### Scenario 2: Why Is This Breaking in CI?
+
+Tony pushes a branch up to CI, but CI doesn't pass. He asks Sofija to help. Sofija checks out that branch to troubleshoot. Sofija can reuse the output from CI instead of waiting for builds to run on her machine.
+
+### Scenario 3: CI Should Know It Already Did That
+
+Maya and Trey push up changes to two different apps that both depend on an unchanged shared buildable library. CI reuses the build output of the shared buildable library when building the apps in the two different PRs.
+
+{% /nx-cloud-section %}
 
 ## Example
 

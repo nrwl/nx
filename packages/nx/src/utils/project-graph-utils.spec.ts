@@ -48,6 +48,11 @@ describe('project graph utils', () => {
             targets: {},
           },
         },
+        'implicit-lib': {
+          name: 'implicit-lib',
+          type: 'lib',
+          data: {},
+        },
       },
       dependencies: {
         'demo-app': [
@@ -70,7 +75,7 @@ describe('project graph utils', () => {
       },
     };
     it('should correctly gather the source root dirs of the dependent projects', () => {
-      const paths = getSourceDirOfDependentProjects('demo-app', projGraph);
+      const [paths] = getSourceDirOfDependentProjects('demo-app', projGraph);
 
       expect(paths.length).toBe(2);
       expect(paths).toContain(projGraph.nodes['ui'].data.sourceRoot);
@@ -85,7 +90,7 @@ describe('project graph utils', () => {
           target: 'demo-app',
         },
       ];
-      const paths = getSourceDirOfDependentProjects('demo-app', projGraph);
+      const [paths] = getSourceDirOfDependentProjects('demo-app', projGraph);
       expect(paths).toContain(projGraph.nodes['ui'].data.sourceRoot);
     });
 
@@ -93,6 +98,22 @@ describe('project graph utils', () => {
       expect(() =>
         getSourceDirOfDependentProjects('non-existent-app', projGraph)
       ).toThrowError();
+    });
+
+    describe('Given there is implicit library with no sourceRoot', () => {
+      it('should return a warnings array with the library with no sourceRoot', () => {
+        projGraph.dependencies['demo-app'].push({
+          type: 'implicit',
+          source: 'demo-app',
+          target: 'implicit-lib',
+        });
+
+        const [_, warnings] = getSourceDirOfDependentProjects(
+          'demo-app',
+          projGraph
+        );
+        expect(warnings).toContain('implicit-lib');
+      });
     });
 
     it('should find the project given a file within its src root', () => {

@@ -16,7 +16,9 @@ You can make a library project just for holding the ASCII asset files. Let Nx kn
 }
 ```
 
-Note: You could choose to make a `package.json` file here instead, if you prefer.
+{% callout type="note" title="Prefer a `package.json` file?" %}
+You could choose to make a `package.json` file here instead, if you prefer.
+{% /callout %}
 
 Then move `cow.txt` out of the `cli` project to:
 
@@ -70,7 +72,7 @@ pageTitle: Some ASCII Art
 Welcome to [The Restaurant at the End of the Universe](https://hitchhikers.fandom.com/wiki/Ameglian_Major_Cow)
 
 <pre>
-{% renderFile "../ascii/assets/cow.txt" %}
+&#123;% renderFile "../ascii/assets/cow.txt" %&#125;
 </pre>
 
 Art courtesy of [cowsay](https://www.npmjs.com/package/cowsay).

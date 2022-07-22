@@ -1,14 +1,14 @@
 import { splitTarget } from './split-target';
 
+const cases = [
+  { input: 'one', expected: ['one'] },
+  { input: 'one:two', expected: ['one', 'two'] },
+  { input: 'one:two:three', expected: ['one', 'two', 'three'] },
+  { input: 'one:"two:two":three', expected: ['one', 'two:two', 'three'] },
+];
+
 describe('splitTarget', () => {
-  it('should work', () => {
-    expect(splitTarget('one')).toEqual(['one']);
-    expect(splitTarget('one:two')).toEqual(['one', 'two']);
-    expect(splitTarget('one:two:three')).toEqual(['one', 'two', 'three']);
-    expect(splitTarget('one:"two:two":three')).toEqual([
-      'one',
-      'two:two',
-      'three',
-    ]);
+  it.each(cases)('$input -> $expected', ({ input, expected }) => {
+    expect(splitTarget(input)).toEqual(expected);
   });
 });

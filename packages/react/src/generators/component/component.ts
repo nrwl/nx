@@ -1,11 +1,3 @@
-import * as ts from 'typescript';
-import { Schema } from './schema';
-import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
-} from '../../utils/versions';
-import { assertValidStyle } from '../../utils/assertion';
-import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
@@ -21,7 +13,15 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import * as ts from 'typescript';
+import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
+import { assertValidStyle } from '../../utils/assertion';
 import { addImport } from '../../utils/ast-utils';
+import {
+  reactRouterDomVersion,
+  typesReactRouterDomVersion,
+} from '../../utils/versions';
+import { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: string;

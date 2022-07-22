@@ -1,10 +1,10 @@
 import { Lookup } from '@nrwl/nx-dev/data-access-packages';
 import { JsonSchema } from '@nrwl/nx-dev/models-package';
+import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import { getParameterMetadata } from './parameter-metadata';
 import { getEnum } from './types/get-enum';
 import { Type } from './types/type';
 import { Heading3 } from './ui/headings';
-import { Markdown } from './ui/markdown/markdown';
 
 export const ParameterView = (props: {
   key: string;
@@ -60,11 +60,21 @@ export const ParameterView = (props: {
       )}
     </div>
 
-    <Markdown content={props.description} />
+    <div className="prose">
+      {renderMarkdown({
+        content: props.description,
+        data: {},
+        filePath: '',
+      })}
+    </div>
 
-    {props.deprecated && props.schema['x-deprecated'] && (
-      <div className="mt-2 rounded-md bg-red-100 p-4">
-        <Markdown content={props.schema['x-deprecated'] as string} />
+    {props.deprecated && !!props.schema['x-deprecated'] && (
+      <div className="prose mt-2 rounded-md bg-red-100 p-4">
+        {renderMarkdown({
+          content: props.schema['x-deprecated'] as string,
+          data: {},
+          filePath: '',
+        })}
       </div>
     )}
   </div>

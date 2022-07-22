@@ -3,15 +3,15 @@ import * as chalk from 'chalk';
 import {
   ExecutorContext,
   joinPathFragments,
-  readJsonFile,
   workspaceLayout,
 } from '@nrwl/devkit';
 import ignore from 'ignore';
-import { readFileSync } from 'fs';
+import { copyFileSync, readFileSync, unlinkSync } from 'fs';
 import { Schema } from './schema';
 import { watch } from 'chokidar';
 import { platform } from 'os';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -47,9 +47,6 @@ function getHttpServerArgs(options: Schema) {
 
 function getBuildTargetCommand(options: Schema) {
   const cmd = ['nx', 'run', options.buildTarget];
-  if (options.withDeps) {
-    cmd.push(`--with-deps`);
-  }
   if (options.parallel) {
     cmd.push(`--parallel`);
   }
@@ -151,12 +148,20 @@ export default async function* fileServerExecutor(
   run();
 
   const outputPath = getBuildTargetOutputPath(options, context);
+
+  if (options.spa) {
+    const src = join(outputPath, 'index.html');
+    const dst = join(outputPath, '404.html');
+
+    // See: https://github.com/http-party/http-server#magic-files
+    copyFileSync(src, dst);
+  }
+
   const args = getHttpServerArgs(options);
 
-  const pathToHttpServerPkgJson = require.resolve('http-server/package.json');
-  const pathToHttpServerBin = readJsonFile(pathToHttpServerPkgJson).bin[
-    'http-server'
-  ];
+  const { path: pathToHttpServerPkgJson, packageJson } =
+    readModulePackageJson('http-server');
+  const pathToHttpServerBin = packageJson.bin['http-server'];
   const pathToHttpServer = resolve(
     pathToHttpServerPkgJson.replace('package.json', ''),
     pathToHttpServerBin
@@ -175,6 +180,10 @@ export default async function* fileServerExecutor(
     serve.kill();
     if (disposeWatch) {
       disposeWatch();
+    }
+
+    if (options.spa) {
+      unlinkSync(join(outputPath, '404.html'));
     }
   };
   process.on('exit', processExitListener);

@@ -47,6 +47,7 @@ export function addImportsToModule(
   const effectsName = `${names(options.name).className}Effects`;
   const facadeName = `${names(options.name).className}Facade`;
   const className = `${names(options.name).className}`;
+  const propertyName = `${names(options.name).propertyName}`;
   const reducerImports = `* as from${className}`;
 
   const storeMetaReducers = `metaReducers: !environment.production ? [] : []`;
@@ -61,7 +62,7 @@ export function addImportsToModule(
   const nxModule = 'NxModule.forRoot()';
   const effectsForRoot = `EffectsModule.forRoot([${effectsName}])`;
   const effectsForEmptyRoot = `EffectsModule.forRoot([])`;
-  const storeForFeature = `StoreModule.forFeature(from${className}.${constantName}_FEATURE_KEY, from${className}.reducer)`;
+  const storeForFeature = `StoreModule.forFeature(from${className}.${constantName}_FEATURE_KEY, from${className}.${propertyName}Reducer)`;
   const effectsForFeature = `EffectsModule.forFeature([${effectsName}])`;
   const devTools = `!environment.production ? StoreDevtoolsModule.instrument() : []`;
   const storeRouterModule = 'StoreRouterConnectingModule.forRoot()';

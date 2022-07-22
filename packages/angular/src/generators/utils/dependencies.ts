@@ -7,9 +7,9 @@ export function addBuildableLibrariesPostCssDependencies(tree: Tree): void {
     {},
     {
       postcss: postcssVersion,
-      'postcss-import': '^14.0.2',
-      'postcss-preset-env': '^6.7.0',
-      'postcss-url': '^10.1.1',
+      'postcss-import': '~14.1.0',
+      'postcss-preset-env': '~7.5.0',
+      'postcss-url': '~10.1.3',
     }
   );
 }

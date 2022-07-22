@@ -12,7 +12,7 @@
     "preset": {
       "factory": "./src/generators/preset/preset#presetSchematic",
       "schema": "./src/generators/preset/schema.json",
-      "description": "Create application in an empty workspace.",
+      "description": "Create an application in an empty workspace.",
       "hidden": true
     },
 
@@ -146,7 +146,7 @@
     "ci-workflow": {
       "factory": "./src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator",
       "schema": "./src/generators/ci-workflow/schema.json",
-      "description": "Generete a CI workflow."
+      "description": "Generate a CI workflow."
     }
   }
 }

@@ -1,5 +1,6 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { libraryGenerator } from '@nrwl/js';
 import { pluginGenerator } from '../plugin/plugin';
 import { generatorGenerator } from './generator';
 
@@ -56,6 +57,26 @@ describe('NxPlugin Generator Generator', () => {
     );
     expect(generatorJson.generators['my-generator'].description).toEqual(
       'my-generator description'
+    );
+  });
+
+  it('should create generators.json if it is not present', async () => {
+    await libraryGenerator(tree, {
+      name: 'test-js-lib',
+      buildable: true,
+    });
+    const libConfig = readProjectConfiguration(tree, 'test-js-lib');
+    await generatorGenerator(tree, {
+      project: 'test-js-lib',
+      name: 'test-generator',
+      unitTestRunner: 'jest',
+    });
+
+    expect(() =>
+      tree.exists(`${libConfig.root}/generators.json`)
+    ).not.toThrow();
+    expect(readJson(tree, `${libConfig.root}/package.json`).generators).toBe(
+      'generators.json'
     );
   });
 

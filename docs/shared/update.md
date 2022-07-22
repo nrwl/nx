@@ -34,7 +34,9 @@ At this point, no packages have been installed, and no other files have been tou
 
 Now, you can inspect `package.json` to see if the changes make sense. Sometimes the migration can update a package to a version that is either not allowed or conflicts with another package. Feel free to manually apply the desired adjustments.
 
-> At this stage, after inspecting the `package.json`, you may wish to manually run the appropriate install command for your workspace (e.g. `npm install`, `yarn`, or `pnpm install`) but in the next step `nx migrate --run-migrations` will also run this automatically for you.
+{% callout type="note" title="Inspect the changes" %}
+At this stage, after inspecting the `package.json`, you may wish to manually run the appropriate install command for your workspace (e.g. `npm install`, `yarn`, or `pnpm install`) but in the next step `nx migrate --run-migrations` will also run this automatically for you.
+{% /callout %}
 
 ### Step 2: Running migrations
 
@@ -165,4 +167,6 @@ git reset --hard # Reset any changes
 git clean -fd # Delete newly added files and directories
 ```
 
-(NOTE: If using `--create-commits` you will need to first retrieve the SHA of the commit before your first automated migration commit in order to jump back to the point before the migrations ran, e.g. `git reset --hard YOUR_APPROPRIATE_SHA_HERE`)
+{% callout type="warning" title="--create-commits" %}
+If using `--create-commits`, you will need to first retrieve the SHA of the commit before your first automated migration commit in order to jump back to the point before the migrations ran, e.g. `git reset --hard YOUR_APPROPRIATE_SHA_HERE`)
+{% /callout %}

@@ -1,6 +1,7 @@
 import { DocumentData, DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import { parseMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import { readFileSync } from 'fs';
-import matter from 'gray-matter';
+import { load as yamlLoad } from 'js-yaml';
 import { join } from 'path';
 import { extractTitle } from './documents.utils';
 
@@ -14,6 +15,7 @@ export class DocumentsApi {
     private readonly options: {
       publicDocsRoot: string;
       documentSources: DocumentMetadata[];
+      addAncestor: { id: string; name: string } | null;
     }
   ) {
     if (!options.publicDocsRoot) {
@@ -22,12 +24,23 @@ export class DocumentsApi {
     if (!options.documentSources) {
       throw new Error('public document sources cannot be undefined');
     }
+
+    const itemList: DocumentMetadata[] = options.documentSources.flatMap(
+      (x) => x.itemList
+    ) as DocumentMetadata[];
+
     this.documents = {
       id: 'documents',
       name: 'documents',
-      itemList: options.documentSources.flatMap(
-        (x) => x.itemList
-      ) as DocumentMetadata[],
+      itemList: !!this.options.addAncestor
+        ? [
+            {
+              id: this.options.addAncestor.id,
+              name: this.options.addAncestor.name,
+              itemList,
+            },
+          ]
+        : itemList,
     };
   }
 
@@ -35,19 +48,21 @@ export class DocumentsApi {
     const docPath = this.getFilePath(path);
 
     const originalContent = readFileSync(docPath, 'utf8');
-    const file = matter(originalContent);
+    const ast = parseMarkdown(originalContent);
+    const frontmatter = ast.attributes.frontmatter
+      ? yamlLoad(ast.attributes.frontmatter)
+      : {};
 
     // Set default title if not provided in front-matter section.
-    if (!file.data.title) {
-      file.data.title = extractTitle(originalContent) ?? path[path.length - 1];
-      file.data.description = file.excerpt ?? path[path.length - 1];
+    if (!frontmatter.title) {
+      frontmatter.title =
+        extractTitle(originalContent) ?? path[path.length - 1];
     }
 
     return {
       filePath: docPath,
-      data: file.data,
-      content: file.content,
-      excerpt: file.excerpt,
+      data: frontmatter,
+      content: originalContent,
     };
   }
 

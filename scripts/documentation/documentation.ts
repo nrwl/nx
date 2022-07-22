@@ -10,8 +10,6 @@ import { generatePackageSchemas } from './package-schemas/generatePackageSchemas
 async function generate() {
   try {
     console.log(`${chalk.blue('i')} Generating Documentation`);
-    generatePackageSchemas();
-    generateDevkitDocumentation();
 
     const commandsOutputDirectory = join(
       __dirname,
@@ -22,6 +20,9 @@ async function generate() {
     removeSync(commandsOutputDirectory);
     await generateCNWocumentation(commandsOutputDirectory);
     await generateCLIDocumentation(commandsOutputDirectory);
+
+    generateDevkitDocumentation();
+    await Promise.all(generatePackageSchemas());
 
     console.log(`\n${chalk.green('✓')} Generated Documentation\n`);
   } catch (e) {
@@ -51,9 +52,7 @@ function checkDocumentation() {
   }
 }
 
-generate().then(() => {
-  checkDocumentation();
-});
+generate().then(() => checkDocumentation());
 
 function printInfo(
   str: string,

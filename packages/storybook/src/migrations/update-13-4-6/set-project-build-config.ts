@@ -5,21 +5,24 @@ import {
   updateProjectConfiguration,
   getProjects,
 } from '@nrwl/devkit';
-import { findStorybookAndBuildTargets } from '../../executors/utils';
+import { findStorybookAndBuildTargetsAndCompiler } from '../../utils/utilities';
 
 export default async function setProjectBuildConfig(tree: Tree) {
   let changesMade = false;
   const projects = getProjects(tree);
   [...projects.entries()].forEach(([projectName, projectConfiguration]) => {
-    const { storybookBuildTarget, storybookTarget, buildTarget } =
-      findStorybookAndBuildTargets(projectConfiguration.targets);
+    if (!projectConfiguration.targets) {
+      return;
+    }
+    const { storybookBuildTarget, storybookTarget, ngBuildTarget } =
+      findStorybookAndBuildTargetsAndCompiler(projectConfiguration.targets);
     if (
       projectName &&
       storybookTarget &&
       projectConfiguration?.targets?.[storybookTarget]?.options?.uiFramework ===
         '@storybook/angular'
     ) {
-      if (buildTarget) {
+      if (ngBuildTarget) {
         if (
           !projectConfiguration.targets[storybookTarget].options
             .projectBuildConfig

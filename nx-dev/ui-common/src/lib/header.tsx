@@ -1,6 +1,7 @@
 import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 import cx from 'classnames';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 export interface HeaderProps {
   isDocViewer?: boolean;
@@ -8,6 +9,9 @@ export interface HeaderProps {
 }
 
 export function Header(props: HeaderProps) {
+  const router = useRouter();
+  const isNxCloudDoc: boolean = router.asPath.startsWith('/nx-cloud');
+  const isReferencesDoc: boolean = router.asPath.startsWith('/packages');
   return (
     <div
       className={cx(
@@ -59,17 +63,44 @@ export function Header(props: HeaderProps) {
         </div>
         {/*NAVIGATION*/}
         <div className="flex-shrink-0 text-sm">
-          <nav className="items-justified flex justify-center space-x-1">
+          <nav
+            aria-labelledby="primary-navigation"
+            className="items-justified flex justify-center space-x-1"
+          >
             <h2 className="sr-only">Main navigation</h2>
             <Link href="/getting-started/intro">
               <a
                 title="Check Nx documentation"
                 className={cx(
                   'px-3 py-2 leading-tight text-white',
-                  !!props.isDocViewer ? 'font-bold' : ''
+                  !!props.isDocViewer && !isNxCloudDoc && !isReferencesDoc
+                    ? 'font-bold'
+                    : ''
                 )}
               >
-                Docs
+                Nx Docs
+              </a>
+            </Link>
+            <Link href="/nx-cloud/intro/what-is-nx-cloud">
+              <a
+                title="Nx Cloud documentation"
+                className={cx(
+                  'px-3 py-2 leading-tight text-white',
+                  !!props.isDocViewer && isNxCloudDoc ? 'font-bold' : ''
+                )}
+              >
+                Nx Cloud Docs
+              </a>
+            </Link>
+            <Link href="/packages">
+              <a
+                title="Official Packages & API"
+                className={cx(
+                  'px-3 py-2 leading-tight text-white',
+                  isReferencesDoc ? 'font-bold' : ''
+                )}
+              >
+                Reference
               </a>
             </Link>
             <Link href="/community#create-nx-plugin">
@@ -83,7 +114,7 @@ export function Header(props: HeaderProps) {
             <Link href="/conf">
               <a
                 title="Check Nx conference"
-                className="relative px-3 py-2 leading-tight text-white md:inline-flex"
+                className="relative hidden px-3 py-2 leading-tight text-white md:inline-flex"
               >
                 {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
                 {/*  <span className="bg-green-nx-base absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />*/}
@@ -141,7 +172,7 @@ export function Header(props: HeaderProps) {
                   >
                     <rect width="10" height="10" />
                   </svg>
-                  12k+
+                  13k+
                 </span>
               </div>
             </a>

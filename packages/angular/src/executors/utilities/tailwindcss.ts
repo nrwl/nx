@@ -25,15 +25,7 @@ export function getTailwindSetup(
   let tailwindConfigPath = tailwindConfig;
 
   if (!tailwindConfigPath) {
-    // Try to find TailwindCSS configuration file in the project or workspace root.
-    const tailwindConfigFile = 'tailwind.config.js';
-    for (const path of [basePath, workspaceRoot]) {
-      const fullPath = join(path, tailwindConfigFile);
-      if (existsSync(fullPath)) {
-        tailwindConfigPath = fullPath;
-        break;
-      }
-    }
+    tailwindConfigPath = getTailwindConfigPath(basePath, workspaceRoot);
   }
 
   // Only load Tailwind CSS plugin if configuration file was found.
@@ -63,6 +55,25 @@ export function getTailwindSetup(
   }
 
   return { tailwindConfigPath, tailwindPackagePath };
+}
+
+function getTailwindConfigPath(
+  projectRoot: string,
+  workspaceRoot: string
+): string | undefined {
+  // valid tailwind config files https://github.com/tailwindlabs/tailwindcss/blob/master/src/util/resolveConfigPath.js#L46
+  const tailwindConfigFiles = ['tailwind.config.js', 'tailwind.config.cjs'];
+
+  for (const basePath of [projectRoot, workspaceRoot]) {
+    for (const configFile of tailwindConfigFiles) {
+      const fullPath = join(basePath, configFile);
+      if (existsSync(fullPath)) {
+        return fullPath;
+      }
+    }
+  }
+
+  return undefined;
 }
 
 export function getTailwindPostCssPlugins(

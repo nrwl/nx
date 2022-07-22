@@ -1,5 +1,5 @@
-export const nxVersion = '*';
-export const storybookVersion = '~6.4.12';
+export const nxVersion = require('../../package.json').version;
+export const storybookVersion = '~6.5.9';
 export const babelCoreVersion = '7.12.13';
 export const babelLoaderVersion = '8.1.0';
 export const babelPresetTypescriptVersion = '7.12.13';
@@ -8,3 +8,5 @@ export const urlLoaderVersion = '^3.0.0';
 export const webpack5Version = '^5.64.0';
 export const storybookReactNativeVersion = '^6.0.1-beta.5';
 export const reactNativeStorybookLoader = '^2.0.5';
+export const storybookSwcAddonVersion = '^1.1.7';
+export const storybookNextAddonVersion = '^1.6.6';

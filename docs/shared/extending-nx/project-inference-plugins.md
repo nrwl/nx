@@ -1,6 +1,8 @@
 # Project Inference
 
-> This API is experimental and might change.
+{% callout type="caution" title="Experimental" %}
+This API is experimental and might change.
+{% /callout %}
 
 Project inference describes the ability of Nx to discover and work with projects based on source code and configuration files in your repo.
 
@@ -26,7 +28,7 @@ Project file patterns are used in two scenarios:
 - Inferring projects when `workspace.json` is not present
 - Determining which files should be passed into `registerProjectTargets`.
 
-Lets use the below plugin and workspace layout as an example:
+Let's use the below plugin and workspace layout as an example:
 
 > libs/awesome-plugin/index.ts
 
@@ -91,10 +93,16 @@ It is possible that the registerProjectTargets function may be called multiple t
 - One plugin may list multiple file patterns, and a project may match more than one of them.
 - Multiple plugins may list similar patterns, and pick up the project separately.
 
-In the first case, the plugin that you are writing will be called into multiple times. If you return the same target (e.g. `build`) on each call, whichever is ran last would be the target that Nx calls into. The order that the function would be called is **NOT** guaranteed, so you should try to avoid this when possible. If specifying multiple patterns, they should either be mutually exclusive (e.g. one match per project) or the plugin should conditionally add targets based on the file passed in.
+**In the first case**, the plugin that you are writing will be called into multiple times. If you return the same target (e.g. `build`) on each call, whichever is ran last would be the target that Nx calls into.
 
-In the second case, different plugins may attempt to register the same target on a project. If this occurs, whichever target was registered by the plugin listed latest in `nx.json` would be the one called into by Nx. As an example, assume `plugin-a`, `plugin-b`, and `plugin-c` all match a file and register `build` as a target. If `nx.json` included `"plugins": ["plugin-a", "plugin-b", "plugin-c"]`, running `nx build my-project` would run the target as defined by `"plugin-c"`. Alternatively, if `nx.json` included `"plugins": ["plugin-c", "plugin-b", "plugin-a"]`, running `nx build my-project` would run the target as defined by `"plugin-a"`
+The order that the function would be called is **NOT** guaranteed, so you should try to avoid this when possible. If specifying multiple patterns, they should either be mutually exclusive (e.g. one match per project) or the plugin should conditionally add targets based on the file passed in.
+
+**In the second case**, different plugins may attempt to register the same target on a project. If this occurs, whichever target was registered by the plugin listed latest in `nx.json` would be the one called into by Nx. As an example, assume `plugin-a`, `plugin-b`, and `plugin-c` all match a file and register `build` as a target. If `nx.json` included `"plugins": ["plugin-a", "plugin-b", "plugin-c"]`, running `nx build my-project` would run the target as defined by `"plugin-c"`.
+
+Alternatively, if `nx.json` included `"plugins": ["plugin-c", "plugin-b", "plugin-a"]`, running `nx build my-project` would run the target as defined by `"plugin-a"`.
 
 ## Development Tips
 
-There is a cache that Nx uses to avoid recalculating the project graph as much as possible, but it may need to be skipped during plugin development. You can set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`. It might also be a good idea to ensure that the dep graph is not running on the nx daemon by setting `NX_DAEMON=false`, as this will ensure you will be able to see any `console.log` statements you add as you're developing. You can also leave the daemon active, but `console.log` statements would only appear in its log file.
+There is a cache that Nx uses to avoid recalculating the project graph as much as possible, but it may need to be skipped during plugin development. You can set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
+
+It might also be a good idea to ensure that the dep graph is not running on the nx daemon by setting `NX_DAEMON=false`, as this will ensure you will be able to see any `console.log` statements you add as you're developing. You can also leave the daemon active, but `console.log` statements would only appear in its log file.

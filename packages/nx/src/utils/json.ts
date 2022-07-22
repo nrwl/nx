@@ -1,9 +1,9 @@
 import { parse, printParseErrorCode, stripComments } from 'jsonc-parser';
-import type { ParseError } from 'jsonc-parser';
+import type { ParseError, ParseOptions } from 'jsonc-parser';
 
 export { stripComments as stripJsonComments };
 
-export interface JsonParseOptions {
+export interface JsonParseOptions extends ParseOptions {
   /**
    * Expect JSON with javascript-style
    * @default false
@@ -14,6 +14,11 @@ export interface JsonParseOptions {
    * @default false
    */
   disallowComments?: boolean;
+
+  /**
+   * Allow trailing commas in the JSON content
+   */
+  allowTrailingComma?: boolean;
 }
 
 export interface JsonSerializeOptions {
@@ -37,20 +42,11 @@ export function parseJson<T extends object = any>(
   options?: JsonParseOptions
 ): T {
   try {
-    if (
-      options?.disallowComments === true ||
-      options?.expectComments !== true
-    ) {
-      return JSON.parse(input);
-    }
-  } catch (error) {
-    if (options?.disallowComments === true) {
-      throw error;
-    }
-  }
+    return JSON.parse(input);
+  } catch {}
 
   const errors: ParseError[] = [];
-  const result: T = parse(input, errors);
+  const result: T = parse(input, errors, options);
 
   if (errors.length > 0) {
     const { error, offset } = errors[0];

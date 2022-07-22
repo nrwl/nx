@@ -34,5 +34,16 @@
       "description": "Renames @nrwl/node:package to @nrwl/js:tsc",
       "factory": "./src/migrations/update-13-8-5/update-package-to-tsc"
     }
+  },
+  "packageJsonUpdates": {
+    "14.3.7": {
+      "version": "14.3.7-beta.0",
+      "packages": {
+        "@types/node": {
+          "version": "18.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
   }
 }

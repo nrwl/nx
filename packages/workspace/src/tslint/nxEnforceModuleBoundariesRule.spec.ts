@@ -7,7 +7,7 @@ import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('nx/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 

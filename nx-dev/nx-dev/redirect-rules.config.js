@@ -33,14 +33,20 @@ const schemaUrls = {
   '/angular/library': '/packages/angular/generators/library',
   '/angular/library-secondary-entry-point':
     '/packages/angular/generators/library-secondary-entry-point',
-  '/angular/mfe-host': '/packages/angular/generators/mfe-host',
-  '/angular/mfe-remote': '/packages/angular/generators/mfe-remote',
+  '/angular/mfe-host': '/packages/angular/generators/mf-host',
+  '/angular/mfe-remote': '/packages/angular/generators/mf-remote',
+  '/packages/angular/generators/mfe-host':
+    '/packages/angular/generators/mf-host',
+  '/packages/angular/generators/mfe-remote':
+    '/packages/angular/generators/mf-remote',
   '/angular/move': '/packages/angular/generators/move',
   '/angular/ngrx': '/packages/angular/generators/ngrx',
   '/angular/scam': '/packages/angular/generators/scam',
   '/angular/scam-directive': '/packages/angular/generators/scam-directive',
   '/angular/scam-pipe': '/packages/angular/generators/scam-pipe',
-  '/angular/setup-mfe': '/packages/angular/generators/setup-mfe',
+  '/angular/setup-mfe': '/packages/angular/generators/setup-mf',
+  '/packages/angular/generators/setup-mfe':
+    '/packages/angular/generators/setup-mf',
   '/angular/setup-tailwind': '/packages/angular/generators/setup-tailwind',
   '/angular/stories': '/packages/angular/generators/stories',
   '/angular/storybook-configuration':
@@ -134,8 +140,6 @@ const schemaUrls = {
   '/nx-plugin/plugin': '/packages/nx-plugin/generators/plugin',
   '/nx-plugin/schematic': '/packages/nx-plugin/generators/generator',
   '/nx-plugin/e2e': '/packages/nx-plugin/executors/e2e',
-  '/nx-devkit/index': '/packages/nx-devkit/index',
-  '/nx-devkit/ngcli_adapter': '/packages/nx-devkit/ngcli_adapter',
 };
 
 /**
@@ -178,10 +182,37 @@ const overviewUrls = {
 };
 
 /**
+ * API removing CLI and putting the content into Nx
+ */
+const cliUrls = {
+  '/cli/create-nx-workspace': '/nx/create-nx-workspace',
+  '/cli/generate': '/nx/generate',
+  '/cli/run': '/nx/run',
+  '/cli/daemon': '/nx/daemon',
+  '/cli/dep-graph': '/nx/dep-graph',
+  '/cli/run-many': '/nx/run-many',
+  '/cli/affected': '/nx/affected',
+  '/cli/affected-dep-graph': '/nx/affected-dep-graph',
+  '/cli/affected-apps': '/nx/affected-apps',
+  '/cli/affected-libs': '/nx/affected-libs',
+  '/cli/print-affected': '/nx/print-affected',
+  '/cli/format-check': '/nx/format-check',
+  '/cli/format-write': '/nx/format-write',
+  '/cli/migrate': '/nx/migrate',
+  '/cli/report': '/nx/report',
+  '/cli/list': '/nx/list',
+  '/cli/workspace-lint': '/nx/workspace-lint',
+  '/cli/workspace-generator': '/nx/workspace-generator',
+  '/cli/connect-to-nx-cloud': '/nx/connect-to-nx-cloud',
+  '/cli/reset': '/nx/reset',
+};
+
+/**
  * Public export API
  */
 module.exports = {
   schemaUrls,
   guideUrls,
   overviewUrls,
+  cliUrls,
 };

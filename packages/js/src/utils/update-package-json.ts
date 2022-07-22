@@ -11,6 +11,7 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { basename, dirname, join, relative } from 'path';
 import { NormalizedExecutorOptions } from './schema';
+import { fileExists } from 'nx/src/utils/fileutils';
 
 function getMainFileDirRelativeToProjectRoot(
   main: string,
@@ -28,7 +29,15 @@ export function updatePackageJson(
   dependencies: DependentBuildableProjectNode[],
   withTypings = true
 ): void {
-  const packageJson = readJsonFile(join(options.projectRoot, 'package.json'));
+  const pathToPackageJson = join(
+    context.root,
+    options.projectRoot,
+    'package.json'
+  );
+
+  const packageJson = fileExists(pathToPackageJson)
+    ? readJsonFile(pathToPackageJson)
+    : { name: context.projectName };
 
   const mainFile = basename(options.main).replace(/\.[tj]s$/, '');
   const relativeMainFileDir = getMainFileDirRelativeToProjectRoot(

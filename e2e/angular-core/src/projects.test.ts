@@ -1,18 +1,18 @@
 import {
   checkFilesExist,
+  cleanupProject,
   getSize,
   killPorts,
   newProject,
-  cleanupProject,
+  promisifiedTreeKill,
+  readFile,
   runCLI,
+  runCommandUntil,
+  runCypressTests,
   tmpProjPath,
   uniq,
   updateFile,
-  runCypressTests,
   updateProjectConfig,
-  readFile,
-  runCommandUntil,
-  promisifiedTreeKill,
 } from '@nrwl/e2e/utils';
 import { ChildProcess } from 'child_process';
 
@@ -193,44 +193,9 @@ describe('Angular Projects', () => {
     runCLI(
       `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-interactive`
     );
-
-    // create secondary entrypoint
-    updateFile(
-      `libs/${childLib}/sub/package.json`,
-      `
-  {
-    "ngPackage": {}
-  }
-`
+    runCLI(
+      `generate @nrwl/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`
     );
-    updateFile(
-      `libs/${childLib}/sub/src/lib/sub.module.ts`,
-      `
-  import { NgModule } from '@angular/core';
-  import { CommonModule } from '@angular/common';
-  @NgModule({ imports: [CommonModule] })
-  export class SubModule {}
-`
-    );
-
-    updateFile(
-      `libs/${childLib}/sub/src/public_api.ts`,
-      `export * from './lib/sub.module';`
-    );
-
-    updateFile(
-      `libs/${childLib}/sub/src/index.ts`,
-      `export * from './public_api';`
-    );
-
-    updateFile(`tsconfig.base.json`, (s) => {
-      return s.replace(
-        `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],`,
-        `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],
-"@${proj}/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
-`
-      );
-    });
 
     const moduleContent = `
     import { NgModule } from '@angular/core';
@@ -257,13 +222,14 @@ describe('Angular Projects', () => {
     expect(buildOutput).toContain('Successfully ran target build');
   });
 
-  it('MFE - should serve the host and remote apps successfully, even with a shared library between them', async () => {
+  it('MF - should serve the host and remote apps successfully, even with a shared library with a secondary entry point between them', async () => {
     // ACT + ASSERT
     const port1 = 4200;
     const port2 = 4206;
     const hostApp = uniq('app');
     const remoteApp1 = uniq('remote');
-    const sharedLib = uniq('sharedLib');
+    const sharedLib = uniq('shared-lib');
+    const secondaryEntry = uniq('secondary');
 
     // generate host app
     runCLI(
@@ -276,7 +242,12 @@ describe('Angular Projects', () => {
     );
 
     // generate a shared lib
-    runCLI(`generate @nrwl/angular:library ${sharedLib} --no-interactive`);
+    runCLI(
+      `generate @nrwl/angular:library ${sharedLib} --buildable --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
+    );
 
     // update the files to use shared library
     updateFile(
@@ -286,6 +257,9 @@ describe('Angular Projects', () => {
       import { ${
         names(sharedLib).className
       }Module } from '@${proj}/${sharedLib}';
+      import { ${
+        names(secondaryEntry).className
+      }Module } from '@${proj}/${secondaryEntry}';
       import { AppComponent } from './app.component';
       import { NxWelcomeComponent } from './nx-welcome.component';
       import { RouterModule } from '@angular/router';
@@ -320,6 +294,9 @@ describe('Angular Projects', () => {
     import { CommonModule } from '@angular/common';
     import { RouterModule } from '@angular/router';
     import { ${names(sharedLib).className}Module } from '@${proj}/${sharedLib}';
+      import { ${
+        names(secondaryEntry).className
+      }Module } from '@${proj}/${secondaryEntry}';
     import { RemoteEntryComponent } from './entry.component';
     
     @NgModule({
@@ -361,14 +338,12 @@ describe('Angular Projects', () => {
       if (process && process.pid) {
         await promisifiedTreeKill(process.pid, 'SIGKILL');
       }
-      await killPorts(port1);
-      await killPorts(port2);
     } catch (err) {
       expect(err).toBeFalsy();
     }
   }, 300000);
 
-  it('MFE - should build the host app successfully', async () => {
+  it('MF - should build the host app successfully', async () => {
     // ARRANGE
     const hostApp = uniq('app');
     const remoteApp1 = uniq('remote');

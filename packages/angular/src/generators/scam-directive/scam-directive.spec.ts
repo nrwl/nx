@@ -1,4 +1,4 @@
-import { addProjectConfiguration } from '@nrwl/devkit';
+import { addProjectConfiguration, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import scamDirectiveGenerator from './scam-directive';
 
@@ -80,6 +80,55 @@ describe('SCAM Directive Generator', () => {
         exports: [ExampleDirective],
       })
       export class ExampleDirectiveModule {}"
+    `);
+  });
+
+  it('should create the scam directive correctly and export it for a secondary entrypoint', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace(2);
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write('libs/lib1/feature/src/index.ts', '');
+    writeJson(tree, 'libs/lib1/feature/ng-package.json', {
+      lib: { entryFile: './src/index.ts' },
+    });
+
+    // ACT
+    await scamDirectiveGenerator(tree, {
+      name: 'example',
+      project: 'lib1',
+      path: 'libs/lib1/feature/src/lib',
+      inlineScam: false,
+      export: true,
+    });
+
+    // ASSERT
+    const directiveModuleSource = tree.read(
+      'libs/lib1/feature/src/lib/example.module.ts',
+      'utf-8'
+    );
+    expect(directiveModuleSource).toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+      import { ExampleDirective } from './example.directive';
+
+      @NgModule({
+        imports: [CommonModule],
+        declarations: [ExampleDirective],
+        exports: [ExampleDirective],
+      })
+      export class ExampleDirectiveModule {}"
+    `);
+    const secondaryEntryPointSource = tree.read(
+      `libs/lib1/feature/src/index.ts`,
+      'utf-8'
+    );
+    expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
+      "export * from \\"./lib/example.directive\\";
+      export * from \\"./lib/example.module\\";"
     `);
   });
 

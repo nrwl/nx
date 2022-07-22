@@ -352,51 +352,54 @@ describe('app', () => {
 
         const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
         expect(eslintJson).toMatchInlineSnapshot(`
-Object {
-  "env": Object {
-    "jest": true,
-  },
-  "extends": Array [
-    "plugin:@nrwl/nx/react-typescript",
-    "../../.eslintrc.json",
-    "next",
-    "next/core-web-vitals",
-  ],
-  "ignorePatterns": Array [
-    "!**/*",
-  ],
-  "overrides": Array [
-    Object {
-      "files": Array [
-        "*.ts",
-        "*.tsx",
-        "*.js",
-        "*.jsx",
-      ],
-      "rules": Object {
-        "@next/next/no-html-link-for-pages": Array [
-          "error",
-          "apps/my-app/pages",
-        ],
-      },
-    },
-    Object {
-      "files": Array [
-        "*.ts",
-        "*.tsx",
-      ],
-      "rules": Object {},
-    },
-    Object {
-      "files": Array [
-        "*.js",
-        "*.jsx",
-      ],
-      "rules": Object {},
-    },
-  ],
-}
-`);
+          Object {
+            "env": Object {
+              "jest": true,
+            },
+            "extends": Array [
+              "plugin:@nrwl/nx/react-typescript",
+              "next",
+              "next/core-web-vitals",
+              "../../.eslintrc.json",
+            ],
+            "ignorePatterns": Array [
+              "!**/*",
+            ],
+            "overrides": Array [
+              Object {
+                "files": Array [
+                  "*.ts",
+                  "*.tsx",
+                  "*.js",
+                  "*.jsx",
+                ],
+                "rules": Object {
+                  "@next/next/no-html-link-for-pages": Array [
+                    "error",
+                    "apps/my-app/pages",
+                  ],
+                },
+              },
+              Object {
+                "files": Array [
+                  "*.ts",
+                  "*.tsx",
+                ],
+                "rules": Object {},
+              },
+              Object {
+                "files": Array [
+                  "*.js",
+                  "*.jsx",
+                ],
+                "rules": Object {},
+              },
+            ],
+            "rules": Object {
+              "@next/next/no-html-link-for-pages": "off",
+            },
+          }
+        `);
       });
     });
 

@@ -1,15 +1,8 @@
-import {
-  splitArgsIntoNxArgsAndOverrides,
-  getAffectedConfig,
-} from './command-line-utils';
-import * as fileUtils from '../project-graph/file-utils';
+import { splitArgsIntoNxArgsAndOverrides } from './command-line-utils';
 
 jest.mock('../project-graph/file-utils');
 
 describe('splitArgs', () => {
-  beforeEach(() => {
-    jest.spyOn(fileUtils, 'readNxJson').mockReturnThis();
-  });
   it('should split nx specific arguments into nxArgs', () => {
     expect(
       splitArgsIntoNxArgsAndOverrides(
@@ -17,10 +10,12 @@ describe('splitArgs', () => {
           base: 'sha1',
           head: 'sha2',
           notNxArg: true,
-          _: ['--override'],
+          override: true,
           $0: '',
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs
     ).toEqual({
       base: 'sha1',
@@ -37,9 +32,10 @@ describe('splitArgs', () => {
         _: ['--override'],
         $0: '',
       },
-      'affected'
+      'affected',
+      {} as any,
+      {} as any
     ).nxArgs;
-    expect(nxArgs['nx-key']).toEqual('some-value');
     expect(nxArgs['nxKey']).toEqual('some-value');
   });
 
@@ -51,7 +47,9 @@ describe('splitArgs', () => {
           _: ['--override'],
           $0: '',
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs
     ).toEqual({
       base: 'main',
@@ -60,12 +58,6 @@ describe('splitArgs', () => {
   });
 
   it('should return configured base branch from nx.json', () => {
-    jest.spyOn(fileUtils, 'readNxJson').mockReturnValue({
-      npmScope: 'testing',
-      affected: {
-        defaultBase: 'develop',
-      },
-    });
     expect(
       splitArgsIntoNxArgsAndOverrides(
         {
@@ -73,7 +65,9 @@ describe('splitArgs', () => {
           _: ['--override'],
           $0: '',
         },
-        'affected'
+        'affected',
+        {} as any,
+        { affected: { defaultBase: 'develop' } }
       ).nxArgs
     ).toEqual({
       base: 'develop',
@@ -82,17 +76,16 @@ describe('splitArgs', () => {
   });
 
   it('should return a default base branch if not configured in nx.json', () => {
-    jest.spyOn(fileUtils, 'readNxJson').mockReturnValue({
-      npmScope: 'testing',
-    });
     expect(
       splitArgsIntoNxArgsAndOverrides(
         {
           notNxArg: true,
-          _: ['--override'],
+          _: ['affecteda', '--override'],
           $0: '',
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs
     ).toEqual({
       base: 'main',
@@ -106,37 +99,71 @@ describe('splitArgs', () => {
         {
           files: [''],
           notNxArg: true,
-          _: ['--override'],
+          __positional_overrides__: [],
           $0: '',
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).overrides
     ).toEqual({
+      __overrides_unparsed__: ['--notNxArg=true'],
       notNxArg: true,
-      override: true,
     });
   });
 
-  it('should set base and head in the affected mode', () => {
-    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
-      {
-        notNxArg: true,
-        _: ['affected', '--name', 'bob', 'sha1', 'sha2', '--override'],
-        $0: '',
-      },
-      'affected'
-    );
-
-    expect(nxArgs).toEqual({
-      base: 'sha1',
-      head: 'sha2',
-      skipNxCache: false,
-    });
-    expect(overrides).toEqual({
+  it('should split non nx specific arguments into target args (with positonal args)', () => {
+    expect(
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          files: [''],
+          notNxArg: true,
+          __positional_overrides__: ['positional'],
+          $0: '',
+        },
+        'affected',
+        {} as any,
+        {} as any
+      ).overrides
+    ).toEqual({
+      _: ['positional'],
+      __overrides_unparsed__: ['positional', '--notNxArg=true'],
       notNxArg: true,
-      override: true,
-      name: 'bob',
     });
+  });
+
+  it('should only use explicitly provided overrides', () => {
+    expect(
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          files: [''],
+          notNxArg: true,
+          _: ['explicit'],
+          $0: '',
+        },
+        'affected',
+        {} as any,
+        {} as any
+      ).overrides
+    ).toEqual({
+      __overrides_unparsed__: ['explicit'],
+      _: ['explicit'],
+    });
+  });
+
+  it('should throw when base and head are set as positional args', () => {
+    expect(() =>
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          notNxArg: true,
+          __positional_overrides__: ['sha1', 'sha2'],
+          $0: '',
+        },
+        'affected',
+        {} as any,
+        {} as any
+      )
+    ).toThrow();
   });
 
   it('should set base and head based on environment variables in affected mode, if they are not provided directly on the command', () => {
@@ -152,7 +179,9 @@ describe('splitArgs', () => {
           _: ['--override'],
           $0: '',
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs
     ).toEqual({
       base: 'envVarSha1',
@@ -168,7 +197,9 @@ describe('splitArgs', () => {
           $0: '',
           head: 'directlyOnCommandSha1', // higher priority than $NX_HEAD
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs
     ).toEqual({
       base: 'envVarSha1',
@@ -184,7 +215,9 @@ describe('splitArgs', () => {
           $0: '',
           base: 'directlyOnCommandSha2', // higher priority than $NX_BASE
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs
     ).toEqual({
       base: 'directlyOnCommandSha2',
@@ -197,25 +230,6 @@ describe('splitArgs', () => {
     process.env.NX_HEAD = originalNxHead;
   });
 
-  it('should not set base and head in the run-one mode', () => {
-    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
-      {
-        notNxArg: true,
-        _: ['--exclude=file'],
-        $0: '',
-      },
-      'run-one'
-    );
-
-    expect(nxArgs).toEqual({
-      skipNxCache: false,
-    });
-    expect(overrides).toEqual({
-      notNxArg: true,
-      exclude: 'file',
-    });
-  });
-
   describe('--parallel', () => {
     it('should be a number', () => {
       const parallel = splitArgsIntoNxArgsAndOverrides(
@@ -224,7 +238,9 @@ describe('splitArgs', () => {
           $0: '',
           parallel: '5',
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(5);
@@ -237,7 +253,9 @@ describe('splitArgs', () => {
           $0: '',
           parallel: '',
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(3);
@@ -250,7 +268,9 @@ describe('splitArgs', () => {
           $0: '',
           parallel: 'true',
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(3);
@@ -263,7 +283,9 @@ describe('splitArgs', () => {
           $0: '',
           parallel: 'false',
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(1);
@@ -277,7 +299,9 @@ describe('splitArgs', () => {
           parallel: '',
           maxParallel: 5,
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(5);
@@ -291,29 +315,12 @@ describe('splitArgs', () => {
           parallel: '',
           maxParallel: 5,
         },
-        'affected'
+        'affected',
+        {} as any,
+        {} as any
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(5);
     });
-  });
-});
-
-describe('getAffectedConfig', () => {
-  it('should return defaults when affected is undefined in nx.json', () => {
-    jest.spyOn(fileUtils, 'readNxJson').mockReturnThis();
-
-    expect(getAffectedConfig().defaultBase).toEqual('main');
-  });
-
-  it('should return default base branch when its defined in nx.json', () => {
-    jest.spyOn(fileUtils, 'readNxJson').mockReturnValue({
-      npmScope: 'testing',
-      affected: {
-        defaultBase: 'testing',
-      },
-    });
-
-    expect(getAffectedConfig().defaultBase).toEqual('testing');
   });
 });

@@ -45,7 +45,7 @@ nx generate lib ui-button
 
 ### Courses, guides, docs
 
-- [Follow the Nx React tutorial](https://nx.dev/react/tutorial/01-create-application)
+- [Follow the Nx React tutorial](https://nx.dev/react-tutorial/01-create-application)
 
 - [Free Nx course on Egghead.io](https://egghead.io/playlists/scale-react-development-with-nx-4038)
 

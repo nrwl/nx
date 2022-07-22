@@ -52,15 +52,15 @@ describe('react:component-story', () => {
       it('should properly set up the story', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-          import { Story, Meta } from '@storybook/react';
-          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
+          import { ComponentStory, ComponentMeta } from '@storybook/react';
+          import { TestUiLib } from './test-ui-lib';
           
           export default {
             component: TestUiLib,
             title: 'TestUiLib',
-          } as Meta;
+          } as ComponentMeta<typeof TestUiLib>;
           
-          const Template: Story<TestUiLibProps> = (args) => <TestUiLib {...args} />;
+          const Template: ComponentStory<typeof TestUiLib> = (args) => <TestUiLib {...args} />;
           
           export const Primary = Template.bind({});
           Primary.args = {};
@@ -148,15 +148,15 @@ describe('react:component-story', () => {
       it('should create a story without controls', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-          import { Story, Meta } from '@storybook/react';
+          import { ComponentStory, ComponentMeta } from '@storybook/react';
           import { Test } from './test-ui-lib';
           
           export default {
             component: Test,
             title: 'Test',
-          } as Meta;
+          } as ComponentMeta<typeof Test>;
           
-          const Template: Story = (args) => <Test {...args} />;
+          const Template: ComponentStory<typeof Test> = (args) => <Test {...args} />;
           
           export const Primary = Template.bind({});
           Primary.args = {};
@@ -198,15 +198,15 @@ describe('react:component-story', () => {
       it('should setup controls based on the component props', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-            import { Story, Meta } from '@storybook/react';
-            import { Test, TestProps } from './test-ui-lib';
+            import { ComponentStory, ComponentMeta } from '@storybook/react';
+            import { Test } from './test-ui-lib';
 
             export default {
               component: Test,
               title: 'Test',
-            } as Meta;
+            } as ComponentMeta<typeof Test>;
 
-            const Template: Story<TestProps> = (args) => <Test {...args} />;
+            const Template: ComponentStory<typeof Test> = (args) => <Test {...args} />;
 
             export const Primary = Template.bind({});
             Primary.args = {
@@ -256,8 +256,8 @@ describe('react:component-story', () => {
       it('should setup controls based on the component props', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-            import { Story, Meta } from '@storybook/react';
-            import { Test, TestProps } from './test-ui-lib';
+            import { ComponentStory, ComponentMeta } from '@storybook/react';
+            import { Test } from './test-ui-lib';
 
             export default {
               component: Test,
@@ -265,9 +265,9 @@ describe('react:component-story', () => {
               argTypes: {
                 someAction: { action: 'someAction executed!' },
               },
-            } as Meta;
+            } as ComponentMeta<typeof Test>;
 
-            const Template: Story<TestProps> = (args) => <Test {...args} />;
+            const Template: ComponentStory<typeof Test> = (args) => <Test {...args} />;
 
             export const Primary = Template.bind({});
             Primary.args = {
@@ -419,15 +419,15 @@ describe('react:component-story', () => {
             it('should properly setup the controls based on the component props', () => {
               expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
                 .toContain(formatFile`
-            import { Story, Meta } from '@storybook/react';
-            import { Test, TestProps } from './test-ui-lib';
+            import { ComponentStory, ComponentMeta } from '@storybook/react';
+            import { Test } from './test-ui-lib';
 
             export default {
               component: Test,
               title: 'Test',
-            } as Meta;
+            } as ComponentMeta<typeof Test>;
 
-            const Template: Story<TestProps> = (args) => <Test {...args} />;
+            const Template: ComponentStory<typeof Test> = (args) => <Test {...args} />;
 
             export const Primary = Template.bind({});
             Primary.args = {
@@ -551,15 +551,15 @@ describe('react:component-story', () => {
             it('should properly setup the controls based on the component props', () => {
               expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
                 .toContain(formatFile`
-              import { Story, Meta } from '@storybook/react';
-              import { Test, TestProps } from './test-ui-lib';
+              import { ComponentStory, ComponentMeta } from '@storybook/react';
+              import { Test } from './test-ui-lib';
   
               export default {
                 component: Test,
                 title: 'Test',
-              } as Meta;
+              } as ComponentMeta<typeof Test>;
   
-              const Template: Story<TestProps> = (args) => <Test {...args} />;
+              const Template: ComponentStory<typeof Test> = (args) => <Test {...args} />;
   
               export const Primary = Template.bind({});
               Primary.args = {
@@ -614,15 +614,15 @@ describe('react:component-story', () => {
 
           expect(formatFile`${appTree.read(storyFilePathOne, 'utf-8')}`)
             .toContain(formatFile`
-            import { Story, Meta } from '@storybook/react';
+            import { ComponentStory, ComponentMeta } from '@storybook/react';
             import { One } from './test-ui-lib';
             
             export default {
               component: One,
               title: 'One',
-            } as Meta;
+            } as ComponentMeta<typeof One>;
             
-            const Template: Story = (args) => <One {...args} />;
+            const Template: ComponentStory<typeof One> = (args) => <One {...args} />;
             
             export const Primary = Template.bind({});
             Primary.args = {};
@@ -630,15 +630,15 @@ describe('react:component-story', () => {
 
           expect(formatFile`${appTree.read(storyFilePathTwo, 'utf-8')}`)
             .toContain(formatFile`
-            import { Story, Meta } from '@storybook/react';
+            import { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Two } from './test-ui-lib';
             
             export default {
               component: Two,
               title: 'Two',
-            } as Meta;
+            } as ComponentMeta<typeof Two>;
             
-            const Template: Story = (args) => <Two {...args} />;
+            const Template: ComponentStory<typeof Two> = (args) => <Two {...args} />;
             
             export const Primary = Template.bind({});
             Primary.args = {};
@@ -646,15 +646,15 @@ describe('react:component-story', () => {
 
           expect(formatFile`${appTree.read(storyFilePathThree, 'utf-8')}`)
             .toContain(formatFile`
-            import { Story, Meta } from '@storybook/react';
-            import { Three, ThreeProps } from './test-ui-lib';
+            import { ComponentStory, ComponentMeta } from '@storybook/react';
+            import { Three } from './test-ui-lib';
             
             export default {
               component: Three,
               title: 'Three',
-            } as Meta;
+            } as ComponentMeta<typeof Three>;
             
-            const Template: Story<ThreeProps> = (args) => <Three {...args} />;
+            const Template: ComponentStory<typeof Three> = (args) => <Three {...args} />;
             
             export const Primary = Template.bind({});
             Primary.args = {
@@ -678,15 +678,15 @@ describe('react:component-story', () => {
     it('should properly set up the story', () => {
       expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
         .toContain(formatFile`
-        import { Story, Meta } from '@storybook/react';
-        import { TestUiLib, TestUiLibProps } from './test-ui-lib';
+        import { ComponentStory, ComponentMeta } from '@storybook/react';
+        import { TestUiLib } from './test-ui-lib';
         
         export default {
           component: TestUiLib,
           title: 'TestUiLib',
-        } as Meta;
+        } as ComponentMeta<typeof TestUiLib>;
         
-        const Template: Story<TestUiLibProps> = (args) => <TestUiLib {...args} />;
+        const Template: ComponentStory<typeof TestUiLib> = (args) => <TestUiLib {...args} />;
         
         export const Primary = Template.bind({});
         Primary.args = {};

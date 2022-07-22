@@ -1,4 +1,5 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/add-nx-to-monorepo/src",
   "projectType": "library",
   "targets": {
@@ -36,7 +37,7 @@
       }
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["build/packages/add-nx-to-monorepo"],
       "options": {
         "commands": [
@@ -51,7 +52,7 @@
       }
     },
     "test-against-repo": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "commands": [
           {

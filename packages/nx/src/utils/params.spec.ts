@@ -7,7 +7,6 @@ import {
   convertAliases,
   convertSmartDefaultsIntoNamedParams,
   convertToCamelCase,
-  lookupUnmatched,
   Schema,
   setDefaults,
   validateOptsAgainstSchema,
@@ -329,16 +328,40 @@ describe('params', () => {
   });
 
   describe('convertToCamelCase', () => {
-    it('should convert dash case to camel case', () => {
+    it('should convert dash case to camel case if the came case property is present in schema', () => {
       expect(
         convertToCamelCase(
           yargsParser(['--one-two', '1'], {
             number: ['oneTwo'],
-          })
+            configuration: {
+              'camel-case-expansion': false,
+            },
+          }),
+          {
+            properties: { oneTwo: 'some object' },
+          } as any
         )
       ).toEqual({
         _: [],
         oneTwo: 1,
+      });
+    });
+
+    it('should not convert dash case to camel case if the came case property is not present in schema', () => {
+      expect(
+        convertToCamelCase(
+          yargsParser(['--one-two', '1'], {
+            configuration: {
+              'camel-case-expansion': false,
+            },
+          }),
+          {
+            properties: {},
+          } as any
+        )
+      ).toEqual({
+        _: [],
+        'one-two': 1,
       });
     });
 
@@ -347,7 +370,13 @@ describe('params', () => {
         convertToCamelCase(
           yargsParser(['--oneTwo', '1'], {
             number: ['oneTwo'],
-          })
+            configuration: {
+              'camel-case-expansion': false,
+            },
+          }),
+          {
+            properties: { oneTwo: 'some object' },
+          } as any
         )
       ).toEqual({
         _: [],
@@ -360,7 +389,13 @@ describe('params', () => {
         convertToCamelCase(
           yargsParser(['--one-Two', '1'], {
             number: ['oneTwo'],
-          })
+            configuration: {
+              'camel-case-expansion': false,
+            },
+          }),
+          {
+            properties: { oneTwo: 'some object' },
+          } as any
         )
       ).toEqual({
         _: [],
@@ -432,62 +467,6 @@ describe('params', () => {
         )
       ).toEqual({
         d: 'test',
-      });
-    });
-  });
-
-  describe('lookupUnmatched', () => {
-    it('should populate the possible array with near matches', () => {
-      expect(
-        lookupUnmatched(
-          {
-            '--': [
-              {
-                name: 'directoy',
-                possible: [],
-              },
-            ],
-          },
-          {
-            properties: { directory: { type: 'string' } },
-            required: [],
-            description: '',
-          }
-        )
-      ).toEqual({
-        '--': [
-          {
-            name: 'directoy',
-            possible: ['directory'],
-          },
-        ],
-      });
-    });
-
-    it('should NOT populate the possible array with far matches', () => {
-      expect(
-        lookupUnmatched(
-          {
-            '--': [
-              {
-                name: 'directoy',
-                possible: [],
-              },
-            ],
-          },
-          {
-            properties: { faraway: { type: 'string' } },
-            required: [],
-            description: '',
-          }
-        )
-      ).toEqual({
-        '--': [
-          {
-            name: 'directoy',
-            possible: [],
-          },
-        ],
       });
     });
   });
@@ -668,7 +647,7 @@ describe('params', () => {
 
   describe('convertSmartDefaultsIntoNamedParams', () => {
     it('should use argv', () => {
-      const params = {};
+      const params = { _: ['argv-value', 'unused'] };
       convertSmartDefaultsIntoNamedParams(
         params,
         {
@@ -682,12 +661,11 @@ describe('params', () => {
             },
           },
         },
-        ['argv-value'],
         null,
         null
       );
 
-      expect(params).toEqual({ a: 'argv-value' });
+      expect(params).toEqual({ a: 'argv-value', _: ['unused'] });
     });
 
     it('should use projectName', () => {
@@ -704,7 +682,6 @@ describe('params', () => {
             },
           },
         },
-        [],
         'myProject',
         null
       );
@@ -725,12 +702,59 @@ describe('params', () => {
             },
           },
         },
-        [],
         null,
         './somepath'
       );
 
       expect(params).toEqual({ a: './somepath' });
+    });
+
+    it('should set unparsed overrides', () => {
+      const params = { __overrides_unparsed__: ['one'] };
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            unparsed: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              $default: {
+                $source: 'unparsed',
+              },
+            },
+          },
+        },
+        null,
+        null
+      );
+
+      expect(params).toEqual({ unparsed: ['one'] });
+    });
+
+    it('should set unparsed overrides (missing)', () => {
+      const params = {};
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            unparsed: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              $default: {
+                $source: 'unparsed',
+              },
+            },
+          },
+        },
+        null,
+        null
+      );
+
+      expect(params).toEqual({ unparsed: [] });
     });
   });
 
@@ -768,6 +792,27 @@ describe('params', () => {
           }
         )
       ).toThrow("'b' is not found in schema");
+    });
+
+    it('should throw if found unsupported positional property', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {
+            a: true,
+            _: 'sometext',
+          },
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+            },
+            additionalProperties: false,
+          }
+        )
+      ).toThrow(
+        "Schema does not support positional arguments. Argument 'sometext' found"
+      );
     });
 
     describe('primitive types', () => {

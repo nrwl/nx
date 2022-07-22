@@ -95,7 +95,7 @@ describe('Web Components Applications', () => {
     checkFilesExist(`dist/apps/_should_not_remove.txt`);
 
     // Asset that React runtime is imported
-    expect(readFile(`dist/libs/${libName}/index.esm.js`)).toMatch(
+    expect(readFile(`dist/libs/${libName}/index.js`)).toMatch(
       /react\/jsx-runtime/
     );
 
@@ -190,7 +190,7 @@ describe('Web Components Applications', () => {
 
   it('should run default jest tests', async () => {
     await expectJestTestsToPass('@nrwl/web:app');
-  });
+  }, 100000);
 });
 
 describe('CLI - Environment Variables', () => {

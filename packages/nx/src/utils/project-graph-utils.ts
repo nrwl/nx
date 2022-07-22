@@ -51,7 +51,7 @@ export function mergeNpmScriptsWithTargets(
 export function getSourceDirOfDependentProjects(
   projectName: string,
   projectGraph = readCachedProjectGraph()
-): string[] {
+): [projectDirs: string[], warnings: string[]] {
   if (!projectGraph.nodes[projectName]) {
     throw new Error(
       `Couldn't find project "${projectName}" in this Nx workspace`
@@ -59,8 +59,16 @@ export function getSourceDirOfDependentProjects(
   }
 
   const nodeNames = findAllProjectNodeDependencies(projectName, projectGraph);
-  return nodeNames.map(
-    (nodeName) => projectGraph.nodes[nodeName].data.sourceRoot
+  return nodeNames.reduce(
+    (result, nodeName) => {
+      if (projectGraph.nodes[nodeName].data.sourceRoot) {
+        result[0].push(projectGraph.nodes[nodeName].data.sourceRoot);
+      } else {
+        result[1].push(nodeName);
+      }
+      return result;
+    },
+    [[], []] as [projectDirs: string[], warnings: string[]]
   );
 }
 

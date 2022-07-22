@@ -29,6 +29,20 @@
         "$ref": "#/definitions/tasksRunnerOptions"
       }
     },
+    "namedInputs": {
+      "type": "object",
+      "description": "Named inputs used by inputs defined in targets",
+      "additionalProperties": {
+        "$ref": "#/definitions/inputs"
+      }
+    },
+    "targetDefaults": {
+      "type": "object",
+      "description": "Target defaults",
+      "additionalProperties": {
+        "$ref": "#/definitions/targetDefaultsConfig"
+      }
+    },
     "targetDependencies": {
       "type": "object",
       "description": "Dependencies between different target names across all projects.",
@@ -70,6 +84,61 @@
     }
   },
   "definitions": {
+    "inputs": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "fileset": {
+                "type": "string",
+                "description": "A glob"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "type": "string",
+                "description": "The projects that the targets belong to.",
+                "enum": ["self", "dependencies"]
+              },
+              "input": {
+                "type": "string",
+                "description": "The name of the input."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "runtime": {
+                "type": "string",
+                "description": "The command that will be executed and the results of which is added to the hash"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "env": {
+                "type": "string",
+                "description": "The name of the env var which value is added to the hash"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
     "cliOptions": {
       "type": "object",
       "description": "Default generator collection.",
@@ -106,22 +175,83 @@
     },
     "targetDependencyConfig": {
       "type": "array",
-      "description": "Target dependency.",
       "items": {
-        "type": "object",
-        "properties": {
-          "projects": {
-            "type": "string",
-            "description": "The projects that the targets belong to.",
-            "enum": ["self", "dependencies"]
+        "oneOf": [
+          {
+            "type": "string"
           },
-          "target": {
-            "type": "string",
-            "description": "The name of the target."
+          {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "type": "string",
+                "description": "The projects that the targets belong to.",
+                "enum": ["self", "dependencies"]
+              },
+              "target": {
+                "type": "string",
+                "description": "The name of the target."
+              },
+              "params": {
+                "type": "string",
+                "description": "Configuration for params handling.",
+                "enum": ["ignore", "forward"],
+                "default": "ignore"
+              }
+            },
+            "additionalProperties": false,
+            "required": ["projects", "target"]
+          }
+        ]
+      }
+    },
+    "targetDefaultsConfig": {
+      "type": "object",
+      "description": "Target defaults",
+      "properties": {
+        "inputs": {
+          "$ref": "#/definitions/inputs"
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "projects": {
+                    "type": "string",
+                    "description": "The projects that the targets belong to.",
+                    "enum": ["self", "dependencies"]
+                  },
+                  "target": {
+                    "type": "string",
+                    "description": "The name of the target."
+                  },
+                  "params": {
+                    "type": "string",
+                    "description": "Configuration for params handling.",
+                    "enum": ["ignore", "forward"],
+                    "default": "ignore"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["projects", "target"]
+              }
+            ]
           }
         },
-        "additionalProperties": false
-      }
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

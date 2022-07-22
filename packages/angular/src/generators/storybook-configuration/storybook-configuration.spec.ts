@@ -1,11 +1,16 @@
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments, writeJson } from '@nrwl/devkit';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { Linter } from 'packages/linter/src/generators/utils/linter';
+import { componentGenerator } from '../component/component';
+import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
 import type { StorybookConfigurationOptions } from './schema';
 import { storybookConfigurationGenerator } from './storybook-configuration';
-
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 function listFiles(tree: Tree): string[] {
   const files = new Set<string>();
   tree.listChanges().forEach((change) => {
@@ -20,8 +25,12 @@ function listFiles(tree: Tree): string[] {
 describe('StorybookConfiguration generator', () => {
   let tree: Tree;
   const libName = 'test-ui-lib';
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
 
   beforeEach(async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
     tree = await createStorybookTestWorkspaceForLib(libName);
 
     overrideCollectionResolutionForTesting({
@@ -74,7 +83,7 @@ describe('StorybookConfiguration generator', () => {
     expect(
       tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();
-    expect(tree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeFalsy();
+    expect(tree.exists('apps/test-ui-lib-e2e/cypress.config.ts')).toBeFalsy();
     expect(
       tree.exists(
         'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
@@ -123,7 +132,7 @@ describe('StorybookConfiguration generator', () => {
     expect(
       tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();
-    expect(tree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeTruthy();
+    expect(tree.exists('apps/test-ui-lib-e2e/cypress.config.ts')).toBeTruthy();
     expect(
       tree.exists(
         'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
@@ -136,17 +145,45 @@ describe('StorybookConfiguration generator', () => {
     ).toBeTruthy();
     expect(
       tree.exists(
-        'apps/test-ui-lib-e2e/src/integration/test-button/test-button.component.spec.ts'
+        'apps/test-ui-lib-e2e/src/e2e/test-button/test-button.component.cy.ts'
       )
     ).toBeTruthy();
     expect(
       tree.exists(
-        'apps/test-ui-lib-e2e/src/integration/test-other/test-other.component.spec.ts'
+        'apps/test-ui-lib-e2e/src/e2e/test-other/test-other.component.cy.ts'
       )
     ).toBeTruthy();
   });
 
   it('should generate the right files', async () => {
+    // add standalone component
+    await componentGenerator(tree, {
+      name: 'standalone',
+      project: libName,
+      standalone: true,
+    });
+    // add secondary entrypoint
+    writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+    await librarySecondaryEntryPointGenerator(tree, {
+      library: libName,
+      name: 'secondary-entry-point',
+    });
+    // add a regular component to the secondary entrypoint
+    await componentGenerator(tree, {
+      name: 'secondary-button',
+      project: libName,
+      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      export: true,
+    });
+    // add a standalone component to the secondary entrypoint
+    await componentGenerator(tree, {
+      name: 'secondary-standalone',
+      project: libName,
+      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      standalone: true,
+      export: true,
+    });
+
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
       name: libName,
       configureCypress: true,
@@ -158,6 +195,34 @@ describe('StorybookConfiguration generator', () => {
   });
 
   it('should generate in the correct folder', async () => {
+    // add standalone component
+    await componentGenerator(tree, {
+      name: 'standalone',
+      project: libName,
+      standalone: true,
+    });
+    // add secondary entrypoint
+    writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+    await librarySecondaryEntryPointGenerator(tree, {
+      library: libName,
+      name: 'secondary-entry-point',
+    });
+    // add a regular component to the secondary entrypoint
+    await componentGenerator(tree, {
+      name: 'secondary-button',
+      project: libName,
+      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      export: true,
+    });
+    // add a standalone component to the secondary entrypoint
+    await componentGenerator(tree, {
+      name: 'secondary-standalone',
+      project: libName,
+      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      standalone: true,
+      export: true,
+    });
+
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
       name: libName,
       configureCypress: true,

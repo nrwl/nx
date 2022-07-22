@@ -10,7 +10,7 @@ export declare global {
     projectGraphResponse?: DepGraphClientResponse;
     environment: 'dev' | 'watch' | 'release';
     appConfig: AppConfig;
-    useXstateInspect: boolean = false;
+    useXstateInspect: boolean;
   }
 }
 

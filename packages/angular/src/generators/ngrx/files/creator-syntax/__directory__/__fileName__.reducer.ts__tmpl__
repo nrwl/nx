@@ -6,26 +6,26 @@ import { <%= className %>Entity } from './<%= fileName %>.models';
 
 export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
 
-export interface State extends EntityState<<%= className %>Entity> {
+export interface <%= className %>State extends EntityState<<%= className %>Entity> {
   selectedId?: string | number; // which <%= className %> record has been selected
   loaded: boolean; // has the <%= className %> list been loaded
   error?: string | null; // last known error (if any)
 }
 
 export interface <%= className %>PartialState {
-  readonly [<%= constantName %>_FEATURE_KEY]: State;
+  readonly [<%= constantName %>_FEATURE_KEY]: <%= className %>State;
 }
 
 export const <%= propertyName %>Adapter: EntityAdapter<<%= className %>Entity> = createEntityAdapter<<%= className %>Entity>();
 
-export const initialState: State = <%= propertyName %>Adapter.getInitialState({
+export const initial<%= className %>State: <%= className %>State = <%= propertyName %>Adapter.getInitialState({
   // set initial required properties
   loaded: false
 });
 
-const <%= propertyName %>Reducer = createReducer(
-  initialState,
-  on(<%= className %>Actions.init,
+const reducer = createReducer(
+  initial<%= className %>State,
+  on(<%= className %>Actions.init<%= className %>,
     state => ({ ...state, loaded: false, error: null })
   ),
   on(<%= className %>Actions.load<%= className %>Success,
@@ -36,6 +36,6 @@ const <%= propertyName %>Reducer = createReducer(
   ),
 );
 
-export function reducer(state: State | undefined, action: Action) {
-  return <%= propertyName %>Reducer(state, action);
+export function <%= propertyName %>Reducer(state: <%= className %>State | undefined, action: Action) {
+  return reducer(state, action);
 }

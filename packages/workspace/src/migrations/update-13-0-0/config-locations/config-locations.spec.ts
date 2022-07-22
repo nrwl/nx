@@ -16,7 +16,6 @@ describe('update to v13 config locations', () => {
     updateJson(tree, 'workspace.json', (json) => ({
       ...json,
       cli: {
-        defaultCollection: '@nrwl/workspace',
         packageManager: 'npm',
       },
       generators: {},
@@ -40,7 +39,6 @@ describe('update to v13 config locations', () => {
     const workspaceJson = readJson(tree, 'workspace.json');
     const nxJson = readJson(tree, 'nx.json');
     expect(nxJson.projects).not.toBeDefined();
-    expect(nxJson.cli?.defaultCollection).toEqual('@nrwl/workspace');
     expect(nxJson.cli?.packageManager).toEqual('npm');
     expect(nxJson.generators).toEqual({});
     expect(workspaceJson.projects.a.tags).toEqual(['test']);
@@ -54,7 +52,6 @@ describe('update to v13 config locations', () => {
       updateJson(tree, 'workspace.json', (json) => ({
         ...json,
         cli: {
-          defaultCollection: '@nrwl/workspace',
           packageManager: 'npm',
         },
         schematics: {
@@ -82,7 +79,6 @@ describe('update to v13 config locations', () => {
       const workspaceJson = readJson(tree, 'workspace.json');
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.projects).not.toBeDefined();
-      expect(nxJson.cli?.defaultCollection).toEqual('@nrwl/workspace');
       expect(nxJson.cli?.packageManager).toEqual('npm');
       expect(nxJson.generators).toEqual({
         '@nrwl/workspace:lib': {

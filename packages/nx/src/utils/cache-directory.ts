@@ -1,5 +1,5 @@
 import { join, isAbsolute } from 'path';
-import { workspaceRoot } from './app-root';
+import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from './fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
 
@@ -35,3 +35,6 @@ export const cacheDir = cacheDirectory(
   workspaceRoot,
   readCacheDirectoryProperty(workspaceRoot)
 );
+
+export const projectGraphCacheDirectory =
+  process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ?? cacheDir;

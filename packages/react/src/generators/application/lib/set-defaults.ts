@@ -12,7 +12,7 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
 
   const workspace = readWorkspaceConfiguration(host);
 
-  if (!workspace.defaultProject) {
+  if (!options.skipDefaultProject && !workspace.defaultProject) {
     workspace.defaultProject = options.projectName;
   }
 

@@ -1,9 +1,8 @@
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
-import { FileData, readNxJson, readWorkspaceJson } from './file-utils';
-import { normalizeNxJson } from './normalize-nx-json';
+import { FileData } from './file-utils';
 import {
   createCache,
   extractCachedFileData,
@@ -34,13 +33,17 @@ import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
   ProjectConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
+import {
+  readAllWorkspaceConfiguration,
+  readNxJson,
+} from '../config/configuration';
 
 export async function buildProjectGraph() {
-  const workspaceJson = readWorkspaceJson();
+  const projectConfigurations = readAllWorkspaceConfiguration();
   const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
-    workspaceJson,
+    projectConfigurations,
     defaultFileHasher.allFileData()
   );
 
@@ -48,7 +51,7 @@ export async function buildProjectGraph() {
   let cache = cacheEnabled ? readCache() : null;
   return (
     await buildProjectGraphUsingProjectFileMap(
-      workspaceJson,
+      projectConfigurations,
       projectFileMap,
       allWorkspaceFiles,
       cache,
@@ -58,7 +61,7 @@ export async function buildProjectGraph() {
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
-  workspaceJson: WorkspaceJsonConfiguration,
+  projectsConfigurations: ProjectsConfigurations,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
   cache: ProjectGraphCache | null,
@@ -69,11 +72,7 @@ export async function buildProjectGraphUsingProjectFileMap(
 }> {
   const nxJson = readNxJson();
   const projectGraphVersion = '5.0';
-  assertWorkspaceValidity(workspaceJson, nxJson);
-  const normalizedNxJson = normalizeNxJson(
-    nxJson,
-    Object.keys(workspaceJson.projects)
-  );
+  assertWorkspaceValidity(projectsConfigurations, nxJson);
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
@@ -84,8 +83,8 @@ export async function buildProjectGraphUsingProjectFileMap(
     !shouldRecomputeWholeGraph(
       cache,
       packageJsonDeps,
-      workspaceJson,
-      normalizedNxJson,
+      projectsConfigurations,
+      nxJson,
       rootTsConfig
     )
   ) {
@@ -97,8 +96,8 @@ export async function buildProjectGraphUsingProjectFileMap(
     cachedFileData = {};
   }
   const context = createContext(
-    workspaceJson,
-    normalizedNxJson,
+    projectsConfigurations,
+    nxJson,
     projectFileMap,
     filesToProcess
   );
@@ -106,7 +105,8 @@ export async function buildProjectGraphUsingProjectFileMap(
     nxJson,
     context,
     cachedFileData,
-    projectGraphVersion
+    projectGraphVersion,
+    packageJsonDeps
   );
   const projectGraphCache = createCache(
     nxJson,
@@ -133,13 +133,14 @@ async function buildProjectGraphUsingContext(
   nxJson: NxJsonConfiguration,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
-  projectGraphVersion: string
+  projectGraphVersion: string,
+  packageJsonDeps: { [packageName: string]: string }
 ) {
   performance.mark('build project graph:start');
 
   const builder = new ProjectGraphBuilder();
 
-  buildWorkspaceProjectNodes(ctx, builder);
+  buildWorkspaceProjectNodes(ctx, builder, nxJson);
   buildNpmPackageNodes(builder);
   for (const proj of Object.keys(cachedFileData)) {
     for (const f of builder.graph.nodes[proj].data.files) {
@@ -150,7 +151,11 @@ async function buildProjectGraphUsingContext(
     }
   }
 
-  await buildExplicitDependencies(jsPluginConfig(nxJson), ctx, builder);
+  await buildExplicitDependencies(
+    jsPluginConfig(nxJson, packageJsonDeps),
+    ctx,
+    builder
+  );
 
   buildImplicitProjectDependencies(ctx, builder);
   builder.setVersion(projectGraphVersion);
@@ -173,8 +178,26 @@ interface NrwlJsPluginConfig {
   analyzePackageJson?: boolean;
 }
 
-function jsPluginConfig(nxJson: NxJsonConfiguration): NrwlJsPluginConfig {
-  return nxJson?.pluginsConfig?.['@nrwl/js'] ?? {};
+function jsPluginConfig(
+  nxJson: NxJsonConfiguration,
+  packageJsonDeps: { [packageName: string]: string }
+): NrwlJsPluginConfig {
+  if (nxJson?.pluginsConfig?.['@nrwl/js']) {
+    return nxJson?.pluginsConfig?.['@nrwl/js'];
+  }
+  if (
+    packageJsonDeps['@nrwl/workspace'] ||
+    packageJsonDeps['@nrwl/js'] ||
+    packageJsonDeps['@nrwl/node'] ||
+    packageJsonDeps['@nrwl/next'] ||
+    packageJsonDeps['@nrwl/react'] ||
+    packageJsonDeps['@nrwl/angular'] ||
+    packageJsonDeps['@nrwl/web']
+  ) {
+    return { analyzePackageJson: true, analyzeSourceFiles: true };
+  } else {
+    return { analyzePackageJson: true, analyzeSourceFiles: false };
+  }
 }
 
 function buildExplicitDependencies(
@@ -348,22 +371,22 @@ function getNumberOfWorkers(): number {
 }
 
 function createContext(
-  workspaceJson: WorkspaceJsonConfiguration,
+  projectsConfigurations: ProjectsConfigurations,
   nxJson: NxJsonConfiguration,
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap
 ): ProjectGraphProcessorContext {
   const projects: Record<string, ProjectConfiguration> = Object.keys(
-    workspaceJson.projects
+    projectsConfigurations.projects
   ).reduce((map, projectName) => {
     map[projectName] = {
-      ...workspaceJson.projects[projectName],
+      ...projectsConfigurations.projects[projectName],
     };
     return map;
   }, {});
   return {
     workspace: {
-      ...workspaceJson,
+      ...projectsConfigurations,
       ...nxJson,
       projects,
     },

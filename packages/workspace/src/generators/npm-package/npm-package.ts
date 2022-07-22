@@ -5,13 +5,12 @@ import {
   generateFiles,
   getWorkspaceLayout,
   getWorkspacePath,
-  joinPathFragments,
   names,
   Tree,
   writeJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
-
+import { getImportPath } from 'nx/src/utils/path';
 export interface ProjectOptions {
   name: string;
 }
@@ -29,7 +28,7 @@ function addFiles(
 ) {
   const packageJsonPath = join(projectRoot, 'package.json');
   writeJson(tree, packageJsonPath, {
-    name: joinPathFragments(`@${npmScope}`, options.name),
+    name: getImportPath(npmScope, options.name),
     version: '0.0.0',
     scripts: {
       test: 'node index.js',

@@ -3,15 +3,15 @@ import {
   DefaultTasksRunnerOptions,
 } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
-import { Subject } from 'rxjs/internal/Subject';
-import type { Observable } from 'rxjs';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task } from '../config/task-graph';
+import { NxArgs } from '../utils/command-line-utils';
 
 export { DefaultTasksRunnerOptions, RemoteCache } from './default-tasks-runner';
 
 /**
+ * TODO: Remove after NX 15 is released
  * This tasks runner converts the new implementation of the default tasks runner
  * to the old Observable-based API.
  *
@@ -25,15 +25,17 @@ export const tasksRunnerV2 = (
     initiatingProject?: string;
     projectGraph: ProjectGraph;
     nxJson: NxJsonConfiguration;
+    nxArgs: NxArgs;
   }
-): Observable<any> => {
+): any => {
   if (!options.lifeCycle.startCommand) {
     throw new Error(
       `If you are using Nx Cloud, update the version of @nrwl/nx-cloud to >=13.0.0`
     );
   }
 
-  const r = new Subject<any>();
+  const { Subject } = require('rxjs/internal/Subject');
+  const r = new Subject();
   (defaultTasksRunner(tasks, options, context) as any)
     .then((tasks: { [id: string]: TaskStatus }) => {
       convertCompletedTasksToOutputFormat(tasks).forEach((k) => r.next(k));

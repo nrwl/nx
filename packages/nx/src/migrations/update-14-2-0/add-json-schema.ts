@@ -1,3 +1,4 @@
+import { formatChangedFilesWithPrettierIfAvailable } from 'nx/src/generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import type { Tree } from '../../generators/tree';
 import { updateJson } from '../../generators/utils/json';
@@ -43,4 +44,6 @@ export default async function (tree: Tree) {
       ...projConfig,
     } as ProjectConfiguration);
   }
+
+  await formatChangedFilesWithPrettierIfAvailable(tree);
 }

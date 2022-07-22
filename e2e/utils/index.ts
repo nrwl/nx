@@ -2,7 +2,8 @@ import {
   joinPathFragments,
   parseJson,
   ProjectConfiguration,
-  WorkspaceJsonConfiguration,
+  readJsonFile,
+  ProjectsConfigurations,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
@@ -21,15 +22,24 @@ import {
 } from 'fs-extra';
 import * as path from 'path';
 import { join } from 'path';
-import { coerce } from 'semver';
 import { check as portCheck } from 'tcp-port-used';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
-import chalk = require('chalk');
-import isCI = require('is-ci');
-import treeKill = require('tree-kill');
+import * as chalk from 'chalk';
+import * as isCI from 'is-ci';
+import * as treeKill from 'tree-kill';
 import { Workspaces } from '../../packages/nx/src/config/workspaces';
 import { PackageManager } from 'nx/src/utils/package-manager';
+
+export function getPublishedVersion(): string {
+  process.env.PUBLISHED_VERSION =
+    process.env.PUBLISHED_VERSION ||
+    // read version of built nx package
+    readJsonFile(`./build/packages/nx/package.json`).version ||
+    // fallback to latest if built nx package is missing
+    'latest';
+  return process.env.PUBLISHED_VERSION as string;
+}
 
 export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
@@ -49,7 +59,7 @@ export const promisifiedTreeKill: (
 
 interface RunCmdOpts {
   silenceError?: boolean;
-  env?: Record<string, string>;
+  env?: Record<string, string | undefined>;
   cwd?: string;
   silent?: boolean;
 }
@@ -66,7 +76,6 @@ export const e2eCwd = `${e2eRoot}/${currentCli()}`;
 ensureDirSync(e2eCwd);
 
 let projName: string;
-const publishedVersion = process.env.PUBLISHED_VERSION || `9999.0.2`;
 
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
@@ -91,7 +100,7 @@ export function updateProjectConfig(
  * if you need a project's configuration.
  */
 export function readWorkspaceConfig(): Omit<
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
   'projects'
 > {
   const w = readJson(workspaceConfigName());
@@ -171,7 +180,8 @@ export function runCreateWorkspace(
 
   const create = execSync(command, {
     cwd: e2eCwd,
-    stdio: [0, 1, 2],
+    // stdio: [0, 1, 2],
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   });
@@ -196,7 +206,9 @@ export function runCreatePlugin(
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  let command = `${pm.runUninstalledPackage} create-nx-plugin ${name}`;
+  let command = `${
+    pm.runUninstalledPackage
+  } create-nx-plugin@${getPublishedVersion()} ${name}`;
 
   if (pluginName) {
     command += ` --pluginName=${pluginName}`;
@@ -212,7 +224,8 @@ export function runCreatePlugin(
 
   const create = execSync(command, {
     cwd: e2eCwd,
-    stdio: [0, 1, 2],
+    //stdio: [0, 1, 2],
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   });
@@ -222,7 +235,7 @@ export function runCreatePlugin(
 export function packageInstall(
   pkg: string,
   projName?: string,
-  version = publishedVersion
+  version = getPublishedVersion()
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
@@ -232,7 +245,8 @@ export function packageInstall(
     .join(' ');
   const install = execSync(`${pm.addDev} ${pkgsWithVersions}`, {
     cwd,
-    stdio: [0, 1, 2],
+    // stdio: [0, 1, 2],
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   });
@@ -245,14 +259,10 @@ export function runNgNew(
 ): string {
   projName = projectName;
 
-  // Use the latest version of the currently supported @angular/cli major version
-  // to cover existing usage out there while avoiding the tests to fail when a new
-  // major comes out and is still not supported
-  const ngCliMajorVersion = coerce(angularCliVersion).major;
   const npmMajorVersion = getNpmMajorVersion();
   const command = `npx ${
     +npmMajorVersion >= 7 ? '--yes' : ''
-  } @angular/cli@${ngCliMajorVersion} new ${projectName} --package-manager=${packageManager}`;
+  } @angular/cli@${angularCliVersion} new ${projectName} --package-manager=${packageManager}`;
 
   return execSync(command, {
     cwd: e2eCwd,
@@ -285,7 +295,10 @@ export function newProject({
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
-        updateFile('.npmrc', 'prefer-frozen-lockfile=false');
+        updateFile(
+          '.npmrc',
+          'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
+        );
       }
 
       const packages = [
@@ -389,7 +402,7 @@ export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: null,
+    env: undefined,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
@@ -442,8 +455,8 @@ export function runCommandUntil(
       }
     }
 
-    p.stdout.on('data', checkCriteria);
-    p.stderr.on('data', checkCriteria);
+    p.stdout?.on('data', checkCriteria);
+    p.stderr?.on('data', checkCriteria);
     p.on('exit', (code) => {
       if (!complete) {
         rej(`Exited with ${code}`);
@@ -472,16 +485,16 @@ export function runCLIAsync(
 export function runNgAdd(
   packageName: string,
   command?: string,
-  version: string = publishedVersion,
+  version: string = getPublishedVersion(),
   opts: RunCmdOpts = {
     silenceError: false,
-    env: null,
+    env: undefined,
     cwd: tmpProjPath(),
   }
 ): string {
   try {
     const pmc = getPackageManagerCommand();
-    packageInstall(packageName, null, version);
+    packageInstall(packageName, undefined, version);
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
       env: { ...(opts.env || process.env) },
@@ -506,10 +519,10 @@ export function runNgAdd(
 }
 
 export function runCLI(
-  command?: string,
+  command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: null,
+    env: undefined,
   }
 ): string {
   try {
@@ -534,7 +547,7 @@ export function runCLI(
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return e.stdout?.toString() + e.stderr?.toString();
+      return stripConsoleColors(e.stdout?.toString() + e.stderr?.toString());
     } else {
       logError(
         `Original command: ${command}`,
@@ -689,7 +702,7 @@ export function checkFilesDoNotExist(...expectedFiles: string[]) {
   expectedFiles.forEach((f) => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
     if (exists(ff)) {
-      throw new Error(`File '${ff}' does not exist`);
+      throw new Error(`File '${ff}' should not exist`);
     }
   });
 }
@@ -789,11 +802,12 @@ export function getPackageManagerCommand({
   run: (script: string, args: string) => string;
   runNx: string;
   runNxSilent: string;
-  runUninstalledPackage?: string | undefined;
+  runUninstalledPackage: string;
   addDev: string;
   list: string;
 } {
   const npmMajorVersion = getNpmMajorVersion();
+  const publishedVersion = getPublishedVersion();
 
   return {
     npm: {
@@ -803,7 +817,7 @@ export function getPackageManagerCommand({
       run: (script: string, args: string) => `npm run ${script} -- ${args}`,
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
-      runUninstalledPackage: `npx`,
+      runUninstalledPackage: `npx --yes`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
@@ -813,7 +827,7 @@ export function getPackageManagerCommand({
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
-      runUninstalledPackage: 'npx',
+      runUninstalledPackage: 'npx --yes',
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
@@ -827,7 +841,7 @@ export function getPackageManagerCommand({
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },
-  }[packageManager.trim()];
+  }[packageManager.trim() as PackageManager];
 }
 
 function getNpmMajorVersion(): string {

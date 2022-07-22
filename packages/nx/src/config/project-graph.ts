@@ -2,6 +2,7 @@ import type {
   TargetConfiguration,
   Workspace,
 } from './workspace-json-project-json';
+import { InputDefinition } from './workspace-json-project-json';
 
 /**
  * Some metadata about a file
@@ -81,6 +82,10 @@ export interface ProjectGraphProjectNode<T = any> {
      */
     root: string;
     sourceRoot?: string;
+    /**
+     * Named inputs associated with a project
+     */
+    namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
     /**
      * Targets associated to the project
      */

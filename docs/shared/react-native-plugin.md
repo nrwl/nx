@@ -20,7 +20,9 @@ npx create-nx-workspace your-workspace-name \
 --appName=your-app-name
 ```
 
-**Note:** You can also run the command without arguments to go through the interactive prompts.
+{% callout type="note" title="Don't know what you need?" %}
+You can also run the command without arguments to go through the interactive prompts.
+{% /callout %}
 
 ```bash
 npx create-nx-workspace your-workspace-name
@@ -65,15 +67,15 @@ Replace `your-lib-name` with the app's name as defined in your workspace.json fi
 
 ## Using React Native
 
-- [run-ios](/react-native/run-ios) - Builds your app and starts it on iOS simulator or device
-- [run-android](/react-native/run-android) - Builds your app and starts it on a connected Android emulator or device
-- [build-android](/react-native/build-android) - Release Build for Android
-- [start](/react-native/package) - Starts the server that communicates with connected devices
-- [bundle](/web/package) - Builds the JavaScript bundle for offline use
-- [sync-deps](/react-native/sync-deps) - Syncs dependencies to package.json (required for autolinking)
-- [ensure-symlink](/react-native/ensure-symlink) - Ensure workspace node_modules is symlink under app's node_modules folder
+- [run-ios](/packages/react-native/executors/run-ios) - Builds your app and starts it on iOS simulator or device
+- [run-android](/packages/react-native/executors/run-android) - Builds your app and starts it on a connected Android emulator or device
+- [build-android](/packages/react-native/executors/build-android) - Release Build for Android
+- [start](/packages/react-native/executors/start) - Starts the server that communicates with connected devices
+- [bundle](/packages/react-native/executors/bundle) - Builds the JavaScript bundle for offline use
+- [sync-deps](/packages/react-native/executors/sync-deps) - Syncs dependencies to package.json (required for autolinking)
+- [ensure-symlink](/packages/react-native/executors/ensure-symlink) - Ensure workspace node_modules is symlink under app's node_modules folder
 
 ## More Documentation
 
-- [Using Detox](/detox/overview)
-- [Using Jest](/jest/overview)
+- [Using Detox](/packages/detox)
+- [Using Jest](/packages/jest)

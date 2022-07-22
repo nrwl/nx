@@ -64,8 +64,6 @@ The downsides of incremental builds:
 
 If you are only planning to use incremental builds to speed up your CI, then the watch mode concern is irrelevant, and the only thing you need to assess is whether the benefits of skipping the compilation outweigh the costs of initializing the TypeScript compiler several times.
 
-> For a given workspace you can use Nx batch mode executors to compile all the libs using a single TS program. It can be made to work for a single workspace, but it's hard to generalize. With this, there is only one TS program created, so there is no extra cost associated with incremental builds.
-
 ## Custom Serve Target
 
 If you are implementing a custom serve command, you can use `WebpackNxBuildCoordinationPlugin` provided by `@nrwl/web`. It's a webpack plugin you can use to coordinate the compiling of the libs and the webpack linking.
@@ -77,3 +75,5 @@ When we talk about incremental builds we often talk about incrementally compilin
 But there are other ways to make the build process incremental. One of them is using WebPack Module Federation.
 
 When using WebPack Module Federation, you split the application into multiple webpack builds. Imagine the application has 3 big sections, and they are built using 3 webpack builds: `W1`, `W2`, and `W3`. Each of them has to build shared code in addition to building the corresponding application section code. So the time it takes to build all of them (`W1` + `W2` + `W3`) will be greater than `W`. However, if you change only Section 1, you will only need to run `W1`. `W2` and `W3` will be retrieved from cache. In addition, `W1`, `W2`, and `W3` can run on separate machines. Because of that, both the CI time and the local serve time can be drastically reduced.
+
+Learn more: [Faster Builds with Module Federation](/module-federation/faster-builds)

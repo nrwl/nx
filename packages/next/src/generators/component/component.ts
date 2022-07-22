@@ -1,8 +1,8 @@
-import { addStyleDependencies } from '../../utils/styles';
+import { convertNxGenerator, getProjects, Tree } from '@nrwl/devkit';
 import type { SupportedStyles } from '@nrwl/react';
 import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
-import { convertNxGenerator, getProjects, Tree } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { addStyleDependencies } from '../../utils/styles';
 
 interface Schema {
   name: string;
@@ -32,7 +32,6 @@ export async function componentGenerator(host: Tree, options: Schema) {
     ...options,
     directory: getDirectory(host, options),
     pascalCaseFiles: false,
-    export: false,
     classComponent: false,
     routing: false,
   });

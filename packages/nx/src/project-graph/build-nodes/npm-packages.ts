@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { workspaceRoot } from 'nx/src/utils/app-root';
+import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { readJsonFile } from 'nx/src/utils/fileutils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 

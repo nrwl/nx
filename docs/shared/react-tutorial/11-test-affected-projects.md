@@ -1,6 +1,9 @@
 # React Nx Tutorial - Step 11: Test Affected Projects
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/_mBBFRjs01g" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/_mBBFRjs01g"
+title="Nx.dev Tutorial | React | Step 11: Test Affected Projects"
+width="100%" /%}
 
 In addition to supporting computation caching, Nx scales your development by doing code change analysis to see what is affected by a particular pull request.
 

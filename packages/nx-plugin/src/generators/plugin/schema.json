@@ -34,7 +34,8 @@
       "description": "The tool to use for running lint checks.",
       "type": "string",
       "enum": ["eslint", "tslint"],
-      "default": "eslint"
+      "default": "eslint",
+      "x-deprecated": "TSLint support is deprecated and will be removed"
     },
     "unitTestRunner": {
       "type": "string",
@@ -57,6 +58,11 @@
       "default": false,
       "description": "Do not update tsconfig.json for development experience."
     },
+    "skipLintChecks": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not eslint configuration for plugin json files."
+    },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
@@ -71,6 +77,11 @@
       "enum": ["tsc", "swc"],
       "default": "tsc",
       "description": "The compiler used by the build and test targets."
+    },
+    "minimal": {
+      "type": "boolean",
+      "description": "Generate the plugin with a minimal setup. This would involve not generating a default executor and generator.",
+      "default": false
     }
   },
   "required": ["name"],

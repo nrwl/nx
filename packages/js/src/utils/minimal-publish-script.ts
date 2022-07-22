@@ -27,7 +27,7 @@ function invariant(condition, message) {
 const [, , name, version, tag = 'next'] = process.argv;
 
 // A simple SemVer validation to validate the version
-const validVersion = /^\\d+\\.\\d+\\.\\d(-\\w+\\.\\d+)?/;
+const validVersion = /^\\d+\\.\\d+\\.\\d+(-\\w+\\.\\d+)?/;
 invariant(
   version && validVersion.test(version),
   \`No version provided or version did not match Semantic Versioning, expected: #.#.#-tag.# or #.#.#, got \${version}.\`

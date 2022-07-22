@@ -9,7 +9,7 @@ import {
 import { ProjectGraphBuilder } from '../project-graph-builder';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('nx/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 

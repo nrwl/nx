@@ -14,7 +14,9 @@ This helps quite a bit, but the recomputation is not very surgical because there
 
 The Nx Daemon is a process which runs in the background on your local machine. There is one unique Nx Daemon per Nx workspace meaning if you have multiple Nx workspaces on your machine active at the same time, the corresponding Nx Daemon instances will operate independently of one another and can be on different versions of Nx.
 
-> On macOS and linux, the server runs as a unix socket, and on Windows it runs as a named pipe.
+{% callout type="note" title="Mac & Linux" %}
+On macOS and linux, the server runs as a unix socket, and on Windows it runs as a named pipe.
+{% /callout %}
 
 The Nx Daemon is more efficient at recomputing the project graph because it watches the files in your workspaces and updates the project graph right away (intelligently throttling to ensure minimal recomputation). It also keeps everything in memory, so the response tends to be a lot faster.
 
@@ -31,4 +33,4 @@ As of v13.6.0, the Nx Daemon is enabled by default. If you want to turn it off, 
 
 ## Logs
 
-To see information about the running Nx Daemon (such as its background process ID and log output file), run `nx daemon --help`. Once you have the path to that log file, you could either open it in your IDE or stream updates in a separate terminal window by running `tail -f {REPLACE_WITH_LOG_PATH}`, for example.
+To see information about the running Nx Daemon (such as its background process ID and log output file), run `nx daemon`. Once you have the path to that log file, you could either open it in your IDE or stream updates in a separate terminal window by running `tail -f {REPLACE_WITH_LOG_PATH}`, for example.

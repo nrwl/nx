@@ -10,13 +10,14 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   angularVersion,
   angularDevkitVersion,
   jestPresetAngularVersion,
   rxjsVersion,
+  tsNodeVersion,
+  tsLibVersion,
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
@@ -81,13 +82,12 @@ function setDefaults(host: Tree, options: Schema) {
   };
 
   updateWorkspaceConfiguration(host, workspace);
-  setDefaultCollection(host, '@nrwl/angular');
 }
 
 function addPostInstall(host: Tree) {
   updateJson(host, 'package.json', (pkgJson) => {
     pkgJson.scripts = pkgJson.scripts ?? {};
-    const command = 'ngcc --properties es2015 browser module main';
+    const command = 'ngcc --properties es2020 browser module main';
     if (!pkgJson.scripts.postinstall) {
       pkgJson.scripts.postinstall = command;
     } else if (!pkgJson.scripts.postinstall.includes('ngcc')) {
@@ -110,7 +110,7 @@ function updateDependencies(host: Tree): GeneratorCallback {
       '@angular/platform-browser-dynamic': angularVersion,
       '@angular/router': angularVersion,
       rxjs: rxjsVersion,
-      tslib: '^2.0.0',
+      tslib: tsLibVersion,
       'zone.js': '~0.11.4',
     },
     {
@@ -154,10 +154,10 @@ function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
             {},
             {
               protractor: '~7.0.0',
-              'jasmine-core': '~3.6.0',
-              'jasmine-spec-reporter': '~5.0.0',
-              'ts-node': '~9.1.1',
-              '@types/jasmine': '~3.6.0',
+              'jasmine-core': '~4.2.0',
+              'jasmine-spec-reporter': '~7.0.0',
+              'ts-node': tsNodeVersion,
+              '@types/jasmine': '~4.0.0',
               '@types/jasminewd2': '~2.0.3',
             }
           )

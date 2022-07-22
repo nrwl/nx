@@ -29,11 +29,12 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/cypress": "*",
-    "@nrwl/devkit": "*",
-    "@nrwl/linter": "*",
-    "@nrwl/workspace": "*",
+    "@nrwl/cypress": "file:../cypress",
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/linter": "file:../linter",
+    "@nrwl/workspace": "file:../workspace",
     "core-js": "^3.6.5",
+    "dotenv": "~10.0.0",
     "semver": "7.3.4",
     "ts-loader": "^9.2.6",
     "tsconfig-paths-webpack-plugin": "3.5.2"

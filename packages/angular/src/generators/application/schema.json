@@ -107,7 +107,7 @@
     "e2eTestRunner": {
       "type": "string",
       "enum": ["protractor", "cypress", "none"],
-      "description": "Test runner to use for end to end (E2E) tests.",
+      "description": "Test runner to use for end to end (E2E) tests. The `protractor` option is deprecated and it will be removed in v15.",
       "default": "cypress"
     },
     "tags": {
@@ -133,13 +133,13 @@
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     },
-    "mfe": {
+    "mf": {
       "description": "Generate a Module Federation configuration for the application",
       "type": "boolean",
       "default": false,
       "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
     },
-    "mfeType": {
+    "mfType": {
       "type": "string",
       "enum": ["host", "remote"],
       "description": "Type of application to generate the Module Federation configuration for.",
@@ -175,6 +175,11 @@
     "addTailwind": {
       "type": "boolean",
       "description": "Whether to configure Tailwind CSS for the application.",
+      "default": false
+    },
+    "skipDefaultProject": {
+      "description": "Skip setting the project as the default project. When `false` (the default), the project is set as the default project only if there is no default project already set.",
+      "type": "boolean",
       "default": false
     }
   },

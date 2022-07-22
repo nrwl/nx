@@ -2,7 +2,7 @@ import { Workspaces } from '../config/workspaces';
 import { performance } from 'perf_hooks';
 import { Hasher } from '../hasher/hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
@@ -23,8 +23,11 @@ export class TaskOrchestrator {
   private cache = new Cache(this.options);
   private workspace = new Workspaces(workspaceRoot);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
+  private readonly nxJson = this.workspace.readNxJson();
+
   private tasksSchedule = new TasksSchedule(
     this.hasher,
+    this.nxJson,
     this.projectGraph,
     this.taskGraph,
     this.workspace,
@@ -40,6 +43,8 @@ export class TaskOrchestrator {
 
   private groups = [];
 
+  private bailed = false;
+
   // endregion internal state
 
   constructor(
@@ -47,7 +52,8 @@ export class TaskOrchestrator {
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
-    private readonly options: DefaultTasksRunnerOptions
+    private readonly options: DefaultTasksRunnerOptions,
+    private readonly bail: boolean
   ) {}
 
   async run() {
@@ -76,7 +82,7 @@ export class TaskOrchestrator {
 
   private async executeNextBatchOfTasksUsingTaskSchedule() {
     // completed all the tasks
-    if (!this.tasksSchedule.hasTasks()) {
+    if (!this.tasksSchedule.hasTasks() || this.bailed) {
       return null;
     }
 
@@ -285,6 +291,7 @@ export class TaskOrchestrator {
         this.initiatingProject,
         this.options
       );
+
       const pipeOutput = this.pipeOutputCapture(task);
 
       // execution
@@ -403,15 +410,23 @@ export class TaskOrchestrator {
     for (const { taskId, status } of taskResults) {
       if (this.completedTasks[taskId] === undefined) {
         this.completedTasks[taskId] = status;
-      }
 
-      if (status === 'failure' || status === 'skipped') {
-        this.complete(
-          this.reverseTaskDeps[taskId].map((depTaskId) => ({
-            taskId: depTaskId,
-            status: 'skipped',
-          }))
-        );
+        if (status === 'failure' || status === 'skipped') {
+          if (this.bail) {
+            // mark the execution as bailed which will stop all further execution
+            // only the tasks that are currently running will finish
+            this.bailed = true;
+          } else {
+            // only mark the packages that depend on the current task as skipped
+            // other tasks will continue to execute
+            this.complete(
+              this.reverseTaskDeps[taskId].map((depTaskId) => ({
+                taskId: depTaskId,
+                status: 'skipped',
+              }))
+            );
+          }
+        }
       }
     }
   }
@@ -423,7 +438,9 @@ export class TaskOrchestrator {
   private pipeOutputCapture(task: Task) {
     try {
       return (
-        getExecutorForTask(task, this.workspace).schema.outputCapture === 'pipe'
+        getExecutorForTask(task, this.workspace, this.projectGraph, this.nxJson)
+          .schema.outputCapture === 'pipe' ||
+        process.env.NX_STREAM_OUTPUT === 'true'
       );
     } catch (e) {
       return false;

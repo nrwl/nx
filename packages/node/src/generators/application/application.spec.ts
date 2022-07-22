@@ -71,6 +71,11 @@ describe('app', () => {
             options: {
               buildTarget: 'my-node-app:build',
             },
+            configurations: {
+              production: {
+                buildTarget: 'my-node-app:build:production',
+              },
+            },
           },
         })
       );

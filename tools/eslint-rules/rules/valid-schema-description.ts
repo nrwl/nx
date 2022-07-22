@@ -1,4 +1,4 @@
-import { ESLintUtils } from '@typescript-eslint/experimental-utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 import type { AST } from 'jsonc-eslint-parser';
 
 // NOTE: The rule will be available in ESLint configs as "@nrwl/nx/workspace/valid-schema-description"

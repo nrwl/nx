@@ -53,10 +53,6 @@ describe('preset', () => {
     expect(tree.children('apps/proj')).toMatchSnapshot();
     expect(tree.children('apps/proj/src/')).toMatchSnapshot();
     expect(tree.children('apps/proj/src/app')).toMatchSnapshot();
-
-    expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
-    ).toBe('@nrwl/angular');
   }, 10000);
 
   it(`should create files (preset = ${Preset.WebComponents})`, async () => {
@@ -67,9 +63,6 @@ describe('preset', () => {
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
-    expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
-    ).toBe('@nrwl/web');
   });
 
   it(`should create files (preset = ${Preset.React})`, async () => {
@@ -82,9 +75,6 @@ describe('preset', () => {
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
-    expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
-    ).toBe('@nrwl/react');
   });
 
   it(`should create files (preset = ${Preset.NextJs})`, async () => {
@@ -97,9 +87,6 @@ describe('preset', () => {
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
-    expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
-    ).toBe('@nrwl/next');
   });
 
   it(`should create files (preset = ${Preset.AngularWithNest})`, async () => {
@@ -161,9 +148,6 @@ describe('preset', () => {
     });
 
     expect(tree.exists('/apps/proj/src/app/App.tsx')).toBe(true);
-    expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').cli.defaultCollection
-    ).toBe('@nrwl/react-native');
   });
 
   describe('core preset', () => {

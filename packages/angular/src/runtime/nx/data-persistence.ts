@@ -15,33 +15,22 @@ import {
   withLatestFrom,
 } from 'rxjs/operators';
 
-/**
- * See {@link DataPersistence.pessimisticUpdate} for more information.
- */
 export interface PessimisticUpdateOpts<T extends Array<unknown>, A> {
   run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
   onError(a: A, e: any): Observable<any> | any;
 }
-/**
- * See {@link DataPersistence.pessimisticUpdate} for more information.
- */
+
 export interface OptimisticUpdateOpts<T extends Array<unknown>, A> {
   run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
   undoAction(a: A, e: any): Observable<Action> | Action;
 }
 
-/**
- * See {@link DataPersistence.fetch} for more information.
- */
 export interface FetchOpts<T extends Array<unknown>, A> {
   id?(a: A, ...slices: [...T]): any;
   run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
   onError?(a: A, e: any): Observable<any> | any;
 }
 
-/**
- * See {@link DataPersistence.navigation} for more information.
- */
 export interface HandleNavigationOpts<T extends Array<unknown>> {
   run(
     a: ActivatedRouteSnapshot,
@@ -61,6 +50,63 @@ export type ActionStateStream<T, A> = Observable<
   ActionOrActionWithStates<[T], A>
 >;
 
+/**
+ *
+ * @whatItDoes Handles pessimistic updates (updating the server first).
+ *
+ * Updating the server, when implemented naively, suffers from race conditions and poor error handling.
+ *
+ * `pessimisticUpdate` addresses these problems. It runs all fetches in order, which removes race conditions
+ * and forces the developer to handle errors.
+ *
+ * ## Example:
+ *
+ * ```typescript
+ * @Injectable()
+ * class TodoEffects {
+ *   updateTodo$ = createEffect(() =>
+ *     this.actions$.pipe(
+ *       ofType('UPDATE_TODO'),
+ *       pessimisticUpdate({
+ *         // provides an action
+ *         run: (action: UpdateTodo) => {
+ *           // update the backend first, and then dispatch an action that will
+ *           // update the client side
+ *           return this.backend.updateTodo(action.todo.id, action.todo).pipe(
+ *             map((updated) => ({
+ *               type: 'UPDATE_TODO_SUCCESS',
+ *               todo: updated,
+ *             }))
+ *           );
+ *         },
+ *         onError: (action: UpdateTodo, error: any) => {
+ *           // we don't need to undo the changes on the client side.
+ *           // we can dispatch an error, or simply log the error here and return `null`
+ *           return null;
+ *         },
+ *       })
+ *     )
+ *   );
+ *
+ *   constructor(private actions$: Actions, private backend: Backend) {}
+ * }
+ * ```
+ *
+ * Note that if you don't return a new action from the run callback, you must set the dispatch property
+ * of the effect to false, like this:
+ *
+ * ```typescript
+ * class TodoEffects {
+ *   updateTodo$ = createEffect(() =>
+ *     this.actions$.pipe(
+ *       //...
+ *     ), { dispatch: false }
+ *   );
+ * }
+ * ```
+ *
+ * @param opts
+ */
 export function pessimisticUpdate<T extends Array<unknown>, A extends Action>(
   opts: PessimisticUpdateOpts<T, A>
 ) {
@@ -72,6 +118,64 @@ export function pessimisticUpdate<T extends Array<unknown>, A extends Action>(
   };
 }
 
+/**
+ *
+ * @whatItDoes Handles optimistic updates (updating the client first).
+ *
+ * It runs all fetches in order, which removes race conditions and forces the developer to handle errors.
+ *
+ * When using `optimisticUpdate`, in case of a failure, the developer has already updated the state locally,
+ * so the developer must provide an undo action.
+ *
+ * The error handling must be done in the callback, or by means of the undo action.
+ *
+ * ## Example:
+ *
+ * ```typescript
+ * @Injectable()
+ * class TodoEffects {
+ *   updateTodo$ = createEffect(() =>
+ *     this.actions$.pipe(
+ *       ofType('UPDATE_TODO'),
+ *       optimisticUpdate({
+ *         // provides an action
+ *         run: (action: UpdateTodo) => {
+ *           return this.backend.updateTodo(action.todo.id, action.todo).pipe(
+ *             mapTo({
+ *               type: 'UPDATE_TODO_SUCCESS',
+ *             })
+ *           );
+ *         },
+ *         undoAction: (action: UpdateTodo, error: any) => {
+ *           // dispatch an undo action to undo the changes in the client state
+ *           return {
+ *             type: 'UNDO_TODO_UPDATE',
+ *             todo: action.todo,
+ *           };
+ *         },
+ *       })
+ *     )
+ *   );
+ *
+ *   constructor(private actions$: Actions, private backend: Backend) {}
+ * }
+ * ```
+ *
+ * Note that if you don't return a new action from the run callback, you must set the dispatch property
+ * of the effect to false, like this:
+ *
+ * ```typescript
+ * class TodoEffects {
+ *   updateTodo$ = createEffect(() =>
+ *     this.actions$.pipe(
+ *       //...
+ *     ), { dispatch: false }
+ *   );
+ * }
+ * ```
+ *
+ * @param opts
+ */
 export function optimisticUpdate<T extends Array<unknown>, A extends Action>(
   opts: OptimisticUpdateOpts<T, A>
 ) {
@@ -83,6 +187,84 @@ export function optimisticUpdate<T extends Array<unknown>, A extends Action>(
   };
 }
 
+/**
+ *
+ * @whatItDoes Handles data fetching.
+ *
+ * Data fetching implemented naively suffers from race conditions and poor error handling.
+ *
+ * `fetch` addresses these problems. It runs all fetches in order, which removes race conditions
+ * and forces the developer to handle errors.
+ *
+ * ## Example:
+ *
+ * ```typescript
+ * @Injectable()
+ * class TodoEffects {
+ *   loadTodos$ = createEffect(() =>
+ *     this.actions$.pipe(
+ *       ofType('GET_TODOS'),
+ *       fetch({
+ *         // provides an action
+ *         run: (a: GetTodos) => {
+ *           return this.backend.getAll().pipe(
+ *             map((response) => ({
+ *               type: 'TODOS',
+ *               todos: response.todos,
+ *             }))
+ *           );
+ *         },
+ *         onError: (action: GetTodos, error: any) => {
+ *           // dispatch an undo action to undo the changes in the client state
+ *           return null;
+ *         },
+ *       })
+ *     )
+ *   );
+ *
+ *   constructor(private actions$: Actions, private backend: Backend) {}
+ * }
+ * ```
+ *
+ * This is correct, but because it set the concurrency to 1, it may not be performant.
+ *
+ * To fix that, you can provide the `id` function, like this:
+ *
+ * ```typescript
+ * @Injectable()
+ * class TodoEffects {
+ *   loadTodo$ = createEffect(() =>
+ *     this.actions$.pipe(
+ *       ofType('GET_TODO'),
+ *       fetch({
+ *         id: (todo: GetTodo) => {
+ *           return todo.id;
+ *         },
+ *         // provides an action
+ *         run: (todo: GetTodo) => {
+ *           return this.backend.getTodo(todo.id).map((response) => ({
+ *             type: 'LOAD_TODO_SUCCESS',
+ *             todo: response.todo,
+ *           }));
+ *         },
+ *         onError: (action: GetTodo, error: any) => {
+ *           // dispatch an undo action to undo the changes in the client state
+ *           return null;
+ *         },
+ *       })
+ *     )
+ *   );
+ *
+ *   constructor(private actions$: Actions, private backend: Backend) {}
+ * }
+ * ```
+ *
+ * With this setup, the requests for Todo 1 will run concurrently with the requests for Todo 2.
+ *
+ * In addition, if there are multiple requests for Todo 1 scheduled, it will only run the last one.
+ *
+ * @param opts
+ */
 export function fetch<T extends Array<unknown>, A extends Action>(
   opts: FetchOpts<T, A>
 ) {
@@ -109,6 +291,55 @@ export function fetch<T extends Array<unknown>, A extends Action>(
   };
 }
 
+/**
+ * @whatItDoes Handles data fetching as part of router navigation.
+ *
+ * Data fetching implemented naively suffers from race conditions and poor error handling.
+ *
+ * `navigation` addresses these problems.
+ *
+ * It checks if an activated router state contains the passed in component type, and, if it does, runs the `run`
+ * callback. It provides the activated snapshot associated with the component and the current state. And it only runs
+ * the last request.
+ *
+ * ## Example:
+ *
+ * ```typescript
+ * @Injectable()
+ * class TodoEffects {
+ *   loadTodo$ = createEffect(() =>
+ *     this.actions$.pipe(
+ *       // listens for the routerNavigation action from @ngrx/router-store
+ *       navigation(TodoComponent, {
+ *         run: (activatedRouteSnapshot: ActivatedRouteSnapshot) => {
+ *           return this.backend
+ *             .fetchTodo(activatedRouteSnapshot.params['id'])
+ *             .pipe(
+ *               map((todo) => ({
+ *                 type: 'LOAD_TODO_SUCCESS',
+ *                 todo: todo,
+ *               }))
+ *             );
+ *         },
+ *         onError: (
+ *           activatedRouteSnapshot: ActivatedRouteSnapshot,
+ *           error: any
+ *         ) => {
+ *           // we can log and error here and return null
+ *           // we can also navigate back
+ *           return null;
+ *         },
+ *       })
+ *     )
+ *   );
+ *
+ *   constructor(private actions$: Actions, private backend: Backend) {}
+ * }
+ * ```
+ *
+ * @param component
+ * @param opts
+ */
 export function navigation<T extends Array<unknown>, A extends Action>(
   component: Type<any>,
   opts: HandleNavigationOpts<T>
@@ -189,56 +420,18 @@ function normalizeActionAndState<T extends Array<unknown>, A>(
 
 /**
  * @whatItDoes Provides convenience methods for implementing common operations of persisting data.
+ *
+ * @deprecated Use the individual operators instead. Will be removed in v15.
  */
 @Injectable()
 export class DataPersistence<T> {
   constructor(public store: Store<T>, public actions: Actions) {}
 
   /**
+   * See {@link pessimisticUpdate} operator for more information.
    *
-   * @whatItDoes Handles pessimistic updates (updating the server first).
-   *
-   * Update the server implemented naively suffers from race conditions and poor error handling.
-   *
-   * `pessimisticUpdate` addresses these problems--it runs all fetches in order, which removes race conditions
-   * and forces the developer to handle errors.
-   *
-   * ## Example:
-   *
-   * ```typescript
-   * @Injectable()
-   * class TodoEffects {
-   *   @Effect() updateTodo = this.s.pessimisticUpdate<UpdateTodo>('UPDATE_TODO', {
-   *     // provides an action and the current state of the store
-   *     run(a, state) {
-   *       // update the backend first, and then dispatch an action that will
-   *       // update the client side
-   *       return this.backend(state.user, a.payload).map(updated => ({
-   *         type: 'TODO_UPDATED',
-   *         payload: updated
-   *       }));
-   *     },
-   *
-   *     onError(a, e: any) {
-   *       // we don't need to undo the changes on the client side.
-   *       // we can dispatch an error, or simply log the error here and return `null`
-   *       return null;
-   *     }
-   *   });
-   *
-   *   constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
-   * }
-   * ```
-   *
-   * Note that if you don't return a new action from the run callback, you must set the dispatch property
-   * of the effect to false, like this:
-   *
-   * ```
-   * class TodoEffects {
-   *   @Effect({dispatch: false})
-   *   updateTodo; //...
-   * }
-   * ```
+   * @deprecated Use the {@link pessimisticUpdate} operator instead.
+   * The {@link DataPersistence} class will be removed in v15.
    */
   pessimisticUpdate<A extends Action = Action>(
     actionType: string | ActionCreator,
@@ -252,50 +445,10 @@ export class DataPersistence<T> {
   }
 
   /**
+   * See {@link optimisticUpdate} operator for more information.
    *
-   * @whatItDoes Handles optimistic updates (updating the client first).
-   *
-   * `optimisticUpdate` addresses these problems--it runs all fetches in order, which removes race conditions
-   * and forces the developer to handle errors.
-   *
-   * `optimisticUpdate` is different from `pessimisticUpdate`. In case of a failure, when using `optimisticUpdate`,
-   * the developer already updated the state locally, so the developer must provide an undo action.
-   *
-   * The error handling must be done in the callback, or by means of the undo action.
-   *
-   * ## Example:
-   *
-   * ```typescript
-   * @Injectable()
-   * class TodoEffects {
-   *   @Effect() updateTodo = this.s.optimisticUpdate<UpdateTodo>('UPDATE_TODO', {
-   *     // provides an action and the current state of the store
-   *     run: (a, state) => {
-   *       return this.backend(state.user, a.payload);
-   *     },
-   *
-   *     undoAction: (a, e: any) => {
-   *       // dispatch an undo action to undo the changes in the client state
-   *       return ({
-   *         type: 'UNDO_UPDATE_TODO',
-   *         payload: a
-   *       });
-   *     }
-   *   });
-   *
-   *   constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
-   * }
-   * ```
-   *
-   * Note that if you don't return a new action from the run callback, you must set the dispatch property
-   * of the effect to false, like this:
-   *
-   * ```
-   * class TodoEffects {
-   *   @Effect({dispatch: false})
-   *   updateTodo; //...
-   * }
-   * ```
+   * @deprecated Use the {@link optimisticUpdate} operator instead.
+   * The {@link DataPersistence} class will be removed in v15.
    */
   optimisticUpdate<A extends Action = Action>(
     actionType: string | ActionCreator,
@@ -309,71 +462,10 @@ export class DataPersistence<T> {
   }
 
   /**
+   * See {@link fetch} operator for more information.
    *
-   * @whatItDoes Handles data fetching.
-   *
-   * Data fetching implemented naively suffers from race conditions and poor error handling.
-   *
-   * `fetch` addresses these problems--it runs all fetches in order, which removes race conditions
-   * and forces the developer to handle errors.
-   *
-   * ## Example:
-   *
-   * ```typescript
-   * @Injectable()
-   * class TodoEffects {
-   *   @Effect() loadTodos = this.s.fetch<GetTodos>('GET_TODOS', {
-   *     // provides an action and the current state of the store
-   *     run: (a, state) => {
-   *       return this.backend(state.user, a.payload).map(r => ({
-   *         type: 'TODOS',
-   *         payload: r
-   *       });
-   *     },
-   *
-   *     onError: (a, e: any) => {
-   *       // dispatch an undo action to undo the changes in the client state
-   *     }
-   *   });
-   *
-   *   constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
-   * }
-   * ```
-   *
-   * This is correct, but because it set the concurrency to 1, it may not be performant.
-   *
-   * To fix that, you can provide the `id` function, like this:
-   *
-   * ```typescript
-   * @Injectable()
-   * class TodoEffects {
-   *   @Effect() loadTodo = this.s.fetch<GetTodo>('GET_TODO', {
-   *     id: (a, state) => {
-   *       return a.payload.id;
-   *     }
-   *
-   *     // provides an action and the current state of the store
-   *     run: (a, state) => {
-   *       return this.backend(state.user, a.payload).map(r => ({
-   *         type: 'TODO',
-   *         payload: r
-   *       });
-   *     },
-   *
-   *     onError: (a, e: any) => {
-   *       // dispatch an undo action to undo the changes in the client state
-   *       return null;
-   *     }
-   *   });
-   *
-   *   constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
-   * }
-   * ```
-   *
-   * With this setup, the requests for Todo 1 will run concurrently with the requests for Todo 2.
-   *
-   * In addition, if DataPersistence notices that there are multiple requests for Todo 1 scheduled,
-   * it will only run the last one.
+   * @deprecated Use the {@link fetch} operator instead.
+   * The {@link DataPersistence} class will be removed in v15.
    */
   fetch<A extends Action = Action>(
     actionType: string | ActionCreator,
@@ -387,37 +479,10 @@ export class DataPersistence<T> {
   }
 
   /**
-   * @whatItDoes Handles data fetching as part of router navigation.
+   * See {@link navigation} operator for more information.
    *
-   * Data fetching implemented naively suffers from race conditions and poor error handling.
-   *
-   * `navigation` addresses these problems.
-   *
-   * It checks if an activated router state contains the passed in component type, and, if it does, runs the `run`
-   * callback. It provides the activated snapshot associated with the component and the current state. And it only runs
-   * the last request.
-   *
-   * ## Example:
-   *
-   * ```typescript
-   * @Injectable()
-   * class TodoEffects {
-   *   @Effect() loadTodo = this.s.navigation(TodoComponent, {
-   *     run: (a, state) => {
-   *       return this.backend.fetchTodo(a.params['id']).map(todo => ({
-   *         type: 'TODO_LOADED',
-   *         payload: todo
-   *       }));
-   *     },
-   *     onError: (a, e: any) => {
-   *       // we can log and error here and return null
-   *       // we can also navigate back
-   *       return null;
-   *     }
-   *   });
-   *   constructor(private s: DataPersistence<TodosState>, private backend: Backend) {}
-   * }
-   * ```
+   * @deprecated Use the {@link navigation} operator instead.
+   * The {@link DataPersistence} class will be removed in v15.
    */
   navigation(
     component: Type<any>,

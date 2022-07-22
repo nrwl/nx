@@ -5,7 +5,6 @@ import { Tree as NrwlTree } from '@nrwl/devkit';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import libraryGenerator from '@nrwl/workspace/src/generators/library/library';
 import { Linter } from '@nrwl/linter';
 

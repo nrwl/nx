@@ -119,7 +119,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-purple-nx-base',
-    link: '/getting-started/nx-devkit',
+    link: '/devkit/index',
     title: 'Nx Devkit',
     subTitle:
       'Nx enables a custom dev experience to match the needs of your organization.',

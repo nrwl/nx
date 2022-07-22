@@ -1,5 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`componentCypressSpec generator should generate .spec.ts when using cypress.json 1`] = `
+"describe('ng-app1', () => {
+  beforeEach(() => cy.visit('/iframe.html?id=testbuttoncomponent--primary&args=buttonType:button;style:default;age;isOn:false;'));
+  it('should render the component', () => {
+    cy.get('proj-test-button').should('exist');
+  });
+});"
+`;
+
 exports[`componentCypressSpec generator should generate the component spec file 1`] = `
 "describe('ng-app1', () => {
   beforeEach(() => cy.visit('/iframe.html?id=testbuttoncomponent--primary&args=buttonType:button;style:default;age;isOn:false;'));

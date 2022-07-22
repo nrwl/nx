@@ -1,4 +1,5 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/detox/src",
   "projectType": "library",
   "targets": {
@@ -13,7 +14,11 @@
           "packages/detox/**/*.spec.jsx",
           "packages/detox/**/*.d.ts",
           "packages/detox/**/executors/**/schema.json",
-          "packages/detox/**/generators/**/schema.json"
+          "packages/detox/**/generators/**/schema.json",
+          "packages/detox/generators.json",
+          "packages/detox/executors.json",
+          "packages/detox/package.json",
+          "packages/detox/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]
@@ -70,7 +75,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["build/packages/detox"],
       "options": {
         "command": "node ./scripts/copy-readme.js detox"

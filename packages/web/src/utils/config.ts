@@ -157,7 +157,7 @@ export function getBaseWebpackPartial(
 
   if (builderOptions.compiler !== 'swc' && extraOptions.isScriptOptimizeOn) {
     webpackConfig.optimization = {
-      sideEffects: false,
+      sideEffects: true,
       minimizer: [
         new TerserPlugin({
           parallel: true,
@@ -182,7 +182,6 @@ export function getBaseWebpackPartial(
     extraPlugins.push(
       new ForkTsCheckerWebpackPlugin({
         typescript: {
-          enabled: true,
           configFile: builderOptions.tsConfig,
           memoryLimit: builderOptions.memoryLimit || 2018,
         },

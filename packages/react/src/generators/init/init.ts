@@ -11,13 +11,13 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { webInitGenerator } from '@nrwl/web';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import {
   nxVersion,
   reactDomVersion,
   reactTestRendererVersion,
   reactVersion,
   testingLibraryReactVersion,
+  tsLibVersion,
   typesNodeVersion,
   typesReactDomVersion,
   typesReactVersion,
@@ -41,7 +41,6 @@ function setDefault(host: Tree) {
   };
 
   updateWorkspaceConfiguration(host, { ...workspace, generators });
-  setDefaultCollection(host, '@nrwl/react');
 }
 
 function updateDependencies(host: Tree) {
@@ -54,7 +53,7 @@ function updateDependencies(host: Tree) {
       react: reactVersion,
       'react-dom': reactDomVersion,
       'regenerator-runtime': '0.13.7',
-      tslib: '^2.0.0',
+      tslib: tsLibVersion,
     },
     {
       '@nrwl/react': nxVersion,

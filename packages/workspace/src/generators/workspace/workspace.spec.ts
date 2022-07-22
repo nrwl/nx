@@ -45,9 +45,6 @@ describe('@nrwl/workspace:workspace', () => {
       affected: {
         defaultBase: 'main',
       },
-      cli: {
-        defaultCollection: '@nrwl/workspace',
-      },
       implicitDependencies: {
         'package.json': {
           dependencies: '*',
@@ -63,13 +60,10 @@ describe('@nrwl/workspace:workspace', () => {
           },
         },
       },
-      targetDependencies: {
-        build: [
-          {
-            projects: 'dependencies',
-            target: 'build',
-          },
-        ],
+      targetDefaults: {
+        build: {
+          dependsOn: ['^build'],
+        },
       },
     });
     const validateNxJson = ajv.compile(nxSchema);
@@ -182,7 +176,7 @@ Object {
     expect(tree.exists('/proj/apps/.gitkeep')).toBe(false);
     expect(tree.exists('/proj/libs/.gitkeep')).toBe(false);
     const nx = readJson(tree, '/proj/nx.json');
-    expect(nx.extends).toEqual('nx/presets/core.json');
+    expect(nx.extends).toEqual('nx/presets/npm.json');
 
     const { scripts } = readJson(tree, '/proj/package.json');
     expect(scripts).toMatchInlineSnapshot(`Object {}`);

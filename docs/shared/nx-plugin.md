@@ -2,9 +2,12 @@ Nx plugins are npm packages that contain generators and executors to extend a Nx
 
 > A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \
 > A list of custom plugins created by the community is found in the [Community](/community) section.
-> Plugins are written using Nx Devkit. **Read [Nx Devkit](/getting-started/nx-devkit) for more information.**
+> Plugins are written using Nx Devkit. **Read [Nx Devkit](/devkit/index) for more information.**
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/fC1-4fAZDP4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/fC1-4fAZDP4"
+title="Nx Tutorial: Building Custom Plugins for Nx"
+width="100%" /%}
 
 ## Generating a Plugin
 
@@ -14,7 +17,7 @@ To get started with building a Nx Plugin, run the following command:
 npx create-nx-plugin my-org --pluginName my-plugin
 ```
 
-This command creates a brand new workspace, and sets up a pre-configured plugin with the specified name.
+This command creates a brand-new workspace, and sets up a pre-configured plugin with the specified name.
 
 > Note, the command above will create a plugin the package name set to `@my-org/my-plugin`. You can pass `--importPath` to provide a different package name.
 
@@ -31,13 +34,15 @@ The created generator contains boilerplate that will do the following:
 - Add the plugin's project to the `nx.json` file
 - Add files to the disk using templates
 
-There will be a exported default function that will be the main entry for the generator.
+There will be an exported default function that will be the main entry for the generator.
 
 ### Generator options
 
 The `schema.d.ts` file contains all the options that the generator supports. By default, it includes `directory`, `tags`, and `name` as the options. If more options need to be added, please update this file and the `schema.json` file.
 
-> Note: The `schema.d.ts` file is used for type checking inside the implementation file. It should match the properties in `schema.json`.
+{% callout type="note" title="More details" %}
+The `schema.d.ts` file is used for type checking inside the implementation file. It should match the properties in `schema.json`.
+{% /callout %}
 
 ### Adding more generators
 
@@ -155,7 +160,9 @@ In order to use your plugin in other workspaces or share it with the community, 
 1. `npm publish ./dist/package/my-plugin` and follow the prompts from npm.
 1. That's it!
 
-> Note: currently you will have to modify the `package.json` version by yourself or with a tool.
+{% callout type="warning" title="Version bump" %}
+Currently you will have to modify the `package.json` version by yourself or with a tool.
+{% /callout %}
 
 After that, you can then install your plugin like any other npm package,
 `npm i -D @my-org/my-plugin` or `yarn add -D @my-org/my-plugin`.
@@ -175,10 +182,13 @@ We will then verify the plugin, offer suggestions or merge the pull request!
 
 ## Preset
 
-A Preset is a customization option which you provide when creating a new workspace. TS, Node, React are some of the internal presets that Nx provides by default.
+A Preset is a customization option which you provide when creating a new workspace. TS, Node, React are some internal presets that Nx provides by default.
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/yGUrF0-uqaU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
- 
+{% youtube
+src="https://www.youtube.com/embed/yGUrF0-uqaU"
+title="Develop a Nx Preset for your Nx Plugin"
+width="100%" /%}
+
 ### Custom Preset
 
 At its core a preset is a generator, which we can create inside of a plugin.
@@ -194,7 +204,9 @@ To create our preset inside of our plugin we can run
   nx generate @nrwl/nx-plugin:generator --name=preset --project=happynrwl
 ```
 
-> Note: the word `preset` is required for the name of this generator
+{% callout type="warning" title="Double check" %}
+The word `preset` is required for the name of this generator
+{% /callout %}
 
 You should have a similar structure to this:
 

@@ -7,12 +7,7 @@
     ".eslintrc.json": "*"
   },
   "targetDependencies": {
-    "build": [
-      {
-        "target": "build",
-        "projects": "dependencies"
-      }
-    ]
+    "build": ["^build"]
   },
   "workspaceLayout": {
     "libsDir": "packages"

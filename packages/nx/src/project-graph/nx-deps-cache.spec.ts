@@ -105,6 +105,18 @@ describe('nx deps utils', () => {
         )
       ).toEqual(true);
     });
+
+    it('should be true when plugin config changes', () => {
+      expect(
+        shouldRecomputeWholeGraph(
+          createCache({}),
+          createPackageJsonDeps({ plugin: '2.0.0' }),
+          createWorkspaceJson({}),
+          createNxJson({ pluginsConfig: { one: 1 } }),
+          createTsConfigJson()
+        )
+      ).toEqual(true);
+    });
   });
 
   describe('extractCachedPartOfProjectGraph', () => {

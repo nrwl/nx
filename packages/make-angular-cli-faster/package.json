@@ -27,10 +27,10 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@nrwl/devkit": "*",
-    "@nrwl/workspace": "*",
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/workspace": "file:../workspace",
     "enquirer": "^2.3.6",
-    "nx": "*",
+    "nx": "file:../nx",
     "semver": "7.3.4",
     "tmp": "~0.2.1",
     "yargs": "^17.4.0",

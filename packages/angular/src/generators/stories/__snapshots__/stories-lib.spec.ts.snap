@@ -9,6 +9,54 @@ exports[`angularStories generator: libraries Stories for non-empty Angular libra
 });"
 `;
 
+exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 1`] = `
+"import { moduleMetadata, Story, Meta } from '@storybook/angular';
+import { StandaloneComponent } from './standalone.component';
+
+export default {
+  title: 'StandaloneComponent',
+  component: StandaloneComponent,
+  decorators: [
+    moduleMetadata({
+      imports: [],
+    })
+  ],
+} as Meta<StandaloneComponent>;
+
+const Template: Story<StandaloneComponent> = (args: StandaloneComponent) => ({
+  props: args,
+});
+
+
+export const Primary = Template.bind({});
+Primary.args = {
+}"
+`;
+
+exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 2`] = `
+"import { moduleMetadata, Story, Meta } from '@storybook/angular';
+import { SecondaryStandaloneComponent } from './secondary-standalone.component';
+
+export default {
+  title: 'SecondaryStandaloneComponent',
+  component: SecondaryStandaloneComponent,
+  decorators: [
+    moduleMetadata({
+      imports: [],
+    })
+  ],
+} as Meta<SecondaryStandaloneComponent>;
+
+const Template: Story<SecondaryStandaloneComponent> = (args: SecondaryStandaloneComponent) => ({
+  props: args,
+});
+
+
+export const Primary = Template.bind({});
+Primary.args = {
+}"
+`;
+
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories.ts files 1`] = `
 "import { moduleMetadata, Story, Meta } from '@storybook/angular';
 import { TestButtonComponent } from './test-button.component';

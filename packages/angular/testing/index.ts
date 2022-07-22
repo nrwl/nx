@@ -6,19 +6,19 @@ import {
 } from 'jasmine-marbles';
 
 /**
- * @deprecated Import from 'jasmine-marbles' instead
+ * @deprecated Import from 'jasmine-marbles' instead. Will be removed in Nx v15.
  */
 export const cold = rxjsMarblesCold;
 /**
- * @deprecated Import from 'jasmine-marbles' instead
+ * @deprecated Import from 'jasmine-marbles' instead. Will be removed in Nx v15.
  */
 export const hot = rxjsMarblesHot;
 /**
- * @deprecated Import from 'jasmine-marbles' instead
+ * @deprecated Import from 'jasmine-marbles' instead. Will be removed in Nx v15.
  */
 export const getTestScheduler = rxjsMarblesTestScheduler;
 /**
- * @deprecated Import from 'jasmine-marbles' instead
+ * @deprecated Import from 'jasmine-marbles' instead. Will be removed in Nx v15.
  */
 export const time = rxjsMarblesTime;
 

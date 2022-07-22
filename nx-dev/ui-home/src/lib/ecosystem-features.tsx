@@ -13,7 +13,7 @@ const featureItems: {
 }[] = [
   {
     classNames: 'bg-green-nx-base',
-    link: '/getting-started/nx-devkit',
+    link: '/devkit/index',
     title: 'Plugins for everything',
     subTitle:
       'React, React Native, Angular, NativeScript, Cypress, Nest.js, Storybook, Ionic, Go among others.',

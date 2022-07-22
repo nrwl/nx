@@ -1,3 +1,7 @@
+// mock so we can test multiple versions
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
+
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import {
   joinPathFragments,
   offsetFromRoot,
@@ -24,6 +28,9 @@ const mockedLogger = { warn: jest.fn() };
 
 describe('e2e migrator', () => {
   let tree: Tree;
+  let mockedInstalledCypressVersion = installedCypressVersion as jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  >;
 
   function addProject(
     name: string,
@@ -46,6 +53,8 @@ describe('e2e migrator', () => {
     // already been run, so we make some adjustments to match that state
     tree.delete('workspace.json');
     writeJson(tree, 'angular.json', { version: 2, projects: {} });
+
+    mockedInstalledCypressVersion.mockReturnValue(9);
 
     jest.clearAllMocks();
   });
@@ -144,26 +153,6 @@ describe('e2e migrator', () => {
       expect(result).toBe(null);
     });
 
-    it('should fail validation when using Cypress and the cypress.json file does not exist', async () => {
-      const project = addProject('app1', {
-        root: '',
-        architect: {
-          e2e: { builder: '@cypress/schematic:cypress', options: {} },
-        },
-      });
-      const migrator = new E2eMigrator(tree, {}, project, undefined);
-
-      const result = migrator.validate();
-
-      expect(result).toHaveLength(1);
-      expect(result[0].message).toBe(
-        'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.json" file could not be found at the project root.'
-      );
-      expect(result[0].hint).toBe(
-        'Make sure the "app1.architect.e2e.options.configFile" option is set to a valid path, or that a "cypress.json" file exists at the project root, or remove the "app1.architect.e2e" target if it is not valid.'
-      );
-    });
-
     it('should fail validation when using Cypress and the specified config file does not exist', async () => {
       const project = addProject('app1', {
         root: '',
@@ -208,20 +197,105 @@ describe('e2e migrator', () => {
       );
     });
 
-    it('should succeed validation when using Cypress', async () => {
-      writeJson(tree, 'cypress.json', {});
-      writeJson(tree, 'cypress/tsconfig.json', {});
-      const project = addProject('app1', {
-        root: '',
-        architect: {
-          e2e: { builder: '@cypress/schematic:cypress', options: {} },
-        },
+    describe('cypress version <10', () => {
+      it('should fail validation when using Cypress and the cypress.json file does not exist', async () => {
+        const project = addProject('app1', {
+          root: '',
+          architect: {
+            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          },
+        });
+        const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+        const result = migrator.validate();
+
+        expect(result).toHaveLength(1);
+        expect(result[0].message).toBe(
+          'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.json" file could not be found at the project root.'
+        );
+        expect(result[0].hint).toBe(
+          'Make sure the "app1.architect.e2e.options.configFile" option is set to a valid path, or that a "cypress.json" file exists at the project root, or remove the "app1.architect.e2e" target if it is not valid.'
+        );
       });
-      const migrator = new E2eMigrator(tree, {}, project, undefined);
 
-      const result = migrator.validate();
+      it('should fail validation when using Cypress and the specified config file does not exist', async () => {
+        const project = addProject('app1', {
+          root: '',
+          architect: {
+            e2e: {
+              builder: '@cypress/schematic:cypress',
+              options: { configFile: 'cypress.conf.json' },
+            },
+          },
+        });
+        const migrator = new E2eMigrator(tree, {}, project, undefined);
 
-      expect(result).toBe(null);
+        const result = migrator.validate();
+
+        expect(result).toHaveLength(1);
+        expect(result[0].message).toBe(
+          'The specified Cypress config file "cypress.conf.json" in the "e2e" target could not be found.'
+        );
+        expect(result[0].hint).toBe(
+          'Make sure the "app1.architect.e2e.options.configFile" option is set to a valid path or remove the "app1.architect.e2e" target if it is not valid.'
+        );
+      });
+
+      it('should succeed validation when using Cypress', async () => {
+        writeJson(tree, 'cypress.json', {});
+        writeJson(tree, 'cypress/tsconfig.json', {});
+        const project = addProject('app1', {
+          root: '',
+          architect: {
+            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          },
+        });
+        const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+        const result = migrator.validate();
+
+        expect(result).toBe(null);
+      });
+    });
+
+    describe('cypress version >=10', () => {
+      it('should fail validation when using Cypress and a cypress.config.{ts,js,mjs,cjs} file does not exist', async () => {
+        mockedInstalledCypressVersion.mockReturnValue(10);
+        const project = addProject('app1', {
+          root: '',
+          architect: {
+            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          },
+        });
+        const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+        const result = migrator.validate();
+
+        expect(result).toHaveLength(1);
+        expect(result[0].message).toBe(
+          'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.config.{ts,js,mjs,cjs}" file could not be found at the project root.'
+        );
+        expect(result[0].hint).toBe(
+          'Make sure the "app1.architect.e2e.options.configFile" option is set to a valid path, or that a "cypress.config.{ts,js,mjs,cjs}" file exists at the project root, or remove the "app1.architect.e2e" target if it is not valid.'
+        );
+      });
+
+      it('should succeed validation when using Cypress', async () => {
+        mockedInstalledCypressVersion.mockReturnValue(10);
+        tree.write('cypress.config.ts', '');
+        writeJson(tree, 'cypress/tsconfig.json', {});
+        const project = addProject('app1', {
+          root: '',
+          architect: {
+            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          },
+        });
+        const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+        const result = migrator.validate();
+
+        expect(result).toBe(null);
+      });
     });
   });
 
@@ -437,6 +511,8 @@ describe('e2e migrator', () => {
 
         await migrator.migrate();
 
+        expect(tree.exists('cypress.json')).toBe(false);
+        expect(tree.exists('cypress/tsconfig.json')).toBe(false);
         expect(tree.exists('apps/app1-e2e/cypress.json')).toBe(true);
         expect(tree.exists('apps/app1-e2e/tsconfig.json')).toBe(true);
       });
@@ -660,68 +736,325 @@ describe('e2e migrator', () => {
         expect(tsConfigJson.compilerOptions.outDir).toBe('../../dist/out-tsc');
       });
 
-      it('should create a cypress.json file when it does not exist', async () => {
-        writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
-        const project = addProject('app1', {
-          root,
-          architect: {
-            e2e: {
-              builder: '@cypress/schematic:cypress',
-              options: { configFile: false },
+      describe('cypress version <10', () => {
+        it('should create a cypress.json file when it does not exist', async () => {
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: {
+                builder: '@cypress/schematic:cypress',
+                options: { configFile: false },
+              },
             },
-          },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+          await migrator.migrate();
+
+          expect(tree.exists('apps/app1-e2e/cypress.json')).toBe(true);
+          const cypressJson = readJson(tree, 'apps/app1-e2e/cypress.json');
+          expect(cypressJson).toStrictEqual({
+            fileServerFolder: '.',
+            fixturesFolder: './src/fixtures',
+            integrationFolder: './src/integration',
+            modifyObstructiveCode: false,
+            supportFile: './src/support/index.ts',
+            pluginsFile: false,
+            video: true,
+            videosFolder: `../../dist/cypress/apps/app1-e2e/videos`,
+            screenshotsFolder: `../../dist/cypress/apps/app1-e2e/screenshots`,
+            chromeWebSecurity: false,
+          });
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
 
-        await migrator.migrate();
+        it('should update the cypress.json file', async () => {
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          writeJson(tree, joinPathFragments(root, 'cypress.json'), {
+            integrationFolder: 'cypress/integration',
+            supportFile: 'cypress/support/index.ts',
+            videosFolder: 'cypress/videos',
+            screenshotsFolder: 'cypress/screenshots',
+            pluginsFile: 'cypress/plugins/index.ts',
+            fixturesFolder: 'cypress/fixtures',
+            baseUrl: 'http://localhost:4200',
+          });
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
 
-        expect(tree.exists('apps/app1-e2e/cypress.json')).toBe(true);
-        const cypressJson = readJson(tree, 'apps/app1-e2e/cypress.json');
-        expect(cypressJson).toStrictEqual({
-          fileServerFolder: '.',
-          fixturesFolder: './src/fixtures',
-          integrationFolder: './src/integration',
-          modifyObstructiveCode: false,
-          supportFile: './src/support/index.ts',
-          pluginsFile: './src/plugins/index.ts',
-          video: true,
-          videosFolder: `../../dist/cypress/apps/app1-e2e/videos`,
-          screenshotsFolder: `../../dist/cypress/apps/app1-e2e/screenshots`,
-          chromeWebSecurity: false,
+          await migrator.migrate();
+
+          const cypressJson = readJson(tree, 'apps/app1-e2e/cypress.json');
+          expect(cypressJson).toStrictEqual({
+            integrationFolder: 'src/integration',
+            supportFile: 'src/support/index.ts',
+            videosFolder: `../../dist/cypress/apps/app1-e2e/videos`,
+            screenshotsFolder: `../../dist/cypress/apps/app1-e2e/screenshots`,
+            pluginsFile: 'src/plugins/index.ts',
+            fixturesFolder: 'src/fixtures',
+            baseUrl: 'http://localhost:4200',
+            fileServerFolder: '.',
+          });
         });
       });
 
-      it('should update the cypress.json file', async () => {
-        writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
-        writeJson(tree, joinPathFragments(root, 'cypress.json'), {
-          integrationFolder: joinPathFragments(root, 'cypress/integration'),
-          supportFile: joinPathFragments(root, 'cypress/support/index.ts'),
-          videosFolder: joinPathFragments(root, 'cypress/videos'),
-          screenshotsFolder: joinPathFragments(root, 'cypress/screenshots'),
-          pluginsFile: joinPathFragments(root, 'cypress/plugins/index.ts'),
-          fixturesFolder: joinPathFragments(root, 'cypress/fixtures'),
-          baseUrl: 'http://localhost:4200',
-        });
-        const project = addProject('app1', {
-          root,
-          architect: {
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
-          },
-        });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+      describe('cypress version >=10', () => {
+        it('should create a cypress.config.ts file when it does not exist', async () => {
+          mockedInstalledCypressVersion.mockReturnValue(10);
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: {
+                builder: '@cypress/schematic:cypress',
+                options: {},
+              },
+            },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
 
-        await migrator.migrate();
+          await migrator.migrate();
 
-        const cypressJson = readJson(tree, 'apps/app1-e2e/cypress.json');
-        expect(cypressJson).toStrictEqual({
-          integrationFolder: './src/integration',
-          supportFile: './src/support/index.ts',
-          videosFolder: `../../dist/cypress/apps/app1-e2e/videos`,
-          screenshotsFolder: `../../dist/cypress/apps/app1-e2e/screenshots`,
-          pluginsFile: './src/plugins/index.ts',
-          fixturesFolder: './src/fixtures',
-          baseUrl: 'http://localhost:4200',
-          fileServerFolder: '.',
+          expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
+          const cypressConfig = tree.read(
+            'apps/app1-e2e/cypress.config.ts',
+            'utf-8'
+          );
+          expect(cypressConfig).toBe(`import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: nxE2EPreset(__dirname)
+});
+`);
+        });
+
+        it('should update e2e config with the nx preset', async () => {
+          mockedInstalledCypressVersion.mockReturnValue(10);
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          tree.write(
+            joinPathFragments(root, 'cypress.config.ts'),
+            `import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:4200'
+  },
+});`
+          );
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+          await migrator.migrate();
+
+          expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
+          const cypressConfig = tree.read(
+            'apps/app1-e2e/cypress.config.ts',
+            'utf-8'
+          );
+          expect(cypressConfig).toMatchSnapshot();
+        });
+
+        it('should update paths in the config', async () => {
+          mockedInstalledCypressVersion.mockReturnValue(10);
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          tree.write(
+            joinPathFragments(root, 'cypress.config.ts'),
+            `import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  fixturesFolder: 'cypress/fixtures',
+  specPattern: 'cypress/**/*.cy.{js,jsx,ts,tsx}',
+  e2e: {
+    baseUrl: 'http://localhost:4200',
+    fixturesFolder: 'cypress/test-data',
+    specPattern: 'cypress/e2e/**/*.cy.ts',
+  },
+  component: {
+    supportFile: 'cypress/support/component.ts',
+  }
+});`
+          );
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+          await migrator.migrate();
+
+          expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
+          const cypressConfig = tree.read(
+            'apps/app1-e2e/cypress.config.ts',
+            'utf-8'
+          );
+          expect(cypressConfig).toMatchSnapshot();
+        });
+
+        it('should remove paths in the e2e config when they match the nx preset defaults', async () => {
+          mockedInstalledCypressVersion.mockReturnValue(10);
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          tree.write(
+            joinPathFragments(root, 'cypress.config.ts'),
+            `import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:4200',
+    fixturesFolder: 'cypress/fixtures',
+    specPattern: 'cypress/**/*.cy.{js,jsx,ts,tsx}',
+  },
+});`
+          );
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+          await migrator.migrate();
+
+          expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
+          const cypressConfig = tree.read(
+            'apps/app1-e2e/cypress.config.ts',
+            'utf-8'
+          );
+          expect(cypressConfig).toMatchSnapshot();
+        });
+
+        it('should keep paths in the e2e config when they differ from the nx preset defaults', async () => {
+          mockedInstalledCypressVersion.mockReturnValue(10);
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          tree.write(
+            joinPathFragments(root, 'cypress.config.ts'),
+            `import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:4200',
+    fixturesFolder: 'cypress/my-fixtures',
+    specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
+  },
+});`
+          );
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+          await migrator.migrate();
+
+          expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
+          const cypressConfig = tree.read(
+            'apps/app1-e2e/cypress.config.ts',
+            'utf-8'
+          );
+          expect(cypressConfig).toMatchSnapshot();
+        });
+
+        it('should add paths to the e2e config from the global config when they differ from the nx preset defaults', async () => {
+          mockedInstalledCypressVersion.mockReturnValue(10);
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          tree.write(
+            joinPathFragments(root, 'cypress.config.ts'),
+            `import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  fixturesFolder: 'cypress/my-fixtures',
+  specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
+  e2e: {
+    baseUrl: 'http://localhost:4200',
+  },
+});`
+          );
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+          await migrator.migrate();
+
+          expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
+          const cypressConfig = tree.read(
+            'apps/app1-e2e/cypress.config.ts',
+            'utf-8'
+          );
+          expect(cypressConfig).toMatchSnapshot();
+        });
+
+        it('should not throw when the e2e config is not defined', async () => {
+          mockedInstalledCypressVersion.mockReturnValue(10);
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          tree.write(
+            joinPathFragments(root, 'cypress.config.ts'),
+            `import { defineConfig } from 'cypress';
+
+export default defineConfig({});`
+          );
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+          await expect(migrator.migrate()).resolves.not.toThrow();
+        });
+
+        it('should not throw when the e2e config is not an object literal', async () => {
+          mockedInstalledCypressVersion.mockReturnValue(10);
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          tree.write(
+            joinPathFragments(root, 'cypress.config.ts'),
+            `import { defineConfig } from 'cypress';
+const e2e = {};
+export default defineConfig({ e2e });`
+          );
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+          await expect(migrator.migrate()).resolves.not.toThrow();
+        });
+
+        it('should not throw when the "defineConfig" call is not found', async () => {
+          mockedInstalledCypressVersion.mockReturnValue(10);
+          writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
+          tree.write(joinPathFragments(root, 'cypress.config.ts'), '');
+          const project = addProject('app1', {
+            root,
+            architect: {
+              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            },
+          });
+          const migrator = new E2eMigrator(tree, {}, project, undefined);
+
+          await expect(migrator.migrate()).resolves.not.toThrow();
         });
       });
     }

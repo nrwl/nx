@@ -1,4 +1,5 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/next",
   "projectType": "library",
   "targets": {
@@ -36,7 +37,7 @@
           {
             "input": "packages/next",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json"],
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"
           },
           {
@@ -60,7 +61,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["build/packages/next"],
       "options": {
         "command": "node ./scripts/copy-readme.js next"
@@ -78,7 +79,11 @@
           "packages/next/**/*.spec.jsx",
           "packages/next/**/*.d.ts",
           "packages/next/**/executors/**/schema.json",
-          "packages/next/**/generators/**/schema.json"
+          "packages/next/**/generators/**/schema.json",
+          "packages/next/generators.json",
+          "packages/next/executors.json",
+          "packages/next/package.json",
+          "packages/next/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

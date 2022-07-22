@@ -1,3 +1,3 @@
-import { ESLintUtils } from '@typescript-eslint/experimental-utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 export const createESLintRule = ESLintUtils.RuleCreator(() => ``);

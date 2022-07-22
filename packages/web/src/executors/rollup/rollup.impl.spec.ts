@@ -30,7 +30,7 @@ describe('rollupExecutor', () => {
       project: 'libs/ui/package.json',
       tsConfig: 'libs/ui/tsconfig.json',
       watch: false,
-      format: ['esm', 'umd'],
+      format: ['esm', 'cjs'],
     };
   });
 
@@ -52,17 +52,17 @@ describe('rollupExecutor', () => {
           globals: { 'react/jsx-runtime': 'jsxRuntime' },
           name: 'Example',
           inlineDynamicImports: false,
-          chunkFileNames: '[name].esm.js',
-          entryFileNames: '[name].esm.js',
+          chunkFileNames: '[name].js',
+          entryFileNames: '[name].js',
         },
         {
           dir: '/root/dist/ui',
-          format: 'umd',
+          format: 'cjs',
           globals: { 'react/jsx-runtime': 'jsxRuntime' },
           name: 'Example',
-          inlineDynamicImports: true,
-          chunkFileNames: '[name].umd.js',
-          entryFileNames: '[name].umd.js',
+          inlineDynamicImports: false,
+          chunkFileNames: '[name].cjs',
+          entryFileNames: '[name].cjs',
         },
       ]);
     });

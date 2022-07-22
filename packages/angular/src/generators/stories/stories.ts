@@ -1,9 +1,13 @@
 import type { Tree } from '@nrwl/devkit';
-import { logger } from '@nrwl/devkit';
-import { getProjectRootPath } from '@nrwl/workspace/src/utilities/project-type';
+import { formatFiles, joinPathFragments, logger } from '@nrwl/devkit';
 import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
 import componentStoryGenerator from '../component-story/component-story';
-import { getComponentsInfo } from './lib/component-info';
+import type { ComponentInfo } from './lib/component-info';
+import {
+  getComponentsInfo,
+  getStandaloneComponentsInfo,
+} from './lib/component-info';
+import { getProjectEntryPoints } from './lib/entry-point';
 import { getE2EProject } from './lib/get-e2e-project';
 import { getModuleFilePaths } from './lib/module-info';
 import type { StoriesGeneratorOptions } from './schema';
@@ -14,9 +18,16 @@ export function angularStoriesGenerator(
 ): void {
   const e2eProjectName = options.cypressProject ?? `${options.name}-e2e`;
   const e2eProject = getE2EProject(tree, e2eProjectName);
-  const projectPath = getProjectRootPath(tree, options.name);
-  const moduleFilePaths = getModuleFilePaths(tree, projectPath);
-  const componentsInfo = getComponentsInfo(tree, moduleFilePaths, options.name);
+  const entryPoints = getProjectEntryPoints(tree, options.name);
+
+  const componentsInfo: ComponentInfo[] = [];
+  for (const entryPoint of entryPoints) {
+    const moduleFilePaths = getModuleFilePaths(tree, entryPoint);
+    componentsInfo.push(
+      ...getComponentsInfo(tree, entryPoint, moduleFilePaths, options.name),
+      ...getStandaloneComponentsInfo(tree, entryPoint)
+    );
+  }
 
   if (options.generateCypressSpecs && !e2eProject) {
     logger.info(
@@ -34,6 +45,7 @@ export function angularStoriesGenerator(
       componentName: info.name,
       componentPath: info.path,
       componentFileName: info.componentFileName,
+      skipFormat: false,
     });
 
     if (options.generateCypressSpecs && e2eProject) {
@@ -44,9 +56,15 @@ export function angularStoriesGenerator(
         componentName: info.name,
         componentPath: info.path,
         componentFileName: info.componentFileName,
+        specDirectory: joinPathFragments(info.entryPointName, info.path),
+        skipFormat: false,
       });
     }
   });
+
+  if (!options.skipFormat) {
+    formatFiles(tree);
+  }
 }
 
 export default angularStoriesGenerator;

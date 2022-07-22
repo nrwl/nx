@@ -3,4 +3,5 @@ export interface ComponentStoryGeneratorOptions {
   componentName: string;
   componentPath: string;
   componentFileName: string;
+  skipFormat?: boolean;
 }

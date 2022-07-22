@@ -24,8 +24,6 @@ export function assertDependentProjectsHaveBeenBuilt(
       
       Please build these libraries first:
       ${missing.map((x) => ` - ${x.node.name}`).join('\n')}
-
-      Try: ${chalk.bold(`nx build ${context.projectName} --with-deps`)}
     `)
     );
   }

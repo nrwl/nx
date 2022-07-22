@@ -1,52 +1,47 @@
 import {
-  workspaceRoot,
   joinPathFragments,
   normalizePath,
   ProjectGraphExternalNode,
-  readCachedProjectGraph,
-  readNxJson,
+  ProjectGraphProjectNode,
+  workspaceRoot,
 } from '@nrwl/devkit';
+import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
+import {
+  checkCircularPath,
+  findFilesInCircularPath,
+} from '@nrwl/workspace/src/utils/graph-utils';
 import {
   DepConstraint,
   findConstraintsFor,
   findDependenciesWithTags,
   findProjectUsingImport,
   findSourceProject,
+  findTransitiveExternalDependencies,
+  findTargetProject,
   getSourceFilePath,
   getTargetProjectBasedOnRelativeImport,
   groupImports,
+  hasBannedDependencies,
   hasBannedImport,
   hasBuildExecutor,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isAngularSecondaryEntrypoint,
   isDirectDependency,
-  isTerminalRun,
-  MappedProjectGraph,
-  MappedProjectGraphNode,
-  mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
   stringifyTags,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
-import {
-  AST_NODE_TYPES,
-  TSESTree,
-} from '@typescript-eslint/experimental-utils';
-import { createESLintRule } from '../utils/create-eslint-rule';
+import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
-import {
-  checkCircularPath,
-  findFilesInCircularPath,
-} from '@nrwl/workspace/src/utils/graph-utils';
-import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
-import * as chalk from 'chalk';
 import { basename, dirname, relative } from 'path';
 import {
   getBarrelEntryPointByImportScope,
   getBarrelEntryPointProjectNode,
   getRelativeImportPath,
 } from '../utils/ast-utils';
+import { createESLintRule } from '../utils/create-eslint-rule';
+import { readProjectGraph } from '../utils/project-graph-utils';
 
 type Options = [
   {
@@ -55,6 +50,7 @@ type Options = [
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
     banTransitiveDependencies: boolean;
+    checkNestedExternalImports: boolean;
   }
 ];
 export type MessageIds =
@@ -67,6 +63,7 @@ export type MessageIds =
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
   | 'bannedExternalImportsViolation'
+  | 'nestedBannedExternalImportsViolation'
   | 'noTransitiveDependencies'
   | 'onlyTagsConstraintViolation'
   | 'notTagsConstraintViolation';
@@ -88,6 +85,7 @@ export default createESLintRule<Options, MessageIds>({
           enforceBuildableLibDependency: { type: 'boolean' },
           allowCircularSelfDependency: { type: 'boolean' },
           banTransitiveDependencies: { type: 'boolean' },
+          checkNestedExternalImports: { type: 'boolean' },
           allow: [{ type: 'string' }],
           depConstraints: [
             {
@@ -116,6 +114,7 @@ export default createESLintRule<Options, MessageIds>({
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
       bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
+      nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package. Nested import found at {{childProjectName}}`,
       noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
       onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
       notTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can not depend on libs tagged with {{tags}}\n\nViolation detected in:\n{{projects}}`,
@@ -128,6 +127,7 @@ export default createESLintRule<Options, MessageIds>({
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
       banTransitiveDependencies: false,
+      checkNestedExternalImports: false,
     },
   ],
   create(
@@ -139,6 +139,7 @@ export default createESLintRule<Options, MessageIds>({
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
         banTransitiveDependencies,
+        checkNestedExternalImports,
       },
     ]
   ) {
@@ -148,40 +149,14 @@ export default createESLintRule<Options, MessageIds>({
     const projectPath = normalizePath(
       (global as any).projectPath || workspaceRoot
     );
-    /**
-     * Only reuse graph when running from terminal
-     * Enforce every IDE change to get a fresh nxdeps.json
-     */
-    if (!(global as any).projectGraph || !isTerminalRun()) {
-      const nxJson = readNxJson();
-      (global as any).workspaceLayout = nxJson.workspaceLayout;
 
-      /**
-       * Because there are a number of ways in which the rule can be invoked (executor vs ESLint CLI vs IDE Plugin),
-       * the ProjectGraph may or may not exist by the time the lint rule is invoked for the first time.
-       */
-      try {
-        (global as any).projectGraph = mapProjectGraphFiles(
-          readCachedProjectGraph()
-        );
-      } catch {
-        const WARNING_PREFIX = `${chalk.reset.keyword('orange')('warning')}`;
-        const RULE_NAME_SUFFIX = `${chalk.reset.dim(
-          '@nrwl/nx/enforce-module-boundaries'
-        )}`;
-        process.stdout
-          .write(`${WARNING_PREFIX} No cached ProjectGraph is available. The rule will be skipped.
-        If you encounter this error as part of running standard \`nx\` commands then please open an issue on https://github.com/nrwl/nx
-        ${RULE_NAME_SUFFIX}\n`);
-      }
-    }
+    const projectGraph = readProjectGraph(RULE_NAME);
 
-    if (!(global as any).projectGraph) {
+    if (!projectGraph) {
       return {};
     }
 
     const workspaceLayout = (global as any).workspaceLayout;
-    const projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
     if (!(global as any).targetProjectLocator) {
       (global as any).targetProjectLocator = new TargetProjectLocator(
@@ -229,16 +204,24 @@ export default createESLintRule<Options, MessageIds>({
       }
 
       // check for relative and absolute imports
-      let targetProject: MappedProjectGraphNode | ProjectGraphExternalNode =
-        getTargetProjectBasedOnRelativeImport(
+      const isAbsoluteImportIntoAnotherProj =
+        isAbsoluteImportIntoAnotherProject(imp, workspaceLayout);
+      let targetProject: ProjectGraphProjectNode | ProjectGraphExternalNode;
+
+      if (isAbsoluteImportIntoAnotherProj) {
+        targetProject = findTargetProject(projectGraph, imp);
+      } else {
+        targetProject = getTargetProjectBasedOnRelativeImport(
           imp,
           projectPath,
           projectGraph,
           sourceFilePath
         );
+      }
+
       if (
         (targetProject && sourceProject !== targetProject) ||
-        isAbsoluteImportIntoAnotherProject(imp, workspaceLayout)
+        isAbsoluteImportIntoAnotherProj
       ) {
         context.report({
           node,
@@ -246,7 +229,7 @@ export default createESLintRule<Options, MessageIds>({
           fix(fixer) {
             if (targetProject) {
               const indexTsPaths = getBarrelEntryPointProjectNode(
-                targetProject as MappedProjectGraphNode
+                targetProject as ProjectGraphProjectNode
               );
 
               if (indexTsPaths && indexTsPaths.length > 0) {
@@ -267,11 +250,13 @@ export default createESLintRule<Options, MessageIds>({
                       entryPointPath.path,
                       sourceProject.data.sourceRoot
                     );
-
-                    importsToRemap.push({
-                      member: importMember,
-                      importPath: importPath ? entryPointPath.importScope : imp, // we cannot remap, so leave it as is
-                    });
+                    // we cannot remap, so leave it as is
+                    if (importPath) {
+                      importsToRemap.push({
+                        member: importMember,
+                        importPath: entryPointPath.importScope,
+                      });
+                    }
                   }
                 }
 
@@ -406,7 +391,7 @@ export default createESLintRule<Options, MessageIds>({
       // check constraints between libs and apps
       // check for circular dependency
       const circularPath = checkCircularPath(
-        (global as any).projectGraph,
+        projectGraph,
         sourceProject,
         targetProject
       );
@@ -510,6 +495,10 @@ export default createESLintRule<Options, MessageIds>({
           return;
         }
 
+        const transitiveExternalDeps = checkNestedExternalImports
+          ? findTransitiveExternalDependencies(projectGraph, targetProject)
+          : [];
+
         for (let constraint of constraints) {
           if (
             constraint.onlyDependOnLibsWithTags &&
@@ -552,6 +541,31 @@ export default createESLintRule<Options, MessageIds>({
                     )
                     .join('\n'),
                 },
+              });
+              return;
+            }
+          }
+          if (
+            checkNestedExternalImports &&
+            constraint.bannedExternalImports &&
+            constraint.bannedExternalImports.length
+          ) {
+            const matches = hasBannedDependencies(
+              transitiveExternalDeps,
+              projectGraph,
+              constraint
+            );
+            if (matches.length > 0) {
+              matches.forEach(([target, violatingSource, constraint]) => {
+                context.report({
+                  node,
+                  messageId: 'bannedExternalImportsViolation',
+                  data: {
+                    sourceTag: constraint.sourceTag,
+                    childProjectName: violatingSource.name,
+                    package: target.data.packageName,
+                  },
+                });
               });
               return;
             }

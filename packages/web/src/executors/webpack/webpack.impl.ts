@@ -14,7 +14,6 @@ import { Range, satisfies } from 'semver';
 import { basename, join } from 'path';
 import {
   calculateProjectDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
@@ -63,6 +62,8 @@ export interface WebWebpackExecutorOptions extends BuildBuilderOptions {
   generateIndexHtml?: boolean;
 
   postcssConfig?: string;
+
+  extractCss?: boolean;
 }
 
 async function getWebpackConfigs(
@@ -188,17 +189,6 @@ export async function* run(
       metadata.root,
       dependencies
     );
-
-    if (
-      !checkDependentProjectsHaveBeenBuilt(
-        context.root,
-        context.projectName,
-        context.targetName,
-        dependencies
-      )
-    ) {
-      throw new Error();
-    }
   }
 
   // Delete output path before bundling

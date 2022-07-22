@@ -37,8 +37,8 @@ type Arguments = {
 enum Preset {
   Apps = 'apps',
   Empty = 'empty', // same as apps, deprecated
-  Core = 'core',
-  NPM = 'npm', // same as core, deprecated
+  Core = 'core', // same as npm, deprecated
+  NPM = 'npm',
   TS = 'ts',
   WebComponents = 'web-components',
   Angular = 'angular',
@@ -58,9 +58,9 @@ const presetOptions: { name: Preset; message: string }[] = [
       'apps              [an empty workspace with no plugins with a layout that works best for building apps]',
   },
   {
-    name: Preset.Core,
+    name: Preset.NPM,
     message:
-      'core              [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]',
+      'npm               [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]',
   },
   {
     name: Preset.TS,
@@ -112,10 +112,9 @@ const presetOptions: { name: Preset; message: string }[] = [
   },
 ];
 
-const tsVersion = 'TYPESCRIPT_VERSION';
-const cliVersion = 'NX_VERSION';
-const nxVersion = 'NX_VERSION';
-const prettierVersion = 'PRETTIER_VERSION';
+const nxVersion = require('../package.json').version;
+const tsVersion = 'TYPESCRIPT_VERSION'; // This gets replaced with the typescript version in the root package.json during build
+const prettierVersion = 'PRETTIER_VERSION'; // This gets replaced with the prettier version in the root package.json during build
 
 export const commandsObject: yargs.Argv<Arguments> = yargs
   .wrap(yargs.terminalWidth())
@@ -161,7 +160,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           type: 'string',
         })
         .option('nxCloud', {
-          describe: chalk.dim`Use Nx Cloud`,
+          describe: chalk.dim`Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
           type: 'boolean',
         })
         .option('ci', {
@@ -221,7 +220,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   } = parsedArgs;
 
   output.log({
-    title: `Nx is creating your v${cliVersion} workspace.`,
+    title: `Nx is creating your v${nxVersion} workspace.`,
     bodyLines: [
       'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
       `Nx will run "${packageManager} install" several times. Please wait.`,
@@ -632,7 +631,7 @@ async function determineNxCloud(
       .prompt([
         {
           name: 'NxCloud',
-          message: `Use Nx Cloud? (It's free and doesn't require registration.)`,
+          message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
           type: 'select',
           choices: [
             {
@@ -714,7 +713,7 @@ async function createSandbox(packageManager: PackageManager) {
       JSON.stringify({
         dependencies: {
           '@nrwl/workspace': nxVersion,
-          nx: cliVersion,
+          nx: nxVersion,
           typescript: tsVersion,
           prettier: prettierVersion,
         },
@@ -722,7 +721,7 @@ async function createSandbox(packageManager: PackageManager) {
       })
     );
 
-    await execAndWait(`${install} --silent`, tmpDir);
+    await execAndWait(`${install} --silent --ignore-scripts`, tmpDir);
 
     installSpinner.succeed();
   } catch (e) {
@@ -797,7 +796,7 @@ async function setupNxCloud(name: string, packageManager: PackageManager) {
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
-      `${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics`,
+      `${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics --installationSource=create-nx-workspace`,
       path.join(process.cwd(), getFileName(name))
     );
     nxCloudSpinner.succeed('NxCloud has been set up successfully');

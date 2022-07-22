@@ -2,14 +2,7 @@ import * as depcheck from 'depcheck';
 
 // Ignore packages that are defined here per package
 const IGNORE_MATCHES = {
-  '*': [
-    'nx',
-    '@nrwl/cli',
-    '@nrwl/workspace',
-    'prettier',
-    'typescript',
-    'dotenv',
-  ],
+  '*': ['nx', '@nrwl/cli', '@nrwl/workspace', 'prettier', 'typescript', 'rxjs'],
   angular: [
     '@angular-devkit/architect',
     '@angular-devkit/build-angular',
@@ -81,8 +74,17 @@ const IGNORE_MATCHES = {
     'babel-jest',
     '@angular-devkit/core',
     '@angular-devkit/schematics',
-    '@swc/jest',
-    'babel-jest',
+    // TODO(caleb): remove when refactoring plugin to use @nrwl/web
+    //  webpack plugins for cypress component testing dev server
+    'babel-loader',
+    'css-loader',
+    'less-loader',
+    'sass',
+    'sass-loader',
+    'style-loader',
+    'stylus-loader',
+    'swc-loader',
+    'tsconfig-paths-webpack-plugin',
   ],
   storybook: [
     '@angular-devkit/architect',
@@ -100,6 +102,7 @@ const IGNORE_MATCHES = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
     '@angular/cli',
+    'ts-node', // We *may* fall back on ts-node, but we want to encourage the use of @swc-node instead so we don't explicitly list ts-node as an optional dep
   ],
   web: [
     // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
@@ -120,7 +123,6 @@ const IGNORE_MATCHES = {
     '@nrwl/jest',
     '@nrwl/linter',
     'tsconfig-paths',
-    '@swc-node/register',
   ],
   nest: ['semver'],
   'make-angular-cli-faster': ['@angular/core'],

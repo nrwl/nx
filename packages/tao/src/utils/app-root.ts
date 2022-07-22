@@ -1,1 +1,1 @@
-export * from 'nx/src/utils/app-root';
+export * from 'nx/src/utils/workspace-root';

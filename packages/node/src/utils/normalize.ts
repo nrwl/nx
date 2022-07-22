@@ -37,6 +37,7 @@ export function normalizeBuildOptions(
       options.additionalEntryPoints ?? []
     ),
     outputFileName: options.outputFileName ?? 'main.js',
+    deleteOutputPath: options.deleteOutputPath ?? true,
   };
 }
 

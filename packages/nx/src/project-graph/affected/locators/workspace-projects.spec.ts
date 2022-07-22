@@ -1,7 +1,13 @@
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from 'nx/src/config/project-graph';
+import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 import { WholeFileChange } from '../../file-utils';
 import {
   getTouchedProjects,
   getImplicitlyTouchedProjects,
+  extractGlobalFilesFromInputs,
 } from './workspace-projects';
 
 function getFileChanges(files: string[]) {
@@ -20,7 +26,9 @@ describe('getTouchedProjects', () => {
       b: { root: 'libs/b' },
       c: { root: 'libs/c' },
     };
-    expect(getTouchedProjects(fileChanges, { projects })).toEqual(['a', 'b']);
+    expect(
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+    ).toEqual(['a', 'b']);
   });
 
   it('should return projects with the root matching a whole directory name in the file path', () => {
@@ -30,7 +38,9 @@ describe('getTouchedProjects', () => {
       abc: { root: 'libs/a-b-c' },
       ab: { root: 'libs/a-b' },
     };
-    expect(getTouchedProjects(fileChanges, { projects })).toEqual(['ab']);
+    expect(
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+    ).toEqual(['ab']);
   });
 
   it('should return projects with the root matching a whole directory name in the file path', () => {
@@ -40,7 +50,9 @@ describe('getTouchedProjects', () => {
       abc: { root: 'libs/a-b-c' },
       ab: { root: 'libs/a-b' },
     };
-    expect(getTouchedProjects(fileChanges, { projects })).toEqual(['ab']);
+    expect(
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+    ).toEqual(['ab']);
   });
 
   it('should return the most qualifying match with the file path', () => {
@@ -49,7 +61,9 @@ describe('getTouchedProjects', () => {
       aaaaa: { root: 'libs/a' },
       ab: { root: 'libs/a/b' },
     };
-    expect(getTouchedProjects(fileChanges, { projects })).toEqual(['ab']);
+    expect(
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+    ).toEqual(['ab']);
   });
 });
 
@@ -133,3 +147,70 @@ describe('getImplicitlyTouchedProjects', () => {
     expect(getImplicitlyTouchedProjects(fileChanges, null, nxJson)).toEqual([]);
   });
 });
+
+describe('extractGlobalFilesFromInputs', () => {
+  it('should return list of global files from nx.json', () => {
+    const globalFiles = extractGlobalFilesFromInputs(
+      {
+        namedInputs: {
+          one: [
+            '{workspaceRoot}/global1.txt',
+            { fileset: '{workspaceRoot}/global2.txt' },
+            '{projectRoot}/local.txt',
+          ],
+        },
+        targetDefaults: {
+          build: {
+            inputs: ['{workspaceRoot}/global3.txt'],
+          },
+        },
+      },
+      {}
+    );
+    expect(globalFiles).toEqual(['global1.txt', 'global2.txt', 'global3.txt']);
+  });
+
+  it('should return list of global files from project configuration', () => {
+    const globalFiles = extractGlobalFilesFromInputs(
+      {},
+      {
+        one: {
+          name: 'one',
+          type: 'lib',
+          data: {
+            namedInputs: {
+              one: [
+                '{workspaceRoot}/global1.txt',
+                { fileset: '{workspaceRoot}/global2.txt' },
+                '{projectRoot}/local.txt',
+              ],
+            },
+            targets: {
+              build: {
+                inputs: ['{workspaceRoot}/global3.txt'],
+              },
+            },
+          },
+        },
+      }
+    );
+    expect(globalFiles).toEqual(['global1.txt', 'global2.txt', 'global3.txt']);
+  });
+});
+
+function buildProjectGraphNodes(
+  projects: Record<string, ProjectConfiguration>
+): ProjectGraph['nodes'] {
+  return Object.fromEntries(
+    Object.entries(projects).map(
+      ([name, config]): [string, ProjectGraphProjectNode] => [
+        name,
+        {
+          data: config,
+          name,
+          type: config.projectType === 'application' ? 'app' : 'lib',
+        },
+      ]
+    )
+  );
+}

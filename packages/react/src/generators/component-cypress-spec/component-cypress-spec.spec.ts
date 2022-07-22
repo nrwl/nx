@@ -1,10 +1,10 @@
 import { Tree } from '@nrwl/devkit';
-import componentCypressSpecGenerator from './component-cypress-spec';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import libraryGenerator from '../library/library';
 import { Linter } from '@nrwl/linter';
-import applicationGenerator from '../application/application';
 import { formatFile } from '../../utils/format-file';
+import applicationGenerator from '../application/application';
+import libraryGenerator from '../library/library';
+import componentCypressSpecGenerator from './component-cypress-spec';
 
 describe('react:component-cypress-spec', () => {
   let appTree: Tree;
@@ -155,6 +155,34 @@ describe('react:component-cypress-spec', () => {
       unitTestRunner: 'none',
       standaloneConfig: false,
     });
+    // since other-e2e isn't a real cypress project we mock the v10 cypress config
+    appTree.write('apps/other-e2e/cypress.config.ts', `export default {}`);
+    await componentCypressSpecGenerator(appTree, {
+      componentPath: `lib/test-ui-lib.tsx`,
+      project: 'test-ui-lib',
+      cypressProject: 'other-e2e',
+    });
+    expect(
+      appTree.exists('apps/other-e2e/src/e2e/test-ui-lib/test-ui-lib.cy.ts')
+    ).toBeTruthy();
+    expect(
+      appTree.exists('apps/test-ui-lib/src/e2e/test-ui-lib/test-ui-lib.cy.ts')
+    ).toBeFalsy();
+  });
+
+  it('should generate a .spec.ts file with cypress.json', async () => {
+    appTree = await createTestUILib('test-ui-lib');
+    await applicationGenerator(appTree, {
+      e2eTestRunner: 'none',
+      linter: Linter.EsLint,
+      name: `other-e2e`,
+      skipFormat: true,
+      style: 'css',
+      unitTestRunner: 'none',
+      standaloneConfig: false,
+    });
+    appTree.delete(`apps/other-e2e/cypress.config.ts`);
+    appTree.write(`apps/other-e2e/cypress.json`, '{}');
     await componentCypressSpecGenerator(appTree, {
       componentPath: `lib/test-ui-lib.tsx`,
       project: 'test-ui-lib',

@@ -12,6 +12,9 @@ import { dirname, isAbsolute } from 'path';
 import { tmpProjPath } from './paths';
 import { parseJson } from '@nrwl/devkit';
 import type { JsonParseOptions } from '@nrwl/devkit';
+import { directoryExists, fileExists } from 'nx/src/utils/fileutils';
+
+export { directoryExists, fileExists };
 
 /**
  * Copies module folders from the working directory to the e2e directory
@@ -137,30 +140,6 @@ export function rmDist(): void {
  */
 export function getCwd(): string {
   return process.cwd();
-}
-
-/**
- * Check if a directory exists
- * @param directoryPath Path to directory
- */
-export function directoryExists(directoryPath: string): boolean {
-  try {
-    return statSync(directoryPath).isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Check if a file exists.
- * @param filePath Path to file
- */
-export function fileExists(filePath: string): boolean {
-  try {
-    return statSync(filePath).isFile();
-  } catch {
-    return false;
-  }
 }
 
 /**

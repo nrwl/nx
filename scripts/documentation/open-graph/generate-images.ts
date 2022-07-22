@@ -5,7 +5,7 @@ import { resolve } from 'path';
 const mapJson = readJSONSync('./docs/map.json', 'utf8');
 
 const documents: any[] = [
-  ...mapJson.find((x) => x.id === 'default')?.['itemList'],
+  ...mapJson.find((x) => x.id === 'nx-documentation')?.['itemList'],
   ...mapJson.find((x) => x.id === 'additional-api-references')?.['itemList'],
 ].filter(Boolean);
 

@@ -23,8 +23,8 @@ describe('Host App Generator', () => {
 
     await applicationGenerator(tree, {
       name: 'remote',
-      mfe: true,
-      mfeType: 'remote',
+      mf: true,
+      mfType: 'remote',
       routing: true,
       port: 4201,
     });

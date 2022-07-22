@@ -1,18 +1,28 @@
 import type { Change, FileChange } from '../file-utils';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { ProjectGraph } from '../../config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
+import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 
 export interface AffectedProjectGraphContext {
-  workspaceJson: any;
-  nxJson: NxJsonConfiguration<string[]>;
+  projectGraphNodes: Record<
+    string,
+    ProjectGraphProjectNode<ProjectConfiguration>
+  >;
+  nxJson: NxJsonConfiguration<any>;
   touchedProjects: string[];
 }
 
 export interface TouchedProjectLocator<T extends Change = Change> {
   (
     fileChanges: FileChange<T>[],
-    workspaceJson?: any,
-    nxJson?: NxJsonConfiguration<string[]>,
+    projectGraphNodes?: Record<
+      string,
+      ProjectGraphProjectNode<ProjectConfiguration>
+    >,
+    nxJson?: NxJsonConfiguration<any>,
     packageJson?: any,
     projectGraph?: ProjectGraph
   ): string[];

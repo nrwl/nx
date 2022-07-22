@@ -1,4 +1,4 @@
-import { workspaceRoot } from '../../utils/app-root';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { openSync, readFileSync } from 'fs';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
@@ -20,6 +20,7 @@ import { ProjectGraph } from '../../config/project-graph';
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
   NX_PROJECT_GLOB_CACHE: 'false',
+  NX_CACHE_WORKSPACE_CONFIG: 'false',
 };
 
 export async function startInBackground(): Promise<ChildProcess['pid']> {

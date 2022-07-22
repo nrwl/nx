@@ -1,6 +1,9 @@
 # Angular Nx Tutorial - Step 11: Testing Affected Projects
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/5t77CPl-bbM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/5t77CPl-bbM"
+title="Nx.dev Tutorial | Angular | Step 11: Test Affected Projects"
+width="100%" /%}
 
 Because Nx understands the project graph of your workspace, Nx is efficient at retesting and rebuilding your projects.
 

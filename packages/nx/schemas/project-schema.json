@@ -4,6 +4,13 @@
   "title": "JSON schema for Nx projects",
   "type": "object",
   "properties": {
+    "namedInputs": {
+      "type": "object",
+      "description": "Named inputs used by inputs defined in targets",
+      "additionalProperties": {
+        "$ref": "#/definitions/inputs"
+      }
+    },
     "targets": {
       "type": "object",
       "description": "Configures all the targets which define what tasks you can run against the project",
@@ -30,23 +37,39 @@
               "type": "object"
             }
           },
+          "inputs": {
+            "$ref": "#/definitions/inputs"
+          },
           "dependsOn": {
             "type": "array",
-            "description": "Target dependency.",
             "items": {
-              "type": "object",
-              "properties": {
-                "projects": {
-                  "type": "string",
-                  "description": "The projects that the targets belong to.",
-                  "enum": ["self", "dependencies"]
+              "oneOf": [
+                {
+                  "type": "string"
                 },
-                "target": {
-                  "type": "string",
-                  "description": "The name of the target."
+                {
+                  "type": "object",
+                  "properties": {
+                    "projects": {
+                      "type": "string",
+                      "description": "The projects that the targets belong to.",
+                      "enum": ["self", "dependencies"]
+                    },
+                    "target": {
+                      "type": "string",
+                      "description": "The name of the target."
+                    },
+                    "params": {
+                      "type": "string",
+                      "description": "Configuration for params handling.",
+                      "enum": ["ignore", "forward"],
+                      "default": "ignore"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["projects", "target"]
                 }
-              },
-              "additionalProperties": false
+              ]
             }
           }
         }
@@ -62,6 +85,63 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    }
+  },
+  "definitions": {
+    "inputs": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "fileset": {
+                "type": "string",
+                "description": "A glob used to determine a fileset."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "type": "string",
+                "description": "The projects that the input belong to.",
+                "enum": ["self", "dependencies"]
+              },
+              "input": {
+                "type": "string",
+                "description": "Named input."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "runtime": {
+                "type": "string",
+                "description": "The command that will be executed and included into the hash."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "env": {
+                "type": "string",
+                "description": "The env var that will be included into the hash."
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
       }
     }
   }

@@ -9,7 +9,6 @@ import {
   getCommands,
   parseCommand,
   ParsedCommand,
-  sortAlphabeticallyFunction,
 } from './utils';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
 import { examples } from '../../packages/nx/src/command-line/examples';
@@ -17,15 +16,7 @@ import { dedent } from 'tslint/lib/utils';
 
 const importFresh = require('import-fresh');
 
-const sharedCommands = [
-  'build',
-  'e2e',
-  'generate',
-  'lint',
-  'run',
-  'serve',
-  'test',
-];
+const sharedCommands = ['generate', 'run'];
 
 export async function generateCLIDocumentation(
   commandsOutputDirectory: string
@@ -56,7 +47,7 @@ description: "${command.description}"
 ---
 # ${command.name}
 
-${command.description}
+${dedent`${formatDeprecated(command.description, command.deprecated)}`}
 
 ## Usage
 

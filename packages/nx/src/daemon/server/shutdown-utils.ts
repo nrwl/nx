@@ -1,4 +1,4 @@
-import { workspaceRoot } from '../../utils/app-root';
+import { workspaceRoot } from '../../utils/workspace-root';
 import type { Server } from 'net';
 import { serverLogger } from './logger';
 import type { WatcherSubscription } from './watcher';

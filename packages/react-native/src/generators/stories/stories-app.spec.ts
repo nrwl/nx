@@ -61,6 +61,7 @@ export async function createTestUIApp(libName: string): Promise<Tree> {
     style: 'css',
     unitTestRunner: 'none',
     name: libName,
+    install: false,
   });
   return appTree;
 }

@@ -14,7 +14,7 @@ This project was generated using [Nx](https://nx.dev).
 
 [10-minute video showing all Nx features](https://nx.dev/getting-started/intro)
 
-[Interactive Tutorial](https://nx.dev/tutorial/01-create-application)
+[Interactive Tutorial](https://nx.dev/react-tutorial/01-create-application)
 
 ## Adding capabilities to your workspace
 

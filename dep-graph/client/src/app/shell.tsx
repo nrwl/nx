@@ -4,6 +4,8 @@ import classNames from 'classnames';
 // nx-ignore-next-line
 import type { DepGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'use-sync-external-store/shim';
+
 import DebuggerPanel from './debugger-panel';
 import { useDepGraphService } from './hooks/use-dep-graph';
 import { useDepGraphSelector } from './hooks/use-dep-graph-selector';
@@ -17,9 +19,19 @@ import {
 } from './machines/selectors';
 import Sidebar from './sidebar/sidebar';
 import { selectValueByThemeStatic } from './theme-resolver';
+import { getTooltipService } from './tooltip-service';
+import ProjectNodeToolTip from './project-node-tooltip';
+import EdgeNodeTooltip from './edge-tooltip';
+
+const tooltipService = getTooltipService();
 
 export function Shell() {
   const depGraphService = useDepGraphService();
+
+  const currentTooltip = useSyncExternalStore(
+    (callback) => tooltipService.subscribe(callback),
+    () => tooltipService.currentTooltip
+  );
 
   const projectGraphService = useProjectGraphDataService();
   const environment = useEnvironmentConfig();
@@ -124,6 +136,26 @@ export function Shell() {
         ) : null}
         <div id="graph-container">
           <div id="cytoscape-graph"></div>
+          {currentTooltip ? (
+            <Tippy
+              content={
+                currentTooltip.type === 'node' ? (
+                  <ProjectNodeToolTip
+                    {...currentTooltip.props}
+                  ></ProjectNodeToolTip>
+                ) : (
+                  <EdgeNodeTooltip {...currentTooltip.props}></EdgeNodeTooltip>
+                )
+              }
+              visible={true}
+              getReferenceClientRect={currentTooltip.ref.getBoundingClientRect}
+              theme={selectValueByThemeStatic('dark-nx', 'nx')}
+              interactive={true}
+              appendTo={document.body}
+              maxWidth="none"
+            ></Tippy>
+          ) : null}
+
           <Tippy
             content="Download Graph as PNG"
             placement="right"

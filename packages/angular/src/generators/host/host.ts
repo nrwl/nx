@@ -31,8 +31,8 @@ export default async function host(tree: Tree, options: Schema) {
 
   const installTask = await applicationGenerator(tree, {
     ...options,
-    mfe: true,
-    mfeType: 'host',
+    mf: true,
+    mfType: 'host',
     routing: true,
     remotes: remotesToIntegrate ?? [],
     port: 4200,

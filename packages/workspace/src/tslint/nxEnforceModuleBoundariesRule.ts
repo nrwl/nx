@@ -4,8 +4,13 @@ import * as ts from 'typescript';
 import type {
   NxJsonConfiguration,
   ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
 } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import {
+  workspaceRoot,
+  readNxJson,
+  readCachedProjectGraph,
+} from '@nrwl/devkit';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -22,7 +27,6 @@ import {
   onlyLoadChildren,
   stringifyTags,
   hasNoneOfTheseTags,
-  MappedProjectGraphNode,
   isAngularSecondaryEntrypoint,
 } from '../utils/runtime-lint-utils';
 import { normalize } from 'path';
@@ -32,7 +36,6 @@ import {
   findFilesInCircularPath,
 } from '../utils/graph-utils';
 import { isRelativePath } from '../utilities/fileutils';
-import { readNxJson, readCachedProjectGraph } from '@nrwl/devkit';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
@@ -139,7 +142,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       super.visitImportDeclaration(node);
       return;
     }
-    let targetProject: MappedProjectGraphNode | ProjectGraphExternalNode =
+    let targetProject: ProjectGraphProjectNode | ProjectGraphExternalNode =
       getTargetProjectBasedOnRelativeImport(
         imp,
         this.projectPath,

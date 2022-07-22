@@ -1,6 +1,6 @@
 export * from './add-e2e';
 export * from './add-linting';
-export * from './add-mfe';
+export * from './add-mf';
 export * from './add-protractor';
 export * from './add-proxy-config';
 export * from './add-unit-test-runner';
@@ -12,6 +12,7 @@ export * from './nrwl-home-tpl';
 export * from './remove-scaffolded-e2e';
 export * from './root-router-config';
 export * from './set-app-strict-default';
+export * from './set-default-project';
 export * from './update-component-spec';
 export * from './update-app-component-template';
 export * from './update-nx-component-template';

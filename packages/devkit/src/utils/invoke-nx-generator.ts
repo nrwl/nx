@@ -7,7 +7,8 @@ import type {
 import { toNewFormat, toOldFormatOrNull } from 'nx/src/config/workspaces';
 import { Generator, GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import { parseJson, serializeJson } from 'nx/src/utils/json';
-import { join, relative, dirname } from 'path';
+import { join, relative } from 'path';
+import type { Mode } from 'fs';
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}
@@ -214,14 +215,11 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
     }
   }
 
-  changePermissions(filePath: string, mode: string | number): void {
+  changePermissions(filePath: string, mode: Mode): void {
     this.warnUnsupportedFilePermissionsChange(filePath, mode);
   }
 
-  private warnUnsupportedFilePermissionsChange(
-    filePath: string,
-    mode: string | number
-  ) {
+  private warnUnsupportedFilePermissionsChange(filePath: string, mode: Mode) {
     logger.warn(
       stripIndent(`The Angular DevKit tree does not support changing a file permissions.
                   Ignoring changing ${filePath} permissions to ${mode}.`)

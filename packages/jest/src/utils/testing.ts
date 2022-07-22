@@ -12,7 +12,7 @@ const migrationTestRunner = new SchematicTestRunner(
   join(__dirname, '../../migrations.json')
 );
 
-export function runSchematic<T = any>(
+export function runSchematic<T extends object = any>(
   schematicName: string,
   options: T,
   tree: Tree
@@ -26,9 +26,9 @@ export function callRule(rule: Rule, tree: Tree) {
   return testRunner.callRule(rule, tree).toPromise();
 }
 
-export function runMigration(
+export function runMigration<T extends object = any>(
   migrationName: string,
-  options: unknown,
+  options: T,
   tree: Tree
 ) {
   return migrationTestRunner

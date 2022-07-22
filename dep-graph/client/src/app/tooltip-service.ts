@@ -1,30 +1,48 @@
 import { VirtualElement } from '@popperjs/core';
-import * as ReactDOM from 'react-dom';
-import tippy, { hideAll, Instance } from 'tippy.js';
-import { selectValueByThemeStatic } from './theme-resolver';
+import { ProjectNodeToolTipProps } from './project-node-tooltip';
+import { EdgeNodeTooltipProps } from './edge-tooltip';
 
 export class GraphTooltipService {
-  open(ref: VirtualElement, tooltipContent: JSX.Element): Instance {
-    const tempDiv = document.createElement('div');
+  private subscribers: Set<Function> = new Set();
 
-    ReactDOM.render(tooltipContent, tempDiv);
+  currentTooltip:
+    | { ref: VirtualElement; type: 'node'; props: ProjectNodeToolTipProps }
+    | { ref: VirtualElement; type: 'edge'; props: EdgeNodeTooltipProps };
 
-    let instance = tippy(document.createElement('div'), {
-      trigger: 'manual',
-      theme: selectValueByThemeStatic('dark-nx', 'nx'),
-      interactive: true,
-      appendTo: document.body,
-      content: tempDiv,
-      getReferenceClientRect: ref.getBoundingClientRect,
-      maxWidth: 'none',
-    });
+  openProjectNodeToolTip(ref: VirtualElement, props: ProjectNodeToolTipProps) {
+    this.currentTooltip = { type: 'node', ref, props };
+    this.broadcastChange();
+  }
 
-    instance.show();
+  openEdgeToolTip(ref: VirtualElement, props: EdgeNodeTooltipProps) {
+    this.currentTooltip = { type: 'edge', ref, props };
+    this.broadcastChange();
+  }
 
-    return instance;
+  broadcastChange() {
+    this.subscribers.forEach((subscriber) => subscriber(this.currentTooltip));
+  }
+
+  subscribe(callback: Function) {
+    this.subscribers.add(callback);
+
+    return () => {
+      this.subscribers.delete(callback);
+    };
   }
 
   hideAll() {
-    hideAll();
+    this.currentTooltip = null;
+    this.broadcastChange();
   }
+}
+
+let tooltipService: GraphTooltipService;
+
+export function getTooltipService(): GraphTooltipService {
+  if (!tooltipService) {
+    tooltipService = new GraphTooltipService();
+  }
+
+  return tooltipService;
 }

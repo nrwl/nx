@@ -2,8 +2,8 @@
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxPluginExecutor",
-  "title": "Create a Executor for an Nx Plugin",
-  "description": "Create a Executor for an Nx Plugin.",
+  "title": "Create an Executor for an Nx Plugin",
+  "description": "Create an Executor for an Nx Plugin.",
   "type": "object",
   "examples": [
     {

@@ -22,7 +22,8 @@ By default, Nx will load any environment variables you place in the following fi
 5. `.env.local`
 6. `.env`
 
-**Note:** Order is important. Nx will move through the above list, ignoring files it can't find, and loading environment variables
+{% callout type="warning" title="Order is important" %}
+Nx will move through the above list, ignoring files it can't find, and loading environment variables
 into the current process for the ones it can find. If it finds a variable that has already been loaded into the process,
 it will ignore it. It does this for two reasons:
 
@@ -39,6 +40,7 @@ For example:
 
 We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files
 for workspace-specific settings (like the [Nx Cloud token](/using-nx/caching#distributed-computation-caching)).
+{% /callout %}
 
 ### Pointing to custom env files
 
@@ -257,8 +259,9 @@ For example in `project.json` (or `angular.json`),
 }
 ```
 
-> You can also customize your webpack configuration, similar to using `DefinePlugin` above. This approach will require
-> post-processing the `index.html` file, and is out of scope for this guide.
+{% callout type="note" title="Optimize" %}
+You can also customize your webpack configuration, similar to using `DefinePlugin` above. This approach will require post-processing the `index.html` file, and is out of scope for this guide.
+{% /callout %}
 
 ## Summary
 

@@ -1,4 +1,5 @@
 import {
+  formatFiles,
   joinPathFragments,
   readProjectConfiguration,
   Tree,
@@ -9,7 +10,9 @@ import { SwcExecutorOptions } from '../../utils/schema';
 
 type OldSwcExecutorOptions = SwcExecutorOptions & { swcrcPath?: string };
 
-export function updateSwcrcPath(tree: Tree) {
+export async function updateSwcrcPath(tree: Tree) {
+  let changesMade = false;
+
   forEachExecutorOptions(
     tree,
     '@nrwl/js:swc',
@@ -30,8 +33,14 @@ export function updateSwcrcPath(tree: Tree) {
       executorOptions.swcrc = newSwcrcPath;
 
       updateProjectConfiguration(tree, projectName, projectConfig);
+
+      changesMade = true;
     }
   );
+
+  if (changesMade) {
+    await formatFiles(tree);
+  }
 }
 
 export default updateSwcrcPath;

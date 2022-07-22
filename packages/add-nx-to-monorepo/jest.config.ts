@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   displayName: 'add-nx-to-monorepo',
 
   globals: {
@@ -11,5 +11,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/projects/add-nx-to-monorepo',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.js',
 };

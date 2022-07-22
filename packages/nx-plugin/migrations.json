@@ -14,6 +14,18 @@
       "version": "11.0.17",
       "description": "Update schema versions for executors and generators",
       "factory": "./src/migrations/update-11-0-0/update-schema-version-for-executors-and-generators"
+    },
+    "add-swc-deps": {
+      "cli": "nx",
+      "version": "14.1.9-beta.0",
+      "description": "Adds @swc/core and @swc-node as a dev dep if you are using them",
+      "factory": "./src/migrations/update-14-1-9/add-swc-deps-if-needed"
+    },
+    "add-swc-deps-again": {
+      "cli": "nx",
+      "version": "14.2.3-beta.0",
+      "description": "Adds @swc/core and @swc-node as a dev dep if you are using them (repeated due to bad version on earlier migration)",
+      "factory": "./src/migrations/update-14-1-9/add-swc-deps-if-needed"
     }
   }
 }

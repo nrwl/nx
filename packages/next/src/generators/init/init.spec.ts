@@ -18,14 +18,6 @@ describe('init', () => {
     expect(packageJson.dependencies['next']).toBeDefined();
   });
 
-  describe('defaultCollection', () => {
-    it('should be set if none was set before', async () => {
-      await nextInitGenerator(tree, {});
-      const { cli } = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(cli.defaultCollection).toEqual('@nrwl/next');
-    });
-  });
-
   it('should not add jest config if unitTestRunner is none', async () => {
     await nextInitGenerator(tree, { unitTestRunner: 'none' });
     expect(tree.exists('jest.config.js')).toEqual(false);

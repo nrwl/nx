@@ -343,10 +343,13 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       this.logger.warn(
         `The "${this.targetNames.build}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
       );
-    } else if (!this.tree.exists(buildDevTsConfig)) {
-      this.logger.warn(
-        `The tsConfig file "${buildDevTsConfig}" specified in the "${this.targetNames.build}" target could not be found. Skipping updating the tsConfig file.`
-      );
+    } else {
+      const newBuildDevTsConfig = this.convertPath(buildDevTsConfig);
+      if (!this.tree.exists(newBuildDevTsConfig)) {
+        this.logger.warn(
+          `The tsConfig file "${buildDevTsConfig}" specified in the "${this.targetNames.build}" target could not be found. Skipping updating the tsConfig file.`
+        );
+      }
     }
 
     this.convertBuildOptions(buildTarget.options ?? {});
@@ -467,10 +470,13 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       this.logger.warn(
         `The "${this.targetNames.server}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
       );
-    } else if (!this.tree.exists(serverDevTsConfig)) {
-      this.logger.warn(
-        `The tsConfig file "${serverDevTsConfig}" specified in the "${this.targetNames.server}" target could not be found. Skipping updating the tsConfig file.`
-      );
+    } else {
+      const newServerDevTsConfig = this.convertPath(serverDevTsConfig);
+      if (!this.tree.exists(newServerDevTsConfig)) {
+        this.logger.warn(
+          `The tsConfig file "${serverDevTsConfig}" specified in the "${this.targetNames.server}" target could not be found. Skipping updating the tsConfig file.`
+        );
+      }
     }
 
     this.convertServerOptions(serverTarget.options ?? {});
@@ -534,10 +540,13 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       this.logger.warn(
         `The "${this.targetNames.test}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
       );
-    } else if (!this.tree.exists(testOptions.tsConfig)) {
-      this.logger.warn(
-        `The tsConfig file "${testOptions.tsConfig}" specified in the "${this.targetNames.test}" target could not be found. Skipping updating the tsConfig file.`
-      );
+    } else {
+      const newTestTsConfig = this.convertPath(testOptions.tsConfig);
+      if (!this.tree.exists(newTestTsConfig)) {
+        this.logger.warn(
+          `The tsConfig file "${testOptions.tsConfig}" specified in the "${this.targetNames.test}" target could not be found. Skipping updating the tsConfig file.`
+        );
+      }
     }
 
     testOptions.main = testOptions.main && this.convertAsset(testOptions.main);

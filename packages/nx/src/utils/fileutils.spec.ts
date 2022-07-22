@@ -1,32 +1,10 @@
-import { fs, vol } from 'memfs';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { fs } from 'memfs';
 import { createDirectory, isRelativePath } from './fileutils';
 
-jest.mock('fs', () => require('memfs').fs);
+jest.mock('fs', () => fs);
 
 describe('fileutils', () => {
-  beforeEach(() => {
-    vol.fromJSON(
-      {
-        './README.md': 'hello',
-        './.nxignore': stripIndents`
-          apps/demo/tmp.txt
-          tmp/
-        `,
-        './.gitignore': stripIndents`
-          *.js
-          node_modules/
-        `,
-        './apps/demo/src/index.ts': 'console.log("hello");',
-        './apps/demo/tmp.txt': '...',
-        './apps/demo/tmp.js': 'console.log("tmp")',
-        './workspace.json': '{}',
-      },
-      '/root'
-    );
-  });
-
-  describe('createDirectory', () => {
+  describe(createDirectory.name, () => {
     it('should recursively create the directory', () => {
       createDirectory('/root/b/c');
       expect(fs.statSync('/root').isDirectory()).toBe(true);
@@ -35,7 +13,7 @@ describe('fileutils', () => {
     });
   });
 
-  describe('isRelativePath()', () => {
+  describe(isRelativePath.name, () => {
     it('should return true for deeper imports', () => {
       expect(isRelativePath('.')).toEqual(true);
       expect(isRelativePath('./file')).toEqual(true);

@@ -1,2 +1,2 @@
-export { withModuleFederation } from '../src/utils/mfe/with-module-federation';
-export * from '../src/utils/mfe/mfe-webpack';
+export { withModuleFederation } from '../src/utils/mf/with-module-federation';
+export * from '../src/utils/mf/mf-webpack';

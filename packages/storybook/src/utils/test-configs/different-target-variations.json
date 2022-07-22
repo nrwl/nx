@@ -1,0 +1,235 @@
+{
+  "web": {
+    "build": {
+      "executor": "@nrwl/next:build",
+      "options": {
+        "root": "apps/web",
+        "outputPath": "dist/apps/web"
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/next:server",
+      "options": {
+        "buildTarget": "web:build",
+        "dev": true
+      }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "port": 4400,
+        "config": {
+          "configFolder": "apps/web/.storybook"
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "uiFramework": "@storybook/react",
+        "outputPath": "dist/storybook/web",
+        "config": {
+          "configFolder": "apps/web/.storybook"
+        }
+      }
+    }
+  },
+  "react": {
+    "build": {
+      "executor": "@nrwl/web:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "compiler": "babel",
+        "outputPath": "dist/apps/reapp"
+      }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "port": 4400,
+        "config": {
+          "configFolder": "apps/reapp/.storybook"
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "uiFramework": "@storybook/react",
+        "outputPath": "dist/storybook/reapp",
+        "config": {
+          "configFolder": "apps/reapp/.storybook"
+        }
+      }
+    }
+  },
+  "nextlib": {
+    "build": {
+      "executor": "@nrwl/web:rollup",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/next-lib-buildable",
+        "tsConfig": "libs/next-lib-buildable/tsconfig.lib.json",
+        "project": "libs/next-lib-buildable/package.json",
+        "entryFile": "libs/next-lib-buildable/src/index.ts",
+        "external": ["react/jsx-runtime"],
+        "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+        "compiler": "babel"
+      }
+    }
+  },
+  "nextapp": {
+    "build": {
+      "executor": "@nrwl/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "root": "apps/nextapp",
+        "outputPath": "dist/apps/nextapp"
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "nextapp:build",
+        "dev": true
+      }
+    }
+  },
+  "ngapp": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/ngapp",
+        "index": "apps/ngapp/src/index.html",
+        "main": "apps/ngapp/src/main.ts",
+        "polyfills": "apps/ngapp/src/polyfills.ts",
+        "tsConfig": "apps/ngapp/tsconfig.app.json",
+        "assets": ["apps/ngapp/src/favicon.ico", "apps/ngapp/src/assets"],
+        "styles": ["apps/ngapp/src/styles.css"],
+        "scripts": []
+      },
+
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "browserTarget": "ngapp:build:production"
+        },
+        "development": {
+          "browserTarget": "ngapp:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+
+    "storybook": {
+      "executor": "@storybook/angular:start-storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "apps/ngapp/.storybook",
+        "browserTarget": "ngapp:build",
+        "compodoc": false
+      }
+    },
+    "build-storybook": {
+      "executor": "@storybook/angular:build-storybook",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputDir": "dist/storybook/ngapp",
+        "configDir": "apps/ngapp/.storybook",
+        "browserTarget": "ngapp:build",
+        "compodoc": false
+      }
+    }
+  },
+  "nglib": {
+    "build": {
+      "executor": "@nrwl/angular:ng-packagr-lite",
+      "outputs": ["dist/libs/nglibuild"],
+      "options": {
+        "project": "libs/nglibuild/ng-package.json"
+      },
+      "defaultConfiguration": "production"
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/nglibuild/**/*.ts",
+          "libs/nglibuild/**/*.html"
+        ]
+      }
+    }
+  },
+  "react-swc": {
+    "build": {
+      "executor": "@nrwl/web:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "compiler": "swc",
+        "outputPath": "dist/apps/reapp"
+      }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "port": 4400,
+        "config": {
+          "configFolder": "apps/reapp/.storybook"
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "uiFramework": "@storybook/react",
+        "outputPath": "dist/storybook/reapp",
+        "config": {
+          "configFolder": "apps/reapp/.storybook"
+        }
+      }
+    }
+  },
+  "nextapp-swc": {
+    "build": {
+      "executor": "@nrwl/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "compiler": "swc",
+        "root": "apps/nextapp",
+        "outputPath": "dist/apps/nextapp"
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "nextapp:build",
+        "dev": true
+      }
+    }
+  },
+  "other": {
+    "build": {
+      "executor": "@my/custom:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "compiler": "swc"
+      }
+    }
+  }
+}

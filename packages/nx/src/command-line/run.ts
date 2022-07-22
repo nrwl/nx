@@ -17,9 +17,15 @@ import {
 import {
   ProjectConfiguration,
   TargetConfiguration,
-  WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { Executor, ExecutorContext } from '../config/misc-interfaces';
+import { serializeOverridesIntoCommandLine } from 'nx/src/utils/serialize-overrides-into-command-line';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
+import { ProjectGraph } from '../config/project-graph';
 
 export interface Target {
   project: string;
@@ -39,7 +45,7 @@ export function printRunHelp(
 }
 
 export function validateProject(
-  workspace: WorkspaceJsonConfiguration,
+  workspace: ProjectsConfigurations,
   projectName: string
 ) {
   const project = workspace.projects[projectName];
@@ -123,10 +129,10 @@ async function runExecutorInternal<T extends { success: boolean }>(
     target: string;
     configuration?: string;
   },
-  options: { [k: string]: any },
+  overrides: { [k: string]: any },
   root: string,
   cwd: string,
-  workspace: WorkspaceJsonConfiguration & NxJsonConfiguration,
+  workspace: ProjectsConfigurations & NxJsonConfiguration,
   isVerbose: boolean,
   printHelp: boolean
 ): Promise<AsyncIterableIterator<T>> {
@@ -164,7 +170,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   }
 
   const combinedOptions = combineOptionsForExecutor(
-    options,
+    overrides,
     configuration,
     targetConfig,
     schema,
@@ -209,7 +215,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       },
       isVerbose
     );
-    const { eachValueFrom } = require('rxjs-for-await');
+    const { eachValueFrom } = await import('../adapter/rxjs-for-await');
     return eachValueFrom(observable as any);
   }
 }
@@ -245,12 +251,15 @@ export async function runExecutor<T extends { success: boolean }>(
     target: string;
     configuration?: string;
   },
-  options: { [k: string]: any },
+  overrides: { [k: string]: any },
   context: ExecutorContext
 ): Promise<AsyncIterableIterator<T>> {
   return await runExecutorInternal<T>(
     targetDescription,
-    options,
+    {
+      ...overrides,
+      __overrides_unparsed__: serializeOverridesIntoCommandLine(overrides),
+    },
     context.root,
     context.cwd,
     context.workspace,
@@ -269,11 +278,12 @@ export async function run(
   },
   overrides: { [k: string]: any },
   isVerbose: boolean,
-  isHelp: boolean
+  isHelp: boolean,
+  projectGraph?: ProjectGraph
 ) {
-  const ws = new Workspaces(root);
+  projectGraph ??= await createProjectGraphAsync();
   return handleErrors(isVerbose, async () => {
-    const workspace = ws.readWorkspaceConfiguration();
+    const workspace = readProjectsConfigurationFromProjectGraph(projectGraph);
     return iteratorToProcessStatusCode(
       await runExecutorInternal(
         targetDescription,

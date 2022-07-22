@@ -5,9 +5,12 @@ import {
 } from '@nrwl/workspace/src/utilities/assets';
 import { join, resolve } from 'path';
 import { checkDependencies } from '../../utils/check-dependencies';
+import {
+  getHelperDependency,
+  HelperDependency,
+} from '../../utils/compiler-helper-dependency';
 import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
-import { addTslibDependencyIfNeeded } from '../../utils/tslib-dependency';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
 import { updatePackageJson } from '../../utils/update-package-json';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
@@ -61,7 +64,15 @@ export async function* tscExecutor(
     options.tsConfig = tmpTsConfig;
   }
 
-  addTslibDependencyIfNeeded(options, context, dependencies);
+  const tsLibDependency = getHelperDependency(
+    HelperDependency.tsc,
+    options.tsConfig,
+    dependencies
+  );
+
+  if (tsLibDependency) {
+    dependencies.push(tsLibDependency);
+  }
 
   const assetHandler = new CopyAssetsHandler({
     projectDir: projectRoot,

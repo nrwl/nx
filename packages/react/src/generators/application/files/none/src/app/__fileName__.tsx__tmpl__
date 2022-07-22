@@ -5,7 +5,7 @@ import NxWelcome from "./nx-welcome";
 
 <% if (classComponent) { %>
 export class App extends Component {
-  render() {
+  override render() {
 <% } else { %>
 export function App() {
 <% } %>

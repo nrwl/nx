@@ -1,16 +1,45 @@
-# Using Tailwind CSS in React
+# Using Tailwind CSS in React and Next.js
 
-This guide serves as a quickstart to installing [Tailwind CSS](https://tailwindcss.com) in your Web/React/Next.js app.
+This guide serves as a quickstart to installing [Tailwind CSS](https://tailwindcss.com) in your React and Next.js app.
 
 For more in-depth look on this topic, be sure to check out our blog post on [Setting up Next.js to use Tailwind with Nx](https://blog.nrwl.io/setup-next-js-to-use-tailwind-with-nx-849b7e21d8d0).
 
-## Step 1: Install Tailwind Dependencies
+## Automated Setup
 
-`npm install tailwindcss@latest postcss@latest autoprefixer@latest`
+The easiest way to set up Tailwind is using the `@nrwl/react:setup-tailwind` generator.
+
+```bash
+nx g @nrwl/react:setup-tailwind --project=<your app here>
+```
+
+This generator will install the necessary dependencies and add `postcss.config.js` and `tailwind.config.js` files.
+
+You will now be able to use Tailwind class names and utilities in your app. For example,
+
+```jsx
+function Hello() {
+  return <div className="bg-indigo-500 p-2 font-mono">Hello!</div>;
+}
+```
+
+If you are having issues with the generator, or want to perform the steps manually, then follow the instructions in the next section.
+
+## Manual Setup Instructions
+
+These manual steps are not required if you use the generator from the previous section.
+
+### Step 1: Install Tailwind Dependencies
+
+```bash
+npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
+
+# or with yarn
+yarn add -D tailwindcss@latest postcss@latest autoprefixer@latest
+```
 
 This installs the requisite tailwind dependencies.
 
-## Step 2: Initialize Tailwind
+### Step 2: Initialize Tailwind
 
 The simplest way to initialize Tailwind is to use their CLI.
 
@@ -21,7 +50,7 @@ npx tailwindcss init -p
 
 This creates the required files with a general boilerplate implementation.
 
-### Pointing PostCSS to Tailwind Config
+#### Pointing PostCSS to Tailwind Config
 
 Next, adjust the `postcss.config.js` as follows:
 
@@ -38,7 +67,7 @@ module.exports = {
 };
 ```
 
-### Introducing Nx Utility for Better Tailwind Purging
+#### Introducing Nx Utility for Better Tailwind Purging
 
 One of the advantages of Tailwind is that it post-processes your CSS removing (also called "purging") all the parts that are not being used. In order to configure which file should be processed, the `tailwind.config.js` has a `content` property (formerly called `purge` in v2). You can find more details on Tailwind's [official documentation](https://tailwindcss.com/docs/content-configuration#configuring-source-paths).
 
@@ -55,7 +84,10 @@ const { join } = require('path');
 
 module.exports = {
   content: [
-    join(__dirname, 'src/**/*!(*.stories|*.spec).{ts,tsx,html}'),
+    join(
+      __dirname,
+      '{src,pages,components}/**/*!(*.stories|*.spec).{ts,tsx,html}'
+    ),
     ...createGlobPatternsForDependencies(__dirname),
   ],
   theme: {
@@ -74,9 +106,7 @@ In the above, you are invoking the `createGlobPatternsForDependencies` utility f
 ];
 ```
 
-_NOTE:_ To ensure proper purging for custom configurations, be sure that the `NODE_ENV` environment variable is set to `production`. By default, Nx only purges on prod build (for example: `nx build --prod`).
-
-## Step 3: Import Tailwind CSS Styles
+### Step 3: Import Tailwind CSS Styles
 
 Next, import tailwind styles to the application's base `styles.css` or `styles.scss` file. This can be done by adding the following lines:
 
@@ -85,3 +115,31 @@ Next, import tailwind styles to the application's base `styles.css` or `styles.s
 @tailwind base;
 @tailwind utilities;
 ```
+
+### Step 4: Applying configuration to libraries
+
+Lastly, let's update the application's project configuration to point to the `postcss.config.js` file that we created in [step 2](#step-2:-initialize-tailwind).
+
+Open up the `apps/{your app here}/project.json` file and add the following to the build target.
+
+```json lines
+{
+  // ...
+  "targets": {
+    "build": {
+      "executor": "@nrwl/web:webpack",
+      "options": {
+        // ...
+        "postcssConfig": "apps/{your app here}/postcss.config.js"
+      }
+    }
+  }
+  // ...
+}
+```
+
+By specifying the `postcssConfig` option, the PostCSS and Tailwind configuration will be applied to all libraries used by the application as well.
+
+{% callout type="note" title="Using library-specific configuration files" %}
+If your libraries have their own `postcss.config.js` and `tailwind.config.js` files then you should not use the `postcssConfig` option. Doing so will ignore the library-specific configuration and apply the application's configuration to everything.
+{%/ callout %}

@@ -1,24 +1,19 @@
 import { ChipIcon, CogIcon } from '@heroicons/react/solid';
-import { Menu } from '@nrwl/nx-dev/models-menu';
 import { PackageMetadata } from '@nrwl/nx-dev/models-package';
-import { Sidebar } from '@nrwl/nx-dev/ui-common';
+import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import cx from 'classnames';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ReactComponentElement } from 'react';
+import React, { ReactComponentElement, ReactNode } from 'react';
+import { Breadcrumbs } from '@nrwl/nx-dev/ui-common';
 import { getPublicPackageName } from './get-public-package-name';
 import { Heading1, Heading2 } from './ui/headings';
-import { Markdown } from './ui/markdown/markdown';
 
 export function PackageSchemaList({
   pkg,
-  menu,
-  navIsOpen,
 }: {
   pkg: PackageMetadata;
-  menu: Menu;
-  navIsOpen?: boolean;
 }): ReactComponentElement<any> {
   const router = useRouter();
 
@@ -30,6 +25,7 @@ export function PackageSchemaList({
       readme: { content: string; filePath: string };
     };
     seo: { title: string; description: string; url: string; imageUrl: string };
+    markdown: ReactNode;
   } = {
     pkg: {
       name: getPublicPackageName(pkg.name),
@@ -52,6 +48,13 @@ export function PackageSchemaList({
         .replace('/', '')
         .replace(/\//gi, '-')}.jpg`,
       url: 'https://nx.dev' + router.asPath,
+    },
+    get markdown(): ReactNode {
+      return renderMarkdown({
+        content: this.pkg.readme.content,
+        filePath: this.pkg.readme.filePath,
+        data: {},
+      });
     },
   };
 
@@ -78,18 +81,23 @@ export function PackageSchemaList({
       />
       <div className="mx-auto w-full max-w-screen-lg">
         <div className="lg:flex">
-          <Sidebar menu={menu} navIsOpen={navIsOpen} />
           <div
             id="content-wrapper"
             className={cx(
-              'w-full min-w-0 flex-auto flex-col pt-16 md:pl-4 lg:static lg:max-h-full lg:overflow-visible',
-              navIsOpen && 'fixed max-h-screen overflow-hidden'
+              'w-full min-w-0 flex-auto flex-col pt-16 md:pl-4 lg:static lg:max-h-full lg:overflow-visible'
             )}
           >
-            <div className="min-w-0 flex-auto px-4 pt-8 pb-24 sm:px-6 lg:pb-16 xl:px-8">
+            <div className="min-w-0 flex-auto px-4 pb-24 sm:px-6 lg:pb-16 xl:px-8">
+              <div className="mb-12 block w-full">
+                <Breadcrumbs path={router.asPath} />
+              </div>
               <div className="mb-8 flex w-full items-center space-x-2">
                 <div className="w-full flex-grow">
-                  <div className="relative inline-flex rounded-md border border-gray-200 bg-white px-4 py-2 text-xs font-medium uppercase text-gray-600">
+                  <div
+                    className="relative inline-flex rounded-md border border-gray-200 bg-white px-4 py-2 text-xs font-medium uppercase text-gray-600"
+                    aria-hidden="true"
+                    data-tooltip="Installable package"
+                  >
                     Package
                   </div>
                 </div>
@@ -109,11 +117,7 @@ export function PackageSchemaList({
 
               <Heading1 title={vm.pkg.name} />
 
-              <Markdown
-                content={vm.pkg.readme.content}
-                documentFilePath={vm.pkg.readme.filePath}
-                classes="mb-16"
-              />
+              <div className="prose mb-16 max-w-none">{vm.markdown}</div>
 
               <Heading2 title="Package reference" />
 
@@ -147,10 +151,13 @@ export function PackageSchemaList({
                           </a>
                         </Link>
                       </p>
-                      <Markdown
-                        content={executors.description}
-                        classes="prose-sm"
-                      />
+                      <div className="prose-sm">
+                        {renderMarkdown({
+                          content: executors.description,
+                          data: {},
+                          filePath: '',
+                        })}
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -182,10 +189,13 @@ export function PackageSchemaList({
                           </a>
                         </Link>
                       </p>
-                      <Markdown
-                        content={generators.description}
-                        classes="prose-sm"
-                      />
+                      <div className="prose-sm">
+                        {renderMarkdown({
+                          content: generators.description,
+                          data: {},
+                          filePath: '',
+                        })}
+                      </div>
                     </div>
                   </li>
                 ))}

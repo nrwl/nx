@@ -1,14 +1,20 @@
 # Integrating Nx and Lerna
 
-> In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This opens up a range of new opportunities for integrating the two. Continue reading to learn more.
+{% callout type="check" title="Nrwl took over stewardship of Lerna" %}
+[In case you missed it, Nrwl, the company behind Nx, took over stewardship of Lerna. This opens up a range of new opportunities for integrating the two. Continue reading to learn more](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9).
+{% /callout %}
 
-Lerna does three main things:
+[Lerna](https://lerna.js.org/) is a popular JavaScript monorepo management tool and which can be used in combination with Nx. Lerna does three main things:
 
-- managing dependencies (`lerna bootstrap`)
-- running commands for a single or multiple packages (`lerna run`)
-- publish your packages, including version management and changelog generation (`lerna publish`)
+1. it runs commands for a single package or multiple packages (`lerna run`)
+2. it manages dependencies (`lerna bootstrap`)
+3. it publishes your packages, handles version management, and does changelog generation (`lerna publish`)
 
-A common pain point with Lerna is when it comes to scaling monorepos. This is **where Nx shines**.
+While Lerna is good at managing dependencies and publishing, it can quickly become painful to scale Lerna based monorepos, simply because Lerna is slow. That's where Nx shines and where it can really speed up your monorepo.
+
+If you are about to set up a new monorepo from scratch, you can directly [go with Nx](/getting-started/nx-setup). If you have an existing Lerna monorepo, you can easily integrate the two.
+
+For a discussion on #2, see [dependency management](#dependency-management) below. For a discussion on #3, see [version management](#version-Management--publishing) below.
 
 ## Speed up Lerna with Nx's powerful task scheduler
 
@@ -16,10 +22,72 @@ Nx comes with a powerful task scheduler that intelligenty runs operations and ma
 
 - **Parallelization and task dependencies -** Nx automatically [knows how your projects relate to each other](/structure/dependency-graph). As a result, if `project-a` depends on `project-b` and you run the build command for `project-a`, Nx first runs the builds for all of `project-a`'s dependencies and then the invoked project itself. Nx sorts these tasks to maximize parallelism.
 - **Only run what changed -** Using [Nx affected commands](/using-nx/affected) you only really execute tasks on the projects that changed, compared to a given baseline (usually the main branch).
-- **Caching -** You get Nx's [computaton caching](/using-nx/caching) for free. All operations, including artifacts and terminal output are restored from the cache (if present) in a completely transparent way without disrupting your DX. No configuration needed. Obviously this results in an incredible speed improvement.
+- **Caching -** You get Nx's [computation caching](/using-nx/caching) for free. All operations, including artifacts and terminal output are restored from the cache (if present) in a completely transparent way without disrupting your DX. No configuration needed. Obviously this results in an incredible speed improvement.
 - **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization. It even learns from previous runs to better distribute tasks! [Learn more](/using-nx/dte)
 
-## Add Nx to an existing Lerna monorepo
+## Integrating Nx with Lerna
+
+Since the [Nx core team now also maintains Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9), there are a lot of different possibilities for integrating the two. The main strategy is to keep using Lerna's bootstrapping and publishing features, but use Nx for the fast task scheduling to speed up Lerna workspaces.
+
+There are two options:
+
+- Upgrade to the latest Lerna version and enable Nx by adding the `useNx` flag to your `lerna.json` file without changing anything else (including your current Lerna commands)
+- Directly using the Nx commands
+
+### Use Nx for task scheduling, without changing the Lerna setup
+
+Starting with Lerna 5.1 (currently in beta) you have Nx as an additional option to the existing `p-map` and `q-map` (previously used by Lerna) for running tasks. This is the **preferred approach if you have already a Lerna repository** since the impact is the lowest, while the benefit is still very high.
+
+To enable Nx support (and thus speed up task running) go through the following steps:
+
+**1. Install Nx**
+
+```bash
+npm i nx --save-dev
+```
+
+(or the yarn/pnpm alternatives).
+
+**2. Adjust your lerna.json**
+
+Change your `lerna.json` by adding the following flag.
+
+```json
+// lerna.json
+{
+  ...
+  "useNx": true
+}
+```
+
+By default `useNx` will be set to `false`, so you have to explicitly opt-in.
+
+**3. Create a nx.json (optional but recommended)**
+
+Nx works even without `nx.json` but to configure some more details such as the `cacheableOperations` of your monorepo in particular, create a `nx.json` at the root of the monorepo. Alternatively you can also just run `npx nx init` to have one generated. Specify the cacheable operations, usually something like `build`, `test`, `lint` etc, depending on your workspace setup:
+
+```json
+// nx.json
+{
+  "extends": "nx/presets/npm.json",
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": ["build"]
+      }
+    }
+  }
+}
+```
+
+Having done these steps, you can now keep using your Lerna repository as you did before. All the commands will work in a backwards compatible way but will be a lot faster. [Read our blog post for some benchmarks](https://blog.nrwl.io/lerna-used-to-walk-now-it-can-fly-eab7a0fe7700?source=friends_link&sk=6c827ec7c9adfc1c760ff2e3f3e05cc7).
+
+{% callout type="note" title="Enable remote caching?" %}
+This does not include distributed caching or distributed task execution powered by Nx Cloud. But you can easily add support for it if wanted. All that's required is `npx nx connect-to-nx-cloud`.
+{% /callout %}
+
+### Switch to the Nx native commands in your Lerna workspace
 
 Nx can be added to an existing Lerna monorepo by running the following command:
 
@@ -75,13 +143,22 @@ Here's an overview of some more Lerna commands and the corresponding Nx version:
 
 ## Dependency Management
 
-Nx does not handle dependency management. You can continue using `lerna bootstrap` if that suits your needs or switch to newer options such as using built-in features of Yarn/NPM/PNPM workspaces.
+Lerna has dependency management already built-in using `lerna bootstrap`. Running that will install all npm dependencies for all packages and also symlink together all Lerna packages that have dependencies of each other.
 
-## Publishing
+Nx does not handle dependency management. As a result, if you already have a Lerna workspace, you can safely keep using `lerna bootstrap`. Alternatively you can use some of the baked-in solutions that now come with npm/yarn/pnpm workspaces.
 
-Lerna has an integrated publishing process with version management and changelog generation. Nx doesn't handle publishing, quite contrary. The Nx repository itself uses Lerna for the package publishing process. So feel free to coninue using it!
+## Version Management & Publishing
 
-That said, you can also easily integrate other tools such as [changesets](https://github.com/changesets/changesets) or [release-it](https://github.com/release-it/release-it) (just to mention two).
+Version management is defined as bumping the version of your changed monorepo packages and automatically creating a changelog. After bumping the version, you will commonly want to publish/upload the new version to NPM (or some other package repository).
+
+If you have an existing Lerna monorepo, feel free to continue using `lerna publish`.
+
+Right now Nx does not handle version management although you can use the [@jscutlery/semver](https://github.com/jscutlery/semver) Nx plugin.
+
+You can also leverage a 3rd-party tool such as:
+
+- [release-it](https://github.com/release-it/release-it) (standalone CLI tool)
+- [changesets](https://github.com/changesets/changesets) (standalone CLI tool)
 
 ## What's more?
 

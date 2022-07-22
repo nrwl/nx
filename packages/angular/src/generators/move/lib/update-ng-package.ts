@@ -1,4 +1,5 @@
 import {
+  normalizePath,
   readProjectConfiguration,
   Tree,
   updateJson,
@@ -21,7 +22,9 @@ export function updateNgPackage(tree: Tree, schema: Schema): void {
     return;
   }
 
-  const rootOffset = relative(join(workspaceRoot, project.root), workspaceRoot);
+  const rootOffset = normalizePath(
+    relative(join(workspaceRoot, project.root), workspaceRoot)
+  );
   let output = `dist/${project.root}`;
   if (project.targets?.build?.outputs?.length > 0) {
     output = project.targets.build.outputs[0];

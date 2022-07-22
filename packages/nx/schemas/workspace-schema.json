@@ -57,19 +57,33 @@
                             "type": "array",
                             "description": "Target dependency.",
                             "items": {
-                              "type": "object",
-                              "properties": {
-                                "projects": {
-                                  "type": "string",
-                                  "description": "The projects that the targets belong to.",
-                                  "enum": ["self", "dependencies"]
+                              "oneOf": [
+                                {
+                                  "type": "string"
                                 },
-                                "target": {
-                                  "type": "string",
-                                  "description": "The name of the target."
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "projects": {
+                                      "type": "string",
+                                      "description": "The projects that the targets belong to.",
+                                      "enum": ["self", "dependencies"]
+                                    },
+                                    "target": {
+                                      "type": "string",
+                                      "description": "The name of the target."
+                                    },
+                                    "params": {
+                                      "type": "string",
+                                      "description": "Configuration for params handling.",
+                                      "enum": ["ignore", "forward"],
+                                      "default": "ignore"
+                                    }
+                                  },
+                                  "additionalProperties": false,
+                                  "required": ["projects", "target"]
                                 }
-                              },
-                              "additionalProperties": false
+                              ]
                             }
                           }
                         }

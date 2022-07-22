@@ -20,6 +20,8 @@ import {
   NxMigrationsConfiguration,
   PackageGroup,
   PackageJson,
+  readNxMigrateConfig,
+  readModulePackageJson,
 } from '../utils/package-json';
 import {
   createTempNpmDirectory,
@@ -393,14 +395,14 @@ function parseTargetPackageAndVersion(args: string) {
     }
   } else {
     if (
-      args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/) ||
       args === 'latest' ||
-      args === 'next'
+      args === 'next' ||
+      valid(args) ||
+      args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/)
     ) {
       const targetVersion = normalizeVersionWithTagCheck(args);
       const targetPackage =
-        args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/) &&
-        lt(targetVersion, '14.0.0-beta.0')
+        !['latest', 'next'].includes(args) && lt(targetVersion, '14.0.0-beta.0')
           ? '@nrwl/workspace'
           : 'nx';
 
@@ -467,10 +469,8 @@ function versions(root: string, from: Record<string, string>) {
       }
 
       if (!cache[packageName]) {
-        const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-          paths: [root],
-        });
-        cache[packageName] = readJsonFile(packageJsonPath).version;
+        const { packageJson } = readModulePackageJson(packageName, [root]);
+        cache[packageName] = packageJson.version;
       }
 
       return cache[packageName];
@@ -624,33 +624,6 @@ async function getPackageMigrationsUsingRegistry(
   );
 }
 
-function resolveNxMigrationConfig(json: Partial<PackageJson>) {
-  const parseNxMigrationsConfig = (
-    fromJson?: string | NxMigrationsConfiguration
-  ): NxMigrationsConfiguration => {
-    if (!fromJson) {
-      return {};
-    }
-    if (typeof fromJson === 'string') {
-      return { migrations: fromJson, packageGroup: [] };
-    }
-
-    return {
-      ...(fromJson.migrations ? { migrations: fromJson.migrations } : {}),
-      ...(fromJson.packageGroup ? { packageGroup: fromJson.packageGroup } : {}),
-    };
-  };
-
-  const config: NxMigrationsConfiguration = {
-    ...parseNxMigrationsConfig(json['ng-update']),
-    ...parseNxMigrationsConfig(json['nx-migrations']),
-    // In case there's a `migrations` field in `package.json`
-    ...parseNxMigrationsConfig(json as any),
-  };
-
-  return config;
-}
-
 async function getPackageMigrationsConfigFromRegistry(
   packageName: string,
   packageVersion: string
@@ -665,7 +638,7 @@ async function getPackageMigrationsConfigFromRegistry(
     return null;
   }
 
-  return resolveNxMigrationConfig(JSON.parse(result));
+  return readNxMigrateConfig(JSON.parse(result));
 }
 
 async function downloadPackageMigrationsFromRegistry(
@@ -744,11 +717,11 @@ function readPackageMigrationConfig(
   packageName: string,
   dir: string
 ): PackageMigrationConfig {
-  const packageJsonPath = require.resolve(`${packageName}/package.json`, {
-    paths: [dir],
-  });
+  const { path: packageJsonPath, packageJson: json } = readModulePackageJson(
+    packageName,
+    [dir]
+  );
 
-  const json = readJsonFile<PackageJson>(packageJsonPath);
   const migrationConfigOrFile = json['nx-migrations'] || json['ng-update'];
 
   if (!migrationConfigOrFile) {
@@ -972,6 +945,8 @@ async function runMigrations(
       (shouldCreateCommits ? ', with each applied in a dedicated commit' : '')
   );
 
+  const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
+
   const migrations: {
     package: string;
     name: string;
@@ -1019,9 +994,22 @@ async function runMigrations(
     logger.info(`---------------------------------------------------------`);
   }
 
+  const depsAfterMigrations = getStringifiedPackageJsonDeps(root);
+  if (depsBeforeMigrations !== depsAfterMigrations) {
+    runInstall();
+  }
+
   logger.info(
     `NX Successfully finished running migrations from '${opts.runMigrations}'`
   );
+}
+
+function getStringifiedPackageJsonDeps(root: string): string {
+  const { dependencies, devDependencies } = readJsonFile<PackageJson>(
+    join(root, 'package.json')
+  );
+
+  return JSON.stringify([dependencies, devDependencies]);
 }
 
 function commitChangesIfAny(commitMessage: string): {
@@ -1083,6 +1071,12 @@ async function runNxMigration(root: string, packageName: string, name: string) {
 
   const collection = readJsonFile<MigrationsJson>(collectionPath);
   const g = collection.generators || collection.schematics;
+  if (!g[name]) {
+    const source = collection.generators ? 'generators' : 'schematics';
+    throw new Error(
+      `Unable to determine implementation path for "${collectionPath}:${name}" using collection.${source}`
+    );
+  }
   const implRelativePath = g[name].implementation || g[name].factory;
 
   let implPath: string;

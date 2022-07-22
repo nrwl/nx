@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as dotenv from 'dotenv';
 import { ChildProcess, fork } from 'child_process';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
 import {
@@ -18,12 +18,13 @@ import {
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task } from '../config/task-graph';
+import { addCommandPrefixIfNeeded } from '../utils/add-command-prefix';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
 
 export class ForkedProcessTaskRunner {
   workspaceRoot = workspaceRoot;
-  cliPath = getCliPath(this.workspaceRoot);
+  cliPath = getCliPath();
 
   private processes = new Set<ChildProcess>();
 
@@ -98,7 +99,10 @@ export class ForkedProcessTaskRunner {
     {
       streamOutput,
       temporaryOutputPath,
-    }: { streamOutput: boolean; temporaryOutputPath: string }
+    }: {
+      streamOutput: boolean;
+      temporaryOutputPath: string;
+    }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
@@ -128,14 +132,20 @@ export class ForkedProcessTaskRunner {
         let outWithErr = [];
         p.stdout.on('data', (chunk) => {
           if (streamOutput) {
-            process.stdout.write(chunk);
+            process.stdout.write(
+              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
+                .content
+            );
           }
           out.push(chunk.toString());
           outWithErr.push(chunk.toString());
         });
         p.stderr.on('data', (chunk) => {
           if (streamOutput) {
-            process.stderr.write(chunk);
+            process.stderr.write(
+              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
+                .content
+            );
           }
           outWithErr.push(chunk.toString());
         });
@@ -168,7 +178,10 @@ export class ForkedProcessTaskRunner {
     {
       streamOutput,
       temporaryOutputPath,
-    }: { streamOutput: boolean; temporaryOutputPath: string }
+    }: {
+      streamOutput: boolean;
+      temporaryOutputPath: string;
+    }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
@@ -272,7 +285,10 @@ export class ForkedProcessTaskRunner {
     if (!outputPath) {
       delete res.NX_TERMINAL_OUTPUT_PATH;
       delete res.NX_STREAM_OUTPUT;
+      delete res.NX_PREFIX_OUTPUT;
     }
+    delete res.NX_BASE;
+    delete res.NX_HEAD;
     delete res.NX_SET_CLI;
     return res;
   }

@@ -20,14 +20,14 @@ export async function createPackageJson(
   if (!packageJson.devDependencies) {
     packageJson.devDependencies = {};
   }
-  const nrwlWorkspaceNode = depGraph.nodes['npm:@nrwl/workspace'];
+  const nrwlWorkspaceNode = depGraph.externalNodes['npm:@nrwl/workspace'];
 
   if (nrwlWorkspaceNode) {
     packageJson.dependencies['@nrwl/workspace'] =
       nrwlWorkspaceNode.data.version;
   }
 
-  const typescriptNode = depGraph.nodes['npm:typescript'];
+  const typescriptNode = depGraph.externalNodes['npm:typescript'];
   if (typescriptNode) {
     packageJson.dependencies['typescript'] = typescriptNode.data.version;
   }

@@ -212,6 +212,11 @@
             "description": "The compiler to use.",
             "enum": ["babel", "swc"],
             "default": "babel"
+          },
+          "skipDefaultProject": {
+            "description": "Skip setting the project as the default project. When `false` (the default), the project is set as the default project only if there is no default project already set.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [],
@@ -598,8 +603,11 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Project name",
-            "$default": { "$source": "argv", "index": 0 }
+            "aliases": ["project", "projectName"],
+            "description": "Project for which to generate Storybook configuration.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "For which project do you want to generate Storybook configuration?",
+            "x-dropdown": "projects"
           },
           "configureCypress": {
             "type": "boolean",
@@ -625,7 +633,12 @@
           },
           "js": {
             "type": "boolean",
-            "description": "Generate JavaScript files rather than TypeScript files.",
+            "description": "Generate JavaScript story files rather than TypeScript story files.",
+            "default": false
+          },
+          "tsConfiguration": {
+            "type": "boolean",
+            "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
             "default": false
           },
           "linter": {
@@ -633,10 +646,6 @@
             "type": "string",
             "enum": ["eslint", "tslint"],
             "default": "eslint"
-          },
-          "projectBuildConfig": {
-            "description": "Provide a custom projectBuildConfig for the Angular executor. If left blank, Nx will use the default.",
-            "type": "string"
           },
           "standaloneConfig": {
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
@@ -665,7 +674,8 @@
         "properties": {
           "project": {
             "type": "string",
-            "description": "The project name where to add the components.",
+            "aliases": ["name", "projectName"],
+            "description": "The project where to add the components.",
             "examples": ["shared-ui-component"],
             "$default": { "$source": "projectName", "index": 0 },
             "x-prompt": "What's name of the project where the component lives?"
@@ -693,15 +703,16 @@
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
         "$id": "NxReactStorybookStories",
-        "title": "Create React Storybook stories",
-        "description": "Create stories/specs for all components declared in an app or a library.",
+        "title": "Generate React Storybook stories",
+        "description": "Generate stories/specs for all components declared in a project.",
         "type": "object",
         "properties": {
           "project": {
             "type": "string",
-            "description": "Library or application name.",
+            "aliases": ["name", "projectName"],
+            "description": "Project for which to generate stories.",
             "$default": { "$source": "projectName", "index": 0 },
-            "x-prompt": "What's name of the project for which you want to generate stories?"
+            "x-prompt": "For which project do you want to generate stories?"
           },
           "generateCypressSpecs": {
             "type": "boolean",
@@ -1166,6 +1177,140 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/react/src/generators/remote/schema.json"
+    },
+    {
+      "name": "cypress-component-configuration",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactCypressComponentTestConfiguration",
+        "title": "Add Cypress component testing",
+        "description": "Add a Cypress component testing configuration to an existing project.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/react:cypress-component-configuration --project=my-react-project",
+            "description": "Add component testing to your react project"
+          },
+          {
+            "command": "nx g @nrwl/react:cypress-component-configuration --project=my-react-project --generate-tests",
+            "description": "Add component testing to your react project and generate component tests for your existing components"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project to add cypress component testing configuration to",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What project should we add Cypress component testing to?"
+          },
+          "generateTests": {
+            "type": "boolean",
+            "description": "Generate default component tests for existing components in the project",
+            "default": false
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting files",
+            "default": false
+          }
+        },
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Setup Cypress component testing for a React project",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/cypress-component-configuration/schema.json"
+    },
+    {
+      "name": "component-test",
+      "factory": "./src/generators/component-test/component-test#componentTestGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactCypressComponentTest",
+        "title": "Add Cypress component test",
+        "description": "Add a Cypress component test for a component.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/react:component-test --project=my-react-project --component-path=src/lib/fancy-component.tsx",
+            "description": "Create a cypress component test for FancyComponent"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project the component is apart of",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What project is this component apart of?"
+          },
+          "componentPath": {
+            "type": "string",
+            "description": "Path to component, from the project source root",
+            "x-prompt": "What is the path to the component?"
+          }
+        },
+        "required": ["project", "componentPath"],
+        "presets": []
+      },
+      "description": "Generate a Cypress component test for a React component",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/component-test/component-test#componentTestGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/component-test/schema.json"
+    },
+    {
+      "name": "setup-tailwind",
+      "factory": "./src/generators/setup-tailwind/setup-tailwind#setupTailwindGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxReactTailwindSetupGenerator",
+        "title": "Configures Tailwind CSS for an application or a buildable/publishable library.",
+        "description": "Adds the Tailwind CSS configuration files for a given React project and installs, if needed, the packages required for Tailwind CSS to work.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g setup-tailwind --project=my-app",
+            "description": "Initialize Tailwind configuration for the `my-app` project."
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project to add the Tailwind CSS setup for.",
+            "alias": "p",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What project would you like to add the Tailwind CSS setup?"
+          },
+          "buildTarget": {
+            "type": "string",
+            "description": "The name of the target used to build the project. This option is not needed in most cases.",
+            "default": "build"
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skips formatting the workspace after the generator completes."
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Set up Tailwind configuration for a project.",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/setup-tailwind/setup-tailwind#setupTailwindGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/setup-tailwind/schema.json"
     }
   ],
   "executors": [

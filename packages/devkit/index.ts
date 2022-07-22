@@ -19,6 +19,7 @@ export type { Tree, FileChange } from 'nx/src/generators/tree';
  */
 export type {
   WorkspaceJsonConfiguration,
+  ProjectsConfigurations,
   TargetDependencyConfig,
   TargetConfiguration,
   ProjectConfiguration,
@@ -46,6 +47,12 @@ export type {
  * @category Workspace
  */
 export { Workspaces } from 'nx/src/config/workspaces';
+
+export {
+  readNxJson,
+  readAllWorkspaceConfiguration,
+  workspaceLayout,
+} from 'nx/src/config/configuration';
 
 export type {
   NxPlugin,
@@ -265,7 +272,12 @@ export { stripIndents } from 'nx/src/utils/strip-indents';
 /**
  * @category Utils
  */
-export { joinPathFragments, normalizePath } from 'nx/src/utils/path';
+export {
+  joinPathFragments,
+  normalizePath,
+  getImportPath,
+  detectWorkspaceScope,
+} from 'nx/src/utils/path';
 
 /**
  * @category Utils
@@ -275,7 +287,7 @@ export { moveFilesToNewDirectory } from './src/utils/move-dir';
 /**
  * @category Utils
  */
-export { workspaceRoot, appRootPath } from 'nx/src/utils/app-root';
+export { workspaceRoot, appRootPath } from 'nx/src/utils/workspace-root';
 
 /**
  * @category Utils
@@ -288,11 +300,6 @@ export {
   createProjectGraphAsync,
   readCachedProjectGraph,
 } from 'nx/src/project-graph/project-graph';
-
-/**
- * @category Utils
- */
-export { readNxJson, workspaceLayout } from 'nx/src/project-graph/file-utils';
 
 /**
  * @category Utils

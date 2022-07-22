@@ -1,6 +1,9 @@
 # Node Nx Tutorial - Step 4: Create Libraries
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/V29I_DHGlB8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/V29I_DHGlB8"
+title="Nx.dev Tutorial | Node | Step 4: Create Libraries"
+width="100%" /%}
 
 Libraries are not just a way to share code in Nx. They are also useful for factoring out code into small units with a well-defined public API.
 
@@ -18,7 +21,9 @@ Run
 nx g @nrwl/nest:lib auth --controller
 ```
 
-> We added the `--controller` flag here to generate a controller along with the library scaffolding.
+{% callout type="note" title="--controller" %}
+We added the `--controller` flag here to generate a controller along with the library scaffolding.
+{% /callout %}
 
 You should see the following:
 
@@ -62,7 +67,9 @@ export class AuthController {
 }
 ```
 
-> In code destined for production, you would actually have a proper authentication check here.
+{% callout type="note" title="We keep things simple here" %}
+In code destined for production, you would actually have a proper authentication check here.
+{% /callout %}
 
 ## Use the new library
 
@@ -84,7 +91,7 @@ import { AuthModule } from '@myorg/auth';
 export class AppModule {}
 ```
 
-**Restart `nx serve todos` then go to http://localhost:3333/auth. You should see `{ authenticated: true }`**
+Restart `nx serve todos` then go to http://localhost:3333/auth. You should see `{ authenticated: true }`.
 
 ## What's Next
 

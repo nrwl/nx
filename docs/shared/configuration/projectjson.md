@@ -7,7 +7,9 @@ Projects can be configured in `package.json` (if you use npm scripts and not Nx 
 use Nx executors). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
 files to get each project's configuration. This guide covers the `project.json` case.
 
-> Angular developers can also configure projects in angular.json. Read [this guide](/getting-started/nx-and-angular#angularjson) for more information.
+{% callout type="note" title="Using Angular?" %}
+Angular developers can also configure projects in angular.json. [Read this guide for more information](/getting-started/nx-and-angular#angularjson).
+{% /callout %}
 
 ## Project Configuration
 
@@ -25,16 +27,16 @@ Let's look at the following `project.json`:
   "root": "libs/mylib/",
   "sourceRoot": "libs/mylib/src",
   "projectType": "library",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "prod": ["!{projectRoot}/**/*.spec.tsx"]
+  },
   "targets": {
     "test": {
       "executor": "@nrwl/jest:jest",
+      "inputs": ["default", "^prod"],
       "outputs": [],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "self"
-        }
-      ],
+      "dependsOn": ["build"],
       "options": {
         "jestConfig": "libs/mylib/jest.config.js",
         "tsConfig": "libs/mylib/tsconfig.spec.json"
@@ -42,13 +44,9 @@ Let's look at the following `project.json`:
     },
     "build": {
       "executor": "@nrwl/js:tsc",
+      "inputs": ["prod", "^prod"],
       "outputs": ["dist/libs/mylib"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
+      "dependsOn": ["^build"],
       "options": {
         "tsConfig": "libs/mylib/tsconfig.lib.json",
         "main": "libs/mylib/src/main.ts"
@@ -70,6 +68,66 @@ Let's look at the following `project.json`:
 - `projectType` is either 'application' or 'library'. The project type is used in project graph viz and in a few aux
   commands.
 
+### inputs & namedInputs
+
+The `inputs` array tells Nx what to consider to determine whether a particular invocation of a script should be a cache
+hit or not. There are three types of inputs:
+
+_Filesets_
+
+Examples:
+
+- `{projectRoot}/**.*.ts`
+- same as `{fileset: "{projectRoot}/**/*.ts"}`
+- `{workspaceRoot}/jest.config.ts`
+- same as `{fileset: "{workspaceRoot}/jest.config.ts}`
+
+_Runtime Inputs_
+
+Examples:
+
+- `{runtime: "node -v"}`
+
+Node the result value is hashed, so it is never displayed.
+
+_Env Variables_
+
+Examples:
+
+- `{env: "MY_ENV_VAR"}`
+
+Node the result value is hashed, so it is never displayed.
+
+_Named Inputs_
+
+Examples:
+
+- `inputs: ["prod"]`
+- same as `inputs: [{input: "prod", projects: "self"}]`
+
+Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
+keeping them in sync is error-prone, we recommend defining named inputs, which you can then reference in all of those
+places.
+
+#### Using ^
+
+Examples:
+
+- `inputs: ["^prod"]`
+- same as `inputs: [{input: "prod", projects: "dependencies"}]`
+
+Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
+an example.
+
+```
+"test": {
+  "inputs": [ "default", "^prod" ]
+}
+```
+
+The configuration above means that the test target depends on all source files of a given project and only prod
+sources (non-test sources) of its dependencies. In other words, it treats test sources as private.
+
 ### Targets
 
 Let's look at a sample test target:
@@ -79,12 +137,7 @@ Let's look at a sample test target:
   "test": {
     "executor": "@nrwl/jest:jest",
     "outputs": [],
-    "dependsOn": [
-      {
-        "target": "build",
-        "projects": "self"
-      }
-    ],
+    "dependsOn": ["build"],
     "options": {
       "jestConfig": "libs/mylib/jest.config.js",
       "tsConfig": "libs/mylib/tsconfig.spec.json"
@@ -126,12 +179,7 @@ The `configurations` property provides extra sets of values that will be merged 
   "build": {
     "executor": "@nrwl/js:tsc",
     "outputs": ["dist/libs/mylib"],
-    "dependsOn": [
-      {
-        "target": "build",
-        "projects": "dependencies"
-      }
-    ],
+    "dependsOn": ["^build"],
     "options": {
       "tsConfig": "libs/mylib/tsconfig.lib.json",
       "main": "libs/mylib/src/main.ts"
@@ -161,28 +209,199 @@ require(`@nrwl/jest`).executors['jest']({
 The selected configuration adds/overrides the default options, and the provided command line args add/override the
 configuration options.
 
+### inputs & namedInputs
+
+The `inputs` array tells Nx what to consider to determine whether a particular invocation of a script should be a cache
+hit or not. There are three types of inputs:
+
+_Filesets_
+
+Examples:
+
+- `{projectRoot}/**.*.ts`
+- same as `{fileset: "{projectRoot}/**/*.ts"}`
+- `{workspaceRoot}/jest.config.ts`
+- same as `{fileset: "{workspaceRoot}/jest.config.ts}`
+
+_Runtime Inputs_
+
+Examples:
+
+- `{runtime: "node -v"}`
+
+Node the result value is hashed, so it is never displayed.
+
+_Env Variables_
+
+Examples:
+
+- `{env: "MY_ENV_VAR"}`
+
+Node the result value is hashed, so it is never displayed.
+
+_Named Inputs_
+
+Examples:
+
+- `inputs: ["prod"]`
+- same as `inputs: [{input: "prod", projects: "self"}]`
+
+Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
+keeping them in sync is error-prone, we recommend defining named inputs, which you can then reference in all of those
+places.
+
+#### Using ^
+
+Examples:
+
+- `inputs: ["^prod"]`
+- same as `inputs: [{input: "prod", projects: "dependencies"}]`
+
+Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
+an example.
+
+```
+"test": {
+  "inputs": [ "default", "^prod" ]
+}
+```
+
+The configuration above means that the test target depends on all source files of a given project and only prod
+sources (non-test sources) of its dependencies. In other words, it treats test sources as private.
+
 ### Outputs
 
-`"outputs": ["dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts. The provided value
-is actually the default, so we can omit it in this case. `"outputs": []` tells Nx that the `test` target doesn't create
-any artifacts on disk.
+Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
+
+#### Basic Example
+
+Usually, a target writes to a specific directory or a file. The following instructs Nx to cache `dist/libs/mylib` and `build/libs/mylib/main.js`:
+
+```json
+  {
+    "build": {
+      ...,
+      "outputs": ["dist/libs/mylib", "build/libs/mylib/main.js"],
+      "options": {
+        ...
+      },
+    }
+  }
+```
+
+#### Referencing Options
+
+Most commonly, targets have an option for an output file or directory. Rather than duplicating the information as seen above, options can be referenced using the below syntax:
+
+> When the `outputPath` option is changed, Nx will start caching the new path as well.
+
+```json
+{
+  "build": {
+    ...,
+    "outputs": ["{options.outputPath}"],
+    "options": {
+      "outputPath": "dist/libs/mylib"
+    }
+  }
+}
+```
+
+#### Specifying Globs
+
+Sometimes, multiple targets might write to the same directory. When possible it is recommended to direct these targets into separate directories.
+
+```json
+{
+  "build-js": {
+    ...,
+    "outputs": ["dist/libs/mylib/js"],
+    "options": {
+      "outputPath": "dist/libs/mylib/js"
+    }
+  },
+  "build-css": {
+    ...,
+    "outputs": ["dist/libs/mylib/css"],
+    "options": {
+      "outputPath": "dist/libs/mylib/css"
+    }
+  }
+}
+```
+
+But if the above is not possible, globs can be specified as outputs to only cache a set of files rather than the whole directory.
+
+```json
+{
+  "build-js": {
+    ...,
+    "outputs": ["dist/libs/mylib/**/*.js"],
+    "options": {
+      "outputPath": "dist/libs/mylib"
+    }
+  },
+  "build-css": {
+    ...,
+    "outputs": ["dist/libs/mylib/**/*.css"],
+    "options": {
+      "outputPath": "dist/libs/mylib"
+    }
+  }
+}
+```
 
 ### dependsOn
 
-Targets can depend on other targets.
+Targets can depend on other targets. This is the relevant portion of the configuration file:
+
+```json
+"build": {
+  "dependsOn": ["^build"]
+},
+"test": {
+  "dependsOn": ["build"]
+}
+```
 
 A common scenario is having to build dependencies of a project first before building the project. This is what
-the `dependsOn` property of the `build` target configures. It tells Nx that before it can build `mylib` it needs to make
+the `"dependsOn": ["^build"]` property of the `build` target configures. It tells Nx that before it can build `mylib` it needs to make
 sure that `mylib`'s dependencies are built as well. This doesn't mean Nx is going to rerun those builds. If the right
 artifacts are already in the right place, Nx will do nothing. If they aren't in the right place, but they are available
 in the cache, Nx will retrieve them from the cache.
 
-Depending on another target of the same project is very common. That's why we provide some syntax sugar, so
-`"dependsOn": [{"target": "build", "projects": "self"}]` can be shortened to `"dependsOn": ["build"]`.
-
-Another common scenario is for a target to depend on another target of the same project. For instance, `dependsOn` of
+Another common scenario is for a target to depend on another target of the same project. For instance, `"dependsOn": ["build"]` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
+
+You can also express the same configuration using:
+
+```json
+"build": {
+  "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+},
+"test": {
+  "dependsOn": [{ "projects": "self", "target": "build" }]
+}
+```
+
+With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target
+dependencies. You can either forward them to the dependency target, or you can ignore them (default).
+
+```json
+"build": {
+   // forward params passed to this target to the dependency targets
+  "dependsOn": [{ "projects": "dependencies", "target": "build", "params": "forward" }]
+},
+"test": {
+  // ignore params passed to this target, won't be forwarded to the dependency targets
+  "dependsOn": [{ "projects": "self", "target": "build", "params": "ignore" }]
+}
+"lint": {
+  // ignore params passed to this target, won't be forwarded to the dependency targets
+  "dependsOn": [{ "projects": "self", "target": "build" }]
+}
+```
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
@@ -274,13 +493,15 @@ The following is an expanded version showing all options. Your `nx.json` will li
     "tsconfig.base.json": "*",
     "nx.json": "*"
   },
-  "targetDependencies": {
-    "build": [
-      {
-        "target": "build",
-        "projects": "dependencies"
-      }
-    ]
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "prod": ["!{projectRoot}/**/*.spec.tsx"]
+  },
+  "targetDefaults": {
+    "build": {
+      "inputs": ["prod", "^prod"],
+      "dependsOn": ["^build"]
+    }
   },
   "cli": {
     "defaultCollection": "@nrwl/js"
@@ -361,30 +582,70 @@ In the example above:
 - Changing `globalFile` only affects `myapp`.
 - Changing any CSS file inside the `styles` directory only affects `myapp`.
 
-### Target Dependencies
+### inputs & namedInputs
 
-Targets can depend on other targets. A common scenario is having to build dependencies of a project first before
-building the project. The `dependsOn` property in `package.json` can be used to define the list of dependencies of an
-individual target.
+Named inputs defined in `nx.json` are merged with the named inputs defined in each project's project.json.
+In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
 
-Often the same `dependsOn` configuration has to be defined for every project in the repo, and that's when
-defining `targetDependencies` in `nx.json` is helpful.
+Defining `inputs` for a given target would replace the set of inputs for that target name defined in `nx.json`.
+Using pseudocode `inputs = projectJson.targets.build.inputs || nxJson.targetDefaults.build.inputs`.
 
-```json
+You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things
+like this (which applies to every project):
+
+```
+"test": {
+  "inputs": [
+    "default",
+    "^prod"
+  ]
+}
+```
+
+And projects can define their prod fileset, without having to redefine the inputs for the `test` target.
+
+```json title="project.json"
 {
-  "targetDependencies": {
-    "build": [
-      {
-        "target": "build",
-        "projects": "dependencies"
-      }
-    ]
+  "namedInputs": {
+    "prod": ["!{projectRoot}/**/*.test.js", "{workspacRoot}/jest.config.js"]
   }
 }
 ```
 
-The configuration above is identical to adding `{"dependsOn": [{"target": "build", "projects": "dependencies"]}` to
-every build target of every project.
+In this case Nx will use the right `prod` input for each project.
+
+### Target Defaults
+
+Targets can depend on other targets. A common scenario is having to build dependencies of a project first before
+building the project. The `dependsOn` property in `project.json` can be used to define the list of dependencies of an
+individual target.
+
+Often the same `dependsOn` configuration has to be defined for every project in the repo, and that's when
+defining `targetDefaults` in `nx.json` is helpful.
+
+```json
+{
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
+  }
+}
+```
+
+The configuration above is identical to adding `{"dependsOn": ["^build"]}` to every build target of every project.
+
+Another target default you can configure is `outputs`:
+
+```json
+{
+  "targetDefaults": {
+    "build": {
+      "outputs": ["./custom-dist"]
+    }
+  }
+}
+```
 
 ### CLI Options
 
@@ -424,19 +685,16 @@ named "default" is used by default. Specify a different one like this `nx run-ma
 Tasks runners can accept different options. The following are the options supported
 by `"nx/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 
-- `cacheableOperations` defines the list of targets/operations that are cached by Nx.
-- `parallel` defines the max number of targets ran in parallel (in older versions of Nx you had to
-  pass `--parallel --maxParallel=3` instead of `--parallel=3`).
-- `captureStderr` defines whether the cache captures stderr or just stdout.
-- `skipNxCache` defines whether the Nx Cache should be skipped. Defaults to `false`.
-- `cacheDirectory` defines where the local cache is stored, which is `node_modules/.cache/nx` by default.
-- `encryptionKey` (when using `"@nrwl/nx-cloud"` only) defines an encryption key to support end-to-end encryption of
-  your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an
-  encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable.
-- `runtimeCacheInputs` defines the list of commands that are run by the runner to include into the computation hash
-  value.
-- `selectivelyHashTsConfig` only hash the path mapping of the active project in the `tsconfig.base.json` (e.g.,
-  adding/removing projects doesn't affect the hash of existing projects). Defaults to `false`
+| Property                | Descrtipion                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cacheableOperations     | defines the list of targets/operations that are cached by Nx                                                                                                                                                                                                                                                                                  |
+| parallel                | defines the max number of targets ran in parallel (in older versions of Nx you had to pass `--parallel --maxParallel=3` instead of `--parallel=3`)                                                                                                                                                                                            |
+| captureStderr           | defines whether the cache captures stderr or just stdout                                                                                                                                                                                                                                                                                      |
+| skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                          |
+| cacheDirectory          | defines where the local cache is stored (defaults to `node_modules/.cache/nx`)                                                                                                                                                                                                                                                                |
+| encryptionKey           | (when using `"@nrwl/nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
+| runtimeCacheInputs      | defines the list of commands that are run by the runner to include into the computation hash value                                                                                                                                                                                                                                            |
+| selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                              |
 
 `runtimeCacheInputs` are set as follows:
 
@@ -473,7 +731,7 @@ a [`.gitignore` file](https://git-scm.com/book/en/v2/Git-Basics-Recording-Change
 ## Validating the configuration
 
 If at any point in time you want to check if your configuration is in sync, you can use
-the [workspace-lint](/cli/workspace-lint) executor:
+the [workspace-lint](/nx/workspace-lint) executor:
 
 ```bash
 nx workspace-lint

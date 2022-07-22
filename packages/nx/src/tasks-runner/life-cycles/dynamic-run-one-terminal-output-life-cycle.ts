@@ -6,6 +6,7 @@ import { output } from '../../utils/output';
 import type { LifeCycle } from '../life-cycle';
 import { prettyTime } from './pretty-time';
 import { Task } from '../../config/task-graph';
+import { formatFlags } from './formatting-utils';
 
 /**
  * As tasks are completed the overall state moves from:
@@ -288,7 +289,7 @@ export async function createRunOneDynamicOutputRenderer({
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.green(`${leftPadding}  --${flag}=${value}`)
+            output.dim.green(formatFlags(leftPadding, flag, value))
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }
@@ -329,7 +330,7 @@ export async function createRunOneDynamicOutputRenderer({
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.red(`${leftPadding}  --${flag}=${value}`)
+            output.dim.red(formatFlags(leftPadding, flag, value))
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }

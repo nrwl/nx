@@ -6,7 +6,7 @@ import {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 
-jest.mock('nx/src/utils/app-root', () => ({
+jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);

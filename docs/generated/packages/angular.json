@@ -10,7 +10,7 @@
       "id": "overview",
       "path": "/packages/angular",
       "file": "shared/angular-plugin",
-      "content": "![Angular logo](/shared/angular-logo.png)\n\nThe Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:\n\n- Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.\n- Generators to help scaffold code quickly, including:\n  - Micro Frontends\n  - Libraries, both internal to your codebase and publishable to npm\n  - Upgrading AngularJS applications\n  - Single Component Application Modules (SCAMs)\n- NgRx helpers.\n- Utilities for automatic workspace refactoring.\n\n## Setting up the Angular plugin\n\nAdding the Angular plugin to an existing Nx workspace can be done with the following:\n\n```bash\nyarn add -D @nrwl/angular\n```\n\n```bash\nnpm install -D @nrwl/angular\n```\n\n## Using the Angular Plugin\n\n### Generating an application\n\nIt's straightforward to generate an Angular application:\n\n```bash\nnx g @nrwl/angular:app appName\n```\n\nBy default, the application will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n- Cypress as the E2E test runner.\n\nWe can then serve, build, test, lint, and run e2e tests on the application with the following commands:\n\n```bash\nnx serve appName\nnx build appName\nnx test appName\nnx lint appName\nnx e2e appName\n```\n\n### Generating a library\n\nGenerating an Angular library is very similar to generating an application:\n\n```bash\nnx g @nrwl/angular:lib libName\n```\n\nBy default, the library will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n\nWe can then test and lint the library with the following commands:\n\n```bash\nnx test libName\nnx lint libName\n```\n\nRead more about:\n\n- [Creating Libraries](/structure/creating-libraries)\n- [Library Types](/structure/library-types)\n- [Buildable and Publishable Libraries](/structure/buildable-and-publishable-libraries)\n\n## More Documentation\n\n- [Angular Nx Tutorial](/angular-tutorial/01-create-application)\n- [Setup Module Federation with Angular and Nx](/module-federation/faster-builds)\n- [Using NgRx](/guides/misc-ngrx)\n- [Using DataPersistence](/guides/misc-data-persistence)\n- [Upgrading an AngularJS application to Angular](/guides/misc-upgrade)\n- [Using Tailwind CSS with Angular projects](/guides/using-tailwind-css-with-angular-projects)\n"
+      "content": "![Angular logo](/shared/angular-logo.png)\n\nThe Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:\n\n- Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.\n- Generators to help scaffold code quickly, including:\n  - Micro Frontends\n  - Libraries, both internal to your codebase and publishable to npm\n  - Upgrading AngularJS applications\n  - Single Component Application Modules (SCAMs)\n- NgRx helpers.\n- Utilities for automatic workspace refactoring.\n\n## Setting up the Angular plugin\n\nAdding the Angular plugin to an existing Nx workspace can be done with the following:\n\n```bash\nyarn add -D @nrwl/angular\n```\n\n```bash\nnpm install -D @nrwl/angular\n```\n\n## Using the Angular Plugin\n\n### Generating an application\n\nIt's straightforward to generate an Angular application:\n\n```bash\nnx g @nrwl/angular:app appName\n```\n\nBy default, the application will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n- Cypress as the E2E test runner.\n\nWe can then serve, build, test, lint, and run e2e tests on the application with the following commands:\n\n```bash\nnx serve appName\nnx build appName\nnx test appName\nnx lint appName\nnx e2e appName\n```\n\n### Generating a library\n\nGenerating an Angular library is very similar to generating an application:\n\n```bash\nnx g @nrwl/angular:lib libName\n```\n\nBy default, the library will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n\nWe can then test and lint the library with the following commands:\n\n```bash\nnx test libName\nnx lint libName\n```\n\nRead more about:\n\n- [Creating Libraries](/structure/creating-libraries)\n- [Library Types](/structure/library-types)\n- [Buildable and Publishable Libraries](/structure/buildable-and-publishable-libraries)\n\n## More Documentation\n\n- [Angular Nx Tutorial](/angular-tutorial/01-create-application)\n- [Setup Module Federation with Angular and Nx](/module-federation/faster-builds)\n- [Using NgRx](/guides/misc-ngrx)\n- [Using Data Persistence operators](/guides/misc-data-persistence)\n- [Upgrading an AngularJS application to Angular](/migration/migration-angularjs)\n- [Using Tailwind CSS with Angular projects](/guides/using-tailwind-css-with-angular-projects)\n"
     }
   ],
   "generators": [
@@ -170,7 +170,7 @@
           "e2eTestRunner": {
             "type": "string",
             "enum": ["protractor", "cypress", "none"],
-            "description": "Test runner to use for end to end (E2E) tests.",
+            "description": "Test runner to use for end to end (E2E) tests. The `protractor` option is deprecated and it will be removed in v15.",
             "default": "cypress"
           },
           "tags": {
@@ -196,13 +196,13 @@
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
             "type": "boolean"
           },
-          "mfe": {
+          "mf": {
             "description": "Generate a Module Federation configuration for the application",
             "type": "boolean",
             "default": false,
             "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
           },
-          "mfeType": {
+          "mfType": {
             "type": "string",
             "enum": ["host", "remote"],
             "description": "Type of application to generate the Module Federation configuration for.",
@@ -238,6 +238,11 @@
           "addTailwind": {
             "type": "boolean",
             "description": "Whether to configure Tailwind CSS for the application.",
+            "default": false
+          },
+          "skipDefaultProject": {
+            "description": "Skip setting the project as the default project. When `false` (the default), the project is set as the default project only if there is no default project already set.",
+            "type": "boolean",
             "default": false
           }
         },
@@ -299,6 +304,11 @@
             "default": false,
             "alias": "t"
           },
+          "standalone": {
+            "description": "Whether the generated component is standalone.",
+            "type": "boolean",
+            "default": false
+          },
           "viewEncapsulation": {
             "description": "The view encapsulation strategy to use in the new component.",
             "enum": ["Emulated", "None", "ShadowDom"],
@@ -355,7 +365,7 @@
           },
           "export": {
             "type": "boolean",
-            "description": "Specifies if the component should be exported in the declaring `NgModule`. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`).",
+            "description": "Specifies if the component should be exported in the declaring `NgModule`. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`) if the module it belongs to is also exported or if the component is standalone.",
             "default": false
           }
         },
@@ -406,6 +416,15 @@
           "cypressProject": {
             "type": "string",
             "description": "The Cypress project to generate the stories under. By default, inferred from `projectName`."
+          },
+          "specDirectory": {
+            "type": "string",
+            "description": "Directory where to place the generated spec file. By default matches the value of the `componentPath` option."
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -453,6 +472,11 @@
             "type": "string",
             "description": "Component file name without the `.ts` extension.",
             "examples": ["awesome.component"]
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -887,7 +911,8 @@
             "type": "string",
             "description": "The name of the library to create the secondary entry point for.",
             "x-prompt": "What library would you like to create the secondary entry point for?",
-            "pattern": "^[a-zA-Z].*$"
+            "pattern": "^[a-zA-Z].*$",
+            "$default": { "$source": "projectName" }
           },
           "skipModule": {
             "type": "boolean",
@@ -929,7 +954,8 @@
           },
           "host": {
             "type": "string",
-            "description": "The name of the host app to attach this remote app to."
+            "description": "The name of the host app to attach this remote app to.",
+            "$default": { "$source": "projectName" }
           },
           "port": {
             "type": "number",
@@ -1121,7 +1147,7 @@
         "cli": "nx",
         "title": "Convert to withModuleFederation Generator Options Schema",
         "type": "object",
-        "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_.",
+        "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n{% callout type=\"warning\" title=\"Overrides\" %}This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!{% /callout %}.",
         "additionalProperties": false,
         "properties": {
           "project": {
@@ -1133,7 +1159,7 @@
         },
         "presets": []
       },
-      "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n _**Note:** This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!_",
+      "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n{% callout type=\"warning\" title=\"Overrides\" %}This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!{% /callout %}",
       "implementation": "/packages/angular/src/generators/convert-to-with-mf/convert-to-with-mf.ts",
       "aliases": [],
       "hidden": false,
@@ -1441,12 +1467,14 @@
             "type": "string",
             "enum": ["classes", "creators"],
             "default": "creators",
-            "description": "Specifies whether to use class-based or creator functions for actions, reducers, and effects."
+            "description": "Specifies whether to use class-based or creator functions for actions, reducers, and effects.",
+            "x-deprecated": "Classes syntax is deprecated and this option will be removed in v15. Creators syntax will be the default in v15 and this option will be removed."
           },
           "useDataPersistence": {
             "type": "boolean",
             "default": false,
-            "description": "Generate NgRx Effects with the `DataPersistence` helper service. Set to false to use plain effects data persistence operators."
+            "description": "Generate NgRx Effects with the `DataPersistence` helper service. Set to false to use plain effects data persistence operators.",
+            "x-deprecated": "This option is deprecated and will be removed in v15. Using the individual operators is recommended."
           },
           "barrels": {
             "type": "boolean",
@@ -1717,11 +1745,11 @@
       "path": "/packages/angular/src/generators/scam-pipe/schema.json"
     },
     {
-      "name": "setup-mfe",
-      "factory": "./src/generators/setup-mfe/setup-mfe",
+      "name": "setup-mf",
+      "factory": "./src/generators/setup-mf/setup-mf",
       "schema": {
         "$schema": "http://json-schema.org/schema",
-        "$id": "GeneratorAngularMFESetup",
+        "$id": "GeneratorAngularMFSetup",
         "cli": "nx",
         "title": "Generate Module Federation Setup for Angular App",
         "description": "Create Module Federation configuration files for given Angular Application.",
@@ -1731,9 +1759,10 @@
             "type": "string",
             "description": "The name of the application to generate the Module Federation configuration for.",
             "$default": { "$source": "argv", "index": 0 },
-            "x-prompt": "What app would you like to generate a Module Federation configuration for?"
+            "x-prompt": "What app would you like to generate a Module Federation configuration for?",
+            "x-dropdown": "projects"
           },
-          "mfeType": {
+          "mfType": {
             "type": "string",
             "enum": ["host", "remote"],
             "description": "Type of application to generate the Module Federation configuration for.",
@@ -1779,15 +1808,15 @@
             "description": "The prefix to use for any generated component."
           }
         },
-        "required": ["appName", "mfeType"],
+        "required": ["appName", "mfType"],
         "additionalProperties": false,
         "presets": []
       },
       "description": "Generate a Module Federation configuration for a given Angular application.",
-      "implementation": "/packages/angular/src/generators/setup-mfe/setup-mfe.ts",
+      "implementation": "/packages/angular/src/generators/setup-mf/setup-mf.ts",
       "aliases": [],
       "hidden": false,
-      "path": "/packages/angular/src/generators/setup-mfe/schema.json"
+      "path": "/packages/angular/src/generators/setup-mf/schema.json"
     },
     {
       "name": "setup-tailwind",
@@ -1848,9 +1877,11 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the project.",
+            "aliases": ["project", "projectName"],
+            "description": "Project for which to generate stories.",
             "$default": { "$source": "argv", "index": 0 },
-            "x-prompt": "What's the name of the project for which you want to generate stories?"
+            "x-prompt": "What's the name of the project for which you want to generate stories?",
+            "x-dropdown": "projects"
           },
           "generateCypressSpecs": {
             "type": "boolean",
@@ -1860,6 +1891,11 @@
           "cypressProject": {
             "type": "string",
             "description": "The Cypress project to generate the stories under. This is inferred from `name` by default."
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -1885,8 +1921,11 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the project.",
-            "$default": { "$source": "argv", "index": 0 }
+            "aliases": ["project", "projectName"],
+            "description": "Project for which to generate Storybook configuration.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "For which project do you want to generate Storybook configuration?",
+            "x-dropdown": "projects"
           },
           "configureCypress": {
             "type": "boolean",
@@ -1916,9 +1955,15 @@
             "enum": ["eslint", "none"],
             "default": "eslint"
           },
-          "projectBuildConfig": {
-            "description": "Provide a custom projectBuildConfig for the Angular executor. If left blank, Nx will use the default.",
-            "type": "string"
+          "tsConfiguration": {
+            "type": "boolean",
+            "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
+            "default": false
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -2032,6 +2077,33 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/generators/web-worker/schema.json"
+    },
+    {
+      "name": "change-storybook-targets",
+      "factory": "./src/generators/change-storybook-targets/change-storybook-targets",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularChangeStorybookTargetsGenerator",
+        "title": "Change Storybook targets",
+        "description": "Change the Storybook target executors.",
+        "type": "object",
+        "cli": "nx",
+        "properties": {
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": [],
+        "presets": []
+      },
+      "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
+      "implementation": "/packages/angular/src/generators/change-storybook-targets/change-storybook-targets.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/change-storybook-targets/schema.json"
     }
   ],
   "executors": [
@@ -2283,7 +2355,8 @@
                   "properties": {
                     "input": {
                       "type": "string",
-                      "description": "The file to include."
+                      "description": "The file to include.",
+                      "pattern": "\\.[cm]?jsx?$"
                     },
                     "bundleName": {
                       "type": "string",
@@ -2299,7 +2372,11 @@
                   "additionalProperties": false,
                   "required": ["input"]
                 },
-                { "type": "string", "description": "The file to include." }
+                {
+                  "type": "string",
+                  "description": "The file to include.",
+                  "pattern": "\\.[cm]?jsx?$"
+                }
               ]
             }
           },
@@ -2314,7 +2391,8 @@
                   "properties": {
                     "input": {
                       "type": "string",
-                      "description": "The file to include."
+                      "description": "The file to include.",
+                      "pattern": "\\.(?:css|scss|sass|less|styl)$"
                     },
                     "bundleName": {
                       "type": "string",
@@ -2330,7 +2408,11 @@
                   "additionalProperties": false,
                   "required": ["input"]
                 },
-                { "type": "string", "description": "The file to include." }
+                {
+                  "type": "string",
+                  "description": "The file to include.",
+                  "pattern": "\\.(?:css|scss|sass|less|styl)$"
+                }
               ]
             }
           },
@@ -2585,15 +2667,9 @@
             "description": "Extract all licenses in a separate file.",
             "default": true
           },
-          "showCircularDependencies": {
-            "type": "boolean",
-            "description": "Show circular dependency warnings on builds.",
-            "default": false,
-            "x-deprecated": "The recommended method to detect circular dependencies in project code is to use either a lint rule or other external tooling."
-          },
           "buildOptimizer": {
             "type": "boolean",
-            "description": "Enables '@angular-devkit/build-optimizer' optimizations when using the 'aot' option.",
+            "description": "Enables advanced build optimizations when using the 'aot' option.",
             "default": true
           },
           "namedChunks": {
@@ -2808,32 +2884,6 @@
               }
             ]
           },
-          "extraEntryPoint": {
-            "oneOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "input": {
-                    "type": "string",
-                    "description": "The file to include."
-                  },
-                  "bundleName": {
-                    "type": "string",
-                    "pattern": "^[\\w\\-.]*$",
-                    "description": "The bundle name for this extra entry point."
-                  },
-                  "inject": {
-                    "type": "boolean",
-                    "description": "If the bundle will be referenced in the HTML file.",
-                    "default": true
-                  }
-                },
-                "additionalProperties": false,
-                "required": ["input"]
-              },
-              { "type": "string", "description": "The file to include." }
-            ]
-          },
           "budget": {
             "type": "object",
             "properties": {
@@ -2994,6 +3044,10 @@
           "poll": {
             "type": "number",
             "description": "Enable and define the file watching poll time period in milliseconds."
+          },
+          "buildLibsFromSource": {
+            "type": "boolean",
+            "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `browserTarget` options, or it will default to `true` if it's also not set in the `browserTarget` options."
           }
         },
         "additionalProperties": false,
@@ -3178,6 +3232,11 @@
           "watch": {
             "type": "boolean",
             "description": "Watch for file changes.",
+            "default": false
+          },
+          "spa": {
+            "type": "boolean",
+            "description": "Redirect 404 errors to index.html (useful for SPA's).",
             "default": false
           }
         },

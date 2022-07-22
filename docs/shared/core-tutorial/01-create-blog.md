@@ -14,7 +14,7 @@ You then receive the following prompts in your command line:
 
 ```bash
 Workspace name (e.g., org name)         myorg
-What to create in the new workspace     core
+What to create in the new workspace     npm
 ```
 
 > You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
@@ -47,17 +47,26 @@ Which tells yarn (or npm) and Nx to look in the `packages` folder for projects t
 
 To install Eleventy run:
 
-```bash
-yarn add -D -W @11ty/eleventy@1.0.0
-```
-
-or
+{% tabs %}
+{% tab label="yarn" %}
 
 ```bash
-npm add -D @11ty/eleventy@1.0.0
+yarn add -D @11ty/eleventy@1.0.0
 ```
 
-Note: We are intentionally installing the package at the root of the workspace because this forces the organization to have the upfront cost of agreeing on the same versions of dependencies rather than the delayed cost of having projects using multiple different incompatible versions of dependencies. Yarn needs the `-W` flag so that you can install dependencies at the root. This is not a requirement of Nx, just a suggestion to help you maintain a growing repo.
+{% /tab %}
+{% tab label="npm" %}
+
+```bash
+nx generate @nrwl/react:library
+```
+
+{% /tab %}
+{% /tabs %}
+
+{% callout type="check" title="Installing in workspace's root" %}
+We are intentionally installing the package at the root of the workspace because this forces the organization to have the upfront cost of agreeing on the same versions of dependencies rather than the delayed cost of having projects using multiple different incompatible versions of dependencies. This is not a requirement of Nx, just a suggestion to help you maintain a growing repo.
+{% /callout %}
 
 **Eleventy Hello World**
 

@@ -11,7 +11,6 @@
       "implementation": "./src/executors/jest/jest.impl",
       "batchImplementation": "./src/executors/jest/jest.impl#batchJest",
       "schema": "./src/executors/jest/schema.json",
-      "hasher": "./src/executors/jest/hasher",
       "description": "Run Jest unit tests."
     }
   }

@@ -17,3 +17,24 @@ export function normalizePath(osSpecificPath: string): string {
 export function joinPathFragments(...fragments: string[]): string {
   return normalizePath(path.join(...fragments));
 }
+
+/**
+ * Detect workspace scope from the package.json name
+ * @param packageName
+ * @returns
+ */
+export function detectWorkspaceScope(packageName: string): string {
+  return packageName?.startsWith('@')
+    ? packageName.substring(1).split('/')[0]
+    : '';
+}
+
+/**
+ * Prefixes project name with npm scope
+ */
+export function getImportPath(
+  npmScope: string,
+  projectDirectory: string
+): string {
+  return npmScope ? `@${npmScope}/${projectDirectory}` : projectDirectory;
+}

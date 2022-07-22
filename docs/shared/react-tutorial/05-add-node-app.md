@@ -1,6 +1,9 @@
 # React Nx Tutorial - Step 5: Add Node Application Implementing API
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/XgfknOqgxQ0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/XgfknOqgxQ0"
+title="Nx.dev Tutorial | React | Step 5: Add Node Application Implementing API"
+width="100%" /%}
 
 The requests fail because the API has not been created yet. Using Nx you develop node applications next to your React applications. You can use same commands to run and test them. You share code between the backend and the frontend. Use this capability to implement the API service.
 
@@ -40,17 +43,26 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
 
 **Add the dependency:**
 
-```bash
-npm install --save-dev @nrwl/express
-```
-
-or
+{% tabs %}
+{% tab label="yarn" %}
 
 ```bash
 yarn add --dev @nrwl/express
 ```
 
-> `@nrwl/express` also added `@nrwl/node`. Run `npx nx list @nrwl/express` and `npx nx list @nrwl/node` to see what those plugins provide.
+{% /tab %}
+{% tab label="npm" %}
+
+```bash
+npm install --save-dev @nrwl/express
+```
+
+{% /tab %}
+{% /tabs %}
+
+{% callout type="check" title="List plugins" %}
+When installing `@nrwl/express`, it also automatically added `@nrwl/node` for you. Run `npx nx list @nrwl/express` and `npx nx list @nrwl/node` to see what those plugins provide.
+{% /callout %}
 
 ## Generate an Express application
 
@@ -95,9 +107,11 @@ The `apps` directory is where Nx places anything you can run: frontend applicati
 
 You can run:
 
-- `npx nx serve api` to serve the application
-- `npx nx build api` to build the application
-- `npx nx test api` to test the application
+| Command          | Description           |
+| ---------------- | --------------------- |
+| npx nx serve api | serve the application |
+| npx nx build api | build the application |
+| npx nx test api  | test the application  |
 
 **Add a file `apps/api/src/app/todos.ts`.**
 

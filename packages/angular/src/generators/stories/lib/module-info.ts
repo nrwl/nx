@@ -1,5 +1,10 @@
 import type { Tree } from '@nrwl/devkit';
-import { logger, stripIndents, visitNotIgnoredFiles } from '@nrwl/devkit';
+import {
+  logger,
+  normalizePath,
+  stripIndents,
+  visitNotIgnoredFiles,
+} from '@nrwl/devkit';
 import { findNodes } from '@nrwl/workspace/src/utilities/typescript';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { extname } from 'path';
@@ -11,6 +16,7 @@ import type {
 } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { getDecoratorMetadata } from '../../../utils/nx-devkit/ast-utils';
+import type { EntryPoint } from './entry-point';
 
 export function getModuleDeclaredComponents(
   file: SourceFile,
@@ -43,12 +49,29 @@ export function getModuleDeclaredComponents(
   return getDeclaredComponentsInDeclarations(declarationsArray);
 }
 
-export function getModuleFilePaths(tree: Tree, projectPath: string): string[] {
+export function getModuleFilePaths(
+  tree: Tree,
+  entryPoint: EntryPoint
+): string[] {
   let moduleFilePaths = [] as string[];
 
-  visitNotIgnoredFiles(tree, projectPath, (filePath: string) => {
-    if (extname(filePath) === '.ts' && hasNgModule(tree, filePath)) {
-      moduleFilePaths.push(filePath);
+  visitNotIgnoredFiles(tree, entryPoint.path, (filePath: string) => {
+    const normalizedFilePath = normalizePath(filePath);
+
+    if (
+      entryPoint.excludeDirs?.some((excludeDir) =>
+        normalizedFilePath.startsWith(excludeDir)
+      )
+    ) {
+      return;
+    }
+
+    if (
+      extname(normalizedFilePath) === '.ts' &&
+      !normalizedFilePath.includes('.storybook') &&
+      hasNgModule(tree, normalizedFilePath)
+    ) {
+      moduleFilePaths.push(normalizedFilePath);
     }
   });
 

@@ -26,18 +26,6 @@ describe('init', () => {
     expect(packageJson.devDependencies['@testing-library/react']).toBeDefined();
   });
 
-  describe('defaultCollection', () => {
-    it('should be set if none was set before', async () => {
-      await reactInitGenerator(tree, schema);
-      const { cli, generators } = readJson<NxJsonConfiguration>(
-        tree,
-        'nx.json'
-      );
-      expect(cli.defaultCollection).toEqual('@nrwl/react');
-      expect(generators['@nrwl/react'].application.babel).toBe(true);
-    });
-  });
-
   it('should not add jest config if unitTestRunner is none', async () => {
     await reactInitGenerator(tree, { ...schema, unitTestRunner: 'none' });
     expect(tree.exists('jest.config.js')).toEqual(false);

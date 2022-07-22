@@ -1,15 +1,18 @@
 import type { NxJsonConfiguration } from './nx-json';
 
-export interface Workspace
-  extends WorkspaceJsonConfiguration,
-    NxJsonConfiguration {
+export interface Workspace extends ProjectsConfigurations, NxJsonConfiguration {
   projects: Record<string, ProjectConfiguration>;
 }
 
 /**
- * Workspace configuration
+ * @deprecated use ProjectsConfigurations
  */
-export interface WorkspaceJsonConfiguration {
+export type WorkspaceJsonConfiguration = ProjectsConfigurations;
+
+/**
+ * Projects Configurations
+ */
+export interface ProjectsConfigurations {
   /**
    * Version of the configuration format
    */
@@ -22,8 +25,8 @@ export interface WorkspaceJsonConfiguration {
   };
 }
 
-export interface RawWorkspaceJsonConfiguration
-  extends Omit<WorkspaceJsonConfiguration, 'projects'> {
+export interface RawProjectsConfigurations
+  extends Omit<ProjectsConfigurations, 'projects'> {
   projects: { [projectName: string]: ProjectConfiguration | string };
 }
 
@@ -86,6 +89,11 @@ export interface ProjectConfiguration {
   implicitDependencies?: string[];
 
   /**
+   * Named inputs targets can refer to reduce duplication
+   */
+  namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
+
+  /**
    * List of tags used by nx-enforce-module-boundaries / project graph
    */
   tags?: string[];
@@ -104,12 +112,23 @@ export interface TargetDependencyConfig {
    * The name of the target
    */
   target: string;
+
+  /**
+   * Configuration for params handling.
+   */
+  params?: 'ignore' | 'forward';
 }
+
+export type InputDefinition =
+  | { input: string; projects: 'self' | 'dependencies' }
+  | { fileset: string }
+  | { runtime: string }
+  | { env: string };
 
 /**
  * Target's configuration
  */
-export interface TargetConfiguration {
+export interface TargetConfiguration<T = any> {
   /**
    * The executor/builder used to implement the target.
    *
@@ -129,9 +148,14 @@ export interface TargetConfiguration {
   dependsOn?: (TargetDependencyConfig | string)[];
 
   /**
+   * This describes filesets, runtime dependencies and other inputs that a target depends on.
+   */
+  inputs?: (InputDefinition | string)[];
+
+  /**
    * Target's options. They are passed in to the executor.
    */
-  options?: any;
+  options?: T;
 
   /**
    * Sets of options

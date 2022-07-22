@@ -225,6 +225,16 @@
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/translations"
   },
   {
+    "name": "@nx-extend/firebase-hosting",
+    "description": "Nx plugin to deploy your apps to Firebase hosting",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/firebase-hosting"
+  },
+  {
+    "name": "@nx-extend/e2e-runner",
+    "description": "Nx plugin that can start your API before running Cypress",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/e2e-runner"
+  },
+  {
     "name": "@nativescript/nx",
     "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
     "url": "https://github.com/nativescript/nx"
@@ -258,5 +268,25 @@
     "name": "nx-uvu",
     "description": "An nx executor for the uvu test library",
     "url": "https://github.com/jmcdo29/nx-uvu"
+  },
+  {
+    "name": "@ndrsg/nx-http",
+    "description": "Plugin with executors, which can perform http-stuff (e.g. requests, webhooks, file up/downloads, ...)",
+    "url": "https://github.com/ndrsg/nx-ext/tree/main/packages/nx-http"
+  },
+  {
+    "name": "@diogovcs/graphql-mesh",
+    "description": "Nx plugin to add GraphQL Mesh integration to Nx Workspace.",
+    "url": "https://github.com/DiogoVCS/nx-graphql-mesh"
+  },
+  {
+    "name": "@computas/nx-yarn",
+    "description": "A plugin to help make nx with yarn a pleasant experience.",
+    "url": "https://github.com/computas/nx-yarn"
+  },
+  {
+    "name": "@theunderscorer/nx-semantic-release",
+    "description": "Nx plugin for automated releases using semantic-release.",
+    "url": "https://github.com/TheUnderScorer/nx-semantic-release"
   }
 ]

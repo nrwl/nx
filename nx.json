@@ -1,11 +1,5 @@
 {
-  "implicitDependencies": {
-    "package.json": "*",
-    ".eslintrc.json": "*",
-    "scripts/vercel/*": ["nx-dev"],
-    ".circleci/config.yml": "*",
-    "tools/eslint-rules/**/*": "*"
-  },
+  "$schema": "packages/nx/schemas/nx-schema.json",
   "affected": {
     "defaultBase": "master"
   },
@@ -14,69 +8,68 @@
     "default": {
       "runner": "@nrwl/nx-cloud",
       "options": {
-        "accessToken": "YzVhYjFiNzAtYTYxZS00OWM3LTlkOGYtZjRmOGRlNDY4MTJhfHJlYWQtd3JpdGU=",
+        "accessToken": "MjEyM2IwYWQtMTEyMS00ZGFmLThkY2UtYjg4YWRiZTNjZmI5fHJlYWQtd3JpdGU=",
         "cacheableOperations": [
           "build",
+          "lint-base",
+          "lint",
           "build-base",
           "test",
-          "lint",
-          "e2e",
-          "sitemap"
+          "sitemap",
+          "e2e"
         ],
         "useDaemonProcess": true,
-        "runtimeCacheInputs": [
-          "echo $SELECTED_CLI",
-          "echo $NX_E2E_CI_CACHE_KEY"
-        ],
         "cacheDirectory": "/tmp/nx-cache",
-        "parallel": 1
+        "parallel": 1,
+        "url": "https://staging.nx.app"
       }
     }
-  },
-  "targetDependencies": {
-    "build": [
-      {
-        "target": "build-base",
-        "projects": "self"
-      }
-    ],
-    "build-base": [
-      {
-        "target": "build-base",
-        "projects": "dependencies"
-      }
-    ]
   },
   "workspaceLayout": {
     "libsDir": "",
     "appsDir": ""
   },
-  "cli": {
-    "defaultCollection": "@nrwl/react"
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "prod": ["!{projectRoot}/**/*.spec.ts{,.snap}"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["build-base"],
+      "inputs": ["prod", "^prod"]
+    },
+    "build-base": {
+      "dependsOn": ["^build-base"],
+      "inputs": ["prod", "^prod"]
+    },
+    "test": {
+      "inputs": ["default", "^prod", "{workspaceRoot}/jest.config.ts"]
+    },
+    "lint": {
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ]
+    },
+    "e2e": {
+      "inputs": [
+        "default",
+        "^prod",
+        {
+          "env": "SELECTED_CLI"
+        },
+        {
+          "env": "NX_E2E_CI_CACHE_KEY"
+        }
+      ]
+    }
   },
   "generators": {
     "@nrwl/react": {
       "application": {
-        "style": "css",
-        "linter": "eslint",
         "babel": true
-      },
-      "component": {
-        "style": "css"
-      },
-      "library": {
-        "style": "css",
-        "linter": "eslint"
       }
     }
-  },
-  "pluginsConfig": {
-    "@nrwl/jest": {
-      "hashingExcludesTestsOfDeps": true
-    },
-    "@nrwl/cypress": {
-      "hashingExcludesTestsOfDeps": true
-    }
-  },
-  "defaultProject": "dep-graph-client"
+  }
 }

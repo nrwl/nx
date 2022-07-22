@@ -50,8 +50,8 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   async migrate(): Promise<void> {
-    this.moveProjectFiles();
     await this.updateProjectConfiguration();
+    this.moveProjectFiles();
     this.updateNgPackageJson();
     this.updateTsConfigs();
     this.updateEsLintConfig();
@@ -259,7 +259,7 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
       return;
     }
 
-    const existEsLintConfigPath = this.tree.exists(this.newEsLintConfigPath);
+    const existEsLintConfigPath = this.tree.exists(this.oldEsLintConfigPath);
     if (!existEsLintConfigPath) {
       this.logger.warn(
         `The ESLint config file "${this.oldEsLintConfigPath}" could not be found. Skipping updating the file.`
@@ -267,11 +267,7 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
     }
 
     lintOptions.eslintConfig =
-      lintOptions.eslintConfig &&
-      joinPathFragments(
-        this.project.newRoot,
-        basename(lintOptions.eslintConfig)
-      );
+      lintOptions.eslintConfig && this.newEsLintConfigPath;
     lintOptions.lintFilePatterns =
       lintOptions.lintFilePatterns &&
       lintOptions.lintFilePatterns.map((pattern) => {
@@ -304,7 +300,7 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
       return;
     }
 
-    const eslintConfig = readJson(this.tree, this.newEsLintConfigPath);
+    const eslintConfig = readJson(this.tree, this.oldEsLintConfigPath);
     if (hasRulesRequiringTypeChecking(eslintConfig)) {
       lintOptions.hasTypeAwareRules = true;
     }

@@ -18,12 +18,20 @@ const allowedExt = ['.ts', '.js'];
 
 function updateTsConfig(tree: Tree, tsConfigPath: string) {
   try {
-    updateJson(tree, tsConfigPath, (json) => {
-      json.exclude = Array.from(
-        new Set([...(json.exclude || []), 'jest.config.ts'])
-      );
-      return json;
-    });
+    updateJson(
+      tree,
+      tsConfigPath,
+      (json) => {
+        json.exclude = Array.from(
+          new Set([...(json.exclude || []), 'jest.config.ts'])
+        );
+        return json;
+      },
+      {
+        allowTrailingComma: true,
+        disallowComments: false,
+      }
+    );
   } catch (e) {
     logger.warn(
       stripIndents`Nx Unable to update ${tsConfigPath}. Please manually ignore the jest.config.ts file.`

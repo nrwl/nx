@@ -56,35 +56,53 @@ Even though we started building Nx Console as a tool for experts, we also aimed 
 
 The `Generate` action allows you to choose a generator and then opens a form listing out all the options for that generator. As you make changes to the form, the generator is executed in `--dry-run` mode in a terminal so you can preview the results of running the generator in real time.
 
-<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/-nUr66MWRiE?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/-nUr66MWRiE"
+title="Nx Console Generate UI Form"
+width="100%" /%}
 
 **From the Command Palette**
 
 You can also launch the `Generate` action from the Command Palette (`⇧⌘P`) by selecting `nx: generate (ui)`.
 
-<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/Sk2XjFwF8Zo?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/Sk2XjFwF8Zo"
+title="Nx Console Generate UI from Command Palette"
+width="100%" /%}
 
 You can even construct the generator options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: generate`. After choosing a generator, select any of the listed options to modify the generator command. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.
 
-<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/q5NTTqRYq9c?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/q5NTTqRYq9c"
+title="Nx Console Generate with Command Palette"
+width="100%" /%}
 
 #### Run
 
 The `Run` action allows you to choose an executor command and then opens a form listing out all the options for that executor. The frequently used executor commands `build`, `serve`, `test`, `e2e` and `lint` also have their own dedicated actions.
 
-<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/rNImFxo9gYs?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/rNImFxo9gYs"
+title="Nx Console Run UI Form"
+width="100%" /%}
 
 **From the Command Palette**
 
 You can also construct the executor command options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: test`. After choosing a project, select any of the listed options to modify the executor command options. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.
 
-<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/CsUkSyQcxwQ?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/CsUkSyQcxwQ"
+title="Nx Console Run from Command Palette"
+width="100%" /%}
 
 #### Common Nx Commands
 
 You can also launch other common Nx commands with the options listed out in the Command Palette.
 
-<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/v6Tso0lB6S4?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/v6Tso0lB6S4"
+title="Nx Console Affected"
+width="100%" /%}
 
 #### Projects
 
@@ -96,7 +114,10 @@ Clicking the ![folder-light.svg](./folder-light.svg) icon next to a project reve
 
 Clicking the ![continue-light.svg](./continue-light.svg) icon next to an executor command executes that command without prompting for options.
 
-<iframe loading="lazy" width="560" height="420" src="https://www.youtube.com/embed/ve_N3unDqAg?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/ve_N3unDqAg"
+title="Nx Console Projects Pane"
+width="100%" /%}
 
 #### Streamlining
 

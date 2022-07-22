@@ -1,4 +1,3 @@
-import { stringUtils } from '@nrwl/workspace';
 import {
   checkFilesExist,
   cleanupProject,
@@ -18,6 +17,7 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { stringUtils } from '@nrwl/workspace';
 import * as http from 'http';
 
 describe('Next.js Applications', () => {
@@ -112,7 +112,7 @@ describe('Next.js Applications', () => {
           )}`
     );
 
-    const e2eTestPath = `apps/${appName}-e2e/src/integration/app.spec.ts`;
+    const e2eTestPath = `apps/${appName}-e2e/src/e2e/app.cy.ts`;
     const e2eContent = readFile(e2eTestPath);
     updateFile(
       e2eTestPath,
@@ -144,9 +144,12 @@ describe('Next.js Applications', () => {
 
   it('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
+    const jsLib = uniq('tslib');
+
     const port = 4201;
 
     runCLI(`generate @nrwl/next:app ${appName}`);
+    runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
 
     const proxyConf = {
       '/external-api': {
@@ -160,13 +163,23 @@ describe('Next.js Applications', () => {
     updateFile('.env.local', 'NX_CUSTOM_VAR=test value from a file');
 
     updateFile(
+      `libs/${jsLib}/src/lib/${jsLib}.ts`,
+      `
+          export function testFn(): string {
+            return process.env.NX_CUSTOM_VAR;
+          };
+          `
+    );
+
+    updateFile(
       `apps/${appName}/pages/index.tsx`,
       `
         import React from 'react';
-        
+        import { testFn } from '@${proj}/${jsLib}';
+
         export const Index = ({ greeting }: any) => {
           return (
-            <p>{process.env.NX_CUSTOM_VAR}</p>
+            <p>{testFn()}</p>
           );
         };
         export default Index;
@@ -322,7 +335,7 @@ describe('Next.js Applications', () => {
         server.disable('x-powered-by');
 
         server.use(
-          express.static(path.resolve(settings.dir, settings.conf.outdir, 'public'))
+          express.static(path.resolve(settings.dir, 'public'))
         );
 
         // Default catch-all handler to allow Next.js to handle all other routes
@@ -412,7 +425,7 @@ describe('Next.js Applications', () => {
   }, 300000);
   it('should run default jest tests', async () => {
     await expectJestTestsToPass('@nrwl/next:app');
-  });
+  }, 100000);
 });
 
 function getData(port: number, path = ''): Promise<any> {

@@ -1,5 +1,6 @@
 import * as path from 'path';
-import { existsSync, removeSync, statSync } from 'fs-extra';
+import { existsSync, removeSync } from 'fs-extra';
+import { directoryExists } from 'nx/src/utils/fileutils';
 
 export function findUp(
   names: string | string[],
@@ -39,7 +40,7 @@ export function findAllNodeModules(from: string, root?: string) {
   let current = from;
   while (current && current !== root) {
     const potential = path.join(current, 'node_modules');
-    if (existsSync(potential) && isDirectory(potential)) {
+    if (directoryExists(potential)) {
       nodeModules.push(potential);
     }
 
@@ -63,12 +64,4 @@ export function deleteOutputDir(root: string, outputPath: string) {
   }
 
   removeSync(resolvedOutputPath);
-}
-
-export function isDirectory(path: string) {
-  try {
-    return statSync(path).isDirectory();
-  } catch (_) {
-    return false;
-  }
 }

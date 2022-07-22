@@ -2,15 +2,20 @@ import { toOldFormatOrNull, Workspaces } from '../config/workspaces';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
+import { readNxJson } from '../config/configuration';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { FileData } from '../config/project-graph';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import type { NxArgs } from '../utils/command-line-utils';
-import { workspaceRoot } from '../utils/app-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { fileExists } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
 import ignore from 'ignore';
-import { FileData } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
+import {
+  readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+} from './project-graph';
 
 export interface Change {
   type: string;
@@ -112,24 +117,26 @@ function defaultReadFileAtRevision(
   }
 }
 
-export function readWorkspaceJson(): WorkspaceJsonConfiguration {
-  return readWorkspaceConfig({
-    format: 'nx',
-    path: workspaceRoot,
-  });
-}
-
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
   path?: string;
-}) {
-  const ws = new Workspaces(opts.path || process.cwd());
-  const json = ws.readWorkspaceConfiguration();
+}): ProjectsConfigurations & NxJsonConfiguration {
+  let configuration: (ProjectsConfigurations & NxJsonConfiguration) | null;
+  try {
+    const projectGraph = readCachedProjectGraph();
+    configuration = {
+      ...readNxJson(),
+      ...readProjectsConfigurationFromProjectGraph(projectGraph),
+    };
+  } catch {
+    const ws = new Workspaces(opts.path || process.cwd());
+    configuration = ws.readWorkspaceConfiguration();
+  }
   if (opts.format === 'angularCli') {
-    const formatted = toOldFormatOrNull(json);
-    return formatted ?? json;
+    const formatted = toOldFormatOrNull(configuration);
+    return formatted ?? configuration;
   } else {
-    return json;
+    return configuration;
   }
 }
 
@@ -148,45 +155,5 @@ export function defaultFileRead(filePath: string): string | null {
 export function readPackageJson(): any {
   return readJsonFile(`${workspaceRoot}/package.json`);
 }
-
-/**
- * Returns the contents of nx.json.
- *
- * If nx.json extends another config file, it will be inlined here.
- */
-export function readNxJson(
-  path: string = `${workspaceRoot}/nx.json`
-): NxJsonConfiguration {
-  let config = readJsonFile<NxJsonConfiguration>(path);
-
-  if (config.extends) {
-    config = {
-      ...resolveNxJsonExtends(config.extends),
-      ...config,
-    };
-  }
-
-  return config;
-}
-
-function resolveNxJsonExtends(extendedNxJsonPath: string) {
-  try {
-    return readJsonFile(require.resolve(extendedNxJsonPath));
-  } catch (e) {
-    throw new Error(`Unable to resolve nx.json extends. Error: ${e.message}`);
-  }
-}
-
-/**
- * Returns information about where apps and libs will be created.
- */
-export function workspaceLayout(): { appsDir: string; libsDir: string } {
-  const nxJson = readNxJson();
-  return {
-    appsDir: nxJson.workspaceLayout?.appsDir ?? 'apps',
-    libsDir: nxJson.workspaceLayout?.libsDir ?? 'libs',
-  };
-}
-
 // Original Exports
 export { FileData };

@@ -61,12 +61,14 @@
       "type": "string",
       "enum": ["classes", "creators"],
       "default": "creators",
-      "description": "Specifies whether to use class-based or creator functions for actions, reducers, and effects."
+      "description": "Specifies whether to use class-based or creator functions for actions, reducers, and effects.",
+      "x-deprecated": "Classes syntax is deprecated and this option will be removed in v15. Creators syntax will be the default in v15 and this option will be removed."
     },
     "useDataPersistence": {
       "type": "boolean",
       "default": false,
-      "description": "Generate NgRx Effects with the `DataPersistence` helper service. Set to false to use plain effects data persistence operators."
+      "description": "Generate NgRx Effects with the `DataPersistence` helper service. Set to false to use plain effects data persistence operators.",
+      "x-deprecated": "This option is deprecated and will be removed in v15. Using the individual operators is recommended."
     },
     "barrels": {
       "type": "boolean",

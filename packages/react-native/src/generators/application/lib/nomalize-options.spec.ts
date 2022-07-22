@@ -1,15 +1,24 @@
+import { Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { Schema } from '../schema';
 import { normalizeOptions } from './normalize-options';
 
 describe('Normalize Options', () => {
+  let appTree: Tree;
+
+  beforeEach(() => {
+    appTree = createTreeWithEmptyWorkspace();
+  });
+
   it('should normalize options with name in kebab case', () => {
     const schema: Schema = {
       name: 'my-app',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
+      install: false,
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -24,6 +33,7 @@ describe('Normalize Options', () => {
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 
@@ -31,8 +41,9 @@ describe('Normalize Options', () => {
     const schema: Schema = {
       name: 'myApp',
       e2eTestRunner: 'none',
+      install: false,
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -46,6 +57,7 @@ describe('Normalize Options', () => {
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 
@@ -54,8 +66,9 @@ describe('Normalize Options', () => {
       name: 'my-app',
       directory: 'directory',
       e2eTestRunner: 'none',
+      install: false,
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/directory/my-app/android',
       appProjectRoot: 'apps/directory/my-app',
@@ -70,6 +83,7 @@ describe('Normalize Options', () => {
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 
@@ -77,8 +91,9 @@ describe('Normalize Options', () => {
     const schema: Schema = {
       name: 'directory/my-app',
       e2eTestRunner: 'none',
+      install: false,
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/directory/my-app/android',
       appProjectRoot: 'apps/directory/my-app',
@@ -92,6 +107,7 @@ describe('Normalize Options', () => {
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 
@@ -100,8 +116,9 @@ describe('Normalize Options', () => {
       name: 'my-app',
       displayName: 'My App',
       e2eTestRunner: 'none',
+      install: false,
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -115,6 +132,7 @@ describe('Normalize Options', () => {
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 });

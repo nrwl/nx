@@ -2,7 +2,9 @@
 
 Turborepo is a build tool that has just been released (Dec 2021). It borrows many ideas from Nx, so, naturally, some folks will compare Nx and Turborepo. This document provides some context to help you evaluate what works best for you.
 
-> Note that the relationship between Nx and Turborepo isn’t the same as with Nx and say Yarn workspaces or Lerna. Nx and Yarn workspaces are complementary, so it makes sense to use both in some situations. Turborepo is a subset of Nx (at this point), so we don’t think it makes sense to use both.
+{% callout type="warning" title="Few key differences" %}
+Note that the relationship between Nx and Turborepo isn’t the same as with Nx and say Yarn workspaces or Lerna. Nx and Yarn workspaces are complementary, so it makes sense to use both in some situations. Turborepo is a subset of Nx (at this point), so we don’t think it makes sense to use both.
+{% /callout %}
 
 We do our best to be unbiased, but, of course you should do your own research. Read the docs, try things out, etc.
 

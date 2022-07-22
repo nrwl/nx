@@ -1,5 +1,5 @@
 import { dirname, join } from 'path';
-import type { WorkspaceJsonConfiguration } from '@nrwl/devkit';
+import type { ProjectsConfigurations } from '@nrwl/devkit';
 import { readWorkspaceConfig } from 'nx/src/project-graph/file-utils';
 
 const JEST_RUNNER_TOKEN = '@nrwl/jest:jest';
@@ -11,7 +11,7 @@ function getJestConfigProjectPath(projectJestConfigPath: string): string {
 export function getJestProjects() {
   const ws = readWorkspaceConfig({
     format: 'nx',
-  }) as WorkspaceJsonConfiguration;
+  }) as ProjectsConfigurations;
   const jestConfigurationSet = new Set();
   for (const projectConfig of Object.values(ws.projects)) {
     if (!projectConfig.targets) {

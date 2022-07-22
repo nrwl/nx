@@ -8,7 +8,6 @@ import {
   parseJson,
   ProjectGraphExternalNode,
   joinPathFragments,
-  FileData,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { workspaceRoot } from './app-root';
@@ -17,20 +16,15 @@ import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 
-export type MappedProjectGraphNode<T = any> = ProjectGraphProjectNode<T> & {
-  data: {
-    files: Record<string, FileData>;
-  };
-};
 export type MappedProjectGraph<T = any> = ProjectGraph<T> & {
-  nodes: Record<string, MappedProjectGraphNode<T>>;
+  allFiles: Record<string, string>;
 };
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
   sourceTag: string;
-  onlyDependOnLibsWithTags: string[];
-  notDependOnLibsWithTags: string[];
+  onlyDependOnLibsWithTags?: string[];
+  notDependOnLibsWithTags?: string[];
   bannedExternalImports?: string[];
 };
 
@@ -111,14 +105,15 @@ export function getTargetProjectBasedOnRelativeImport(
   projectPath: string,
   projectGraph: MappedProjectGraph,
   sourceFilePath: string
-): MappedProjectGraphNode<any> | undefined {
+): ProjectGraphProjectNode<any> | undefined {
   if (!isRelative(imp)) {
     return undefined;
   }
+  const sourceDir = path.join(projectPath, path.dirname(sourceFilePath));
 
-  const targetFile = normalizePath(
-    path.resolve(path.join(projectPath, path.dirname(sourceFilePath)), imp)
-  ).substring(projectPath.length + 1);
+  const targetFile = normalizePath(path.resolve(sourceDir, imp)).substring(
+    projectPath.length + 1
+  );
 
   return findTargetProject(projectGraph, targetFile);
 }
@@ -126,8 +121,8 @@ export function getTargetProjectBasedOnRelativeImport(
 export function findProjectUsingFile<T>(
   projectGraph: MappedProjectGraph<T>,
   file: string
-): MappedProjectGraphNode {
-  return Object.values(projectGraph.nodes).find((n) => n.data.files[file]);
+): ProjectGraphProjectNode {
+  return projectGraph.nodes[projectGraph.allFiles[file]];
 }
 
 export function findSourceProject(
@@ -175,7 +170,7 @@ export function findProjectUsingImport(
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string
-): MappedProjectGraphNode | ProjectGraphExternalNode {
+): ProjectGraphProjectNode | ProjectGraphExternalNode {
   const target = targetProjectLocator.findProjectWithImport(imp, filePath);
   return projectGraph.nodes[target] || projectGraph.externalNodes?.[target];
 }
@@ -207,15 +202,33 @@ export function onlyLoadChildren(
 }
 
 export function getSourceFilePath(sourceFileName: string, projectPath: string) {
-  return normalizePath(sourceFileName).substring(projectPath.length + 1);
+  const relativePath = sourceFileName.slice(projectPath.length + 1);
+  return normalizePath(relativePath);
+}
+
+/**
+ * Find constraint (if any) that explicitly banns the given target npm project
+ * @param externalProject
+ * @param depConstraints
+ * @returns
+ */
+function isConstraintBanningProject(
+  externalProject: ProjectGraphExternalNode,
+  constraint: DepConstraint
+): boolean {
+  return constraint.bannedExternalImports.some((importDefinition) =>
+    parseImportWildcards(importDefinition).test(
+      externalProject.data.packageName
+    )
+  );
 }
 
 export function hasBannedImport(
   source: ProjectGraphProjectNode,
-  target: ProjectGraphProjectNode | ProjectGraphExternalNode,
+  target: ProjectGraphExternalNode,
   depConstraints: DepConstraint[]
-): DepConstraint | null {
-  // return those constraints that match source projec and have `bannedExternalImports` defined
+): DepConstraint | undefined {
+  // return those constraints that match source project and have `bannedExternalImports` defined
   depConstraints = depConstraints.filter(
     (c) =>
       (source.data.tags || []).includes(c.sourceTag) &&
@@ -223,10 +236,74 @@ export function hasBannedImport(
       c.bannedExternalImports.length
   );
   return depConstraints.find((constraint) =>
-    constraint.bannedExternalImports.some((importDefinition) =>
-      parseImportWildcards(importDefinition).test(target.data.packageName)
-    )
+    isConstraintBanningProject(target, constraint)
   );
+}
+
+/**
+ * Find all unique (transitive) external dependencies of given project
+ * @param graph
+ * @param source
+ * @returns
+ */
+export function findTransitiveExternalDependencies(
+  graph: ProjectGraph,
+  source: ProjectGraphProjectNode
+): ProjectGraphDependency[] {
+  if (!graph.externalNodes) {
+    return [];
+  }
+  const allReachableProjects = [];
+  const allProjects = Object.keys(graph.nodes);
+
+  for (let i = 0; i < allProjects.length; i++) {
+    if (pathExists(graph, source.name, allProjects[i])) {
+      allReachableProjects.push(allProjects[i]);
+    }
+  }
+
+  const externalDependencies = [];
+  for (let i = 0; i < allReachableProjects.length; i++) {
+    const dependencies = graph.dependencies[allReachableProjects[i]];
+    if (dependencies) {
+      for (let d = 0; d < dependencies.length; d++) {
+        const dependency = dependencies[d];
+        if (graph.externalNodes[dependency.target]) {
+          externalDependencies.push(dependency);
+        }
+      }
+    }
+  }
+
+  return externalDependencies;
+}
+
+/**
+ * Check if
+ * @param externalDependencies
+ * @param graph
+ * @param depConstraint
+ * @returns
+ */
+export function hasBannedDependencies(
+  externalDependencies: ProjectGraphDependency[],
+  graph: ProjectGraph,
+  depConstraint: DepConstraint
+):
+  | Array<[ProjectGraphExternalNode, ProjectGraphProjectNode, DepConstraint]>
+  | undefined {
+  return externalDependencies
+    .filter((dependency) =>
+      isConstraintBanningProject(
+        graph.externalNodes[dependency.target],
+        depConstraint
+      )
+    )
+    .map((dep) => [
+      graph.externalNodes[dep.target],
+      graph.nodes[dep.source],
+      depConstraint,
+    ]);
 }
 
 export function isDirectDependency(target: ProjectGraphExternalNode): boolean {
@@ -281,22 +358,19 @@ export function mapProjectGraphFiles<T>(
   if (!projectGraph) {
     return null;
   }
-  const nodes: Record<string, MappedProjectGraphNode> = {};
+  const allFiles: Record<string, string> = {};
   Object.entries(
     projectGraph.nodes as Record<string, ProjectGraphProjectNode>
   ).forEach(([name, node]) => {
-    const files: Record<string, FileData> = {};
-    node.data.files.forEach(({ file, hash, deps }) => {
-      files[removeExt(file)] = { file, hash, ...(deps && { deps }) };
+    node.data.files.forEach(({ file }) => {
+      const fileName = removeExt(file);
+      allFiles[fileName] = name;
     });
-    const data = { ...node.data, files };
-
-    nodes[name] = { ...node, data };
   });
 
   return {
     ...projectGraph,
-    nodes,
+    allFiles,
   };
 }
 

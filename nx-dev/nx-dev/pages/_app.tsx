@@ -1,5 +1,4 @@
 import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
-import { AnnouncementBanner } from '@nrwl/nx-dev/ui-common';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -83,13 +82,13 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
       {/* HubSpot Analytics */}
       <Script
         id="hs-script-loader"
-        strategy="lazyOnload"
+        strategy="worker"
         src="https://js.hs-scripts.com/2757427.js"
       />
       {/* Hotjar Analytics */}
       <Script
         id="hotjar-script-loader"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
           (function(h,o,t,j,a,r){

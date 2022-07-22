@@ -44,12 +44,13 @@ export default async function* moduleFederationDevServer(
     : [options.devRemotes];
 
   for (const app of knownRemotes) {
-    const isDev = devServeApps.includes(app);
+    const [appName] = Array.isArray(app) ? app : [app];
+    const isDev = devServeApps.includes(appName);
     iter = combineAsyncIterators(
       iter,
       await runExecutor(
         {
-          project: app,
+          project: appName,
           target: isDev ? 'serve' : 'serve-static',
           configuration: context.configurationName,
         },

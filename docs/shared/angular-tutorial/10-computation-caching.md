@@ -1,6 +1,9 @@
 # Angular Nx Tutorial - Step 10: Computation Caching
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/HX3--ilBhBs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/HX3--ilBhBs"
+title="Nx.dev Tutorial | Angular | Step 10: Use Computation Caching"
+width="100%" /%}
 
 Nx has built-in computation caching, which helps drastically improve the performance of the commands.
 
@@ -55,7 +58,9 @@ Build at: 2022-01-21T20:36:14.528Z - Hash: 795c96ce5e48a766 - Time: 11596ms
 
 Based on the state of the source code and the environment, Nx was able to figure out that it had already run this exact command. Nx found the artifact in the local cache and replayed the output and restored the necessary files.
 
-> Caching only works with the Nx CLI. Running `ng build todos` runs the command every single time.
+{% callout type="warning" title="Caching is a feature of Nx CLI" %}
+Caching only works with the Nx CLI. Running `ng build todos` runs the command every single time.
+{% /callout %}
 
 ## Building multiple projects
 
@@ -73,7 +78,9 @@ Nx read the output from the cache instead of running the command for 1 out of 2 
 
 Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache here [here](/using-nx/caching).
 
-> Add --parallel to any command, and Nx does most of the work in parallel.
+{% callout type="check" title="Go faster" %}
+Add --parallel to any command, and Nx does most of the work in parallel.
+{% /callout %}
 
 ## What's Next
 

@@ -1,7 +1,7 @@
-import { readNxJson } from '../project-graph/file-utils';
 import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { execSync } from 'child_process';
+import { readNxJson } from '../config/configuration';
 
 export async function connectToNxCloudUsingScan(scan: boolean): Promise<void> {
   if (!scan) return;
@@ -61,7 +61,7 @@ async function connectToNxCloudPrompt(prompt?: string) {
         name: 'NxCloud',
         message:
           prompt ??
-          `Connect to Nx Cloud? (It's free and doesn't require registration.)`,
+          `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
         type: 'select',
         choices: [
           {

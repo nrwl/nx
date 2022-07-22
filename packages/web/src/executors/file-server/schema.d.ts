@@ -11,4 +11,5 @@ export interface Schema {
   withDeps: boolean;
   proxyOptions?: object;
   watch?: boolean;
+  spa: boolean;
 }

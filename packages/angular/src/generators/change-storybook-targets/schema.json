@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularChangeStorybookTargetsGenerator",
+  "title": "Change Storybook targets",
+  "description": "Change the Storybook target executors.",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": []
+}

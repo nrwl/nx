@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxCypressComponentProject",
+  "cli": "nx",
+  "title": "Set up Cypress component testing for a project",
+  "description": "Set up Cypress component test for a project.",
+  "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nrwl/cypress:cypress-component-project --project=my-cool-lib ",
+      "description": "Add cypress component testing to an existing project named my-cool-lib"
+    }
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add cypress component testing to",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-prompt": "What project should we add Cypress component testing to?"
+    }
+  },
+  "required": ["project"]
+}

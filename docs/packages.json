@@ -39,19 +39,15 @@
         "scam",
         "scam-directive",
         "scam-pipe",
-        "setup-mfe",
+        "setup-mf",
         "setup-tailwind",
         "stories",
         "storybook-configuration",
         "upgrade-module",
-        "web-worker"
+        "web-worker",
+        "change-storybook-targets"
       ]
     }
-  },
-  {
-    "name": "cli",
-    "path": "generated/packages/cli.json",
-    "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "cra-to-nx",
@@ -73,7 +69,12 @@
     "path": "generated/packages/cypress.json",
     "schemas": {
       "executors": ["cypress"],
-      "generators": ["init", "cypress-project"]
+      "generators": [
+        "init",
+        "cypress-project",
+        "cypress-component-project",
+        "migrate-to-cypress-10"
+      ]
     }
   },
   {
@@ -187,7 +188,8 @@
         "e2e-project",
         "migration",
         "generator",
-        "executor"
+        "executor",
+        "plugin-lint-checks"
       ]
     }
   },
@@ -208,7 +210,10 @@
         "component-cypress-spec",
         "hook",
         "host",
-        "remote"
+        "remote",
+        "cypress-component-configuration",
+        "component-test",
+        "setup-tailwind"
       ]
     }
   },
@@ -243,7 +248,12 @@
     "path": "generated/packages/storybook.json",
     "schemas": {
       "executors": ["storybook", "build"],
-      "generators": ["init", "configuration", "cypress-project"]
+      "generators": [
+        "init",
+        "configuration",
+        "cypress-project",
+        "change-storybook-targets"
+      ]
     }
   },
   {

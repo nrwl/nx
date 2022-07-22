@@ -30,6 +30,7 @@ export async function storybookConfigurationGenerator(
     js: false,
     linter: schema.linter,
     standaloneConfig: schema.standaloneConfig,
+    tsConfiguration: schema.tsConfiguration,
   });
 
   addStorybookTask(host, schema.name);

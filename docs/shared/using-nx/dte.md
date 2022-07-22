@@ -1,6 +1,10 @@
 # Distributed Task Execution
 
-> Before reading this guide, check out the [mental model guide](/using-nx/mental-model). It will help you understand how computation caching fits into the rest of Nx.
+{% callout type="note" title="First thing!" %}
+Before reading this guide, [check out the mental model guide](/using-nx/mental-model). It will help you understand how computation caching fits into the rest of Nx.
+{% /callout %}
+
+{% nx-cloud-section %}
 
 ## Overview
 
@@ -32,3 +36,5 @@ it locally.
 These are the savings you get by enabling Distributed Task Execution in your CI config:
 
 ![DTE](/shared/using-nx/dte.png)
+
+{% /nx-cloud-section %}

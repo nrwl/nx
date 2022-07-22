@@ -4,6 +4,7 @@ import { output } from '../output';
 import type { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
 import { getPluginCapabilities } from './plugin-capabilities';
 import { hasElements } from './shared';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 
 export function getInstalledPluginsFromPackageJson(
   workspaceRoot: string,
@@ -25,7 +26,7 @@ export function getInstalledPluginsFromPackageJson(
         try {
           // Check for `package.json` existence instead of requiring the module itself
           // because malformed entries like `main`, may throw false exceptions.
-          require.resolve(`${name}/package.json`, { paths: [workspaceRoot] });
+          readModulePackageJson(name);
           return true;
         } catch {
           return false;

@@ -39,6 +39,12 @@ function updateProjectConfig(host: Tree, options: NormalizedSchema) {
     ];
     return json;
   });
+
+  // tsconfig.json
+  updateJson(host, `${options.projectRoot}/tsconfig.json`, (json) => ({
+    ...json,
+    compilerOptions: { ...json.compilerOptions, target: 'es2020' },
+  }));
 }
 
 function updateProjectIvyConfig(host: Tree, options: NormalizedSchema) {

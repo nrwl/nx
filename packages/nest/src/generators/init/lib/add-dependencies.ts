@@ -9,6 +9,7 @@ import {
   reflectMetadataVersion,
   rxjsVersion6,
   rxjsVersion7,
+  tsLibVersion,
 } from '../../../utils/versions';
 
 export function addDependencies(tree: Tree): GeneratorCallback {
@@ -42,7 +43,7 @@ export function addDependencies(tree: Tree): GeneratorCallback {
       '@nestjs/platform-express': NEST_VERSION,
       'reflect-metadata': reflectMetadataVersion,
       rxjs: RXJS,
-      tslib: '^2.0.0',
+      tslib: tsLibVersion,
     },
     {
       '@nestjs/schematics': nestJsSchematicsVersion,

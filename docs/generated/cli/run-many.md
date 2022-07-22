@@ -20,7 +20,7 @@ nx run-many
 Test all projects:
 
 ```bash
-nx run-many --target=test --all
+nx run-many --target=test
 ```
 
 Test proj1 and proj2:
@@ -41,7 +41,9 @@ nx run-many --target=test --projects=proj1,proj2 --parallel=2
 
 Type: boolean
 
-Run the target on all projects in the workspace
+Default: true
+
+[deprecated] Run the target on all projects in the workspace
 
 ### configuration
 
@@ -63,6 +65,22 @@ Type: boolean
 
 Show help
 
+### nx-bail
+
+Type: boolean
+
+Default: false
+
+Stop command execution after the first failed task
+
+### nx-ignore-cycles
+
+Type: boolean
+
+Default: false
+
+Ignore cycles in the task graph
+
 ### ~~only-failed~~
 
 Type: boolean
@@ -77,7 +95,7 @@ Only run the target on projects which previously failed
 
 Type: string
 
-Choices: [dynamic, static, stream]
+Choices: [dynamic, static, stream, stream-without-prefixes]
 
 Defines how Nx emits outputs tasks logs
 

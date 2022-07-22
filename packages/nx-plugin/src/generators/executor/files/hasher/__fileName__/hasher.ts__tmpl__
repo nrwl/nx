@@ -6,7 +6,7 @@ import { CustomHasher } from '@nrwl/devkit';
  * you can consume workspace details from the context.
  */
 export const <%=propertyName%>Hasher: CustomHasher = async (task, context) => {
-    return context.hasher.hashTaskWithDepsAndContext(task)
+    return context.hasher.hashTask(task)
 };
 
 export default <%=propertyName%>Hasher;
