@@ -66,6 +66,10 @@ export async function scheduleTarget(
 
   const registry = new schema.CoreSchemaRegistry();
   registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  registry.addSmartDefaultProvider('unparsed', () => {
+    // This happens when context.scheduleTarget is used to run a target using nx:run-commands
+    return [];
+  });
   const architectHost = new WorkspaceNodeModulesArchitectHost(workspace, root);
   const architect: Architect = new Architect(architectHost, registry);
   const run = await architect.scheduleTarget(
