@@ -147,7 +147,7 @@ export function Header(props: HeaderProps) {
               href="https://github.com/nrwl/nx"
               target="_blank"
               rel="noreferrer"
-              className="px-3 py-2 text-white"
+              className="hidden px-3 py-2 text-white md:inline-flex"
             >
               <span className="sr-only">Nx on Github</span>
               <div className="item-center flex">
