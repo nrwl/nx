@@ -1042,6 +1042,11 @@
             "id": "overview",
             "path": "/packages/jest",
             "file": "shared/jest-plugin"
+          },
+          {
+            "name": "Troubleshooting",
+            "id": "troubleshooting",
+            "file": "shared/guides/jest/troubleshooting"
           }
         ]
       },
