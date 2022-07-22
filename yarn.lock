@@ -13243,7 +13243,7 @@ express@4.17.3, express@^4.17.1:
     utils-merge "1.0.1"
     vary "~1.1.2"
 
-express@4.18.1, express@^4.17.3:
+express@4.18.1, express@^4.17.3, express@^4.18.1:
   version "4.18.1"
   resolved "https://registry.yarnpkg.com/express/-/express-4.18.1.tgz#7797de8b9c72c857b9cd0e14a5eea80666267caf"
   integrity sha512-zZBcOX9TfehHQhtupq57OF8lFZ3UZi08Y97dwFCkD8p9d/d2Y3M+ykKcwaMDEL+4qyUolgBDX6AblpR3fL212Q==
