@@ -1340,6 +1340,47 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.5.0": {
+      "version": "14.5.0-beta.4",
+      "packages": {
+        "@angular/cli": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma": {
+          "version": "~6.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-jasmine": {
+          "version": "~5.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-jasmine-html-reporter": {
+          "version": "~2.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-core": {
+          "version": "~4.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

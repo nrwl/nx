@@ -154,10 +154,10 @@ function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
             {},
             {
               protractor: '~7.0.0',
-              'jasmine-core': '~3.6.0',
-              'jasmine-spec-reporter': '~5.0.0',
+              'jasmine-core': '~4.2.0',
+              'jasmine-spec-reporter': '~7.0.0',
               'ts-node': tsNodeVersion,
-              '@types/jasmine': '~3.6.0',
+              '@types/jasmine': '~4.0.0',
               '@types/jasminewd2': '~2.0.3',
             }
           )
