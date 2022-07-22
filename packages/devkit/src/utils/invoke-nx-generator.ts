@@ -134,6 +134,7 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
     const fileChanges = [];
     for (const action of this.tree.actions) {
       if (action.kind === 'r') {
+        // TODO: convert to RENAME FileChange type
         fileChanges.push({
           path: this.normalize(action.to),
           type: 'CREATE',
@@ -217,6 +218,18 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
 
   changePermissions(filePath: string, mode: Mode): void {
     this.warnUnsupportedFilePermissionsChange(filePath, mode);
+  }
+
+  isDeleted(path: string): boolean {
+    return this.tree.isDeleted(path);
+  }
+
+  isRenamed(path: string): boolean {
+    return this.tree.isRenamed(path);
+  }
+
+  isNoop(path: string): boolean {
+    return this.tree.isNoop(path);
   }
 
   private warnUnsupportedFilePermissionsChange(filePath: string, mode: Mode) {

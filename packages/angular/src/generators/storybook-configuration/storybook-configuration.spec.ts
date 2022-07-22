@@ -14,7 +14,13 @@ jest.mock('@nrwl/cypress/src/utils/cypress-version');
 function listFiles(tree: Tree): string[] {
   const files = new Set<string>();
   tree.listChanges().forEach((change) => {
-    if (change.type !== 'DELETE') {
+    if (
+      !(
+        tree.isDeleted(change.path) ||
+        tree.isNoop(change.path) ||
+        tree.isRenamed(change.path)
+      )
+    ) {
       files.add(change.path);
     }
   });
