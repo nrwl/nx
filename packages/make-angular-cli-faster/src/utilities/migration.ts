@@ -1,9 +1,4 @@
-import {
-  getPackageManagerCommand,
-  output,
-  readJsonFile,
-  workspaceRoot,
-} from '@nrwl/devkit';
+import { getPackageManagerCommand, output } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
