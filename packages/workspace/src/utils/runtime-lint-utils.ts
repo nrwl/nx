@@ -374,9 +374,8 @@ export function mapProjectGraphFiles<T>(
   };
 }
 
-const ESLINT_REGEX = /node_modules.*\/eslint$/;
-const NRWL_CLI_REGEX = /nx\/bin\/run-executor\.js$/;
-
+const ESLINT_REGEX = /node_modules.*[\/\\]eslint$/;
+const NRWL_CLI_REGEX = /nx[\/\\]bin[\/\\]run-executor\.js$/;
 export function isTerminalRun(): boolean {
   return (
     process.argv.length > 1 &&
