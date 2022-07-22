@@ -18,6 +18,12 @@ import {
   rxjsVersion,
   tsNodeVersion,
   tsLibVersion,
+  zoneJsVersion,
+  protractorVersion,
+  jasmineCoreVersion,
+  jasmineSpecReporterVersion,
+  typesJasmineVersion,
+  typesJasminewd2Version,
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
@@ -111,7 +117,7 @@ function updateDependencies(host: Tree): GeneratorCallback {
       '@angular/router': angularVersion,
       rxjs: rxjsVersion,
       tslib: tsLibVersion,
-      'zone.js': '~0.11.4',
+      'zone.js': zoneJsVersion,
     },
     {
       '@angular/cli': angularDevkitVersion,
@@ -153,12 +159,12 @@ function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
             host,
             {},
             {
-              protractor: '~7.0.0',
-              'jasmine-core': '~4.2.0',
-              'jasmine-spec-reporter': '~7.0.0',
+              protractor: protractorVersion,
+              'jasmine-core': jasmineCoreVersion,
+              'jasmine-spec-reporter': jasmineSpecReporterVersion,
               'ts-node': tsNodeVersion,
-              '@types/jasmine': '~4.0.0',
-              '@types/jasminewd2': '~2.0.3',
+              '@types/jasmine': typesJasmineVersion,
+              '@types/jasminewd2': typesJasminewd2Version,
             }
           )
         : () => {};
