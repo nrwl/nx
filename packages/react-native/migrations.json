@@ -48,12 +48,6 @@
       "description": "Rename blacklistRE to blockList in metro.config.js",
       "factory": "./src/migrations/update-14-2-1/rename-blockList-metro-config"
     },
-    "rename-jest-preprocessor-14-4-0": {
-      "version": "14.4.0-beta.0",
-      "cli": "nx",
-      "description": "Remove transform in jest.config",
-      "factory": "./src/migrations/update-14-4-0/update-jest-config"
-    },
     "add-exclude-sync-deps-14-5-5": {
       "version": "14.5.5-beta.0",
       "cli": "nx",
@@ -65,7 +59,13 @@
       "cli": "nx",
       "description": "Change searchDir field from string to array for storybook target",
       "factory": "./src/migrations/update-14-5-8/change-searchDir-storybook"
-    }
+    },
+    "rename-jest-preprocessor-14-6-0": {
+      "version": "14.6.0-beta.0",
+      "cli": "nx",
+      "description": "Remove transform in jest.config",
+      "factory": "./src/migrations/update-14-6-0/update-jest-config"
+    },
   },
   "packageJsonUpdates": {
     "11.4.0": {
