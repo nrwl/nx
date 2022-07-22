@@ -87,6 +87,15 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Nx Private Cloud
 
+## 2.4.8
+
+IMPORTANT: The default container mode has changed from COMMUNITY to ENTERPRISE. If you are running a Community version of the container, you will need to make sure the `NX_CLOUD_MODE=private-community` is explicitly set (otherwise your container will fail to start-up).
+
+- Fix: Web app performance improvements
+- Fix: issue with Github logged in admins not being able to download logs
+- Fix: issue with billing page when multiple access tokens were attached to the same org
+- Fix: multiple Mongo DBs used to be created if a default DB was not provided in the connection string. Now it always defaults to the provided `NX_CLOUD_MONGO_DB_NAME§
+
 ## 2.4.7
 
 - Misc: performance improvements to DB indexes
