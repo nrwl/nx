@@ -25,6 +25,7 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart, Fast and Extensible Build System'))
+  .demandCommand(1, '')
   .command({
     command: 'generate <generator> [_..]',
     describe:
@@ -308,7 +309,7 @@ export const commandsObject = yargs
         await (await import('./migrate')).migrate(process.cwd(), args)
       )
   )
-  .help('help')
+  .help()
   .version(nxVersion);
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
