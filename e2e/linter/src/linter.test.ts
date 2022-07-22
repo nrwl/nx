@@ -256,6 +256,10 @@ describe('Linter', () => {
       createFile(
         `libs/${libA}/src/lib/tslib-a.ts`,
         `
+      export function libASayHi(): string {
+        return 'hi there';
+      }
+
       export function libASayHello(): string {
         return 'Hi from tslib-a';
       }
@@ -297,6 +301,7 @@ describe('Linter', () => {
       createFile(
         `libs/${libB}/src/lib/tslib-b.ts`,
         `
+        import { libASayHi } from 'libs/${libA}/src/lib/tslib-a';
         import { libASayHello } from '../../../${libA}/src/lib/tslib-a';
         // import { someNonPublicLibFunction } from '../../../${libA}/src/lib/some-non-exported-function';
         import { someSelectivelyExportedFn } from '../../../${libA}/src/lib/some-non-exported-function';
@@ -304,6 +309,7 @@ describe('Linter', () => {
         export function tslibB(): string {
           // someNonPublicLibFunction();
           someSelectivelyExportedFn();
+          libASayHi();
           libASayHello();
           return 'hi there';
         }
@@ -409,6 +415,9 @@ export function tslibC(): string {
       const fileContent = readFile(`libs/${libB}/src/lib/tslib-b.ts`);
       expect(fileContent).toContain(
         `import { libASayHello } from '@${projScope}/${libA}';`
+      );
+      expect(fileContent).toContain(
+        `import { libASayHi } from '@${projScope}/${libA}';`
       );
       expect(fileContent).toContain(
         `import { someSelectivelyExportedFn } from '@${projScope}/${libA}';`

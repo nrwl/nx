@@ -17,6 +17,7 @@ import {
   findProjectUsingImport,
   findSourceProject,
   findTransitiveExternalDependencies,
+  findTargetProject,
   getSourceFilePath,
   getTargetProjectBasedOnRelativeImport,
   groupImports,
@@ -203,16 +204,24 @@ export default createESLintRule<Options, MessageIds>({
       }
 
       // check for relative and absolute imports
-      let targetProject: ProjectGraphProjectNode | ProjectGraphExternalNode =
-        getTargetProjectBasedOnRelativeImport(
+      const isAbsoluteImportIntoAnotherProj =
+        isAbsoluteImportIntoAnotherProject(imp, workspaceLayout);
+      let targetProject: ProjectGraphProjectNode | ProjectGraphExternalNode;
+
+      if (isAbsoluteImportIntoAnotherProj) {
+        targetProject = findTargetProject(projectGraph, imp);
+      } else {
+        targetProject = getTargetProjectBasedOnRelativeImport(
           imp,
           projectPath,
           projectGraph,
           sourceFilePath
         );
+      }
+
       if (
         (targetProject && sourceProject !== targetProject) ||
-        isAbsoluteImportIntoAnotherProject(imp, workspaceLayout)
+        isAbsoluteImportIntoAnotherProj
       ) {
         context.report({
           node,
