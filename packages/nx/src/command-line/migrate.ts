@@ -25,6 +25,7 @@ import {
 } from '../utils/package-json';
 import {
   createTempNpmDirectory,
+  detectPackageManager,
   getPackageManagerCommand,
   packageRegistryPack,
   packageRegistryView,
@@ -653,7 +654,7 @@ async function getPackageMigrationsUsingInstall(
   let result: ResolvedMigrationConfiguration;
 
   try {
-    const pmc = getPackageManagerCommand();
+    const pmc = getPackageManagerCommand(detectPackageManager(dir));
 
     await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
       cwd: dir,
