@@ -5,6 +5,17 @@ import {
   joinPathFragments,
   readJson,
 } from '@nrwl/devkit';
+import {
+  jasmineCoreVersion,
+  jasmineSpecReporterVersion,
+  karmaChromeLauncherVersion,
+  karmaCoverageVersion,
+  karmaJasmineHtmlReporterVersion,
+  karmaJasmineVersion,
+  karmaVersion,
+  typesJasmineVersion,
+  typesNodeVersion,
+} from '../../utils/versions';
 import { GeneratorOptions } from './schema';
 
 export function karmaGenerator(tree: Tree, options: GeneratorOptions) {
@@ -23,15 +34,15 @@ export function karmaGenerator(tree: Tree, options: GeneratorOptions) {
     tree,
     {},
     {
-      karma: '~6.4.0',
-      'karma-chrome-launcher': '~3.1.0',
-      'karma-coverage': '~2.2.0',
-      'karma-jasmine': '~5.1.0',
-      'karma-jasmine-html-reporter': '~2.0.0',
-      'jasmine-core': '~4.2.0',
-      'jasmine-spec-reporter': '~7.0.0',
-      '@types/jasmine': '~4.0.0',
-      '@types/node': '16.11.7',
+      karma: karmaVersion,
+      'karma-chrome-launcher': karmaChromeLauncherVersion,
+      'karma-coverage': karmaCoverageVersion,
+      'karma-jasmine': karmaJasmineVersion,
+      'karma-jasmine-html-reporter': karmaJasmineHtmlReporterVersion,
+      'jasmine-core': jasmineCoreVersion,
+      'jasmine-spec-reporter': jasmineSpecReporterVersion,
+      '@types/jasmine': typesJasmineVersion,
+      '@types/node': typesNodeVersion,
     }
   );
 }
