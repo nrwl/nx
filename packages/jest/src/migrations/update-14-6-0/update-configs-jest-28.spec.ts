@@ -5,7 +5,6 @@ import {
   checkDeps,
   updateConfigsJest28,
   updateJestConfig,
-  updateTransformPatterns,
 } from './update-configs-jest-28';
 
 const mockJestConfig = `
@@ -186,119 +185,5 @@ export default {
         'jest-jasmine2': '28.1.1',
       })
     );
-  });
-
-  describe('updateTransformPatterns', () => {
-    it('should update angular transformIgnorePatterns', async () => {
-      const actual = updateTransformPatterns(`
-/* eslint-disable */
-export default {
-  displayName: 'myapp2579056',
-  preset: '../../jest.preset.js',
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\\\.(html|svg)$',
-    },
-  },
-  coverageDirectory: '../../coverage/apps/myapp2579056',
-  transform: {
-    '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
-  },
-  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
-  snapshotSerializers: [
-    'jest-preset-angular/build/serializers/no-ng-attributes',
-    'jest-preset-angular/build/serializers/ng-snapshot',
-    'jest-preset-angular/build/serializers/html-comment',
-  ],
-}
-    `);
-      expect(actual).toContain(
-        "transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$|rxjs)']"
-      );
-    });
-
-    it('should not update non ng configs', () => {
-      const actual = updateTransformPatterns(
-        `
-/* eslint-disable */
-export default {
-  displayName: 'r',
-  preset: '../../jest.preset.js',
-  transform: {
-    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
-    '^.+\\.[tj]sx?$': 'babel-jest',
-  },
-  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/apps/r',
-};`
-      );
-      expect(actual).not.toContain(
-        "transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$|rxjs)']"
-      );
-    });
-
-    it('should work with js config', () => {
-      const actual = updateTransformPatterns(`
-/* eslint-disable */
-module.exports = {
-  displayName: 'myapp2579056',
-  preset: '../../jest.preset.js',
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\\\.(html|svg)$',
-    },
-  },
-  coverageDirectory: '../../coverage/apps/myapp2579056',
-  transform: {
-    '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
-  },
-  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
-  snapshotSerializers: [
-    'jest-preset-angular/build/serializers/no-ng-attributes',
-    'jest-preset-angular/build/serializers/ng-snapshot',
-    'jest-preset-angular/build/serializers/html-comment',
-  ],
-}
-    `);
-      expect(actual).toContain(
-        "transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$|rxjs)']"
-      );
-    });
-
-    it('should work with interpolated string', () => {
-      const actual = updateTransformPatterns(`
-/* eslint-disable */
-const esModules = ['something', '@another', '@third'];
-export default {
-  displayName: 'myapp2579056',
-  preset: '../../jest.preset.js',
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\\\.(html|svg)$',
-    },
-  },
-  coverageDirectory: '../../coverage/apps/myapp2579056',
-  transform: {
-    '^.+\\\\.(ts|mjs|js|html)$': 'jest-preset-angular',
-  },
-  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$|\${esModules.join('|')})'],
-  snapshotSerializers: [
-    'jest-preset-angular/build/serializers/no-ng-attributes',
-    'jest-preset-angular/build/serializers/ng-snapshot',
-    'jest-preset-angular/build/serializers/html-comment',
-  ],
-}
-    `);
-      expect(actual).toContain(
-        "transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$|rxjs|${esModules.join('|')})']"
-      );
-    });
   });
 });

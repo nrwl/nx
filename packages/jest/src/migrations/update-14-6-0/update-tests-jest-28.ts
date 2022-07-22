@@ -186,13 +186,13 @@ export function updateJestImports(content: string): string {
 
   return tsquery.replace(
     mockUpdatedImports,
-    ':declaration:has(StringLiteral[value="expect"])',
+    ':matches(ImportDeclaration:has(StringLiteral[value="expect"]), VariableDeclaration:has(StringLiteral[value="expect"]))',
     (node: ts.ImportDeclaration | ts.VariableDeclaration) => {
       if (ts.isImportDeclaration(node)) {
         return `import { expect } from 'expect';`;
       }
       if (ts.isVariableDeclaration(node)) {
-        return `{ expect } = require('expect')`; // this query doesn't include the ; so we don't need to add it.
+        return `{ expect } = require('expect')`; // this query doesn't capture the ; so we don't need to add it in the replace.
       }
       return;
     }
