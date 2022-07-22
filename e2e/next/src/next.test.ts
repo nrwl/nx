@@ -335,7 +335,7 @@ describe('Next.js Applications', () => {
         server.disable('x-powered-by');
 
         server.use(
-          express.static(path.resolve(settings.dir, settings.conf.outdir, 'public'))
+          express.static(path.resolve(settings.dir, 'public'))
         );
 
         // Default catch-all handler to allow Next.js to handle all other routes
