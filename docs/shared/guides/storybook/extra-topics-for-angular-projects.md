@@ -69,7 +69,7 @@ Your Storybook targets in your `project.json` will look like this:
 
 This setup instructs Nx to use the configuration under the `build-storybook` target of `my-project` when using the `storybook` and `build-storybook` executors.
 
-{% callout type="note" title="Storybook & Angular" %}
+{% callout type="note" title="The defaultProject" %}
 Storybook for Angular needs a default project specified in order to run. The reason is that it uses that default project to read the build configuration from (paths to files to include in the build, and other configurations/settings). In a pure Angular/Storybook setup (**not** an Nx workspace), the Angular application/project would have an `angular.json` file. That file would have a property called `defaultProject`. In an Nx workspace the `defaultProject` property would be specified in the `nx.json` file. Previously, Nx would try to resolve the `defaultProject` of the workspace, and use the build configuration of that project. In most cases, the `defaultProject`'s build configuration would not work for some other project set up with Storybook, since there would most probably be mismatches in paths or other project-specific options.
 {% /callout %}
 
@@ -105,7 +105,8 @@ Your Storybook targets in your `project.json` will look like this:
     }
 ```
 
-> **Note**: Chances are, you will most probably need the same `styles` and `stylePreprocessorOptions` for your `storybook` and your `build-storybook` targets. Since you're using `browserTarget`, that means that Storybook will use the `options` of `build` or `build-storybook` when executing the `storybook` task (when compiling your Storybook). In that case, as explained, you _only_ need to add the `styles` or `stylePreprocessorOptions` to the corresponding target (`build` or `build-storybook`) that the `browserTarget` is pointing to. In that case, for example, the configuration shown above would look like this:
+{% callout type="note" title="Using build-storybook for styles" %}
+Chances are, you will most probably need the same `styles` and `stylePreprocessorOptions` for your `storybook` and your `build-storybook` targets. Since you're using `browserTarget`, that means that Storybook will use the `options` of `build` or `build-storybook` when executing the `storybook` task (when compiling your Storybook). In that case, as explained, you _only_ need to add the `styles` or `stylePreprocessorOptions` to the corresponding target (`build` or `build-storybook`) that the `browserTarget` is pointing to. In that case, for example, the configuration shown above would look like this:
 
 ```json
     "storybook": {
@@ -130,6 +131,8 @@ Your Storybook targets in your `project.json` will look like this:
      ...
     }
 ```
+
+{% /callout %}
 
 ## Moving your project targets to the new (native Storybook) schema
 
