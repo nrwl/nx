@@ -20,9 +20,7 @@ export async function defaultServer(
   server.disable('x-powered-by');
 
   // Serve shared assets copied to `public` folder
-  server.use(
-    express.static(path.resolve(settings.dir, settings.conf.outdir, 'public'))
-  );
+  server.use(express.static(path.resolve(settings.dir, 'public')));
 
   // Set up the proxy.
   if (proxyConfig) {

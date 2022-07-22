@@ -107,7 +107,7 @@ describe('Next.js webpack config builder', () => {
   });
 
   describe('prepareConfig', () => {
-    it('should set the dist and out directories', async () => {
+    it('should set the dist directory', async () => {
       const config = await prepareConfig(
         PHASE_PRODUCTION_BUILD,
         {
@@ -123,7 +123,6 @@ describe('Next.js webpack config builder', () => {
       expect(config).toEqual(
         expect.objectContaining({
           distDir: '../../dist/apps/wibble/.next',
-          outdir: '../../dist/apps/wibble',
         })
       );
     });
