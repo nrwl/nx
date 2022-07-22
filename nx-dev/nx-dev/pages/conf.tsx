@@ -8,11 +8,11 @@ export function ConfPage(): ReactComponentElement<any> {
   return (
     <>
       <NextSeo
-        title="Nx Conf 2022 - October 18th, 2022"
+        title="Nx Conf 2022 - October 17th, 2022"
         description="Nx Conf is a conference featuring members of the Nx team and the community. Join us as we share our ideas and expertise about monorepos and making development faster, more scalable, and more collaborative."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Conf 2022 - October 18th, 2022',
+          title: 'Nx Conf 2022 - October 17th, 2022',
           description:
             'Nx Conf is a conference featuring members of the Nx team and the community. Join us as we share our ideas and expertise about monorepos and making development faster, more scalable, and more collaborative.',
           images: [
@@ -20,7 +20,7 @@ export function ConfPage(): ReactComponentElement<any> {
               url: 'https://nx.dev/images/nx-conf-2022-media.jpg',
               width: 1000,
               height: 500,
-              alt: 'Nx Conf 2022 - October 18th, 2022',
+              alt: 'Nx Conf 2022 - October 17th, 2022',
               type: 'image/jpeg',
             },
           ],
@@ -167,7 +167,7 @@ export function ConfPage(): ReactComponentElement<any> {
                 <h2 className="my-6">
                   <div className="font-input-mono bg-blue-nx-dark mb-4 inline-block rounded-md py-4 px-6 text-xl font-extrabold leading-none tracking-tight sm:text-2xl lg:text-2xl">
                     <span className="sr-only">Announcing Nx Conf on </span>{' '}
-                    October 18, 2022
+                    October 17, 2022
                   </div>
                 </h2>
                 <h3 className="mb-6">
@@ -180,7 +180,7 @@ export function ConfPage(): ReactComponentElement<any> {
                   and more collaborative.
                 </p>
                 <p className="mb-6 sm:text-lg">
-                  Workshops will be available on Oct. 17, 19.
+                  Workshops will be available on Oct. 16, 18.
                 </p>
                 {/*<div className="mt-16 flex">
                   <a
