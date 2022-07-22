@@ -44,7 +44,6 @@
     "glob": "7.1.4",
     "license-webpack-plugin": "^4.0.2",
     "rxjs": "^6.5.4",
-    "rxjs-for-await": "0.0.2",
     "source-map-support": "0.5.19",
     "terser-webpack-plugin": "^5.3.3",
     "tree-kill": "1.2.2",
