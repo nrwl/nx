@@ -1,8 +1,10 @@
 import type defaultResolver from 'jest-resolve/build/defaultResolver';
+import type { PkgJson } from 'jest-resolve/build/fileWalkers';
 import { dirname, extname } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 
 interface ResolveOptions {
+  packageFilter?: (pkg: PkgJson) => PkgJson;
   rootDir: string;
   basedir: string;
   paths: string[];
@@ -53,8 +55,8 @@ const pkgNamesToTarget = new Set([
   '@firebase/firestore-compat',
   '@firebase/messaging',
   '@firebase/util',
-  ...(process.env.NX_JEST_PACKAGE_NAMES
-    ? process.env.NX_JEST_PACKAGE_NAMES.split(',')
+  ...(process.env.NX_JEST_RESOLVER_PACKAGES
+    ? process.env.NX_JEST_RESOLVER_PACKAGES.split(',')
     : []
   )
     .map((p) => p.trim())
@@ -77,6 +79,10 @@ module.exports = function (path: string, options: ResolveOptions) {
       return options.defaultResolver(path, {
         ...options,
         packageFilter: (pkg) => {
+          if (options?.packageFilter) {
+            pkg = options.packageFilter(pkg);
+          }
+
           if (pkgNamesToTarget.has(pkg.name as string)) {
             delete pkg.exports;
             delete pkg.module;
