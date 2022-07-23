@@ -135,4 +135,26 @@ describe('eslint-utils', () => {
       });
     });
   });
+
+  describe('reportUnusedDisableDirectives', () => {
+    it('should create the ESLint instance with "reportUnusedDisableDirectives" set to the given value for reportUnusedDisableDirectives', async () => {
+      await lint(undefined, {
+        reportUnusedDisableDirectives: 'error',
+      }).catch(() => {});
+
+      expect(ESLint).toHaveBeenCalledWith({
+        cache: false,
+        cacheLocation: undefined,
+        cacheStrategy: undefined,
+        errorOnUnmatchedPattern: false,
+        fix: false,
+        ignorePath: undefined,
+        overrideConfigFile: undefined,
+        reportUnusedDisableDirectives: 'error',
+        resolvePluginsRelativeTo: undefined,
+        rulePaths: [],
+        useEslintrc: true,
+      });
+    });
+  });
 });
