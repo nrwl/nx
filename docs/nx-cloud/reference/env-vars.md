@@ -34,4 +34,4 @@ By default, Nx Cloud requests will time out after 10 seconds. `NX_CLOUD_NO_TIMEO
 
 ### NX_VERBOSE_LOGGING
 
-Setting `NX_VERBOSE_LOGGING` to true will output the debug information about agents communicating with the main job. This can be useful for debugging unexpected cache misses and issues with Nx Private Cloud setups.
+Setting `NX_VERBOSE_LOGGING` to true will output the debug information about agents communicating with the main job. This can be useful for debugging unexpected cache misses and issues with on-prem setups.

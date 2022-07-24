@@ -1,59 +1,4 @@
-# Nx Private Cloud Advanced Configuration
-
-## Configure Memory Limits
-
-By default, the Nx Cloud container is configured to run on an instance with 8GB of RAM.
-
-If you have a container with 4GB of RAM, you can decrease the memory limits by setting the following env variables:
-
-- `NX_CLOUD_FILE_SERVER_MEMORY_LIMIT=500`
-- `NX_CLOUD_API_MEMORY_LIMIT=800`
-- `NX_CLOUD_DATABASE_MEMORY_LIMIT=1`
-
-Example:
-
-```bash
-> docker create --name cloud \
-    -p 80:8081 \
-    -e NX_CLOUD_APP_URL="https://cloud.myorg.com" \
-    -e ADMIN_PASSWORD=admin \
-    -e NX_CLOUD_FILE_SERVER_MEMORY_LIMIT=500 \
-    -e NX_CLOUD_API_MEMORY_LIMIT=800 \
-    -e NX_CLOUD_DATABASE_MEMORY_LIMIT=1 \
-    -v /data/private-cloud:/data nxprivatecloud/nxcloud:latest
-```
-
-The right amount of RAM depends heavily on how you run Nx Cloud.
-
-- The `NX_CLOUD_FILE_SERVER_MEMORY_LIMIT` value is only relevant if you use the built-in file server.
-- The `NX_CLOUD_DATABASE_MEMORY_LIMIT` value is only relevant if you use the built-in database.
-
-For instance, if you use S3 to store the cached artifacts and you host Mongo DB yourself, even 2GB might be sufficient. You can set the following limit:
-
-- `NX_CLOUD_API_MEMORY_LIMIT=800`
-
-If you run everything in the Nx Cloud container, then 8GB is much preferred.
-
-## Configure Artifact Expiration When Using Built-in File Server
-
-By default, the Nx Cloud container is going to remove cached artifacts after two weeks. You can change it by setting `NX_CACHE_EXPIRATION_PERIOD_IN_DAYS` when starting the container.
-
-Example:
-
-```bash
-> docker create --name cloud \
-    -p 80:8081 \
-    -e NX_CLOUD_APP_URL="https://cloud.myorg.com" \
-    -e ADMIN_PASSWORD=admin \
-    -e NX_CACHE_EXPIRATION_PERIOD_IN_DAYS=5 \
-    -v /data/private-cloud:/data nxprivatecloud/nxcloud:latest
-```
-
-## Self-Signed Certificates
-
-If you have a self-signed certificate, you will have to provision `NODE_EXTRA_CA_CERTS`. The env variable should point to a PEM file with either your certificate, or the root certificate your certificate was created from. Though this can be accomplished with a CLI command like `NODE_EXTRA_CA_CERTS=./tools/certs/cert.crt nx test myapp`, you will most likely want to configure it as a global env variable (for instance in your `.bashrc` file).
-
-A self-sign certificate registered in your OS won't be picked up by Node. Node requires you to provision `NODE_EXTRA_CA_CERTS`.
+# Advanced Configuration
 
 ## Troubleshooting and Verbose Logging
 
@@ -64,3 +9,60 @@ To help troubleshoot installations, add the following env variables when startin
 -e NX_API_LOG_LEVEL=DEBIG
 -e NX_MONGO_LOG_LEVEL=DEBUG
 ```
+
+## Running the Mongo Database
+
+Nx Cloud uses MongoDB to store its metadata. There are several common ways to run MongoDB.
+
+### Using MongoDB Kubernetes Operator
+
+The MongoDB team maintains the open
+source [MongoDB Kubernetes Operator](https://github.com/mongodb/mongodb-kubernetes-operator). You can use it to set up
+your own deployment of MongoDB. See [the Nx Cloud Kubernetes example](https://github.com/nrwl/nxcloud-k8s-setup) for
+more information.
+
+### Using CosmosDB
+
+If you are deploying to Azure, you might have access to CosmosDB. See here for more information.
+
+### Using Mongo Atlas
+
+[Mongo Atlas](https://mongodb.com/) is a great option for deploying MongoDB.
+
+## Using External File Storage
+
+By default, the on-prem version of Nx Cloud is going to start a file server and store the cached artifacts in the
+provided volume. But
+you can also configure Nx Cloud to use an external file storage. At the moment, only S3 and Azure Blob are
+supported.
+
+### Using S3/Minio
+
+To configure S3 as a file storage, provision the `AWS_S3_ACCESS_KEY_ID`, `AWS_S3_SECRET_ACCESS_KEY`, and `AWS_S3_BUCKET`
+env variables for the `nx-cloud-nx-api` container.
+
+If you are using an accelerated bucket, et: `AWS_S3_ACCELERATED` to `true`
+
+If you are using a local S3 installation (e.g., Minio), you will also need to set `AWS_S3_ENDPOINT`.
+
+{% callout type="note" title="On cache item expiration time" %}
+Remember to
+set [a cache item expiration time](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-expire-general-considerations.html)
+. The default is currently 4 weeks. If you would like to keep items for longer, for example for 8 weeks, please remember
+to set the `NX_CACHE_EXPIRATION_PERIOD_IN_DAYS=56` env variable as well, so the container knows when to expire the Mongo
+cache entries as well.
+{% /callout %}
+
+### Using Azure
+
+To configure Azure Blob as a file storage, provision the `AZURE_CONNECTION_STRING`, `AZURE_CONTAINER` env variables for the `nx-cloud-nx-api` container.
+
+To obtain the `AZURE_CONNECTION_STRING` value go to your "Storage Account" and click on "Access Keys". You will also
+need to create a container in your storage account before starting the Nx Cloud container.
+
+If you use an external file storage and an external MongoDB instance, you don't have to provision the volume.
+
+{% callout type="note" title="Cache expiration time" %}
+See note above about setting a cache expiration time. For Azure blob
+storage, [see this guide](https://docs.microsoft.com/en-us/azure/cdn/cdn-manage-expiration-of-blob-content).
+{% /callout %}
