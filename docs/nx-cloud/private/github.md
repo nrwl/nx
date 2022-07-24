@@ -1,4 +1,4 @@
-# Private Cloud GitHub PR Integration
+# GitHub PR Integration
 
 ## Set Up a Webhook
 
@@ -16,34 +16,35 @@
 
 ## Generate Access token
 
-- Private Cloud will need permission to post comments on your Pull Requests
+- Your installation of Nx Cloud will need permission to post comments on your Pull Requests
 - [Follow these instructions](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
 - Make sure you select "repo" as a scope
-- After you generate the token, make sure to copy and store it. We'll add it to Private Cloud in a bit.
+- After you generate the token, make sure to copy and store it. We'll add it to your installation of Nx Cloud in a bit.
 
 ![Generate personal access token](/nx-cloud/private/images/private-cloud-github-integration-generate-token.png)
 
 ## Optional - Configure Self-Hosted GitHub Instances
 
-- If you are running a self-hosted edition of GitHub, you'll need to tell Private Cloud where to make requests to
+- If you are running a self-hosted edition of GitHub, you'll need to tell your installation of Nx Cloud where to make requests to
 - Your GitHub API URL should look like this: `https://custom-github-host.com` (without a trailing slash)
-- Keep a note of it, as we'll use it to configure Private Cloud ☝️
+- Keep a note of it, as we'll use it to configure your installation of Nx Cloud ☝️
 - Optionally, you can try the above URL in the browser to see if it finds the API.
-- Note if you use public GitHub, this step is not required. You also don't need to provision the `GITHUB_API_URL` env variable when creating a container.
+- Note if you use public GitHub, this step is not required. You also don't need to provision the `GITHUB_API_URL` env
+  variable when creating a container.
 
-Run your container with all the configuration options we generated above:
+## Configure Container
 
-```bash
-> docker run --name cloud \
-    -p 80:8081 \
-    -e NX_CLOUD_APP_URL="https://cloud.myorg.com" \
-    -e ADMIN_PASSWORD=admin \
-    -e GITHUB_WEBHOOK_SECRET=SECRET_YOU_PROVISIONED \
-    -e GITHUB_AUTH_TOKEN=TOKEN_GENERATED_FOR_YOU \
-    -e GITHUB_API_URL=URL \
-    -v /data/private-cloud:/data nxprivatecloud/nxcloud:latest
-```
+Provide the following env variables to the `nx-cloud-nx-api` container:
+
+- `GITHUB_WEBHOOK_SECRET` set to the secret you provisioned
+- `GITHUB_AUTH_TOKEN` set to the token generated for you
+- `GITHUB_API_URL` set to the URL of your github installation
+
+> If you are running Nx Cloud as a single container, the three env vars should be provisioned for that container.
 
 ## Optional - Configure `NX_CLOUD_INTEGRATION_DEFAULT_WORKSPACE_ID`
 
-Nx Cloud uses the `accessToken` property from nx.json to find a workspace for a given GitHub repository. If it isn't possible to set `accessToken`, you can also pass `NX_CLOUD_INTEGRATION_DEFAULT_WORKSPACE_ID` env variable to the container. This value will be used when the `accessToken` property is missing. You can find the id of your workspace in the URL.
+Nx Cloud uses the `accessToken` property from nx.json to find a workspace for a given GitHub repository. If it isn't
+possible to set `accessToken`, you can also pass `NX_CLOUD_INTEGRATION_DEFAULT_WORKSPACE_ID` env variable to the
+container. This value will be used when the `accessToken` property is missing. You can find the id of your workspace in
+the URL.

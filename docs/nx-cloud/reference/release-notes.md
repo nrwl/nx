@@ -85,7 +85,7 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 - Fix: DTE could get stuck when trying to execute tasks with different configurations
 
-# Nx Private Cloud
+# Docker Containers
 
 ## 2.4.8
 
@@ -219,8 +219,8 @@ IMPORTANT: The default container mode has changed from COMMUNITY to ENTERPRISE. 
 
 ## 2.2
 
-- [Nx Private Cloud 2.2](https://blog.nrwl.io/%EF%B8%8F-nx-cloud-2-2-%EF%B8%8F-b7656ed5ce7c)
+- [Nx Cloud 2.2](https://blog.nrwl.io/%EF%B8%8F-nx-cloud-2-2-%EF%B8%8F-b7656ed5ce7c)
 
 ## 2.0
 
-- [Overview of Nx Private Cloud 2.0](https://blog.nrwl.io/introducing-nx-cloud-2-0-f1e5c2002a65)
+- [Overview of Nx Cloud 2.0](https://blog.nrwl.io/introducing-nx-cloud-2-0-f1e5c2002a65)

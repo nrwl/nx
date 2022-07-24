@@ -4,7 +4,7 @@ import { assertTextOnPage } from './helpers';
  * Asserting all the additional API references pages are accounted for and accessible.
  * Generation of the pages is manual since we want to make sure the change is intended.
  */
-describe('nx-dev: Nx Cloud section', () => {
+xdescribe('nx-dev: Nx Cloud section', () => {
   (<{ title: string; path: string }[]>[
     { title: 'What is Nx Cloud?', path: '/nx-cloud/intro/what-is-nx-cloud' },
     {

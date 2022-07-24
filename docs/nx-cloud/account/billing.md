@@ -2,7 +2,7 @@
 
 When connected to Nx Cloud every workspace can start using the Distributed Computation Cache and Distributed Task Execution right away, without having to set up any billing information.
 
-However, some large workspaces or those using Nx Private Cloud will need to have a subscription set up.
+However, some large workspaces will need to have a subscription set up.
 
 ## Time Saved / Utilization
 

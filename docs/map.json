@@ -769,7 +769,7 @@
         ]
       },
       {
-        "name": "Private Cloud",
+        "name": "On Prem",
         "id": "private-cloud",
         "itemList": [
           {
@@ -781,21 +781,6 @@
             "name": "Enable Github PR Integration",
             "id": "github",
             "file": "nx-cloud/private/github"
-          },
-          {
-            "name": "Deploy with Kubernetes",
-            "id": "deploy-kubernetes",
-            "file": "nx-cloud/private/deploy-kubernetes"
-          },
-          {
-            "name": "Deploy with AWS",
-            "id": "deploy-aws",
-            "file": "nx-cloud/private/deploy-aws"
-          },
-          {
-            "name": "Deploy with Azure",
-            "id": "deploy-azure",
-            "file": "nx-cloud/private/deploy-azure"
           },
           {
             "name": "Authenticate with a Single Admin",
@@ -816,6 +801,11 @@
             "name": "Advanced Configuration",
             "id": "advanced-config",
             "file": "nx-cloud/private/advanced-config"
+          },
+          {
+            "name": "Standalone",
+            "id": "standalone",
+            "file": "nx-cloud/private/standalone"
           }
         ]
       },

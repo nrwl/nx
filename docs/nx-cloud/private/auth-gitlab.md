@@ -1,4 +1,4 @@
-# Nx Private Cloud GitLab Auth
+# GitLab Auth
 
 Before creating your container, you'll need to create a GitLab app for your organisation.
 
@@ -30,16 +30,12 @@ Once you create, keep a note of the Client ID and the Secret:
 
 ![Step 5](/nx-cloud/private/images/gitlab_step_5.png)
 
-## Connect your private cloud instance to your new app
+## Connect your Nx Cloud installation to your new app
 
-[When setting up your private cloud](/nx-cloud/private-cloud/get-started), you can pass these two environment variables to it:
+Provide the following env variables to the `nx-cloud-api` container:
 
-```bash
-GITLAB_APP_ID=...
-GITLAB_APP_SECRET=...
-```
-
-Use the App ID and App Secret from when you created the app above.
+- `GITLAB_APP_ID`
+- `GITLAB_APP_SECRET`
 
 ## On-premise GitLab
 
@@ -47,4 +43,4 @@ If you are running an on-premise version of GitLab, you will need to configure o
 
 `GITLAB_API_URL=https://custom-gitlab-instance.com`
 
-This will point all auth endpoints to your GitLab server (rather the public one).
+This will point all the auth endpoints to your GitLab server (rather the public one).
