@@ -1,9 +1,8 @@
 import { chain, Rule, Tree } from '@angular-devkit/schematics';
 import { formatFiles, readWorkspace } from '@nrwl/workspace';
 import { join } from 'path';
-import { importConstants } from '../../utils/require-shim';
 
-const { CONFIG_FILE, CONFIG_FILES } = importConstants();
+import { CONFIG_FILES } from '../../utils/constants';
 
 const defaultConfig = `const withSass = require('@zeit/next-sass');
 const withLess = require('@zeit/next-less');
@@ -41,7 +40,7 @@ export default function update(): Rule {
         // Next.js 12 specifies two config files.
         const configFile = Array.isArray(CONFIG_FILES)
           ? CONFIG_FILES[0]
-          : CONFIG_FILE;
+          : 'next.config.js';
         const configPath = join(p.root, configFile);
         if (!host.exists(configPath)) {
           host.create(configPath, defaultConfig);
