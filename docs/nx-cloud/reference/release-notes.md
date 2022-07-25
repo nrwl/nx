@@ -87,6 +87,14 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 2.4.10
+
+- Fix an issue with the admin password not being set correctly
+
+## 2.4.9
+
+- Align all NxCloud images to this version. No new fixes or features included.
+
 ## 2.4.8
 
 IMPORTANT: The default container mode has changed from COMMUNITY to ENTERPRISE. If you are running a Community version of the container, you will need to make sure the `NX_CLOUD_MODE=private-community` is explicitly set (otherwise your container will fail to start-up).
