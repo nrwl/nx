@@ -384,14 +384,17 @@ export function flushChanges(root: string, fileChanges: FileChange[]): void {
   });
 }
 
-export function printChanges(fileChanges: FileChange[]): void {
+export function printChanges(
+  fileChanges: FileChange[],
+  indent: string = ''
+): void {
   fileChanges.forEach((f) => {
     if (f.type === 'CREATE') {
-      console.log(`${chalk.green('CREATE')} ${f.path}`);
+      console.log(`${indent}${chalk.green('CREATE')} ${f.path}`);
     } else if (f.type === 'UPDATE') {
-      console.log(`${chalk.white('UPDATE')} ${f.path}`);
+      console.log(`${indent}${chalk.white('UPDATE')} ${f.path}`);
     } else if (f.type === 'DELETE') {
-      console.log(`${chalk.yellow('DELETE')} ${f.path}`);
+      console.log(`${indent}${chalk.yellow('DELETE')} ${f.path}`);
     }
   });
 }

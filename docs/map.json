@@ -921,7 +921,12 @@
             "id": "connect-to-nx-cloud",
             "file": "generated/cli/connect-to-nx-cloud"
           },
-          { "name": "reset", "id": "reset", "file": "generated/cli/reset" }
+          { "name": "reset", "id": "reset", "file": "generated/cli/reset" },
+          {
+            "name": "repair",
+            "id": "repair",
+            "file": "generated/cli/repair"
+          }
         ]
       },
       {

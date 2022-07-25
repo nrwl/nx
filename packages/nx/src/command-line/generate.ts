@@ -29,7 +29,7 @@ export interface GenerateOptions {
   defaults: boolean;
 }
 
-function printChanges(fileChanges: FileChange[]) {
+export function printChanges(fileChanges: FileChange[]) {
   fileChanges.forEach((f) => {
     if (f.type === 'CREATE') {
       console.log(`${chalk.green('CREATE')} ${f.path}`);
