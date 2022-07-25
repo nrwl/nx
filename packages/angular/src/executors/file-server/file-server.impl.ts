@@ -1,23 +1,22 @@
-import { execFileSync, fork } from 'child_process';
 import {
   ExecutorContext,
   joinPathFragments,
-  readJsonFile,
   workspaceLayout,
 } from '@nrwl/devkit';
-import ignore from 'ignore';
-import { readFileSync } from 'fs';
-import { Schema } from './schema';
+import { execFileSync, fork } from 'child_process';
 import { watch } from 'chokidar';
-import { platform } from 'os';
-import { resolve } from 'path';
+import { copyFileSync, readFileSync, unlinkSync } from 'fs';
+import ignore from 'ignore';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
+import { platform } from 'os';
+import { join, resolve } from 'path';
+import { Schema } from './schema';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
 function getHttpServerArgs(options: Schema) {
-  const args = ['-c-1'];
+  const args = ['-c-1', '--cors'];
   if (options.port) {
     args.push(`-p=${options.port}`);
   }
@@ -43,7 +42,6 @@ function getHttpServerArgs(options: Schema) {
     });
   }
 
-  args.push('--cors');
   return args;
 }
 
@@ -149,6 +147,15 @@ export default async function* fileServerExecutor(
   run();
 
   const outputPath = getBuildTargetOutputPath(options, context);
+
+  if (options.spa) {
+    const src = join(outputPath, 'index.html');
+    const dst = join(outputPath, '404.html');
+
+    // See: https://github.com/http-party/http-server#magic-files
+    copyFileSync(src, dst);
+  }
+
   const args = getHttpServerArgs(options);
 
   const { path: pathToHttpServerPkgJson, packageJson } =
@@ -172,6 +179,10 @@ export default async function* fileServerExecutor(
     serve.kill();
     if (disposeWatch) {
       disposeWatch();
+    }
+
+    if (options.spa) {
+      unlinkSync(join(outputPath, '404.html'));
     }
   };
   process.on('exit', processExitListener);

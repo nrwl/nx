@@ -17,27 +17,26 @@ const reach: Reach = {
 };
 
 function buildMatrix(graph: ProjectGraph) {
-  const dependencies = graph.dependencies;
   const nodes = Object.keys(graph.nodes);
+  const nodesLength = nodes.length;
   const adjList = {};
   const matrix = {};
 
-  const initMatrixValues = nodes.reduce((acc, value) => {
-    return {
-      ...acc,
-      [value]: false,
-    };
-  }, {});
-
-  nodes.forEach((v) => {
+  // create matrix value set
+  for (let i = 0; i < nodesLength; i++) {
+    const v = nodes[i];
     adjList[v] = [];
-    matrix[v] = { ...initMatrixValues };
-  });
+    // meeroslav: turns out this is 10x faster than spreading the pre-generated initMatrixValues
+    matrix[v] = {};
+  }
 
-  for (let proj in dependencies) {
-    for (let dep of dependencies[proj]) {
-      if (graph.nodes[dep.target]) {
-        adjList[proj].push(dep.target);
+  const projectsWithDependencies = Object.keys(graph.dependencies);
+  for (let i = 0; i < projectsWithDependencies.length; i++) {
+    const dependencies = graph.dependencies[projectsWithDependencies[i]];
+    for (let j = 0; j < dependencies.length; j++) {
+      const dependency = dependencies[j];
+      if (graph.nodes[dependency.target]) {
+        adjList[dependency.source].push(dependency.target);
       }
     }
   }
@@ -45,16 +44,19 @@ function buildMatrix(graph: ProjectGraph) {
   const traverse = (s: string, v: string) => {
     matrix[s][v] = true;
 
-    for (let adj of adjList[v]) {
-      if (matrix[s][adj] === false) {
+    const adjListLength = adjList[v].length;
+    for (let i = 0; i < adjListLength; i++) {
+      const adj = adjList[v][i];
+      if (!matrix[s][adj]) {
         traverse(s, adj);
       }
     }
   };
 
-  nodes.forEach((v) => {
+  for (let i = 0; i < nodesLength; i++) {
+    const v = nodes[i];
     traverse(v, v);
-  });
+  }
 
   return {
     matrix,
@@ -120,7 +122,7 @@ export function pathExists(
     reach.adjList = adjList;
   }
 
-  return reach.matrix[sourceProjectName][targetProjectName];
+  return !!reach.matrix[sourceProjectName][targetProjectName];
 }
 
 export function checkCircularPath(

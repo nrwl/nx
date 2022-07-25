@@ -4,6 +4,7 @@ import {
   installPackagesTask,
   joinPathFragments,
   logger,
+  ProjectConfiguration,
   readProjectConfiguration,
   stripIndents,
   Tree,
@@ -11,12 +12,15 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { tsquery } from '@phenomnomnominal/tsquery';
+import { extname } from 'path';
 import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
 import { cypressVersion } from '../../utils/versions';
 import {
   addConfigToTsConfig,
   createNewCypressConfig,
   findCypressConfigs,
+  updatePluginFile,
   updateProjectPaths,
   writeNewConfig,
 } from './conversion.util';
@@ -39,13 +43,18 @@ export async function migrateCypressProject(tree: Tree) {
           tree.exists(cypressConfigPathJson) &&
           !tree.exists(cypressConfigPathTs)
         ) {
-          const cypressConfigs = createNewCypressConfig(
+          let cypressConfigs = createNewCypressConfig(
             tree,
             projectConfig,
             cypressConfigPathJson
           );
 
           updateProjectPaths(tree, projectConfig, cypressConfigs);
+          cypressConfigs = updatePluginFile(
+            tree,
+            projectConfig,
+            cypressConfigs
+          );
           writeNewConfig(tree, cypressConfigPathTs, cypressConfigs);
           addConfigToTsConfig(
             tree,

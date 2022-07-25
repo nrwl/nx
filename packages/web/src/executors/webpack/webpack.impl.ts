@@ -1,4 +1,5 @@
 import { ExecutorContext, logger, readCachedProjectGraph } from '@nrwl/devkit';
+import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
 import {
@@ -8,13 +9,11 @@ import {
   switchMap,
   tap,
 } from 'rxjs/operators';
-import { eachValueFrom } from 'rxjs-for-await';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
 import { basename, join } from 'path';
 import {
   calculateProjectDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
@@ -190,17 +189,6 @@ export async function* run(
       metadata.root,
       dependencies
     );
-
-    if (
-      !checkDependentProjectsHaveBeenBuilt(
-        context.root,
-        context.projectName,
-        context.targetName,
-        dependencies
-      )
-    ) {
-      throw new Error();
-    }
   }
 
   // Delete output path before bundling

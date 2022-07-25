@@ -8,6 +8,7 @@ import {
   findTransitiveExternalDependencies,
   hasBannedDependencies,
   hasBannedImport,
+  isTerminalRun,
 } from './runtime-lint-utils';
 
 describe('hasBannedImport', () => {
@@ -247,5 +248,68 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
       hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
         .length
     ).toBe(0);
+  });
+});
+
+describe('is terminal run', () => {
+  const originalProcess = process;
+
+  const mockProcessArgv = (argv: string[]) => {
+    process = Object.assign({}, process, { argv });
+  };
+
+  afterEach(() => {
+    process = originalProcess;
+  });
+
+  it('is a terminal run when the command is started from the nx executor on Mac', () => {
+    // Mac: $run npx nx lint my-nx-project
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v16.13.0/bin/node',
+      '/Users/user/my-repo/node_modules/nx/bin/run-executor.js',
+      '{"targetDescription":{"project":"my-nx-project","target":"lint"}',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run when the command is started from the nx executor on Windows', () => {
+    // Windows: $run npx nx lint my-nx-project
+    mockProcessArgv([
+      'C:\\Program Files\\nodejs\\node.exe',
+      'C:\\dev\\my-repo\\node_modules\\nx\\bin\\run-executor.js',
+      '{"targetDescription":{"project":"my-nx-project","target":"lint"}',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run when the command is started from the node module eslint on Mac', () => {
+    // Mac: $run npx eslint my-file.ts
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v16.13.0/bin/node',
+      '/Users/user/rabobank/my-repo/node_modules/.bin/eslint',
+      'my-file.ts',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run when the command is started from the node module eslint on Windows', () => {
+    // Windows: $run npx eslint my-file.ts
+    mockProcessArgv([
+      'C:\\Program Files\\nodejs\\node.exe',
+      'C:\\dev\\my-repo\\node_modules\\nx\\bin\\eslint',
+      'my-file.ts',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is not a terminal run when the is started from the IDE', () => {
+    // Visual Studio Code mac
+    mockProcessArgv([
+      '/Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper.app/Contents/MacOS/Code Helper',
+      '/Users/user/.vscode/extensions/dbaeumer.vscode-eslint-2.2.6/server/out/eslintServer.js',
+      '--node-ipc',
+      '--clientProcessId=95193',
+    ]);
+    expect(isTerminalRun()).toBe(false);
   });
 });

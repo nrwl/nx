@@ -8,9 +8,9 @@ pipelines:
   pull-requests:
     '**':
       - step:
-          name: "Build and test affected apps on Pull Requests"
+          name: 'Build and test affected apps on Pull Requests'
           caches: # optional
-          - node
+            - node
           script:
             - npm ci
             - npx nx workspace-lint
@@ -22,9 +22,9 @@ pipelines:
   branches:
     main:
       - step:
-        name: "Build and test affected apps on 'main' branch changes"
+          name: "Build and test affected apps on 'main' branch changes"
           caches: # optional
-          - node
+            - node
           script:
             - npm ci
             - npx nx workspace-lint

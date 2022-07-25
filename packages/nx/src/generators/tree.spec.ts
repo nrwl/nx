@@ -1,4 +1,4 @@
-import { lstatSync, readFileSync, writeFileSync } from 'fs';
+import { lstatSync, Mode, readFileSync, writeFileSync } from 'fs';
 import { removeSync, ensureDirSync } from 'fs-extra';
 import { dirSync } from 'tmp';
 import * as path from 'path';
@@ -473,7 +473,7 @@ describe('tree', () => {
     });
   }
 
-  function octal(value: string | number): number {
+  function octal(value: Mode): number {
     if (typeof value === 'string') return parseInt(value, 8);
     return value;
   }

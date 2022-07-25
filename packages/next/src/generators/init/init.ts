@@ -14,6 +14,7 @@ import {
   eslintConfigNextVersion,
   nextVersion,
   nxVersion,
+  tsLibVersion,
 } from '../../utils/versions';
 import { InitSchema } from './schema';
 
@@ -25,7 +26,7 @@ function updateDependencies(host: Tree) {
       next: nextVersion,
       react: reactVersion,
       'react-dom': reactDomVersion,
-      tslib: '^2.0.0',
+      tslib: tsLibVersion,
     },
     {
       'eslint-config-next': eslintConfigNextVersion,

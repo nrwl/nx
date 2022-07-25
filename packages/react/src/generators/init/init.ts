@@ -17,6 +17,7 @@ import {
   reactTestRendererVersion,
   reactVersion,
   testingLibraryReactVersion,
+  tsLibVersion,
   typesNodeVersion,
   typesReactDomVersion,
   typesReactVersion,
@@ -52,7 +53,7 @@ function updateDependencies(host: Tree) {
       react: reactVersion,
       'react-dom': reactDomVersion,
       'regenerator-runtime': '0.13.7',
-      tslib: '^2.0.0',
+      tslib: tsLibVersion,
     },
     {
       '@nrwl/react': nxVersion,

@@ -202,7 +202,7 @@ Object {
 exports[`convertToCypressTen convertCypressProject should update project w/customized config 1`] = `
 "import { defineConfig } from 'cypress'
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
-import setupNodeEvents from './src/plugins/index.js';
+import setupNodeEvents from './src/plugins/index';
 
 const cypressJsonConfig = {
 \\"fileServerFolder\\": \\".\\",

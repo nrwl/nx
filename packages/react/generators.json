@@ -44,28 +44,28 @@
     "storybook-configuration": {
       "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationSchematic",
       "schema": "./src/generators/storybook-configuration/schema.json",
-      "description": "Set up storybook for a React app or library",
+      "description": "Set up storybook for a React app or library.",
       "hidden": false
     },
 
     "component-story": {
       "factory": "./src/generators/component-story/component-story#componentStorySchematic",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Generate storybook story for a React component",
+      "description": "Generate storybook story for a React component.",
       "hidden": false
     },
 
     "stories": {
       "factory": "./src/generators/stories/stories#storiesSchematic",
       "schema": "./src/generators/stories/schema.json",
-      "description": "Create stories/specs for all components declared in an app or library",
+      "description": "Create stories/specs for all components declared in an app or library.",
       "hidden": false
     },
 
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/component-cypress-spec#componentCypressSchematic",
       "schema": "./src/generators/component-cypress-spec/schema.json",
-      "description": "Create a Cypress spec for a UI component that has a story",
+      "description": "Create a Cypress spec for a UI component that has a story.",
       "hidden": false
     },
 
@@ -79,14 +79,21 @@
     "cypress-component-configuration": {
       "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
-      "description": "Setup Cypress component testing for a React project",
+      "description": "Setup Cypress component testing for a React project.",
       "hidden": false
     },
 
     "component-test": {
       "factory": "./src/generators/component-test/component-test#componentTestGenerator",
       "schema": "./src/generators/component-test/schema.json",
-      "description": "Generate a Cypress component test for a React component",
+      "description": "Generate a Cypress component test for a React component.",
+      "hidden": false
+    },
+
+    "setup-tailwind": {
+      "factory": "./src/generators/setup-tailwind/setup-tailwind#setupTailwindSchematic",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Set up Tailwind configuration for a project.",
       "hidden": false
     }
   },
@@ -189,6 +196,13 @@
       "factory": "./src/generators/component-test/component-test#componentTestGenerator",
       "schema": "./src/generators/component-test/schema.json",
       "description": "Generate a Cypress component test for a React component",
+      "hidden": false
+    },
+
+    "setup-tailwind": {
+      "factory": "./src/generators/setup-tailwind/setup-tailwind#setupTailwindGenerator",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Set up Tailwind configuration for a project.",
       "hidden": false
     }
   }

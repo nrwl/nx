@@ -32,7 +32,7 @@ NX_CLOUD_NO_TIMEOUTS=true nx run-many --target=build --all
 
 Setting `NX_VERBOSE_LOGGING=true` when running a command will emit a large amount of metadata It will print information about what artifacts are being downloaded and uploaded, as well as information about the hashes of every computation.
 
-This can be useful for debugging unexpected cache misses, and issues with Nx Private Cloud setups.
+This can be useful for debugging unexpected cache misses, and issues with on-prem setups.
 
 `NX_VERBOSE_LOGGING=true` will also print detailed information about distributed task execution, such as what commands were sent where, etc.
 

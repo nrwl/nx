@@ -35,7 +35,9 @@ The `pr` and `main` jobs implement the CI workflow.
 
 To use the [Nx Orb](https://github.com/nrwl/nx-orb) with a private repository on your main branch, you need to grant the orb access to your CircleCI API. You can do this by creating an environment variable called `CIRCLE_API_TOKEN` in the context or the project.
 
-> Note: It should be a user token, not project token.
+{% callout type="warning" title="Caution" %}
+It should be a user token, not project token.
+{% /callout %}
 
 {% nx-cloud-section %}
 

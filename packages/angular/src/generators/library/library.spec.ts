@@ -758,7 +758,6 @@ describe('lib', () => {
 
       // Make sure these exist
       [
-        'my-dir/my-lib/.browserslistrc',
         'my-dir/my-lib/jest.config.ts',
         'my-dir/my-lib/ng-package.json',
         'my-dir/my-lib/project.json',

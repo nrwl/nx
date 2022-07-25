@@ -88,7 +88,9 @@ module.exports = {
 };
 ```
 
-**Note:** The easiest way is probably to generate a new library and Storybook configuration and then copy & paste the `main.js`.
+{% callout type="note" title="Tip!" %}
+The easiest way is probably to generate a new library and Storybook configuration and then copy & paste the `main.js`.
+{% /callout %}
 
 ### 2. Move any custom webpack configuration to `webpackFinal`
 

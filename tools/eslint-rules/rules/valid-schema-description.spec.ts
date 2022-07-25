@@ -1,4 +1,4 @@
-import { TSESLint } from '@typescript-eslint/experimental-utils';
+import { TSESLint } from '@typescript-eslint/utils';
 import { rule, RULE_NAME } from './valid-schema-description';
 
 const ruleTester = new TSESLint.RuleTester({

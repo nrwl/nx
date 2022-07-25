@@ -85,7 +85,16 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 - Fix: DTE could get stuck when trying to execute tasks with different configurations
 
-# Nx Private Cloud
+# Docker Containers
+
+## 2.4.8
+
+IMPORTANT: The default container mode has changed from COMMUNITY to ENTERPRISE. If you are running a Community version of the container, you will need to make sure the `NX_CLOUD_MODE=private-community` is explicitly set (otherwise your container will fail to start-up).
+
+- Fix: Web app performance improvements
+- Fix: issue with Github logged in admins not being able to download logs
+- Fix: issue with billing page when multiple access tokens were attached to the same org
+- Fix: multiple Mongo DBs used to be created if a default DB was not provided in the connection string. Now it always defaults to the provided `NX_CLOUD_MONGO_DB_NAME§
 
 ## 2.4.7
 
@@ -210,8 +219,8 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 ## 2.2
 
-- [Nx Private Cloud 2.2](https://blog.nrwl.io/%EF%B8%8F-nx-cloud-2-2-%EF%B8%8F-b7656ed5ce7c)
+- [Nx Cloud 2.2](https://blog.nrwl.io/%EF%B8%8F-nx-cloud-2-2-%EF%B8%8F-b7656ed5ce7c)
 
 ## 2.0
 
-- [Overview of Nx Private Cloud 2.0](https://blog.nrwl.io/introducing-nx-cloud-2-0-f1e5c2002a65)
+- [Overview of Nx Cloud 2.0](https://blog.nrwl.io/introducing-nx-cloud-2-0-f1e5c2002a65)

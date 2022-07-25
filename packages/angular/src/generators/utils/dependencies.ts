@@ -1,5 +1,10 @@
 import { addDependenciesToPackageJson, Tree } from '@nrwl/devkit';
-import { postcssVersion } from '../../utils/versions';
+import {
+  postcssImportVersion,
+  postcssPresetEnvVersion,
+  postcssUrlVersion,
+  postcssVersion,
+} from '../../utils/versions';
 
 export function addBuildableLibrariesPostCssDependencies(tree: Tree): void {
   addDependenciesToPackageJson(
@@ -7,9 +12,9 @@ export function addBuildableLibrariesPostCssDependencies(tree: Tree): void {
     {},
     {
       postcss: postcssVersion,
-      'postcss-import': '~14.1.0',
-      'postcss-preset-env': '~7.5.0',
-      'postcss-url': '~10.1.3',
+      'postcss-import': postcssImportVersion,
+      'postcss-preset-env': postcssPresetEnvVersion,
+      'postcss-url': postcssUrlVersion,
     }
   );
 }
