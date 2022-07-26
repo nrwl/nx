@@ -87,6 +87,10 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 2.4.11
+
+- Fixes an intermitent container start-up issue when running a self-contained Mongo instance
+
 ## 2.4.10
 
 - Fix an issue with the admin password not being set correctly
