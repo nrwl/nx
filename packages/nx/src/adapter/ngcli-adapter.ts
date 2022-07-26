@@ -99,7 +99,7 @@ function createWorkflow(
   fsHost: virtualFs.Host<Stats>,
   root: string,
   opts: any
-) {
+): import('@angular-devkit/schematics/tools').NodeWorkflow {
   const NodeWorkflow = require('@angular-devkit/schematics/tools').NodeWorkflow;
   const workflow = new NodeWorkflow(fsHost, {
     force: false,
@@ -880,7 +880,11 @@ export async function runMigration(
   const fsHost = new NxScopedHost(root);
   const workflow = createWorkflow(fsHost, root, {});
   const collection = resolveMigrationsCollection(packageName);
-  return workflow
+
+  const record = { loggingQueue: [] as string[], error: false };
+  workflow.reporter.subscribe(await createRecorder(fsHost, record, logger));
+
+  await workflow
     .execute({
       collection,
       schematic: migrationName,
@@ -889,6 +893,11 @@ export async function runMigration(
       logger: logger as any,
     })
     .toPromise();
+
+  return {
+    loggingQueue: record.loggingQueue,
+    madeChanges: record.loggingQueue.length > 0,
+  };
 }
 
 function resolveMigrationsCollection(name: string): string {
@@ -1094,8 +1103,8 @@ export function wrapAngularDevkitSchematic(
 
     // used for testing
     if (collectionResolutionOverrides) {
-      const r = workflow.engineHost.resolve;
-      workflow.engineHost.resolve = (collection, b, c) => {
+      const r = (workflow.engineHost as any).resolve;
+      (workflow.engineHost as any).resolve = (collection, b, c) => {
         if (collectionResolutionOverrides[collection]) {
           return collectionResolutionOverrides[collection];
         } else {
