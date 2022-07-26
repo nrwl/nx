@@ -36,16 +36,18 @@ import { updatePackageJson } from './lib/update-package-json';
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
 const image = require('@rollup/plugin-image');
+
 const json = require('@rollup/plugin-json');
 const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
-
 export default async function* rollupExecutor(
   rawOptions: WebRollupOptions,
   context: ExecutorContext
 ) {
+  process.env.NODE_ENV ??= 'production';
+
   const project = context.workspace.projects[context.projectName];
   const projectGraph = readCachedProjectGraph();
   const sourceRoot = project.sourceRoot;
