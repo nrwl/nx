@@ -29,7 +29,7 @@ export const reactReduxVersion = '8.0.2';
 export const reactTestRendererVersion = '18.2.0';
 
 export const eslintPluginImportVersion = '2.26.0';
-export const eslintPluginJsxA11yVersion = '6.6.0';
+export const eslintPluginJsxA11yVersion = '6.6.1';
 export const eslintPluginReactVersion = '7.30.1';
 export const eslintPluginReactHooksVersion = '4.6.0';
 

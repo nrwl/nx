@@ -5,10 +5,15 @@ import {
   parseTargetString,
   readTargetOptions,
 } from '@nrwl/devkit';
-
 import * as chalk from 'chalk';
 import { existsSync } from 'fs';
 import { join, resolve } from 'path';
+import { readCachedProjectGraph } from '@nrwl/devkit';
+import {
+  calculateProjectDependencies,
+  DependentBuildableProjectNode,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { workspaceLayout } from '@nrwl/devkit';
 
 import { prepareConfig } from '../../utils/config';
 import {
@@ -20,16 +25,11 @@ import {
 } from '../../utils/types';
 import { customServer } from './lib/custom-server';
 import { defaultServer } from './lib/default-server';
-import { readCachedProjectGraph } from '@nrwl/devkit';
-import {
-  calculateProjectDependencies,
-  DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
-import { importConstants } from '../../utils/require-shim';
-import { workspaceLayout } from '@nrwl/devkit';
-
-const { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_SERVER } = importConstants();
+import {
+  PHASE_DEVELOPMENT_SERVER,
+  PHASE_PRODUCTION_SERVER,
+} from '../../utils/constants';
 
 const infoPrefix = `[ ${chalk.dim(chalk.cyan('info'))} ] `;
 const readyPrefix = `[ ${chalk.green('ready')} ]`;

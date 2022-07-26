@@ -1,10 +1,9 @@
 import { createWebpackConfig, prepareConfig } from './config';
 import { NextBuildBuilderOptions } from '@nrwl/next';
 import { dirname } from 'path';
-import { importConstants } from './require-shim';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
-const { PHASE_PRODUCTION_BUILD } = importConstants();
+import { PHASE_PRODUCTION_BUILD } from './constants';
 
 jest.mock('@nrwl/web/src/utils/config', () => ({
   createCopyPlugin: () => {},
