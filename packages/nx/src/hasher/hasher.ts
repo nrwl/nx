@@ -384,20 +384,12 @@ class TaskHasher {
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
         const parts = [];
-        if (fileset.indexOf('*') > -1) {
-          this.projectGraph.allWorkspaceFiles
-            .filter((f) => minimatch(f.file, withoutWorkspaceRoot))
-            .forEach((f) => {
-              parts.push(f.hash);
-            });
-        } else {
-          const matchingFile = this.projectGraph.allWorkspaceFiles.find(
-            (t) => t.file === withoutWorkspaceRoot
-          );
-          if (matchingFile) {
-            parts.push(matchingFile.hash);
-          }
-        }
+        this.projectGraph.allWorkspaceFiles
+          .filter((f) => minimatch(f.file, withoutWorkspaceRoot))
+          .forEach((f) => {
+            parts.push(f.hash);
+          });
+
         const value = this.hashing.hashArray(parts);
         res({
           value,
