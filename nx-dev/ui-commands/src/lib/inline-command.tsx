@@ -1,4 +1,4 @@
-import { ReactComponentElement, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -14,7 +14,7 @@ export function InlineCommand({
   language,
   command,
   callback,
-}: InlineCommandProps): ReactComponentElement<any> {
+}: InlineCommandProps): JSX.Element {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     let t: NodeJS.Timeout;
@@ -59,5 +59,3 @@ export function InlineCommand({
     </div>
   );
 }
-
-export default InlineCommand;
