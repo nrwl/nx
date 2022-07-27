@@ -765,6 +765,39 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.5.0": {
+      "version": "14.5.0-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.69.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "12.4.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.18.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "8.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "8.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "8.0.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
