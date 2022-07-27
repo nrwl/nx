@@ -47,6 +47,8 @@ For this example, you’ll be migrating the default CRA typescript template app 
 
 There is also a [repo](https://github.com/nrwl/cra-to-nx-migration) that shows the finished result of this guide and for each step a [diff](https://github.com/nrwl/cra-to-nx-migration/commits/main) will be provided to see the exact code changes that occur for that step.
 
+{% github-repository url="https://github.com/nrwl/cra-to-nx-migration" /%}
+
 ### 1. Create your workspace
 
 To start migrating your app, create an Nx workspace:

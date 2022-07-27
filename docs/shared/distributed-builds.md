@@ -10,10 +10,8 @@ The easiest way is to use Nx Cloud. Learn more about [configuring your CI](/nx-c
 
 But you can also set up distribution manually using the `print-affected` and `run-many` commands.
 
-Please look at the following two examples:
-
-- [Example of setting up distributed Azure build for Nx workspace](https://github.com/nrwl/nx-azure-build)
-- [Example of setting up distributed Jenkins build for Nx workspace](https://github.com/nrwl/nx-jenkins-build)
+{% github-repository url="https://github.com/nrwl/nx-azure-build" /%}
+{% github-repository url="https://github.com/nrwl/nx-jenkins-build" /%}
 
 The Azure example is very easy to port to other CI providers (e.g., CircleCI, GitLab).
 

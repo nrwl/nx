@@ -7,4 +7,4 @@ Repo contains:
 
 The repo shows how Nx works in a large workspace. It also benchmarks Nx and explains the optimisations Nx uses to be fast.
 
-**Repository:** [vsavkin/large-monorepo](https://github.com/vsavkin/large-monorepo)
+{% github-repository url="https://github.com/vsavkin/large-monorepo" /%}

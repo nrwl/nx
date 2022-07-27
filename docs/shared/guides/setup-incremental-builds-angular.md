@@ -274,3 +274,5 @@ depends on must also be `build-base`:
 ## Example repository
 
 Check out the [nx-incremental-large-repo](https://github.com/nrwl/nx-incremental-large-repo) for a live example.
+
+{% github-repository url="https://github.com/nrwl/nx-incremental-large-repo" /%}
