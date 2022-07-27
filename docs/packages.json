@@ -109,7 +109,7 @@
     "name": "js",
     "path": "generated/packages/js.json",
     "schemas": {
-      "executors": ["tsc", "swc"],
+      "executors": ["tsc", "swc", "node"],
       "generators": ["library", "init", "convert-to-swc"]
     }
   },
@@ -159,7 +159,14 @@
     "path": "generated/packages/next.json",
     "schemas": {
       "executors": ["build", "server", "export"],
-      "generators": ["init", "application", "page", "component", "library"]
+      "generators": [
+        "init",
+        "application",
+        "page",
+        "component",
+        "library",
+        "custom-server"
+      ]
     }
   },
   {

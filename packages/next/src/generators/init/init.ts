@@ -3,7 +3,6 @@ import {
   convertNxGenerator,
   GeneratorCallback,
   Tree,
-  updateJson,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { jestInitGenerator } from '@nrwl/jest';
@@ -17,6 +16,7 @@ import {
   tsLibVersion,
 } from '../../utils/versions';
 import { InitSchema } from './schema';
+import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 
 function updateDependencies(host: Tree) {
   return addDependenciesToPackageJson(
@@ -51,6 +51,8 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
 
   const installTask = updateDependencies(host);
   tasks.push(installTask);
+
+  addGitIgnoreEntry(host);
 
   return runTasksInSerial(...tasks);
 }
