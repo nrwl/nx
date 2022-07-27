@@ -2,6 +2,7 @@ import { ExecutorContext } from '@nrwl/devkit';
 import {
   compileTypeScript,
   compileTypeScriptWatcher,
+  TypeScriptCompilationOptions,
 } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import type {
   CustomTransformers,
@@ -49,12 +50,13 @@ export async function* compileTypeScriptFiles(
     ),
   });
 
-  const tscOptions = {
+  const tscOptions: TypeScriptCompilationOptions = {
     outputPath: normalizedOptions.outputPath,
     projectName: context.projectName,
     projectRoot: normalizedOptions.projectRoot,
     tsConfig: normalizedOptions.tsConfig,
     watch: normalizedOptions.watch,
+    deleteOutputPath: normalizedOptions.clean,
     getCustomTransformers,
   };
 
