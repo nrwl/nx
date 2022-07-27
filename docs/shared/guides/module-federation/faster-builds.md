@@ -39,10 +39,11 @@ The best way to understand the setup is through an example. In this section, we 
 1. `/cart`
 1. `/about`
 
-But before we begin, we've put together a couple of example repos for you to inspect if you want to skip ahead.
+But before we begin, we've put together a couple of example repos (React and Angular) for you to inspect if you want to skip ahead.
 
-- Angular: https://github.com/nrwl/ng-module-federation
-- React: https://github.com/nrwl/react-module-federation
+{% github-repository url="https://github.com/nrwl/ng-module-federation" /%}
+
+{% github-repository url="https://github.com/nrwl/react-module-federation" /%}
 
 These examples have fully functioning [CI](https://github.com/nrwl/react-module-federation/blob/main/.github/workflows/ci.yml) [workflows](https://github.com/nrwl/ng-module-federation/blob/main/.github/workflows/ci.yml) that are simple to set up. You can see what the CI does by viewing the sample pull requests in each repo. Also notice the [Nx Cloud](https://nx.app) integration, which gives you insight into each pipeline. We'll touch on this [later in this guide](#distributed-computation-caching-with-nx-cloud).
 
@@ -328,6 +329,10 @@ The above command is just an example. You'll need to use what make sense for you
 
 For examples of how CI/CD pipelines can be configured using Nx Cloud and GitHub, see our [React](https://github.com/nrwl/react-module-federation)
 and [Angular](https://github.com/nrwl/ng-module-federation) examples.
+
+{% github-repository url="https://github.com/nrwl/ng-module-federation" /%}
+
+{% github-repository url="https://github.com/nrwl/react-module-federation" /%}
 
 ## Using buildable libs
 
