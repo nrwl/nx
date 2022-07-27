@@ -3,6 +3,7 @@ import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import { ReferencesIndexItem } from '@nrwl/nx-dev/ui-references';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
 import { ReferencesSection } from '../../ui-references/src/lib/references-section';
 import { nxMenuApi } from '../lib/api';
 
@@ -20,15 +21,18 @@ export async function getStaticProps(): Promise<{ props: ReferencesProps }> {
 
 export function Packages(props: ReferencesProps): JSX.Element {
   const router = useRouter();
+  const [targetPackageId, setTargetPackageId] = useState<string>('');
+  const updateTargetPackageId = (id: string) =>
+    id === targetPackageId ? setTargetPackageId('') : setTargetPackageId(id);
   const nxPackageIds = ['nx', 'workspace', 'devkit', 'nx-plugin'];
-  const references = [
+  const references: MenuItem[] = [
     ...nxPackageIds.map((id) =>
       props.references.itemList.find((pkg) => pkg.id === id)
     ),
     ...props.references.itemList.filter(
       (pkg) => !nxPackageIds.includes(pkg.id)
     ),
-  ];
+  ].filter((pkg): pkg is MenuItem => !!pkg);
 
   return (
     <>
@@ -81,19 +85,25 @@ export function Packages(props: ReferencesProps): JSX.Element {
                   key={'ref-' + category.id}
                   path={category.path as string}
                   name={category.name as string}
-                  id={category.id as string}
+                  id={category.id}
+                  active={targetPackageId}
+                  callback={updateTargetPackageId}
                 />
               ))}
             </nav>
 
-            {references.map((category: MenuItem, index, all) => (
-              <div key={[category.id, index].join('-')} className="py-10">
-                <ReferencesSection section={category} />
-                {!(index + 1 === all.length) && (
-                  <div className="inset-x-0 bottom-0 mt-8 h-1 rounded-full bg-gradient-to-r from-[#8154E8] to-[#47BC99]"></div>
-                )}
-              </div>
-            ))}
+            {references
+              .filter((pkg) =>
+                !!targetPackageId ? pkg.id === targetPackageId : true
+              )
+              .map((category: MenuItem, index, all) => (
+                <div key={[category.id, index].join('-')} className="py-10">
+                  <ReferencesSection section={category} />
+                  {!(index + 1 === all.length) && (
+                    <div className="inset-x-0 bottom-0 mt-8 h-1 rounded-full bg-gradient-to-r from-[#8154E8] to-[#47BC99]"></div>
+                  )}
+                </div>
+              ))}
           </section>
         </div>
       </main>
