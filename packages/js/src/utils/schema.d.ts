@@ -38,6 +38,7 @@ export interface ExecutorOptions {
   tsConfig: string;
   swcrc?: string;
   watch: boolean;
+  clean?: boolean;
   transformers: TransformerEntry[];
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';

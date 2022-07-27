@@ -262,6 +262,11 @@
             "description": "Enable re-building when files change.",
             "default": false
           },
+          "clean": {
+            "type": "boolean",
+            "description": "Remove previous output before build.",
+            "default": true
+          },
           "transformers": {
             "type": "array",
             "description": "List of TypeScript Transformer Plugins.",
@@ -413,6 +418,11 @@
             "type": "boolean",
             "description": "Enable re-building when files change.",
             "default": false
+          },
+          "clean": {
+            "type": "boolean",
+            "description": "Remove previous output before build.",
+            "default": true
           },
           "skipTypeCheck": {
             "type": "boolean",
