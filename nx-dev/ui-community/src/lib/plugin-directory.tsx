@@ -1,6 +1,6 @@
 import { SearchIcon } from '@heroicons/react/solid';
 import { PluginCard } from '@nrwl/nx-dev/ui-common';
-import { ReactComponentElement, useState } from 'react';
+import { useState } from 'react';
 
 interface Plugin {
   description: string;
@@ -13,7 +13,7 @@ export function PluginDirectory({
   pluginList,
 }: {
   pluginList: Plugin[];
-}): ReactComponentElement<any> {
+}): JSX.Element {
   const [searchTerm, setSearchTerm] = useState('');
   return (
     <div
@@ -66,5 +66,3 @@ export function PluginDirectory({
     </div>
   );
 }
-
-export default PluginDirectory;

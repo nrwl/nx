@@ -1,7 +1,6 @@
 import { MailIcon } from '@heroicons/react/solid';
-import { ReactComponentElement } from 'react';
 
-export function ConnectWithUs(): ReactComponentElement<any> {
+export function ConnectWithUs(): JSX.Element {
   return (
     <article
       id="community"
@@ -145,5 +144,3 @@ export function ConnectWithUs(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default ConnectWithUs;

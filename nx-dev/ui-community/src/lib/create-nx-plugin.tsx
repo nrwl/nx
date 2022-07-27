@@ -4,9 +4,8 @@ import {
   ShareIcon,
 } from '@heroicons/react/solid';
 import Link from 'next/link';
-import { ReactComponentElement } from 'react';
 
-export function CreateNxPlugin(): ReactComponentElement<any> {
+export function CreateNxPlugin(): JSX.Element {
   return (
     <article
       id="create-nx-plugin"
@@ -126,5 +125,3 @@ export function CreateNxPlugin(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default CreateNxPlugin;
