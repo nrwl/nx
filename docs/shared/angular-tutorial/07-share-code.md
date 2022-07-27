@@ -60,7 +60,7 @@ If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at
 **Now update `apps/api/src/app/app.service.ts` to import the interface:**
 
 ```typescript
-import { Injectable } from '@nestjs/common';
+import { Injectable } from '@angular/core';
 import { Todo } from '@myorg/data';
 
 @Injectable()
