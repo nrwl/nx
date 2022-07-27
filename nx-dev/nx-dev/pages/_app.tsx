@@ -7,7 +7,10 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
 
-export default function CustomApp({ Component, pageProps }: AppProps) {
+export default function CustomApp({
+  Component,
+  pageProps,
+}: AppProps): JSX.Element {
   const router = useRouter();
   const gaMeasurementId = 'UA-88380372-10';
   useEffect(() => {
