@@ -1,6 +1,4 @@
-import React, { ReactComponentElement } from 'react';
-
-export function EventBanner(): ReactComponentElement<any> {
+export function EventBanner(): JSX.Element {
   return (
     <div className="bg-green-nx-base relative">
       <div className="mx-auto max-w-7xl py-4 px-3 sm:px-6 lg:px-8">
@@ -30,5 +28,3 @@ export function EventBanner(): ReactComponentElement<any> {
     </div>
   );
 }
-
-export default EventBanner;

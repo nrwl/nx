@@ -1,9 +1,9 @@
 import { motion, useAnimation } from 'framer-motion';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function NxPlaybook(): ReactComponentElement<any> {
+export function NxPlaybook(): JSX.Element {
   const controls = useAnimation();
   const [ref, inView] = useInView({ triggerOnce: true });
 
@@ -72,5 +72,3 @@ export function NxPlaybook(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default NxPlaybook;

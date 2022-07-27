@@ -1,10 +1,10 @@
 import cx from 'classnames';
 import { motion, useAnimation } from 'framer-motion';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function OpenSourceProjects(): ReactComponentElement<any> {
+export function OpenSourceProjects(): JSX.Element {
   const projectList = [
     {
       title: 'Storybook',
@@ -415,5 +415,3 @@ export function OpenSourceProjects(): ReactComponentElement<any> {
     </div>
   );
 }
-
-export default OpenSourceProjects;

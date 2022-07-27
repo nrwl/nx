@@ -147,7 +147,7 @@ const featureItems: {
   },
 ];
 
-export function EcosystemFeatures(): ReactComponentElement<any> {
+export function EcosystemFeatures(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -257,5 +257,3 @@ export function EcosystemFeatures(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default EcosystemFeatures;
