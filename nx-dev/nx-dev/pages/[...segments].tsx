@@ -105,7 +105,7 @@ export default function DocumentationPage({
   document,
   pkg,
   schemaRequest,
-}: DocumentationPageProps) {
+}: DocumentationPageProps): JSX.Element {
   const { toggleNav, navIsOpen } = useNavToggle();
 
   const vm: { entryComponent: JSX.Element } = {

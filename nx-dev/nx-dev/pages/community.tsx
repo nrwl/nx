@@ -11,7 +11,6 @@ import {
 } from '@nrwl/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { ReactComponentElement } from 'react';
 
 declare const fetch: any;
 
@@ -39,7 +38,7 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
   };
 }
 
-export function Community(props: CommunityProps): ReactComponentElement<any> {
+export default function Community(props: CommunityProps): JSX.Element {
   const firstPartyPlugins = [
     {
       description:
@@ -275,5 +274,3 @@ export function Community(props: CommunityProps): ReactComponentElement<any> {
     </>
   );
 }
-
-export default Community;

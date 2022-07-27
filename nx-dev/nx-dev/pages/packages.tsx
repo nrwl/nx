@@ -18,7 +18,7 @@ export async function getStaticProps(): Promise<{ props: ReferencesProps }> {
   };
 }
 
-export function Packages(props: ReferencesProps): JSX.Element {
+export default function Packages(props: ReferencesProps): JSX.Element {
   const router = useRouter();
   const nxPackageIds = ['nx', 'workspace', 'devkit', 'nx-plugin'];
   const references = [
@@ -101,5 +101,3 @@ export function Packages(props: ReferencesProps): JSX.Element {
     </>
   );
 }
-
-export default Packages;
