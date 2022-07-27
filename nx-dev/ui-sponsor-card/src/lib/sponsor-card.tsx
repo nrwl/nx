@@ -6,7 +6,7 @@ export interface Sponsor {
   description: string;
   linkTarget: string;
 }
-export function SponsorCard(data: Sponsor) {
+export function SponsorCard(data: Sponsor): JSX.Element {
   return (
     <figure className="align-center grid h-full grid-cols-1 items-center justify-center gap-12 py-6 md:grid-cols-3">
       <div className="rounded-full md:col-span-1">
