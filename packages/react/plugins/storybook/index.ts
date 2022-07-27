@@ -1,9 +1,12 @@
-import { joinPathFragments, readJsonFile } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  readJsonFile,
+  logger,
+  workspaceRoot,
+} from '@nrwl/devkit';
 import { getBaseWebpackPartial } from '@nrwl/web/src/utils/config';
 import { getStylesPartial } from '@nrwl/web/src/utils/web.config';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
-import { logger } from '@storybook/node-logger';
 import { join } from 'path';
 import { gte } from 'semver';
 import { Configuration, WebpackPluginInstance, DefinePlugin } from 'webpack';
