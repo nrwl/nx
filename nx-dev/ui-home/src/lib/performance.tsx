@@ -6,7 +6,7 @@ import {
   useMotionValue,
   useTransform,
 } from 'framer-motion';
-import { ReactComponentElement, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 function Counter({
@@ -19,7 +19,7 @@ function Counter({
   to: number;
   round: number;
   progress: MotionValue<number>;
-}): ReactComponentElement<any> {
+}): JSX.Element {
   const ref = useRef();
   const value = useTransform(progress, [0, 1000], [from, to], {
     clamp: false,
@@ -42,7 +42,7 @@ function Counter({
   return <span ref={ref}>{formatNumber(value.get())}</span>;
 }
 
-export function Performance(): ReactComponentElement<any> {
+export function Performance(): JSX.Element {
   const progress: MotionValue<number> = useMotionValue(0);
   const opacityVariant = {
     hidden: {
@@ -169,5 +169,3 @@ export function Performance(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default Performance;

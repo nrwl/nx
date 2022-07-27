@@ -1,8 +1,8 @@
 import { motion, useAnimation } from 'framer-motion';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-const featureItems: ReactComponentElement<any>[] = [
+const featureItems: JSX.Element[] = [
   <svg
     id="typescript-logo"
     className="max-h-12 w-full fill-current text-[#3178C6]"
@@ -52,7 +52,7 @@ const featureItems: ReactComponentElement<any>[] = [
   </svg>,
 ];
 
-export function OpenPlatform(): ReactComponentElement<any> {
+export function OpenPlatform(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -145,5 +145,3 @@ export function OpenPlatform(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default OpenPlatform;

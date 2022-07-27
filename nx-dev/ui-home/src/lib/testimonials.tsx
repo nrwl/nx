@@ -1,7 +1,6 @@
 import { TestimonialCard } from '@nrwl/nx-dev/ui-common';
-import { ReactComponentElement } from 'react';
 
-export function Testimonials(): ReactComponentElement<any> {
+export function Testimonials(): JSX.Element {
   const column1 = [
     {
       link: 'https://twitter.com/antoinepairet/status/1488882179434328065',
@@ -98,5 +97,3 @@ export function Testimonials(): ReactComponentElement<any> {
     </div>
   );
 }
-
-export default Testimonials;

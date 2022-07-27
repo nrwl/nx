@@ -1,9 +1,9 @@
 import { motion, useAnimation } from 'framer-motion';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function EggheadCourses(): ReactComponentElement<any> {
+export function EggheadCourses(): JSX.Element {
   const controls = useAnimation();
   const [ref, inView] = useInView({ triggerOnce: true });
 
@@ -70,5 +70,3 @@ export function EggheadCourses(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default EggheadCourses;

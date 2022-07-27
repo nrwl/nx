@@ -1,10 +1,10 @@
 import { motion, useAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function CloudSupport(): ReactComponentElement<any> {
+export function CloudSupport(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -120,5 +120,3 @@ export function CloudSupport(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default CloudSupport;
