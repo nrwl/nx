@@ -1,5 +1,3 @@
-import { ReactComponentElement } from 'react';
-
 export interface PluginCardProps {
   name: string;
   description: string;
@@ -12,7 +10,7 @@ export function PluginCard({
   description,
   url,
   isOfficial,
-}: PluginCardProps): ReactComponentElement<any> {
+}: PluginCardProps): JSX.Element {
   return (
     <div className="focus-within:ring-blue-nx-base relative flex w-full overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50">
       <div className="flex w-full flex-col px-4 py-3">
@@ -51,5 +49,3 @@ export function PluginCard({
     </div>
   );
 }
-
-export default PluginCard;

@@ -8,7 +8,7 @@ export interface HeaderProps {
   useDarkBackground?: boolean;
 }
 
-export function Header(props: HeaderProps) {
+export function Header(props: HeaderProps): JSX.Element {
   const router = useRouter();
   const isNxCloudDoc: boolean = router.asPath.startsWith('/nx-cloud');
   const isReferencesDoc: boolean = router.asPath.startsWith('/packages');
@@ -182,5 +182,3 @@ export function Header(props: HeaderProps) {
     </div>
   );
 }
-
-export default Header;
