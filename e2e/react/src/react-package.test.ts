@@ -136,6 +136,13 @@ describe('Build React libraries and apps', () => {
       checkFilesExist(`dist/libs/${parentLib}/index.js`);
       checkFilesExist(`dist/libs/${childLib}/index.js`);
       checkFilesExist(`dist/libs/${childLib2}/index.js`);
+
+      expect(readFile(`dist/libs/${childLib}/index.js`)).not.toContain(
+        'react/jsx-dev-runtime'
+      );
+      expect(readFile(`dist/libs/${childLib}/index.js`)).toContain(
+        'react/jsx-runtime'
+      );
     });
 
     it('should support --format option', () => {

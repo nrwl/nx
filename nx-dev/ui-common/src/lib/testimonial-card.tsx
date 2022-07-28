@@ -1,5 +1,3 @@
-import { ReactComponentElement } from 'react';
-
 interface Testimonial {
   author: string;
   title: string;
@@ -8,11 +6,7 @@ interface Testimonial {
   link: string;
 }
 
-export function TestimonialCard({
-  data,
-}: {
-  data: Testimonial;
-}): ReactComponentElement<any> {
+export function TestimonialCard({ data }: { data: Testimonial }): JSX.Element {
   return (
     <figure className="focus-within:ring-blue-nx-base relative flex flex-col-reverse rounded-lg border border-gray-300 bg-white p-6 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2  hover:bg-gray-50">
       <blockquote className="mt-6 text-slate-500">
@@ -38,5 +32,3 @@ export function TestimonialCard({
     </figure>
   );
 }
-
-export default TestimonialCard;

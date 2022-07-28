@@ -37,6 +37,8 @@ It is costly to rebuild all the buildable libraries from scratch every time you 
 
 If we can share the cache with our teammates, we can get a much better dev experience. For instance, [this repo](https://github.com/nrwl/nx-incremental-large-repo) has a large application, where `nx serve` takes just a few seconds.
 
+{% github-repository url="https://github.com/nrwl/nx-incremental-large-repo" /%}
+
 ![comparison: webpack vs incremental build](/shared/incremental-build-webpack-vs-incremental.png)
 
 The above chart has three different test runs:

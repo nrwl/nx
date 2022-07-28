@@ -14,6 +14,8 @@ For this example, you’ll be migrating the [Real World AngularJS](https://githu
 
 There is also a [repo](https://github.com/nrwl/nx-migrate-angularjs-example) that shows a completed example of this guide.
 
+{% github-repository url="https://github.com/nrwl/nx-migrate-angularjs-example" /%}
+
 {% callout type="note" title="RealWorld app vs reality" %}
 The RealWorld app is a great example of an AngularJS app, but it probably doesn’t have the complexity of your own codebase. As you go along, I’ll include some recommendations on how you might apply this example to your larger, more complex application.
 {% /callout %}

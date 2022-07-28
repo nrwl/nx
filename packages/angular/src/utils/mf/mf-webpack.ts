@@ -4,16 +4,13 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nrwl/devkit';
-import {
-  getRootTsConfigPath,
-  readTsConfig,
-} from '@nrwl/workspace/src/utilities/typescript';
+import { getRootTsConfigPath } from '@nrwl/workspace/src/utilities/typescript';
 import { existsSync, lstatSync, readdirSync } from 'fs';
 import { PackageJson, readModulePackageJson } from 'nx/src/utils/package-json';
 import { dirname, join, normalize, relative } from 'path';
-import { ParsedCommandLine } from 'typescript';
 import { NormalModuleReplacementPlugin } from 'webpack';
-import { readRootPackageJson } from './utils';
+import { readTsPathMappings } from './typescript';
+import { readRootPackageJson, WorkspaceLibrary } from './utils';
 
 export interface SharedLibraryConfig {
   singleton?: boolean;
@@ -22,36 +19,11 @@ export interface SharedLibraryConfig {
   eager?: boolean;
 }
 
-function traverseUpFileTreeAndPerformActionUntil(
-  dirPath: string,
-  endPath: string,
-  action: (dirname: string) => boolean
-) {
-  while (dirPath !== endPath) {
-    if (action(dirPath)) {
-      break;
-    }
-    dirPath = dirname(dirPath);
-  }
-}
-
 function collectWorkspaceLibrarySecondaryEntryPoints(
   library: string,
-  libraryPath: string,
+  libraryRoot: string,
   tsconfigPathAliases: Record<string, string[]>
 ) {
-  let libraryRootDirPath = libraryPath;
-  traverseUpFileTreeAndPerformActionUntil(
-    dirname(libraryRootDirPath),
-    workspaceRoot,
-    (currentDirPath) => {
-      if (existsSync(join(currentDirPath, 'package.json'))) {
-        libraryRootDirPath = currentDirPath;
-        return true;
-      }
-    }
-  );
-
   const aliasesUnderLibrary = Object.keys(tsconfigPathAliases).filter(
     (libName) => libName.startsWith(library) && libName !== library
   );
@@ -60,21 +32,13 @@ function collectWorkspaceLibrarySecondaryEntryPoints(
     const pathToLib = dirname(
       join(workspaceRoot, tsconfigPathAliases[alias][0])
     );
-    let isSecondaryEntrypoint = false;
     let searchDir = pathToLib;
-    traverseUpFileTreeAndPerformActionUntil(
-      searchDir,
-      libraryRootDirPath,
-      (currentDirPath) => {
-        if (existsSync(join(currentDirPath, 'ng-package.json'))) {
-          isSecondaryEntrypoint = true;
-          return true;
-        }
+    while (searchDir !== libraryRoot) {
+      if (existsSync(join(searchDir, 'ng-package.json'))) {
+        secondaryEntryPoints.push({ name: alias, path: pathToLib });
+        break;
       }
-    );
-
-    if (isSecondaryEntrypoint) {
-      secondaryEntryPoints.push({ name: alias, path: pathToLib });
+      searchDir = dirname(searchDir);
     }
   }
 
@@ -82,47 +46,40 @@ function collectWorkspaceLibrarySecondaryEntryPoints(
 }
 
 export function shareWorkspaceLibraries(
-  libraries: string[],
+  libraries: WorkspaceLibrary[],
   tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath()
 ) {
-  if (!existsSync(tsConfigPath)) {
-    throw new Error(
-      `NX MF: TsConfig Path for workspace libraries does not exist! (${tsConfigPath})`
-    );
+  if (!libraries) {
+    return getEmptySharedLibrariesConfig();
   }
 
-  const tsConfig: ParsedCommandLine = readTsConfig(tsConfigPath);
-  const tsconfigPathAliases = tsConfig.options?.paths;
-
-  if (!tsconfigPathAliases) {
-    return {
-      getAliases: () => [],
-      getLibraries: () => ({}),
-      getReplacementPlugin: () =>
-        new NormalModuleReplacementPlugin(/./, () => {}),
-    };
+  const tsconfigPathAliases = readTsPathMappings(tsConfigPath);
+  if (!Object.keys(tsconfigPathAliases).length) {
+    return getEmptySharedLibrariesConfig();
   }
 
   const pathMappings: { name: string; path: string }[] = [];
   for (const [key, paths] of Object.entries(tsconfigPathAliases)) {
-    if (libraries && libraries.includes(key)) {
-      const pathToLib = normalize(join(workspaceRoot, paths[0]));
-      collectWorkspaceLibrarySecondaryEntryPoints(
-        key,
-        pathToLib,
-        tsconfigPathAliases
-      ).forEach(({ name, path }) =>
-        pathMappings.push({
-          name,
-          path,
-        })
-      );
-
-      pathMappings.push({
-        name: key,
-        path: pathToLib,
-      });
+    const library = libraries.find((lib) => lib.importKey === key);
+    if (!library) {
+      continue;
     }
+
+    collectWorkspaceLibrarySecondaryEntryPoints(
+      key,
+      join(workspaceRoot, library.root),
+      tsconfigPathAliases
+    ).forEach(({ name, path }) =>
+      pathMappings.push({
+        name,
+        path,
+      })
+    );
+
+    pathMappings.push({
+      name: key,
+      path: normalize(join(workspaceRoot, paths[0])),
+    });
   }
 
   return {
@@ -159,6 +116,15 @@ export function shareWorkspaceLibraries(
           }
         }
       }),
+  };
+}
+
+function getEmptySharedLibrariesConfig() {
+  return {
+    getAliases: () => ({}),
+    getLibraries: () => ({}),
+    getReplacementPlugin: () =>
+      new NormalModuleReplacementPlugin(/./, () => {}),
   };
 }
 

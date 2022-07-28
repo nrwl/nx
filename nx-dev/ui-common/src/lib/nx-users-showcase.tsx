@@ -1,4 +1,4 @@
-export function NxUsersShowcase() {
+export function NxUsersShowcase(): JSX.Element {
   return (
     <div className="overflow-hidden py-4 px-4">
       <div className="top-1 bottom-3 mx-auto w-60 text-center text-xs text-gray-400">
@@ -1035,5 +1035,3 @@ export function NxUsersShowcase() {
     </div>
   );
 }
-
-export default NxUsersShowcase;

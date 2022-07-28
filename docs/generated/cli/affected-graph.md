@@ -191,6 +191,8 @@ Untracked changes
 
 ### verbose
 
+Type: boolean
+
 Print additional error stack trace on failure
 
 ### version

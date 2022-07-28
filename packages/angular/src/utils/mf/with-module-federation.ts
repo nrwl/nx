@@ -1,22 +1,17 @@
 import {
+  createProjectGraphAsync,
+  ProjectGraph,
+  readCachedProjectGraph,
+} from '@nrwl/devkit';
+import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { extname, join } from 'path';
+import {
   getNpmPackageSharedConfig,
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
 } from './mf-webpack';
-import {
-  createProjectGraphAsync,
-  ProjectGraph,
-  readCachedProjectGraph,
-} from '@nrwl/devkit';
-import {
-  getRootTsConfigPath,
-  readTsConfig,
-} from '@nrwl/workspace/src/utilities/typescript';
-import { ParsedCommandLine } from 'typescript';
-import { readRootPackageJson } from './utils';
-import { extname, join } from 'path';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { getDependentPackagesForProject, readRootPackageJson } from './utils';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 export type MFRemotes = string[] | [remoteName: string, remoteUrl: string][];
@@ -37,85 +32,6 @@ export interface MFConfig {
   exposes?: Record<string, string>;
   shared?: SharedFunction;
   additionalShared?: AdditionalSharedConfig;
-}
-
-function collectDependencies(
-  projectGraph: ProjectGraph,
-  name: string,
-  dependencies = {
-    workspaceLibraries: new Set<string>(),
-    npmPackages: new Set<string>(),
-  },
-  seen: Set<string> = new Set()
-): {
-  workspaceLibraries: Set<string>;
-  npmPackages: Set<string>;
-} {
-  if (seen.has(name)) {
-    return dependencies;
-  }
-  seen.add(name);
-
-  (projectGraph.dependencies[name] ?? []).forEach((dependency) => {
-    if (dependency.target.startsWith('npm:')) {
-      dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
-    } else {
-      dependencies.workspaceLibraries.add(dependency.target);
-      collectDependencies(projectGraph, dependency.target, dependencies, seen);
-    }
-  });
-
-  return dependencies;
-}
-
-function mapWorkspaceLibrariesToTsConfigImport(workspaceLibraries: string[]) {
-  const { nodes: projectGraphNodes } = readCachedProjectGraph();
-
-  const tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath();
-  const tsConfig: ParsedCommandLine = readTsConfig(tsConfigPath);
-
-  const tsconfigPathAliases: Record<string, string[]> = tsConfig.options?.paths;
-
-  if (!tsconfigPathAliases) {
-    return workspaceLibraries;
-  }
-
-  const mappedLibraries = [];
-  for (const lib of workspaceLibraries) {
-    const sourceRoot = projectGraphNodes[lib].data.sourceRoot;
-    let found = false;
-
-    for (const [key, value] of Object.entries(tsconfigPathAliases)) {
-      if (value.find((p) => p.startsWith(sourceRoot))) {
-        mappedLibraries.push(key);
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      mappedLibraries.push(lib);
-    }
-  }
-
-  return mappedLibraries;
-}
-
-async function getDependentPackagesForProject(
-  projectGraph: ProjectGraph,
-  name: string
-) {
-  const { npmPackages, workspaceLibraries } = collectDependencies(
-    projectGraph,
-    name
-  );
-
-  return {
-    workspaceLibraries: mapWorkspaceLibrariesToTsConfigImport([
-      ...workspaceLibraries,
-    ]),
-    npmPackages: [...npmPackages],
-  };
 }
 
 function determineRemoteUrl(remote: string) {
@@ -246,7 +162,7 @@ export async function withModuleFederation(options: MFConfig) {
     projectGraph = await createProjectGraphAsync();
   }
 
-  const dependencies = await getDependentPackagesForProject(
+  const dependencies = getDependentPackagesForProject(
     projectGraph,
     options.name
   );

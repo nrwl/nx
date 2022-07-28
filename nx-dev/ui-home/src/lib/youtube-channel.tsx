@@ -1,9 +1,9 @@
 import { motion, useAnimation } from 'framer-motion';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function YoutubeChannel(): ReactComponentElement<any> {
+export function YoutubeChannel(): JSX.Element {
   const controls = useAnimation();
   const [ref, inView] = useInView({ triggerOnce: true });
 
@@ -71,5 +71,3 @@ export function YoutubeChannel(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default YoutubeChannel;

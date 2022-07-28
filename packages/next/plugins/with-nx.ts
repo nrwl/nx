@@ -1,6 +1,4 @@
-// ignoring while we support both Next 11.1.0 and versions before it
-// @ts-ignore
-import type { NextConfig } from 'next/dist/server/config';
+import type { NextConfig } from 'next';
 import type { WebpackConfigOptions } from '../src/utils/types';
 
 const { join } = require('path');
@@ -24,12 +22,13 @@ function regexEqual(x, y) {
 
 function withNx(nextConfig = {} as WithNxOptions) {
   const userWebpack = nextConfig.webpack || ((x) => x);
+  const { nx, ...validNextConfig } = nextConfig;
   return {
     eslint: {
       ignoreDuringBuilds: true,
-      ...(nextConfig.eslint ?? {}),
+      ...(validNextConfig.eslint ?? {}),
     },
-    ...nextConfig,
+    ...validNextConfig,
     webpack: (config, options) => {
       /*
        * Update babel to support our monorepo setup.

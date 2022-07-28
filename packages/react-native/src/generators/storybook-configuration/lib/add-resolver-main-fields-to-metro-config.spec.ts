@@ -1,39 +1,34 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
-import update from './add-project-root-metro-config-14-0-0';
+import { formatFile } from '../../../utils/format-file';
 
-describe('Add projectRoot option in metro.config.js', () => {
+import { addResolverMainFieldsToMetroConfig } from './add-resolver-main-fields-to-metro-config';
+
+describe('addResolverMainFieldsToMetroConfig', () => {
   let tree: Tree;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+
     addProjectConfiguration(tree, 'products', {
       root: 'apps/products',
       sourceRoot: 'apps/products/src',
-      targets: {
-        start: {
-          executor: '@nrwl/react-native:start',
-          options: {
-            port: 8081,
-          },
-        },
-      },
     });
   });
 
   it(`should update metro.config.js and add key projectRoot`, async () => {
     tree.write(
       'apps/products/metro.config.js',
-      `
+      formatFile`
 const { withNxMetro } = require('@nrwl/react-native');
 const { getDefaultConfig } = require('metro-config');
+const exclusionList = require('metro-config/src/defaults/exclusionList');
 
 module.exports = (async () => {
   const {
     resolver: { sourceExts, assetExts },
   } = await getDefaultConfig();
-  // console.log(getModulesRunBeforeMainModule);
   return withNxMetro(
     {
       transformer: {
@@ -46,33 +41,31 @@ module.exports = (async () => {
         babelTransformerPath: require.resolve('react-native-svg-transformer'),
       },
       resolver: {
+        
         assetExts: assetExts.filter((ext) => ext !== 'svg'),
         sourceExts: [...sourceExts, 'svg'],
-        resolverMainFields: ['sbmodern', 'browser', 'main'],
+        blockList: exclusionList([/^(?!.*node_modules).*\/dist\/.*/]),
       },
-    },
-    {
-      // Change this to true to see debugging info.
-      // Useful if you have issues resolving modules
-      debug: false,
-      // all the file extensions used for imports other than 'ts', 'tsx', 'js', 'jsx'
-      extensions: [],
     }
   );
-})();
-`
+})();`
     );
-    await update(tree);
+    addResolverMainFieldsToMetroConfig(tree, {
+      name: 'products',
+    });
 
-    expect(tree.read('apps/products/metro.config.js', 'utf-8')).toEqual(`
+    expect(
+      formatFile`${tree.read('apps/products/metro.config.js', 'utf-8')}`
+    ).toEqual(
+      formatFile`
 const { withNxMetro } = require('@nrwl/react-native');
 const { getDefaultConfig } = require('metro-config');
+const exclusionList = require('metro-config/src/defaults/exclusionList');
 
 module.exports = (async () => {
   const {
     resolver: { sourceExts, assetExts },
   } = await getDefaultConfig();
-  // console.log(getModulesRunBeforeMainModule);
   return withNxMetro(
     {
       transformer: {
@@ -85,21 +78,15 @@ module.exports = (async () => {
         babelTransformerPath: require.resolve('react-native-svg-transformer'),
       },
       resolver: {
+        resolverMainFields: ['sbmodern', 'browser', 'main'],
         assetExts: assetExts.filter((ext) => ext !== 'svg'),
         sourceExts: [...sourceExts, 'svg'],
-        resolverMainFields: ['sbmodern', 'browser', 'main'],
+        blockList: exclusionList([/^(?!.*node_modules).*\/dist\/.*/]),
       },
-    },
-    {
-      // Change this to true to see debugging info.
-      // Useful if you have issues resolving modules
-      projectRoot: __dirname, watchFolders: [], debug: false,
-      // all the file extensions used for imports other than 'ts', 'tsx', 'js', 'jsx'
-      extensions: [],
     }
   );
-})();
-`);
+})();`
+    );
   });
 
   it(`should not udpate metro.config.js if projectRoot already exists`, async () => {
@@ -126,24 +113,18 @@ module.exports = (async () => {
         babelTransformerPath: require.resolve('react-native-svg-transformer'),
       },
       resolver: {
+        resolverMainFields: ['main'],
         assetExts: assetExts.filter((ext) => ext !== 'svg'),
         sourceExts: [...sourceExts, 'svg'],
-        resolverMainFields: ['sbmodern', 'browser', 'main'],
       },
     },
-    {
-      projectRoot: __dirname,
-      // Change this to true to see debugging info.
-      // Useful if you have issues resolving modules
-      debug: false,
-      // all the file extensions used for imports other than 'ts', 'tsx', 'js', 'jsx'
-      extensions: [],
-    }
   );
 })();
 `
     );
-    await update(tree);
+    addResolverMainFieldsToMetroConfig(tree, {
+      name: 'products',
+    });
 
     expect(tree.read('apps/products/metro.config.js', 'utf-8')).toEqual(
       `
@@ -167,19 +148,11 @@ module.exports = (async () => {
         babelTransformerPath: require.resolve('react-native-svg-transformer'),
       },
       resolver: {
+        resolverMainFields: ['main'],
         assetExts: assetExts.filter((ext) => ext !== 'svg'),
         sourceExts: [...sourceExts, 'svg'],
-        resolverMainFields: ['sbmodern', 'browser', 'main'],
       },
     },
-    {
-      projectRoot: __dirname,
-      // Change this to true to see debugging info.
-      // Useful if you have issues resolving modules
-      debug: false,
-      // all the file extensions used for imports other than 'ts', 'tsx', 'js', 'jsx'
-      extensions: [],
-    }
   );
 })();
 `

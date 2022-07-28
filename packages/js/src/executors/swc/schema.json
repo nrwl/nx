@@ -34,6 +34,11 @@
       "description": "Enable re-building when files change.",
       "default": false
     },
+    "clean": {
+      "type": "boolean",
+      "description": "Remove previous output before build.",
+      "default": true
+    },
     "skipTypeCheck": {
       "type": "boolean",
       "description": "Whether to skip TypeScript type checking.",

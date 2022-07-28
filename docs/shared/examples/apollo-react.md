@@ -9,4 +9,4 @@ In this article, you’ll learn how to:
 
 **Blog Post:** [Using Apollo GraphQL with React in an Nx Workspace](https://blog.nrwl.io/using-apollo-graphql-with-react-in-an-nx-workspace-99db8d69cebe)
 
-**Repository:** [nx-apollo-react-example](https://github.com/nrwl/nx-apollo-react-example)
+{% github-repository url="https://github.com/nrwl/nx-apollo-react-example" /%}

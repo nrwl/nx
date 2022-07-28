@@ -309,6 +309,16 @@ export const commandsObject = yargs
         await (await import('./migrate')).migrate(process.cwd(), args)
       )
   )
+  .command(
+    'repair',
+    'Repair any configuration that is no longer supported by Nx.',
+    (yargs) =>
+      linkToNxDevAndExamples(yargs, 'repair').option('verbose', {
+        type: 'boolean',
+        describe: 'Print additional error stack trace on failure',
+      }),
+    async (args) => process.exit(await (await import('./repair')).repair(args))
+  )
   .help()
   .version(nxVersion);
 
@@ -438,6 +448,7 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       default: false,
     })
     .option('verbose', {
+      type: 'boolean',
       describe: 'Print additional error stack trace on failure',
     })
     .option('nx-bail', {
@@ -503,6 +514,7 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       default: [],
     })
     .option('verbose', {
+      type: 'boolean',
       describe: 'Print additional error stack trace on failure',
     })
     .option('nx-bail', {

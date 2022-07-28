@@ -7,4 +7,4 @@ Repo contains:
 
 The repo shows how Nx distributed task execution can make the CI 16 times faster with a small configuration change.
 
-**Repository:** [vsavkin/interstellar](https://github.com/vsavkin/interstellar)
+{% github-repository url="https://github.com/vsavkin/interstellar" /%}

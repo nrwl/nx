@@ -9,4 +9,4 @@ Learn to:
 
 **Blog post:** [Powering Up React Development With Nx](https://blog.nrwl.io/powering-up-react-development-with-nx-cf0a9385dbec)
 
-**Repository:** [nrwl/react-nx-example](https://github.com/nrwl/react-nx-example)
+{% github-repository url="https://github.com/nrwl/react-nx-example" /%}
