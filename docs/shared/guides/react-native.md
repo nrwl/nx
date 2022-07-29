@@ -116,6 +116,10 @@ npx nx test-ios mobile-e2e
 
 When using React Native in Nx, you get the out-of-the-box support for TypeScript, Detox, and Jest. No need to configure anything: watch mode, source maps, and typings just work.
 
+{% callout type="warning" title="Symlinks for node_modules" %}
+Altought NX is based on the single node_modules principle, react native projects need a node_modules folder in the RN project directory itself. NX will create all the necessary symlinks when you first create the project, but when you clone the project from scratch, you could have some problems installing pods in your iOS project. In that case, you may need to force symlinks manually: see the [troubleshooting section](#troubleshooting) below for further details
+{% /callout %}
+
 ### Adding React Native to an Existing Workspace
 
 For existing Nx workspaces, install the `@nrwl/react-native` package to add React Native capabilities to it.
@@ -286,3 +290,45 @@ Here are other resources that you may find useful to learn more about React Nati
 
 - **Blog post:** [Introducing React Native Support for Nx](https://blog.nrwl.io/introducing-react-native-support-for-nx-48d335e90c89) by Jack Hsu
 - **Blog post:** [Step by Step Guide on Creating a Monorepo for React Native Apps using Nx](https://blog.nrwl.io/step-by-step-guide-on-creating-a-monorepo-for-react-native-apps-using-nx-704753b6c70e) by Eimly Xiong
+
+
+## Troubleshooting
+
+### Invalid `Podfile` file: cannot load such file
+
+In the case you get some errors when you try to install pods in your iOS project, like the following one 
+
+```bash
+[!] Invalid `Podfile` file: cannot load such file -- /path/to/your/workspace/apps/my-rn-app/node_modules/react-native/scripts/react_native_pods.
+
+ #  from /path/to/your/workspace/apps/my-rn-app/ios/Podfile:2
+ #  -------------------------------------------
+ #  require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
+ >  require_relative '../node_modules/react-native/scripts/react_native_pods'
+ #  require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+ #  -------------------------------------------
+```
+try to run the following command:
+
+```bash
+# assuming that your RN app name is `my-rn-app`
+npx nx run my-rn-app:ensure-symlink
+```
+In the case the problem persists, if it doesn't fix it, try to remove the `node_modules`folder from both the project root and the RN app folder, install the dependencies with yarn or npm based on what you use, and try to run the above command again
+
+
+
+```bash
+# assuming that your RN app name is `my-rn-app`
+
+rm -rf node_modules
+rm -rf apps/my-rn-app/node_modules
+
+# with yarn
+yarn
+# with npm
+npm i
+
+npx nx run my-rn-app:ensure-symlink
+
+```
