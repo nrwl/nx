@@ -10,6 +10,15 @@ To help troubleshoot installations, add the following env variables when startin
 -e NX_MONGO_LOG_LEVEL=DEBUG
 ```
 
+or if using helm set `verboseLogging` to `'true'`:
+
+```yaml
+image:
+  tag: 'latest'
+
+verboseLogging: 'true'
+```
+
 ## Running the Mongo Database
 
 Nx Cloud uses MongoDB to store its metadata. There are several common ways to run MongoDB.

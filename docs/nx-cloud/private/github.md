@@ -32,7 +32,32 @@
 - Note if you use public GitHub, this step is not required. You also don't need to provision the `GITHUB_API_URL` env
   variable when creating a container.
 
-## Configure Container
+## Configure Nx Cloud Installation
+
+### Using Helm:
+
+```yaml
+image:
+  tag: 'latest'
+
+nxCloudAppURL: 'https://nx-cloud.myorg.com'
+
+github:
+  pr:
+    enabled: true
+    # apiUrl: '' uncomment when using github enterprise
+
+secret:
+  name: 'cloudsecret'
+  nxCloudMongoServerEndpoint: 'NX_CLOUD_MONGO_SERVER_ENDPOINT'
+  githubWebhookSecret: 'GITHUB_WEBHOOK_SECRET'
+  githubAuthToken: 'GITHUB_AUTH_TOKEN'
+```
+
+Note that the secret must contain `GITHUB_WEBHOOK_SECRET` and `GITHUB_AUTH_TOKEN` (
+see [Nx Cloud Helm Charts](https://github.com/nrwl/nx-cloud-helm) for more context).
+
+### Not using Helm:
 
 Provide the following env variables to the `nx-cloud-nx-api` container:
 
