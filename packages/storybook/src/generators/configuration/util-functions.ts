@@ -89,7 +89,7 @@ export function addAngularStorybookTask(tree: Tree, projectName: string) {
   };
   projectConfig.targets['build-storybook'] = {
     executor: '@storybook/angular:build-storybook',
-    outputs: ['{options.outputPath}'],
+    outputs: ['{options.outputDir}'],
     options: {
       outputDir: joinPathFragments('dist/storybook', projectName),
       configDir: `${projectConfig.root}/.storybook`,
