@@ -28,12 +28,12 @@ export default async function* reactNatievStorybookExecutor(
   if (fileExists(packageJsonPath))
     displayNewlyAddedDepsMessage(
       context.projectName,
-      await syncDeps(
-        context.projectName,
-        projectRoot,
-        context.root,
-        '@storybook/addon-ondevice-actions,@storybook/addon-ondevice-backgrounds,@storybook/addon-ondevice-controls,@storybook/addon-ondevice-notes'
-      )
+      await syncDeps(context.projectName, projectRoot, context.root, [
+        '@storybook/addon-ondevice-actions',
+        '@storybook/addon-ondevice-backgrounds',
+        '@storybook/addon-ondevice-controls',
+        '@storybook/addon-ondevice-notes',
+      ])
     );
 
   try {

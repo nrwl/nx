@@ -1,14 +1,16 @@
 import { join } from 'path';
-import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
 import * as chalk from 'chalk';
 import {
   ExecutorContext,
   logger,
   readJsonFile,
   writeJsonFile,
+  createProjectGraphAsync,
 } from '@nrwl/devkit';
+
+import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
+
 import { ReactNativeSyncDepsOptions } from './schema';
-import { createProjectGraphAsync } from '@nrwl/devkit';
 
 export interface ReactNativeSyncDepsOutput {
   success: boolean;
@@ -25,7 +27,12 @@ export default async function* syncDepsExecutor(
       context.projectName,
       projectRoot,
       context.root,
-      options.include
+      typeof options.include === 'string'
+        ? options.include.split(',')
+        : options.include,
+      typeof options.exclude === 'string'
+        ? options.exclude.split(',')
+        : options.exclude
     )
   );
 
@@ -36,14 +43,14 @@ export async function syncDeps(
   projectName: string,
   projectRoot: string,
   workspaceRoot: string,
-  include?: string
+  include: string[] = [],
+  exclude: string[] = []
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync();
-  const npmDeps = findAllNpmDependencies(graph, projectName);
+  let npmDeps = findAllNpmDependencies(graph, projectName);
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   const packageJson = readJsonFile(packageJsonPath);
   const newDeps = [];
-  const includeDeps = include?.split(',');
   let updated = false;
 
   if (!packageJson.dependencies) {
@@ -51,8 +58,11 @@ export async function syncDeps(
     updated = true;
   }
 
-  if (includeDeps) {
-    npmDeps.push(...includeDeps);
+  if (include && include.length) {
+    npmDeps.push(...include);
+  }
+  if (exclude && exclude.length) {
+    npmDeps = npmDeps.filter((dep) => !exclude.includes(dep));
   }
 
   npmDeps.forEach((dep) => {
