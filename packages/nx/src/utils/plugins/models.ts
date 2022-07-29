@@ -20,3 +20,9 @@ export interface CommunityPlugin {
   url: string;
   description: string;
 }
+
+export interface CustomPlugin {
+  name: string;
+  url: string;
+  description: string;
+}

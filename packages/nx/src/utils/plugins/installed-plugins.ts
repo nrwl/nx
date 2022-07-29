@@ -1,6 +1,6 @@
 import * as chalk from 'chalk';
 import { output } from '../output';
-import type { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
+import type { CommunityPlugin, CorePlugin, CustomPlugin, PluginCapabilities } from './models';
 import { getPluginCapabilities } from './plugin-capabilities';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
@@ -9,13 +9,15 @@ import { readModulePackageJson } from '../package-json';
 export function getInstalledPluginsFromPackageJson(
   workspaceRoot: string,
   corePlugins: CorePlugin[],
-  communityPlugins: CommunityPlugin[] = []
+  communityPlugins: CommunityPlugin[] = [],
+  thirdPartPlugins: CustomPlugin[]  = [] 
 ): Map<string, PluginCapabilities> {
   const packageJson = readJsonFile(`${workspaceRoot}/package.json`);
 
   const plugins = new Set([
     ...corePlugins.map((p) => p.name),
     ...communityPlugins.map((p) => p.name),
+    ...thirdPartPlugins.map((p)=> p.name),
     ...Object.keys(packageJson.dependencies || {}),
     ...Object.keys(packageJson.devDependencies || {}),
   ]);

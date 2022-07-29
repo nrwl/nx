@@ -9,6 +9,7 @@ import {
   listInstalledPlugins,
   listPluginCapabilities,
 } from '../utils/plugins';
+import { fetchThirdPartyPlugins, listThirdPartyPlugins } from '../utils/plugins/custom-plugins';
 
 export interface ListArgs {
   /** The name of an installed plugin to query  */
@@ -35,16 +36,27 @@ export async function listHandler(args: ListArgs): Promise<void> {
       });
 
       return [];
+    })
+    const thirdPartyPlugins = await fetchThirdPartyPlugins().catch(() => {
+      output.warn({
+        title: `Error fetching 3rd Party plugins:`,
+        bodyLines: [`Error fetching plugins in nx-plugin.conf`]
+      })
+
+      return [];
     });
+  
 
     const installedPlugins = getInstalledPluginsFromPackageJson(
       workspaceRoot,
       corePlugins,
-      communityPlugins
+      communityPlugins,
+      thirdPartyPlugins
     );
     listInstalledPlugins(installedPlugins);
     listCorePlugins(installedPlugins, corePlugins);
     listCommunityPlugins(installedPlugins, communityPlugins);
+    listThirdPartyPlugins(installedPlugins, thirdPartyPlugins)
 
     output.note({
       title: `Use "nx list [plugin]" to find out more`,
