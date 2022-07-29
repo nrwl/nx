@@ -24,6 +24,7 @@ export default async function buildExecutor(
 ) {
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV ||= 'production';
+  (process.env as any).__NEXT_REACT_ROOT ||= 'true';
 
   let dependencies: DependentBuildableProjectNode[] = [];
   const root = resolve(context.root, options.root);

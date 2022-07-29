@@ -1,27 +1,28 @@
 /* eslint-disable react/display-name */
-import { ReactElement } from 'react';
-import Document, { Html, Head, Main, NextScript } from 'next/document';
+import Document, { Html, Head, Main, NextScript, DocumentContext, DocumentInitialProps } from 'next/document';
 import { ServerStyleSheet } from 'styled-components';
 
-export default class CustomDocument extends Document<{ styleTags: ReactElement[] }> {
-  static getInitialProps({ renderPage }) {
-    const sheet = new ServerStyleSheet();
+export default class CustomDocument extends Document {
+  static async getInitialProps(ctx: DocumentContext): Promise<DocumentInitialProps> {
+   const originalRenderPage = ctx.renderPage;
 
-    const page = renderPage(App => props =>
-      sheet.collectStyles(<App {...props} />)
-    );
+   const sheet = new ServerStyleSheet();
 
-    const styleTags = sheet.getStyleElement();
+   ctx.renderPage = () => originalRenderPage({
+    enhanceApp: (App) => (props) => sheet.collectStyles(<App {...props} />),
+    enhanceComponent: (Component) => Component,
+   });
 
-    return { ...page, styleTags };
+   const intialProps = await Document.getInitialProps(ctx);
+   const styles = sheet.getStyleElement();
+
+   return {...intialProps, styles };
   }
 
   render() {
     return (
       <Html>
-        <Head>
-          {this.props.styleTags}
-        </Head>
+        <Head>{this.props.styles}</Head>
         <body>
           <Main />
           <NextScript />
