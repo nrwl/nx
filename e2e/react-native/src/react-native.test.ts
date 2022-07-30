@@ -88,6 +88,19 @@ describe('react native', () => {
     });
   });
 
+  it('should upgrade native for application', async () => {
+    const appName = uniq('my-app');
+    runCLI(
+      `generate @nrwl/react-native:application ${appName} --install=false`
+    );
+
+    expect(() =>
+      runCLI(
+        `generate @nrwl/react-native:upgrade-native ${appName} --install=false`
+      )
+    ).not.toThrow();
+  });
+
   it('sync npm dependencies for autolink', async () => {
     const appName = uniq('my-app');
     runCLI(

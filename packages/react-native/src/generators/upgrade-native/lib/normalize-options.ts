@@ -1,4 +1,4 @@
-import { names } from '@nrwl/devkit';
+import { names, offsetFromRoot } from '@nrwl/devkit';
 import { UpgradeNativeConfigureSchema } from '../schema';
 
 export interface NormalizedSchema {
@@ -9,10 +9,12 @@ export interface NormalizedSchema {
   entryFile: string;
   entryFileIos: string;
   e2eTestRunner: 'detox' | 'none';
+  offsetFromRoot: string;
 }
 
 export function normalizeOptions(
-  options: UpgradeNativeConfigureSchema
+  options: UpgradeNativeConfigureSchema,
+  appProjectRoot: string // app root
 ): NormalizedSchema {
   const { fileName, className } = names(options.name);
 
@@ -33,5 +35,6 @@ export function normalizeOptions(
     entryFile,
     entryFileIos,
     e2eTestRunner: options.e2eTestRunner,
+    offsetFromRoot: offsetFromRoot(appProjectRoot),
   };
 }
