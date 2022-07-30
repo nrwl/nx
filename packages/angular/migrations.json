@@ -154,6 +154,12 @@
       "version": "14.5.0-beta.0",
       "description": "Update any references of MFE to MF.",
       "factory": "./src/migrations/update-14-5-0/migrate-mfe-to-mf"
+    },
+    "update-angular-cli-version-14-1-0": {
+      "cli": "nx",
+      "version": "14.5.2-beta.0",
+      "description": "Update the @angular/cli package version to ~14.1.0.",
+      "factory": "./src/migrations/update-14-5-2/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1341,15 +1347,31 @@
         }
       }
     },
-    "14.5.0": {
-      "version": "14.5.0-beta.4",
+    "14.5.2": {
+      "version": "14.5.2-beta.0",
       "packages": {
-        "@angular/cli": {
+        "@angular-devkit/architect": {
+          "version": "~0.1401.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1401.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
           "version": "~14.1.0",
           "alwaysAddToPackageJson": false
         },
         "@schematics/angular": {
-          "version": "~14.1.0",
+          "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/core": {
