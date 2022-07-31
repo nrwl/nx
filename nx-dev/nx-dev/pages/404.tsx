@@ -2,7 +2,7 @@ import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 
-export default function FourOhFour() {
+export default function FourOhFour(): JSX.Element {
   return (
     <>
       <NextSeo title="Page not found" noindex={true} />
