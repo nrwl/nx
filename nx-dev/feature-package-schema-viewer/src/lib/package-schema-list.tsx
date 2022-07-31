@@ -140,5 +140,3 @@ export function PackageSchemaList({
     </>
   );
 }
-
-export default PackageSchemaList;
