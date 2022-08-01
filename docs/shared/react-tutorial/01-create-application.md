@@ -52,7 +52,7 @@ myorg/
 │   │   ├── .babelrc
 │   │   ├── .browserslistrc
 │   │   ├── .eslintrc.json
-│   │   ├── jest.config.js
+│   │   ├── jest.config.ts
 │   │   ├── project.json
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
@@ -61,16 +61,14 @@ myorg/
 │       ├── src/
 │       │   ├── fixtures/
 │       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.js
+│       │   ├── e2e/
+│       │   │   └── app.cy.ts
 │       │   └── support/
 │       │       ├── app.po.ts
 │       │       ├── commands.ts
-│       │       └── index.ts
+│       │       └── e2e.ts
 │       ├── .eslintrc.json
-│       ├── cypress.json
+│       ├── cypress.config.ts
 │       ├── project.json
 │       └── tsconfig.json
 ├── libs/
@@ -78,7 +76,7 @@ myorg/
 ├── .eslintrc.json
 ├── .prettierrc
 ├── babel.config.json
-├── jest.config.js
+├── jest.config.ts
 ├── jest.preset.js
 ├── nx.json
 ├── package.json

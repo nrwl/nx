@@ -33,7 +33,7 @@ myorg/
 │   └── todos/
 ├── libs/
 │   ├── auth/
-│   │   ├── jest.config.js
+│   │   ├── jest.config.ts
 │   │   ├── src/
 │   │   │   ├── index.ts
 │   │   │   └── lib/
