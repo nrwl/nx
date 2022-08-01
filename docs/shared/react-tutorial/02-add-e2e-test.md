@@ -16,7 +16,7 @@ export const getTodos = () => cy.get('li.todo');
 export const getAddTodoButton = () => cy.get('button#add-todo');
 ```
 
-**Next, update `apps/todos-e2e/src/integration/app.spec.ts`.**
+**Next, update `apps/todos-e2e/src/e2e/app.cy.ts`.**
 
 ```typescript
 import { getAddTodoButton, getTodos } from '../support/app.po';

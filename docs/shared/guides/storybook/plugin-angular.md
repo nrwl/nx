@@ -172,7 +172,9 @@ Primary.args = {
 };
 ```
 
-**Cypress \*.spec.ts file**
+**Cypress test file**
+
+> Depending on your Cypress version, the file will end with .spec.ts or .cy.ts
 
 ```typescript
 describe('shared-ui', () => {

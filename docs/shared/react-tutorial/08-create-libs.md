@@ -38,7 +38,7 @@ myorg/
 │       │   │   ├── ui.spec.tsx
 │       │   │   └── ui.tsx
 │       │   └── index.ts
-│       ├── jest.config.js
+│       ├── jest.config.ts
 │       ├── project.json
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
@@ -97,7 +97,7 @@ myorg/
 │       │   │   ├── ui.spec.tsx
 │       │   │   └── ui.tsx
 │       │   └── index.ts
-│       ├── jest.conf.js
+│       ├── jest.config.ts
 │       ├── project.json
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
