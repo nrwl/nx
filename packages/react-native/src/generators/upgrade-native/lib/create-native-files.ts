@@ -7,12 +7,12 @@ import { UpgradeNativeConfigureSchema } from '../schema';
 export function createNativeFiles(
   host: Tree,
   schema: UpgradeNativeConfigureSchema,
-  root: string
+  appProjectRoot: string
 ) {
-  const options = normalizeOptions(schema);
+  const options = normalizeOptions(schema, appProjectRoot);
 
-  const iosProjectRoot = joinPathFragments(root, 'ios');
-  const androidProjectRoot = joinPathFragments(root, 'android');
+  const iosProjectRoot = joinPathFragments(appProjectRoot, 'ios');
+  const androidProjectRoot = joinPathFragments(appProjectRoot, 'android');
 
   generateFiles(
     host,
