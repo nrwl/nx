@@ -32,11 +32,14 @@ export default async function* syncDepsExecutor(
   yield { success: true };
 }
 
+type DependencyType = 'dependencies' | 'devDependencies';
+
 export async function syncDeps(
   projectName: string,
   projectRoot: string,
   workspaceRoot: string,
-  include?: string
+  include?: string,
+  acceptDependencyType: DependencyType[] = ['dependencies']
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync();
   const npmDeps = findAllNpmDependencies(graph, projectName);
@@ -56,7 +59,7 @@ export async function syncDeps(
   }
 
   npmDeps.forEach((dep) => {
-    if (!packageJson.dependencies[dep]) {
+    if (!acceptDependencyType.some((type) => packageJson[type]?.[dep])) {
       packageJson.dependencies[dep] = '*';
       newDeps.push(dep);
       updated = true;
