@@ -333,6 +333,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.5.3": {
+      "version": "14.5.3-beta.0",
+      "packages": {
+        "@emotion/server": {
+          "version": "11.10.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
