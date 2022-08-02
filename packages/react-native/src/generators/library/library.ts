@@ -81,7 +81,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
 
   if (options.publishable || options.buildable) {
     const { libsDir } = getWorkspaceLayout(host);
-    const external = ['react/jsx-runtime'];
+    const external = ['react/jsx-runtime', 'react-native'];
 
     targets.build = {
       executor: '@nrwl/web:rollup',
