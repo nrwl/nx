@@ -2,6 +2,7 @@
   "name": "@nrwl/nx-source",
   "description": "Smart, Fast and Extensible Build System",
   "homepage": "https://nx.dev",
+  "trigger": "notcool",
   "private": true,
   "scripts": {
     "build": "nx run-many --target build --all --parallel 8 --exclude nx-dev,typedoc-theme",
