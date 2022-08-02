@@ -34,7 +34,7 @@ myorg/
 ├── README.md
 ├── apps/
 │   └── todos/
-│       ├── jest.config.js
+│       ├── jest.config.ts
 │       ├── src/
 │       │   ├── app/
 │       │   │   ├── app.controller.spec.ts
@@ -54,7 +54,7 @@ myorg/
 ├── tools/
 ├── .eslintrc.json
 ├── .prettierrc
-├── jest.config.js
+├── jest.config.ts
 ├── jest.preset.js
 ├── nx.json
 ├── package.json

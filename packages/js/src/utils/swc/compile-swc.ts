@@ -158,6 +158,9 @@ export async function* compileSwcWatch(
 
       stderrOnData = (err?: any) => {
         process.stderr.write(err);
+        if (err.includes('Debugger attached.')) {
+          return;
+        }
         next(getResult(false));
       };
 

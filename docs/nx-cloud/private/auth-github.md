@@ -34,7 +34,31 @@ And then generate a new client secret, and save it somewhere secure (we'll use i
 
 ![Step 7](/nx-cloud/private/images/github_auth_step_7.png)
 
-## Connect your Nx Cloud installation to your OAuth App
+## Configure Nx Cloud Installation
+
+### Using Helm:
+
+```yaml
+image:
+  tag: 'latest'
+
+nxCloudAppURL: 'https://nx-cloud.myorg.com'
+
+github:
+  auth:
+    enabled: true
+
+secret:
+  name: 'cloudsecret'
+  nxCloudMongoServerEndpoint: 'NX_CLOUD_MONGO_SERVER_ENDPOINT'
+  githubAuthClientId: 'GITHUB_AUTH_CLIENT_ID'
+  githubAuthClientSecret: 'GITHUB_AUTH_CLIENT_SECRET'
+```
+
+Note that the secret must contain `GITHUB_AUTH_CLIENT_ID` and `GITHUB_AUTH_CLIENT_SECRET` (
+see [Nx Cloud Helm Charts](https://github.com/nrwl/nx-cloud-helm) for more context).
+
+### Not using Helm:
 
 Provide the following env variables to the `nx-cloud-api` container:
 
@@ -45,12 +69,14 @@ Provide the following env variables to the `nx-cloud-api` container:
 
 ## GitHub Enterprise
 
-If you are running an on-premise version of GitHub (Enterprise Server), you will need to configure one additional environment variable:
+If you are running an on-premise version of GitHub (Enterprise Server), you will need to configure one additional
+environment variable:
 
 `GITHUB_API_URL=https://custom-github-instance.com`
 
 This will point all auth endpoints to your GitHub server (rather the public one).
 
 {% callout type="check" title="Good to know!" %}
-The above environment variable, also helps with setting up the GitHub app integration, so you can have Nx Cloud build stats directly on your pull request. See full set up instructions [here](/nx-cloud/private-cloud/github).
+The above environment variable, also helps with setting up the GitHub app integration, so you can have Nx Cloud build
+stats directly on your pull request. See full set up instructions [here](/nx-cloud/private-cloud/github).
 {% /callout %}

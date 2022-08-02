@@ -31,8 +31,8 @@
     },
     "generateCypressSpecs": {
       "type": "boolean",
-      "description": "Specifies whether to automatically generate `*.spec.ts` files in the generated Cypress e2e app.",
-      "x-prompt": "Automatically generate *.spec.ts files in the generated Cypress e2e app?",
+      "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app.",
+      "x-prompt": "Automatically generate test files in the generated Cypress e2e app?",
       "default": true
     },
     "cypressDirectory": {

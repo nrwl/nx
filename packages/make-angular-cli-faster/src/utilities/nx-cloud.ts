@@ -7,7 +7,7 @@ export async function promptForNxCloud(): Promise<boolean> {
     {
       name: 'useNxCloud',
       message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
-      type: 'select',
+      type: 'autocomplete',
       choices: [
         {
           name: 'Yes',

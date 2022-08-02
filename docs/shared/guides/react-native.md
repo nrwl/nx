@@ -51,7 +51,7 @@ happynrwl/
 │   │   │       ├── App.tsx
 │   │   │       └── App.spec.tsx
 │   │   ├── .babelrc
-│   │   ├── jest.config.js
+│   │   ├── jest.config.ts
 │   │   ├── test-setup.ts
 │   │   ├── package.json
 │   │   ├── project.json
@@ -70,7 +70,7 @@ happynrwl/
 ├── libs/
 ├── tools/
 ├── babel.config.json
-├── jest.config.js
+├── jest.config.ts
 ├── jest.preset.js
 ├── nx.json
 ├── package-lock.json

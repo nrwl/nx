@@ -48,7 +48,7 @@ myorg/
 │   │   │   └── test-setup.ts
 │   │   ├── .browserslistrc
 │   │   ├── .eslintrc.json
-│   │   ├── jest.config.js
+│   │   ├── jest.config.ts
 │   │   ├── project.json
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.editor.json
@@ -58,15 +58,13 @@ myorg/
 │       ├── src/
 │       │   ├── fixtures/
 │       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
+│       │   ├── e2e/
+│       │   │   └── app.cy.ts
 │       │   └── support/
 │       │       ├── app.po.ts
 │       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── cypress.json
+│       │       └── e2e.ts
+│       ├── cypress.config.ts
 │       ├── project.json
 │       └── tsconfig.json
 ├── libs/
@@ -75,7 +73,7 @@ myorg/
 ├── .prettierrc
 ├── angular.json
 ├── decorate-angular-cli.js
-├── jest.config.js
+├── jest.config.ts
 ├── jest.preset.js
 ├── nx.json
 ├── package.json

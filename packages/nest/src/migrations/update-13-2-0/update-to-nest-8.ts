@@ -1,12 +1,11 @@
 import { formatFiles, logger, readJson, Tree, updateJson } from '@nrwl/devkit';
 import { checkAndCleanWithSemver } from '@nrwl/workspace';
 import { satisfies } from 'semver';
-import {
-  nestJsSchematicsVersion,
-  nestJsVersion8,
-  rxjsVersion7,
-} from '../../utils/versions';
 import { sortObjectByKeys } from '@nrwl/workspace/src/utils/ast-utils';
+
+const nestJsSchematicsVersion = '^9.0.0';
+const nestJsVersion8 = '^8.0.0';
+const rxjsVersion7 = '^7.0.0';
 
 export default async function update(tree: Tree) {
   const shouldUpdate = await isUpdatable(tree);
