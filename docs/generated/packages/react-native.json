@@ -834,8 +834,9 @@
         "type": "object",
         "properties": {
           "searchDir": {
-            "type": "string",
-            "description": "The directory or directories, relative to the project root, to search for files in."
+            "type": "array",
+            "description": "The directory or directories, relative to the project root, to search for files in.",
+            "items": { "oneOf": [{ "type": "string" }] }
           },
           "outputFile": {
             "type": "string",
