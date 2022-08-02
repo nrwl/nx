@@ -53,7 +53,7 @@ function addStorybookTask(host: Tree, projectName: string) {
   projectConfig.targets['storybook'] = {
     executor: '@nrwl/react-native:storybook',
     options: {
-      searchDir: projectConfig.root,
+      searchDir: [projectConfig.root],
       outputFile: './.storybook/story-loader.js',
       pattern: '**/*.stories.@(js|jsx|ts|tsx|md)',
       silent: false,

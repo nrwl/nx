@@ -12,7 +12,7 @@ import {
 
 let childProcess: ChildProcess;
 
-export default async function* reactNatievStorybookExecutor(
+export default async function* reactNativeStorybookExecutor(
   options: ReactNativeStorybookOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean }> {
@@ -32,7 +32,8 @@ export default async function* reactNatievStorybookExecutor(
         context.projectName,
         projectRoot,
         context.root,
-        '@storybook/addon-ondevice-actions,@storybook/addon-ondevice-backgrounds,@storybook/addon-ondevice-controls,@storybook/addon-ondevice-notes'
+        '@storybook/addon-ondevice-actions,@storybook/addon-ondevice-backgrounds,@storybook/addon-ondevice-controls,@storybook/addon-ondevice-notes',
+        ['dependencies', 'devDependencies']
       )
     );
 
@@ -88,7 +89,13 @@ function createStorybookOptions(options) {
         acc.push(`--${k}`);
       }
     } else {
-      acc.push(`--${k}`, options[k]);
+      if (Array.isArray(options[k])) {
+        options[k].forEach((option) => {
+          acc.push(`--${k}`, option);
+        });
+      } else {
+        acc.push(`--${k}`, options[k]);
+      }
     }
     return acc;
   }, []);
