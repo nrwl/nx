@@ -6,7 +6,11 @@ import { Workspaces } from '../config/workspaces';
 
 import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from '../utils/fileutils';
-import { PackageJson, readModulePackageJson } from './package-json';
+import {
+  PackageJson,
+  readModulePackageJson,
+  readModulePackageJsonWithoutFallbacks,
+} from './package-json';
 import { registerTsProject } from './register';
 import {
   ProjectConfiguration,
@@ -118,7 +122,7 @@ export function readPluginPackageJson(
   json: PackageJson;
 } {
   try {
-    const result = readModulePackageJson(pluginName, paths);
+    const result = readModulePackageJsonWithoutFallbacks(pluginName, paths);
     return {
       json: result.packageJson,
       path: result.path,

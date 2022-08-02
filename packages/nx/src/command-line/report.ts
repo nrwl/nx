@@ -8,6 +8,11 @@ import {
 } from '../utils/package-manager';
 import { readJsonFile } from '../utils/fileutils';
 import { PackageJson, readModulePackageJson } from '../utils/package-json';
+import { getLocalWorkspacePlugins } from '../utils/plugins/local-plugins';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
 
 export const packagesWeCareAbout = [
   'nx',
@@ -49,7 +54,7 @@ export const patternsWeIgnoreInCommunityReport: Array<string | RegExp> = [
  * Must be run within an Nx workspace
  *
  */
-export function reportHandler() {
+export async function reportHandler() {
   const pm = detectPackageManager();
   const pmVersion = getPackageManagerVersion(pm);
 
@@ -63,6 +68,22 @@ export function reportHandler() {
   packagesWeCareAbout.forEach((p) => {
     bodyLines.push(`${chalk.green(p)} : ${chalk.bold(readPackageVersion(p))}`);
   });
+
+  bodyLines.push('---------------------------------------');
+
+  try {
+    const projectGraph = await createProjectGraphAsync();
+    bodyLines.push('Local workspace plugins:');
+    const plugins = getLocalWorkspacePlugins(
+      readProjectsConfigurationFromProjectGraph(projectGraph)
+    ).keys();
+    for (const plugin of plugins) {
+      bodyLines.push(`\t ${chalk.green(plugin)}`);
+    }
+    bodyLines.push(...plugins);
+  } catch {
+    bodyLines.push('Unable to construct project graph');
+  }
 
   bodyLines.push('---------------------------------------');
 

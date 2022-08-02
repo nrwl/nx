@@ -106,6 +106,41 @@ export function buildTargetFromScript(
   };
 }
 
+/**
+ * Uses `require.resolve` to read the package.json for a module.
+ *
+ * This will fail if the module doesn't export package.json
+ *
+ * @returns package json contents and path
+ */
+export function readModulePackageJsonWithoutFallbacks(
+  moduleSpecifier: string,
+  requirePaths = [workspaceRoot]
+): {
+  packageJson: PackageJson;
+  path: string;
+} {
+  const packageJsonPath: string = require.resolve(
+    `${moduleSpecifier}/package.json`,
+    {
+      paths: requirePaths,
+    }
+  );
+  const packageJson: PackageJson = readJsonFile(packageJsonPath);
+
+  return {
+    path: packageJsonPath,
+    packageJson,
+  };
+}
+
+/**
+ * Reads the package.json file for a specified module.
+ *
+ * Includes a fallback that accounts for modules that don't export package.json
+ *
+ * @returns package json contents and path
+ */
 export function readModulePackageJson(
   moduleSpecifier: string,
   requirePaths = [workspaceRoot]
@@ -117,14 +152,13 @@ export function readModulePackageJson(
   let packageJson: PackageJson;
 
   try {
-    packageJsonPath = require.resolve(`${moduleSpecifier}/package.json`, {
-      paths: requirePaths,
-    });
-    packageJson = readJsonFile(packageJsonPath);
+    ({ path: packageJsonPath, packageJson } =
+      readModulePackageJsonWithoutFallbacks(moduleSpecifier, requirePaths));
   } catch {
     const entryPoint = require.resolve(moduleSpecifier, {
       paths: requirePaths,
     });
+
     let moduleRootPath = dirname(entryPoint);
     packageJsonPath = join(moduleRootPath, 'package.json');
 
