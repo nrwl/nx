@@ -28,9 +28,14 @@
       "description": "Hide error messages containing server information.",
       "default": false
     },
+    "customServerTarget": {
+      "type": "string",
+      "description": "Target which builds the custom server."
+    },
     "customServerPath": {
       "type": "string",
-      "description": "Use a custom server script."
+      "description": "Use a custom server script. (Use `customServerTarget` instead)",
+      "x-deprecated": true
     },
     "hostname": {
       "type": "string",

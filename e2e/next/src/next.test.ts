@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  createFile,
   expectJestTestsToPass,
   isNotWindows,
   killPorts,
@@ -22,10 +21,19 @@ import * as http from 'http';
 
 describe('Next.js Applications', () => {
   let proj: string;
+  let originalEnv: string;
 
   beforeAll(() => (proj = newProject()));
 
   afterAll(() => cleanupProject());
+
+  beforeEach(() => {
+    originalEnv = process.env.NODE_ENV;
+  });
+
+  afterEach(() => {
+    process.env.NODE_ENV = originalEnv;
+  });
 
   it('should generate app + libs', async () => {
     const appName = uniq('app');
@@ -310,66 +318,20 @@ describe('Next.js Applications', () => {
     });
   }, 300000);
 
-  it('should allow using a custom server implementation in TypeScript', async () => {
+  it('should allow using a custom server implementation', async () => {
     const appName = uniq('app');
-    const port = 4202;
 
-    // generate next.js app
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+    runCLI(`generate @nrwl/next:app ${appName} --style=css --no-interactive`);
+    runCLI(`generate @nrwl/next:custom-server ${appName} --no-interactive`);
 
-    // create custom server
-    createFile(
-      'tools/custom-next-server.ts',
-      `
-      const express = require('express');
-      const path = require('path');
+    checkFilesExist(`apps/${appName}/server/main.ts`);
 
-      export default async function nextCustomServer(app, settings, proxyConfig) {
-        const handle = app.getRequestHandler();
-        await app.prepare();
-
-        const x: string = 'custom typescript server running';
-        console.log(x);
-
-        const server = express();
-        server.disable('x-powered-by');
-
-        server.use(
-          express.static(path.resolve(settings.dir, 'public'))
-        );
-
-        // Default catch-all handler to allow Next.js to handle all other routes
-        server.all('*', (req, res) => handle(req, res));
-
-        server.listen(settings.port, settings.hostname);
-      }
-    `
-    );
-
-    updateProjectConfig(appName, (config) => {
-      config.targets.serve.options.customServerPath =
-        '../../tools/custom-next-server.ts';
-
-      return config;
+    await checkApp(appName, {
+      checkUnitTest: false,
+      checkLint: false,
+      checkE2E: true,
+      checkExport: false,
     });
-
-    // serve Next.js
-    const p = await runCommandUntil(
-      `run ${appName}:serve --port=${port}`,
-      (output) => {
-        return output.indexOf(`[ ready ] on http://localhost:${port}`) > -1;
-      }
-    );
-
-    const data = await getData(port);
-    expect(data).toContain(`Welcome`);
-
-    try {
-      await promisifiedTreeKill(p.pid, 'SIGKILL');
-      await killPorts(port);
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
   }, 300000);
 
   it('should support different --style options', async () => {

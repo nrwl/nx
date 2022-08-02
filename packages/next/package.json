@@ -46,6 +46,7 @@
     "dotenv": "~10.0.0",
     "eslint-config-next": "^12.1.0",
     "fs-extra": "^10.1.0",
+    "ignore": "^5.0.4",
     "ts-node": "~10.8.0",
     "tsconfig-paths": "^3.9.0",
     "url-loader": "^4.1.1",
