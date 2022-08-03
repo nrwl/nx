@@ -205,6 +205,7 @@ export function createRollupOptions(
         ),
       }),
       image(),
+      json(),
       useBabel &&
         require('rollup-plugin-typescript2')({
           check: true,
@@ -258,7 +259,6 @@ export function createRollupOptions(
         }),
       commonjs(),
       analyze(),
-      json(),
     ];
 
     const globals = options.globals
