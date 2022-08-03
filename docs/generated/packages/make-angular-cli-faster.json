@@ -2,8 +2,8 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "make-angular-cli-faster",
   "description": "Make Angular CLI faster by enabling distributed computation caching",
-  "root": "/packages/make-angular-cli-faster",
-  "source": "/packages/make-angular-cli-faster/src",
+  "root": "C:/development/nx/packages/make-angular-cli-faster",
+  "source": "C:\\development\\nx\\packages\\make-angular-cli-faster\\src",
   "documentation": [],
   "generators": [],
   "executors": []
