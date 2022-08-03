@@ -1285,7 +1285,7 @@
             "description": "The name of the project to add the Tailwind CSS setup for.",
             "alias": "p",
             "$default": { "$source": "argv", "index": 0 },
-            "x-dropdown": "project",
+            "x-dropdown": "projects",
             "x-prompt": "What project would you like to add the Tailwind CSS setup?"
           },
           "buildTarget": {
