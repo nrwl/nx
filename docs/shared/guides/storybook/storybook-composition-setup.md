@@ -44,16 +44,24 @@ You can always read more in the [official Storybook docs](https://storybook.js.o
 
 It's quite easy to use this feature, in Nx and in general, since you do not need to make any code changes, you just need to have the "composed" Storybook instances (the ones you need to "compose") running, choose a "host" Storybook, and just add the composed Storybooks in it's `.storybook/main.js` file.
 
-Nx provides the [`run-many`](https://nx.dev/l/a/cli/run-many) command, which will allow you to easily run multiple Storybooks at the same time. You need to run the `run-many` command with the parallel flag (eg. `--parallel=4`), because you want to run all your Storybooks in parallel. You can change the value of the `parallel` flag to be of as many Storybooks you want to run in parallel as you need. However, be **very carefull** with putting large numbers in this
+Nx provides the [`run-many`](https://nx.dev/l/a/cli/run-many) command, which will allow you to easily run multiple Storybooks at the same time. You need to run the `run-many` command with the parallel flag (eg. `--parallel=3`), because you want to run all your Storybooks in parallel. You can change the value of the `parallel` flag to be of as many Storybooks you want to run in parallel as you need. However, be **very carefull** with putting large numbers in this
 flag, since it can cause big delays or get stuck. You can play around and adjust that number to one your machine runs comfortably with. Keep in mind that you can add in this feature however many live/public Storybooks as you need (Storybooks that you do not run locally).
 
-You can just do:
+In order to get get it working for you, you need to two two things:
+
+1. Make sure your "composed" Storybook instances are running. For that you can do:
 
 ```bash
-nx run-many --target=storybook --projects=main-host,one-composed,two-composed,three-composed --parallel=4
+nx run-many --target=storybook --projects=one-composed,two-composed,three-composed --parallel=3
 ```
 
-Before running the above command to actually compose our Storybook instances under the **`main-host`** project, we would need to do the following adjustments to our workspace:
+2. Start your host Storybook in another tab of your terminal:
+
+```bash
+nx storybook main-host
+```
+
+Before doing the above steps to actually compose our Storybook instances under the **`main-host`** project, we would need to do the following adjustments to our workspace:
 
 ### Adjust the Storybook ports in `project.json`
 
@@ -81,7 +89,7 @@ In your project's targets, in the `storybook` target, you will notice that the d
 
 We can keep this port for the project which will serve as the host of our configuration, but we must change the port numbers of the other projects, the projects which will be composed/composed. The reason for that is the following:
 
-- When the `nx run-many --target=storybook --parallel=4` command executes, it will go and look into your `project.json` file to see the port you have assigned for that project's Storybook.
+- When the `nx run-many --target=storybook --parallel=3` command executes, it will go and look into your `project.json` file to see the port you have assigned for that project's Storybook.
 - When it finds a port that it is already used, it will change the port number randomly (usually adding `1` until it finds an empty port).
 
 Since we are using the `--parallel` flag, and the commands are executed in parallel, we cannot know for sure the order that the `storybook` command will be executed. So, we cannot be sure which port will correspond to which of the projects.
@@ -112,3 +120,83 @@ module.exports = {
   },
 };
 ```
+
+### Optional: use `run-commands` and create a `storybook-composition` target
+
+If you want to take advantage of the [`run-commands`](https://nx.dev/packages/workspace/executors/run-commands) functionality of Nx, you can create a custom target that will invoke the `run-parallel` command for your "composed" Storybook instances.
+
+The objective is to end up with a new target in your `main-host`'s `project.json` file (`apps/main-host/project.json`) that looks like this:
+
+```json
+    "storybook-composition": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx storybook one-composed",
+          "nx storybook two-composed",
+          "nx storybook three-composed"
+          ],
+        "parallel": true
+      }
+    }
+```
+
+which you can then invoke like this:
+
+```bash
+nx run main-host:storybook-composition
+```
+
+which will take care of starting all your "composed" Storybook instances, before you run `nx storybook main-host`.
+
+#### Generating a new `target` in our `main-host`
+
+Let's first generate a new `target` called `storybook-composition` for our `main-host`.
+
+Run the following command:
+
+```bash
+nx generate @nrwl/workspace:run-commands storybook-composition --command='nx storybook one-composed' --project=main-host
+```
+
+This will create a new `target` in your `apps/main-host/project.json`:
+
+```json
+    "storybook-composition": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "nx storybook one-composed"
+      }
+    }
+```
+
+Now, change the `command` option to be `commands`, add the `"parallel": true` option, and add all the other "composed" Storybook commands:
+
+```json
+    "storybook-composition": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx storybook one-composed",
+          "nx storybook two-composed",
+          "nx storybook three-composed"
+          ],
+        "parallel": true
+      }
+    }
+```
+
+Now, you can start all your "composed" Storybook instances by running:
+
+```bash
+nx run main-host:storybook-composition
+```
+
+**After** all of your "composed" Storybook instances have started, you can run in a new terminal:
+
+```bash
+nx storybook main-host
+```
+
+This approach takes the "burden" of writing the `run-many` command manually, and makes it easier to add/remove "composed" Storybook instances.
