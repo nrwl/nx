@@ -49,7 +49,7 @@ describe('project graph creation', () => {
     expect(graphJson.nodes[libName].data.files.length).toBeGreaterThan(0);
   });
 
-  it("should correctly build the nxdeps.json containing files for the project when root is '' and for project that do not have root as ''", () => {
+  it("should correctly build the graph.json containing files for the project when root is '' and for project that do not have root as ''", () => {
     // ARRANGE
     const libName = uniq('mylib');
     const secondLibName = uniq('mysecondlib');
