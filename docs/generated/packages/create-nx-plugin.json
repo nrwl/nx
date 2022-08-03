@@ -2,8 +2,8 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "create-nx-plugin",
   "description": "Smart, Fast and Extensible Build System",
-  "root": "C:/development/nx/packages/create-nx-plugin",
-  "source": "C:\\development\\nx\\packages\\create-nx-plugin\\src",
+  "root": "/packages/create-nx-plugin",
+  "source": "/packages/create-nx-plugin/src",
   "documentation": [],
   "generators": [],
   "executors": []

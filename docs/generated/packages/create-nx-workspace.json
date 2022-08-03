@@ -2,8 +2,8 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "create-nx-workspace",
   "description": "Smart, Fast and Extensible Build System",
-  "root": "C:/development/nx/packages/create-nx-workspace",
-  "source": "C:\\development\\nx\\packages\\create-nx-workspace\\src",
+  "root": "/packages/create-nx-workspace",
+  "source": "/packages/create-nx-workspace/src",
   "documentation": [],
   "generators": [],
   "executors": []

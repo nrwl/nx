@@ -2,29 +2,308 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "cypress",
   "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
-  "root": "C:/development/nx/packages/cypress",
-  "source": "C:\\development\\nx\\packages\\cypress\\src",
+  "root": "/packages/cypress",
+  "source": "/packages/cypress/src",
   "documentation": [
     {
       "name": "Overview",
       "id": "overview",
       "path": "/packages/cypress",
       "file": "shared/cypress-plugin",
-      "content": "![Cypress logo](/shared/cypress-logo.png)\r\n\r\nCypress is a test runner built for the modern web. It has a lot of great features:\r\n\r\n- Time travel\r\n- Real-time reloads\r\n- Automatic waiting\r\n- Spies, stubs, and clocks\r\n- Network traffic control\r\n- Screenshots and videos\r\n\r\n## Setting Up Cypress\r\n\r\n> Info about [Cypress Component Testing can be found here](/cypress/cypress-component-testing)\r\n\r\nIf the `@nrwl/cypress` package is not installed, install the version that matches your `nx` package version.\r\n\r\n```bash\r\nyarn add --dev @nrwl/cypress\r\n```\r\n\r\n```bash\r\nnpm install --save-dev @nrwl/cypress\r\n```\r\n\r\n## E2E Testing\r\n\r\nBy default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.\r\n\r\n```bash\r\nnx g @nrwl/web:app frontend\r\n```\r\n\r\n### Creating a Cypress E2E project for an existing project\r\n\r\nTo generate an E2E project based on an existing project, run the following generator\r\n\r\n```bash\r\nnx g @nrwl/cypress:cypress-project your-app-name-e2e --project=your-app-name\r\n```\r\n\r\nOptionally, you can use the `--baseUrl` option if you don't want cypress plugin to serve `your-app-name`.\r\n\r\n```bash\r\nnx g @nrwl/cypress:cypress-project your-app-name-e2e --baseUrl=http://localhost:4200\r\n```\r\n\r\nReplace `your-app-name` with the app's name as defined in your `workspace.json` file.\r\n\r\n### Testing Applications\r\n\r\nRun `nx e2e frontend-e2e` to execute e2e tests with Cypress.\r\n\r\nYou can run your e2e test against a production build with the `--prod` flag\r\n\r\n```bash\r\nnx e2e frontend-e2e --prod\r\n```\r\n\r\nBy default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your\r\nterminal. Screenshots and videos will be accessible in `dist/cypress/apps/frontend/screenshots` and `dist/cypress/apps/frontend/videos`.\r\n\r\n### Watching for Changes (Headed Mode)\r\n\r\nWith, `nx e2e frontend-e2e --watch` Cypress will start in headed mode where you can see your application being tested.\r\n\r\nRunning Cypress with `--watch` is a great way to enhance dev workflow - you can build up test files with the application\r\nrunning and Cypress will re-run those tests as you enhance and add to the suite.\r\n\r\n```bash\r\nnx e2e frontend-e2e --prod\r\n```\r\n\r\n### Specifying a Custom Url to Test\r\n\r\nThe `baseUrl` property provides you the ability to test an application hosted on a specific domain.\r\n\r\n```bash\r\nnx e2e frontend-e2e --baseUrl=https://frontend.com\r\n```\r\n\r\n> If no `baseUrl` and no `devServerTarget` are provided, Cypress will expect to have the `baseUrl` property in\r\n> the cypress config file, or will error.\r\n\r\n## Using cypress.config.ts\r\n\r\nIf you need to fine tune your Cypress setup, you can do so by modifying `cypress.config.ts` in the project root. For\r\ninstance,\r\nyou can easily add your `projectId` to save all the screenshots and videos into your Cypress dashboard. The complete\r\nconfiguration is documented\r\non [the official website](https://docs.cypress.io/guides/references/configuration.html#Options).\r\n"
+      "content": "![Cypress logo](/shared/cypress-logo.png)\n\nCypress is a test runner built for the modern web. It has a lot of great features:\n\n- Time travel\n- Real-time reloads\n- Automatic waiting\n- Spies, stubs, and clocks\n- Network traffic control\n- Screenshots and videos\n\n## Setting Up Cypress\n\n> Info about [Cypress Component Testing can be found here](/cypress/cypress-component-testing)\n\nIf the `@nrwl/cypress` package is not installed, install the version that matches your `nx` package version.\n\n```bash\nyarn add --dev @nrwl/cypress\n```\n\n```bash\nnpm install --save-dev @nrwl/cypress\n```\n\n## E2E Testing\n\nBy default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.\n\n```bash\nnx g @nrwl/web:app frontend\n```\n\n### Creating a Cypress E2E project for an existing project\n\nTo generate an E2E project based on an existing project, run the following generator\n\n```bash\nnx g @nrwl/cypress:cypress-project your-app-name-e2e --project=your-app-name\n```\n\nOptionally, you can use the `--baseUrl` option if you don't want cypress plugin to serve `your-app-name`.\n\n```bash\nnx g @nrwl/cypress:cypress-project your-app-name-e2e --baseUrl=http://localhost:4200\n```\n\nReplace `your-app-name` with the app's name as defined in your `workspace.json` file.\n\n### Testing Applications\n\nRun `nx e2e frontend-e2e` to execute e2e tests with Cypress.\n\nYou can run your e2e test against a production build with the `--prod` flag\n\n```bash\nnx e2e frontend-e2e --prod\n```\n\nBy default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your\nterminal. Screenshots and videos will be accessible in `dist/cypress/apps/frontend/screenshots` and `dist/cypress/apps/frontend/videos`.\n\n### Watching for Changes (Headed Mode)\n\nWith, `nx e2e frontend-e2e --watch` Cypress will start in headed mode where you can see your application being tested.\n\nRunning Cypress with `--watch` is a great way to enhance dev workflow - you can build up test files with the application\nrunning and Cypress will re-run those tests as you enhance and add to the suite.\n\n```bash\nnx e2e frontend-e2e --prod\n```\n\n### Specifying a Custom Url to Test\n\nThe `baseUrl` property provides you the ability to test an application hosted on a specific domain.\n\n```bash\nnx e2e frontend-e2e --baseUrl=https://frontend.com\n```\n\n> If no `baseUrl` and no `devServerTarget` are provided, Cypress will expect to have the `baseUrl` property in\n> the cypress config file, or will error.\n\n## Using cypress.config.ts\n\nIf you need to fine tune your Cypress setup, you can do so by modifying `cypress.config.ts` in the project root. For\ninstance,\nyou can easily add your `projectId` to save all the screenshots and videos into your Cypress dashboard. The complete\nconfiguration is documented\non [the official website](https://docs.cypress.io/guides/references/configuration.html#Options).\n"
     },
     {
       "name": "Component Testing",
       "id": "cypress-component-testing",
       "file": "shared/cypress-component-testing",
-      "content": "# Cypress Component Testing\r\n\r\n> Component testing is in a early preview and requires Cypress v10 and above.\r\n> See our [guide for more information](/cypress/v10-migration-guide) to migrate to Cypress v10.\r\n\r\nUnlike [E2E testing](/packages/cypress), component testing does not create a new project. Instead, Cypress component testing is added\r\ndirectly to a project.\r\n\r\n```bash\r\nnx g @nrwl/react:cypress-component-configuration --project=your-react-lib\r\n```\r\n\r\nYou can optionally pass in `--generate-tests` to create component tests for all components within the library.\r\n\r\n## Testing Projects\r\n\r\nRun `nx component-test your-lib` to execute the component tests with Cypress.\r\n\r\nBy default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your\r\nterminal. Screenshots and videos will be accessible in `dist/cypress/libs/your-lib/screenshots` and `dist/cypress/libs/your-lib/videos`.\r\n\r\n## Watching for Changes (Headed Mode)\r\n\r\nWith, `nx component-test your-lib --watch` Cypress will start in headed mode. Where you can see your component being tested.\r\n\r\nRunning Cypress with `--watch` is a great way to iterate on your components since cypress will rerun your tests as you make those changes validating the new behavior.\r\n\r\n## More Information\r\n\r\nYou can read more on component testing in the [Cypress documentation](https://docs.cypress.io/guides/component-testing/writing-your-first-component-test).\r\n"
+      "content": "# Cypress Component Testing\n\n> Component testing is in a early preview and requires Cypress v10 and above.\n> See our [guide for more information](/cypress/v10-migration-guide) to migrate to Cypress v10.\n\nUnlike [E2E testing](/packages/cypress), component testing does not create a new project. Instead, Cypress component testing is added\ndirectly to a project.\n\n```bash\nnx g @nrwl/react:cypress-component-configuration --project=your-react-lib\n```\n\nYou can optionally pass in `--generate-tests` to create component tests for all components within the library.\n\n## Testing Projects\n\nRun `nx component-test your-lib` to execute the component tests with Cypress.\n\nBy default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your\nterminal. Screenshots and videos will be accessible in `dist/cypress/libs/your-lib/screenshots` and `dist/cypress/libs/your-lib/videos`.\n\n## Watching for Changes (Headed Mode)\n\nWith, `nx component-test your-lib --watch` Cypress will start in headed mode. Where you can see your component being tested.\n\nRunning Cypress with `--watch` is a great way to iterate on your components since cypress will rerun your tests as you make those changes validating the new behavior.\n\n## More Information\n\nYou can read more on component testing in the [Cypress documentation](https://docs.cypress.io/guides/component-testing/writing-your-first-component-test).\n"
     },
     {
       "name": "v10 Migration Guide",
       "id": "v10-migration-guide",
       "file": "shared/guides/cypress/cypress-v10-migration",
-      "content": "# Migrating to Cypress V10\r\n\r\nCypress v10 introduce new features, like component testing, along with some breaking changes.\r\n\r\nBefore continuing, make sure you have all your changes committed and have a clean working tree.\r\n\r\nYou can migrate an E2E project to v10 by running the following command:\r\n\r\n```bash\r\nnx g @nrwl/cypress:migrate-to-cypress-10\r\n```\r\n\r\nIn general, these are the steps taken to migrate your project:\r\n\r\n1. Migrates your existing `cypress.json` configuration to a new `cypress.config.ts` configuration file.\r\n   - The `pluginsFile` option has been replaced for `setupNodeEvents`. We will import the file and add it to\r\n     the `setupNodeEvents` config option. Double-check your plugins are working correctly.\r\n2. Rename all test files from `.spec.ts` to `.cy.ts`\r\n3. Rename the `support/index.ts` to `support/e2e.ts` and update any associated imports\r\n4. Rename the `integrations` folder to the `e2e` folder\r\n\r\nWe take the best effort to make this migration seamless, but there can be edge cases we didn't anticipate. So feel free to [open an issue](https://github.com/nrwl/nx/issues/new?assignees=&labels=type%3A+bug&template=1-bug.md) if you come across any problems.\r\n\r\nYou can also consult the [official Cypress migration guide](https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-version-10-0) if you get stuck and want to manually migrate your projects.\r\n"
+      "content": "# Migrating to Cypress V10\n\nCypress v10 introduce new features, like component testing, along with some breaking changes.\n\nBefore continuing, make sure you have all your changes committed and have a clean working tree.\n\nYou can migrate an E2E project to v10 by running the following command:\n\n```bash\nnx g @nrwl/cypress:migrate-to-cypress-10\n```\n\nIn general, these are the steps taken to migrate your project:\n\n1. Migrates your existing `cypress.json` configuration to a new `cypress.config.ts` configuration file.\n   - The `pluginsFile` option has been replaced for `setupNodeEvents`. We will import the file and add it to\n     the `setupNodeEvents` config option. Double-check your plugins are working correctly.\n2. Rename all test files from `.spec.ts` to `.cy.ts`\n3. Rename the `support/index.ts` to `support/e2e.ts` and update any associated imports\n4. Rename the `integrations` folder to the `e2e` folder\n\nWe take the best effort to make this migration seamless, but there can be edge cases we didn't anticipate. So feel free to [open an issue](https://github.com/nrwl/nx/issues/new?assignees=&labels=type%3A+bug&template=1-bug.md) if you come across any problems.\n\nYou can also consult the [official Cypress migration guide](https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-version-10-0) if you get stuck and want to manually migrate your projects.\n"
     }
   ],
-  "generators": [],
-  "executors": []
+  "generators": [
+    {
+      "name": "init",
+      "factory": "./src/generators/init/init#cypressInitGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxCypressInit",
+        "cli": "nx",
+        "title": "Add Cypress Configuration to the workspace",
+        "description": "Add Cypress Configuration to the workspace.",
+        "type": "object",
+        "properties": {
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          }
+        },
+        "presets": []
+      },
+      "description": "Initialize the `@nrwl/cypress` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true,
+      "implementation": "/packages/cypress/src/generators/init/init#cypressInitGenerator.ts",
+      "path": "/packages/cypress/src/generators/init/schema.json"
+    },
+    {
+      "name": "cypress-project",
+      "factory": "./src/generators/cypress-project/cypress-project#cypressProjectGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxCypressProjectGeneratorSchema",
+        "cli": "nx",
+        "title": "Create Cypress Configuration for the workspace",
+        "description": "Create Cypress Configuration for the workspace.",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the frontend project to test.",
+            "$default": { "$source": "projectName" }
+          },
+          "baseUrl": {
+            "type": "string",
+            "description": "The address (with the port) which your application is running on."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the E2E Project.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What name would you like to use for the e2e project?"
+          },
+          "directory": {
+            "type": "string",
+            "description": "A directory where the project is placed."
+          },
+          "linter": {
+            "description": "The tool to use for running lint checks.",
+            "type": "string",
+            "enum": ["eslint", "tslint", "none"],
+            "default": "eslint"
+          },
+          "js": {
+            "description": "Generate JavaScript files rather than TypeScript files.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          },
+          "setParserOptionsProject": {
+            "type": "boolean",
+            "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+            "default": false
+          },
+          "standaloneConfig": {
+            "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside workspace.json.",
+            "type": "boolean"
+          },
+          "skipPackageJson": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not add dependencies to `package.json`."
+          }
+        },
+        "required": ["name"],
+        "presets": []
+      },
+      "description": "Add a Cypress E2E Project.",
+      "hidden": true,
+      "implementation": "/packages/cypress/src/generators/cypress-project/cypress-project#cypressProjectGenerator.ts",
+      "aliases": [],
+      "path": "/packages/cypress/src/generators/cypress-project/schema.json"
+    },
+    {
+      "name": "cypress-component-project",
+      "factory": "./src/generators/cypress-component-project/cypress-component-project#cypressComponentProject",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxCypressComponentProject",
+        "cli": "nx",
+        "title": "Set up Cypress component testing for a project",
+        "description": "Set up Cypress component test for a project.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/cypress:cypress-component-project --project=my-cool-lib ",
+            "description": "Add cypress component testing to an existing project named my-cool-lib"
+          }
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project to add cypress component testing to",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What project should we add Cypress component testing to?"
+          }
+        },
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Set up Cypress Component Test for a project",
+      "hidden": true,
+      "implementation": "/packages/cypress/src/generators/cypress-component-project/cypress-component-project#cypressComponentProject.ts",
+      "aliases": [],
+      "path": "/packages/cypress/src/generators/cypress-component-project/schema.json"
+    },
+    {
+      "name": "migrate-to-cypress-10",
+      "factory": "./src/generators/migrate-to-cypress-ten/migrate-to-cypress-ten#migrateCypressProject",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxCypressMigrateToTen",
+        "cli": "nx",
+        "title": "Migrate e2e project to Cypress 10",
+        "description": "Migrate Cypress e2e project from v8/v9 to Cypress v10.",
+        "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/cypress:migrate-to-cypress-10",
+            "description": "Migrate existing cypress projects to Cypress v10"
+          }
+        ],
+        "properties": {},
+        "presets": []
+      },
+      "description": "Migrate existing Cypress e2e projects to Cypress v10",
+      "hidden": true,
+      "implementation": "/packages/cypress/src/generators/migrate-to-cypress-ten/migrate-to-cypress-ten#migrateCypressProject.ts",
+      "aliases": [],
+      "path": "/packages/cypress/src/generators/migrate-to-cypress-ten/schema.json"
+    }
+  ],
+  "executors": [
+    {
+      "name": "cypress",
+      "implementation": "/packages/cypress/src/executors/cypress/cypress.impl.ts",
+      "schema": {
+        "title": "Cypress Target",
+        "description": "Cypress target option for Build Facade.",
+        "type": "object",
+        "outputCapture": "pipe",
+        "cli": "nx",
+        "properties": {
+          "cypressConfig": {
+            "type": "string",
+            "description": "The path of the Cypress configuration json file."
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Recompile and run tests when files change.",
+            "default": false
+          },
+          "tsConfig": {
+            "type": "string",
+            "description": "The path of the Cypress tsconfig configuration json file."
+          },
+          "devServerTarget": {
+            "type": "string",
+            "description": "Dev server target to run tests against."
+          },
+          "headed": {
+            "type": "boolean",
+            "description": "Displays the browser instead of running headlessly. Set this to `true` if your run depends on a Chrome extension being loaded.",
+            "default": false
+          },
+          "headless": {
+            "type": "boolean",
+            "description": "Hide the browser instead of running headed (default for cypress run).",
+            "default": false,
+            "x-deprecated": true
+          },
+          "exit": {
+            "type": "boolean",
+            "description": "Whether or not the Cypress Test Runner will stay open after running tests in a spec file.",
+            "default": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The key cypress should use to run tests in parallel/record the run (CI only)."
+          },
+          "record": {
+            "type": "boolean",
+            "description": "Whether or not Cypress should record the results of the tests.",
+            "default": false
+          },
+          "parallel": {
+            "type": "boolean",
+            "description": "Whether or not Cypress should run its tests in parallel (CI only).",
+            "default": false
+          },
+          "baseUrl": {
+            "type": "string",
+            "description": "The address (with the port) which your application is running on."
+          },
+          "browser": {
+            "type": "string",
+            "description": "The browser to run tests in."
+          },
+          "env": {
+            "type": "object",
+            "description": "A key-value Pair of environment variables to pass to Cypress runner."
+          },
+          "spec": {
+            "type": "string",
+            "description": "A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. `**examples/**,**actions.spec**`."
+          },
+          "copyFiles": {
+            "type": "string",
+            "description": "A regex string that is used to choose what additional integration files to copy to the dist folder.",
+            "x-deprecated": true
+          },
+          "ciBuildId": {
+            "oneOf": [{ "type": "string" }, { "type": "number" }],
+            "description": "A unique identifier for a run to enable grouping or parallelization."
+          },
+          "group": {
+            "type": "string",
+            "description": "A named group for recorded runs in the Cypress dashboard."
+          },
+          "ignoreTestFiles": {
+            "type": "string",
+            "description": "A String or Array of glob patterns used to ignore test files that would otherwise be shown in your list of tests. Cypress uses minimatch with the options: `{dot: true, matchBase: true}`. We suggest using https://globster.xyz to test what files would match."
+          },
+          "reporter": {
+            "type": "string",
+            "description": "The reporter used during cypress run."
+          },
+          "reporterOptions": {
+            "type": "string",
+            "description": "The reporter options used. Supported options depend on the reporter."
+          },
+          "skipServe": {
+            "type": "boolean",
+            "description": "Skip dev-server build.",
+            "default": false
+          },
+          "testingType": {
+            "type": "string",
+            "description": "Specify the type of tests to execute.",
+            "enum": ["component", "e2e"],
+            "default": "e2e"
+          },
+          "tag": {
+            "type": "string",
+            "description": "A comma delimited list to identify a run with.",
+            "aliases": ["t"]
+          }
+        },
+        "additionalProperties": true,
+        "required": ["cypressConfig"],
+        "presets": []
+      },
+      "description": "Run Cypress E2E tests.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/cypress/src/executors/cypress/schema.json"
+    }
+  ]
 }
