@@ -295,5 +295,5 @@ export function isCacheableTask(
 }
 
 function longRunningTask(task: Task) {
-  return !!task.overrides['watch'];
+  return !!task.overrides['watch'] && task.overrides['watch'] !== 'false';
 }
