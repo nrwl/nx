@@ -139,12 +139,7 @@ export class ProcessTasks {
               );
             }
           } else {
-            this.processTask(
-              task,
-              depProject.name,
-              configuration,
-              taskOverrides
-            );
+            this.processTask(task, depProject.name, configuration, overrides);
           }
         }
       } else {
