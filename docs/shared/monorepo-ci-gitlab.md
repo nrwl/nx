@@ -69,4 +69,74 @@ In order to use distributed task execution, we need to start agents and set the 
 
 Read more about the [Distributed CI setup with Nx Cloud](/using-nx/ci-overview#distributed-ci-with-nx-cloud).
 
+```yaml
+image: node:18
+variables:
+  CI: 'true'
+  NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+
+# Creating template for DTE agents
+.dte-agent:
+  interruptible: true
+  cache:
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - '.yarn-cache/'
+  script:
+    - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
+    - yarn nx-cloud start-agent
+  artifacts:
+    expire_in: 5 days
+    paths:
+      - dist
+
+# Creating template for a job running DTE (orchestrator)
+.base-pipeline:
+  interruptible: true
+  only:
+    - main
+    - merge_requests
+  cache:
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - '.yarn-cache/'
+  before_script:
+    - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+  artifacts:
+    expire_in: 5 days
+    paths:
+      - node_modules/.cache/nx
+
+# Main job running DTE
+nx-dte:
+  stage: affected
+  extends: .base-pipeline
+  script:
+    - yarn nx-cloud start-ci-run
+    - yarn nx-cloud record -- yarn nx workspace-lint --base=$NX_BASE --head=$NX_HEAD
+    - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+    - yarn nx-cloud stop-all-agents
+
+# Create as many agents as you want
+nx-dte-agent1:
+  extends: .dte-agent
+  stage: affected
+nx-dte-agent2:
+  extends: .dte-agent
+  stage: affected
+nx-dte-agent3:
+  extends: .dte-agent
+  stage: affected
+```
+
 {% /nx-cloud-section %}
