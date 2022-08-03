@@ -1,23 +1,13 @@
-import { interpret, Interpreter, Typestate } from 'xstate';
+import { interpret, InterpreterStatus } from 'xstate';
 import { depGraphMachine } from './dep-graph.machine';
-import {
-  DepGraphContext,
-  DepGraphSchema,
-  DepGraphUIEvents,
-} from './interfaces';
 
-let depGraphService: Interpreter<
-  DepGraphContext,
-  DepGraphSchema,
-  DepGraphUIEvents,
-  Typestate<DepGraphContext>
->;
+// TODO: figure out what happened to make the interprett return type get so weird
+let depGraphService = interpret(depGraphMachine, {
+  devTools: !!window.useXstateInspect,
+});
 
 export function getDepGraphService() {
-  if (!depGraphService) {
-    depGraphService = interpret(depGraphMachine, {
-      devTools: !!window.useXstateInspect,
-    });
+  if (depGraphService.status === InterpreterStatus.NotStarted) {
     depGraphService.start();
   }
 

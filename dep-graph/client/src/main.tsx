@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom';
 import { inspect } from '@xstate/inspect';
 import App from './app/app';
+import { ExternalApi } from './app/machines/externalApi';
 
 if (window.useXstateInspect === true) {
   inspect({
@@ -9,6 +10,8 @@ if (window.useXstateInspect === true) {
     iframe: false, // open in new window
   });
 }
+
+window.externalApi = new ExternalApi();
 
 ReactDOM.render(
   <StrictMode>
