@@ -6,6 +6,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { initGenerator as nodeInitGenerator } from '@nrwl/node';
+import { tslibVersion } from '@nrwl/node/src/utils/versions';
 import {
   expressTypingsVersion,
   expressVersion,
@@ -20,6 +21,7 @@ function updateDependencies(tree: Tree) {
     tree,
     {
       express: expressVersion,
+      tslib: tslibVersion,
     },
     {
       '@types/express': expressTypingsVersion,

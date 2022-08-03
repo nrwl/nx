@@ -279,6 +279,7 @@ describe('Build Node apps', () => {
           '@nestjs/platform-express': '^9.0.0',
           'reflect-metadata': '^0.1.13',
           rxjs: '^7.0.0',
+          tslib: '^2.3.0',
         },
         main: 'main.js',
         name: expect.any(String),
