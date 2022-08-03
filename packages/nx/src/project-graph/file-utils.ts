@@ -157,3 +157,10 @@ export function readPackageJson(): any {
 }
 // Original Exports
 export { FileData };
+
+// TODO(v16): Remove these exports
+export {
+  readNxJson,
+  readAllWorkspaceConfiguration,
+  workspaceLayout,
+} from '../config/configuration';

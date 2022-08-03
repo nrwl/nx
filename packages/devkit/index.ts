@@ -10,6 +10,16 @@
  */
 
 /**
+ * Note to developers: This is the Public API of @nrwl/devkit.
+ * @nrwl/devkit should be compatible with versions of Nx 1 major version prior.
+ * This is so that plugins can use the latest @nrwl/devkit while their users may use versions +/- 1 of Nx.
+ *
+ * 1. Try hard to not add to this API to reduce the surface area we need to maintain.
+ * 2. Do not add newly created paths from the nx package to this file as they will not be available in older versions of Nx.
+ *   a. We might need to duplicate code instead of importing from nx until all supported versions of nx contain the file.
+ */
+
+/**
  * @category Tree
  */
 export type { Tree, FileChange } from 'nx/src/generators/tree';
@@ -48,11 +58,12 @@ export type {
  */
 export { Workspaces } from 'nx/src/config/workspaces';
 
+// TODO (v16): Change this to export from 'nx/src/config/configuration'
 export {
   readNxJson,
   readAllWorkspaceConfiguration,
   workspaceLayout,
-} from 'nx/src/config/configuration';
+} from 'nx/src/project-graph/file-utils';
 
 export type {
   NxPlugin,
@@ -284,10 +295,11 @@ export {
  */
 export { moveFilesToNewDirectory } from './src/utils/move-dir';
 
+// TODO(v16): Change this to export from 'nx/src/utils/workspace-root'
 /**
  * @category Utils
  */
-export { workspaceRoot, appRootPath } from 'nx/src/utils/workspace-root';
+export { workspaceRoot, appRootPath } from 'nx/src/utils/app-root';
 
 /**
  * @category Utils
