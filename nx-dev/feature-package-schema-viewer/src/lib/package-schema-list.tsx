@@ -21,6 +21,7 @@ export function PackageSchemaList({
       name: string;
       description: string;
       githubUrl: string;
+      id: string;
       readme: { content: string; filePath: string };
     };
     seo: { title: string; description: string; url: string; imageUrl: string };
@@ -30,6 +31,7 @@ export function PackageSchemaList({
       name: getPublicPackageName(pkg.name),
       description: pkg.description,
       githubUrl: pkg.githubRoot + pkg.root,
+      id: pkg.name,
       get readme() {
         const hasOverview = pkg.documentation.find((d) => d.id === 'overview');
         return !!hasOverview
@@ -129,7 +131,7 @@ export function PackageSchemaList({
               <div className="prose mb-16 max-w-none">{vm.markdown}</div>
 
               <PackageReference
-                name={vm.pkg.name}
+                name={vm.pkg.id}
                 executors={pkg.executors}
                 generators={pkg.generators}
               ></PackageReference>

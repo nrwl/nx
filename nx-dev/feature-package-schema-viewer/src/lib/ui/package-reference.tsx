@@ -33,7 +33,7 @@ export function PackageReference({
           <SchemaListItem
             schema={executor}
             packageName={name}
-            type="generator"
+            type="executors"
           />
         ))}
         {executors.length === 0 && <EmptyList type="executor" />}
@@ -46,7 +46,7 @@ export function PackageReference({
           <SchemaListItem
             schema={generator}
             packageName={name}
-            type="generator"
+            type="generators"
           />
         ))}
         {generators.length === 0 && <EmptyList type="generator" />}
@@ -61,7 +61,7 @@ function SchemaListItem({
   packageName,
 }: {
   schema: SchemaMetadata;
-  type: 'executor' | 'generator';
+  type: 'executors' | 'generators';
   packageName: string;
 }): JSX.Element {
   return (
@@ -69,7 +69,7 @@ function SchemaListItem({
       key={schema.name}
       className="focus-within:ring-blue-nx-base relative flex px-2 py-4 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
     >
-      {type === 'executor' ? (
+      {type === 'executors' ? (
         <ChipIcon
           className="h-8 w-8 flex-shrink-0 rounded-full text-gray-300"
           role="img"
