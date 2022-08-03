@@ -200,8 +200,7 @@ You can also express the same configuration using:
 }
 ```
 
-With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target
-dependencies. You can either forward them to the dependency target, or you can ignore them (default).
+With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target. You can either forward them or you can ignore them (default).
 
 ```json
 "build": {
@@ -210,11 +209,20 @@ dependencies. You can either forward them to the dependency target, or you can i
 },
 "test": {
   // ignore params passed to this target, won't be forwarded to the dependency targets
-  "dependsOn": [{ "projects": "self", "target": "build", "params": "ignore" }]
+  "dependsOn": [{ "projects": "dependencies", "target": "build", "params": "ignore" }]
 }
 "lint": {
   // ignore params passed to this target, won't be forwarded to the dependency targets
-  "dependsOn": [{ "projects": "self", "target": "build" }]
+  "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+}
+```
+
+Obviously this also works when defining a relation for the target of the project itself using `"projects": "self"`:
+
+```json
+"build": {
+   // forward params passed to this target to the project target
+  "dependsOn": [{ "projects": "self", "target": "pre-build", "params": "forward" }]
 }
 ```
 

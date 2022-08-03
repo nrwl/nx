@@ -19,7 +19,7 @@ export async function getStaticProps(): Promise<{ props: ReferencesProps }> {
   };
 }
 
-export function Packages(props: ReferencesProps): JSX.Element {
+export default function Packages(props: ReferencesProps): JSX.Element {
   const router = useRouter();
   const [targetPackageId, setTargetPackageId] = useState<string>('');
   const updateTargetPackageId = (id: string) =>
@@ -111,5 +111,3 @@ export function Packages(props: ReferencesProps): JSX.Element {
     </>
   );
 }
-
-export default Packages;

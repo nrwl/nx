@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "<%= offsetFromRoot %>dist/out-tsc",
-    "types": ["node"]
+    "types": ["node"],
+    "jsx": "react-native"
   },
   "exclude": ["**/*.spec.ts", "**/*.spec.tsx", "test-setup.ts"],
   "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]

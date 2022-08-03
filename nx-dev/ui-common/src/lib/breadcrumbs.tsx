@@ -1,7 +1,7 @@
 import { ChevronRightIcon } from '@heroicons/react/solid';
 import classNames from 'classnames';
 
-export function Breadcrumbs({ path }: { path: string }) {
+export function Breadcrumbs({ path }: { path: string }): JSX.Element {
   const cleanedPath = path.includes('?')
     ? path.slice(0, path.indexOf('?'))
     : path;
@@ -72,5 +72,3 @@ export function Breadcrumbs({ path }: { path: string }) {
     </div>
   );
 }
-
-export default Breadcrumbs;

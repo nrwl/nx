@@ -3,7 +3,7 @@ import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import cx from 'classnames';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import React, { ReactComponentElement, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { Breadcrumbs } from '@nrwl/nx-dev/ui-common';
 import { getPublicPackageName } from './get-public-package-name';
 import { Heading1 } from './ui/headings';
@@ -13,7 +13,7 @@ export function PackageSchemaList({
   pkg,
 }: {
   pkg: PackageMetadata;
-}): ReactComponentElement<any> {
+}): JSX.Element {
   const router = useRouter();
 
   const vm: {
@@ -140,5 +140,3 @@ export function PackageSchemaList({
     </>
   );
 }
-
-export default PackageSchemaList;

@@ -18,7 +18,7 @@ export function SchemaViewer({
   reference: string;
   lookup: Lookup;
   stage: Stage;
-}) {
+}): JSX.Element {
   const properties = schema.properties || {};
   const isDeprecated = (schema: JsonSchema): boolean =>
     typeof schema === 'boolean' ? false : !!schema['x-deprecated'];

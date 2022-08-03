@@ -1,53 +1,27 @@
 import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { addDependenciesToPackageJson, readJson } from '@nrwl/devkit';
-import { satisfies } from 'semver';
+import { addDependenciesToPackageJson } from '@nrwl/devkit';
 import {
-  nestJsSchematicsVersion,
-  nestJsVersion7,
-  nestJsVersion8,
+  nestJsVersion,
   nxVersion,
   reflectMetadataVersion,
-  rxjsVersion6,
-  rxjsVersion7,
+  rxjsVersion,
   tsLibVersion,
 } from '../../../utils/versions';
 
 export function addDependencies(tree: Tree): GeneratorCallback {
-  // Old nest 7 and rxjs 6 by default
-  let NEST_VERSION = nestJsVersion7;
-  let RXJS = rxjsVersion6;
-
-  const packageJson = readJson(tree, 'package.json');
-
-  if (packageJson.dependencies['@angular/core']) {
-    let rxjs = packageJson.dependencies['rxjs'];
-
-    if (rxjs.startsWith('~') || rxjs.startsWith('^')) {
-      rxjs = rxjs.substring(1);
-    }
-
-    if (satisfies(rxjs, rxjsVersion7)) {
-      NEST_VERSION = nestJsVersion8;
-      RXJS = packageJson.dependencies['rxjs'];
-    }
-  } else {
-    NEST_VERSION = nestJsVersion8;
-    RXJS = rxjsVersion7;
-  }
-
   return addDependenciesToPackageJson(
     tree,
     {
-      '@nestjs/common': NEST_VERSION,
-      '@nestjs/core': NEST_VERSION,
-      '@nestjs/platform-express': NEST_VERSION,
+      '@nestjs/common': nestJsVersion,
+      '@nestjs/core': nestJsVersion,
+      '@nestjs/platform-express': nestJsVersion,
       'reflect-metadata': reflectMetadataVersion,
-      rxjs: RXJS,
+      rxjs: rxjsVersion,
       tslib: tsLibVersion,
     },
     {
-      '@nestjs/schematics': nestJsSchematicsVersion,
-      '@nestjs/testing': NEST_VERSION,
+      '@nestjs/schematics': nestJsVersion,
+      '@nestjs/testing': nestJsVersion,
       '@nrwl/nest': nxVersion,
     }
   );

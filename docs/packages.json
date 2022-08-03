@@ -56,8 +56,11 @@
   },
   {
     "name": "js",
-    "path": "generated\\packages\\js.json",
-    "schemas": { "executors": [], "generators": [] }
+    "path": "generated/packages/js.json",
+    "schemas": {
+      "executors": ["tsc", "swc", "node"],
+      "generators": ["library", "init", "convert-to-swc"]
+    }
   },
   {
     "name": "linter",
@@ -76,8 +79,18 @@
   },
   {
     "name": "next",
-    "path": "generated\\packages\\next.json",
-    "schemas": { "executors": [], "generators": [] }
+    "path": "generated/packages/next.json",
+    "schemas": {
+      "executors": ["build", "server", "export"],
+      "generators": [
+        "init",
+        "application",
+        "page",
+        "component",
+        "library",
+        "custom-server"
+      ]
+    }
   },
   {
     "name": "node",

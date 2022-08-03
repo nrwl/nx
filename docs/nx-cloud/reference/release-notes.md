@@ -87,9 +87,18 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 02-08-2022T16-11-36
+
+- Note: The version naming scheme for the containers was changed to better track date/time of releases and to support embedding of the version inside the web UI
+- Feat: view the container version under the /errors route
+- Feat: BitBucket login (note: does not support self-hosted instances of BitBucket Server)
+- Feat: New system-ui font scheme
+- Fix: branch screen sorting performance improvements
+
 ## 2.4.11
 
 - Fixes an intermitent container start-up issue when running a self-contained Mongo instance
+- Fixes an issue with the self-hosted file-server where it would fail to create the initial directories
 
 ## 2.4.10
 

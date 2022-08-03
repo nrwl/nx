@@ -1,14 +1,14 @@
 import cx from 'classnames';
 import { motion, useAnimation } from 'framer-motion';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 const featureItems: {
   classNames: string;
   link: string;
   subTitle: string;
-  svg: ReactComponentElement<any>;
+  svg: JSX.Element;
   title: string;
 }[] = [
   {
@@ -148,7 +148,7 @@ const featureItems: {
   },
 ];
 
-export function MonorepoFeatures(): ReactComponentElement<any> {
+export function MonorepoFeatures(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -264,5 +264,3 @@ export function MonorepoFeatures(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default MonorepoFeatures;

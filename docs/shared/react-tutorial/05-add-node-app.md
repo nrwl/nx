@@ -85,7 +85,7 @@ myorg/
 │   │   │   │   ├── environment.ts
 │   │   │   │   └── environment.prod.ts
 │   │   │   └── main.ts
-│   │   ├── jest.conf.js
+│   │   ├── jest.config.ts
 │   │   ├── project.json
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json

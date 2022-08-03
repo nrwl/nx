@@ -39,7 +39,7 @@ function getHttpServerArgs(options: Schema) {
 
   if (options.proxyOptions) {
     Object.keys(options.proxyOptions).forEach((key) => {
-      args.push(`--proxy-options.${key}=options.proxyOptions[key]`);
+      args.push(`--proxy-options.${key}=${options.proxyOptions[key]}`);
     });
   }
   return args;

@@ -142,7 +142,7 @@ const featureItems: {
   },
 ];
 
-export function ExperienceFeatures(): ReactComponentElement<any> {
+export function ExperienceFeatures(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -252,5 +252,3 @@ export function ExperienceFeatures(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default ExperienceFeatures;

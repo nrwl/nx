@@ -14,7 +14,7 @@ export const SchemaEditor = ({
   type: 'executor' | 'generator';
   content: Record<string, any>;
   schema: JsonSchema;
-}) => {
+}): JSX.Element => {
   const monaco = useMonaco();
 
   useEffect(() => {

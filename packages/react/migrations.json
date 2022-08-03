@@ -564,6 +564,35 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.5.3": {
+      "version": "14.5.3-beta.0",
+      "packages": {
+        "@types/node": {
+          "version": "18.6.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.10.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/react": {
+          "version": "11.10.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/babel-plugin": {
+          "version": "11.10.0",
+          "alwaysAddToPackageJson": false
+        },
+        "tailwindcss": {
+          "version": "3.1.7",
+          "alwaysAddToPackageJson": false
+        },
+        "autoprefixer": {
+          "version": "10.4.8",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

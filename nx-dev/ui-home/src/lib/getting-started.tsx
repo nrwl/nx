@@ -4,12 +4,12 @@ import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ReactComponentElement, useState } from 'react';
+import { useState } from 'react';
 
 interface Tab {
   id: string;
   name: string;
-  svg: (active: boolean) => ReactComponentElement<any>;
+  svg: (active: boolean) => JSX.Element;
 }
 
 function Tabs({
@@ -20,7 +20,7 @@ function Tabs({
   tabs: Tab[];
   activeTab: string;
   setActiveTab: (id: string) => void;
-}): ReactComponentElement<any> {
+}): JSX.Element {
   return (
     <div className="mx-auto mt-12 max-w-3xl">
       <div>
@@ -82,7 +82,7 @@ function Tabs({
   );
 }
 
-function AngularPane(): ReactComponentElement<any> {
+function AngularPane(): JSX.Element {
   const opacityTranslateYVariant = {
     hidden: {
       opacity: 0,
@@ -324,7 +324,7 @@ function AngularPane(): ReactComponentElement<any> {
   );
 }
 
-function NodeJsPane(): ReactComponentElement<any> {
+function NodeJsPane(): JSX.Element {
   const opacityTranslateYVariant = {
     hidden: {
       opacity: 0,
@@ -499,7 +499,7 @@ function NodeJsPane(): ReactComponentElement<any> {
   );
 }
 
-function ReactPane(): ReactComponentElement<any> {
+function ReactPane(): JSX.Element {
   const opacityTranslateYVariant = {
     hidden: {
       opacity: 0,
@@ -754,7 +754,7 @@ function ReactPane(): ReactComponentElement<any> {
   );
 }
 
-function TypescriptPane(): ReactComponentElement<any> {
+function TypescriptPane(): JSX.Element {
   const opacityTranslateYVariant = {
     hidden: {
       opacity: 0,
@@ -991,7 +991,7 @@ function TypescriptPane(): ReactComponentElement<any> {
   );
 }
 
-export function GettingStarted(): ReactComponentElement<any> {
+export function GettingStarted(): JSX.Element {
   const tabs: Tab[] = [
     {
       id: 'typescript',
@@ -1060,7 +1060,7 @@ export function GettingStarted(): ReactComponentElement<any> {
   ];
   const panes: {
     id: string;
-    element: () => ReactComponentElement<any>;
+    element: () => JSX.Element;
   }[] = [
     {
       id: 'angular',
@@ -1090,5 +1090,3 @@ export function GettingStarted(): ReactComponentElement<any> {
     </div>
   );
 }
-
-export default GettingStarted;

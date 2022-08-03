@@ -359,7 +359,7 @@ async function determinePackageManager(
           name: 'PackageManager',
           message: `Which package manager to use       `,
           initial: 'npm' as any,
-          type: 'select',
+          type: 'autocomplete',
           choices: [
             { name: 'npm', message: 'NPM' },
             { name: 'yarn', message: 'Yarn' },
@@ -457,7 +457,7 @@ async function determinePreset(parsedArgs: any): Promise<Preset> {
         name: 'Preset',
         message: `What to create in the new workspace`,
         initial: 'empty' as any,
-        type: 'select',
+        type: 'autocomplete',
         choices: presetOptions,
       },
     ])
@@ -598,7 +598,7 @@ async function determineStyle(
           name: 'style',
           message: `Default stylesheet format          `,
           initial: 'css' as any,
-          type: 'select',
+          type: 'autocomplete',
           choices: choices,
         },
       ])
@@ -632,7 +632,7 @@ async function determineNxCloud(
         {
           name: 'NxCloud',
           message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
-          type: 'select',
+          type: 'autocomplete',
           choices: [
             {
               name: 'Yes',
@@ -680,7 +680,7 @@ async function determineCI(
           {
             name: 'CI',
             message: `CI workflow file to generate?      `,
-            type: 'select',
+            type: 'autocomplete',
             initial: '' as any,
             choices: [
               { message: 'none', name: '' },

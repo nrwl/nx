@@ -598,7 +598,7 @@ export async function combineOptionsForGenerator(
   );
 
   if (isInteractive && isTTY()) {
-    combined = await promptForValues(combined, schema);
+    combined = await promptForValues(combined, schema, wc);
   }
 
   warnDeprecations(combined, schema);
@@ -710,10 +710,14 @@ function getGeneratorDefaults(
   return defaults;
 }
 
-async function promptForValues(opts: Options, schema: Schema) {
+async function promptForValues(
+  opts: Options,
+  schema: Schema,
+  wc: (ProjectsConfigurations & NxJsonConfiguration) | null
+) {
   interface Prompt {
     name: string;
-    type: 'input' | 'select' | 'multiselect' | 'confirm' | 'numeral';
+    type: 'input' | 'autocomplete' | 'multiselect' | 'confirm' | 'numeral';
     message: string;
     initial?: any;
     choices?: (string | { name: string; message: string })[];
@@ -732,9 +736,17 @@ async function promptForValues(opts: Options, schema: Schema) {
 
       if (typeof v['x-prompt'] === 'string') {
         question.message = v['x-prompt'];
+
         if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
-          question.type = 'select';
+          question.type = 'autocomplete';
           question.choices = [...v.enum];
+        } else if (
+          v.type === 'string' &&
+          v.$default?.$source === 'projectName' &&
+          wc
+        ) {
+          question.type = 'autocomplete';
+          question.choices = Object.keys(wc.projects);
         } else {
           question.type = v.type === 'boolean' ? 'confirm' : 'input';
         }
@@ -749,7 +761,9 @@ async function promptForValues(opts: Options, schema: Schema) {
         question.type = 'confirm';
       } else {
         question.message = v['x-prompt'].message;
-        question.type = v['x-prompt'].multiselect ? 'multiselect' : 'select';
+        question.type = v['x-prompt'].multiselect
+          ? 'multiselect'
+          : 'autocomplete';
         question.choices =
           v['x-prompt'].items &&
           v['x-prompt'].items.map((item) => {

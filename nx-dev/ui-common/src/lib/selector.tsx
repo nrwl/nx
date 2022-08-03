@@ -8,9 +8,7 @@ export interface SelectorProps<T> {
   onChange: (item: { label: string; value: string; data?: T }) => void;
 }
 
-export function Selector<T = {}>(
-  props: SelectorProps<T>
-): ReactComponentElement<any> {
+export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
   return (
     <div className="w-full">
       <Listbox
@@ -87,5 +85,3 @@ export function Selector<T = {}>(
     </div>
   );
 }
-
-export default Selector;

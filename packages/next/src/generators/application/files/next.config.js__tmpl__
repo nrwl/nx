@@ -15,9 +15,6 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
-  // Set this to true if you use CSS modules.
-  // See: https://github.com/css-modules/css-modules
-  cssModules: false,
 };
 
 module.exports = withLess(withNx(nextConfig));
@@ -33,9 +30,6 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
-  // Set this to true if you use CSS modules.
-  // See: https://github.com/css-modules/css-modules
-  cssModules: false,
 };
 
 module.exports = withStylus(withNx(nextConfig));

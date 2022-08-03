@@ -90,6 +90,18 @@
       "version": "14.4.3-beta.0",
       "description": "Add a development outputPath to avoid conflict with the production build.",
       "factory": "./src/migrations/update-14-4-3/add-dev-output-path"
+    },
+    "add-gitignore-entry": {
+      "cli": "nx",
+      "version": "14.5.3-beta.0",
+      "description": "Add .next folder to gitignore.",
+      "factory": "./src/migrations/update-14-5-3/add-gitignore-entry"
+    },
+    "update-dev-output-path": {
+      "cli": "nx",
+      "version": "14.5.3-beta.0",
+      "description": "Update development outputPath to the project root.",
+      "factory": "./src/migrations/update-14-5-3/update-dev-output-path"
     }
   },
   "packageJsonUpdates": {
@@ -318,6 +330,15 @@
         },
         "sass": {
           "version": "1.54.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.3": {
+      "version": "14.5.3-beta.0",
+      "packages": {
+        "@emotion/server": {
+          "version": "11.10.0",
           "alwaysAddToPackageJson": false
         }
       }
