@@ -394,6 +394,7 @@ describe('lib', () => {
         expect(tsconfigJson.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
+          'jest.config.ts',
           '**/*.test.ts',
         ]);
       });
@@ -409,6 +410,7 @@ describe('lib', () => {
         expect(tsconfigJson.exclude).toEqual([
           'src/test.ts',
           '**/*.spec.ts',
+          'jest.config.ts',
           '**/*.test.ts',
         ]);
       });
@@ -421,7 +423,11 @@ describe('lib', () => {
 
         // ASSERT
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
-        expect(tsconfigJson.exclude).toEqual(['**/*.test.ts', '**/*.spec.ts']);
+        expect(tsconfigJson.exclude).toEqual([
+          'jest.config.ts',
+          '**/*.test.ts',
+          '**/*.spec.ts',
+        ]);
       });
     });
 
@@ -902,6 +908,7 @@ describe('lib', () => {
         expect(tsConfigLibJson.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
+          'jest.config.ts',
           '**/*.test.ts',
         ]);
 
@@ -916,6 +923,7 @@ describe('lib', () => {
         expect(tsConfigLibJson2.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
+          'jest.config.ts',
           '**/*.test.ts',
         ]);
 
@@ -933,6 +941,7 @@ describe('lib', () => {
         expect(tsConfigLibJson3.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
+          'jest.config.ts',
           '**/*.test.ts',
         ]);
       });

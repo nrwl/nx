@@ -42,11 +42,13 @@ function updateTsConfig(tree: Tree, tsConfigPath: string) {
 function addEsLintIgnoreComments(tree: Tree, filePath: string) {
   if (tree.exists(filePath)) {
     const contents = tree.read(filePath, 'utf-8');
-    tree.write(
-      filePath,
-      `/* eslint-disable */
+    if (!contents.startsWith('/* eslint-disable */')) {
+      tree.write(
+        filePath,
+        `/* eslint-disable */
 ${contents}`
-    );
+      );
+    }
   }
 }
 
@@ -133,6 +135,11 @@ export async function updateJestConfigExt(tree: Tree) {
 
           if (tsConfig.references) {
             for (const { path } of tsConfig.references) {
+              // skip as editor.json should include everything anyway.
+              if (path.endsWith('tsconfig.editor.json')) {
+                continue;
+              }
+
               if (path.endsWith('tsconfig.spec.json')) {
                 const eslintPath = joinPathFragments(
                   projectConfig.root,
