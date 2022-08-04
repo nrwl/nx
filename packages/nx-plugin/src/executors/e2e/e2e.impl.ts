@@ -3,12 +3,12 @@ import 'dotenv/config';
 import type { ExecutorContext } from '@nrwl/devkit';
 
 import {
-  convertNxExecutor,
   logger,
   parseTargetString,
   readTargetOptions,
   runExecutor,
 } from '@nrwl/devkit';
+import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
 import { jestExecutor } from '@nrwl/jest/src/executors/jest/jest.impl';
 import type { NxPluginE2EExecutorOptions } from './schema';
 
@@ -16,10 +16,12 @@ export async function* nxPluginE2EExecutor(
   options: NxPluginE2EExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean }> {
+  const { target, ...jestOptions } = options;
+
   let success: boolean;
-  for await (const _ of runBuildTarget(options.target, context)) {
+  for await (const _ of runBuildTarget(target, context)) {
     try {
-      success = await runTests(options.jestConfig, context);
+      success = await runTests(jestOptions, context);
     } catch (e) {
       logger.error(e.message);
       success = false;
@@ -52,10 +54,13 @@ async function* runBuildTarget(
 }
 
 async function runTests(
-  jestConfig: string,
+  jestOptions: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<boolean> {
-  const { success } = await jestExecutor({ jestConfig, watch: false }, context);
+  const { success } = await jestExecutor(
+    { ...jestOptions, watch: false },
+    context
+  );
 
   return success;
 }
