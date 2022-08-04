@@ -10,7 +10,10 @@ function createProjectRootMappings(
     if (!projectFileMap[projectName]) {
       projectFileMap[projectName] = [];
     }
-    const root = workspaceJson.projects[projectName].root;
+    const root =
+      workspaceJson.projects[projectName].root === ''
+        ? '.'
+        : workspaceJson.projects[projectName].root;
     projectRootMappings.set(
       root.endsWith('/') ? root.substring(0, root.length - 1) : root,
       projectFileMap[projectName]
@@ -23,16 +26,15 @@ function findMatchingProjectFiles(
   projectRootMappings: Map<string, FileData[]>,
   file: string
 ) {
-  for (
-    let currentPath = dirname(file);
-    currentPath != dirname(currentPath);
-    currentPath = dirname(currentPath)
-  ) {
+  let currentPath = file;
+  do {
+    currentPath = dirname(currentPath);
     const p = projectRootMappings.get(currentPath);
     if (p) {
       return p;
     }
-  }
+  } while (currentPath != dirname(currentPath));
+
   return null;
 }
 
