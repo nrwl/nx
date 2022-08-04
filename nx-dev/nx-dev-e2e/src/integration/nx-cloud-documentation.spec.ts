@@ -80,6 +80,10 @@ xdescribe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/private-cloud/auth-gitlab',
     },
     {
+      title: 'Nx Private Cloud BitBucket Auth',
+      path: '/nx-cloud/private-cloud/auth-bitbucket',
+    },
+    {
       title: 'Advanced Configuration',
       path: '/nx-cloud/private-cloud/advanced-config',
     },
