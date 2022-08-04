@@ -17,7 +17,7 @@ export async function makeAngularCliFaster(args: Args) {
   const useNxCloud = await promptForNxCloud();
 
   output.log({ title: '📦 Installing dependencies' });
-  installDependencies(migration, useNxCloud);
+  await installDependencies(migration, useNxCloud);
 
   output.log({ title: '📝 Setting up workspace for faster computation' });
   migrateWorkspace(migration);
