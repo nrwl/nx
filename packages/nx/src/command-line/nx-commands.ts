@@ -438,7 +438,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .options('configuration', {
       describe:
         'This is the configuration to use when performing tasks on projects',
-      alias: 'c',
       type: 'string',
     })
     .options('only-failed', {
@@ -499,7 +498,6 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
     .options('configuration', {
       describe:
         'This is the configuration to use when performing tasks on projects',
-      alias: 'c',
       type: 'string',
     })
     .options('only-failed', {
