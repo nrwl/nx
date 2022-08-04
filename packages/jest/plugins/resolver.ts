@@ -41,20 +41,6 @@ function getCompilerSetup(rootDir: string) {
 }
 // https://jestjs.io/docs/upgrading-to-jest28#packagejson-exports
 const pkgNamesToTarget = new Set([
-  'nanoid',
-  'uuid',
-  'rxjs',
-  '@firebase/auth',
-  '@firebase/storage',
-  '@firebase/functions',
-  '@firebase/database',
-  '@firebase/auth-compat',
-  '@firebase/database-compat',
-  '@firebase/app-compat',
-  '@firebase/firestore',
-  '@firebase/firestore-compat',
-  '@firebase/messaging',
-  '@firebase/util',
   ...(process.env.NX_JEST_RESOLVER_PACKAGES
     ? process.env.NX_JEST_RESOLVER_PACKAGES.split(',')
     : []

@@ -7,4 +7,8 @@ export const nxPreset = {
     '^.+\\.(ts|js|html)$': 'ts-jest',
   },
   testEnvironment: 'jsdom',
+  testEnvironmentOptions: {
+    // tell jest to resolve common js when possible
+    customExportConditions: ['node', 'require', 'default'],
+  },
 };
