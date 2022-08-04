@@ -1033,6 +1033,17 @@ export function wrapAngularDevkitSchematic(
   collectionName: string,
   generatorName: string
 ) {
+  // This is idempotent, if it happens to get called
+  // multiple times its no big deal. It ensures that some
+  // patches are applied to @angular-devkit code which
+  // are necessary. For the most part, our wrapped host hits
+  // the necessary areas, but for some things it wouldn't make
+  // sense for the adapter to be 100% accurate.
+  //
+  // e.g. Angular warns about tags, but some angular CLI schematics
+  // were written with Nx in mind, and may care about tags.
+  require('./compat');
+
   return async (host: Tree, generatorOptions: { [k: string]: any }) => {
     if (
       mockedSchematics &&
