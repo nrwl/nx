@@ -1403,6 +1403,43 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.5.3": {
+      "version": "14.5.3-beta.0",
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1401.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1401.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

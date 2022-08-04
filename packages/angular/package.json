@@ -37,7 +37,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "~14.1.0",
+    "@angular-devkit/schematics": "~14.1.1",
     "@nrwl/cypress": "file:../cypress",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/jest": "file:../jest",
