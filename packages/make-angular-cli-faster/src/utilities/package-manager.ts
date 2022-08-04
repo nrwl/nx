@@ -17,10 +17,10 @@ import { MigrationDefinition } from './types';
 // version when the Nx CLI changed from @nrwl/tao & @nrwl/cli to nx
 const versionWithConsolidatedPackages = '13.9.0';
 
-export function installDependencies(
+export async function installDependencies(
   { packageName, version }: MigrationDefinition,
   useNxCloud: boolean
-): void {
+): Promise<void> {
   const json = readJsonFile(join(workspaceRoot, 'package.json'));
 
   json.devDependencies ??= {};
@@ -36,7 +36,7 @@ export function installDependencies(
   if (useNxCloud) {
     // get the latest @nrwl/nx-cloud version compatible with the Nx major
     // version being installed
-    json.devDependencies['@nrwl/nx-cloud'] = resolvePackageVersion(
+    json.devDependencies['@nrwl/nx-cloud'] = await resolvePackageVersion(
       '@nrwl/nx-cloud',
       `^${major(version)}.0.0`
     );
