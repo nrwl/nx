@@ -2,17 +2,59 @@ import { readJson, updateJson } from 'nx/src/generators/utils/json';
 import { installPackagesTask } from '../tasks/install-packages-task';
 import type { Tree } from 'nx/src/generators/tree';
 import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
+import { coerce, gt } from 'semver';
+
+const NON_SEMVER_TAGS = {
+  next: 1,
+  latest: 0,
+  previous: -1,
+  legacy: -2,
+};
 
 function filterExistingDependencies(
   dependencies: Record<string, string>,
-  existingDependencies: Record<string, string>
+  existingAltDependencies: Record<string, string>
 ) {
-  if (!existingDependencies) {
+  if (!existingAltDependencies) {
     return dependencies;
   }
 
   return Object.keys(dependencies ?? {})
-    .filter((d) => !existingDependencies[d])
+    .filter((d) => !existingAltDependencies[d])
+    .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
+}
+
+function updateExistingDependenciesVersion(
+  dependencies: Record<string, string>,
+  existingAltDependencies: Record<string, string>
+) {
+  return Object.keys(existingAltDependencies || {})
+    .filter((d) => {
+      if (!dependencies[d]) {
+        return false;
+      }
+
+      const incomingVersion = dependencies[d];
+      const existingVersion = existingAltDependencies[d];
+
+      if (
+        incomingVersion in NON_SEMVER_TAGS &&
+        existingVersion in NON_SEMVER_TAGS
+      ) {
+        return (
+          NON_SEMVER_TAGS[incomingVersion] > NON_SEMVER_TAGS[existingVersion]
+        );
+      }
+
+      if (
+        incomingVersion in NON_SEMVER_TAGS ||
+        existingVersion in NON_SEMVER_TAGS
+      ) {
+        return true;
+      }
+
+      return gt(coerce(incomingVersion), coerce(existingVersion));
+    })
     .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
 }
 
@@ -29,7 +71,7 @@ function filterExistingDependencies(
  * @param dependencies Dependencies to be added to the dependencies section of package.json
  * @param devDependencies Dependencies to be added to the devDependencies section of package.json
  * @param packageJsonPath Path to package.json
- * @returns Callback to install dependencies only if necessary. undefined is returned if changes are not necessary.
+ * @returns Callback to install dependencies only if necessary, no-op otherwise
  */
 export function addDependenciesToPackageJson(
   tree: Tree,
@@ -39,14 +81,29 @@ export function addDependenciesToPackageJson(
 ): GeneratorCallback {
   const currentPackageJson = readJson(tree, packageJsonPath);
 
-  const filteredDependencies = filterExistingDependencies(
+  let filteredDependencies = filterExistingDependencies(
     dependencies,
     currentPackageJson.devDependencies
   );
-  const filteredDevDependencies = filterExistingDependencies(
+  let filteredDevDependencies = filterExistingDependencies(
     devDependencies,
     currentPackageJson.dependencies
   );
+
+  filteredDependencies = {
+    ...filteredDependencies,
+    ...updateExistingDependenciesVersion(
+      devDependencies,
+      currentPackageJson.dependencies
+    ),
+  };
+  filteredDevDependencies = {
+    ...filteredDevDependencies,
+    ...updateExistingDependenciesVersion(
+      dependencies,
+      currentPackageJson.devDependencies
+    ),
+  };
 
   if (
     requiresAddingOfPackages(
@@ -59,12 +116,10 @@ export function addDependenciesToPackageJson(
       json.dependencies = {
         ...(json.dependencies || {}),
         ...filteredDependencies,
-        ...(json.dependencies || {}),
       };
       json.devDependencies = {
         ...(json.devDependencies || {}),
         ...filteredDevDependencies,
-        ...(json.devDependencies || {}),
       };
       json.dependencies = sortObjectByKeys(json.dependencies);
       json.devDependencies = sortObjectByKeys(json.devDependencies);
@@ -150,15 +205,21 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
   packageJsonFile.devDependencies = packageJsonFile.devDependencies || {};
 
   if (Object.keys(deps).length > 0) {
-    needsDepsUpdate = Object.keys(deps).some(
-      (entry) => !packageJsonFile.dependencies[entry]
-    );
+    needsDepsUpdate =
+      Object.keys(deps).some((entry) => !packageJsonFile.dependencies[entry]) ||
+      Object.keys(deps).some(
+        (entry) => !packageJsonFile.devDependencies[entry]
+      );
   }
 
   if (Object.keys(devDeps).length > 0) {
-    needsDevDepsUpdate = Object.keys(devDeps).some(
-      (entry) => !packageJsonFile.devDependencies[entry]
-    );
+    needsDevDepsUpdate =
+      Object.keys(devDeps).some(
+        (entry) => !packageJsonFile.devDependencies[entry]
+      ) ||
+      Object.keys(devDeps).some(
+        (entry) => !packageJsonFile.dependencies[entry]
+      );
   }
 
   return needsDepsUpdate || needsDevDepsUpdate;

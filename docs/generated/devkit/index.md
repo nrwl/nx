@@ -754,7 +754,7 @@ This will **add** `react` and `jest` to the dependencies and devDependencies sec
 
 [`GeneratorCallback`](../../devkit/index#generatorcallback)
 
-Callback to install dependencies only if necessary. undefined is returned if changes are not necessary.
+Callback to install dependencies only if necessary, no-op otherwise
 
 ---
 
