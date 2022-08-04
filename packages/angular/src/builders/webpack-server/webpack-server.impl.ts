@@ -112,13 +112,19 @@ export function executeWebpackServerBuilder(
         const workspaceDependencies = dependencies
           .filter((dep) => !isNpmProject(dep.node))
           .map((dep) => dep.node.name);
-        baseWebpackConfig.plugins.push(
-          new WebpackNxBuildCoordinationPlugin(
-            `nx run-many --target=${
-              parsedBrowserTarget.target
-            } --projects=${workspaceDependencies.join(',')}`
-          )
-        );
+        // default for `nx run-many` is --all projects
+        // by passing an empty string for --projects, run-many will default to
+        // run the target for all projects.
+        // This will occur when workspaceDependencies = []
+        if (workspaceDependencies.length > 0) {
+          baseWebpackConfig.plugins.push(
+            new WebpackNxBuildCoordinationPlugin(
+              `nx run-many --target=${
+                parsedBrowserTarget.target
+              } --projects=${workspaceDependencies.join(',')}`
+            )
+          );
+        }
       }
 
       if (!pathToWebpackConfig) {
