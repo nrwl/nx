@@ -113,6 +113,7 @@ export function getBaseWebpackPartial(
       // two builds on a single file change.
       aggregateTimeout: 200,
       poll: options.poll,
+      ...options.watchOptions,
     },
     stats: getStatsConfig(options),
     experiments: {

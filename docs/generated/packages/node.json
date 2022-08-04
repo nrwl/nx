@@ -301,6 +301,22 @@
             "description": "Run build when files change.",
             "default": false
           },
+          "watchOptions": {
+            "type": "object",
+            "description": "A set of options used to customize watch mode.",
+            "properties": {
+              "aggregateTimeout": { "type": "integer" },
+              "ignored": {
+                "oneOf": [
+                  { "type": "array", "items": { "type": "string" } },
+                  { "type": "string" }
+                ]
+              },
+              "poll": { "type": "integer" },
+              "followSymlinks": { "type": "boolean" },
+              "stdin": { "type": "boolean" }
+            }
+          },
           "poll": {
             "type": "number",
             "description": "Frequency of file watcher in ms."
