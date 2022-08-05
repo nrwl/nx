@@ -25,12 +25,12 @@ export const SearchDepth = memo(
               name="depthFilter"
               value="depthFilterActivated"
               type="checkbox"
-              className="h-4 w-4 rounded border-slate-300 dark:text-slate-700"
+              className="accent-green-nx-base h-4 w-4"
               checked={searchDepthEnabled}
               onChange={(event) =>
                 searchDepthFilterEnabledChange(event.target.checked)
               }
-            ></input>
+            />
           </div>
           <div className="ml-3 text-sm">
             <label
