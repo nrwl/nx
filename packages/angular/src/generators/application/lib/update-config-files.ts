@@ -27,7 +27,12 @@ function updateTsConfigOptions(host: Tree, options: NormalizedSchema) {
       outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`,
     },
     exclude: [
-      ...new Set([...(json.exclude || []), '**/*.test.ts', '**/*.spec.ts']),
+      ...new Set([
+        ...(json.exclude || []),
+        'jest.config.ts',
+        '**/*.test.ts',
+        '**/*.spec.ts',
+      ]),
     ],
   }));
 

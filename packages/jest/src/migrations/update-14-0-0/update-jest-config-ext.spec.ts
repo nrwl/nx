@@ -220,4 +220,79 @@ describe('Jest Migration (v14.0.0)', () => {
     const tsconfigSpec = readJson(tree, 'libs/lib-one/tsconfig.spec.json');
     expect(tsconfigSpec.exclude).toEqual(['node_modules']);
   });
+
+  it('should produce the same results when running multiple times', async () => {
+    await libSetUp(tree);
+    updateJson(tree, 'libs/lib-one/tsconfig.lib.json', (json) => {
+      json.exclude = ['**/*.spec.ts'];
+      return json;
+    });
+    updateJson(tree, 'libs/lib-one/tsconfig.spec.json', (json) => {
+      json.include = ['**/*.spec.ts'];
+      return json;
+    });
+
+    await setupNextProj(tree);
+
+    const esLintJson = readJson(tree, 'libs/my-next-proj/.eslintrc.json');
+    // make sure the parserOptions are set correctly for next
+    expect(esLintJson.overrides[0]).toMatchSnapshot();
+
+    await updateJestConfigExt(tree);
+
+    assertNextProj(tree);
+    assertLib(tree);
+
+    await updateJestConfigExt(tree);
+
+    assertNextProj(tree);
+    assertLib(tree);
+
+    expect(tree.read('libs/lib-one/jest.config.ts', 'utf-8')).toMatchSnapshot();
+  });
 });
+
+async function setupNextProj(tree: Tree) {
+  await libSetUp(tree, {
+    ...setupDefaults,
+    libName: 'my-next-proj',
+    setParserOptionsProject: true,
+  });
+  const projectConfig = readProjectConfiguration(tree, 'my-next-proj');
+  projectConfig.targets['build'] = {
+    executor: '@nrwl/next:build',
+    options: {},
+  };
+  updateProjectConfiguration(tree, 'my-next-proj', projectConfig);
+  updateJson(tree, 'libs/my-next-proj/tsconfig.json', (json) => {
+    // simulate nextJS tsconfig;
+    json.exclude = ['node_modules'];
+    return json;
+  });
+}
+
+function assertNextProj(tree: Tree) {
+  expect(
+    readJson(tree, 'libs/my-next-proj/tsconfig.spec.json').exclude
+  ).toEqual(['node_modules']);
+  expect(
+    readJson(tree, 'libs/my-next-proj/tsconfig.spec.json').include
+  ).toEqual(expect.arrayContaining(['jest.config.ts']));
+}
+
+function assertLib(tree: Tree) {
+  expect(readJson(tree, 'libs/lib-one/tsconfig.json').exclude).toBeFalsy();
+  expect(readJson(tree, 'libs/lib-one/tsconfig.spec.json').exclude).toBeFalsy();
+  expect(readJson(tree, 'libs/lib-one/tsconfig.spec.json').include).toEqual([
+    '**/*.spec.ts',
+    'jest.config.ts',
+  ]);
+
+  expect(readJson(tree, 'libs/lib-one/tsconfig.lib.json').exclude).toEqual([
+    '**/*.spec.ts',
+    'jest.config.ts',
+  ]);
+  expect(readJson(tree, 'libs/lib-one/tsconfig.lib.json').include).toEqual([
+    '**/*.ts',
+  ]);
+}

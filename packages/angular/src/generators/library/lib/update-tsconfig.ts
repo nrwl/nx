@@ -35,7 +35,12 @@ function updateProjectConfig(host: Tree, options: NormalizedSchema) {
   updateJson(host, `${options.projectRoot}/tsconfig.lib.json`, (json) => {
     json.include = ['**/*.ts'];
     json.exclude = [
-      ...new Set([...(json.exclude || []), '**/*.test.ts', '**/*.spec.ts']),
+      ...new Set([
+        ...(json.exclude || []),
+        'jest.config.ts',
+        '**/*.test.ts',
+        '**/*.spec.ts',
+      ]),
     ];
     return json;
   });
