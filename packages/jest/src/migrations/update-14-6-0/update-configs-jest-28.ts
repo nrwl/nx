@@ -1,5 +1,7 @@
 import { addDependenciesToPackageJson, readJson, Tree } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { tsquery } from '@phenomnomnominal/tsquery';
+import { isStringLiteralLike, PropertyAssignment } from 'typescript';
 import { JestExecutorOptions } from '../../executors/jest/schema';
 import {
   findRootJestConfig,
@@ -33,24 +35,48 @@ export function updateConfigsJest28(tree: Tree) {
 }
 
 export function updateJestConfig(config: string): string {
-  return config
-    .replace(
-      /(testURL:\s*['"`])(.*)(['"`])/g,
-      'testEnvironmentOptions: {url: $3$2$3}'
-    )
-    .replace(/(extraGlobals)/g, `sandboxInjectedGlobals`)
-    .replace(
-      /(timers:\s*['"`])(real)(['"`])/g,
-      'fakeTimers: { enableGlobally: false }'
-    )
-    .replace(
-      /(timers:\s*['"`])(fake|modern)(['"`])/g,
-      'fakeTimers: { enableGlobally: true }'
-    )
-    .replace(
-      /(timers:\s*['"`])(legacy)(['"`])/g,
-      'fakeTimers: { enableGlobally: true, legacyFakeTimers: true }'
-    );
+  let content = tsquery.replace(
+    config,
+    'PropertyAssignment:has(Identifier[name="testURL"])',
+    (node: PropertyAssignment) => {
+      const value = node?.initializer?.getText();
+      return `testEnvironmentOptions: {url: ${value}}`;
+    }
+  );
+
+  content = tsquery.replace(
+    content,
+    'PropertyAssignment > Identifier[name="extraGlobals"]',
+    () => {
+      return 'sandboxInjectedGlobals';
+    }
+  );
+
+  return tsquery.replace(
+    content,
+    'PropertyAssignment:has(Identifier[name="timers"])',
+    (node: PropertyAssignment) => {
+      // must guard against non string properties as that means it's already been manually migrated
+      if (node?.initializer && isStringLiteralLike(node.initializer)) {
+        const value = node?.initializer.getText().trim() as
+          | 'fake'
+          | 'modern'
+          | 'real'
+          | 'legacy';
+
+        // use .includes to ignore the different quotes (' " `)
+        if (value.includes('fake') || value.includes('modern')) {
+          return `fakeTimers: { enableGlobally: true }`;
+        }
+        if (value.includes('real')) {
+          return `fakeTimers: { enableGlobally: false }`;
+        }
+        if (value.includes('legacy')) {
+          return `fakeTimers: { enableGlobally: true, legacyFakeTimers: true }`;
+        }
+      }
+    }
+  );
 }
 
 export function checkDeps(tree: Tree): Record<string, string> {
