@@ -35,6 +35,7 @@ jobs:
           - e2e-angular-core
           - e2e-angular-extensions
           - e2e-nx-run,e2e-nx-misc,e2e-nx-plugin
+          - e2e-make-angular-cli-faster
           - e2e-jest
           - e2e-linter
           - e2e-cypress
@@ -82,6 +83,8 @@ jobs:
             packages: e2e-add-nx-to-monorepo
           - os: macos-latest
             packages: e2e-dep-graph-client
+          - os: macos-latest
+            packages: e2e-make-angular-cli-faster
       fail-fast: false
 
     name: ${{ matrix.os-name }}/${{ matrix.package_manager }} - ${{ matrix.packages }}

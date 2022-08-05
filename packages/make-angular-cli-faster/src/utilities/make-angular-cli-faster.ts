@@ -6,6 +6,7 @@ import { installDependencies } from './package-manager';
 export interface Args {
   version?: string;
   verbose?: boolean;
+  useNxCloud?: boolean;
 }
 
 export async function makeAngularCliFaster(args: Args) {
@@ -14,7 +15,10 @@ export async function makeAngularCliFaster(args: Args) {
   output.log({ title: '🧐 Checking versions compatibility' });
   const migration = await determineMigration(args.version);
 
-  const useNxCloud = await promptForNxCloud();
+  const useNxCloud =
+    args.useNxCloud !== null && args.useNxCloud !== undefined
+      ? args.useNxCloud
+      : await promptForNxCloud();
 
   output.log({ title: '📦 Installing dependencies' });
   await installDependencies(migration, useNxCloud);

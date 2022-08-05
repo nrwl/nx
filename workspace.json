@@ -21,6 +21,7 @@
     "e2e-jest": "e2e/jest",
     "e2e-js": "e2e/js",
     "e2e-linter": "e2e/linter",
+    "e2e-make-angular-cli-faster": "e2e/make-angular-cli-faster",
     "e2e-next": "e2e/next",
     "e2e-node": "e2e/node",
     "e2e-nx-init": "e2e/nx-init",

@@ -4,8 +4,8 @@ import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
-import { readJsonFile, writeJsonFile } from './fileutils';
-import { PackageJson, readModulePackageJson } from './package-json';
+import { writeJsonFile } from './fileutils';
+import { readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
 
 const execAsync = promisify(exec);

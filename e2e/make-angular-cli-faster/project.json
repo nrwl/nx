@@ -1,0 +1,34 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/make-angular-cli-faster",
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "yarn e2e-start-local-registry"
+          },
+          {
+            "command": "yarn e2e-build-package-publish"
+          },
+          {
+            "command": "nx run-e2e-tests e2e-make-angular-cli-faster"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "run-e2e-tests": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "e2e/make-angular-cli-faster/jest.config.ts",
+        "passWithNoTests": true,
+        "runInBand": true
+      },
+      "outputs": ["coverage/e2e/make-angular-cli-faster"]
+    }
+  },
+  "implicitDependencies": ["make-angular-cli-faster"]
+}
