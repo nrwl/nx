@@ -34,12 +34,12 @@ To start with, we need to create a new Nx Workspace. We can do this easily with:
 
 ```bash
 # Npm
-npx create-nx-workspace ng-mf
+npx create-nx-workspace ng-mfe
 ```
 
 ```bash
 # Yarn
-yarn create nx-workspace ng-mf --packageManager=yarn
+yarn create nx-workspace ng-mfe --packageManager=yarn
 ```
 
 You'll be prompted for a preset. We recommend selecting `empty` as it will allow you finer control over your workspace configuration.
