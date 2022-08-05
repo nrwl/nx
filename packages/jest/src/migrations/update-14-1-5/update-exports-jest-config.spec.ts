@@ -3,6 +3,8 @@ import {
   stripIndents,
   Tree,
   updateProjectConfiguration,
+  updateJson,
+  readJson,
 } from '@nrwl/devkit';
 import { createTree, createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
@@ -86,9 +88,19 @@ module.exports = {
 };
 `
     );
+    updateJson(tree, 'package.json', (json) => {
+      delete json.devDependencies['ts-node'];
+      return json;
+    });
+    expect(
+      readJson(tree, 'package.json').devDependencies['ts-node']
+    ).toBeUndefined();
     updateExportsJestConfig(tree);
 
     const config = tree.read('libs/lib-one/jest.config.ts', 'utf-8');
+    expect(readJson(tree, 'package.json').devDependencies['ts-node']).toEqual(
+      '10.9.1'
+    );
     expect(config).toMatchSnapshot();
   });
 
