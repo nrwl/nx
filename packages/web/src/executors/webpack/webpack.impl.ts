@@ -101,41 +101,43 @@ async function getWebpackConfigs(
     }
   }
 
-  return [
-    // ESM build for modern browsers.
-    getWebConfig(
-      context.root,
-      projectRoot,
-      sourceRoot,
-      options,
-      true,
-      isScriptOptimizeOn,
-      context.configurationName
-    ),
-    // ES5 build for legacy browsers.
-    isScriptOptimizeOn && buildBrowserFeatures.isDifferentialLoadingNeeded()
-      ? getWebConfig(
-          context.root,
-          projectRoot,
-          sourceRoot,
-          options,
-          false,
-          isScriptOptimizeOn,
-          context.configurationName
-        )
-      : undefined,
-  ]
-    .filter(Boolean)
-    .map((config) => {
-      if (customWebpack) {
-        return customWebpack(config, {
-          options,
-          configuration: context.configurationName,
-        });
-      } else {
-        return config;
-      }
-    });
+  return await Promise.all(
+    [
+      // ESM build for modern browsers.
+      getWebConfig(
+        context.root,
+        projectRoot,
+        sourceRoot,
+        options,
+        true,
+        isScriptOptimizeOn,
+        context.configurationName
+      ),
+      // ES5 build for legacy browsers.
+      isScriptOptimizeOn && buildBrowserFeatures.isDifferentialLoadingNeeded()
+        ? getWebConfig(
+            context.root,
+            projectRoot,
+            sourceRoot,
+            options,
+            false,
+            isScriptOptimizeOn,
+            context.configurationName
+          )
+        : undefined,
+    ]
+      .filter(Boolean)
+      .map(async (config) => {
+        if (customWebpack) {
+          return await customWebpack(config, {
+            options,
+            configuration: context.configurationName,
+          });
+        } else {
+          return config;
+        }
+      })
+  );
 }
 
 export async function* run(

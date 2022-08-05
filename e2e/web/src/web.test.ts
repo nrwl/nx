@@ -1,20 +1,20 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  cleanupProject,
   createFile,
   isNotWindows,
   killPorts,
   newProject,
   readFile,
   removeFile,
-  cleanupProject,
+  rmDist,
   runCLI,
   runCLIAsync,
   runCypressTests,
   uniq,
   updateFile,
   updateProjectConfig,
-  expectJestTestsToPass,
 } from '@nrwl/e2e/utils';
 
 describe('Web Components Applications', () => {
@@ -38,7 +38,7 @@ describe('Web Components Applications', () => {
     );
 
     expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
-      `<link rel="stylesheet" href="styles.css">`
+      '<link rel="stylesheet" href="styles.css">'
     );
 
     const testResults = await runCLIAsync(`test ${appName}`);
@@ -188,8 +188,54 @@ describe('Web Components Applications', () => {
     ).not.toThrow();
   }, 1000000);
 
-  it('should run default jest tests', async () => {
-    await expectJestTestsToPass('@nrwl/web:app');
+  it('should support custom webpackConfig option', async () => {
+    const appName = uniq('app');
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+    updateProjectConfig(appName, (config) => {
+      config.targets.build.options.webpackConfig = `apps/${appName}/webpack.config.js`;
+      return config;
+    });
+
+    // Return sync function
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+      module.exports = (config, context) => {
+        return config;
+      };
+    `
+    );
+    runCLI(`build ${appName} --outputHashing none`);
+    checkFilesExist(`dist/apps/${appName}/main.esm.js`);
+
+    rmDist();
+
+    // Return async function
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+      module.exports = async (config, context) => {
+        return config;
+      };
+    `
+    );
+    runCLI(`build ${appName} --outputHashing none`);
+    checkFilesExist(`dist/apps/${appName}/main.esm.js`);
+
+    rmDist();
+
+    // Return promise of function
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+      module.exports = Promise.resolve((config, context) => {
+        return config;
+      });
+    `
+    );
+    runCLI(`build ${appName} --outputHashing none`);
+    checkFilesExist(`dist/apps/${appName}/main.esm.js`);
   }, 100000);
 });
 
@@ -377,7 +423,6 @@ describe('index.html interpolation', () => {
         <meta charset="utf-8" />
         <title>BestReactApp</title>
         <base href="/" />
-
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" type="image/x-icon" href="favicon.ico" />
       </head>

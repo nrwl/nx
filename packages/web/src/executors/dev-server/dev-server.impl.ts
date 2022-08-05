@@ -85,7 +85,7 @@ export default async function* devServerExecutor(
       customWebpack = await customWebpack;
     }
 
-    webpackConfig = customWebpack(webpackConfig, {
+    webpackConfig = await customWebpack(webpackConfig, {
       buildOptions,
       configuration: serveOptions.buildTarget.split(':')[2],
     });
