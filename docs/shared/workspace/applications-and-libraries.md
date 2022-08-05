@@ -1,6 +1,6 @@
 # Applications and libraries
 
-A typical Nx workspace is structured into _"apps"_ and _"libs"_. This distinction allows us to have a more modular architecture by following a separation of concerns methodology, incentivising the organisation of our source code and logic into smaller, more focused and highly cohesive units.
+A typical Nx workspace is structured into _"apps"_ and _"libs"_. This distinction allows us to have a more modular architecture by following a separation of concerns methodology, incentivising the organization of our source code and logic into smaller, more focused and highly cohesive units.
 
 Nx automatically creates TypeScript path mappings in the `tsconfig.base.json` file, such that they can be easily consumed by other apps or libs.
 
