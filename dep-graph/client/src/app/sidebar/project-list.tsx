@@ -88,49 +88,42 @@ function ProjectListItem({
         <button
           data-cy={`focus-button-${project.projectGraphNode.name}`}
           type="button"
-          className="mr-1 flex rounded-md"
+          className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
           title="Focus on this library"
           onClick={() => focusProject(project.projectGraphNode.name)}
         >
-          <span className="flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700">
-            <DocumentSearchIcon className="h-5 w-5" />
-          </span>
+          <DocumentSearchIcon className="h-5 w-5" />
         </button>
 
         <ExperimentalFeature>
-          <button
-            type="button"
-            className="mr-1 flex rounded-md"
-            title="Start Trace"
-            onClick={() => startTrace(project.projectGraphNode.name)}
-          >
-            <span
+          <span className="relative z-0 inline-flex rounded-md shadow-sm">
+            {/*Once these button are not experimental anymore, button the DocumentSearchIcon button in this span as well. */}
+            <button
+              type="button"
+              title="Start Trace"
+              onClick={() => startTrace(project.projectGraphNode.name)}
               className={`${
                 tracingInfo.start === project.projectGraphNode.name
                   ? 'ring-blue-nx-base'
                   : 'ring-slate-200 dark:ring-slate-600'
-              } flex items-center rounded-md bg-white p-1 font-medium  shadow-sm ring-1 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
+              } flex items-center rounded-l-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
             >
               <LocationMarkerIcon className="h-5 w-5" />
-            </span>
-          </button>
+            </button>
 
-          <button
-            type="button"
-            className="flex rounded-md"
-            title="End Trace"
-            onClick={() => endTrace(project.projectGraphNode.name)}
-          >
-            <span
+            <button
+              type="button"
+              title="End Trace"
+              onClick={() => endTrace(project.projectGraphNode.name)}
               className={`${
                 tracingInfo.end === project.projectGraphNode.name
                   ? 'ring-blue-nx-base'
                   : 'ring-slate-200 dark:ring-slate-600'
-              } flex items-center rounded-md bg-white p-1 font-medium  shadow-sm ring-1 transition hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
+              } flex items-center rounded-r-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
             >
               <FlagIcon className="h-5 w-5" />
-            </span>
-          </button>
+            </button>
+          </span>
         </ExperimentalFeature>
 
         <label
