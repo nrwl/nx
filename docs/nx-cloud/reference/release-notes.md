@@ -87,6 +87,12 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 05-08-2022T15-42-20
+
+- Fix: issue with retrieving hashes during reads
+- Feat: added route to display container version at `/version`
+- Misc: forward api errors to stderr so k8s clusters can process them better
+
 ## 02-08-2022T16-11-36
 
 - Note: The version naming scheme for the containers was changed to better track date/time of releases and to support embedding of the version inside the web UI
