@@ -798,6 +798,11 @@
             "file": "nx-cloud/private/auth-gitlab"
           },
           {
+            "name": "Authenticate with BitBucket",
+            "id": "auth-bitbucket",
+            "file": "nx-cloud/private/auth-bitbucket"
+          },
+          {
             "name": "Advanced Configuration",
             "id": "advanced-config",
             "file": "nx-cloud/private/advanced-config"
