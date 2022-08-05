@@ -120,10 +120,10 @@ export function TextFilterPanel({
               name="textFilterCheckbox"
               type="checkbox"
               value="includeInPath"
-              className="h-4 w-4 rounded border-slate-300 dark:border-slate-700"
+              className="accent-green-nx-base h-4 w-4"
               checked={includePath}
               onChange={toggleIncludeLibsInPathChange}
-            ></input>
+            />
           </div>
           <div className="ml-3 text-sm">
             <label
