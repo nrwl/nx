@@ -294,6 +294,7 @@ export function writeNewConfig(
   // remove deprecated configs options
   const {
     pluginsFile = false,
+    supportFile = false,
     integrationFolder = '',
     ...restOfConfig
   } = cypressConfigs.cypressConfigTs.e2e;

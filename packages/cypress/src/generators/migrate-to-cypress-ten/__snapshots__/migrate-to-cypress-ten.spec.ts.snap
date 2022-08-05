@@ -12,8 +12,7 @@ const cypressJsonConfig = {
 \\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
 \\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
 \\"chromeWebSecurity\\": false,
-\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
-\\"supportFile\\": \\"src/support/e2e.ts\\"
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\"
 }
 export default defineConfig({
 e2e: {
@@ -36,8 +35,7 @@ const cypressJsonConfig = {
 \\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
 \\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
 \\"chromeWebSecurity\\": false,
-\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
-\\"supportFile\\": \\"src/support/e2e.ts\\"
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\"
 }
 export default defineConfig({
 e2e: {
@@ -79,8 +77,7 @@ const cypressJsonConfig = {
 \\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
 \\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
 \\"chromeWebSecurity\\": false,
-\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
-\\"supportFile\\": \\"src/support/e2e.ts\\"
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\"
 }
 export default defineConfig({
 e2e: {
@@ -145,8 +142,7 @@ const cypressJsonConfig = {
 \\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
 \\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
 \\"chromeWebSecurity\\": false,
-\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
-\\"supportFile\\": \\"src/support/e2e.ts\\"
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\"
 }
 export default defineConfig({
 e2e: {
@@ -212,8 +208,7 @@ const cypressJsonConfig = {
 \\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
 \\"chromeWebSecurity\\": false,
 \\"baseUrl\\": \\"http://localhost:4200\\",
-\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
-\\"supportFile\\": false
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\"
 }
 export default defineConfig({
 e2e: {
@@ -236,8 +231,7 @@ const cypressJsonConfig = {
 \\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
 \\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
 \\"chromeWebSecurity\\": false,
-\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
-\\"supportFile\\": \\"src/support/e2e.ts\\"
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\"
 }
 export default defineConfig({
 e2e: {
