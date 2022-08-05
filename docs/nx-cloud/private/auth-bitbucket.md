@@ -4,7 +4,7 @@ Nx Private Cloud currently only support **public** BitBucket auth. On-prem insta
 
 Before creating your container, you'll need to create a BitBucket "OAuth consumer" for your organisation.
 
-## Creating a GitLab app
+## Creating a BitBucket OAuth consumer
 
 From BitBucket, click on your profile picture and select your workspace:
 
