@@ -18,6 +18,7 @@ import { StorybookConfigureSchema } from './schema';
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   await storiesGenerator(host, {
     project: schema.name,
+    ignorePaths: schema.ignorePaths,
   });
 }
 

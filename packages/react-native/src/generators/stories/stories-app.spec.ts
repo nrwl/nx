@@ -32,6 +32,27 @@ describe('react:stories for applications', () => {
     ).toBeTruthy();
   });
 
+  it('should ignore paths', async () => {
+    await reactNativeComponentGenerator(appTree, {
+      name: 'another-cmp',
+      project: 'test-ui-app',
+    });
+    await storiesGenerator(appTree, {
+      project: 'test-ui-app',
+      ignorePaths: ['apps/test-ui-app/src/app/**'],
+    });
+
+    expect(appTree.exists('apps/test-ui-app/src/app/App.tsx')).toBeTruthy();
+    expect(
+      appTree.exists('apps/test-ui-app/src/app/App.stories.tsx')
+    ).toBeFalsy();
+    expect(
+      appTree.exists(
+        'apps/test-ui-app/src/app/another-cmp/another-cmp.stories.tsx'
+      )
+    ).toBeFalsy();
+  });
+
   it('should ignore files that do not contain components', async () => {
     // create another component
     appTree.write(

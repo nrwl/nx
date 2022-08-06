@@ -42,6 +42,21 @@ describe('angularStories generator: applications', () => {
     ).toBeTruthy();
   });
 
+  it('should ignore paths', async () => {
+    await scamGenerator(tree, { name: 'my-scam', project: appName });
+
+    angularStoriesGenerator(tree, {
+      name: appName,
+      ignorePaths: [`apps/${appName}/src/app/my-scam/**`],
+    });
+
+    expect(
+      tree.exists(
+        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`
+      )
+    ).toBeFalsy();
+  });
+
   it('should generate stories file for inline scam component', async () => {
     await scamGenerator(tree, {
       name: 'my-scam',

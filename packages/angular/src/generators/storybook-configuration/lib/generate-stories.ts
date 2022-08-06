@@ -20,5 +20,6 @@ export function generateStories(
     generateCypressSpecs:
       options.configureCypress && options.generateCypressSpecs,
     cypressProject: e2eProjectName,
+    ignorePaths: options.ignorePaths,
   });
 }
