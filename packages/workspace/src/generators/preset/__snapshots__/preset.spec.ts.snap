@@ -37,3 +37,38 @@ Array [
   "nx-welcome.component.ts",
 ]
 `;
+
+exports[`preset should create files (preset = web-components) 1`] = `
+Array [
+  ".babelrc",
+  "browserslist",
+  "src",
+  "tsconfig.app.json",
+  "tsconfig.json",
+  ".eslintrc.json",
+  "jest.config.ts",
+  "tsconfig.spec.json",
+]
+`;
+
+exports[`preset should create files (preset = web-components) 2`] = `
+Array [
+  "app",
+  "assets",
+  "environments",
+  "favicon.ico",
+  "index.html",
+  "main.ts",
+  "polyfills.ts",
+  "styles.css",
+  "test-setup.ts",
+]
+`;
+
+exports[`preset should create files (preset = web-components) 3`] = `
+Array [
+  "app.element.css",
+  "app.element.spec.ts",
+  "app.element.ts",
+]
+`;

@@ -3,7 +3,8 @@ export {
   listCommunityPlugins,
 } from './community-plugins';
 export {
-  fetchThirdPartyPlugins, listThirdPartyPlugins
+  fetchThirdPartyPlugins,
+  listThirdPartyPlugins,
 } from './custom-plugins';
 export { fetchCorePlugins, listCorePlugins } from './core-plugins';
 export {
