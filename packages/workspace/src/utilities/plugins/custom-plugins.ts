@@ -19,9 +19,11 @@ export async function fetchThirdPartyPlugins(): Promise<CustomPlugin[]> {
       logger.debug('No thirdparty plugins found in project repository');
     return [];
   }
-  return [
-    ...(await Promise.all<CustomPlugin>(
-      thirdPartyPluginsList.split('\n').filter(Boolean).map((link: string) => {
+  return await Promise.all<CustomPlugin>(
+    thirdPartyPluginsList
+      .split('\n')
+      .filter(Boolean)
+      .map((link: string) => {
         if (link.toLowerCase().startsWith('http://')) {
           logger.warn({ title: 'HTTP based url detected in plugin config.' });
           throw new Error('HTTP URL found in the list');
@@ -51,8 +53,7 @@ export async function fetchThirdPartyPlugins(): Promise<CustomPlugin[]> {
           req.end();
         });
       })
-    )),
-  ];
+  );
 }
 
 export function listThirdPartyPlugins(
