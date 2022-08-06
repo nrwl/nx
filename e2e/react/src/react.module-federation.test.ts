@@ -44,7 +44,7 @@ describe('React Module Federation', () => {
     updateFile(
       `apps/${shell}/webpack.config.js`,
       stripIndents`
-        const withModuleFederation = require('@nrwl/react/module-federation');
+        const { withModuleFederation } = require('@nrwl/react/module-federation');
         const moduleFederationConfig = require('./module-federation.config');
 
         module.exports = withModuleFederation({

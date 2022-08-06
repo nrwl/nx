@@ -220,7 +220,7 @@ export async function withModuleFederation(options: ModuleFederationConfig) {
     projectGraph = await createProjectGraphAsync();
   }
 
-  const project = projectGraph.nodes[options.name].data;
+  const project = projectGraph.nodes[options.name]?.data;
 
   if (!project) {
     throw Error(
