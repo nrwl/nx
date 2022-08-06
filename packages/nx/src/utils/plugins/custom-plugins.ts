@@ -61,13 +61,13 @@ export function listThirdPartyPlugins(
 ): void {
   if (!customPlugins || !customPlugins.length) return;
 
-  const availableCommunityPlugins = customPlugins.filter(
+  const availableThirdPartyPlugins = customPlugins.filter(
     (p) => !installedPlugins.has(p.name)
   );
 
   output.log({
     title: `Third party plugins:`,
-    bodyLines: availableCommunityPlugins.map((p) => {
+    bodyLines: availableThirdPartyPlugins.map((p) => {
       return `${chalk.bold(p.name)} - ${p.description}`;
     }),
   });
