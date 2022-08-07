@@ -425,6 +425,12 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       coerce: parseCSV,
       default: [],
     })
+    .option('only', {
+      describe: 'Only process certain projects',
+      type: 'array',
+      coerce: parseCSV,
+      default: [],
+    })
     .options('runner', {
       describe: 'This is the name of the tasks runner configured in nx.json',
       type: 'string',

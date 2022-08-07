@@ -74,6 +74,7 @@ const runOne: string[] = [
   'parallel',
   'maxParallel',
   'exclude',
+  'only',
   'onlyFailed',
   'help',
   'skipNxCache',
@@ -113,6 +114,7 @@ export interface NxArgs {
   base?: string;
   head?: string;
   exclude?: string[];
+  only?: string[];
   files?: string[];
   onlyFailed?: boolean;
   verbose?: boolean;

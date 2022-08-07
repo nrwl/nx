@@ -142,6 +142,13 @@ describe('Nx Affected and Graph Tests', () => {
       expect(buildExcluded).toContain(`Running target build for 2 project(s):`);
       expect(buildExcluded).toContain(`- ${mypublishablelib}`);
 
+      const buildOnly = runCLI(`affected:build --only ${myapp}`);
+      expect(buildOnly).toContain(
+        `Running target build for 1 project(s) and 1 task(s) they depend on:`
+      );
+      expect(buildOnly).toContain(`- ${myapp}`);
+      expect(buildOnly).not.toContain(`- ${mypublishablelib}`);
+
       // test
       updateFile(
         `apps/${myapp}/src/app/app.element.spec.ts`,

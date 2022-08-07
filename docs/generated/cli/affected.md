@@ -115,6 +115,14 @@ Default: false
 
 Ignore cycles in the task graph
 
+### only
+
+Type: array
+
+Default: []
+
+Only process certain projects
+
 ### ~~only-failed~~
 
 Type: boolean

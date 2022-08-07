@@ -135,7 +135,7 @@ function projectsToRun(
   nxArgs: NxArgs,
   projectGraph: ProjectGraph
 ): ProjectGraphProjectNode[] {
-  let affectedGraph = nxArgs.all
+  const affectedGraph = nxArgs.all
     ? projectGraph
     : filterAffected(
         projectGraph,
@@ -146,14 +146,23 @@ function projectsToRun(
         )
       );
 
-  if (nxArgs.exclude) {
-    const excludedProjects = new Set(nxArgs.exclude);
-    return Object.entries(affectedGraph.nodes)
-      .filter(([projectName]) => !excludedProjects.has(projectName))
-      .map(([, project]) => project);
+  let affectedProjects = Object.values(affectedGraph.nodes);
+
+  if (nxArgs.only && nxArgs.only.length > 0) {
+    const onlyProjects = new Set(nxArgs.only);
+    affectedProjects = affectedProjects.filter(({ name }) =>
+      onlyProjects.has(name)
+    );
   }
 
-  return Object.values(affectedGraph.nodes) as ProjectGraphProjectNode[];
+  if (nxArgs.exclude) {
+    const excludedProjects = new Set(nxArgs.exclude);
+    affectedProjects = affectedProjects.filter(
+      ({ name }) => !excludedProjects.has(name)
+    );
+  }
+
+  return affectedProjects;
 }
 
 function allProjectsWithTarget(
