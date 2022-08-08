@@ -65,16 +65,22 @@ export function shareWorkspaceLibraries(
       continue;
     }
 
-    collectWorkspaceLibrarySecondaryEntryPoints(
-      key,
-      join(workspaceRoot, library.root),
-      tsconfigPathAliases
-    ).forEach(({ name, path }) =>
-      pathMappings.push({
-        name,
-        path,
-      })
+    const needsSecondaryEntryPointsCollected = existsSync(
+      join(workspaceRoot, library.root, 'ng-package.json')
     );
+
+    if (needsSecondaryEntryPointsCollected) {
+      collectWorkspaceLibrarySecondaryEntryPoints(
+        key,
+        join(workspaceRoot, library.root),
+        tsconfigPathAliases
+      ).forEach(({ name, path }) =>
+        pathMappings.push({
+          name,
+          path,
+        })
+      );
+    }
 
     pathMappings.push({
       name: key,
