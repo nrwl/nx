@@ -64,7 +64,7 @@
       "version": "14.6.0-beta.0",
       "cli": "nx",
       "description": "Remove transform in jest.config",
-      "factory": "./src/migrations/update-14-6-0/rename-jest-preprocessor"
+      "factory": "./src/migrations/update-14-6-0/remove-jest-transform"
     },
   },
   "packageJsonUpdates": {

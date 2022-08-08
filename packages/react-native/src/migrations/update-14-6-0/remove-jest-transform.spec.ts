@@ -1,6 +1,6 @@
 import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import update from './rename-jest-preprocessor';
+import update from './remove-jest-transform';
 
 describe('Rename jest preprocessor', () => {
   let tree: Tree;
@@ -28,7 +28,7 @@ describe('Rename jest preprocessor', () => {
     });
   });
 
-  it(`should not update if the code does not contain existing preprocessor`, async () => {
+  it(`should not remove transfrom if the code does not contain existing preprocessor`, async () => {
     tree.write(
       'apps/products/jest.config.js',
       `module.exports = {
@@ -38,12 +38,10 @@ describe('Rename jest preprocessor', () => {
     await update(tree);
 
     const jestConfig = tree.read('apps/products/jest.config.js', 'utf-8');
-    expect(jestConfig).not.toContain(
-      `@nrwl/react-native/plugins/jest/preprocessor.js`
-    );
+    expect(jestConfig).not.toContain(`transform`);
   });
 
-  it(`should update if the code contains existing preprocessor`, async () => {
+  it(`should remove transform if the code contains existing preprocessor`, async () => {
     tree.write(
       'apps/products/jest.config.js',
       `module.exports = {
@@ -60,9 +58,7 @@ describe('Rename jest preprocessor', () => {
     await update(tree);
 
     const jestConfig = tree.read('apps/products/jest.config.js', 'utf-8');
-    expect(jestConfig).toContain(
-      `@nrwl/react-native/plugins/jest/preprocessor.js`
-    );
+    expect(jestConfig).not.toContain('transfrom: {');
     expect(jestConfig).not.toContain(`testRunner: 'jest-jasmine2',`);
   });
 });

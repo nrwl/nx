@@ -126,13 +126,6 @@ const IGNORE_MATCHES = {
   ],
   nest: ['semver'],
   'make-angular-cli-faster': ['@angular/core'],
-  'react-native': [
-    '@babel/core',
-    '@babel/generator',
-    '@jest/create-cache-key-function',
-    'metro-babel-register',
-    'metro-react-native-babel-transformer',
-  ],
 };
 
 export default async function getMissingDependencies(
