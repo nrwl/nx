@@ -5,7 +5,6 @@ import {
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { join } from 'path';
-
 import componentStoryGenerator from '../component-story/component-story';
 import { StorybookStoriesSchema } from './schema';
 import {
@@ -13,16 +12,23 @@ import {
   projectRootPath,
 } from '@nrwl/react/src/generators/stories/stories';
 import { isTheFileAStory } from '@nrwl/storybook/src/utils/utilities';
+import minimatch = require('minimatch');
 
-export async function createAllStories(tree: Tree, projectName: string) {
+export async function createAllStories(
+  tree: Tree,
+  projectName: string,
+  ignorePaths?: string[]
+) {
   const projects = getProjects(tree);
   const projectConfiguration = projects.get(projectName);
 
-  const { sourceRoot } = projectConfiguration;
+  const { sourceRoot, root } = projectConfiguration;
   const projectPath = projectRootPath(projectConfiguration);
 
   let componentPaths: string[] = [];
   visitNotIgnoredFiles(tree, projectPath, (path) => {
+    if (ignorePaths?.some((pattern) => minimatch(path, pattern))) return;
+
     if (
       (path.endsWith('.tsx') && !path.endsWith('.spec.tsx')) ||
       (path.endsWith('.js') && !path.endsWith('.spec.js')) ||
@@ -62,7 +68,7 @@ export async function storiesGenerator(
   host: Tree,
   schema: StorybookStoriesSchema
 ) {
-  await createAllStories(host, schema.project);
+  await createAllStories(host, schema.project, schema.ignorePaths);
 }
 
 export default storiesGenerator;

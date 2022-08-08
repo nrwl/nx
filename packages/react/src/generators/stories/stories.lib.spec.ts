@@ -72,6 +72,134 @@ describe('react:stories for libraries', () => {
 
   it('should not overwrite existing stories', () => {});
 
+  describe('ignore paths', () => {
+    beforeEach(() => {
+      appTree.write(
+        'libs/test-ui-lib/src/lib/test-path/ignore-it/another-one.tsx',
+        `import React from 'react';
+  
+    export interface IgnoreProps {
+      name: string;
+      displayAge: boolean;
+    }
+  
+    export const Ignored = (props: IgnoreProps) => {
+      return (
+        <div>
+          <h1>Welcome to test component, {props.name}</h1>
+        </div>
+      );
+    };
+  
+    export default Ignored;
+    `
+      );
+
+      appTree.write(
+        'libs/test-ui-lib/src/lib/anothercmp/another-cmp.skip.tsx',
+        `import React from 'react';
+    
+    export interface OtherTestProps {
+      name: string;
+      displayAge: boolean;
+    }
+  
+    export const OtherTest = (props: OtherTestProps) => {
+      return (
+        <div>
+          <h1>Welcome to test component, {props.name}</h1>
+        </div>
+      );
+    };
+  
+    export default OtherTest;
+    `
+      );
+    });
+    it('should generate stories for all if no ignorePaths', async () => {
+      await storiesGenerator(appTree, {
+        project: 'test-ui-lib',
+        generateCypressSpecs: false,
+      });
+
+      expect(
+        appTree.exists(
+          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx'
+        )
+      ).toBeTruthy();
+
+      expect(
+        appTree.exists(
+          'libs/test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.tsx'
+        )
+      ).toBeTruthy();
+
+      expect(
+        appTree.exists(
+          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.skip.stories.tsx'
+        )
+      ).toBeTruthy();
+    });
+
+    it('should ignore entire paths', async () => {
+      await storiesGenerator(appTree, {
+        project: 'test-ui-lib',
+        generateCypressSpecs: false,
+        ignorePaths: [
+          'libs/test-ui-lib/src/lib/anothercmp/**',
+          '**/**/src/**/test-path/ignore-it/**',
+        ],
+      });
+
+      expect(
+        appTree.exists(
+          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx'
+        )
+      ).toBeFalsy();
+
+      expect(
+        appTree.exists(
+          'libs/test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.tsx'
+        )
+      ).toBeFalsy();
+
+      expect(
+        appTree.exists(
+          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.skip.stories.tsx'
+        )
+      ).toBeFalsy();
+    });
+
+    it('should ignore path or a pattern', async () => {
+      await storiesGenerator(appTree, {
+        project: 'test-ui-lib',
+        generateCypressSpecs: false,
+        ignorePaths: [
+          'libs/test-ui-lib/src/lib/anothercmp/**/*.skip.*',
+          '**/test-ui-lib/src/**/test-path/**',
+        ],
+      });
+
+      expect(
+        appTree.exists(
+          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx'
+        )
+      ).toBeTruthy();
+
+      expect(
+        appTree.exists(
+          'libs/test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.tsx'
+        )
+      ).toBeFalsy();
+
+      expect(
+        appTree.exists(
+          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.skip.stories.tsx'
+        )
+      ).toBeFalsy();
+    });
+  });
+
   it('should ignore files that do not contain components', async () => {
     // create another component
     appTree.write(

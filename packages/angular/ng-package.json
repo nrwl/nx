@@ -13,6 +13,7 @@
     "chokidar",
     "ignore",
     "jasmine-marbles",
+    "minimatch",
     "rxjs-for-await",
     "webpack-merge",
     "ts-node",

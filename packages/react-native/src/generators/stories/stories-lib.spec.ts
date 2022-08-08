@@ -38,6 +38,32 @@ describe('react-native:stories for libraries', () => {
     ).toBeTruthy();
   });
 
+  it('should ignore paths', async () => {
+    await reactNativeComponentGenerator(appTree, {
+      name: 'test-ui-lib',
+      project: 'test-ui-lib',
+    });
+    await reactNativeComponentGenerator(appTree, {
+      name: 'another-cmp',
+      project: 'test-ui-lib',
+    });
+    await storiesGenerator(appTree, {
+      project: 'test-ui-lib',
+      ignorePaths: ['libs/test-ui-lib/src/lib/another-cmp/**'],
+    });
+
+    expect(
+      appTree.exists(
+        'libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx'
+      )
+    ).toBeTruthy();
+    expect(
+      appTree.exists(
+        'libs/test-ui-lib/src/lib/another-cmp/another-cmp.stories.tsx'
+      )
+    ).toBeFalsy();
+  });
+
   it('should ignore files that do not contain components', async () => {
     await reactNativeComponentGenerator(appTree, {
       name: 'test-ui-lib',

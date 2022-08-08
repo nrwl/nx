@@ -36,6 +36,7 @@
     "fs-extra": "^10.1.0",
     "ignore": "^5.0.4",
     "metro-resolver": "^0.71.3",
+    "minimatch": "3.0.5",
     "node-fetch": "^2.6.7",
     "tsconfig-paths": "^3.9.0"
   },

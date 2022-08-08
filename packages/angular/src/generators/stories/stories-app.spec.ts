@@ -3,7 +3,9 @@ import type { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { scamGenerator } from '../scam/scam';
+import { componentGenerator } from '../component/component';
 import { angularStoriesGenerator } from './stories';
+
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
@@ -40,6 +42,62 @@ describe('angularStories generator: applications', () => {
         `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`
       )
     ).toBeTruthy();
+  });
+
+  it('should ignore paths', async () => {
+    await scamGenerator(tree, { name: 'my-scam', project: appName });
+
+    angularStoriesGenerator(tree, {
+      name: appName,
+      ignorePaths: [`apps/${appName}/src/app/my-scam/**`],
+    });
+
+    expect(
+      tree.exists(
+        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`
+      )
+    ).toBeFalsy();
+  });
+
+  it('should ignore paths when full path to component is provided', async () => {
+    await scamGenerator(tree, { name: 'my-scam', project: appName });
+
+    angularStoriesGenerator(tree, {
+      name: appName,
+      ignorePaths: [`apps/${appName}/src/app/my-scam/my-scam.component.ts`],
+    });
+
+    expect(
+      tree.exists(
+        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`
+      )
+    ).toBeFalsy();
+  });
+
+  it('should ignore a path that has a nested component, but still generate nested component stories', async () => {
+    await componentGenerator(tree, { name: 'component-a', project: appName });
+    await componentGenerator(tree, {
+      name: 'component-a/component-b',
+      project: appName,
+    });
+
+    angularStoriesGenerator(tree, {
+      name: appName,
+      ignorePaths: [
+        `apps/${appName}/src/app/component-a/component-a.component.ts`,
+      ],
+    });
+
+    expect(
+      tree.exists(
+        `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`
+      )
+    ).toBeTruthy();
+    expect(
+      tree.exists(
+        `apps/${appName}/src/app/component-a/component-a.component.stories.ts`
+      )
+    ).toBeFalsy();
   });
 
   it('should generate stories file for inline scam component', async () => {

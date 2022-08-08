@@ -42,6 +42,18 @@ describe('nextjs:stories for applications', () => {
       tree.exists('apps/test-ui-app/components/test.stories.tsx')
     ).toBeTruthy();
   });
+
+  it('should ignore paths', async () => {
+    await storiesGenerator(tree, {
+      project: 'test-ui-app',
+      generateCypressSpecs: false,
+      ignorePaths: ['apps/test-ui-app/components/**'],
+    });
+
+    expect(
+      tree.exists('apps/test-ui-app/components/test.stories.tsx')
+    ).toBeFalsy();
+  });
 });
 
 export async function createTestUIApp(name: string): Promise<Tree> {

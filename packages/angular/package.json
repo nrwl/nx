@@ -53,6 +53,7 @@
     "ignore": "^5.0.4",
     "jasmine-marbles": "~0.8.4",
     "magic-string": "~0.26.2",
+    "minimatch": "3.0.5",
     "semver": "7.3.4",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^3.9.0",

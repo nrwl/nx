@@ -650,6 +650,18 @@
           "standaloneConfig": {
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
             "type": "boolean"
+          },
+          "ignorePaths": {
+            "type": "array",
+            "description": "Paths to ignore when looking for components.",
+            "items": { "type": "string", "description": "Path to ignore." },
+            "examples": [
+              "apps/my-app/src/not-stories/**",
+              "**/**/src/**/not-stories/**",
+              "libs/my-lib/**/*.something.ts",
+              "**/**/src/**/*.other.*",
+              "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
+            ]
           }
         },
         "required": ["name"],
@@ -727,6 +739,18 @@
             "type": "boolean",
             "description": "Generate JavaScript files rather than TypeScript files.",
             "default": false
+          },
+          "ignorePaths": {
+            "type": "array",
+            "description": "Paths to ignore when looking for components.",
+            "items": { "type": "string", "description": "Path to ignore." },
+            "examples": [
+              "apps/my-app/src/not-stories/**",
+              "**/**/src/**/not-stories/**",
+              "libs/my-lib/**/*.something.ts",
+              "**/**/src/**/*.other.*",
+              "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
+            ]
           }
         },
         "required": ["project"],

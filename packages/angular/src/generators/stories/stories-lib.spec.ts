@@ -333,5 +333,60 @@ describe('angularStories generator: libraries', () => {
         )
       ).toMatchSnapshot();
     });
+
+    it('should ignore paths', async () => {
+      // add secondary entrypoint
+      writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+      await librarySecondaryEntryPointGenerator(tree, {
+        library: libName,
+        name: 'secondary-entry-point',
+      });
+      // add a standalone component to the secondary entrypoint
+      await componentGenerator(tree, {
+        name: 'secondary-button',
+        project: libName,
+        path: `libs/${libName}/secondary-entry-point/src/lib`,
+      });
+
+      angularStoriesGenerator(tree, {
+        name: libName,
+        ignorePaths: [
+          `libs/${libName}/src/lib/barrel/**`,
+          `libs/${libName}/secondary-entry-point/**`,
+        ],
+      });
+
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/barrel/barrel-button/barrel-button.component.stories.ts`
+        )
+      ).toBeFalsy();
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/nested/nested-button/nested-button.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/test-button/test-button.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.exists(
+          `libs/${libName}/src/lib/test-other/test-other.component.stories.ts`
+        )
+      ).toBeTruthy();
+      expect(
+        tree.read(
+          `libs/${libName}/src/lib/test-button/test-button.component.stories.ts`,
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+      expect(
+        tree.exists(
+          `libs/${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button.component.stories.ts`
+        )
+      ).toBeFalsy();
+    });
   });
 });
