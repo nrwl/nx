@@ -12,7 +12,7 @@ function patchNextCSSWithStylus(
 
 patchNextCSSWithStylus();
 
-function withStylus({ stylusLoaderOptions = {}, ...nextConfig }: any) {
+export function withStylus({ stylusLoaderOptions = {}, ...nextConfig }: any) {
   return Object.assign({}, nextConfig, {
     webpack(config, opts) {
       // there are 2 relevant sass rules in next.js - css modules and global css
@@ -94,4 +94,5 @@ function withStylus({ stylusLoaderOptions = {}, ...nextConfig }: any) {
 }
 
 module.exports = withStylus;
+module.exports.withStylus = withStylus;
 module.exports.patchNext = patchNextCSSWithStylus;
