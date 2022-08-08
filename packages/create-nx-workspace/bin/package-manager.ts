@@ -39,15 +39,18 @@ export function getPackageManagerCommand(
 } {
   switch (packageManager) {
     case 'yarn':
+      const [yarnMajor] = getPackageManagerVersion('yarn').split('.');
+      let useBerry = +yarnMajor >= 2;
       return {
-        install: 'yarn',
-        exec: 'yarn',
+        install: 'yarn install',
+        exec: useBerry ? 'yarn exec' : 'yarn',
       };
 
     case 'pnpm':
-      const [major, minor] = getPackageManagerVersion('pnpm').split('.');
+      const [pnpmMajor, pnpmMinor] =
+        getPackageManagerVersion('pnpm').split('.');
       let useExec = false;
-      if ((+major >= 6 && +minor >= 13) || +major >= 7) {
+      if ((+pnpmMajor >= 6 && +pnpmMinor >= 13) || +pnpmMajor >= 7) {
         useExec = true;
       }
       return {
