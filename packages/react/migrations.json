@@ -593,6 +593,27 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.5.5": {
+      "version": "14.5.5-beta.0",
+      "packages": {
+        "@types/react": {
+          "version": "18.0.17",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/node": {
+          "version": "18.6.5",
+          "alwaysAddToPackageJson": false
+        },
+        "postcss": {
+          "version": "8.4.16",
+          "alwaysAddToPackageJson": false
+        },
+        "tailwindcss": {
+          "version": "3.1.8",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
