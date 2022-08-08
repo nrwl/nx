@@ -3,11 +3,11 @@ export const nxVersion = require('../../package.json').version;
 export const reactVersion = '18.2.0';
 export const reactDomVersion = '18.2.0';
 export const reactIsVersion = '18.2.0';
-export const typesReactVersion = '18.0.15';
+export const typesReactVersion = '18.0.17';
 export const typesReactDomVersion = '18.0.6';
 export const typesReactIsVersion = '17.0.3';
 
-export const typesNodeVersion = '18.6.3';
+export const typesNodeVersion = '18.6.5';
 
 export const styledComponentsVersion = '5.3.5';
 export const typesStyledComponentsVersion = '5.1.25';
@@ -37,6 +37,6 @@ export const babelPluginStyledComponentsVersion = '1.10.7';
 
 export const tsLibVersion = '^2.3.0';
 
-export const postcssVersion = '8.4.14';
-export const tailwindcssVersion = '3.1.7';
+export const postcssVersion = '8.4.16';
+export const tailwindcssVersion = '3.1.8';
 export const autoprefixerVersion = '10.4.8';
