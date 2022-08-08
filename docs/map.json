@@ -634,11 +634,6 @@
             "name": "Nx Devkit and Angular Devkit",
             "id": "nx-devkit-angular-devkit",
             "file": "shared/guides/nx-devkit-angular-devkit"
-          },
-          {
-            "name": "Angular and Nx Version Matrix",
-            "id": "angular-nx-version-matrix",
-            "file": "shared/guides/angular-nx-version-matrix"
           }
         ]
       },
@@ -1016,7 +1011,6 @@
           {
             "name": "Angular and Nx Version Matrix",
             "id": "angular-nx-version-matrix",
-            "path": "/guides/angular-nx-version-matrix",
             "file": "shared/guides/angular-nx-version-matrix"
           }
         ]
