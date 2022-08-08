@@ -84,19 +84,17 @@ export async function* tscExecutor(
   if (options.watch) {
     const disposeWatchAssetChanges =
       await assetHandler.watchAndProcessOnAssetChange();
-    const disposePackageJsonChanged = await watchForSingleFileChanges(
+    const disposePackageJsonChanges = await watchForSingleFileChanges(
       join(context.root, projectRoot),
       'package.json',
       () => updatePackageJson(options, context, target, dependencies)
     );
-    process.on('exit', async () => {
+    const handleTermination = async () => {
       await disposeWatchAssetChanges();
-      await disposePackageJsonChanged();
-    });
-    process.on('SIGTERM', async () => {
-      await disposeWatchAssetChanges();
-      await disposePackageJsonChanged();
-    });
+      await disposePackageJsonChanges();
+    };
+    process.on('SIGINT', () => handleTermination());
+    process.on('SIGTERM', () => handleTermination());
   }
 
   return yield* compileTypeScriptFiles(options, context, async () => {
