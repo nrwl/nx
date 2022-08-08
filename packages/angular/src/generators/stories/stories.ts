@@ -44,12 +44,17 @@ export function angularStoriesGenerator(
   componentsInfo
     .filter(
       (f) =>
-        !options.ignorePaths?.some((pattern) =>
-          minimatch(
-            joinPathFragments(f.moduleFolderPath, f.path, f.componentFileName),
+        !options.ignorePaths?.some((pattern) => {
+          const shouldIgnorePath = minimatch(
+            joinPathFragments(
+              f.moduleFolderPath,
+              f.path,
+              `${f.componentFileName}.ts`
+            ),
             pattern
-          )
-        )
+          );
+          return shouldIgnorePath;
+        })
     )
     ?.forEach((info) => {
       if (info === undefined) {

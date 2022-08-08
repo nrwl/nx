@@ -59,14 +59,27 @@ describe('angularStories generator: applications', () => {
     ).toBeFalsy();
   });
 
+  it('should ignore paths when full path to component is provided', async () => {
+    await scamGenerator(tree, { name: 'my-scam', project: appName });
+
+    angularStoriesGenerator(tree, {
+      name: appName,
+      ignorePaths: [`apps/${appName}/src/app/my-scam/my-scam.component.ts`],
+    });
+
+    expect(
+      tree.exists(
+        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`
+      )
+    ).toBeFalsy();
+  });
+
   it('should ignore a path that has a nested component, but still generate nested component stories', async () => {
     await componentGenerator(tree, { name: 'component-a', project: appName });
     await componentGenerator(tree, {
       name: 'component-a/component-b',
       project: appName,
     });
-
-    console.log(tree.listChanges());
 
     angularStoriesGenerator(tree, {
       name: appName,

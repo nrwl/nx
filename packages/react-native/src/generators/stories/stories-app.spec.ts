@@ -53,6 +53,63 @@ describe('react:stories for applications', () => {
     ).toBeFalsy();
   });
 
+  it('should ignore paths with a direct path to a component', async () => {
+    await reactNativeComponentGenerator(appTree, {
+      name: 'another-new-cmp',
+      project: 'test-ui-app',
+    });
+
+    await storiesGenerator(appTree, {
+      project: 'test-ui-app',
+      ignorePaths: [
+        'apps/test-ui-app/src/app/another-new-cmp/another-new-cmp.tsx',
+      ],
+    });
+
+    expect(appTree.exists('apps/test-ui-app/src/app/App.tsx')).toBeTruthy();
+    expect(
+      appTree.exists('apps/test-ui-app/src/app/App.stories.tsx')
+    ).toBeTruthy();
+    expect(
+      appTree.exists(
+        'apps/test-ui-app/src/app/another-new-cmp/another-new-cmp.stories.tsx'
+      )
+    ).toBeFalsy();
+  });
+
+  it('should ignore a path that has a nested component, but still generate nested component stories', async () => {
+    await reactNativeComponentGenerator(appTree, {
+      name: 'another-new-cmp',
+      project: 'test-ui-app',
+    });
+    await reactNativeComponentGenerator(appTree, {
+      name: 'comp-a',
+      directory: 'app/another-new-cmp',
+      project: 'test-ui-app',
+    });
+    await storiesGenerator(appTree, {
+      project: 'test-ui-app',
+      ignorePaths: [
+        'apps/test-ui-app/src/app/another-new-cmp/another-new-cmp.tsx',
+      ],
+    });
+
+    expect(appTree.exists('apps/test-ui-app/src/app/App.tsx')).toBeTruthy();
+    expect(
+      appTree.exists('apps/test-ui-app/src/app/App.stories.tsx')
+    ).toBeTruthy();
+    expect(
+      appTree.exists(
+        'apps/test-ui-app/src/app/another-new-cmp/comp-a/comp-a.stories.tsx'
+      )
+    ).toBeTruthy();
+    expect(
+      appTree.exists(
+        'apps/test-ui-app/src/app/another-new-cmp/another-new-cmp.stories.tsx'
+      )
+    ).toBeFalsy();
+  });
+
   it('should ignore files that do not contain components', async () => {
     // create another component
     appTree.write(
