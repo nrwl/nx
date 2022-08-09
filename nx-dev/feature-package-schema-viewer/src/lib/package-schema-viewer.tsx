@@ -3,7 +3,6 @@ import cx from 'classnames';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import Content from './content';
-import { getPublicPackageName } from './get-public-package-name';
 import { getSchemaViewModel, SchemaViewModel } from './get-schema-view-model';
 import { SchemaRequest } from './schema-request.models';
 
@@ -21,9 +20,7 @@ export function PackageSchemaViewer({
     // Process the request and make available the needed schema information
     schema: getSchemaViewModel(router.query, schemaRequest),
     seo: {
-      title: `${getPublicPackageName(schemaRequest.pkg.name)}:${
-        schemaRequest.schemaName
-      } | Nx`,
+      title: `${schemaRequest.pkg.packageName}:${schemaRequest.schemaName} | Nx`,
       description:
         'Next generation build system with first class monorepo support and powerful integrations.',
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath

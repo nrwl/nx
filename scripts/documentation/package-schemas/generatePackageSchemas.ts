@@ -69,6 +69,7 @@ export function generatePackageSchemas(): Promise<void>[] {
    */
   const packageList = packages.map((p) => ({
     name: p.name,
+    packageName: p.name,
     path: join('generated', 'packages', p.name + '.json'),
     schemas: {
       executors: p.executors.map((s) => s.name),

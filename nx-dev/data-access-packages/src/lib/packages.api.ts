@@ -15,6 +15,7 @@ export class PackagesApi {
       // packages.json content file
       packagesIndex: {
         name: string;
+        packageName: string;
         path: string;
         schemas: { executors: string[]; generators: string[] };
       }[];
@@ -76,6 +77,7 @@ export class PackagesApi {
       itemList: this.options.packagesIndex.map((p) => ({
         id: p.name,
         name: p.name.replace(/-/gi, ' '),
+        packageName: p.packageName,
         path: `/packages/${p.name}`,
         itemList: this.getPackage(p.name)
           .documentation.map((d) => ({

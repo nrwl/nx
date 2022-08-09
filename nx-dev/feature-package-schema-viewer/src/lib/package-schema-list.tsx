@@ -5,7 +5,6 @@ import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { ReactNode } from 'react';
 import { Breadcrumbs } from '@nrwl/nx-dev/ui-common';
-import { getPublicPackageName } from './get-public-package-name';
 import { Heading1 } from './ui/headings';
 import { PackageReference } from './ui/package-reference';
 
@@ -28,7 +27,7 @@ export function PackageSchemaList({
     markdown: ReactNode;
   } = {
     pkg: {
-      name: getPublicPackageName(pkg.name),
+      name: pkg.packageName,
       description: pkg.description,
       githubUrl: pkg.githubRoot + pkg.root,
       id: pkg.name,
@@ -43,7 +42,7 @@ export function PackageSchemaList({
       },
     },
     seo: {
-      title: `${getPublicPackageName(pkg.name)} | Nx`,
+      title: `${pkg.packageName} | Nx`,
       description: pkg.description,
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath
         .replace('/', '')

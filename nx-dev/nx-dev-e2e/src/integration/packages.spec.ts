@@ -128,10 +128,10 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/angular:file-server',
       path: '/packages/angular/executors/file-server',
     },
-    { title: '@nrwl/cra-to-nx', path: '/packages/cra-to-nx' },
-    { title: '@nrwl/create-nx-plugin', path: '/packages/create-nx-plugin' },
+    { title: 'cra-to-nx', path: '/packages/cra-to-nx' },
+    { title: 'create-nx-plugin', path: '/packages/create-nx-plugin' },
     {
-      title: '@nrwl/create-nx-workspace',
+      title: 'create-nx-workspace',
       path: '/packages/create-nx-workspace',
     },
     { title: '@nrwl/cypress', path: '/packages/cypress' },
@@ -188,7 +188,7 @@ describe('nx-dev: Packages Section', () => {
     { title: '@nrwl/linter', path: '/packages/linter/executors/lint' },
     { title: '@nrwl/linter', path: '/packages/linter/executors/eslint' },
     {
-      title: '@nrwl/make-angular-cli-faster',
+      title: 'make-angular-cli-faster',
       path: '/packages/make-angular-cli-faster',
     },
     { title: '@nrwl/nest', path: '/packages/nest' },

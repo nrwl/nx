@@ -10,7 +10,6 @@ import {
 } from '@nrwl/nx-dev/models-package';
 import { ParsedUrlQuery } from 'querystring';
 import { Errors, Example, generateJsonExampleFor } from './examples';
-import { getPublicPackageName } from './get-public-package-name';
 import { SchemaRequest } from './schema-request.models';
 
 function getReferenceFromQuery(query: string): string {
@@ -41,7 +40,7 @@ export function getSchemaViewModel(
 
   return {
     schemaMetadata,
-    packageName: getPublicPackageName(schemaRequest.pkg.name),
+    packageName: schemaRequest.pkg.packageName,
     packageUrl: `/packages/${schemaRequest.pkg.name}`,
     schemaGithubUrl: schemaRequest.pkg.githubRoot + schemaMetadata.path,
     rootReference: '#',
