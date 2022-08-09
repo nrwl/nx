@@ -372,11 +372,11 @@ const scheduleRow = (item: ScheduleItem): JSX.Element => (
           ) : (
             <h3 className="mb-4">{item.title}</h3>
           )}
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-slate-300">
             {item.speakers.join(' & ')}
           </div>
         </div>
-        <p className="col-span-2 px-5 pt-8 pb-12 text-gray-400 md:py-12 md:px-8">
+        <p className="col-span-2 px-5 pt-8 pb-12 text-slate-300 md:py-12 md:px-8">
           {item.description}
         </p>
       </article>
