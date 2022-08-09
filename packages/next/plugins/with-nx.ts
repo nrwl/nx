@@ -20,7 +20,7 @@ function regexEqual(x, y) {
   );
 }
 
-function withNx(nextConfig = {} as WithNxOptions) {
+export function withNx(nextConfig = {} as WithNxOptions) {
   const userWebpack = nextConfig.webpack || ((x) => x);
   const { nx, ...validNextConfig } = nextConfig;
   return {
@@ -154,4 +154,7 @@ function addNxEnvVariables(config: any) {
   }
 }
 
+// Support for older generated code: `const withNx = require('@nrwl/next/plugins/with-nx');`
 module.exports = withNx;
+// Support for newer generated code: `const { withNx } = require(...);`
+module.exports.withNx = withNx;
