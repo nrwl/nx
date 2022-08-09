@@ -172,7 +172,7 @@ export function Header(props: HeaderProps): JSX.Element {
                   >
                     <rect width="10" height="10" />
                   </svg>
-                  13k+
+                  14k+
                 </span>
               </div>
             </a>
