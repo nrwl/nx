@@ -59,6 +59,7 @@ function createValidRunBuilderOptions(
     hasTypeAwareRules: false,
     rulesdir: [],
     resolvePluginsRelativeTo: null,
+    reportUnusedDisableDirectives: null,
     ...additionalOptions,
   };
 }
@@ -133,6 +134,7 @@ describe('Linter Builder', () => {
         maxWarnings: null,
         outputFile: null,
         quiet: false,
+        reportUnusedDisableDirectives: null,
       }),
       mockContext
     );
@@ -153,6 +155,7 @@ describe('Linter Builder', () => {
       noEslintrc: false,
       rulesdir: [],
       resolvePluginsRelativeTo: null,
+      reportUnusedDisableDirectives: null,
     });
   });
 

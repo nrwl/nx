@@ -42,6 +42,8 @@ export async function lint(
      * not be any html files in the project, so keeping it true would break linting everytime
      */
     errorOnUnmatchedPattern: false,
+    reportUnusedDisableDirectives:
+      options.reportUnusedDisableDirectives || undefined,
   });
 
   return await eslint.lintFiles(options.lintFilePatterns);
