@@ -11,6 +11,7 @@ const documents: any[] = [
 
 const packages: {
   name: string;
+  packageName: string;
   path: string;
   schemas: { executors: string[]; generators: string[] };
 }[] = readJSONSync('./docs/packages.json');
@@ -33,20 +34,20 @@ documents.map((category) => {
 packages.map((pkg) => {
   data.push({
     title: 'Package details',
-    content: getPublicPackageName(pkg.name),
+    content: pkg.packageName,
     filename: ['packages', pkg.name].join('-'),
   });
   pkg.schemas.executors.map((schema) => {
     data.push({
       title: 'Executor details',
-      content: `${getPublicPackageName(pkg.name)}:${schema}`,
+      content: `${pkg.packageName}:${schema}`,
       filename: ['packages', pkg.name, 'executors', schema].join('-'),
     });
   });
   pkg.schemas.generators.map((schema) => {
     data.push({
       title: 'Generator details',
-      content: `${getPublicPackageName(pkg.name)}:${schema}`,
+      content: `${pkg.packageName}:${schema}`,
       filename: ['packages', pkg.name, 'generators', schema].join('-'),
     });
   });
@@ -137,14 +138,3 @@ ensureDir(targetFolder).then(() =>
     )
   )
 );
-
-export function getPublicPackageName(
-  packageName: string,
-  prefix: string = '@nrwl/'
-): string {
-  /**
-   * Core Nx package is not prefixed by "@nrwl/" on NPM
-   */
-  const isNxCorePackage = packageName === 'nx';
-  return isNxCorePackage ? packageName : prefix + packageName;
-}

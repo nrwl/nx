@@ -1,6 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "nest",
+  "packageName": "@nrwl/nest",
   "description": "The Nx Plugin for Nest that contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
   "root": "/packages/nest",
   "source": "/packages/nest/src",

@@ -1,6 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "nx-plugin",
+  "packageName": "@nrwl/nx-plugin",
   "description": "Plugin for creating plugins for Nx :)",
   "root": "/packages/nx-plugin",
   "source": "/packages/nx-plugin/src",

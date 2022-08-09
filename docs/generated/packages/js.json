@@ -1,6 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "js",
+  "packageName": "@nrwl/js",
   "description": "The Nx plugin that provides the best experience for developing JavaScript and TypeScript projects.",
   "root": "/packages/js",
   "source": "/packages/js/src",

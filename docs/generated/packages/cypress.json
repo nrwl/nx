@@ -1,6 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "cypress",
+  "packageName": "@nrwl/cypress",
   "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
   "root": "/packages/cypress",
   "source": "/packages/cypress/src",

@@ -1,6 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "workspace",
+  "packageName": "@nrwl/workspace",
   "description": "Smart, Fast and Extensible Build System.",
   "root": "/packages/workspace",
   "source": "/packages/workspace/src",
