@@ -20,8 +20,8 @@ import {
   NxMigrationsConfiguration,
   PackageGroup,
   PackageJson,
-  readNxMigrateConfig,
   readModulePackageJson,
+  readNxMigrateConfig,
 } from '../utils/package-json';
 import {
   createTempNpmDirectory,
@@ -33,6 +33,7 @@ import {
 } from '../utils/package-manager';
 import { handleErrors } from '../utils/params';
 import { connectToNxCloudCommand } from './connect-to-nx-cloud';
+import { output } from '../utils/output';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: NxMigrationsConfiguration['packageGroup'];
@@ -539,9 +540,11 @@ function createFetcher() {
 
     let resolvedVersion: string = packageVersion;
     let migrations: Promise<ResolvedMigrationConfiguration>;
+
     function setCache(packageName: string, packageVersion: string) {
       migrationsCache[packageName + '-' + packageVersion] = migrations;
     }
+
     migrations = fetchMigrations(packageName, packageVersion, setCache).then(
       (result) => {
         if (result.schematics) {
@@ -558,6 +561,7 @@ function createFetcher() {
     return migrations;
   };
 }
+
 // testing-fetch-end
 
 async function getPackageMigrationsUsingRegistry(
@@ -843,32 +847,38 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       createMigrationsFile(root, migrations);
     }
 
-    logger.info(`NX The migrate command has run successfully.`);
-    logger.info(`- package.json has been updated`);
-    if (migrations.length > 0) {
-      logger.info(`- migrations.json has been generated`);
-    } else {
-      logger.info(
-        `- there are no migrations to run, so migrations.json has not been created.`
-      );
-    }
-    logger.info(`NX Next steps:`);
-    logger.info(
-      `- Make sure package.json changes make sense and then run '${pmc.install}'`
-    );
-    if (migrations.length > 0) {
-      logger.info(`- Run '${pmc.exec} nx migrate --run-migrations'`);
-    }
-    logger.info(`- To learn more go to https://nx.dev/using-nx/updating-nx`);
+    output.success({
+      title: `The migrate command has run successfully.`,
+      bodyLines: [
+        `- Package.json has been updated.`,
+        migrations.length > 0
+          ? `- Migrations.json has been generated.`
+          : `- There are no migrations to run, so migrations.json has not been created.`,
+      ],
+    });
 
-    if (showConnectToCloudMessage()) {
-      const cmd = pmc.run('nx', 'connect-to-nx-cloud');
-      logger.info(
-        `- You may run '${cmd}' to get faster builds, GitHub integration, and more. Check out https://nx.app`
-      );
-    }
+    output.log({
+      title: 'Next steps:',
+      bodyLines: [
+        `- Make sure package.json changes make sense and then run '${pmc.install}',`,
+        ...(migrations.length > 0
+          ? [`- Run '${pmc.exec} nx migrate --run-migrations'`]
+          : []),
+        `- To learn more go to https://nx.dev/using-nx/updating-nx`,
+        ...(showConnectToCloudMessage()
+          ? [
+              `- You may run '${pmc.run(
+                'nx',
+                'connect-to-nx-cloud'
+              )}' to get faster builds, GitHub integration, and more. Check out https://nx.app`,
+            ]
+          : []),
+      ],
+    });
   } catch (e) {
-    logger.error(`NX The migrate command failed.`);
+    output.error({
+      title: `The migrate command failed.`,
+    });
     throw e;
   }
 }
@@ -891,9 +901,9 @@ function showConnectToCloudMessage() {
 
 function runInstall() {
   const pmCommands = getPackageManagerCommand();
-  logger.info(
-    `NX Running '${pmCommands.install}' to make sure necessary packages are installed`
-  );
+  output.log({
+    title: `Running '${pmCommands.install}' to make sure necessary packages are installed`,
+  });
   execSync(pmCommands.install, { stdio: [0, 1, 2] });
 }
 
@@ -965,9 +975,9 @@ export async function executeMigrations(
       }
       logger.info(`---------------------------------------------------------`);
     } catch (e) {
-      logger.error(
-        `NX Failed to run ${m.name} from ${m.package}. This workspace is NOT up to date!`
-      );
+      output.error({
+        title: `Failed to run ${m.name} from ${m.package}. This workspace is NOT up to date!`,
+      });
       throw e;
     }
   }
@@ -990,10 +1000,11 @@ async function runMigrations(
     runInstall();
   }
 
-  logger.info(
-    `NX Running migrations from '${opts.runMigrations}'` +
-      (shouldCreateCommits ? ', with each applied in a dedicated commit' : '')
-  );
+  output.log({
+    title:
+      `Running migrations from '${opts.runMigrations}'` +
+      (shouldCreateCommits ? ', with each applied in a dedicated commit' : ''),
+  });
 
   const migrations: {
     package: string;
@@ -1011,13 +1022,13 @@ async function runMigrations(
   );
 
   if (migrationsWithNoChanges.length < migrations.length) {
-    logger.info(
-      `NX Successfully finished running migrations from '${opts.runMigrations}'. This workspace is up to date!`
-    );
+    output.success({
+      title: `Successfully finished running migrations from '${opts.runMigrations}'. This workspace is up to date!`,
+    });
   } else {
-    logger.info(
-      `NX No changes were made from running '${opts.runMigrations}'. This workspace is up to date!`
-    );
+    output.success({
+      title: `No changes were made from running '${opts.runMigrations}'. This workspace is up to date!`,
+    });
   }
 }
 
