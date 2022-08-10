@@ -28,7 +28,7 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - script: yarn --frozen-lockfile
+      - script: yarn install --frozen-lockfile
         displayName: NPM Install Dependencies
       - script: npx nx-cloud start-agent
         displayName: Start Nx-Cloud agent
@@ -38,7 +38,7 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - script: yarn --frozen-lockfile
+      - script: yarn install --frozen-lockfile
         displayName: NPM Install Dependencies
       - script: yarn nx-cloud start-ci-run
         displayName: Start CI run
@@ -75,7 +75,7 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: yarn --frozen-lockfile
+          command: yarn install --frozen-lockfile
       - run:
           name: Start the agent << parameters.ordinal >>
           command: yarn nx-cloud start-agent
@@ -89,7 +89,7 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: yarn --frozen-lockfile
+          command: yarn install --frozen-lockfile
       - nx/set-shas:
           main-branch-name: 'main'
       - run:
