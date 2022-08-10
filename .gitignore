@@ -1,5 +1,6 @@
 node_modules
-.idea
+/.idea
+/.fleet
 /.vscode
 dist
 /build

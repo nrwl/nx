@@ -37,6 +37,7 @@ export const defaultTasksRunner: TasksRunner<
     nxJson: NxJsonConfiguration;
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
+    hasher: Hasher;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
   if (
@@ -69,6 +70,7 @@ async function runAllTasks(
     nxJson: NxJsonConfiguration;
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
+    hasher: Hasher;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
   // TODO: vsavkin: remove this after Nx 16
@@ -81,10 +83,8 @@ async function runAllTasks(
     'task-graph-created'
   );
 
-  const hasher = new Hasher(context.projectGraph, context.nxJson, options);
-
   const orchestrator = new TaskOrchestrator(
-    hasher,
+    context.hasher,
     context.initiatingProject,
     context.projectGraph,
     context.taskGraph,
