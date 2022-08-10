@@ -98,6 +98,11 @@
             "name": "Updating Nx",
             "id": "updating-nx",
             "file": "shared/update"
+          },
+          {
+            "name": "Nx, NodeJS and Typescript Versions",
+            "id": "nx-nodejs-typescript-version-matrix",
+            "file": "shared/nx-compatibility-matrix"
           }
         ]
       },
