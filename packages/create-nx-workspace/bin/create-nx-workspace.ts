@@ -13,6 +13,7 @@ import {
   getPackageManagerVersion,
   PackageManager,
   packageManagerList,
+  generatePackageManagerFiles,
 } from './package-manager';
 import { validateNpmPackage } from './validate-npm-package';
 import { deduceDefaultBase } from './default-base';
@@ -720,8 +721,9 @@ async function createSandbox(packageManager: PackageManager) {
         license: 'MIT',
       })
     );
+    generatePackageManagerFiles(tmpDir, packageManager);
 
-    await execAndWait(`${install} --silent --ignore-scripts`, tmpDir);
+    await execAndWait(install, tmpDir);
 
     installSpinner.succeed();
   } catch (e) {
