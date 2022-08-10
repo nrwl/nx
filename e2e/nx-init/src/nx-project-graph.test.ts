@@ -10,8 +10,8 @@ import {
 describe('project graph creation', () => {
   let proj;
 
-  beforeAll(() => newProject());
-  afterAll(() => cleanupProject());
+  beforeEach(() => newProject());
+  afterEach(() => cleanupProject());
 
   it('should correctly build the nxdeps.json containing files for the project', () => {
     // ARRANGE
