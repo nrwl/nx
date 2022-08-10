@@ -15,4 +15,4 @@ We provide a recommended version, and it is usually the latest minor version of 
 | ~14.0.0         | **14.4.3**                     | 14.2.1 <= 14.4.3     |
 | ~14.1.0         | **latest**                     | 14.5.0 <= latest     |
 
-If you would like to see how the supported versions of Node and Typescript for the version of Angular you are using, [Lars Gyrup Brink Nielsen](https://twitter.com/LayZeeDK) has a very good resoucre for that [here](https://gist.github.com/LayZeeDK/c822cc812f75bb07b7c55d07ba2719b3).
+If you would like to see how the supported versions of Node and Typescript for the version of Angular you are using, [Lars Gyrup Brink Nielsen](https://twitter.com/LayZeeDK) has a very good resource for that [here](https://gist.github.com/LayZeeDK/c822cc812f75bb07b7c55d07ba2719b3).
