@@ -82,7 +82,7 @@ const sitemapLinks = readSiteMapIndex(
   join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
-const errors = [];
+const errors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
     if (!sitemapLinks.includes(['https://nx.dev', link].join('')))
