@@ -92,6 +92,11 @@ export interface Tree {
    */
   isFile(filePath: string): boolean;
 
+  // /**
+  //  * Check if this is a directory or not.
+  //  */
+  // isDirectory(filePath: string): boolean;
+
   /**
    * Returns the list of children of a folder.
    */
@@ -110,8 +115,22 @@ export interface Tree {
    */
   changePermissions(filePath: string, mode: Mode): void;
 
+  /**
+   * Check if this is deleted
+   * @param filePath
+   */
   isDeleted(filePath: string): boolean;
+
+  /**
+   * Check if this is renamed
+   * @param filePath
+   */
   isRenamed(filePath: string): boolean;
+
+  /**
+   * Check if this is a noop change
+   * @param filePath
+   */
   isNoop(filePath: string): boolean;
 }
 
@@ -144,15 +163,101 @@ export interface FileChange {
   noop?: boolean;
 }
 
+export interface IRecordChange {
+  content?: Buffer | null;
+  isDeleted?: boolean;
+  isRename?: boolean;
+  isFolder?: boolean;
+  isNoop?: boolean;
+  options?: TreeWriteOptions | TreeRenameOptions;
+}
+export interface IRecordChangeDelete extends IRecordChange {
+  isNoop: boolean;
+}
+export interface IRecordChangeCreate extends IRecordChange {
+  content: Buffer | null;
+  options: TreeWriteOptions;
+}
+export interface IRecordChangeRename extends IRecordChange {
+  content: Buffer | null;
+  isFolder: boolean;
+  options: TreeRenameOptions;
+}
+
+export class RecordChange implements IRecordChange {
+  public content: Buffer | null;
+  public isDeleted: boolean;
+  public isRename: boolean;
+  public isNoop: boolean;
+  public isFolder: boolean;
+  public options: TreeWriteOptions | TreeRenameOptions;
+
+  constructor(config: IRecordChange) {
+    Object.assign(
+      this,
+      {
+        content: null,
+        isDeleted: false,
+        isRename: false,
+        isNoop: void 0, // default to undefined
+        isFolder: false,
+        options: void 0,
+      },
+      config
+    );
+  }
+
+  isFile() {
+    return !this.isDeleted && !this.isFolder;
+  }
+
+  isDirectory() {
+    return !this.isDeleted && this.isFolder;
+  }
+}
+
+class DeleteChange extends RecordChange {
+  constructor(config?: IRecordChangeDelete) {
+    super(
+      Object.assign(
+        {
+          isDeleted: true,
+          content: null,
+        },
+        config || {}
+      )
+    );
+  }
+}
+class WriteChange extends RecordChange {
+  constructor(config: IRecordChangeCreate) {
+    super(
+      Object.assign(
+        {
+          isDeleted: false,
+        },
+        config
+      )
+    );
+  }
+}
+class RenameChange extends RecordChange {
+  constructor(config: IRecordChangeRename) {
+    super(
+      Object.assign(
+        {
+          isDeleted: false,
+          isRename: true,
+        },
+        config
+      )
+    );
+  }
+}
+
 export class FsTree implements Tree {
   private recordedChanges: {
-    [path: string]: {
-      content: Buffer | null;
-      isDeleted: boolean;
-      isRename?: boolean;
-      isNoop?: boolean;
-      options?: TreeWriteOptions | TreeRenameOptions;
-    };
+    [path: string]: RecordChange;
   } = {};
 
   // Used to track renames by mapping original path to new path
@@ -168,11 +273,13 @@ export class FsTree implements Tree {
     filePath = this.normalize(filePath);
     try {
       let content: Buffer;
-      if (this.renameChanges[this.rp(filePath)]) {
+      if (this.isRenamed(filePath)) {
         return null;
       }
-      if (this.recordedChanges[this.rp(filePath)]) {
-        content = this.recordedChanges[this.rp(filePath)].content;
+
+      const change = this.getChange(filePath);
+      if (change) {
+        content = change.content;
       } else {
         content = this.fsReadFile(filePath);
       }
@@ -197,15 +304,17 @@ export class FsTree implements Tree {
       Buffer.from(content).equals(this.fsReadFile(filePath))
     ) {
       // Remove recorded change because the file has been restored to it's original contents
-      delete this.recordedChanges[this.rp(filePath)];
+      this.removeChange(filePath);
       return;
     }
     try {
-      this.recordedChanges[this.rp(filePath)] = {
-        content: Buffer.from(content),
-        isDeleted: false,
-        options,
-      };
+      this.addChange(
+        filePath,
+        new WriteChange({
+          content: Buffer.from(content),
+          options,
+        })
+      );
     } catch (e) {
       if (this.isVerbose) {
         logger.error(e);
@@ -224,15 +333,16 @@ export class FsTree implements Tree {
 
   delete(filePath: string): void {
     filePath = this.normalize(filePath);
-    if (this.filesForDir(this.rp(filePath)).length > 0) {
-      this.filesForDir(this.rp(filePath)).forEach(
-        (f) => (this.recordedChanges[f] = { content: null, isDeleted: true })
-      );
+
+    this.filesForDir(this.rp(filePath)).forEach((f) => {
+      this.addChange(f, new DeleteChange());
+    });
+
+    if (this.isDeleted(filePath)) {
+      return;
     }
-    this.recordedChanges[this.rp(filePath)] = {
-      content: null,
-      isDeleted: true,
-    };
+
+    this.addChange(filePath, new DeleteChange());
 
     // Delete directories when empty
     if (this.children(dirname(this.rp(filePath))).length < 1) {
@@ -243,11 +353,13 @@ export class FsTree implements Tree {
   exists(filePath: string): boolean {
     filePath = this.normalize(filePath);
     try {
-      if (this.renameChanges[this.rp(filePath)]) {
+      if (this.isRenamed(filePath)) {
         return false;
       }
-      if (this.recordedChanges[this.rp(filePath)]) {
-        return !this.recordedChanges[this.rp(filePath)].isDeleted;
+
+      const change = this.getChange(filePath);
+      if (change) {
+        return !change.isDeleted;
       } else if (this.filesForDir(this.rp(filePath)).length > 0) {
         return true;
       } else {
@@ -262,56 +374,71 @@ export class FsTree implements Tree {
     from = this.rp(this.normalize(from));
     to = this.rp(this.normalize(to));
 
-    if (!this.exists(from)) {
-      return void 0;
-    }
+    if (this.fsExists(from)) {
+      const change = this.addChange(
+        to,
+        new RenameChange({
+          content: this.read(from),
+          isFolder: this.isDirectory(from),
+          isNoop,
+          options: {
+            mode: this.fsIsInGitIndex(from) ? 'git' : 'fs',
+            source: from,
+          },
+        })
+      );
 
-    const dirFiles = this.filesForDir(from);
-    const mode = this.fsIsInGitIndex(from) ? 'git' : 'fs';
+      this.renameChanges[from] = to;
 
-    this.recordedChanges[to] = {
-      content: dirFiles.length > 0 ? null : this.read(from),
-      isDeleted: false,
-      isRename: true,
-      isNoop,
-      options: {
-        mode,
-        source: from,
-      } as TreeRenameOptions,
-    };
+      // delete previous entry for moved file
+      if (this.renameChanges[to]) {
+        delete this.renameChanges[to];
+      }
 
-    this.renameChanges[from] = to;
+      this.filesForDir(from).forEach((f) => {
+        this.rename(this.rp(f), this.rp(join(to, basename(f))), true);
+      });
 
-    // delete previous entry if doing a swip-swap to clean the map
-    if (this.renameChanges[to] === from) {
-      delete this.renameChanges[to];
-      // delete this.recordedChanges[from];
-    }
-    // console.log(`${from} -> ${to}`);
-    // console.log(JSON.stringify(this.renameChanges));
-    dirFiles.forEach((f) => {
-      // console.log(`Entry: ${this.rp(f)} -> ${this.rp(join(to, basename(f)))}`);
-      this.rename(this.rp(f), this.rp(join(to, basename(f))), true);
-    });
-
-    // Delete directories when empty
-    if (this.children(dirname(from)).length < 1) {
-      this.recordedChanges[dirname(from)] = {
-        content: null,
-        isDeleted: true,
-      };
+      // Delete directories when empty
+      if (
+        !isNoop &&
+        !change.isDirectory() &&
+        this.children(dirname(from)).length < 1
+      ) {
+        this.delete(dirname(from));
+      }
+    } else {
+      const content = this.read(from);
+      this.delete(from);
+      this.write(to, content);
+      return;
     }
   }
 
   isFile(filePath: string): boolean {
-    filePath = this.normalize(filePath);
     try {
-      if (this.recordedChanges[this.rp(filePath)]) {
-        return !this.recordedChanges[this.rp(filePath)].isDeleted;
-      } else if (this.renameChanges[this.rp(filePath)]) {
+      const change = this.getChange(filePath);
+      if (change) {
+        return change.isFile();
+      } else if (this.isRenamed(filePath)) {
         return false;
       } else {
-        return this.fsIsFile(filePath);
+        return this.fsIsFile(this.normalize(filePath));
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  isDirectory(filePath: string): boolean {
+    try {
+      const change = this.getChange(filePath);
+      if (change) {
+        return change.isDirectory();
+      } else if (this.isRenamed(filePath)) {
+        return false;
+      } else {
+        return this.fsIsDirectory(this.normalize(filePath));
       }
     } catch {
       return false;
@@ -325,7 +452,7 @@ export class FsTree implements Tree {
     res = [...res, ...this.directChildrenOfDir(this.rp(dirPath))];
     res = res.filter((q) => {
       const p = join(this.rp(dirPath), q);
-      return !this.renameChanges[p] && !this.recordedChanges[p]?.isDeleted;
+      return !this.isRenamed(p) && !this.isDeleted(p);
     });
     // Dedupe
     return Array.from(new Set(res));
@@ -334,39 +461,40 @@ export class FsTree implements Tree {
   listChanges(): FileChange[] {
     const res = [] as FileChange[];
     Object.keys(this.recordedChanges).forEach((f) => {
-      if (this.recordedChanges[f].isDeleted) {
+      const change = this.recordedChanges[f];
+      if (change instanceof DeleteChange) {
         if (this.fsExists(f)) {
           res.push({
             path: f,
             type: 'DELETE',
             content: null,
-            noop: this.recordedChanges[f].isNoop,
+            noop: change.isNoop,
           });
         }
       } else {
-        if (this.recordedChanges[f].isRename) {
+        if (change instanceof RenameChange) {
           res.push({
             path: f,
             type: 'RENAME',
-            content: this.recordedChanges[f].content,
-            options: this.recordedChanges[f].options,
-            noop: this.recordedChanges[f].isNoop,
+            content: change.content,
+            options: change.options,
+            noop: change.isNoop,
           });
         } else if (this.fsExists(f)) {
           res.push({
             path: f,
             type: 'UPDATE',
-            content: this.recordedChanges[f].content,
-            options: this.recordedChanges[f].options,
-            noop: this.recordedChanges[f].isNoop,
+            content: change.content,
+            options: change.options,
+            noop: change.isNoop,
           });
         } else {
           res.push({
             path: f,
             type: 'CREATE',
-            content: this.recordedChanges[f].content,
-            options: this.recordedChanges[f].options,
-            noop: this.recordedChanges[f].isNoop,
+            content: change.content,
+            options: change.options,
+            noop: change.isNoop,
           });
         }
       }
@@ -377,14 +505,19 @@ export class FsTree implements Tree {
   changePermissions(filePath: string, mode: Mode): void {
     filePath = this.normalize(filePath);
     const filePathChangeKey = this.rp(filePath);
-    if (this.recordedChanges[filePathChangeKey]) {
-      if (this.recordedChanges[filePathChangeKey].isDeleted) {
+    if (this.isRenamed(filePathChangeKey)) {
+      throw new Error(`Cannot change permissions of renamed file ${filePath}.`);
+    }
+
+    const change = this.getChange(filePathChangeKey);
+    if (change) {
+      if (change.isDeleted) {
         throw new Error(
           `Cannot change permissions of deleted file ${filePath}.`
         );
       }
 
-      this.recordedChanges[filePathChangeKey].options = { mode };
+      change.options = { mode };
     } else if (!this.fsExists(filePath)) {
       throw new Error(
         `Cannot change permissions of non-existing file ${filePath}.`
@@ -395,27 +528,44 @@ export class FsTree implements Tree {
       // permissions to them.
       throw new Error(`Cannot change permissions of non-file ${filePath}.`);
     } else {
-      this.recordedChanges[filePathChangeKey] = {
-        content: this.fsReadFile(filePath),
-        isDeleted: false,
-        options: { mode },
-      };
+      this.addChange(
+        filePathChangeKey,
+        new WriteChange({
+          content: this.fsReadFile(filePath),
+          isDeleted: false,
+          options: { mode },
+        })
+      );
     }
   }
 
   isDeleted(path: string): boolean {
-    path = this.rp(this.normalize(path));
-    return !!this.recordedChanges[path]?.isDeleted || false;
+    return !!this.getChange(path)?.isDeleted;
+  }
+
+  isNoop(path: string): boolean {
+    return !!this.getChange(path)?.isNoop;
   }
 
   isRenamed(path: string): boolean {
     path = this.rp(this.normalize(path));
-    return !!this.renameChanges[path] || false;
+    return !!this.renameChanges[path];
   }
 
-  isNoop(path: string): boolean {
+  private getChange(path: string): RecordChange | null {
     path = this.rp(this.normalize(path));
-    return !!this.recordedChanges[path]?.isNoop || false;
+    return this.recordedChanges[path] || null;
+  }
+
+  private addChange(path: string, rc: RecordChange): RecordChange {
+    path = this.rp(this.normalize(path));
+    this.recordedChanges[path] = rc;
+    return rc;
+  }
+
+  private removeChange(path: string): void {
+    path = this.rp(this.normalize(path));
+    delete this.recordedChanges[path];
   }
 
   private normalize(path: string) {
@@ -434,6 +584,15 @@ export class FsTree implements Tree {
     try {
       const stat = statSync(join(this.root, filePath));
       return stat.isFile();
+    } catch {
+      return false;
+    }
+  }
+
+  private fsIsDirectory(filePath: string): boolean {
+    try {
+      const stat = statSync(join(this.root, filePath));
+      return stat.isDirectory();
     } catch {
       return false;
     }
@@ -464,9 +623,7 @@ export class FsTree implements Tree {
   private filesForDir(path: string): string[] {
     return Object.keys(this.recordedChanges).filter(
       (f) =>
-        f.startsWith(`${path}/`) &&
-        !this.recordedChanges[f].isDeleted &&
-        !this.renameChanges[f]
+        f.startsWith(`${path}/`) && !this.isDeleted(f) && !this.isRenamed(f)
     );
   }
 
@@ -508,11 +665,11 @@ export function flushChanges(root: string, fileChanges: FileChange[]): void {
     } else if (f.type === 'DELETE') {
       removeSync(fpath);
     } else if (f.type === 'RENAME') {
-      const options: TreeRenameOptions = f.options as TreeRenameOptions;
-      if (options?.mode === 'fs') {
-        renameSync(join(root, options.source), fpath);
-      } else if (f.options?.mode === 'git') {
-        renameGitSync(join(root, options.source), fpath);
+      const { mode, source } = f.options as TreeRenameOptions;
+      if (mode === 'fs') {
+        renameSync(join(root, source), fpath);
+      } else if (mode === 'git') {
+        renameGitSync(join(root, source), fpath);
       }
     }
   });
@@ -530,11 +687,8 @@ export function printChanges(
     } else if (f.type === 'DELETE') {
       console.log(`${indent}${chalk.yellow('DELETE')} ${f.path}`);
     } else if (f.type === 'RENAME') {
-      console.log(
-        `${chalk.cyan('RENAME')} ${
-          (f.options as TreeRenameOptions)?.source
-        } -> ${f.path}`
-      );
+      const { source } = f.options as TreeRenameOptions;
+      console.log(`${indent}${chalk.cyan('RENAME')} ${source} -> ${f.path}`);
     }
   });
 }

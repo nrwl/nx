@@ -130,6 +130,10 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
     return this.tree.exists(filePath) && !!this.tree.read(filePath);
   }
 
+  isDirectory(filePath: string): boolean {
+    return this.tree.exists(filePath) && this.children(filePath).length > 0;
+  }
+
   listChanges(): FileChange[] {
     const fileChanges = [];
     for (const action of this.tree.actions) {

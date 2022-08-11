@@ -260,19 +260,9 @@ describe('tree', () => {
 
       expect(s(tree.listChanges())).toEqual([
         {
-          path: 'parent/new-child/new-child-file.txt',
+          path: 'renamed-new-child-file.txt',
           type: 'CREATE',
           content: 'new child content',
-        },
-        {
-          path: 'renamed-new-child-file.txt',
-          type: 'RENAME',
-          content: 'new child content',
-          options: {
-            mode: 'fs',
-            source: 'parent/new-child/new-child-file.txt',
-          },
-          noop: false,
         },
         {
           path: 'renamed-root-file.txt',
@@ -442,14 +432,20 @@ describe('tree', () => {
           },
           noop: true,
         },
-        {
-          content: null,
-          path: 'parent/child',
-          type: 'DELETE',
-        },
       ]);
 
       flushChanges(dir, tree.listChanges());
+
+      expect(tree.children('parent')).toEqual([
+        'new-child',
+        'parent-file-with-write-options.txt',
+        'parent-file.txt',
+      ]);
+
+      expect(tree.read('parent/new-child/child-file.txt', 'utf-8')).toEqual(
+        'The child content'
+      );
+      expect(tree.read('parent/child/child-file.txt')).toEqual(null);
     });
 
     describe('in git repos', () => {
@@ -509,11 +505,6 @@ describe('tree', () => {
               source: 'parent/child/child-file.txt',
             },
             noop: true,
-          },
-          {
-            content: null,
-            path: 'parent/child',
-            type: 'DELETE',
           },
         ]);
 
