@@ -7,7 +7,11 @@ import {
 import { createPackageJson } from '@nrwl/workspace/src/utilities/create-package-json';
 
 import type { BuildNodeBuilderOptions } from './types';
-import { getHelperDependenciesFromProjectGraph } from '@nrwl/js/src/utils/compiler-helper-dependency';
+import {
+  getHelperDependenciesFromProjectGraph,
+  HelperDependency,
+} from '@nrwl/js/src/utils/compiler-helper-dependency';
+import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 export class GeneratePackageJsonWebpackPlugin implements WebpackPluginInstance {
   constructor(
@@ -30,6 +34,22 @@ export class GeneratePackageJsonWebpackPlugin implements WebpackPluginInstance {
             this.context.root,
             this.context.projectName
           );
+
+          const importHelpers = !!readTsConfig(this.options.tsConfig).options
+            .importHelpers;
+          const shouldAddHelperDependency =
+            importHelpers &&
+            helperDependencies.every(
+              (dep) => dep.target !== HelperDependency.tsc
+            );
+
+          if (shouldAddHelperDependency) {
+            helperDependencies.push({
+              type: 'static',
+              source: this.context.projectName,
+              target: HelperDependency.tsc,
+            });
+          }
 
           if (helperDependencies.length > 0) {
             this.projectGraph.dependencies[this.context.projectName] =

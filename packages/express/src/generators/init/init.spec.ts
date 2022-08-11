@@ -27,6 +27,8 @@ describe('init', () => {
     const packageJson = readJson(tree, 'package.json');
     // add express
     expect(packageJson.dependencies['express']).toBeDefined();
+    // add tslib
+    expect(packageJson.dependencies['tslib']).toBeDefined();
     // move `@nrwl/express` to dev
     expect(packageJson.dependencies['@nrwl/express']).toBeUndefined();
     expect(packageJson.devDependencies['@nrwl/express']).toBeDefined();
