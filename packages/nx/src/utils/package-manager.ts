@@ -60,7 +60,6 @@ export function getPackageManagerCommand(
           : 'yarn install --frozen-lockfile',
         add: useBerry ? 'yarn add' : 'yarn add -W',
         addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
-        addGlobal: 'yarn global add',
         rm: 'yarn remove',
         exec: useBerry ? 'yarn exec' : 'yarn',
         run: (script: string, args: string) => `yarn ${script} ${args}`,
@@ -78,7 +77,6 @@ export function getPackageManagerCommand(
         ciInstall: 'pnpm install --frozen-lockfile',
         add: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
         addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
-        addGlobal: 'pnpm add -g',
         rm: 'pnpm rm',
         exec: useExec ? 'pnpm exec' : 'pnpx',
         run: (script: string, args: string) =>
@@ -96,7 +94,6 @@ export function getPackageManagerCommand(
         ciInstall: 'npm ci',
         add: 'npm install',
         addDev: 'npm install -D',
-        addGlobal: 'npm install -g',
         rm: 'npm rm',
         exec: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,

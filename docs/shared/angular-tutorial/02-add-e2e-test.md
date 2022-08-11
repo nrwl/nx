@@ -5,7 +5,7 @@ src="https://www.youtube.com/embed/owRAO75DIR4"
 title="Nx.dev Tutorial | Angular | Step 2: Add E2E Test"
 width="100%" /%}
 
-By default, Nx uses [Cypress](/cypress/overview) to run E2E tests.
+By default, Nx uses [Cypress](/packages/cypress) to run E2E tests.
 
 **Open `apps/todos-e2e/src/support/app.po.ts`.** It's a page object file that contains helpers for querying the page.
 

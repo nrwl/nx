@@ -36,7 +36,7 @@ If you are looking to add a React application, check out the [React plugin](/pac
 
 ### Creating Libraries
 
-To create a generic TypeScript library (i.e. non-framework specific), use the [`@nrwl/js`](/js/overview) plugin.
+To create a generic TypeScript library (i.e. non-framework specific), use the [`@nrwl/js`](/packages/js) plugin.
 
 ```bash
 nx g @nrwl/js:lib my-new-lib

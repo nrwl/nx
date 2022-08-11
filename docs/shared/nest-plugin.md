@@ -148,4 +148,4 @@ nx test my-nest-lib
 ## More Documentation
 
 - [Todo Tutorial](/node-tutorial/01-create-application)
-- [Using Jest](/jest/overview)
+- [Using Jest](/packages/jest)

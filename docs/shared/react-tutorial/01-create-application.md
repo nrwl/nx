@@ -8,7 +8,7 @@ width="100%" /%}
 In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies.
 
 {% callout type="check" title="Nx has first-class Next.js support" %}
-Nx has first-class Next.js support, if you are looking to try or use it for your project. Read more about it [here](/next/overview)
+Nx has first-class Next.js support, if you are looking to try or use it for your project. Read more about it [here](/packages/next)
 {% /callout %}
 
 {% callout type="note" title="Plugins for a rich developer experience" %}

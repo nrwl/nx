@@ -83,7 +83,9 @@ export class DocumentsApi {
       } else {
         paths.push({
           params: {
-            segments: [...acc, curr.id],
+            segments: curr.path
+              ? curr.path.split('/').filter(Boolean).flat()
+              : [...acc, curr.id],
           },
         });
       }
@@ -98,6 +100,13 @@ export class DocumentsApi {
     return paths;
   }
 
+  /**
+   * Getting the document's filePath is done in 2 steps
+   * - traversing the tree by path segments
+   * - if not found, try searching for it via the complete path string
+   * @param path
+   * @private
+   */
   private getFilePath(path: string[]): string {
     let items = this.documents?.itemList;
 
@@ -105,15 +114,34 @@ export class DocumentsApi {
       throw new Error(`Document not found`);
     }
 
-    let found;
+    let found: DocumentMetadata | null = null;
+    // Traversing the tree by matching item's ids with path's segments
     for (const part of path) {
-      found = items?.find((item) => item.id === part);
+      found = items?.find((item) => item.id === part) || null;
       if (found) {
         items = found.itemList;
-      } else {
-        throw new Error(`Document not found`);
       }
     }
+
+    // If still not found, then attempt to match any item's id with the current path as a string
+    if (!found) {
+      function recur(curr, acc) {
+        if (curr.itemList) {
+          curr.itemList.forEach((ii) => {
+            recur(ii, [...acc, curr.id]);
+          });
+        } else {
+          if (curr.path === '/' + path.join('/')) {
+            found = curr;
+          }
+        }
+      }
+      this.documents.itemList!.forEach((item) => {
+        recur(item, []);
+      });
+    }
+
+    if (!found) throw new Error(`Document not found`);
     const file = found.file ?? ['generated', ...path].join('/');
     return join(this.options.publicDocsRoot, `${file}.md`);
   }
