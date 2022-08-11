@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { nestJsVersion, nxVersion } from '../../utils/versions';
 import { initGenerator } from './init';
 
@@ -8,7 +8,7 @@ describe('init generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     jest.clearAllMocks();
   });
 

@@ -1,12 +1,12 @@
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import eslint8Updates from './eslint-8-updates';
 
 describe('eslint8Updates()', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     tree.write(
       `tools/eslint-rules/jest.config.js`,
       `

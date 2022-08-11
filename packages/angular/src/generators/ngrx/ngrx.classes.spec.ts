@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { dirname } from 'path';
 import {
   AppConfig,
@@ -31,7 +31,7 @@ describe('NgRx generator', () => {
     expect(tree.exists(file)).not.toBeTruthy();
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     createApp(tree, 'myapp');
     appConfig = getAppConfig();
     statePath = `${dirname(appConfig.appModule)}/+state`;

@@ -10,7 +10,7 @@ describe('NxPlugin Generator Generator', () => {
 
   beforeEach(async () => {
     projectName = 'my-plugin';
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
     await pluginGenerator(tree, {
       name: projectName,
     } as any);

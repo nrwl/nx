@@ -1,5 +1,5 @@
 import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import updateAngularConfig from './update-webpack-browser-config';
 
 function getBuildTarget(tree: Tree) {
@@ -10,7 +10,7 @@ describe('Migration to update targets with @nrwl/angular:webpack-browser executo
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     addProjectConfiguration(tree, 'ng-app', {
       root: '',

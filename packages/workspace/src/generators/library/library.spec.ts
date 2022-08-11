@@ -5,7 +5,10 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '@nrwl/devkit/testing';
 
 import { libraryGenerator } from './library';
 import { Schema } from './schema.d';
@@ -25,12 +28,12 @@ describe('lib', () => {
   };
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   describe('workspace v2', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace(2);
+      tree = createTreeWithEmptyWorkspace();
     });
 
     it('should default to standalone project for first project', async () => {
@@ -60,7 +63,7 @@ describe('lib', () => {
 
   // describe('workspace v1', () => {
   //   beforeEach(() => {
-  //     tree = createTreeWithEmptyWorkspace(1);
+  //     tree = createTreeWithEmptyV1Workspace();
   //   });
   //
   //   it('should default to inline project for first project', async () => {

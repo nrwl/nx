@@ -59,7 +59,7 @@ async function libSetUp(tree: Tree, options = setupDefaults) {
 describe('Jest Migration (v14.0.0)', () => {
   let tree: Tree;
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should rename project jest.config.js to jest.config.ts', async () => {

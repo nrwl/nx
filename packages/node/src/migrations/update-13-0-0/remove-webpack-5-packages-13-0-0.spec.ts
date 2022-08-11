@@ -1,5 +1,5 @@
 import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import subject from './remove-webpack-5-packages-13-0-0';
 
@@ -26,7 +26,7 @@ describe('Migration: Remove webpack 5 packages from Nx12', () => {
   `(
     `should remove packages installed via webpack5 generator`,
     async ({ version }) => {
-      let tree = createTreeWithEmptyWorkspace();
+      let tree = createTreeWithEmptyV1Workspace();
 
       tree.write(
         'package.json',
@@ -62,7 +62,7 @@ describe('Migration: Remove webpack 5 packages from Nx12', () => {
   `(
     `should not do anything if the webpack version is not 5`,
     async ({ version }) => {
-      let tree = createTreeWithEmptyWorkspace();
+      let tree = createTreeWithEmptyV1Workspace();
 
       tree.write(
         'package.json',
@@ -94,7 +94,7 @@ describe('Migration: Remove webpack 5 packages from Nx12', () => {
   );
 
   it(`should not remove packages not every expected package is installed`, async () => {
-    let tree = createTreeWithEmptyWorkspace();
+    let tree = createTreeWithEmptyV1Workspace();
 
     tree.write(
       'package.json',

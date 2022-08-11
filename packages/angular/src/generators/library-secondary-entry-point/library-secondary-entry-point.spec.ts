@@ -12,7 +12,7 @@ describe('librarySecondaryEntryPoint generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should throw when the library does not exist in the workspace', async () => {

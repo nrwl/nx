@@ -1,4 +1,4 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { readJson, Tree } from '@nrwl/devkit';
 import { updateEmotionSetup } from './update-emotion-setup';
 
@@ -6,7 +6,7 @@ describe('Update tsconfig config for Emotion', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it(`should add jsxImportSource if it uses @emotion/react`, async () => {

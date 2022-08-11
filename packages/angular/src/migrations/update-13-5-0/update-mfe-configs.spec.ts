@@ -15,7 +15,7 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 describe('migrateMFEConfigs', () => {
   it('should do nothing for correct setups', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'test', {
       root: 'apps/test',
       targets: {
@@ -71,7 +71,7 @@ describe('migrateMFEConfigs', () => {
 
   it('should fix incorrect setups', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'test', {
       root: 'apps/test',
       sourceRoot: 'apps/test/src',

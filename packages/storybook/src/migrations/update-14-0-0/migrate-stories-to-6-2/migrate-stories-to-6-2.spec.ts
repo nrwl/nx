@@ -4,7 +4,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { joinPathFragments, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { storybookVersion } from '@nrwl/storybook';
 import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
@@ -43,7 +43,7 @@ describe('migrate-stories-to-6-2 schematic', () => {
         ),
       });
 
-      appTree = createTreeWithEmptyWorkspace();
+      appTree = createTreeWithEmptyV1Workspace();
 
       await runAngularLibrarySchematic(appTree, {
         name: 'test-ui-lib',

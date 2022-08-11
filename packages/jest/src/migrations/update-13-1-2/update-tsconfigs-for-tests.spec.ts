@@ -1,5 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import update from './update-tsconfigs-for-tests';
 
 const reactTsConfigs = {
@@ -170,7 +170,7 @@ const tsConfigWithExclude = {
     let tree: Tree;
 
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyV1Workspace();
       tree.write(
         'apps/project-one/tsconfig.app.json',
         String.raw`${JSON.stringify(configs.app, null, 2)}`

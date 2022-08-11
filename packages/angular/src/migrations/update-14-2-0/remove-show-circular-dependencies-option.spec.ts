@@ -10,7 +10,7 @@ describe('remove-show-circular-dependencies-option migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it.each([

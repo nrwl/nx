@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { webWorkerGenerator } from './web-worker';
 
@@ -9,7 +9,7 @@ describe('webWorker generator', () => {
   const appName = 'ng-app1';
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     await applicationGenerator(tree, { name: appName });
     jest.clearAllMocks();
   });

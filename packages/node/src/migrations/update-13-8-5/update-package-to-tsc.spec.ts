@@ -1,11 +1,11 @@
 import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import update from './update-package-to-tsc';
 
 describe('Migration: rename package to tsc', () => {
   it(`should rename the "package" executor to "tsc"`, async () => {
-    let tree = createTreeWithEmptyWorkspace();
+    let tree = createTreeWithEmptyV1Workspace();
 
     tree.write(
       'workspace.json',
@@ -53,7 +53,7 @@ describe('Migration: rename package to tsc', () => {
   });
 
   it(`should skip migration if no projects use @nrwl/js:node`, async () => {
-    let tree = createTreeWithEmptyWorkspace();
+    let tree = createTreeWithEmptyV1Workspace();
 
     tree.write(
       'workspace.json',

@@ -1,6 +1,6 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '@nrwl/workspace/generators';
 import { cypressProjectGenerator } from './cypress-project';
@@ -14,7 +14,7 @@ describe('@nrwl/storybook:cypress-project', () => {
 
   beforeEach(async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     await libraryGenerator(tree, {
       name: 'test-ui-lib',
       standaloneConfig: false,

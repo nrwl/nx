@@ -11,7 +11,7 @@ describe('migrate-mfe-to-mf', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should replace any imports from nrwl/angular/mfe', () => {

@@ -1,5 +1,5 @@
 import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import updateStorybookTsconfig from './fix-storybook-tsconfig';
 
 describe('Fix Storybook TSConfig to avoid VSCode error', () => {
@@ -7,7 +7,7 @@ describe('Fix Storybook TSConfig to avoid VSCode error', () => {
 
   describe('when project has valid configuration and targets', () => {
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyV1Workspace();
 
       writeJson(tree, 'workspace.json', {
         projects: {
@@ -56,7 +56,7 @@ describe('Fix Storybook TSConfig to avoid VSCode error', () => {
 
   describe('when project has no targets', () => {
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyV1Workspace();
 
       writeJson(tree, 'workspace.json', {
         projects: {

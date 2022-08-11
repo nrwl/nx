@@ -1,4 +1,4 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { readJson, writeJson, DependencyType } from '@nrwl/devkit';
 import { createBabelrcForWorkspaceLibs } from './create-babelrc-for-workspace-libs';
 import type { ProjectGraph, Tree } from '@nrwl/devkit';
@@ -15,7 +15,7 @@ describe('Create missing .babelrc files', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it(`should create .babelrc files for libs that are used in '@nrwl/web:build'`, async () => {

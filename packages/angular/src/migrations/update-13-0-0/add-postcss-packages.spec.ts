@@ -6,7 +6,7 @@ describe('add-postcss-import migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should not add postcss-import when ng-packagr is not installed', () => {

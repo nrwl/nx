@@ -4,7 +4,7 @@ import {
   getProjects,
   readJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { reactNativeApplicationGenerator } from './application';
 
@@ -12,7 +12,7 @@ describe('app', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyV1Workspace();
     appTree.write('.gitignore', '');
   });
 

@@ -5,7 +5,7 @@ import {
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '@nrwl/workspace/generators';
@@ -18,7 +18,7 @@ describe('@nrwl/storybook:configuration', () => {
     let tree: Tree;
 
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyV1Workspace();
       await libraryGenerator(tree, {
         name: 'test-ui-lib',
         standaloneConfig: false,
@@ -424,7 +424,7 @@ describe('@nrwl/storybook:configuration', () => {
     describe('for js Storybook configurations', () => {
       let tree: Tree;
       beforeAll(async () => {
-        tree = createTreeWithEmptyWorkspace();
+        tree = createTreeWithEmptyV1Workspace();
         writeJson(tree, 'workspace.json', workspaceConfiguration);
         writeJson(tree, 'apps/nxapp/tsconfig.json', {});
         writeJson(tree, 'apps/reapp/tsconfig.json', {});
@@ -522,7 +522,7 @@ describe('@nrwl/storybook:configuration', () => {
     describe('for TypeScript Storybook configurations', () => {
       let tree: Tree;
       beforeAll(async () => {
-        tree = createTreeWithEmptyWorkspace();
+        tree = createTreeWithEmptyV1Workspace();
         writeJson(tree, 'workspace.json', workspaceConfiguration);
         writeJson(tree, 'apps/nxapp/tsconfig.json', {});
         writeJson(tree, 'apps/reapp/tsconfig.json', {});

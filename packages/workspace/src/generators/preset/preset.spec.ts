@@ -1,5 +1,5 @@
 import { Tree, readJson, NxJsonConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
 import * as path from 'path';
@@ -9,7 +9,7 @@ describe('preset', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     overrideCollectionResolutionForTesting({
       '@nrwl/workspace': path.join(
         __dirname,

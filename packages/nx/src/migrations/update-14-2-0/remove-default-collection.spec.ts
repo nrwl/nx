@@ -10,7 +10,7 @@ describe('remove-default-collection', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should remove default collection from nx.json', async () => {

@@ -1,5 +1,5 @@
 import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '../../generators/library/library';
 import { removeStyledJsxBabelConfig } from './remove-styled-jsx-babel-plugin';
@@ -8,7 +8,7 @@ describe('Remove styled-jsx babel plugin for Next libs', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     await libraryGenerator(tree, {
       name: 'test-lib',

@@ -1,4 +1,4 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { addProjectConfiguration, Tree, writeJson } from '@nrwl/devkit';
 import removeTypescriptPlugin from './remove-typescript-plugin';
 
@@ -6,7 +6,7 @@ describe('remove typescript plugin', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     addProjectConfiguration(tree, 'proj', {
       root: 'proj',

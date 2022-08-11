@@ -4,7 +4,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '../../../utils/lint';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
@@ -24,7 +24,7 @@ describe('updateEslint', () => {
       relativeToRootDestination: 'libs/shared/my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should handle .eslintrc.json not existing', async () => {

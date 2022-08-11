@@ -12,7 +12,7 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { E2eMigrator } from './e2e.migrator';
 import { MigrationProjectConfiguration } from './types';
 
@@ -47,7 +47,7 @@ describe('e2e migrator', () => {
   }
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     // when this migrator is invoked, some of the workspace migration has
     // already been run, so we make some adjustments to match that state

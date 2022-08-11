@@ -1,5 +1,5 @@
 import { getProjects, Tree, updateProjectConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import componentStoryGenerator from './component-story';
 import { Linter } from '@nrwl/linter';
 
@@ -408,7 +408,7 @@ export async function createTestUILib(
   libName: string,
   useEsLint = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace();
+  let appTree = createTreeWithEmptyV1Workspace();
   appTree.write('.gitignore', '');
 
   await libraryGenerator(appTree, {

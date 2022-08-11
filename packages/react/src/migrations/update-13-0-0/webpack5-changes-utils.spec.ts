@@ -1,11 +1,11 @@
 import { Tree, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { allReactProjectsWithStorybookConfiguration } from '@nrwl/react/src/migrations/update-13-0-0/webpack5-changes-utils';
 
 describe('webpack5ChangesUtils', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should get project name and storybook configuration for all react projects', () => {

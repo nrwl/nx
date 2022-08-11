@@ -1,11 +1,11 @@
 import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import subject from './remove-deprecated-options-13-0-0';
 
 describe('Migration: Remove deprecated options', () => {
   it(`should remove deprecated node build options`, async () => {
-    let tree = createTreeWithEmptyWorkspace();
+    let tree = createTreeWithEmptyV1Workspace();
 
     tree.write(
       'workspace.json',

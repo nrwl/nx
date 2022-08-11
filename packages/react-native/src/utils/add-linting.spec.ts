@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '@nrwl/workspace/src/generators/library/library';
 import { addLinting } from './add-linting';
@@ -8,7 +8,7 @@ describe('Add Linting', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.None,

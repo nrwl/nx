@@ -3,7 +3,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateBuildTargets } from './update-build-targets';
 
@@ -20,7 +20,7 @@ describe('updateBuildTargets', () => {
       newProjectName: 'subfolder-my-destination',
       relativeToRootDestination: 'libs/subfolder/my-destination',
     };
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(tree, 'my-source', {
       root: 'libs/my-source',
       targets: {

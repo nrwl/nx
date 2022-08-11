@@ -1,11 +1,11 @@
 import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import rename from './rename-build-to-webpack';
 
 describe('Migration: rename build to webpack', () => {
   it(`should rename the "build" executor to "webpack"`, async () => {
-    let tree = createTreeWithEmptyWorkspace();
+    let tree = createTreeWithEmptyV1Workspace();
 
     tree.write(
       'workspace.json',

@@ -2,14 +2,14 @@ import { readJson, Tree } from '@nrwl/devkit';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { removeReactReduxTypesFromPackageJson } from './remove-react-redux-types-package';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 describe('Remove @types/react-redux Package from package.json 12.0.0', () => {
   let tree: Tree;
   let schematicRunner: SchematicTestRunner;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     schematicRunner = new SchematicTestRunner(
       '@nrwl/react',

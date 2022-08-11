@@ -1,5 +1,5 @@
 import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { applicationGenerator, libraryGenerator } from '@nrwl/react';
 import { Linter } from '@nrwl/linter';
 import { reduxGenerator } from './redux';
@@ -8,7 +8,7 @@ describe('redux', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyV1Workspace();
     await libraryGenerator(appTree, {
       name: 'my-lib',
       linter: Linter.EsLint,

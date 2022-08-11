@@ -5,7 +5,7 @@ import { scamGenerator } from './scam';
 describe('SCAM Generator', () => {
   it('should create the inline scam correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -53,7 +53,7 @@ describe('SCAM Generator', () => {
 
   it('should create the separate scam correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -88,7 +88,7 @@ describe('SCAM Generator', () => {
 
   it('should create the scam correctly and export it for a secondary entrypoint', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'lib1', {
       projectType: 'library',
       sourceRoot: 'libs/lib1/src',
@@ -138,7 +138,7 @@ describe('SCAM Generator', () => {
   describe('--path', () => {
     it('should not throw when the path does not exist under project', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app1', {
         projectType: 'application',
         sourceRoot: 'apps/app1/src',
@@ -187,7 +187,7 @@ describe('SCAM Generator', () => {
 
     it('should not matter if the path starts with a slash', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app1', {
         projectType: 'application',
         sourceRoot: 'apps/app1/src',
@@ -236,7 +236,7 @@ describe('SCAM Generator', () => {
 
     it('should throw when the path does not exist under project', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app1', {
         projectType: 'application',
         sourceRoot: 'apps/app1/src',

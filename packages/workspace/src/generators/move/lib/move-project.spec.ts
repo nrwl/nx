@@ -3,7 +3,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { moveProject } from '@nrwl/workspace/src/generators/move/lib/move-project';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
@@ -13,7 +13,7 @@ describe('moveProject', () => {
   let projectConfig: ProjectConfiguration;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     await libraryGenerator(tree, { name: 'my-lib', standaloneConfig: false });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
