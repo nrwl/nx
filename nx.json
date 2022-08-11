@@ -10,13 +10,18 @@
       "options": {
         "accessToken": "MjEyM2IwYWQtMTEyMS00ZGFmLThkY2UtYjg4YWRiZTNjZmI5fHJlYWQtd3JpdGU=",
         "cacheableOperations": [
-          "lint-base",
           "lint",
+          "lint-base",
           "build-base",
           "test",
           "build",
           "e2e",
-          "sitemap"
+          "sitemap",
+          "one",
+          "two",
+          "three",
+          "four",
+          "five"
         ],
         "useDaemonProcess": true,
         "cacheDirectory": "/tmp/nx-cache",

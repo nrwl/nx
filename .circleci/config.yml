@@ -138,7 +138,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>
       SELECTED_PM: << parameters.pm >>
       NX_E2E_RUN_CYPRESS: 'false'
-      NX_VERBOSE_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'true'
     steps:
       - run:
           name: Set dynamic nx run variable
@@ -160,7 +160,7 @@ jobs:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 8
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-      NX_VERBOSE_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'true'
     steps:
       - run:
           name: Set dynamic nx run variable
@@ -170,36 +170,10 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud record yarn check-imports
-      - run: npx nx-cloud record yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: npx nx-cloud record yarn check-commit
-      - run: npx nx-cloud record yarn check-lock-files
-      - run: npx nx-cloud record yarn depcheck
-      - run:
-          name: Check Documentation
-          command: npx nx-cloud record yarn documentation
-          no_output_timeout: 20m
       - run:
           name: Run Lint/Test/Build
           command: |
-            pids=()
-
-            npx nx-cloud record yarn nx workspace-lint &
-            pids+=($!)
-            yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
-            pids+=($!)
-            yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-            for pid in "${pids[@]}"; do
-              wait "$pid"
-            done
-      - run:
-          name: Run E2E Tests
-          command: |
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular,e2e-react-native,e2e-detox --parallel=1
-          no_output_timeout: 45m
+            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=3
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
@@ -256,20 +230,6 @@ workflows:
     jobs:
       - agent:
           name: 'agent1'
-      - agent:
-          name: 'agent2'
-      - agent:
-          name: 'agent3'
-      - agent:
-          name: 'agent4'
-      - agent:
-          name: 'agent5'
-      - agent:
-          name: 'agent6'
-      - agent:
-          name: 'agent7'
-      - agent:
-          name: 'agent8'
       - main-linux
       - mainmacos:
           name: main-macos-e2e

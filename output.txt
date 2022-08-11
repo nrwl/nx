@@ -1,0 +1,49 @@
+HERE
+HERE
+HERE
+{
+  'angular:test': {
+    id: 'angular:test',
+    target: { project: 'angular', target: 'test', configuration: undefined },
+    projectRoot: 'packages/angular',
+    overrides: { __overrides_unparsed__: [] },
+    hash: 'a8ecad43d83f8e0d9ee9647a27a9329041d271085d55f39877d0f85b0024b2db',
+    hashDetails: {
+      command: 'b03500c18b18401c0049cf9c6b337eb4173768e90fd41136d8523dfa536654a2',
+      nodes: [Object],
+      implicitDeps: {},
+      runtime: {}
+    }
+  }
+}
+
+ >  NX   Starting distributed command execution
+
+DTE
+DTE
+DTE
+DTE
+DTE
+DTE
+DTE
+DTE [
+  [
+    {
+      "taskId": "angular:test",
+      "hash": "a8ecad43d83f8e0d9ee9647a27a9329041d271085d55f39877d0f85b0024b2db",
+      "projectName": "angular",
+      "target": "test",
+      "configuration": null,
+      "params": ""
+    }
+  ]
+]
+
+ >  NX   Waiting...
+
+
+ >  NX   Completing run group with an error
+
+   runGroup: 2
+   error: Main job was terminated via SIGINT
+
