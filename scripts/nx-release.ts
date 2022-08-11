@@ -63,11 +63,12 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   }
 
   const lernaJsonPath = join(__dirname, '../lerna.json');
-  let originalLernaJson: Buffer;
+  let originalLernaJson: Buffer | undefined;
 
   if (options.local || options.tag === 'next') {
     originalLernaJson = readFileSync(lernaJsonPath);
   }
+
   if (options.local) {
     /**
      * Hide changes from Lerna
@@ -82,9 +83,10 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     process.on('SIGTERM', unhideFromGitIndex);
   }
 
-  const publishOptions = {
+  const publishOptions: Record<string, boolean | string | undefined> = {
     gitReset: false,
     distTag: options.tag,
+    canary: options.canary,
   };
 
   if (!options.skipPublish) {
@@ -94,7 +96,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     console.warn('Not Publishing because --dryRun was passed');
   }
 
-  if (options.local || options.tag === 'next') {
+  if (originalLernaJson) {
     writeFileSync(lernaJsonPath, originalLernaJson);
   }
 })();
@@ -124,6 +126,11 @@ function parseArgs() {
       description: 'Publish Nx locally, not to actual NPM',
       alias: 'l',
       default: true,
+    })
+    .option('canary', {
+      type: 'boolean',
+      description: 'Create canary version',
+      hidden: true,
     })
     .option('force', {
       type: 'boolean',
