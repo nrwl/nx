@@ -90,7 +90,7 @@ Yarn Berry operates slightly differently than Yarn Classic. In order to publish 
   ```yml
   npmRegistries:
     'https://registry.yarnpkg.com':
-      npmAuthToken: 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
+      npmAuthToken: npm_******************
   yarnPath: .yarn/releases/yarn-3.2.2.cjs
 
   npmRegistryServer: 'http://localhost:4873'
