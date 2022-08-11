@@ -18,31 +18,27 @@ const readmePathList: string[] = glob
   .map((path: string) => path.slice(1, -3)) // Removing first `/` and `.md`
   .filter((path: string) => !path.startsWith(sharedFilesPattern));
 
-function fileExtractor(file: any): string[] {
+function filePathExtractor(file: any): string[] {
   const paths: string[] = [];
 
-  function recur(curr, acc) {
+  function recur(curr): void {
     if (curr.itemList) {
       curr.itemList.forEach((ii) => {
-        recur(ii, [...acc, curr.id]);
+        recur(ii);
       });
     } else {
       paths.push(curr.file);
     }
   }
-
-  recur(file, []);
+  recur(file);
   return paths;
 }
 
-const mapPathList: string[] = readJsonSync(`${basePath}/map.json`)
-  .map((file: any) => fileExtractor(file))
+const mapPathList: string[] = readJsonSync(`${basePath}/map.json`, {
+  encoding: 'utf8',
+})
+  .map((file: any) => filePathExtractor(file))
   .flat()
-  .filter(
-    // Removing duplicates
-    (item: string, index: number, array: string[]) =>
-      array.indexOf(item) === index
-  )
   .filter((item: string) => item.split('/').length > 1); // Removing "category" paths (not linked to a file)
 const readmeMissList = readmePathList.filter((x) => !mapPathList.includes(x));
 const mapMissList = mapPathList.filter((x) => !readmePathList.includes(x));
