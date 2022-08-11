@@ -4,7 +4,7 @@ import {
   readJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import * as linter from '@nrwl/linter';
 import { addLintingGenerator } from './add-linting';
 import * as devkit from '@nrwl/devkit';
@@ -15,7 +15,7 @@ describe('addLinting generator', () => {
   const appProjectRoot = `apps/${appProjectName}`;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     addProjectConfiguration(tree, appProjectName, {
       root: appProjectRoot,

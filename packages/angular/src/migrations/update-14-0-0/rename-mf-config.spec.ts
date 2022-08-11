@@ -5,7 +5,7 @@ import renameMFConfig from './rename-mf-config';
 describe('Module Federation Config Migration', () => {
   it('should rename files in projects that have an mfe.config.js', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await host(tree, {
       name: 'host1',
@@ -32,7 +32,7 @@ describe('Module Federation Config Migration', () => {
 
   it('should fix dynamic hosts', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await host(tree, {
       name: 'host1',

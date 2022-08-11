@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateProjectRootFiles } from './update-project-root-files';
@@ -8,7 +8,7 @@ describe('updateProjectRootFiles', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should update the relative root in files at the root of the project', async () => {

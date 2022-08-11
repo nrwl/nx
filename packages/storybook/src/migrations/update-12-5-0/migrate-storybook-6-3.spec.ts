@@ -1,12 +1,15 @@
 import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTree, createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  createTree,
+  createTreeWithEmptyV1Workspace,
+} from '@nrwl/devkit/testing';
 import updateStorybookv63 from './migrate-storybook-6-3';
 
 describe('Upgrade to Storybook v6.3', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   describe('migrate addon-knobs registration', () => {

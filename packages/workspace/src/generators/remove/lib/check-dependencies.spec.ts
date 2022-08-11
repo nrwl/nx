@@ -7,7 +7,7 @@ import {
 } from '@nrwl/devkit';
 import { Schema } from '../schema';
 import { checkDependencies } from './check-dependencies';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
 // let projectGraph: ProjectGraph;
 // jest.mock('../../../core/project-graph', () => ({
@@ -29,7 +29,7 @@ describe('empty', () => {
 //   let schema: Schema;
 //
 //   beforeEach(async () => {
-//     tree = createTreeWithEmptyWorkspace();
+//     tree = createTreeWithEmptyV1Workspace();
 //
 //     schema = {
 //       projectName: 'my-source',

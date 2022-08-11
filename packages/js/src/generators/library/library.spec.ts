@@ -25,7 +25,7 @@ describe('lib', () => {
   };
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   describe('configs', () => {

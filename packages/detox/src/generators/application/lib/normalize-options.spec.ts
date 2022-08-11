@@ -1,5 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { Schema } from '../schema';
 import { normalizeOptions } from './normalize-options';
@@ -8,7 +8,7 @@ describe('Normalize Options', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyV1Workspace();
   });
 
   it('should normalize options with name in kebab case', () => {

@@ -1,5 +1,5 @@
 import { logger, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { createApp, createLib } from '../../utils/testing-generators';
 import { reactNativeComponentGenerator } from './component';
 
@@ -9,7 +9,7 @@ describe('component', () => {
 
   beforeEach(async () => {
     projectName = 'my-lib';
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyV1Workspace();
     appTree.write('.gitignore', '');
     await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);

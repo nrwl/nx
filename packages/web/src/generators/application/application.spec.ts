@@ -1,7 +1,7 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
 import { getProjects, readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
@@ -16,7 +16,7 @@ describe('app', () => {
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
 
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   describe('not nested', () => {

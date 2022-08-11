@@ -1,10 +1,10 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import runCommands from './run-commands';
 import { libraryGenerator } from '../library/library';
 
 describe('run-commands', () => {
   it('should generate a target', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyV1Workspace();
     const opts = {
       name: 'custom',
       project: 'lib',

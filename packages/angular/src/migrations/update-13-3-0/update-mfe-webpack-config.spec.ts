@@ -9,7 +9,7 @@ describe('update-mfe-webpack-config', () => {
   describe('run the migration', () => {
     it('should skip the migration when there is no MFE config', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app', {
         root: 'apps/testing',
         targets: {
@@ -40,7 +40,7 @@ describe('update-mfe-webpack-config', () => {
 
     it('should skip the migration when using a different executor', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app', {
         root: 'apps/testing',
         targets: {
@@ -64,7 +64,7 @@ describe('update-mfe-webpack-config', () => {
 
     it('shouldnt run for non mfe configs', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app', {
         root: 'apps/testing',
         targets: {
@@ -113,7 +113,7 @@ describe('update-mfe-webpack-config', () => {
 
     it('should run the migration successfully for a host config', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app', {
         root: 'apps/testing',
         targets: {
@@ -274,7 +274,7 @@ describe('update-mfe-webpack-config', () => {
 
     it('should add outputModule to experiments object when something else exists in experiments', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app', {
         root: 'apps/testing',
         targets: {
@@ -435,7 +435,7 @@ describe('update-mfe-webpack-config', () => {
 
     it('should run the migration successfully for a remote config', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app', {
         root: 'apps/testing',
         targets: {

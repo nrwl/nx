@@ -5,14 +5,17 @@ import {
   readWorkspaceConfiguration,
   readJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '@nrwl/devkit/testing';
 import update from './config-locations';
 
 describe('update to v13 config locations', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
     updateJson(tree, 'workspace.json', (json) => ({
       ...json,
       cli: {
@@ -48,7 +51,7 @@ describe('update to v13 config locations', () => {
 
   describe('v1 workspace', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace(1);
+      tree = createTreeWithEmptyV1Workspace();
       updateJson(tree, 'workspace.json', (json) => ({
         ...json,
         cli: {

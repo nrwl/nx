@@ -1,12 +1,12 @@
 import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import addReactTypings from './update-storybook-react-typings';
 
 describe('Adjust Storybook React Typings in Storybook tsconfig', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     writeJson(tree, 'workspace.json', {
       projects: {

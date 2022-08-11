@@ -1,5 +1,5 @@
 import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updatePackageJson } from './update-package-json';
@@ -18,7 +18,7 @@ describe('updatePackageJson', () => {
       relativeToRootDestination: 'libs/my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     await libraryGenerator(tree, { name: 'my-lib', standaloneConfig: false });
   });
 

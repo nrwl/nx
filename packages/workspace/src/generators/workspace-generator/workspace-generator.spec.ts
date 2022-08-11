@@ -1,9 +1,9 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import workspaceGenerator from './workspace-generator';
 
 describe('workspace-generator', () => {
   it('should generate a target', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyV1Workspace();
     const opts = {
       name: 'custom',
       skipFormat: true,

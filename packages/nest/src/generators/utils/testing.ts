@@ -1,8 +1,8 @@
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 export function createTreeWithNestApplication(appName: string): Tree {
-  const tree = createTreeWithEmptyWorkspace();
+  const tree = createTreeWithEmptyV1Workspace();
   tree.write(
     'workspace.json',
     String.raw`

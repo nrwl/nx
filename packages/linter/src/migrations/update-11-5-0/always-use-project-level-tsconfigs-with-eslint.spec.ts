@@ -4,13 +4,13 @@ import {
   readJson,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import updateTsConfigsWithEslint from './always-use-project-level-tsconfigs-with-eslint';
 
 describe('Always use project level tsconfigs with eslint', () => {
   let tree: Tree;
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(tree, 'react-app', {
       root: 'apps/react-app',
       sourceRoot: 'apps/react-app/src',

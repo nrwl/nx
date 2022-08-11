@@ -1,12 +1,12 @@
 import { readJson, stripIndents, Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { jestInitGenerator } from './init';
 
 describe('jest', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should generate files with --js flag', async () => {

@@ -17,7 +17,7 @@ import {
 describe('Jest Migration (v14.1.2)', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update root jest files', () => {

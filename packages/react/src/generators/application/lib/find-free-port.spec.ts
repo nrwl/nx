@@ -1,11 +1,11 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
 
 import { findFreePort } from './find-free-port';
 
 describe('findFreePort', () => {
   it('should return the largest port + 1', () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyV1Workspace();
     addProject(tree, 'app1', 4200);
     addProject(tree, 'app2', 4201);
     addProject(tree, 'no-serve');
@@ -16,7 +16,7 @@ describe('findFreePort', () => {
   });
 
   it('should default to port 4200', () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyV1Workspace();
     addProject(tree, 'no-serve');
 
     const port = findFreePort(tree);

@@ -1,5 +1,5 @@
 import { getProjects, Tree, updateProjectConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import libraryGenerator from '../library/library';
 import componentStoryGenerator from './component-story';
 import { Linter } from '@nrwl/linter';
@@ -699,7 +699,7 @@ export async function createTestUILib(
   libName: string,
   useEsLint = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace();
+  let appTree = createTreeWithEmptyV1Workspace();
   await libraryGenerator(appTree, {
     name: libName,
     linter: useEsLint ? Linter.EsLint : Linter.TsLint,

@@ -8,7 +8,7 @@ import updateAngularConfig from './update-angular-config';
 describe('update-angular-config migration', () => {
   it('should remove deprecated options from webpack server executor', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'testing', {
       root: 'apps/testing',
       targets: {
@@ -53,7 +53,7 @@ describe('update-angular-config migration', () => {
 
   it('should remove deprecated options from webpack browser executor', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'testing', {
       root: 'apps/testing',
       targets: {
@@ -78,7 +78,7 @@ describe('update-angular-config migration', () => {
 
   it('should not fail for projects with no targets', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'testing', {
       root: 'apps/testing',
     });

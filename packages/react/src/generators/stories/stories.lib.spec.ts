@@ -1,6 +1,6 @@
 import { Tree } from '@nrwl/devkit';
 import storiesGenerator from './stories';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import applicationGenerator from '../application/application';
 import { Linter } from '@nrwl/linter';
 import libraryGenerator from '../library/library';
@@ -224,7 +224,7 @@ export async function createTestUILib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace();
+  let appTree = createTreeWithEmptyV1Workspace();
 
   await libraryGenerator(appTree, {
     linter: Linter.EsLint,

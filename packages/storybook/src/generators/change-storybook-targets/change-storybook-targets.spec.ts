@@ -1,5 +1,5 @@
 import { readWorkspaceConfiguration, Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import changeStorybookTargetsGenerator from './change-storybook-targets';
 import * as defaultConfig from './test-configs/default-config.json';
 import * as customNames from './test-configs/custom-names-config.json';
@@ -13,7 +13,7 @@ describe('Change the Storybook targets for Angular projects to use native Storyb
 
   describe('for all types of angular projects - non-buildable and buildable libs/apps', () => {
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyV1Workspace();
     });
 
     it(`should set the browserTarget correctly in the Storybook config according to the type of project`, async () => {
@@ -48,7 +48,7 @@ describe('Change the Storybook targets for Angular projects to use native Storyb
 
   describe('for non-angular projects', () => {
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyV1Workspace();
       writeJson(tree, 'workspace.json', nonAngular);
     });
 

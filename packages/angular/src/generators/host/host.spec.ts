@@ -6,7 +6,7 @@ import remote from '../remote/remote';
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     // ACT
     await host(tree, {
@@ -19,7 +19,7 @@ describe('Host App Generator', () => {
 
   it('should generate a host app with a remote', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await applicationGenerator(tree, {
       name: 'remote',
@@ -44,7 +44,7 @@ describe('Host App Generator', () => {
 
   it('should generate a host and any remotes that dont exist with correct routing setup', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     // ACT
 
@@ -74,7 +74,7 @@ describe('Host App Generator', () => {
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     await remote(tree, {
       name: 'remote1',
     });
@@ -96,7 +96,7 @@ describe('Host App Generator', () => {
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     await remote(tree, {
       name: 'remote1',
     });

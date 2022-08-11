@@ -5,7 +5,10 @@ import {
   readJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '@nrwl/devkit/testing';
 import type { NormalizedSchema } from '../schema';
 import { moveProjectConfiguration } from './move-project-configuration';
 
@@ -14,7 +17,7 @@ describe('moveProjectConfiguration', () => {
   let projectConfig: ProjectConfiguration;
   let schema: NormalizedSchema;
 
-  const setupWorkspace = (version = 1) => {
+  const setupWorkspace = (version: 1 | 2 = 1) => {
     schema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
@@ -24,7 +27,10 @@ describe('moveProjectConfiguration', () => {
       relativeToRootDestination: 'apps/subfolder/my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace(version);
+    tree =
+      version === 1
+        ? createTreeWithEmptyV1Workspace()
+        : createTreeWithEmptyWorkspace();
 
     addProjectConfiguration(tree, 'my-source', {
       projectType: 'application',

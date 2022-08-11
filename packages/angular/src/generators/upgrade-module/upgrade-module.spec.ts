@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { angularJsVersion } from '../../utils/versions';
 import { upgradeModuleGenerator } from './upgrade-module';
@@ -11,7 +11,7 @@ describe('upgradeModule generator', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     createApp(tree, appName);
   });
 

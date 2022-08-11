@@ -4,14 +4,14 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import changeNxJsonPresets from '@nrwl/workspace/src/migrations/update-14-0-0/change-nx-json-presets';
 
 describe('changeNxJsonPresets', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should not set any new extends', async () => {

@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from 'packages/linter/src/generators/utils/linter';
 
 import detoxApplicationGenerator from './application';
@@ -13,7 +13,7 @@ describe('detox application generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     tree.write('.gitignore', '');
   });
 

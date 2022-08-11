@@ -1,4 +1,4 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { writeJson, readJson, Tree } from '@nrwl/devkit';
 import migrate from './update-13-10-0';
 
@@ -6,7 +6,7 @@ describe('Update tsconfig for React apps', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should update to React 18 if React Native is not installed', async () => {

@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { moveGenerator } from '@nrwl/workspace/generators';
 import { Schema } from '../schema';
 import { updateModuleName } from './update-module-name';
@@ -11,7 +11,7 @@ describe('updateModuleName Rule', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should handle nesting resulting in the same project name', async () => {

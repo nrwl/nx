@@ -1,5 +1,5 @@
 import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 
 import init from './init';
@@ -10,7 +10,7 @@ describe('init', () => {
   let host: Tree;
 
   beforeEach(() => {
-    host = createTreeWithEmptyWorkspace();
+    host = createTreeWithEmptyV1Workspace();
   });
 
   it('should add angular dependencies', async () => {

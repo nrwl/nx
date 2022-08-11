@@ -6,7 +6,7 @@ describe('opt-out-testbed-teardown migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
     jest.doMock('@nrwl/devkit', () => ({ workspaceRoot: '' }));
   });
 

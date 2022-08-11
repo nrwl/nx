@@ -1,5 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { checkTargets } from './check-targets';
 
@@ -8,7 +8,7 @@ describe('checkTargets', () => {
   let schema: Schema;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     schema = {
       projectName: 'ng-app',

@@ -1,5 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import { formatFile } from '../../../utils/format-file';
 
@@ -9,7 +9,7 @@ describe('replaceAppImportWithStorybookToggle', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     addProjectConfiguration(tree, 'products', {
       root: 'apps/products',

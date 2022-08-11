@@ -1,12 +1,12 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
 describe('forEachExecutorOptions', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(tree, 'proj1', {
       root: 'proj1',
       targets: {

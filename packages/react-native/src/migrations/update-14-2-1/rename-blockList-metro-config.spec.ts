@@ -1,5 +1,5 @@
 import { addProjectConfiguration, Tree, getProjects } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import update from './rename-blockList-metro-config';
 
@@ -7,7 +7,7 @@ describe('Rename blacklistRE to blockList in metro.config.js for react native ap
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(tree, 'products', {
       root: 'apps/products',
       sourceRoot: 'apps/products/src',

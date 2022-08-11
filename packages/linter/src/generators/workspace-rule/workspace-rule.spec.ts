@@ -1,12 +1,12 @@
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { lintWorkspaceRuleGenerator } from './workspace-rule';
 
 describe('@nrwl/linter:workspace-rule', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should generate the required files', async () => {

@@ -6,7 +6,7 @@ describe('update-angular-cli migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update @angular/cli version when defined as a dev dependency', async () => {

@@ -3,7 +3,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateImplicitDependencies } from './update-implicit-dependencies';
 
@@ -21,7 +21,7 @@ describe('updateImplicitDepenencies', () => {
       relativeToRootDestination: 'libs/my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     addProjectConfiguration(tree, 'my-lib', {
       root: 'libs/my-lib',

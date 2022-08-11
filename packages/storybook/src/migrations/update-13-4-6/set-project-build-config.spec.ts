@@ -1,5 +1,5 @@
 import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import setProjectBuildConfig from './set-project-build-config';
 import * as defaultConfig from './test-configs/default-config.json';
 import * as customNames from './test-configs/custom-names-config.json';
@@ -10,7 +10,7 @@ describe('Set the projectBuildConfig option in the Storybook configuration for A
 
   describe('for all types of angular projects - non-buildable and buildable libs/apps', () => {
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyV1Workspace();
     });
 
     it(`should set the projectBuildConfig in the Storybook config according to the type of project`, async () => {
@@ -28,7 +28,7 @@ describe('Set the projectBuildConfig option in the Storybook configuration for A
 
   describe('for non-angular projects', () => {
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyV1Workspace();
       writeJson(tree, 'workspace.json', nonAngular);
     });
 

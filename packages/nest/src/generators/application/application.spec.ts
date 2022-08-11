@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from './application';
 
 describe('application generator', () => {
@@ -9,7 +9,7 @@ describe('application generator', () => {
   const appDirectory = 'my-node-app';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     jest.clearAllMocks();
   });
 

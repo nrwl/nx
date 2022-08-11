@@ -1,11 +1,11 @@
 import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import rename from './rename-execute-to-node';
 
 describe('Migration: rename execute to node', () => {
   it(`should rename the "execute" executor to "node"`, async () => {
-    let tree = createTreeWithEmptyWorkspace();
+    let tree = createTreeWithEmptyV1Workspace();
 
     tree.write(
       'workspace.json',

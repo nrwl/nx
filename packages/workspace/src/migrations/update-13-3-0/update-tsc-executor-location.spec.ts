@@ -13,7 +13,7 @@ describe('add `defaultBase` in nx.json', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update @nrwl/workspace:tsc -> @nrwl/js:tsc', async () => {

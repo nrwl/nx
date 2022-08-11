@@ -9,7 +9,10 @@ import {
   readWorkspaceConfiguration,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -29,7 +32,7 @@ describe('app', () => {
   > = installedCypressVersion as never;
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyV1Workspace();
   });
 
   describe('not nested', () => {
@@ -345,7 +348,7 @@ describe('app', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      appTree = createTreeWithEmptyWorkspace(2);
+      appTree = createTreeWithEmptyWorkspace();
       updateJson(appTree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { appsDir: '' },
@@ -735,7 +738,7 @@ describe('app', () => {
   describe('--e2e-test-runner', () => {
     describe(E2eTestRunner.Protractor, () => {
       it('should create the e2e project in v2 workspace', async () => {
-        appTree = createTreeWithEmptyWorkspace(2);
+        appTree = createTreeWithEmptyWorkspace();
 
         expect(
           async () =>

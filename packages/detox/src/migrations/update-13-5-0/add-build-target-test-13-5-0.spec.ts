@@ -1,12 +1,12 @@
 import { addProjectConfiguration, getProjects, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import update from './add-build-target-test-13-5-0';
 
 describe('add-e2e-targets-13-5-0', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(tree, 'products-e2e', {
       root: 'apps/products-e2e',
       sourceRoot: 'apps/products-e2e/src',

@@ -1,5 +1,5 @@
 import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import convertWebpackBrowserBuildTargetToDelegateBuild from './convert-webpack-browser-build-target-to-delegate-build';
 
 function getWsConfig(tree: Tree) {
@@ -10,7 +10,7 @@ describe('convertWebpackBrowserBuildTargetToDelegateBuild', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     addProjectConfiguration(tree, 'ng-app1', {
       root: '',

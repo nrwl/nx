@@ -3,7 +3,10 @@ import {
   readJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '@nrwl/devkit/testing';
 import enquirer = require('enquirer');
 import { libraryGenerator } from '../library/library';
 import * as devkit from '@nrwl/devkit';
@@ -30,7 +33,7 @@ describe('convert-to-nx-project', () => {
   });
 
   it('should throw if project && all are both specified', async () => {
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -44,7 +47,7 @@ describe('convert-to-nx-project', () => {
   it('should prompt for a project if neither project nor all are specified', async () => {
     const spy = jest.spyOn(enquirer, 'prompt');
 
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -58,7 +61,7 @@ describe('convert-to-nx-project', () => {
   it('should not prompt for a project if all is specified', async () => {
     const spy = jest.spyOn(enquirer, 'prompt');
 
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -70,7 +73,7 @@ describe('convert-to-nx-project', () => {
   });
 
   it('should extract single project configuration to project.json', async () => {
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -90,7 +93,7 @@ describe('convert-to-nx-project', () => {
   });
 
   it('should extract all project configurations to project.json', async () => {
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -119,7 +122,7 @@ describe('convert-to-nx-project', () => {
   });
 
   it('should include tags in project.json', async () => {
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -139,7 +142,7 @@ describe('convert-to-nx-project', () => {
   });
 
   it('should set workspace.json to point to the root directory', async () => {
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       name: 'lib',
       standaloneConfig: false,
@@ -152,7 +155,7 @@ describe('convert-to-nx-project', () => {
   });
 
   it('should error in v1 schema with workspace.json', async () => {
-    const tree = createTreeWithEmptyWorkspace(1);
+    const tree = createTreeWithEmptyV1Workspace();
     await libraryGenerator(tree, {
       name: 'lib',
       standaloneConfig: false,
@@ -168,7 +171,7 @@ describe('convert-to-nx-project', () => {
   it('should format files by default', async () => {
     jest.spyOn(devkit, 'formatFiles');
 
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -184,7 +187,7 @@ describe('convert-to-nx-project', () => {
   it('should format files when passing skipFormat false', async () => {
     jest.spyOn(devkit, 'formatFiles');
 
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -200,7 +203,7 @@ describe('convert-to-nx-project', () => {
   it('should not format files when passing skipFormat true ', async () => {
     jest.spyOn(devkit, 'formatFiles');
 
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
       name: 'lib',

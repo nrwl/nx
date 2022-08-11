@@ -5,7 +5,7 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { jestConfigObject } from '../../utils/config/functions';
 
 import { jestProjectGenerator } from './jest-project';
@@ -24,7 +24,7 @@ describe('jestProject', () => {
   };
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(tree, 'lib1', {
       root: 'libs/lib1',
       sourceRoot: 'libs/lib1/src',
