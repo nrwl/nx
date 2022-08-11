@@ -26,15 +26,15 @@ git checkout -b testbranch
 Run the command to see affected apps.
 
 ```sh
-npx nx affected:apps
+npx nx print-affected --type=app --select=projects
 ```
 
-You should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the project graph to figure out which apps can be affected by this change.
+You should see `todos` printed out. The `print-affected` looks at what you have changed and uses the project graph to figure out which apps can be affected by this change.
 
 Run the command to see affected libraries
 
 ```sh
-npx nx affected:libs
+npx nx print-affected --type=lib --select=projects
 ```
 
 You should see `ui` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
