@@ -2,7 +2,6 @@ import { Workspaces } from '../config/workspaces';
 
 import {
   calculateReverseDeps,
-  getCustomHasher,
   getExecutorForTask,
   getExecutorNameForTask,
   removeTasksFromTaskGraph,
@@ -11,8 +10,8 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Hasher } from '../hasher/hasher';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
-import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
+import { hashTask } from '../hasher/hash-task';
 
 export interface Batch {
   executorName: string;
@@ -84,7 +83,16 @@ export class TasksSchedule {
 
   private async scheduleTask(taskId: string) {
     const task = this.taskGraph.tasks[taskId];
-    await this.hashTask(task);
+
+    if (!task.hash) {
+      await hashTask(
+        this.workspaces,
+        this.hasher,
+        this.projectGraph,
+        this.taskGraph,
+        task
+      );
+    }
 
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
@@ -169,26 +177,5 @@ export class TasksSchedule {
     return this.taskGraph.dependencies[taskId].every((id) =>
       this.completedTasks.has(id)
     );
-  }
-
-  private async hashTask(task: Task) {
-    const customHasher = getCustomHasher(
-      task,
-      this.workspaces,
-      this.nxJson,
-      this.projectGraph
-    );
-    const { value, details } = await (customHasher
-      ? customHasher(task, {
-          hasher: this.hasher,
-          projectGraph: this.projectGraph,
-          taskGraph: this.taskGraph,
-          workspaceConfig: readProjectsConfigurationFromProjectGraph(
-            this.projectGraph
-          ),
-        })
-      : this.hasher.hashTask(task));
-    task.hash = value;
-    task.hashDetails = details;
   }
 }

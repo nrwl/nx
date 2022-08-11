@@ -942,6 +942,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 | `tasks`                      | [`Task`](../../devkit/index#task)[]                                                   |
 | `options`                    | [`DefaultTasksRunnerOptions`](../../devkit/index#defaulttasksrunneroptions)           |
 | `context?`                   | `Object`                                                                              |
+| `context.hasher?`            | [`Hasher`](../../devkit/index#hasher)                                                 |
 | `context.initiatingProject?` | `string`                                                                              |
 | `context.nxArgs`             | `NxArgs`                                                                              |
 | `context.nxJson`             | [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)<`string`[] \| `"*"`\> |
