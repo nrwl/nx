@@ -214,7 +214,7 @@ export default async function multipleExecutor(
 
 For other ideas on how to create your own executors, you can always check out Nx's own open-source executors as well!
 
-(For example, our [cypress executor](https://github.com/nrwl/nx/blob/master/packages/cypress/src/executors/cypress/cypress.impl.ts))
+{% github-repository url="https://github.com/nrwl/nx/blob/master/packages/cypress/src/executors/cypress/cypress.impl.ts" %}
 
 ## Using Custom Hashers
 

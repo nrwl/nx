@@ -127,3 +127,5 @@ It might also be a good idea to ensure that the dep graph is not running on the 
 ## Example Project Graph Plugin
 
 The [nrwl/nx-go-project-graph-plugin](https://github.com/nrwl/nx-go-project-graph-plugin) repo contains an example project graph plugin which adds [Go](https://golang.org/) dependencies to the Nx Project Graph! A similar approach can be used for other languages.
+
+{% github-repository url="https://github.com/nrwl/nx-go-project-graph-plugin" /%}

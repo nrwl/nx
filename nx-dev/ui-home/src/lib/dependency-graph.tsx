@@ -1,9 +1,9 @@
 import { motion, useAnimation } from 'framer-motion';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function DependencyGraph(): ReactComponentElement<any> {
+export function DependencyGraph(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -107,5 +107,3 @@ export function DependencyGraph(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default DependencyGraph;

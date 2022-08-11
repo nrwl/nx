@@ -28,8 +28,7 @@ import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { importConfig } from './require-shim';
-const loadConfig = importConfig();
+const loadConfig = require('next/dist/server/config').default;
 
 export function createWebpackConfig(
   workspaceRoot: string,

@@ -15,6 +15,21 @@
         "index": 0
       },
       "x-prompt": "For which project do you want to generate stories?"
+    },
+    "ignorePaths": {
+      "type": "array",
+      "description": "Paths to ignore when looking for components.",
+      "items": {
+        "type": "string",
+        "description": "Path to ignore."
+      },
+      "examples": [
+        "apps/my-app/src/not-stories/**",
+        "**/**/src/**/not-stories/**",
+        "libs/my-lib/**/*.something.ts",
+        "**/**/src/**/*.other.*",
+        "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
+      ]
     }
   },
   "required": ["project"]

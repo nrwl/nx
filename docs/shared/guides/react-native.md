@@ -2,7 +2,7 @@
 
 ![React Logo](/shared/react-logo.png)
 
-Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/detox/overview), Storybook, Jest, and more.
+Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/packages/detox), Storybook, Jest, and more.
 
 In this guide we will show you how to develop [React Native](https://reactnative.dev/) applications with Nx.
 
@@ -51,7 +51,7 @@ happynrwl/
 │   │   │       ├── App.tsx
 │   │   │       └── App.spec.tsx
 │   │   ├── .babelrc
-│   │   ├── jest.config.js
+│   │   ├── jest.config.ts
 │   │   ├── test-setup.ts
 │   │   ├── package.json
 │   │   ├── project.json
@@ -70,7 +70,7 @@ happynrwl/
 ├── libs/
 ├── tools/
 ├── babel.config.json
-├── jest.config.js
+├── jest.config.ts
 ├── jest.preset.js
 ├── nx.json
 ├── package-lock.json

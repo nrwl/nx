@@ -133,6 +133,8 @@ Task to run for affected projects
 
 ### verbose
 
+Type: boolean
+
 Print additional error stack trace on failure
 
 ### version

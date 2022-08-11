@@ -31,8 +31,8 @@
     },
     "generateCypressSpecs": {
       "type": "boolean",
-      "description": "Specifies whether to automatically generate `*.spec.ts` files in the generated Cypress e2e app.",
-      "x-prompt": "Automatically generate *.spec.ts files in the generated Cypress e2e app?",
+      "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app.",
+      "x-prompt": "Automatically generate test files in the generated Cypress e2e app?",
       "default": true
     },
     "cypressDirectory": {
@@ -54,6 +54,21 @@
       "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
+    },
+    "ignorePaths": {
+      "type": "array",
+      "description": "Paths to ignore when looking for components.",
+      "items": {
+        "type": "string",
+        "description": "Path to ignore."
+      },
+      "examples": [
+        "apps/my-app/src/not-stories/**",
+        "**/**/src/**/not-stories/**",
+        "libs/my-lib/**/*.something.ts",
+        "**/**/src/**/*.other.*",
+        "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
+      ]
     }
   },
   "additionalProperties": false,

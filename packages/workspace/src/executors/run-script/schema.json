@@ -21,6 +21,6 @@
     }
   },
   "additionalProperties": true,
-  "required": ["script", "__unparsed__"],
+  "required": ["script"],
   "examplesFile": "../../../docs/run-script-examples.md"
 }

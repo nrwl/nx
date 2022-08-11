@@ -25,6 +25,11 @@
       "factory": "./src/generators/component/component#componentSchematic",
       "schema": "./src/generators/component/schema.json",
       "description": "Create a React component."
+    },
+    "custom-server": {
+      "factory": "./src/generators/custom-server/custom-server#customServerSchematic",
+      "schema": "./src/generators/custom-server/schema.json",
+      "description": "Set up a custom server."
     }
   },
   "generators": {
@@ -57,6 +62,11 @@
       "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a library."
+    },
+    "custom-server": {
+      "factory": "./src/generators/custom-server/custom-server#customServerGenerator",
+      "schema": "./src/generators/custom-server/schema.json",
+      "description": "Set up a custom server."
     }
   }
 }

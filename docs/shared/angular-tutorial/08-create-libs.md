@@ -89,7 +89,7 @@ myorg/
 │       │   │   └── ui.module.ts
 │       │   └── index.ts
 │       ├── .eslintrc.json
-│       ├── jest.config.js
+│       ├── jest.config.ts
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json

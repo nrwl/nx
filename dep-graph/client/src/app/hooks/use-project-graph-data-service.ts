@@ -7,7 +7,7 @@ let projectGraphService: ProjectGraphService;
 
 export function useProjectGraphDataService() {
   if (projectGraphService === undefined) {
-    if (window.environment === 'dev') {
+    if (window.environment === 'dev' || window.environment === 'nx-console') {
       projectGraphService = new FetchProjectGraphService();
     } else if (window.environment === 'watch') {
       projectGraphService = new MockProjectGraphService();

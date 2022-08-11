@@ -1,6 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "linter",
+  "packageName": "@nrwl/linter",
   "description": "The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
   "root": "/packages/linter",
   "source": "/packages/linter/src",
@@ -313,6 +314,12 @@
           "resolvePluginsRelativeTo": {
             "type": "string",
             "description": "The equivalent of the `--resolve-plugins-relative-to` flag on the ESLint CLI."
+          },
+          "reportUnusedDisableDirectives": {
+            "type": "string",
+            "default": "off",
+            "enum": ["off", "warn", "error"],
+            "description": "The equivalent of the `--report-unused-disable-directives` flag on the ESLint CLI."
           }
         },
         "required": ["lintFilePatterns"],

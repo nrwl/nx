@@ -8,7 +8,7 @@ export function useEnvironmentConfig(): {
   watch: boolean;
   localMode: 'serve' | 'build';
   projectGraphResponse?: DepGraphClientResponse;
-  environment: 'dev' | 'watch' | 'release';
+  environment: 'dev' | 'watch' | 'release' | 'nx-console';
   appConfig: AppConfig;
   useXstateInspect: boolean;
 } {

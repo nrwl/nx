@@ -8,7 +8,7 @@ width="100%" /%}
 In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies.
 
 {% callout type="check" title="Nx has first-class Next.js support" %}
-Nx has first-class Next.js support, if you are looking to try or use it for your project. Read more about it [here](/next/overview)
+Nx has first-class Next.js support, if you are looking to try or use it for your project. Read more about it [here](/packages/next)
 {% /callout %}
 
 {% callout type="note" title="Plugins for a rich developer experience" %}
@@ -52,7 +52,7 @@ myorg/
 │   │   ├── .babelrc
 │   │   ├── .browserslistrc
 │   │   ├── .eslintrc.json
-│   │   ├── jest.config.js
+│   │   ├── jest.config.ts
 │   │   ├── project.json
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
@@ -61,16 +61,14 @@ myorg/
 │       ├── src/
 │       │   ├── fixtures/
 │       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.js
+│       │   ├── e2e/
+│       │   │   └── app.cy.ts
 │       │   └── support/
 │       │       ├── app.po.ts
 │       │       ├── commands.ts
-│       │       └── index.ts
+│       │       └── e2e.ts
 │       ├── .eslintrc.json
-│       ├── cypress.json
+│       ├── cypress.config.ts
 │       ├── project.json
 │       └── tsconfig.json
 ├── libs/
@@ -78,7 +76,7 @@ myorg/
 ├── .eslintrc.json
 ├── .prettierrc
 ├── babel.config.json
-├── jest.config.js
+├── jest.config.ts
 ├── jest.preset.js
 ├── nx.json
 ├── package.json

@@ -2,8 +2,8 @@ import {
   joinPathFragments,
   parseJson,
   ProjectConfiguration,
-  readJsonFile,
   ProjectsConfigurations,
+  readJsonFile,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
@@ -329,7 +329,7 @@ export function newProject({
     }
 
     if (process.env.NX_VERBOSE_LOGGING == 'true') {
-      console.log(`E2E test is creating a project: ${tmpProjPath()}`);
+      logInfo(`NX`, `E2E test is creating a project: ${tmpProjPath()}`);
     }
     return projScope;
   } catch (e) {

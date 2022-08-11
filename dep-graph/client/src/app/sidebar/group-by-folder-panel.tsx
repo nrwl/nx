@@ -16,10 +16,10 @@ export const GroupByFolderPanel = memo(
               name="displayOptions"
               value="groupByFolder"
               type="checkbox"
-              className="h-4 w-4 rounded border-slate-300 dark:border-slate-700"
+              className="accent-green-nx-base h-4 w-4"
               onChange={(event) => groupByFolderChanged(event.target.checked)}
               checked={groupByFolder}
-            ></input>
+            />
           </div>
           <div className="ml-3 text-sm">
             <label

@@ -19,9 +19,9 @@ It is also a good idea to read the [mental model guide](/using-nx/mental-model) 
 ## Nx and React Plugins
 
 Nx plugins help you develop [React](/packages/react) applications with fully integrated support for modern tools
-and libraries like [Jest](/jest/overview), [Cypress](/cypress/overview),
+and libraries like [Jest](/packages/jest), [Cypress](/packages/cypress),
 [Storybook](/packages/storybook), [ESLint](/packages/linter), and more. Nx also supports React
-frameworks like [Next.js](/next/overview), Remix, and has great support for [React Native](/react-native/overview).
+frameworks like [Next.js](/packages/next), Remix, and has great support for [React Native](/packages/react-native).
 
 {% youtube
 src="https://www.youtube.com/embed/sNz-4PUM0k8"

@@ -1,4 +1,8 @@
 import { workspaceRoot } from '@nrwl/devkit';
+import { packageExists } from '../utils/config-utils';
+
+const isPrettierAvailable =
+  packageExists('prettier') && packageExists('eslint-config-prettier');
 
 /**
  * This configuration is intended to be applied to ALL .ts and .tsx files
@@ -19,7 +23,7 @@ export default {
     'eslint:recommended',
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
-    'prettier',
+    ...(isPrettierAvailable ? ['prettier'] : []),
   ],
   rules: {
     '@typescript-eslint/explicit-member-accessibility': 'off',

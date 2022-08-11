@@ -1,4 +1,6 @@
+import { addDependenciesToPackageJson, GeneratorCallback } from '@nrwl/devkit';
 import type { Tree } from '@nrwl/devkit';
+import { tsNodeVersion } from '../../utils/versions';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import type { BinaryExpression } from 'typescript';
@@ -6,6 +8,7 @@ import type { JestExecutorOptions } from '../../executors/jest/schema';
 
 export function updateExportsJestConfig(tree: Tree) {
   const { didUpdateRootPreset } = updateRootFiles(tree);
+  let shouldInstallTsNode = false;
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
     '@nrwl/jest:jest',
@@ -13,6 +16,7 @@ export function updateExportsJestConfig(tree: Tree) {
       if (options.jestConfig && tree.exists(options.jestConfig)) {
         if (options.jestConfig.endsWith('.ts')) {
           updateToDefaultExport(tree, options.jestConfig);
+          shouldInstallTsNode = true;
         }
 
         const updatedImport = updateNxPresetImport(
@@ -32,6 +36,10 @@ export function updateExportsJestConfig(tree: Tree) {
       }
     }
   );
+
+  return shouldInstallTsNode
+    ? addDependenciesToPackageJson(tree, {}, { 'ts-node': tsNodeVersion })
+    : () => {};
 }
 
 export function updateRootFiles(tree: Tree): { didUpdateRootPreset: boolean } {

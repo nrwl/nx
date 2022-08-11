@@ -7,4 +7,5 @@ export interface StorybookConfigureSchema {
   tsConfiguration?: boolean;
   linter?: Linter;
   standaloneConfig?: boolean;
+  ignorePaths?: string[];
 }

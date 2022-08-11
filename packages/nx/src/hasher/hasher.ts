@@ -115,6 +115,12 @@ export class Hasher {
     };
   }
 
+  hashDependsOnOtherTasks(task: Task) {
+    const inputs = this.taskHasher.inputs(task);
+    // check here for outputs
+    return false;
+  }
+
   /**
    * @deprecated use hashTask instead
    */
@@ -212,10 +218,11 @@ class TaskHasher {
       if (!projectNode) {
         return this.hashExternalDependency(task);
       }
+
       const projectGraphDeps =
         this.projectGraph.dependencies[task.target.project] ?? [];
 
-      const { selfInputs, depsInputs } = this.inputs(task, projectNode);
+      const { selfInputs, depsInputs } = this.inputs(task);
       const self = await this.hashSelfInputs(task, selfInputs);
       const deps = await this.hashDepsTasks(
         depsInputs,
@@ -276,10 +283,11 @@ class TaskHasher {
       .filter((r) => !!r);
   }
 
-  private inputs(
-    task: Task,
-    projectNode: ProjectGraphProjectNode<any>
-  ): { depsInputs: { input: string }[]; selfInputs: ExpandedSelfInput[] } {
+  inputs(task: Task): {
+    depsInputs: { input: string }[];
+    selfInputs: ExpandedSelfInput[];
+  } {
+    const projectNode = this.projectGraph.nodes[task.target.project];
     const namedInputs = {
       default: [{ fileset: '{projectRoot}/**/*' }],
       ...this.nxJson.namedInputs,

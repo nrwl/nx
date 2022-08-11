@@ -3,12 +3,15 @@ import {
   ExecutorContext,
   logger,
   parseTargetString,
+  readCachedProjectGraph,
   readTargetOptions,
+  runExecutor,
+  workspaceLayout,
 } from '@nrwl/devkit';
-
 import * as chalk from 'chalk';
 import { existsSync } from 'fs';
 import { join, resolve } from 'path';
+import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 
 import { prepareConfig } from '../../utils/config';
 import {
@@ -20,19 +23,12 @@ import {
 } from '../../utils/types';
 import { customServer } from './lib/custom-server';
 import { defaultServer } from './lib/default-server';
-import { readCachedProjectGraph } from '@nrwl/devkit';
 import {
-  calculateProjectDependencies,
-  DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
-import { importConstants } from '../../utils/require-shim';
-import { workspaceLayout } from '@nrwl/devkit';
-
-const { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_SERVER } = importConstants();
+  PHASE_DEVELOPMENT_SERVER,
+  PHASE_PRODUCTION_SERVER,
+} from '../../utils/constants';
 
 const infoPrefix = `[ ${chalk.dim(chalk.cyan('info'))} ] `;
-const readyPrefix = `[ ${chalk.green('ready')} ]`;
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
@@ -45,17 +41,36 @@ export default async function* serveExecutor(
     ? 'development'
     : 'production';
 
-  let dependencies: DependentBuildableProjectNode[] = [];
-  const buildTarget = parseTargetString(options.buildTarget);
-  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
+  // Setting port that the custom server should use.
+  (process.env as any).PORT = options.port;
+
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
-    buildTarget,
+    parseTargetString(options.buildTarget),
     context
   );
-
   const root = resolve(context.root, buildOptions.root);
-  const libsDir = join(context.root, workspaceLayout().libsDir);
-  if (!options.buildLibsFromSource) {
+  const config = await prepareConfig(
+    options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,
+    buildOptions,
+    context,
+    getDependencies(options, context),
+    join(context.root, workspaceLayout().libsDir)
+  );
+
+  if (options.customServerTarget) {
+    yield* runCustomServer(root, config, options, buildOptions, context);
+  } else {
+    yield* runNextDevServer(root, config, options, buildOptions, context);
+  }
+}
+
+function getDependencies(
+  options: NextServeBuilderOptions,
+  context: ExecutorContext
+) {
+  if (options.buildLibsFromSource) {
+    return [];
+  } else {
     const result = calculateProjectDependencies(
       readCachedProjectGraph(),
       context.root,
@@ -63,19 +78,18 @@ export default async function* serveExecutor(
       'build', // should be generalized
       context.configurationName
     );
-    dependencies = result.dependencies;
-
-    assertDependentProjectsHaveBeenBuilt(dependencies, context);
+    return result.dependencies;
   }
+}
 
-  const config = await prepareConfig(
-    options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,
-    buildOptions,
-    context,
-    dependencies,
-    libsDir
-  );
-
+async function* runNextDevServer(
+  root: string,
+  config: ReturnType<typeof prepareConfig>,
+  options: NextServeBuilderOptions,
+  buildOptions: NextBuildBuilderOptions,
+  context: ExecutorContext
+) {
+  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
   const settings: NextServerOptions = {
     dev: options.dev,
     dir: root,
@@ -83,8 +97,11 @@ export default async function* serveExecutor(
     quiet: options.quiet,
     conf: config,
     port: options.port,
-    path: options.customServerPath,
+    customServer: !!options.customServerTarget,
     hostname: options.hostname,
+
+    // TOOD(jack): Remove in Nx 15
+    path: options.customServerPath,
   };
 
   const server: NextServer = options.customServerPath
@@ -106,7 +123,7 @@ export default async function* serveExecutor(
 
   try {
     await server(settings, proxyConfig);
-    logger.info(`${readyPrefix} on ${baseUrl}`);
+    logger.info(`[ ${chalk.green('ready')} ] on ${baseUrl}`);
 
     yield {
       baseUrl,
@@ -124,4 +141,37 @@ export default async function* serveExecutor(
       );
     }
   }
+}
+
+async function* runCustomServer(
+  root: string,
+  config: ReturnType<typeof prepareConfig>,
+  options: NextServeBuilderOptions,
+  buildOptions: NextBuildBuilderOptions,
+  context: ExecutorContext
+) {
+  process.env.NX_NEXT_DIR = root;
+  process.env.NX_NEXT_PUBLIC_DIR = join(root, 'public');
+
+  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
+
+  const customServerBuild = await runExecutor(
+    parseTargetString(options.customServerTarget),
+    {
+      watch: true,
+    },
+    context
+  );
+
+  for await (const result of customServerBuild) {
+    if (!result.success) {
+      return result;
+    }
+    yield {
+      success: true,
+      baseUrl,
+    };
+  }
+
+  return { success: true };
 }

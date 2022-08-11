@@ -1,5 +1,5 @@
 // TODO@ben: add tailwindcss classes
-export function YouTube(props: any) {
+export function YouTube(props: any): JSX.Element {
   return (
     <iframe
       {...props}

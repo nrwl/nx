@@ -10,4 +10,5 @@ export interface StorybookConfigureSchema {
   linter?: Linter;
   cypressDirectory?: string;
   standaloneConfig?: boolean;
+  ignorePaths?: string[];
 }

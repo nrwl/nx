@@ -6,6 +6,8 @@ import {
   names,
   writeJson,
   formatFiles,
+  getPackageManagerVersion,
+  PackageManager,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
 import {
@@ -94,6 +96,14 @@ function createNpmrc(host: Tree, options: Schema) {
   );
 }
 
+// ensure that yarn (berry) install uses classic node linker
+function createYarnrcYml(host: Tree, options: Schema) {
+  host.write(
+    join(options.directory, '.yarnrc.yml'),
+    'nodeLinker: node-modules\n'
+  );
+}
+
 function formatWorkspaceJson(host: Tree, options: Schema) {
   const path = join(
     options.directory,
@@ -151,8 +161,13 @@ export async function workspaceGenerator(host: Tree, options: Schema) {
   if (options.cli === 'angular') {
     decorateAngularClI(host, options);
   }
-  if (options.packageManager === 'pnpm') {
+  const [packageMajor] = getPackageManagerVersion(
+    options.packageManager as PackageManager
+  ).split('.');
+  if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
     createNpmrc(host, options);
+  } else if (options.packageManager === 'yarn' && +packageMajor >= 2) {
+    createYarnrcYml(host, options);
   }
   setPresetProperty(host, options);
   addNpmScripts(host, options);

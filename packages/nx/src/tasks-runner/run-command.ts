@@ -19,11 +19,14 @@ import {
   TargetDefaults,
   TargetDependencies,
 } from '../config/nx-json';
-import { Task } from '../config/task-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
+import { Workspaces } from 'nx/src/config/workspaces';
+import { Hasher } from 'nx/src/hasher/hasher';
+import { hashDependsOnOtherTasks, hashTask } from 'nx/src/hasher/hash-task';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -82,6 +85,23 @@ async function getTerminalOutputLifeCycle(
   }
 }
 
+async function hashTasksThatDontDependOnOtherTasks(
+  workspaces: Workspaces,
+  hasher: Hasher,
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph
+) {
+  const res = [] as Promise<void>[];
+  for (let t of Object.values(taskGraph.tasks)) {
+    if (
+      !hashDependsOnOtherTasks(workspaces, hasher, projectGraph, taskGraph, t)
+    ) {
+      res.push(hashTask(workspaces, hasher, projectGraph, taskGraph, t));
+    }
+  }
+  return Promise.all(res);
+}
+
 export async function runCommand(
   projectsToRun: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
@@ -99,6 +119,7 @@ export async function runCommand(
       extraTargetDependencies
     );
     const projectNames = projectsToRun.map((t) => t.name);
+
     const taskGraph = createTaskGraph(
       projectGraph,
       defaultDependencyConfigs,
@@ -106,6 +127,14 @@ export async function runCommand(
       [nxArgs.target],
       nxArgs.configuration,
       overrides
+    );
+
+    const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
+    await hashTasksThatDontDependOnOtherTasks(
+      new Workspaces(workspaceRoot),
+      hasher,
+      projectGraph,
+      taskGraph
     );
 
     const cycle = findCycle(taskGraph);
@@ -162,6 +191,7 @@ export async function runCommand(
         nxJson,
         nxArgs,
         taskGraph,
+        hasher,
       }
     );
     let anyFailures;

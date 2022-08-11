@@ -49,6 +49,9 @@ describe('TasksSchedule', () => {
           batchImplementationFactory: jest.fn(),
         };
       },
+      readNxJson() {
+        return {};
+      },
     };
 
     const projectGraph: ProjectGraph = {

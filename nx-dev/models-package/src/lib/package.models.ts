@@ -7,6 +7,7 @@ import { JsonSchema1 } from './json-schema.models';
 export interface PackageMetadata {
   githubRoot: string;
   name: string;
+  packageName: string;
   description: string;
   documentation: {
     id: string;

@@ -98,6 +98,11 @@
             "name": "Updating Nx",
             "id": "updating-nx",
             "file": "shared/update"
+          },
+          {
+            "name": "Nx, NodeJS and Typescript Versions",
+            "id": "nx-nodejs-typescript-version-matrix",
+            "file": "shared/nx-compatibility-matrix"
           }
         ]
       },
@@ -769,7 +774,7 @@
         ]
       },
       {
-        "name": "Private Cloud",
+        "name": "On Prem",
         "id": "private-cloud",
         "itemList": [
           {
@@ -781,21 +786,6 @@
             "name": "Enable Github PR Integration",
             "id": "github",
             "file": "nx-cloud/private/github"
-          },
-          {
-            "name": "Deploy with Kubernetes",
-            "id": "deploy-kubernetes",
-            "file": "nx-cloud/private/deploy-kubernetes"
-          },
-          {
-            "name": "Deploy with AWS",
-            "id": "deploy-aws",
-            "file": "nx-cloud/private/deploy-aws"
-          },
-          {
-            "name": "Deploy with Azure",
-            "id": "deploy-azure",
-            "file": "nx-cloud/private/deploy-azure"
           },
           {
             "name": "Authenticate with a Single Admin",
@@ -813,9 +803,19 @@
             "file": "nx-cloud/private/auth-gitlab"
           },
           {
+            "name": "Authenticate with BitBucket",
+            "id": "auth-bitbucket",
+            "file": "nx-cloud/private/auth-bitbucket"
+          },
+          {
             "name": "Advanced Configuration",
             "id": "advanced-config",
             "file": "nx-cloud/private/advanced-config"
+          },
+          {
+            "name": "Standalone",
+            "id": "standalone",
+            "file": "nx-cloud/private/standalone"
           }
         ]
       },
@@ -931,7 +931,12 @@
             "id": "connect-to-nx-cloud",
             "file": "generated/cli/connect-to-nx-cloud"
           },
-          { "name": "reset", "id": "reset", "file": "generated/cli/reset" }
+          { "name": "reset", "id": "reset", "file": "generated/cli/reset" },
+          {
+            "name": "repair",
+            "id": "repair",
+            "file": "generated/cli/repair"
+          }
         ]
       },
       {
@@ -1007,6 +1012,12 @@
             "id": "overview",
             "path": "/packages/angular",
             "file": "shared/angular-plugin"
+          },
+          {
+            "name": "Angular and Nx Version Matrix",
+            "id": "angular-nx-version-matrix",
+            "file": "shared/angular-nx-version-matrix",
+            "path": "/angular-nx-version-matrix"
           }
         ]
       },

@@ -21,6 +21,7 @@ export interface NextServerOptions {
   port: number;
   path: string;
   hostname: string;
+  customServer?: boolean;
 }
 
 export interface FileReplacement {
@@ -35,6 +36,7 @@ export interface NextBuildBuilderOptions {
   assets?: any[];
   nextConfig?: string;
   buildLibsFromSource?: boolean;
+  watch?: boolean;
 }
 
 export interface NextServeBuilderOptions {
@@ -43,6 +45,9 @@ export interface NextServeBuilderOptions {
   staticMarkup: boolean;
   quiet: boolean;
   buildTarget: string;
+  customServerTarget?: string;
+  /** @deprecated Use customServerTarget
+   */
   customServerPath?: string;
   hostname?: string;
   proxyConfig?: string;

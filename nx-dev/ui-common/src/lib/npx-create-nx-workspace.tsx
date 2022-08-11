@@ -21,7 +21,7 @@ export function NpxCreateNxWorkspaceAnimation({
   restartFunction,
 }: {
   restartFunction: () => void;
-}) {
+}): JSX.Element {
   const npxCreateNxWorkspace = useAnimation();
   const wrapper = useAnimation();
   const firstLoading = useAnimation();
@@ -663,7 +663,7 @@ export function NpxCreateNxWorkspaceAnimation({
   );
 }
 
-export function NpxCreateNxWorkspace() {
+export function NpxCreateNxWorkspace(): JSX.Element {
   const [isDisplayed, setIsDisplayed] = useState(true);
 
   const restart = () => {
@@ -694,5 +694,3 @@ export function NpxCreateNxWorkspace() {
     </>
   );
 }
-
-export default NpxCreateNxWorkspace;

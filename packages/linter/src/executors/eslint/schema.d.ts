@@ -1,4 +1,5 @@
 import type { JsonObject } from '@angular-devkit/core';
+import type { Linter } from 'eslint';
 
 export interface Schema extends JsonObject {
   eslintConfig: string | null;
@@ -18,6 +19,7 @@ export interface Schema extends JsonObject {
   cacheStrategy: 'content' | 'metadata' | null;
   rulesdir: string[];
   resolvePluginsRelativeTo: string | null;
+  reportUnusedDisableDirectives: Linter.RuleLevel | null;
 }
 
 type Formatter =

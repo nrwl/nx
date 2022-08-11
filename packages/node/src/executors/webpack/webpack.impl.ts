@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { ExecutorContext, readCachedProjectGraph } from '@nrwl/devkit';
+import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
@@ -7,7 +8,6 @@ import {
 import { getRootTsConfigPath } from '@nrwl/workspace/src/utilities/typescript';
 
 import { map, tap } from 'rxjs/operators';
-import { eachValueFrom } from 'rxjs-for-await';
 import { resolve } from 'path';
 import { register } from 'ts-node';
 

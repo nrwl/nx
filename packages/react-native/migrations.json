@@ -47,6 +47,12 @@
       "cli": "nx",
       "description": "Rename blacklistRE to blockList in metro.config.js",
       "factory": "./src/migrations/update-14-2-1/rename-blockList-metro-config"
+    },
+    "add-exclude-sync-deps-14-5-5": {
+      "version": "14.5.5-beta.0",
+      "cli": "nx",
+      "description": "Change include field from string to array for sync-deps target",
+      "factory": "./src/migrations/update-14-5-5/add-exclude-sync-deps"
     }
   },
   "packageJsonUpdates": {
@@ -762,6 +768,39 @@
         },
         "@react-native-community/cli": {
           "version": "8.0.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.0": {
+      "version": "14.5.0-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.69.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "12.4.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.18.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "8.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "8.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "8.0.4",
           "alwaysAddToPackageJson": false
         }
       }

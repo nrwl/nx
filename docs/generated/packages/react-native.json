@@ -1,6 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "react-native",
+  "packageName": "@nrwl/react-native",
   "description": "React Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.\n\nThe Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Detox, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
   "root": "/packages/react-native",
   "source": "/packages/react-native/src",
@@ -380,6 +381,18 @@
           "standaloneConfig": {
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
             "type": "boolean"
+          },
+          "ignorePaths": {
+            "type": "array",
+            "description": "Paths to ignore when looking for components.",
+            "items": { "type": "string", "description": "Path to ignore." },
+            "examples": [
+              "apps/my-app/src/not-stories/**",
+              "**/**/src/**/not-stories/**",
+              "libs/my-lib/**/*.something.ts",
+              "**/**/src/**/*.other.*",
+              "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
+            ]
           }
         },
         "required": ["name"],
@@ -443,6 +456,18 @@
             "description": "Project for which to generate stories.",
             "$default": { "$source": "projectName", "index": 0 },
             "x-prompt": "For which project do you want to generate stories?"
+          },
+          "ignorePaths": {
+            "type": "array",
+            "description": "Paths to ignore when looking for components.",
+            "items": { "type": "string", "description": "Path to ignore." },
+            "examples": [
+              "apps/my-app/src/not-stories/**",
+              "**/**/src/**/not-stories/**",
+              "libs/my-lib/**/*.something.ts",
+              "**/**/src/**/*.other.*",
+              "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
+            ]
           }
         },
         "required": ["project"],
@@ -795,8 +820,16 @@
         "type": "object",
         "properties": {
           "include": {
-            "type": "string",
-            "description": "A comma-separated list of additional npm packages to include. e.g. `nx sync-deps --include=react-native-gesture-handler,react-native-safe-area-context`"
+            "type": "array",
+            "items": { "type": "string" },
+            "default": [],
+            "description": "An array of additional npm packages to include."
+          },
+          "exclude": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": [],
+            "description": "An array of npm packages to exclude."
           }
         },
         "presets": []

@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 /*
@@ -37,21 +37,27 @@ export function getPackageManagerCommand(
   install: string;
   exec: string;
 } {
+  const [pmMajor, pmMinor] =
+    getPackageManagerVersion(packageManager).split('.');
+
   switch (packageManager) {
     case 'yarn':
+      const useBerry = +pmMajor >= 2;
+      const installCommand = 'yarn install --silent';
       return {
-        install: 'yarn',
+        install: useBerry
+          ? installCommand
+          : `${installCommand} --ignore-scripts`,
         exec: 'yarn',
       };
 
     case 'pnpm':
-      const [major, minor] = getPackageManagerVersion('pnpm').split('.');
       let useExec = false;
-      if ((+major >= 6 && +minor >= 13) || +major >= 7) {
+      if ((+pmMajor >= 6 && +pmMinor >= 13) || +pmMajor >= 7) {
         useExec = true;
       }
       return {
-        install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
+        install: 'pnpm install --no-frozen-lockfile --silent --ignore-scripts',
         exec: useExec ? 'pnpm exec' : 'pnpx',
       };
 
@@ -59,9 +65,26 @@ export function getPackageManagerCommand(
       process.env.npm_config_legacy_peer_deps =
         process.env.npm_config_legacy_peer_deps ?? 'true';
       return {
-        install: 'npm install',
+        install: 'npm install --silent --ignore-scripts',
         exec: 'npx',
       };
+  }
+}
+
+export function generatePackageManagerFiles(
+  root: string,
+  packageManager: PackageManager = detectPackageManager()
+) {
+  const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
+  switch (packageManager) {
+    case 'yarn':
+      if (+pmMajor >= 2) {
+        writeFileSync(
+          join(root, '.yarnrc.yml'),
+          'nodeLinker: node-modules\nenableScripts: false'
+        );
+      }
+      break;
   }
 }
 

@@ -7,6 +7,7 @@ export interface DocumentData {
 export interface DocumentMetadata {
   id: string;
   name?: string;
+  packageName?: string;
   file?: string;
   path?: string;
   itemList?: DocumentMetadata[];

@@ -4,6 +4,6 @@ This repository contains a single book store website that serves a React app for
 
 The repository is kept up to date with the latest version of Nx and is used as a smoke test for migrations to new versions of Nx.
 
-**Repository:** [nx-examples](https://github.com/nrwl/nx-examples)
-
 **Live Demo:** [Nx Store](https://nrwl-nx-examples-cart.netlify.app/cart)
+
+{% github-repository url="https://github.com/nrwl/nx-examples" /%}

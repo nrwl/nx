@@ -325,6 +325,8 @@ export class ForkedProcessTaskRunner {
     const env: NodeJS.ProcessEnv = {
       NX_TASK_TARGET_PROJECT: task.target.project,
       NX_TASK_HASH: task.hash,
+      // used when Nx is invoked via Lerna
+      LERNA_PACKAGE_NAME: task.target.project,
     };
 
     // TODO: remove this once we have a reasonable way to configure it

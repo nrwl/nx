@@ -30,7 +30,7 @@ myorg/
 │       │   └── index.ts
 │       ├── .babelrc
 │       ├── .eslintrc.json
-│       ├── jest.config.js
+│       ├── jest.config.ts
 │       ├── project.json
 │       ├── README.md
 │       ├── tsconfig.json

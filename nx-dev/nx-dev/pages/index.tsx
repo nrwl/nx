@@ -23,9 +23,9 @@ import {
 } from '@nrwl/nx-dev/ui-home';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export function Index(): ReactComponentElement<any> {
+export default function Index(): JSX.Element {
   /**
    * Detects whether we should use a background fallback or not.
    * `false` by default
@@ -343,5 +343,3 @@ export function Index(): ReactComponentElement<any> {
     </>
   );
 }
-
-export default Index;

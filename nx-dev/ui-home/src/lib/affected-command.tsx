@@ -1,10 +1,10 @@
 import { motion, useAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function AffectedCommand(): ReactComponentElement<any> {
+export function AffectedCommand(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -161,5 +161,3 @@ export function AffectedCommand(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default AffectedCommand;

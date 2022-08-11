@@ -85,9 +85,9 @@ UPDATE tsconfig.base.json
 UPDATE workspace.json
 UPDATE nx.json
 CREATE libs/mylib/.eslintrc.json
-CREATE libs/mylib/jest.config.js
+CREATE libs/mylib/jest.config.ts
 CREATE libs/mylib/tsconfig.spec.json
-UPDATE jest.config.js
+UPDATE jest.config.ts
 CREATE libs/mylib/NOTES.md
 ```
 

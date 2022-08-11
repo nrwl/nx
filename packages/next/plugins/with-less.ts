@@ -12,7 +12,7 @@ function patchNextCSSWithLess(
 
 patchNextCSSWithLess();
 
-function withLess({ lessLoaderOptions = {}, ...nextConfig }) {
+export function withLess({ lessLoaderOptions = {}, ...nextConfig }) {
   return Object.assign({}, nextConfig, {
     webpack(config, opts) {
       // there are 2 relevant sass rules in next.js - css modules and global css
@@ -95,4 +95,5 @@ function withLess({ lessLoaderOptions = {}, ...nextConfig }) {
 }
 
 module.exports = withLess;
+module.exports.withLess = withLess;
 module.exports.patchNext = patchNextCSSWithLess;

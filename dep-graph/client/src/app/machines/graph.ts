@@ -17,6 +17,7 @@ import {
   ProjectNode,
 } from '../util-cytoscape';
 import { GraphPerfReport, GraphRenderEvents } from './interfaces';
+import { getEnvironmentConfig } from '../hooks/use-environment-config';
 
 export class GraphService {
   private traversalGraph: cy.Core;
@@ -212,7 +213,19 @@ export class GraphService {
         });
       }
 
-      this.renderGraph.fit().center().resize();
+      const environmentConfig = getEnvironmentConfig();
+
+      if (environmentConfig.environment === 'nx-console') {
+        // when in the nx-console environment, adjust graph width and position to be to right of floating panel
+        // 175 is a magic number that represents the width of the floating panels divided in half plus some padding
+        this.renderGraph
+          .fit(this.renderGraph.elements(), 175)
+          .center()
+          .resize()
+          .panBy({ x: 150, y: 0 });
+      } else {
+        this.renderGraph.fit(this.renderGraph.elements(), 25).center().resize();
+      }
 
       selectedProjectNames = this.renderGraph
         .nodes('[type!="dir"]')

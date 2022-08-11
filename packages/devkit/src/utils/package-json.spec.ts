@@ -75,4 +75,72 @@ describe('addDependenciesToPackageJson', () => {
     });
     expect(installTask).toBeDefined();
   });
+
+  it('should not add dependencies when they exist in devDependencies or vice versa', () => {
+    // ARRANGE
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        '@nrwl/angular': 'latest',
+      },
+      devDependencies: {
+        '@nrwl/next': 'latest',
+      },
+    });
+
+    // ACT
+    const installTask = addDependenciesToPackageJson(
+      tree,
+      {
+        '@nrwl/next': 'next',
+      },
+      {
+        '@nrwl/angular': 'next',
+      }
+    );
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies).toEqual({
+      '@nrwl/angular': 'latest',
+    });
+    expect(devDependencies).toEqual({
+      '@nrwl/next': 'latest',
+    });
+    expect(installTask).toBeDefined();
+  });
+
+  it('should add additional dependencies when they dont exist in devDependencies or vice versa and not update the ones that do exist', () => {
+    // ARRANGE
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        '@nrwl/angular': 'latest',
+      },
+      devDependencies: {
+        '@nrwl/next': 'latest',
+      },
+    });
+
+    // ACT
+    const installTask = addDependenciesToPackageJson(
+      tree,
+      {
+        '@nrwl/next': 'next',
+        '@nrwl/cypress': 'latest',
+      },
+      {
+        '@nrwl/angular': 'next',
+      }
+    );
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies).toEqual({
+      '@nrwl/angular': 'latest',
+      '@nrwl/cypress': 'latest',
+    });
+    expect(devDependencies).toEqual({
+      '@nrwl/next': 'latest',
+    });
+    expect(installTask).toBeDefined();
+  });
 });

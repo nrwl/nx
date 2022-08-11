@@ -1,9 +1,14 @@
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
+import {
+  ConfHealthAndSafety,
+  ConfLocation,
+  ConfWorkshop,
+} from '@nrwl/nx-dev/ui-conference';
 import { NextSeo } from 'next-seo';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ReactComponentElement } from 'react';
 
-export function ConfPage(): ReactComponentElement<any> {
+export default function ConfPage(): JSX.Element {
   const router = useRouter();
   return (
     <>
@@ -182,6 +187,26 @@ export function ConfPage(): ReactComponentElement<any> {
                 <p className="mb-6 sm:text-lg">
                   Workshops will be available on Oct. 16, 18.
                 </p>
+                <a
+                  className="font-input-mono group flex w-full items-center sm:text-xl"
+                  href="https://ti.to/nx-conf/nx-conf-2022?utm_source=nxdev"
+                >
+                  <span className="group-hover:underline">Register now</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
+                  </svg>
+                </a>
                 {/*<div className="mt-16 flex">
                   <a
                     className="font-input-mono group flex w-full items-center justify-end sm:text-2xl"
@@ -210,8 +235,8 @@ export function ConfPage(): ReactComponentElement<any> {
             </div>
           </div>
         </div>
-        {/*<div className="w-full overflow-hidden">
-          NAVIGATION
+        <div className="w-full overflow-hidden">
+          {/*NAVIGATION*/}
           <div className="hidden border-t border-b border-gray-600 md:block">
             <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
               <div className="font-input-mono grid-cols-7 items-center divide-x divide-gray-600 text-center md:grid">
@@ -253,30 +278,34 @@ export function ConfPage(): ReactComponentElement<any> {
                   </svg>
                 </div>
                 <Link href="#agenda">
-                  <a className="hover:bg-blue-nx-dark cursor-pointer p-8 transition">
+                  <a className="hover:bg-blue-nx-dark cursor-pointer py-8 transition">
                     Agenda
                   </a>
                 </Link>
                 <Link href="#speakers">
-                  <a className="hover:bg-blue-nx-dark cursor-pointer p-8 transition">
+                  <a className="hover:bg-blue-nx-dark cursor-pointer py-8 transition">
                     Speakers
                   </a>
                 </Link>
                 <Link href="#workshop">
-                  <a className="hover:bg-blue-nx-dark cursor-pointer p-8 transition">
+                  <a className="hover:bg-blue-nx-dark cursor-pointer py-8 transition">
                     Workshop
                   </a>
                 </Link>
-                <Link href="#sponsors">
-                  <a className="hover:bg-blue-nx-dark cursor-pointer p-8 transition">
-                    Sponsors
+                <Link href="#location">
+                  <a className="hover:bg-blue-nx-dark cursor-pointer py-8 transition">
+                    Location
+                  </a>
+                </Link>
+                <Link href="#health-and-safety">
+                  <a className="hover:bg-blue-nx-dark cursor-pointer py-8 transition">
+                    Health & Safety
                   </a>
                 </Link>
               </div>
             </div>
           </div>
-
-          AGENDA
+          {/*AGENDA*/}
           <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             <div className="mt-24">
               <h2 id="agenda" className="font-input-mono my-20 text-3xl">
@@ -284,9 +313,15 @@ export function ConfPage(): ReactComponentElement<any> {
               </h2>
             </div>
           </div>
-          <ConfScheduleShort />
-
-          SPEAKERS
+          <div className="border-t border-gray-600">
+            <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
+              <div className="p-8 text-center">
+                More information coming soon!
+              </div>
+            </div>
+          </div>
+          {/*<ConfScheduleShort />*/}
+          {/*SPEAKERS*/}
           <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             <div className="mt-24">
               <h2 id="speakers" className="font-input-mono my-20 text-3xl">
@@ -294,9 +329,15 @@ export function ConfPage(): ReactComponentElement<any> {
               </h2>
             </div>
           </div>
-          <ConfSpeakers />
-
-          WORKSHOP
+          <div className="border-t border-gray-600">
+            <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
+              <div className="p-8 text-center">
+                More information coming soon!
+              </div>
+            </div>
+          </div>
+          {/*<ConfSpeakers />*/}
+          {/*WORKSHOP*/}
           <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             <div className="mt-24">
               <h2 id="workshop" className="font-input-mono my-20 text-3xl">
@@ -305,8 +346,28 @@ export function ConfPage(): ReactComponentElement<any> {
             </div>
           </div>
           <ConfWorkshop />
-
-          SPONSORS
+          {/*LOCATION*/}
+          <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
+            <div className="mt-24">
+              <h2 id="location" className="font-input-mono my-20 text-3xl">
+                Location
+              </h2>
+            </div>
+          </div>
+          <ConfLocation />
+          {/*HEALTH AND SAFETY*/}
+          <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
+            <div className="mt-24">
+              <h2
+                id="health-and-safety"
+                className="font-input-mono my-20 text-3xl"
+              >
+                Health & Safety
+              </h2>
+            </div>
+          </div>
+          <ConfHealthAndSafety />
+          {/*SPONSORS
           <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             <div className="mt-24">
               <h2 id="sponsors" className="font-input-mono my-20 text-3xl">
@@ -314,9 +375,8 @@ export function ConfPage(): ReactComponentElement<any> {
               </h2>
             </div>
           </div>
-          <ConfSponsors />
-
-          <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
+          <ConfSponsors />*/}
+          {/*<div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             SPONSORS
             <div className="my-24">
               <h2 id="sponsors" className="my-20 text-3xl font-input-mono">
@@ -460,12 +520,10 @@ export function ConfPage(): ReactComponentElement<any> {
                 </div>
               </div>
             </div>
-          </div>
-        </div>*/}
+          </div>*/}
+        </div>
       </main>
       <Footer useDarkBackground={true} />
     </>
   );
 }
-
-export default ConfPage;

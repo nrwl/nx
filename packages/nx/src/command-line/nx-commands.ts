@@ -25,6 +25,7 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart, Fast and Extensible Build System'))
+  .demandCommand(1, '')
   .command({
     command: 'generate <generator> [_..]',
     describe:
@@ -308,7 +309,17 @@ export const commandsObject = yargs
         await (await import('./migrate')).migrate(process.cwd(), args)
       )
   )
-  .help('help')
+  .command(
+    'repair',
+    'Repair any configuration that is no longer supported by Nx.',
+    (yargs) =>
+      linkToNxDevAndExamples(yargs, 'repair').option('verbose', {
+        type: 'boolean',
+        describe: 'Print additional error stack trace on failure',
+      }),
+    async (args) => process.exit(await (await import('./repair')).repair(args))
+  )
+  .help()
   .version(nxVersion);
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
@@ -437,6 +448,7 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       default: false,
     })
     .option('verbose', {
+      type: 'boolean',
       describe: 'Print additional error stack trace on failure',
     })
     .option('nx-bail', {
@@ -502,6 +514,7 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       default: [],
     })
     .option('verbose', {
+      type: 'boolean',
       describe: 'Print additional error stack trace on failure',
     })
     .option('nx-bail', {

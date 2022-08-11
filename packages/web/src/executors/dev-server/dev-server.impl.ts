@@ -5,7 +5,7 @@ import {
   readTargetOptions,
 } from '@nrwl/devkit';
 
-import { eachValueFrom } from 'rxjs-for-await';
+import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
 import * as WebpackDevServer from 'webpack-dev-server';
 
@@ -85,7 +85,7 @@ export default async function* devServerExecutor(
       customWebpack = await customWebpack;
     }
 
-    webpackConfig = customWebpack(webpackConfig, {
+    webpackConfig = await customWebpack(webpackConfig, {
       buildOptions,
       configuration: serveOptions.buildTarget.split(':')[2],
     });

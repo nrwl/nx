@@ -1,3 +1,11 @@
 {
-  "presets": ["module:metro-react-native-babel-preset"]
+  "presets": [
+    [
+      "@nrwl/react/babel",
+      {
+        "runtime": "automatic",
+        "useBuiltIns": "usage"
+      }
+    ]
+  ]
 }

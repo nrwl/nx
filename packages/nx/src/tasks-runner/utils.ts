@@ -297,7 +297,12 @@ export function isCacheableTask(
 function longRunningTask(task: Task) {
   const t = task.target.target;
   return (
-    !!task.overrides['watch'] || t === 'serve' || t === 'dev' || t === 'start'
+    (!!task.overrides['watch'] && task.overrides['watch'] !== 'false') ||
+    t.endsWith(':watch') ||
+    t.endsWith('-watch') ||
+    t === 'serve' ||
+    t === 'dev' ||
+    t === 'start'
   );
 }
 

@@ -1,20 +1,18 @@
-import { ChipIcon, CogIcon } from '@heroicons/react/solid';
 import { PackageMetadata } from '@nrwl/nx-dev/models-package';
 import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import cx from 'classnames';
 import { NextSeo } from 'next-seo';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { ReactComponentElement, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { Breadcrumbs } from '@nrwl/nx-dev/ui-common';
-import { getPublicPackageName } from './get-public-package-name';
-import { Heading1, Heading2 } from './ui/headings';
+import { Heading1 } from './ui/headings';
+import { PackageReference } from './ui/package-reference';
 
 export function PackageSchemaList({
   pkg,
 }: {
   pkg: PackageMetadata;
-}): ReactComponentElement<any> {
+}): JSX.Element {
   const router = useRouter();
 
   const vm: {
@@ -22,15 +20,17 @@ export function PackageSchemaList({
       name: string;
       description: string;
       githubUrl: string;
+      id: string;
       readme: { content: string; filePath: string };
     };
     seo: { title: string; description: string; url: string; imageUrl: string };
     markdown: ReactNode;
   } = {
     pkg: {
-      name: getPublicPackageName(pkg.name),
+      name: pkg.packageName,
       description: pkg.description,
       githubUrl: pkg.githubRoot + pkg.root,
+      id: pkg.name,
       get readme() {
         const hasOverview = pkg.documentation.find((d) => d.id === 'overview');
         return !!hasOverview
@@ -42,7 +42,7 @@ export function PackageSchemaList({
       },
     },
     seo: {
-      title: `${getPublicPackageName(pkg.name)} | Nx`,
+      title: `${pkg.packageName} | Nx`,
       description: pkg.description,
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath
         .replace('/', '')
@@ -129,87 +129,11 @@ export function PackageSchemaList({
 
               <div className="prose mb-16 max-w-none">{vm.markdown}</div>
 
-              <Heading2 title="Package reference" />
-
-              <p className="mb-16">
-                Here is a list of all the executors and generators available
-                from this package.
-              </p>
-
-              <Heading2 title={'Executors'} />
-              <ul role="list" className="divide-y divide-gray-200">
-                {pkg.executors.map((executors) => (
-                  <li
-                    key={executors.name}
-                    className="focus-within:ring-blue-nx-base relative flex px-2 py-4 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
-                  >
-                    <ChipIcon
-                      className="h-8 w-8 flex-shrink-0 rounded-full text-gray-300"
-                      role="img"
-                    />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        <Link
-                          href={`/packages/${pkg.name}/executors/${executors.name}`}
-                        >
-                          <a className="focus:outline-none">
-                            <span
-                              className="absolute inset-0"
-                              aria-hidden="true"
-                            ></span>
-                            {executors.name}
-                          </a>
-                        </Link>
-                      </p>
-                      <div className="prose-sm">
-                        {renderMarkdown({
-                          content: executors.description,
-                          data: {},
-                          filePath: '',
-                        })}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="h-12">{/* SPACER */}</div>
-              <Heading2 title={'Generators'} />
-              <ul role="list" className="divide-y divide-gray-200">
-                {pkg.generators.map((generators) => (
-                  <li
-                    key={generators.name}
-                    className="focus-within:ring-blue-nx-base relative flex px-2 py-4 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
-                  >
-                    <CogIcon
-                      className="h-8 w-8 flex-shrink-0 rounded-full text-gray-300"
-                      role="img"
-                    />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        <Link
-                          href={`/packages/${pkg.name}/generators/${generators.name}`}
-                        >
-                          <a className="focus:outline-none">
-                            <span
-                              className="absolute inset-0"
-                              aria-hidden="true"
-                            ></span>
-                            {generators.name}
-                          </a>
-                        </Link>
-                      </p>
-                      <div className="prose-sm">
-                        {renderMarkdown({
-                          content: generators.description,
-                          data: {},
-                          filePath: '',
-                        })}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <PackageReference
+                name={vm.pkg.id}
+                executors={pkg.executors}
+                generators={pkg.generators}
+              ></PackageReference>
             </div>
           </div>
         </div>
@@ -217,5 +141,3 @@ export function PackageSchemaList({
     </>
   );
 }
-
-export default PackageSchemaList;

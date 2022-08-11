@@ -112,6 +112,12 @@
     "resolvePluginsRelativeTo": {
       "type": "string",
       "description": "The equivalent of the `--resolve-plugins-relative-to` flag on the ESLint CLI."
+    },
+    "reportUnusedDisableDirectives": {
+      "type": "string",
+      "default": "off",
+      "enum": ["off", "warn", "error"],
+      "description": "The equivalent of the `--report-unused-disable-directives` flag on the ESLint CLI."
     }
   },
   "required": ["lintFilePatterns"]

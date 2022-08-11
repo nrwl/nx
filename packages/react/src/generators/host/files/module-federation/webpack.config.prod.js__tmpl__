@@ -1,8 +1,13 @@
-const withModuleFederation = require('@nrwl/react/module-federation');
-const moduleFederationConfig = require('./module-federation.config');
+// @ts-check
 
-module.exports = withModuleFederation({
-    ...moduleFederationConfig,
+const { withModuleFederation } = require('@nrwl/react/module-federation');
+const baseConfig = require('./module-federation.config');
+
+/**
+ * @type {import('@nrwl/react/module-federation').ModuleFederationConfig}
+ **/
+const prodConfig = {
+    ...baseConfig,
     /*
      * Remote overrides for production.
      * Each entry is a pair of an unique name and the URL where it is deployed.
@@ -23,4 +28,6 @@ module.exports = withModuleFederation({
     remotes: [
       <% remotes.forEach(function(r) {%>['<%= r.fileName %>', '//localhost:<%= r.port %>/'],<% }); %>
     ],
-});
+};
+
+module.exports = withModuleFederation(prodConfig);

@@ -66,6 +66,10 @@ export async function scheduleTarget(
 
   const registry = new schema.CoreSchemaRegistry();
   registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  registry.addSmartDefaultProvider('unparsed', () => {
+    // This happens when context.scheduleTarget is used to run a target using nx:run-commands
+    return [];
+  });
   const architectHost = new WorkspaceNodeModulesArchitectHost(workspace, root);
   const architect: Architect = new Architect(architectHost, registry);
   const run = await architect.scheduleTarget(
@@ -95,7 +99,7 @@ function createWorkflow(
   fsHost: virtualFs.Host<Stats>,
   root: string,
   opts: any
-) {
+): import('@angular-devkit/schematics/tools').NodeWorkflow {
   const NodeWorkflow = require('@angular-devkit/schematics/tools').NodeWorkflow;
   const workflow = new NodeWorkflow(fsHost, {
     force: false,
@@ -876,7 +880,11 @@ export async function runMigration(
   const fsHost = new NxScopedHost(root);
   const workflow = createWorkflow(fsHost, root, {});
   const collection = resolveMigrationsCollection(packageName);
-  return workflow
+
+  const record = { loggingQueue: [] as string[], error: false };
+  workflow.reporter.subscribe(await createRecorder(fsHost, record, logger));
+
+  await workflow
     .execute({
       collection,
       schematic: migrationName,
@@ -885,6 +893,11 @@ export async function runMigration(
       logger: logger as any,
     })
     .toPromise();
+
+  return {
+    loggingQueue: record.loggingQueue,
+    madeChanges: record.loggingQueue.length > 0,
+  };
 }
 
 function resolveMigrationsCollection(name: string): string {
@@ -1020,6 +1033,17 @@ export function wrapAngularDevkitSchematic(
   collectionName: string,
   generatorName: string
 ) {
+  // This is idempotent, if it happens to get called
+  // multiple times its no big deal. It ensures that some
+  // patches are applied to @angular-devkit code which
+  // are necessary. For the most part, our wrapped host hits
+  // the necessary areas, but for some things it wouldn't make
+  // sense for the adapter to be 100% accurate.
+  //
+  // e.g. Angular warns about tags, but some angular CLI schematics
+  // were written with Nx in mind, and may care about tags.
+  require('./compat');
+
   return async (host: Tree, generatorOptions: { [k: string]: any }) => {
     if (
       mockedSchematics &&
@@ -1090,8 +1114,8 @@ export function wrapAngularDevkitSchematic(
 
     // used for testing
     if (collectionResolutionOverrides) {
-      const r = workflow.engineHost.resolve;
-      workflow.engineHost.resolve = (collection, b, c) => {
+      const r = (workflow.engineHost as any).resolve;
+      (workflow.engineHost as any).resolve = (collection, b, c) => {
         if (collectionResolutionOverrides[collection]) {
           return collectionResolutionOverrides[collection];
         } else {

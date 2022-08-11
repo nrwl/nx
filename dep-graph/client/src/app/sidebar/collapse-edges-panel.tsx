@@ -16,10 +16,10 @@ export const CollapseEdgesPanel = memo(
               name="collapseEdges"
               value="collapseEdges"
               type="checkbox"
-              className="h-4 w-4 rounded border-slate-400 dark:border-slate-300"
+              className="h-4 w-4 accent-purple-500"
               onChange={(event) => collapseEdgesChanged(event.target.checked)}
               checked={collapseEdges}
-            ></input>
+            />
           </div>
           <div className="ml-3 text-sm">
             <label

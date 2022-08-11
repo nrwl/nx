@@ -1,6 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "jest",
+  "packageName": "@nrwl/jest",
   "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
   "root": "/packages/jest",
   "source": "/packages/jest/src",

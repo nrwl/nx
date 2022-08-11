@@ -27,7 +27,7 @@ myorg/
 │       │   ├── lib/
 │       │   │   └── data.ts
 │       │   └── index.ts
-│       ├── jest.config.js
+│       ├── jest.config.ts
 │       ├── project.json
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json

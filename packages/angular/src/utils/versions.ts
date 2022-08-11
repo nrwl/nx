@@ -1,7 +1,7 @@
 export const nxVersion = require('../../package.json').version;
 
-export const angularVersion = '~14.1.0';
-export const angularDevkitVersion = '~14.1.0';
+export const angularVersion = '~14.1.1';
+export const angularDevkitVersion = '~14.1.1';
 export const ngPackagrVersion = '~14.1.0';
 export const ngrxVersion = '~14.0.0';
 export const rxjsVersion = '~7.4.0';
@@ -16,7 +16,7 @@ export const postcssImportVersion = '~14.1.0';
 export const postcssPresetEnvVersion = '~7.5.0';
 export const postcssUrlVersion = '~10.1.3';
 export const autoprefixerVersion = '^10.4.0';
-export const tsNodeVersion = '~10.8.0';
+export const tsNodeVersion = '10.9.1';
 
 export const jestPresetAngularVersion = '~11.1.2';
 export const protractorVersion = '~7.0.0';

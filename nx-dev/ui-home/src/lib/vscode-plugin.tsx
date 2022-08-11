@@ -1,10 +1,10 @@
 import { motion, useAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function VscodePlugin(): ReactComponentElement<any> {
+export function VscodePlugin(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -107,5 +107,3 @@ export function VscodePlugin(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default VscodePlugin;

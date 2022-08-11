@@ -1,169 +1,110 @@
-import { MemberCard } from '@nrwl/nx-dev/ui-member-card';
-import { ReactComponentElement } from 'react';
-
-export function ConfWorkshop(): ReactComponentElement<any> {
+export function ConfWorkshop(): JSX.Element {
   return (
     <div className="border-t border-b border-gray-600">
       <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
         <article className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-gray-600">
           <div className="px-5 py-12 md:pr-12">
             <div className="font-input-mono text-green-nx-base">
-              September 14 & 15
+              Day 1 - Sunday, Oct. 16 | Day 2 - Tuesday, Oct. 18
             </div>
             <h2 className="font-input-mono pt-8 pb-2 text-2xl">
-              Develop at Scale with Nx Monorepos
+              Learn from the Creators of Nx, First Hand!
             </h2>
-            <p className="text-md mb-8 text-gray-400">
-              Presented by Nrwl on September 14th and 15th, 10:30am - 5:30pm ET
+            <p className="text-md mb-8 text-slate-300">
+              Attendees can register for both days of the workshop or just Day 2
+              for more advanced Nx users.
             </p>
-            <p className="text-gray-400">
-              We'll kick off the Nx Conf festivities with a 2-day deep dive into
-              all things Nx! The Nx Workshop is the official workshop created
-              and maintained by the Nx Core Team at Nrwl. In these two days,
-              Nrwl architects will cover the breadth of tools and techniques
-              needed for any tech lead or individual contributor to be
-              successful working in an Nx workspace.
+            <p className="text-slate-300">
+              This is your chance to get first-hand knowledge from Nrwl
+              engineers and Nx Core team members. Get your questions answered,
+              uncover the secrets of Nx and its powerful plugin system to
+              accelerate the development of applications, and how to set up a
+              monorepo that not just works initially but scales with your team
+              and organization.
             </p>
             <h4 className="font-input-mono mt-8 mb-4 text-lg">
               $800 All-Inclusive
             </h4>
-            <p className="mb-4 text-gray-400">
-              Each ticket for the Nx Workshop is $800, and includes both days of
-              the workshop, as well as a free coupon for the Advanced Nx
-              Workspaces course on nxplaybook.com, and a gift box to be shipped
-              to you that includes the coveted "10x Nx Developer" t-shirt.
+            <p className="mb-4 text-slate-300">
+              To help you better learn and apply various concepts in your
+              projects, we're going to create a more "real-world" example,
+              building a store for a fictional board game company called "The
+              Board Game Hoard".
             </p>
-            <p className="mb-4 text-gray-400">
-              The workshop consists of short presentations, followed by hands-on
-              codelabs.
-            </p>
-
             <h4 className="font-input-mono mb-2 text-lg">Day 1</h4>
-            <ul className="mb-4 text-sm text-gray-400">
+            <p className="mb-2 text-xs italic text-slate-300">
+              (9am-5pm; environment setup starting at 8am)
+            </p>
+            <p className="mb-4 text-sm text-slate-300">
+              This introductory workshop will give you all you need to get set
+              up and running with your brand new Nx workspace, covering topics
+              around:
+            </p>
+            <ul className="mb-4 list-disc text-sm text-slate-300">
+              <li>Generating a pristine Nx workspace</li>
               <li>
-                <span role="img" aria-label="emojii">
-                  🔬
-                </span>
-                &nbsp; Lab 1 - Generate an empty workspace
+                Generating frontend Angular apps and backend APIs inside your
+                workspace, with pre-configured proxies
               </li>
+              <li>Creating shared libs for re-using code</li>
               <li>
-                <span role="img" aria-label="emojii">
-                  ⚗️
-                </span>
-                &nbsp; Lab 2 - Generate an Angular app
+                Generating new routed components with all the lazily loaded
+                routes pre-configured by Nx and ready to go
               </li>
+              <li>How to organize code in a monorepo</li>
+              <li>Easily move libs around your folder structure</li>
               <li>
-                <span role="img" aria-label="emojii">
-                  🧪
-                </span>
-                &nbsp; Lab 3 - Executors
-              </li>
-              <li>
-                <span role="img" aria-label="emojii">
-                  🔭
-                </span>
-                &nbsp; Lab 4 - Generate a component lib
-              </li>
-              <li>
-                <span role="img" aria-label="emojii">
-                  🧬
-                </span>
-                &nbsp; Lab 5 - Generate a utility lib
-              </li>
-              <li>
-                <span role="img" aria-label="emojii">
-                  🧮
-                </span>
-                &nbsp; Lab 6 - Generate a route lib
-              </li>
-              <li>
-                <span role="img" aria-label="emojii">
-                  🤖
-                </span>
-                &nbsp; Lab 7 - Add a NestJS API
-              </li>
-              <li>
-                <span role="img" aria-label="emojii">
-                  📐
-                </span>
-                &nbsp; Lab 8 - Displaying a full game in the routed game-detail
-                component
-              </li>
-              <li>
-                <span role="img" aria-label="emojii">
-                  💻
-                </span>
-                &nbsp; Lab 9 - Generate a type lib that the API and frontend can
-                share
-              </li>
-              <li>
-                <span role="img" aria-label="emojii">
-                  👩‍💻
-                </span>
-                &nbsp; Lab 10 - Generate Storybook stories for the shared ui
-                component
-              </li>
-              <li>
-                <span role="img" aria-label="emojii">
-                  ⌨️
-                </span>
-                &nbsp; Lab 11 - E2E test the shared component
+                Creating Storybook stories and e2e Cypress tests for your
+                components
               </li>
             </ul>
 
             <h4 className="font-input-mono mb-2 text-lg">Day 2</h4>
-            <ul className="text-sm text-gray-400">
+            <p className="mb-2 text-xs italic text-slate-300">
+              (9am-5pm; environment setup starting at 8am)
+            </p>
+            <p className="mb-4 text-sm text-slate-300">
+              Take a deep dive into advanced Nx concepts that help you leverage
+              Nx to its fullest, covering topics around:
+            </p>
+            <ul className="mb-4 list-disc text-sm text-slate-300">
               <li>
-                <span role="img" aria-label="emojii">
-                  💡
-                </span>
-                &nbsp; Lab 12 - Module boundaries
+                How to set boundaries between the different scopes in your
+                project
+              </li>
+              <li>Automate your workspace with "local plugins"</li>
+              <li>
+                Learn how to write and test your own plugin executors and
+                generators
               </li>
               <li>
-                <span role="img" aria-label="emojii">
-                  🧸️
-                </span>
-                &nbsp; Lab 13 - Workspace Generators - Intro
+                Learn about computation caching, optimization strategies, and
+                how to distribute it with Nx Cloud
               </li>
               <li>
-                <span role="img" aria-label="emojii">
-                  🧵
-                </span>
-                &nbsp; Lab 14 - Workspace Generators - Modifying files
+                Set-up CI for your Pull Request, including the configuration of
+                distributed task execution and Nx Cloud GitHub integration
               </li>
               <li>
-                <span role="img" aria-label="emojii">
-                  💎
-                </span>
-                &nbsp; Lab 15 - Setting up CI
+                Write advanced deployment targets using the run-commands
+                executor
               </li>
               <li>
-                <span role="img" aria-label="emojii">
-                  🔌
-                </span>
-                &nbsp; Lab 16 - Distributed caching
+                Deployment and CD systems to only deploy affected projects
               </li>
+              <li>Publishing packages and strategies for versioning</li>
               <li>
-                <span role="img" aria-label="emojii">
-                  🔍
-                </span>
-                &nbsp; Lab 17 - NxCloud GitHub bot
-              </li>
-              <li>
-                <span role="img" aria-label="emojii">
-                  📎
-                </span>
-                &nbsp; Lab 18 - Run-Commands and deploying the frontend
-              </li>
-              <li>
-                <b>
-                  Q&A with Jeff Cross, Victor Savkin, Jason Jean, and Jack Hsu
-                </b>
+                Bonus: Incremental adoption of Nx (in a PNPM/NPM/Yarn workspace
+                and/or Lerna workspace)
               </li>
             </ul>
+            <p className="mb-4 text-sm text-slate-300">
+              If you're only attending day 2, please plan to arrive at 8am to
+              set up your example workspace.
+            </p>
           </div>
           <div className="divide-y divide-gray-600 py-12">
-            <div className="px-5 pb-12 md:w-4/5 md:pl-12">
+            {/*<div className="px-5 pb-12 md:w-4/5 md:pl-12">
               <h3 className="font-input-mono mb-8 text-xl">Instructors</h3>
               <MemberCard
                 imageUrl="/images/conf/kirils-ladovs.webp"
@@ -175,17 +116,17 @@ export function ConfWorkshop(): ReactComponentElement<any> {
                 name="Rares Matei"
                 description="Sr. JavaScript Engineer / Nrwl"
               />
-              {/* <MemberCard
+              <MemberCard
                 imageUrl="/images/conf/craigory-coppola.webp"
                 name="Craigory Coppola"
                 description="Sr. JavaScript Engineer / Nrwl"
-              /> */}
-            </div>
-            <div className="workshop-border-r px-5 py-12 md:pl-12">
+              />
+            </div>*/}
+            {/*<div className="workshop-border-r px-5 py-12 md:pl-12">
               <h3 className="font-input-mono mb-8 text-xl">
                 What you'll learn
               </h3>
-              <p className="text-gray-400">
+              <p className="text-slate-300">
                 We’ll build up a monorepo from scratch, creating a client app
                 and server app that share an API type library. We’ll learn how
                 Nx uses builder commands and schemeatics to make the developer
@@ -204,19 +145,17 @@ export function ConfWorkshop(): ReactComponentElement<any> {
                   <path d="M9.931 12.645h4.138l-2.07-4.908m0-7.737L.68 3.982l1.726 14.771L12 24l9.596-5.242L23.32 3.984 11.999.001zm7.064 18.31h-2.638l-1.422-3.503H8.996l-1.422 3.504h-2.64L12 2.65z" />
                 </svg>
               </div>
-              <p className="text-gray-400">
+              <p className="text-slate-300">
                 All codelabs are available in either React or Angular, but the
                 concepts are the same.
               </p>
-            </div>
-            <div className="px-5 pt-12 md:pl-12">
+            </div>*/}
+            <div className="px-5 py-12 md:pl-12">
               <a
                 className="font-input-mono group flex w-full items-center sm:text-xl"
-                href="https://nrwl.io/contact-us?utm_source=nxdev"
+                href="https://ti.to/nx-conf/nx-conf-2022?utm_source=nxdev"
               >
-                <span className="group-hover:underline">
-                  Contact us for the workshop
-                </span>
+                <span className="group-hover:underline">Save your ticket!</span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "

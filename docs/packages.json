@@ -1,11 +1,13 @@
 [
   {
     "name": "add-nx-to-monorepo",
+    "packageName": "add-nx-to-monorepo",
     "path": "generated/packages/add-nx-to-monorepo.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "angular",
+    "packageName": "angular",
     "path": "generated/packages/angular.json",
     "schemas": {
       "executors": [
@@ -51,21 +53,25 @@
   },
   {
     "name": "cra-to-nx",
+    "packageName": "cra-to-nx",
     "path": "generated/packages/cra-to-nx.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "create-nx-plugin",
+    "packageName": "create-nx-plugin",
     "path": "generated/packages/create-nx-plugin.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "create-nx-workspace",
+    "packageName": "create-nx-workspace",
     "path": "generated/packages/create-nx-workspace.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "cypress",
+    "packageName": "cypress",
     "path": "generated/packages/cypress.json",
     "schemas": {
       "executors": ["cypress"],
@@ -79,6 +85,7 @@
   },
   {
     "name": "detox",
+    "packageName": "detox",
     "path": "generated/packages/detox.json",
     "schemas": {
       "executors": ["build", "test"],
@@ -87,34 +94,40 @@
   },
   {
     "name": "devkit",
+    "packageName": "devkit",
     "path": "generated/packages/devkit.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "eslint-plugin-nx",
+    "packageName": "eslint-plugin-nx",
     "path": "generated/packages/eslint-plugin-nx.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "express",
+    "packageName": "express",
     "path": "generated/packages/express.json",
     "schemas": { "executors": [], "generators": ["init", "application"] }
   },
   {
     "name": "jest",
+    "packageName": "jest",
     "path": "generated/packages/jest.json",
     "schemas": { "executors": ["jest"], "generators": ["init", "jest-project"] }
   },
   {
     "name": "js",
+    "packageName": "js",
     "path": "generated/packages/js.json",
     "schemas": {
-      "executors": ["tsc", "swc"],
+      "executors": ["tsc", "swc", "node"],
       "generators": ["library", "init", "convert-to-swc"]
     }
   },
   {
     "name": "linter",
+    "packageName": "linter",
     "path": "generated/packages/linter.json",
     "schemas": {
       "executors": ["lint", "eslint"],
@@ -123,11 +136,13 @@
   },
   {
     "name": "make-angular-cli-faster",
+    "packageName": "make-angular-cli-faster",
     "path": "generated/packages/make-angular-cli-faster.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "nest",
+    "packageName": "nest",
     "path": "generated/packages/nest.json",
     "schemas": {
       "executors": [],
@@ -156,14 +171,23 @@
   },
   {
     "name": "next",
+    "packageName": "next",
     "path": "generated/packages/next.json",
     "schemas": {
       "executors": ["build", "server", "export"],
-      "generators": ["init", "application", "page", "component", "library"]
+      "generators": [
+        "init",
+        "application",
+        "page",
+        "component",
+        "library",
+        "custom-server"
+      ]
     }
   },
   {
     "name": "node",
+    "packageName": "node",
     "path": "generated/packages/node.json",
     "schemas": {
       "executors": ["webpack", "node"],
@@ -172,6 +196,7 @@
   },
   {
     "name": "nx",
+    "packageName": "nx",
     "path": "generated/packages/nx.json",
     "schemas": {
       "executors": ["noop", "run-commands", "run-script"],
@@ -180,6 +205,7 @@
   },
   {
     "name": "nx-plugin",
+    "packageName": "nx-plugin",
     "path": "generated/packages/nx-plugin.json",
     "schemas": {
       "executors": ["e2e"],
@@ -195,6 +221,7 @@
   },
   {
     "name": "react",
+    "packageName": "react",
     "path": "generated/packages/react.json",
     "schemas": {
       "executors": ["module-federation-dev-server"],
@@ -219,6 +246,7 @@
   },
   {
     "name": "react-native",
+    "packageName": "react-native",
     "path": "generated/packages/react-native.json",
     "schemas": {
       "executors": [
@@ -245,6 +273,7 @@
   },
   {
     "name": "storybook",
+    "packageName": "storybook",
     "path": "generated/packages/storybook.json",
     "schemas": {
       "executors": ["storybook", "build"],
@@ -258,11 +287,13 @@
   },
   {
     "name": "tao",
+    "packageName": "tao",
     "path": "generated/packages/tao.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "web",
+    "packageName": "web",
     "path": "generated/packages/web.json",
     "schemas": {
       "executors": ["webpack", "rollup", "dev-server", "file-server"],
@@ -271,6 +302,7 @@
   },
   {
     "name": "workspace",
+    "packageName": "workspace",
     "path": "generated/packages/workspace.json",
     "schemas": {
       "executors": ["run-commands", "counter", "run-script"],

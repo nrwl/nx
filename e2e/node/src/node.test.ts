@@ -1,8 +1,8 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
-  createFile,
   checkFilesDoNotExist,
   checkFilesExist,
+  createFile,
   expectJestTestsToPass,
   killPorts,
   newProject,
@@ -274,11 +274,12 @@ describe('Build Node apps', () => {
     expect(packageJson).toEqual(
       expect.objectContaining({
         dependencies: {
-          '@nestjs/common': '^8.0.0',
-          '@nestjs/core': '^8.0.0',
-          '@nestjs/platform-express': '^8.0.0',
+          '@nestjs/common': '^9.0.0',
+          '@nestjs/core': '^9.0.0',
+          '@nestjs/platform-express': '^9.0.0',
           'reflect-metadata': '^0.1.13',
           rxjs: '^7.0.0',
+          tslib: '^2.3.0',
         },
         main: 'main.js',
         name: expect.any(String),

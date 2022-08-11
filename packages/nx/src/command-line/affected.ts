@@ -1,11 +1,10 @@
-import * as yargs from 'yargs';
 import { calculateFileChanges } from '../project-graph/file-utils';
 import { runCommand } from '../tasks-runner/run-command';
 import { output } from '../utils/output';
 import { generateGraph } from './dep-graph';
 import { printAffected } from './print-affected';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
-import type { NxArgs, RawNxArgs } from '../utils/command-line-utils';
+import type { NxArgs } from '../utils/command-line-utils';
 import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,

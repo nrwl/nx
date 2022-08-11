@@ -36,7 +36,7 @@ There are two options:
 
 ### Use Nx for task scheduling, without changing the Lerna setup
 
-Starting with Lerna 5.1 (currently in beta) you have Nx as an additional option to the existing `p-map` and `q-map` (previously used by Lerna) for running tasks. This is the **preferred approach if you have already a Lerna repository** since the impact is the lowest, while the benefit is still very high.
+Starting with Lerna 5.1 you have Nx as an additional option to the existing `p-map` and `q-map` (previously used by Lerna) for running tasks. This is the **preferred approach if you have already a Lerna repository** since the impact is the lowest, while the benefit is still very high.
 
 To enable Nx support (and thus speed up task running) go through the following steps:
 

@@ -105,6 +105,7 @@ export function getPackageMetadataList(
       return {
         githubRoot: 'https://github.com/nrwl/nx/blob/master',
         name: folderName,
+        packageName: packageJson.name,
         description: packageJson.description,
         root: relativeFolderPath,
         source: join(relativeFolderPath, '/src'),

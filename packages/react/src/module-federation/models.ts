@@ -22,7 +22,7 @@ export type AdditionalSharedConfig = Array<
 
 export interface ModuleFederationConfig {
   name: string;
-  remotes?: string[];
+  remotes?: Remotes;
   library?: ModuleFederationLibrary;
   exposes?: Record<string, string>;
   shared?: SharedFunction;

@@ -1,6 +1,13 @@
-module.exports = {
+// @ts-check
+
+/**
+ * @type {import('@nrwl/react/module-federation').ModuleFederationConfig}
+ **/
+const moduleFederationConfig = {
     name: '<%= projectName %>',
     remotes: [
     <% remotes.forEach(function(r) {%> "<%= r.fileName %>", <% }); %>
     ],
-}
+};
+
+module.exports = moduleFederationConfig;

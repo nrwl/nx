@@ -1,6 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "next",
+  "packageName": "@nrwl/next",
   "description": "When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.\n\nThe Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:\n\n\n- Scaffolding for creating, building, serving, linting, and testing Next.js applications.\n\n- Integration with building, serving, and exporting a Next.js application.\n\n- Integration with React libraries within the workspace.",
   "root": "/packages/next",
   "source": "/packages/next/src",
@@ -566,6 +567,47 @@
       "implementation": "/packages/next/src/generators/library/library#libraryGenerator.ts",
       "hidden": false,
       "path": "/packages/next/src/generators/library/schema.json"
+    },
+    {
+      "name": "custom-server",
+      "factory": "./src/generators/custom-server/custom-server#customServerGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "NxNextCustomServer",
+        "title": "Add custom server",
+        "description": "Add a custom server to existing Next.js application.",
+        "examples": [
+          {
+            "command": "nx g custom-server my-app",
+            "description": "Add a custom server to existing Next.js app."
+          }
+        ],
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project.",
+            "alias": "p",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-dropdown": "project",
+            "x-prompt": "What is the name of the project to set up a custom server for?"
+          },
+          "compiler": {
+            "type": "string",
+            "enum": ["tsc", "swc"],
+            "default": "tsc",
+            "description": "The compiler used to build the custom server."
+          }
+        },
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Set up a custom server.",
+      "implementation": "/packages/next/src/generators/custom-server/custom-server#customServerGenerator.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/next/src/generators/custom-server/schema.json"
     }
   ],
   "executors": [
@@ -655,9 +697,14 @@
             "description": "Hide error messages containing server information.",
             "default": false
           },
+          "customServerTarget": {
+            "type": "string",
+            "description": "Target which builds the custom server."
+          },
           "customServerPath": {
             "type": "string",
-            "description": "Use a custom server script."
+            "description": "Use a custom server script. (Use `customServerTarget` instead)",
+            "x-deprecated": true
           },
           "hostname": {
             "type": "string",

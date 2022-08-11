@@ -7,8 +7,20 @@
   "type": "object",
   "properties": {
     "include": {
-      "type": "string",
-      "description": "A comma-separated list of additional npm packages to include. e.g. `nx sync-deps --include=react-native-gesture-handler,react-native-safe-area-context`"
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "An array of additional npm packages to include."
+    },
+    "exclude": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "An array of npm packages to exclude."
     }
   }
 }

@@ -70,7 +70,37 @@ To publish packages to a local registry, do the following:
 - Run `cd ./tmp` in Terminal 2
 - Run `npx create-nx-workspace@999.9.9` in Terminal 2
 
-If you have problems publishing, make sure you use Node 14 and NPM 6 instead of Node 15 and NPM 7.
+If you have problems publishing, make sure you use Node 16 and NPM 6 or 8.
+
+### Publishing for Yarn 2+ (Berry)
+
+Yarn Berry operates slightly differently than Yarn Classic. In order to publish packages for Berry follow next steps:
+
+- Run `yarn set version berry` to switch to latest Yarn version.
+- Create `.yarnrc.yml` in root with following contents:
+  ```yml
+  nodeLinker: node-modules
+  npmRegistryServer: 'http://localhost:4873'
+  unsafeHttpWhitelist:
+    - localhost
+  ```
+- Run `yarn local-registry start` in Terminal 1 (keep it running)
+- If you are creating nx workspace outside of your nx repo, make sure to add npm registry info to your root yarnrc (usually in ~/.yarnrc.yml). The file should look something like this:
+
+  ```yml
+  npmRegistries:
+    'https://registry.yarnpkg.com':
+      npmAuthToken: npm_******************
+  yarnPath: .yarn/releases/yarn-3.2.2.cjs
+
+  npmRegistryServer: 'http://localhost:4873'
+  unsafeHttpWhitelist:
+    - localhost
+  ```
+
+- Run `yarn nx-release --local` in Terminal 2 to publish next minor version. If this version already exists, you can bump the minor version in `lerna.json` to toggle the next minor. The output will report the version of published packages.
+- Go to your target folder (e.g. `cd ./tmp`) in Terminal 2
+- Run `yarn dlx create-nx-workspace@123.4.5` in Terminal 2 (replace `123.4.5` with the version that got published).
 
 ### Running Unit Tests
 

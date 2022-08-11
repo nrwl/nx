@@ -34,7 +34,7 @@
     "@nrwl/workspace": "file:../workspace"
   },
   "peerDependencies": {
-    "express": "4.17.2"
+    "express": "^4.18.1"
   },
   "peerDependenciesMeta": {
     "express": {

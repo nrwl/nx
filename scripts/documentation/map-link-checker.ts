@@ -12,65 +12,34 @@ console.log(`${chalk.blue('i')} Documentation Map Check`);
 const basePath = 'docs';
 const sharedFilesPattern = 'shared/cli';
 
-// These are Overview documentation files showed at url like `/packages/:name`
-const allowedOrphanFiles: string[] = [
-  'shared/angular-plugin.md',
-  'shared/cypress-plugin.md',
-  'shared/detox-plugin.md',
-  'shared/express-plugin.md',
-  'shared/guides/storybook/plugin-overview.md',
-  'shared/jest-plugin.md',
-  'shared/js-plugin.md',
-  'shared/linter-plugin.md',
-  'shared/nest-plugin.md',
-  'shared/next-plugin.md',
-  'shared/node-plugin.md',
-  'shared/nx-plugin.md',
-  'shared/react-native-plugin.md',
-  'shared/react-plugin.md',
-  'shared/web-plugin.md',
-  'shared/workspace-plugin.md',
-].map((x) => x.replace('.md', ''));
-
 const readmePathList: string[] = glob
   .sync(`${basePath}/**/*.md`)
   .map((path: string) => path.split(basePath)[1])
   .map((path: string) => path.slice(1, -3)) // Removing first `/` and `.md`
-  .filter((path: string) => !path.startsWith(sharedFilesPattern))
-  .filter((i) => !allowedOrphanFiles.includes(i)); // Removing the paths allowed to be orphans
+  .filter((path: string) => !path.startsWith(sharedFilesPattern));
 
-function pathExtractor(
-  pathList: string[] = [],
-  item: any,
-  currentPath: string = ''
-): string[] {
-  currentPath = currentPath ? [currentPath, item.id].join('/') : item.id;
-  if (item.itemList) {
-    return item.itemList
-      .map((i: any) => pathExtractor(pathList, i, currentPath))
-      .flat();
+function filePathExtractor(file: any): string[] {
+  const paths: string[] = [];
+
+  function recur(curr): void {
+    if (curr.itemList) {
+      curr.itemList.forEach((ii) => {
+        recur(ii);
+      });
+    } else {
+      paths.push(curr.file);
+    }
   }
-  if (item.path) {
-    return pathList;
-  }
-  if (item.file) {
-    pathList.push(item.file);
-    return pathList;
-  }
-  pathList.push(currentPath);
-  return pathList;
+  recur(file);
+  return paths;
 }
 
-const mapPathList: string[] = readJsonSync(`${basePath}/map.json`)
-  .map((file: any) => pathExtractor([], file, ''))
+const mapPathList: string[] = readJsonSync(`${basePath}/map.json`, {
+  encoding: 'utf8',
+})
+  .map((file: any) => filePathExtractor(file))
   .flat()
-  .filter(
-    // Removing duplicates
-    (item: string, index: number, array: string[]) =>
-      array.indexOf(item) === index
-  )
   .filter((item: string) => item.split('/').length > 1); // Removing "category" paths (not linked to a file)
-
 const readmeMissList = readmePathList.filter((x) => !mapPathList.includes(x));
 const mapMissList = mapPathList.filter((x) => !readmePathList.includes(x));
 
