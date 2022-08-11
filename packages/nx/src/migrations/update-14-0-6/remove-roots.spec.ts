@@ -1,5 +1,8 @@
 import { Tree } from '../../generators/tree';
-import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { addProjectConfiguration } from '../../generators/utils/project-configuration';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import removeRoots from './remove-roots';
