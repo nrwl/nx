@@ -1011,7 +1011,8 @@
           {
             "name": "Angular and Nx Version Matrix",
             "id": "angular-nx-version-matrix",
-            "file": "shared/guides/angular-nx-version-matrix"
+            "file": "shared/angular-nx-version-matrix",
+            "path": "/angular-nx-version-matrix"
           }
         ]
       },
