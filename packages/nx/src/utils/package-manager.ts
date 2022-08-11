@@ -4,8 +4,8 @@ import { remove } from 'fs-extra';
 import { dirname, join } from 'path';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
-import { readJsonFile, writeJsonFile } from './fileutils';
-import { PackageJson, readModulePackageJson } from './package-json';
+import { writeJsonFile } from './fileutils';
+import { readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
 
 const execAsync = promisify(exec);
@@ -49,16 +49,23 @@ export function getPackageManagerCommand(
   packageManager: PackageManager = detectPackageManager()
 ): PackageManagerCommands {
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
-    yarn: () => ({
-      install: 'yarn',
-      ciInstall: 'yarn --frozen-lockfile',
-      add: 'yarn add -W',
-      addDev: 'yarn add -D -W',
-      rm: 'yarn remove',
-      exec: 'yarn',
-      run: (script: string, args: string) => `yarn ${script} ${args}`,
-      list: 'yarn list',
-    }),
+    yarn: () => {
+      const yarnVersion = getPackageManagerVersion('yarn');
+      const useBerry = gte(yarnVersion, '2.0.0');
+
+      return {
+        install: 'yarn',
+        ciInstall: useBerry
+          ? 'yarn install --immutable'
+          : 'yarn install --frozen-lockfile',
+        add: useBerry ? 'yarn add' : 'yarn add -W',
+        addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
+        rm: 'yarn remove',
+        exec: useBerry ? 'yarn exec' : 'yarn',
+        run: (script: string, args: string) => `yarn ${script} ${args}`,
+        list: useBerry ? 'yarn info --name-only' : 'yarn list',
+      };
+    },
     pnpm: () => {
       const pnpmVersion = getPackageManagerVersion('pnpm');
       const useExec = gte(pnpmVersion, '6.13.0');
