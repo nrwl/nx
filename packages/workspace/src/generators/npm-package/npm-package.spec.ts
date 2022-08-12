@@ -7,14 +7,14 @@ import {
   updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { getWorkspacePath } from '@nrwl/devkit';
 import { npmPackageGenerator } from './npm-package';
 
 describe('@nrwl/workspace:npm-package', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     const workspaceConfig = readWorkspaceConfiguration(tree);
     workspaceConfig.workspaceLayout = {

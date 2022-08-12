@@ -1,11 +1,11 @@
 import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import update from './add-missing-root-babel-config';
 
 describe('Jest Migration (v13.4.4)', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     tree.write(
       'package.json',
       JSON.stringify({
@@ -76,7 +76,7 @@ describe('Jest Migration (v13.4.4)', () => {
   });
 
   it('should update w/ Array value for babel-jest transformer', async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     tree.write(
       'libs/lib-three/jest.config.js',

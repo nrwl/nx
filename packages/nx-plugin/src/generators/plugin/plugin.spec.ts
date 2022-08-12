@@ -26,7 +26,7 @@ describe('NxPlugin Plugin Generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update the workspace.json file', async () => {

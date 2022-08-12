@@ -1,12 +1,12 @@
 import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { karmaGenerator } from './karma';
 
 describe('karma', () => {
   let tree: devkit.Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should do nothing when karma is already installed and karma.conf.js exists', () => {

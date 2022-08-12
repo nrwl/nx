@@ -4,7 +4,7 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateDefaultProject } from './update-default-project';
 
@@ -12,7 +12,7 @@ describe('updateDefaultProject', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(tree, 'my-source', {
       root: 'libs/my-source',
       targets: {},

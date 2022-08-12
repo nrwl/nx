@@ -1,11 +1,11 @@
 import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import migrate from './add-postcss-config-option';
 
 describe('Migration: add PostCSS config option', () => {
   it(`should add postcssConfig option if file exists`, async () => {
-    let tree = createTreeWithEmptyWorkspace();
+    let tree = createTreeWithEmptyV1Workspace();
 
     tree.write(
       'workspace.json',
@@ -50,7 +50,7 @@ describe('Migration: add PostCSS config option', () => {
     });
   });
   it(`should not add postcssConfig option if file does not exist`, async () => {
-    let tree = createTreeWithEmptyWorkspace();
+    let tree = createTreeWithEmptyV1Workspace();
 
     tree.write(
       'workspace.json',

@@ -7,7 +7,7 @@ import addCypressMfWorkaround from './add-cypress-mf-workaround';
 describe('Add Cypress MFE Workaround', () => {
   it('should add the cypress command to the index.ts for project that has associated e2e', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
       name: 'app1',
       routing: true,
@@ -28,7 +28,7 @@ describe('Add Cypress MFE Workaround', () => {
 
   it('should not add the cypress command to the index.ts for project that has does not have an associated e2e', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
       name: 'app1',
       routing: true,

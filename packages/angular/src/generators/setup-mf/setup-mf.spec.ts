@@ -1,5 +1,5 @@
 import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import { setupMf } from './setup-mf';
 import applicationGenerator from '../application/application';
@@ -8,7 +8,7 @@ describe('Init MF', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     await applicationGenerator(tree, {
       name: 'app1',
       routing: true,

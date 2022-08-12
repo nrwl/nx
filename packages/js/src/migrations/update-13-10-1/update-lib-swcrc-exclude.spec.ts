@@ -5,7 +5,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import updateSwcRcExclude from './update-lib-swcrc-exclude';
 
 const projectConfig: ProjectConfiguration = {
@@ -57,7 +57,7 @@ const oldSwcRc = {
 describe('Update .lib.swcrc exclude', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(tree, 'swc-lib', projectConfig);
 
     tree.write('libs/swc-lib/.lib.swcrc', JSON.stringify(oldSwcRc));

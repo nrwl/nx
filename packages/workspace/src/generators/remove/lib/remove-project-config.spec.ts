@@ -5,7 +5,7 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import { Schema } from '../schema';
 import { removeProjectConfig } from './remove-project-config';
@@ -15,7 +15,7 @@ describe('removeProjectConfig', () => {
   let schema: Schema;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     addProjectConfiguration(tree, 'ng-app', {
       projectType: 'application',

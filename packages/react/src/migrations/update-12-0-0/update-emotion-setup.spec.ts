@@ -1,4 +1,4 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { readJson, Tree } from '@nrwl/devkit';
 import { updateEmotionSetup } from './update-emotion-setup';
 
@@ -6,7 +6,7 @@ describe('Update babel config for emotion', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it(`should add web babel preset if it does not exist`, async () => {

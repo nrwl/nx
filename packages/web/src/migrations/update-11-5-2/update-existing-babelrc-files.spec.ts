@@ -1,4 +1,4 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { readJson, writeJson, Tree } from '@nrwl/devkit';
 import { updateExistingBabelrcFiles } from './update-existing-babelrc-files';
 
@@ -6,7 +6,7 @@ describe('Create missing .babelrc files', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it(`should add web babel preset if it does not exist`, async () => {

@@ -2,7 +2,10 @@ import Ajv from 'ajv';
 import { Tree } from '../tree';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
-import { createTreeWithEmptyWorkspace } from '../testing-utils/create-tree-with-empty-workspace';
+import {
+  createTreeWithEmptyWorkspace,
+  createTreeWithEmptyV1Workspace,
+} from '../testing-utils/create-tree-with-empty-workspace';
 import { readJson, updateJson } from '../utils/json';
 import {
   addProjectConfiguration,
@@ -45,7 +48,7 @@ describe('project configuration', () => {
 
   describe('workspace v1', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace(1);
+      tree = createTreeWithEmptyV1Workspace();
     });
 
     describe('readProjectConfiguration', () => {
@@ -187,7 +190,7 @@ describe('project configuration', () => {
 
   describe('workspace v2', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace(2);
+      tree = createTreeWithEmptyWorkspace();
     });
 
     describe('readProjectConfiguration', () => {

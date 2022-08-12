@@ -9,7 +9,7 @@ import remote from './remote';
 describe('MF Remote App Generator', () => {
   it('should generate a remote mf app with no host', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     // ACT
     await remote(tree, {
@@ -23,7 +23,7 @@ describe('MF Remote App Generator', () => {
 
   it('should generate a remote mf app with a host', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     await applicationGenerator(tree, {
       name: 'host',
@@ -46,7 +46,7 @@ describe('MF Remote App Generator', () => {
 
   it('should error when a remote app is attempted to be generated with an incorrect host', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     // ACT
     try {
@@ -65,7 +65,7 @@ describe('MF Remote App Generator', () => {
 
   it('should generate a remote mf app and automatically find the next port available', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     await remote(tree, {
       name: 'existing',
       port: 4201,
@@ -83,7 +83,7 @@ describe('MF Remote App Generator', () => {
 
   it('should generate a remote mf app and automatically find the next port available even when there are no other targets', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     // ACT
     await remote(tree, {
@@ -97,7 +97,7 @@ describe('MF Remote App Generator', () => {
 
   it('should not set the remote as the default project', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
 
     // ACT
     await remote(tree, {

@@ -2,13 +2,12 @@ import * as chalk from 'chalk';
 import { dedent } from 'tslint/lib/utils';
 import {
   generateMarkdownFile,
+  generateOptionsMarkdown,
   getCommands,
   parseCommand,
   ParsedCommand,
-  sortAlphabeticallyFunction,
-  formatDeprecated,
-  generateOptionsMarkdown,
 } from './utils';
+
 const importFresh = require('import-fresh');
 
 export async function generateCNWocumentation(commandsOutputDirectory: string) {

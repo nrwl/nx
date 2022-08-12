@@ -11,7 +11,7 @@ describe('set-build-libs-from-source migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should not error when project does not have targets', async () => {

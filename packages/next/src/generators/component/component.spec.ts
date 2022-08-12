@@ -1,6 +1,6 @@
 import { applicationGenerator } from '../application/application';
 import { componentGenerator } from './component';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Tree } from '@nrwl/devkit';
 import { libraryGenerator } from '@nrwl/react';
 import { Linter } from '@nrwl/linter';
@@ -11,7 +11,7 @@ describe('component', () => {
   const libName = 'my-lib';
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     await applicationGenerator(tree, {
       name: appName,
       style: 'css',

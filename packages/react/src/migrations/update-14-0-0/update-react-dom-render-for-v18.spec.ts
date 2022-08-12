@@ -9,7 +9,7 @@ import update from './update-react-dom-render-for-v18';
 
 describe('React update for Nx 14', () => {
   it('should remove deprecated @testing-library/react package', async () => {
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     writeJson(tree, 'package.json', {
       devDependencies: {
         '@testing-library/react': '0.0.0',
@@ -31,7 +31,7 @@ describe('React update for Nx 14', () => {
     ${'jsx'}
     ${'tsx'}
   `('should update react-dom render call if it exists', async ({ ext }) => {
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(
       tree,
       'example',
@@ -89,7 +89,7 @@ describe('React update for Nx 14', () => {
   });
 
   it('should skip update if main file does not contain react-dom', async () => {
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(
       tree,
       'example',

@@ -2,7 +2,7 @@ import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import * as storybookUtils from '../utils/storybook';
 import { componentCypressSpecGenerator } from './component-cypress-spec';
@@ -17,7 +17,7 @@ describe('componentCypressSpec generator', () => {
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     const componentGenerator = wrapAngularDevkitSchematic(
       '@schematics/angular',

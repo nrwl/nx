@@ -1,11 +1,6 @@
 import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
 import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
-import {
-  createMenuItems,
-  getBasicSection,
-  getDeepDiveSection,
-  getPackageApiSection,
-} from './menu.utils';
+import { createMenuItems, getPackageApiSection } from './menu.utils';
 
 export class MenuApi {
   private menuCache: Menu | null = null;

@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import {
   lintWorkspaceRulesProjectGenerator,
   WORKSPACE_RULES_PROJECT_NAME,
@@ -14,7 +14,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should update implicitDependencies in nx.json', async () => {

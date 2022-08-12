@@ -2,6 +2,7 @@ import { outputFileSync, readJsonSync } from 'fs-extra';
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
 import { dedent } from 'tslint/lib/utils';
+
 const stripAnsi = require('strip-ansi');
 const importFresh = require('import-fresh');
 

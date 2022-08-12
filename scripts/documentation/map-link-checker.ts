@@ -3,9 +3,9 @@
  * - Error if `map.json` reference a markdown file that does not exist
  * - Error if a markdown file exists without reference in `map.json`
  */
+import * as chalk from 'chalk';
 import { readJsonSync } from 'fs-extra';
 import * as glob from 'glob';
-import * as chalk from 'chalk';
 
 console.log(`${chalk.blue('i')} Documentation Map Check`);
 

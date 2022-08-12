@@ -8,7 +8,7 @@ describe('add-json-schema >', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update nx.json $schema', async () => {

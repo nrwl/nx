@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { karmaProjectGenerator } from './karma-project';
 import libraryGenerator from '../library/library';
 import { Linter } from '@nrwl/linter';
@@ -11,7 +11,7 @@ describe('karmaProject', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     await libraryGenerator(tree, {
       name: 'lib1',

@@ -1,5 +1,5 @@
 import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { updateTsconfig } from './update-tsconfig';
 import { libraryGenerator } from '../../library/library';
@@ -10,7 +10,7 @@ describe('updateTsconfig', () => {
   let schemaWithImportPath: Schema;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     schema = {
       projectName: 'my-lib',

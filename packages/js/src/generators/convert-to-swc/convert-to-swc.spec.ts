@@ -22,7 +22,7 @@ describe('convert to swc', () => {
   };
 
   beforeAll(() => {
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should convert tsc to swc', async () => {

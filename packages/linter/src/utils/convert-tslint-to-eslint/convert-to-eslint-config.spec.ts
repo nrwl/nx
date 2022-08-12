@@ -1,5 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { join } from 'path';
 import {
   convertToESLintConfig,
@@ -113,7 +113,7 @@ describe('convertTSLintDisableCommentsForProject', () => {
   const projectRoot = `apps/${projectName}`;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(tree, projectName, {
       root: projectRoot,
       projectType: 'application',

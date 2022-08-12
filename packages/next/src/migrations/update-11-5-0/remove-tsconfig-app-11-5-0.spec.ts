@@ -1,12 +1,12 @@
 import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import removeTsconfigApp from './remove-tsconfig-app-11-5-0';
 
 describe('Remove tsconfig.app.json 11.5.0', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should remove tsconfig.app.json', async () => {

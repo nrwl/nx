@@ -6,7 +6,7 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { exampleRootTslintJson } from '@nrwl/linter';
 import { conversionGenerator } from './convert-tslint-to-eslint';
 
@@ -101,7 +101,7 @@ describe('convert-tslint-to-eslint', () => {
   let host: Tree;
 
   beforeEach(async () => {
-    host = createTreeWithEmptyWorkspace();
+    host = createTreeWithEmptyV1Workspace();
 
     writeJson(host, 'tslint.json', exampleRootTslintJson.raw);
 

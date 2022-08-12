@@ -4,14 +4,14 @@ import {
   TargetConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import addOutputs from './add-outputs';
 
 describe('addOutputs', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     const lintWithoutOutputs: TargetConfiguration = {
       executor: '@nrwl/linter:eslint',

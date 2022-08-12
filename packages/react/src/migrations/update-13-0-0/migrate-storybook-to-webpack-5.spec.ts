@@ -1,11 +1,11 @@
 import { readJson, Tree, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { migrateStorybookToWebPack5 } from './migrate-storybook-to-webpack-5';
 
 describe('migrateStorybookToWebPack5', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should add packages needed by Storybook if workspace has the @storybook/react package', async () => {
@@ -25,7 +25,7 @@ describe('migrateStorybookToWebPack5', () => {
   });
 
   it('should not add the webpack Storybook packages again if they already exist', async () => {
-    let newTree = createTreeWithEmptyWorkspace();
+    let newTree = createTreeWithEmptyV1Workspace();
     updateJson(newTree, 'package.json', (json) => {
       json.dependencies = {
         '@storybook/react': '~6.3.0',

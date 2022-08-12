@@ -6,7 +6,7 @@ import updateAngularJestConfig from './update-angular-jest-config';
 describe('update-angular-jest-config migration', () => {
   it('should migrate the jest config', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app', {
       root: 'apps/testing',
       targets: {
@@ -51,7 +51,7 @@ describe('update-angular-jest-config migration', () => {
   });
 
   it("shouldn't error on null targets", async () => {
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app', {
       root: 'apps/testing',
     });

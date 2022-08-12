@@ -1,7 +1,7 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import type { Tree } from '@nrwl/devkit';
 import { writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { cypressProjectGenerator } from '@nrwl/storybook';
 import { componentGenerator } from '../component/component';
@@ -27,7 +27,7 @@ describe('angularStories generator: libraries', () => {
     let tree: Tree;
 
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyV1Workspace();
       await libraryGenerator(tree, { name: libName });
     });
 

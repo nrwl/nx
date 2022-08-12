@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { updateJson, joinPathFragments, readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import libGenerator from '../../generators/library/library';
 import updateInvalidImportPaths from './update-invalid-import-paths';
@@ -9,7 +9,7 @@ describe('Migration to fix invalid import paths in affected workspaces', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     // set up some libs
 

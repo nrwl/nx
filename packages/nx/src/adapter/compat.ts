@@ -27,6 +27,18 @@ const allowedProjectExtensions = [
   'generators',
 ];
 
+const allowedWorkspaceExtensions = [
+  'implicitDependencies',
+  'affected',
+  'npmScope',
+  'tasksRunnerOptions',
+  'workspaceLayout',
+  'plugins',
+  'targetDefaults',
+  'files',
+  'generators',
+];
+
 if (!patched) {
   Module.prototype.require = function () {
     const result = originalRequire.apply(this, arguments);
@@ -124,12 +136,14 @@ function mockReadJsonWorkspace(
     readJsonUtils,
     'readJsonWorkspace',
     (originalReadJsonWorkspace) => async (path, host, options) => {
+      const modifiedOptions = {
+        ...options,
+        allowedProjectExtensions,
+        allowedWorkspaceExtensions,
+      };
       try {
         // Attempt angular CLI default behaviour
-        return await originalReadJsonWorkspace(path, host, {
-          ...options,
-          allowedProjectExtensions,
-        });
+        return await originalReadJsonWorkspace(path, host, modifiedOptions);
       } catch {
         // This failed. Its most likely due to a lack of a workspace definition file,
         // or other things that are different between NgCLI and Nx config files.
@@ -155,7 +169,7 @@ function mockReadJsonWorkspace(
             // second arg is a host, only method used is readFile
             readFile: () => JSON.stringify(workspaceConfiguration),
           },
-          { ...options, allowedProjectExtensions },
+          modifiedOptions,
         ]);
       }
     }

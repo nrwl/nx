@@ -1,12 +1,12 @@
 import { readJson, Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import addStyledJsxTypings from './update-storybook-styled-jsx-typings';
 
 describe('Add styled-jsx typings to Storybook tsconfig', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     writeJson(tree, 'workspace.json', {
       projects: {
