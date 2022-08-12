@@ -1,5 +1,5 @@
 import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
-import { readJSONSync, ensureDir, readFile, writeFileSync } from 'fs-extra';
+import { ensureDir, readFile, readJSONSync, writeFileSync } from 'fs-extra';
 import { resolve } from 'path';
 
 const mapJson = readJSONSync('./docs/map.json', 'utf8');

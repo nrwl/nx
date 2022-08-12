@@ -1,9 +1,9 @@
 import * as chalk from 'chalk';
-import * as yargs from 'yargs';
+import { execSync } from 'child_process';
 import { watch } from 'chokidar';
 import { BehaviorSubject } from 'rxjs';
 import { debounceTime, filter, switchMapTo, tap } from 'rxjs/operators';
-import { execSync } from 'child_process';
+import * as yargs from 'yargs';
 
 /**
  * Available colours
