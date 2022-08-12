@@ -2,6 +2,9 @@ import * as chalk from 'chalk';
 import { readFileSync } from 'fs';
 import { readJsonSync } from 'fs-extra';
 import { join } from 'path';
+import { register as registerTsConfigPaths } from 'tsconfig-paths';
+import { dedent } from 'tslint/lib/utils';
+import { examples } from '../../packages/nx/src/command-line/examples';
 import {
   formatDeprecated,
   generateMarkdownFile,
@@ -10,9 +13,6 @@ import {
   parseCommand,
   ParsedCommand,
 } from './utils';
-import { register as registerTsConfigPaths } from 'tsconfig-paths';
-import { examples } from '../../packages/nx/src/command-line/examples';
-import { dedent } from 'tslint/lib/utils';
 
 const importFresh = require('import-fresh');
 

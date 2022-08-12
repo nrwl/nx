@@ -1,6 +1,6 @@
+import * as chalk from 'chalk';
 import { execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
-import * as chalk from 'chalk';
 
 export function generateDevkitDocumentation() {
   console.log(`\n${chalk.blue('i')} Generating Documentation for Devkit\n`);
