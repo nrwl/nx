@@ -1,10 +1,10 @@
 import { PackageMetadata } from '@nrwl/nx-dev/models-package';
+import { Breadcrumbs } from '@nrwl/nx-dev/ui-common';
 import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import cx from 'classnames';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { ReactNode } from 'react';
-import { Breadcrumbs } from '@nrwl/nx-dev/ui-common';
 import { Heading1 } from './ui/headings';
 import { PackageReference } from './ui/package-reference';
 
