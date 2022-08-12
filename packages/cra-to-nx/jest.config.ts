@@ -1,3 +1,4 @@
+/* eslint-disable */
 export default {
   displayName: 'cra-to-nx',
 

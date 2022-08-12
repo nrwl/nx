@@ -1,3 +1,4 @@
+/* eslint-disable */
 export default {
   transform: {
     '^.+\\.[tj]sx?$': 'ts-jest',

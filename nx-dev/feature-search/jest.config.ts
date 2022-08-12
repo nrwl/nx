@@ -1,3 +1,4 @@
+/* eslint-disable */
 export default {
   displayName: 'nx-dev-feature-search',
   transform: {

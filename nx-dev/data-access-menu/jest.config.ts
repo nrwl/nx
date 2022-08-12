@@ -1,3 +1,4 @@
+/* eslint-disable */
 export default {
   displayName: 'nx-dev-data-access-menu',
   preset: '../../jest.preset.js',
