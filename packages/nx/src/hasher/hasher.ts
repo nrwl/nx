@@ -116,8 +116,6 @@ export class Hasher {
   }
 
   hashDependsOnOtherTasks(task: Task) {
-    const inputs = this.taskHasher.inputs(task);
-    // check here for outputs
     return false;
   }
 
@@ -216,38 +214,91 @@ class TaskHasher {
     return Promise.resolve().then(async () => {
       const projectNode = this.projectGraph.nodes[task.target.project];
       if (!projectNode) {
-        return this.hashExternalDependency(task);
+        return this.hashExternalDependency(task.target.project);
       }
-
-      const projectGraphDeps =
-        this.projectGraph.dependencies[task.target.project] ?? [];
-
-      const { selfInputs, depsInputs } = this.inputs(task);
-      const self = await this.hashSelfInputs(task, selfInputs);
-      const deps = await this.hashDepsTasks(
-        depsInputs,
-        projectGraphDeps,
-        visited
+      const namedInputs = {
+        default: [{ fileset: '{projectRoot}/**/*' }],
+        ...this.nxJson.namedInputs,
+        ...projectNode.data.namedInputs,
+      };
+      const targetData = projectNode.data.targets[task.target.target];
+      const targetDefaults = (this.nxJson.targetDefaults || {})[
+        task.target.target
+      ];
+      const { selfInputs, depsInputs } = splitInputsIntoSelfAndDependencies(
+        targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
+        namedInputs
       );
 
-      let details = {};
-      for (const s of self) {
-        details = { ...details, ...s.details };
-      }
-      for (const s of deps) {
-        details = { ...details, ...s.details };
-      }
-
-      const value = this.hashing.hashArray([
-        ...self.map((d) => d.value),
-        ...deps.map((d) => d.value),
-      ]);
-
-      return { value, details };
+      return this.hashSelfAndDepsInputs(
+        task.target.project,
+        'default',
+        selfInputs,
+        depsInputs,
+        visited
+      );
     });
   }
 
-  private async hashDepsTasks(
+  private async hashNamedInput(
+    projectName: string,
+    namedInput: string,
+    visited: string[]
+  ): Promise<PartialHash> {
+    const projectNode = this.projectGraph.nodes[projectName];
+    if (!projectNode) {
+      return this.hashExternalDependency(projectName);
+    }
+    const namedInputs = {
+      default: [{ fileset: '{projectRoot}/**/*' }],
+      ...this.nxJson.namedInputs,
+      ...projectNode.data.namedInputs,
+    };
+
+    const selfInputs = expandNamedInput(namedInput, namedInputs);
+    const depsInputs = [{ input: namedInput }];
+    return this.hashSelfAndDepsInputs(
+      projectName,
+      namedInput,
+      selfInputs,
+      depsInputs,
+      visited
+    );
+  }
+
+  private async hashSelfAndDepsInputs(
+    projectName: string,
+    namedInput: string,
+    selfInputs: ExpandedSelfInput[],
+    depsInputs: { input: string }[],
+    visited: string[]
+  ) {
+    const projectGraphDeps = this.projectGraph.dependencies[projectName] ?? [];
+
+    const self = await this.hashSelfInputs(projectName, namedInput, selfInputs);
+    const deps = await this.hashDepsInputs(
+      depsInputs,
+      projectGraphDeps,
+      visited
+    );
+
+    let details = {};
+    for (const s of self) {
+      details = { ...details, ...s.details };
+    }
+    for (const s of deps) {
+      details = { ...details, ...s.details };
+    }
+
+    const value = this.hashing.hashArray([
+      ...self.map((d) => d.value),
+      ...deps.map((d) => d.value),
+    ]);
+
+    return { value, details };
+  }
+
+  private async hashDepsInputs(
     inputs: { input: string }[],
     projectGraphDeps: ProjectGraphDependency[],
     visited: string[]
@@ -261,16 +312,9 @@ class TaskHasher {
                 return null;
               } else {
                 visited.push(d.target);
-                return await this.hashTask(
-                  {
-                    id: `${d.target}:$input:${input.input}`,
-                    target: {
-                      project: d.target,
-                      target: '$input',
-                      configuration: input.input,
-                    },
-                    overrides: {},
-                  },
+                return await this.hashNamedInput(
+                  d.target,
+                  input.input || 'default',
                   visited
                 );
               }
@@ -283,36 +327,8 @@ class TaskHasher {
       .filter((r) => !!r);
   }
 
-  inputs(task: Task): {
-    depsInputs: { input: string }[];
-    selfInputs: ExpandedSelfInput[];
-  } {
-    const projectNode = this.projectGraph.nodes[task.target.project];
-    const namedInputs = {
-      default: [{ fileset: '{projectRoot}/**/*' }],
-      ...this.nxJson.namedInputs,
-      ...projectNode.data.namedInputs,
-    };
-    if (task.target.target === '$input') {
-      return {
-        depsInputs: [{ input: task.target.configuration }],
-        selfInputs: expandNamedInput(task.target.configuration, namedInputs),
-      };
-    } else {
-      const targetData = projectNode.data.targets[task.target.target];
-      const targetDefaults = (this.nxJson.targetDefaults || {})[
-        task.target.target
-      ];
-      // task from TaskGraph can be added here
-      return splitInputsIntoSelfAndDependencies(
-        targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
-        namedInputs
-      );
-    }
-  }
-
-  private hashExternalDependency(task: Task) {
-    const n = this.projectGraph.externalNodes[task.target.project];
+  private hashExternalDependency(projectName: string) {
+    const n = this.projectGraph.externalNodes[projectName];
     const version = n?.data?.version;
     let hash: string;
     if (version) {
@@ -329,18 +345,19 @@ class TaskHasher {
       // The actual checksum added here is of no importance as
       // the version is unknown and may only change when some
       // other change occurs in package.json and/or package-lock.json
-      hash = `__${task.target.project}__`;
+      hash = `__${projectName}__`;
     }
     return {
       value: hash,
       details: {
-        [task.target.project]: version || hash,
+        [projectName]: version || hash,
       },
     };
   }
 
   private async hashSelfInputs(
-    task: Task,
+    projectName: string,
+    namedInput: string,
     inputs: ExpandedSelfInput[]
   ): Promise<PartialHash[]> {
     const filesets = inputs
@@ -349,7 +366,8 @@ class TaskHasher {
 
     const projectFilesets = [];
     const workspaceFilesets = [];
-    let invalidFileset = null;
+    let invalidFilesetNoPrefix = null;
+    let invalidFilesetWorkspaceRootNegative = null;
 
     for (let f of filesets) {
       if (f.startsWith('{projectRoot}/') || f.startsWith('!{projectRoot}/')) {
@@ -360,22 +378,32 @@ class TaskHasher {
       ) {
         workspaceFilesets.push(f);
       } else {
-        invalidFileset = f;
+        invalidFilesetNoPrefix = f;
       }
     }
-    if (invalidFileset) {
+
+    if (invalidFilesetNoPrefix) {
       throw new Error(
         [
-          `"${invalidFileset}" is an invalid fileset.`,
+          `"${invalidFilesetNoPrefix}" is an invalid fileset.`,
           'All filesets have to start with either {workspaceRoot} or {projectRoot}.',
           'For instance: "!{projectRoot}/**/*.spec.ts" or "{workspaceRoot}/package.json".',
-          `If "${invalidFileset}" is a named input, make sure it is defined in, for instance, nx.json.`,
+          `If "${invalidFilesetNoPrefix}" is a named input, make sure it is defined in, for instance, nx.json.`,
         ].join('\n')
       );
     }
+    if (invalidFilesetWorkspaceRootNegative) {
+      throw new Error(
+        [
+          `"${invalidFilesetWorkspaceRootNegative}" is an invalid fileset.`,
+          'It is not possible to negative filesets starting with {workspaceRoot}.',
+        ].join('\n')
+      );
+    }
+
     const notFilesets = inputs.filter((r) => !r['fileset']);
     return Promise.all([
-      this.hashTaskFileset(task, projectFilesets),
+      this.hashProjectFileset(projectName, namedInput, projectFilesets),
       ...[
         ...workspaceFilesets,
         ...this.legacyFilesetInputs.map((r) => r.fileset),
@@ -416,18 +444,19 @@ class TaskHasher {
     return this.filesetHashes[mapKey];
   }
 
-  private async hashTaskFileset(
-    task: Task,
+  private async hashProjectFileset(
+    projectName: string,
+    namedInput: string,
     filesetPatterns: string[]
   ): Promise<PartialHash> {
-    const mapKey = `${task.target.project}:$filesets`;
+    const mapKey = `${projectName}:$filesets:${namedInput}`;
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
-        const p = this.projectGraph.nodes[task.target.project];
+        const p = this.projectGraph.nodes[projectName];
         const filesetWithExpandedProjectRoot = filesetPatterns.map((f) =>
           f.replace('{projectRoot}', p.data.root)
         );
-        const filteredFiles = this.filterFiles(
+        const filteredFiles = filterUsingGlobPatterns(
           p.data.root,
           p.data.files,
           filesetWithExpandedProjectRoot
@@ -480,17 +509,6 @@ class TaskHasher {
       details: { [`env:${envVarName}`]: value },
       value,
     };
-  }
-
-  private filterFiles(
-    projectRoot: string,
-    files: FileData[],
-    patterns: string[]
-  ) {
-    if (patterns.indexOf(`${projectRoot}/**/*`) > -1) return files;
-    return files.filter(
-      (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
-    );
   }
 
   private hashTsConfig(p: ProjectGraphProjectNode) {
@@ -583,4 +601,40 @@ export function expandNamedInput(
   namedInputs ||= {};
   if (!namedInputs[input]) throw new Error(`Input '${input}' is not defined`);
   return expandSelfInputs(namedInputs[input], namedInputs);
+}
+
+export function filterUsingGlobPatterns(
+  projectRoot: string,
+  files: FileData[],
+  patterns: string[]
+): FileData[] {
+  const positive = [];
+  const negative = [];
+  for (const p of patterns) {
+    if (p.startsWith('!')) {
+      negative.push(p);
+    } else {
+      positive.push(p);
+    }
+  }
+
+  if (positive.length === 0 && negative.length === 0) {
+    return files;
+  }
+
+  return files.filter((f) => {
+    let matchedPositive = false;
+    if (
+      positive.length === 0 ||
+      (positive.length === 1 && positive[0] === `${projectRoot}/**/*`)
+    ) {
+      matchedPositive = true;
+    } else {
+      matchedPositive = positive.some((pattern) => minimatch(f.file, pattern));
+    }
+
+    if (!matchedPositive) return false;
+
+    return negative.every((pattern) => minimatch(f.file, pattern));
+  });
 }

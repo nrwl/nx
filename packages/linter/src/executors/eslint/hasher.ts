@@ -27,7 +27,8 @@ export default async function run(
   );
 
   const command = res.details['command'];
-  const selfSource = res.details.nodes[`${task.target.project}:$filesets`];
+  const selfSource =
+    res.details.nodes[`${task.target.project}:$filesets:default`];
 
   const nodes = {};
   const hashes = [] as string[];
