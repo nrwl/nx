@@ -92,10 +92,10 @@ export interface Tree {
    */
   isFile(filePath: string): boolean;
 
-  // /**
-  //  * Check if this is a directory or not.
-  //  */
-  // isDirectory(filePath: string): boolean;
+  /**
+   * Check if this is a directory or not.
+   */
+  isDirectory(filePath: string): boolean;
 
   /**
    * Returns the list of children of a folder.
