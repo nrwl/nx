@@ -9,7 +9,6 @@ import {
   convertNxGenerator,
   Tree,
   formatFiles,
-  joinPathFragments,
   GeneratorCallback,
 } from '@nrwl/devkit';
 import { normalizeOptions } from './lib/normalize-options';
@@ -32,10 +31,9 @@ export async function reactNativeApplicationGenerator(
   const lintTask = await addLinting(
     host,
     options.projectName,
+    'tsconfig.app.json',
     options.appProjectRoot,
-    [joinPathFragments(options.appProjectRoot, 'tsconfig.app.json')],
-    options.linter,
-    options.setParserOptionsProject
+    options
   );
   const jestTask = await addJest(
     host,

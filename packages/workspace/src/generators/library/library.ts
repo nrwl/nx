@@ -77,6 +77,8 @@ export function addLint(
   return lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
+    js: options.js,
+    unitTestRunner: options.unitTestRunner,
     skipFormat: true,
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),

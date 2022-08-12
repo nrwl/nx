@@ -181,6 +181,8 @@ export async function addLintingToApplication(
   const lintTask = await lintProjectGenerator(tree, {
     linter: options.linter,
     project: options.name,
+    js: options.js,
+    unitTestRunner: options.unitTestRunner,
     tsConfigPaths: [
       joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
     ],

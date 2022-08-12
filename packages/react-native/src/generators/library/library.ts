@@ -47,10 +47,9 @@ export async function reactNativeLibraryGenerator(
   const lintTask = await addLinting(
     host,
     options.name,
+    'tsconfig.lib.json',
     options.projectRoot,
-    [joinPathFragments(options.projectRoot, 'tsconfig.lib.json')],
-    options.linter,
-    options.setParserOptionsProject
+    options
   );
 
   if (!options.skipTsConfig) {
