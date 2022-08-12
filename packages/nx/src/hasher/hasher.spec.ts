@@ -12,7 +12,7 @@ jest.mock('../utils/typescript');
 
 import { vol } from 'memfs';
 import tsUtils = require('../utils/typescript');
-import { expandNamedInput, Hasher } from './hasher';
+import { expandNamedInput, filterUsingGlobPatterns, Hasher } from './hasher';
 
 describe('Hasher', () => {
   const packageJson = {
@@ -45,14 +45,6 @@ describe('Hasher', () => {
     };
   }
 
-  /**
-   * const workSpaceJson = {
-   *     projects: {
-   *       parent: { root: 'libs/parent' },
-   *       child: { root: 'libs/child' },
-   *     },
-   *   };
-   */
   beforeEach(() => {
     vol.fromJSON(
       {
@@ -124,7 +116,7 @@ describe('Hasher', () => {
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
-      'parent:$filesets':
+      'parent:$filesets:default':
         '/file|file.hash|{"root":"libs/parent","targets":{"build":{"inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"}]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       '{workspaceRoot}/yarn.lock': 'yarn.lock.hash',
       '{workspaceRoot}/package-lock.json': 'package-lock.json.hash',
@@ -186,9 +178,9 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'child:$filesets':
+      'child:$filesets:default':
         '/fileb.ts|/fileb.spec.ts|b.hash|b.spec.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets':
+      'parent:$filesets:default':
         '/filea.ts|/filea.spec.ts|a.hash|a.spec.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
@@ -250,11 +242,109 @@ describe('Hasher', () => {
     });
 
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'child:$filesets':
+      'child:$filesets:prod':
         'libs/child/fileb.ts|libs/child/fileb.spec.ts|b.hash|b.spec.hash|{"root":"libs/child","namedInputs":{"prod":["default"]},"targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets':
+      'parent:$filesets:default':
         'libs/parent/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{"inputs":["prod","^prod"]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
+  });
+
+  it('should be able to handle multiple filesets per project', async () => {
+    process.env.MY_TEST_HASH_ENV = 'MY_TEST_HASH_ENV_VALUE';
+    const hasher = new Hasher(
+      {
+        nodes: {
+          parent: {
+            name: 'parent',
+            type: 'lib',
+            data: {
+              root: 'libs/parent',
+              targets: {
+                test: {
+                  inputs: ['default', '^prod'],
+                },
+              },
+              files: [
+                { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+                { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+              ],
+            },
+          },
+          child: {
+            name: 'child',
+            type: 'lib',
+            data: {
+              root: 'libs/child',
+              namedInputs: {
+                prod: [
+                  '!{projectRoot}/**/*.spec.ts',
+                  '{workspaceRoot}/global2',
+                  { env: 'MY_TEST_HASH_ENV' },
+                ],
+              },
+              targets: {
+                test: {
+                  inputs: ['default'],
+                },
+              },
+              files: [
+                { file: 'libs/child/fileb.ts', hash: 'b.hash' },
+                { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+              ],
+            },
+          },
+        },
+        dependencies: {
+          parent: [{ source: 'parent', target: 'child', type: 'static' }],
+        },
+        allWorkspaceFiles,
+      },
+      {
+        namedInputs: {
+          default: ['{projectRoot}/**/*', '{workspaceRoot}/global1'],
+          prod: ['!{projectRoot}/**/*.spec.ts'],
+        },
+      } as any,
+      {},
+      createHashing()
+    );
+
+    const parentHash = await hasher.hashTask({
+      target: { project: 'parent', target: 'test' },
+      id: 'parent-test',
+      overrides: { prop: 'prop-value' },
+    });
+
+    expect(parentHash.details.nodes['parent:$filesets:default']).toContain(
+      'libs/parent/filea.ts|libs/parent/filea.spec.ts|a.hash|a.spec.hash|'
+    );
+    expect(parentHash.details.nodes['child:$filesets:prod']).toContain(
+      'libs/child/fileb.ts|b.hash|'
+    );
+    expect(parentHash.details.nodes['{workspaceRoot}/global1']).toEqual(
+      'global1.hash'
+    );
+    expect(parentHash.details.nodes['{workspaceRoot}/global2']).toBe(
+      'global2.hash'
+    );
+    expect(parentHash.details.nodes['env:MY_TEST_HASH_ENV']).toEqual(
+      'MY_TEST_HASH_ENV_VALUE'
+    );
+
+    const childHash = await hasher.hashTask({
+      target: { project: 'child', target: 'test' },
+      id: 'child-test',
+      overrides: { prop: 'prop-value' },
+    });
+
+    expect(childHash.details.nodes['child:$filesets:default']).toContain(
+      'libs/child/fileb.ts|libs/child/fileb.spec.ts|b.hash|b.spec.hash|'
+    );
+    expect(childHash.details.nodes['{workspaceRoot}/global1']).toEqual(
+      'global1.hash'
+    );
+    expect(childHash.details.nodes['{workspaceRoot}/global2']).toBe(undefined);
+    expect(childHash.details.nodes['env:MY_TEST_HASH_ENV']).toBeUndefined();
   });
 
   it('should use targetdefaults from nx.json', async () => {
@@ -314,9 +404,9 @@ describe('Hasher', () => {
     });
 
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'child:$filesets':
+      'child:$filesets:prod':
         'libs/child/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets':
+      'parent:$filesets:default':
         'libs/parent/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
@@ -364,7 +454,7 @@ describe('Hasher', () => {
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'parent:$filesets':
+      'parent:$filesets:default':
         '/file|file.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"]}}}',
     });
   });
@@ -416,9 +506,9 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('parent|build'); //project and target
     expect(tasksHash.value).toContain('build'); //target
     expect(onlySourceNodes(tasksHash.details.nodes)).toEqual({
-      'child:$filesets':
+      'child:$filesets:default':
         '/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets':
+      'parent:$filesets:default':
         '/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
 
@@ -435,9 +525,9 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('child|build'); //project and target
     expect(hashb.value).toContain('build'); //target
     expect(onlySourceNodes(hashb.details.nodes)).toEqual({
-      'child:$filesets':
+      'child:$filesets:default':
         '/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets':
+      'parent:$filesets:default':
         '/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
@@ -565,7 +655,7 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'app:$filesets':
+      'app:$filesets:default':
         '/filea.ts|a.hash|{"root":"apps/app","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'npm:react': '17.0.0',
     });
@@ -611,7 +701,7 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'app:$filesets':
+      'app:$filesets:default':
         '/filea.ts|a.hash|{"root":"apps/app","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'npm:react': '__npm:react__',
     });
@@ -653,6 +743,62 @@ describe('Hasher', () => {
         b: ['c'],
       });
       expect(expanded).toEqual([{ fileset: 'c' }]);
+    });
+  });
+
+  describe('filterUsingGlobPatterns', () => {
+    it('should OR all positive patterns and AND all negative patterns (when positive and negative patterns)', () => {
+      const filtered = filterUsingGlobPatterns(
+        '/root',
+        [
+          { file: '/root/a.ts' },
+          { file: '/root/b.js' },
+          { file: '/root/c.spec.ts' },
+          { file: '/root/d.md' },
+        ] as any,
+        [
+          '/root/**/*.ts',
+          '/root/**/*.js',
+          '!/root/**/*.spec.ts',
+          '!/root/**/*.md',
+        ]
+      );
+
+      expect(filtered.map((f) => f.file)).toEqual(['/root/a.ts', '/root/b.js']);
+    });
+
+    it('should OR all positive patterns and AND all negative patterns (when negative patterns)', () => {
+      const filtered = filterUsingGlobPatterns(
+        '/root',
+        [
+          { file: '/root/a.ts' },
+          { file: '/root/b.js' },
+          { file: '/root/c.spec.ts' },
+          { file: '/root/d.md' },
+        ] as any,
+        ['!/root/**/*.spec.ts', '!/root/**/*.md']
+      );
+
+      expect(filtered.map((f) => f.file)).toEqual(['/root/a.ts', '/root/b.js']);
+    });
+
+    it('should OR all positive patterns and AND all negative patterns (when positive patterns)', () => {
+      const filtered = filterUsingGlobPatterns(
+        '/root',
+        [
+          { file: '/root/a.ts' },
+          { file: '/root/b.js' },
+          { file: '/root/c.spec.ts' },
+          { file: '/root/d.md' },
+        ] as any,
+        ['/root/**/*.ts', '/root/**/*.js']
+      );
+
+      expect(filtered.map((f) => f.file)).toEqual([
+        '/root/a.ts',
+        '/root/b.js',
+        '/root/c.spec.ts',
+      ]);
     });
   });
 });
