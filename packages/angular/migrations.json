@@ -1438,6 +1438,10 @@
         "@angular/material": {
           "version": "~14.1.1",
           "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
         }
       }
     },
