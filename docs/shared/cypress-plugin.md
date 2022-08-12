@@ -89,3 +89,23 @@ instance,
 you can easily add your `projectId` to save all the screenshots and videos into your Cypress dashboard. The complete
 configuration is documented
 on [the official website](https://docs.cypress.io/guides/references/configuration.html#Options).
+
+## Environment Variables
+
+If you're needing to pass a variable to cypress that you wish to not commit to your repository, i.e. API keys, or dynamic values based on configurations, i.e. API Urls. This is where [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables) can be used.
+
+There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the [env executor option for cypress](https://nx.dev/packages/cypress/executors/cypress#env) or the commandline.
+
+Create a `cypress.env.json` file in the projects root i.e. `apps/my-cool-app-e2e/cypress.env.json`. Cypress will automatically pick up this file. This method is helpful for configurations that you want to not commit. Just don't forget to add the file to the `.gitignore` and add documentation so people in your repo know what values to popluate in their local copy of the `cypress.env.json` file.
+
+Using [@nrwl/cypress:cypress](/packages/cypress/executors/cypress) env executor option is a good way to add values you want to define that you don't mine commit to the repository, such as a base API url. You can leverage [target configurations](/configuration/projectjson#targets) to define different values as well.
+
+Optionally, you can pass environment variables via the commandline with the `--env` flag.
+
+{% callout type="warning" title="Executor options and --env" %}
+When using the `--env` flag, this will not be merged with any values used in the `env` executor option.
+{% /callout %}
+
+```bash
+nx e2e frontend-e2e --env.API_URL="https://api.my-nx-website.com" --env.API_KEY="abc-123"
+```
