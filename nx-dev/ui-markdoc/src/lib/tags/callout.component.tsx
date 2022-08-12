@@ -1,8 +1,8 @@
 import {
   CheckCircleIcon,
   ExclamationIcon,
-  InformationCircleIcon,
   HandIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/outline';
 import cx from 'classnames';
 import { ReactNode } from 'react';
