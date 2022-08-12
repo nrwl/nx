@@ -9,6 +9,14 @@ import {
   listInstalledPlugins,
   listPluginCapabilities,
 } from '../utils/plugins';
+import {
+  getLocalWorkspacePlugins,
+  listLocalWorkspacePlugins,
+} from '../utils/plugins/local-plugins';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
 
 export interface ListArgs {
   /** The name of an installed plugin to query  */
@@ -36,12 +44,18 @@ export async function listHandler(args: ListArgs): Promise<void> {
 
       return [];
     });
+    const projectGraph = await createProjectGraphAsync();
 
+    const localPlugins = getLocalWorkspacePlugins(
+      readProjectsConfigurationFromProjectGraph(projectGraph)
+    );
     const installedPlugins = getInstalledPluginsFromPackageJson(
       workspaceRoot,
       corePlugins,
       communityPlugins
     );
+
+    listLocalWorkspacePlugins(localPlugins);
     listInstalledPlugins(installedPlugins);
     listCorePlugins(installedPlugins, corePlugins);
     listCommunityPlugins(installedPlugins, communityPlugins);
