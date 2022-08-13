@@ -65,6 +65,12 @@ export function getWebpackConfig(config: Configuration) {
     config.plugins.push(new ReactRefreshPlugin());
   }
 
+  // enable webpack node api
+  config.node = {
+    __dirname: true,
+    __filename: true,
+  };
+
   return config;
 }
 
