@@ -116,24 +116,24 @@ Here's an overview of some more Lerna commands and the corresponding Nx version:
   "private": true,
   "scripts": {
 -   "build:all": "lerna run build",
-+   "build:all": "nx run-many --target=build --all",
++   "build:all": "nx run-many --target=build",
 -   "build:app1": "lerna run build --scope=app1",
 +   "build:app1": "nx build app1",
 -   "build:since": "lerna run build --since=main",
 +   "build:since": "nx affected --target=build",
 -   "test:all": "lerna run test",
-+   "test:all": "nx run-many --target=test --all",
++   "test:all": "nx run-many --target=test",
 -   "test:app1": "lerna run test --scope=app1",
 +   "test:app1": "nx test app1",
 -   "test:since": "lerna run test --since=main",
 +   "test:since": "nx affected --target=test",
 -   "dev": "lerna run dev --stream --parallel",
-+   "dev": "nx run-many --target=dev --all",
++   "dev": "nx run-many --target=dev",
 -   "dev:app1": "lerna run dev --stream --scope=app1",
 +   "dev:app1": "nx dev app1"
   },
   "devDependencies": {
-    "lerna": "3.*",
+    "lerna": "5.*",
 +   "nx": "latest"
   }
 }
