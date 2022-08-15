@@ -23,6 +23,7 @@ import { Executor, ExecutorContext } from '../config/misc-interfaces';
 import { serializeOverridesIntoCommandLine } from 'nx/src/utils/serialize-overrides-into-command-line';
 import {
   createProjectGraphAsync,
+  readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { ProjectGraph } from '../config/project-graph';
@@ -133,6 +134,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   root: string,
   cwd: string,
   workspace: ProjectsConfigurations & NxJsonConfiguration,
+  projectGraph: ProjectGraph,
   isVerbose: boolean,
   printHelp: boolean
 ): Promise<AsyncIterableIterator<T>> {
@@ -188,6 +190,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       projectName: project,
       targetName: target,
       configurationName: configuration,
+      projectGraph,
       cwd,
       isVerbose,
     }) as Promise<T> | AsyncIterableIterator<T>;
@@ -263,12 +266,13 @@ export async function runExecutor<T extends { success: boolean }>(
     context.root,
     context.cwd,
     context.workspace,
+    context.projectGraph,
     context.isVerbose,
     false
   );
 }
 
-export async function run(
+export function run(
   cwd: string,
   root: string,
   targetDescription: {
@@ -278,10 +282,9 @@ export async function run(
   },
   overrides: { [k: string]: any },
   isVerbose: boolean,
-  isHelp: boolean,
-  projectGraph?: ProjectGraph
+  isHelp: boolean
 ) {
-  projectGraph ??= await createProjectGraphAsync();
+  const projectGraph = readCachedProjectGraph();
   return handleErrors(isVerbose, async () => {
     const workspace = readProjectsConfigurationFromProjectGraph(projectGraph);
     return iteratorToProcessStatusCode(
@@ -291,6 +294,7 @@ export async function run(
         root,
         cwd,
         workspace,
+        projectGraph,
         isVerbose,
         isHelp
       )

@@ -3,9 +3,9 @@ import * as chalk from 'chalk';
 import {
   ExecutorContext,
   logger,
+  ProjectGraph,
   readJsonFile,
   writeJsonFile,
-  createProjectGraphAsync,
 } from '@nrwl/devkit';
 
 import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
@@ -27,6 +27,7 @@ export default async function* syncDepsExecutor(
       context.projectName,
       projectRoot,
       context.root,
+      context.projectGraph,
       typeof options.include === 'string'
         ? options.include.split(',')
         : options.include,
@@ -43,11 +44,11 @@ export async function syncDeps(
   projectName: string,
   projectRoot: string,
   workspaceRoot: string,
+  projectGraph: ProjectGraph,
   include: string[] = [],
   exclude: string[] = []
 ): Promise<string[]> {
-  const graph = await createProjectGraphAsync();
-  let npmDeps = findAllNpmDependencies(graph, projectName);
+  let npmDeps = findAllNpmDependencies(projectGraph, projectName);
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   const packageJson = readJsonFile(packageJsonPath);
   const newDeps = [];

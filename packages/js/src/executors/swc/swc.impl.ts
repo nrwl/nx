@@ -112,7 +112,8 @@ export async function* swcExecutor(
   const swcHelperDependency = getHelperDependency(
     HelperDependency.swc,
     options.swcCliOptions.swcrcPath,
-    dependencies
+    dependencies,
+    context.projectGraph
   );
 
   if (swcHelperDependency) {

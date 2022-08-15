@@ -7,7 +7,6 @@ import {
 } from '@nrwl/devkit';
 import exportApp from 'next/dist/export';
 import { join, resolve } from 'path';
-import { readCachedProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
@@ -29,7 +28,7 @@ export default async function exportExecutor(
   let dependencies: DependentBuildableProjectNode[] = [];
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph(),
+      context.projectGraph,
       context.root,
       context.projectName,
       'build', // this should be generalized

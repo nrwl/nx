@@ -1,8 +1,4 @@
-import {
-  ExecutorContext,
-  ProjectGraphProjectNode,
-  readCachedProjectGraph,
-} from '@nrwl/devkit';
+import { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
@@ -18,10 +14,9 @@ export function checkDependencies(
   target: ProjectGraphProjectNode<any>;
   dependencies: DependentBuildableProjectNode[];
 } {
-  const projectGraph = readCachedProjectGraph();
   const { target, dependencies, nonBuildableDependencies } =
     calculateProjectDependencies(
-      projectGraph,
+      context.projectGraph,
       context.root,
       context.projectName,
       context.targetName,

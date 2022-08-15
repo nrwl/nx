@@ -1,7 +1,7 @@
 import {
   logger,
+  ProjectGraph,
   ProjectGraphDependency,
-  readCachedProjectGraph,
   readJsonFile,
 } from '@nrwl/devkit';
 import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
@@ -44,6 +44,7 @@ export function getHelperDependency(
   helperDependency: HelperDependency,
   configPath: string,
   dependencies: DependentBuildableProjectNode[],
+  projectGraph: ProjectGraph,
   returnDependencyIfFound = false
 ): DependentBuildableProjectNode | null {
   const dependency = dependencies.find((dep) => dep.name === helperDependency);
@@ -70,7 +71,6 @@ export function getHelperDependency(
 
   if (!isHelperNeeded) return null;
 
-  const projectGraph = readCachedProjectGraph();
   const libNode = projectGraph.externalNodes[helperDependency];
 
   if (!libNode) {
@@ -91,10 +91,9 @@ export function getHelperDependency(
 
 export function getHelperDependenciesFromProjectGraph(
   contextRoot: string,
-  sourceProject: string
+  sourceProject: string,
+  projectGraph: ProjectGraph
 ): ProjectGraphDependency[] {
-  const projectGraph = readCachedProjectGraph();
-
   // if the source project isn't part of the projectGraph nodes; skip
   if (!projectGraph.nodes[sourceProject]) return [];
 
@@ -153,6 +152,7 @@ export function getHelperDependenciesFromProjectGraph(
         helperDependency,
         configPath,
         dependencies,
+        projectGraph,
         true
       );
 

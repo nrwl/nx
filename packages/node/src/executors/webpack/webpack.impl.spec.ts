@@ -16,10 +16,6 @@ describe('Node Build Executor', () => {
   let options: BuildNodeBuilderOptions;
 
   beforeEach(async () => {
-    jest
-      .spyOn(projectGraph, 'readCachedProjectGraph')
-      .mockReturnValue({} as ProjectGraph);
-
     (<any>runWebpack).mockReturnValue(of({ hasErrors: () => false }));
     context = {
       root: '/root',
@@ -36,6 +32,7 @@ describe('Node Build Executor', () => {
         },
         npmScope: 'test',
       },
+      projectGraph: {} as ProjectGraph,
       isVerbose: false,
     };
     options = {
