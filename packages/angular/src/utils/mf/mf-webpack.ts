@@ -20,25 +20,44 @@ export interface SharedLibraryConfig {
 }
 
 function collectWorkspaceLibrarySecondaryEntryPoints(
-  library: string,
-  libraryRoot: string,
+  library: WorkspaceLibrary,
   tsconfigPathAliases: Record<string, string[]>
 ) {
-  const aliasesUnderLibrary = Object.keys(tsconfigPathAliases).filter(
-    (libName) => libName.startsWith(library) && libName !== library
+  const libraryRoot = join(workspaceRoot, library.root);
+  const needsSecondaryEntryPointsCollected = existsSync(
+    join(libraryRoot, 'ng-package.json')
   );
+
   const secondaryEntryPoints = [];
-  for (const alias of aliasesUnderLibrary) {
-    const pathToLib = dirname(
-      join(workspaceRoot, tsconfigPathAliases[alias][0])
-    );
-    let searchDir = pathToLib;
-    while (searchDir !== libraryRoot) {
-      if (existsSync(join(searchDir, 'ng-package.json'))) {
-        secondaryEntryPoints.push({ name: alias, path: pathToLib });
-        break;
+  if (needsSecondaryEntryPointsCollected) {
+    const tsConfigAliasesForLibWithSecondaryEntryPoints = Object.entries(
+      tsconfigPathAliases
+    ).reduce((acc, [tsKey, tsPaths]) => {
+      if (!tsKey.startsWith(library.importKey)) {
+        return { ...acc };
       }
-      searchDir = dirname(searchDir);
+
+      if (tsPaths.some((path) => path.startsWith(`${library.root}/`))) {
+        acc = { ...acc, [tsKey]: tsPaths };
+      }
+
+      return acc;
+    }, {});
+
+    for (const [alias] of Object.entries(
+      tsConfigAliasesForLibWithSecondaryEntryPoints
+    )) {
+      const pathToLib = dirname(
+        join(workspaceRoot, tsconfigPathAliases[alias][0])
+      );
+      let searchDir = pathToLib;
+      while (searchDir !== libraryRoot) {
+        if (existsSync(join(searchDir, 'ng-package.json'))) {
+          secondaryEntryPoints.push({ name: alias, path: pathToLib });
+          break;
+        }
+        searchDir = dirname(searchDir);
+      }
     }
   }
 
@@ -66,8 +85,7 @@ export function shareWorkspaceLibraries(
     }
 
     collectWorkspaceLibrarySecondaryEntryPoints(
-      key,
-      join(workspaceRoot, library.root),
+      library,
       tsconfigPathAliases
     ).forEach(({ name, path }) =>
       pathMappings.push({
