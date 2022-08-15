@@ -1,3 +1,5 @@
+import { NextPage } from 'next';
+
 <% if (styledModule && styledModule !== 'styled-jsx') {
   var wrapper = 'StyledPage';
 %>import styled from '<%= styledModule %>';<% } else {
@@ -11,7 +13,7 @@
 const StyledPage = styled.div`<%- pageStyleContent %>`;
 <% }%>
 
-export function Index() {
+export const Index: NextPage = () => {
   /*
    * Replace the elements below with your own.
    *
