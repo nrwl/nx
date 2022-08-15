@@ -35,6 +35,8 @@ export type TargetDependencies = Record<
 
 /**
  * Nx.json configuration
+ *
+ * @note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
  */
 export interface NxJsonConfiguration<T = '*' | string[]> {
   /**
