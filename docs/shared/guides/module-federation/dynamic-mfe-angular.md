@@ -51,7 +51,7 @@ You'll also be prompted if you would like to setup Nx Cloud. For this tutorial s
 To add Angular-related features to our newly created monorepo we need to install the Angular Plugin. Again, this is pretty easy to do:
 
 {% callout type="warning" title="Be at the root" %}
-Check that you are now at the root of your monorepo in your terminal. If not, run `cd ng-mfe`.
+Check that you are now at the root of your monorepo in your terminal. If not, run `cd ng-mf`.
 {% /callout %}
 
 ```bash
@@ -236,7 +236,7 @@ Next we want to set up our `entry.component.ts` file so that it renders a login 
 
 ```ts
 import { Component } from '@angular/core';
-import { UserService } from '@ng-mfe/shared/data-access-user';
+import { UserService } from '@ng-mf/shared/data-access-user';
 @Component({
   selector: 'ng-mf-login-entry',
   template: `
@@ -338,7 +338,7 @@ Finally, let's add our logic to `app.component.ts`. Change it to match the follo
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { distinctUntilChanged } from 'rxjs/operators';
-import { UserService } from '@ng-mfe/shared/data-access-user';
+import { UserService } from '@ng-mf/shared/data-access-user';
 @Component({
   selector: 'ng-mf-root',
   template: `
@@ -356,11 +356,14 @@ export class AppComponent implements OnInit {
     this.isLoggedIn$
       .pipe(distinctUntilChanged())
       .subscribe(async (loggedIn) => {
-        if (!loggedIn) {
-          this.router.navigateByUrl('login');
-        } else {
-          this.router.navigateByUrl('');
-        }
+        // Queue the navigation after initialNavigation blocking is completed
+        setTimeout(() => {
+          if (!loggedIn) {
+            this.router.navigateByUrl('login');
+          } else {
+            this.router.navigateByUrl('');
+          }
+        });
       });
   }
 }
