@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { ExecutorContext, readCachedProjectGraph } from '@nrwl/devkit';
+import { ExecutorContext } from '@nrwl/devkit';
 import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import {
   calculateProjectDependencies,
@@ -47,10 +47,9 @@ export async function* webpackExecutor(
     registerTsNode();
   }
 
-  const projGraph = readCachedProjectGraph();
   if (!options.buildLibsFromSource) {
     const { target, dependencies } = calculateProjectDependencies(
-      projGraph,
+      context.projectGraph,
       context.root,
       context.projectName,
       context.targetName,
@@ -76,7 +75,9 @@ export async function* webpackExecutor(
         configuration: context.configurationName,
       });
     },
-    Promise.resolve(getNodeWebpackConfig(context, projGraph, options))
+    Promise.resolve(
+      getNodeWebpackConfig(context, context.projectGraph, options)
+    )
   );
 
   return yield* eachValueFrom(

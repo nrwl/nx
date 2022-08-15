@@ -16,7 +16,6 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { readCachedProjectGraph } from '@nrwl/devkit';
 import { getEmittedFiles, runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 
@@ -53,7 +52,7 @@ export default async function* devServerExecutor(
 
   if (!buildOptions.buildLibsFromSource) {
     const { target, dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph(),
+      context.projectGraph,
       context.root,
       context.projectName,
       'build', // should be generalized

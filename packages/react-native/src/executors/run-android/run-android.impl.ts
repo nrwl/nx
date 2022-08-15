@@ -29,7 +29,12 @@ export default async function* runAndroidExecutor(
   if (options.sync) {
     displayNewlyAddedDepsMessage(
       context.projectName,
-      await syncDeps(context.projectName, projectRoot, context.root)
+      await syncDeps(
+        context.projectName,
+        projectRoot,
+        context.root,
+        context.projectGraph
+      )
     );
   }
 

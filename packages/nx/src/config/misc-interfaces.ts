@@ -177,4 +177,12 @@ export interface ExecutorContext {
    * Enable verbose logging
    */
   isVerbose: boolean;
+
+  /**
+   * A snapshot of the project graph as
+   * it existed when the Nx command was kicked off
+   *
+   * @todo(AgentEnder) mark this required for v15
+   */
+  projectGraph?: ProjectGraph;
 }

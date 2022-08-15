@@ -1,4 +1,4 @@
-import { ExecutorContext, logger, readCachedProjectGraph } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nrwl/devkit';
 import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
@@ -179,7 +179,7 @@ export async function* run(
 
   if (!options.buildLibsFromSource && context.targetName) {
     const { dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph(),
+      context.projectGraph,
       context.root,
       context.projectName,
       context.targetName,

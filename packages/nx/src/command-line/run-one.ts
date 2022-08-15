@@ -50,7 +50,7 @@ export async function runOne(
   if (nxArgs.help) {
     await (
       await import('./run')
-    ).run(cwd, workspaceRoot, opts, {}, false, true, projectGraph);
+    ).run(cwd, workspaceRoot, opts, {}, false, true);
     process.exit(0);
   }
 

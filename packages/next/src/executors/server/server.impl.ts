@@ -3,7 +3,6 @@ import {
   ExecutorContext,
   logger,
   parseTargetString,
-  readCachedProjectGraph,
   readTargetOptions,
   runExecutor,
   workspaceLayout,
@@ -72,7 +71,7 @@ function getDependencies(
     return [];
   } else {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph(),
+      context.projectGraph,
       context.root,
       context.projectName,
       'build', // should be generalized

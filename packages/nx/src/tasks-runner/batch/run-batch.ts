@@ -31,6 +31,7 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
     cwd: process.cwd(),
     workspace: workspaceConfig,
     isVerbose: false,
+    projectGraph,
   };
   for (const task of tasks) {
     const projectConfiguration = workspaceConfig.projects[task.target.project];
