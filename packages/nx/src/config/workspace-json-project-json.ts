@@ -11,6 +11,7 @@ export type WorkspaceJsonConfiguration = ProjectsConfigurations;
 
 /**
  * Projects Configurations
+ * @note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
  */
 export interface ProjectsConfigurations {
   /**
@@ -37,6 +38,8 @@ export type ProjectType = 'library' | 'application';
 
 /**
  * Project configuration
+ *
+ * @note: when adding properties here add them to `allowedProjectExtensions` in adapter/compat.ts
  */
 export interface ProjectConfiguration {
   /**

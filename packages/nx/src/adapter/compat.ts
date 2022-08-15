@@ -25,6 +25,7 @@ const allowedProjectExtensions = [
   'configFilePath',
   '$schema',
   'generators',
+  'namedInputs',
 ];
 
 const allowedWorkspaceExtensions = [
@@ -37,6 +38,7 @@ const allowedWorkspaceExtensions = [
   'targetDefaults',
   'files',
   'generators',
+  'namedInputs',
 ];
 
 if (!patched) {
