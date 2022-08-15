@@ -7,12 +7,7 @@ import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
 import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
 import type { ExecutorContext } from '@nrwl/devkit';
-import {
-  logger,
-  names,
-  readCachedProjectGraph,
-  readJsonFile,
-} from '@nrwl/devkit';
+import { logger, names, readJsonFile } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   computeCompilerOptionsPaths,
@@ -49,10 +44,9 @@ export default async function* rollupExecutor(
   process.env.NODE_ENV ??= 'production';
 
   const project = context.workspace.projects[context.projectName];
-  const projectGraph = readCachedProjectGraph();
   const sourceRoot = project.sourceRoot;
   const { target, dependencies } = calculateProjectDependencies(
-    projectGraph,
+    context.projectGraph,
     context.root,
     context.projectName,
     context.targetName,
@@ -78,7 +72,7 @@ export default async function* rollupExecutor(
   }
   const packageJson = readJsonFile(options.project);
 
-  const npmDeps = (projectGraph.dependencies[context.projectName] ?? [])
+  const npmDeps = (context.projectGraph.dependencies[context.projectName] ?? [])
     .filter((d) => d.target.startsWith('npm:'))
     .map((d) => d.target.slice(4));
 

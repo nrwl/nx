@@ -3,7 +3,6 @@ import {
   joinPathFragments,
   logger,
   parseTargetString,
-  readCachedProjectGraph,
   runExecutor,
 } from '@nrwl/devkit';
 import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
@@ -65,10 +64,9 @@ function calculateResolveMappings(
   context: ExecutorContext,
   options: NodeExecutorOptions
 ) {
-  const projectGraph = readCachedProjectGraph();
   const parsed = parseTargetString(options.buildTarget);
   const { dependencies } = calculateProjectDependencies(
-    projectGraph,
+    context.projectGraph,
     context.root,
     parsed.project,
     parsed.target,

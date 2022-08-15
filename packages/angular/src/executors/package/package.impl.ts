@@ -1,5 +1,4 @@
 import type { ExecutorContext } from '@nrwl/devkit';
-import { readCachedProjectGraph } from '@nrwl/devkit';
 import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import {
   calculateProjectDependencies,
@@ -68,7 +67,7 @@ export function createLibraryExecutor(
   ) {
     const { target, dependencies, topLevelDependencies } =
       calculateProjectDependencies(
-        readCachedProjectGraph(),
+        context.projectGraph,
         context.root,
         context.projectName,
         context.targetName,

@@ -67,7 +67,8 @@ export async function* tscExecutor(
   const tsLibDependency = getHelperDependency(
     HelperDependency.tsc,
     options.tsConfig,
-    dependencies
+    dependencies,
+    context.projectGraph
   );
 
   if (tsLibDependency) {

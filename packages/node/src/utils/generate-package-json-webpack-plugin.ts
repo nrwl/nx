@@ -32,7 +32,8 @@ export class GeneratePackageJsonWebpackPlugin implements WebpackPluginInstance {
         () => {
           const helperDependencies = getHelperDependenciesFromProjectGraph(
             this.context.root,
-            this.context.projectName
+            this.context.projectName,
+            this.projectGraph
           );
 
           const importHelpers = !!readTsConfig(this.options.tsConfig).options

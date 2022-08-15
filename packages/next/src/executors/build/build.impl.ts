@@ -4,7 +4,6 @@ import build from 'next/dist/build';
 import { join, resolve } from 'path';
 import { copySync, mkdir } from 'fs-extra';
 import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { readCachedProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
@@ -34,7 +33,7 @@ export default async function buildExecutor(
 
   if (!options.buildLibsFromSource && context.targetName) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph(),
+      context.projectGraph,
       context.root,
       context.projectName,
       context.targetName,
