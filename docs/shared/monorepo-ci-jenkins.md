@@ -101,6 +101,29 @@ pipeline {
                         sh "npx nx-cloud stop-all-agents"
                     }
                 }
+
+                # Add as many agent you want
+                stage('Agent1') {
+                   agent any
+                   steps {
+                    sh "npm ci"
+                    sh "npx nx-cloud start-agent"
+                   }
+                }
+                stage('Agent2') {
+                   agent any
+                   steps {
+                    sh "npm ci"
+                    sh "npx nx-cloud start-agent"
+                   }
+                }
+                stage('Agent3') {
+                   agent any
+                   steps {
+                    sh "npm ci"
+                    sh "npx nx-cloud start-agent"
+                   }
+                }
             }
         }
     }
