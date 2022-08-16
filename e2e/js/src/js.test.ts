@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  createFile,
   expectJestTestsToPass,
   newProject,
   readFile,
@@ -257,6 +258,58 @@ describe('js e2e', () => {
 
     expect(readJson(`dist/libs/${lib}/package.json`)).not.toHaveProperty(
       'peerDependencies.@swc/helpers'
+    );
+  }, 120000);
+
+  it('should allow wildcard ts path alias', async () => {
+    const base = uniq('base');
+    runCLI(`generate @nrwl/js:lib ${base} --buildable`);
+
+    const lib = uniq('lib');
+    runCLI(`generate @nrwl/js:lib ${lib} --buildable`);
+
+    updateFile(`libs/${base}/src/index.ts`, () => {
+      return `
+        import { ${lib} } from '@${scope}/${lib}'
+        export * from './lib/${base}';
+        
+        ${lib}();
+      `;
+    });
+
+    expect(runCLI(`build ${base}`)).toContain(
+      'Done compiling TypeScript files'
+    );
+
+    updateJson('tsconfig.base.json', (json) => {
+      json['compilerOptions']['paths'][`@${scope}/${lib}/*`] = [
+        `libs/${lib}/src/*`,
+      ];
+      return json;
+    });
+
+    createFile(
+      `libs/${lib}/src/${lib}.ts`,
+      `
+export function ${lib}Wildcard() {
+  return '${lib}-wildcard';
+};
+    `
+    );
+
+    updateFile(`libs/${base}/src/index.ts`, () => {
+      return `
+        import { ${lib} } from '@${scope}/${lib}';
+        import { ${lib}Wildcard } from '@${scope}/${lib}/src/${lib}';
+        export * from './lib/${base}';
+        
+        ${lib}();
+        ${lib}Wildcard();
+      `;
+    });
+
+    expect(runCLI(`build ${base}`)).toContain(
+      'Done compiling TypeScript files'
     );
   }, 120000);
 
