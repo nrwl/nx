@@ -31,4 +31,5 @@ export interface Schema {
   skipModule?: boolean;
   skipPackageJson?: boolean;
   skipPostInstall?: boolean;
+  standalone?: boolean;
 }

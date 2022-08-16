@@ -22,6 +22,7 @@ import {
 } from '../../utils/versions';
 import libraryGenerator from './library';
 import { Schema } from './schema';
+import applicationGenerator from '../application/application';
 
 describe('lib', () => {
   let tree: Tree;
@@ -1459,6 +1460,90 @@ describe('lib', () => {
       expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
       expect(devDependencies['postcss']).toBe(postcssVersion);
       expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
+    });
+  });
+
+  describe('--standalone', () => {
+    it('should generate a library with a standalone component as entry point', async () => {
+      await runLibraryGeneratorWithOpts({ standalone: true });
+
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          'libs/my-lib/src/lib/my-lib/my-lib.component.spec.ts',
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup', async () => {
+      await runLibraryGeneratorWithOpts({ standalone: true, routing: true });
+
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          'libs/my-lib/src/lib/my-lib/my-lib.component.spec.ts',
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child', async () => {
+      // ARRANGE
+      await applicationGenerator(tree, {
+        name: 'app1',
+        routing: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+        parentModule: 'apps/app1/src/app/app.module.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('apps/app1/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child', async () => {
+      // ARRANGE
+      await applicationGenerator(tree, {
+        name: 'app1',
+        routing: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+        lazy: true,
+        parentModule: 'apps/app1/src/app/app.module.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('apps/app1/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 });

@@ -884,6 +884,11 @@
             "type": "boolean",
             "description": "Whether to skip the creation of a default module when generating the library.",
             "default": false
+          },
+          "standalone": {
+            "type": "boolean",
+            "description": "Generate a library that uses a standalone component instead of a module as the entry point.",
+            "default": false
           }
         },
         "additionalProperties": false,
