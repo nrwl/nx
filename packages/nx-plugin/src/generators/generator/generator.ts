@@ -126,8 +126,8 @@ function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
     let generators = json.generators ?? json.schematics;
     generators = generators || {};
     generators[options.name] = {
-      factory: `./src/generators/${options.name}/generator`,
-      schema: `./src/generators/${options.name}/schema.json`,
+      factory: `./src/generators/${options.fileName}/generator`,
+      schema: `./src/generators/${options.fileName}/schema.json`,
       description: options.description,
     };
     json.generators = generators;
