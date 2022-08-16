@@ -149,6 +149,7 @@ export default createESLintRule<Options, MessageIds>({
     const projectPath = normalizePath(
       (global as any).projectPath || workspaceRoot
     );
+    const fileName = normalizePath(context.getFilename());
 
     const projectGraph = readProjectGraph(RULE_NAME);
 
@@ -192,10 +193,7 @@ export default createESLintRule<Options, MessageIds>({
         return;
       }
 
-      const sourceFilePath = getSourceFilePath(
-        context.getFilename(),
-        projectPath
-      );
+      const sourceFilePath = getSourceFilePath(fileName, projectPath);
 
       const sourceProject = findSourceProject(projectGraph, sourceFilePath);
       // If source is not part of an nx workspace, return.
@@ -327,7 +325,7 @@ export default createESLintRule<Options, MessageIds>({
                     if (importPath) {
                       // resolve the import path
                       const relativePath = relative(
-                        dirname(context.getFilename()),
+                        dirname(fileName),
                         dirname(importPath)
                       );
 
