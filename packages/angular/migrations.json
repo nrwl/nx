@@ -1453,6 +1453,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.5.7": {
+      "version": "14.5.7-beta.0",
+      "packages": {
+        "rxjs": {
+          "version": "~7.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
