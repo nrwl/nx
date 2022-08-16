@@ -119,6 +119,11 @@
       "description": "Enable the Rust-based compiler SWC to compile JS/TS files.",
       "type": "boolean",
       "default": true
+    },
+    "customServer": {
+      "description": "Use a custom Express server for the Next.js application.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": []

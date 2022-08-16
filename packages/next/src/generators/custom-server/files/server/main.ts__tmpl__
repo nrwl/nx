@@ -1,8 +1,13 @@
 /*
  * This is only a minimal custom server to get started.
- * You should customize this server with CORS and other security features.
+ * You may want to consider using Express or another server framework, and enable security features such as CORS.
+ *
+ * For more examples, see the Next.js repo:
+ * - Express: https://github.com/vercel/next.js/tree/canary/examples/custom-server-express
+ * - Hapi: https://github.com/vercel/next.js/tree/canary/examples/custom-server-hapi
  */
-import express from 'express';
+import { createServer } from 'http';
+import { parse } from 'url';
 import * as path from 'path';
 import next from 'next';
 
@@ -11,10 +16,9 @@ import next from 'next';
 // - The fallback `__dirname` is for production builds.
 // - Feel free to change this to suit your needs.
 const dir = process.env.NX_NEXT_DIR || path.join(__dirname, '..');
-const publicDir = process.env.NX_NEXT_PUBLIC_DIR || path.join(__dirname, '../public');
 const dev = process.env.NODE_ENV === 'development';
 
-// Express server options:
+// HTTP Server options:
 // - Feel free to change this to suit your needs.
 const hostname = process.env.HOST || 'localhost';
 const port = process.env.PORT ? parseInt(process.env.PORT) : 4200;
@@ -25,28 +29,14 @@ async function main() {
 
   await nextApp.prepare();
 
-  const expressApp = express();
-
-  expressApp.get('/api', (req, res) => {
-    res.send({ message: 'Welcome!' });
+  const server = createServer((req, res) => {
+    const parsedUrl = parse(req.url, true);
+    handle(req, res, parsedUrl);
   });
 
-  // Serve static files from public folder.
-  expressApp.use(express.static(publicDir));
+  server.listen(port, hostname);
 
-  // Redirect requests to Next.js app.
-  expressApp.all('*', (req, res) => {
-    console.log('Forwarding request to Next.js: ', req.url);
-    handle(req, res)
-  });
-
-  return new Promise<void>((resolve, reject) => {
-    expressApp.on('error', (err) => reject(err));
-    expressApp.listen(port, () => {
-      console.log(`[ ready ] on http://${hostname}:${port}`)
-      resolve();
-    });
-  });
+  console.log(`[ ready ] on http://${hostname}:${port}`)
 }
 
 main().catch((err) => {
