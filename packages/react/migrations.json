@@ -614,6 +614,27 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.5.7": {
+      "version": "14.5.7-beta.0",
+      "packages": {
+        "@types/node": {
+          "version": "18.7.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/styled-components": {
+          "version": "5.1.26",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-jsx": {
+          "version": "5.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@reduxjs/toolkit": {
+          "version": "1.8.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
