@@ -492,8 +492,9 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Project name.",
-            "$default": { "$source": "argv", "index": 0 }
+            "description": "Application project name to upgrade native files.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-dropdown": "project"
           },
           "displayName": {
             "description": "The display name to show in the application. Defaults to name.",
