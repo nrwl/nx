@@ -148,7 +148,7 @@ describe('Next.js Applications', () => {
       `dist/apps/${appName}/public/a/b.txt`,
       `dist/apps/${appName}/public/shared/ui/hello.txt`
     );
-  }, 300000);
+  }, 300_000);
 
   it('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
@@ -222,7 +222,7 @@ describe('Next.js Applications', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  }, 300000);
+  }, 300_000);
 
   it('should build with a next.config.js file in the dist folder', async () => {
     const appName = uniq('app');
@@ -248,7 +248,7 @@ describe('Next.js Applications', () => {
 
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
     expect(result).toContain('NODE_ENV is production');
-  }, 300000);
+  }, 300_000);
 
   it('should support --js flag', async () => {
     const appName = uniq('app');
@@ -300,7 +300,7 @@ describe('Next.js Applications', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 300000);
+  }, 300_000);
 
   it('should support --no-swc flag', async () => {
     const appName = uniq('app');
@@ -316,13 +316,14 @@ describe('Next.js Applications', () => {
       checkE2E: false,
       checkExport: true,
     });
-  }, 300000);
+  }, 300_000);
 
   it('should allow using a custom server implementation', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --style=css --no-interactive`);
-    runCLI(`generate @nrwl/next:custom-server ${appName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/next:app ${appName} --style=css --no-interactive --custom-server`
+    );
 
     checkFilesExist(`apps/${appName}/server/main.ts`);
 
@@ -332,7 +333,7 @@ describe('Next.js Applications', () => {
       checkE2E: true,
       checkExport: false,
     });
-  }, 300000);
+  }, 300_000);
 
   it('should support different --style options', async () => {
     const lessApp = uniq('app');
@@ -384,10 +385,10 @@ describe('Next.js Applications', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 300000);
+  }, 300_000);
   it('should run default jest tests', async () => {
     await expectJestTestsToPass('@nrwl/next:app');
-  }, 100000);
+  }, 100_000);
 });
 
 function getData(port: number, path = ''): Promise<any> {

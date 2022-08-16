@@ -1,4 +1,5 @@
 import { convertNxGenerator, formatFiles, Tree } from '@nrwl/devkit';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
@@ -12,7 +13,7 @@ import { updateJestConfig } from './lib/update-jest-config';
 import { nextInitGenerator } from '../init/init';
 import { addStyleDependencies } from '../../utils/styles';
 import { addLinting } from './lib/add-linting';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { customServerGenerator } from '../custom-server/custom-server';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
@@ -30,6 +31,13 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   updateJestConfig(host, options);
   const styledTask = addStyleDependencies(host, options.style);
   setDefaults(host, options);
+
+  if (options.customServer) {
+    await customServerGenerator(host, {
+      project: options.name,
+      compiler: options.swc ? 'swc' : 'tsc',
+    });
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

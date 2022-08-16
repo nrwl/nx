@@ -14,7 +14,7 @@ import { CustomServerSchema } from './schema';
 export async function customServerGenerator(
   host: Tree,
   options: CustomServerSchema
-) {
+): Promise<void> {
   const project = readProjectConfiguration(host, options.project);
 
   if (project.targets?.build?.executor !== '@nrwl/next:build') {

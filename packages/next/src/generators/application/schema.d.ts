@@ -16,4 +16,5 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
   swc?: boolean;
+  customServer?: boolean;
 }
