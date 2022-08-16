@@ -3738,10 +3738,10 @@
     url-loader "^4.1.1"
     webpack-merge "^5.8.0"
 
-"@nrwl/nx-cloud@14.4.0":
-  version "14.4.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-14.4.0.tgz#b706a11934ef0ce936fd9f8e6e999db8383dc1cf"
-  integrity sha512-4sKNzGhBqTipy4fPZD09ZBkV9UTPTn0JUOQxOI7ETqlHhT2u8SfeybSJMnPAi5H6DjsqsooM8JCKPR/7D4+8sQ==
+"@nrwl/nx-cloud@14.4.1":
+  version "14.4.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-14.4.1.tgz#a4d8e9ce6e5bbb753916adadaf0e23ca24b54823"
+  integrity sha512-vlWpBmIGfYvB9XMAdDZWOihOTFPE2VV9CDeZzBbSMF32KxDqUkhfaLf3dg6puIeUPkPbj5k+V57xjAl7g9k+Xw==
   dependencies:
     axios "^0.21.1"
     chalk "4.1.0"
@@ -3749,6 +3749,7 @@
     node-machine-id "^1.1.12"
     strip-json-comments "^3.1.1"
     tar "6.1.11"
+    yargs-parser ">=21.0.1"
 
 "@nrwl/react@14.6.0-beta.3":
   version "14.6.0-beta.3"
@@ -23247,6 +23248,11 @@ yargs-parser@21.0.1, yargs-parser@^21.0.0:
   version "21.0.1"
   resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-21.0.1.tgz#0267f286c877a4f0f728fceb6f8a3e4cb95c6e35"
   integrity sha512-9BK1jFpLzJROCI5TzwZL/TU4gqjK5xiHV/RfWLOahrjAko/e4DJkRDZQXfvqAsiZzzYhgAzbgz6lg48jcm4GLg==
+
+yargs-parser@>=21.0.1:
+  version "21.1.1"
+  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-21.1.1.tgz#9096bceebf990d21bb31fa9516e0ede294a77d35"
+  integrity sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==
 
 yargs@17.5.1, yargs@^17.2.1, yargs@^17.4.0:
   version "17.5.1"

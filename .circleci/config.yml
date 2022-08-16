@@ -179,6 +179,7 @@ jobs:
           name: Check Documentation
           command: npx nx-cloud record yarn documentation
           no_output_timeout: 20m
+      - run: npx nx-cloud start-ci-run --command-count=4
       - run:
           name: Run Lint/Test/Build
           command: |
