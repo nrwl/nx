@@ -13,7 +13,8 @@ import {
 } from '@nrwl/e2e/utils';
 
 // TODO(Colum or Leosvel): Investigate and fix these tests
-describe.skip('Tailwind support', () => {
+
+describe('Tailwind support', () => {
   let project: string;
 
   const defaultButtonBgColor = 'bg-blue-700';
@@ -117,14 +118,19 @@ describe.skip('Tailwind support', () => {
     updateFile(tailwindConfigPath, tailwindConfigUpdated);
   };
 
+  let previousPM = process.env.SELECTED_PM;
   beforeAll(() => {
+    process.env.SELECTED_PM = 'yarn';
     project = newProject();
 
     // Create tailwind config in the workspace root
     createWorkspaceTailwindConfigFile();
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    cleanupProject();
+    process.env.SELECTED_PM = previousPM;
+  });
 
   describe('Libraries', () => {
     const createLibComponent = (

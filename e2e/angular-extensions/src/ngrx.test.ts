@@ -1,18 +1,25 @@
 import {
+  cleanupProject,
   expectTestsPass,
   getSelectedPackageManager,
   newProject,
   readJson,
-  cleanupProject,
   runCLI,
   runCLIAsync,
   uniq,
 } from '@nrwl/e2e/utils';
 
 describe('Angular Package', () => {
+  let previousPM = process.env.SELECTED_PM;
   describe('ngrx', () => {
-    beforeAll(() => newProject());
-    afterAll(() => cleanupProject());
+    beforeAll(() => {
+      process.env.SELECTED_PM = 'yarn';
+      newProject();
+    });
+    afterAll(() => {
+      cleanupProject();
+      process.env.SELECTED_PM = previousPM;
+    });
 
     it('should work', async () => {
       const myapp = uniq('myapp');
