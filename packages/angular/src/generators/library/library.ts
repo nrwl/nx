@@ -27,9 +27,10 @@ import { NormalizedSchema } from './lib/normalized-schema';
 import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
 import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
+import { addStandaloneComponent } from './lib/add-standalone-component';
 import { Schema } from './schema';
 
-export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
+export async function libraryGenerator(tree: Tree, schema: Partial<Schema>) {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
     throw new Error(`To use "--lazy" option, "--routing" must also be set.`);
@@ -47,9 +48,9 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
     );
   }
 
-  const options = normalizeOptions(host, schema);
+  const options = normalizeOptions(tree, schema);
 
-  await init(host, {
+  await init(tree, {
     ...options,
     skipFormat: true,
     e2eTestRunner: E2eTestRunner.None,
@@ -59,7 +60,7 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
     '@schematics/angular',
     'library'
   );
-  await runAngularLibrarySchematic(host, {
+  await runAngularLibrarySchematic(tree, {
     name: options.name,
     prefix: options.prefix,
     entryFile: 'index',
@@ -70,40 +71,46 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
 
   if (options.ngCliSchematicLibRoot !== options.projectRoot) {
     moveFilesToNewDirectory(
-      host,
+      tree,
       options.ngCliSchematicLibRoot,
       options.projectRoot
     );
   }
-  await updateProject(host, options);
-  updateTsConfig(host, options);
-  await addUnitTestRunner(host, options);
-  updateNpmScopeIfBuildableOrPublishable(host, options);
-  addModule(host, options);
-  setStrictMode(host, options);
-  await addLinting(host, options);
+  await updateProject(tree, options);
+  updateTsConfig(tree, options);
+  await addUnitTestRunner(tree, options);
+  updateNpmScopeIfBuildableOrPublishable(tree, options);
+
+  if (!options.standalone) {
+    addModule(tree, options);
+  } else {
+    await addStandaloneComponent(tree, options);
+  }
+
+  setStrictMode(tree, options);
+  await addLinting(tree, options);
 
   if (options.addTailwind) {
-    await setupTailwindGenerator(host, {
+    await setupTailwindGenerator(tree, {
       project: options.name,
       skipFormat: true,
     });
   }
 
   if (options.buildable || options.publishable) {
-    removeDependenciesFromPackageJson(host, [], ['ng-packagr']);
+    removeDependenciesFromPackageJson(tree, [], ['ng-packagr']);
     addDependenciesToPackageJson(
-      host,
+      tree,
       {},
       {
         'ng-packagr': ngPackagrVersion,
       }
     );
-    addBuildableLibrariesPostCssDependencies(host);
+    addBuildableLibrariesPostCssDependencies(tree);
   }
 
   if (options.standaloneConfig) {
-    await convertToNxProjectGenerator(host, {
+    await convertToNxProjectGenerator(tree, {
       project: options.name,
       all: false,
       skipFormat: true,
@@ -111,11 +118,11 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   }
 
   if (!options.skipFormat) {
-    await formatFiles(host);
+    await formatFiles(tree);
   }
 
   return () => {
-    installPackagesTask(host);
+    installPackagesTask(tree);
   };
 }
 

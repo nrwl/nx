@@ -56,7 +56,7 @@ function updateFiles(host: Tree, options: NormalizedSchema) {
   if (options.name !== options.fileName) {
     host.delete(path.join(libRoot, `${options.name}.module.ts`));
   }
-  if (!options.skipModule) {
+  if (!options.skipModule && !options.standalone) {
     host.write(
       path.join(libRoot, `${options.fileName}.module.ts`),
       `
@@ -104,7 +104,7 @@ function updateFiles(host: Tree, options: NormalizedSchema) {
 
   host.write(
     `${options.projectRoot}/src/index.ts`,
-    options.skipModule
+    options.skipModule || options.standalone
       ? ``
       : `
         export * from './lib/${options.fileName}.module';
