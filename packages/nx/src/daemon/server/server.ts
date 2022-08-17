@@ -1,7 +1,7 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
-import { performance, PerformanceObserver } from 'perf_hooks';
+import { PerformanceObserver } from 'perf_hooks';
 import {
   FULL_OS_SOCKET_PATH,
   isWindows,
@@ -12,6 +12,7 @@ import { serverLogger } from './logger';
 import {
   handleServerProcessTermination,
   resetInactivityTimeout,
+  respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
 } from './shutdown-utils';
 import {
@@ -20,47 +21,16 @@ import {
   SubscribeToWorkspaceChangesCallback,
   WatcherSubscription,
 } from './watcher';
-import {
-  addUpdatedAndDeletedFiles,
-  getCachedSerializedProjectGraphPromise,
-} from './project-graph-incremental-recomputation';
+import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
 import { existsSync, statSync } from 'fs';
 import { HashingImpl } from '../../hasher/hashing-impl';
 import { defaultFileHasher } from '../../hasher/file-hasher';
-
-function respondToClient(socket: Socket, message: string) {
-  return new Promise((res) => {
-    socket.write(message, () => {
-      // Close the connection once all data has been written so that the client knows when to read it.
-      socket.end();
-      serverLogger.log(`Closed Connection to Client`);
-      res(null);
-    });
-  });
-}
+import { handleRequestProjectGraph } from './handle-request-project-graph';
+import { handleProcessInBackground } from './handle-process-in-background';
 
 let watcherSubscription: WatcherSubscription | undefined;
 let performanceObserver: PerformanceObserver | undefined;
 let watcherError: Error | undefined;
-
-async function respondWithErrorAndExit(
-  socket: Socket,
-  description: string,
-  error: Error
-) {
-  // print some extra stuff in the error message
-  serverLogger.requestLog(
-    `Responding to the client with an error.`,
-    description,
-    error.message
-  );
-  console.error(error);
-
-  error.message = `${error.message}\n\nBecause of the error the Nx daemon process has exited. The next Nx command is going to restart the daemon process.\nIf the error persists, please run "nx reset".`;
-
-  await respondToClient(socket, serializeResult(error, null));
-  process.exit(1);
-}
 
 const server = createServer(async (socket) => {
   resetInactivityTimeout(handleInactivityTimeout);
@@ -90,70 +60,33 @@ const server = createServer(async (socket) => {
 
     resetInactivityTimeout(handleInactivityTimeout);
 
-    const payload = data.toString();
-    if (payload !== 'REQUEST_PROJECT_GRAPH_PAYLOAD') {
+    const unparsedPayload = data.toString();
+    let payload;
+    try {
+      payload = JSON.parse(unparsedPayload);
+    } catch (e) {
       await respondWithErrorAndExit(
         socket,
         `Invalid payload from the client`,
-        new Error(`Unsupported payload sent to daemon server: ${payload}`)
-      );
-    }
-
-    performance.mark('server-connection');
-    serverLogger.requestLog('Client Request for Project Graph Received');
-
-    const result = await getCachedSerializedProjectGraphPromise();
-    if (result.error) {
-      await respondWithErrorAndExit(
-        socket,
-        `Error when preparing serialized project graph.`,
-        result.error
-      );
-    }
-
-    const serializedResult = serializeResult(
-      result.error,
-      result.serializedProjectGraph
-    );
-    if (!serializedResult) {
-      await respondWithErrorAndExit(
-        socket,
-        `Error when serializing project graph result.`,
         new Error(
-          'Critical error when serializing server result, check server logs'
+          `Unsupported payload sent to daemon server: ${unparsedPayload}`
         )
       );
     }
 
-    performance.mark('serialized-project-graph-ready');
-    performance.measure(
-      'total for creating and serializing project graph',
-      'server-connection',
-      'serialized-project-graph-ready'
-    );
-
-    socket.write(serializedResult, () => {
-      performance.mark('serialized-project-graph-written-to-client');
-      performance.measure(
-        'write project graph to socket',
-        'serialized-project-graph-ready',
-        'serialized-project-graph-written-to-client'
+    if (payload.type === 'REQUEST_PROJECT_GRAPH') {
+      await handleRequestProjectGraph(socket);
+    } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
+      await handleProcessInBackground(socket, payload);
+    } else {
+      await respondWithErrorAndExit(
+        socket,
+        `Invalid payload from the client`,
+        new Error(
+          `Unsupported payload sent to daemon server: ${unparsedPayload}`
+        )
       );
-      // Close the connection once all data has been written so that the client knows when to read it.
-      socket.end();
-      performance.measure(
-        'total for server response',
-        'server-connection',
-        'serialized-project-graph-written-to-client'
-      );
-      const bytesWritten = Buffer.byteLength(
-        result.serializedProjectGraph,
-        'utf-8'
-      );
-      serverLogger.requestLog(
-        `Closed Connection to Client (${bytesWritten} bytes transferred)`
-      );
-    });
+    }
   });
 });
 
