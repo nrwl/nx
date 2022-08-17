@@ -61,7 +61,7 @@ describe('Jest Migration - jest 28 config support', () => {
   });
 
   it('should update jest-environment-jsdom if being used', async () => {
-    let tree = createTreeWithEmptyWorkspace(2);
+    let tree = createTreeWithEmptyWorkspace();
     tree.write(
       `package.json`,
       `{
@@ -90,7 +90,7 @@ describe('Jest Migration - jest 28 config support', () => {
   });
 
   it('should update jest-jasmine2 if being used as a test runner', () => {
-    let tree = createTreeWithEmptyWorkspace(2);
+    let tree = createTreeWithEmptyWorkspace();
     tree.write(
       `package.json`,
       `{
@@ -118,7 +118,7 @@ describe('Jest Migration - jest 28 config support', () => {
   });
 
   it('should not install deps if they are not used', () => {
-    let tree = createTreeWithEmptyWorkspace(2);
+    let tree = createTreeWithEmptyWorkspace();
     tree.write(
       `package.json`,
       `{
@@ -143,7 +143,7 @@ describe('Jest Migration - jest 28 config support', () => {
   });
 
   it('should update deps from jest.config.ts', async () => {
-    let tree = createTreeWithEmptyWorkspace(2);
+    let tree = createTreeWithEmptyWorkspace();
     await workspaceLib(tree, { name: 'my-lib', unitTestRunner: 'jest' });
     tree.write(
       'libs/my-lib/jest.config.ts',
