@@ -7,16 +7,29 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { removePropertyFromJestConfig } from '@nrwl/jest';
+import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { join } from 'path';
 
 /**
  * Remove transfrom and testRunner in jest
  */
 export default async function update(tree: Tree) {
-  forEachExecutorOptions(tree, '@nrwl/react-native:start', (_, projectName) => {
-    const project = readProjectConfiguration(tree, projectName);
-    removeTransform(tree, project);
-  });
+  forEachExecutorOptions<JestExecutorOptions>(
+    tree,
+    '@nrwl/jest:jest',
+    (options, projectName) => {
+      if (options.jestConfig && tree.exists(options.jestConfig)) {
+        const jestConfig = tree.read(options.jestConfig, 'utf-8');
+
+        if (jestConfig.includes(`preset: 'react-native'`)) {
+          const project = readProjectConfiguration(tree, projectName);
+          removeTransform(tree, project);
+          renameBabelJson(tree, project);
+        }
+      }
+    }
+  );
 
   await formatFiles(tree);
 }
@@ -30,6 +43,26 @@ function removeTransform(host: Tree, project: ProjectConfiguration) {
   } catch {
     logger.error(
       stripIndents`Unable to update ${jestConfigPath} for project ${project.root}.`
+    );
+  }
+}
+
+function renameBabelJson(host: Tree, project: ProjectConfiguration) {
+  const babelrcPath = join(project.root, '.babelrc');
+  const babelJsonPath = join(project.root, 'babel.config.json');
+  if (!host.exists(babelrcPath)) {
+    return;
+  }
+  try {
+    const buffer = host.read(babelrcPath);
+    if (!buffer) {
+      return;
+    }
+    host.write(babelJsonPath, buffer);
+    host.delete(babelrcPath);
+  } catch {
+    logger.error(
+      stripIndents`Unable to rename from ${babelrcPath} to ${babelJsonPath} for project ${project.root}.`
     );
   }
 }

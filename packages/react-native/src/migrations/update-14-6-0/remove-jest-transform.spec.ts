@@ -20,7 +20,7 @@ describe('Rename jest preprocessor', () => {
         test: {
           executor: '@nrwl/jest:jest',
           options: {
-            jestConfig: 'apps/products/jest.config.js',
+            jestConfig: 'apps/products/jest.config.ts',
             passWithNoTests: true,
           },
         },
@@ -30,20 +30,20 @@ describe('Rename jest preprocessor', () => {
 
   it(`should not remove transfrom if the code does not contain existing preprocessor`, async () => {
     tree.write(
-      'apps/products/jest.config.js',
+      'apps/products/jest.config.ts',
       `module.exports = {
       preset: 'react-native',
     };`
     );
     await update(tree);
 
-    const jestConfig = tree.read('apps/products/jest.config.js', 'utf-8');
+    const jestConfig = tree.read('apps/products/jest.config.ts', 'utf-8');
     expect(jestConfig).not.toContain(`transform`);
   });
 
   it(`should remove transform if the code contains existing preprocessor`, async () => {
     tree.write(
-      'apps/products/jest.config.js',
+      'apps/products/jest.config.ts',
       `module.exports = {
         preset: 'react-native',
         testRunner: 'jest-jasmine2',
@@ -57,8 +57,53 @@ describe('Rename jest preprocessor', () => {
     );
     await update(tree);
 
-    const jestConfig = tree.read('apps/products/jest.config.js', 'utf-8');
+    const jestConfig = tree.read('apps/products/jest.config.ts', 'utf-8');
     expect(jestConfig).not.toContain('transfrom: {');
     expect(jestConfig).not.toContain(`testRunner: 'jest-jasmine2',`);
+  });
+
+  it(`should rename .babelrc to babel.config.json`, async () => {
+    tree.write(
+      'apps/products/jest.config.ts',
+      `module.exports = {
+      preset: 'react-native',
+    };`
+    );
+    tree.write(
+      'apps/products/.babelrc',
+      `{
+        "presets": ["module:metro-react-native-babel-preset"]
+      }`
+    );
+    await update(tree);
+
+    expect(tree.exists('apps/products/.babelrc')).toBeFalsy();
+    expect(tree.exists('apps/products/babel.config.json')).toBeTruthy();
+    const babelConfigJson = tree.read(
+      'apps/products/babel.config.json',
+      'utf-8'
+    );
+    expect(babelConfigJson).toContain(
+      `"presets": ["module:metro-react-native-babel-preset"]`
+    );
+  });
+
+  it(`should not rename .babelrc to babel.config.json if app is not react native`, async () => {
+    tree.write(
+      'apps/products/jest.config.ts',
+      `module.exports = {
+      preset: 'other',
+    };`
+    );
+    tree.write(
+      'apps/products/.babelrc',
+      `{
+        "presets": ["module:metro-react-native-babel-preset"]
+      }`
+    );
+    await update(tree);
+
+    expect(tree.exists('apps/products/.babelrc')).toBeTruthy();
+    expect(tree.exists('apps/products/babel.config.json')).toBeFalsy();
   });
 });
