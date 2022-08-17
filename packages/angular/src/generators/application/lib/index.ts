@@ -19,3 +19,4 @@ export * from './update-nx-component-template';
 export * from './update-config-files';
 export * from './update-e2e-project';
 export * from './update-editor-tsconfig';
+export * from './convert-to-standalone-app';

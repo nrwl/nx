@@ -24,6 +24,133 @@ const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
+exports[`app --standalone should generate a standalone app correctly with routing 1`] = `
+"import { enableProdMode, importProvidersFrom } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { AppComponent } from './app/app.component';
+import { environment } from './environments/environment';
+
+if (environment.production) {
+  enableProdMode();
+}
+
+bootstrapApplication(AppComponent, {
+  providers: [importProvidersFrom(RouterModule.forRoot([], {initialNavigation: 'enabledBlocking'}))],
+}).catch((err) => console.error(err));"
+`;
+
+exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
+"import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterModule } from '@angular/router';
+import { Component } from '@angular/core';
+
+@Component({
+  standalone: true,
+  imports: [NxWelcomeComponent, RouterModule],
+  selector: 'proj-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'standalone';
+}"
+`;
+
+exports[`app --standalone should generate a standalone app correctly with routing 3`] = `
+"import { TestBed } from '@angular/core/testing';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterTestingModule } from '@angular/router/testing';
+
+describe('AppComponent', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({imports: [AppComponent, NxWelcomeComponent, RouterTestingModule] }).compileComponents();
+  });
+
+  it('should create the app', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+
+  it(\`should have as title 'standalone'\`, () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app.title).toEqual('standalone');
+  });
+
+  it('should render title', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome standalone');
+  });
+});
+"
+`;
+
+exports[`app --standalone should generate a standalone app correctly without routing 1`] = `
+"import { enableProdMode } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';;
+import { AppComponent } from './app/app.component';
+import { environment } from './environments/environment';
+
+if (environment.production) {
+  enableProdMode();
+}
+
+bootstrapApplication(AppComponent).catch((err) => console.error(err));"
+`;
+
+exports[`app --standalone should generate a standalone app correctly without routing 2`] = `
+"import { NxWelcomeComponent } from './nx-welcome.component';
+import { Component } from '@angular/core';
+
+@Component({
+  standalone: true,
+  imports: [NxWelcomeComponent],
+  selector: 'proj-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'standalone';
+}"
+`;
+
+exports[`app --standalone should generate a standalone app correctly without routing 3`] = `
+"import { TestBed } from '@angular/core/testing';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+describe('AppComponent', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({imports: [AppComponent, NxWelcomeComponent]}).compileComponents();
+  });
+
+  it('should create the app', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+
+  it(\`should have as title 'standalone'\`, () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app.title).toEqual('standalone');
+  });
+
+  it('should render title', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome standalone');
+  });
+});
+"
+`;
+
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
 
 exports[`app nested should update workspace.json 1`] = `

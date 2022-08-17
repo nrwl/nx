@@ -1074,6 +1074,58 @@ describe('app', () => {
       expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
     });
   });
+
+  describe('--standalone', () => {
+    it('should generate a standalone app correctly with routing', async () => {
+      // ACT
+      await generateApp(appTree, 'standalone', {
+        standalone: true,
+        routing: true,
+      });
+
+      // ASSERT
+      expect(
+        appTree.read('apps/standalone/src/main.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/standalone/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/standalone/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.exists('apps/standalone/src/app/app.module.ts')
+      ).toBeFalsy();
+      expect(
+        appTree.read('apps/standalone/src/app/nx-welcome.component.ts', 'utf-8')
+      ).toContain('standalone: true');
+    });
+
+    it('should generate a standalone app correctly without routing', async () => {
+      // ACT
+      await generateApp(appTree, 'standalone', {
+        standalone: true,
+        routing: false,
+      });
+
+      // ASSERT
+      expect(
+        appTree.read('apps/standalone/src/main.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/standalone/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/standalone/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.exists('apps/standalone/src/app/app.module.ts')
+      ).toBeFalsy();
+      expect(
+        appTree.read('apps/standalone/src/app/nx-welcome.component.ts', 'utf-8')
+      ).toContain('standalone: true');
+    });
+  });
 });
 
 async function generateApp(
