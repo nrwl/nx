@@ -36,7 +36,8 @@ export function getInputPropertyDeclarations(
 export function getComponentProps(
   tree: Tree,
   componentPath: string,
-  getArgsDefaultValueFn: (property: PropertyDeclaration) => string | undefined
+  getArgsDefaultValueFn: (property: PropertyDeclaration) => string | undefined,
+  useDecoratorName = true
 ): InputDescriptor[] {
   const props = getInputPropertyDeclarations(tree, componentPath).map(
     (node) => {
@@ -46,11 +47,12 @@ export function getComponentProps(
         ),
         SyntaxKind.StringLiteral
       );
-      const name = decoratorContent.length
-        ? !decoratorContent[0].getText().includes('.')
-          ? decoratorContent[0].getText().slice(1, -1)
-          : node.name.getText()
-        : node.name.getText();
+      const name =
+        useDecoratorName && decoratorContent.length
+          ? !decoratorContent[0].getText().includes('.')
+            ? decoratorContent[0].getText().slice(1, -1)
+            : node.name.getText()
+          : node.name.getText();
 
       const type = getKnobType(node);
       const defaultValue = getArgsDefaultValueFn(node);

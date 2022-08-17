@@ -33,6 +33,11 @@
       "schema": "./src/generators/component-story/schema.json",
       "description": "Creates a `stories.ts` file for a component."
     },
+    "component-test": {
+      "factory": "./src/generators/component-test/compat",
+      "schema": "./src/generators/component-test/schema.json",
+      "description": "Creates a cypress component test file for a component."
+    },
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
@@ -146,6 +151,11 @@
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Adds Storybook configuration to a project."
     },
+    "cypress-component-configuration": {
+      "factory": "./src/generators/cypress-component-configuration/compat",
+      "schema": "./src/generators/cypress-component-configuration/schema.json",
+      "description": "Setup Cypress component testing for a project."
+    },
     "upgrade-module": {
       "factory": "./src/generators/upgrade-module/compat",
       "schema": "./src/generators/upgrade-module/schema.json",
@@ -193,6 +203,11 @@
       "factory": "./src/generators/component-story/component-story",
       "schema": "./src/generators/component-story/schema.json",
       "description": "Creates a stories.ts file for a component."
+    },
+    "component-test": {
+      "factory": "./src/generators/component-test/compat",
+      "schema": "./src/generators/component-test/schema.json",
+      "description": "Creates a cypress component test file for a component."
     },
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
@@ -306,6 +321,11 @@
       "factory": "./src/generators/storybook-configuration/storybook-configuration",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Adds Storybook configuration to a project."
+    },
+    "cypress-component-configuration": {
+      "factory": "./src/generators/cypress-component-configuration/compat",
+      "schema": "./src/generators/cypress-component-configuration/schema.json",
+      "description": "Setup Cypress component testing for a project."
     },
     "upgrade-module": {
       "factory": "./src/generators/upgrade-module/upgrade-module",
