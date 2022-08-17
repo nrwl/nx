@@ -79,7 +79,19 @@ happynrwl/
 └── workspace.json
 ```
 
-Run `npx nx run-android mobile` to run the applicatoin in development mode on Android simulator/device. Run `npx nx run-ios mobile` to run the applicatoin in developement mode on iOS simulator/device.
+To run the application in development mode:
+
+On Android simulator/device:
+
+```bash
+npx nx run-android mobile
+```
+
+iOS simulator/device:
+
+```bash
+npx nx run-ios mobile
+```
 
 Try out other commands as well.
 
@@ -92,7 +104,7 @@ Try out other commands as well.
 
 **Android:**
 
-```sh
+```bash
 npx nx build-android mobile
 ```
 
@@ -104,13 +116,13 @@ No CLI support yet. Run in the Xcode project. See: https://reactnative.dev/docs/
 
 **Android:**
 
-```sh
+```bash
 npx nx test-android mobile-e2e
 ```
 
 **iOS:** (Mac only)
 
-```sh
+```bash
 npx nx test-ios mobile-e2e
 ```
 
@@ -187,7 +199,7 @@ Run:
 - `npx nx test shared-ui-layout` to test the library
 - `npx nx lint shared-ui-layout` to lint the library
 
-To generate a new comopnent inside `shared-ui-layout` run:
+To generate a new component inside `shared-ui-layout` run:
 
 ```bash
 npx nx g @nrwl/react-native:component layout --project=shared-ui-layout --export
