@@ -8,7 +8,7 @@ import {
 
 const args = yargsParser(process.argv, {
   string: ['version'],
-  boolean: ['verbose'],
+  boolean: ['verbose', 'useNxCloud'],
 });
 
 makeAngularCliFaster(args as Args)
