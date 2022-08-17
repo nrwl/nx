@@ -38,6 +38,7 @@
         "host",
         "ng-add",
         "ngrx",
+        "scam-to-standalone",
         "scam",
         "scam-directive",
         "scam-pipe",

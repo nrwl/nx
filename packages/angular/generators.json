@@ -106,6 +106,11 @@
       "schema": "./src/generators/ngrx/schema.json",
       "description": "Adds NgRx support to an application or library."
     },
+    "scam-to-standalone": {
+      "factory": "./src/generators/scam-to-standalone/compat",
+      "schema": "./src/generators/scam-to-standalone/schema.json",
+      "description": "Convert an existing Single Component Angular Module (SCAM) to a Standalone Component."
+    },
     "scam": {
       "factory": "./src/generators/scam/scam.compat",
       "schema": "./src/generators/scam/schema.json",
@@ -261,6 +266,11 @@
       "factory": "./src/generators/ngrx/ngrx",
       "schema": "./src/generators/ngrx/schema.json",
       "description": "Adds NgRx support to an application or library."
+    },
+    "scam-to-standalone": {
+      "factory": "./src/generators/scam-to-standalone/scam-to-standalone",
+      "schema": "./src/generators/scam-to-standalone/schema.json",
+      "description": "Convert an existing Single Component Angular Module (SCAM) to a Standalone Component."
     },
     "scam": {
       "factory": "./src/generators/scam/scam",

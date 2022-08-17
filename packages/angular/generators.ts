@@ -14,6 +14,7 @@ export * from './src/generators/storybook-configuration/storybook-configuration'
 export * from './src/generators/upgrade-module/upgrade-module';
 export * from './src/generators/setup-mf/setup-mf';
 export * from './src/generators/host/host';
+export * from './src/generators/scam-to-standalone/scam-to-standalone';
 export * from './src/generators/scam/scam';
 export * from './src/generators/scam-directive/scam-directive';
 export * from './src/generators/scam-pipe/scam-pipe';
