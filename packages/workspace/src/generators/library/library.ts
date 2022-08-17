@@ -81,6 +81,7 @@ export function addLint(
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     ],
+    unitTestRunner: options.unitTestRunner,
     eslintFilePatterns: [
       `${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
     ],

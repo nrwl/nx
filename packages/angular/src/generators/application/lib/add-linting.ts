@@ -14,5 +14,6 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     prefix: options.prefix,
     setParserOptionsProject: options.setParserOptionsProject,
     skipPackageJson: options.skipPackageJson,
+    unitTestRunner: options.unitTestRunner,
   });
 }

@@ -20,6 +20,7 @@ export async function addLinting(
     tsConfigPaths: [
       joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
     ],
+    unitTestRunner: options.unitTestRunner,
     eslintFilePatterns: [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });

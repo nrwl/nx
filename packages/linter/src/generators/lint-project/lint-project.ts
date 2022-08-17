@@ -20,6 +20,7 @@ interface LintProjectOptions {
   skipFormat: boolean;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
+  unitTestRunner?: string;
 }
 
 function createTsLintConfiguration(
@@ -90,6 +91,7 @@ export async function lintProjectGenerator(
 ) {
   const installTask = lintInitGenerator(tree, {
     linter: options.linter,
+    unitTestRunner: options.unitTestRunner,
     skipPackageJson: options.skipPackageJson,
   });
   const projectConfig = readProjectConfiguration(tree, options.project);

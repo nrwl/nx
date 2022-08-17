@@ -9,38 +9,39 @@ import {
 import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
 import type { Linter as ESLintLinter } from 'eslint';
 
-export async function addLinting(
-  host: Tree,
-  projectName: string,
-  appProjectRoot: string,
-  tsConfigPaths: string[],
-  linter: Linter,
-  setParserOptionsProject?: boolean
-) {
-  if (linter === Linter.None) {
+interface NormalizedSchema {
+  linter?: Linter;
+  projectName: string;
+  projectRoot: string;
+  setParserOptionsProject?: boolean;
+  tsConfigPaths: string[];
+}
+
+export async function addLinting(host: Tree, options: NormalizedSchema) {
+  if (options.linter === Linter.None) {
     return () => {};
   }
 
   const lintTask = await lintProjectGenerator(host, {
-    linter,
-    project: projectName,
-    tsConfigPaths,
-    eslintFilePatterns: [`${appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
+    linter: options.linter,
+    project: options.projectName,
+    tsConfigPaths: options.tsConfigPaths,
+    eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });
 
-  if (linter === Linter.TsLint) {
+  if (options.linter === Linter.TsLint) {
     return () => {};
   }
 
   const reactEslintJson = createReactEslintJson(
-    appProjectRoot,
-    setParserOptionsProject
+    options.projectRoot,
+    options.setParserOptionsProject
   );
 
   updateJson(
     host,
-    joinPathFragments(appProjectRoot, '.eslintrc.json'),
+    joinPathFragments(options.projectRoot, '.eslintrc.json'),
     (json: ESLintLinter.Config) => {
       json = reactEslintJson;
       json.ignorePatterns = ['!**/*', 'public', '.cache', 'node_modules'];

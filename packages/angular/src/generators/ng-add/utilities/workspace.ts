@@ -163,7 +163,8 @@ export function updatePackageJson(tree: Tree): void {
 
 export function updateRootEsLintConfig(
   tree: Tree,
-  existingEsLintConfig: any | undefined
+  existingEsLintConfig: any | undefined,
+  unitTestRunner?: string
 ): void {
   if (tree.exists('.eslintrc.json')) {
     /**
@@ -175,7 +176,7 @@ export function updateRootEsLintConfig(
     tree.delete('.eslintrc.json');
   }
 
-  lintInitGenerator(tree, { linter: Linter.EsLint });
+  lintInitGenerator(tree, { linter: Linter.EsLint, unitTestRunner });
 
   if (!existingEsLintConfig) {
     // There was no eslint config in the root, so we keep the generated one as-is.
