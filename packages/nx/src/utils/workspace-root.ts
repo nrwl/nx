@@ -6,13 +6,6 @@ import { fileExists } from './fileutils';
  */
 export const workspaceRoot = workspaceRootInner(process.cwd(), process.cwd());
 
-/**
- * The root of the workspace.
- *
- * @deprecated use workspaceRoot instead
- */
-export const appRootPath = workspaceRoot;
-
 export function workspaceRootInner(
   dir: string,
   candidateRoot: string | null
