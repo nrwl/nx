@@ -37,7 +37,7 @@ export default async function* reactNatievStorybookExecutor(
     );
 
   try {
-    await runCliStorybook(context.root, projectRoot, options);
+    await runCliStorybook(context.root, options);
     yield { success: true };
   } finally {
     if (childProcess) {
@@ -48,7 +48,6 @@ export default async function* reactNatievStorybookExecutor(
 
 function runCliStorybook(
   workspaceRoot: string,
-  projectRoot: string,
   options: ReactNativeStorybookOptions
 ) {
   return new Promise((resolve, reject) => {
@@ -87,8 +86,12 @@ function createStorybookOptions(options) {
       if (v === true) {
         acc.push(`--${k}`);
       }
+    } else if (Array.isArray(v)) {
+      v.forEach((value) => {
+        acc.push(`--${k}`, value);
+      });
     } else {
-      acc.push(`--${k}`, options[k]);
+      acc.push(`--${k}`, v);
     }
     return acc;
   }, []);

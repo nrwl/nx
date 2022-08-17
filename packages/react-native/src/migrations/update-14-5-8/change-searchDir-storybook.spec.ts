@@ -4,9 +4,9 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import update from './add-exclude-sync-deps';
+import update from './change-searchDir-storybook';
 
-describe('add-exclude-sync-deps', () => {
+describe('change-searchDir-storybook', () => {
   let tree: Tree;
 
   beforeEach(async () => {
@@ -15,24 +15,24 @@ describe('add-exclude-sync-deps', () => {
       root: 'apps/products',
       sourceRoot: 'apps/products/src',
       targets: {
-        'sync-deps': {
-          executor: '@nrwl/react-native:sync-deps',
+        storybook: {
+          executor: '@nrwl/react-native:storybook',
           options: {
-            include: 'react-native-reanmiated,react-native-screens',
+            searchDir: 'apps/products',
           },
         },
       },
     });
   });
 
-  it(`should change include from string to array`, async () => {
+  it(`should change searchDir from string to array`, async () => {
     await update(tree);
 
     const projectConfig = readProjectConfiguration(tree, 'products');
-    expect(projectConfig.targets['sync-deps']).toEqual({
-      executor: '@nrwl/react-native:sync-deps',
+    expect(projectConfig.targets['storybook']).toEqual({
+      executor: '@nrwl/react-native:storybook',
       options: {
-        include: ['react-native-reanmiated', 'react-native-screens'],
+        searchDir: ['apps/products'],
       },
     });
   });

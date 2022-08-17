@@ -5,7 +5,11 @@
   "type": "object",
   "properties": {
     "searchDir": {
-      "type": "string",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
       "description": "The directory or directories, relative to the project root, to search for files in."
     },
     "outputFile": {
