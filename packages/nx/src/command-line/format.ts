@@ -46,7 +46,7 @@ export async function format(
   const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
     // prettier removes one of the \
     // prettier-ignore
-    (p) => `"${p.replace("$", "\\\$")}"`
+    (p) => `"${p.replace(/\$/g, "\\\$")}"`
   );
 
   // Chunkify the patterns array to prevent crashing the windows terminal
