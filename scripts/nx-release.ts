@@ -68,7 +68,6 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   if (options.local || options.tag === 'next') {
     originalLernaJson = readFileSync(lernaJsonPath);
   }
-
   if (options.local) {
     /**
      * Hide changes from Lerna
@@ -86,7 +85,6 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   const publishOptions: Record<string, boolean | string | undefined> = {
     gitReset: false,
     distTag: options.tag,
-    canary: options.canary,
   };
 
   if (!options.skipPublish) {
@@ -126,11 +124,6 @@ function parseArgs() {
       description: 'Publish Nx locally, not to actual NPM',
       alias: 'l',
       default: true,
-    })
-    .option('canary', {
-      type: 'boolean',
-      description: 'Create canary version',
-      hidden: true,
     })
     .option('force', {
       type: 'boolean',

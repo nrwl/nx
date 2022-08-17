@@ -42,7 +42,7 @@ async function buildPackagePublishAndCleanPorts() {
 }
 
 async function updateVersionsAndPublishPackages() {
-  execSync(`yarn nx-release 9999.0.2 --local`, {
+  execSync(`yarn nx-release major --local`, {
     stdio: 'inherit',
   });
 }
