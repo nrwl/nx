@@ -27,6 +27,7 @@ import { handleErrors } from '../utils/params';
 import { Workspaces } from 'nx/src/config/workspaces';
 import { Hasher } from 'nx/src/hasher/hasher';
 import { hashDependsOnOtherTasks, hashTask } from 'nx/src/hasher/hash-task';
+import { DaemonClient } from '../daemon/client/client';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -192,6 +193,7 @@ export async function runCommand(
         nxArgs,
         taskGraph,
         hasher,
+        daemon: new DaemonClient(nxJson),
       }
     );
     let anyFailures;

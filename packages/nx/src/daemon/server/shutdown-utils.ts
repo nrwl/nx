@@ -1,7 +1,8 @@
 import { workspaceRoot } from '../../utils/workspace-root';
-import type { Server } from 'net';
+import type { Server, Socket } from 'net';
 import { serverLogger } from './logger';
 import type { WatcherSubscription } from './watcher';
+import { serializeResult } from 'nx/src/daemon/socket-utils';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
@@ -37,4 +38,34 @@ export function resetInactivityTimeout(cb: () => void): void {
     clearTimeout(serverInactivityTimerId);
   }
   serverInactivityTimerId = setTimeout(cb, SERVER_INACTIVITY_TIMEOUT_MS);
+}
+
+function respondToClient(socket: Socket, message: string) {
+  return new Promise((res) => {
+    socket.write(message, () => {
+      // Close the connection once all data has been written so that the client knows when to read it.
+      socket.end();
+      serverLogger.log(`Closed Connection to Client`);
+      res(null);
+    });
+  });
+}
+
+export async function respondWithErrorAndExit(
+  socket: Socket,
+  description: string,
+  error: Error
+) {
+  // print some extra stuff in the error message
+  serverLogger.requestLog(
+    `Responding to the client with an error.`,
+    description,
+    error.message
+  );
+  console.error(error);
+
+  error.message = `${error.message}\n\nBecause of the error the Nx daemon process has exited. The next Nx command is going to restart the daemon process.\nIf the error persists, please run "nx reset".`;
+
+  await respondToClient(socket, serializeResult(error, null));
+  process.exit(1);
 }

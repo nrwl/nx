@@ -3,6 +3,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { Hasher } from '../hasher/hasher';
+import { DaemonClient } from '../daemon/client/client';
 
 export type TaskStatus =
   | 'success'
@@ -27,5 +28,6 @@ export type TasksRunner<T = unknown> = (
     nxArgs: NxArgs;
     taskGraph?: TaskGraph;
     hasher?: Hasher;
+    daemon?: DaemonClient;
   }
 ) => any | Promise<{ [id: string]: TaskStatus }>;

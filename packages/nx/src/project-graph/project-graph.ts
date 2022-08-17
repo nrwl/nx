@@ -2,14 +2,8 @@ import { ProjectGraphCache, readCache } from './nx-deps-cache';
 import { buildProjectGraph } from './build-project-graph';
 import { workspaceFileName } from './file-utils';
 import { output } from '../utils/output';
-import { isCI } from '../utils/is-ci';
 import { defaultFileHasher } from '../hasher/file-hasher';
-import {
-  isDaemonDisabled,
-  markDaemonAsDisabled,
-  writeDaemonLogs,
-} from '../daemon/tmp-dir';
-import { statSync } from 'fs';
+import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
 import { ProjectGraph, ProjectGraphV4 } from '../config/project-graph';
 import { stripIndents } from '../utils/strip-indents';
 import { readNxJson } from '../config/configuration';
@@ -17,6 +11,7 @@ import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
+import { DaemonClient } from '../daemon/client/client';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -108,35 +103,12 @@ async function buildProjectGraphWithoutDaemon() {
  */
 export async function createProjectGraphAsync(): Promise<ProjectGraph> {
   const nxJson = readNxJson();
-  const useDaemonProcessOption =
-    nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
-  const env = process.env.NX_DAEMON;
-
-  // env takes precedence
-  // option=true,env=false => no daemon
-  // option=false,env=undefined => no daemon
-  // option=false,env=false => no daemon
-
-  // option=undefined,env=undefined => daemon
-  // option=true,env=true => daemon
-  // option=false,env=true => daemon
-  if (
-    isCI() ||
-    isDocker() ||
-    isDaemonDisabled() ||
-    (useDaemonProcessOption === undefined && env === 'false') ||
-    (useDaemonProcessOption === true && env === 'false') ||
-    (useDaemonProcessOption === false && env === undefined) ||
-    (useDaemonProcessOption === false && env === 'false')
-  ) {
+  const daemon = new DaemonClient(nxJson);
+  if (!daemon.enabled()) {
     return await buildProjectGraphWithoutDaemon();
   } else {
     try {
-      const daemonClient = require('../daemon/client/client');
-      if (!(await daemonClient.isServerAvailable())) {
-        await daemonClient.startInBackground();
-      }
-      return daemonClient.getProjectGraphFromServer();
+      return daemon.getProjectGraph();
     } catch (e) {
       if (e.message.indexOf('inotify_add_watch') > -1) {
         // common errors with the daemon due to OS settings (cannot watch all the files available)
@@ -162,23 +134,6 @@ export async function createProjectGraphAsync(): Promise<ProjectGraph> {
       return buildProjectGraphWithoutDaemon();
     }
   }
-}
-
-function isDocker() {
-  try {
-    statSync('/.dockerenv');
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function printErrorMessage(e: any) {
-  const lines = e.message.split('\n');
-  output.error({
-    title: lines[0],
-    bodyLines: lines.slice(1),
-  });
 }
 
 /**

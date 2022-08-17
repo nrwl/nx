@@ -1,6 +1,6 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
-import { openSync, readFileSync } from 'fs';
+import { openSync, readFileSync, statSync } from 'fs';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
 import { join } from 'path';
@@ -14,14 +14,76 @@ import { FULL_OS_SOCKET_PATH, killSocketOrPath } from '../socket-utils';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
+  isDaemonDisabled,
 } from '../tmp-dir';
 import { ProjectGraph } from '../../config/project-graph';
+import { isCI } from '../../utils/is-ci';
+import { readNxJson } from '../../config/configuration';
+import { NxJsonConfiguration } from 'nx/src/config/nx-json';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_WORKSPACE_CONFIG: 'false',
 };
+
+export class DaemonClient {
+  constructor(private readonly nxJson: NxJsonConfiguration) {}
+
+  enabled() {
+    const useDaemonProcessOption =
+      this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
+    const env = process.env.NX_DAEMON;
+
+    // env takes precedence
+    // option=true,env=false => no daemon
+    // option=false,env=undefined => no daemon
+    // option=false,env=false => no daemon
+
+    // option=undefined,env=undefined => daemon
+    // option=true,env=true => daemon
+    // option=false,env=true => daemon
+    if (
+      isCI() ||
+      isDocker() ||
+      isDaemonDisabled() ||
+      (useDaemonProcessOption === undefined && env === 'false') ||
+      (useDaemonProcessOption === true && env === 'false') ||
+      (useDaemonProcessOption === false && env === undefined) ||
+      (useDaemonProcessOption === false && env === 'false')
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  async getProjectGraph(): Promise<ProjectGraph> {
+    if (!(await isServerAvailable())) {
+      await startInBackground();
+    }
+    return sendMessageToDaemon({ type: 'REQUEST_PROJECT_GRAPH' });
+  }
+
+  async processInBackground(requirePath: string, data: any): Promise<any> {
+    if (!(await isServerAvailable())) {
+      await startInBackground();
+    }
+    return sendMessageToDaemon({
+      type: 'PROCESS_IN_BACKGROUND',
+      requirePath,
+      data,
+    });
+  }
+}
+
+function isDocker() {
+  try {
+    statSync('/.dockerenv');
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function startInBackground(): Promise<ChildProcess['pid']> {
   await safelyCleanUpExistingProcess();
@@ -136,19 +198,13 @@ export async function isServerAvailable(): Promise<boolean> {
   });
 }
 
-/**
- * Establishes a client connection to the daemon server for use in project graph
- * creation utilities.
- *
- * All logs are performed by the devkit logger because this logic does not
- * run "on the server" per se and therefore does not write to its log output.
- *
- * TODO: Gracefully handle a server shutdown (for whatever reason) while a client
- * is connecting and querying it.
- */
-export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
+async function sendMessageToDaemon(message: {
+  type: string;
+  requirePath?: string;
+  data?: any;
+}): Promise<any> {
   return new Promise((resolve, reject) => {
-    performance.mark('getProjectGraphFromServer-start');
+    performance.mark('sendMessageToDaemon-start');
     const socket = connect(FULL_OS_SOCKET_PATH);
 
     socket.on('error', (err) => {
@@ -156,7 +212,7 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
         return reject(err);
       }
       if (err.message.startsWith('LOCK-FILES-CHANGED')) {
-        return getProjectGraphFromServer().then(resolve, reject);
+        return sendMessageToDaemon(message).then(resolve, reject);
       }
       let error: any;
       if (err.message.startsWith('connect ENOENT')) {
@@ -174,54 +230,47 @@ export async function getProjectGraphFromServer(): Promise<ProjectGraph> {
       return reject(error || err);
     });
 
-    /**
-     * Immediately after connecting to the server we send it the known project graph creation
-     * request payload. See the notes above createServer() for more context as to why we explicitly
-     * request the graph from the client like this.
-     */
     socket.on('connect', () => {
-      socket.write('REQUEST_PROJECT_GRAPH_PAYLOAD');
+      socket.write(JSON.stringify(message));
 
-      let serializedProjectGraphResult = '';
+      let serializedResult = '';
       socket.on('data', (data) => {
-        serializedProjectGraphResult += data.toString();
+        serializedResult += data.toString();
       });
 
       socket.on('end', () => {
         try {
           performance.mark('json-parse-start');
-          const projectGraphResult = JSON.parse(serializedProjectGraphResult);
+          const parsedResult = JSON.parse(serializedResult);
           performance.mark('json-parse-end');
           performance.measure(
-            'deserialize graph result on the client',
+            'deserialize daemon response',
             'json-parse-start',
             'json-parse-end'
           );
-          if (projectGraphResult.error) {
-            reject(projectGraphResult.error);
+          if (parsedResult.error) {
+            reject(parsedResult.error);
           } else {
             performance.measure(
-              'total for getProjectGraphFromServer()',
-              'getProjectGraphFromServer-start',
+              'total for sendMessageToDaemon()',
+              'sendMessageToDaemon-start',
               'json-parse-end'
             );
-            return resolve(projectGraphResult.projectGraph);
+            return resolve(parsedResult.projectGraph);
           }
         } catch (e) {
-          const endOfGraph =
-            serializedProjectGraphResult.length > 300
-              ? serializedProjectGraphResult.substring(
-                  serializedProjectGraphResult.length - 300
-                )
-              : serializedProjectGraphResult;
+          const endOfResponse =
+            serializedResult.length > 300
+              ? serializedResult.substring(serializedResult.length - 300)
+              : serializedResult;
           reject(
             daemonProcessException(
               [
-                'Could not deserialize project graph.',
+                'Could not deserialize response from Nx deamon.',
                 `Message: ${e.message}`,
                 '\n',
                 `Received:`,
-                endOfGraph,
+                endOfResponse,
                 '\n',
               ].join('\n')
             )
