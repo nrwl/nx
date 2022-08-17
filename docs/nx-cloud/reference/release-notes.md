@@ -1,5 +1,10 @@
 # `@nrwl/nx-cloud` - Release notes
 
+## 14.3.0
+
+- Fix: Resolve issue where sometimes cache hits would be reported as misses when paired with Nx 13.0-13.5
+- Fix: Correctly infer NX_BRANCH while running in Gitlab CI
+
 ## 14.2.0
 
 - Feat: Add `NX_CLOUD_SILENT_RECORD` environment variable for use with `nx-cloud record`
