@@ -38,6 +38,7 @@ executors:
     <<: *defaults
     docker:
       - image: cimg/node:lts-browsers
+    resource_class: medium+
 
   macos:
     <<: *defaults
