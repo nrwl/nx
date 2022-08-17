@@ -111,6 +111,16 @@ describe('Jest Migration - jest 28 config support', () => {
 `
     );
 
+    tree.write(
+      'jest.preset.js',
+      `
+const nxPreset = require('@nrwl/jest/preset').default;
+module.exports = {
+  ...nxPreset,
+  testRunner: 'jest-jasmine2',
+};`
+    );
+
     const actual = checkDeps(tree);
     expect(actual).toEqual({
       'jest-jasmine2': '28.1.1',

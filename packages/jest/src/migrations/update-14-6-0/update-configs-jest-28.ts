@@ -83,13 +83,7 @@ export function checkDeps(tree: Tree): Record<string, string> {
   const packageJson = readJson(tree, 'package.json');
   let devDeps = {};
 
-  if (packageJson.devDependencies['jest-jasmine2']) {
-    devDeps['jest-jasmine2'] = jestVersion;
-  }
-  if (
-    packageJson.devDependencies['jest-environment-jsdom'] ||
-    packageJson.devDependencies['jest-preset-angular']
-  ) {
+  if (packageJson.devDependencies['jest-preset-angular']) {
     devDeps['jest-environment-jsdom'] = jestVersion;
   }
 

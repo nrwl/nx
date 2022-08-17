@@ -183,6 +183,14 @@
           "version": "~28.1.1",
           "alwaysAddToPackageJson": false
         },
+        "jest-jasmine2": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-environment-jsdom": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
         "ts-jest": {
           "version": "~28.0.5",
           "alwaysAddToPackageJson": false
