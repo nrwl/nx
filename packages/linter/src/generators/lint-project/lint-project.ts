@@ -11,7 +11,6 @@ import { Linter } from '../utils/linter';
 import { findEslintFile } from '../utils/eslint-file';
 import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
-import { ESLint } from 'eslint';
 
 interface LintProjectOptions {
   project: string;
@@ -21,8 +20,6 @@ interface LintProjectOptions {
   skipFormat: boolean;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
-  js?: boolean;
-  unitTestRunner?: string;
 }
 
 function createTsLintConfiguration(
@@ -42,9 +39,9 @@ function createTsLintConfiguration(
 function createEsLintConfiguration(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  options: LintProjectOptions
+  setParserOptionsProject: boolean
 ) {
-  const eslintJSON: ESLint.ConfigData = {
+  writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
     extends: [`${offsetFromRoot(projectConfig.root)}${findEslintFile(tree)}`],
     // Include project files to be linted since the global one excludes all files.
     ignorePatterns: ['!**/*'],
@@ -64,7 +61,7 @@ function createEsLintConfiguration(
          * parserOptions.project), the executor will attempt to look for the particular error typescript-eslint gives you
          * and provide feedback to the user.
          */
-        parserOptions: !options.setParserOptionsProject
+        parserOptions: !setParserOptionsProject
           ? undefined
           : {
               project: [`${projectConfig.root}/tsconfig.*?.json`],
@@ -84,15 +81,7 @@ function createEsLintConfiguration(
         rules: {},
       },
     ],
-  };
-  if (options.js && options.unitTestRunner === 'jest') {
-    eslintJSON.overrides.push({
-      files: ['*.spec.js', '*.spec.jsx', '**/*.test.js', '**/*.test.jsx'],
-      env: { jest: true },
-      rules: {},
-    });
-  }
-  writeJson(tree, join(projectConfig.root, `.eslintrc.json`), eslintJSON);
+  });
 }
 
 export async function lintProjectGenerator(
@@ -113,7 +102,11 @@ export async function lintProjectGenerator(
         lintFilePatterns: options.eslintFilePatterns,
       },
     };
-    createEsLintConfiguration(tree, projectConfig, options);
+    createEsLintConfiguration(
+      tree,
+      projectConfig,
+      options.setParserOptionsProject
+    );
   } else {
     projectConfig.targets['lint'] = {
       executor: '@angular-devkit/build-angular:tslint',

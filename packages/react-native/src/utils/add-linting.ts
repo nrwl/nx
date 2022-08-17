@@ -9,52 +9,38 @@ import {
 import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
 import type { Linter as ESLintLinter } from 'eslint';
 
-interface LintingSchema {
-  linter?: Linter;
-  js?: boolean;
-  unitTestRunner?: 'jest' | 'none';
-  setParserOptionsProject?: boolean;
-}
-
-// options.name,
-// options.projectRoot,
-// [joinPathFragments(options.projectRoot, 'tsconfig.lib.json')],
-// options.linter,
-// options.setParserOptionsProject
-
 export async function addLinting(
   host: Tree,
   projectName: string,
-  tsConfigFileName: string,
-  projectRoot: string,
-  options: LintingSchema
+  appProjectRoot: string,
+  tsConfigPaths: string[],
+  linter: Linter,
+  setParserOptionsProject?: boolean
 ) {
-  if (options.linter === Linter.None) {
+  if (linter === Linter.None) {
     return () => {};
   }
 
   const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
+    linter,
     project: projectName,
-    js: options.js,
-    unitTestRunner: options.unitTestRunner,
-    tsConfigPaths: [joinPathFragments(projectRoot, tsConfigFileName)],
-    eslintFilePatterns: [`${projectRoot}/**/*.{ts,tsx,js,jsx}`],
+    tsConfigPaths,
+    eslintFilePatterns: [`${appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });
 
-  if (options.linter === Linter.TsLint) {
+  if (linter === Linter.TsLint) {
     return () => {};
   }
 
   const reactEslintJson = createReactEslintJson(
-    projectRoot,
-    options.setParserOptionsProject
+    appProjectRoot,
+    setParserOptionsProject
   );
 
   updateJson(
     host,
-    joinPathFragments(projectRoot, '.eslintrc.json'),
+    joinPathFragments(appProjectRoot, '.eslintrc.json'),
     (json: ESLintLinter.Config) => {
       json = reactEslintJson;
       json.ignorePatterns = ['!**/*', 'public', '.cache', 'node_modules'];
