@@ -35,6 +35,29 @@ module.exports = {
 "
 `;
 
+exports[`@nrwl/storybook:configuration basic functionalities should generate files 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "npmScope": "proj",
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+          "build-storybook",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+}
+`;
+
 exports[`@nrwl/storybook:configuration basic functionalities should have the proper typings 1`] = `
 Array [
   "../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts",

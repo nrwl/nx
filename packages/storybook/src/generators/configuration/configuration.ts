@@ -15,6 +15,7 @@ import { initGenerator } from '../init/init';
 
 import {
   addAngularStorybookTask,
+  addBuildStorybookToCacheableOperations,
   addStorybookTask,
   configureTsProjectConfig,
   configureTsSolutionConfig,
@@ -59,6 +60,8 @@ export async function configurationGenerator(
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
+
+  addBuildStorybookToCacheableOperations(tree);
 
   if (schema.uiFramework === '@storybook/angular') {
     addAngularStorybookTask(tree, schema.name);

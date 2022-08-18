@@ -15,9 +15,9 @@ import { Linter } from '@nrwl/linter';
 import { join } from 'path';
 import {
   dedupe,
+  findStorybookAndBuildTargetsAndCompiler,
   isFramework,
   TsConfig,
-  findStorybookAndBuildTargetsAndCompiler,
 } from '../../utils/utilities';
 import { StorybookConfigureSchema } from './schema';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
@@ -355,4 +355,26 @@ export function getTsConfigPath(
       ? 'tsconfig.app.json'
       : 'tsconfig.lib.json'
   );
+}
+
+export function addBuildStorybookToCacheableOperations(tree: Tree) {
+  updateJson(tree, 'nx.json', (json) => ({
+    ...json,
+    tasksRunnerOptions: {
+      ...(json.tasksRunnerOptions ?? {}),
+      default: {
+        ...(json.tasksRunnerOptions?.default ?? {}),
+        options: {
+          ...(json.tasksRunnerOptions?.default?.options ?? {}),
+          cacheableOperations: Array.from(
+            new Set([
+              ...(json.tasksRunnerOptions?.default?.options
+                ?.cacheableOperations ?? []),
+              'build-storybook',
+            ])
+          ),
+        },
+      },
+    },
+  }));
 }
