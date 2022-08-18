@@ -8,10 +8,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/*! purgecss start ignore */
-@import './constellation-wobble.animation.css';
-/*! purgecss end ignore */
-
 svg {
   shape-rendering: auto;
   text-rendering: optimizeLegibility;
