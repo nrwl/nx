@@ -71,7 +71,7 @@ module.exports = function (path, options) {
     }
 
     // Global modules which must be resolved by defaultResolver
-    if (['fs', 'http', 'path'].includes(path)) {
+    if (['child_process', 'fs', 'http', 'path'].includes(path)) {
       return options.defaultResolver(path, options);
     }
 

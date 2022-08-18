@@ -5,7 +5,7 @@ export default {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
-  displayName: 'jest',
+  displayName: 'js',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
 };
