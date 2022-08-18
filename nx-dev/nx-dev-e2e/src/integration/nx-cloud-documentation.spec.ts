@@ -4,7 +4,7 @@ import { assertTextOnPage } from './helpers';
  * Asserting all the additional API references pages are accounted for and accessible.
  * Generation of the pages is manual since we want to make sure the change is intended.
  */
-xdescribe('nx-dev: Nx Cloud section', () => {
+describe('nx-dev: Nx Cloud section', () => {
   (<{ title: string; path: string }[]>[
     { title: 'What is Nx Cloud?', path: '/nx-cloud/intro/what-is-nx-cloud' },
     {
@@ -48,39 +48,27 @@ xdescribe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/account/encryption',
     },
     {
-      title: 'Getting Started with Nx Private Cloud',
+      title: 'Running Nx Cloud on Prem',
       path: '/nx-cloud/private-cloud/get-started',
     },
     {
-      title: 'Private Cloud GitHub PR Integration',
+      title: 'GitHub PR Integration',
       path: '/nx-cloud/private-cloud/github',
     },
     {
-      title: 'Nx Private Cloud and Kubernetes',
-      path: '/nx-cloud/private-cloud/deploy-kubernetes',
-    },
-    {
-      title: 'Deploying Nx Private Cloud to AWS',
-      path: '/nx-cloud/private-cloud/deploy-aws',
-    },
-    {
-      title: 'Deploying Nx Private Cloud to Azure',
-      path: '/nx-cloud/private-cloud/deploy-azure',
-    },
-    {
-      title: 'Nx Private Cloud Auth',
+      title: 'Auth (Basic)',
       path: '/nx-cloud/private-cloud/auth-single-admin',
     },
     {
-      title: 'Nx Private Cloud GitHub Auth',
+      title: 'GitHub Auth',
       path: '/nx-cloud/private-cloud/auth-github',
     },
     {
-      title: 'Nx Private Cloud GitLab Auth',
+      title: 'GitLab Auth',
       path: '/nx-cloud/private-cloud/auth-gitlab',
     },
     {
-      title: 'Nx Private Cloud BitBucket Auth',
+      title: 'BitBucket Auth',
       path: '/nx-cloud/private-cloud/auth-bitbucket',
     },
     {
@@ -100,7 +88,7 @@ xdescribe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/reference/server-api',
     },
     {
-      title: '@nrwl/nx-cloudNx Private Cloud',
+      title: '@nrwl/nx-cloud - Release notes',
       path: '/nx-cloud/reference/release-notes',
     },
   ]).forEach((page) => assertTextOnPage(page.path, page.title));
