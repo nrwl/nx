@@ -9,8 +9,8 @@ import {
   convertNxGenerator,
   Tree,
   formatFiles,
-  joinPathFragments,
   GeneratorCallback,
+  joinPathFragments,
 } from '@nrwl/devkit';
 import { normalizeOptions } from './lib/normalize-options';
 import initGenerator from '../init/init';
@@ -29,14 +29,14 @@ export async function reactNativeApplicationGenerator(
   addProject(host, options);
 
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
-  const lintTask = await addLinting(
-    host,
-    options.projectName,
-    options.appProjectRoot,
-    [joinPathFragments(options.appProjectRoot, 'tsconfig.app.json')],
-    options.linter,
-    options.setParserOptionsProject
-  );
+  const lintTask = await addLinting(host, {
+    ...options,
+    projectRoot: options.appProjectRoot,
+    tsConfigPaths: [
+      joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+    ],
+  });
+
   const jestTask = await addJest(
     host,
     options.unitTestRunner,

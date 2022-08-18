@@ -96,7 +96,7 @@ export async function migrateFromAngularCli(
       createRootKarmaConfig(tree);
     }
     if (workspaceCapabilities.eslint) {
-      updateRootEsLintConfig(tree, eslintConfig);
+      updateRootEsLintConfig(tree, eslintConfig, options.unitTestRunner);
       cleanupEsLintPackages(tree);
     }
 

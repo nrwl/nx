@@ -44,14 +44,13 @@ export async function reactNativeLibraryGenerator(
     e2eTestRunner: 'none',
   });
 
-  const lintTask = await addLinting(
-    host,
-    options.name,
-    options.projectRoot,
-    [joinPathFragments(options.projectRoot, 'tsconfig.lib.json')],
-    options.linter,
-    options.setParserOptionsProject
-  );
+  const lintTask = await addLinting(host, {
+    ...options,
+    projectName: options.name,
+    tsConfigPaths: [
+      joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
+    ],
+  });
 
   if (!options.skipTsConfig) {
     updateBaseTsConfig(host, options);

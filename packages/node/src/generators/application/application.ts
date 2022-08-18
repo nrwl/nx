@@ -187,6 +187,7 @@ export async function addLintingToApplication(
     eslintFilePatterns: [
       `${options.appProjectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
     ],
+    unitTestRunner: options.unitTestRunner,
     skipFormat: true,
     setParserOptionsProject: options.setParserOptionsProject,
   });

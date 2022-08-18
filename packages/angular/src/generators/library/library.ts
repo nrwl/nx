@@ -168,6 +168,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     projectName: options.name,
     projectRoot: options.projectRoot,
     prefix: options.prefix,
+    unitTestRunner: options.unitTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
   });

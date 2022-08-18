@@ -110,7 +110,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
 
     if (!project.targets) {
       logger.warn(stripIndents`
-      NOTE: Project, "${options.project}", does not have any targets defined and a baseUrl was not provided. Nx will use  
+      NOTE: Project, "${options.project}", does not have any targets defined and a baseUrl was not provided. Nx will use
       "${options.project}:serve" as the devServerTarget. But you may need to define this target within the project, "${options.project}".
       `);
     }

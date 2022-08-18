@@ -12,6 +12,7 @@ export async function addLintingGenerator(
 ): Promise<GeneratorCallback> {
   const installTask = lintInitGenerator(tree, {
     linter: Linter.EsLint,
+    unitTestRunner: options.unitTestRunner,
     skipPackageJson: options.skipPackageJson,
   });
 

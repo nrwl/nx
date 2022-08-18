@@ -310,6 +310,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
         project: this.project.name,
         linter: Linter.EsLint,
         eslintFilePatterns: [`${this.project.newRoot}/**/*.{js,ts}`],
+        unitTestRunner: this.options.unitTestRunner,
         tsConfigPaths: [
           joinPathFragments(this.project.newRoot, 'tsconfig.json'),
         ],

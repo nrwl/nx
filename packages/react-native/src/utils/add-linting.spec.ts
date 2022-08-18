@@ -16,13 +16,12 @@ describe('Add Linting', () => {
   });
 
   it('should add update `workspace.json` file properly when eslint is passed', () => {
-    addLinting(
-      tree,
-      'my-lib',
-      'libs/my-lib',
-      ['libs/my-lib/tsconfig.lib.json'],
-      Linter.EsLint
-    );
+    addLinting(tree, {
+      projectName: 'my-lib',
+      linter: Linter.EsLint,
+      tsConfigPaths: ['libs/my-lib/tsconfig.lib.json'],
+      projectRoot: 'libs/my-lib',
+    });
     const project = readProjectConfiguration(tree, 'my-lib');
 
     expect(project.targets.lint).toBeDefined();
@@ -30,13 +29,12 @@ describe('Add Linting', () => {
   });
 
   it('should add update `workspace.json` file properly when tslint is passed', () => {
-    addLinting(
-      tree,
-      'my-lib',
-      'libs/my-lib',
-      ['libs/my-lib/tsconfig.lib.json'],
-      Linter.TsLint
-    );
+    addLinting(tree, {
+      projectName: 'my-lib',
+      linter: Linter.TsLint,
+      tsConfigPaths: ['libs/my-lib/tsconfig.lib.json'],
+      projectRoot: 'libs/my-lib',
+    });
     const project = readProjectConfiguration(tree, 'my-lib');
 
     expect(project.targets.lint).toBeDefined();
@@ -46,13 +44,12 @@ describe('Add Linting', () => {
   });
 
   it('should not add lint target when "none" is passed', async () => {
-    addLinting(
-      tree,
-      'my-lib',
-      'libs/my-lib',
-      ['libs/my-lib/tsconfig.lib.json'],
-      Linter.None
-    );
+    addLinting(tree, {
+      projectName: 'my-lib',
+      linter: Linter.None,
+      tsConfigPaths: ['libs/my-lib/tsconfig.lib.json'],
+      projectRoot: 'libs/my-lib',
+    });
     const project = readProjectConfiguration(tree, 'my-lib');
 
     expect(project.targets.lint).toBeUndefined();

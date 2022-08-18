@@ -48,6 +48,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
         eslintFilePatterns: [
           joinPathFragments(options.e2eProjectRoot, '**/*.ts'),
         ],
+        unitTestRunner: options.unitTestRunner,
         skipFormat: true,
         setParserOptionsProject: options.setParserOptionsProject,
         skipPackageJson: options.skipPackageJson,
