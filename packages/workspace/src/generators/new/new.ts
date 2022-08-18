@@ -13,17 +13,10 @@ import {
 
 import { join } from 'path';
 import * as yargsParser from 'yargs-parser';
-import { spawn, SpawnOptions } from 'child_process';
-
-import { gte } from 'semver';
-
+import { spawn } from 'child_process';
 import { workspaceGenerator } from '../workspace/workspace';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
-import {
-  checkGitVersion,
-  deduceDefaultBase,
-} from '../../utilities/default-base';
 import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 
 export interface Schema {
@@ -33,11 +26,9 @@ export interface Schema {
   appName: string;
   npmScope?: string;
   skipInstall?: boolean;
-  skipGit?: boolean;
   style?: string;
   nxCloud?: boolean;
   preset: string;
-  commit?: { name: string; email: string; message?: string };
   defaultBase: string;
   linter: 'tslint' | 'eslint';
   packageManager?: PackageManager;
@@ -116,76 +107,6 @@ function generatePreset(host: Tree, opts: NormalizedSchema) {
   }
 }
 
-async function initializeGitRepo(
-  host: Tree,
-  rootDirectory: string,
-  options: Schema
-) {
-  const execute = (args: ReadonlyArray<string>, ignoreErrorStream = false) => {
-    const outputStream = 'ignore';
-    const errorStream = ignoreErrorStream ? 'ignore' : process.stderr;
-    const spawnOptions: SpawnOptions = {
-      stdio: [process.stdin, outputStream, errorStream],
-      shell: true,
-      cwd: join(host.root, rootDirectory),
-      env: {
-        ...process.env,
-        ...(options.commit.name
-          ? {
-              GIT_AUTHOR_NAME: options.commit.name,
-              GIT_COMMITTER_NAME: options.commit.name,
-            }
-          : {}),
-        ...(options.commit.email
-          ? {
-              GIT_AUTHOR_EMAIL: options.commit.email,
-              GIT_COMMITTER_EMAIL: options.commit.email,
-            }
-          : {}),
-      },
-    };
-    return new Promise<void>((resolve, reject) => {
-      spawn('git', args, spawnOptions).on('close', (code) => {
-        if (code === 0) {
-          resolve();
-        } else {
-          reject(code);
-        }
-      });
-    });
-  };
-  const gitVersion = checkGitVersion();
-  if (!gitVersion) {
-    return;
-  }
-  const insideRepo = await execute(
-    ['rev-parse', '--is-inside-work-tree'],
-    true
-  ).then(
-    () => true,
-    () => false
-  );
-  if (insideRepo) {
-    console.info(
-      `Directory is already under version control. Skipping initialization of git.`
-    );
-    return;
-  }
-  const defaultBase = options.defaultBase || deduceDefaultBase();
-  if (gte(gitVersion, '2.28.0')) {
-    await execute(['init', '-b', defaultBase]);
-  } else {
-    await execute(['init']);
-    await execute(['checkout', '-b', defaultBase]); // Git < 2.28 doesn't support -b on git init.
-  }
-  await execute(['add', '.']);
-  if (options.commit) {
-    const message = options.commit.message || 'initial commit';
-    await execute(['commit', `-m "${message}"`]);
-  }
-  console.info('Successfully initialized git.');
-}
-
 export async function newGenerator(host: Tree, options: Schema) {
   if (
     options.skipInstall &&
@@ -229,15 +150,6 @@ export async function newGenerator(host: Tree, options: Schema) {
   return async () => {
     installPackagesTask(host, false, options.directory, options.packageManager);
     await generatePreset(host, options);
-    if (!options.skipGit) {
-      try {
-        await initializeGitRepo(host, options.directory, options);
-      } catch (e) {
-        console.error(
-          `Could not initialize git repository. Error: ${e.message}`
-        );
-      }
-    }
   };
 }
 

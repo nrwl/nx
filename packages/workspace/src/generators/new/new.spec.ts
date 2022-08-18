@@ -8,7 +8,6 @@ const defaultOptions: Omit<Schema, 'name' | 'directory' | 'appName'> = {
   cli: 'nx',
   preset: Preset.Apps,
   skipInstall: false,
-  skipGit: false,
   linter: Linter.EsLint,
   defaultBase: 'main',
 };

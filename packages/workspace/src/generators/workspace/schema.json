@@ -62,35 +62,6 @@
       "type": "boolean",
       "default": false
     },
-    "skipGit": {
-      "description": "Skip initializing a git repository.",
-      "type": "boolean",
-      "default": false,
-      "alias": "g"
-    },
-    "commit": {
-      "description": "Initial repository commit information.",
-      "oneOf": [
-        { "type": "boolean" },
-        {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "email": {
-              "type": "string",
-              "format": "email"
-            },
-            "message": {
-              "type": "string"
-            }
-          },
-          "required": ["name", "email"]
-        }
-      ],
-      "default": true
-    },
     "packageManager": {
       "description": "The package manager used to install dependencies.",
       "type": "string",

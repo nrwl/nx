@@ -47,6 +47,26 @@ Choices: [nx, angular]
 
 CLI to power the Nx workspace
 
+### commit.email
+
+Type: string
+
+E-mail of the committer
+
+### commit.message
+
+Type: string
+
+Default: Initial commit
+
+Commit message
+
+### commit.name
+
+Type: string
+
+Name of the committer
+
 ### defaultBase
 
 Type: string
@@ -94,6 +114,14 @@ Package manager to use
 Type: string
 
 Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular", "angular-nest", "react", "react-express", "react-native", "next", "nest", "express"]. To build your own see https://nx.dev/packages/nx-plugin#preset
+
+### skipGit
+
+Type: boolean
+
+Default: false
+
+Skip initializing a git repository.
 
 ### style
 

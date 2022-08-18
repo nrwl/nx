@@ -39,37 +39,6 @@
       "type": "boolean",
       "default": false
     },
-    "skipGit": {
-      "description": "Skip initializing a git repository.",
-      "type": "boolean",
-      "default": false,
-      "alias": "g"
-    },
-    "commit": {
-      "description": "Initial repository commit information.",
-      "oneOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "email": {
-              "type": "string",
-              "format": "email"
-            },
-            "message": {
-              "type": "string"
-            }
-          },
-          "required": ["name", "email"]
-        }
-      ],
-      "default": true
-    },
     "preset": {
       "description": "What to create in the new workspace.",
       "type": "string"
