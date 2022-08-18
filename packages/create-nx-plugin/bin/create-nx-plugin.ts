@@ -12,7 +12,7 @@ import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 import * as path from 'path';
 import { dirSync } from 'tmp';
-import { showNxWarning } from './shared';
+import { initializeGitRepo, showNxWarning } from './shared';
 import {
   detectInvokedPackageManager,
   PackageManager,
@@ -123,17 +123,6 @@ function updateWorkspace(workspaceName: string) {
   removeSync(path.join(workspaceName, 'libs'));
 }
 
-function commitChanges(workspaceName) {
-  execSync('git add .', {
-    cwd: workspaceName,
-    stdio: 'ignore',
-  });
-  execSync('git commit --amend --no-edit', {
-    cwd: workspaceName,
-    stdio: 'ignore',
-  });
-}
-
 function determineWorkspaceName(parsedArgs: any): Promise<string> {
   const workspaceName: string = parsedArgs._[2];
 
@@ -215,7 +204,8 @@ determineWorkspaceName(parsedArgs).then((workspaceName) => {
     createWorkspace(tmpDir, packageManager, parsedArgs, workspaceName);
     updateWorkspace(workspaceName);
     createNxPlugin(workspaceName, pluginName, packageManager, parsedArgs);
-    commitChanges(workspaceName);
-    showNxWarning(workspaceName);
+    return initializeGitRepo(workspaceName).then(() => {
+      showNxWarning(workspaceName);
+    });
   });
 });

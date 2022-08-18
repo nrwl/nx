@@ -21,6 +21,8 @@ import { getFileName, stringifyCollection } from './utils';
 import { yargsDecorator } from './decorator';
 import chalk = require('chalk');
 import { ciList } from './ci';
+import { join } from 'path';
+import { initializeGitRepo } from './git';
 
 type Arguments = {
   name: string;
@@ -33,6 +35,12 @@ type Arguments = {
   packageManager: PackageManager;
   defaultBase: string;
   ci: string;
+  skipGit: boolean;
+  commit: {
+    message: string;
+    name: string;
+    email: string;
+  };
 };
 
 enum Preset {
@@ -121,7 +129,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
   .wrap(yargs.terminalWidth())
   .parserConfiguration({
     'strip-dashed': true,
-    'dot-notation': false,
+    'dot-notation': true,
   })
   .command(
     // this is the default and only command
@@ -187,6 +195,25 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           defaultDescription: 'main',
           describe: chalk.dim`Default base to use for new projects`,
           type: 'string',
+        })
+        .option('skipGit', {
+          describe: chalk.dim`Skip initializing a git repository.`,
+          type: 'boolean',
+          default: false,
+          alias: 'g',
+        })
+        .option('commit.name', {
+          describe: chalk.dim`Name of the committer`,
+          type: 'string',
+        })
+        .option('commit.email', {
+          describe: chalk.dim`E-mail of the committer`,
+          type: 'string',
+        })
+        .option('commit.message', {
+          describe: chalk.dim`Commit message`,
+          type: 'string',
+          default: 'Initial commit',
         }),
     async (argv: yargs.ArgumentsCamelCase<Arguments>) => {
       await main(argv).catch((error) => {
@@ -218,6 +245,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     packageManager,
     defaultBase,
     ci,
+    skipGit,
+    commit,
   } = parsedArgs;
 
   output.log({
@@ -230,15 +259,20 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 
   const tmpDir = await createSandbox(packageManager);
 
-  await createApp(tmpDir, name, packageManager as PackageManager, {
-    ...parsedArgs,
-    cli,
-    preset,
-    appName,
-    style,
-    nxCloud,
-    defaultBase,
-  });
+  const directory = await createApp(
+    tmpDir,
+    name,
+    packageManager as PackageManager,
+    {
+      ...parsedArgs,
+      cli,
+      preset,
+      appName,
+      style,
+      nxCloud,
+      defaultBase,
+    }
+  );
 
   let nxCloudInstallRes;
   if (nxCloud) {
@@ -254,6 +288,16 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       packageManager as PackageManager,
       nxCloud && nxCloudInstallRes.code === 0
     );
+  }
+  if (!skipGit) {
+    try {
+      await initializeGitRepo(directory, { defaultBase, commit });
+    } catch (e) {
+      output.error({
+        title: 'Could not initialize git repository',
+        bodyLines: [e.message],
+      });
+    }
   }
 
   showNxWarning(name);
@@ -745,7 +789,7 @@ async function createApp(
   name: string,
   packageManager: PackageManager,
   parsedArgs: any
-) {
+): Promise<string> {
   const { _, cli, ...restArgs } = parsedArgs;
 
   // Ensure to use packageManager for args
@@ -760,7 +804,8 @@ async function createApp(
 
   const command = `new ${name} ${args} --collection=@nrwl/workspace/generators.json --cli=${cli}`;
 
-  let nxWorkspaceRoot = `"${process.cwd().replace(/\\/g, '/')}"`;
+  const workingDir = process.cwd().replace(/\\/g, '/');
+  let nxWorkspaceRoot = `"${workingDir}"`;
 
   // If path contains spaces there is a problem in Windows for npm@6.
   // In this case we have to escape the wrapping quotes.
@@ -791,6 +836,7 @@ async function createApp(
   } finally {
     workspaceSetupSpinner.stop();
   }
+  return join(workingDir, name);
 }
 
 async function setupNxCloud(name: string, packageManager: PackageManager) {
