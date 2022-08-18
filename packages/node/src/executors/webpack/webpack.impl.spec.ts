@@ -84,6 +84,27 @@ describe('Node Build Executor', () => {
     );
   });
 
+  it('should use watchOptions if passed in', async () => {
+    await webpackExecutor(
+      {
+        ...options,
+        watchOptions: {
+          ignored: ['path1'],
+        },
+      },
+      context
+    ).next();
+
+    expect(runWebpack).toHaveBeenCalledWith(
+      expect.objectContaining({
+        watchOptions: {
+          ignored: ['path1'],
+          aggregateTimeout: 200,
+        },
+      })
+    );
+  });
+
   describe('webpackConfig', () => {
     it('should handle custom path', async () => {
       jest.mock(
