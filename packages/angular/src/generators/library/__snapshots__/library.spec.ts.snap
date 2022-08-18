@@ -143,7 +143,7 @@ import { RouterModule } from '@angular/router';
   ],
   imports: [
     BrowserModule,
-    RouterModule.forRoot([{path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(module => module.MYLIB_ROUTES)}], {initialNavigation: 'enabledBlocking'})
+    RouterModule.forRoot([{path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.MYLIB_ROUTES)}], {initialNavigation: 'enabledBlocking'})
   ],
   providers: [],
   bootstrap: [AppComponent]
