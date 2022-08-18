@@ -1545,5 +1545,135 @@ describe('lib', () => {
         tree.read('apps/app1/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent module as direct child', async () => {
+      // ARRANGE
+      await applicationGenerator(tree, {
+        name: 'app1',
+        routing: true,
+        standalone: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+        parentModule: 'apps/app1/src/main.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('apps/app1/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { enableProdMode, importProvidersFrom } from '@angular/core';
+        import { bootstrapApplication } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app/app.component';
+        import { environment } from './environments/environment';
+        import { MYLIB_ROUTES } from '@proj/my-lib';
+
+        if (environment.production) {
+          enableProdMode();
+        }
+
+        bootstrapApplication(AppComponent, {
+          providers: [importProvidersFrom(RouterModule.forRoot([
+            { path: 'my-lib', children: MYLIB_ROUTES },], {initialNavigation: 'enabledBlocking'}))],
+        }).catch((err) => console.error(err))"
+      `);
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent module as a lazy child', async () => {
+      // ARRANGE
+      await applicationGenerator(tree, {
+        name: 'app1',
+        routing: true,
+        standalone: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+        lazy: true,
+        parentModule: 'apps/app1/src/main.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('apps/app1/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { enableProdMode, importProvidersFrom } from '@angular/core';
+        import { bootstrapApplication } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app/app.component';
+        import { environment } from './environments/environment';
+
+        if (environment.production) {
+          enableProdMode();
+        }
+
+        bootstrapApplication(AppComponent, {
+          providers: [importProvidersFrom(RouterModule.forRoot([
+            {path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.MYLIB_ROUTES)},], {initialNavigation: 'enabledBlocking'}))],
+        }).catch((err) => console.error(err))"
+      `);
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent routes as direct child', async () => {
+      // ARRANGE
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        name: 'second',
+        standalone: true,
+        routing: true,
+        parentModule: 'libs/my-lib/src/lib/routes.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/src/lib/routes.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Route } from '@angular/router';
+            import { MyLibComponent } from './my-lib/my-lib.component';
+        import { SECOND_ROUTES } from '@proj/second';
+            
+                export const MYLIB_ROUTES: Route[] = [
+            { path: 'second', children: SECOND_ROUTES },
+                  {path: '', component: MyLibComponent}
+                ]"
+      `);
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent routes as a lazy child', async () => {
+      // ARRANGE
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        name: 'second',
+        standalone: true,
+        routing: true,
+        lazy: true,
+        parentModule: 'libs/my-lib/src/lib/routes.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/src/lib/routes.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Route } from '@angular/router';
+            import { MyLibComponent } from './my-lib/my-lib.component';
+            
+                export const MYLIB_ROUTES: Route[] = [
+            {path: 'second', loadChildren: () => import('@proj/second').then(m => m.SECOND_ROUTES)},
+                  {path: '', component: MyLibComponent}
+                ]"
+      `);
+    });
   });
 });
