@@ -906,7 +906,7 @@ describe('lib', () => {
         // ASSERT
         expect(moduleContents).toContain('RouterModule.forRoot([');
         expect(moduleContents).toContain(
-          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}`
+          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}`
         );
 
         expect(tsConfigLibJson.exclude).toEqual([
@@ -918,10 +918,10 @@ describe('lib', () => {
 
         expect(moduleContents2).toContain('RouterModule.forRoot([');
         expect(moduleContents2).toContain(
-          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}`
+          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}`
         );
         expect(moduleContents2).toContain(
-          `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(module => module.MyLib2Module)}`
+          `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(m => m.MyLib2Module)}`
         );
 
         expect(tsConfigLibJson2.exclude).toEqual([
@@ -933,13 +933,13 @@ describe('lib', () => {
 
         expect(moduleContents3).toContain('RouterModule.forRoot([');
         expect(moduleContents3).toContain(
-          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}`
+          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}`
         );
         expect(moduleContents3).toContain(
-          `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(module => module.MyLib2Module)}`
+          `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(m => m.MyLib2Module)}`
         );
         expect(moduleContents3).toContain(
-          `{path: 'my-lib3', loadChildren: () => import('@proj/my-dir/my-lib3').then(module => module.MyLib3Module)}`
+          `{path: 'my-lib3', loadChildren: () => import('@proj/my-dir/my-lib3').then(m => m.MyLib3Module)}`
         );
 
         expect(tsConfigLibJson3.exclude).toEqual([
@@ -987,7 +987,7 @@ describe('lib', () => {
 
         expect(moduleContents).toContain('RouterModule.forRoot(routes)');
         expect(moduleContents).toContain(
-          `const routes = [{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}];`
+          `const routes = [{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}];`
         );
       });
     });

@@ -22,9 +22,7 @@ export function addLoadChildren(host: Tree, options: NormalizedSchema) {
     sourceFile,
     `{path: '${
       names(options.fileName).fileName
-    }', loadChildren: () => import('${
-      options.importPath
-    }').then(module => module.${
+    }', loadChildren: () => import('${options.importPath}').then(m => m.${
       options.standalone
         ? `${names(options.name).className.toUpperCase()}_ROUTES`
         : options.moduleName
