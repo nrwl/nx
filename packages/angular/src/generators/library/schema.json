@@ -78,7 +78,8 @@
     },
     "parentModule": {
       "type": "string",
-      "description": "Update the router configuration of the parent module using `loadChildren` or `children`, depending on what `lazy` is set to."
+      "description": "Update the router configuration of the parent module using `loadChildren` or `children`, depending on what `lazy` is set to.",
+      "alias": "parent"
     },
     "tags": {
       "type": "string",

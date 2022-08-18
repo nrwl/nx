@@ -6,13 +6,14 @@ import {
   addRoute,
 } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
+import { addStandaloneRoute } from '../../../utils/nx-devkit/standalone-utils';
 
-export function addChildren(host: Tree, options: NormalizedSchema) {
-  if (!host.exists(options.parentModule)) {
+export function addChildren(tree: Tree, options: NormalizedSchema) {
+  if (!tree.exists(options.parentModule)) {
     throw new Error(`Cannot find '${options.parentModule}'`);
   }
 
-  const moduleSource = host.read(options.parentModule, 'utf-8');
+  const moduleSource = tree.read(options.parentModule, 'utf-8');
   const constName = options.standalone
     ? `${names(options.name).className.toUpperCase()}_ROUTES`
     : `${names(options.fileName).propertyName}Routes`;
@@ -26,24 +27,35 @@ export function addChildren(host: Tree, options: NormalizedSchema) {
 
   if (!options.standalone) {
     sourceFile = addImportToModule(
-      host,
+      tree,
       sourceFile,
       options.parentModule,
       options.moduleName
     );
   }
 
-  sourceFile = addRoute(
-    host,
-    options.parentModule,
-    sourceFile,
-    `{ path: '${names(options.fileName).fileName}', children: ${constName} }`
-  );
   sourceFile = insertImport(
-    host,
+    tree,
     sourceFile,
     options.parentModule,
     options.standalone ? constName : `${options.moduleName}, ${constName}`,
     importPath
   );
+
+  const route = `{ path: '${
+    names(options.fileName).fileName
+  }', children: ${constName} }`;
+
+  if (moduleSource.includes('@NgModule')) {
+    sourceFile = addRoute(tree, options.parentModule, sourceFile, route);
+  } else {
+    addStandaloneRoute(
+      tree,
+      options.parentModule,
+      route,
+      false,
+      constName,
+      importPath
+    );
+  }
 }
