@@ -53,6 +53,12 @@
       "cli": "nx",
       "description": "Change include field from string to array for sync-deps target",
       "factory": "./src/migrations/update-14-5-5/add-exclude-sync-deps"
+    },
+    "change-searchDir-storybook-14-5-8": {
+      "version": "14.5.8-beta.0",
+      "cli": "nx",
+      "description": "Change searchDir field from string to array for storybook target",
+      "factory": "./src/migrations/update-14-5-8/change-searchDir-storybook"
     }
   },
   "packageJsonUpdates": {
