@@ -18,7 +18,6 @@ import {
 } from '../tmp-dir';
 import { ProjectGraph } from '../../config/project-graph';
 import { isCI } from '../../utils/is-ci';
-import { readNxJson } from '../../config/configuration';
 import { NxJsonConfiguration } from 'nx/src/config/nx-json';
 
 const DAEMON_ENV_SETTINGS = {
@@ -61,7 +60,8 @@ export class DaemonClient {
     if (!(await isServerAvailable())) {
       await startInBackground();
     }
-    return sendMessageToDaemon({ type: 'REQUEST_PROJECT_GRAPH' });
+    const r = await sendMessageToDaemon({ type: 'REQUEST_PROJECT_GRAPH' });
+    return r.projectGraph;
   }
 
   async processInBackground(requirePath: string, data: any): Promise<any> {
@@ -230,8 +230,10 @@ async function sendMessageToDaemon(message: {
       return reject(error || err);
     });
 
-    socket.on('connect', () => {
+    socket.on('ready', () => {
       socket.write(JSON.stringify(message));
+      // send EOT to indicate that the message has been fully written
+      socket.write(String.fromCodePoint(4));
 
       let serializedResult = '';
       socket.on('data', (data) => {
@@ -256,7 +258,7 @@ async function sendMessageToDaemon(message: {
               'sendMessageToDaemon-start',
               'json-parse-end'
             );
-            return resolve(parsedResult.projectGraph);
+            return resolve(parsedResult);
           }
         } catch (e) {
           const endOfResponse =
