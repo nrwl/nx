@@ -84,7 +84,7 @@ npm install --save web-vitals
 {% /tab %}
 {% /tabs %}
 
-{% callout type="note" title="Scope & appName?" %}
+{% callout type="note" title="What is @craco/craco?" %}
 The `@craco/craco` package allows us to customize the webpack and jest config without ejecting.
 {% /callout %}
 
