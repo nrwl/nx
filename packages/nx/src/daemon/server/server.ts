@@ -6,12 +6,12 @@ import {
   FULL_OS_SOCKET_PATH,
   isWindows,
   killSocketOrPath,
-  serializeResult,
 } from '../socket-utils';
 import { serverLogger } from './logger';
 import {
   handleServerProcessTermination,
   resetInactivityTimeout,
+  respondToClient,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
 } from './shutdown-utils';
@@ -32,6 +32,12 @@ let watcherSubscription: WatcherSubscription | undefined;
 let performanceObserver: PerformanceObserver | undefined;
 let watcherError: Error | undefined;
 
+export type HandlerResult = {
+  description: string;
+  error?: any;
+  response?: string;
+};
+
 const server = createServer(async (socket) => {
   resetInactivityTimeout(handleInactivityTimeout);
   if (!performanceObserver) {
@@ -42,53 +48,68 @@ const server = createServer(async (socket) => {
     performanceObserver.observe({ entryTypes: ['measure'] });
   }
 
+  let message = '';
   socket.on('data', async (data) => {
-    if (watcherError) {
-      await respondWithErrorAndExit(
-        socket,
-        `File watcher error in the workspace '${workspaceRoot}'.`,
-        watcherError
-      );
-    }
-
-    if (lockFileChanged()) {
-      await respondWithErrorAndExit(socket, `Lock files changed`, {
-        name: '',
-        message: 'LOCK-FILES-CHANGED',
-      });
-    }
-
-    resetInactivityTimeout(handleInactivityTimeout);
-
-    const unparsedPayload = data.toString();
-    let payload;
-    try {
-      payload = JSON.parse(unparsedPayload);
-    } catch (e) {
-      await respondWithErrorAndExit(
-        socket,
-        `Invalid payload from the client`,
-        new Error(
-          `Unsupported payload sent to daemon server: ${unparsedPayload}`
-        )
-      );
-    }
-
-    if (payload.type === 'REQUEST_PROJECT_GRAPH') {
-      await handleRequestProjectGraph(socket);
-    } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
-      await handleProcessInBackground(socket, payload);
+    const chunk = data.toString();
+    if (chunk.length === 0 || chunk.codePointAt(chunk.length - 1) != 4) {
+      message += chunk;
     } else {
-      await respondWithErrorAndExit(
-        socket,
-        `Invalid payload from the client`,
-        new Error(
-          `Unsupported payload sent to daemon server: ${unparsedPayload}`
-        )
-      );
+      message += chunk.substring(0, chunk.length - 1);
+      await handleMessage(socket, message);
     }
   });
 });
+
+async function handleMessage(socket, data) {
+  if (watcherError) {
+    await respondWithErrorAndExit(
+      socket,
+      `File watcher error in the workspace '${workspaceRoot}'.`,
+      watcherError
+    );
+  }
+
+  if (lockFileChanged()) {
+    await respondWithErrorAndExit(socket, `Lock files changed`, {
+      name: '',
+      message: 'LOCK-FILES-CHANGED',
+    });
+  }
+
+  resetInactivityTimeout(handleInactivityTimeout);
+
+  const unparsedPayload = data.toString();
+  let payload;
+  try {
+    payload = JSON.parse(unparsedPayload);
+  } catch (e) {
+    await respondWithErrorAndExit(
+      socket,
+      `Invalid payload from the client`,
+      new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
+    );
+  }
+
+  if (payload.type === 'REQUEST_PROJECT_GRAPH') {
+    await handleResult(socket, await handleRequestProjectGraph());
+  } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
+    await handleResult(socket, await handleProcessInBackground(payload));
+  } else {
+    await respondWithErrorAndExit(
+      socket,
+      `Invalid payload from the client`,
+      new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
+    );
+  }
+}
+
+async function handleResult(socket: Socket, hr: HandlerResult) {
+  if (hr.error) {
+    await respondWithErrorAndExit(socket, hr.description, hr.error);
+  } else {
+    await respondToClient(socket, hr.response, hr.description);
+  }
+}
 
 function handleInactivityTimeout() {
   handleServerProcessTermination({

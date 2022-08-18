@@ -1,27 +1,34 @@
-import { respondWithErrorAndExit } from './shutdown-utils';
+import { HandlerResult } from './server';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { serverLogger } from './logger';
 
-export async function handleProcessInBackground(
-  socket,
-  payload: { type: string; requirePath: string; data: any }
-) {
+export async function handleProcessInBackground(payload: {
+  type: string;
+  requirePath: string;
+  data: any;
+}): Promise<HandlerResult> {
   let fn;
   try {
-    fn = require(payload.requirePath);
+    fn = require(require.resolve(payload.requirePath, {
+      paths: [workspaceRoot],
+    })).default;
   } catch (e) {
-    await respondWithErrorAndExit(
-      socket,
-      `Unable to require ${payload.requirePath}`,
-      new Error(`Unable to require ${payload.requirePath}`)
-    );
+    return {
+      description: `Unable to require ${payload.requirePath}`,
+      error: new Error(`Unable to require ${payload.requirePath}`),
+    };
   }
 
   try {
-    await fn(socket, payload.data);
+    const response = await fn(payload.data, serverLogger);
+    return {
+      response,
+      description: payload.type,
+    };
   } catch (e) {
-    await respondWithErrorAndExit(
-      socket,
-      `Error when processing ${payload.type}.`,
-      new Error(`Error when processing ${payload.type}. Message: ${e.message}`)
-    );
+    return {
+      description: `Error when processing ${payload.type}.`,
+      error: e,
+    };
   }
 }

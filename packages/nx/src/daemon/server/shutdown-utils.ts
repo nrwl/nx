@@ -40,9 +40,16 @@ export function resetInactivityTimeout(cb: () => void): void {
   serverInactivityTimerId = setTimeout(cb, SERVER_INACTIVITY_TIMEOUT_MS);
 }
 
-function respondToClient(socket: Socket, message: string) {
+export function respondToClient(
+  socket: Socket,
+  response: string,
+  description: string
+) {
   return new Promise((res) => {
-    socket.write(message, () => {
+    socket.write(response, () => {
+      if (description) {
+        serverLogger.requestLog(`Responding to the client.`, description);
+      }
       // Close the connection once all data has been written so that the client knows when to read it.
       socket.end();
       serverLogger.log(`Closed Connection to Client`);
@@ -66,6 +73,6 @@ export async function respondWithErrorAndExit(
 
   error.message = `${error.message}\n\nBecause of the error the Nx daemon process has exited. The next Nx command is going to restart the daemon process.\nIf the error persists, please run "nx reset".`;
 
-  await respondToClient(socket, serializeResult(error, null));
+  await respondToClient(socket, serializeResult(error, null), null);
   process.exit(1);
 }

@@ -2,62 +2,46 @@ import { performance } from 'perf_hooks';
 import { serializeResult } from '../socket-utils';
 import { serverLogger } from './logger';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
-import { respondWithErrorAndExit } from './shutdown-utils';
+import { HandlerResult } from './server';
 
-export async function handleRequestProjectGraph(socket) {
-  performance.mark('server-connection');
-  serverLogger.requestLog('Client Request for Project Graph Received');
+export async function handleRequestProjectGraph(): Promise<HandlerResult> {
+  try {
+    performance.mark('server-connection');
+    serverLogger.requestLog('Client Request for Project Graph Received');
 
-  const result = await getCachedSerializedProjectGraphPromise();
-  if (result.error) {
-    await respondWithErrorAndExit(
-      socket,
-      `Error when preparing serialized project graph.`,
-      result.error
+    const result = await getCachedSerializedProjectGraphPromise();
+    if (result.error) {
+      return {
+        description: `Error when preparing serialized project graph.`,
+        error: result.error,
+      };
+    }
+
+    const serializedResult = serializeResult(
+      result.error,
+      result.serializedProjectGraph
     );
-  }
+    if (!serializedResult) {
+      return {
+        description: `Error when serializing project graph result.`,
+        error: new Error(
+          'Critical error when serializing server result, check server logs'
+        ),
+      };
+    }
 
-  const serializedResult = serializeResult(
-    result.error,
-    result.serializedProjectGraph
-  );
-  if (!serializedResult) {
-    await respondWithErrorAndExit(
-      socket,
-      `Error when serializing project graph result.`,
-      new Error(
-        'Critical error when serializing server result, check server logs'
-      )
-    );
-  }
-
-  performance.mark('serialized-project-graph-ready');
-  performance.measure(
-    'total for creating and serializing project graph',
-    'server-connection',
-    'serialized-project-graph-ready'
-  );
-
-  socket.write(serializedResult, () => {
-    performance.mark('serialized-project-graph-written-to-client');
+    performance.mark('serialized-project-graph-ready');
     performance.measure(
-      'write project graph to socket',
-      'serialized-project-graph-ready',
-      'serialized-project-graph-written-to-client'
-    );
-    // Close the connection once all data has been written so that the client knows when to read it.
-    socket.end();
-    performance.measure(
-      'total for server response',
+      'total for creating and serializing project graph',
       'server-connection',
-      'serialized-project-graph-written-to-client'
+      'serialized-project-graph-ready'
     );
-    const bytesWritten = Buffer.byteLength(
-      result.serializedProjectGraph,
-      'utf-8'
-    );
-    serverLogger.requestLog(
-      `Closed Connection to Client (${bytesWritten} bytes transferred)`
-    );
-  });
+
+    return { response: serializedResult, description: 'project-graph' };
+  } catch (e) {
+    return {
+      description: `Unexpected error when creating Project Graph.`,
+      error: e,
+    };
+  }
 }
