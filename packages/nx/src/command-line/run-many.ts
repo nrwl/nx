@@ -5,6 +5,7 @@ import { projectHasTarget } from '../utils/project-graph-utils';
 import { output } from '../utils/output';
 import { connectToNxCloudIfExplicitlyAsked } from './connect';
 import { performance } from 'perf_hooks';
+import * as micromatch from 'micromatch';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
@@ -64,25 +65,22 @@ function projectsToRun(
     res.sort((a, b) => a.name.localeCompare(b.name));
     return res;
   }
-  checkForInvalidProjects(nxArgs, allProjects);
-  const selectedProjects = nxArgs.projects.map((name) =>
+
+  const projectNames = allProjects.map((project) => project.name);
+
+  const matchedProjects = micromatch(projectNames, nxArgs.projects);
+
+  if (matchedProjects.length === 0) {
+    throw new Error(`No projects matching: ${nxArgs.projects.join(', ')}`);
+  }
+
+  const selectedProjects = matchedProjects.map((name) =>
     allProjects.find((project) => project.name === name)
   );
+
   return runnableForTarget(selectedProjects, nxArgs.target, true).filter(
     (proj) => !excludedProjects.has(proj.name)
   );
-}
-
-function checkForInvalidProjects(
-  nxArgs: NxArgs,
-  allProjects: ProjectGraphProjectNode[]
-) {
-  const invalid = nxArgs.projects.filter(
-    (name) => !allProjects.find((p) => p.name === name)
-  );
-  if (invalid.length !== 0) {
-    throw new Error(`Invalid projects: ${invalid.join(', ')}`);
-  }
 }
 
 function runnableForTarget(

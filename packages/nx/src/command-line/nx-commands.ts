@@ -543,7 +543,7 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       'populate--': true,
     })
     .option('projects', {
-      describe: 'Projects to run (comma delimited)',
+      describe: 'Projects to run (comma delimited patterns)',
       type: 'string',
     })
     .option('all', {
