@@ -1,3 +1,9 @@
+import { Linter } from '@nrwl/linter';
+import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
+import type { Styles } from '../utils/types';
+
+type AngularLinter = Exclude<Linter, Linter.TsLint>;
+
 export interface Schema {
   name: string;
   host?: string;
