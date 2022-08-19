@@ -81,6 +81,7 @@ const runOne: string[] = [
   'outputStyle',
   'nxBail',
   'nxIgnoreCycles',
+  'verbose',
 ];
 
 const runMany: string[] = [...runOne, 'projects', 'all'];

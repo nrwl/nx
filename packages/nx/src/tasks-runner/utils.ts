@@ -254,12 +254,10 @@ export function getPrintableCommandArgsForTask(task: Task) {
 }
 
 export function getSerializedArgsForTask(task: Task, isVerbose: boolean) {
-  const overrides = { ...task.overrides };
-  delete overrides['verbose'];
   return [
     JSON.stringify({
       targetDescription: task.target,
-      overrides: overrides,
+      overrides: task.overrides,
       isVerbose: isVerbose,
     }),
   ];

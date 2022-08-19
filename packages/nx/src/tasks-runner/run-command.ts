@@ -112,100 +112,103 @@ export async function runCommand(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>
 ) {
-  const status = await handleErrors(overrides['verbose'] === true, async () => {
-    const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
+  const status = await handleErrors(
+    process.env.NX_VERBOSE_LOGGING === 'true',
+    async () => {
+      const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-    const defaultDependencyConfigs = mergeTargetDependencies(
-      nxJson.targetDefaults,
-      extraTargetDependencies
-    );
-    const projectNames = projectsToRun.map((t) => t.name);
+      const defaultDependencyConfigs = mergeTargetDependencies(
+        nxJson.targetDefaults,
+        extraTargetDependencies
+      );
+      const projectNames = projectsToRun.map((t) => t.name);
 
-    const taskGraph = createTaskGraph(
-      projectGraph,
-      defaultDependencyConfigs,
-      projectNames,
-      [nxArgs.target],
-      nxArgs.configuration,
-      overrides
-    );
-
-    const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
-    await hashTasksThatDontDependOnOtherTasks(
-      new Workspaces(workspaceRoot),
-      hasher,
-      projectGraph,
-      taskGraph
-    );
-
-    const cycle = findCycle(taskGraph);
-    if (cycle) {
-      if (nxArgs.nxIgnoreCycles) {
-        output.warn({
-          title: `The task graph has a circular dependency`,
-          bodyLines: [`${cycle.join(' --> ')}`],
-        });
-        makeAcyclic(taskGraph);
-      } else {
-        output.error({
-          title: `Could not execute command because the task graph has a circular dependency`,
-          bodyLines: [`${cycle.join(' --> ')}`],
-        });
-        process.exit(1);
-      }
-    }
-
-    const tasks = Object.values(taskGraph.tasks);
-    if (nxArgs.outputStyle == 'stream') {
-      process.env.NX_STREAM_OUTPUT = 'true';
-      process.env.NX_PREFIX_OUTPUT = 'true';
-    }
-    if (nxArgs.outputStyle == 'stream-without-prefixes') {
-      process.env.NX_STREAM_OUTPUT = 'true';
-    }
-    const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
-      initiatingProject,
-      projectNames,
-      tasks,
-      nxArgs,
-      overrides,
-      runnerOptions
-    );
-    const lifeCycles = [lifeCycle] as LifeCycle[];
-
-    if (process.env.NX_PERF_LOGGING) {
-      lifeCycles.push(new TaskTimingsLifeCycle());
-    }
-
-    if (process.env.NX_PROFILE) {
-      lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
-    }
-
-    const promiseOrObservable = tasksRunner(
-      tasks,
-      { ...runnerOptions, lifeCycle: new CompositeLifeCycle(lifeCycles) },
-      {
-        initiatingProject:
-          nxArgs.outputStyle === 'compact' ? null : initiatingProject,
-        target: nxArgs.target,
+      const taskGraph = createTaskGraph(
         projectGraph,
-        nxJson,
-        nxArgs,
-        taskGraph,
+        defaultDependencyConfigs,
+        projectNames,
+        [nxArgs.target],
+        nxArgs.configuration,
+        overrides
+      );
+
+      const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
+      await hashTasksThatDontDependOnOtherTasks(
+        new Workspaces(workspaceRoot),
         hasher,
-        daemon: new DaemonClient(nxJson),
+        projectGraph,
+        taskGraph
+      );
+
+      const cycle = findCycle(taskGraph);
+      if (cycle) {
+        if (nxArgs.nxIgnoreCycles) {
+          output.warn({
+            title: `The task graph has a circular dependency`,
+            bodyLines: [`${cycle.join(' --> ')}`],
+          });
+          makeAcyclic(taskGraph);
+        } else {
+          output.error({
+            title: `Could not execute command because the task graph has a circular dependency`,
+            bodyLines: [`${cycle.join(' --> ')}`],
+          });
+          process.exit(1);
+        }
       }
-    );
-    let anyFailures;
-    if ((promiseOrObservable as any).subscribe) {
-      anyFailures = await anyFailuresInObservable(promiseOrObservable);
-    } else {
-      // simply await the promise
-      anyFailures = await anyFailuresInPromise(promiseOrObservable as any);
+
+      const tasks = Object.values(taskGraph.tasks);
+      if (nxArgs.outputStyle == 'stream') {
+        process.env.NX_STREAM_OUTPUT = 'true';
+        process.env.NX_PREFIX_OUTPUT = 'true';
+      }
+      if (nxArgs.outputStyle == 'stream-without-prefixes') {
+        process.env.NX_STREAM_OUTPUT = 'true';
+      }
+      const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
+        initiatingProject,
+        projectNames,
+        tasks,
+        nxArgs,
+        overrides,
+        runnerOptions
+      );
+      const lifeCycles = [lifeCycle] as LifeCycle[];
+
+      if (process.env.NX_PERF_LOGGING) {
+        lifeCycles.push(new TaskTimingsLifeCycle());
+      }
+
+      if (process.env.NX_PROFILE) {
+        lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
+      }
+
+      const promiseOrObservable = tasksRunner(
+        tasks,
+        { ...runnerOptions, lifeCycle: new CompositeLifeCycle(lifeCycles) },
+        {
+          initiatingProject:
+            nxArgs.outputStyle === 'compact' ? null : initiatingProject,
+          target: nxArgs.target,
+          projectGraph,
+          nxJson,
+          nxArgs,
+          taskGraph,
+          hasher,
+          daemon: new DaemonClient(nxJson),
+        }
+      );
+      let anyFailures;
+      if ((promiseOrObservable as any).subscribe) {
+        anyFailures = await anyFailuresInObservable(promiseOrObservable);
+      } else {
+        // simply await the promise
+        anyFailures = await anyFailuresInPromise(promiseOrObservable as any);
+      }
+      await renderIsDone;
+      return anyFailures ? 1 : 0;
     }
-    await renderIsDone;
-    return anyFailures ? 1 : 0;
-  });
+  );
   // fix for https://github.com/nrwl/nx/issues/1666
   if (process.stdin['unref']) (process.stdin as any).unref();
   process.exit(status);

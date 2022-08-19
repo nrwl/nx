@@ -315,7 +315,8 @@ export const commandsObject = yargs
     (yargs) =>
       linkToNxDevAndExamples(yargs, 'repair').option('verbose', {
         type: 'boolean',
-        describe: 'Print additional error stack trace on failure',
+        describe:
+          'Prints additional information about the commands (e.g., stack traces)',
       }),
     async (args) => process.exit(await (await import('./repair')).repair(args))
   )
@@ -449,7 +450,9 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('verbose', {
       type: 'boolean',
-      describe: 'Print additional error stack trace on failure',
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
+      default: false,
     })
     .option('nx-bail', {
       describe: 'Stop command execution after the first failed task',
@@ -515,7 +518,9 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('verbose', {
       type: 'boolean',
-      describe: 'Print additional error stack trace on failure',
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
+      default: false,
     })
     .option('nx-bail', {
       describe: 'Stop command execution after the first failed task',
@@ -643,6 +648,12 @@ function withGenerateOptions(yargs: yargs.Argv) {
       describe: 'When false disables interactive input prompts for options',
       type: 'boolean',
       default: true,
+    })
+    .option('verbose', {
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
+      type: 'boolean',
+      default: false,
     });
 
   if (generatorWillShowHelp) {
@@ -697,6 +708,12 @@ function withRunOneOptions(yargs: yargs.Argv) {
     .option('nx-ignore-cycles', {
       describe: 'Ignore cycles in the task graph',
       type: 'boolean',
+      default: false,
+    })
+    .option('verbose', {
+      type: 'boolean',
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
       default: false,
     });
 

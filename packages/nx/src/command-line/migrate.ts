@@ -1104,7 +1104,11 @@ async function runNxMigration(root: string, packageName: string, name: string) {
 }
 
 export async function migrate(root: string, args: { [k: string]: any }) {
-  return handleErrors(args['verbose'], async () => {
+  if (args['verbose']) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
+
+  return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
     const opts = parseMigrationsOptions(args);
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);

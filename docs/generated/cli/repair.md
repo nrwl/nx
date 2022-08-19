@@ -27,7 +27,7 @@ Show help
 
 Type: boolean
 
-Print additional error stack trace on failure
+Prints additional information about the commands (e.g., stack traces)
 
 ### version
 
