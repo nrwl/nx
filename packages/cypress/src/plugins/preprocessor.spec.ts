@@ -1,4 +1,4 @@
-import { mocked } from 'ts-jest/utils';
+import { mocked } from 'jest-mock';
 import { getWebpackConfig, preprocessTypescript } from './preprocessor';
 jest.mock('@cypress/webpack-preprocessor', () => {
   return jest.fn(
