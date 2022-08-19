@@ -11,7 +11,7 @@ This guide is divided into two sections:
   - [Setting environment variables](#setting-environment-variables)
     - [Pointing to custom env files](#pointing-to-custom-env-files)
     - [Ad-hoc variables](#ad-hoc-variables)
-   [Angular](#using-environment-variables-in-angular-applications)
+      [Angular](#using-environment-variables-in-angular-applications)
 
 ## Setting environment variables
 

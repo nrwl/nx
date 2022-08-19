@@ -10,4 +10,5 @@ There are several strategies you can use to adopt Nx in your organization, depen
 - [Manual migration](/recipe/manual)
 
 Other recipes related to adopting Nx:
+
 - [Preserving Git Histories](/recipe/preserving-git-histories)

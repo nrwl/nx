@@ -534,13 +534,23 @@
           },
           {
             "name": "Running Custom Commands",
-            "id": "run-commands-builder",
+            "id": "run-commands-executor",
             "file": "shared/running-custom-commands"
           },
           {
+            "name": "Use Executor Configurations",
+            "id": "use-executor-configurations",
+            "file": "shared/recipes/use-executor-configurations"
+          },
+          {
             "name": "Creating Custom Executors",
-            "id": "creating-custom-builders",
+            "id": "creating-custom-executors",
             "file": "shared/tools-workspace-builders"
+          },
+          {
+            "name": "Compose Executors",
+            "id": "compose executors",
+            "file": "shared/recipes/compose-executors"
           },
           {
             "name": "Workspace Generators",
@@ -703,9 +713,9 @@
             "file": "shared/extending-nx/project-graph-plugins"
           },
           {
-            "name": "Using Tags",
-            "id": "monorepo-tags",
-            "file": "shared/monorepo-tags"
+            "name": "Imposing Constraints on the Graph",
+            "id": "imposing-constraints-on-the-graph",
+            "file": "shared/recipes/imposing-constraints-on-the-graph"
           }
         ]
       },

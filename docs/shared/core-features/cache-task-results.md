@@ -54,7 +54,7 @@ Ran all test suites.
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
  >  NX   Successfully ran target test for project header (4ms)
- 
+
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 

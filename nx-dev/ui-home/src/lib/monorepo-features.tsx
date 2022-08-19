@@ -103,7 +103,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-purple-nx-base',
-    link: '/structure/monorepo-tags',
+    link: '/recipe/imposing-constraints-on-the-graph',
     title: 'Easy code sharing',
     subTitle: 'Nx simplifies extracting and refactoring shared libraries.',
     svg: (
@@ -125,7 +125,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-red-500',
-    link: '/structure/monorepo-tags',
+    link: '/recipe/imposing-constraints-on-the-graph',
     title: 'Ownership management',
     subTitle:
       'Nx statically enforces the separation of shared and app-specific code.',

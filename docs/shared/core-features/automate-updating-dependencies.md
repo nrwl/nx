@@ -57,7 +57,6 @@ This will update your source code in your workspace in accordance with the imple
 
 After you run all the migrations, you can remove `migrations.json` and commit any outstanding changes.
 
-
 ## Problems?
 
 If you can't run `nx migrate --run-migrations` all in one step, try the tips in [Advanced Update Process](/recipe/advanced-update)

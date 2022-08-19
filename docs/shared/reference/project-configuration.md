@@ -4,7 +4,6 @@ Projects can be configured in `package.json` (if you use npm scripts and not Nx 
 [use task executors](/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
 files to get each project's configuration. This reference
 
-
 The following configuration creates `build` and `test` targets for Nx.
 
 {% tabs %}
@@ -29,11 +28,15 @@ The following configuration creates `build` and `test` targets for Nx.
   "targets": {
     "test": {
       "executor": "@nrwl/jest:jest",
-      "options": { /* ... */ }
+      "options": {
+        /* ... */
+      }
     },
     "build": {
       "executor": "@nrwl/js:tsc",
-      "options": { /* ... */ }
+      "options": {
+        /* ... */
+      }
     }
   }
 }
@@ -99,14 +102,14 @@ You can add Nx-specific configuration as follows:
       "inputs": ["default", "^prod"],
       "outputs": [],
       "dependsOn": ["build"],
-      "options": { }
+      "options": {}
     },
     "build": {
       "executor": "@nrwl/js:tsc",
       "inputs": ["prod", "^prod"],
       "outputs": ["dist/libs/mylib"],
       "dependsOn": ["^build"],
-      "options": { }
+      "options": {}
     }
   },
   "tags": ["scope:myteam"],
@@ -301,7 +304,7 @@ You can annotate your projects with `tags` as follows:
 }
 ```
 
-You can [configure lint rules using these tags](/structure/monorepo-tags) to, for instance, ensure that libraries
+You can [configure lint rules using these tags](/recipe/imposing-constraints-on-the-graph) to, for instance, ensure that libraries
 belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies

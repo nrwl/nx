@@ -1,12 +1,15 @@
 # All Recipes
 
 ## Getting Started
+
 - [Set up a new workspace](/recipe/set-up-a-new-workspace)
 
 ## Nx Console
+
 - [Use Nx Console](/recipe/use-nx-console)
 
 ## CI
+
 - [Setting up Azure Pipelines](/recipe/monorepo-ci-azure)
 - [Setting up CircleCI](/recipe/monorepo-ci-circle-ci)
 - [Setting up GitHub Actions](/recipe/monorepo-ci-github-actions)
@@ -15,6 +18,7 @@
 - [Setting up Bitbucket](/recipe/monorepo-ci-bitbucket-pipelines)
 
 ## Adopting Nx
+
 - [Nx and Lerna](/recipe/lerna-and-nx)
 - [NPM/Yarn/PNPM workspaces](/recipe/adding-to-monorepo)
 - [From CRA](/recipe/migration-cra)
@@ -24,10 +28,14 @@
 - [Preserving Git Histories](/recipe/preserving-git-histories)
 
 ## Executors
-- [Running Custom Commands](/recipe/run-commands-builder)
-- [Creating Custom Executors](/recipe/creating-custom-builders)
+
+- [Use Executor Configurations](/recipe/use-executor-configurations)
+- [Running Custom Commands](/recipe/run-commands-executor)
+- [Creating Custom Executors](/recipe/creating-custom-executors)
+- [Compose Executors](/recipe/compose-executors)
 
 ## Generators
+
 - [Workspace Generators](/recipe/workspace-generators)
 - [Composing Generators](/recipe/composing-generators)
 - [Generator Options](/recipe/generator-options)
@@ -35,20 +43,24 @@
 - [Modifying Files](/recipe/modifying-files)
 
 ## Advanced Plugins
+
 - [Project Inference Plugins](/recipe/project-inference-plugins)
 - [Project Graph Plugins](/recipe/project-graph-plugins)
 
 ## Environment Variables
+
 - [Define Environment Variables](/recipe/define-environment-variables)
 - [Use Environment Variables in React](/recipe/use-environment-variables-in-react)
 - [Use Environment Variables in Angular](/recipe/use-environment-variables-in-angular)
 
 ## Module Federation and Micro Frontends
+
 - [Faster Builds with Module Federation](/recipe/faster-builds)
 - [Advanced Micro Frontends with Angular using Dynamic Federation](/recipe/dynamic-module-federation-with-angular)
 - [Nx Micro-Frontend Example](/recipe/nx-examples)
 
 ## Other
+
 - [JavaScript and TypeScript](/recipe/js-and-ts)
 - [React Native with Nx](/recipe/react-native)
 - [Adding Images, Fonts, and Files](/recipe/adding-assets-react)
@@ -68,4 +80,4 @@
 - [Using Apollo GraphQL](/recipe/apollo-react)
 - [Large Repo and Caching](/recipe/caching)
 - [Large Repo and DTE](/recipe/dte)
-- [Using Tags](/recipe/monorepo-tags)
+- [Imposing Constraints on the Graph](/recipe/imposing-constraints-on-the-graph)

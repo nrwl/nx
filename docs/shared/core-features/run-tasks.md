@@ -11,19 +11,19 @@ them is a key feature of a tool like Nx.
 
 ## Define Tasks
 
-For these examples, we'll use a repo that has three projects: `remixapp`, `header` and `footer`.  `remixapp` is a deployable app and uses the `header` and `footer` libraries.
+For these examples, we'll use a repo that has three projects: `remixapp`, `header` and `footer`. `remixapp` is a deployable app and uses the `header` and `footer` libraries.
 
-Each project has the `test` and `build` targets defined.  Tasks can be defined as npm scripts in a project's `package.json` file or in a `project.json` file:
+Each project has the `test` and `build` targets defined. Tasks can be defined as npm scripts in a project's `package.json` file or in a `project.json` file:
 
 {% tabs %}
 {% tab label="package.json" %}
 
 ```json
 {
-    "scripts": {
-        "build": "webpack -c webpack.conf.js",
-        "test": "jest --coverage"
-    }
+  "scripts": {
+    "build": "webpack -c webpack.conf.js",
+    "test": "jest --coverage"
+  }
 }
 ```
 
@@ -32,26 +32,25 @@ Each project has the `test` and `build` targets defined.  Tasks can be defined a
 
 ```json
 {
-    "targets": {
-        "build": {
-            "executor": "@nrwl/workspace:run-commands",
-            "options": {
-                "command": "webpack -c webpack.conf.js"
-            }
-        },
-        "test": {
-            "executor": "@nrwl/jest:jest",
-            "options": {
-                "codeCoverage": true
-            }
-        }
+  "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "webpack -c webpack.conf.js"
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "codeCoverage": true
+      }
     }
+  }
 }
 ```
 
 {% /tab %}
 {% /tabs %}
-
 
 ## Run a Single Task
 

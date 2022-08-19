@@ -73,7 +73,7 @@ For example, your generated application should have four [tasks available](/exec
 
 These workspace configuration files can seem a little long and intimidating. The Nx Console can help you navigate it more easily with its Workspace JSON panel. By clicking on a project in your workspace, it will navigate you to the right place in the workspace file to begin making edits.
 
-Additionally, there is an `nx.json` file that contains metadata about your projects. [This metadata includes tags](/structure/monorepo-tags) that can help you impose constraints on your applications and library dependencies.
+Additionally, there is an `nx.json` file that contains metadata about your projects. [This metadata includes tags](/recipe/imposing-constraints-on-the-graph) that can help you impose constraints on your applications and library dependencies.
 
 ## Migrating your code
 
@@ -157,11 +157,11 @@ nx format:write
 
 Nx offers built-in tasks for the most common needs: `serve`, `build`, `test`, `e2e`, and `lint`. You likely have additional tasks that are needed to manage or deploy your codebase. These tasks might include deployment, i18n workflows, or uploading assets to CDNs. These tasks can be set up as scripts that you run manually with node, ts-node, or npm scripts. You can migrate those tasks over as-is, to begin with.
 
-You should consider implementing them as Nx tasks which should be a quick transition with the `run-commands` builder. [The `run-commands` builder](/executors/run-commands-builder) will allow you to run any custom commands you need as an Nx task. By implementing these commands in an Nx task, they are able to take advantage of the project graph in Nx and only run when necessary. They are also able to be cached and only be re-run when necessary.
+You should consider implementing them as Nx tasks which should be a quick transition with the `run-commands` builder. [The `run-commands` executor](/executors/run-commands-executor) will allow you to run any custom commands you need as an Nx task. By implementing these commands in an Nx task, they are able to take advantage of the project graph in Nx and only run when necessary. They are also able to be cached and only be re-run when necessary.
 
 Your use-case may also be covered by one of our community plugins. Plugin authors are able to extend the functionality of Nx through our plugin API.
 
-[Learn more about the `run-commands` builder](/packages/nx/executors/run-commands)
+[Learn more about the `run-commands` executor](/packages/nx/executors/run-commands)
 
 [Learn more about caching](/using-nx/caching)
 
@@ -196,4 +196,4 @@ It’s important to remember: don’t just drop your code anywhere! Always gener
 
 If you’re consolidating multiple repositories or libraries into a single Nx workspace, you may have concerns about code boundaries. Previously, you may have had well-established boundaries by separating code into different repositories or having a public API for a library. Nx features a tagging system that allows you to enforce these code boundaries in a granular way. Each project can be tagged, and you can constrain dependencies based on these tags.
 
-[Learn more about tags and dependency constraints](/structure/monorepo-tags)
+[Learn more about tags and dependency constraints](/recipe/imposing-constraints-on-the-graph)

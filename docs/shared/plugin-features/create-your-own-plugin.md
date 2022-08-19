@@ -43,7 +43,7 @@ All the core plugins are written using Nx Devkit, and you can use the same utili
 executors.
 
 {% callout type="check" title="Plugins!" %}
-The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [custom generators](/generators/workspace-generators) and [executors](/executors/creating-custom-builders) for your own workspace. You can also write your own plugin and share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
+The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [custom generators](/generators/workspace-generators) and [executors](/executors/creating-custom-executors) for your own workspace. You can also write your own plugin and share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
 {% /callout %}
 
 ### Local workspace plugins
@@ -84,5 +84,5 @@ and generators.
 
 - [Using Nx Core Without Plugins](/getting-started/nx-core)
 - [Workspace generators](/generators/workspace-generators)
-- [Workspace executors](/executors/creating-custom-builders)
+- [Workspace executors](/executors/creating-custom-executors)
 - [Nx Community Plugins](/community)

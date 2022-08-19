@@ -27,7 +27,6 @@ Note, you can also change the default in `nx.json`, like this:
 }
 ```
 
-
 ## Define Task Dependencies (aka Task Pipelines)
 
 To ensure tasks run in the correct order, Nx needs to know how the tasks depend on each other. Add the following to `nx.json`:
@@ -81,7 +80,6 @@ Situations like this are pretty common:
 
 Because we described the rules in `nx.json`, they will apply to all the projects in the repo. You can also define
 project-specific rules by adding them to the project's configuration.
-
 
 ```json
 {

@@ -3,6 +3,7 @@
 In this tutorial you create multiple projects in a monorepo and take advantage of the core Nx features with a minimum of configuration.
 
 ## Contents:
+
 - [1 - Create Blog](/core-tutorial/01-create-blog)
 - [2 - Create CLI](/core-tutorial/02-create-cli)
 - [3 - Share Assets](/core-tutorial/03-share-assets)
