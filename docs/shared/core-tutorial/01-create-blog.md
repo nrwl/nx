@@ -2,6 +2,14 @@
 
 In this tutorial you create multiple projects in a monorepo and take advantage of the core Nx features with a minimum of configuration.
 
+## Contents:
+- [1 - Create Blog](/core-tutorial/01-create-blog)
+- [2 - Create CLI](/core-tutorial/02-create-cli)
+- [3 - Share Assets](/core-tutorial/03-share-assets)
+- [4 - Build Affected Projects](/core-tutorial/04-build-affected-projects)
+- [5 - Automatically Detect Dependencies](/core-tutorial/05-auto-detect-dependencies)
+- [6 - Summary](/core-tutorial/06-summary)
+
 ## Create a New Workspace
 
 **Start by creating a new workspace.**
@@ -74,11 +82,7 @@ Create a file at `packages/blog/package.json` with these contents:
 
 ```json
 {
-  "name": "blog",
-  "description": "eleventy blog",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "eleventy --input=./src --output=../../dist/packages/blog",
+- [blog](leventy blog)
     "serve": "eleventy --serve --input=./src --output=../../dist/packages/blog"
   }
 }
@@ -124,10 +128,10 @@ layout: layout.liquid
 pageTitle: Welcome to my blog
 ---
 
-{% for post in collections.posts %}
+{%= '{%' %} for post in collections.posts {%= '%}' %}
 <h2><a href="{{ post.url }}">{{ post.data.pageTitle }}</a></h2>
 <em>{{ post.date | date: "%Y-%m-%d" }}</em>
-{% endfor %}
+{%= '{%' %} endfor {%= '%}' %}
 ```
 
 Create the following files:

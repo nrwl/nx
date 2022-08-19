@@ -1,39 +1,4 @@
-# Nx and Angular
-
-Nx is a smart, fast and extensible build system with first class monorepo support and powerful integrations. It has a powerful core and a rich plugin ecosystem.
-
-## Making Things Fast
-
-If you're only interested in improving the performance of your monorepo by using Nx's [affected:\* commands](/using-nx/affected), [computation cache](/using-nx/caching), and [distributed task execution](/using-nx/dte), then you don't need to use any plugins. Everything will work the same way whether your monorepo has React, Vue, Svelte, or even Go, Rust, or Java apps. Nx is technology-agnostic.
-
-Check out the following guides to get started:
-
-- [Using Nx without plugins](/getting-started/nx-core)
-- [Adding Nx to an existing monorepo](/migration/adding-to-monorepo)
-- [Adding Nx to an Angular CLI project](/migration/migration-angular)
-- [Migrating from AngularJS](/migration/migration-angularjs)
-
-{% callout type="note" title="Going deeper" %}
-It is also a good idea to read the [mental model guide](/using-nx/mental-model) to understand how Nx works.
-{% /callout %}
-
-## Nx and Angular Plugins
-
-Nx plugins helps you develop [Angular](/packages/angular) applications with fully integrated support for
-modern tools and libraries like [Jest](/packages/jest), [Cypress](/packages/cypress),
-[ESLint](/packages/linter), [Storybook](/packages/storybook), [NgRx](/guides/misc-ngrx) and more.
-
-{% youtube
-src="https://www.youtube.com/embed/cXOkmOy-8dk"
-title="Modern Angular with Nx Dev Tools"
-width="100%" /%}
-
-Check out the following to get started:
-
-- [Angular: Interactive Nx Tutorial (with videos)](/angular-tutorial/01-create-application)
-- [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
-
-## Nx and Angular CLI
+# Nx and the Angular CLI
 
 {% callout type="check" title="Nx and AngularCLI commands are interchangeable" %}
 If you add Nx to an Angular CLI project, `ng` and `nx` are interchangeable (they invoke the same command). So anywhere you see `"nx build"` or `"nx affected"`, you can also use `"ng build"` or `"ng affected"`.

@@ -38,14 +38,11 @@ export function getBasicSection(items: MenuItem[]): MenuSection {
       .filter(
         (m) =>
           m.id === 'getting-started' ||
-          m.id === 'tutorial' ||
-          m.id === 'migration' ||
-          m.id === 'configuration' ||
-          m.id === 'using-nx' ||
-          m.id === 'core-tutorial' ||
-          m.id === 'react-tutorial' ||
-          m.id === 'angular-tutorial' ||
-          m.id === 'node-tutorial'
+          m.id === 'core-features' ||
+          m.id === 'plugin-features' ||
+          m.id === 'concepts' ||
+          m.id === 'recipes' ||
+          m.id === 'reference'
       )
       .map((m) => {
         return {

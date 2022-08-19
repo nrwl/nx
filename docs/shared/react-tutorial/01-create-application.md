@@ -15,6 +15,21 @@ Nx has first-class Next.js support, if you are looking to try or use it for your
 In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
 {% /callout %}
 
+## Contents
+
+- [1 - Create Application](/react-tutorial/01-create-application)
+- [2 - Add E2E Test](/react-tutorial/02-add-e2e-test)
+- [3 - Display Todos](/react-tutorial/03-display-todos)
+- [4 - Connect to API](/react-tutorial/04-connect-to-api)
+- [5 - Add Node Application](/react-tutorial/05-add-node-app)
+- [6 - Proxy Configuration](/react-tutorial/06-proxy)
+- [7 - Share Code](/react-tutorial/07-share-code)
+- [8 - Create Libraries](/react-tutorial/08-create-libs)
+- [9 - Project Graph](/react-tutorial/09-dep-graph)
+- [10 - Use Computation Caching](/react-tutorial/10-computation-caching)
+- [11 - Test Affected Projects](/react-tutorial/11-test-affected-projects)
+- [12 - Summary](/react-tutorial/12-summary)
+
 ## Create a new workspace
 
 Start by creating a new workspace.
