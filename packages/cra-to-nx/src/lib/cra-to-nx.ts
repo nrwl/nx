@@ -9,6 +9,7 @@ import {
   removeSync,
   readdirSync,
 } from 'fs-extra';
+import { output } from '@nrwl/devkit';
 
 import { addCRAcracoScriptsToPackageJson } from './add-cra-commands-to-nx';
 import { checkForUncommittedChanges } from './check-for-uncommitted-changes';
@@ -17,7 +18,6 @@ import { readNameFromPackageJson } from './read-name-from-package-json';
 import { setupTsConfig } from './tsconfig-setup';
 import { writeCracoConfig } from './write-craco-config';
 import { cleanUpFiles } from './clean-up-files';
-import { output } from '@nrwl/devkit';
 
 let packageManager: string;
 function checkPackageManager() {
@@ -60,9 +60,14 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
     ...packageJson.devDependencies,
   };
   const isCRA5 = /^[^~]?5/.test(deps['react-scripts']);
+  const npmVersion = execSync('npm -v').toString();
+  // Should remove this check 04/2023 once Node 14 & npm 6 reach EOL
+  const npxYesFlagNeeded = !npmVersion.startsWith('6'); // npm 7 added -y flag to npx
 
   execSync(
-    `npx -y create-nx-workspace@latest temp-workspace --appName=${reactAppName} --preset=react --style=css --packageManager=${packageManager}`,
+    `npx ${
+      npxYesFlagNeeded ? '-y' : ''
+    } create-nx-workspace@latest temp-workspace --appName=${reactAppName} --preset=react --style=css --packageManager=${packageManager}`,
     { stdio: [0, 1, 2] }
   );
 
