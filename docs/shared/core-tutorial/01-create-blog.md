@@ -58,7 +58,7 @@ yarn add -D @11ty/eleventy@1.0.0
 {% tab label="npm" %}
 
 ```bash
-nx generate @nrwl/react:library
+npm install -D @11ty/eleventy@1.0.0
 ```
 
 {% /tab %}
