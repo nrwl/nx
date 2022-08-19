@@ -118,7 +118,7 @@ To actually create a blog, we'll have to change a few more files. This is all El
 
 Update `index.html`:
 
-```html
+```html {% process=false %}
 ---
 layout: layout.liquid
 pageTitle: Welcome to my blog
