@@ -1,5 +1,5 @@
 export * from './add-cypress-workaround';
-export * from './add-entry-module';
+export * from './add-remote-entry';
 export * from './add-remote-to-host';
 export * from './change-build-target';
 export * from './fix-bootstrap';

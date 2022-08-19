@@ -12,6 +12,7 @@ import remoteGenerator from '../remote/remote';
 import { normalizeProjectName } from '../utils/project';
 import * as ts from 'typescript';
 import { addRoute } from '../../utils/nx-devkit/ast-utils';
+import { addStandaloneRoute } from '../../utils/nx-devkit/standalone-utils';
 import { setupMf } from '../setup-mf/setup-mf';
 
 export default async function host(tree: Tree, options: Schema) {
@@ -57,6 +58,7 @@ export default async function host(tree: Tree, options: Schema) {
       name: remote,
       host: appName,
       skipFormat: true,
+      standalone: options.standalone,
     });
   }
 
@@ -97,30 +99,47 @@ ${remoteRoutes}
 `
   );
 
-  const pathToHostAppModule = joinPathFragments(
+  const pathToHostRootRoutingFile = joinPathFragments(
     sourceRoot,
-    'app/app.module.ts'
+    options.standalone ? 'bootstrap.ts' : 'app/app.module.ts'
   );
-  const hostAppModule = tree.read(pathToHostAppModule, 'utf-8');
+  const hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
 
-  if (!hostAppModule.includes('RouterModule.forRoot(')) {
+  if (!hostRootRoutingFile.includes('RouterModule.forRoot(')) {
     return;
   }
 
   let sourceFile = ts.createSourceFile(
-    pathToHostAppModule,
-    hostAppModule,
+    pathToHostRootRoutingFile,
+    hostRootRoutingFile,
     ts.ScriptTarget.Latest,
     true
   );
 
-  sourceFile = addRoute(
-    tree,
-    pathToHostAppModule,
-    sourceFile,
-    `{
+  if (hostRootRoutingFile.includes('@NgModule')) {
+    sourceFile = addRoute(
+      tree,
+      pathToHostRootRoutingFile,
+      sourceFile,
+      `{
          path: '', 
          component: NxWelcomeComponent
      }`
-  );
+    );
+  } else {
+    addStandaloneRoute(
+      tree,
+      pathToHostRootRoutingFile,
+      `{
+      path: '',
+      component: NxWelcomeComponent
+    }`
+    );
+
+    tree.write(
+      pathToHostRootRoutingFile,
+      `import { NxWelcomeComponent } from './app/nx-welcome.component';
+    ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
+    );
+  }
 }

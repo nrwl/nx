@@ -5,7 +5,11 @@ import type { Schema } from '../schema';
 export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
   const mainFilePath = joinPathFragments(appRoot, 'src/main.ts');
   const bootstrapCode = tree.read(mainFilePath, 'utf-8');
-  tree.write(joinPathFragments(appRoot, 'src/bootstrap.ts'), bootstrapCode);
+  if (options.standalone) {
+    tree.write(`${appRoot}/src/bootstrap.ts`, standaloneBootstrapCode);
+  } else {
+    tree.write(joinPathFragments(appRoot, 'src/bootstrap.ts'), bootstrapCode);
+  }
 
   const bootstrapImportCode = `import('./bootstrap').catch(err => console.error(err))`;
 
@@ -23,3 +27,22 @@ export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
       : bootstrapImportCode
   );
 }
+
+const standaloneBootstrapCode = `import {environment} from "./environments/environment";
+import {enableProdMode, importProvidersFrom} from "@angular/core";
+import {bootstrapApplication} from "@angular/platform-browser";
+import {RouterModule} from "@angular/router";
+import {RemoteEntryComponent} from "./app/remote-entry/entry.component";
+import {RemoteRoutes} from "./app/remote-entry/routes";
+
+if (environment.production) {
+  enableProdMode();
+}
+
+bootstrapApplication(RemoteEntryComponent, {
+  providers: [
+    importProvidersFrom(
+      RouterModule.forRoot(RemoteRoutes, {initialNavigation: 'enabledBlocking'})
+    )
+  ]
+});`;

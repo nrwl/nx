@@ -53,6 +53,7 @@ export default async function remote(tree: Tree, options: Schema) {
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
     e2eProjectName: `${appName}-e2e`,
+    standalone: options.standalone,
   });
 
   removeDeadCode(tree, options);
@@ -90,21 +91,22 @@ function removeDeadCode(tree: Tree, options: Schema) {
   );
   tree.delete(joinPathFragments(project.sourceRoot, 'app/app.component.html'));
 
-  const pathToComponent = joinPathFragments(
+  const pathToAppComponent = joinPathFragments(
     project.sourceRoot,
     'app/app.component.ts'
   );
-  const component =
-    tree.read(pathToComponent, 'utf-8').split('templateUrl')[0] +
-    `template: '<router-outlet></router-outlet>'
+  if (!options.standalone) {
+    const component =
+      tree.read(pathToAppComponent, 'utf-8').split('templateUrl')[0] +
+      `template: '<router-outlet></router-outlet>'
 })
 export class AppComponent {}`;
 
-  tree.write(pathToComponent, component);
+    tree.write(pathToAppComponent, component);
 
-  tree.write(
-    joinPathFragments(project.sourceRoot, 'app/app.module.ts'),
-    `import { NgModule } from '@angular/core';
+    tree.write(
+      joinPathFragments(project.sourceRoot, 'app/app.module.ts'),
+      `import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
@@ -122,5 +124,8 @@ import { AppComponent } from './app.component';
  bootstrap: [AppComponent],
 })
 export class AppModule {}`
-  );
+    );
+  } else {
+    tree.delete(pathToAppComponent);
+  }
 }

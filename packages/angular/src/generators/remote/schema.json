@@ -144,6 +144,11 @@
       "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
+    },
+    "standalone": {
+      "description": "Whether to generate a remote application with standalone components.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false,

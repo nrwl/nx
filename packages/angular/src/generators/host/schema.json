@@ -149,6 +149,11 @@
       "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
+    },
+    "standalone": {
+      "type": "boolean",
+      "description": "Whether to generate a host application that uses standalone components.",
+      "default": false
     }
   },
   "additionalProperties": false,

@@ -104,4 +104,32 @@ describe('MF Remote App Generator', () => {
     const { defaultProject } = readWorkspaceConfiguration(tree);
     expect(defaultProject).toBeUndefined();
   });
+
+  it('should generate the a remote setup for standalone components', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    // ACT
+    await remote(tree, {
+      name: 'test',
+      standalone: true,
+    });
+
+    // ASSERT
+    expect(tree.exists(`apps/test/src/app/app.module.ts`)).toBeFalsy();
+    expect(tree.exists(`apps/test/src/app/app.component.ts`)).toBeFalsy();
+    expect(
+      tree.exists(`apps/test/src/app/remote-entry/entry.module.ts`)
+    ).toBeFalsy();
+    expect(tree.read(`apps/test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read(`apps/test/module-federation.config.js`, 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read(`apps/test/src/app/remote-entry/entry.component.ts`, 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read(`apps/test/src/app/remote-entry/routes.ts`, 'utf-8')
+    ).toMatchSnapshot();
+  });
 });

@@ -131,12 +131,12 @@ export async function applicationGenerator(
     });
   }
 
-  if (options.mf) {
-    await addMf(host, options);
-  }
-
   if (options.standalone) {
     convertToStandaloneApp(host, options);
+  }
+
+  if (options.mf) {
+    await addMf(host, options);
   }
 
   if (!options.skipFormat) {
