@@ -3259,10 +3259,10 @@
     npmlog "^4.1.2"
     write-file-atomic "^3.0.3"
 
-"@markdoc/markdoc@^0.1.3":
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/@markdoc/markdoc/-/markdoc-0.1.4.tgz#2f229ce3feb80aa781c0d8f453f7a7a614e1248a"
-  integrity sha512-WOm+jwCeDyWtshIc5tjZ/AD+rFpqL9b1YAUiC975VlZISxRXt2G6Df5G3RwH420Jbavtik50r2tDInnEWIS8nQ==
+"@markdoc/markdoc@0.1.6":
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/@markdoc/markdoc/-/markdoc-0.1.6.tgz#3ac13e8d135378231e83dc7faf3a4c73fb0fad0a"
+  integrity sha512-I+QvtEjeZpl8H8uRbSuILwlUw/8ngogQnHeXKmxigJcvLXqZ8BJSldCPXjiVKpQ5vZOpjrblwAAkTI4JeEN3ZA==
 
 "@mdx-js/mdx@^1.6.22":
   version "1.6.22"

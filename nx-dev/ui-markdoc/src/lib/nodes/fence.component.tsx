@@ -14,6 +14,14 @@ function resolveLanguage(lang: string) {
   }
 }
 
+function showLineNumber(lang: string, content: string) {
+  if (['bash', 'text', 'treeview'].includes(lang)) {
+    return false;
+  }
+
+  return content.split(/\r\n|\r|\n/).length > 2;
+}
+
 export function Fence({
   children,
   language,
@@ -33,6 +41,7 @@ export function Fence({
       t && clearTimeout(t);
     };
   }, [copied]);
+
   return (
     <div className="code-block group relative">
       <CopyToClipboard
@@ -63,7 +72,7 @@ export function Fence({
         </button>
       </CopyToClipboard>
       <SyntaxHighlighter
-        showLineNumbers={!['bash', 'text', 'treeview'].includes(language)}
+        showLineNumbers={showLineNumber(language, children)}
         useInlineStyles={false}
         language={resolveLanguage(language)}
         children={children}
