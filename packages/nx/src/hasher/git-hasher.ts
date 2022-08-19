@@ -133,7 +133,14 @@ async function getUnstagedFiles(path: string) {
 async function getUntrackedFiles(path: string) {
   const { stdout: untracked } = await spawnProcess(
     'git',
-    ['ls-files', '--recurse-submodules', '--other', '-z', '--exclude-standard', '.'],
+    [
+      'ls-files',
+      '--recurse-submodules',
+      '--other',
+      '-z',
+      '--exclude-standard',
+      '.',
+    ],
     path
   );
   const lines = untracked.split('\0').filter((f) => !!f);
