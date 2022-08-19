@@ -159,7 +159,6 @@ jobs:
     executor: linux
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
-      NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 8
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
       NX_VERBOSE_LOGGING: 'false'
     steps:
@@ -171,6 +170,7 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
+      - run: npx nx-cloud start-ci-run --command-count=5 --agent-count=8
       - run: npx nx-cloud record yarn check-imports
       - run: npx nx-cloud record yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx-cloud record yarn check-commit
@@ -180,7 +180,6 @@ jobs:
           name: Check Documentation
           command: npx nx-cloud record yarn documentation
           no_output_timeout: 20m
-      - run: npx nx-cloud start-ci-run --command-count=4
       - run:
           name: Run Lint/Test/Build
           command: |

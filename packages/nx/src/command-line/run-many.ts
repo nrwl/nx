@@ -26,6 +26,9 @@ export async function runMany(
     { printWarnings: true },
     nxJson
   );
+  if (nxArgs.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 

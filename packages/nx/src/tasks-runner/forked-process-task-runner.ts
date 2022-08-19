@@ -26,6 +26,7 @@ export class ForkedProcessTaskRunner {
   workspaceRoot = workspaceRoot;
   cliPath = getCliPath();
 
+  private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
   private processes = new Set<ChildProcess>();
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {
@@ -107,10 +108,7 @@ export class ForkedProcessTaskRunner {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
         const args = getPrintableCommandArgsForTask(task);
-        const serializedArgs = getSerializedArgsForTask(
-          task,
-          task.overrides['verbose'] === true
-        );
+        const serializedArgs = getSerializedArgsForTask(task, this.verbose);
         if (streamOutput) {
           output.logCommand(args.join(' '));
           output.addNewline();
@@ -186,10 +184,7 @@ export class ForkedProcessTaskRunner {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
         const args = getPrintableCommandArgsForTask(task);
-        const serializedArgs = getSerializedArgsForTask(
-          task,
-          task.overrides['verbose'] === true
-        );
+        const serializedArgs = getSerializedArgsForTask(task, this.verbose);
         if (streamOutput) {
           output.logCommand(args.join(' '));
           output.addNewline();

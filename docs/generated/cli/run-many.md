@@ -135,7 +135,9 @@ Task to run for affected projects
 
 Type: boolean
 
-Print additional error stack trace on failure
+Default: false
+
+Prints additional information about the commands (e.g., stack traces)
 
 ### version
 

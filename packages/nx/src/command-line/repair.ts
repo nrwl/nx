@@ -7,7 +7,11 @@ export async function repair(
   args: { verbose: boolean },
   extraMigrations = [] as any[]
 ) {
-  return handleErrors(args['verbose'], async () => {
+  if (args['verbose']) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
+  const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
+  return handleErrors(verbose, async () => {
     const nxMigrations = Object.entries(migrationsJson.generators).map(
       ([name, migration]) => {
         return {
@@ -24,7 +28,7 @@ export async function repair(
     const migrationsThatMadeNoChanges = await executeMigrations(
       process.cwd(),
       migrations,
-      args['verbose'],
+      verbose,
       false,
       ''
     );

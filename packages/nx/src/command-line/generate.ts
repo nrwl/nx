@@ -268,9 +268,8 @@ export function printGenHelp(
 
 export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
   const ws = new Workspaces(null);
-  const isVerbose = args['verbose'];
 
-  return handleErrors(isVerbose, async () => {
+  return handleErrors(false, async () => {
     const opts = await convertToGenerateOptions(args, ws, null, 'new');
     const { normalizedGeneratorName, schema, implementationFactory } =
       ws.readGenerator(opts.collectionName, opts.generatorName);
@@ -288,11 +287,11 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
       opts.interactive,
       null,
       null,
-      isVerbose
+      false
     );
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
-      const host = new FsTree(cwd, isVerbose);
+      const host = new FsTree(cwd, false);
       const implementation = implementationFactory();
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
@@ -313,25 +312,29 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
           ...opts,
           generatorOptions: combinedOpts,
         },
-        isVerbose
+        false
       );
     }
   });
 }
 
 export async function generate(cwd: string, args: { [k: string]: any }) {
+  if (args['verbose']) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
+  const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
+
   const ws = new Workspaces(workspaceRoot);
   const nxJson = readNxJson();
   const projectGraph = await createProjectGraphAsync();
   const projectsConfiguration =
     readProjectsConfigurationFromProjectGraph(projectGraph);
+
   const workspaceConfiguration = {
     ...nxJson,
     ...projectsConfiguration,
   };
-  const isVerbose = args['verbose'];
-
-  return handleErrors(isVerbose, async () => {
+  return handleErrors(verbose, async () => {
     const opts = await convertToGenerateOptions(
       args,
       ws,
@@ -360,11 +363,11 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       opts.interactive,
       ws.calculateDefaultProjectName(cwd, workspaceConfiguration),
       ws.relativeCwd(cwd),
-      isVerbose
+      verbose
     );
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
-      const host = new FsTree(workspaceRoot, isVerbose);
+      const host = new FsTree(workspaceRoot, verbose);
       const implementation = implementationFactory();
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
@@ -386,7 +389,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
           ...opts,
           generatorOptions: combinedOpts,
         },
-        isVerbose
+        verbose
       );
     }
   });
