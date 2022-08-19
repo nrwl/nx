@@ -120,7 +120,7 @@ describe('Tailwind support', () => {
 
   let previousPM = process.env.SELECTED_PM;
   beforeAll(() => {
-    process.env.SELECTED_PM = 'yarn';
+    process.env.SELECTED_PM = 'npm';
     project = newProject();
 
     // Create tailwind config in the workspace root
