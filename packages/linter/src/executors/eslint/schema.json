@@ -7,7 +7,9 @@
   "properties": {
     "eslintConfig": {
       "type": "string",
-      "description": "The name of the ESLint configuration file."
+      "description": "The name of the ESLint configuration file.",
+      "x-completion-type": "file",
+      "x-completion-glob": ".eslintrc?(.json)"
     },
     "lintFilePatterns": {
       "type": "array",
@@ -66,11 +68,14 @@
     },
     "cacheLocation": {
       "type": "string",
-      "description": "Path to the cache file or directory."
+      "description": "Path to the cache file or directory.",
+      "x-completion-type": "directory",
+      "x-completion-glob": "tsconfig.*.json"
     },
     "outputFile": {
       "type": "string",
-      "description": "File to write report to."
+      "description": "File to write report to.",
+      "x-completion-type": "file"
     },
     "maxWarnings": {
       "type": "number",
@@ -84,7 +89,9 @@
     },
     "ignorePath": {
       "type": "string",
-      "description": "The path of the `.eslintignore` file."
+      "description": "The path of the `.eslintignore` file.",
+      "x-completion-type": "file",
+      "x-completion-glob": ".eslintignore"
     },
     "noEslintrc": {
       "type": "boolean",
@@ -106,12 +113,14 @@
       "description": "The equivalent of the `--rulesdir` flag on the ESLint CLI.",
       "default": [],
       "items": {
-        "type": "string"
+        "type": "string",
+        "x-completion-type": "directory"
       }
     },
     "resolvePluginsRelativeTo": {
       "type": "string",
-      "description": "The equivalent of the `--resolve-plugins-relative-to` flag on the ESLint CLI."
+      "description": "The equivalent of the `--resolve-plugins-relative-to` flag on the ESLint CLI.",
+      "x-completion-type": "directory"
     },
     "reportUnusedDisableDirectives": {
       "type": "string",

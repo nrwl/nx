@@ -25,7 +25,9 @@
     },
     "tsConfig": {
       "type": "string",
-      "description": "The full path for the TypeScript configuration file, relative to the workspace root."
+      "description": "The full path for the TypeScript configuration file, relative to the workspace root.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
     },
     "watch": {
       "type": "boolean",
@@ -45,7 +47,9 @@
     },
     "tailwindConfig": {
       "type": "string",
-      "description": "The full path for the Tailwind configuration file, relative to the workspace root. If not provided and a `tailwind.config.js` file exists in the project or workspace root, it will be used. Otherwise, Tailwind will not be configured."
+      "description": "The full path for the Tailwind configuration file, relative to the workspace root. If not provided and a `tailwind.config.js` file exists in the project or workspace root, it will be used. Otherwise, Tailwind will not be configured.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tailwind.config.js"
     }
   },
   "additionalProperties": false,

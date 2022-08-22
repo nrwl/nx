@@ -10,11 +10,14 @@
     },
     "entryFile": {
       "type": "string",
-      "description": "The path to the entry file, relative to project."
+      "description": "The path to the entry file, relative to project.",
+      "x-completion-type": "file",
+      "x-completion-glob": "**/*@(.js|.ts)"
     },
     "outputPath": {
       "type": "string",
-      "description": "The output path of the generated files."
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory"
     },
     "deleteOutputPath": {
       "type": "boolean",
@@ -23,7 +26,9 @@
     },
     "tsConfig": {
       "type": "string",
-      "description": "The path to tsconfig file."
+      "description": "The path to tsconfig file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
     },
     "format": {
       "type": "array",
@@ -63,11 +68,15 @@
         {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "x-completion-type": "file",
+            "x-completion-glob": "rollup?(*)@(.js|.ts)"
           }
         },
         {
-          "type": "string"
+          "type": "string",
+          "x-completion-type": "file",
+          "x-completion-glob": "rollup?(*)@(.js|.ts)"
         }
       ],
       "description": "Path to a function which takes a rollup config and returns an updated rollup config."

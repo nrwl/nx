@@ -10,11 +10,15 @@
     },
     "main": {
       "type": "string",
-      "description": "The name of the main entry-point file."
+      "description": "The name of the main entry-point file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "**/*@(.js|.ts|.tsx)"
     },
     "tsConfig": {
       "type": "string",
-      "description": "The name of the Typescript configuration file."
+      "description": "The name of the Typescript configuration file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
     },
     "compiler": {
       "type": "string",
@@ -24,7 +28,8 @@
     },
     "outputPath": {
       "type": "string",
-      "description": "The output path of the generated files."
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory"
     },
     "deleteOutputPath": {
       "type": "boolean",
@@ -86,7 +91,9 @@
     },
     "index": {
       "type": "string",
-      "description": "HTML File which will be contain the application."
+      "description": "HTML File which will be contain the application.",
+      "x-completion-type": "file",
+      "x-completion-glob": "**/*@(.html|.htm)"
     },
     "scripts": {
       "type": "array",
@@ -178,7 +185,9 @@
     },
     "polyfills": {
       "type": "string",
-      "description": "Polyfills to load before application"
+      "description": "Polyfills to load before application",
+      "x-completion-type": "file",
+      "x-completion-glob": "**/*@(.js|.ts|.tsx)"
     },
     "verbose": {
       "type": "boolean",
@@ -213,11 +222,13 @@
         "properties": {
           "replace": {
             "type": "string",
-            "description": "The file to be replaced."
+            "description": "The file to be replaced.",
+            "x-completion-type": "file"
           },
           "with": {
             "type": "string",
-            "description": "The file to replace with."
+            "description": "The file to replace with.",
+            "x-completion-type": "file"
           }
         },
         "additionalProperties": false,
@@ -241,7 +252,9 @@
     },
     "webpackConfig": {
       "type": "string",
-      "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack"
+      "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack",
+      "x-completion-type": "file",
+      "x-completion-glob": "webpack?(*)@(.js|.ts)"
     }
   },
   "required": ["tsConfig", "main", "index"],
@@ -330,7 +343,9 @@
           "properties": {
             "input": {
               "type": "string",
-              "description": "The file to include."
+              "description": "The file to include.",
+              "x-completion-type": "file",
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
             },
             "bundleName": {
               "type": "string",
@@ -347,7 +362,9 @@
         },
         {
           "type": "string",
-          "description": "The file to include."
+          "description": "The file to include.",
+          "x-completion-type": "file",
+          "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
         }
       ]
     }

@@ -26,7 +26,8 @@
     },
     "outputPath": {
       "type": "string",
-      "description": "The output path of the generated files."
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory"
     },
     "styles": {
       "type": "array",
@@ -89,7 +90,8 @@
           "properties": {
             "input": {
               "type": "string",
-              "description": "The file to include."
+              "description": "The file to include.",
+              "x-completion-type": "file"
             },
             "bundleName": {
               "type": "string",
