@@ -160,6 +160,12 @@
       "version": "14.5.2-beta.0",
       "description": "Update the @angular/cli package version to ~14.1.0.",
       "factory": "./src/migrations/update-14-5-2/update-angular-cli"
+    },
+    "update-angular-cli-version-14-2-0": {
+      "cli": "nx",
+      "version": "14.6.0-beta.0",
+      "description": "Update the @angular/cli package version to ~14.2.0.",
+      "factory": "./src/migrations/update-14-6-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1469,42 +1475,45 @@
         "jest-preset-angular": {
           "version": "~12.2.0",
           "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "14.7.0": {
-      "version": "14.7.0-beta.0",
-      "packages": {
+        },
         "@angular-devkit/architect": {
-          "version": "~0.1402.0-next.1",
+          "version": "~0.1402.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-angular": {
-          "version": "~14.2.0-next.1",
+          "version": "~14.2.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-webpack": {
-          "version": "~0.1402.0-next.1",
+          "version": "~0.1402.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/core": {
-          "version": "~14.2.0-next.1",
+          "version": "~14.2.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
-          "version": "~14.2.0-next.1",
+          "version": "~14.2.0",
           "alwaysAddToPackageJson": false
         },
         "@schematics/angular": {
-          "version": "~14.2.0-next.1",
+          "version": "~14.2.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/core": {
-          "version": "~14.2.0-next.1",
+          "version": "~14.2.0",
           "alwaysAddToPackageJson": true
         },
         "@angular/material": {
-          "version": "~14.2.0-next.1",
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~14.2.0",
           "alwaysAddToPackageJson": false
         }
       }
