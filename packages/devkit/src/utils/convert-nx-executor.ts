@@ -49,7 +49,7 @@ function toObservable<T extends { success: boolean }>(
   return new (require('rxjs') as typeof import('rxjs')).Observable(
     (subscriber) => {
       promiseOrAsyncIterator.then((value) => {
-        if ((!value as any).next) {
+        if (!(value as any).next) {
           subscriber.next(value as T);
           subscriber.complete();
         } else {
