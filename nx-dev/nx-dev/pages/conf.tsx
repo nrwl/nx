@@ -3,6 +3,7 @@ import {
   ConfHealthAndSafety,
   ConfLocation,
   ConfScheduleShort,
+  ConfSpeakers,
   ConfWorkshop,
 } from '@nrwl/nx-dev/ui-conference';
 import { NextSeo } from 'next-seo';
@@ -324,14 +325,7 @@ export default function ConfPage(): JSX.Element {
               </h2>
             </div>
           </div>
-          <div className="border-t border-gray-600">
-            <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
-              <div className="p-8 text-center">
-                More information coming soon!
-              </div>
-            </div>
-          </div>
-          {/*<ConfSpeakers />*/}
+          <ConfSpeakers />
           {/*WORKSHOP*/}
           <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             <div className="mt-24">

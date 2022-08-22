@@ -18,17 +18,24 @@ export function ConfSpeakers(): JSX.Element {
     },
     {
       description:
-        "Colum Ferry is a Senior Software Engineer at Nrwl, working on the Angular Plugin for Nx. He's interested in architectural patterns with Angular and, more particularly, in achieving a Micro Frontend Architecture with Angular. Colum is a married father of two rambunctious kids and he's lately turned into a huge Formula 1 fan!",
-      imageUrl: '/images/conf/colum-ferry.webp',
-      name: 'Colum Ferry',
-      twitter: 'FerryColum',
+        'Lara is a Software Engineering technical Leader on the Customer Experience Angular team at Cisco. Most of Lara’s career has been spent working in the full stack as a Software Consultant and she enjoys sharing the knowledge and experience she has gained with others through talks, blogs, or pairing with teammates. When she is not coding or teaching, Lara enjoys trail running, fostering rescue kittens, and traveling with her family.',
+      imageUrl: '/images/conf/lara-newsom.webp',
+      name: 'Lara Newsom',
+      twitter: 'LaraNerdsom',
     },
     {
       description:
-        "Juri Strumpflohner lives in the very northern part of Italy and is currently working as a JavaScript Architect and Engineering Manager at Nrwl, where he consults for some of the world's biggest companies around the globe. Juri is a Google Developer Expert in Web Technologies & Angular, speaks at international conferences, teaches on Egghead.io. He's also a core member of Nx.",
-      imageUrl: '/images/conf/juri-strumpflohner.webp',
-      name: 'Juri Strumpflohner',
-      twitter: 'juristr',
+        'Santosh works as a Senior Software Engineer at Celonis and is a GDE for Angular, GitHub Star, and an Auth0 Ambassador, he loves contributing to Angular and its eco-system. He is co-founder of This is Learning. He is also the author of the Ngx-Builders package and part of NestJsAddOns core Team. He is also running This is Tech Talks talk show, where he invites industry experts to discuss different technologies.',
+      imageUrl: '/images/conf/santosh-yadav.webp',
+      name: 'Santosh Yadav',
+      twitter: 'SantoshYadavDev',
+    },
+    {
+      description:
+        'Jordan is a Developer Experience Engineer at Cypress. He is passionate about writing "good code" that is easy to read, test and maintain over time. He has over a decade of experience in software development, marketing, design, and video production. Jordan also serves as the CEO & Co-Founder for the non-profit Dream On: Global. When he is not working, he spends his time as a husband, father and Cleveland sports fan.',
+      imageUrl: '/images/conf/jordan-powell.webp',
+      name: 'Jordan Powell',
+      twitter: 'JordanPowell88',
     },
     {
       description:
@@ -38,39 +45,35 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'bencabanes',
     },
     {
-      description:
-        'Philip Fulcher is a senior engineer with Nrwl and an Nx core team member. He works with Fortune 500 clients to modernize their development practices with a monorepo approach. Philip lives in Colorado with his wife (who is much smarter than him) and two great kids.',
-      imageUrl: '/images/conf/philip-fulcher.webp',
-      name: 'Philip Fulcher',
-      twitter: 'PhilipJFulcher',
+      description: 'TBD',
+      imageUrl: '/images/conf/jack-hsu.webp',
+      name: 'Jack Hsu',
+      twitter: 'jay_soo',
+    },
+    {
+      description: 'TBD',
+      imageUrl: '/images/conf/altan-stalker.webp',
+      name: 'Altan Stalker',
+      twitter: 'altan',
+    },
+    {
+      description: 'TBD',
+      imageUrl: '/images/conf/jonathan-cammisuli.webp',
+      name: 'Jonathan Cammisuli',
+      twitter: 'jcammisuli',
     },
     {
       description:
-        'Jo Hanna is a senior software engineer, problem-solver and science groupie. She has a firm belief that people are always the most interesting component of any system, and a fascination with how we learn and why we often tend to guard too closely the information we acquire.',
-      imageUrl: '/images/conf/jo-hanna-pearce.webp',
-      name: 'Jo Hanna Pearce',
-      twitter: 'jhannapearce',
+        'Software engineer at Ionic working on the Cloud Team. Maintainer of the Ionic and Capacitor Nx plugins.',
+      imageUrl: '/images/conf/devin-shoemaker.webp',
+      name: 'Devin Shoemaker',
+      twitter: 'paranoidcoder',
     },
     {
-      description:
-        'Craigory is an engineer with Nrwl on the Nx core team. Before joining Nrwl, Craigory created the nx-dotnet plugin to integrate C# and .NET into Nx in monorepos alongside front end code.',
-      imageUrl: '/images/conf/craigory-coppola.webp',
-      name: 'Craigory Coppola',
-      twitter: 'enderagent',
-    },
-    {
-      description:
-        'Jason is an architect at Nrwl and a part of the Nx Core Team. He works with Fortune 500 companies across different industries to enable them to develop like Google, Microsoft, and Facebook. Jason is also an enthusiast of board games and mechanical keyboards.',
-      imageUrl: '/images/conf/jason-jeans.webp',
-      name: 'Jason Jean',
-      twitter: 'frozenpandaz',
-    },
-    {
-      description:
-        'Miro is an engineer at Nrwl.io and a member of the Nx Core team. He enjoys sharing with the community, speaking, contributing to open source, and organizing events. Miro is co-founder of Angular Austria and co-organizer of Angular Vienna and ViennaJS meetups.',
-      imageUrl: '/images/conf/miroslav-jonas.webp',
-      name: 'Miroslav Jonas',
-      twitter: 'meeroslav',
+      description: 'TBD',
+      imageUrl: '/images/conf/rares-matei.webp',
+      name: 'Rareş Matei',
+      twitter: '__rares',
     },
   ];
 
