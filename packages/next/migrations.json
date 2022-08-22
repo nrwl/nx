@@ -342,6 +342,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.6.0": {
+      "version": "14.6.0-beta.1",
+      "packages": {
+        "next": {
+          "version": "12.2.5",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.2.5",
+          "alwaysAddToPackageJson": false
+        },
+        "sass": {
+          "version": "1.54.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
