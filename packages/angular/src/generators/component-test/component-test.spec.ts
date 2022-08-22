@@ -1,10 +1,10 @@
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import { componentTestGenerator } from './component-test';
 import { UnitTestRunner } from '../../utils/test-runners';
-import { libraryGenerator } from '../library/library';
 import { componentGenerator } from '../component/component';
+import { libraryGenerator } from '../library/library';
+import { componentTestGenerator } from './component-test';
 
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;

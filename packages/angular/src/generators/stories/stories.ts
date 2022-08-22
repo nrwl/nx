@@ -7,14 +7,14 @@ import {
 } from '@nrwl/devkit';
 import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
 import componentStoryGenerator from '../component-story/component-story';
-import type { ComponentInfo } from './lib/component-info';
+import type { ComponentInfo } from '../utils/storybook-ast/component-info';
 import {
   getComponentsInfo,
   getStandaloneComponentsInfo,
-} from './lib/component-info';
-import { getProjectEntryPoints } from './lib/entry-point';
+} from '../utils/storybook-ast/component-info';
+import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getE2EProject } from './lib/get-e2e-project';
-import { getModuleFilePaths } from './lib/module-info';
+import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import type { StoriesGeneratorOptions } from './schema';
 import minimatch = require('minimatch');
 

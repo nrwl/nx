@@ -4,7 +4,7 @@ import * as devkit from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from '../application/application';
-import * as storybookUtils from '../utils/storybook';
+import * as storybookUtils from '../utils/storybook-ast/storybook-inputs';
 import { componentCypressSpecGenerator } from './component-cypress-spec';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version

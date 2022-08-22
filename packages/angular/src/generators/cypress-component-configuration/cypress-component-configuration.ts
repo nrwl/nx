@@ -1,5 +1,3 @@
-import { CypressComponentConfigSchema } from './schema';
-import { getTsSourceFile } from '@nrwl/angular/src/utils/nx-devkit/ast-utils';
 import { cypressComponentProject } from '@nrwl/cypress';
 import {
   formatFiles,
@@ -9,18 +7,14 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { basename } from 'path';
-import { createSourceFile, ScriptTarget } from 'typescript';
 import { componentTestGenerator } from '../component-test/component-test';
 import {
   getComponentsInfo,
   getStandaloneComponentsInfo,
-} from '../stories/lib/component-info';
-import { getProjectEntryPoints } from '../stories/lib/entry-point';
-import {
-  getModuleDeclaredComponents,
-  getModuleFilePaths,
-} from '../stories/lib/module-info';
+} from '../utils/storybook-ast/component-info';
+import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
+import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
+import { CypressComponentConfigSchema } from './schema';
 
 /**
  * This is for cypress built in component testing, if you want to test with

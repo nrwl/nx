@@ -5,7 +5,7 @@ import {
 } from '@nrwl/workspace/src/utilities/typescript';
 import type { PropertyDeclaration } from 'typescript';
 import { SyntaxKind } from 'typescript';
-import { getTsSourceFile } from '../../utils/nx-devkit/ast-utils';
+import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
 
 export type KnobType = 'text' | 'boolean' | 'number' | 'select';
 export interface InputDescriptor {
@@ -36,7 +36,9 @@ export function getInputPropertyDeclarations(
 export function getComponentProps(
   tree: Tree,
   componentPath: string,
-  getArgsDefaultValueFn: (property: PropertyDeclaration) => string | undefined,
+  getArgsDefaultValueFn: (
+    property: PropertyDeclaration
+  ) => string | undefined = getArgsDefaultValue,
   useDecoratorName = true
 ): InputDescriptor[] {
   const props = getInputPropertyDeclarations(tree, componentPath).map(
@@ -88,4 +90,17 @@ export function getKnobType(property: PropertyDeclaration): KnobType {
     return initializerKindToKnobType[property.initializer.kind] || 'text';
   }
   return 'text';
+}
+
+export function getArgsDefaultValue(property: PropertyDeclaration): string {
+  const typeNameToDefault = {
+    string: "''",
+    number: '0',
+    boolean: 'false',
+  };
+  return property.initializer
+    ? property.initializer.getText()
+    : property.type
+    ? typeNameToDefault[property.type.getText()]
+    : "''";
 }

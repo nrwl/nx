@@ -1,13 +1,9 @@
-import librarySecondaryEntryPointGenerator from '../library-secondary-entry-point/library-secondary-entry-point';
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import {
-  joinPathFragments,
-  readProjectConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import { joinPathFragments, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '../library/library';
 import { componentGenerator } from '../component/component';
+import librarySecondaryEntryPointGenerator from '../library-secondary-entry-point/library-secondary-entry-point';
+import { libraryGenerator } from '../library/library';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
