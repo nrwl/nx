@@ -11,80 +11,122 @@ export function ConfScheduleShort(): JSX.Element {
   const scheduleItemsFor16: ScheduleItem[] = [
     {
       type: 'event',
-      time: '12:00 - 12:30 pm ET',
-      title: 'Keynote',
-      description: '',
-      speakers: ['Juri Strumpflohner', 'Victor Savkin'],
-      videoUrl: 'https://www.youtube.com/watch?v=vLOKgg05Az0',
-    },
-    {
-      type: 'event',
-      time: '12:30 - 1:00pm ET',
-      title: 'Understanding Monorepos: What you need to know',
+      time: '10:00 - 10:30am (UTC-07:00)',
+      title: 'Keynote - Nx and Lerna: Integrated vs Package-Based Monorepos',
       description:
-        'Monorepos are hot right now, especially among Web developers. We’re here to help you understand what they are, what problems they solve, and how Nx makes them delightful. You can break down barriers and reclaim the collaboration you’ve been missing.',
-      speakers: ['Benjamin Cabanes', 'Philip Fulcher'],
-      videoUrl: 'https://www.youtube.com/watch?v=pXw9Ugx_YWI',
-    },
-    {
-      type: 'event',
-      time: '1:00 - 1:30pm ET',
-      title: 'Build your own Nx Workspace from Scratch',
-      description:
-        "Nx Plugins are opinionated and generate quite a bit of configuration. But what happens when that doesn't suit your organization? What is actually necessary and what can be altered? To understand the core of Nx and how to configure it exactly to your needs, Jason Jean and Miroslav Jonas will be building an Nx Workspace from scratch!",
-      speakers: ['Jason Jean', 'Miroslav Jonas'],
-      videoUrl: 'https://www.youtube.com/watch?v=0WADb34Yjmg',
-    },
-    {
-      type: 'event',
-      time: '1:30 - 1:45pm ET',
-      title: 'Speaker Q&A',
-      description: '',
-      speakers: ['Jason Jean', 'Benjamin Cabanes', 'Philip Fulcher'],
+        'The JS community has two main styles of monorepos: the “package-based” approach (popularized by Lerna) and the “integrated” style (popularized by Nx, used by Google, Facebook etc.). While one is lightweight and easy to adopt, the other gives much more flexibility, scales better, and provides better dev ergonomics but requires a mind shift.\n' +
+        'In this talk, we’ll have a deeper look at how Lerna and Nx implement these approaches, the trade-offs, and the advantages; we will help you pick the right one and show how to migrate from one to the other.\n',
+      speakers: ['Victor Savkin'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '1:45 - 2:15pm ET',
-      title: 'Superpowered Micro Frontends with Monorepos',
-      description:
-        'Micro Frontends are awesome, but they can be difficult to set up, maintain and scale. Learn how Nx and Monorepos not only embrace Micro Frontends, but provide amazing benefits that improves reliability, developer experience and maintainability and also encourages strategic collaboration while reducing the risk of running into classic Micro Frontend problems such as Micro Frontend anarchy, framework version mismatch and out-of-sync shared packages.',
-      speakers: ['Colum Ferry'],
-      videoUrl: 'https://www.youtube.com/watch?v=dotA6ZSmNL4',
-    },
-    {
-      type: 'event',
-      time: '2:15 - 2:45pm ET',
-      title: 'Progressively enhance your DX with Nx',
-      description:
-        'Nx gives you tools to level up your productivity and DX. You can start off with a minimal setup and progressively add features by using plugins. Learn how Nx can help projects of any size to thrive.',
-      speakers: ['Craigory Coppola'],
-      videoUrl: 'https://www.youtube.com/watch?v=FKSxIJyB508',
-    },
-    {
-      type: 'event',
-      time: '2:45 - 3:15pm ET',
-      title: 'Into the (Nx) Clouds',
-      description:
-        "Let's takeoff and create a new monorepo from scratch. We can circle the tools that make your local developer experience more pleasant and cruise over the basic CI configuration you'll need. Then we'll kick in the afterburners and show you what Nx Cloud can really do, how to use some of the lesser known features and how it makes CI even faster with cloud caching and distributed task execution.",
-      speakers: ['Jo Hanna Pearce'],
-      videoUrl: 'https://www.youtube.com/watch?v=CTdaNk9Pn9g',
-    },
-    {
-      type: 'event',
-      time: '3:15 - 3:30pm ET',
-      title: 'Speaker Q&A',
-      description: '',
-      speakers: ['Colum Ferry', 'Craigory Coppola', 'Jo Hanna Pearce'],
+      time: '10:30 - 11:00am (UTC-07:00)',
+      title: 'Re-thinking CI bottlenecks with Distributed Execution',
+      description: 'TBD',
+      speakers: ['Rareş Matei', 'Altan Stalker'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '3:30 - 3:45pm ET',
-      title: 'Nx / NxCloud team panel discussion',
+      time: '11:00 - 11:30am (UTC-07:00)',
+      title: 'TBD',
+      description: 'TBD',
+      speakers: [],
+      videoUrl: '',
+    },
+    {
+      type: 'break',
+      time: '11:30 - 11:45am (UTC-07:00)',
+      title: 'Break',
+      description: '',
+      speakers: [],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '11:45 - 12:15pm (UTC-07:00)',
+      title: 'Nx + Cypress Like Peanut Butter & Jelly',
       description:
-        'A Q&A panel with Nx and NxCloud teams ready to answer all your burning questions!',
-      speakers: ['Nx / NxCloud teams'],
+        "Name a more iconic duo than Nx & Cypress... I'll wait. In this talk I will highlight some of ways in which Nx integrates seamlessly with Cypress and how it can speed up both your development and overall developer experience. We will also take a look at Cypress Component Testing and how you can leverage Nx in your testing. By the end you will see why Nx and Cypress are the peanut butter and jelly of your developer toolbox.",
+      speakers: ['Jordan Powell'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '12:15 - 12:45pm (UTC-07:00)',
+      title: 'Extending Nx: Polyglot Superpowers',
+      description:
+        "Extensibility is in Nx's DNA, and having a tool that you can extend and customize to your monorepo setup is crucial. Sharing different languages in a monorepo is extremely common yet toolchains usually don't play well together. Fortunately, Nx allows you to extend its capabilities to integrate your whole stack. Use Nx's graph on your Go or Python code and see what is affected, or generate Go code via Nx. Make Nx polyglot to take advantage of affected tests and remote caching for all your tech stack.",
+      speakers: ['Jack Hsu', 'Benjamin Cabanes'],
+      videoUrl: '',
+    },
+    {
+      type: 'break',
+      time: '12:45 - 2:00pm (UTC-07:00)',
+      title: 'LUNCH',
+      description: '',
+      speakers: [],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '2:00 - 2:30pm (UTC-07:00)',
+      title: 'Nx, Ionic, Appflow: Navigating the Wild West of Hybrid Apps',
+      description:
+        'These days there are a lot of ways to build mobile apps. But what if you want to share your types across the frontend and backend, or share components and logic across your mobile and web app, and maybe an admin panel? At this point, your options get pretty limited, and things only get more complicated once you start thinking about how to automate building and deploying your native apps to the app store. In this talk, we’ll explore how to develop Ionic applications in an Nx workspace and how to configure Appflow for automated app store deployments.',
+      speakers: ['Devin Shoemaker'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '2:30 - 3:00pm (UTC-07:00)',
+      title: 'Nx at Celonis',
+      description:
+        'Celonis adopted AngularJS in 2011, 5 years later in 2016 we had fewer applications to manage, and individual teams were responsible for each application, soon we found there are many issues with each team owning the code, we are duplicating some code, some teams dont have frontend developers and are sometimes dependent on each other is delaying the development workflow. Celonis decided to introduce the project "One Frontend" and we chose Nx and use Module Federation, join us to learn about the journey of Celonis migrating to Nx, why we chose Nx, and how CLI made our life easier, and what Nx\'s future is at Celonis.',
+      speakers: ['Santosh Yadav'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '3:00 - 3:30pm (UTC-07:00)',
+      title: 'Make Nx Work for You with Custom Generators',
+      description:
+        'There is a lot the Nx can do for your application right out of the box, but did you know you can write custom workspace generators specific to YOUR application to help automate the various tasks your team performs on a daily basis? Why write yet another confluence page documenting all of the little things that have to be done after generating a library when you can write a workspace generator that handles all of the little details for you? In this talk we will cover everything you need to know to create your own workspace generator to help reduce manual tasks, enforce architectural patterns, and generate more consistent predictable code.',
+      speakers: ['Lara Newsom'],
+      videoUrl: '',
+    },
+    {
+      type: 'break',
+      time: '3:30 - 3:45pm (UTC-07:00)',
+      title: 'Break',
+      description: '',
+      speakers: [],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '3:45 - 4:15pm (UTC-07:00)',
+      title: 'The power of Nx Console',
+      description:
+        'Are you tired of searching the docs for the exact name of that Nx command flag? Or do you want to explore what’s possible but don’t know where to start? Nx isn’t just fast! We deeply care about the developer experience too! Every command, with all its options, running tasks, and the Nx graph. Just fingertips away so you can keep focused and remain in the flow. In this talk, we’re going deep into how to augment your Nx experience in VSCode! Not a VSCode user? Then be all ears: we might have a surprise.',
+      speakers: ['Jonathan Cammisuli'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '4:15 - 5:00pm (UTC-07:00)',
+      title: 'Closing Remarks',
+      description: '',
+      speakers: ['Jeff Cross'],
+      videoUrl: '',
+    },
+    {
+      type: 'break',
+      time: '7:00pm (UTC-07:00)',
+      title: 'After Party',
+      description: '',
+      speakers: [],
       videoUrl: '',
     },
   ];
@@ -93,7 +135,7 @@ export function ConfScheduleShort(): JSX.Element {
     <div className="border-t border-gray-600">
       <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
         <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-gray-600">
-          <div className="p-8 text-center">April 29th</div>
+          <div className="p-8 text-center">October 17th</div>
         </div>
       </div>
       <section className="w-full divide-y divide-gray-600 border-t border-b border-gray-600">

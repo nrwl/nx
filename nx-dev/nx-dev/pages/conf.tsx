@@ -2,6 +2,7 @@ import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import {
   ConfHealthAndSafety,
   ConfLocation,
+  ConfScheduleShort,
   ConfWorkshop,
 } from '@nrwl/nx-dev/ui-conference';
 import { NextSeo } from 'next-seo';
@@ -309,18 +310,12 @@ export default function ConfPage(): JSX.Element {
           <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             <div className="mt-24">
               <h2 id="agenda" className="font-input-mono my-20 text-3xl">
-                Agenda (EST)
+                Agenda{' '}
+                <span className="text-base italic">(Phoenix - UTC-07:00)</span>
               </h2>
             </div>
           </div>
-          <div className="border-t border-gray-600">
-            <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
-              <div className="p-8 text-center">
-                More information coming soon!
-              </div>
-            </div>
-          </div>
-          {/*<ConfScheduleShort />*/}
+          <ConfScheduleShort />
           {/*SPEAKERS*/}
           <div className="mx-auto max-w-screen-lg px-5 py-5 text-white xl:max-w-screen-xl">
             <div className="mt-24">
