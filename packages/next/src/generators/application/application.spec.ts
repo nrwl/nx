@@ -364,6 +364,7 @@ describe('app', () => {
             ],
             "ignorePatterns": Array [
               "!**/*",
+              ".next/**/*",
             ],
             "overrides": Array [
               Object {

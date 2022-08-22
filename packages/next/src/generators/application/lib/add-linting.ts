@@ -37,6 +37,11 @@ export async function addLinting(
         // Turn off @next/next/no-html-link-for-pages since there is an issue with nextjs throwing linting errors
         // TODO(nicholas): remove after Vercel updates nextjs linter to only lint ["*.ts", "*.tsx", "*.js", "*.jsx"]
 
+        reactEslintJson.ignorePatterns = [
+          ...reactEslintJson.ignorePatterns,
+          '.next/**/*',
+        ];
+
         reactEslintJson.rules = {
           '@next/next/no-html-link-for-pages': 'off',
           ...reactEslintJson.rules,
