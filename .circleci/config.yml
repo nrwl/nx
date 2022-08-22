@@ -158,7 +158,6 @@ jobs:
   main-linux:
     executor: linux
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
       NX_VERBOSE_LOGGING: 'false'
     steps:
@@ -170,7 +169,7 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud start-ci-run --command-count=5 --agent-count=8
+      - run: npx nx-cloud start-ci-run --stop-agents-after="e2e"
       - run: npx nx-cloud record yarn check-imports
       - run: npx nx-cloud record yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx-cloud record yarn check-commit
@@ -201,11 +200,6 @@ jobs:
           command: |
             npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular,e2e-react-native,e2e-detox,e2e-make-angular-cli-faster --parallel=1
           no_output_timeout: 45m
-      - run:
-          name: Stop All Running Agents for This CI Run
-          command: npx nx-cloud stop-all-agents
-          when: always
-
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
