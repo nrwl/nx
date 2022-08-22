@@ -1,14 +1,15 @@
 import 'dotenv/config';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, readJsonFile, workspaceLayout } from '@nrwl/devkit';
 import build from 'next/dist/build';
 import { join, resolve } from 'path';
 import { copySync, mkdir } from 'fs-extra';
+import { gte } from 'semver';
 import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { workspaceLayout } from '@nrwl/devkit';
+import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 
 import { prepareConfig } from '../../utils/config';
 import { createPackageJson } from './lib/create-package-json';
@@ -23,7 +24,14 @@ export default async function buildExecutor(
 ) {
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV ||= 'production';
-  (process.env as any).__NEXT_REACT_ROOT ||= 'true';
+
+  // Set `__NEXT_REACT_ROOT` based on installed ReactDOM version
+  const packageJson = readJsonFile(join(context.root, 'package.json'));
+  const reactDomVersion = packageJson.dependencies['react-dom'];
+  const hasReact18 =
+    reactDomVersion &&
+    gte(checkAndCleanWithSemver('react-dom', reactDomVersion), '18.0.0');
+  (process.env as any).__NEXT_REACT_ROOT ||= hasReact18 ? 'true' : undefined;
 
   let dependencies: DependentBuildableProjectNode[] = [];
   const root = resolve(context.root, options.root);
