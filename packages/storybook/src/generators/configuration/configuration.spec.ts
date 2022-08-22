@@ -83,6 +83,7 @@ describe('@nrwl/storybook:configuration', () => {
       expect(
         storybookTsconfigJson.exclude.includes('../**/*.spec.jsx')
       ).toBeFalsy();
+      expect(readJson(tree, 'nx.json')).toMatchSnapshot();
     });
 
     it('should generate TypeScript Configuration files', async () => {
