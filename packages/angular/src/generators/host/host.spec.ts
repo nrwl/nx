@@ -1,6 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import host from './host';
-import applicationGenerator from '../application/application';
 import remote from '../remote/remote';
 
 describe('Host App Generator', () => {
@@ -21,12 +20,8 @@ describe('Host App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
 
-    await applicationGenerator(tree, {
+    await remote(tree, {
       name: 'remote',
-      mf: true,
-      mfType: 'remote',
-      routing: true,
-      port: 4201,
     });
 
     // ACT

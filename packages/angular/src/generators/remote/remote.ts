@@ -1,4 +1,5 @@
 import {
+  formatFiles,
   getProjects,
   joinPathFragments,
   readProjectConfiguration,
@@ -8,6 +9,7 @@ import type { Schema } from './schema';
 import applicationGenerator from '../application/application';
 import { getMFProjects } from '../../utils/get-mf-projects';
 import { normalizeProjectName } from '../utils/project';
+import { setupMf } from '../setup-mf/setup-mf';
 
 function findNextAvailablePort(tree: Tree) {
   const mfProjects = getMFProjects(tree);
@@ -32,17 +34,32 @@ export default async function remote(tree: Tree, options: Schema) {
     );
   }
 
+  const appName = normalizeProjectName(options.name, options.directory);
+  const port = options.port ?? findNextAvailablePort(tree);
+
   const installTask = await applicationGenerator(tree, {
     ...options,
-    mf: true,
+    routing: true,
+    skipDefaultProject: true,
+    port,
+  });
+
+  await setupMf(tree, {
+    appName,
     mfType: 'remote',
     routing: true,
     host: options.host,
-    port: options.port ?? findNextAvailablePort(tree),
-    skipDefaultProject: true,
+    port,
+    skipPackageJson: options.skipPackageJson,
+    skipFormat: true,
+    e2eProjectName: `${appName}-e2e`,
   });
 
   removeDeadCode(tree, options);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return installTask;
 }
