@@ -23,7 +23,7 @@ export function ConfWorkshop(): JSX.Element {
               and organization.
             </p>
             <h4 className="font-input-mono mt-8 mb-4 text-lg">
-              $800 All-Inclusive
+              $800 All-Inclusive / $400 Day 2 only
             </h4>
             <p className="mb-4 text-slate-300">
               To help you better learn and apply various concepts in your
