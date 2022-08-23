@@ -45,19 +45,22 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'bencabanes',
     },
     {
-      description: 'TBD',
+      description:
+        'Core contributor to Nx, and engineering manager at Nrwl. Jack has been doing web development for two decades, and has worked with both small and large organizations. He is passionate about helping teams achieve a high level of productivity through smart tooling and good architecture.',
       imageUrl: '/images/conf/jack-hsu.webp',
       name: 'Jack Hsu',
       twitter: 'jay_soo',
     },
     {
-      description: 'TBD',
+      description:
+        "Based in Atlanta, GA, Altan is a senior engineer at Nrwl and works primarily on Nx Cloud. He's passionate about developer experience and helping organizations move quickly. When not building software, you can find him working on his keyboard or on a hike.",
       imageUrl: '/images/conf/altan-stalker.webp',
       name: 'Altan Stalker',
       twitter: 'altan',
     },
     {
-      description: 'TBD',
+      description:
+        'Jon is the lead developer for the official Nx Console extension. He has been working as a developer for 15 years; building websites, web apps and server applications. He loves to write Typescript, and dabbles in a bit of Rust. Born and raised in Canada, he’ll always have a recommendation on what to put maple syrup on.',
       imageUrl: '/images/conf/jonathan-cammisuli.webp',
       name: 'Jonathan Cammisuli',
       twitter: 'jcammisuli',
@@ -70,7 +73,8 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'paranoidcoder',
     },
     {
-      description: 'TBD',
+      description:
+        'From the faraway lands of Scotland (but without the Scottish accent), Rareș works at Nrwl.io on NxCloud, helping teams speed up and scale their development practices. He enjoys learning by teaching and has multiple courses on Egghead.io and is a Scotland organiser for Codebar.io.',
       imageUrl: '/images/conf/rares-matei.webp',
       name: 'Rareş Matei',
       twitter: '__rares',
