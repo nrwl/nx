@@ -42,7 +42,7 @@ export async function affected(
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = await createProjectGraphAsync();
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projects = projectsToRun(nxArgs, projectGraph);
 
   try {

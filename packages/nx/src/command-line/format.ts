@@ -79,7 +79,7 @@ export async function format(
 async function getPatterns(
   args: NxArgs & { libsAndApps: boolean; _: string[] }
 ): Promise<string[]> {
-  const graph = await createProjectGraphAsync();
+  const graph = await createProjectGraphAsync({ exitOnError: true });
   const allFilesPattern = ['.'];
 
   if (args.all) {
@@ -119,7 +119,7 @@ async function getPatternsFromApps(
   allWorkspaceFiles: FileData[],
   projectGraph: ProjectGraph
 ): Promise<string[]> {
-  const graph = await createProjectGraphAsync();
+  const graph = await createProjectGraphAsync({ exitOnError: true });
   const affectedGraph = filterAffected(
     graph,
     calculateFileChanges(affectedFiles, allWorkspaceFiles)

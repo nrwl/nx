@@ -7,7 +7,7 @@ import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { pruneExternalNodes } from '../project-graph/operators';
 
 export async function workspaceLint(): Promise<void> {
-  const graph = await createProjectGraphAsync();
+  const graph = await createProjectGraphAsync({ exitOnError: true });
   const allWorkspaceFiles = graph.allWorkspaceFiles;
   const projectGraph = pruneExternalNodes(graph);
 

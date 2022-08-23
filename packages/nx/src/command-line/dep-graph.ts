@@ -167,7 +167,9 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
-  let graph = pruneExternalNodes(await createProjectGraphAsync());
+  let graph = pruneExternalNodes(
+    await createProjectGraphAsync({ exitOnError: true })
+  );
   const layout = workspaceLayout();
 
   const projects = Object.values(graph.nodes) as ProjectGraphProjectNode[];
@@ -477,7 +479,9 @@ async function createDepGraphClientResponse(
   performance.mark('project graph watch calculation:start');
   await defaultFileHasher.init();
 
-  let graph = pruneExternalNodes(await createProjectGraphAsync());
+  let graph = pruneExternalNodes(
+    await createProjectGraphAsync({ exitOnError: true })
+  );
   performance.mark('project graph watch calculation:end');
   performance.mark('project graph response generation:start');
 

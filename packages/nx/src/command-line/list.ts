@@ -44,7 +44,7 @@ export async function listHandler(args: ListArgs): Promise<void> {
 
       return [];
     });
-    const projectGraph = await createProjectGraphAsync();
+    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 
     const localPlugins = getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph)

@@ -139,15 +139,18 @@ function daemonProcessException(message: string) {
     if (log.length > 20) {
       log = log.slice(log.length - 20);
     }
-    return new Error(
+    const error = new Error(
       [
         message,
+        '',
         'Messages from the log:',
         ...log,
         '\n',
         `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
       ].join('\n')
     );
+    (error as any).internalDaemonError = true;
+    return error;
   } catch (e) {
     return new Error(message);
   }
@@ -209,11 +212,13 @@ async function sendMessageToDaemon(message: {
 
     socket.on('error', (err) => {
       if (!err.message) {
-        return reject(err);
+        return reject(daemonProcessException(err.toString()));
       }
+
       if (err.message.startsWith('LOCK-FILES-CHANGED')) {
         return sendMessageToDaemon(message).then(resolve, reject);
       }
+
       let error: any;
       if (err.message.startsWith('connect ENOENT')) {
         error = daemonProcessException('The Daemon Server is not running');
@@ -226,8 +231,10 @@ async function sendMessageToDaemon(message: {
         error = daemonProcessException(
           `Unable to connect to the daemon process.`
         );
+      } else {
+        error = daemonProcessException(err.toString());
       }
-      return reject(error || err);
+      return reject(error);
     });
 
     socket.on('ready', () => {
