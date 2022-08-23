@@ -901,7 +901,7 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 ### createProjectGraphAsync
 
-▸ **createProjectGraphAsync**(): `Promise`<[`ProjectGraph`](../../devkit/index#projectgraph)\>
+▸ **createProjectGraphAsync**(`opts?`): `Promise`<[`ProjectGraph`](../../devkit/index#projectgraph)\>
 
 Computes and returns a ProjectGraph.
 
@@ -924,6 +924,13 @@ Tip: If you want to debug project graph creation, run your command with NX_DAEMO
 
 Nx uses two layers of caching: the information about explicit dependencies stored on the disk and the information
 stored in the daemon process. To reset both run: `nx reset`.
+
+#### Parameters
+
+| Name               | Type      |
+| :----------------- | :-------- |
+| `opts`             | `Object`  |
+| `opts.exitOnError` | `boolean` |
 
 #### Returns
 

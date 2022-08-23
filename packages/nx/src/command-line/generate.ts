@@ -326,7 +326,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
 
   const ws = new Workspaces(workspaceRoot);
   const nxJson = readNxJson();
-  const projectGraph = await createProjectGraphAsync();
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projectsConfiguration =
     readProjectsConfigurationFromProjectGraph(projectGraph);
 

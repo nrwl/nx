@@ -72,7 +72,7 @@ export async function reportHandler() {
   bodyLines.push('---------------------------------------');
 
   try {
-    const projectGraph = await createProjectGraphAsync();
+    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
     bodyLines.push('Local workspace plugins:');
     const plugins = getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph)

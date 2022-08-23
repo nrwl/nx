@@ -29,7 +29,7 @@ export async function runOne(
   performance.measure('code-loading', 'init-local', 'command-execution-begins');
 
   const nxJson = readNxJson();
-  const projectGraph = await createProjectGraphAsync();
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 
   const opts = parseRunOneOptions(cwd, args, {
     ...readProjectsConfigurationFromProjectGraph(projectGraph),

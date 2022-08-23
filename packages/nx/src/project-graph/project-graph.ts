@@ -80,6 +80,22 @@ async function buildProjectGraphWithoutDaemon() {
   return await buildProjectGraph();
 }
 
+function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
+  if (opts.exitOnError) {
+    const lines = e.message.split('\n');
+    output.error({
+      title: lines[0],
+      bodyLines: lines.slice(1),
+    });
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.error(e);
+    }
+    process.exit(1);
+  } else {
+    throw e;
+  }
+}
+
 /**
  * Computes and returns a ProjectGraph.
  *
@@ -101,15 +117,25 @@ async function buildProjectGraphWithoutDaemon() {
  * Nx uses two layers of caching: the information about explicit dependencies stored on the disk and the information
  * stored in the daemon process. To reset both run: `nx reset`.
  */
-export async function createProjectGraphAsync(): Promise<ProjectGraph> {
+export async function createProjectGraphAsync(
+  opts: { exitOnError: boolean } = { exitOnError: false }
+): Promise<ProjectGraph> {
   const nxJson = readNxJson();
   const daemon = new DaemonClient(nxJson);
   if (!daemon.enabled()) {
-    return await buildProjectGraphWithoutDaemon();
+    try {
+      return await buildProjectGraphWithoutDaemon();
+    } catch (e) {
+      handleProjectGraphError(opts, e);
+    }
   } else {
     try {
-      return daemon.getProjectGraph();
+      return await daemon.getProjectGraph();
     } catch (e) {
+      if (!e.internalDaemonError) {
+        handleProjectGraphError(opts, e);
+      }
+
       if (e.message.indexOf('inotify_add_watch') > -1) {
         // common errors with the daemon due to OS settings (cannot watch all the files available)
         output.note({
