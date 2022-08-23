@@ -298,5 +298,10 @@
     "name": "nx-pwm",
     "description": "Nx plugin and CLI to help maintain packages, inspired by NX repo tooling",
     "url": "https://github.com/gioragutt/nx-pwm"
+  },
+  {
+    "name": "@nxrocks/nx-micronaut",
+    "description": "Nx plugin to generate, run, package, build (and more) Micronaut projects inside your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-micronaut"
   }
 ]
