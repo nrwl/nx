@@ -1,10 +1,9 @@
 import {
-  ProjectGraph,
-  Task,
-  TaskGraph,
-  ProjectsConfigurations,
-  Hasher,
   Hash,
+  Hasher,
+  ProjectGraph,
+  ProjectsConfigurations,
+  Task,
 } from '@nrwl/devkit';
 
 export default async function run(
@@ -12,7 +11,6 @@ export default async function run(
   context: {
     hasher: Hasher;
     projectGraph: ProjectGraph;
-    taskGraph: TaskGraph;
     workspaceConfig: ProjectsConfigurations;
   }
 ): Promise<Hash> {
@@ -21,17 +19,20 @@ export default async function run(
     return res;
   }
 
-  const deps = allDeps(task.id, context.taskGraph, context.projectGraph);
+  const deps = allDeps(task, context.projectGraph);
   const tags = context.hasher.hashArray(
     deps.map((d) => (context.workspaceConfig.projects[d].tags || []).join('|'))
   );
 
   const command = res.details['command'];
-  const selfSource =
-    res.details.nodes[`${task.target.project}:$filesets:default`];
 
-  const nodes = {};
-  const hashes = [] as string[];
+  const selfSource =
+    res.details.nodes[
+      `${task.target.project}:$filesets:${task.target.target}`
+    ] || res.details.nodes[`${task.target.project}:$filesets:default`];
+
+  const nodes: { [name: string]: string } = {};
+  const hashes: string[] = [];
   for (const d of Object.keys(res.details.nodes)) {
     if (d.indexOf('$fileset') === -1) {
       nodes[d] = res.details.nodes[d];
@@ -47,17 +48,8 @@ export default async function run(
   };
 }
 
-function allDeps(
-  taskId: string,
-  taskGraph: TaskGraph,
-  projectGraph: ProjectGraph
-): string[] {
-  if (!taskGraph.tasks) {
-    return [];
-  }
-  const project = taskGraph.tasks[taskId].target.project;
-  const dependencies = projectGraph.dependencies[project]
+function allDeps(task: Task, projectGraph: ProjectGraph): string[] {
+  return projectGraph.dependencies[task.target.project]
     .filter((d) => !!projectGraph.nodes[d.target])
     .map((d) => d.target);
-  return dependencies;
 }

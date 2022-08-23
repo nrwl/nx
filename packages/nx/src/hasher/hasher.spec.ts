@@ -116,7 +116,7 @@ describe('Hasher', () => {
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
-      'parent:$filesets:default':
+      'parent:$filesets:build':
         '/file|file.hash|{"root":"libs/parent","targets":{"build":{"inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"}]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       '{workspaceRoot}/yarn.lock': 'yarn.lock.hash',
       '{workspaceRoot}/package-lock.json': 'package-lock.json.hash',
@@ -244,7 +244,7 @@ describe('Hasher', () => {
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
       'child:$filesets:prod':
         'libs/child/fileb.ts|libs/child/fileb.spec.ts|b.hash|b.spec.hash|{"root":"libs/child","namedInputs":{"prod":["default"]},"targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets:default':
+      'parent:$filesets:build':
         'libs/parent/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{"inputs":["prod","^prod"]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
@@ -315,7 +315,7 @@ describe('Hasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(parentHash.details.nodes['parent:$filesets:default']).toContain(
+    expect(parentHash.details.nodes['parent:$filesets:test']).toContain(
       'libs/parent/filea.ts|libs/parent/filea.spec.ts|a.hash|a.spec.hash|'
     );
     expect(parentHash.details.nodes['child:$filesets:prod']).toContain(
@@ -337,7 +337,7 @@ describe('Hasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(childHash.details.nodes['child:$filesets:default']).toContain(
+    expect(childHash.details.nodes['child:$filesets:test']).toContain(
       'libs/child/fileb.ts|libs/child/fileb.spec.ts|b.hash|b.spec.hash|'
     );
     expect(childHash.details.nodes['{workspaceRoot}/global1']).toEqual(
@@ -345,6 +345,104 @@ describe('Hasher', () => {
     );
     expect(childHash.details.nodes['{workspaceRoot}/global2']).toBe(undefined);
     expect(childHash.details.nodes['env:MY_TEST_HASH_ENV']).toBeUndefined();
+  });
+
+  it('should be able to handle multiple filesets per parent project project', async () => {
+    const hasher = new Hasher(
+      {
+        nodes: {
+          parent: {
+            name: 'parent',
+            type: 'lib',
+            data: {
+              root: 'libs/parent',
+              targets: {
+                build: {},
+                e2e: {},
+              },
+              files: [
+                { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+                { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+                {
+                  file: 'libs/parent/filea.e2e-spec.ts',
+                  hash: 'a.e2e-spec.hash',
+                },
+              ],
+            },
+          },
+          child: {
+            name: 'child',
+            type: 'lib',
+            data: {
+              root: 'libs/child',
+              targets: {
+                build: {},
+                e2e: {},
+              },
+              files: [
+                { file: 'libs/child/fileb.ts', hash: 'b.hash' },
+                { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+                {
+                  file: 'libs/child/fileb.e2e-spec.ts',
+                  hash: 'b.e2e-spec.hash',
+                },
+              ],
+            },
+          },
+        },
+        dependencies: {
+          parent: [{ source: 'parent', target: 'child', type: 'static' }],
+        },
+        allWorkspaceFiles,
+      },
+      {
+        namedInputs: {
+          'skip-test-files': ['!{projectRoot}/**/*.spec.ts'],
+          'skip-e2e-files': ['!{projectRoot}/**/*.e2e-spec.ts'],
+          'skip-test-and-e2e-files': ['!{projectRoot}/**/*.{spec,e2e-spec}.ts'],
+        },
+        targetDefaults: {
+          build: {
+            inputs: ['skip-test-and-e2e-files', '^skip-test-and-e2e-files'],
+            dependsOn: ['^build'],
+          },
+          e2e: {
+            inputs: ['skip-test-files', '^skip-test-and-e2e-files'],
+          },
+        },
+      } as any,
+      {},
+      createHashing()
+    );
+
+    const e2eHash = await hasher.hashTask({
+      target: { project: 'parent', target: 'e2e' },
+      id: 'parent-test',
+      overrides: {},
+    });
+
+    expect(e2eHash.details.nodes['parent:$filesets:e2e']).toContain(
+      'libs/parent/filea.ts|libs/parent/filea.e2e-spec.ts|a.hash|a.e2e-spec.hash|'
+    );
+
+    for (const value of Object.values(e2eHash.details.nodes)) {
+      expect(value).not.toContain('.spec');
+    }
+
+    const buildHash = await hasher.hashTask({
+      target: { project: 'parent', target: 'build' },
+      id: 'parent-build',
+      overrides: {},
+    });
+
+    expect(buildHash.details.nodes['parent:$filesets:build']).toContain(
+      'libs/parent/filea.ts|a.hash|'
+    );
+
+    for (const value of Object.values(buildHash.details.nodes)) {
+      expect(value).not.toContain('.spec');
+      expect(value).not.toContain('.e2e-spec');
+    }
   });
 
   it('should use targetdefaults from nx.json', async () => {
@@ -406,7 +504,7 @@ describe('Hasher', () => {
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
       'child:$filesets:prod':
         'libs/child/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets:default':
+      'parent:$filesets:build':
         'libs/parent/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });

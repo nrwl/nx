@@ -14,10 +14,11 @@ import { readJsonFile } from '../utils/fileutils';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { getImportPath } from '../utils/path';
 
-type ExpandedSelfInput =
-  | { fileset: string }
-  | { runtime: string }
-  | { env: string };
+interface FilesetInput {
+  fileset: string;
+}
+
+type ExpandedSelfInput = FilesetInput | { runtime: string } | { env: string };
 
 /**
  * A data structure returned by the default hasher.
@@ -102,7 +103,10 @@ export class Hasher {
   }
 
   async hashTask(task: Task): Promise<Hash> {
-    const res = await this.taskHasher.hashTask(task, [task.target.project]);
+    const res = await this.taskHasher.hashTask(
+      task,
+      new Set([task.target.project])
+    );
     const command = this.hashCommand(task);
     return {
       value: this.hashArray([res.value, command]),
@@ -156,7 +160,10 @@ export class Hasher {
    * @deprecated use hashTask
    */
   async hashSource(task: Task): Promise<string> {
-    const hash = await this.taskHasher.hashTask(task, [task.target.project]);
+    const hash = await this.taskHasher.hashTask(
+      task,
+      new Set([task.target.project])
+    );
     return hash.details[`${task.target.project}:$filesets`];
   }
 
@@ -181,7 +188,7 @@ export class Hasher {
   }
 }
 
-const DEFAULT_INPUTS = [
+const DEFAULT_INPUTS: InputDefinition[] = [
   {
     projects: 'self',
     fileset: '{projectRoot}/**/*',
@@ -210,40 +217,47 @@ class TaskHasher {
     private readonly options: { selectivelyHashTsConfig: boolean }
   ) {}
 
-  async hashTask(task: Task, visited: string[]): Promise<PartialHash> {
-    return Promise.resolve().then(async () => {
-      const projectNode = this.projectGraph.nodes[task.target.project];
-      if (!projectNode) {
-        return this.hashExternalDependency(task.target.project);
-      }
-      const namedInputs = {
-        default: [{ fileset: '{projectRoot}/**/*' }],
-        ...this.nxJson.namedInputs,
-        ...projectNode.data.namedInputs,
-      };
-      const targetData = projectNode.data.targets[task.target.target];
-      const targetDefaults = (this.nxJson.targetDefaults || {})[
-        task.target.target
-      ];
-      const { selfInputs, depsInputs } = splitInputsIntoSelfAndDependencies(
-        targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
-        namedInputs
-      );
+  async hashTask(task: Task, visited: Set<string>): Promise<PartialHash> {
+    const projectNode = this.projectGraph.nodes[task.target.project];
+    if (!projectNode) {
+      return this.hashExternalDependency(task.target.project);
+    }
+    const namedInputs = {
+      default: [{ fileset: '{projectRoot}/**/*' }],
+      ...this.nxJson.namedInputs,
+      ...projectNode.data.namedInputs,
+    };
+    const targetData = projectNode.data.targets[task.target.target];
+    const targetDefaults = (this.nxJson.targetDefaults || {})[
+      task.target.target
+    ];
 
-      return this.hashSelfAndDepsInputs(
-        task.target.project,
-        'default',
-        selfInputs,
-        depsInputs,
-        visited
-      );
-    });
+    let inputName = 'default';
+    let inputs: (string | InputDefinition)[] = DEFAULT_INPUTS;
+
+    if (targetData.inputs || targetDefaults?.inputs) {
+      inputName = task.target.target;
+      inputs = targetData.inputs || targetDefaults?.inputs;
+    }
+
+    const { selfInputs, depsInputs } = splitInputsIntoSelfAndDependencies(
+      inputs,
+      namedInputs
+    );
+
+    return this.hashSelfAndDepsInputs(
+      task.target.project,
+      inputName,
+      selfInputs,
+      depsInputs,
+      visited
+    );
   }
 
   private async hashNamedInput(
     projectName: string,
     namedInput: string,
-    visited: string[]
+    visited: Set<string>
   ): Promise<PartialHash> {
     const projectNode = this.projectGraph.nodes[projectName];
     if (!projectNode) {
@@ -271,7 +285,7 @@ class TaskHasher {
     namedInput: string,
     selfInputs: ExpandedSelfInput[],
     depsInputs: { input: string }[],
-    visited: string[]
+    visited: Set<string>
   ) {
     const projectGraphDeps = this.projectGraph.dependencies[projectName] ?? [];
 
@@ -301,17 +315,17 @@ class TaskHasher {
   private async hashDepsInputs(
     inputs: { input: string }[],
     projectGraphDeps: ProjectGraphDependency[],
-    visited: string[]
+    visited: Set<string>
   ): Promise<PartialHash[]> {
     return (
       await Promise.all(
         inputs.map(async (input) => {
           return await Promise.all(
             projectGraphDeps.map(async (d) => {
-              if (visited.indexOf(d.target) > -1) {
+              if (visited.has(d.target)) {
                 return null;
               } else {
-                visited.push(d.target);
+                visited.add(d.target);
                 return await this.hashNamedInput(
                   d.target,
                   input.input || 'default',
@@ -360,12 +374,10 @@ class TaskHasher {
     namedInput: string,
     inputs: ExpandedSelfInput[]
   ): Promise<PartialHash[]> {
-    const filesets = inputs
-      .filter((r) => !!r['fileset'])
-      .map((r) => r['fileset']);
+    const filesets = inputs.filter(isFilesSetInput).map((r) => r.fileset);
 
-    const projectFilesets = [];
-    const workspaceFilesets = [];
+    const projectFilesets: string[] = [];
+    const workspaceFilesets: string[] = [];
     let invalidFilesetNoPrefix = null;
     let invalidFilesetWorkspaceRootNegative = null;
 
@@ -401,7 +413,7 @@ class TaskHasher {
       );
     }
 
-    const notFilesets = inputs.filter((r) => !r['fileset']);
+    const notFilesets = inputs.filter((r) => !isFilesSetInput(r));
     return Promise.all([
       this.hashProjectFileset(projectName, namedInput, projectFilesets),
       ...[
@@ -444,7 +456,7 @@ class TaskHasher {
     return this.filesetHashes[mapKey];
   }
 
-  private async hashProjectFileset(
+  private hashProjectFileset(
     projectName: string,
     namedInput: string,
     filesetPatterns: string[]
@@ -543,8 +555,8 @@ export function splitInputsIntoSelfAndDependencies(
   depsInputs: { input: string }[];
   selfInputs: ExpandedSelfInput[];
 } {
-  const depsInputs = [];
-  const selfInputs = [];
+  const depsInputs: { input: string }[] = [];
+  const selfInputs: (InputDefinition | string)[] = [];
   for (const d of inputs) {
     if (typeof d === 'string') {
       if (d.startsWith('^')) {
@@ -592,6 +604,10 @@ function expandSelfInputs(
     }
   }
   return expanded;
+}
+
+function isFilesSetInput(input: ExpandedSelfInput): input is FilesetInput {
+  return !!input['fileset'];
 }
 
 export function expandNamedInput(
