@@ -218,6 +218,10 @@
             "x-completion-type": "file",
             "x-completion-glob": "main@(.js|.ts|.jsx|.tsx)"
           },
+          "rootDir": {
+            "type": "string",
+            "description": "Sets the rootDir for TypeScript compilation. When not defined, it uses the root of project."
+          },
           "outputPath": {
             "type": "string",
             "description": "The output path of the generated files.",

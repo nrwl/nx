@@ -34,6 +34,7 @@ export interface LibraryGeneratorSchema {
 export interface ExecutorOptions {
   assets: Array<AssetGlob | string>;
   main: string;
+  rootDir?: string;
   outputPath: string;
   tsConfig: string;
   swcrc?: string;
