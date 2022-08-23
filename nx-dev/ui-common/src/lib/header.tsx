@@ -116,10 +116,10 @@ export function Header(props: HeaderProps): JSX.Element {
                 title="Check Nx conference"
                 className="relative hidden px-3 py-2 leading-tight text-white md:inline-flex"
               >
-                {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
-                {/*  <span className="bg-green-nx-base absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />*/}
-                {/*  <span className="bg-green-nx-base relative inline-flex h-3 w-3 rounded-full" />*/}
-                {/*</span>*/}
+                <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">
+                  <span className="bg-green-nx-base absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
+                  <span className="bg-green-nx-base relative inline-flex h-3 w-3 rounded-full" />
+                </span>
                 Nx Conf
               </a>
             </Link>
