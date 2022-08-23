@@ -186,22 +186,21 @@ jobs:
             npx nx-cloud record yarn depcheck) &
             pids+=($!)
 
-            npx nx-cloud record yarn nx workspace-lint &
+            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 && 
+            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular,e2e-react-native,e2e-detox,e2e-make-angular-cli-faster --parallel=1) &
             pids+=($!)
-            yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
+            (npx nx-cloud record yarn nx workspace-lint && yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3) &
             pids+=($!)
             yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
-            pids+=($!)
-            yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
             for pid in "${pids[@]}"; do
               wait "$pid"
             done
       - run:
-          name: Run E2E Tests
-          command: |
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular,e2e-react-native,e2e-detox,e2e-make-angular-cli-faster --parallel=1
-          no_output_timeout: 45m
+          name: Stop All Running Agents for This CI Run
+          command: npx nx-cloud stop-all-agents
+          when: always
+
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
