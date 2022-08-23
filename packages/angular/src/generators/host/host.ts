@@ -12,6 +12,7 @@ import remoteGenerator from '../remote/remote';
 import { normalizeProjectName } from '../utils/project';
 import * as ts from 'typescript';
 import { addRoute } from '../../utils/nx-devkit/ast-utils';
+import { setupMf } from '../setup-mf/setup-mf';
 
 export default async function host(tree: Tree, options: Schema) {
   const projects = getProjects(tree);
@@ -29,22 +30,32 @@ export default async function host(tree: Tree, options: Schema) {
     });
   }
 
+  const appName = normalizeProjectName(options.name, options.directory);
+
   const installTask = await applicationGenerator(tree, {
     ...options,
-    mf: true,
+    routing: true,
+    port: 4200,
+    skipFormat: true,
+  });
+
+  await setupMf(tree, {
+    appName,
     mfType: 'host',
     routing: true,
-    remotes: remotesToIntegrate ?? [],
     port: 4200,
+    remotes: remotesToIntegrate ?? [],
     federationType: options.dynamic ? 'dynamic' : 'static',
+    skipPackageJson: options.skipPackageJson,
     skipFormat: true,
+    e2eProjectName: `${appName}-e2e`,
   });
 
   for (const remote of remotesToGenerate) {
     await remoteGenerator(tree, {
       ...options,
       name: remote,
-      host: normalizeProjectName(options.name, options.directory),
+      host: appName,
       skipFormat: true,
     });
   }

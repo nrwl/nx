@@ -3,7 +3,7 @@ import {
   readWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import applicationGenerator from '../application/application';
+import host from '../host/host';
 import remote from './remote';
 
 describe('MF Remote App Generator', () => {
@@ -25,18 +25,14 @@ describe('MF Remote App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
 
-    await applicationGenerator(tree, {
+    await host(tree, {
       name: 'host',
-      mf: true,
-      mfType: 'host',
-      routing: true,
     });
 
     // ACT
     await remote(tree, {
       name: 'test',
       host: 'host',
-      port: 4201,
     });
 
     // ASSERT
@@ -53,7 +49,6 @@ describe('MF Remote App Generator', () => {
       await remote(tree, {
         name: 'test',
         host: 'host',
-        port: 4201,
       });
     } catch (error) {
       // ASSERT

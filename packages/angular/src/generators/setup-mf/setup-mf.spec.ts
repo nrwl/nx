@@ -278,6 +278,7 @@ describe('Init MF', () => {
       appName: 'test-app',
       mfType: 'host',
       routing: true,
+      e2eProjectName: 'test-app-e2e',
     });
 
     // ASSERT
