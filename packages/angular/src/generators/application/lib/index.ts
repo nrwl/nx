@@ -1,6 +1,5 @@
 export * from './add-e2e';
 export * from './add-linting';
-export * from './add-mf';
 export * from './add-protractor';
 export * from './add-proxy-config';
 export * from './add-unit-test-runner';

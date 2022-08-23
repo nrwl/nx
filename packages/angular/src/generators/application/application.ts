@@ -12,7 +12,6 @@ import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
   addE2e,
   addLinting,
-  addMf,
   addProxyConfig,
   addRouterRootConfiguration,
   addUnitTestRunner,
@@ -133,10 +132,6 @@ export async function applicationGenerator(
 
   if (options.standalone) {
     convertToStandaloneApp(host, options);
-  }
-
-  if (options.mf) {
-    await addMf(host, options);
   }
 
   if (!options.skipFormat) {
