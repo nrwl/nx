@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxExpoBuildWeb",
+  "cli": "nx",
+  "title": "Expo web Build executor",
+  "description": "Build the web app for production",
+  "type": "object",
+  "properties": {
+    "clear": {
+      "type": "boolean",
+      "description": "Clear all cached build files and assets.",
+      "alias": "c"
+    },
+    "noPwa": {
+      "type": "boolean",
+      "description": "Prevent webpack from generating the manifest.json and injecting meta into the index.html head."
+    },
+    "dev": {
+      "type": "boolean",
+      "description": "Turns dev flag on before bundling"
+    }
+  },
+  "required": []
+}

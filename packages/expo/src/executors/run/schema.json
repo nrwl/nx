@@ -1,0 +1,51 @@
+{
+  "cli": "nx",
+  "$id": "NxExpoRun",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Run iOS or Android application",
+  "description": "Run Expo target options",
+  "type": "object",
+  "properties": {
+    "platform": {
+      "description": "Platform to run for (ios, android).",
+      "enum": ["ios", "android"],
+      "default": "ios"
+    },
+    "xcodeConfiguration": {
+      "type": "string",
+      "description": "(iOS) Xcode configuration to use. Debug or Release",
+      "default": "Debug"
+    },
+    "scheme": {
+      "type": "string",
+      "description": "(iOS) Explicitly set the Xcode scheme to use"
+    },
+    "variant": {
+      "type": "string",
+      "description": "(Android) Specify your app's build variant (e.g. debug, release).",
+      "default": "debug"
+    },
+    "device": {
+      "type": "string",
+      "description": "Device name or UDID to build the app on. The value is not required if you have a single device connected.",
+      "alias": "d"
+    },
+    "sync": {
+      "type": "boolean",
+      "description": "Syncs npm dependencies to package.json (for React Native autolink). Always true when --install is used.",
+      "default": true
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to start the Metro bundler on",
+      "default": 8081,
+      "alias": "p"
+    },
+    "bundler": {
+      "type": "boolean",
+      "description": "Whether to skip starting the Metro bundler. True to start it, false to skip it.",
+      "default": true
+    }
+  },
+  "required": ["platform"]
+}

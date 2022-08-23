@@ -1,0 +1,7 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {
+    "@typescript-eslint/no-empty-function": "off"
+  },
+  "ignorePatterns": ["!**/*"]
+}
