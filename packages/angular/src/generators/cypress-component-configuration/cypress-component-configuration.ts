@@ -1,11 +1,14 @@
 import { cypressComponentProject } from '@nrwl/cypress';
+import { findBuildConfig } from '@nrwl/cypress/src/utils/find-target-options';
 import {
   formatFiles,
   generateFiles,
   joinPathFragments,
+  logger,
   ProjectConfiguration,
   readProjectConfiguration,
   Tree,
+  updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { componentTestGenerator } from '../component-test/component-test';
 import {
@@ -30,6 +33,7 @@ export async function cypressComponentConfiguration(
     skipFormat: true,
   });
 
+  await updateProjectConfig(tree, options);
   addFiles(tree, projectConfig, options);
 
   if (options.skipFormat) {
@@ -91,3 +95,37 @@ function addFiles(
     }
   }
 }
+
+async function updateProjectConfig(
+  tree: Tree,
+  options: CypressComponentConfigSchema
+) {
+  const found = await findBuildConfig(tree, {
+    project: options.project,
+    buildTarget: options.buildTarget,
+    validExecutorNames: new Set<string>([
+      '@nrwl/angular:webpack-browser',
+      '@angular-devkit/build-angular:browser',
+    ]),
+  });
+
+  assertValidConfig(found?.config);
+
+  const projectConfig = readProjectConfiguration(tree, options.project);
+  projectConfig.targets['component-test'].options = {
+    ...projectConfig.targets['component-test'].options,
+    skipServe: true,
+    devServerTarget: found.target,
+  };
+  updateProjectConfiguration(tree, options.project, projectConfig);
+}
+
+function assertValidConfig(config: unknown) {
+  if (!config) {
+    throw new Error(
+      'Unable to find a valid build configuration. Try passing in a target for an Angular app. --build-target=<project>:<target>[:<configuration>]'
+    );
+  }
+}
+
+export default cypressComponentConfiguration;

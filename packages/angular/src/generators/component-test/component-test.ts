@@ -31,14 +31,15 @@ export function componentTestGenerator(
       getArgsDefaultValue,
       false
     );
-
     generateFiles(
       tree,
       joinPathFragments(__dirname, 'files'),
       componentDirPath,
       {
         componentName: options.componentName,
-        componentFileName: options.componentFileName,
+        componentFileName: options.componentFileName.startsWith('./')
+          ? options.componentFileName.slice(2)
+          : options.componentFileName,
         props: props.filter((p) => typeof p.defaultValue !== 'undefined'),
         tpl: '',
       }

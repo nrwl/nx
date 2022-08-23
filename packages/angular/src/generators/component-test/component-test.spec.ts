@@ -1,3 +1,4 @@
+import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
@@ -5,13 +6,17 @@ import { UnitTestRunner } from '../../utils/test-runners';
 import { componentGenerator } from '../component/component';
 import { libraryGenerator } from '../library/library';
 import { componentTestGenerator } from './component-test';
-
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;
+  let mockedAssertMinimumCypressVersion: jest.Mock<
+    ReturnType<typeof assertMinimumCypressVersion>
+  > = assertMinimumCypressVersion as never;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     // silence warnings about missing .gitignore file
     tree.write('.gitignore', '');
+    mockedAssertMinimumCypressVersion.mockReturnValue();
   });
 
   it('should handle component w/o inputs', async () => {
@@ -45,7 +50,7 @@ describe(MyLibComponent.name, () => {
   it('renders', () => {
      mount(MyLibComponent, config);
   })
-}
+})
 `);
   });
 
@@ -119,7 +124,7 @@ describe(MyLibComponent.name, () => {
           }
        });
   })
-}
+})
 `);
   });
 
@@ -192,7 +197,7 @@ describe(MyLibComponent.name, () => {
           }
        });
   })
-}
+})
 `);
   });
 
@@ -243,7 +248,7 @@ describe(MyLibComponent.name, () => {
   it('renders', () => {
      mount(MyLibComponent, config);
   })
-}
+})
 `;
 
     componentTestGenerator(tree, {

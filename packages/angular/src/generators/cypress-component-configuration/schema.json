@@ -19,6 +19,11 @@
       "description": "Generate default component tests for existing components in the project",
       "default": false
     },
+    "buildTarget": {
+      "type": "string",
+      "description": "A build target used to configure Cypress component testing in the format of `project:target[:configuration]`. The build target should be an angular app. If not provided we will try to infer it from your projects usage.",
+      "pattern": "^[^:\\s]+:[^:\\s]+(:\\S+)?$"
+    },
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting files",

@@ -16,4 +16,4 @@ describe(<%= componentName %>.name, () => {
           }
        }<% } else { %> config<% } %>);
   })
-}
+})

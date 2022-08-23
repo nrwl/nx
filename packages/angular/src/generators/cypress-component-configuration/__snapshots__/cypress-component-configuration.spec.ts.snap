@@ -22,7 +22,7 @@ describe(SomethingOneComponent.name, () => {
           }
        });
   })
-}
+})
 "
 `;
 
@@ -48,7 +48,7 @@ describe(SomethingTwoComponent.name, () => {
           }
        });
   })
-}
+})
 "
 `;
 
@@ -74,7 +74,7 @@ describe(SomethingThreeComponent.name, () => {
           }
        });
   })
-}
+})
 "
 `;
 
@@ -100,7 +100,7 @@ describe(SomethingOneComponent.name, () => {
           }
        });
   })
-}
+})
 "
 `;
 
@@ -126,7 +126,7 @@ describe(SomethingTwoComponent.name, () => {
           }
        });
   })
-}
+})
 "
 `;
 
@@ -152,7 +152,7 @@ describe(SomethingThreeComponent.name, () => {
           }
        });
   })
-}
+})
 "
 `;
 
@@ -170,7 +170,7 @@ describe(FancyButtonComponent.name, () => {
   it('renders', () => {
      mount(FancyButtonComponent, config);
   })
-}
+})
 "
 `;
 
@@ -188,7 +188,7 @@ describe(StandaloneFancyButtonComponent.name, () => {
   it('renders', () => {
      mount(StandaloneFancyButtonComponent, config);
   })
-}
+})
 "
 `;
 
@@ -206,7 +206,7 @@ describe(SomethingOneComponent.name, () => {
   it('renders', () => {
      mount(SomethingOneComponent, config);
   })
-}
+})
 "
 `;
 
@@ -224,7 +224,7 @@ describe(SomethingTwoComponent.name, () => {
   it('renders', () => {
      mount(SomethingTwoComponent, config);
   })
-}
+})
 "
 `;
 
@@ -242,7 +242,7 @@ describe(SomethingThreeComponent.name, () => {
   it('renders', () => {
      mount(SomethingThreeComponent, config);
   })
-}
+})
 "
 `;
 
@@ -260,7 +260,7 @@ describe(SomethingOneComponent.name, () => {
   it('renders', () => {
      mount(SomethingOneComponent, config);
   })
-}
+})
 "
 `;
 
@@ -278,7 +278,7 @@ describe(SomethingTwoComponent.name, () => {
   it('renders', () => {
      mount(SomethingTwoComponent, config);
   })
-}
+})
 "
 `;
 
@@ -296,6 +296,6 @@ describe(SomethingThreeComponent.name, () => {
   it('renders', () => {
      mount(SomethingThreeComponent, config);
   })
-}
+})
 "
 `;
