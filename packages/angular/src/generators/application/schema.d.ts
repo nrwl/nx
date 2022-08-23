@@ -23,14 +23,29 @@ export interface Schema {
   backendProject?: string;
   strict?: boolean;
   standaloneConfig?: boolean;
+  /**
+   * @deprecated Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version.
+   */
   mf?: boolean;
+  /**
+   * @deprecated Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version.
+   */
   mfType?: 'host' | 'remote';
+  /**
+   * @deprecated Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version.
+   */
   remotes?: string[];
   port?: number;
+  /**
+   * @deprecated Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version.
+   */
   host?: string;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   skipPostInstall?: boolean;
+  /**
+   * @deprecated Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version.
+   */
   federationType?: 'static' | 'dynamic';
   skipDefaultProject?: boolean;
   standalone?: boolean;
