@@ -114,7 +114,7 @@ exports[`Init MF should generate the remote entry component correctly when prefi
 
 @Component({
   selector: 'remote1-entry',
-  template: \`nx-welcome></nx-welcome>\`
+  template: \`<nx-welcome></nx-welcome>\`
 })
 export class RemoteEntryComponent {}
 "
