@@ -116,6 +116,32 @@
     "schemas": { "executors": [], "generators": [] }
   },
   {
+    "name": "expo",
+    "packageName": "expo",
+    "path": "generated/packages/expo.json",
+    "schemas": {
+      "executors": [
+        "update",
+        "build",
+        "build-list",
+        "download",
+        "build-ios",
+        "build-android",
+        "build-web",
+        "build-status",
+        "publish",
+        "publish-set",
+        "rollback",
+        "run",
+        "start",
+        "sync-deps",
+        "ensure-symlink",
+        "eject"
+      ],
+      "generators": ["init", "application", "library", "component", "preset"]
+    }
+  },
+  {
     "name": "express",
     "packageName": "express",
     "description": "The Nx Plugin for Express that contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
