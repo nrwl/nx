@@ -56,7 +56,7 @@ export function ConfSpeakers(): JSX.Element {
         "Based in Atlanta, GA, Altan is a senior engineer at Nrwl and works primarily on Nx Cloud. He's passionate about developer experience and helping organizations move quickly. When not building software, you can find him working on his keyboard or on a hike.",
       imageUrl: '/images/conf/altan-stalker.webp',
       name: 'Altan Stalker',
-      twitter: 'altan',
+      twitter: 'StalkAltan',
     },
     {
       description:
