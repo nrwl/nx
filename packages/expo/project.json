@@ -71,16 +71,18 @@
       "outputs": ["{options.outputPath}"]
     },
     "build": {
-      "dependsOn": [
-        {
-          "target": "build-base",
-          "projects": "self"
-        }
-      ],
-      "executor": "@nrwl/workspace:run-commands",
-      "outputs": ["dist/packages/expo"],
+      "executor": "nx:run-commands",
+      "outputs": ["build/packages/angular"],
       "options": {
-        "command": "node ./tools/scripts/copy-readme.js expo"
+        "commands": [
+          {
+            "command": "node ./scripts/build-angular"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js angular"
+          }
+        ],
+        "parallel": false
       }
     },
     "publish": {

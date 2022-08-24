@@ -1,5 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { formatFile } from '../../../utils/format-file';
 
@@ -9,7 +9,7 @@ describe('addResolverMainFieldsToMetroConfig', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace();
 
     addProjectConfiguration(tree, 'products', {
       root: 'apps/products',

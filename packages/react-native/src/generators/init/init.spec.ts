@@ -1,13 +1,13 @@
 import { NxJsonConfiguration } from '@nrwl/devkit';
 import { Tree, readJson, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { reactNativeInitGenerator } from './init';
 
 describe('init', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace();
     tree.write('.gitignore', '');
   });
 

@@ -3,6 +3,7 @@ import {
   readWorkspaceConfiguration,
   getProjects,
   readJson,
+  readProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
@@ -45,11 +46,9 @@ describe('app', () => {
       unitTestRunner: 'none',
     });
 
-    const { projects } = readJson(appTree, '/workspace.json');
-    expect(projects).toMatchObject({
-      'my-app': {
-        tags: ['one', 'two'],
-      },
+    const projectConfiguration = readProjectConfiguration(appTree, 'my-app');
+    expect(projectConfiguration).toMatchObject({
+      tags: ['one', 'two'],
     });
   });
 
