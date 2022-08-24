@@ -16,9 +16,7 @@
     "project": {
       "type": "string",
       "description": "The name of the project.",
-      "$default": {
-        "$source": "projectName"
-      }
+      "x-dropdown": "projects"
     },
     "name": {
       "type": "string",
