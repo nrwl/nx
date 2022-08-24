@@ -90,7 +90,7 @@ jobs:
         sudo: false # disable sudo for windows debugging
 
   report-success:
-    if: ${{ github.repository_owner == 'nrwl' && github.event_name == 'workflow_dispatch' }} # only once it's fixed on manual dispatch
+    if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name == 'workflow_dispatch' }} # only once it's fixed on manual dispatch
     needs: e2e
     runs-on: ubuntu-latest
     name: Report success
