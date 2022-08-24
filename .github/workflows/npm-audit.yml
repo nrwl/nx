@@ -18,8 +18,8 @@ jobs:
     - name: Check lock file for invalid hosts
       run: npx lockfile-lint -s -n -p yarn.lock -a hosts yarn npm
 
-    - name: Run Dependency confusion supply chain check
-      run: npx snync -d .
+    # - name: Run Dependency confusion supply chain check
+    #  run: npx snync -d .
 
   report:
     if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
@@ -40,7 +40,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   report-success:
-    if: ${{ github.repository_owner == 'nrwl' && github.event_name == 'workflow_dispatch' }} # only once it's fixed on manual dispatch
+    if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name == 'workflow_dispatch' }} # only once it's fixed on manual dispatch
     needs: audit
     runs-on: ubuntu-latest
     name: Report success
