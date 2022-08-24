@@ -1,7 +1,29 @@
 import { nxBaseCypressPreset } from '@nrwl/cypress/plugins/cypress-preset';
-import { getCSSModuleLocalIdent } from '@nrwl/web/src/utils/web.config';
-import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import type { Configuration } from 'webpack';
+import {
+  logger,
+  parseTargetString,
+  ProjectConfiguration,
+  ProjectGraph,
+  readCachedProjectGraph,
+  TargetConfiguration,
+  workspaceRoot,
+  stripIndents,
+} from '@nrwl/devkit';
+import { WebWebpackExecutorOptions } from '@nrwl/web/src/executors/webpack/webpack.impl';
+import { normalizeWebBuildOptions } from '@nrwl/web/src/utils/normalize';
+import { getWebConfig } from '@nrwl/web/src/utils/web.config';
+import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
+import { extname, relative } from 'path';
+import { buildBaseWebpackConfig } from './webpack-fallback';
+
+export interface ReactComponentTestingOptions {
+  /**
+   * the component testing target name.
+   * this is only when customized away from the default value of `component-test`
+   * @example 'component-test'
+   */
+  ctTargetName: string;
+}
 
 /**
  * React nx preset for Cypress Component Testing
@@ -18,9 +40,46 @@ import type { Configuration } from 'webpack';
  *   }
  * })
  *
- * @param pathToConfig will be used to construct the output paths for videos and screenshots
+ * @param pathToConfig will be used for loading project options and to construct the output paths for videos and screenshots
+ * @param options override options
  */
-export function nxComponentTestingPreset(pathToConfig: string) {
+export function nxComponentTestingPreset(
+  pathToConfig: string,
+  options?: ReactComponentTestingOptions
+) {
+  let webpackConfig;
+  try {
+    const graph = readCachedProjectGraph();
+    const { targets, name } = getConfigByPath(graph, pathToConfig);
+    const targetName = options?.ctTargetName || 'component-test';
+    const mergedOptions = targets[targetName].defaultConfiguration
+      ? {
+          ...targets[targetName].options,
+          ...targets[targetName].configurations[
+            targets[targetName].defaultConfiguration
+          ],
+        }
+      : targets[targetName].options;
+    const buildTarget = mergedOptions?.devServerTarget;
+
+    if (!buildTarget) {
+      throw new Error(
+        `Unable to find the 'devServerTarget' executor option in the '${targetName}' target of the '${name}' project`
+      );
+    }
+
+    webpackConfig = buildTargetWebpack(graph, buildTarget, name);
+  } catch (e) {
+    logger.warn(
+      stripIndents`Unable to build a webpack config with the project graph. 
+      Falling back to default webpack config.`
+    );
+    logger.warn(e);
+    webpackConfig = buildBaseWebpackConfig({
+      tsConfigPath: 'tsconfig.cy.json',
+      compiler: 'babel',
+    });
+  }
   return {
     ...nxBaseCypressPreset(pathToConfig),
     devServer: {
@@ -28,152 +87,110 @@ export function nxComponentTestingPreset(pathToConfig: string) {
       // need to use const to prevent typing to string
       framework: 'react',
       bundler: 'webpack',
-      webpackConfig: buildBaseWebpackConfig({
-        tsConfigPath: 'tsconfig.cy.json',
-        compiler: 'babel',
-      }),
+      webpackConfig,
     } as const,
   };
 }
 
-// TODO(caleb): use the webpack utils to build the config
-//  can't seem to get css modules to play nice when using it 🤔
-function buildBaseWebpackConfig({
-  tsConfigPath = 'tsconfig.cy.json',
-  compiler = 'babel',
-}: {
-  tsConfigPath: string;
-  compiler: 'swc' | 'babel';
-}): Configuration {
-  const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
-  const config: Configuration = {
-    target: 'web',
-    resolve: {
-      extensions,
-      plugins: [
-        new TsconfigPathsPlugin({
-          configFile: tsConfigPath,
-          extensions,
-        }) as never,
-      ],
-    },
-    mode: 'development',
-    devtool: false,
-    output: {
-      publicPath: '/',
-      chunkFilename: '[name].bundle.js',
-    },
-    module: {
-      rules: [
-        {
-          test: /\.(bmp|png|jpe?g|gif|webp|avif)$/,
-          type: 'asset',
-          parser: {
-            dataUrlCondition: {
-              maxSize: 10_000, // 10 kB
-            },
-          },
-        },
-        CSS_MODULES_LOADER,
-      ],
-    },
-  };
+/**
+ * apply the schema.json defaults from the @nrwl/web:webpack executor to the target options
+ */
+function withSchemaDefaults(
+  target: TargetConfiguration<WebWebpackExecutorOptions>
+) {
+  const options = target.defaultConfiguration
+    ? {
+        ...target.options,
+        ...target.configurations[target.defaultConfiguration],
+      }
+    : target.options;
 
-  if (compiler === 'swc') {
-    config.module.rules.push({
-      test: /\.([jt])sx?$/,
-      loader: require.resolve('swc-loader'),
-      exclude: /node_modules/,
-      options: {
-        jsc: {
-          parser: {
-            syntax: 'typescript',
-            decorators: true,
-            tsx: true,
-          },
-          transform: {
-            react: {
-              runtime: 'automatic',
-            },
-          },
-          loose: true,
-        },
-      },
-    });
-  }
-
-  if (compiler === 'babel') {
-    config.module.rules.push({
-      test: /\.(js|jsx|mjs|ts|tsx)$/,
-      loader: require.resolve('babel-loader'),
-      options: {
-        presets: [`@nrwl/react/babel`],
-        rootMode: 'upward',
-        babelrc: true,
-      },
-    });
-  }
-  return config;
+  options.compiler = options.compiler || 'babel';
+  options.deleteOutputPath = options.deleteOutputPath === undefined || true;
+  options.vendorChunk = options.vendorChunk === undefined || true;
+  options.commonChunk = options.commonChunk === undefined || true;
+  options.runtimeChunk = options.runtimeChunk === undefined || true;
+  options.sourceMap = options.sourceMap === undefined || true;
+  options.assets = options.assets || [];
+  options.scripts = options.scripts || [];
+  options.styles = options.styles || [];
+  options.budgets = options.budgets || [];
+  options.namedChunks = options.namedChunks === undefined || true;
+  options.outputhasing = options.outputhasing || 'none';
+  options.extractCss = options.extractCss === undefined || true;
+  options.memoryLimit = options.memoryLimit || 2048;
+  options.maxWorkers = options.maxWorkers || 2;
+  options.fileReplacements = options.fileReplacements || [];
+  options.buildLibsFromSource =
+    options.buildLibsFromSource === undefined || true;
+  options.generateIndexHtml = options.generateIndexHtml === undefined || true;
+  return options;
 }
 
-const loaderModulesOptions = {
-  modules: {
-    mode: 'local',
-    getLocalIdent: getCSSModuleLocalIdent,
-  },
-  importLoaders: 1,
-};
+function buildTargetWebpack(
+  graph: ProjectGraph,
+  buildTarget: string,
+  componentTestingProjectName: string
+) {
+  const { project, target, configuration } = parseTargetString(buildTarget);
 
-const commonLoaders = [
-  {
-    loader: require.resolve('style-loader'),
-  },
-  {
-    loader: require.resolve('css-loader'),
-    options: loaderModulesOptions,
-  },
-];
+  const appProjectConfig = graph.nodes[project]?.data;
+  const thisProjectConfig = graph.nodes[componentTestingProjectName]?.data;
 
-const CSS_MODULES_LOADER = {
-  test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
-  oneOf: [
-    {
-      test: /\.module\.css$/,
-      use: commonLoaders,
-    },
-    {
-      test: /\.module\.(scss|sass)$/,
-      use: [
-        ...commonLoaders,
-        {
-          loader: require.resolve('sass-loader'),
-          options: {
-            implementation: require('sass'),
-            sassOptions: {
-              fiber: false,
-              precision: 8,
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.module\.less$/,
-      use: [
-        ...commonLoaders,
-        {
-          loader: require.resolve('less-loader'),
-        },
-      ],
-    },
-    {
-      test: /\.module\.styl$/,
-      use: [
-        ...commonLoaders,
-        {
-          loader: require.resolve('stylus-loader'),
-        },
-      ],
-    },
-  ],
-};
+  if (!appProjectConfig || !thisProjectConfig) {
+    throw new Error(stripIndents`Unable to load project configs from graph. 
+    Has build config? ${!!appProjectConfig}
+    Has component config? ${!!thisProjectConfig}
+    `);
+  }
+
+  const options = normalizeWebBuildOptions(
+    withSchemaDefaults(appProjectConfig?.targets?.[target]),
+    workspaceRoot,
+    appProjectConfig.sourceRoot!
+  );
+
+  const isScriptOptimizeOn =
+    typeof options.optimization === 'boolean'
+      ? options.optimization
+      : options.optimization && options.optimization.scripts
+      ? options.optimization.scripts
+      : false;
+  return getWebConfig(
+    workspaceRoot,
+    thisProjectConfig.root,
+    thisProjectConfig.sourceRoot,
+    options,
+    true,
+    isScriptOptimizeOn,
+    configuration
+  );
+}
+
+function getConfigByPath(
+  graph: ProjectGraph,
+  configPath: string
+): ProjectConfiguration {
+  const configFileFromWorkspaceRoot = relative(
+    workspaceRoot,
+    configPath
+  ).replace(extname(configPath), '');
+  const mappedGraph = mapProjectGraphFiles(graph);
+  const componentTestingProjectName =
+    mappedGraph.allFiles[configFileFromWorkspaceRoot];
+  if (
+    !componentTestingProjectName ||
+    !graph.nodes[componentTestingProjectName]?.data
+  ) {
+    throw new Error(
+      stripIndents`Unable to find the project configuration that includes ${configFileFromWorkspaceRoot}. 
+      Found project name? ${componentTestingProjectName}. 
+      Graph has data? ${!!graph.nodes[componentTestingProjectName]?.data}`
+    );
+  }
+  // make sure name is set since it can be undefined
+  graph.nodes[componentTestingProjectName].data.name =
+    graph.nodes[componentTestingProjectName].data.name ||
+    componentTestingProjectName;
+  return graph.nodes[componentTestingProjectName].data;
+}

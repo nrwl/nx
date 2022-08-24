@@ -30,6 +30,12 @@
       "version": "12.8.0-beta.0",
       "description": "Remove Typescript Preprocessor Plugin",
       "factory": "./src/migrations/update-12-8-0/remove-typescript-plugin"
+    },
+    "update-cypress-configs-preset": {
+      "cli": "nx",
+      "version": "14.6.1-beta.0",
+      "description": "Change Cypress e2e and component testing presets to use __filename instead of __dirname and include a devServerTarget for component testing.",
+      "factory": "./src/migrations/update-14-6-1/update-cypress-configs-presets"
     }
   },
   "packageJsonUpdates": {
