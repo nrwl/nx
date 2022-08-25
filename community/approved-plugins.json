@@ -303,5 +303,10 @@
     "name": "@nxrocks/nx-micronaut",
     "description": "Nx plugin to generate, run, package, build (and more) Micronaut projects inside your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-micronaut"
+  },
+  {
+    "name": "@koliveira15/nx-sonarqube",
+    "description": "Nx plugin that analyses projects using SonarQube / SonarCloud.",
+    "url": "https://github.com/koliveira15/nx-sonarqube"
   }
 ]
