@@ -340,7 +340,7 @@
             "file": "shared/using-nx/affected"
           },
           {
-            "name": "More Concept Guides",
+            "name": "More Concept Guides »",
             "id": "more-concept-guides",
             "file": "shared/concepts/more-concepts"
           }
@@ -421,9 +421,9 @@
             "file": "shared/workspace/buildable-and-publishable-libraries"
           },
           {
-            "name": "Project Graph",
-            "id": "dependency-graph",
-            "file": "shared/workspace/structure/dependency-graph"
+            "name": "How the Project Graph is Built",
+            "id": "how-project-graph-is-built",
+            "file": "shared/concepts/how-project-graph-is-built"
           }
         ]
       },
@@ -442,7 +442,7 @@
             "file": "shared/recipes/adopt-nx"
           },
           {
-            "name": "All Recipes",
+            "name": "All Recipes »",
             "id": "all",
             "file": "shared/recipes/recipe-list"
           }
@@ -751,6 +751,11 @@
             "name": "Export Project Graph",
             "id": "export-project-graph",
             "file": "shared/recipes/export-project-graph"
+          },
+          {
+            "name": "Resolve Circular Dependencies",
+            "id": "resolve-circular-dependencies",
+            "file": "shared/recipes/resolve-circular-dependencies"
           }
         ]
       },

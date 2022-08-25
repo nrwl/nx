@@ -11,7 +11,7 @@ By default, the computation hash for - say - `nx test remixapp` includes:
 - Runtime values provisioned by the user such as the version of Node
 - CLI Command flags
 
-![computation-hashing](../images/caching/Nx-hashing.png)
+![computation-hashing](../images/caching/nx-hashing.png)
 
 > This behavior is customizable. For instance, lint checks may only depend on the source code of the project and global
 > configs. Builds can depend on the dts files of the compiled libs instead of their source.

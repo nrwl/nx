@@ -1,44 +1,4 @@
-# Analyzing & Visualizing Workspaces
-
-To be able to support the monorepo-style development, the tools must know how different projects in your workspace depend on each other. Nx uses advanced code analysis to construct this project graph. And it gives you a way to explore it:
-
-{% youtube
-src="https://www.youtube.com/embed/cMZ-ReC-jWU"
-title="Nx Tutorial: Improved Dependency Graph Visualization for Nx"
-width="100%" /%}
-
-## How the Project Graph is Built
-
-Nx creates a graph of all the dependencies between projects in your workspace using two sources of information:
-
-1. Typescript `import` statements referencing a particular project's path alias
-
-   For instance, if a file in `my-app` has this code:
-
-   ```typescript
-   import { something } from '@myorg/awesome-library';
-   ```
-
-   Then `my-app` depends on `awesome-library`
-
-2. Manually created `implicitDependencies` in the `nx.json` file.
-
-   If your `nx.json` has this content:
-
-   ```json
-   {
-     "projects": {
-       "my-app": {
-         "tags": [],
-         "implicitDependencies": ["my-api"]
-       }
-     }
-   }
-   ```
-
-   Then `my-app` depends on `my-api`
-
-## Circular Dependencies
+# Resolve Circular Dependencies
 
 A circular dependency is when a project transitively depends on itself. This can cause problems in the design of your software and also makes Nx's affected algorithm less effective. The lint rule, `nx-enforce-module-boundaries`, will produce an error if any circular dependencies are created and ensures that any `import` statements going across projects only `import` from the defined public apis in a project's root `index.ts` file.
 
