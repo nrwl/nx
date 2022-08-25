@@ -50,6 +50,11 @@ function generateSpecsForComponents(tree: Tree, filePath: string) {
   const componentDir = dirname(filePath);
   const ext = extname(filePath);
   const fileName = basename(filePath, ext);
+
+  if (tree.exists(joinPathFragments(componentDir, `${fileName}.cy${ext}`))) {
+    return;
+  }
+
   const defaultExport = getComponentNode(sourceFile);
 
   if (cmpNodes?.length) {

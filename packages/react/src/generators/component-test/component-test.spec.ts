@@ -55,6 +55,28 @@ describe(componentTestGenerator.name, () => {
     expect(tree.exists('libs/some-lib/src/lib/some-lib.cy.js')).toBeTruthy();
   });
 
+  it('should not overwrite exising component test', async () => {
+    mockedAssertMinimumCypressVersion.mockReturnValue();
+    await libraryGenerator(tree, {
+      linter: Linter.EsLint,
+      name: 'some-lib',
+      skipFormat: true,
+      skipTsConfig: false,
+      style: 'scss',
+      unitTestRunner: 'none',
+      component: true,
+    });
+    tree.write('libs/some-lib/src/lib/some-lib.cy.tsx', 'existing content');
+    componentTestGenerator(tree, {
+      project: 'some-lib',
+      componentPath: 'lib/some-lib.tsx',
+    });
+
+    expect(tree.read('libs/some-lib/src/lib/some-lib.cy.tsx', 'utf-8')).toEqual(
+      'existing content'
+    );
+  });
+
   it('should not throw if path is invalid', async () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();
     await libraryGenerator(tree, {
