@@ -16,10 +16,7 @@ This will open a browser window with an interactive representation of the projec
 
 Once the graph is displayed, you can click on an individual dependency link to find out what specific file(s) created that dependency.
 
-{% youtube
-src="https://www.youtube.com/embed/cMZ-ReC-jWU"
-title="Nx Tutorial: Improved Dependency Graph Visualization for Nx"
-width="100%" /%}s
+![Project Graph screenshot](../images/project-graph.png)
 
 ## Related Documentation:
 
