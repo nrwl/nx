@@ -41,7 +41,7 @@ jobs:
           main-branch-name: '<%= mainBranch %>'
       - run:
           name: Initialize the Nx Cloud distributed CI run
-          command: <%= packageManagerPrefix %> nx-cloud start-ci-run
+          command: <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
       - run:
           name: Run workspace lint
           command: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx workspace-lint

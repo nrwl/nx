@@ -43,7 +43,7 @@ jobs:
         displayName: Install PNPM
       <% } %>- script: <%= packageManagerInstall %>
         displayName: NPM Install Dependencies
-      - script: <%= packageManagerPrefix %> nx-cloud start-ci-run
+      - script: <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
         displayName: Start CI run
       - script: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx workspace-lint
         displayName: Run workspace lint
