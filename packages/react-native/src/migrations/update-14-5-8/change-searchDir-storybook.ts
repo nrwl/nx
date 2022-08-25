@@ -17,7 +17,7 @@ export default async function update(tree: Tree) {
     )
       continue;
     const searchDir = config.targets?.['storybook']?.options?.searchDir;
-    if (!searchDir || !searchDir.length) {
+    if (!searchDir || !searchDir.length || Array.isArray(searchDir)) {
       continue;
     }
     config.targets['storybook'].options.searchDir = searchDir.split(',');

@@ -1,8 +1,16 @@
+// options form https://github.com/react-native-community/cli/blob/main/docs/commands.md#bundle
 export interface ReactNativeBundleOptions {
-  dev: boolean;
-  platform: string;
   entryFile: string;
+  platform: string;
+  transfrom?: string;
+  dev: boolean; // default is true
+  minify?: boolean; // default is false
   bundleOutput: string;
   maxWorkers: number;
-  sourceMap: boolean;
+  sourcemapOutput?: string;
+  sourcemapSourcesRoot?: string;
+  sourcemapUseAbsolutePath: boolean; // default is false
+  assetDest?: string;
+  resetCache: boolean; // default is false
+  readGlobalCache?: boolean; // default is false
 }

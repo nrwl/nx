@@ -1,9 +1,10 @@
 import { createDirectory } from '@nrwl/workspace/src/utilities/fileutils';
-import { names } from '@nrwl/devkit';
-import { dirname, join, relative, sep } from 'path';
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
+import { names, ExecutorContext } from '@nrwl/devkit';
+import { dirname, join } from 'path';
 import { ChildProcess, fork } from 'child_process';
-import { ExecutorContext } from '@nrwl/devkit';
+
+import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
+
 import { ReactNativeBundleOptions } from './schema';
 
 export interface ReactNativeBundleOutput {
@@ -33,7 +34,11 @@ export default async function* bundleExecutor(
   }
 }
 
-function runCliBuild(workspaceRoot, projectRoot, options) {
+function runCliBuild(
+  workspaceRoot: string,
+  projectRoot: string,
+  options: ReactNativeBundleOptions
+) {
   return new Promise((resolve, reject) => {
     const cliOptions = createBundleOptions(options);
     childProcess = fork(

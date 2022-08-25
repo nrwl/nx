@@ -709,14 +709,26 @@
         "description": "JS Bundle target options.",
         "type": "object",
         "properties": {
+          "entryFile": {
+            "type": "string",
+            "description": "The entry file relative to project root."
+          },
+          "platform": {
+            "enum": ["ios", "android"],
+            "description": "Platform to build for."
+          },
+          "transformer": {
+            "type": "string",
+            "description": "Specify a custom transformer to be used."
+          },
           "dev": {
             "type": "boolean",
             "description": "Generate a development build.",
             "default": true
           },
-          "entryFile": {
-            "type": "string",
-            "description": "The entry file relative to project root."
+          "minify": {
+            "type": "boolean",
+            "description": "Allows overriding whether bundle is minified."
           },
           "bundleOutput": {
             "type": "string",
@@ -726,13 +738,32 @@
             "type": "number",
             "description": "The number of workers we should parallelize the transformer on."
           },
-          "sourceMap": {
-            "type": "boolean",
-            "description": "Whether source maps should be generated or not."
+          "sourcemapOutput": {
+            "type": "string",
+            "description": "File name where to store the sourcemap file for resulting bundle, ex. /tmp/groups.map."
           },
-          "platform": {
-            "description": "Platform to build for (`ios`, `android`).",
-            "type": "string"
+          "sourcemapSourcesRoot": {
+            "type": "string",
+            "description": "Path to make sourcemaps sources entries relative to, ex. /root/dir."
+          },
+          "sourcemapUseAbsolutePath": {
+            "type": "boolean",
+            "description": "Report SourceMapURL using its full path.",
+            "default": false
+          },
+          "assetsDest": {
+            "type": "string",
+            "description": "Directory name where to store assets referenced in the bundle."
+          },
+          "resetCache": {
+            "type": "boolean",
+            "description": "Removes cached files.",
+            "default": false
+          },
+          "readGlobalCache": {
+            "type": "boolean",
+            "description": "Removes cached files.",
+            "default": false
           }
         },
         "required": ["platform", "entryFile", "bundleOutput"],

@@ -42,21 +42,27 @@ describe('react native', () => {
     const libLintResults = await runCLIAsync(`lint ${libName}`);
     expect(libLintResults.combinedOutput).toContain('All files pass linting.');
 
-    const iosBundleResult = await runCLIAsync(`bundle-ios ${appName}`);
+    const iosBundleResult = await runCLIAsync(
+      `bundle-ios ${appName} --sourcemapOutput=../../dist/apps/${appName}/ios/main.map`
+    );
     expect(iosBundleResult.combinedOutput).toContain(
       'Done writing bundle output'
     );
-    expect(() =>
-      checkFilesExist(`dist/apps/${appName}/ios/main.jsbundle`)
-    ).not.toThrow();
+    expect(() => {
+      checkFilesExist(`dist/apps/${appName}/ios/main.jsbundle`);
+      checkFilesExist(`dist/apps/${appName}/ios/main.map`);
+    }).not.toThrow();
 
-    const androidBundleResult = await runCLIAsync(`bundle-android ${appName}`);
+    const androidBundleResult = await runCLIAsync(
+      `bundle-android ${appName} --sourcemapOutput=../../dist/apps/${appName}/android/main.map`
+    );
     expect(androidBundleResult.combinedOutput).toContain(
       'Done writing bundle output'
     );
-    expect(() =>
-      checkFilesExist(`dist/apps/${appName}/android/main.jsbundle`)
-    ).not.toThrow();
+    expect(() => {
+      checkFilesExist(`dist/apps/${appName}/android/main.jsbundle`);
+      checkFilesExist(`dist/apps/${appName}/android/main.map`);
+    }).not.toThrow();
   }, 1000000);
 
   it('should create storybook with application', async () => {
