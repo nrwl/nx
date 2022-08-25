@@ -40,7 +40,7 @@ jobs:
     steps:
       - script: yarn install --frozen-lockfile
         displayName: NPM Install Dependencies
-      - script: yarn nx-cloud start-ci-run
+      - script: yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
         displayName: Start CI run
       - script: yarn nx-cloud record -- yarn nx workspace-lint
         displayName: Run workspace lint
@@ -94,7 +94,7 @@ jobs:
           main-branch-name: 'main'
       - run:
           name: Initialize the Nx Cloud distributed CI run
-          command: yarn nx-cloud start-ci-run
+          command: yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
       - run:
           name: Run workspace lint
           command: yarn nx-cloud record -- yarn nx workspace-lint
@@ -145,6 +145,8 @@ jobs:
     uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.6
     with:
       number-of-agents: 3
+      init-commands: |
+        yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
       parallel-commands: |
         yarn nx-cloud record -- yarn nx workspace-lint
         yarn nx-cloud record -- yarn nx format:check
@@ -176,6 +178,8 @@ jobs:
     uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.6
     with:
       number-of-agents: 3
+      init-commands: |
+        yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
       parallel-commands: |
         yarn nx-cloud record -- yarn nx workspace-lint
         yarn nx-cloud record -- yarn nx format:check
