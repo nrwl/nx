@@ -3,6 +3,7 @@ import {
   readProjectConfiguration,
   stripIndents,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
@@ -51,6 +52,10 @@ export async function updateCypressConfigsPresets(tree: Tree) {
       }
     }
   );
+
+  if (updateTasks.length > 0) {
+    cacheComponentTestTarget(tree);
+  }
 
   await Promise.all(updateTasks);
 
@@ -135,4 +140,25 @@ async function addBuildTargetToConfig(
   return true;
 }
 
+function cacheComponentTestTarget(tree: Tree) {
+  updateJson(tree, 'nx.json', (json) => ({
+    ...json,
+    tasksRunnerOptions: {
+      ...(json.tasksRunnerOptions ?? {}),
+      default: {
+        ...(json.tasksRunnerOptions?.default ?? {}),
+        options: {
+          ...(json.tasksRunnerOptions?.default?.options ?? {}),
+          cacheableOperations: Array.from(
+            new Set([
+              ...(json.tasksRunnerOptions?.default?.options
+                ?.cacheableOperations ?? []),
+              'component-test',
+            ])
+          ),
+        },
+      },
+    },
+  }));
+}
 export default updateCypressConfigsPresets;

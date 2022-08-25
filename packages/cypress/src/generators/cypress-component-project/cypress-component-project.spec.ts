@@ -1,6 +1,7 @@
 import {
   addProjectConfiguration,
   ProjectConfiguration,
+  readJson,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
@@ -116,6 +117,19 @@ describe('Cypress Component Project', () => {
     );
     expect(tree.exists('libs/cool-lib/tsconfig.cy.json')).toEqual(true);
     expect(projectConfig.targets['component-test']).toMatchSnapshot();
+  });
+
+  it('should update cacheable operations', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+    await cypressComponentProject(tree, {
+      project: 'cool-lib',
+      skipFormat: false,
+    });
+
+    expect(
+      readJson(tree, 'nx.json').tasksRunnerOptions.default.options
+        .cacheableOperations
+    ).toEqual(expect.arrayContaining(['component-test']));
   });
 
   it('should not error when rerunning on an existing project', async () => {
