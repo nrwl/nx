@@ -19,11 +19,14 @@ Once the graph is displayed, you can click on an individual dependency link to f
 ## Related Documentation:
 
 ### Recipes
+
 - [Export Project Graph to JSON](/recipe/export-project-graph)
 - Resolve Circular Dependencies
 
 ### Concepts
+
 - How the Project Graph is Built
 
 ### Reference
+
 - [Graph Command](/nx/graph)
