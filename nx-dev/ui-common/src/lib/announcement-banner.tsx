@@ -9,15 +9,15 @@ export function AnnouncementBanner(): JSX.Element {
             <span className="md:hidden">
               <Link href="/conf?utm_source=announcement-banner">
                 <a className="text-white underline">
-                  Nx Conf on October 17th at Phoenix AZ!
+                  Nx Conf on October 17th in Phoenix AZ!
                 </a>
               </Link>
             </span>
             <span className="hidden md:inline">
               <span className="font-black">
-                Nx Conf on October 17th at Phoenix AZ
+                Nx Conf on October 17th in Phoenix AZ
               </span>
-              , do not miss out!
+              , do not miss it!
             </span>
             <span className="ml-2 inline-block">
               <Link href="/conf?utm_source=announcement-banner">
