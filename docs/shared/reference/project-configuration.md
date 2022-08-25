@@ -295,6 +295,9 @@ configuration above.
 
 You can annotate your projects with `tags` as follows:
 
+{% tabs %}
+{% tab label="package.json" %}
+
 ```jsonc
 {
   "name": "mylib",
@@ -304,13 +307,29 @@ You can annotate your projects with `tags` as follows:
 }
 ```
 
-You can [configure lint rules using these tags](/recipe/imposing-constraints-on-the-graph) to, for instance, ensure that libraries
+{% /tab %}
+{% tab label="project.json" %}
+
+```jsonc
+{
+  "root": "/libs/mylib",
+  "tags": ["scope:myteam"]
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+You can [configure lint rules using these tags](/core-features/enforce-project-boundaries) to, for instance, ensure that libraries
 belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies
 
 Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced
 statically, so you can set them manually like this:
+
+{% tabs %}
+{% tab label="package.json" %}
 
 ```jsonc
 {
@@ -321,7 +340,23 @@ statically, so you can set them manually like this:
 }
 ```
 
+{% /tab %}
+{% tab label="project.json" %}
+
+```jsonc
+{
+  "root": "/libs/mylib",
+  "implicitDependencies": ["anotherlib"]
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
 You can also remove a dependency as follows:
+
+{% tabs %}
+{% tab label="package.json" %}
 
 ```jsonc
 {
@@ -331,6 +366,19 @@ You can also remove a dependency as follows:
   }
 }
 ```
+
+{% /tab %}
+{% tab label="project.json" %}
+
+```jsonc
+{
+  "root": "/libs/mylib",
+  "implicitDependencies": ["!anotherlib"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
+}
+```
+
+{% /tab %}
+{% /tabs %}
 
 ### Ignoring a project
 

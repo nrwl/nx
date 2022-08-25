@@ -11,9 +11,9 @@ them is a key feature of a tool like Nx.
 
 ## Define Tasks
 
-For these examples, we'll use a repo that has three projects: `remixapp`, `header` and `footer`. `remixapp` is a deployable app and uses the `header` and `footer` libraries.
+For these examples, we'll imagine a repo that has three projects: `myapp`, `header` and `footer`. `myapp` is a deployable app and uses the `header` and `footer` libraries.
 
-Each project has the `test` and `build` targets defined. Tasks can be defined as npm scripts in a project's `package.json` file or in a `project.json` file:
+Each project has the `test` and `build` targets defined. Tasks can be defined as npm scripts in a project's `package.json` file or as targets in a `project.json` file:
 
 {% tabs %}
 {% tab label="package.json" %}
@@ -62,18 +62,18 @@ npx nx test header
 
 ## Run Everything
 
-To run the `build` target for every project in the repo, run:
+To run the `build` target for all projects in the repo, run:
 
 ```bash
-npx nx run-many --all --target=build
+npx nx run-many --target=build
 ```
 
-This will build the projects in the right order: `footer` and `header` and then `remixapp`.
+This will build the projects in the right order: `footer` and `header` and then `myapp`.
 
 ```bash title="Terminal Output"
     ✔  nx run header:build (501ms)
     ✔  nx run footer:build (503ms)
-    ✔  nx run remixapp:build (670ms)
+    ✔  nx run myapp:build (670ms)
 
  —————————————————————————————————————————————————————————————————————————————
 
@@ -91,10 +91,23 @@ You can also run a command for all the projects affected in your PR like this:
 npx nx affected --target=test
 ```
 
-Learn more [here](../api-reference/commands).
+Learn more about the affected command [here](/concepts/affected).
 
 ## Control How Tasks Run
 
 For more control over the order tasks are executed, edit the [Task Pipeline Configuration](../concepts/task-pipeline-configuration).
 
 To speed up your task execution, learn how to [Cache Task Results](./cache-task-results) and [Distribute Task Execution](./distribute-task-execution)
+
+## Related Documentation
+
+### Concepts
+
+- [Task Pipeline Configuration](/concepts/task-pipeline-configuration)
+- [How Affected Works](/concepts/how-affected-works)
+
+### Reference
+
+- [run command](/nx/run)
+- [run-many command](/nx/run-many)
+- [affected command](/nx/affected)

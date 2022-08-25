@@ -1,7 +1,7 @@
-# Affected
+# How Affected Works
 
 {% callout type="note" title="First thing!" %}
-Before reading this guide, [check out the mental model guide](/using-nx/mental-model). It will help you understand how computation caching fits into the rest of Nx.
+Before reading this guide, [check out the mental model guide](/concepts/mental-model). It will help you understand how computation caching fits into the rest of Nx.
 {% /callout %}
 
 ## Overview

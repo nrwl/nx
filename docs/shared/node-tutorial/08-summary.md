@@ -13,6 +13,5 @@ In this tutorial you:
 
 **Dive Deep:**
 
-- [Nx CLI](/using-nx/nx-cli)
-- [Computation Caching](/using-nx/caching)
-- [Rebuilding What is Affected](/using-nx/affected)
+- [Computation Caching](/concepts/how-caching-works)
+- [Rebuilding What is Affected](/concepts/affected)

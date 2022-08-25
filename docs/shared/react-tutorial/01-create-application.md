@@ -12,7 +12,7 @@ Nx has first-class Next.js support, if you are looking to try or use it for your
 {% /callout %}
 
 {% callout type="note" title="Plugins for a rich developer experience" %}
-In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.**
 {% /callout %}
 
 ## Contents

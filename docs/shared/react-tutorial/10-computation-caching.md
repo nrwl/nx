@@ -55,7 +55,7 @@ Based on the state of the source code and the environment, Nx figured out that i
 Nx read the output from the cache instead of running the command for 1 out of 2 projects.
 ```
 
-Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache [here](/using-nx/caching).
+Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache [here](/concepts/how-caching-works).
 
 > Add --parallel to any command, and Nx does most of the work in parallel.
 

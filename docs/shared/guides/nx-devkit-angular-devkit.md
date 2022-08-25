@@ -185,7 +185,7 @@ export default createBuilder<NextBuildBuilderOptions>(run);
 
 ### Notable Differences
 
-- Nx Devkit executors return a Promise (or async iterable). If you want, you can always convert an observable to a promise or an async iterable. See [Using Rxjs Observables](/executors/using-builders#using-rxjs-observables)
+- Nx Devkit executors return a Promise (or async iterable). If you want, you can always convert an observable to a promise or an async iterable.
 - Nx Devkit executors do not have to be wrapped using `createBuilder`.
 
 The schema files for both Nx Devkit executors and Angular Builders are the same. Nx can run both of them in the same way.

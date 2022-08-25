@@ -183,8 +183,8 @@ export async function batchJest(
           '\n\r' +
           jestReporterUtils.getResultHeader(
             testResult,
-            globalConfig,
-            configs[i].projectConfig
+            globalConfig as any,
+            configs[i].projectConfig as any
           );
       }
     }

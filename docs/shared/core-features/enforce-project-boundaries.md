@@ -33,69 +33,72 @@ And configure the rule in your root `.eslintrc.json` file:
 
 ## Tags
 
-Nx comes with a generic mechanism for expressing constraints: tags.
+Nx comes with a generic mechanism for expressing constraints on project dependencies: tags.
 
 First, use your project configuration (in `project.json` or `package.json`) to annotate your projects with `tags`. In this example, we will use three tags: `scope:client`. `scope:admin`, `scope:shared`.
 
+{% tabs %}
+{% tab label="package.json" %}
+
 ```jsonc
-// project "client"
+// client/package.json
 {
   // ... more project configuration here
+  "nx": {
+    "tags": ["scope:client"]
+  }
+}
+```
 
+```jsonc
+// admin/package.json
+{
+  // ... more project configuration here
+  "nx": {
+    "tags": ["scope:admin"]
+  }
+}
+```
+
+```jsonc
+// utils/package.json
+{
+  // ... more project configuration here
+  "nx": {
+    "tags": ["scope:shared"]
+  }
+}
+```
+
+{% /tab %}
+{% tab label="project.json" %}
+
+```jsonc
+// client/project.json
+{
+  // ... more project configuration here
   "tags": ["scope:client"]
 }
+```
 
-// project "client-e2e"
+```jsonc
+// admin/project.json
 {
   // ... more project configuration here
-
-  "tags": ["scope:client"],
-  "implicitDependencies": ["client"]
-}
-
-// project "admin"
-{
-  // ... more project configuration here
-
   "tags": ["scope:admin"]
 }
+```
 
-// project "admin-e2e"
+```jsonc
+// utils/project.json
 {
   // ... more project configuration here
-
-  "tags": ["scope:admin"],
-  "implicitDependencies": ["admin"]
-}
-
-// project "client-feature-main"
-{
-  // ... more project configuration here
-
-  "tags": ["scope:client"]
-},
-
-// project "admin-feature-permissions"
-{
-  // ... more project configuration here
-
-  "tags": ["scope:admin"]
-}
-
-// project "components-shared"
-{
-  // ... more project configuration here
-
-  "tags": ["scope:shared"]
-}
-
-// project "utils"
-{
-  // ... more project configuration here
-
   "tags": ["scope:shared"]
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 Next you should update your root lint configuration:
 
@@ -132,39 +135,6 @@ Next you should update your root lint configuration:
 }
 ```
 
-- If you are using **TSLint** you should look for an existing rule entry in your root `tslint.json` called `"nx-enforce-module-boundaries"` and you should update the `"depConstraints"`:
-
-```jsonc
-{
-  // ... more TSLint config here
-
-  // nx-enforce-module-boundaries should already exist at the top-level of your config
-  "nx-enforce-module-boundaries": [
-    true,
-    {
-      "allow": [],
-      // update depConstraints based on your tags
-      "depConstraints": [
-        {
-          "sourceTag": "scope:shared",
-          "onlyDependOnLibsWithTags": ["scope:shared"]
-        },
-        {
-          "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
-        },
-        {
-          "sourceTag": "scope:client",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
-        }
-      ]
-    }
-  ]
-
-  // ... more TSLint config here
-}
-```
-
 With these constraints in place, `scope:client` projects can only depend on other `scope:client` projects or on `scope:shared` projects. And `scope:admin` projects can only depend on other `scope:admin` projects or on `scope:shared` projects. So `scope:client` and `scope:admin` cannot depend on each other.
 
 Projects without any tags cannot depend on any other projects. If you add the following, projects without any tags will be able to depend on any other project.
@@ -176,8 +146,35 @@ Projects without any tags cannot depend on any other projects. If you add the fo
 }
 ```
 
-If you try to violate the constraints, you will get an error:
+If you try to violate the constraints, you will get an error when linting:
 
 ```bash
-A project tagged with "scope:admin" can only depend on projects tagged with "scoped:shared" or "scope:admin".
+A project tagged with "scope:admin" can only depend on projects
+tagged with "scoped:shared" or "scope:admin".
 ```
+
+## Related Documentation
+
+### Concepts
+
+- [Using Nx at Enterprises](/more-concepts/monorepo-nx-enterprise)
+- [Applications and Libraries](/more-concepts/applications-and-libraries)
+- [Creating Libraries](/more-concepts/creating-libraries)
+- [Library Types](/more-concepts/library-types)
+- [Grouping Libraries](/more-concepts/grouping-libraries)
+
+### Recipes
+
+- [Using ESLint in Nx Workspaces](/recipe/eslint)
+- [Ban Dependencies with Certain Tags](/recipe/ban-dependencies-with-tags)
+- [Tag in Multiple Dimensions](/recipe/tag-multiple-dimensions)
+- [Ban External Imports](/recipe/ban-external-imports)
+- [Tags Allow List](/recipe/tags-allow-list)
+
+### Reference
+
+- [workspace-lint command](/nx/workspace-lint)
+- [format:check](/nx/format-check)
+- [format:write](/nx/format-write)
+- [nx.json workspaceLayout property](/reference/nx-json#workspace-layout)
+- [nxignore file](/reference/nxignore)

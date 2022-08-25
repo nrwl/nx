@@ -40,8 +40,8 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 - Publish a package to be used outside the monorepo
 - Better visualize the architecture using `nx graph`
 
-For more information on Nx libraries, see our documentation on [Creating Libraries](/structure/creating-libraries)
-and [Library Types](/structure/library-types).
+For more information on Nx libraries, see our documentation on [Creating Libraries](/more-concepts/creating-libraries)
+and [Library Types](/more-concepts/library-types).
 
 To generate a new library run:
 
@@ -164,7 +164,7 @@ nx export my-new-app
 
 Once you are ready to deploy your Next.js application, you have absolute freedom to choose any hosting provider that fits your needs.
 
-You may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience. We have detailed [how to deploy your Next.js application to Vercel in a separate guide](/guides/deploy-nextjs-to-vercel).
+You may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience. We have detailed [how to deploy your Next.js application to Vercel in a separate guide](/recipe/deploy-nextjs-to-vercel).
 
 ## More Documentation
 

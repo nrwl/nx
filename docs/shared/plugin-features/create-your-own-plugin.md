@@ -29,7 +29,7 @@ Plugins have:
 
   - Plugins can provide a function `processProjectGraph` to add extra edges to the project graph.
   - This allows plugins to influence the behavior of `nx affected` and the project graph visualization.
-  - See [project graph plugins](/structure/project-graph-plugins) for more information.
+  - See [project graph plugins](/recipe/project-graph-plugins) for more information.
 
 - **Project Inference Extensions**
 
@@ -43,7 +43,7 @@ All the core plugins are written using Nx Devkit, and you can use the same utili
 executors.
 
 {% callout type="check" title="Plugins!" %}
-The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [custom generators](/generators/workspace-generators) and [executors](/executors/creating-custom-executors) for your own workspace. You can also write your own plugin and share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
+The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [custom generators](/recipe/workspace-generators) and [executors](/recipe/creating-custom-executors) for your own workspace. You can also write your own plugin and share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
 {% /callout %}
 
 ### Local workspace plugins
@@ -74,15 +74,25 @@ Trees (ASTs), and more.
 ### Pay as you go
 
 As with most things in Nx, the core of Nx Devkit is very simple. It only uses language primitives and immutable
-objects (the tree being the only exception). See [Simplest Generator](/generators/creating-files)
-and [Simplest Executor](/executors/using-builders#simplest-executor) for examples on creating generators
-and executors. The [Using Executors](/executors/using-builders)
-and [Using Generators](/generators/using-generators) guides also have additional information on executors
+objects (the tree being the only exception). See [Simplest Generator](/recipe/creating-files)
+and [Simplest Executor](/plugin-features/use-task-executors#simplest-executor) for examples on creating generators
+and executors. The [Using Executors](/plugin-features/use-task-executors)
+and [Using Generators](/plugin-features/use-code-generators) guides also have additional information on executors
 and generators.
 
 ## Learn more
 
-- [Using Nx Core Without Plugins](/getting-started/nx-core)
-- [Workspace generators](/generators/workspace-generators)
-- [Workspace executors](/executors/creating-custom-executors)
+- [Workspace generators](/recipe/workspace-generators)
+- [Workspace executors](/recipe/creating-custom-executors)
 - [Nx Community Plugins](/community)
+
+## Related Documentation
+
+### Concepts
+
+- [Nx Devkit and Angular Devkit](/more-concepts/nx-devkit-angular-devkit)
+
+### Recipes
+
+- [Project Inference Plugins](/recipe/project-inference-plugins)
+- [Project Graph Plugins](/recipe/project-graph-plugins)

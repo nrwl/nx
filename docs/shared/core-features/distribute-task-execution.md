@@ -47,6 +47,19 @@ The agent job execution flow is very simple:
 
 ## Illustrated Guide
 
-For more details about how distributed task execution works, check out the [illustrated guide](../concepts/dte-guide) by Nrwlian [Nicole Oliver](https://twitter.com/nixcodes).
+For more details about how distributed task execution works, check out the [illustrated guide](../concepts/dte) by Nrwlian [Nicole Oliver](https://twitter.com/nixcodes).
 
-[![how does distributed task execution work in Nx Cloud?](../images/dte/how-does-dte-work.jpeg)](../concepts/dte-guide)
+[![how does distributed task execution work in Nx Cloud?](../images/dte/how-does-dte-work.jpeg)](../concepts/dte)
+
+## Related Documentation
+
+- [Nx Cloud Documentation](/nx-cloud/intro/what-is-nx-cloud)
+- [Nx Cloud Main Site](https://nx.app)
+
+### Recipes
+
+- [CI Setup](/recipes/ci-setup)
+
+### Reference
+
+- [connect-to-nx-cloud command](/nx/connect-to-nx-cloud)

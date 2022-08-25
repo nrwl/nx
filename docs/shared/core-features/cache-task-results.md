@@ -60,12 +60,12 @@ Ran all test suites.
 
 ## Advanced Caching
 
-For a more in-depth understanding of the caching implementation and to fine-tune the caching for your repo, read [How Caching Works](../concepts/how-caching-works).
+For a more in-depth understanding of the caching implementation and to fine-tune the caching for your repo, read [How Caching Works](/concepts/how-caching-works).
 
 ## Local Computation Caching
 
 By default, Nx uses a local computation cache. Nx stores the cached values only for a week, after which they
-are deleted. To clear the cache run `nx reset`, and Nx will create a new one the next time it tries to access it.
+are deleted. To clear the cache run [`nx reset`](/nx/reset), and Nx will create a new one the next time it tries to access it.
 
 ## Distributed Computation Caching
 
@@ -81,3 +81,13 @@ npx nx connect-to-nx-cloud
 ```
 
 Learn more about Nx Cloud at [https://nx.app](https://nx.app).
+
+## Related Documentation
+
+### Concepts
+- [How Caching Works](/concepts/how-caching-works)
+
+### Reference
+- [--skip-nx-cache](/nx/affected#skip-nx-cache)
+- [reset command](/nx/reset)
+- [tasks-runner-options](/reference/nx-json#tasks-runner-options)

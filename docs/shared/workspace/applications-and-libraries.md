@@ -28,8 +28,8 @@ As such, if we follow a _80/20 approach_:
 
 Note, these libraries don’t necessarily need to be built separately, but are rather consumed and built by the application itself directly. Hence, nothing changes from a pure deployment point of view.
 
-That said, it is totally possible to create so-called _"[buildable libraries](/structure/buildable-and-publishable-libraries#buildable-libraries)"_ for enabling incremental builds as
-well as _"[publishable libraries](/structure/buildable-and-publishable-libraries#publishable-libraries)"_ for those scenarios where not only you want to
+That said, it is totally possible to create so-called _"[buildable libraries](/more-concepts/buildable-and-publishable-libraries#buildable-libraries)"_ for enabling incremental builds as
+well as _"[publishable libraries](/more-concepts/buildable-and-publishable-libraries#publishable-libraries)"_ for those scenarios where not only you want to
 use a specific library within the current Nx workspace, but also to publish it
 to some package repository (e.g NPM).
 
@@ -45,6 +45,6 @@ In fact when organizing libraries you should think about your business domains.
 
 Most often teams are aligned with those domains and thus a similar organization of the libraries in the `libs/` folder might be most appropriate. Nx allows to nest libraries into sub-folders which makes it easy to reflect such structuring.
 
-- [Learn more about when you need to create a new library or using an existing one](/structure/creating-libraries)
-- [Learn more about the different types of libraries we think you should follow](/structure/library-types)
-- [Learn more about how to group libraries between each others](/structure/grouping-libraries)
+- [Learn more about when you need to create a new library or using an existing one](/more-concepts/creating-libraries)
+- [Learn more about the different types of libraries we think you should follow](/more-concepts/library-types)
+- [Learn more about how to group libraries between each others](/more-concepts/grouping-libraries)

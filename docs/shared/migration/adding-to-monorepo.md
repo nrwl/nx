@@ -1,7 +1,7 @@
 # Adding Nx to Lerna/Yarn/PNPM/NPM Workspace
 
 {% callout type="note" title="Migrating from Lerna?" %}
-Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This allows for a much better integration between the two. [Read more in our dedicated guide](/migration/lerna-and-nx).
+Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This allows for a much better integration between the two. [Read more in our dedicated guide](/recipe/lerna-and-nx).
 {% /callout %}
 
 **Short story:** you can use Nx easily together with your current Lerna/Yarn/PNPM/NPM monorepo setup. Why? To speed up
@@ -29,33 +29,32 @@ width="100%" /%}
 3. Set up [Nx Cloud](https://nx.app) (if you chose "yes").
 
 {% callout type="note" title="Familiar with Turborepo?" %}
-If you are familiar with Turborepo, check out [this guide](/guides/turbo-and-nx). At this point, Nx can do anything Turbo can, and much more.
+If you are familiar with Turborepo, check out [this guide](/more-concepts/turbo-and-nx). At this point, Nx can do anything Turbo can, and much more.
 {% /callout %}
 
 ## What You Get Right Away
 
-This sets up [Nx core](/getting-started/nx-core) in your existing monorepo which comes with a series of interesting
-features that help intelligenty schedule tasks and make sure operations are quick:
+This sets up Nx core in your existing monorepo which comes with a series of interesting features that help intelligenty schedule tasks and make sure operations are quick:
 
 - **Run any npm script -** with Nx installed, you can use its powerful task scheduler which automatically picks up your
   npm scripts from your package's script section. For instance if package `myproj` has a `build` script, you can just
   run it using `nx build myproj`. Similarly, for running tests use `nx test myproj` and so on.
 - **Parallelization and task dependencies -** Nx
-  automatically [knows how your projects relate to each other](/structure/dependency-graph). As a result, if `project-a`
+  automatically [knows how your projects relate to each other](/more-concepts/dependency-graph). As a result, if `project-a`
   depends on `project-b` and you run `nx build project-a`, Nx first runs the builds for all of `project-a`'s
   dependencies, in this specific example it builds `project-b` before `project-a`.
-- **Only run what changed -** Using [Nx affected commands](/using-nx/affected) you only really execute tasks on the
+- **Only run what changed -** Using [Nx affected commands](/concepts/affected) you only really execute tasks on the
   projects that changed, compared to a given baseline (usually the main branch).
-- **Caching -** You get Nx's [computation caching](/using-nx/caching) for free. All operations, including artifacts and
+- **Caching -** You get Nx's [computation caching](/concepts/how-caching-works) for free. All operations, including artifacts and
   terminal output are restored from the cache (if present) in a completely transparent way without disrupting your DX.
   No configuration needed. Obviously this results in an incredible speed improvement.
 - **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically
   distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization.
-  It even learns from previous runs to better distribute tasks! [Learn more](/using-nx/dte)
-- **Interactive workspace visualization -** Nx comes with a [project graph visualization](/structure/dependency-graph)
+  It even learns from previous runs to better distribute tasks! [Learn more](/concepts/dte)
+- **Interactive workspace visualization -** Nx comes with a [project graph visualization](/more-concepts/dependency-graph)
   built-in which you can use to interactively explore your workspace, understand dependencies and find paths between
   nodes and why they exist.
-- **Dedicated VSCode extension -** You can install [Nx Console](/using-nx/console) which is a dedicated VSCode extension
+- **Dedicated VSCode extension -** You can install [Nx Console](/core-features/integrate-with-editors) which is a dedicated VSCode extension
   to provide a visual interface for navigating your monorepo workspace in terms of launching commands as well as for
   generating code.
 - **GitHub integration -** Install the [Nx Cloud Github App](https://github.com/apps/nx-cloud) to get inline reporting
@@ -63,7 +62,7 @@ features that help intelligenty schedule tasks and make sure operations are quic
 
 ## Looking for integrating Lerna and Nx?
 
-Check out our dedicated guide: [Lerna and Nx](/migration/lerna-and-nx)
+Check out our dedicated guide: [Lerna and Nx](/recipe/lerna-and-nx)
 
 ## Further customizations
 

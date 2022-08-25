@@ -55,7 +55,7 @@ ${dedent`${formatDeprecated(command.description, command.deprecated)}`}
 nx ${command.commandString}
 \`\`\`
 
-[Install \`nx\` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using \`nx\`, or use \`npx nx\`, \`yarn nx\`, or \`pnpx nx\`.\n`;
+Install \`nx\` globally to invoke the command directly using \`nx\`, or use \`npx nx\`, \`yarn nx\`, or \`pnpx nx\`.\n`;
 
     if (examples[command.name] && examples[command.name].length > 0) {
       template += `\n### Examples`;

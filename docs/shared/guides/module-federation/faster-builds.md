@@ -286,7 +286,7 @@ module.exports = withModuleFederation({
 Now you can run `nx build host` to build all the `host` and all the implicit dependencies in production mode.
 
 {% callout type="note" title="Distributed caching" %}
-Again, if you don't use [Nx Cloud's Distributed Tasks Execution](/using-nx/dte) using Module Federation will be slower than building everything in a single process. It's only if you enable Distributed Tasks Execution, your CI will be able to build each remote on a separate machine, in parallel, (or not build it at all and retrieve it from cache), which will reduce the CI time.
+Again, if you don't use [Nx Cloud's Distributed Tasks Execution](/concepts/dte) using Module Federation will be slower than building everything in a single process. It's only if you enable Distributed Tasks Execution, your CI will be able to build each remote on a separate machine, in parallel, (or not build it at all and retrieve it from cache), which will reduce the CI time.
 {% /callout %}
 
 After running that command you'll see the following artifacts in `dist` folder.
@@ -344,7 +344,7 @@ Because Nx Cloud's Distributed Tasks Execution works with any task graph, having
 
 ## Summary
 
-You could use Module Federation to implement [micro frontends](/module-federation/micro-frontend-architecture), but this guide showed how to use it to speed up your builds.
+You could use Module Federation to implement [micro frontends](/more-concepts/micro-frontend-architecture), but this guide showed how to use it to speed up your builds.
 
 Module Federation allows you to split a single build process into multiple processes which can run in parallel or even on multiple machines. The result of each build process can be cached independently. For this to work well in practice you need to have a build system supporting distributed computation caching and distributed tasks execution (e.g., Nx + Nx Cloud).
 

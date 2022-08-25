@@ -6,7 +6,10 @@
 
 ## Nx Console
 
-- [Use Nx Console](/recipe/use-nx-console)
+- [Generate Command](/recipe/console-generate-command)
+- [Run Command](/recipe/console-run-command)
+- [Project Pane](/recipe/console-project-pane)
+- [Keyboard Shortcuts](/recipe/console-shortcuts)
 
 ## CI
 
@@ -80,4 +83,7 @@
 - [Using Apollo GraphQL](/recipe/apollo-react)
 - [Large Repo and Caching](/recipe/caching)
 - [Large Repo and DTE](/recipe/dte)
-- [Imposing Constraints on the Graph](/recipe/imposing-constraints-on-the-graph)
+- [Ban Dependencies with Certain Tags](/recipe/ban-dependencies-with-tags)
+- [Tag in Multiple Dimensions](/recipe/tag-multiple-dimensions)
+- [Ban External Imports](/recipe/ban-external-imports)
+- [Tags Allow List](/recipe/tags-allow-list)

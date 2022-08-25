@@ -23,3 +23,12 @@ If you are using [WebStorm](https://www.jetbrains.com/webstorm/), you can instal
 - [Nx Console Idea](https://plugins.jetbrains.com/plugin/15101-nx-console-idea)
 
 These plugins are **NOT** built or maintained by the Nx team. They are maintained by independent community contributors.
+
+## Related Documentation
+
+### Recipes
+
+- [Nx Console Generate Command](/recipe/console-generate-command)
+- [Nx Console Run Command](/recipe/console-run-command)
+- [Nx Console Project Pane](/recipe/console-project-pane)
+- [Nx Console Keyboard Shortcuts](/recipe/console-shortcuts)

@@ -17,8 +17,8 @@ the boilerplate. However, the vast majority of the features will work the same w
 ## Getting Started
 
 - [Nx core tutorial](/core-tutorial/01-create-blog) will help you understand the core of Nx.
-- [Adding Nx to an existing monorepo](/migration/adding-to-monorepo) shows several paths to adopting Nx in your organization.
-- [Mental model](/using-nx/mental-model) is a good starting point for those who like to understand things theoretically first.
+- [Adding Nx to an existing monorepo](/recipe/adding-to-monorepo) shows several paths to adopting Nx in your organization.
+- [Mental model](/concepts/mental-model) is a good starting point for those who like to understand things theoretically first.
 
 If you want to use Nx plugins to really level up your productivity, pick one of the following tutorials:
 

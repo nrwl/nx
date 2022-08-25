@@ -69,7 +69,7 @@ nx build <project-name>
 ```
 
 Build artifacts will be found in the `dist` directory under `apps/<project-name>` by default. Customize the build
-configuration by editing `outputPath` in the [project configuration](/configuration/projectjson).
+configuration by editing `outputPath` in the [project configuration](/reference/project-configuration).
 
 ### Waiting for Other Tasks
 

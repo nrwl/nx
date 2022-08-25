@@ -8,9 +8,12 @@
 | NX_CACHE_DIRECTORY             | string  | The cache is stored in `node_modules/.cache/nx` by default. Set this variable to use a different directory.                                   |
 | NX_CACHE_PROJECT_GRAPH         | boolean | If set to `false`, disables the project graph cache. Most useful when developing a plugin that modifies the project graph.                    |
 | NX_DAEMON                      | boolean | If set to `false`, disables the Nx daemon process. Disable the daemon to print `console.log` statements in plugin code you are developing.    |
+| NX_PROFILE                     | string  | Prepend `NX_PROFILE=profile.json` before running targets with Nx to generate a file that be [loaded in Chrome dev tools](/recipe/performance-profiling) to visualize the performance of Nx across multiple processes.    |
 
-Related Recipes:
+## Related Recipes:
 
 - [Define Environment Variables](/recipe/define-environment-variables)
 - [Use environment variables in React apps](/recipe/use-environment-variables-in-react)
 - [Use environment variables in Angular apps](/recipe/use-environment-variables-in-angular)
+- [Profiling Performance](/recipe/performance-profiling)
+

@@ -8,7 +8,7 @@ width="100%" /%}
 In this tutorial you use Nx to build a server application out of common libraries using modern technologies.
 
 {% callout type="note" title="Plugins for a rich developer experience" %}
-In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.**
 {% /callout %}
 
 ## Contents
@@ -145,7 +145,7 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](/using-nx/console#nx-console-for-vscode)).
+It helps with good editor integration (see [VSCode Support](/core-features/integrate-with-editors#nx-console-for-vscode)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
 

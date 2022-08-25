@@ -32,7 +32,7 @@ The executor supports incrementally building your Angular application by buildin
 This can improve build time as the building of the workspace libraries can be cached, meaning they only have to be rebuilt if they have changed.
 
 > Note: There may be some additional overhead in the linking of the built libraries' sources which may reduce the overall improvement in build time. Therefore this approach only benefits large applications and would likely have a negative impact on small and medium applications.  
-> You can read more about when to use incremental builds [here](/ci/incremental-builds#when-should-i-use-incremental-builds).
+> You can read more about when to use incremental builds [here](/more-concepts/incremental-builds#when-should-i-use-incremental-builds).
 
 To allow your Angular application to take advantage of incremental building, change the `build` target in your `project.json` to match the following:
 

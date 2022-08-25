@@ -453,9 +453,24 @@
         "id": "recipe",
         "itemList": [
           {
-            "name": "Use Nx Console",
-            "id": "use-nx-console",
-            "file": "shared/recipes/use-nx-console"
+            "name": "Nx Console Generate Command",
+            "id": "console-generate-command",
+            "file": "shared/recipes/console-generate-command"
+          },
+          {
+            "name": "Nx Console Run Command",
+            "id": "console-run-command",
+            "file": "shared/recipes/console-run-command"
+          },
+          {
+            "name": "Nx Console Project Pane",
+            "id": "console-project-pane",
+            "file": "shared/recipes/console-project-pane"
+          },
+          {
+            "name": "Nx Console Keyboard Shortcuts",
+            "id": "console-shortcuts",
+            "file": "shared/recipes/console-shortcuts"
           },
           {
             "name": "Advanced Update Nx",
@@ -549,7 +564,7 @@
           },
           {
             "name": "Compose Executors",
-            "id": "compose executors",
+            "id": "compose-executors",
             "file": "shared/recipes/compose-executors"
           },
           {
@@ -713,9 +728,29 @@
             "file": "shared/extending-nx/project-graph-plugins"
           },
           {
-            "name": "Imposing Constraints on the Graph",
-            "id": "imposing-constraints-on-the-graph",
-            "file": "shared/recipes/imposing-constraints-on-the-graph"
+            "name": "Ban Dependencies with Certain Tags",
+            "id": "ban-dependencies-with-tags",
+            "file": "shared/recipes/ban-dependencies-with-tags"
+          },
+          {
+            "name": "Tag in Multiple Dimensions",
+            "id": "tag-multiple-dimensions",
+            "file": "shared/recipes/tag-multiple-dimensions"
+          },
+          {
+            "name": "Ban External Imports",
+            "id": "ban-external-imports",
+            "file": "shared/recipes/ban-external-imports"
+          },
+          {
+            "name": "Tags Allow List",
+            "id": "tags-allow-list",
+            "file": "shared/recipes/tags-allow-list"
+          },
+          {
+            "name": "Export Project Graph",
+            "id": "export-project-graph",
+            "file": "shared/recipes/export-project-graph"
           }
         ]
       },

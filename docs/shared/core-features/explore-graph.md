@@ -16,12 +16,14 @@ This will open a browser window with an interactive representation of the projec
 
 Once the graph is displayed, you can click on an individual dependency link to find out what specific file(s) created that dependency.
 
-## JSON Project Graph
+## Related Documentation:
 
-If you prefer to analyze the underlying data of the project graph with a script or some other tool, you can run:
+### Recipes
+- [Export Project Graph to JSON](/recipe/export-project-graph)
+- Resolve Circular Dependencies
 
-```bash
-nx graph --file=output.json
-```
+### Concepts
+- How the Project Graph is Built
 
-This will give you all the information that is used to create the project graph visualization.
+### Reference
+- [Graph Command](/nx/graph)

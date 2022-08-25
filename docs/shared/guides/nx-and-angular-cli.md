@@ -26,7 +26,7 @@ What we recommend instead is to split `angular.json` into multiple `project.json
 - Run `nx generate @nrwl/workspace:convert-to-nx-project --all=true`
 
 {% callout type="check" title="Nx and AngularCLI are compatible" %}
-But regardless of whether you use `angular.json` or `project.json`, the configuration remains the same. So anything written about `project.json` or `workspace.json` applies to `angular.json` in the same way. For instance, everything in [project.json and nx.json](/configuration/projectjson) applies to `angular.json` in the same way.
+But regardless of whether you use `angular.json` or `project.json`, the configuration remains the same. So anything written about `project.json` or `workspace.json` applies to `angular.json` in the same way. For instance, everything in [project.json](/reference/project-configuration) and [nx.json](/reference/nx-json) applies to `angular.json` in the same way.
 {% /callout %}
 
 Note that even though the configuration is split, everything works the same way. All migrations and schematics that expect a single `angular.json` file, will receive a single file. Nx is smart, so it merges all the files in memory to make those migrations and schematics work.
