@@ -104,7 +104,7 @@ To speed up your task execution, learn how to [Cache Task Results](./cache-task-
 ### Concepts
 
 - [Task Pipeline Configuration](/concepts/task-pipeline-configuration)
-- [How Affected Works](/concepts/how-affected-works)
+- [How Affected Works](/concepts/affected)
 
 ### Reference
 

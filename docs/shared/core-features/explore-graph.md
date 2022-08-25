@@ -29,4 +29,4 @@ Once the graph is displayed, you can click on an individual dependency link to f
 
 ### Reference
 
-- [Graph Command](/nx/graph)
+- [Graph Command](/nx/dep-graph)
