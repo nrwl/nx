@@ -30,9 +30,10 @@ export function ConfScheduleShort(): JSX.Element {
     {
       type: 'event',
       time: '11:00 - 11:30am (UTC-07:00)',
-      title: 'TBA',
-      description: 'TBA',
-      speakers: [],
+      title: 'Lerna Reborn',
+      description:
+        "Lerna blazed the original trail in the open-source JavaScript monorepo space, and the whole ecosystem has benefitted immensely from that experience. It remains extremely popular for versioning/publishing and full monorepo workspace management, and now that the Nrwl Team has taken over stewardship of the project, we want to share some of the great updates we've made over the last few months as well as what we have planned for the near future.",
+      speakers: ['James Henry'],
       videoUrl: '',
     },
     {

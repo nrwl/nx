@@ -79,6 +79,13 @@ export function ConfSpeakers(): JSX.Element {
       name: 'Rareş Matei',
       twitter: '__rares',
     },
+    {
+      description:
+        'James leverages his expert knowledge of Nx to help the biggest enterprises on the planet provide maximum value to their customers. He is a prolific open-source contributor, ESLint Core Team Alum, and has worked on a number of projects alongside the TypeScript Team.',
+      imageUrl: '/images/conf/james-henry.webp',
+      name: 'James Henry',
+      twitter: 'MrJamesHenry',
+    },
   ];
 
   function chunkList<ITEM>(itemList: ITEM[], chunkSize: number): Array<ITEM[]> {
