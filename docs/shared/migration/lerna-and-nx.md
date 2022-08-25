@@ -20,7 +20,7 @@ For a discussion on #2, see [dependency management](#dependency-management) belo
 
 Nx comes with a powerful task scheduler that intelligenty runs operations and makes sure they are quick. This happens in a variety of ways:
 
-- **Parallelization and task dependencies -** Nx automatically [knows how your projects relate to each other](/more-concepts/dependency-graph). As a result, if `project-a` depends on `project-b` and you run the build command for `project-a`, Nx first runs the builds for all of `project-a`'s dependencies and then the invoked project itself. Nx sorts these tasks to maximize parallelism.
+- **Parallelization and task dependencies -** Nx automatically [knows how your projects relate to each other](/more-concepts/how-project-graph-is-built). As a result, if `project-a` depends on `project-b` and you run the build command for `project-a`, Nx first runs the builds for all of `project-a`'s dependencies and then the invoked project itself. Nx sorts these tasks to maximize parallelism.
 - **Only run what changed -** Using [Nx affected commands](/concepts/affected) you only really execute tasks on the projects that changed, compared to a given baseline (usually the main branch).
 - **Caching -** You get Nx's [computation caching](/concepts/how-caching-works) for free. All operations, including artifacts and terminal output are restored from the cache (if present) in a completely transparent way without disrupting your DX. No configuration needed. Obviously this results in an incredible speed improvement.
 - **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization. It even learns from previous runs to better distribute tasks! [Learn more](/concepts/dte)
@@ -162,7 +162,7 @@ You can also leverage a 3rd-party tool such as:
 
 Nx comes with a whole range of additional features such as:
 
-- **Interactive workspace visualization -** to interactively explore the underlying [project graph](/more-concepts/dependency-graph) for understanding dependencies and find paths between nodes.
+- **Interactive workspace visualization -** to interactively explore the underlying [project graph](/core-features/explore-graph) for understanding dependencies and find paths between nodes.
 - **Nx plugins -** for adding first-class support for React, Next.js, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and many more.
 - **Dedicated VSCode extension -** You can install [Nx Console](/core-features/integrate-with-editors) which is a dedicated VSCode extension to provide a visual interface for navigating your monorepo workspace in terms of launching commands as well as for generating code.
 - **GitHub integration -** Install the [Nx Cloud Github App](https://github.com/apps/nx-cloud) to get inline reporting on your CI jobs.

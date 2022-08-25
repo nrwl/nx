@@ -40,7 +40,7 @@ This sets up Nx core in your existing monorepo which comes with a series of inte
   npm scripts from your package's script section. For instance if package `myproj` has a `build` script, you can just
   run it using `nx build myproj`. Similarly, for running tests use `nx test myproj` and so on.
 - **Parallelization and task dependencies -** Nx
-  automatically [knows how your projects relate to each other](/more-concepts/dependency-graph). As a result, if `project-a`
+  automatically [knows how your projects relate to each other](/more-concepts/how-project-graph-is-built). As a result, if `project-a`
   depends on `project-b` and you run `nx build project-a`, Nx first runs the builds for all of `project-a`'s
   dependencies, in this specific example it builds `project-b` before `project-a`.
 - **Only run what changed -** Using [Nx affected commands](/concepts/affected) you only really execute tasks on the
@@ -51,7 +51,7 @@ This sets up Nx core in your existing monorepo which comes with a series of inte
 - **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically
   distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization.
   It even learns from previous runs to better distribute tasks! [Learn more](/concepts/dte)
-- **Interactive workspace visualization -** Nx comes with a [project graph visualization](/more-concepts/dependency-graph)
+- **Interactive workspace visualization -** Nx comes with a [project graph visualization](/core-features/explore-graph)
   built-in which you can use to interactively explore your workspace, understand dependencies and find paths between
   nodes and why they exist.
 - **Dedicated VSCode extension -** You can install [Nx Console](/core-features/integrate-with-editors) which is a dedicated VSCode extension

@@ -12,4 +12,4 @@
 - [Library Types](/more-concepts/library-types)
 - [Grouping Libraries](/more-concepts/grouping-libraries)
 - [Buildable and Publishable Libraries](/more-concepts/buildable-and-publishable-libraries)
-- [Project Graph](/more-concepts/dependency-graph)
+- [How the Project Graph is Built](/more-concepts/how-project-graph-is-built)

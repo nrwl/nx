@@ -23,14 +23,14 @@ width="100%" /%}s
 
 ## Related Documentation:
 
+### Concepts
+
+- [How the Project Graph is Built](/more-concepts/how-project-graph-is-built)
+
 ### Recipes
 
 - [Export Project Graph to JSON](/recipe/export-project-graph)
 - [Resolve Circular Dependencies](/recipe/resolve-circular-dependencies)
-
-### Concepts
-
-- [How the Project Graph is Built](/concepts/how-project-graph-is-built)
 
 ### Reference
 
