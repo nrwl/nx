@@ -23,7 +23,10 @@ export async function runOne(
   extraTargetDependencies: Record<
     string,
     (TargetDependencyConfig | string)[]
-  > = {}
+  > = {},
+  extraOptions = { excludeTaskDependencies: false } as {
+    excludeTaskDependencies: boolean;
+  }
 ): Promise<void> {
   performance.mark('command-execution-begins');
   performance.measure('code-loading', 'init-local', 'command-execution-begins');
@@ -67,7 +70,8 @@ export async function runOne(
     nxArgs,
     overrides,
     opts.project,
-    extraTargetDependencies
+    extraTargetDependencies,
+    extraOptions
   );
 }
 

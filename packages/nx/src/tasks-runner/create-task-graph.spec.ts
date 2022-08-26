@@ -729,4 +729,58 @@ describe('createTaskGraph', () => {
       },
     });
   });
+
+  it('should exclude task dependencies', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            files: [],
+            targets: {
+              build: {
+                dependsOn: [{ target: 'test', projects: 'self' }],
+              },
+              test: {},
+            },
+          },
+        },
+      },
+      dependencies: {},
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      },
+      true
+    );
+    // prebuild should also be in here
+    expect(taskGraph).toEqual({
+      roots: ['app1:build'],
+      tasks: {
+        'app1:build': {
+          id: 'app1:build',
+          target: {
+            project: 'app1',
+            target: 'build',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+        },
+      },
+      dependencies: {
+        'app1:build': [],
+      },
+    });
+  });
 });

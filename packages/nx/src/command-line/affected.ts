@@ -124,7 +124,8 @@ export async function affected(
           nxArgs,
           overrides,
           null,
-          extraTargetDependencies
+          extraTargetDependencies,
+          { excludeTaskDependencies: false }
         );
         break;
       }
