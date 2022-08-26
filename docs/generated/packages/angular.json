@@ -291,7 +291,7 @@
           "project": {
             "type": "string",
             "description": "The name of the project.",
-            "$default": { "$source": "projectName" }
+            "x-dropdown": "projects"
           },
           "name": {
             "type": "string",
@@ -736,7 +736,7 @@
           "project": {
             "type": "string",
             "description": "The name of the project.",
-            "$default": { "$source": "projectName" }
+            "x-dropdown": "projects"
           },
           "skipFormat": {
             "description": "Skip formatting files.",
@@ -931,7 +931,7 @@
             "description": "The name of the library to create the secondary entry point for.",
             "x-prompt": "What library would you like to create the secondary entry point for?",
             "pattern": "^[a-zA-Z].*$",
-            "$default": { "$source": "projectName" }
+            "x-dropdown": "projects"
           },
           "skipModule": {
             "type": "boolean",
@@ -1567,7 +1567,7 @@
           "project": {
             "type": "string",
             "description": "The name of the project.",
-            "$default": { "$source": "projectName" }
+            "x-dropdown": "projects"
           },
           "name": {
             "type": "string",
@@ -1687,7 +1687,7 @@
           "project": {
             "type": "string",
             "description": "The name of the project.",
-            "$default": { "$source": "projectName" }
+            "x-dropdown": "projects"
           },
           "name": {
             "type": "string",
@@ -1760,7 +1760,7 @@
           "project": {
             "type": "string",
             "description": "The name of the project.",
-            "$default": { "$source": "projectName" }
+            "x-dropdown": "projects"
           },
           "name": {
             "type": "string",
@@ -2127,7 +2127,7 @@
           "project": {
             "type": "string",
             "description": "The name of the project.",
-            "$default": { "$source": "projectName" }
+            "x-dropdown": "projects"
           },
           "name": {
             "type": "string",
