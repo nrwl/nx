@@ -26,4 +26,5 @@ export interface Schema {
   inlineTemplate?: boolean;
   viewEncapsulation?: 'Emulated' | 'Native' | 'None';
   skipFormat?: boolean;
+  standalone?: boolean;
 }

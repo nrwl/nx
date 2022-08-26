@@ -60,6 +60,11 @@
     "prefix": {
       "type": "string",
       "description": "The prefix to use for any generated component."
+    },
+    "standalone": {
+      "type": "boolean",
+      "description": "Whether the application is a standalone application.",
+      "default": false
     }
   },
   "required": ["appName", "mfType"],

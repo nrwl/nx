@@ -17,3 +17,55 @@ exports[`MF Remote App Generator should generate a remote mf app with no host 1`
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
+
+exports[`MF Remote App Generator should generate the a remote setup for standalone components 1`] = `
+"import {environment} from \\"./environments/environment\\";
+import {enableProdMode, importProvidersFrom} from \\"@angular/core\\";
+import {bootstrapApplication} from \\"@angular/platform-browser\\";
+import {RouterModule} from \\"@angular/router\\";
+import {RemoteEntryComponent} from \\"./app/remote-entry/entry.component\\";
+import {RemoteRoutes} from \\"./app/remote-entry/routes\\";
+
+if (environment.production) {
+  enableProdMode();
+}
+
+bootstrapApplication(RemoteEntryComponent, {
+  providers: [
+    importProvidersFrom(
+      RouterModule.forRoot(RemoteRoutes, {initialNavigation: 'enabledBlocking'})
+    )
+  ]
+});"
+`;
+
+exports[`MF Remote App Generator should generate the a remote setup for standalone components 2`] = `
+"module.exports = {
+  name: 'test',
+  exposes: {
+    './Routes': 'apps/test/src/app/remote-entry/routes.ts',
+  },
+}"
+`;
+
+exports[`MF Remote App Generator should generate the a remote setup for standalone components 3`] = `
+"import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+@Component({
+  standalone: true,
+  imports: [CommonModule, NxWelcomeComponent],
+  selector: 'proj-test-entry',
+  template: \`<proj-nx-welcome></proj-nx-welcome>\`
+})
+export class RemoteEntryComponent {}
+"
+`;
+
+exports[`MF Remote App Generator should generate the a remote setup for standalone components 4`] = `
+"import { Route } from '@angular/router';
+import { RemoteEntryComponent } from './entry.component';
+
+export const RemoteRoutes: Route[] = [{path: '', component: RemoteEntryComponent}]"
+`;

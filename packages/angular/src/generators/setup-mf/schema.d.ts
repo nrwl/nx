@@ -10,4 +10,5 @@ export interface Schema {
   skipPackageJson?: boolean;
   e2eProjectName?: string;
   prefix?: string;
+  standalone?: boolean;
 }

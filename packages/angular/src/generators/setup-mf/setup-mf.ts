@@ -4,7 +4,7 @@ import type { Schema } from './schema';
 
 import {
   addCypressOnErrorWorkaround,
-  addEntryModule,
+  addRemoteEntry,
   addRemoteToHost,
   changeBuildTarget,
   fixBootstrap,
@@ -27,7 +27,8 @@ export async function setupMf(tree: Tree, options: Schema) {
 
   generateWebpackConfig(tree, options, projectConfig.root, remotesWithPorts);
 
-  addEntryModule(tree, options, projectConfig.root);
+  addRemoteEntry(tree, options, projectConfig.root);
+
   changeBuildTarget(tree, options);
   updateTsConfigTarget(tree, options);
   setupServeTarget(tree, options);

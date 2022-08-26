@@ -111,4 +111,24 @@ describe('Host App Generator', () => {
       tree.read('apps/foo/host-app/module-federation.config.js', 'utf-8')
     ).toContain(`'remote1','foo-remote2','foo-remote3'`);
   });
+
+  it('should generate a host with remotes using standalone components', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    // ACT
+    await host(tree, {
+      name: 'host',
+      remotes: ['remote1'],
+      standalone: true,
+    });
+
+    // ASSERT
+    expect(tree.exists(`apps/host/src/app/app.module.ts`)).toBeFalsy();
+    expect(tree.read(`apps/host/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
+    expect(tree.read(`apps/host/src/remotes.d.ts`, 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read(`apps/host/src/app/app.component.ts`, 'utf-8')
+    ).toMatchSnapshot();
+  });
 });

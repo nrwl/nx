@@ -29,6 +29,7 @@ export function generateWebpackConfig(
       name: options.appName,
       remotes: remotesWithPorts ?? [],
       projectRoot: appRoot,
+      standalone: options.standalone,
     }
   );
 }
