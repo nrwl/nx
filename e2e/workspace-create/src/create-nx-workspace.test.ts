@@ -190,13 +190,25 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
   });
 
+  it('should be able to create react-native workspace', () => {
+    const wsName = uniq('react-native');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'react-native',
+      appName,
+      packageManager: 'npm',
+    });
+
+    expectNoAngularDevkit();
+  });
+
   it('should be able to create an expo workspace', () => {
     const wsName = uniq('expo');
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
       preset: 'expo',
       appName,
-      packageManager,
+      packageManager: 'npm',
     });
 
     expectNoAngularDevkit();
