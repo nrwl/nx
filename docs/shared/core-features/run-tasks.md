@@ -34,7 +34,7 @@ Each project has the `test` and `build` targets defined. Tasks can be defined as
 {
   "targets": {
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "webpack -c webpack.conf.js"
       }

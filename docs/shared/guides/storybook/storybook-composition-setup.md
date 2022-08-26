@@ -156,7 +156,7 @@ Let's first generate a new `target` called `storybook-composition` for our `main
 Run the following command:
 
 ```bash
-nx generate @nrwl/workspace:run-commands storybook-composition --command='nx storybook one-composed' --project=main-host
+nx generate nx:run-commands storybook-composition --command='nx storybook one-composed' --project=main-host
 ```
 
 This will create a new `target` in your `apps/main-host/project.json`:

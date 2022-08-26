@@ -83,7 +83,11 @@ Create a file at `packages/blog/package.json` with these contents:
 
 ```json
 {
-- [blog](leventy blog)
+  "name": "blog",
+  "description": "eleventy blog",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "eleventy --input=./src --output=../../dist/packages/blog",
     "serve": "eleventy --serve --input=./src --output=../../dist/packages/blog"
   }
 }
@@ -129,10 +133,10 @@ layout: layout.liquid
 pageTitle: Welcome to my blog
 ---
 
-{%= '{%' %} for post in collections.posts {%= '%}' %}
+{% for post in collections.posts %}
 <h2><a href="{{ post.url }}">{{ post.data.pageTitle }}</a></h2>
 <em>{{ post.date | date: "%Y-%m-%d" }}</em>
-{%= '{%' %} endfor {%= '%}' %}
+{% endfor %}
 ```
 
 Create the following files:

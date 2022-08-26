@@ -197,7 +197,7 @@ Say you have the same application above with a configuration as follows:
       }
     },
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": [
         "{options.outputPath}"
       ],
