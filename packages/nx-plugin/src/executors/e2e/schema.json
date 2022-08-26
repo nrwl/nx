@@ -10,12 +10,16 @@
     },
     "jestConfig": {
       "type": "string",
-      "description": "Jest config file."
+      "description": "Jest config file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "jest.config@(.js|.ts)"
     },
     "tsSpecConfig": {
       "type": "string",
       "description": "The tsconfig file for specs.",
-      "x-deprecated": "Use the `tsconfig` property for `ts-jest` in the e2e project `jest.config.js` file. It will be removed in the next major release."
+      "x-deprecated": "Use the `tsconfig` property for `ts-jest` in the e2e project `jest.config.js` file. It will be removed in the next major release.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
     },
 
     "codeCoverage": {
@@ -45,7 +49,9 @@
     },
     "testFile": {
       "description": "The name of the file to test.",
-      "type": "string"
+      "type": "string",
+      "x-completion-type": "file",
+      "x-completion-glob": "**/*.+(spec|test).+(ts|js)"
     },
     "tsConfig": {
       "description": "The name of the Typescript configuration file. Set the tsconfig option in the jest config file. ",

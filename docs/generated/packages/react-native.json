@@ -711,7 +711,9 @@
         "properties": {
           "entryFile": {
             "type": "string",
-            "description": "The entry file relative to project root."
+            "description": "The entry file relative to project root.",
+            "x-completion-type": "file",
+            "x-completion-glob": "main@(.js|.ts)"
           },
           "platform": {
             "enum": ["ios", "android"],
@@ -732,7 +734,8 @@
           },
           "bundleOutput": {
             "type": "string",
-            "description": "The output path of the generated files."
+            "description": "The output path of the generated files.",
+            "x-completion-type": "directory"
           },
           "maxWorkers": {
             "type": "number",

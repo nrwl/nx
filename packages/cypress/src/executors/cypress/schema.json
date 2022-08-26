@@ -7,7 +7,9 @@
   "properties": {
     "cypressConfig": {
       "type": "string",
-      "description": "The path of the Cypress configuration json file."
+      "description": "The path of the Cypress configuration json file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "cypress?(*)@(.js|.ts|.json)"
     },
     "watch": {
       "type": "boolean",
@@ -16,7 +18,9 @@
     },
     "tsConfig": {
       "type": "string",
-      "description": "The path of the Cypress tsconfig configuration json file."
+      "description": "The path of the Cypress tsconfig configuration json file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
     },
     "devServerTarget": {
       "type": "string",

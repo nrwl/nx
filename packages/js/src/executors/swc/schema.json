@@ -7,19 +7,26 @@
   "properties": {
     "main": {
       "type": "string",
-      "description": "The name of the main entry-point file."
+      "description": "The name of the main entry-point file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "main@(.js|.ts|.tsx)"
     },
     "outputPath": {
       "type": "string",
-      "description": "The output path of the generated files."
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory"
     },
     "tsConfig": {
       "type": "string",
-      "description": "The path to the Typescript configuration file."
+      "description": "The path to the Typescript configuration file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
     },
     "swcrc": {
       "type": "string",
-      "description": "The path to the SWC configuration file. Default: .lib.swcrc"
+      "description": "The path to the SWC configuration file. Default: .lib.swcrc",
+      "x-completion-type": "file",
+      "x-completion-glob": ".swcrc"
     },
     "assets": {
       "type": "array",

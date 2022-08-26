@@ -121,7 +121,9 @@
           "configPath": {
             "type": "string",
             "description": "Specify Detox config file path. If not supplied, detox searches for `.detoxrc[.js]` or `detox` section in `package.json`.",
-            "alias": "cp"
+            "alias": "cp",
+            "x-completion-type": "file",
+            "x-completion-glob": ".detoxrc?(.js)"
           }
         },
         "required": [],
@@ -165,7 +167,9 @@
           "configPath": {
             "type": "string",
             "description": "Specify Detox config file path. If not supplied, detox searches for `.detoxrc[.js]` or `detox` section in package.json.",
-            "alias": "cp"
+            "alias": "cp",
+            "x-completion-type": "file",
+            "x-completion-glob": ".detoxrc?(.js)"
           },
           "runnerConfig": {
             "type": "string",

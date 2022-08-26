@@ -13,16 +13,24 @@
     },
     "config": {
       "type": "string",
-      "description": "The name of the configuration file."
+      "description": "The name of the configuration file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "(tslint.json|.eslintrc.json)"
     },
     "tsConfig": {
       "description": "The name of the TypeScript configuration file.",
       "oneOf": [
-        { "type": "string" },
+        {
+          "type": "string",
+          "x-completion-type": "file",
+          "x-completion-glob": "tsconfig.*.json"
+        },
         {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "x-completion-type": "file",
+            "x-completion-glob": "tsconfig.*.json"
           }
         }
       ]
@@ -57,7 +65,8 @@
       "description": "Files to exclude from linting.",
       "default": [],
       "items": {
-        "type": "string"
+        "type": "string",
+        "x-completion-type": "file"
       }
     },
     "files": {
@@ -65,7 +74,8 @@
       "description": "Files to include in linting.",
       "default": [],
       "items": {
-        "type": "string"
+        "type": "string",
+        "x-completion-type": "file"
       }
     },
     "force": {
@@ -90,11 +100,13 @@
     },
     "cacheLocation": {
       "type": "string",
-      "description": "Path to the cache file or directory."
+      "description": "Path to the cache file or directory.",
+      "x-completion-type": "directory"
     },
     "outputFile": {
       "type": "string",
-      "description": "File to write report to."
+      "description": "File to write report to.",
+      "x-completion-type": "file"
     },
     "maxWarnings": {
       "type": "number",

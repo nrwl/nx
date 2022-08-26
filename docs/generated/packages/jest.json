@@ -173,7 +173,9 @@
           },
           "jestConfig": {
             "description": "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration)",
-            "type": "string"
+            "type": "string",
+            "x-completion-type": "file",
+            "x-completion-glob": "jest.config@(.js|.ts)"
           },
           "testFile": {
             "description": "The name of the file to test.",
@@ -282,7 +284,8 @@
           },
           "coverageDirectory": {
             "description": "The directory where Jest should output its coverage files.",
-            "type": "string"
+            "type": "string",
+            "x-completion-type": "directory"
           },
           "testResultsProcessor": {
             "description": "Node module that implements a custom results processor. (https://jestjs.io/docs/en/configuration#testresultsprocessor-string)",

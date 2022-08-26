@@ -43,7 +43,8 @@
     },
     "proxyConfig": {
       "type": "string",
-      "description": "Path to the proxy configuration file."
+      "description": "Path to the proxy configuration file.",
+      "x-completion-type": "file"
     },
     "buildLibsFromSource": {
       "type": "boolean",

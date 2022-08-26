@@ -282,15 +282,20 @@
         "properties": {
           "main": {
             "type": "string",
-            "description": "The name of the main entry-point file."
+            "description": "The name of the main entry-point file.",
+            "x-completion-type": "file",
+            "x-completion-glob": "main@(.js|.ts)"
           },
           "tsConfig": {
             "type": "string",
-            "description": "The name of the Typescript configuration file."
+            "description": "The name of the Typescript configuration file.",
+            "x-completion-type": "file",
+            "x-completion-glob": "tsconfig.*.json"
           },
           "outputPath": {
             "type": "string",
-            "description": "The output path of the generated files."
+            "description": "The output path of the generated files.",
+            "x-completion-type": "directory"
           },
           "deleteOutputPath": {
             "type": "boolean",
@@ -411,11 +416,13 @@
               "properties": {
                 "replace": {
                   "type": "string",
-                  "description": "The file to be replaced."
+                  "description": "The file to be replaced.",
+                  "x-completion-type": "file"
                 },
                 "with": {
                   "type": "string",
-                  "description": "The file to replace with."
+                  "description": "The file to replace with.",
+                  "x-completion-type": "file"
                 }
               },
               "additionalProperties": false,
@@ -425,8 +432,19 @@
           },
           "webpackConfig": {
             "oneOf": [
-              { "type": "array", "items": { "type": "string" } },
-              { "type": "string" }
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "x-completion-type": "file",
+                  "x-completion-glob": "webpack?(*)@(.js|.ts)"
+                }
+              },
+              {
+                "type": "string",
+                "x-completion-type": "file",
+                "x-completion-glob": "webpack?(*)@(.js|.ts)"
+              }
             ],
             "description": "Path to a function which takes a webpack config, context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack"
           },
@@ -474,7 +492,9 @@
                 },
                 "entryPath": {
                   "type": "string",
-                  "description": "Path to the additional entry file."
+                  "description": "Path to the additional entry file.",
+                  "x-completion-type": "file",
+                  "x-completion-glob": "**/*@(.js|.ts)"
                 }
               }
             }
