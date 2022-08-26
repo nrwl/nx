@@ -759,7 +759,7 @@ async function promptForValues(
       ) {
         question.message = v['x-prompt'].message;
         question.type = 'confirm';
-      } else {
+      } else if (v['x-prompt'].items) {
         question.message = v['x-prompt'].message;
         question.type = v['x-prompt'].multiselect
           ? 'multiselect'
@@ -776,6 +776,9 @@ async function promptForValues(
               };
             }
           });
+      } else {
+        question.message = v['x-prompt'].message;
+        question.type = v.type === 'boolean' ? 'confirm' : 'input';
       }
       prompts.push(question);
     }
