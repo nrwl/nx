@@ -144,6 +144,7 @@ const schemaUrls = {
 
 /**
  * Guide specific rules (added 2022-01-04)
+ * Added more 2022-08-26
  */
 const guideUrls = {
   '/core-concepts/configuration': '/configuration/projectjson',
@@ -158,6 +159,30 @@ const guideUrls = {
   '/using-nx/nx-devkit': '/extending-nx/nx-devkit',
   '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
   '/guides/lerna-and-nx': '/migration/lerna-and-nx',
+  '/getting-started/nx-setup': '/getting-started/intro',
+  '/getting-started/nx-core': '/getting-started/core-tutorial',
+  '/getting-started/nx-and-typescript': '/getting-started/intro',
+  '/getting-started/nx-and-react': '/getting-started/intro',
+  '/getting-started/nx-and-angular': '/getting-started/intro',
+  '/configuration/packagejson': '/reference/project-configuration',
+  '/configuration/projectjson': '/reference/project-configuration',
+  '/using-nx/nx-cli': '/getting-started/intro',
+  '/using-nx/console': '/core-features/integrate-with-editors',
+  '/using-nx/mental-model': '/concepts/mental-model',
+  '/using-nx/caching': '/concepts/how-caching-works',
+  '/using-nx/dte': '/core-features/distribute-task-execution',
+  '/using-nx/affected': '/concepts/affected',
+  '/using-nx/ci-overview': '/recipes/ci-setup',
+  '/using-nx/updating-nx': '/core-features/automate-updating-dependencies',
+  '/using-nx/nx-nodejs-typescript-version-matrix':
+    '/workspace/nx-nodejs-typescript-version-matrix',
+  '/migration/lerna-and-nx': '/recipe/lerna-and-nx',
+  '/migration/adding-to-monorepo': '/recipe/adding-to-monorepo',
+  '/migration/migration-cra': '/recipe/migration-cra',
+  '/migration/migration-angular': '/recipe/migration-angular',
+  '/migration/migration-angularjs': '/recipe/migration-angularjs',
+  '/migration/preserving-git-histories': '/recipe/preserving-git-histories',
+  '/migration/manual': '/recipe/manual',
 };
 
 /**
