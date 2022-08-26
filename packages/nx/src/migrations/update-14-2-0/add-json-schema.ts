@@ -7,6 +7,8 @@ import {
   getRelativeProjectJsonSchemaPath,
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
+import { logger } from '../../utils/logger';
+import { join } from 'path';
 
 export default async function (tree: Tree) {
   // update nx.json $schema
@@ -33,16 +35,24 @@ export default async function (tree: Tree) {
 
   // update projects $schema
   for (const [projName, projConfig] of getProjects(tree)) {
-    if (projConfig['$schema']) continue;
+    if (
+      projConfig['$schema'] ||
+      !tree.exists(join(projConfig.root, 'project.json'))
+    )
+      continue;
 
-    const relativeProjectJsonSchemaPath = getRelativeProjectJsonSchemaPath(
-      tree,
-      projConfig
-    );
-    updateProjectConfiguration(tree, projName, {
-      $schema: relativeProjectJsonSchemaPath,
-      ...projConfig,
-    } as ProjectConfiguration);
+    try {
+      const relativeProjectJsonSchemaPath = getRelativeProjectJsonSchemaPath(
+        tree,
+        projConfig
+      );
+      updateProjectConfiguration(tree, projName, {
+        $schema: relativeProjectJsonSchemaPath,
+        ...projConfig,
+      } as ProjectConfiguration);
+    } catch (e) {
+      logger.warn(`Could not add schema for "${projName}": ${e.message}`);
+    }
   }
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
