@@ -274,6 +274,11 @@ export const commandsObject = yargs
     handler: async (args: any) => (await import('./list')).listHandler(args),
   })
   .command({
+    command: 'targets',
+    describe: 'Lists available targets for a workspace.',
+    handler: async () => (await import('./targets')).targetsHandler(),
+  })
+  .command({
     command: 'reset',
     describe:
       'Clears all the cached Nx artifacts and metadata about the workspace and shuts down the Nx Daemon.',

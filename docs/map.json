@@ -917,6 +917,11 @@
           { "name": "report", "id": "report", "file": "generated/cli/report" },
           { "name": "list", "id": "list", "file": "generated/cli/list" },
           {
+            "name": "targets",
+            "id": "targets",
+            "file": "generated/cli/targets"
+          },
+          {
             "name": "workspace-lint",
             "id": "workspace-lint",
             "file": "generated/cli/workspace-lint"

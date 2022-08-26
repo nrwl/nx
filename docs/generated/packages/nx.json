@@ -109,6 +109,12 @@
       "content": "---\ntitle: 'list - CLI command'\ndescription: 'Lists installed plugins, capabilities of installed plugins and other available plugins.'\n---\n\n# list\n\nLists installed plugins, capabilities of installed plugins and other available plugins.\n\n## Usage\n\n```bash\nnx list [plugin]\n```\n\n[Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.\n\n### Examples\n\nList the plugins installed in the current workspace:\n\n```bash\nnx list\n```\n\nList the generators and executors available in the `@nrwl/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace):\n\n```bash\nnx list @nrwl/web\n```\n\n## Options\n\n### help\n\nType: boolean\n\nShow help\n\n### plugin\n\nType: string\n\nThe name of an installed plugin to query\n\n### version\n\nType: boolean\n\nShow version number\n"
     },
     {
+      "name": "targets",
+      "id": "targets",
+      "file": "generated/cli/targets",
+      "content": "---\ntitle: 'targets - CLI command'\ndescription: 'Lists available targets for a workspace.'\n---\n\n# targets\n\nLists available targets for a workspace.\n\n## Usage\n\n```bash\nnx targets\n```\n\n[Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.\n"
+    },
+    {
       "name": "workspace-lint",
       "id": "workspace-lint",
       "file": "generated/cli/workspace-lint",
