@@ -34,8 +34,9 @@ type PropertyDescription = {
   additionalProperties?: boolean;
   'x-prompt'?:
     | string
-    | { message: string; type: string; items: any[]; multiselect?: boolean };
+    | { message: string; type: string; items?: any[]; multiselect?: boolean };
   'x-deprecated'?: boolean | string;
+  'x-dropdown'?: 'projects';
 
   // Numbers Only
   multipleOf?: number;
@@ -710,19 +711,19 @@ function getGeneratorDefaults(
   return defaults;
 }
 
-async function promptForValues(
+interface Prompt {
+  name: string;
+  type: 'input' | 'autocomplete' | 'multiselect' | 'confirm' | 'numeral';
+  message: string;
+  initial?: any;
+  choices?: (string | { name: string; message: string })[];
+}
+
+export function getPromptsForSchema(
   opts: Options,
   schema: Schema,
   wc: (ProjectsConfigurations & NxJsonConfiguration) | null
-) {
-  interface Prompt {
-    name: string;
-    type: 'input' | 'autocomplete' | 'multiselect' | 'confirm' | 'numeral';
-    message: string;
-    initial?: any;
-    choices?: (string | { name: string; message: string })[];
-  }
-
+): Prompt[] {
   const prompts: Prompt[] = [];
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (v['x-prompt'] && opts[k] === undefined) {
@@ -734,23 +735,31 @@ async function promptForValues(
         question.initial = v.default;
       }
 
+      // Normalize x-prompt
       if (typeof v['x-prompt'] === 'string') {
-        question.message = v['x-prompt'];
+        const message = v['x-prompt'];
+        v['x-prompt'] = {
+          type: v.type === 'boolean' ? 'confirm' : 'input',
+          message,
+        };
+      }
 
-        if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
-          question.type = 'autocomplete';
-          question.choices = [...v.enum];
-        } else if (
-          v.type === 'string' &&
-          v.$default?.$source === 'projectName' &&
-          wc
-        ) {
-          question.type = 'autocomplete';
-          question.choices = Object.keys(wc.projects);
-        } else {
-          question.type = v.type === 'boolean' ? 'confirm' : 'input';
-        }
-      } else if (v['x-prompt'].type == 'number') {
+      question.message = v['x-prompt'].message;
+
+      if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
+        question.type = 'autocomplete';
+        question.choices = [...v.enum];
+      } else if (
+        v.type === 'string' &&
+        (v.$default?.$source === 'projectName' ||
+          k === 'project' ||
+          k === 'projectName' ||
+          v['x-dropdown'] === 'projects') &&
+        wc
+      ) {
+        question.type = 'autocomplete';
+        question.choices = Object.keys(wc.projects);
+      } else if (v.type === 'number' || v['x-prompt'].type == 'number') {
         question.message = v['x-prompt'].message;
         question.type = 'numeral';
       } else if (
@@ -784,10 +793,18 @@ async function promptForValues(
     }
   });
 
+  return prompts;
+}
+
+async function promptForValues(
+  opts: Options,
+  schema: Schema,
+  wc: (ProjectsConfigurations & NxJsonConfiguration) | null
+) {
   return await (
     await import('enquirer')
   )
-    .prompt(prompts)
+    .prompt(getPromptsForSchema(opts, schema, wc))
     .then((values) => ({ ...opts, ...values }))
     .catch((e) => {
       console.error(e);
