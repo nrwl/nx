@@ -150,7 +150,7 @@ describe('Run Commands', () => {
   });
 
   describe('interpolateArgsIntoCommand', () => {
-    it('should add all unparsed args when forwardAllArgs is true', () => {
+    it('should add all unknown unparsed args when forwardAllArgs is true', () => {
       expect(
         interpolateArgsIntoCommand(
           'echo',
@@ -158,6 +158,26 @@ describe('Run Commands', () => {
           true
         )
       ).toEqual('echo one -a=b');
+    });
+
+    it('should not add unparsed args, that are executor options when forwardAllArgs is true', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { __unparsed__: ['--command=abc', '--parallel=false'] } as any,
+          true
+        )
+      ).toEqual('echo');
+    });
+
+    it('should not add "--__unparsed__=.." as argument', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { __unparsed__: ['--__unparsed__='] } as any,
+          true
+        )
+      ).toEqual('echo');
     });
   });
 

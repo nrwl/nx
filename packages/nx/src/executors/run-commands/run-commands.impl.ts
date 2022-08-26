@@ -292,12 +292,22 @@ export function interpolateArgsIntoCommand(
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) => opts.parsedArgs[group]);
   } else if (forwardAllArgs) {
+    const filteredUnparsed = filterUnparsed(opts.__unparsed__);
     return `${command}${
-      opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
+      filteredUnparsed.length > 0 ? ' ' + filteredUnparsed.join(' ') : ''
     }`;
   } else {
     return command;
   }
+}
+
+function filterUnparsed(unparsed: string[]) {
+  return unparsed.filter(
+    (_unparsedKV) =>
+      ![...propKeys, '__unparsed__'].some((_propKey) =>
+        _unparsedKV.startsWith(`--${_propKey}=`)
+      )
+  );
 }
 
 function parseArgs(options: RunCommandsOptions) {
