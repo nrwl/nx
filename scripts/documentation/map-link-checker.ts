@@ -22,6 +22,7 @@ function filePathExtractor(file: any): string[] {
   const paths: string[] = [];
 
   function recur(curr): void {
+    if (curr.isExternal) return; // Removing external links
     if (curr.itemList) {
       curr.itemList.forEach((ii) => {
         recur(ii);

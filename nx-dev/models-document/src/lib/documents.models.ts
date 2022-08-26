@@ -10,5 +10,6 @@ export interface DocumentMetadata {
   packageName?: string;
   file?: string;
   path?: string;
+  isExternal?: boolean;
   itemList?: DocumentMetadata[];
 }
