@@ -110,7 +110,8 @@ export async function runCommand(
   nxArgs: NxArgs,
   overrides: any,
   initiatingProject: string | null,
-  extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>
+  extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
+  extraOptions: { excludeTaskDependencies: boolean }
 ) {
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
@@ -129,7 +130,8 @@ export async function runCommand(
         projectNames,
         [nxArgs.target],
         nxArgs.configuration,
-        overrides
+        overrides,
+        extraOptions.excludeTaskDependencies
       );
 
       const hasher = new Hasher(projectGraph, nxJson, runnerOptions);

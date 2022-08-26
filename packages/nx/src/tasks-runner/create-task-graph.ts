@@ -21,7 +21,8 @@ export class ProcessTasks {
     projectNames: string[],
     targets: string[],
     configuration: string,
-    overrides: Object
+    overrides: Object,
+    excludeTaskDependencies: boolean
   ) {
     for (const projectName of projectNames) {
       for (const target of targets) {
@@ -42,9 +43,12 @@ export class ProcessTasks {
         this.dependencies[task.id] = [];
       }
     }
-    for (const taskId of Object.keys(this.tasks)) {
-      const task = this.tasks[taskId];
-      this.processTask(task, task.target.project, configuration, overrides);
+
+    if (!excludeTaskDependencies) {
+      for (const taskId of Object.keys(this.tasks)) {
+        const task = this.tasks[taskId];
+        this.processTask(task, task.target.project, configuration, overrides);
+      }
     }
     return Object.keys(this.dependencies).filter(
       (d) => this.dependencies[d].length === 0
@@ -219,10 +223,17 @@ export function createTaskGraph(
   projectNames: string[],
   targets: string[],
   configuration: string | undefined,
-  overrides: Object
+  overrides: Object,
+  excludeTaskDependencies: boolean = false
 ): TaskGraph {
   const p = new ProcessTasks(defaultDependencyConfigs, projectGraph);
-  const roots = p.processTasks(projectNames, targets, configuration, overrides);
+  const roots = p.processTasks(
+    projectNames,
+    targets,
+    configuration,
+    overrides,
+    excludeTaskDependencies
+  );
   return {
     roots,
     tasks: p.tasks,

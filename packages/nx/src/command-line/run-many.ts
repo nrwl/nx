@@ -16,7 +16,10 @@ export async function runMany(
   extraTargetDependencies: Record<
     string,
     (TargetDependencyConfig | string)[]
-  > = {}
+  > = {},
+  extraOptions = { excludeTaskDependencies: false } as {
+    excludeTaskDependencies: boolean;
+  }
 ) {
   performance.mark('command-execution-begins');
   const nxJson = readNxJson();
@@ -42,7 +45,8 @@ export async function runMany(
     nxArgs,
     overrides,
     null,
-    extraTargetDependencies
+    extraTargetDependencies,
+    extraOptions
   );
 }
 
