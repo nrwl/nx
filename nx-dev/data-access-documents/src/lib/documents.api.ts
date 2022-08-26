@@ -76,6 +76,7 @@ export class DocumentsApi {
     const paths: StaticDocumentPaths[] = [];
 
     function recur(curr, acc) {
+      if (curr.isExternal) return;
       if (curr.itemList) {
         curr.itemList.forEach((ii) => {
           recur(ii, [...acc, curr.id]);
