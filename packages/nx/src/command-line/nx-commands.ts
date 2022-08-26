@@ -25,7 +25,6 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart, Fast and Extensible Build System'))
-  .env('NX')
   .demandCommand(1, '')
   .command({
     command: 'generate <generator> [_..]',
