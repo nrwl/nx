@@ -97,7 +97,7 @@ async function* runNextDevServer(
     conf: config,
     port: options.port,
     customServer: !!options.customServerTarget,
-    hostname: options.hostname,
+    hostname: options.hostname || 'localhost',
 
     // TOOD(jack): Remove in Nx 15
     path: options.customServerPath,
