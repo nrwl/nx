@@ -108,7 +108,7 @@ package.json
 Now let's modify `packages/complex/index.js` to include `require('@myorg/simple')`. If you run `nx test complex`,
 you will see an error saying that `@myorg/simple` cannot be resolved.
 
-This is expected. Nx analyzes your source to enable computation caching, it knows what projects are affected by your PR,
+This is expected. Nx analyzes your source to enable computation caching, it knows what projects are affected by changes,
 but it **does not** change how your npm scripts run. Whatever tools you use in your npm scripts will run exactly as they
 would without Nx. **Nx Core doesn't replace your tools and doesn't change how they work.**
 
@@ -169,7 +169,7 @@ With Nx, you never have to worry about preparing your workspace before running a
 
 ### Nx Knows What Is Affected
 
-Running `nx affected --target=test` will test all the projects affected by the current PR.
+Running `nx affected --target=test` will test all the projects affected by the current changes.
 
 ### Nx Caches and Distributes Tasks
 
