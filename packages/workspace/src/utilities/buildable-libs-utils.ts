@@ -13,11 +13,11 @@ import { unlinkSync } from 'fs';
 import { output } from './output';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 
-function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
+function isBuildable(node: ProjectGraphProjectNode): boolean {
   return (
     node.data.targets &&
-    node.data.targets[target] &&
-    node.data.targets[target].executor !== ''
+    node.data.targets['build'] &&
+    node.data.targets['build'].executor !== ''
   );
 }
 
@@ -69,32 +69,34 @@ export function calculateProjectDependencies(
       let project: DependentBuildableProjectNode = null;
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
       if (depNode.type === 'lib') {
-        if (isBuildable(targetName, depNode)) {
-          const libPackageJsonPath = join(
-            root,
-            depNode.data.root,
-            'package.json'
-          );
+        if (targetName === 'build') {
+          if (isBuildable(depNode)) {
+            const libPackageJsonPath = join(
+              root,
+              depNode.data.root,
+              'package.json'
+            );
 
-          project = {
-            name: fileExists(libPackageJsonPath)
-              ? readJsonFile(libPackageJsonPath).name // i.e. @workspace/mylib
-              : dep,
-            outputs: getOutputsForTargetAndConfiguration(
-              {
-                overrides: {},
-                target: {
-                  project: projectName,
-                  target: targetName,
-                  configuration: configurationName,
+            project = {
+              name: fileExists(libPackageJsonPath)
+                ? readJsonFile(libPackageJsonPath).name // i.e. @workspace/mylib
+                : dep,
+              outputs: getOutputsForTargetAndConfiguration(
+                {
+                  overrides: {},
+                  target: {
+                    project: projectName,
+                    target: targetName,
+                    configuration: configurationName,
+                  },
                 },
-              },
-              depNode
-            ),
-            node: depNode,
-          };
-        } else {
-          nonBuildableDependencies.push(dep);
+                depNode
+              ),
+              node: depNode,
+            };
+          } else {
+            nonBuildableDependencies.push(dep);
+          }
         }
       } else if (depNode.type === 'npm') {
         project = {
