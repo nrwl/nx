@@ -31,7 +31,9 @@ export default async function buildExecutor(
   const hasReact18 =
     reactDomVersion &&
     gte(checkAndCleanWithSemver('react-dom', reactDomVersion), '18.0.0');
-  (process.env as any).__NEXT_REACT_ROOT ||= hasReact18 ? 'true' : undefined;
+  if (hasReact18) {
+    (process.env as any).__NEXT_REACT_ROOT ||= 'true';
+  }
 
   let dependencies: DependentBuildableProjectNode[] = [];
   const root = resolve(context.root, options.root);
