@@ -75,7 +75,7 @@ export function readProjectsConfigurationFromProjectGraph(
   };
 }
 
-async function buildProjectGraphWithoutDaemon() {
+export async function buildProjectGraphWithoutDaemon() {
   await defaultFileHasher.ensureInitialized();
   return await buildProjectGraph();
 }
