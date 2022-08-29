@@ -38,6 +38,7 @@ export interface CypressExecutorOptions extends Json {
   skipServe?: boolean;
   testingType?: 'component' | 'e2e';
   tag?: string;
+  retries?: number;
 }
 
 export default async function cypressExecutor(
@@ -180,10 +181,15 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
   const options: any = {
     project: projectFolderPath,
     configFile: basename(opts.cypressConfig),
+    config: {},
   };
   // If not, will use the `baseUrl` normally from `cypress.json`
   if (baseUrl) {
-    options.config = { baseUrl };
+    options.config.baseUrl = baseUrl;
+  }
+
+  if (opts.retries !== undefined) {
+    options.config.retries = opts.retries;
   }
 
   if (opts.browser) {

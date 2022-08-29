@@ -119,6 +119,10 @@
       "type": "string",
       "description": "A comma delimited list to identify a run with.",
       "aliases": ["t"]
+    },
+    "retries": {
+      "type": "number",
+      "description": "Retry failed tests the specified number of times."
     }
   },
   "additionalProperties": true,
