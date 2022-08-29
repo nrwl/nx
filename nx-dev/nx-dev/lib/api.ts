@@ -6,7 +6,6 @@ import {
   getBasicNxCloudSection,
   getBasicSection,
   getDeepDiveNxCloudSection,
-  getDeepDiveSection,
 } from '../../data-access-menu/src/lib/menu.utils';
 
 // Imports JSON directly, so they can be bundled into the app and functions.

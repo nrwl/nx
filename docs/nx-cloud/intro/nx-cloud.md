@@ -10,7 +10,7 @@ And it takes five minutes to set up.
 
 ## Clean User Interface
 
-Most developers will benefit from Nx Cloud without ever changing any of their workflow. Commands will just execute faster. For those developers that are tasked with making the most of Nx Cloud or those that want to get more insight into the different commands executed in the repository, Nx Cloud has a clean, informative user interface.
+Most developers will benefit from Nx Cloud without ever-changing any of their workflow. Commands will just execute faster. For those developers that are tasked with making the most of Nx Cloud or those that want to get more insight into the different commands executed in the repository, Nx Cloud has a clean, informative user interface.
 
 The [top level organization page](https://nx.app/orgs/5e38af6de037b5000598b2d6/workspaces/5edaf12087863a0005781f17) displays recent runs and a helpful dashboard of information about commands run in the repository.
 
