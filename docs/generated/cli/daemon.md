@@ -13,7 +13,7 @@ Prints information about the Nx Daemon process or starts a daemon process
 nx daemon
 ```
 
-[Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
+Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ## Options
 

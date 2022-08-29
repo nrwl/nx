@@ -76,9 +76,9 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](/using-nx/console#nx-console-for-vscode)).
+It helps with good editor integration (see [VSCode Support](/core-features/integrate-with-editors#nx-console-for-vscode)).
 
-But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed [computation caching](/using-nx/caching) and [distributed builds](/using-nx/dte).
+But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed [computation caching](/concepts/how-caching-works) and [distributed builds](/concepts/dte).
 
 ## What's Next
 

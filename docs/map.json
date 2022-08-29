@@ -13,158 +13,24 @@
             "file": "shared/getting-started/intro"
           },
           {
-            "name": "Nx Setup",
-            "id": "nx-setup",
-            "file": "shared/getting-started/nx-setup"
+            "name": "Core Tutorial",
+            "id": "core-tutorial",
+            "file": "shared/core-tutorial/01-create-blog"
           },
           {
-            "name": "Nx Without Plugins",
-            "id": "nx-core",
-            "file": "shared/nx-core"
+            "name": "React Tutorial",
+            "id": "react-tutorial",
+            "file": "shared/react-tutorial/01-create-application"
           },
           {
-            "name": "Nx and TypeScript",
-            "id": "nx-and-typescript",
-            "file": "shared/guides/nx-and-ts"
+            "name": "Angular Tutorial",
+            "id": "angular-tutorial",
+            "file": "shared/angular-tutorial/01-create-application"
           },
           {
-            "name": "Nx and React",
-            "id": "nx-and-react",
-            "file": "shared/getting-started/nx-and-react"
-          },
-          {
-            "name": "Nx and Angular",
-            "id": "nx-and-angular",
-            "file": "shared/getting-started/nx-and-angular"
-          }
-        ]
-      },
-      {
-        "name": "Configuration Choices",
-        "id": "configuration",
-        "itemList": [
-          {
-            "name": "package.json and nx.json",
-            "id": "packagejson",
-            "file": "shared/configuration/packagejson"
-          },
-          {
-            "name": "project.json and nx.json",
-            "id": "projectjson",
-            "file": "shared/configuration/projectjson"
-          }
-        ]
-      },
-      {
-        "name": "Using Nx",
-        "id": "using-nx",
-        "itemList": [
-          {
-            "name": "Nx CLI",
-            "id": "nx-cli",
-            "file": "shared/using-nx/nx-cli"
-          },
-          {
-            "name": "Nx Editor Plugins",
-            "id": "console",
-            "file": "shared/console"
-          },
-          {
-            "name": "Mental Model",
-            "id": "mental-model",
-            "file": "shared/mental-model"
-          },
-          {
-            "name": "Computation Caching",
-            "id": "caching",
-            "file": "shared/using-nx/caching"
-          },
-          {
-            "name": "Distributed Task Execution",
-            "id": "dte",
-            "file": "shared/using-nx/dte"
-          },
-          {
-            "name": "Affected",
-            "id": "affected",
-            "file": "shared/using-nx/affected"
-          },
-          {
-            "name": "CI Setup",
-            "id": "ci-overview",
-            "file": "shared/ci-overview"
-          },
-          {
-            "name": "Updating Nx",
-            "id": "updating-nx",
-            "file": "shared/update"
-          },
-          {
-            "name": "Nx, NodeJS and Typescript Versions",
-            "id": "nx-nodejs-typescript-version-matrix",
-            "file": "shared/nx-compatibility-matrix"
-          }
-        ]
-      },
-      {
-        "name": "Extending Nx",
-        "id": "extending-nx",
-        "itemList": [
-          {
-            "name": "Nx Plugins and Devkit",
-            "id": "nx-devkit",
-            "file": "shared/extending-nx/devkit-and-nx-plugins"
-          },
-          {
-            "name": "Project Inference Plugins",
-            "id": "project-inference-plugins",
-            "file": "shared/extending-nx/project-inference-plugins"
-          },
-          {
-            "name": "Project Graph Plugins",
-            "id": "project-graph-plugins",
-            "file": "shared/extending-nx/project-graph-plugins"
-          }
-        ]
-      },
-      {
-        "name": "Migration",
-        "id": "migration",
-        "itemList": [
-          {
-            "name": "Nx and Lerna",
-            "id": "lerna-and-nx",
-            "file": "shared/migration/lerna-and-nx"
-          },
-          {
-            "name": "NPM/Yarn/PNPM workspaces",
-            "id": "adding-to-monorepo",
-            "file": "shared/migration/adding-to-monorepo"
-          },
-          {
-            "name": "From CRA",
-            "id": "migration-cra",
-            "file": "shared/migration/migration-cra"
-          },
-          {
-            "name": "From Angular CLI",
-            "id": "migration-angular",
-            "file": "shared/migration/migration-angular"
-          },
-          {
-            "name": "From AngularJS",
-            "id": "migration-angularjs",
-            "file": "shared/migration/migration-angularjs"
-          },
-          {
-            "name": "Preserving Git Histories",
-            "id": "preserving-git-histories",
-            "file": "shared/migration/preserving-git-histories"
-          },
-          {
-            "name": "Manual migration",
-            "id": "manual",
-            "file": "shared/migration/manual"
+            "name": "Node Tutorial",
+            "id": "node-tutorial",
+            "file": "shared/node-tutorial/01-create-application"
           }
         ]
       },
@@ -383,66 +249,152 @@
         ]
       },
       {
-        "name": "Executors / Builders",
-        "id": "executors",
+        "name": "Core Features",
+        "id": "core-features",
         "itemList": [
           {
-            "name": "Using Executors / Builders",
-            "id": "using-builders",
-            "file": "shared/using-executors"
+            "name": "Run Tasks",
+            "id": "run-tasks",
+            "file": "shared/core-features/run-tasks"
           },
           {
-            "name": "Running Custom Commands",
-            "id": "run-commands-builder",
-            "file": "shared/running-custom-commands"
+            "name": "Cache Task Results",
+            "id": "cache-task-results",
+            "file": "shared/core-features/cache-task-results"
           },
           {
-            "name": "Creating Custom Executors",
-            "id": "creating-custom-builders",
-            "file": "shared/tools-workspace-builders"
+            "name": "Explore the Graph",
+            "id": "explore-graph",
+            "file": "shared/core-features/explore-graph"
+          },
+          {
+            "name": "Distribute Task Execution",
+            "id": "distribute-task-execution",
+            "file": "shared/core-features/distribute-task-execution"
+          },
+          {
+            "name": "Integrate with Editors",
+            "id": "integrate-with-editors",
+            "file": "shared/core-features/integrate-with-editors"
+          },
+          {
+            "name": "Automate Updating Dependencies",
+            "id": "automate-updating-dependencies",
+            "file": "shared/core-features/automate-updating-dependencies"
+          },
+          {
+            "name": "Enforce Project Boundaries",
+            "id": "enforce-project-boundaries",
+            "file": "shared/core-features/enforce-project-boundaries"
           }
         ]
       },
       {
-        "name": "Generators",
-        "id": "generators",
+        "name": "Plugin Features",
+        "id": "plugin-features",
         "itemList": [
           {
-            "name": "Using Generators",
-            "id": "using-generators",
-            "file": "shared/generators/using-generators"
+            "name": "Use Task Executors",
+            "id": "use-task-executors",
+            "file": "shared/plugin-features/use-task-executors"
           },
           {
-            "name": "Workspace Generators",
-            "id": "workspace-generators",
-            "file": "shared/generators/workspace-generators"
+            "name": "Use Code Generators",
+            "id": "use-code-generators",
+            "file": "shared/plugin-features/use-code-generators"
           },
           {
-            "name": "Composing Generators",
-            "id": "composing-generators",
-            "file": "shared/generators/composing-generators"
-          },
-          {
-            "name": "Generator Options",
-            "id": "generator-options",
-            "file": "shared/generators/generator-options"
-          },
-          {
-            "name": "Creating Files",
-            "id": "creating-files",
-            "file": "shared/generators/creating-files"
-          },
-          {
-            "name": "Modifying Files",
-            "id": "modifying-files",
-            "file": "shared/generators/modifying-files"
+            "name": "Create Your Own Plugin",
+            "id": "create-your-own-plugin",
+            "file": "shared/plugin-features/create-your-own-plugin"
           }
         ]
       },
       {
-        "name": "Workspace Structure",
-        "id": "structure",
+        "name": "Concepts",
+        "id": "concepts",
         "itemList": [
+          {
+            "name": "Mental Model",
+            "id": "mental-model",
+            "file": "shared/mental-model"
+          },
+          {
+            "name": "How Caching Works",
+            "id": "how-caching-works",
+            "file": "shared/concepts/how-caching-works"
+          },
+          {
+            "name": "Distributed Task Execution Guide",
+            "id": "dte",
+            "file": "shared/concepts/dte-guide"
+          },
+          {
+            "name": "Task Pipeline Configuration",
+            "id": "task-pipeline-configuration",
+            "file": "shared/concepts/task-pipeline-configuration"
+          },
+          {
+            "name": "Affected",
+            "id": "affected",
+            "file": "shared/using-nx/affected"
+          },
+          {
+            "name": "More Concept Guides »",
+            "id": "more-concept-guides",
+            "file": "shared/concepts/more-concepts"
+          }
+        ]
+      },
+      {
+        "name": "More Concepts",
+        "id": "more-concepts",
+        "itemList": [
+          {
+            "name": "Incremental Builds",
+            "id": "incremental-builds",
+            "file": "shared/incremental-builds"
+          },
+          {
+            "name": "Nx and Turborepo",
+            "id": "turbo-and-nx",
+            "file": "shared/guides/turbo-and-nx"
+          },
+          {
+            "name": "Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Using Nx at Enterprises",
+            "id": "monorepo-nx-enterprise",
+            "file": "shared/monorepo-nx-enterprise"
+          },
+          {
+            "name": "Nx Daemon",
+            "id": "nx-daemon",
+            "file": "shared/daemon"
+          },
+          {
+            "name": "Nx and the Angular CLI",
+            "id": "nx-and-angular",
+            "file": "shared/guides/nx-and-angular-cli"
+          },
+          {
+            "name": "Folder Structure",
+            "id": "folder-structure",
+            "file": "shared/guides/integrated-repo-folder-structure"
+          },
+          {
+            "name": "Nx Devkit and Angular Devkit",
+            "id": "nx-devkit-angular-devkit",
+            "file": "shared/guides/nx-devkit-angular-devkit"
+          },
+          {
+            "name": "Micro Frontend Architecture",
+            "id": "micro-frontend-architecture",
+            "file": "shared/guides/module-federation/micro-frontend-architecture"
+          },
           {
             "name": "Applications and Libraries",
             "id": "applications-and-libraries",
@@ -469,26 +421,67 @@
             "file": "shared/workspace/buildable-and-publishable-libraries"
           },
           {
-            "name": "Using Tags",
-            "id": "monorepo-tags",
-            "file": "shared/monorepo-tags"
-          },
-          {
-            "name": "Project Graph",
-            "id": "dependency-graph",
-            "file": "shared/workspace/structure/dependency-graph"
-          },
-          {
-            "name": "Extending the Project Graph",
-            "id": "project-graph-plugins",
-            "file": "shared/extending-nx/project-graph-plugins"
+            "name": "How the Project Graph is Built",
+            "id": "how-project-graph-is-built",
+            "file": "shared/concepts/how-project-graph-is-built"
           }
         ]
       },
       {
-        "name": "CI",
-        "id": "ci",
+        "name": "Recipes",
+        "id": "recipes",
         "itemList": [
+          {
+            "name": "CI Setup",
+            "id": "ci-setup",
+            "file": "shared/ci-overview"
+          },
+          {
+            "name": "Adopting Nx",
+            "id": "adopting-nx",
+            "file": "shared/recipes/adopt-nx"
+          },
+          {
+            "name": "All Recipes »",
+            "id": "all",
+            "file": "shared/recipes/recipe-list"
+          }
+        ]
+      },
+      {
+        "name": "Recipe",
+        "id": "recipe",
+        "itemList": [
+          {
+            "name": "Nx Console Generate Command",
+            "id": "console-generate-command",
+            "file": "shared/recipes/console-generate-command"
+          },
+          {
+            "name": "Nx Console Run Command",
+            "id": "console-run-command",
+            "file": "shared/recipes/console-run-command"
+          },
+          {
+            "name": "Nx Console Project Pane",
+            "id": "console-project-pane",
+            "file": "shared/recipes/console-project-pane"
+          },
+          {
+            "name": "Nx Console Keyboard Shortcuts",
+            "id": "console-shortcuts",
+            "file": "shared/recipes/console-shortcuts"
+          },
+          {
+            "name": "Advanced Update Nx",
+            "id": "advanced-update",
+            "file": "shared/recipes/advanced-update"
+          },
+          {
+            "name": "Set up a new workspace",
+            "id": "set-up-a-new-workspace",
+            "file": "shared/recipes/set-up-a-new-workspace"
+          },
           {
             "name": "Setting up Azure Pipelines",
             "id": "monorepo-ci-azure",
@@ -520,35 +513,94 @@
             "file": "shared/monorepo-ci-bitbucket-pipelines"
           },
           {
-            "name": "Distributed CI",
-            "id": "distributed-builds",
-            "file": "shared/distributed-builds"
+            "name": "Nx and Lerna",
+            "id": "lerna-and-nx",
+            "file": "shared/migration/lerna-and-nx"
           },
           {
-            "name": "Incremental Builds",
-            "id": "incremental-builds",
-            "file": "shared/incremental-builds"
+            "name": "NPM/Yarn/PNPM workspaces",
+            "id": "adding-to-monorepo",
+            "file": "shared/migration/adding-to-monorepo"
           },
           {
-            "name": "Setup incremental builds for Angular applications",
-            "id": "setup-incremental-builds-angular",
-            "file": "shared/guides/setup-incremental-builds-angular"
-          }
-        ]
-      },
-      {
-        "name": "Guides",
-        "id": "guides",
-        "itemList": [
-          {
-            "name": "Nx and Turborepo",
-            "id": "turbo-and-nx",
-            "file": "shared/guides/turbo-and-nx"
+            "name": "From CRA",
+            "id": "migration-cra",
+            "file": "shared/migration/migration-cra"
           },
           {
-            "name": "Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
+            "name": "From Angular CLI",
+            "id": "migration-angular",
+            "file": "shared/migration/migration-angular"
+          },
+          {
+            "name": "From AngularJS",
+            "id": "migration-angularjs",
+            "file": "shared/migration/migration-angularjs"
+          },
+          {
+            "name": "Preserving Git Histories",
+            "id": "preserving-git-histories",
+            "file": "shared/migration/preserving-git-histories"
+          },
+          {
+            "name": "Manual migration",
+            "id": "manual",
+            "file": "shared/migration/manual"
+          },
+          {
+            "name": "Running Custom Commands",
+            "id": "run-commands-executor",
+            "file": "shared/running-custom-commands"
+          },
+          {
+            "name": "Use Executor Configurations",
+            "id": "use-executor-configurations",
+            "file": "shared/recipes/use-executor-configurations"
+          },
+          {
+            "name": "Creating Custom Executors",
+            "id": "creating-custom-executors",
+            "file": "shared/tools-workspace-builders"
+          },
+          {
+            "name": "Compose Executors",
+            "id": "compose-executors",
+            "file": "shared/recipes/compose-executors"
+          },
+          {
+            "name": "Workspace Generators",
+            "id": "workspace-generators",
+            "file": "shared/generators/workspace-generators"
+          },
+          {
+            "name": "Composing Generators",
+            "id": "composing-generators",
+            "file": "shared/generators/composing-generators"
+          },
+          {
+            "name": "Generator Options",
+            "id": "generator-options",
+            "file": "shared/generators/generator-options"
+          },
+          {
+            "name": "Creating Files",
+            "id": "creating-files",
+            "file": "shared/generators/creating-files"
+          },
+          {
+            "name": "Modifying Files",
+            "id": "modifying-files",
+            "file": "shared/generators/modifying-files"
+          },
+          {
+            "name": "JavaScript and TypeScript",
+            "id": "js-and-ts",
+            "file": "shared/guides/js-and-ts"
+          },
+          {
+            "name": "React Native with Nx",
+            "id": "react-native",
+            "file": "shared/guides/react-native"
           },
           {
             "name": "Adding Images, Fonts, and Files",
@@ -556,14 +608,24 @@
             "file": "shared/guides/adding-assets"
           },
           {
-            "name": "Using Environment Variables",
-            "id": "environment-variables",
-            "file": "shared/guides/environment-variables"
+            "name": "Define Environment Variables",
+            "id": "define-environment-variables",
+            "file": "shared/guides/define-environment-variables"
           },
           {
-            "name": "Using Nx at Enterprises",
-            "id": "monorepo-nx-enterprise",
-            "file": "shared/monorepo-nx-enterprise"
+            "name": "Use Environment Variables in React",
+            "id": "use-environment-variables-in-react",
+            "file": "shared/guides/use-environment-variables-in-react"
+          },
+          {
+            "name": "Use Environment Variables in Angular",
+            "id": "use-environment-variables-in-angular",
+            "file": "shared/guides/use-environment-variables-in-angular"
+          },
+          {
+            "name": "Setup incremental builds for Angular applications",
+            "id": "setup-incremental-builds-angular",
+            "file": "shared/guides/setup-incremental-builds-angular"
           },
           {
             "name": "Profiling Build Performance",
@@ -576,29 +638,9 @@
             "file": "shared/eslint"
           },
           {
-            "name": "Customizing Webpack Config",
-            "id": "customize-webpack",
-            "file": "shared/guides/customize-webpack"
-          },
-          {
-            "name": "Nx Daemon",
-            "id": "nx-daemon",
-            "file": "shared/daemon"
-          },
-          {
-            "name": "JavaScript and TypeScript",
-            "id": "js-and-ts",
-            "file": "shared/guides/js-and-ts"
-          },
-          {
             "name": "Configuring Browser Support",
             "id": "browser-support",
             "file": "shared/guides/browser-support"
-          },
-          {
-            "name": "React Native with Nx",
-            "id": "react-native",
-            "file": "shared/guides/react-native"
           },
           {
             "name": "Deploying Next.js applications to Vercel",
@@ -636,37 +678,20 @@
             "file": "shared/guides/misc-data-persistence"
           },
           {
-            "name": "Nx Devkit and Angular Devkit",
-            "id": "nx-devkit-angular-devkit",
-            "file": "shared/guides/nx-devkit-angular-devkit"
-          }
-        ]
-      },
-      {
-        "name": "Module Federation",
-        "id": "module-federation",
-        "itemList": [
+            "name": "Customizing Webpack Config",
+            "id": "customize-webpack",
+            "file": "shared/guides/customize-webpack"
+          },
           {
             "name": "Faster Builds with Module Federation",
             "id": "faster-builds",
             "file": "shared/guides/module-federation/faster-builds"
           },
           {
-            "name": "Micro Frontend Architecture",
-            "id": "micro-frontend-architecture",
-            "file": "shared/guides/module-federation/micro-frontend-architecture"
-          },
-          {
             "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
             "id": "dynamic-module-federation-with-angular",
             "file": "shared/guides/module-federation/dynamic-mfe-angular"
-          }
-        ]
-      },
-      {
-        "name": "Examples",
-        "id": "examples",
-        "itemList": [
+          },
           {
             "name": "Nx Micro-Frontend Example",
             "id": "nx-examples",
@@ -691,6 +716,77 @@
             "name": "Large Repo and DTE",
             "id": "dte",
             "file": "shared/examples/dte"
+          },
+          {
+            "name": "Project Inference Plugins",
+            "id": "project-inference-plugins",
+            "file": "shared/extending-nx/project-inference-plugins"
+          },
+          {
+            "name": "Project Graph Plugins",
+            "id": "project-graph-plugins",
+            "file": "shared/extending-nx/project-graph-plugins"
+          },
+          {
+            "name": "Ban Dependencies with Certain Tags",
+            "id": "ban-dependencies-with-tags",
+            "file": "shared/recipes/ban-dependencies-with-tags"
+          },
+          {
+            "name": "Tag in Multiple Dimensions",
+            "id": "tag-multiple-dimensions",
+            "file": "shared/recipes/tag-multiple-dimensions"
+          },
+          {
+            "name": "Ban External Imports",
+            "id": "ban-external-imports",
+            "file": "shared/recipes/ban-external-imports"
+          },
+          {
+            "name": "Tags Allow List",
+            "id": "tags-allow-list",
+            "file": "shared/recipes/tags-allow-list"
+          },
+          {
+            "name": "Export Project Graph",
+            "id": "export-project-graph",
+            "file": "shared/recipes/export-project-graph"
+          },
+          {
+            "name": "Resolve Circular Dependencies",
+            "id": "resolve-circular-dependencies",
+            "file": "shared/recipes/resolve-circular-dependencies"
+          }
+        ]
+      },
+      {
+        "name": "Reference",
+        "id": "reference",
+        "itemList": [
+          {
+            "name": "Commands",
+            "id": "commands",
+            "file": "shared/reference/commands"
+          },
+          {
+            "name": "nx.json",
+            "id": "nx-json",
+            "file": "shared/reference/nx-json"
+          },
+          {
+            "name": "Project Configuration",
+            "id": "project-configuration",
+            "file": "shared/reference/project-configuration"
+          },
+          {
+            "name": ".nxignore",
+            "id": "nxignore",
+            "file": "shared/reference/nxignore"
+          },
+          {
+            "name": "Environment Variables",
+            "id": "environment-variables",
+            "file": "shared/reference/environment-variables"
           }
         ]
       }
@@ -948,6 +1044,11 @@
             "id": "overview",
             "path": "/packages/workspace",
             "file": "shared/workspace-plugin"
+          },
+          {
+            "name": "Nx, NodeJS and Typescript Versions",
+            "id": "nx-nodejs-typescript-version-matrix",
+            "file": "shared/nx-compatibility-matrix"
           }
         ]
       },

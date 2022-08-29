@@ -75,5 +75,9 @@ You can use `enforce-module-boundaries` rule by adding it to your ESLint rules c
 
 Read more about proper usage of this rule:
 
-- [Imposing Constraints on the Project Graph](/structure/monorepo-tags)
+- [Enforce Project Boundaries](/core-features/enforce-project-boundaries)
+- [Ban Dependencies with Certain Tags](/recipe/ban-dependencies-with-tags)
+- [Tag in Multiple Dimensions](/recipe/tag-multiple-dimensions)
+- [Ban External Imports](/recipe/ban-external-imports)
+- [Tags Allow List](/recipe/tags-allow-list)
 - [Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)

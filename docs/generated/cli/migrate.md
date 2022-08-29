@@ -18,7 +18,7 @@ Creates a migrations file or runs migrations from the migrations file.
 nx migrate [packageAndVersion]
 ```
 
-[Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
+Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 

@@ -16,13 +16,12 @@ the boilerplate. However, the vast majority of the features will work the same w
 
 ## Getting Started
 
-- [Using Nx without plugins](/getting-started/nx-core) will help you understand the core of Nx.
-- [Adding Nx to an existing monorepo](/migration/adding-to-monorepo) will show how to add Nx to an existing monorepo.
-- [Mental model](/using-nx/mental-model) is a good starting point for those who like to understand things theoretically first.
-- [Nx core tutorial](/core-tutorial/01-create-blog) to start learning how to use Nx.
+- [Nx core tutorial](/core-tutorial/01-create-blog) will help you understand the core of Nx.
+- [Adding Nx to an existing monorepo](/recipe/adding-to-monorepo) shows several paths to adopting Nx in your organization.
+- [Mental model](/concepts/mental-model) is a good starting point for those who like to understand things theoretically first.
 
-If you want to use Nx plugins to really level up your productivity, pick one of the following guides:
+If you want to use Nx plugins to really level up your productivity, pick one of the following tutorials:
 
-- [Nx and TypeScript](/getting-started/nx-and-typescript)
-- [Nx and React](/getting-started/nx-and-react)
-- [Nx and Angular](/getting-started/nx-and-angular)
+- [Nx and Node](/node-tutorial/01-create-application)
+- [Nx and React](/react-tutorial/01-create-application)
+- [Nx and Angular](/angular-tutorial/01-create-application)

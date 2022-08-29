@@ -258,7 +258,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 }
 ```
 
-To get an in-depth guide on customizing/running or debugging your generator see [workspace generators](https://nx.dev/generators/workspace-generators#running-a-workspace-generator).
+To get an in-depth guide on customizing/running or debugging your generator see [workspace generators](/recipe/workspace-generators#running-a-workspace-generator).
 
 #### Usage
 

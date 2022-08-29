@@ -4,7 +4,7 @@ The workspace plugin contains executors and generators that are useful for any N
 
 Codifying your organization's best practices into workspace generators is a great way to ensure that the best practices are easy to follow and implement. Running `nx g @nrwl/workspace:workspace-generator feature` will create a workspace generator which is written the same way generators are written for Nx plugins. The workspace generator can then be run with `nx workspace-generator feature`.
 
-> See more about [workspace generators](/generators/workspace-generators)
+> See more about [workspace generators](/recipe/workspace-generators)
 
 ## Reorganizing Projects
 

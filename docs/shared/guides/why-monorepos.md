@@ -3,7 +3,7 @@
 A monorepo is a single git repository that holds the source code for multiple applications and libraries, along with the tooling for them.
 
 {% callout type="note" title="Lerna users" %}
-If you are familiar with Lerna or Yarn workspaces, check out [this guide](/migration/lerna-and-nx) (with a quick video) showing how to add Nx to a Lerna/Yarn workspace, what the difference is, when to use both and when to use just Nx.
+If you are familiar with Lerna or Yarn workspaces, check out [this guide](/recipe/lerna-and-nx) (with a quick video) showing how to add Nx to a Lerna/Yarn workspace, what the difference is, when to use both and when to use just Nx.
 {% /callout %}
 
 ## What are the benefits of a monorepo?

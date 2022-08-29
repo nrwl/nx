@@ -18,7 +18,7 @@ Go to your CRA React app directory and run the following command:
 npx cra-to-nx
 ```
 
-Then just sit back and wait. After a while you will be able to take advantage of the [full magic of Nx](https://nx.dev/latest/react/getting-started/getting-started).
+Then just sit back and wait. After a while you will be able to take advantage of the [full magic of Nx](/getting-started/intro).
 
 ## Ok, it's done, what do I do now?
 
@@ -49,7 +49,7 @@ nx generate lib ui-button
 
 - [Free Nx course on Egghead.io](https://egghead.io/playlists/scale-react-development-with-nx-4038)
 
-- Or just use the VS Code Nx Extension, [Nx Console](https://nx.dev/latest/react/getting-started/console) to do all these using a UI.
+- Or just use the VS Code Nx Extension, [Nx Console](/core-features/integrate-with-editors) to do all these using a UI.
 
 ## So, now I just have my React app in a monorepo?
 

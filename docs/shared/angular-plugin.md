@@ -71,15 +71,15 @@ nx lint libName
 
 Read more about:
 
-- [Creating Libraries](/structure/creating-libraries)
-- [Library Types](/structure/library-types)
-- [Buildable and Publishable Libraries](/structure/buildable-and-publishable-libraries)
+- [Creating Libraries](/more-concepts/creating-libraries)
+- [Library Types](/more-concepts/library-types)
+- [Buildable and Publishable Libraries](/more-concepts/buildable-and-publishable-libraries)
 
 ## More Documentation
 
 - [Angular Nx Tutorial](/angular-tutorial/01-create-application)
-- [Setup Module Federation with Angular and Nx](/module-federation/faster-builds)
-- [Using NgRx](/guides/misc-ngrx)
-- [Using Data Persistence operators](/guides/misc-data-persistence)
-- [Upgrading an AngularJS application to Angular](/migration/migration-angularjs)
-- [Using Tailwind CSS with Angular projects](/guides/using-tailwind-css-with-angular-projects)
+- [Setup Module Federation with Angular and Nx](/recipe/faster-builds)
+- [Using NgRx](/recipe/misc-ngrx)
+- [Using Data Persistence operators](/recipe/misc-data-persistence)
+- [Upgrading an AngularJS application to Angular](/recipe/migration-angularjs)
+- [Using Tailwind CSS with Angular projects](/recipe/using-tailwind-css-with-angular-projects)

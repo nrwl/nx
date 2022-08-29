@@ -20,8 +20,8 @@ Just `cd` into your Create-React-App (CRA) project and run the following command
 npx cra-to-nx
 ```
 
-Then just sit back and wait. After a while, take advantage of the [full magic of Nx](https://nx.dev/getting-started/intro).
-Start from [the commands mentioned in this article](https://nx.dev/migration/migration-cra#try-nx).
+Then just sit back and wait. After a while, take advantage of the [full magic of Nx](/getting-started/intro).
+Start from [the commands mentioned in this article](/recipe/migration-cra#try-nx).
 
 {% callout type="caution" title="Commit your changes" %}
 The command will fail if you try to execute it, and you have uncommitted changes in your repository. Commit any local changes, and then try to run the command.

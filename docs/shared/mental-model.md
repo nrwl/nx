@@ -123,7 +123,7 @@ By default, the computation hash for say `nx test app1` includes:
 - All the source files of `app1` and `lib`
 - Relevant global configuration
 - Versions of external dependencies
-- [Runtime values provisioned by the user](/using-nx/caching#runtime-hash-inputs)
+- [Runtime values provisioned by the user](/concepts/how-caching-works#runtime-hash-inputs)
 - CLI Command flags
 
 ![computation-hashing](/shared/mental-model/computation-hashing-v2.png)
@@ -160,9 +160,7 @@ work happens. The rest is either left as is or restored from the cache.
 
 ## Distributed task execution
 
-Nx supports running commands across multiple machines. You can either set it up by hand (
-see [here](/ci/distributed-builds)) or use Nx
-Cloud. [Read the comparison of the two approaches.](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953?source=friends_link&sk=5120b7ff982730854ed22becfe7a640a)
+Nx supports running commands across multiple machines. You can either set it up by hand or use Nx Cloud. [Read the comparison of the two approaches.](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953?source=friends_link&sk=5120b7ff982730854ed22becfe7a640a)
 
 When using the distributed task execution, Nx is able to run any task graph on many agents instead of locally.
 

@@ -135,7 +135,7 @@ For a large organization it's crucial to establish how projects can depend on ea
 - Libraries with a broader scope (e.g., `shared/ui`) should not depend on the libraries with narrower scope (e.g., `happynrwlapp/search/utils-testing`).
 - Component libraries should only depend on other component libraries and utility libraries, but should not depend feature libraries.
 
-Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about tags [here](/structure/monorepo-tags).
+Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about tags [here](/core-features/enforce-project-boundaries).
 
 ## Code Ownership
 

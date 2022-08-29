@@ -2,9 +2,9 @@
 
 ## Save Time With Distributed Task Execution & Distributed Cache
 
-Nx partitions a command into smaller tasks and runs them in parallel, in the correct order. Nx Cloud takes it one step further and [runs any command across multiple machines](/using-nx/dte), while giving you a consolidated view of the command as if it ran locally.
+Nx partitions a command into smaller tasks and runs them in parallel, in the correct order. Nx Cloud takes it one step further and [runs any command across multiple machines](/concepts/dte), while giving you a consolidated view of the command as if it ran locally.
 
-Nx caches the output of any previously run command such as testing and building, so it can replay the cached results instead of rerunning it. Nx Cloud allows you to [share the computation cache](/using-nx/caching#distributed-computation-caching) across everyone in your team and CI.
+Nx caches the output of any previously run command such as testing and building, so it can replay the cached results instead of rerunning it. Nx Cloud allows you to [share the computation cache](/core-features/cache-task-results#distributed-computation-caching) across everyone in your team and CI.
 
 And it takes five minutes to set up.
 

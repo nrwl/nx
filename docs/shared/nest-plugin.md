@@ -69,7 +69,7 @@ To make the library `publishable`, use the following command:
 nx g @nrwl/nest:lib my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
 ```
 
-> Read more about [building and publishing libraries here](/structure/buildable-and-publishable-libraries).
+> Read more about [building and publishing libraries here](/more-concepts/buildable-and-publishable-libraries).
 
 ### Nest Generators
 

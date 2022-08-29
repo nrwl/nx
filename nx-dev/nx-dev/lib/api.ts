@@ -39,7 +39,7 @@ export const nxCloudDocumentsApi = new DocumentsApi({
 export const nxMenuApi = new MenuApi(
   nxDocumentsApi.getDocuments(),
   packagesApi.getPackageDocuments().itemList as DocumentMetadata[],
-  [getBasicSection, getDeepDiveSection]
+  [getBasicSection]
 );
 
 export const nxCloudMenuApi = new MenuApi(

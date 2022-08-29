@@ -57,7 +57,7 @@ The `pr` and `main` jobs implement the CI workflow.
 
 In order to use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
 
-Read more about the [Distributed CI setup with Nx Cloud](/using-nx/ci-overview#distributed-ci-with-nx-cloud).
+Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci-setup#distributed-ci-with-nx-cloud).
 
 ```groovy
 pipeline {

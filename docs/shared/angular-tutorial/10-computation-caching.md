@@ -76,7 +76,7 @@ And notice the output:
 Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
 ```
 
-Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache here [here](/using-nx/caching).
+Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache here [here](/concepts/how-caching-works).
 
 {% callout type="check" title="Go faster" %}
 Add --parallel to any command, and Nx does most of the work in parallel.

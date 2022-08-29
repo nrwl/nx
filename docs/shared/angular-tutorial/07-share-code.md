@@ -53,7 +53,7 @@ export interface Todo {
 
 ### A note about VS Code :
 
-If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognized. This may need to be done **every time a new workspace library is added**. If you install the [Nx Console](/using-nx/console) extension you won't need to take this step.
+If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognized. This may need to be done **every time a new workspace library is added**. If you install the [Nx Console](/core-features/integrate-with-editors) extension you won't need to take this step.
 
 ## Refactor the API
 

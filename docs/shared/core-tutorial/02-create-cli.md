@@ -61,7 +61,7 @@ There are a few reasons to choose `project.json` for the CLI project.
 2. As the scripts in the project get more complex, `project.json` tends to have a flatter structure - rather than a long horizontal line in `package.json` with all the cli flags.
 3. The easiest method to run scripts provided in Nx plugins is to use a `project.json` file.
 
-All of these reasons are matters of preference. After this tutorial, you should have enough of a taste of both styles to make an informed decision about which format you prefer. Read more about [package.json configuration](/configuration/packagejson) and [project.json configuration](configuration/projectjson) in their respective guides.
+All of these reasons are matters of preference. After this tutorial, you should have enough of a taste of both styles to make an informed decision about which format you prefer. Read more about [project configuration](/reference/project-configuration).
 
 ### Project.json syntax
 

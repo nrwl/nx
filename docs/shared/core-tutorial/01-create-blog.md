@@ -2,6 +2,15 @@
 
 In this tutorial you create multiple projects in a monorepo and take advantage of the core Nx features with a minimum of configuration.
 
+## Contents:
+
+- [1 - Create Blog](/core-tutorial/01-create-blog)
+- [2 - Create CLI](/core-tutorial/02-create-cli)
+- [3 - Share Assets](/core-tutorial/03-share-assets)
+- [4 - Build Affected Projects](/core-tutorial/04-build-affected-projects)
+- [5 - Automatically Detect Dependencies](/core-tutorial/05-auto-detect-dependencies)
+- [6 - Summary](/core-tutorial/06-summary)
+
 ## Create a New Workspace
 
 **Start by creating a new workspace.**

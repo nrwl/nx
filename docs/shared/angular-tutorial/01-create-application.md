@@ -8,8 +8,23 @@ width="100%" /%}
 In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies like Cypress and Nest.
 
 {% callout type="note" title="Plugins for a rich developer experience" %}
-In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.** [Read about using Nx without plugins](/core-tutorial/01-create-blog).
 {% /callout %}
+
+## Contents
+
+- [1 - Create Application](/angular-tutorial/01-create-application)
+- [2 - Add E2E Test](/angular-tutorial/02-add-e2e-test)
+- [3 - Display Todos](/angular-tutorial/03-display-todos)
+- [4 - Connect to API](/angular-tutorial/04-connect-to-api)
+- [5 - Add Node Application](/angular-tutorial/05-add-node-app)
+- [6 - Proxy Configuration](/angular-tutorial/06-proxy)
+- [7 - Share Code](/angular-tutorial/07-share-code)
+- [8 - Create Libraries](/angular-tutorial/08-create-libs)
+- [9 - Project Graph](/angular-tutorial/09-dep-graph)
+- [10 - Use Computation Caching](/angular-tutorial/10-computation-caching)
+- [11 - Test Affected Projects](/angular-tutorial/11-test-affected-projects)
+- [12 - Summary](/angular-tutorial/12-summary)
 
 ## Create a new workspace
 

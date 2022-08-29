@@ -44,11 +44,11 @@ Every organization manages their CI/CD pipelines differently, so the examples do
 
 Read the guides for more information on how to configure them in CI.
 
-- [Overview](/using-nx/ci-overview#distributed-ci-with-nx-cloud)
-- [Azure Pipelines](/ci/monorepo-ci-azure#distributed-ci-with-nx-cloud)
-- [Circle CI](/ci/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
-- [GitHub Actions](/ci/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
-- [Jenkins](/ci/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
+- [Overview](/recipes/ci-setup#distributed-ci-with-nx-cloud)
+- [Azure Pipelines](/recipe/monorepo-ci-azure#distributed-ci-with-nx-cloud)
+- [Circle CI](/recipe/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
+- [GitHub Actions](/recipe/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
+- [Jenkins](/recipe/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
 
 ## Additional Notes
 
