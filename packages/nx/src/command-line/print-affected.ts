@@ -3,8 +3,12 @@ import * as yargs from 'yargs';
 import type { NxArgs } from '../utils/command-line-utils';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task } from '../config/task-graph';
-import { ProcessTasks } from 'nx/src/tasks-runner/create-task-graph';
+import { ProcessTasks } from '../tasks-runner/create-task-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
+import { Workspaces } from '../config/workspaces';
+import { Hasher } from '../hasher/hasher';
+import { hashTask } from '../hasher/hash-task';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
@@ -23,6 +27,7 @@ export async function printAffected(
     ),
     projectGraph,
     nxArgs,
+    nxJson,
     overrides
   );
   const result = {
@@ -41,8 +46,12 @@ async function createTasks(
   affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
+  nxJson: NxJsonConfiguration,
   overrides: yargs.Arguments
 ) {
+  const workspaces = new Workspaces(workspaceRoot);
+  const hasher = new Hasher(projectGraph, nxJson, {});
+
   const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
     (affectedProject) => {
       const p = new ProcessTasks({}, projectGraph);
@@ -61,10 +70,15 @@ async function createTasks(
     }
   );
 
+  await Promise.all(
+    tasks.map((t) => hashTask(workspaces, hasher, projectGraph, {} as any, t))
+  );
+
   return tasks.map((task, index) => ({
     id: task.id,
     overrides,
     target: task.target,
+    hash: task.hash,
     command: getCommandAsString(task),
     outputs: getOutputs(projectGraph.nodes, task),
   }));
