@@ -80,7 +80,7 @@ function readSiteMapLinks(filePath: string): string[] {
 const documentLinks = extractAllLinks(join(workspaceRoot, 'docs'));
 const sitemapLinks = readSiteMapIndex(
   join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
-  'sitemap-0.xml'
+  'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
 const errors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
