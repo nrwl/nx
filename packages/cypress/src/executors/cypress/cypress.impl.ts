@@ -45,7 +45,8 @@ export default async function cypressExecutor(
   context: ExecutorContext
 ) {
   options = normalizeOptions(options, context);
-
+  // this is used by cypress component testing presets to build the executor contexts with the correct configuration options.
+  process.env.NX_CYPRESS_TARGET_CONFIGURATION = context.configurationName;
   let success;
 
   for await (const baseUrl of startDevServer(options, context)) {
