@@ -49,7 +49,30 @@ describe('React:CypressComponentTestConfiguration', () => {
       unitTestRunner: 'none',
       component: true,
     });
-
+    // --build-target still needs to build the graph in order for readTargetOptions to work
+    projectGraph = {
+      nodes: {
+        'my-app': {
+          name: 'my-app',
+          type: 'app',
+          data: {
+            ...readProjectConfiguration(tree, 'my-app'),
+          },
+        },
+        'some-lib': {
+          name: 'some-lib',
+          type: 'lib',
+          data: {
+            ...readProjectConfiguration(tree, 'some-lib'),
+          },
+        },
+      },
+      dependencies: {
+        'my-app': [
+          { type: DependencyType.static, source: 'my-app', target: 'some-lib' },
+        ],
+      },
+    };
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,

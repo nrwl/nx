@@ -1,5 +1,5 @@
 import { workspaceRoot } from '@nrwl/devkit';
-import { dirname, extname, join, relative } from 'path';
+import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
 interface BaseCypressPreset {
@@ -12,8 +12,9 @@ interface BaseCypressPreset {
 export function nxBaseCypressPreset(pathToConfig: string): BaseCypressPreset {
   // prevent from placing path outside the root of the workspace
   // if they pass in a file or directory
-  const normalizedPath =
-    extname(pathToConfig) === '' ? pathToConfig : dirname(pathToConfig);
+  const normalizedPath = lstatSync(pathToConfig).isDirectory()
+    ? pathToConfig
+    : dirname(pathToConfig);
   const projectPath = relative(workspaceRoot, normalizedPath);
   const offset = relative(normalizedPath, workspaceRoot);
   const videosFolder = join(offset, 'dist', 'cypress', projectPath, 'videos');

@@ -108,30 +108,34 @@ async function addBuildTargetToConfig(
   targetName: string,
   configName?: string
 ): Promise<boolean> {
-  const { foundTarget, targetConfig } = await findBuildConfig(tree, {
+  const projectWithBuild = await findBuildConfig(tree, {
     project: projectName,
     validExecutorNames: new Set(['@nrwl/web:webpack']),
   });
   // didn't find the config so can't update. consumer should collect list of them and display a warning at the end
   // no reason to fail since the preset will fallback to a default config so should still keep working.
-  if (!foundTarget || !targetConfig) {
+  if (!projectWithBuild?.target || !projectWithBuild?.config) {
     return false;
   }
 
   const projectConfig = readProjectConfiguration(tree, projectName);
+  // if using a custom config and the devServerTarget default args
+  // has a different target, then add it to the custom target config
+  // otherwise add it to the default options
   if (
     configName &&
-    foundTarget !== projectConfig.targets[targetName]?.options?.devServerTarget
+    projectWithBuild.target !==
+      projectConfig.targets[targetName]?.options?.devServerTarget
   ) {
     projectConfig.targets[targetName].configurations[configName] = {
       ...projectConfig.targets[targetName].configurations[configName],
-      devServerTarget: foundTarget,
+      devServerTarget: projectWithBuild.target,
       skipServe: true,
     };
   } else {
     projectConfig.targets[targetName].options = {
       ...projectConfig.targets[targetName].options,
-      devServerTarget: foundTarget,
+      devServerTarget: projectWithBuild.target,
       skipServe: true,
     };
   }
@@ -144,11 +148,11 @@ function cacheComponentTestTarget(tree: Tree) {
   updateJson(tree, 'nx.json', (json) => ({
     ...json,
     tasksRunnerOptions: {
-      ...(json.tasksRunnerOptions ?? {}),
+      ...json.tasksRunnerOptions,
       default: {
-        ...(json.tasksRunnerOptions?.default ?? {}),
+        ...json.tasksRunnerOptions?.default,
         options: {
-          ...(json.tasksRunnerOptions?.default?.options ?? {}),
+          ...json.tasksRunnerOptions?.default?.options,
           cacheableOperations: Array.from(
             new Set([
               ...(json.tasksRunnerOptions?.default?.options

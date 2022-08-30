@@ -1,18 +1,25 @@
 import { nxBaseCypressPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import type { CypressExecutorOptions } from '@nrwl/cypress/src/executors/cypress/cypress.impl';
 import {
+  ExecutorContext,
   logger,
   parseTargetString,
   ProjectConfiguration,
   ProjectGraph,
   readCachedProjectGraph,
+  readNxJson,
+  readTargetOptions,
+  stripIndents,
+  Target,
   TargetConfiguration,
   workspaceRoot,
-  stripIndents,
 } from '@nrwl/devkit';
-import { WebWebpackExecutorOptions } from '@nrwl/web/src/executors/webpack/webpack.impl';
+import type { WebWebpackExecutorOptions } from '@nrwl/web/src/executors/webpack/webpack.impl';
 import { normalizeWebBuildOptions } from '@nrwl/web/src/utils/normalize';
 import { getWebConfig } from '@nrwl/web/src/utils/web.config';
 import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
+import { lstatSync } from 'fs';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import { extname, relative } from 'path';
 import { buildBaseWebpackConfig } from './webpack-fallback';
 
@@ -50,25 +57,39 @@ export function nxComponentTestingPreset(
   let webpackConfig;
   try {
     const graph = readCachedProjectGraph();
-    const { targets, name } = getConfigByPath(graph, pathToConfig);
-    const targetName = options?.ctTargetName || 'component-test';
-    const mergedOptions = targets[targetName].defaultConfiguration
-      ? {
-          ...targets[targetName].options,
-          ...targets[targetName].configurations[
-            targets[targetName].defaultConfiguration
-          ],
-        }
-      : targets[targetName].options;
-    const buildTarget = mergedOptions?.devServerTarget;
+    const { targets: ctTargets, name: ctProjectName } = getConfigByPath(
+      graph,
+      pathToConfig
+    );
+    const ctTargetName = options?.ctTargetName || 'component-test';
+    const ctConfigurationName = process.env.NX_CYPRESS_TARGET_CONFIGURATION;
+
+    const ctExecutorContext = createExecutorContext(
+      graph,
+      ctTargets,
+      ctProjectName,
+      ctTargetName,
+      ctConfigurationName
+    );
+
+    const ctExecutorOptions = readTargetOptions<CypressExecutorOptions>(
+      {
+        project: ctProjectName,
+        target: ctTargetName,
+        configuration: ctConfigurationName,
+      },
+      ctExecutorContext
+    );
+
+    const buildTarget = ctExecutorOptions.devServerTarget;
 
     if (!buildTarget) {
       throw new Error(
-        `Unable to find the 'devServerTarget' executor option in the '${targetName}' target of the '${name}' project`
+        `Unable to find the 'devServerTarget' executor option in the '${ctTargetName}' target of the '${ctProjectName}' project`
       );
     }
 
-    webpackConfig = buildTargetWebpack(graph, buildTarget, name);
+    webpackConfig = buildTargetWebpack(graph, buildTarget, ctProjectName);
   } catch (e) {
     logger.warn(
       stripIndents`Unable to build a webpack config with the project graph. 
@@ -96,34 +117,29 @@ export function nxComponentTestingPreset(
  * apply the schema.json defaults from the @nrwl/web:webpack executor to the target options
  */
 function withSchemaDefaults(
-  target: TargetConfiguration<WebWebpackExecutorOptions>
-) {
-  const options = target.defaultConfiguration
-    ? {
-        ...target.options,
-        ...target.configurations[target.defaultConfiguration],
-      }
-    : target.options;
+  target: Target,
+  context: ExecutorContext
+): WebWebpackExecutorOptions {
+  const options = readTargetOptions<WebWebpackExecutorOptions>(target, context);
 
-  options.compiler = options.compiler || 'babel';
-  options.deleteOutputPath = options.deleteOutputPath === undefined || true;
-  options.vendorChunk = options.vendorChunk === undefined || true;
-  options.commonChunk = options.commonChunk === undefined || true;
-  options.runtimeChunk = options.runtimeChunk === undefined || true;
-  options.sourceMap = options.sourceMap === undefined || true;
-  options.assets = options.assets || [];
-  options.scripts = options.scripts || [];
-  options.styles = options.styles || [];
-  options.budgets = options.budgets || [];
-  options.namedChunks = options.namedChunks === undefined || true;
-  options.outputhasing = options.outputhasing || 'none';
-  options.extractCss = options.extractCss === undefined || true;
-  options.memoryLimit = options.memoryLimit || 2048;
-  options.maxWorkers = options.maxWorkers || 2;
-  options.fileReplacements = options.fileReplacements || [];
-  options.buildLibsFromSource =
-    options.buildLibsFromSource === undefined || true;
-  options.generateIndexHtml = options.generateIndexHtml === undefined || true;
+  options.compiler ??= 'babel';
+  options.deleteOutputPath ??= true;
+  options.vendorChunk ??= true;
+  options.commonChunk ??= true;
+  options.runtimeChunk ??= true;
+  options.sourceMap ??= true;
+  options.assets ??= [];
+  options.scripts ??= [];
+  options.styles ??= [];
+  options.budgets ??= [];
+  options.namedChunks ??= true;
+  options.outputHashing ??= 'none';
+  options.extractCss ??= true;
+  options.memoryLimit ??= 2048;
+  options.maxWorkers ??= 2;
+  options.fileReplacements ??= [];
+  options.buildLibsFromSource ??= true;
+  options.generateIndexHtml ??= true;
   return options;
 }
 
@@ -132,22 +148,32 @@ function buildTargetWebpack(
   buildTarget: string,
   componentTestingProjectName: string
 ) {
-  const { project, target, configuration } = parseTargetString(buildTarget);
+  const parsed = parseTargetString(buildTarget);
 
-  const appProjectConfig = graph.nodes[project]?.data;
-  const thisProjectConfig = graph.nodes[componentTestingProjectName]?.data;
+  const buildableProjectConfig = graph.nodes[parsed.project]?.data;
+  const ctProjectConfig = graph.nodes[componentTestingProjectName]?.data;
 
-  if (!appProjectConfig || !thisProjectConfig) {
+  if (!buildableProjectConfig || !ctProjectConfig) {
     throw new Error(stripIndents`Unable to load project configs from graph. 
-    Has build config? ${!!appProjectConfig}
-    Has component config? ${!!thisProjectConfig}
+    Using build target '${buildTarget}'
+    Has build config? ${!!buildableProjectConfig}
+    Has component config? ${!!ctProjectConfig}
     `);
   }
 
   const options = normalizeWebBuildOptions(
-    withSchemaDefaults(appProjectConfig?.targets?.[target]),
+    withSchemaDefaults(
+      parsed,
+      createExecutorContext(
+        graph,
+        buildableProjectConfig.targets,
+        parsed.project,
+        parsed.target,
+        parsed.target
+      )
+    ),
     workspaceRoot,
-    appProjectConfig.sourceRoot!
+    buildableProjectConfig.sourceRoot!
   );
 
   const isScriptOptimizeOn =
@@ -158,12 +184,12 @@ function buildTargetWebpack(
       : false;
   return getWebConfig(
     workspaceRoot,
-    thisProjectConfig.root,
-    thisProjectConfig.sourceRoot,
+    ctProjectConfig.root,
+    ctProjectConfig.sourceRoot,
     options,
     true,
     isScriptOptimizeOn,
-    configuration
+    parsed.configuration
   );
 }
 
@@ -171,26 +197,50 @@ function getConfigByPath(
   graph: ProjectGraph,
   configPath: string
 ): ProjectConfiguration {
-  const configFileFromWorkspaceRoot = relative(
-    workspaceRoot,
-    configPath
-  ).replace(extname(configPath), '');
+  const configFileFromWorkspaceRoot = relative(workspaceRoot, configPath);
+  const normalizedPathFromWorkspaceRoot = lstatSync(configPath).isFile()
+    ? configFileFromWorkspaceRoot.replace(extname(configPath), '')
+    : configFileFromWorkspaceRoot;
+
   const mappedGraph = mapProjectGraphFiles(graph);
   const componentTestingProjectName =
-    mappedGraph.allFiles[configFileFromWorkspaceRoot];
+    mappedGraph.allFiles[normalizedPathFromWorkspaceRoot];
   if (
     !componentTestingProjectName ||
     !graph.nodes[componentTestingProjectName]?.data
   ) {
     throw new Error(
-      stripIndents`Unable to find the project configuration that includes ${configFileFromWorkspaceRoot}. 
+      stripIndents`Unable to find the project configuration that includes ${normalizedPathFromWorkspaceRoot}. 
       Found project name? ${componentTestingProjectName}. 
       Graph has data? ${!!graph.nodes[componentTestingProjectName]?.data}`
     );
   }
   // make sure name is set since it can be undefined
-  graph.nodes[componentTestingProjectName].data.name =
-    graph.nodes[componentTestingProjectName].data.name ||
+  graph.nodes[componentTestingProjectName].data.name ??=
     componentTestingProjectName;
   return graph.nodes[componentTestingProjectName].data;
+}
+
+function createExecutorContext(
+  graph: ProjectGraph,
+  targets: Record<string, TargetConfiguration>,
+  projectName: string,
+  targetName: string,
+  configurationName: string
+): ExecutorContext {
+  const projectConfigs = readProjectsConfigurationFromProjectGraph(graph);
+  return {
+    cwd: process.cwd(),
+    projectGraph: graph,
+    target: targets[targetName],
+    targetName,
+    configurationName,
+    root: workspaceRoot,
+    isVerbose: false,
+    projectName,
+    workspace: {
+      ...readNxJson(),
+      ...projectConfigs,
+    },
+  };
 }

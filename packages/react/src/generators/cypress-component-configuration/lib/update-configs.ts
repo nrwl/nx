@@ -77,12 +77,12 @@ export async function updateProjectConfig(
     validExecutorNames: new Set<string>(['@nrwl/web:webpack']),
   });
 
-  assetValidConfig(found.targetConfig);
+  assetValidConfig(found.config);
 
   const projectConfig = readProjectConfiguration(tree, options.project);
   projectConfig.targets['component-test'].options = {
     ...projectConfig.targets['component-test'].options,
-    devServerTarget: found.foundTarget,
+    devServerTarget: found.target,
     skipServe: true,
   };
   updateProjectConfiguration(tree, options.project, projectConfig);

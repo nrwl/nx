@@ -5,7 +5,6 @@ import {
   DependencyType,
   logger,
   ProjectGraph,
-  readJson,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
@@ -97,20 +96,20 @@ describe('updateComponentTestingConfig', () => {
     };
     await updateCypressConfigsPresets(tree);
 
-    expect(loggerSpy).toHaveBeenNthCalledWith(
-      1,
-      'Unable to find a build target to add to the component testing target in the following projects:'
-    );
-    expect(loggerSpy).toHaveBeenNthCalledWith(2, '- something-lib');
-    expect(loggerSpy).toHaveBeenNthCalledWith(
-      3,
-      `You can manually add the 'devServerTarget' option to the
+    expect(loggerSpy.mock.calls).toEqual([
+      [
+        'Unable to find a build target to add to the component testing target in the following projects:',
+      ],
+      ['- something-lib'],
+      [
+        `You can manually add the 'devServerTarget' option to the
 component testing target to specify the build target to use.
 The build configuration should be using @nrwl/web:webpack as the executor.
 Usually this is a React app in your workspace.
 Component testing will fallback to a default configuration if one isn't provided,
-but might require modifications if your projects are more complex.`
-    );
+but might require modifications if your projects are more complex.`,
+      ],
+    ]);
   });
 
   it('should handle already updated config', async () => {

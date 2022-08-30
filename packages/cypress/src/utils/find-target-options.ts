@@ -1,12 +1,20 @@
 import {
   createProjectGraphAsync,
+  logger,
   parseTargetString,
   ProjectGraph,
   ProjectGraphDependency,
   readProjectConfiguration,
+  stripIndents,
   TargetConfiguration,
   Tree,
+  reverse,
+  readTargetOptions,
+  ExecutorContext,
+  workspaceRoot,
+  readNxJson,
 } from '@nrwl/devkit';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
 interface FindTargetOptions {
   project: string;
@@ -18,42 +26,43 @@ interface FindTargetOptions {
   validExecutorNames: Set<string>;
 }
 
+interface FoundTarget {
+  config: TargetConfiguration;
+  target: string;
+}
+
 export async function findBuildConfig(
   tree: Tree,
   options: FindTargetOptions
-): Promise<{ foundTarget: string; targetConfig: TargetConfiguration }> {
+): Promise<FoundTarget> {
   // attempt to use the provided target
+  const graph = await createProjectGraphAsync();
   if (options.buildTarget) {
     return {
-      foundTarget: options.buildTarget,
-      targetConfig: findInTarget(tree, options),
+      target: options.buildTarget,
+      config: findInTarget(tree, graph, options),
     };
   }
   // check to see if there is a valid config in the given project
-  const [selfBuildTarget, selfProjectConfig] = findTargetOptionsInProject(
+  const selfProject = findTargetOptionsInProject(
     tree,
+    graph,
     options.project,
     options.validExecutorNames
   );
-  if (selfBuildTarget && selfProjectConfig) {
-    return {
-      targetConfig: selfProjectConfig,
-      foundTarget: selfBuildTarget,
-    };
+  if (selfProject) {
+    return selfProject;
   }
 
   // attempt to find any projects with the valid config in the graph that consumes this project
-  const [graphBuildTarget, graphTargetConfig] = await findInGraph(
-    tree,
-    options
-  );
-  return {
-    foundTarget: graphBuildTarget,
-    targetConfig: graphTargetConfig,
-  };
+  return await findInGraph(tree, graph, options);
 }
 
-function findInTarget(tree: Tree, options: FindTargetOptions) {
+function findInTarget(
+  tree: Tree,
+  graph: ProjectGraph,
+  options: FindTargetOptions
+): TargetConfiguration {
   const { project, target, configuration } = parseTargetString(
     options.buildTarget
   );
@@ -61,68 +70,105 @@ function findInTarget(tree: Tree, options: FindTargetOptions) {
   const foundConfig =
     configuration || projectConfig?.targets?.[target]?.defaultConfiguration;
 
-  if (!foundConfig) {
-    return projectConfig?.targets?.[target];
-  }
-  projectConfig.targets[target].options = {
-    ...(projectConfig.targets[target]?.options || {}),
-    ...projectConfig.targets[target]?.configurations[foundConfig],
-  };
-  return projectConfig.targets[target];
+  return readTargetOptions(
+    { project, target, configuration: foundConfig },
+    createExecutorContext(
+      graph,
+      projectConfig.targets,
+      project,
+      target,
+      foundConfig
+    )
+  );
 }
 
 async function findInGraph(
   tree: Tree,
+  graph: ProjectGraph,
   options: FindTargetOptions
-): Promise<[targetName: string, config: TargetConfiguration]> {
-  const graph = await createProjectGraphAsync();
+): Promise<FoundTarget> {
   const parents = findParentsOfProject(graph, options.project);
-  if (parents.length > 0) {
-    for (const parent of parents) {
-      const [maybeBuildTarget, maybeTargetConfig] = findTargetOptionsInProject(
-        tree,
-        parent.source,
-        options.validExecutorNames
-      );
-      if (maybeBuildTarget && maybeTargetConfig) {
-        return [maybeBuildTarget, maybeTargetConfig];
-      }
+  const potentialTargets = [];
+
+  for (const parent of parents) {
+    const parentProject = findTargetOptionsInProject(
+      tree,
+      graph,
+      parent.target,
+      options.validExecutorNames
+    );
+    if (parentProject) {
+      potentialTargets.push(parentProject);
     }
   }
-  return [null, null];
+
+  if (potentialTargets.length > 1) {
+    logger.warn(stripIndents`Multiple potential targets found for ${options.project}. Found ${potentialTargets.length}. 
+    Using ${potentialTargets[0].target}.
+    To specify a different target use the --build-target flag.
+    `);
+  }
+  return potentialTargets[0];
 }
 
 function findParentsOfProject(
   graph: ProjectGraph,
   projectName: string
 ): ProjectGraphDependency[] {
-  const parents = [];
-  for (const dep in graph.dependencies) {
-    const f = graph.dependencies[dep].filter((d) => d.target === projectName);
-    parents.push(...f);
-  }
-  return parents;
+  const reversedGraph = reverse(graph);
+  return reversedGraph.dependencies[projectName]
+    ? Object.values(reversedGraph.dependencies[projectName])
+    : [];
 }
 
 function findTargetOptionsInProject(
   tree: Tree,
+  graph: ProjectGraph,
   projectName: string,
   includes: Set<string>
-): [buildTarget: string, config: TargetConfiguration] {
+): FoundTarget {
   const projectConfig = readProjectConfiguration(tree, projectName);
 
   for (const targetName in projectConfig.targets) {
     const targetConfig = projectConfig.targets[targetName];
     if (includes.has(targetConfig.executor)) {
-      targetConfig.options = targetConfig.defaultConfiguration
-        ? {
-            ...targetConfig.options,
-            ...targetConfig.configurations[targetConfig.defaultConfiguration],
-          }
-        : targetConfig.options;
-
-      return [`${projectName}:${targetName}`, targetConfig];
+      return {
+        target: `${projectName}:${targetName}`,
+        config: readTargetOptions(
+          { project: projectName, target: targetName },
+          createExecutorContext(
+            graph,
+            projectConfig.targets,
+            projectName,
+            targetName,
+            null
+          )
+        ),
+      };
     }
   }
-  return [null, null];
+}
+
+function createExecutorContext(
+  graph: ProjectGraph,
+  targets: Record<string, TargetConfiguration>,
+  projectName: string,
+  targetName: string,
+  configurationName?: string
+): ExecutorContext {
+  const projectConfigs = readProjectsConfigurationFromProjectGraph(graph);
+  return {
+    cwd: process.cwd(),
+    projectGraph: graph,
+    target: targets[targetName],
+    targetName,
+    configurationName,
+    root: workspaceRoot,
+    isVerbose: false,
+    projectName,
+    workspace: {
+      ...readNxJson(),
+      ...projectConfigs,
+    },
+  };
 }

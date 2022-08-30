@@ -94,11 +94,11 @@ export function addToCacheableOperations(tree: Tree) {
   updateJson(tree, 'nx.json', (json) => ({
     ...json,
     tasksRunnerOptions: {
-      ...(json.tasksRunnerOptions ?? {}),
+      ...json.tasksRunnerOptions,
       default: {
-        ...(json.tasksRunnerOptions?.default ?? {}),
+        ...json.tasksRunnerOptions?.default,
         options: {
-          ...(json.tasksRunnerOptions?.default?.options ?? {}),
+          ...json.tasksRunnerOptions?.default?.options,
           cacheableOperations: Array.from(
             new Set([
               ...(json.tasksRunnerOptions?.default?.options
