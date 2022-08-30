@@ -23,7 +23,8 @@ export function ConfScheduleShort(): JSX.Element {
       type: 'event',
       time: '10:30 - 11:00am (UTC-07:00)',
       title: 'Re-thinking CI bottlenecks with Distributed Execution',
-      description: 'TBA',
+      description:
+        'Nx’s powerful caching algorithms and dependency graph knowledge allow you to build simple CI pipelines that scale as your workspace grows. But caching and affected work best in the average case: when only some projects are changed in a PR, you can skip anything that can’t be affected by that change, and from the remaining ones the caching algorithms will help you replay all the work that has been done before. But after a certain point you have to start splitting the work across multiple agents if you want your workspace to scale.      In this talk we’ll explore why your CI can slow down in big workspaces, and how you can unlock horizontal scaling by distributing your tasks across multiple machines. We’ll look at some of the issues with task distribution and how you can use NxCloud workflows to implement scalable CI configs that optimally splits the work across your matrix of agents.',
       speakers: ['Rareş Matei', 'Altan Stalker'],
       videoUrl: '',
     },
