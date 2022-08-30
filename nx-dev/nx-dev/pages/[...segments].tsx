@@ -19,133 +19,24 @@ import {
 } from '../lib/api';
 
 interface DocumentationPageProps {
-  menu: Menu;
-  document: DocumentData | null;
-  pkg: PackageMetadata | null;
-  schemaRequest: {
+  message?: string;
+  menu?: Menu;
+  document?: DocumentData | null;
+  pkg?: PackageMetadata | null;
+  schemaRequest?: {
     type: 'executors' | 'generators';
     schemaName: string;
   } | null;
-}
-
-// We may want to extract this to another lib.
-function useNavToggle() {
-  const [navIsOpen, setNavIsOpen] = useState(false);
-  const toggleNav = useCallback(() => {
-    setNavIsOpen(!navIsOpen);
-  }, [navIsOpen, setNavIsOpen]);
-
-  useEffect(() => {
-    if (!navIsOpen) return;
-
-    function handleRouteChange() {
-      setNavIsOpen(false);
-    }
-
-    Router.events.on('routeChangeComplete', handleRouteChange);
-
-    return () => Router.events.off('routeChangeComplete', handleRouteChange);
-  }, [navIsOpen, setNavIsOpen]);
-
-  return { navIsOpen, toggleNav };
-}
-
-function SidebarButton(props: { onClick: () => void; navIsOpen: boolean }) {
-  return (
-    <button
-      type="button"
-      className="bg-green-nx-base fixed bottom-4 right-4 z-50 block h-16 w-16 rounded-full text-white shadow-sm lg:hidden"
-      onClick={props.onClick}
-    >
-      <span className="sr-only">Open site navigation</span>
-      <svg
-        width="24"
-        height="24"
-        fill="none"
-        className={cx(
-          'absolute top-1/2 left-1/2 -mt-3 -ml-3 transform transition duration-300',
-          {
-            'scale-80 opacity-0': props.navIsOpen,
-          }
-        )}
-      >
-        <path
-          d="M4 7h16M4 14h16M4 21h16"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <svg
-        width="24"
-        height="24"
-        fill="none"
-        className={cx(
-          'absolute top-1/2 left-1/2 -mt-3 -ml-3 transform transition duration-300',
-          {
-            'scale-80 opacity-0': !props.navIsOpen,
-          }
-        )}
-      >
-        <path
-          d="M6 18L18 6M6 6l12 12"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </button>
-  );
 }
 
 export default function DocumentationPage({
   menu,
   document,
   pkg,
+  message,
   schemaRequest,
 }: DocumentationPageProps): JSX.Element {
-  const { toggleNav, navIsOpen } = useNavToggle();
-
-  const vm: { entryComponent: JSX.Element } = {
-    entryComponent: (
-      <DocViewer
-        document={document || ({} as any)}
-        menu={{
-          sections: menu.sections.filter((x) => x.id !== 'official-packages'),
-        }}
-        toc={null}
-        navIsOpen={navIsOpen}
-      />
-    ),
-  };
-
-  if (!!pkg) {
-    vm.entryComponent = <PackageSchemaList pkg={pkg} />;
-  }
-
-  if (!!pkg && !!schemaRequest) {
-    vm.entryComponent = (
-      <PackageSchemaViewer
-        schemaRequest={{
-          ...schemaRequest,
-          pkg,
-        }}
-      />
-    );
-  }
-
-  return (
-    <>
-      <Header isDocViewer={true} />
-      <main id="main" role="main">
-        {vm.entryComponent}
-        {!pkg && <SidebarButton onClick={toggleNav} navIsOpen={navIsOpen} />}
-      </main>
-      {!navIsOpen ? <Footer /> : null}
-    </>
-  );
+  return <h1>msg: {message}</h1>;
 }
 
 export async function getStaticProps({
@@ -155,92 +46,106 @@ export async function getStaticProps({
 }) {
   // Set Document and Menu apis
   let documentsApi = nxDocumentsApi;
-  let menuApi = nxMenuApi;
-  if (params.segments[0] === 'nx-cloud') {
-    documentsApi = nxCloudDocumentsApi;
-    menuApi = nxCloudMenuApi;
-  }
-
-  const menu = menuApi.getMenu();
-
-  if (params.segments[0] === 'packages') {
-    let pkg: PackageMetadata | null = null;
-    try {
-      pkg = packagesApi.getPackage(params.segments[1]);
-    } catch (e) {
-      // Do nothing
-    }
-
-    // TODO@ben: handle packages view routes?
-    if (!pkg || (params.segments.length < 4 && 2 < params.segments.length)) {
-      return {
-        redirect: {
-          // If the menu is found, go to the first document, else go to homepage
-          destination:
-            menu?.sections[0].itemList?.[0].itemList?.[0].path ?? '/',
-          permanent: false,
-        },
-      };
-    }
-
-    // TODO@ben: handle packages view routes?
-    if (pkg && params.segments.length === 2) {
-      return {
-        props: {
-          document: null,
-          menu: nxMenuApi.getMenu(),
-          pkg,
-          schemaRequest: null,
-        },
-      };
-    }
-
-    return {
-      props: {
-        document: null,
-        menu: nxMenuApi.getMenu(),
-        pkg,
-        schemaRequest: {
-          type: params.segments[2],
-          schemaName: params.segments[3],
-        },
-      },
-    };
-  }
+  // let menuApi = nxMenuApi;
+  //
+  // if (params.segments[0] === 'nx-cloud') {
+  //   documentsApi = nxCloudDocumentsApi;
+  //   menuApi = nxCloudMenuApi;
+  // }
+  //
+  // let menu: any;
+  // try {
+  //   menu = menuApi.getMenu();
+  // } catch {
+  //   return { props: { message: 'menuApi.getMenu() (1)' } };
+  // }
+  //
+  // if (params.segments[0] === 'packages') {
+  //   let pkg: PackageMetadata | null = null;
+  //   try {
+  //     pkg = packagesApi.getPackage(params.segments[1]);
+  //   } catch (e) {
+  //     // Do nothing
+  //     return { props: { message: 'packagesApi.getPackage() (2)' } };
+  //   }
+  //
+  //   // TODO@ben: handle packages view routes?
+  //   if (!pkg || (params.segments.length < 4 && 2 < params.segments.length)) {
+  //     return {
+  //       redirect: {
+  //         // If the menu is found, go to the first document, else go to homepage
+  //         destination: '/',
+  //         // menu?.sections[0].itemList?.[0].itemList?.[0].path ?? '/',
+  //         permanent: false,
+  //       },
+  //     };
+  //   }
+  //
+  //   // TODO@ben: handle packages view routes?
+  //   if (pkg && params.segments.length === 2) {
+  //     return {
+  //       props: {
+  //         document: null,
+  //         menu: nxMenuApi.getMenu(),
+  //         pkg,
+  //         schemaRequest: null,
+  //       },
+  //     };
+  //   }
+  //
+  //   try {
+  //     return {
+  //       props: {
+  //         document: null,
+  //         menu: nxMenuApi.getMenu(),
+  //         pkg,
+  //         schemaRequest: {
+  //           type: params.segments[2],
+  //           schemaName: params.segments[3],
+  //         },
+  //       },
+  //     };
+  //   } catch (e) {
+  //     return { props: { message: `nxMenuApi.getMenu() (3) ${e.message}` } };
+  //   }
+  // }
 
   let document: DocumentData | undefined;
   try {
     document = documentsApi.getDocument(params.segments);
   } catch (e) {
     // Do nothing
-  }
-
-  if (document) {
     return {
-      props: {
-        document,
-        menu,
-        schemaRequest: null,
-      },
-    };
-  } else {
-    return {
+      // props: { message: 'documentsApi.getDocument() (4)' } };
       redirect: {
-        // If the menu is found, go to the first document, else go to homepage
-        destination: menu?.sections[0].itemList?.[0].itemList?.[0].path ?? '/',
+        destination: '/#error',
         permanent: false,
       },
     };
   }
+
+  return {
+    redirect: {
+      // If the menu is found, go to the first document, else go to homepage
+      destination: '/',
+      //menu?.sections[0].itemList?.[0].itemList?.[0].path ?? '/',
+      permanent: false,
+    },
+  };
 }
 
 export async function getStaticPaths() {
   return {
-    paths: [
-      ...packagesApi.getStaticPackagePaths(),
-      ...nxDocumentsApi.getStaticDocumentPaths(),
-      ...nxCloudDocumentsApi.getStaticDocumentPaths(),
-    ],
+    paths: [],
     fallback: 'blocking',
   };
 }
+//   return {
+//     paths: [
+//       ...packagesApi.getStaticPackagePaths(),
+//       ...nxDocumentsApi.getStaticDocumentPaths(),
+//       ...nxCloudDocumentsApi.getStaticDocumentPaths(),
+//     ],
+//     fallback: 'blocking',
+//   };
+// }
