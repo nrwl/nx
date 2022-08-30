@@ -13,7 +13,7 @@ jest.debug.config.js
 .tool-versions
 /.nx-cache
 /.verdaccio/build/local-registry
-dep-graph/client/src/assets/environment.js
+/graph/client/src/assets/environment.js
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/images/open-graph
 # Lerna creates this

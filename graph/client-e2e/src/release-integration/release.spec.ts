@@ -1,4 +1,4 @@
-describe('dep-graph-client release', () => {
+describe('graph-client release', () => {
   beforeEach(() => {
     cy.intercept('/assets/graphs/*').as('getGraph');
 

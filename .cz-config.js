@@ -30,7 +30,7 @@ module.exports = {
     { name: 'linter', description: 'anything Linter specific' },
     { name: 'storybook', description: 'anything Storybook specific' },
     { name: 'nx-cloud', description: 'anything NxCloud specific' },
-    { name: 'dep-graph', description: 'anything dep-graph app specific' },
+    { name: 'graph', description: 'anything graph app specific' },
     {
       name: 'testing',
       description: 'anything testing specific (e.g., jest or cypress)',

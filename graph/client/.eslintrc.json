@@ -10,7 +10,10 @@
       "rules": {
         "no-restricted-imports": [
           "error",
-          { "paths": ["rxjs"], "patterns": ["rxjs/*"] }
+          {
+            "paths": ["rxjs"],
+            "patterns": ["rxjs/*"]
+          }
         ]
       }
     },

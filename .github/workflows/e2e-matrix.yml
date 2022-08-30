@@ -48,7 +48,7 @@ jobs:
           - e2e-react-native
           # - e2e-detox
           - e2e-add-nx-to-monorepo
-          - e2e-dep-graph-client
+          - e2e-graph-client
         exclude:
           # exclude react-native and detox from ubuntu
           - os: ubuntu-latest
@@ -82,7 +82,7 @@ jobs:
           - os: macos-latest
             packages: e2e-add-nx-to-monorepo
           - os: macos-latest
-            packages: e2e-dep-graph-client
+            packages: e2e-graph-client
           - os: macos-latest
             packages: e2e-make-angular-cli-faster
       fail-fast: false

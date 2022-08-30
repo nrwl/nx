@@ -205,10 +205,7 @@ export async function generateGraph(
     }
   }
 
-  let html = readFileSync(
-    join(__dirname, '../core/dep-graph/index.html'),
-    'utf-8'
-  );
+  let html = readFileSync(join(__dirname, '../core/graph/index.html'), 'utf-8');
 
   graph = filterGraph(graph, args.focus || null, args.exclude || []);
 
@@ -223,7 +220,7 @@ export async function generateGraph(
     if (ext === '.html') {
       const assetsFolder = join(fileFolderPath, 'static');
       const assets: string[] = [];
-      copySync(join(__dirname, '../core/dep-graph'), assetsFolder, {
+      copySync(join(__dirname, '../core/graph'), assetsFolder, {
         filter: (_src, dest) => {
           const isntHtml = !/index\.html/.test(dest);
           if (isntHtml && dest.includes('.')) {
@@ -346,7 +343,7 @@ async function startServer(
       return;
     }
 
-    let pathname = join(__dirname, '../core/dep-graph/', sanitizePath);
+    let pathname = join(__dirname, '../core/graph/', sanitizePath);
 
     if (!existsSync(pathname)) {
       // if the file is not found, return 404

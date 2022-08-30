@@ -507,8 +507,8 @@ describe('Nx Affected and Graph Tests', () => {
     }
 
     if (isWindows()) {
-      it('dep-graph should output json to file by absolute path in Windows', () => {
-        runCLI(`dep-graph --file=C:\\tmp\\project-graph.json`);
+      it('graph should output json to file by absolute path in Windows', () => {
+        runCLI(`graph --file=C:\\tmp\\project-graph.json`);
 
         expect(fileExists('C:\\tmp\\project-graph.json')).toBeTruthy();
       }, 1000000);
