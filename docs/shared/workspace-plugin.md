@@ -13,7 +13,7 @@ The workspace plugin provides the [`@nrwl/workspace:move`](/packages/workspace/g
 
 ### Moving Projects
 
-Running `nx g @nrwl/workspace:move new/location/my-lib --projectName my-lib` will move the `my-lib` library to `libs/new/location/my-lib`.
+Running `nx g @nrwl/workspace:move --projectName my-lib --destination new/location/my-lib` will move the `my-lib` library to `libs/new/location/my-lib`.
 
 Moving the files manually can be done easily but a lot of steps are often missed when projects are moved. This generator will also handle the following:
 
@@ -43,6 +43,6 @@ Like when moving projects, some steps are often missed when removing projects. T
 
 Executors provide an optimized way of running targets but unfortunately, not every target has an executor written for it. The [`nx:run-commands`](/packages/nx/executors/run-commands) executor is an executor that runs any command or multiple commands in the shell. This can be useful when integrating with other tools which do not have an executor provided. There is also a generator to help configure this executor.
 
-Running `nx g nx:run-commands printhello --project my-feature-lib --command 'echo hello'` will create a `my-feature-lib:printhello` target that executes `echo hello` in the shell.
+Running `nx g @nrwl/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'` will create a `my-feature-lib:printhello` target that executes `echo hello` in the shell.
 
 > See more about [`nx:run-commands`](/packages/nx/executors/run-commands)
