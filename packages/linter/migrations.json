@@ -265,6 +265,20 @@
           "version": "^5.29.0"
         }
       }
+    },
+    "15.6.0": {
+      "version": "15.6.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~5.33.1"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~5.33.1"
+        },
+        "@typescript-eslint/utils": {
+          "version": "~5.33.1"
+        }
+      }
     }
   }
 }
