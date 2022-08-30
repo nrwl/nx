@@ -161,6 +161,12 @@
       "description": "Update the @angular/cli package version to ~14.1.0.",
       "factory": "./src/migrations/update-14-5-2/update-angular-cli"
     },
+    "update-rxjs-7-5-0": {
+      "cli": "nx",
+      "version": "14.5.7-beta.0",
+      "description": "Update the rxjs package version to ~7.5.0 if RxJS 7 is used in workspace.",
+      "factory": "./src/migrations/update-14-5-7/update-rxjs"
+    },
     "update-angular-cli-version-14-2-0": {
       "cli": "nx",
       "version": "14.6.0-beta.0",
@@ -1456,15 +1462,6 @@
       "packages": {
         "ts-node": {
           "version": "10.9.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "14.5.7": {
-      "version": "14.5.7-beta.0",
-      "packages": {
-        "rxjs": {
-          "version": "~7.5.0",
           "alwaysAddToPackageJson": false
         }
       }
