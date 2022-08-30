@@ -9,7 +9,10 @@ import { PackageMetadata } from '@nrwl/nx-dev/models-package';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import cx from 'classnames';
 import Router from 'next/router';
+import type { GetStaticPaths, GetStaticProps } from 'next';
 import { useCallback, useEffect, useState } from 'react';
+
+import { FourOhFour } from './404';
 import {
   nxCloudDocumentsApi,
   nxCloudMenuApi,
@@ -18,15 +21,18 @@ import {
   packagesApi,
 } from '../lib/api';
 
-interface DocumentationPageProps {
-  menu: Menu;
-  document: DocumentData | null;
-  pkg: PackageMetadata | null;
-  schemaRequest: {
-    type: 'executors' | 'generators';
-    schemaName: string;
-  } | null;
-}
+type DocumentationPageProps =
+  | { statusCode: 404 }
+  | {
+      statusCode: 200;
+      menu: Menu;
+      document: DocumentData | null;
+      pkg: PackageMetadata | null;
+      schemaRequest: {
+        type: 'executors' | 'generators';
+        schemaName: string;
+      } | null;
+    };
 
 // We may want to extract this to another lib.
 function useNavToggle() {
@@ -100,13 +106,16 @@ function SidebarButton(props: { onClick: () => void; navIsOpen: boolean }) {
   );
 }
 
-export default function DocumentationPage({
-  menu,
-  document,
-  pkg,
-  schemaRequest,
-}: DocumentationPageProps): JSX.Element {
+export default function DocumentationPage(
+  props: DocumentationPageProps
+): JSX.Element {
   const { toggleNav, navIsOpen } = useNavToggle();
+
+  if (props.statusCode === 404) {
+    return <FourOhFour />;
+  }
+
+  const { menu, document, pkg, schemaRequest } = props;
 
   const vm: { entryComponent: JSX.Element } = {
     entryComponent: (
@@ -148,11 +157,11 @@ export default function DocumentationPage({
   );
 }
 
-export async function getStaticProps({
+export const getStaticProps: GetStaticProps = async ({
   params,
 }: {
   params: { segments: string[] };
-}) {
+}) => {
   // Set Document and Menu apis
   let documentsApi = nxDocumentsApi;
   let menuApi = nxMenuApi;
@@ -174,11 +183,9 @@ export async function getStaticProps({
     // TODO@ben: handle packages view routes?
     if (!pkg || (params.segments.length < 4 && 2 < params.segments.length)) {
       return {
-        redirect: {
-          // If the menu is found, go to the first document, else go to homepage
-          destination:
-            menu?.sections[0].itemList?.[0].itemList?.[0].path ?? '/',
-          permanent: false,
+        notFound: true,
+        props: {
+          statusCode: 404,
         },
       };
     }
@@ -223,18 +230,17 @@ export async function getStaticProps({
         schemaRequest: null,
       },
     };
-  } else {
-    return {
-      redirect: {
-        // If the menu is found, go to the first document, else go to homepage
-        destination: menu?.sections[0].itemList?.[0].itemList?.[0].path ?? '/',
-        permanent: false,
-      },
-    };
   }
-}
 
-export async function getStaticPaths() {
+  return {
+    notFound: true,
+    props: {
+      statusCode: 404,
+    },
+  };
+};
+
+export const getStaticPaths: GetStaticPaths = () => {
   return {
     paths: [
       ...packagesApi.getStaticPackagePaths(),
@@ -243,4 +249,4 @@ export async function getStaticPaths() {
     ],
     fallback: 'blocking',
   };
-}
+};
