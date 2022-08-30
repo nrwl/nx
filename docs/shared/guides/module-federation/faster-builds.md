@@ -302,7 +302,7 @@ dist/apps
 Now, we can add a simple deploy command to simulate deploying this folder to production.
 
 ```bash
-nx g nx:run-commands \
+nx g @nrwl/workspace:run-commands \
 deploy \
 --project=host \
 --command="rm -rf production && mkdir production && cp -r dist/apps/host/* production && cp -r dist/apps/{shop,cart,about} production && http-server -p 3000 -a localhost production"
