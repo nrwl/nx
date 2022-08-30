@@ -32,13 +32,19 @@ export class PackagesApi {
 
     if (!packagePath) throw new Error('Package name could not be found: ' + id);
 
-    if (!this.database[id])
-      this.database[id] = JSON.parse(
-        readFileSync(
-          [this.options.publicPackagesRoot, packagePath].join('/'),
-          'utf-8'
-        )
-      );
+    // For production build, the packages files are missing so need this try-catch.
+    // TODO(jack): Look at handling this without try-catch.
+    try {
+      if (!this.database[id])
+        this.database[id] = JSON.parse(
+          readFileSync(
+            [this.options.publicPackagesRoot, packagePath].join('/'),
+            'utf-8'
+          )
+        );
+    } catch {
+      //nothing
+    }
 
     return this.database[id];
   }
@@ -71,36 +77,46 @@ export class PackagesApi {
   }
 
   getPackageDocuments(): DocumentMetadata {
-    return {
-      id: 'packages',
-      name: 'packages',
-      itemList: this.options.packagesIndex.map((p) => ({
-        id: p.name,
-        name: p.name.replace(/-/gi, ' '),
-        packageName: p.packageName,
-        path: `/packages/${p.name}`,
-        itemList: this.getPackage(p.name)
-          .documentation.map((d) => ({
-            id: d.id,
-            name: d.name,
-            path: d.path,
-          }))
-          .concat(
-            p.schemas.executors.map((e) => ({
-              id: e,
-              name: e,
-              path: `/packages/${p.name}/executors/${e}`,
+    // For production build, the packages files are missing so need this try-catch.
+    // TODO(jack): Look at handling this without try-catch.
+    try {
+      return {
+        id: 'packages',
+        name: 'packages',
+        itemList: this.options.packagesIndex.map((p) => ({
+          id: p.name,
+          name: p.name.replace(/-/gi, ' '),
+          packageName: p.packageName,
+          path: `/packages/${p.name}`,
+          itemList: this.getPackage(p.name)
+            .documentation.map((d) => ({
+              id: d.id,
+              name: d.name,
+              path: d.path,
             }))
-          )
-          .concat(
-            p.schemas.generators.map((g) => ({
-              id: g,
-              name: g,
-              path: `/packages/${p.name}/generators/${g}`,
-            }))
-          ),
-      })),
-    };
+            .concat(
+              p.schemas.executors.map((e) => ({
+                id: e,
+                name: e,
+                path: `/packages/${p.name}/executors/${e}`,
+              }))
+            )
+            .concat(
+              p.schemas.generators.map((g) => ({
+                id: g,
+                name: g,
+                path: `/packages/${p.name}/generators/${g}`,
+              }))
+            ),
+        })),
+      };
+    } catch {
+      return {
+        id: 'packages',
+        name: 'packages',
+        itemList: [],
+      };
+    }
   }
 
   getPackageSchema(
@@ -109,6 +125,7 @@ export class PackagesApi {
     schemaName: string
   ): SchemaMetadata | null {
     const file = this.getPackage(packageName);
+    if (!file) return null;
     return file[type].find((s) => s.name === schemaName) ?? null;
   }
 }
