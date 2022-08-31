@@ -11,12 +11,19 @@
   ],<% } %>
   <% if(uiFramework === '@storybook/angular' && projectType === 'application') { %>"files": ["../src/polyfills.ts"],<% } %>
   "exclude": ["../**/*.spec.ts" <% if(uiFramework === '@storybook/react') { %>, "../**/*.spec.js", "../**/*.spec.tsx", "../**/*.spec.jsx"<% } %>],
-  "include": [
-    "../<%= mainDir %>/**/*.stories.ts", 
-    "../<%= mainDir %>/**/*.stories.js", 
-    "../<%= mainDir %>/**/*.stories.jsx", 
-    "../<%= mainDir %>/**/*.stories.tsx", 
-    "../<%= mainDir %>/**/*.stories.mdx", 
+  "include": [<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    "../**/*.stories.ts",
+    "../**/*.stories.js",
+    "../**/*.stories.jsx",
+    "../**/*.stories.tsx",
+    "../**/*.stories.mdx",
     "*.ts",
-    "*.js"<% if(uiFramework === '@storybook/react-native') { %>, "*.tsx"<% } %>]
+    "*.js"<% } else { %>
+    "../<%= mainDir %>/**/*.stories.ts",
+    "../<%= mainDir %>/**/*.stories.js",
+    "../<%= mainDir %>/**/*.stories.jsx",
+    "../<%= mainDir %>/**/*.stories.tsx",
+    "../<%= mainDir %>/**/*.stories.mdx",
+    "*.ts",
+    "*.js"<% if(uiFramework === '@storybook/react-native') { %>, *.tsx"<% } %><% } %>]
 }

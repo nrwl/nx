@@ -11,11 +11,17 @@
   ],<% } %>
   <% if(uiFramework === '@storybook/angular' && projectType === 'application') { %>"files": ["../src/polyfills.ts"],<% } %>
   "exclude": ["../**/*.spec.ts" <% if(uiFramework === '@storybook/react') { %>, "../**/*.spec.js", "../**/*.spec.tsx", "../**/*.spec.jsx"<% } %>],
-  "include": [
+  "include": [<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    "../**/*.stories.ts",
+    "../**/*.stories.js",
+    "../**/*.stories.jsx",
+    "../**/*.stories.tsx",
+    "../**/*.stories.mdx",
+    "*.js"<% } else { %>
     "../<%= mainDir %>/**/*.stories.ts", 
     "../<%= mainDir %>/**/*.stories.js", 
     "../<%= mainDir %>/**/*.stories.jsx", 
     "../<%= mainDir %>/**/*.stories.tsx", 
-    "../<%= mainDir %>/**/*.stories.mdx", 
-    "*.js"<% if(uiFramework === '@storybook/react-native') { %>, "*.ts", "*.tsx"<% } %>]
+    "../<%= mainDir %>/**/*.stories.mdx",
+    "*.js"<% if(uiFramework === '@storybook/react-native') { %>, "*.ts", "*.tsx"<% } %><% } %>]
 }
