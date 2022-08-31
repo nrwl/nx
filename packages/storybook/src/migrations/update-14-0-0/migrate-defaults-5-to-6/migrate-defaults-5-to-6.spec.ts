@@ -23,6 +23,7 @@ describe('migrate-defaults-5-to-6 Generator', () => {
           '@storybook/addon-knobs': '^5.3.8',
           '@storybook/angular': '^5.3.8',
           '@storybook/addon-notes': '5.3.21',
+          '@storybook/addon-postcss': '2.0.0',
         },
       };
     });
@@ -73,6 +74,9 @@ describe('migrate-defaults-5-to-6 Generator', () => {
     );
     expect(packageJson.devDependencies['@storybook/addon-notes']).toEqual(
       '5.3.21'
+    );
+    expect(packageJson.devDependencies['@storybook/addon-postcss']).toEqual(
+      '2.0.0'
     );
   });
 
