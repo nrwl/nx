@@ -10,7 +10,9 @@ import {
 
 const importFresh = require('import-fresh');
 
-export async function generateCNWocumentation(commandsOutputDirectory: string) {
+export async function generateCnwDocumentation(
+  commandsOutputDirectory: string
+) {
   process.env.NX_GENERATE_DOCS_PROCESS = 'true';
 
   console.log(
