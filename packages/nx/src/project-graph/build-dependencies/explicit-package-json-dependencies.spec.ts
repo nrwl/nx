@@ -17,7 +17,7 @@ describe('explicit package json dependencies', () => {
   let ctx: ProjectGraphProcessorContext;
   let projects: Record<string, ProjectGraphProjectNode>;
   let fsJson;
-  beforeEach(() => {
+  beforeEach(async () => {
     const workspaceJson = {
       projects: {
         proj: {
@@ -57,7 +57,7 @@ describe('explicit package json dependencies', () => {
     };
     vol.fromJSON(fsJson, '/root');
 
-    defaultFileHasher.init();
+    await defaultFileHasher.init();
 
     ctx = {
       workspace: {

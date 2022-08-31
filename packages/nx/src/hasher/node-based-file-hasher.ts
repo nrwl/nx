@@ -2,19 +2,19 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
 import { FileData } from '../config/project-graph';
 import { join, relative } from 'path';
-import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
+import { readdirSync, statSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
-import { stripIndents } from '../utils/strip-indents';
-import ignore from 'ignore';
+import ignore, { Ignore } from 'ignore';
 import { normalizePath } from '../utils/path';
+import { getIgnoredGlobs } from '../utils/ignore-patterns';
 
 export class NodeBasedFileHasher extends FileHasherBase {
-  ignoredGlobs = getIgnoredGlobs();
+  ignoredGlobs: Ignore;
 
   async init() {
     performance.mark('init hashing:start');
     this.clear();
-
+    this.ignoredGlobs = await getAllIgnoredGlobs();
     this.allFilesInDir(workspaceRoot, true);
 
     performance.mark('init hashing:end');
@@ -64,19 +64,10 @@ export class NodeBasedFileHasher extends FileHasherBase {
   }
 }
 
-function getIgnoredGlobs() {
+async function getAllIgnoredGlobs() {
   const ig = ignore();
-  ig.add(readFileIfExisting(`${workspaceRoot}/.gitignore`));
-  ig.add(readFileIfExisting(`${workspaceRoot}/.nxignore`));
-  ig.add(stripIndents`
-      node_modules
-      tmp
-      dist
-      build    
-    `);
-  return ig;
-}
+  const globs = await getIgnoredGlobs({ ig });
+  ig.add(['node_modules', 'tmp', 'dist', 'build']);
 
-function readFileIfExisting(path: string) {
-  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
+  return ig;
 }

@@ -19,8 +19,7 @@ describe('project graph', () => {
   let tsConfigJson: any;
   let filesJson: any;
 
-  beforeEach(() => {
-    defaultFileHasher.ensureInitialized();
+  beforeEach(async () => {
     packageJson = {
       name: '@nrwl/workspace-src',
       version: '0.0.0',
@@ -184,6 +183,7 @@ describe('project graph', () => {
     };
     vol.reset();
     vol.fromJSON(filesJson, '/root');
+    await defaultFileHasher.ensureInitialized();
   });
 
   it('should throw an appropriate error for an invalid json config', async () => {

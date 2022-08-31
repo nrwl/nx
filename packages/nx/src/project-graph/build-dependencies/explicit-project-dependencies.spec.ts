@@ -23,9 +23,9 @@ describe('explicit project dependencies', () => {
   });
 
   describe('static imports, dynamic imports, and commonjs requires', () => {
-    it('should build explicit dependencies for static imports, and top-level dynamic imports and commonjs requires', () => {
+    it('should build explicit dependencies for static imports, and top-level dynamic imports and commonjs requires', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -70,9 +70,9 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
-    it('should build explicit dependencies for static exports', () => {
+    it('should build explicit dependencies for static exports', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -111,9 +111,9 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
-    it(`should build explicit dependencies for TypeScript's import/export require syntax, and side-effectful import`, () => {
+    it(`should build explicit dependencies for TypeScript's import/export require syntax, and side-effectful import`, async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -152,9 +152,9 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
-    it('should build explicit dependencies for nested dynamic imports and commonjs requires', () => {
+    it('should build explicit dependencies for nested dynamic imports and commonjs requires', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -214,9 +214,9 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
-    it('should build explicit dependencies when relative paths are used', () => {
+    it('should build explicit dependencies when relative paths are used', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -254,9 +254,9 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
-    it('should not build explicit dependencies when nx-ignore-next-line comments are present', () => {
+    it('should not build explicit dependencies when nx-ignore-next-line comments are present', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -347,9 +347,9 @@ describe('explicit project dependencies', () => {
       expect(res).toEqual([]);
     });
 
-    it('should not build explicit dependencies for stringified or templatized import/require statements', () => {
+    it('should not build explicit dependencies for stringified or templatized import/require statements', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -431,9 +431,9 @@ describe('explicit project dependencies', () => {
    * https://angular.io/guide/deprecations#loadchildren-string-syntax
    */
   describe('legacy Angular loadChildren string syntax', () => {
-    it('should build explicit dependencies for legacy Angular loadChildren string syntax', () => {
+    it('should build explicit dependencies for legacy Angular loadChildren string syntax', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -485,9 +485,9 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
-    it('should not build explicit dependencies when nx-ignore-next-line comments are present', () => {
+    it('should not build explicit dependencies when nx-ignore-next-line comments are present', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -554,7 +554,7 @@ interface VirtualWorkspaceConfig {
  * Prepares a minimal workspace and virtual file-system for the given files and dependency
  * projects in order to be able to execute `buildExplicitTypeScriptDependencies()` in the tests.
  */
-function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
+async function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
   const nxJson = {
     npmScope: 'proj',
   };
@@ -638,7 +638,7 @@ function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
 
   vol.fromJSON(fsJson, '/root');
 
-  defaultFileHasher.init();
+  await defaultFileHasher.init();
 
   return {
     ctx: {

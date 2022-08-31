@@ -7,15 +7,17 @@ import * as fs from 'fs';
 import { JsonDiffType } from '../utils/json-diff';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import ignore from 'ignore';
+import { relative } from 'path';
+import { workspaceRoot } from '../utils/workspace-root';
 
 describe('calculateFileChanges', () => {
-  beforeEach(() => {
-    defaultFileHasher.ensureInitialized();
+  beforeEach(async () => {
+    await defaultFileHasher.ensureInitialized();
   });
+
   it('should return a whole file change by default for files that exist', () => {
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     const changes = calculateFileChanges(
-      ['proj/index.ts'],
+      [relative(workspaceRoot, __filename)], // this **must** be a real file in the Nx repo
       [],
       undefined,
       (path, revision) => {

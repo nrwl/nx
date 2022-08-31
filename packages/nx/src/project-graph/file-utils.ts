@@ -16,6 +16,7 @@ import {
   readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
 } from './project-graph';
+import { getIgnoredGlobsSync } from '../utils/ignore-patterns';
 
 export interface Change {
   type: string;
@@ -49,8 +50,7 @@ export function readFileIfExisting(path: string) {
 
 function getIgnoredGlobs() {
   const ig = ignore();
-  ig.add(readFileIfExisting(`${workspaceRoot}/.gitignore`));
-  ig.add(readFileIfExisting(`${workspaceRoot}/.nxignore`));
+  getIgnoredGlobsSync({ ig });
   return ig;
 }
 

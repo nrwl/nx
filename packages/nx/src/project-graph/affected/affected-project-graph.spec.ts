@@ -21,7 +21,7 @@ describe('project graph', () => {
   let nxJson: NxJsonConfiguration;
   let filesJson: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     process.env.NX_CACHE_PROJECT_GRAPH = 'false';
     packageJson = {
       name: '@nrwl/workspace-src',
@@ -155,7 +155,7 @@ describe('project graph', () => {
       './tsconfig.base.json': JSON.stringify(tsConfigJson),
     };
     vol.fromJSON(filesJson, '/root');
-    defaultFileHasher.init();
+    await defaultFileHasher.init();
   });
 
   afterEach(() => [delete process.env.NX_CACHE_PROJECT_GRAPH]);

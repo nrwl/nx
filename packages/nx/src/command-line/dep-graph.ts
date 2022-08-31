@@ -21,6 +21,7 @@ import {
 } from '../config/project-graph';
 import { pruneExternalNodes } from '../project-graph/operators';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
+import { getIgnoredGlobs } from '../utils/ignore-patterns';
 
 export interface DepGraphClientResponse {
   hash: string;
@@ -308,7 +309,7 @@ async function startServer(
   openBrowser: boolean = true
 ) {
   if (watchForchanges) {
-    startWatcher();
+    await startWatcher();
   }
 
   currentDepGraphClientResponse = await createDepGraphClientResponse(affected);
@@ -408,19 +409,16 @@ let currentDepGraphClientResponse: DepGraphClientResponse = {
   exclude: [],
 };
 
-function getIgnoredGlobs(root: string) {
+async function getIgnoreObject(root: string) {
   const ig = ignore();
   try {
-    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
+    await getIgnoredGlobs({ ig });
   } catch {}
   return ig;
 }
 
 function startWatcher() {
-  createFileWatcher(workspaceRoot, async () => {
+  return createFileWatcher(workspaceRoot, async () => {
     output.note({ title: 'Recalculating project graph...' });
 
     const newGraphClientResponse = await createDepGraphClientResponse();
@@ -447,8 +445,11 @@ function debounce(fn: (...args) => void, time: number) {
   };
 }
 
-function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
-  const ignoredGlobs = getIgnoredGlobs(root);
+async function createFileWatcher(
+  root: string,
+  changeHandler: () => Promise<void>
+) {
+  const ig = await getIgnoreObject(root);
   const layout = workspaceLayout();
 
   const watcher = watch(
@@ -464,7 +465,7 @@ function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
   watcher.on(
     'all',
     debounce(async (event: string, path: string) => {
-      if (ignoredGlobs.ignores(path)) return;
+      if (ig.ignores(path)) return;
       await changeHandler();
     }, 500)
   );

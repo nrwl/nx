@@ -25,7 +25,6 @@ import { getRootTsConfigPath } from '../utils/typescript';
 import {
   ProjectFileMap,
   ProjectGraph,
-  ProjectGraphExternalNode,
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
@@ -46,6 +45,7 @@ import {
   mapLockFileDataToPartialGraph,
   parseLockFile,
 } from '../utils/lock-file/lock-file';
+import { PackageJson } from '../utils/package-json';
 
 export async function buildProjectGraph() {
   const projectConfigurations = readAllWorkspaceConfiguration();
@@ -145,7 +145,7 @@ export async function buildProjectGraphUsingProjectFileMap(
 }
 
 function readCombinedDeps() {
-  const json = readJsonFile(join(workspaceRoot, 'package.json'));
+  const json = readJsonFile<PackageJson>(join(workspaceRoot, 'package.json'));
   return { ...json.dependencies, ...json.devDependencies };
 }
 

@@ -14,6 +14,16 @@ import { handleServerProcessTermination } from './shutdown-utils';
 import { Server } from 'net';
 import ignore from 'ignore';
 import { normalizePath } from '../../utils/path';
+import {
+  getIgnoredGlobs,
+  locatedIgnoreFiles,
+} from 'nx/src/utils/ignore-patterns';
+
+export type WatcherSubscription = AsyncSubscription;
+export type SubscribeToWorkspaceChangesCallback = (
+  err: Error | null,
+  changeEvents: Event[] | null
+) => Promise<void>;
 
 const ALWAYS_IGNORE = [
   join(workspaceRoot, 'node_modules'),
@@ -21,40 +31,26 @@ const ALWAYS_IGNORE = [
   FULL_OS_SOCKET_PATH,
 ];
 
-function getIgnoredGlobs() {
-  return [
-    ...ALWAYS_IGNORE,
-    ...getIgnoredGlobsFromFile(join(workspaceRoot, '.nxignore')),
-    ...getIgnoredGlobsFromFile(join(workspaceRoot, '.gitignore')),
-  ];
-}
-
-function getIgnoredGlobsFromFile(file: string): string[] {
-  try {
-    return readFileSync(file, 'utf-8')
-      .split('\n')
-      .map((i) => i.trim())
-      .filter((i) => !!i && !i.startsWith('#'))
-      .map((i) => (i.startsWith('/') ? join(workspaceRoot, i) : i));
-  } catch (e) {
-    return [];
-  }
-}
-
 export type FileWatcherCallback = (
   err: Error | null,
   changeEvents: Event[] | null
 ) => Promise<void>;
 
-function configureIgnoreObject() {
+/**
+ * This configures the files and directories which we always want to ignore as part of file watching
+ * and which we know the location of statically (meaning irrespective of user configuration files).
+ * This has the advantage of being ignored directly within the C++ layer of `@parcel/watcher` so there
+ * is less pressure on the main JavaScript thread.
+ *
+ * It's possible that glob support will be added in the C++ layer in the future as well:
+ * https://github.com/parcel-bundler/watcher/issues/64
+ */
+async function configureIgnoredFiles() {
   const ig = ignore();
-  try {
-    ig.add(readFileSync(`${workspaceRoot}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${workspaceRoot}/.nxignore`, 'utf-8'));
-  } catch {}
-  return ig;
+  const ignoredGlobs = await getIgnoredGlobs({ ig });
+  ig.add(FULL_OS_SOCKET_PATH);
+  ignoredGlobs.push(FULL_OS_SOCKET_PATH);
+  return { ignoreObject: ig, ignoredGlobs };
 }
 
 export async function subscribeToOutputsChanges(
@@ -94,7 +90,7 @@ export async function subscribeToWorkspaceChanges(
    * executed by packages which do not have its necessary native binaries available.
    */
   const watcher = await import('@parcel/watcher');
-  const ignoreObj = configureIgnoreObject();
+  const { ignoreObject, ignoredGlobs } = await configureIgnoredFiles();
 
   return await watcher.subscribe(
     workspaceRoot,
@@ -112,10 +108,7 @@ export async function subscribeToWorkspaceChanges(
           type: event.type,
           path: normalizePath(relative(workspaceRoot, event.path)),
         };
-        if (
-          workspaceRelativeEvent.path === '.gitignore' ||
-          workspaceRelativeEvent.path === '.nxignore'
-        ) {
+        if (locatedIgnoreFiles.has(workspaceRelativeEvent.path)) {
           hasIgnoreFileUpdate = true;
         }
         workspaceRelativeEvents.push(workspaceRelativeEvent);
@@ -131,14 +124,14 @@ export async function subscribeToWorkspaceChanges(
 
       const nonIgnoredEvents = workspaceRelativeEvents
         .filter(({ path }) => !!path)
-        .filter(({ path }) => !ignoreObj.ignores(path));
+        .filter(({ path }) => !ignoreObject.ignores(path));
 
       if (nonIgnoredEvents && nonIgnoredEvents.length > 0) {
         cb(null, nonIgnoredEvents);
       }
     },
     {
-      ignore: getIgnoredGlobs(),
+      ignore: ignoredGlobs,
     }
   );
 }

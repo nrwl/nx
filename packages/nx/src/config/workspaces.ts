@@ -27,6 +27,7 @@ import {
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
+import { getIgnoredGlobsSync } from '../utils/ignore-patterns';
 
 export function workspaceConfigName(
   root: string
@@ -653,36 +654,12 @@ export function globForProjectFiles(
   const combinedProjectGlobPattern = '{' + projectGlobPatterns.join(',') + '}';
 
   performance.mark('start-glob-for-projects');
-  /**
-   * This configures the files and directories which we always want to ignore as part of file watching
-   * and which we know the location of statically (meaning irrespective of user configuration files).
-   * This has the advantage of being ignored directly within globSync
-   *
-   * Other ignored entries will need to be determined dynamically by reading and evaluating the user's
-   * .gitignore and .nxignore files below.
-   */
 
-  const ALWAYS_IGNORE = [
-    '/node_modules',
-    '**/node_modules',
-    '/dist',
-    ...globsToExclude,
-  ];
-
-  /**
-   * TODO: This utility has been implemented multiple times across the Nx codebase,
-   * discuss whether it should be moved to a shared location.
-   */
   const ig = ignore();
-  try {
-    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
-  } catch {}
+  const ignoredPatterns = getIgnoredGlobsSync({ ig });
 
   const globResults = globSync(combinedProjectGlobPattern, {
-    ignore: ALWAYS_IGNORE,
+    ignore: ignoredPatterns,
     absolute: false,
     cwd: root,
     dot: true,
