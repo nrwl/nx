@@ -5,7 +5,7 @@ import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as yargs from 'yargs';
 import { showNxWarning, unparse } from './shared';
-import { output } from './output';
+import { isCI, output } from './output';
 import * as ora from 'ora';
 import {
   detectInvokedPackageManager,
@@ -23,6 +23,7 @@ import chalk = require('chalk');
 import { ciList } from './ci';
 import { join } from 'path';
 import { initializeGitRepo } from './git';
+import axios from 'axios';
 
 type Arguments = {
   name: string;
@@ -306,6 +307,8 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   if (nxCloud && nxCloudInstallRes.code === 0) {
     printNxCloudSuccessMessage(nxCloudInstallRes.stdout);
   }
+
+  await recordWorkspaceCreationStats(nxCloud);
 }
 
 async function getConfiguration(
@@ -1011,4 +1014,25 @@ function pointToFreeCourseOnEgghead(): string[] {
     `Prefer watching videos? Check out this free Nx course on Egghead.io.`,
     `https://egghead.io/playlists/scale-react-development-with-nx-4038`,
   ];
+}
+
+/**
+ * We are incrementing a counter to track how often create-nx-workspace is used in CI
+ * vs dev environments. No personal information is collected.
+ */
+async function recordWorkspaceCreationStats(useCloud: boolean) {
+  try {
+    const major = Number(nxVersion.split('.')[0]);
+    if (major < 10 || major > 30) return; // test version, skip it
+    await axios
+      .create({
+        baseURL: 'https://cloud.nx.app',
+        timeout: 400,
+      })
+      .post('/nx-cloud/stats', {
+        command: 'create-nx-workspace',
+        isCI: isCI(),
+        useCloud,
+      });
+  } catch (e) {}
 }
