@@ -1,33 +1,26 @@
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
-import { readdirSync, existsSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import { workspaceRoot } from '../utils/workspace-root';
-import { fileExists } from '../utils/fileutils';
-import { output } from '../utils/output';
-import type { CompilerOptions } from 'typescript';
-import { generate } from './generate';
-import { readJsonFile, writeJsonFile } from '../utils/fileutils';
+import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { logger } from '../utils/logger';
+import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { normalizePath } from '../utils/path';
+import {
+  getToolsOutDir,
+  toolsTsConfigPath,
+  TsConfig,
+} from '../utils/tools-root';
+import { workspaceRoot } from '../utils/workspace-root';
+import { generate } from './generate';
 import { parserConfiguration } from './nx-commands';
 
 const rootDirectory = workspaceRoot;
 const toolsDir = path.join(rootDirectory, 'tools');
 const generatorsDir = path.join(toolsDir, 'generators');
-const toolsTsConfigPath = path.join(toolsDir, 'tsconfig.tools.json');
-
-type TsConfig = {
-  extends: string;
-  compilerOptions: CompilerOptions;
-  files?: string[];
-  include?: string[];
-  exclude?: string[];
-  references?: Array<{ path: string }>;
-};
 
 export async function workspaceGenerators(args: string[]) {
   const outDir = compileTools();
@@ -53,17 +46,6 @@ function compileTools() {
     collectionData
   );
   return generatorsOutDir;
-}
-
-function getToolsOutDir() {
-  const outDir = toolsTsConfig().compilerOptions.outDir;
-
-  if (!outDir) {
-    logger.error(`${toolsTsConfigPath} must specify an outDir`);
-    process.exit(1);
-  }
-
-  return path.resolve(toolsDir, outDir);
 }
 
 function compileToolsDir(outDir: string) {
@@ -103,10 +85,6 @@ function constructCollection() {
     generators,
     schematics: generators,
   };
-}
-
-function toolsTsConfig(): TsConfig {
-  return readJsonFile<TsConfig>(toolsTsConfigPath);
 }
 
 function listGenerators(collectionFile: string) {
