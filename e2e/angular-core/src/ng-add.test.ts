@@ -57,7 +57,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     packageInstall('cypress', null, '^9.0.0');
   }
   function addCypress10() {
-    runNgAdd('@cypress/schematic', '--e2e-update', 'latest');
+    runNgAdd('@cypress/schematic', '--e2e', 'latest');
   }
 
   function addEsLint() {
