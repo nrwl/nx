@@ -658,6 +658,31 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.6.0": {
+      "version": "14.6.0-beta.0",
+      "packages": {
+        "@types/react": {
+          "version": "18.0.18",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/node": {
+          "version": "18.7.14",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.10.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/react": {
+          "version": "11.10.4",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.31.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
