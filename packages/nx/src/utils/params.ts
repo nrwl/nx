@@ -1,10 +1,19 @@
-import { logger } from './logger';
+import path = require('path');
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
-  TargetConfiguration,
   ProjectsConfigurations,
+  TargetConfiguration,
 } from '../config/workspace-json-project-json';
+import { logger } from './logger';
 import { output } from './output';
+import { getToolsOutDir } from './tools-root';
+
+interface CustomXPrompt {
+  message: string;
+  type: 'custom';
+  source: string;
+  method?: string;
+}
 
 type PropertyDescription = {
   type?: string | string[];
@@ -34,6 +43,7 @@ type PropertyDescription = {
   additionalProperties?: boolean;
   'x-prompt'?:
     | string
+    | CustomXPrompt
     | { message: string; type: string; items?: any[]; multiselect?: boolean };
   'x-deprecated'?: boolean | string;
   'x-dropdown'?: 'projects';
@@ -719,13 +729,16 @@ interface Prompt {
   choices?: (string | { name: string; message: string })[];
 }
 
-export function getPromptsForSchema(
+export async function getPromptsForSchema(
   opts: Options,
   schema: Schema,
   wc: (ProjectsConfigurations & NxJsonConfiguration) | null
-): Prompt[] {
+): Promise<Prompt[]> {
   const prompts: Prompt[] = [];
-  Object.entries(schema.properties).forEach(([k, v]) => {
+  const entries = Object.entries(schema.properties);
+
+  for (let i = 0, len = entries.length; i < len; i++) {
+    const [k, v] = entries[i];
     if (v['x-prompt'] && opts[k] === undefined) {
       const question: Prompt = {
         name: k,
@@ -759,15 +772,43 @@ export function getPromptsForSchema(
       ) {
         question.type = 'autocomplete';
         question.choices = Object.keys(wc.projects);
-      } else if (v.type === 'number' || v['x-prompt'].type == 'number') {
+      } else if (v.type === 'number' || v['x-prompt'].type === 'number') {
         question.message = v['x-prompt'].message;
         question.type = 'numeral';
       } else if (
-        v['x-prompt'].type == 'confirmation' ||
-        v['x-prompt'].type == 'confirm'
+        v['x-prompt'].type === 'confirmation' ||
+        v['x-prompt'].type === 'confirm'
       ) {
         question.message = v['x-prompt'].message;
         question.type = 'confirm';
+      } else if (isCustomPrompt(v['x-prompt'])) {
+        const toolsOutDir = getToolsOutDir();
+        const sourceFile = path.join(toolsOutDir, v['x-prompt'].source);
+        const method = v['x-prompt'].method ?? 'default';
+        const getPrompt = await import(sourceFile)
+          .then((m) => m[method])
+          .catch((e) => {
+            console.error(e);
+            process.exit(0);
+          });
+
+        if (typeof getPrompt === 'function') {
+          const promptOptions = await getPrompt();
+
+          if (typeof promptOptions === 'object') {
+            Object.assign(question, promptOptions);
+          } else {
+            console.error(
+              `Invalid prompt options returned by '${method}' in: ${sourceFile}`
+            );
+            process.exit(0);
+          }
+        } else {
+          console.error(
+            `Could not find '${method}' function export for prompt: ${sourceFile}`
+          );
+          process.exit(0);
+        }
       } else if (v['x-prompt'].items) {
         question.message = v['x-prompt'].message;
         question.type = v['x-prompt'].multiselect
@@ -791,7 +832,7 @@ export function getPromptsForSchema(
       }
       prompts.push(question);
     }
-  });
+  }
 
   return prompts;
 }
@@ -804,7 +845,7 @@ async function promptForValues(
   return await (
     await import('enquirer')
   )
-    .prompt(getPromptsForSchema(opts, schema, wc))
+    .prompt(await getPromptsForSchema(opts, schema, wc))
     .then((values) => ({ ...opts, ...values }))
     .catch((e) => {
       console.error(e);
@@ -865,4 +906,15 @@ function isConvertibleToNumber(value) {
   }
 
   return !isNaN(+value);
+}
+
+/**
+ * Type guard to determine if the value is a {CustomXPrompt}
+ * @param value the x-prompt value to test
+ * @returns true if the value is a custom prompt value.
+ */
+function isCustomPrompt(
+  value: PropertyDescription['x-prompt']
+): value is CustomXPrompt {
+  return typeof value !== 'string' && value.type === 'custom';
 }

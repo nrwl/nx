@@ -1,4 +1,5 @@
 import * as yargsParser from 'yargs-parser';
+import { TargetConfiguration } from '../config/workspace-json-project-json';
 import { logger } from './logger';
 import {
   applyVerbosity,
@@ -13,7 +14,7 @@ import {
   validateOptsAgainstSchema,
   warnDeprecations,
 } from './params';
-import { TargetConfiguration } from '../config/workspace-json-project-json';
+import * as toolsRoot from './tools-root';
 
 describe('params', () => {
   describe('combineOptionsForExecutor', () => {
@@ -1391,8 +1392,8 @@ describe('params', () => {
   });
 
   describe('getPromptsForSchema', () => {
-    it('should use a input prompt for x-prompt defined as string', () => {
-      const prompts = getPromptsForSchema(
+    it('should use a input prompt for x-prompt defined as string', async () => {
+      const prompts = await getPromptsForSchema(
         {},
         {
           properties: {
@@ -1412,8 +1413,8 @@ describe('params', () => {
       ]);
     });
 
-    it('should use a confirm prompt for boolean options with x-prompt defined as string', () => {
-      const prompts = getPromptsForSchema(
+    it('should use a confirm prompt for boolean options with x-prompt defined as string', async () => {
+      const prompts = await getPromptsForSchema(
         {},
         {
           properties: {
@@ -1434,8 +1435,8 @@ describe('params', () => {
       ]);
     });
 
-    it('should use an numeral prompt for x-prompts for numbers', () => {
-      const prompts = getPromptsForSchema(
+    it('should use an numeral prompt for x-prompts for numbers', async () => {
+      const prompts = await getPromptsForSchema(
         {},
         {
           properties: {
@@ -1460,8 +1461,8 @@ describe('params', () => {
       ]);
     });
 
-    it('should use an multiselect prompt for x-prompts with items', () => {
-      const prompts = getPromptsForSchema(
+    it('should use an multiselect prompt for x-prompts with items', async () => {
+      const prompts = await getPromptsForSchema(
         {},
         {
           properties: {
@@ -1492,8 +1493,8 @@ describe('params', () => {
       ]);
     });
 
-    it('should use an multiselect prompt for x-prompts with items', () => {
-      const prompts = getPromptsForSchema(
+    it('should use an multiselect prompt for x-prompts with items', async () => {
+      const prompts = await getPromptsForSchema(
         {},
         {
           properties: {
@@ -1533,8 +1534,8 @@ describe('params', () => {
     });
 
     describe('Project prompts', () => {
-      it('should use an autocomplete prompt for a property named project', () => {
-        const prompts = getPromptsForSchema(
+      it('should use an autocomplete prompt for a property named project', async () => {
+        const prompts = await getPromptsForSchema(
           {},
           {
             properties: {
@@ -1563,8 +1564,8 @@ describe('params', () => {
         ]);
       });
 
-      it('should use an autocomplete prompt for property named projectName', () => {
-        const prompts = getPromptsForSchema(
+      it('should use an autocomplete prompt for property named projectName', async () => {
+        const prompts = await getPromptsForSchema(
           {},
           {
             properties: {
@@ -1593,8 +1594,8 @@ describe('params', () => {
         ]);
       });
 
-      it('should use an autocomplete prompt for x-dropdown set to projects', () => {
-        const prompts = getPromptsForSchema(
+      it('should use an autocomplete prompt for x-dropdown set to projects', async () => {
+        const prompts = await getPromptsForSchema(
           {},
           {
             properties: {
@@ -1624,8 +1625,8 @@ describe('params', () => {
         ]);
       });
 
-      it('should use a prompt for a project when $default.$source is project', () => {
-        const prompts = getPromptsForSchema(
+      it('should use a prompt for a project when $default.$source is project', async () => {
+        const prompts = await getPromptsForSchema(
           {},
           {
             properties: {
@@ -1658,8 +1659,8 @@ describe('params', () => {
       });
     });
 
-    it('should use an autocomplete prompt for x-prompts for enums', () => {
-      const prompts = getPromptsForSchema(
+    it('should use an autocomplete prompt for x-prompts for enums', async () => {
+      const prompts = await getPromptsForSchema(
         {},
         {
           properties: {
@@ -1686,8 +1687,8 @@ describe('params', () => {
       ]);
     });
 
-    it('should use an autocomplete prompt that defaults to the default value for x-prompts for enums', () => {
-      const prompts = getPromptsForSchema(
+    it('should use an autocomplete prompt that defaults to the default value for x-prompts for enums', async () => {
+      const prompts = await getPromptsForSchema(
         {},
         {
           properties: {
@@ -1716,8 +1717,8 @@ describe('params', () => {
       ]);
     });
 
-    it('should use a input prompt for x-prompts with no items', () => {
-      const prompts = getPromptsForSchema(
+    it('should use a input prompt for x-prompts with no items', async () => {
+      const prompts = await getPromptsForSchema(
         {},
         {
           properties: {
@@ -1738,6 +1739,208 @@ describe('params', () => {
       expect(prompts).toEqual([
         { type: 'input', name: 'name', message: 'What is your name?' },
       ]);
+    });
+
+    describe('Custom prompts', () => {
+      let toolsSpy: jest.SpyInstance;
+      let processSpy: jest.SpyInstance;
+      let consoleSpy: jest.SpyInstance;
+
+      beforeEach(() => {
+        toolsSpy = jest
+          .spyOn(toolsRoot, 'getToolsOutDir')
+          .mockImplementation(() => './');
+
+        processSpy = jest
+          .spyOn(process, 'exit')
+          .mockImplementation((code?: number) => {
+            throw new Error(`process.exit: ${code}`);
+          });
+
+        consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      });
+
+      afterEach(() => {
+        toolsSpy.mockClear();
+        processSpy.mockClear();
+        consoleSpy.mockClear();
+      });
+
+      it('should error when source does not exist', async () => {
+        const action = async () =>
+          await getPromptsForSchema(
+            {},
+            {
+              properties: {
+                name: {
+                  'x-prompt': {
+                    type: 'custom',
+                    message: 'What is your name?',
+                    source: 'foo',
+                  },
+                },
+              },
+            },
+            {
+              version: 2,
+              projects: {},
+            }
+          );
+
+        await expect(action).rejects.toThrow();
+        expect(consoleSpy).toHaveBeenCalled();
+        expect(processSpy).toHaveBeenCalled();
+      });
+
+      it('should return the custom prompt when the source file exists', async () => {
+        const prompts = await getPromptsForSchema(
+          {},
+          {
+            properties: {
+              name: {
+                'x-prompt': {
+                  type: 'custom',
+                  message: 'What is your name?',
+                  source: 'packages/nx/src/utils/prompt.fixture',
+                },
+              },
+            },
+          },
+          {
+            version: 2,
+            projects: {},
+          }
+        );
+
+        expect(prompts).toEqual([
+          {
+            name: 'passing default',
+            message: "What's your name?",
+            fields: [{ name: 'foo', message: 'Name' }],
+            template: '{ "name": "${name}" }',
+          },
+        ]);
+      });
+
+      it('should use the schema name and message when missing', async () => {
+        const prompts = await getPromptsForSchema(
+          {},
+          {
+            properties: {
+              name: {
+                'x-prompt': {
+                  type: 'custom',
+                  message: 'What is your name?',
+                  source: 'packages/nx/src/utils/prompt.fixture',
+                  method: 'missingNameMessage',
+                },
+              },
+            },
+          },
+          {
+            version: 2,
+            projects: {},
+          }
+        );
+
+        expect(prompts).toEqual([
+          {
+            name: 'name',
+            message: 'What is your name?',
+            fields: [{ name: 'foo', message: 'Name' }],
+            template: '{ "name": "${name}" }',
+          },
+        ]);
+      });
+
+      it('should return the custom prompt using the named method', async () => {
+        const prompts = await getPromptsForSchema(
+          {},
+          {
+            properties: {
+              name: {
+                'x-prompt': {
+                  type: 'custom',
+                  message: 'What is your name?',
+                  source: 'packages/nx/src/utils/prompt.fixture',
+                  method: 'passingNamedMethod',
+                },
+              },
+            },
+          },
+          {
+            version: 2,
+            projects: {},
+          }
+        );
+
+        expect(prompts).toEqual([
+          {
+            name: 'passing named',
+            message: "What's your name?",
+            fields: [{ name: 'foo', message: 'Name' }],
+            template: '{ "name": "${name}" }',
+          },
+        ]);
+      });
+
+      it('should throw an error when the named method is invalid', async () => {
+        const action = async () =>
+          await getPromptsForSchema(
+            {},
+            {
+              properties: {
+                name: {
+                  'x-prompt': {
+                    type: 'custom',
+                    message: 'What is your name?',
+                    source: 'packages/nx/src/utils/prompt.fixture',
+                    method: 'fooMethod',
+                  },
+                },
+              },
+            },
+            {
+              version: 2,
+              projects: {},
+            }
+          );
+
+        await expect(action).rejects.toThrow();
+        expect(consoleSpy).toHaveBeenCalledWith(
+          "Could not find 'fooMethod' function export for prompt: packages/nx/src/utils/prompt.fixture"
+        );
+        expect(processSpy).toHaveBeenCalled();
+      });
+
+      it('should throw an error when the named method result is invalid', async () => {
+        const action = async () =>
+          await getPromptsForSchema(
+            {},
+            {
+              properties: {
+                name: {
+                  'x-prompt': {
+                    type: 'custom',
+                    message: 'What is your name?',
+                    source: 'packages/nx/src/utils/prompt.fixture',
+                    method: 'invalidReturnValue',
+                  },
+                },
+              },
+            },
+            {
+              version: 2,
+              projects: {},
+            }
+          );
+
+        await expect(action).rejects.toThrow();
+        expect(consoleSpy).toHaveBeenCalledWith(
+          "Invalid prompt options returned by 'invalidReturnValue' in: packages/nx/src/utils/prompt.fixture"
+        );
+        expect(processSpy).toHaveBeenCalled();
+      });
     });
   });
 });
