@@ -102,6 +102,103 @@ Dynamic options can prompt the user to select from a list of options. To define 
 
 Running the generator without providing a value for the type will prompt the user to make a selection.
 
+Example numeral prompt:
+
+```json
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "my-generator",
+  "type": "object",
+  "properties": {
+    "age": {
+      "type": "number",
+      "description": "Age",
+      "x-prompt": {
+        "message": "How old are you?",
+        "type": "number"
+      }
+    }
+  }
+}
+```
+
+Example confirmation prompt:
+
+```json
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "my-generator",
+  "type": "object",
+  "properties": {
+    "age": {
+      "type": "boolean",
+      "description": "Prompts for confirmation",
+      "x-prompt": {
+        "message": "Are you sure you want to continue?",
+        "type": "confirm"
+      }
+    }
+  }
+}
+```
+
+You may also specify one of the [prompts supported by Enquirer](https://github.com/enquirer/enquirer#-built-in-prompts).
+This can be used for scenarios where the prompt options may be dynamic or based on previous prompt values.
+
+```json
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "my-generator",
+  "type": "object",
+  "properties": {
+    "age": {
+      "type": "boolean",
+      "description": "Snippet Example",
+      "x-prompt": {
+        "type": "custom",
+        "source": "prompts/foo"
+      }
+    }
+  }
+}
+```
+
+```ts
+// source file (relative to tools directory): prompts/foo.js
+export default async function () {
+  return {
+    type: 'snippet',
+    fields: [
+      {
+        name: 'foo',
+        message: 'Foo',
+      },
+    ],
+    template: `
+      {
+        "name": "\${foo}"
+      }`,
+  };
+}
+
+// Or specify a named function using the `method` property in the `x-prompt` config
+export async function myPrompt() {
+  return {
+    type: 'snippet',
+    fields: [
+      {
+        name: 'foo',
+        message: 'Foo',
+      },
+    ],
+    template: `
+      {
+        "name": "\${foo}"
+      }`,
+  };
+}
+```
+
 ## All configurable schema options
 
 Properties tagged with ⚠️ are required. Others are optional.
