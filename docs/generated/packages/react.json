@@ -1207,7 +1207,7 @@
       "name": "cypress-component-configuration",
       "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
       "schema": {
-        "$schema": "http://json-schema.org/schema",
+        "$schema": "https://json-schema.org/schema",
         "cli": "nx",
         "$id": "NxReactCypressComponentTestConfiguration",
         "title": "Add Cypress component testing",
@@ -1229,6 +1229,11 @@
             "description": "The name of the project to add cypress component testing configuration to",
             "$default": { "$source": "projectName" },
             "x-prompt": "What project should we add Cypress component testing to?"
+          },
+          "buildTarget": {
+            "type": "string",
+            "description": "A build target used to configure Cypress component testing in the format of `project:target[:configuration]`. The build target should be from a React app. If not provided we will try to infer it from your projects usage.",
+            "pattern": "^[^:\\s]+:[^:\\s]+(:\\S+)?$"
           },
           "generateTests": {
             "type": "boolean",

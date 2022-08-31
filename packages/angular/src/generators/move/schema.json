@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nrwl/angular:move --project my-feature-lib shared/my-feature-lib",
+      "command": "nx g @nrwl/angular:move --project my-feature-lib --destination shared/my-feature-lib",
       "description": "Move libs/my-feature-lib to libs/shared/my-feature-lib."
     }
   ],
@@ -15,7 +15,8 @@
     "projectName": {
       "type": "string",
       "alias": "project",
-      "description": "The name of the Angular project to move."
+      "description": "The name of the Angular project to move.",
+      "x-dropdown": "projects"
     },
     "destination": {
       "type": "string",

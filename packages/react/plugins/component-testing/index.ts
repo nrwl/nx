@@ -1,7 +1,36 @@
 import { nxBaseCypressPreset } from '@nrwl/cypress/plugins/cypress-preset';
-import { getCSSModuleLocalIdent } from '@nrwl/web/src/utils/web.config';
-import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import type { Configuration } from 'webpack';
+import type { CypressExecutorOptions } from '@nrwl/cypress/src/executors/cypress/cypress.impl';
+import {
+  ExecutorContext,
+  logger,
+  parseTargetString,
+  ProjectConfiguration,
+  ProjectGraph,
+  readCachedProjectGraph,
+  readNxJson,
+  readTargetOptions,
+  stripIndents,
+  Target,
+  TargetConfiguration,
+  workspaceRoot,
+} from '@nrwl/devkit';
+import type { WebWebpackExecutorOptions } from '@nrwl/web/src/executors/webpack/webpack.impl';
+import { normalizeWebBuildOptions } from '@nrwl/web/src/utils/normalize';
+import { getWebConfig } from '@nrwl/web/src/utils/web.config';
+import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
+import { lstatSync } from 'fs';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { extname, relative } from 'path';
+import { buildBaseWebpackConfig } from './webpack-fallback';
+
+export interface ReactComponentTestingOptions {
+  /**
+   * the component testing target name.
+   * this is only when customized away from the default value of `component-test`
+   * @example 'component-test'
+   */
+  ctTargetName: string;
+}
 
 /**
  * React nx preset for Cypress Component Testing
@@ -18,9 +47,60 @@ import type { Configuration } from 'webpack';
  *   }
  * })
  *
- * @param pathToConfig will be used to construct the output paths for videos and screenshots
+ * @param pathToConfig will be used for loading project options and to construct the output paths for videos and screenshots
+ * @param options override options
  */
-export function nxComponentTestingPreset(pathToConfig: string) {
+export function nxComponentTestingPreset(
+  pathToConfig: string,
+  options?: ReactComponentTestingOptions
+) {
+  let webpackConfig;
+  try {
+    const graph = readCachedProjectGraph();
+    const { targets: ctTargets, name: ctProjectName } = getConfigByPath(
+      graph,
+      pathToConfig
+    );
+    const ctTargetName = options?.ctTargetName || 'component-test';
+    const ctConfigurationName = process.env.NX_CYPRESS_TARGET_CONFIGURATION;
+
+    const ctExecutorContext = createExecutorContext(
+      graph,
+      ctTargets,
+      ctProjectName,
+      ctTargetName,
+      ctConfigurationName
+    );
+
+    const ctExecutorOptions = readTargetOptions<CypressExecutorOptions>(
+      {
+        project: ctProjectName,
+        target: ctTargetName,
+        configuration: ctConfigurationName,
+      },
+      ctExecutorContext
+    );
+
+    const buildTarget = ctExecutorOptions.devServerTarget;
+
+    if (!buildTarget) {
+      throw new Error(
+        `Unable to find the 'devServerTarget' executor option in the '${ctTargetName}' target of the '${ctProjectName}' project`
+      );
+    }
+
+    webpackConfig = buildTargetWebpack(graph, buildTarget, ctProjectName);
+  } catch (e) {
+    logger.warn(
+      stripIndents`Unable to build a webpack config with the project graph. 
+      Falling back to default webpack config.`
+    );
+    logger.warn(e);
+    webpackConfig = buildBaseWebpackConfig({
+      tsConfigPath: 'tsconfig.cy.json',
+      compiler: 'babel',
+    });
+  }
   return {
     ...nxBaseCypressPreset(pathToConfig),
     devServer: {
@@ -28,152 +108,139 @@ export function nxComponentTestingPreset(pathToConfig: string) {
       // need to use const to prevent typing to string
       framework: 'react',
       bundler: 'webpack',
-      webpackConfig: buildBaseWebpackConfig({
-        tsConfigPath: 'tsconfig.cy.json',
-        compiler: 'babel',
-      }),
+      webpackConfig,
     } as const,
   };
 }
 
-// TODO(caleb): use the webpack utils to build the config
-//  can't seem to get css modules to play nice when using it 🤔
-function buildBaseWebpackConfig({
-  tsConfigPath = 'tsconfig.cy.json',
-  compiler = 'babel',
-}: {
-  tsConfigPath: string;
-  compiler: 'swc' | 'babel';
-}): Configuration {
-  const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
-  const config: Configuration = {
-    target: 'web',
-    resolve: {
-      extensions,
-      plugins: [
-        new TsconfigPathsPlugin({
-          configFile: tsConfigPath,
-          extensions,
-        }) as never,
-      ],
-    },
-    mode: 'development',
-    devtool: false,
-    output: {
-      publicPath: '/',
-      chunkFilename: '[name].bundle.js',
-    },
-    module: {
-      rules: [
-        {
-          test: /\.(bmp|png|jpe?g|gif|webp|avif)$/,
-          type: 'asset',
-          parser: {
-            dataUrlCondition: {
-              maxSize: 10_000, // 10 kB
-            },
-          },
-        },
-        CSS_MODULES_LOADER,
-      ],
-    },
-  };
+/**
+ * apply the schema.json defaults from the @nrwl/web:webpack executor to the target options
+ */
+function withSchemaDefaults(
+  target: Target,
+  context: ExecutorContext
+): WebWebpackExecutorOptions {
+  const options = readTargetOptions<WebWebpackExecutorOptions>(target, context);
 
-  if (compiler === 'swc') {
-    config.module.rules.push({
-      test: /\.([jt])sx?$/,
-      loader: require.resolve('swc-loader'),
-      exclude: /node_modules/,
-      options: {
-        jsc: {
-          parser: {
-            syntax: 'typescript',
-            decorators: true,
-            tsx: true,
-          },
-          transform: {
-            react: {
-              runtime: 'automatic',
-            },
-          },
-          loose: true,
-        },
-      },
-    });
-  }
-
-  if (compiler === 'babel') {
-    config.module.rules.push({
-      test: /\.(js|jsx|mjs|ts|tsx)$/,
-      loader: require.resolve('babel-loader'),
-      options: {
-        presets: [`@nrwl/react/babel`],
-        rootMode: 'upward',
-        babelrc: true,
-      },
-    });
-  }
-  return config;
+  options.compiler ??= 'babel';
+  options.deleteOutputPath ??= true;
+  options.vendorChunk ??= true;
+  options.commonChunk ??= true;
+  options.runtimeChunk ??= true;
+  options.sourceMap ??= true;
+  options.assets ??= [];
+  options.scripts ??= [];
+  options.styles ??= [];
+  options.budgets ??= [];
+  options.namedChunks ??= true;
+  options.outputHashing ??= 'none';
+  options.extractCss ??= true;
+  options.memoryLimit ??= 2048;
+  options.maxWorkers ??= 2;
+  options.fileReplacements ??= [];
+  options.buildLibsFromSource ??= true;
+  options.generateIndexHtml ??= true;
+  return options;
 }
 
-const loaderModulesOptions = {
-  modules: {
-    mode: 'local',
-    getLocalIdent: getCSSModuleLocalIdent,
-  },
-  importLoaders: 1,
-};
+function buildTargetWebpack(
+  graph: ProjectGraph,
+  buildTarget: string,
+  componentTestingProjectName: string
+) {
+  const parsed = parseTargetString(buildTarget);
 
-const commonLoaders = [
-  {
-    loader: require.resolve('style-loader'),
-  },
-  {
-    loader: require.resolve('css-loader'),
-    options: loaderModulesOptions,
-  },
-];
+  const buildableProjectConfig = graph.nodes[parsed.project]?.data;
+  const ctProjectConfig = graph.nodes[componentTestingProjectName]?.data;
 
-const CSS_MODULES_LOADER = {
-  test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
-  oneOf: [
-    {
-      test: /\.module\.css$/,
-      use: commonLoaders,
+  if (!buildableProjectConfig || !ctProjectConfig) {
+    throw new Error(stripIndents`Unable to load project configs from graph. 
+    Using build target '${buildTarget}'
+    Has build config? ${!!buildableProjectConfig}
+    Has component config? ${!!ctProjectConfig}
+    `);
+  }
+
+  const options = normalizeWebBuildOptions(
+    withSchemaDefaults(
+      parsed,
+      createExecutorContext(
+        graph,
+        buildableProjectConfig.targets,
+        parsed.project,
+        parsed.target,
+        parsed.target
+      )
+    ),
+    workspaceRoot,
+    buildableProjectConfig.sourceRoot!
+  );
+
+  const isScriptOptimizeOn =
+    typeof options.optimization === 'boolean'
+      ? options.optimization
+      : options.optimization && options.optimization.scripts
+      ? options.optimization.scripts
+      : false;
+  return getWebConfig(
+    workspaceRoot,
+    ctProjectConfig.root,
+    ctProjectConfig.sourceRoot,
+    options,
+    true,
+    isScriptOptimizeOn,
+    parsed.configuration
+  );
+}
+
+function getConfigByPath(
+  graph: ProjectGraph,
+  configPath: string
+): ProjectConfiguration {
+  const configFileFromWorkspaceRoot = relative(workspaceRoot, configPath);
+  const normalizedPathFromWorkspaceRoot = lstatSync(configPath).isFile()
+    ? configFileFromWorkspaceRoot.replace(extname(configPath), '')
+    : configFileFromWorkspaceRoot;
+
+  const mappedGraph = mapProjectGraphFiles(graph);
+  const componentTestingProjectName =
+    mappedGraph.allFiles[normalizedPathFromWorkspaceRoot];
+  if (
+    !componentTestingProjectName ||
+    !graph.nodes[componentTestingProjectName]?.data
+  ) {
+    throw new Error(
+      stripIndents`Unable to find the project configuration that includes ${normalizedPathFromWorkspaceRoot}. 
+      Found project name? ${componentTestingProjectName}. 
+      Graph has data? ${!!graph.nodes[componentTestingProjectName]?.data}`
+    );
+  }
+  // make sure name is set since it can be undefined
+  graph.nodes[componentTestingProjectName].data.name ??=
+    componentTestingProjectName;
+  return graph.nodes[componentTestingProjectName].data;
+}
+
+function createExecutorContext(
+  graph: ProjectGraph,
+  targets: Record<string, TargetConfiguration>,
+  projectName: string,
+  targetName: string,
+  configurationName: string
+): ExecutorContext {
+  const projectConfigs = readProjectsConfigurationFromProjectGraph(graph);
+  return {
+    cwd: process.cwd(),
+    projectGraph: graph,
+    target: targets[targetName],
+    targetName,
+    configurationName,
+    root: workspaceRoot,
+    isVerbose: false,
+    projectName,
+    workspace: {
+      ...readNxJson(),
+      ...projectConfigs,
     },
-    {
-      test: /\.module\.(scss|sass)$/,
-      use: [
-        ...commonLoaders,
-        {
-          loader: require.resolve('sass-loader'),
-          options: {
-            implementation: require('sass'),
-            sassOptions: {
-              fiber: false,
-              precision: 8,
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.module\.less$/,
-      use: [
-        ...commonLoaders,
-        {
-          loader: require.resolve('less-loader'),
-        },
-      ],
-    },
-    {
-      test: /\.module\.styl$/,
-      use: [
-        ...commonLoaders,
-        {
-          loader: require.resolve('stylus-loader'),
-        },
-      ],
-    },
-  ],
-};
+  };
+}

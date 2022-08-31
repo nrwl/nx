@@ -136,6 +136,46 @@ You can re-run it at a later point using the following command:
 nx g @nrwl/react:stories <project-name>
 ```
 
+{% callout type="note" title="Example" %}
+
+Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui`. This library contains a component, called `my-button`.
+
+The command to generate stories for that library would be:
+
+```bash
+nx g @nrwl/react:stories feature-ui
+```
+
+and the result would be the following:
+
+```treeview
+<workspace name>/
+├── .storybook/
+├── apps/
+├── libs/
+│   ├── feature/
+│   │   ├── ui/
+|   |   |   ├── .storybook/
+|   |   |   ├── src/
+|   |   |   |   ├──lib
+|   |   |   |   |   ├──my-button
+|   |   |   |   |   |   ├── my-button.component.ts
+|   |   |   |   |   |   ├── my-button.component.stories.ts
+|   |   |   |   |   |   └── etc...
+|   |   |   |   |   └── etc...
+|   |   |   ├── README.md
+|   |   |   ├── tsconfig.json
+|   |   |   └── etc...
+|   |   └── etc...
+|   └── etc...
+├── nx.json
+├── package.json
+├── README.md
+└── etc...
+```
+
+{% /callout %}
+
 ### Cypress tests for Stories
 
 Both `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.

@@ -50,7 +50,9 @@
         "outputPath": "dist/nx-dev/nx-dev"
       },
       "configurations": {
-        "development": {},
+        "development": {
+          "outputPath": "nx-dev/nx-dev"
+        },
         "production": {}
       }
     },

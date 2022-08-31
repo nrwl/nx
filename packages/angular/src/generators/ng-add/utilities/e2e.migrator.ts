@@ -562,7 +562,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private updateCypress10ConfigFile(configFilePath: string): void {
-    this.cypressPreset = nxE2EPreset(this.project.newRoot);
+    this.cypressPreset = nxE2EPreset(configFilePath);
 
     const fileContent = this.tree.read(configFilePath, 'utf-8');
     let sourceFile = tsquery.ast(fileContent);

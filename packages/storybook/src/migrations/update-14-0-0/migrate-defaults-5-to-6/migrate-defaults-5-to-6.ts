@@ -88,6 +88,7 @@ function maybeUpdateVersion(tree: Tree): GeneratorCallback {
       '@storybook/testing-vue',
       '@storybook/testing-vue3',
       '@storybook/addon-notes',
+      '@storybook/addon-postcss',
     ];
 
     json.dependencies = json.dependencies || {};

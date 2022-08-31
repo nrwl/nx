@@ -7,7 +7,9 @@ import {
   ProjectConfiguration,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
+  NxJsonConfiguration,
 } from '@nrwl/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
@@ -35,7 +37,7 @@ export async function cypressComponentProject(
 
   addProjectFiles(tree, projectConfig, options);
   addTargetToProject(tree, projectConfig, options);
-
+  addToCacheableOperations(tree);
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
@@ -86,4 +88,26 @@ function addTargetToProject(
   };
 
   updateProjectConfiguration(tree, options.project, projectConfig);
+}
+
+export function addToCacheableOperations(tree: Tree) {
+  updateJson(tree, 'nx.json', (json) => ({
+    ...json,
+    tasksRunnerOptions: {
+      ...json.tasksRunnerOptions,
+      default: {
+        ...json.tasksRunnerOptions?.default,
+        options: {
+          ...json.tasksRunnerOptions?.default?.options,
+          cacheableOperations: Array.from(
+            new Set([
+              ...(json.tasksRunnerOptions?.default?.options
+                ?.cacheableOperations ?? []),
+              'component-test',
+            ])
+          ),
+        },
+      },
+    },
+  }));
 }
