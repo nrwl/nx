@@ -18,7 +18,7 @@ const importFresh = require('import-fresh');
 
 const sharedCommands = ['generate', 'run'];
 
-export async function generateCLIDocumentation(
+export async function generateCliDocumentation(
   commandsOutputDirectory: string
 ) {
   /**

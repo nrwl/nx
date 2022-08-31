@@ -2,8 +2,8 @@ import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 import { join } from 'path';
-import { generateCLIDocumentation } from './generate-cli-data';
-import { generateCNWocumentation } from './generate-cnw-documentation';
+import { generateCliDocumentation } from './generate-cli-data';
+import { generateCnwDocumentation } from './generate-cnw-documentation';
 import { generateDevkitDocumentation } from './generate-devkit-documentation';
 import { generatePackageSchemas } from './package-schemas/generatePackageSchemas';
 
@@ -18,8 +18,8 @@ async function generate() {
       'cli'
     );
     removeSync(commandsOutputDirectory);
-    await generateCNWocumentation(commandsOutputDirectory);
-    await generateCLIDocumentation(commandsOutputDirectory);
+    await generateCnwDocumentation(commandsOutputDirectory);
+    await generateCliDocumentation(commandsOutputDirectory);
 
     generateDevkitDocumentation();
     await Promise.all(generatePackageSchemas());
