@@ -14,25 +14,14 @@ export function checkDependencies(
   target: ProjectGraphProjectNode<any>;
   dependencies: DependentBuildableProjectNode[];
 } {
-  const { target, dependencies, nonBuildableDependencies } =
-    calculateProjectDependencies(
-      context.projectGraph,
-      context.root,
-      context.projectName,
-      context.targetName,
-      context.configurationName
-    );
+  const { target, dependencies } = calculateProjectDependencies(
+    context.projectGraph,
+    context.root,
+    context.projectName,
+    context.targetName,
+    context.configurationName
+  );
   const projectRoot = target.data.root;
-
-  if (nonBuildableDependencies.length > 0) {
-    throw new Error(
-      `Buildable libraries can only depend on other buildable libraries. You must define the ${
-        context.targetName
-      } target for the following libraries: ${nonBuildableDependencies
-        .map((t) => `"${t}"`)
-        .join(', ')}`
-    );
-  }
 
   if (dependencies.length > 0) {
     return {
