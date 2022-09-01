@@ -1,0 +1,49 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "graph/client-e2e/src",
+  "projectType": "application",
+  "targets": {
+    "e2e-base": {
+      "executor": "@nrwl/cypress:cypress",
+      "options": {
+        "tsConfig": "graph/client-e2e/tsconfig.e2e.json",
+        "baseUrl": "http://localhost:4200"
+      },
+      "configurations": {
+        "dev": {
+          "cypressConfig": "graph/client-e2e/cypress.json",
+          "devServerTarget": "graph-client:serve"
+        },
+        "watch": {
+          "cypressConfig": "graph/client-e2e/cypress-watch-mode.json",
+          "devServerTarget": "graph-client:serve:watch"
+        },
+        "release": {
+          "cypressConfig": "graph/client-e2e/cypress-release.json",
+          "devServerTarget": "graph-client:serve:release"
+        }
+      },
+      "defaultConfiguration": "dev"
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "commands": [
+          "npx nx e2e-base e2e-graph-client -c dev",
+          "npx nx e2e-base e2e-graph-client -c watch",
+          "npx nx e2e-base e2e-graph-client -c release"
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["graph/client-e2e/**/*.ts"]
+      }
+    }
+  },
+  "implicitDependencies": ["graph-client"]
+}

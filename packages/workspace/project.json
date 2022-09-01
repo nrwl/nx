@@ -67,7 +67,7 @@
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/copy-dep-graph.js"
+            "command": "node ./scripts/copy-graph-client.js"
           },
           {
             "command": "node ./scripts/copy-readme.js workspace"

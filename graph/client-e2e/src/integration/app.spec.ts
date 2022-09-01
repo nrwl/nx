@@ -19,7 +19,7 @@ import {
 import * as nxExamplesJson from '../fixtures/nx-examples.json';
 import * as affectedJson from '../fixtures/affected.json';
 
-describe('dep-graph-client', () => {
+describe('graph-client', () => {
   before(() => {
     cy.intercept('/assets/graphs/nx.json', { fixture: 'nx-examples.json' }).as(
       'getGraph'
@@ -282,7 +282,7 @@ describe('dep-graph-client', () => {
   });
 });
 
-describe('loading dep-graph client with url params', () => {
+describe('loading graph client with url params', () => {
   beforeEach(() => {
     cy.intercept('/assets/graphs/*', { fixture: 'nx-examples.json' }).as(
       'getGraph'

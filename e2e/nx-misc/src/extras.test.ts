@@ -84,7 +84,7 @@ describe('Extra Nx Misc Tests', () => {
     `
       );
 
-      runCLI('dep-graph --file project-graph.json');
+      runCLI('graph --file project-graph.json');
       const projectGraphJson = readJson('project-graph.json');
       expect(projectGraphJson.graph.nodes['plugin-node']).toBeDefined();
       expect(projectGraphJson.graph.nodes['plugin-node2']).toBeDefined();

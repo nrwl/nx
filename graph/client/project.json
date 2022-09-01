@@ -1,21 +1,21 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "dep-graph/client/src",
+  "sourceRoot": "graph/client/src",
   "projectType": "application",
   "targets": {
     "build-base": {
       "executor": "@nrwl/web:webpack",
       "options": {
         "maxWorkers": 8,
-        "outputPath": "build/apps/dep-graph",
-        "index": "dep-graph/client/src/index.html",
-        "main": "dep-graph/client/src/main.tsx",
-        "polyfills": "dep-graph/client/src/polyfills.ts",
-        "tsConfig": "dep-graph/client/tsconfig.app.json",
-        "styles": ["dep-graph/client/src/styles.scss"],
+        "outputPath": "build/apps/graph",
+        "index": "graph/client/src/index.html",
+        "main": "graph/client/src/main.tsx",
+        "polyfills": "graph/client/src/polyfills.ts",
+        "tsConfig": "graph/client/tsconfig.app.json",
+        "styles": ["graph/client/src/styles.scss"],
         "scripts": [],
         "assets": [],
-        "webpackConfig": "dep-graph/client/webpack.config.js",
+        "webpackConfig": "graph/client/webpack.config.js",
         "optimization": false,
         "outputHashing": "none",
         "sourceMap": true,
@@ -34,10 +34,10 @@
       "configurations": {
         "dev": {
           "assets": [
-            "dep-graph/client/src/favicon.ico",
-            "dep-graph/client/src/assets/graphs/",
+            "graph/client/src/favicon.ico",
+            "graph/client/src/assets/graphs/",
             {
-              "input": "dep-graph/client/src/assets/dev",
+              "input": "graph/client/src/assets/dev",
               "output": "/",
               "glob": "environment.js"
             }
@@ -45,14 +45,14 @@
         },
         "nx-console": {
           "assets": [
-            "dep-graph/client/src/favicon.ico",
+            "graph/client/src/favicon.ico",
             {
-              "input": "dep-graph/client/src/assets/graphs",
+              "input": "graph/client/src/assets/graphs",
               "output": "/assets/graphs",
               "glob": "nx-examples.json"
             },
             {
-              "input": "dep-graph/client/src/assets/nx-console",
+              "input": "graph/client/src/assets/nx-console",
               "output": "/",
               "glob": "environment.js"
             }
@@ -60,14 +60,14 @@
         },
         "release": {
           "assets": [
-            "dep-graph/client/src/favicon.ico",
+            "graph/client/src/favicon.ico",
             {
-              "input": "dep-graph/client/src/assets/graphs",
+              "input": "graph/client/src/assets/graphs",
               "output": "/assets/graphs",
               "glob": "nx-examples.json"
             },
             {
-              "input": "dep-graph/client/src/assets/release",
+              "input": "graph/client/src/assets/release",
               "output": "/",
               "glob": "environment.js"
             }
@@ -88,9 +88,9 @@
         },
         "watch": {
           "assets": [
-            "dep-graph/client/src/favicon.ico",
+            "graph/client/src/favicon.ico",
             {
-              "input": "dep-graph/client/src/assets/watch",
+              "input": "graph/client/src/assets/watch",
               "output": "/",
               "glob": "environment.js"
             }
@@ -104,16 +104,16 @@
       "executor": "@nrwl/web:dev-server",
       "configurations": {
         "dev": {
-          "buildTarget": "dep-graph-client:build-base:dev"
+          "buildTarget": "graph-client:build-base:dev"
         },
         "nx-console": {
-          "buildTarget": "dep-graph-client:build-base:nx-console"
+          "buildTarget": "graph-client:build-base:nx-console"
         },
         "release": {
-          "buildTarget": "dep-graph-client:build-base:release"
+          "buildTarget": "graph-client:build-base:release"
         },
         "watch": {
-          "buildTarget": "dep-graph-client:build-base:watch"
+          "buildTarget": "graph-client:build-base:watch"
         }
       },
       "defaultConfiguration": "dev"
@@ -122,14 +122,14 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["dep-graph/client/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["graph/client/**/*.{ts,tsx,js,jsx}"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/dep-graph/client"],
+      "outputs": ["coverage/graph/client"],
       "options": {
-        "jestConfig": "dep-graph/client/jest.config.ts",
+        "jestConfig": "graph/client/jest.config.ts",
         "passWithNoTests": true
       }
     }
