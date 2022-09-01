@@ -176,6 +176,7 @@ jobs:
           no_output_timeout: 20m
       - run:
           name: Run Checks/Lint/Test/Build
+          no_output_timeout: 60m
           command: |
             pids=()
 
