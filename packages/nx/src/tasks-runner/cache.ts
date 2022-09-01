@@ -196,7 +196,11 @@ export class Cache {
         collapsedOutputsInCache,
         taskWithCachedResult
       ),
-      this.isAnyOutputMissing(outputsInCache, outputsInWorkspace),
+      this.haveOutputsBeenAddedOrRemoved(
+        taskWithCachedResult,
+        outputsInCache,
+        outputsInWorkspace
+      ),
     ]);
     return latestHashesDifferent || outputMissing;
   }
@@ -329,28 +333,70 @@ export class Cache {
     }
   }
 
-  private async isAnyOutputMissing(
-    outputsInCache: string[],
-    outputsInWorkspace: string[]
+  private async haveOutputsBeenAddedOrRemoved(
+    result: TaskWithCachedResult,
+    cachedOutputs: string[],
+    workspaceFiles: string[]
   ): Promise<boolean> {
-    for (let i = 0; i < outputsInCache.length; i++) {
-      const cacheOutputPath = outputsInCache[i];
-      const workspaceOutputPath = outputsInWorkspace[i];
+    const workspaceSet = new Set(workspaceFiles);
 
-      const cacheExists = await pathExists(cacheOutputPath);
-      const rootExists = await pathExists(workspaceOutputPath);
-
-      if (!cacheExists || !rootExists) return true;
-
-      if (
-        (await lstat(cacheOutputPath)).isDirectory() &&
-        (await lstat(workspaceOutputPath)).isDirectory() &&
-        (await readdir(cacheOutputPath)).length !==
-          (await readdir(workspaceOutputPath)).length
-      )
+    for (const path of cachedOutputs) {
+      if (!(await pathExists(join(workspaceRoot, path)))) {
         return true;
+      }
+      if (!workspaceSet.has(path)) {
+        return true;
+      }
+      const isDirectory = (await lstat(path)).isDirectory();
+      if (isDirectory) {
+        const [cachedFiles, workspaceFiles] = await Promise.all([
+          this.getFilesInDirectory(join(result.cachedResult.outputsPath, path)),
+          this.getFilesInDirectory(join(workspaceRoot, path)),
+        ]);
+
+        if (workspaceFiles.size !== cachedFiles.size) {
+          return true;
+        }
+        for (const file of cachedFiles) {
+          if (!workspaceFiles.has(file)) {
+            return true;
+          }
+          workspaceFiles.delete(file);
+        }
+        if (workspaceFiles.size !== 0) {
+          return true;
+        }
+      }
+      workspaceSet.delete(path);
+    }
+    if (workspaceSet.size !== 0) {
+      return true;
     }
     return false;
+  }
+
+  private async getFilesInDirectory(path: string): Promise<Set<string>> {
+    const paths = new Set<string>();
+    await this.visitDirectory(path, (entry) => {
+      paths.add(relative(path, entry));
+    });
+    return paths;
+  }
+
+  private async visitDirectory(path: string, visitor: (path: string) => void) {
+    const children = await readdir(join(path), {
+      withFileTypes: true,
+    });
+
+    await Promise.all(
+      children.map(async (child) => {
+        if (child.isFile()) {
+          visitor(join(path, child.name));
+        } else if (child.isDirectory()) {
+          await this.visitDirectory(join(path, child.name), visitor);
+        }
+      })
+    );
   }
 
   private getFileNameWithLatestRecordedHashForOutput(output: string): string {

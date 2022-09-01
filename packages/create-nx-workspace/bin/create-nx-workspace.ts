@@ -1023,6 +1023,9 @@ function pointToFreeCourseOnEgghead(): string[] {
 async function recordWorkspaceCreationStats(useCloud: boolean) {
   try {
     const major = Number(nxVersion.split('.')[0]);
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.log(`Record stat. Major: ${major}`);
+    }
     if (major < 10 || major > 30) return; // test version, skip it
     await axios
       .create({
@@ -1034,5 +1037,9 @@ async function recordWorkspaceCreationStats(useCloud: boolean) {
         isCI: isCI(),
         useCloud,
       });
-  } catch (e) {}
+  } catch (e) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.error(e);
+    }
+  }
 }
