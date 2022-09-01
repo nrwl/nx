@@ -73,7 +73,7 @@ export function AffectedCommand(): JSX.Element {
                 necessary.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
-                <Link href="/using-nx/affected">
+                <Link href="/concepts/affected">
                   <a
                     title="Nx allows you to see what is affected by your changes"
                     className="bg-blue-nx-base hover:bg-blue-nx-dark inline-flex rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm transition"

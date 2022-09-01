@@ -122,7 +122,7 @@ export default function Index(): JSX.Element {
                     </a>
                   </Link>
 
-                  <Link href="/migration/lerna-and-nx">
+                  <Link href="/recipe/lerna-and-nx">
                     <a
                       title="Integrate Nx and Lerna"
                       className="text-blue-nx-base hover:text-blue-nx-dark w-full flex-none rounded-md border border-transparent bg-white py-3 px-6 text-lg font-semibold leading-6 transition hover:bg-gray-100 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white sm:w-auto"
@@ -131,7 +131,7 @@ export default function Index(): JSX.Element {
                     </a>
                   </Link>
 
-                  <Link href="/migration/adding-to-monorepo">
+                  <Link href="/recipe/adding-to-monorepo">
                     <a
                       title="Add Nx to existing Monorepo"
                       className="text-blue-nx-base hover:text-blue-nx-dark mt-4 w-full flex-none rounded-md border border-transparent bg-white py-3 px-6 text-lg font-semibold leading-6 transition hover:bg-gray-100 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white sm:w-auto md:mt-0"

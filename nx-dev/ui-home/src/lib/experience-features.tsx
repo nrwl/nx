@@ -13,7 +13,7 @@ const featureItems: {
 }[] = [
   {
     classNames: 'bg-blue-500',
-    link: '/using-nx/console',
+    link: '/core-features/integrate-with-editors',
     title: 'Editor plugins',
     subTitle: 'Nx-aware autocompletion and refactoring.',
     svg: (
@@ -46,7 +46,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-pink-500',
-    link: '/using-nx/nx-cli#modifying-code',
+    link: '/plugin-features/use-code-generators',
     title: 'Powerful code generation',
     subTitle: 'Nx automates repeatable tasks and refactorings.',
     svg: (
@@ -74,7 +74,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-green-nx-base',
-    link: '/structure/dependency-graph',
+    link: '/core-features/explore-graph',
     title: 'Interactive visualizations',
     subTitle:
       'An evergreen architecture diagram to help explore and understand your workspace.',
@@ -97,7 +97,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-yellow-500',
-    link: '/generators/workspace-generators',
+    link: '/recipe/workspace-generators',
     title: 'Workspace generators',
     subTitle: 'Nx helps enforce best practices and organizational standards.',
     svg: (

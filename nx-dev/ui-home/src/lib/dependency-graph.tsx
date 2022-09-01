@@ -70,7 +70,7 @@ export function DependencyGraph(): JSX.Element {
                 and understand your workspace.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
-                <Link href="/structure/dependency-graph">
+                <Link href="/core-features/explore-graph">
                   <a
                     title="Nx graph tool to visally interact with monorepo dependencies"
                     className="bg-blue-nx-base hover:bg-blue-nx-dark inline-flex rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm transition"
