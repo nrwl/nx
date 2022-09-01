@@ -134,12 +134,11 @@ async function getUntrackedFiles(path: string) {
   const { stdout: untracked } = await spawnProcess(
     'git',
     [
-      'ls-files',
-      '--recurse-submodules',
-      '--other',
-      '-z',
-      '--exclude-standard',
-      '.',
+      'submodule',
+      'foreach',
+      '--recursive',
+      '--quiet',
+      'git ls-files --other -z --exclude-standard .'
     ],
     path
   );
