@@ -5,7 +5,6 @@ import { joinPathFragments } from 'nx/src/utils/path';
 import { names } from '@nrwl/devkit';
 import { addLoadChildren } from './add-load-children';
 import { addChildren } from './add-children';
-import { normalizeProjectName } from '../../utils/project';
 
 export async function addStandaloneComponent(
   tree: Tree,
@@ -15,7 +14,7 @@ export async function addStandaloneComponent(
     name: options.name,
     standalone: true,
     export: true,
-    project: normalizeProjectName(options.name, options.directory),
+    project: options.name,
   });
 
   if (options.routing) {
