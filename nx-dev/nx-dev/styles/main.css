@@ -52,6 +52,7 @@ iframe[src*='youtube'] {
   width: max-content;
 }
 
+.prose iframe[src^="https://staging.nx.app"],
 .prose iframe[src^="https://nx.app"]
 {
   border: 1px solid hsla(0, 0%, 85%, 1);
