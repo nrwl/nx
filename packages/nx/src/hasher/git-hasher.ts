@@ -131,7 +131,8 @@ async function getUnstagedFiles(path: string) {
 }
 
 async function getUntrackedFiles(path: string) {
-  const { stdout: untracked } = await spawnProcess(
+  const { stdout: untracked } = await spawnProcess('git', ['ls-files', '--other', '-z', '--exclude-standard', '.'], path);
+  const { stdout: untrackedInSubModules } = await spawnProcess(
     'git',
     [
       'submodule',
@@ -143,7 +144,9 @@ async function getUntrackedFiles(path: string) {
     path
   );
   const lines = untracked.split('\0').filter((f) => !!f);
-  return getGitHashForFiles(lines, path);
+  const additionalLines = untrackedInSubModules.split('\0').filter((f) => !!f);
+
+  return getGitHashForFiles([...lines,...additionalLines], path);
 }
 
 export async function getFileHashes(path: string): Promise<{
