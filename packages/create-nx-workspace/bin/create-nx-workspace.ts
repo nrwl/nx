@@ -61,6 +61,45 @@ enum Preset {
   Express = 'express',
 }
 
+class PromptMessages {
+  private messages = {
+    nxCloud: [
+      {
+        code: 'set-up-cloud',
+        message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
+      },
+      {
+        code: 'set-up-distributed-caching-ci',
+        message: `Enable distributed caching to make your CI faster`,
+      },
+      {
+        code: 'set-up-distributed-caching',
+        message: `Enable distributed caching to make your builds and tests faster`,
+      },
+    ],
+  };
+
+  private selectedMessages = {};
+
+  getPromptMessage(key: string): string {
+    if (this.selectedMessages[key] === undefined) {
+      if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
+        this.selectedMessages[key] = 0;
+      } else {
+        this.selectedMessages[key] = Math.floor(
+          Math.random() * this.messages[key].length
+        );
+      }
+    }
+    return this.messages[key][this.selectedMessages[key]].message;
+  }
+
+  codeOfSelectedPromptMessage(key: string): string {
+    if (!this.selectedMessages[key]) return null;
+    return this.messages[key][this.selectedMessages[key]].code;
+  }
+}
+
 const presetOptions: { name: Preset; message: string }[] = [
   {
     name: Preset.Apps,
@@ -126,6 +165,8 @@ const nxVersion = require('../package.json').version;
 const tsVersion = 'TYPESCRIPT_VERSION'; // This gets replaced with the typescript version in the root package.json during build
 const prettierVersion = 'PRETTIER_VERSION'; // This gets replaced with the prettier version in the root package.json during build
 
+const messages = new PromptMessages();
+
 export const commandsObject: yargs.Argv<Arguments> = yargs
   .wrap(yargs.terminalWidth())
   .parserConfiguration({
@@ -170,7 +211,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           type: 'string',
         })
         .option('nxCloud', {
-          describe: chalk.dim`Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
+          describe: chalk.dim(messages.getPromptMessage('nxCloud')),
           type: 'boolean',
         })
         .option('ci', {
@@ -679,12 +720,12 @@ async function determineNxCloud(
       .prompt([
         {
           name: 'NxCloud',
-          message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
+          message: messages.getPromptMessage('nxCloud'),
           type: 'autocomplete',
           choices: [
             {
               name: 'Yes',
-              hint: 'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
+              hint: 'I want faster builds',
             },
 
             {
@@ -905,9 +946,11 @@ async function setupCI(
 }
 
 function printNxCloudSuccessMessage(nxCloudOut: string) {
-  const bodyLines = nxCloudOut.split('Nx Cloud has been enabled')[1].trim();
+  const bodyLines = nxCloudOut
+    .split('Distributed caching via Nx Cloud has been enabled')[1]
+    .trim();
   output.note({
-    title: `Nx Cloud has been enabled`,
+    title: `Distributed caching via Nx Cloud has been enabled`,
     bodyLines: bodyLines.split('\n').map((r) => r.trim()),
   });
 }
@@ -1036,6 +1079,7 @@ async function recordWorkspaceCreationStats(useCloud: boolean) {
         command: 'create-nx-workspace',
         isCI: isCI(),
         useCloud,
+        meta: messages.codeOfSelectedPromptMessage('nxCloud'),
       });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
