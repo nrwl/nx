@@ -218,7 +218,7 @@ function AngularPane(): JSX.Element {
               >
                 <div className="flex w-full px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <Link href="/migration/migration-angular">
+                    <Link href="/recipe/migration-angular">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="text-md mb-0.5 font-bold text-gray-600">
@@ -259,9 +259,7 @@ function AngularPane(): JSX.Element {
                       d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                     />
                   </svg>
-                  <p className="text-xs font-bold">
-                    migration/migration-angular
-                  </p>
+                  <p className="text-xs font-bold">recipe/migration-angular</p>
                 </div>
               </motion.div>
               <motion.div
@@ -271,7 +269,7 @@ function AngularPane(): JSX.Element {
               >
                 <div className="flex w-full px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <Link href="/migration/migration-angularjs">
+                    <Link href="/recipe/migration-angularjs">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="text-md mb-0.5 font-bold text-gray-600">
@@ -312,7 +310,7 @@ function AngularPane(): JSX.Element {
                     />
                   </svg>
                   <p className="text-xs font-bold">
-                    migration/migration-angularjs
+                    recipe/migration-angularjs
                   </p>
                 </div>
               </motion.div>
@@ -449,7 +447,7 @@ function NodeJsPane(): JSX.Element {
               >
                 <div className="flex w-full px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <Link href="/migration/adding-to-monorepo">
+                    <Link href="/recipe/adding-to-monorepo">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="text-md mb-0.5 font-bold text-gray-600">
@@ -486,9 +484,7 @@ function NodeJsPane(): JSX.Element {
                       d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                     />
                   </svg>
-                  <p className="text-xs font-bold">
-                    migration/lerna-yarn-pnpm-npm
-                  </p>
+                  <p className="text-xs font-bold">recipe/adding-to-monorepo</p>
                 </div>
               </motion.div>
             </div>
@@ -617,7 +613,7 @@ function ReactPane(): JSX.Element {
               </svg>
               <h3 className="mt-2 font-semibold">
                 Next.js{' '}
-                <Link href="/next/overview">
+                <Link href="/packages/next">
                   <a className="text-sm font-normal italic text-gray-600 hover:underline">
                     (follow our Next.js guide)
                   </a>
@@ -655,7 +651,7 @@ function ReactPane(): JSX.Element {
               >
                 <div className="flex w-full px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <Link href="/migration/migration-cra">
+                    <Link href="/recipe/migration-cra">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="text-md mb-0.5 font-bold text-gray-600">
@@ -694,7 +690,7 @@ function ReactPane(): JSX.Element {
                       d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                     />
                   </svg>
-                  <p className="text-xs font-bold">migration/migration-cra</p>
+                  <p className="text-xs font-bold">recipe/migration-cra</p>
                 </div>
               </motion.div>
               <motion.div
@@ -704,7 +700,7 @@ function ReactPane(): JSX.Element {
               >
                 <div className="flex w-full px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <Link href="/migration/adding-to-monorepo">
+                    <Link href="/recipe/adding-to-monorepo">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="text-md mb-0.5 font-bold text-gray-600">
@@ -741,9 +737,7 @@ function ReactPane(): JSX.Element {
                       d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                     />
                   </svg>
-                  <p className="text-xs font-bold">
-                    migration/lerna-yarn-pnpm-npm
-                  </p>
+                  <p className="text-xs font-bold">recipe/adding-to-monorepo</p>
                 </div>
               </motion.div>
             </div>
@@ -836,36 +830,6 @@ function TypescriptPane(): JSX.Element {
                 />
               </div>
             </div>
-
-            <div className="relative my-6 pl-14 pr-4">
-              <svg
-                className="absolute left-4 top-0 h-6 w-6"
-                role="img"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-              >
-                <path d="M1.125 0C.502 0 0 .502 0 1.125v21.75C0 23.498.502 24 1.125 24h21.75c.623 0 1.125-.502 1.125-1.125V1.125C24 .502 23.498 0 22.875 0zm17.363 9.75c.612 0 1.154.037 1.627.111a6.38 6.38 0 0 1 1.306.34v2.458a3.95 3.95 0 0 0-.643-.361 5.093 5.093 0 0 0-.717-.26 5.453 5.453 0 0 0-1.426-.2c-.3 0-.573.028-.819.086a2.1 2.1 0 0 0-.623.242c-.17.104-.3.229-.393.374a.888.888 0 0 0-.14.49c0 .196.053.373.156.529.104.156.252.304.443.444s.423.276.696.41c.273.135.582.274.926.416.47.197.892.407 1.266.628.374.222.695.473.963.753.268.279.472.598.614.957.142.359.214.776.214 1.253 0 .657-.125 1.21-.373 1.656a3.033 3.033 0 0 1-1.012 1.085 4.38 4.38 0 0 1-1.487.596c-.566.12-1.163.18-1.79.18a9.916 9.916 0 0 1-1.84-.164 5.544 5.544 0 0 1-1.512-.493v-2.63a5.033 5.033 0 0 0 3.237 1.2c.333 0 .624-.03.872-.09.249-.06.456-.144.623-.25.166-.108.29-.234.373-.38a1.023 1.023 0 0 0-.074-1.089 2.12 2.12 0 0 0-.537-.5 5.597 5.597 0 0 0-.807-.444 27.72 27.72 0 0 0-1.007-.436c-.918-.383-1.602-.852-2.053-1.405-.45-.553-.676-1.222-.676-2.005 0-.614.123-1.141.369-1.582.246-.441.58-.804 1.004-1.089a4.494 4.494 0 0 1 1.47-.629 7.536 7.536 0 0 1 1.77-.201zm-15.113.188h9.563v2.166H9.506v9.646H6.789v-9.646H3.375z" />
-              </svg>
-              <h3 className="mt-2 font-semibold">
-                TypeScript/JavaScript Tooling{' '}
-                <Link href="/getting-started/nx-and-typescript">
-                  <a className="text-sm font-normal italic text-gray-600 hover:underline">
-                    (follow our Nx and TypeScript tutorial)
-                  </a>
-                </Link>
-              </h3>
-
-              <div className="mt-2 inline-flex max-w-full">
-                <InlineCommand
-                  language={'bash'}
-                  command={'npx create-nx-workspace --preset=ts'}
-                  callback={() =>
-                    sendCustomEvent('code-snippets', 'click', router.pathname)
-                  }
-                />
-              </div>
-            </div>
           </div>
         </div>
         <div className="mt-12 sm:mt-16 lg:col-start-2 lg:mt-0 lg:py-16">
@@ -881,67 +845,13 @@ function TypescriptPane(): JSX.Element {
             />
             <div className="mt-6 grid w-full grid-cols-1 items-center gap-4 lg:grid-cols-2">
               <motion.div
-                custom={0.2}
-                variants={opacityTranslateYVariant}
-                className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
-              >
-                <div className="flex w-full px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <Link href="/getting-started/nx-and-typescript">
-                      <a className="focus:outline-none">
-                        <span className="absolute inset-0" aria-hidden="true" />
-                        <p className="text-md mb-0.5 font-bold text-gray-600">
-                          Nx and TypeScript
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Follow this guide to learn how to build TypeScript
-                          packages with Nx
-                        </p>
-                      </a>
-                    </Link>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <div className="rounded-full bg-[#3178C6] p-2 text-white">
-                      <svg
-                        className="h-6 w-6 p-0.5"
-                        role="img"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="currentColor"
-                      >
-                        <path d="M1.125 0C.502 0 0 .502 0 1.125v21.75C0 23.498.502 24 1.125 24h21.75c.623 0 1.125-.502 1.125-1.125V1.125C24 .502 23.498 0 22.875 0zm17.363 9.75c.612 0 1.154.037 1.627.111a6.38 6.38 0 0 1 1.306.34v2.458a3.95 3.95 0 0 0-.643-.361 5.093 5.093 0 0 0-.717-.26 5.453 5.453 0 0 0-1.426-.2c-.3 0-.573.028-.819.086a2.1 2.1 0 0 0-.623.242c-.17.104-.3.229-.393.374a.888.888 0 0 0-.14.49c0 .196.053.373.156.529.104.156.252.304.443.444s.423.276.696.41c.273.135.582.274.926.416.47.197.892.407 1.266.628.374.222.695.473.963.753.268.279.472.598.614.957.142.359.214.776.214 1.253 0 .657-.125 1.21-.373 1.656a3.033 3.033 0 0 1-1.012 1.085 4.38 4.38 0 0 1-1.487.596c-.566.12-1.163.18-1.79.18a9.916 9.916 0 0 1-1.84-.164 5.544 5.544 0 0 1-1.512-.493v-2.63a5.033 5.033 0 0 0 3.237 1.2c.333 0 .624-.03.872-.09.249-.06.456-.144.623-.25.166-.108.29-.234.373-.38a1.023 1.023 0 0 0-.074-1.089 2.12 2.12 0 0 0-.537-.5 5.597 5.597 0 0 0-.807-.444 27.72 27.72 0 0 0-1.007-.436c-.918-.383-1.602-.852-2.053-1.405-.45-.553-.676-1.222-.676-2.005 0-.614.123-1.141.369-1.582.246-.441.58-.804 1.004-1.089a4.494 4.494 0 0 1 1.47-.629 7.536 7.536 0 0 1 1.77-.201zm-15.113.188h9.563v2.166H9.506v9.646H6.789v-9.646H3.375z"></path>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-2 flex w-full items-center space-x-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-gray-400">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
-                  <p className="text-xs font-bold">
-                    getting-started/nx-and-typescript
-                  </p>
-                </div>
-              </motion.div>
-              <motion.div
                 custom={0.6}
                 variants={opacityTranslateYVariant}
                 className="focus-within:ring-blue-nx-base relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
               >
                 <div className="flex w-full px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <Link href="/migration/adding-to-monorepo">
+                    <Link href="/recipe/adding-to-monorepo">
                       <a className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden="true" />
                         <p className="text-md mb-0.5 font-bold text-gray-600">
@@ -978,9 +888,7 @@ function TypescriptPane(): JSX.Element {
                       d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                     />
                   </svg>
-                  <p className="text-xs font-bold">
-                    migration/lerna-yarn-pnpm-npm
-                  </p>
+                  <p className="text-xs font-bold">recipe/adding-to-monorepo</p>
                 </div>
               </motion.div>
             </div>

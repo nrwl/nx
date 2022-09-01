@@ -72,7 +72,7 @@ export function VscodePlugin(): JSX.Element {
                 projects, construct commands, and much more.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
-                <Link href="/using-nx/console">
+                <Link href="/core-features/integrate-with-editors">
                   <a
                     title="Get a better monorepo experience with Nx Console"
                     className="bg-blue-nx-base hover:bg-blue-nx-dark inline-flex rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm transition"

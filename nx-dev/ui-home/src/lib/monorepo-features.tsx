@@ -13,7 +13,7 @@ const featureItems: {
 }[] = [
   {
     classNames: 'bg-pink-500',
-    link: '/using-nx/affected',
+    link: '/concepts/affected',
     title: 'Smart rebuilds',
     subTitle: 'Nx only rebuilds and retests what is affected by your change.',
     svg: (
@@ -35,7 +35,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-green-nx-base',
-    link: '/using-nx/mental-model#the-project-graph',
+    link: '/concepts/mental-model#the-project-graph',
     title: 'Project graph',
     subTitle:
       'Nx analyzes your workspace to improve performance and developer experience.',
@@ -58,7 +58,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-yellow-500',
-    link: '/using-nx/dte',
+    link: '/core-features/distribute-task-execution',
     title: 'Distributed task execution',
     subTitle:
       'Nx distributes any command across multiple machines without any configuration.',
@@ -81,7 +81,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-blue-500',
-    link: '/using-nx/caching',
+    link: '/concepts/how-caching-works',
     title: 'Computation caching',
     subTitle: 'Nx never rebuilds or tests the same code twice.',
     svg: (
