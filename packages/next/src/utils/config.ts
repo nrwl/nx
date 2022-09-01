@@ -35,7 +35,6 @@ export function createWebpackConfig(
   projectRoot: string,
   fileReplacements: FileReplacement[] = [],
   assets: any = null,
-  nxConfigOptions: WebpackConfigOptions = {},
   dependencies: DependentBuildableProjectNode[] = [],
   libsDir = ''
 ): (a, b) => Configuration {
@@ -51,12 +50,6 @@ export function createWebpackConfig(
       defaultLoaders: any;
     }
   ): Configuration {
-    // default `svgr` to `true`, as it used to be supported by default,
-    // before this option was introduced
-    if (typeof nxConfigOptions.svgr === 'undefined') {
-      nxConfigOptions.svgr = true;
-    }
-
     const mainFields = ['es2015', 'module', 'main'];
     const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
     let tsConfigPath = join(projectRoot, 'tsconfig.json');
@@ -93,43 +86,6 @@ export function createWebpackConfig(
       exclude: /node_modules/,
       use: [defaultLoaders.babel],
     });
-
-    if (nxConfigOptions.svgr) {
-      config.module.rules.push({
-        test: /\.svg$/,
-        oneOf: [
-          // If coming from JS/TS file, then transform into React component using SVGR.
-          {
-            issuer: /\.[jt]sx?$/,
-            use: [
-              {
-                loader: require.resolve('@svgr/webpack'),
-                options: {
-                  svgo: false,
-                  titleProp: true,
-                  ref: true,
-                },
-              },
-              {
-                loader: require.resolve('url-loader'),
-                options: {
-                  limit: 10000, // 10kB
-                  name: '[name].[hash:7].[ext]',
-                },
-              },
-            ],
-          },
-          // Fallback to plain URL loader if someone just imports the SVG and references it on the <img src> tag
-          {
-            loader: require.resolve('url-loader'),
-            options: {
-              limit: 10000, // 10kB
-              name: '[name].[hash:7].[ext]',
-            },
-          },
-        ],
-      });
-    }
 
     // Copy (shared) assets to `public` folder during client-side compilation
     if (!isServer && Array.isArray(assets) && assets.length > 0) {
@@ -175,7 +131,6 @@ export async function prepareConfig(
       options.root,
       options.fileReplacements,
       options.assets,
-      config.nx,
       dependencies,
       libsDir
     )(userWebpack ? userWebpack(a, b) : a, b);

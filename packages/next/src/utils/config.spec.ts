@@ -67,41 +67,7 @@ describe('Next.js webpack config builder', () => {
 
       // not much value in checking what they are
       // just check they get added
-      expect(config.module.rules.length).toBe(2);
-    });
-
-    it('should set svgr rule by default', () => {
-      const webpackConfig = createWebpackConfig('/root', 'apps/wibble', []);
-
-      const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
-        { defaultLoaders: {} }
-      );
-
-      const svgrRule = config.module.rules.find(
-        (rule) => rule !== '...' && rule.test.toString() === String(/\.svg$/)
-      );
-      expect(svgrRule).toBeTruthy();
-    });
-
-    it('should not set svgr rule when its turned off', () => {
-      const webpackConfig = createWebpackConfig(
-        '/root',
-        'apps/wibble',
-        [],
-        undefined,
-        { svgr: false }
-      );
-
-      const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
-        { defaultLoaders: {} }
-      );
-
-      const svgrRule = config.module.rules.find(
-        (rule) => rule !== '...' && rule.test.toString() === String(/\.svg$/)
-      );
-      expect(svgrRule).toBeFalsy();
+      expect(config.module.rules.length).toBe(1);
     });
   });
 
