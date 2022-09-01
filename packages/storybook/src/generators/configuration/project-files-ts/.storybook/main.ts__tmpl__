@@ -9,10 +9,12 @@ const config: StorybookConfig = {
   <% } %>
 
   stories: [
-    ...rootMain.stories,
+    ...rootMain.stories,<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    '../**/*.stories.mdx',
+    '../**/*.stories.@(js|jsx|ts|tsx)' <% } else { %>
     '../<%= projectDirectory %>/**/*.stories.mdx',
     '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx)'
-  ],
+  <% } %>],
   addons: [...(rootMain.addons || []) <% if(uiFramework === '@storybook/react') { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
     <% if(usesSwc && !isNextJs) { %>, 'storybook-addon-swc' <% } %>
     <% if(isNextJs) { %>, 'storybook-addon-swc', 

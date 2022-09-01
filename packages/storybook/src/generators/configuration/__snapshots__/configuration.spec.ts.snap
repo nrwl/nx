@@ -12,9 +12,8 @@ module.exports = {
   
   stories: [
     ...rootMain.stories,
-    '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
-  ],
+    '../**/*.stories.mdx',
+    '../**/*.stories.@(js|jsx|ts|tsx)' ],
   addons: [...rootMain.addons 
     
     
@@ -78,9 +77,8 @@ module.exports = {
   
   stories: [
     ...rootMain.stories,
-    '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
-  ],
+    '../**/*.stories.mdx',
+    '../**/*.stories.@(js|jsx|ts|tsx)' ],
   addons: [...rootMain.addons 
     
     
@@ -156,11 +154,11 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\", 
-    \\"../src/**/*.stories.js\\", 
-    \\"../src/**/*.stories.jsx\\", 
-    \\"../src/**/*.stories.tsx\\", 
-    \\"../src/**/*.stories.mdx\\", 
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
+    \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -218,11 +216,11 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\", 
-    \\"../src/**/*.stories.js\\", 
-    \\"../src/**/*.stories.jsx\\", 
-    \\"../src/**/*.stories.tsx\\", 
-    \\"../src/**/*.stories.mdx\\", 
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
+    \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -287,11 +285,11 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../components/**/*.stories.ts\\", 
-    \\"../components/**/*.stories.js\\", 
-    \\"../components/**/*.stories.jsx\\", 
-    \\"../components/**/*.stories.tsx\\", 
-    \\"../components/**/*.stories.mdx\\", 
+    \\"../components/**/*.stories.ts\\",
+    \\"../components/**/*.stories.js\\",
+    \\"../components/**/*.stories.jsx\\",
+    \\"../components/**/*.stories.tsx\\",
+    \\"../components/**/*.stories.mdx\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -349,11 +347,11 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\", 
-    \\"../src/**/*.stories.js\\", 
-    \\"../src/**/*.stories.jsx\\", 
-    \\"../src/**/*.stories.tsx\\", 
-    \\"../src/**/*.stories.mdx\\", 
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
+    \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -411,11 +409,11 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\", 
-    \\"../src/**/*.stories.js\\", 
-    \\"../src/**/*.stories.jsx\\", 
-    \\"../src/**/*.stories.tsx\\", 
-    \\"../src/**/*.stories.mdx\\", 
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
+    \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -473,11 +471,11 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\", 
-    \\"../src/**/*.stories.js\\", 
-    \\"../src/**/*.stories.jsx\\", 
-    \\"../src/**/*.stories.tsx\\", 
-    \\"../src/**/*.stories.mdx\\", 
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
+    \\"../src/**/*.stories.mdx\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -538,7 +536,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.js\\", 
     \\"../src/**/*.stories.jsx\\", 
     \\"../src/**/*.stories.tsx\\", 
-    \\"../src/**/*.stories.mdx\\", 
+    \\"../src/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
 "
@@ -598,7 +596,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.js\\", 
     \\"../src/**/*.stories.jsx\\", 
     \\"../src/**/*.stories.tsx\\", 
-    \\"../src/**/*.stories.mdx\\", 
+    \\"../src/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
 "
@@ -665,7 +663,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../components/**/*.stories.js\\", 
     \\"../components/**/*.stories.jsx\\", 
     \\"../components/**/*.stories.tsx\\", 
-    \\"../components/**/*.stories.mdx\\", 
+    \\"../components/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
 "
@@ -725,7 +723,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.js\\", 
     \\"../src/**/*.stories.jsx\\", 
     \\"../src/**/*.stories.tsx\\", 
-    \\"../src/**/*.stories.mdx\\", 
+    \\"../src/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
 "
@@ -785,7 +783,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.js\\", 
     \\"../src/**/*.stories.jsx\\", 
     \\"../src/**/*.stories.tsx\\", 
-    \\"../src/**/*.stories.mdx\\", 
+    \\"../src/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
 "
@@ -845,7 +843,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../src/**/*.stories.js\\", 
     \\"../src/**/*.stories.jsx\\", 
     \\"../src/**/*.stories.tsx\\", 
-    \\"../src/**/*.stories.mdx\\", 
+    \\"../src/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
 "
