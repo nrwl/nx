@@ -224,7 +224,7 @@ describe('Next.js Applications', () => {
     }
   }, 300_000);
 
-  it('should build with a next.config.js file in the dist folder', async () => {
+  it('should support custom next.config.js and output it in dist', async () => {
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
@@ -232,12 +232,27 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-      module.exports = {
-        webpack: (c) => {
-          console.log('NODE_ENV is', process.env.NODE_ENV);
-          return c;
-        }
-      }
+        const { withNx } = require('@nrwl/next/plugins/with-nx');
+        const nextConfig = {
+          nx: {
+            svgr: false,
+          },
+          webpack: (config, context) => {
+            // Make sure SVGR plugin is disabled if nx.svgr === false (see above)
+            const found = config.module.rules.find(r => {
+              if (!r.test || !r.test.test('test.svg')) return false;
+              if (!r.oneOf || !r.oneOf.use) return false;
+              return r.oneOf.use.some(rr => /svgr/.test(rr.loader));
+            });
+            if (found) throw new Error('Found SVGR plugin');
+
+            console.log('NODE_ENV is', process.env.NODE_ENV);
+            
+            return config;
+          }
+        };
+        
+        module.exports = withNx(nextConfig);
       `
     );
     // deleting `NODE_ENV` value, so that it's `undefined`, and not `"test"`

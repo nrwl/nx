@@ -123,6 +123,48 @@ export function withNx(nextConfig = {} as WithNxOptions) {
        */
       addNxEnvVariables(config);
 
+      /**
+       * 6. Add SVGR support if option is on.
+       */
+
+      // Default SVGR support to be on for projects.
+      if (nx.svgr !== false) {
+        config.module.rules.push({
+          test: /\.svg$/,
+          oneOf: [
+            // If coming from JS/TS file, then transform into React component using SVGR.
+            {
+              issuer: /\.[jt]sx?$/,
+              use: [
+                {
+                  loader: require.resolve('@svgr/webpack'),
+                  options: {
+                    svgo: false,
+                    titleProp: true,
+                    ref: true,
+                  },
+                },
+                {
+                  loader: require.resolve('url-loader'),
+                  options: {
+                    limit: 10000, // 10kB
+                    name: '[name].[hash:7].[ext]',
+                  },
+                },
+              ],
+            },
+            // Fallback to plain URL loader if someone just imports the SVG and references it on the <img src> tag
+            {
+              loader: require.resolve('url-loader'),
+              options: {
+                limit: 10000, // 10kB
+                name: '[name].[hash:7].[ext]',
+              },
+            },
+          ],
+        });
+      }
+
       return userWebpack(config, options);
     },
   };
