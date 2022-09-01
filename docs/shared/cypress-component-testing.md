@@ -1,16 +1,38 @@
 # Cypress Component Testing
 
-> Component testing is in a early preview and requires Cypress v10 and above.
+> Component testing requires Cypress v10 and above.
 > See our [guide for more information](/cypress/v10-migration-guide) to migrate to Cypress v10.
 
 Unlike [E2E testing](/packages/cypress), component testing does not create a new project. Instead, Cypress component testing is added
-directly to a project.
+directly to a project, like [Jest](/packages/jest)
+
+## Add Component Testing to a Project
+
+> Currently only [@nrwl/react](/packages/react/generators/cypress-component-configuration) and [@nrwl/angular](/packages/angular/generators/cypress-component-configuration) plugins support component testing
+
+Use the `cypress-component-configuration` generator from the respective plugin to add component testing to a project.
 
 ```bash
-nx g @nrwl/react:cypress-component-configuration --project=your-react-lib
+nx g @nrwl/react:cypress-component-configuration --project=your-project
+
+nx g @nrwl/angular:cypress-component-configuration --project=your-project
 ```
 
 You can optionally pass in `--generate-tests` to create component tests for all components within the library.
+
+Component testing leverage a build target within your workspace as the base for running the tests. The build target is usually an app within the workspace. By default, the generator attempts to find the build target for you base on your project usage, but you can manually specify the build target to use via the `--build-target` option.
+
+```bash
+nx g @nrwl/react:cypress-component-configuration --project=your-project --build-target=my-react-app:build
+
+nx g @nrwl/angular:cypress-component-configuration --project=your-project --build-target=my-ng-app:build
+```
+
+The build target option can be changed later via updating the `devServerTarget` option in the `component-test` target.
+
+{% callout type="warning" title="Executor Options" %}
+When using component testing make sure to set `skipServe: true` in the component test target options, otherwise `@nrwl/cypress` will attempt to run the build first which can slow down your component tests. `skipServe: true` is automatically set when using the `cypress-component-configuration` generator.
+{% /callout %}
 
 ## Testing Projects
 
