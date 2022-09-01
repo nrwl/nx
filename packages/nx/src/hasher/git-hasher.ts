@@ -146,7 +146,7 @@ async function getUntrackedFiles(path: string) {
   const lines = untracked.split('\0').filter((f) => !!f);
   const additionalLines = untrackedInSubModules.split('\0').filter((f) => !!f);
 
-  return getGitHashForFiles([...lines,...additionalLines], path);
+  return getGitHashForFiles([...lines, ...additionalLines], path);
 }
 
 export async function getFileHashes(path: string): Promise<{
