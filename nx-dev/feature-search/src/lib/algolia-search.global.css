@@ -1,52 +1,25 @@
 .DocSearch--active {
-  overflow: hidden !important;
+  @apply overflow-hidden !important;
 }
 
 .DocSearch-Container {
-  height: 100vh;
-  left: 0;
-  position: fixed;
-  top: 0;
-  width: 100vw;
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 1rem;
-}
-
-@screen sm {
-  .DocSearch-Container {
-    padding: 1.5rem;
-  }
-}
-
-@screen md {
-  .DocSearch-Container {
-    padding: 10vh;
-  }
-}
-
-@screen lg {
-  .DocSearch-Container {
-    padding: 12vh;
-  }
+  @apply fixed top-0 left-0 z-[50] flex h-screen w-screen cursor-auto flex-col bg-black/30 p-4 backdrop-blur-sm sm:p-6 md:p-[10vh] lg:p-[12vh];
 }
 
 .DocSearch-LoadingIndicator svg {
-  display: none;
+  @apply hidden;
 }
 
 .DocSearch-LoadingIndicator {
   display: none;
   width: 1.5rem;
   height: 1.5rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='9' stroke-width='2' stroke='%23cffafe' /%3E%3Cpath d='M3,12a9,9 0 1,0 18,0a9,9 0 1,0 -18,0' stroke-width='2' stroke='%232663eb' stroke-dasharray='56.5486677646' stroke-dashoffset='37.6991118431' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Ccircle cx='12' cy='12' r='9' stroke-width='2' stroke='%23cffafe' /%3E%3Cpath d='M3,12a9,9 0 1,0 18,0a9,9 0 1,0 -18,0' stroke-width='2' stroke='%2306b6d4' stroke-dasharray='56.5486677646' stroke-dashoffset='37.6991118431' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-size: 100% 100%;
 }
 
 .DocSearch-Container--Stalled .DocSearch-LoadingIndicator {
-  display: block;
+  @apply block;
 }
 
 .DocSearch-Modal {
@@ -56,42 +29,60 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border-radius: 1rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border-radius: theme('borderRadius.lg');
+  box-shadow: theme('boxShadow.lg');
   background: white;
 }
 
 .DocSearch-SearchBar {
-  flex: none;
-  border-bottom: 1px solid theme('colors.gray.200');
-  position: relative;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  margin: 0 1.5rem;
+  padding: 0 1rem;
+  @apply relative flex flex-none items-center border-b border-slate-100;
 }
 
 .DocSearch-Form {
-  flex: auto;
-  display: flex;
-  align-items: center;
-  min-width: 0;
+  @apply flex min-w-0 flex-auto items-center;
+}
+
+.DocSearch-Dropdown-Container {
+  @apply pb-6;
 }
 
 .DocSearch-Dropdown {
-  flex: auto;
-  border-bottom-left-radius: 1rem;
-  border-bottom-right-radius: 1rem;
-  padding: 0 1.5rem 1.5rem;
-  overflow: auto;
+  @apply flex-auto overflow-auto;
+}
+
+.DocSearch-Hit--Result {
+  @apply relative mx-6;
+}
+
+.DocSearch-Hit--Result.DocSearch-Hit--Child {
+  @apply ml-12;
+}
+
+.DocSearch-Hit--Result.DocSearch-Hit--Child::before {
+  content: '';
+  position: absolute;
+  top: -0.25rem;
+  bottom: -0.25rem;
+  left: -1rem;
+  width: 1px;
+  background: theme('colors.slate.200');
+}
+
+.DocSearch-Hit > a {
+  position: relative;
+  font-size: 0.875rem;
+  border-bottom: 1px solid theme('colors.slate.100');
+}
+
+.DocSearch-Hit--Result {
+  @apply border-b-0 !important;
 }
 
 .DocSearch-MagnifierLabel {
-  flex: none;
-  width: 1.5rem;
-  height: 1.5rem;
-  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z' stroke='%23143055' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
-  background-size: 100%;
+  @apply h-6 w-6 flex-none;
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m19 19-3.5-3.5' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='11' cy='11' r='6' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
 .DocSearch-MagnifierLabel svg {
@@ -105,19 +96,21 @@
 .DocSearch-Input {
   appearance: none;
   background: transparent;
-  height: 4.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #374151;
-  margin-left: 1rem;
-  margin-right: 1rem;
+  border: none !important;
+  box-shadow: none !important;
+  color: theme('colors.slate.900');
   flex: auto;
+  font-size: 1rem;
+  height: 3.5rem;
+  margin-left: 0.75rem;
+  margin-right: 1rem;
   min-width: 0;
 }
 
-.DocSearch-Input:focus {
-  outline: 2px dotted transparent;
-  border-color: #143157 !important;
+@screen sm {
+  .DocSearch-Input {
+    font-size: 0.875rem;
+  }
 }
 
 .DocSearch-Input::-webkit-search-cancel-button,
@@ -131,24 +124,20 @@
   display: none;
 }
 
-.DocSearch-Reset::before {
-  content: 'esc';
-}
-
 .DocSearch-Cancel {
+  appearance: none;
   flex: none;
   font-size: 0;
   border-radius: 0.375rem;
-  background-color: theme('colors.gray.50');
-  border: 1px solid theme('colors.gray.300');
-  padding: 0.125rem 0.375rem;
-}
-
-.DocSearch-Cancel::before {
-  content: 'esc';
-  color: theme('colors.gray.400');
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  padding: 0.25rem 0.375rem;
+  @apply shadow-sm ring-1 ring-slate-900/5 hover:shadow hover:ring-slate-900/10;
+  width: 1.75rem;
+  height: 1.5rem;
+  /* esc */
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='7' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M.506 6h3.931V4.986H1.736v-1.39h2.488V2.583H1.736V1.196h2.69V.182H.506V6ZM8.56 1.855h1.18C9.721.818 8.87.102 7.574.102c-1.276 0-2.21.705-2.205 1.762-.003.858.602 1.35 1.585 1.585l.634.159c.633.153.986.335.988.727-.002.426-.406.716-1.03.716-.64 0-1.1-.295-1.14-.878h-1.19c.03 1.259.931 1.91 2.343 1.91 1.42 0 2.256-.68 2.259-1.745-.003-.969-.733-1.483-1.744-1.71l-.523-.125c-.506-.117-.93-.304-.92-.722 0-.375.332-.65.934-.65.588 0 .949.267.994.724ZM15.78 2.219C15.618.875 14.6.102 13.254.102c-1.537 0-2.71 1.086-2.71 2.989 0 1.898 1.153 2.989 2.71 2.989 1.492 0 2.392-.992 2.526-2.063l-1.244-.006c-.117.623-.606.98-1.262.98-.883 0-1.483-.656-1.483-1.9 0-1.21.591-1.9 1.492-1.9.673 0 1.159.389 1.253 1.028h1.244Z' fill='%23334155'/%3E%3C/svg%3E") !important;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 57.1428571429% auto;
 }
 
 .DocSearch-Reset svg {
@@ -156,18 +145,20 @@
 }
 
 .DocSearch-Hit-source {
-  color: theme('colors.gray.600');
-  font-weight: bold;
   line-height: 1.5rem;
-  margin-top: 1.5rem;
-  margin-bottom: 1rem;
-  text-transform: capitalize;
+  font-weight: 600;
+  color: theme('colors.slate.900');
+  padding-top: 2.5rem;
+  margin: 0 1.5rem 1rem;
+}
+
+.DocSearch-Hits:first-child .DocSearch-Hit-source {
+  padding-top: 1.5rem;
 }
 
 .DocSearch-Hit-Container {
   display: flex;
   align-items: center;
-  height: 4rem;
 }
 
 .DocSearch-Hit-Tree {
@@ -179,13 +170,19 @@
   margin-right: 0.875rem;
 }
 
-.DocSearch-Hit-icon path {
-  stroke-width: 2px;
-  stroke: #71717a;
-}
+.DocSearch-Hit--Result .DocSearch-Hit-icon {
+  display: block;
+  flex: none;
+  margin-right: 1rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: theme('borderRadius.md');
+  /* hash icon */
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.75 1v10M8.25 1v10M1 3.75h10M1 8.25h10' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center center;
 
-.DocSearch-Hit[aria-selected='true'] .DocSearch-Hit-icon path {
-  stroke: white;
+  @apply bg-white shadow-sm ring-1 ring-slate-900/5;
 }
 
 .DocSearch-Hit-content-wrapper {
@@ -193,47 +190,51 @@
   display: flex;
   flex-direction: column-reverse;
   min-width: 0;
+  z-index: 1;
 }
 
 .DocSearch-Hit-path {
+  align-self: flex-start;
   font-size: 0.75rem;
-  line-height: 1rem;
-  font-weight: 500;
-  color: theme('colors.gray.500');
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: theme('colors.slate.700');
+  background: theme('colors.slate.100');
+  border-radius: 999px;
+  padding: 0 0.375rem;
 }
 
-.DocSearch-Hit[aria-selected='true'] .DocSearch-Hit-path {
-  color: theme('colors.blue.200');
+.DocSearch-Hit[aria-selected='true'] .DocSearch-Hit-icon {
+  @apply bg-transparent shadow-none ring-1 ring-white/30;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.75 1v10M8.25 1v10M1 3.75h10M1 8.25h10' stroke='%23fff' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 .DocSearch-Hit-title {
-  color: #374151;
-  line-height: 1.5rem;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.DocSearch-Hit[aria-selected='true'] .DocSearch-Hit-title {
-  color: white;
+  @apply truncate leading-6 text-slate-700;
 }
 
 .DocSearch-Hit-title + .DocSearch-Hit-path {
-  margin-bottom: 0.125rem;
+  @apply mb-1;
 }
 
 .DocSearch-Hit-action {
-  flex: none;
-  margin-left: 0.875rem;
+  @apply ml-3.5 flex-none;
+}
+
+.DocSearch-Hit-action svg {
+  @apply hidden;
+}
+
+.DocSearch-Hit-action {
+  @apply h-6 w-6;
 }
 
 .DocSearch-Hit-action-button {
-  display: flex;
+  @apply flex;
 }
 
 .DocSearch-Hit-action + .DocSearch-Hit-action {
-  margin-left: 0.5rem;
+  @apply ml-2;
 }
 
 .DocSearch-Hit-action path {
@@ -246,98 +247,77 @@
 }
 
 .DocSearch-Hit > a {
-  display: block;
-  background: theme('colors.gray.50');
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  padding: 0 1.25rem 0 1rem;
+  @apply block py-4 px-6;
 }
 
-.DocSearch-Hit[aria-selected='true'] > a {
-  background: theme('colors.blue.nx-base');
-}
-
-.DocSearch-Hit + .DocSearch-Hit {
-  margin-top: 0.5rem;
+.DocSearch-Hit--Result {
+  @apply py-3 px-4 !important;
 }
 
 .DocSearch-Hit {
-  position: relative;
+  @apply relative;
 }
 
-.DocSearch-Hit--Child {
-  padding-left: 1.75rem;
+.DocSearch-Hit:first-child > a {
+  @apply border-t border-slate-100;
 }
 
-.DocSearch-Hit--Child::before,
-.DocSearch-Hit--Child + .DocSearch-Hit:not(.DocSearch-Hit--Child)::before {
-  content: '';
-  position: absolute;
-  top: -0.25rem;
-  bottom: -0.25rem;
-  left: 0.5rem;
-  width: 1.25rem;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='200' viewBox='0 0 12 200' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 1 0 V 200 M 1 100 H 12' stroke='%23a1a1aa' stroke-width='2'/%3E%3C/svg%3E%0A");
-  background-repeat: no-repeat;
-  background-position: center left;
+.DocSearch-Hit--Result {
+  @apply border-t-0 !important;
 }
 
-.DocSearch-Hit--Child:last-child::before,
-.DocSearch-Hit--Child + .DocSearch-Hit:not(.DocSearch-Hit--Child)::before {
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='200' viewBox='0 0 12 200' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 1 0 V 89 Q 1 100 12 100' stroke='%23a1a1aa' stroke-width='2'/%3E%3C/svg%3E%0A");
+.DocSearch-Hit + .DocSearch-Hit .DocSearch-Hit--Result {
+  @apply mt-2;
 }
 
-.DocSearch-Hit:not(.DocSearch-Hit--Child) + .DocSearch-Hit--Child::after {
-  content: '';
-  position: absolute;
-  top: -0.25rem;
-  left: 0;
-  width: 1.25rem;
-  height: 0.25rem;
-  background: #fff;
+.DocSearch-Hit--Result {
+  @apply rounded-lg bg-slate-50;
 }
 
-.DocSearch-Hit--Child + .DocSearch-Hit:not(.DocSearch-Hit--Child)::before {
-  top: auto;
-  bottom: calc(100% + 0.25rem);
-  height: calc(100% + 0.25rem);
-  background-color: #fff;
+.DocSearch-Hit[aria-selected='true'] > a {
+  @apply bg-slate-50;
+}
+
+.DocSearch-Hit[aria-selected='true'] .DocSearch-Hit--Result {
+  @apply bg-blue-nx-base;
+}
+
+.DocSearch-Hit--FirstChild::before {
+  @apply top-0 !important;
+}
+
+.DocSearch-Hit--LastChild::before {
+  @apply bottom-0 !important;
 }
 
 .DocSearch-Hits mark {
   background: none;
-  color: theme('colors.blue.nx-dark');
+  @apply text-blue-nx-base border-blue-nx-base border-b-2 font-semibold;
+}
+
+.DocSearch-Hit-path mark {
+  @apply border-0;
 }
 
 .DocSearch-Hit[aria-selected='true'] mark {
   color: inherit;
-  text-decoration: underline;
+  border-bottom-color: currentColor;
 }
 
 .DocSearch-Footer {
-  flex: none;
-  display: flex;
-  justify-content: flex-end;
-  margin: 0 1.5rem;
-  border-top: 1px solid theme('colors.gray.200');
-  padding: 1.25rem 0;
+  @apply flex flex-none justify-end border-t border-slate-100 py-4 px-6;
 }
 
 .DocSearch-Commands {
-  display: none;
+  @apply hidden;
 }
 
 .DocSearch-Logo a {
-  display: flex;
-  align-items: center;
-  color: #5d6494;
-  font-size: 0.75rem;
-  font-weight: 500;
+  @apply flex items-center text-xs font-medium text-slate-400;
 }
 
 .DocSearch-Logo svg {
-  color: #5468ff;
-  margin-left: 0.5rem;
+  @apply ml-3 text-[#5468ff];
 }
 
 .DocSearch-Hit--deleting,
@@ -347,59 +327,122 @@
 }
 
 .DocSearch-NoResults .DocSearch-Screen-Icon {
-  display: none;
+  @apply hidden;
 }
 
 .DocSearch-Title {
-  font-size: theme('fontSize.lg');
-  line-height: theme('lineHeight.6');
-  margin-bottom: 2.5rem;
+  @apply mb-10 text-lg leading-6;
 }
 
 .DocSearch-Title strong {
-  color: theme('colors.gray.900');
-  font-weight: 500;
-}
-
-.DocSearch-StartScreen,
-.DocSearch-NoResults {
-  padding-top: 2.5rem;
-  padding-bottom: 1rem;
+  @apply font-normal text-slate-900;
 }
 
 .DocSearch-StartScreen .DocSearch-Help {
-  font-size: theme('fontSize.lg');
-  line-height: theme('lineHeight.6');
+  @apply py-16 px-6 text-center text-slate-400;
+}
+
+.DocSearch-NoResults {
+  @apply px-4 pt-10 pb-8;
+}
+
+.DocSearch-NoResults .DocSearch-Title {
+  text-align: center;
+  color: theme('colors.slate.400');
 }
 
 .DocSearch-NoResults-Prefill-List .DocSearch-Help {
-  font-size: theme('fontSize.xs');
-  line-height: theme('lineHeight.4');
-  letter-spacing: theme('letterSpacing.wide');
-  text-transform: uppercase;
-  font-weight: 600;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid theme('colors.gray.200');
+  @apply mb-3 text-sm font-semibold leading-6 text-slate-900;
 }
 
-.DocSearch-NoResults-Prefill-List li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid theme('colors.gray.200');
+.DocSearch-NoResults-Prefill-List ul {
+  @apply rounded-lg border border-slate-200 bg-slate-50;
 }
 
 .DocSearch-NoResults-Prefill-List button {
-  font-weight: 500;
-  color: theme('colors.blue.600');
+  padding: 0.5rem 0.75rem;
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: theme('fontSize.sm');
+  line-height: theme('lineHeight.6');
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m11 9 3 3-3 3' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+
+  @apply text-slate-700;
+}
+
+.DocSearch-NoResults-Prefill-List li + li button {
+  @apply border-t border-slate-200;
 }
 
 .DocSearch-NoResults-Prefill-List + .DocSearch-Help {
-  font-size: theme('fontSize.sm');
-  line-height: theme('lineHeight.5');
-  margin-top: 1rem;
+  @apply mt-3 text-xs leading-6;
 }
 
 .DocSearch-NoResults-Prefill-List + .DocSearch-Help a {
-  box-shadow: theme('boxShadow.sm');
-  color: theme('colors.blue.700');
-  font-weight: 500;
+  @apply font-semibold text-blue-500;
+}
+
+.DocSearch-Hit-action [title='Save this search'],
+.DocSearch-Hit-action [title='Remove this search from history'],
+.DocSearch-Hit-action [title='Remove this search from favorites'] {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.DocSearch-Hit-action [title='Save this search'] svg,
+.DocSearch-Hit-action [title='Remove this search from history'] svg,
+.DocSearch-Hit-action [title='Remove this search from favorites'] svg {
+  display: none;
+}
+
+.DocSearch-Hit-action [title='Save this search'] {
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m12 5 2 5h5l-4 4 2 5-5-3-5 3 2-5-4-4h5l2-5Z' stroke='%23CBD5E1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.DocSearch-Hit-action [title='Save this search']:hover {
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m12 5 2 5h5l-4 4 2 5-5-3-5 3 2-5-4-4h5l2-5Z' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.DocSearch-Hit-action [title='Remove this search from history'] {
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M17 7 7 17M7 7l10 10' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.DocSearch-Hit-action [title='Remove this search from history']:hover {
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M17 7 7 17M7 7l10 10' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.DocSearch-Hit-action [title='Remove this search from favorites']::before {
+  @apply pointer-events-none absolute inset-0 bg-slate-50 content-[''];
+}
+
+.DocSearch-Hit[aria-selected='true']
+  [title='Remove this search from favorites']::before {
+  @apply bg-slate-100;
+}
+
+.DocSearch-Hit-action [title='Remove this search from favorites']::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  width: calc(4.5rem + 1px);
+  height: 1.5rem;
+  margin-left: calc(-3rem - 1px);
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m12 5 2 5h5l-4 4 2 5-5-3-5 3 2-5-4-4h5l2-5Z' fill='%23143157' stroke='%23143157' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='1' height='1' fill='%23e2e8f0' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M17 7 7 17M7 7l10 10' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, repeat-y, no-repeat;
+  background-position: left, center, right;
+}
+
+.DocSearch-Hit-action [title='Remove this search from favorites']:hover::after {
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m12 5 2 5h5l-4 4 2 5-5-3-5 3 2-5-4-4h5l2-5Z' fill='%23143157' stroke='%23143157' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='1' height='1' fill='%23e2e8f0' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M17 7 7 17M7 7l10 10' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.DocSearch-Hit-action + .DocSearch-Hit-action {
+  @apply ml-3 border-l border-slate-200 pl-3;
 }

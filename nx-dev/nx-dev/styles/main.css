@@ -1,12 +1,13 @@
 @tailwind base;
 
 /*! purgecss start ignore */
-@import 'nx-dev/feature-search/src/lib/algolia-search.global.css';
 @import 'highlight.js/styles/github-gist.css';
 /*! purgecss end ignore */
 
 @tailwind components;
 @tailwind utilities;
+
+@import 'nx-dev/feature-search/src/lib/algolia-search.global.css';
 
 svg {
   shape-rendering: auto;
