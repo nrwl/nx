@@ -4,8 +4,10 @@ describe('Redirect rules configuration', () => {
   describe('Safety checks', () => {
     it('should not redirect to itself', () => {
       const rules = {
-        ...redirectRules.overviewUrls,
+        ...redirectRules.cliUrls,
+        ...redirectRules.diataxis,
         ...redirectRules.guideUrls,
+        ...redirectRules.overviewUrls,
         ...redirectRules.schemaUrls,
       };
 

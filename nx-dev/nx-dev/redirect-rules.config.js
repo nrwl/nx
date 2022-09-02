@@ -144,7 +144,6 @@ const schemaUrls = {
 
 /**
  * Guide specific rules (added 2022-01-04)
- * Added more 2022-08-26
  */
 const guideUrls = {
   '/core-concepts/configuration': '/configuration/projectjson',
@@ -159,6 +158,12 @@ const guideUrls = {
   '/using-nx/nx-devkit': '/extending-nx/nx-devkit',
   '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
   '/guides/lerna-and-nx': '/migration/lerna-and-nx',
+};
+
+/**
+ * Diataxis restructure specific rules (added 2022-09-02)
+ */
+const diataxis = {
   '/getting-started/nx-setup': '/getting-started/intro',
   '/getting-started/nx-core': '/getting-started/core-tutorial',
   '/getting-started/nx-and-typescript': '/getting-started/intro',
@@ -176,6 +181,10 @@ const guideUrls = {
   '/using-nx/updating-nx': '/core-features/automate-updating-dependencies',
   '/using-nx/nx-nodejs-typescript-version-matrix':
     '/workspace/nx-nodejs-typescript-version-matrix',
+  '/extending-nx/nx-devkit': '/plugin-features/create-your-own-plugin',
+  '/extending-nx/project-inference-plugins':
+    '/recipe/project-inference-plugins',
+  '/extending-nx/project-graph-plugins': '/recipe/project-graph-plugins',
   '/migration/lerna-and-nx': '/recipe/lerna-and-nx',
   '/migration/adding-to-monorepo': '/recipe/adding-to-monorepo',
   '/migration/migration-cra': '/recipe/migration-cra',
@@ -183,6 +192,67 @@ const guideUrls = {
   '/migration/migration-angularjs': '/recipe/migration-angularjs',
   '/migration/preserving-git-histories': '/recipe/preserving-git-histories',
   '/migration/manual': '/recipe/manual',
+  '/executors/using-builders': '/plugin-features/use-task-executors',
+  '/executors/run-commands-builder': '/recipe/run-commands-executor',
+  '/executors/creating-custom-builders': '/recipe/creating-custom-executors',
+  '/generators/using-generators': '/plugin-features/use-code-generators',
+  '/generators/workspace-generators': '/recipe/workspace-generators',
+  '/generators/composing-generators': '/recipe/composing-generators',
+  '/generators/generator-options': '/recipe/generator-options',
+  '/generators/creating-files': '/recipe/creating-files',
+  '/generators/modifying-files': '/recipe/modifying-files',
+  '/structure/applications-and-libraries':
+    'more-concepts/applications-and-libraries',
+  '/structure/creating-libraries': '/more-concepts/creating-libraries',
+  '/structure/library-types': '/more-concepts/library-types',
+  '/structure/grouping-libraries': '/more-concepts/grouping-libraries',
+  '/structure/buildable-and-publishable-libraries':
+    '/more-concepts/buildable-and-publishable-libraries',
+  '/structure/monorepo-tags': '/core-features/enforce-project-boundaries',
+  '/structure/dependency-graph': '/core-features/explore-graph',
+  '/structure/project-graph-plugins': '/recipe/project-graph-plugins',
+  '/ci/monorepo-ci-azure': '/recipe/monorepo-ci-azure',
+  '/ci/monorepo-ci-circle-ci': '/recipe/monorepo-ci-circle-ci',
+  '/ci/monorepo-ci-github-actions': '/recipe/monorepo-ci-github-actions',
+  '/ci/monorepo-ci-jenkins': '/recipe/monorepo-ci-jenkins',
+  '/ci/monorepo-ci-gitlab': '/recipe/monorepo-ci-gitlab',
+  '/ci/monorepo-ci-bitbucket-pipelines':
+    '/recipe/monorepo-ci-bitbucket-pipelines',
+  '/ci/distributed-builds': '/concepts/dte', // 👀
+  '/ci/incremental-builds': '/more-concepts/incremental-builds',
+  '/ci/setup-incremental-builds-angular':
+    '/recipe/setup-incremental-builds-angular',
+  '/guides/turbo-and-nx': '/more-concepts/turbo-and-nx',
+  '/guides/why-monorepos': '/more-concepts/why-monorepos',
+  '/guides/adding-assets-react': '/recipe/adding-assets-react',
+  '/guides/environment-variables': '/reference/environment-variables',
+  '/guides/monorepo-nx-enterprise': '/more-concepts/monorepo-nx-enterprise',
+  '/guides/performance-profiling': '/recipe/performance-profiling',
+  '/guides/eslint': '/recipe/eslint',
+  '/guides/customize-webpack': '/recipe/customize-webpack',
+  '/guides/nx-daemon': '/more-concepts/nx-daemon',
+  '/guides/js-and-ts': '/recipe/js-and-ts',
+  '/guides/browser-support': '/recipe/browser-support',
+  '/guides/react-native': '/recipe/react-native',
+  '/guides/deploy-nextjs-to-vercel': '/recipe/deploy-nextjs-to-vercel',
+  '/guides/webpack-5': '/recipe/webpack-5',
+  '/guides/using-tailwind-css-in-react': '/recipe/using-tailwind-css-in-react',
+  '/guides/react-18': '/recipe/react-18',
+  '/guides/using-tailwind-css-with-angular-projects':
+    '/recipe/using-tailwind-css-with-angular-projects',
+  '/guides/misc-ngrx': '/recipe/misc-ngrx',
+  '/guides/misc-data-persistence': '/recipe/misc-data-persistence',
+  '/guides/nx-devkit-angular-devkit': '/more-concepts/nx-devkit-angular-devkit',
+  '/module-federation/faster-builds': '/recipe/faster-builds',
+  '/module-federation/micro-frontend-architecture':
+    '/more-concepts/micro-frontend-architecture',
+  '/module-federation/dynamic-module-federation-with-angular':
+    '/recipe/dynamic-module-federation-with-angular',
+  '/examples/nx-examples': '/recipe/nx-examples',
+  '/examples/react-nx': '/recipe/react-nx',
+  '/examples/apollo-react': '/recipe/apollo-react',
+  '/examples/caching': '/recipe/caching',
+  '/examples/dte': '/recipe/dte',
 };
 
 /**
@@ -236,8 +306,9 @@ const cliUrls = {
  * Public export API
  */
 module.exports = {
-  schemaUrls,
+  cliUrls,
+  diataxis,
   guideUrls,
   overviewUrls,
-  cliUrls,
+  schemaUrls,
 };
