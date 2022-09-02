@@ -131,7 +131,11 @@ async function getUnstagedFiles(path: string) {
 }
 
 async function getUntrackedFiles(path: string) {
-  const { stdout: untracked } = await spawnProcess('git', ['ls-files', '--other', '-z', '--exclude-standard', '.'], path);
+  const { stdout: untracked } = await spawnProcess(
+    'git',
+    ['ls-files', '--other', '-z', '--exclude-standard', '.'],
+    path
+  );
   const { stdout: untrackedInSubModules } = await spawnProcess(
     'git',
     [
@@ -139,7 +143,7 @@ async function getUntrackedFiles(path: string) {
       'foreach',
       '--recursive',
       '--quiet',
-      'git ls-files --other -z --exclude-standard .'
+      'git ls-files --other -z --exclude-standard .',
     ],
     path
   );
