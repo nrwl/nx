@@ -131,11 +131,13 @@ async function getUnstagedFiles(path: string) {
 }
 
 async function getUntrackedFiles(path: string) {
+  //this command will list all parent repo's untracked files
   const { stdout: untracked } = await spawnProcess(
     'git',
     ['ls-files', '--other', '-z', '--exclude-standard', '.'],
     path
   );
+  //and this command will only list nested submodules untracked files
   const { stdout: untrackedInSubModules } = await spawnProcess(
     'git',
     [
