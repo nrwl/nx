@@ -9,6 +9,7 @@
     "@angular-eslint/",
     "@schematics",
     "@phenomnomnominal/tsquery",
+    "@typescript-eslint/",
     "chalk",
     "chokidar",
     "ignore",

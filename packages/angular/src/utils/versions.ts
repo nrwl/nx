@@ -9,7 +9,7 @@ export const zoneJsVersion = '~0.11.4';
 export const angularJsVersion = '1.7.9';
 export const tsLibVersion = '^2.3.0';
 
-export const angularEslintVersion = '~14.0.0';
+export const angularEslintVersion = '~14.0.4';
 export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';
 export const postcssImportVersion = '~14.1.0';
@@ -18,7 +18,7 @@ export const postcssUrlVersion = '~10.1.3';
 export const autoprefixerVersion = '^10.4.0';
 export const tsNodeVersion = '10.9.1';
 
-export const jestPresetAngularVersion = '~12.2.0';
+export const jestPresetAngularVersion = '~12.2.2';
 export const protractorVersion = '~7.0.0';
 export const karmaVersion = '~6.4.0';
 export const karmaChromeLauncherVersion = '~3.1.0';

@@ -11,6 +11,13 @@ import {
 } from '@nrwl/e2e/utils';
 import * as ts from 'typescript';
 
+/**
+ * Importing this helper from @typescript-eslint/type-utils to ensure
+ * compatibility with TS < 4.8 due to the API change in TS4.8.
+ * This helper allows for support of TS <= 4.8.
+ */
+import { getDecorators, getModifiers } from '@typescript-eslint/type-utils';
+
 describe('Linter', () => {
   it('should handle linting errors', () => {
     const myapp = uniq('myapp');
@@ -509,8 +516,8 @@ function updateGeneratedRuleImplementation(
         ) {
           return ts.factory.updateMethodDeclaration(
             node,
-            node.decorators,
-            node.modifiers,
+            getDecorators(node),
+            getModifiers(node),
             node.asteriskToken,
             node.name,
             node.questionToken,

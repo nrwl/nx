@@ -18,6 +18,13 @@ import {
   SourceFile,
 } from 'typescript';
 
+/**
+ * Importing this helper from @typescript-eslint/type-utils to ensure
+ * compatibility with TS < 4.8 due to the API change in TS4.8.
+ * This helper allows for support of TS <= 4.8.
+ */
+import { getDecorators } from '@typescript-eslint/type-utils';
+
 type ngModuleDecoratorProperty =
   | 'imports'
   | 'providers'
@@ -52,7 +59,7 @@ export function insertNgModuleProperty(
 
   const ngModuleClassDeclaration = findDecoratedClass(sourceFile, ngModuleName);
 
-  const ngModuleDecorator = ngModuleClassDeclaration.decorators.find(
+  const ngModuleDecorator = getDecorators(ngModuleClassDeclaration).find(
     (decorator) =>
       isCallExpression(decorator.expression) &&
       isIdentifier(decorator.expression.expression) &&
@@ -160,16 +167,18 @@ function getNamedImport(coreImport: ImportDeclaration, importName: string) {
 
 function findDecoratedClass(sourceFile: SourceFile, ngModuleName: __String) {
   const classDeclarations = sourceFile.statements.filter(isClassDeclaration);
-  return classDeclarations.find(
-    (declaration) =>
-      declaration.decorators &&
-      declaration.decorators.some(
+  return classDeclarations.find((declaration) => {
+    const decorators = getDecorators(declaration);
+    if (decorators) {
+      return decorators.some(
         (decorator) =>
           isCallExpression(decorator.expression) &&
           isIdentifier(decorator.expression.expression) &&
           decorator.expression.expression.escapedText === ngModuleName
-      )
-  );
+      );
+    }
+    return undefined;
+  });
 }
 
 function findPropertyAssignment(
