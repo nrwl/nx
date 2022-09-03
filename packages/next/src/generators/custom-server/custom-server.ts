@@ -1,5 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import {
+  addDependenciesToPackageJson,
   updateJson,
   convertNxGenerator,
   generateFiles,
@@ -10,11 +11,12 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { CustomServerSchema } from './schema';
+import { nxVersion } from '../../utils/versions';
 
 export async function customServerGenerator(
   host: Tree,
   options: CustomServerSchema
-): Promise<void> {
+) {
   const project = readProjectConfiguration(host, options.project);
 
   if (project.targets?.build?.executor !== '@nrwl/next:build') {
@@ -104,6 +106,14 @@ export async function customServerGenerator(
     ];
     return json;
   });
+
+  const installTask = addDependenciesToPackageJson(
+    host,
+    {},
+    { '@nrwl/devkit': nxVersion }
+  );
+
+  return installTask;
 }
 
 export const customServerSchematic = convertNxGenerator(customServerGenerator);

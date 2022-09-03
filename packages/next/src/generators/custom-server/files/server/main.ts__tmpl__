@@ -10,6 +10,25 @@ import { createServer } from 'http';
 import { parse } from 'url';
 import * as path from 'path';
 import next from 'next';
+import {
+  ExecutorContext,
+  ProjectConfiguration,
+  parseTargetString,
+  readJsonFile,
+  readTargetOptions,
+  workspaceLayout,
+} from '@nrwl/devkit';
+import { NextBuildBuilderOptions } from '@nrwl/next';
+import { prepareConfig } from '@nrwl/next/src/utils/config';
+import {
+  PHASE_DEVELOPMENT_SERVER,
+  PHASE_PRODUCTION_SERVER,
+} from '@nrwl/next/src/utils/constants';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from 'nx/src/project-graph/project-graph';
+import { workspaceRoot} from 'nx/src/utils/workspace-root';
 
 // Next.js server options:
 // - The environment variable is set by `@nrwl/next:server` when running the dev server.
@@ -23,8 +42,36 @@ const dev = process.env.NODE_ENV === 'development';
 const hostname = process.env.HOST || 'localhost';
 const port = process.env.PORT ? parseInt(process.env.PORT) : 4200;
 
+async function createNextApp() {
+  const projectConfig = readJsonFile<ProjectConfiguration>(`${dir}/project.json`);
+  const projectGraph = await createProjectGraphAsync();
+  const workspaceConfig =
+    readProjectsConfigurationFromProjectGraph(projectGraph);
+  const context: ExecutorContext = {
+    root: workspaceRoot,
+    cwd: process.cwd(),
+    workspace: workspaceConfig,
+    isVerbose: false,
+    projectGraph,
+  };
+  const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
+    parseTargetString(projectConfig.targets?.['serve']?.options?.['buildTarget'] ?? ''),
+    context
+  );
+  const conf = await prepareConfig(
+    dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,
+    buildOptions,
+    context,
+    [],
+    path.join(context.root, workspaceLayout().libsDir)
+  );
+
+  return next({ dev, dir, conf });
+}
+
 async function main() {
-  const nextApp = next({ dev, dir });
+  const nextApp = await createNextApp();
+
   const handle = nextApp.getRequestHandler();
 
   await nextApp.prepare();
@@ -43,4 +90,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-
