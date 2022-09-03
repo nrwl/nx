@@ -1,8 +1,10 @@
 import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
+  readWorkspaceConfiguration,
   removeDependenciesFromPackageJson,
   updateJson,
+  updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 import {
@@ -15,7 +17,7 @@ import {
 } from '../../utils/versions';
 
 import { Linter } from '../utils/linter';
-import { containsEslint } from '../utils/eslint-file';
+import { findEslintFile } from '../utils/eslint-file';
 import { ESLint } from 'eslint';
 
 export interface LinterInitOptions {
@@ -180,8 +182,31 @@ function initTsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
     : () => {};
 }
 
+function addTargetDefaults(tree: Tree) {
+  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+
+  const productionFileSet = workspaceConfiguration.namedInputs?.production;
+  if (productionFileSet) {
+    // Remove .eslintrc.json
+    productionFileSet.push('!{projectRoot}/.eslintrc.json');
+    // Dedupe and set
+    workspaceConfiguration.namedInputs.production = Array.from(
+      new Set(productionFileSet)
+    );
+  }
+
+  workspaceConfiguration.targetDefaults ??= {};
+
+  workspaceConfiguration.targetDefaults.lint ??= {};
+  workspaceConfiguration.targetDefaults.lint.inputs ??= [
+    'default',
+    `{workspaceRoot}/.eslintrc.json`,
+  ];
+  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+}
+
 function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
-  if (containsEslint(tree)) {
+  if (findEslintFile(tree)) {
     return () => {};
   }
 
@@ -194,6 +219,7 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
     '.eslintrc.json',
     getGlobalEsLintConfiguration(options.unitTestRunner)
   );
+  addTargetDefaults(tree);
 
   if (tree.exists('.vscode/extensions.json')) {
     updateJson(tree, '.vscode/extensions.json', (json) => {

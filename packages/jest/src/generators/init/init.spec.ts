@@ -1,4 +1,11 @@
-import { readJson, stripIndents, Tree, writeJson } from '@nrwl/devkit';
+import {
+  NxJsonConfiguration,
+  readJson,
+  stripIndents,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { jestInitGenerator } from './init';
 
@@ -37,6 +44,61 @@ describe('jest', () => {
     tree.write('jest.config.ts', `test`);
     jestInitGenerator(tree, {});
     expect(tree.read('jest.config.ts', 'utf-8')).toEqual('test');
+  });
+
+  it('should add target defaults for test', async () => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.namedInputs ??= {};
+      json.namedInputs.production = ['default'];
+      return json;
+    });
+
+    jestInitGenerator(tree, {});
+
+    const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
+      .namedInputs.production;
+    const testDefaults = readJson<NxJsonConfiguration>(tree, 'nx.json')
+      .targetDefaults.test;
+    expect(productionFileSet).toContain(
+      '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
+    );
+    expect(productionFileSet).toContain('!{projectRoot}/tsconfig.spec.json');
+    expect(productionFileSet).toContain('!{projectRoot}/jest.config.[jt]s');
+    expect(testDefaults).toEqual({
+      inputs: ['default', '^production', '{workspaceRoot}/jest.preset.js'],
+    });
+  });
+
+  it('should not alter target defaults if jest.preset.js already exists', async () => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.namedInputs ??= {};
+      json.namedInputs.production = ['default', '^production'];
+      return json;
+    });
+
+    jestInitGenerator(tree, {});
+
+    let nxJson: NxJsonConfiguration;
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.namedInputs.production = [
+        'default',
+        '^production',
+        '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+        '!{projectRoot}/**/*.md',
+      ];
+      json.targetDefaults.test = {
+        inputs: [
+          'default',
+          '^production',
+          '{workspaceRoot}/jest.preset.js',
+          '{workspaceRoot}/testSetup.ts',
+        ],
+      };
+      nxJson = json;
+      return json;
+    });
+    jestInitGenerator(tree, {});
+    expect(readJson<NxJsonConfiguration>(tree, 'nx.json')).toEqual(nxJson);
   });
 
   it('should add dependencies', async () => {

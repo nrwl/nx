@@ -2,10 +2,12 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   GeneratorCallback,
+  readWorkspaceConfiguration,
   removeDependenciesFromPackageJson,
   stripIndents,
   Tree,
   updateJson,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import {
   babelJestVersion,
@@ -26,9 +28,9 @@ const schemaDefaults = {
   js: false,
 } as const;
 
-function createJestConfig(host: Tree, js: boolean = false) {
+function createJestConfig(tree: Tree, js: boolean = false) {
   // if the root ts config already exists then don't make a js one or vice versa
-  if (!host.exists('jest.config.ts') && !host.exists('jest.config.js')) {
+  if (!tree.exists('jest.config.ts') && !tree.exists('jest.config.js')) {
     const contents = js
       ? stripIndents`
       const { getJestProjects } = require('@nrwl/jest');
@@ -42,19 +44,55 @@ function createJestConfig(host: Tree, js: boolean = false) {
       export default {
        projects: getJestProjects()
       };`;
-    host.write(`jest.config.${js ? 'js' : 'ts'}`, contents);
+    tree.write(`jest.config.${js ? 'js' : 'ts'}`, contents);
   }
 
-  if (!host.exists('jest.preset.js')) {
+  if (!tree.exists('jest.preset.js')) {
     // preset is always js file.
-    host.write(
+    tree.write(
       `jest.preset.js`,
       `
       const nxPreset = require('@nrwl/jest/preset').default;
      
       module.exports = { ...nxPreset }`
     );
+
+    addTestInputs(tree);
   }
+}
+
+function addTestInputs(tree: Tree) {
+  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+
+  const productionFileSet = workspaceConfiguration.namedInputs?.production;
+  if (productionFileSet) {
+    // This is one of the patterns in the default jest patterns
+    productionFileSet.push(
+      // Remove spec, test, and snapshots from the production fileset
+      '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+      // Remove tsconfig.spec.json
+      '!{projectRoot}/tsconfig.spec.json',
+      // Remove jest.config.js/ts
+      '!{projectRoot}/jest.config.[jt]s'
+    );
+    // Dedupe and set
+    workspaceConfiguration.namedInputs.production = Array.from(
+      new Set(productionFileSet)
+    );
+  }
+
+  // Test targets depend on all their project's sources + production sources of dependencies
+  workspaceConfiguration.targetDefaults ??= {};
+  workspaceConfiguration.targetDefaults.test ??= {};
+  workspaceConfiguration.targetDefaults.test.inputs ??= [
+    'default',
+    productionFileSet ? '^production' : '^default',
+  ];
+  workspaceConfiguration.targetDefaults.test.inputs.push(
+    '{workspaceRoot}/jest.preset.js'
+  );
+
+  updateWorkspaceConfiguration(tree, workspaceConfiguration);
 }
 
 function updateDependencies(tree: Tree, options: NormalizedSchema) {

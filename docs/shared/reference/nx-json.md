@@ -25,11 +25,11 @@ The following is an expanded version showing all options. Your `nx.json` will li
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
-    "prod": ["!{projectRoot}/**/*.spec.tsx"]
+    "production": ["!{projectRoot}/**/*.spec.tsx"]
   },
   "targetDefaults": {
     "build": {
-      "inputs": ["prod", "^prod"],
+      "inputs": ["production", "^production"],
       "dependsOn": ["^build"]
     }
   },
@@ -127,7 +127,7 @@ like this (which applies to every project):
 "test": {
   "inputs": [
     "default",
-    "^prod"
+    "^production"
   ]
 }
 ```
@@ -137,7 +137,10 @@ And projects can define their prod fileset, without having to redefine the input
 ```json title="project.json"
 {
   "namedInputs": {
-    "prod": ["!{projectRoot}/**/*.test.js", "{workspacRoot}/jest.config.js"]
+    "production": [
+      "!{projectRoot}/**/*.test.js",
+      "{workspacRoot}/jest.config.js"
+    ]
   }
 }
 ```

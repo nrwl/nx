@@ -5,10 +5,12 @@ import {
   offsetFromRoot,
   readJson,
   readProjectConfiguration,
+  readWorkspaceConfiguration,
   toJS,
   Tree,
   updateJson,
   updateProjectConfiguration,
+  updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 import { Linter } from '@nrwl/linter';
@@ -262,6 +264,31 @@ export function createRootStorybookDir(
   generateFiles(tree, templatePath, '', {
     rootTsConfigPath: getRootTsConfigPathInTree(tree),
   });
+
+  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+
+  const hasProductionFileset = !!workspaceConfiguration.namedInputs?.production;
+  if (hasProductionFileset) {
+    workspaceConfiguration.namedInputs.production.push(
+      '!{projectRoot}/.storybook/**/*'
+    );
+    workspaceConfiguration.namedInputs.production.push(
+      '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
+    );
+  }
+
+  workspaceConfiguration.targetDefaults ??= {};
+  workspaceConfiguration.targetDefaults['build-storybook'] ??= {};
+  workspaceConfiguration.targetDefaults['build-storybook'].inputs ??= [
+    'default',
+    hasProductionFileset ? '^production' : '^default',
+  ];
+
+  workspaceConfiguration.targetDefaults['build-storybook'].inputs.push(
+    '{workspaceRoot}/.storybook/**/*'
+  );
+
+  updateWorkspaceConfiguration(tree, workspaceConfiguration);
 
   if (js) {
     toJS(tree);

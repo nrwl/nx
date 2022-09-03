@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as yargs from 'yargs';
 import { execSync } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { URL } from 'url';
 import { join } from 'path';
 
@@ -75,7 +75,8 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     const uncommittedFiles = execSync('git diff --name-only --relative HEAD .')
       .toString()
       .split('\n')
-      .filter((i) => i.length > 0);
+      .filter((i) => i.length > 0)
+      .filter((f) => existsSync(f));
     const unhideFromGitIndex = hideFromGitIndex(uncommittedFiles);
 
     process.on('exit', unhideFromGitIndex);

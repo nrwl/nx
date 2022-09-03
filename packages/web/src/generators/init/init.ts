@@ -4,8 +4,10 @@ import {
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
+  readWorkspaceConfiguration,
   removeDependenciesFromPackageJson,
   Tree,
+  updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
@@ -42,6 +44,15 @@ function initRootBabelConfig(tree: Tree) {
   writeJson(tree, '/babel.config.json', {
     babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
   });
+
+  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+
+  if (workspaceConfiguration.namedInputs?.sharedGlobals) {
+    workspaceConfiguration.namedInputs.sharedGlobals.push(
+      '{workspaceRoot}/babel.config.json'
+    );
+  }
+  updateWorkspaceConfiguration(tree, workspaceConfiguration);
 }
 
 export async function webInitGenerator(tree: Tree, schema: Schema) {

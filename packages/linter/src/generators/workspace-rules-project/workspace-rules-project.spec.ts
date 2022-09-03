@@ -1,10 +1,12 @@
 import {
   addProjectConfiguration,
+  NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
   lintWorkspaceRulesProjectGenerator,
   WORKSPACE_RULES_PROJECT_NAME,
@@ -14,22 +16,23 @@ describe('@nrwl/linter:workspace-rules-project', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should update implicitDependencies in nx.json', async () => {
-    expect(
-      readJson(tree, 'nx.json').implicitDependencies
-    ).toMatchInlineSnapshot(`undefined`);
-
+  it('should add lint project files to lint inputs', async () => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.targetDefaults = {
+        lint: {
+          inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
+        },
+      };
+      return json;
+    });
     await lintWorkspaceRulesProjectGenerator(tree);
 
-    expect(readJson(tree, 'nx.json').implicitDependencies)
-      .toMatchInlineSnapshot(`
-      Object {
-        "tools/eslint-rules/**/*": "*",
-      }
-    `);
+    expect(
+      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.lint.inputs
+    ).toContain('{workspaceRoot}/tools/eslint-rules/**/*');
   });
 
   it('should generate the required files', async () => {
@@ -72,6 +75,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
     expect(readProjectConfiguration(tree, WORKSPACE_RULES_PROJECT_NAME))
       .toMatchInlineSnapshot(`
       Object {
+        "$schema": "../../node_modules/nx/schemas/project-schema.json",
         "root": "tools/eslint-rules",
         "sourceRoot": "tools/eslint-rules",
         "targets": Object {
