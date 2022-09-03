@@ -77,11 +77,12 @@ const runOne: string[] = [
   'onlyFailed',
   'help',
   'skipNxCache',
-  'scan',
   'outputStyle',
   'nxBail',
   'nxIgnoreCycles',
   'verbose',
+  'cloud',
+  'dte',
 ];
 
 const runMany: string[] = [...runOne, 'projects', 'all'];
@@ -124,7 +125,6 @@ export interface NxArgs {
   select?: string;
   skipNxCache?: boolean;
   outputStyle?: string;
-  scan?: boolean;
   nxBail?: boolean;
   nxIgnoreCycles?: boolean;
   type?: string;

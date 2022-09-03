@@ -3,29 +3,27 @@ import { getPackageManagerCommand } from '../utils/package-manager';
 import { execSync } from 'child_process';
 import { readNxJson } from '../config/configuration';
 
-export async function connectToNxCloudUsingScan(scan: boolean): Promise<void> {
-  if (!scan) return;
+export async function connectToNxCloudIfExplicitlyAsked(opts: {
+  [k: string]: any;
+}): Promise<void> {
+  if (opts['cloud'] === true) {
+    const nxJson = readNxJson();
+    const runners = Object.values(nxJson.tasksRunnerOptions);
+    const onlyDefaultRunnerIsUsed =
+      runners.length === 1 && runners[0].runner === 'nx/tasks-runners/default';
+    if (!onlyDefaultRunnerIsUsed) return;
 
-  const nxJson = readNxJson();
-  const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
-    (r) =>
-      r.runner == '@nrwl/workspace/tasks-runners/default' ||
-      r.runner == 'nx/tasks-runners/default'
-  );
-  if (!defaultRunnerIsUsed) return;
-
-  output.log({
-    title: '--scan requires the workspace to be connected to Nx Cloud.',
-  });
-  const res = await connectToNxCloudPrompt();
-  if (res) {
+    output.log({
+      title: '--cloud requires the workspace to be connected to Nx Cloud.',
+    });
     const pmc = getPackageManagerCommand();
-    execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`);
-    execSync(`${pmc.exec} nx g @nrwl/nx-cloud:init`, {
+    execSync(`${pmc.exec} nx connect-to-nx-cloud`, {
       stdio: [0, 1, 2],
     });
-  } else {
-    output.log({ title: 'Executing the command without --scan' });
+    output.success({
+      title: 'Your workspace has been successfully connected to Nx Cloud.',
+    });
+    process.exit(0);
   }
 }
 

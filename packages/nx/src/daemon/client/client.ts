@@ -29,31 +29,36 @@ const DAEMON_ENV_SETTINGS = {
 export class DaemonClient {
   constructor(private readonly nxJson: NxJsonConfiguration) {}
 
+  private _enabled: boolean | undefined;
+
   enabled() {
-    const useDaemonProcessOption =
-      this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
-    const env = process.env.NX_DAEMON;
+    if (this._enabled === undefined) {
+      const useDaemonProcessOption =
+        this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
+      const env = process.env.NX_DAEMON;
 
-    // env takes precedence
-    // option=true,env=false => no daemon
-    // option=false,env=undefined => no daemon
-    // option=false,env=false => no daemon
+      // env takes precedence
+      // option=true,env=false => no daemon
+      // option=false,env=undefined => no daemon
+      // option=false,env=false => no daemon
 
-    // option=undefined,env=undefined => daemon
-    // option=true,env=true => daemon
-    // option=false,env=true => daemon
-    if (
-      isCI() ||
-      isDocker() ||
-      isDaemonDisabled() ||
-      (useDaemonProcessOption === undefined && env === 'false') ||
-      (useDaemonProcessOption === true && env === 'false') ||
-      (useDaemonProcessOption === false && env === undefined) ||
-      (useDaemonProcessOption === false && env === 'false')
-    ) {
-      return false;
+      // option=undefined,env=undefined => daemon
+      // option=true,env=true => daemon
+      // option=false,env=true => daemon
+      if (
+        isCI() ||
+        isDocker() ||
+        isDaemonDisabled() ||
+        (useDaemonProcessOption === undefined && env === 'false') ||
+        (useDaemonProcessOption === true && env === 'false') ||
+        (useDaemonProcessOption === false && env === undefined) ||
+        (useDaemonProcessOption === false && env === 'false')
+      ) {
+        this._enabled = false;
+      }
+      this._enabled = true;
     }
-    return true;
+    return this._enabled;
   }
 
   async getProjectGraph(): Promise<ProjectGraph> {
@@ -72,6 +77,32 @@ export class DaemonClient {
       type: 'PROCESS_IN_BACKGROUND',
       requirePath,
       data,
+    });
+  }
+
+  async recordOutputsHash(outputs: string[], hash: string): Promise<any> {
+    if (!(await isServerAvailable())) {
+      await startInBackground();
+    }
+    return sendMessageToDaemon({
+      type: 'RECORD_OUTPUTS_HASH',
+      data: {
+        outputs,
+        hash,
+      },
+    });
+  }
+
+  async outputsHashesMatch(outputs: string[], hash: string): Promise<any> {
+    if (!(await isServerAvailable())) {
+      await startInBackground();
+    }
+    return sendMessageToDaemon({
+      type: 'OUTPUTS_HASHES_MATCH',
+      data: {
+        outputs,
+        hash,
+      },
     });
   }
 }

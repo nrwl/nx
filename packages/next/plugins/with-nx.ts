@@ -128,7 +128,7 @@ export function withNx(nextConfig = {} as WithNxOptions) {
        */
 
       // Default SVGR support to be on for projects.
-      if (nx.svgr !== false) {
+      if (nx?.svgr !== false) {
         config.module.rules.push({
           test: /\.svg$/,
           oneOf: [

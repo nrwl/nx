@@ -4,7 +4,7 @@ import type { NxArgs, RawNxArgs } from '../utils/command-line-utils';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { output } from '../utils/output';
-import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
+import { connectToNxCloudIfExplicitlyAsked } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
@@ -33,7 +33,7 @@ export async function runMany(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
-  await connectToNxCloudUsingScan(nxArgs.scan);
+  await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projects = projectsToRun(nxArgs, projectGraph);
