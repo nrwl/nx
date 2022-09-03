@@ -1,6 +1,6 @@
 import { runCommand } from '../tasks-runner/run-command';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
-import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
+import { connectToNxCloudIfExplicitlyAsked } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import {
   createProjectGraphAsync,
@@ -59,7 +59,7 @@ export async function runOne(
     process.exit(0);
   }
 
-  await connectToNxCloudUsingScan(nxArgs.scan);
+  await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   const { projects } = getProjects(projectGraph, opts.project);
 

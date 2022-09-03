@@ -320,6 +320,9 @@ export function newProject({
       packageInstall(packages.join(` `), projScope);
 
       if (useBackupProject) {
+        // stop the daemon
+        execSync('nx reset', { cwd: `${e2eCwd}/proj` });
+
         moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
       }
     }

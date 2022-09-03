@@ -7,6 +7,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
+import { DaemonClient } from '../daemon/client/client';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;
@@ -38,6 +39,7 @@ export const defaultTasksRunner: TasksRunner<
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
     hasher: Hasher;
+    daemon: DaemonClient;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
   if (
@@ -71,6 +73,7 @@ async function runAllTasks(
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
     hasher: Hasher;
+    daemon: DaemonClient;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
   // TODO: vsavkin: remove this after Nx 16
@@ -89,7 +92,8 @@ async function runAllTasks(
     context.projectGraph,
     context.taskGraph,
     options,
-    context.nxArgs?.nxBail
+    context.nxArgs?.nxBail,
+    context.daemon
   );
 
   return orchestrator.run();

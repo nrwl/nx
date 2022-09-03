@@ -5,13 +5,11 @@ import {
   mkdir,
   mkdirSync,
   pathExists,
-  readdir,
   readFile,
   remove,
-  unlink,
   writeFile,
 } from 'fs-extra';
-import { dirname, join, relative, resolve, sep } from 'path';
+import { dirname, join, resolve } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { execFile, spawn } from 'child_process';
 import { cacheDir } from '../utils/cache-directory';
@@ -31,7 +29,6 @@ export class Cache {
   root = workspaceRoot;
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
-  latestOutputsHashesDir = this.ensureLatestOutputsHashesDir();
   useFsExtraToCopyAndRemove = platform() === 'win32';
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
@@ -96,7 +93,6 @@ export class Cache {
 
       await mkdir(join(td, 'outputs'));
       const expandedOutputs = await this.expandOutputsInWorkspace(outputs);
-      const collapsedOutputs = collapseExpandedOutputs(expandedOutputs);
 
       await Promise.all(
         expandedOutputs.map(async (f) => {
@@ -122,8 +118,6 @@ export class Cache {
         await this.options.remoteCache.store(task.hash, this.cachePath);
       }
 
-      await this.recordOutputsHash(collapsedOutputs, task.hash);
-
       if (terminalOutput) {
         const outputPath = this.temporaryOutputPath(task);
         await writeFile(outputPath, terminalOutput);
@@ -141,10 +135,6 @@ export class Cache {
         outputs,
         cachedResult
       );
-      const collapsedOutputs = collapseExpandedOutputs(expandedOutputs);
-
-      await this.removeRecordedOutputsHashes(collapsedOutputs);
-
       await Promise.all(
         expandedOutputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
@@ -159,50 +149,11 @@ export class Cache {
           }
         })
       );
-
-      await this.recordOutputsHash(collapsedOutputs, hash);
     });
   }
 
   temporaryOutputPath(task: Task) {
     return join(this.terminalOutputsDir, task.hash);
-  }
-
-  async removeRecordedOutputsHashes(outputs: string[]): Promise<void> {
-    await Promise.all(
-      outputs.map(async (output) => {
-        const hashFile =
-          this.getFileNameWithLatestRecordedHashForOutput(output);
-        try {
-          await unlink(hashFile);
-        } catch {}
-      })
-    );
-  }
-
-  async shouldCopyOutputsFromCache(
-    taskWithCachedResult: TaskWithCachedResult,
-    outputs: string[]
-  ): Promise<boolean> {
-    const [outputsInCache, outputsInWorkspace] = await Promise.all([
-      this.expandOutputsInCache(outputs, taskWithCachedResult.cachedResult),
-      this.expandOutputsInWorkspace(outputs),
-    ]);
-
-    const collapsedOutputsInCache = collapseExpandedOutputs(outputsInCache);
-
-    const [latestHashesDifferent, outputMissing] = await Promise.all([
-      this.areLatestOutputsHashesDifferentThanTaskHash(
-        collapsedOutputsInCache,
-        taskWithCachedResult
-      ),
-      this.haveOutputsBeenAddedOrRemoved(
-        taskWithCachedResult,
-        outputsInCache,
-        outputsInWorkspace
-      ),
-    ]);
-    return latestHashesDifferent || outputMissing;
   }
 
   private async expandOutputsInWorkspace(outputs: string[]) {
@@ -223,7 +174,7 @@ export class Cache {
           if (await pathExists(join(cwd, entry))) {
             return entry;
           }
-          return fastGlob(entry, { cwd });
+          return fastGlob(entry, { cwd, dot: true });
         })
       )
     ).flat();
@@ -262,154 +213,6 @@ export class Cache {
     });
   }
 
-  private async recordOutputsHash(
-    outputs: string[],
-    hash: string
-  ): Promise<void> {
-    await mkdir(this.latestOutputsHashesDir, { recursive: true });
-
-    await Promise.all(
-      outputs.map(async (output) => {
-        const hashFile =
-          this.getFileNameWithLatestRecordedHashForOutput(output);
-        try {
-          await writeFile(hashFile, hash);
-        } catch {}
-      })
-    );
-  }
-
-  private async areLatestOutputsHashesDifferentThanTaskHash(
-    outputs: string[],
-    { task }: TaskWithCachedResult
-  ) {
-    const latestExistingOutputHashes = (
-      await readdir(this.latestOutputsHashesDir)
-    ).map((m) => m.substring(0, m.length - 5));
-    // Purposely blocking
-    for (const output of outputs) {
-      const latestOutputFilename = this.getLatestOutputHashFilename(output);
-
-      const conflicts = latestExistingOutputHashes.filter((w) => {
-        // This is the exact same output
-        return (
-          w !== latestOutputFilename &&
-          // This is an child of the output
-          (latestOutputFilename.startsWith(w) ||
-            // This is a parent of the output
-            w.startsWith(latestOutputFilename))
-        );
-      });
-
-      if (conflicts.length > 0) {
-        // Clean up the conflicts
-        await Promise.all(
-          conflicts.map((conflict) =>
-            unlink(join(this.latestOutputsHashesDir, conflict + '.hash'))
-          )
-        );
-        return true;
-      }
-
-      const hash = await this.getLatestRecordedHashForTask(output);
-
-      if (!!hash && hash !== task.hash) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private async getLatestRecordedHashForTask(
-    output: string
-  ): Promise<string | null> {
-    try {
-      return await readFile(
-        this.getFileNameWithLatestRecordedHashForOutput(output),
-        'utf-8'
-      );
-    } catch {
-      return null;
-    }
-  }
-
-  private async haveOutputsBeenAddedOrRemoved(
-    result: TaskWithCachedResult,
-    cachedOutputs: string[],
-    workspaceFiles: string[]
-  ): Promise<boolean> {
-    const workspaceSet = new Set(workspaceFiles);
-
-    for (const path of cachedOutputs) {
-      if (!(await pathExists(join(workspaceRoot, path)))) {
-        return true;
-      }
-      if (!workspaceSet.has(path)) {
-        return true;
-      }
-      const isDirectory = (await lstat(path)).isDirectory();
-      if (isDirectory) {
-        const [cachedFiles, workspaceFiles] = await Promise.all([
-          this.getFilesInDirectory(join(result.cachedResult.outputsPath, path)),
-          this.getFilesInDirectory(join(workspaceRoot, path)),
-        ]);
-
-        if (workspaceFiles.size !== cachedFiles.size) {
-          return true;
-        }
-        for (const file of cachedFiles) {
-          if (!workspaceFiles.has(file)) {
-            return true;
-          }
-          workspaceFiles.delete(file);
-        }
-        if (workspaceFiles.size !== 0) {
-          return true;
-        }
-      }
-      workspaceSet.delete(path);
-    }
-    if (workspaceSet.size !== 0) {
-      return true;
-    }
-    return false;
-  }
-
-  private async getFilesInDirectory(path: string): Promise<Set<string>> {
-    const paths = new Set<string>();
-    await this.visitDirectory(path, (entry) => {
-      paths.add(relative(path, entry));
-    });
-    return paths;
-  }
-
-  private async visitDirectory(path: string, visitor: (path: string) => void) {
-    const children = await readdir(join(path), {
-      withFileTypes: true,
-    });
-
-    await Promise.all(
-      children.map(async (child) => {
-        if (child.isFile()) {
-          visitor(join(path, child.name));
-        } else if (child.isDirectory()) {
-          await this.visitDirectory(join(path, child.name), visitor);
-        }
-      })
-    );
-  }
-
-  private getFileNameWithLatestRecordedHashForOutput(output: string): string {
-    return join(
-      this.latestOutputsHashesDir,
-      `${this.getLatestOutputHashFilename(output)}.hash`
-    );
-  }
-
-  private getLatestOutputHashFilename(output: string) {
-    return output.split(sep).join('-');
-  }
-
   private async getFromLocalDir(task: Task) {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
     const td = join(this.cachePath, task.hash);
@@ -444,12 +247,6 @@ export class Cache {
     return path;
   }
 
-  private ensureLatestOutputsHashesDir() {
-    const path = join(this.cachePath, 'latestOutputsHashes');
-    mkdirSync(path, { recursive: true });
-    return path;
-  }
-
   private tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
     let attempts = 0;
     const baseTimeout = 100;
@@ -468,52 +265,4 @@ export class Cache {
     };
     return _try();
   }
-}
-
-/**
- * Heuristic to prevent writing too many hash files
- */
-const MAX_OUTPUTS_TO_CHECK_HASHES = 5;
-
-/**
- * Collapse Expanded Outputs back into a smaller set of directories/files to track
- * Note: DO NOT USE, Only exported for unit testing
- * */
-export function collapseExpandedOutputs(expandedOutputs: string[]) {
-  const tree: Set<string>[] = [];
-
-  // Create a Tree of directories/files
-  for (const output of expandedOutputs) {
-    const pathParts = [];
-    pathParts.unshift(output);
-    let dir = dirname(output);
-    while (dir !== dirname(dir)) {
-      pathParts.unshift(dir);
-
-      dir = dirname(dir);
-    }
-
-    for (let i = 0; i < pathParts.length; i++) {
-      tree[i] ??= new Set<string>();
-      tree[i].add(pathParts[i]);
-    }
-  }
-
-  // Find a level in the tree that has too many outputs
-  if (tree.length === 0) {
-    return [];
-  }
-
-  let j = 0;
-  let level = tree[j];
-  for (j = 0; j < tree.length; j++) {
-    level = tree[j];
-    if (level.size > MAX_OUTPUTS_TO_CHECK_HASHES) {
-      break;
-    }
-  }
-
-  // Return the level before the level with too many outputs
-  // If the first level has too many outputs, return that one.
-  return Array.from(tree[Math.max(0, j - 1)]);
 }

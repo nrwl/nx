@@ -27,6 +27,10 @@ import { HashingImpl } from '../../hasher/hashing-impl';
 import { defaultFileHasher } from '../../hasher/file-hasher';
 import { handleRequestProjectGraph } from './handle-request-project-graph';
 import { handleProcessInBackground } from './handle-process-in-background';
+import {
+  handleOutputsHashesMatch,
+  handleRecordOutputsHash,
+} from './handle-output-contents';
 
 let watcherSubscription: WatcherSubscription | undefined;
 let performanceObserver: PerformanceObserver | undefined;
@@ -94,6 +98,10 @@ async function handleMessage(socket, data) {
     await handleResult(socket, await handleRequestProjectGraph());
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
     await handleResult(socket, await handleProcessInBackground(payload));
+  } else if (payload.type === 'RECORD_OUTPUTS_HASH') {
+    await handleResult(socket, await handleRecordOutputsHash(payload));
+  } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
+    await handleResult(socket, await handleOutputsHashesMatch(payload));
   } else {
     await respondWithErrorAndExit(
       socket,
