@@ -449,7 +449,7 @@ class TaskHasher {
     namedInput: string,
     filesetPatterns: string[]
   ): Promise<PartialHash> {
-    const mapKey = `${projectName}:$filesets:${namedInput}`;
+    const mapKey = `${projectName}:$filesets:${namedInput}:${filesetPatterns}`;
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];

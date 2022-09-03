@@ -28,7 +28,11 @@ export default async function run(
 
   const command = res.details['command'];
   const selfSource =
-    res.details.nodes[`${task.target.project}:$filesets:default`];
+    res.details.nodes[
+      Object.keys(res.details.nodes).find((k) =>
+        k.startsWith(`${task.target.project}:$filesets:default`)
+      )
+    ];
 
   const nodes = {};
   const hashes = [] as string[];

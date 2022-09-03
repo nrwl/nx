@@ -116,7 +116,7 @@ describe('Hasher', () => {
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
-      'parent:$filesets:default':
+      'parent:$filesets:default:{projectRoot}/**/*':
         '/file|file.hash|{"root":"libs/parent","targets":{"build":{"inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"}]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       '{workspaceRoot}/yarn.lock': 'yarn.lock.hash',
       '{workspaceRoot}/package-lock.json': 'package-lock.json.hash',
@@ -178,9 +178,9 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'child:$filesets:default':
+      'child:$filesets:default:{projectRoot}/**/*':
         '/fileb.ts|/fileb.spec.ts|b.hash|b.spec.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets:default':
+      'parent:$filesets:default:{projectRoot}/**/*':
         '/filea.ts|/filea.spec.ts|a.hash|a.spec.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
@@ -242,9 +242,9 @@ describe('Hasher', () => {
     });
 
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'child:$filesets:prod':
+      'child:$filesets:prod:{projectRoot}/**/*':
         'libs/child/fileb.ts|libs/child/fileb.spec.ts|b.hash|b.spec.hash|{"root":"libs/child","namedInputs":{"prod":["default"]},"targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets:default':
+      'parent:$filesets:default:!{projectRoot}/**/*.spec.ts':
         'libs/parent/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{"inputs":["prod","^prod"]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
@@ -315,12 +315,16 @@ describe('Hasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(parentHash.details.nodes['parent:$filesets:default']).toContain(
+    expect(
+      parentHash.details.nodes['parent:$filesets:default:{projectRoot}/**/*']
+    ).toContain(
       'libs/parent/filea.ts|libs/parent/filea.spec.ts|a.hash|a.spec.hash|'
     );
-    expect(parentHash.details.nodes['child:$filesets:prod']).toContain(
-      'libs/child/fileb.ts|b.hash|'
-    );
+    expect(
+      parentHash.details.nodes[
+        'child:$filesets:prod:!{projectRoot}/**/*.spec.ts'
+      ]
+    ).toContain('libs/child/fileb.ts|b.hash|');
     expect(parentHash.details.nodes['{workspaceRoot}/global1']).toEqual(
       'global1.hash'
     );
@@ -337,7 +341,9 @@ describe('Hasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(childHash.details.nodes['child:$filesets:default']).toContain(
+    expect(
+      childHash.details.nodes['child:$filesets:default:{projectRoot}/**/*']
+    ).toContain(
       'libs/child/fileb.ts|libs/child/fileb.spec.ts|b.hash|b.spec.hash|'
     );
     expect(childHash.details.nodes['{workspaceRoot}/global1']).toEqual(
@@ -404,9 +410,9 @@ describe('Hasher', () => {
     });
 
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'child:$filesets:prod':
+      'child:$filesets:prod:!{projectRoot}/**/*.spec.ts':
         'libs/child/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets:default':
+      'parent:$filesets:default:!{projectRoot}/**/*.spec.ts':
         'libs/parent/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
@@ -454,7 +460,7 @@ describe('Hasher', () => {
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'parent:$filesets:default':
+      'parent:$filesets:default:{projectRoot}/**/*':
         '/file|file.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"]}}}',
     });
   });
@@ -506,9 +512,9 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('parent|build'); //project and target
     expect(tasksHash.value).toContain('build'); //target
     expect(onlySourceNodes(tasksHash.details.nodes)).toEqual({
-      'child:$filesets:default':
+      'child:$filesets:default:{projectRoot}/**/*':
         '/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets:default':
+      'parent:$filesets:default:{projectRoot}/**/*':
         '/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
 
@@ -525,9 +531,9 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('child|build'); //project and target
     expect(hashb.value).toContain('build'); //target
     expect(onlySourceNodes(hashb.details.nodes)).toEqual({
-      'child:$filesets:default':
+      'child:$filesets:default:{projectRoot}/**/*':
         '/fileb.ts|b.hash|{"root":"libs/child","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      'parent:$filesets:default':
+      'parent:$filesets:default:{projectRoot}/**/*':
         '/filea.ts|a.hash|{"root":"libs/parent","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
   });
@@ -655,7 +661,7 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'app:$filesets:default':
+      'app:$filesets:default:{projectRoot}/**/*':
         '/filea.ts|a.hash|{"root":"apps/app","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'npm:react': '17.0.0',
     });
@@ -701,7 +707,7 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(onlySourceNodes(hash.details.nodes)).toEqual({
-      'app:$filesets:default':
+      'app:$filesets:default:{projectRoot}/**/*':
         '/filea.ts|a.hash|{"root":"apps/app","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
       'npm:react': '__npm:react__',
     });
