@@ -44,20 +44,40 @@ This library is exporting a single `message` string.
 
 Install the `cowsay` npm package at the root of the workspace.
 
+{% tabs %}
+{% tab label="yarn" %}
+
 ```bash
 yarn add -W cowsay@1.5.0
 ```
 
-Make an application that uses the `messages` library. Note that you won't specify the dependency manually in the `package.json` file.
+{% /tab %}
+{% tab label="npm" %}
 
-`packages/cow/package.json`:
+```bash
+npm add -W cowsay@1.5.0
+```
+
+{% /tab %}
+{% /tabs %}
+
+Make an application that uses the `messages` library. Note that you won't specify the dependency manually in the `project.json` file.
+
+`packages/cow/project.json`:
 
 ```json
 {
-  "name": "cow",
-  "version": "0.0.1",
-  "scripts": {
-    "serve": "node index.js"
+  "root": "packages/cow",
+  "sourceRoot": "packages/cow/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node src/index.js",
+        "cwd": "packages/cow"
+      }
+    }
   }
 }
 ```
