@@ -13,6 +13,7 @@ export interface TypeScriptCompilationOptions {
   rootDir?: string;
   watch?: boolean;
   getCustomTransformers?(program: Program): CustomTransformers;
+  showTsConfig?: boolean;
 }
 
 export interface TypescriptWatchChangeEvent {
@@ -30,6 +31,10 @@ export function compileTypeScript(options: TypeScriptCompilationOptions): {
 
   if (normalizedOptions.deleteOutputPath) {
     removeSync(normalizedOptions.outputPath);
+  }
+  
+  if(options.showTsConfig) {
+    console.log(`tsConfig: ${JSON.stringify(tsConfig)}`);
   }
 
   return createProgram(tsConfig, normalizedOptions);
