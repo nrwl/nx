@@ -354,7 +354,6 @@ describe('Hasher', () => {
   });
 
   it('should calculate correct hash for each task when one task depends on another in the same project', async () => {
-
     const hasher = new Hasher(
       {
         nodes: {

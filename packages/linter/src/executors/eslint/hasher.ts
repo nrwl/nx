@@ -31,7 +31,7 @@ export default async function run(
     res.details.nodes[
       Object.keys(res.details.nodes).find((k) =>
         k.startsWith(`${task.target.project}:$filesets:default`)
-      )
+      ) || ''
     ];
 
   const nodes = {};
