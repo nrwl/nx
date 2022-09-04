@@ -34,7 +34,7 @@ describe('normalizeSchema', () => {
   it('should calculate importPath, projectName and relativeToRootDestination correctly', () => {
     const expected: NormalizedSchema = {
       destination: 'my/library',
-      importPath: '@proj/my-library',
+      importPath: '@proj/my/library',
       newProjectName: 'my-library',
       projectName: 'my-library',
       relativeToRootDestination: 'libs/my/library',
