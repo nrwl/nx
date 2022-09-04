@@ -163,6 +163,15 @@ module.exports = withNx({
       });
     }
 
+    // Diataxis doc restructure
+    for (let s of Object.keys(redirectRules.diataxis)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.diataxis[s],
+        permanent: true,
+      });
+    }
+
     // Landing pages
     rules.push({
       source: '/(angular|react|node)',

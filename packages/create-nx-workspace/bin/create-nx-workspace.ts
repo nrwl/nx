@@ -863,13 +863,17 @@ async function createApp(
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }
   }
-  let workspaceSetupSpinner = ora('Creating your workspace').start();
+  let workspaceSetupSpinner = ora(
+    `Creating your workspace in ${getFileName(name)}`
+  ).start();
 
   try {
     const fullCommand = `${pmc.exec} nx ${command} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
     await execAndWait(fullCommand, tmpDir);
 
-    workspaceSetupSpinner.succeed('Nx has successfully created the workspace.');
+    workspaceSetupSpinner.succeed(
+      `Nx has successfully created the workspace: ${getFileName(name)}.`
+    );
   } catch (e) {
     workspaceSetupSpinner.fail();
     output.error({
@@ -880,7 +884,7 @@ async function createApp(
   } finally {
     workspaceSetupSpinner.stop();
   }
-  return join(workingDir, name);
+  return join(workingDir, getFileName(name));
 }
 
 async function setupNxCloud(name: string, packageManager: PackageManager) {

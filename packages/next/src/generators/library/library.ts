@@ -27,7 +27,10 @@ export async function libraryGenerator(host: Tree, options: Schema) {
   });
   tasks.push(initTask);
 
-  const libTask = await reactLibraryGenerator(host, options);
+  const libTask = await reactLibraryGenerator(host, {
+    ...options,
+    compiler: 'swc',
+  });
   tasks.push(libTask);
 
   updateJson(host, joinPathFragments(projectRoot, '.babelrc'), (json) => {

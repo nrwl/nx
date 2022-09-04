@@ -131,4 +131,39 @@ describe('Host App Generator', () => {
       tree.read(`apps/host/src/app/app.component.ts`, 'utf-8')
     ).toMatchSnapshot();
   });
+
+  it('should generate the correct app component spec file', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    // ACT
+    await host(tree, {
+      name: 'host',
+      remotes: ['remote1'],
+      standalone: true,
+    });
+
+    // ASSERT
+    expect(
+      tree.read(`apps/host/src/app/app.component.spec.ts`, 'utf-8')
+    ).toMatchSnapshot();
+  });
+
+  it('should generate the correct app component spec file with a directory', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    // ACT
+    await host(tree, {
+      name: 'dashboard',
+      remotes: ['remote1'],
+      directory: 'test',
+      standalone: true,
+    });
+
+    // ASSERT
+    expect(
+      tree.read(`apps/test/dashboard/src/app/app.component.spec.ts`, 'utf-8')
+    ).toMatchSnapshot();
+  });
 });

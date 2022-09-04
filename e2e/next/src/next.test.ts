@@ -37,11 +37,11 @@ describe('Next.js Applications', () => {
 
   it('should generate app + libs', async () => {
     const appName = uniq('app');
-    const reactLib = uniq('reactlib');
+    const nextLib = uniq('nextlib');
     const jsLib = uniq('tslib');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
-    runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
+    runCLI(`generate @nrwl/next:lib ${nextLib} --no-interactive`);
     runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
 
     // Create file in public that should be copied to dist
@@ -105,8 +105,8 @@ describe('Next.js Applications', () => {
           import dynamic from 'next/dynamic';
 
           const TestComponent = dynamic(
-              () => import('@${proj}/${reactLib}').then(d => d.${stringUtils.capitalize(
-        reactLib
+              () => import('@${proj}/${nextLib}').then(d => d.${stringUtils.capitalize(
+        nextLib
       )})
             );
           ${content.replace(
@@ -283,7 +283,7 @@ describe('Next.js Applications', () => {
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nrwl/react:lib ${libName} --no-interactive --style=none --js`
+      `generate @nrwl/next:lib ${libName} --no-interactive --style=none --js`
     );
 
     const mainPath = `apps/${appName}/pages/index.js`;

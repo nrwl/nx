@@ -1,5 +1,6 @@
 import {
   formatFiles,
+  generateFiles,
   getProjects,
   joinPathFragments,
   names,
@@ -142,4 +143,14 @@ ${remoteRoutes}
     ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
     );
   }
+
+  generateFiles(
+    tree,
+    joinPathFragments(__dirname, 'files'),
+    joinPathFragments(sourceRoot, 'app'),
+    {
+      appName: normalizeProjectName(options.name, options.directory),
+      tmpl: '',
+    }
+  );
 }

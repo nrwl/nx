@@ -12,13 +12,17 @@ export function hashDependsOnOtherTasks(
   taskGraph: TaskGraph,
   task: Task
 ) {
-  const customHasher = getCustomHasher(
-    task,
-    workspaces,
-    workspaces.readNxJson(),
-    projectGraph
-  );
-  if (customHasher) return true;
+  try {
+    const customHasher = getCustomHasher(
+      task,
+      workspaces,
+      workspaces.readNxJson(),
+      projectGraph
+    );
+    if (customHasher) return true;
+  } catch {
+    return true;
+  }
   return hasher.hashDependsOnOtherTasks(task);
 }
 

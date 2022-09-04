@@ -9,7 +9,7 @@ In this tutorial you:
 
 ## Learn more
 
-- [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
+- [Free Nx Course on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dH38AfqmwabvOszDmKriGco)
 
 **Dive Deep:**
 
