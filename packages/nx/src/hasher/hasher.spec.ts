@@ -353,6 +353,57 @@ describe('Hasher', () => {
     expect(childHash.details.nodes['env:MY_TEST_HASH_ENV']).toBeUndefined();
   });
 
+  it('should calculate correct hash for each task when one task depends on another in the same project', async () => {
+
+    const hasher = new Hasher(
+      {
+        nodes: {
+          app: {
+            name: 'app',
+            type: 'app',
+            data: {
+              root: 'libs/app',
+              targets: {
+                firstTask: {
+                  inputs: ['{projectRoot}/**/*.spec.ts'],
+                },
+                secondTask: {
+                  dependsOn: ['firstTask'],
+                },
+              },
+              files: [
+                { file: 'libs/app/filea.ts', hash: 'a.hash' },
+                { file: 'libs/app/filea.spec.ts', hash: 'a.spec.hash' },
+              ],
+            },
+          },
+        },
+        dependencies: {},
+        allWorkspaceFiles,
+      },
+      {},
+      {},
+      createHashing()
+    );
+
+    const secondTaskHash = await hasher.hashTask({
+      target: { project: 'app', target: 'secondTask' },
+      id: 'app-secondTask',
+      overrides: {},
+    });
+
+    expect(secondTaskHash.value).toContain('a.hash');
+    expect(secondTaskHash.value).toContain('a.spec.hash');
+
+    const firstTaskHash = await hasher.hashTask({
+      target: { project: 'app', target: 'firstTask' },
+      id: 'app-firstTask',
+      overrides: {},
+    });
+
+    expect(firstTaskHash.value).not.toContain('a.hash');
+    expect(firstTaskHash.value).toContain('a.spec.hash');
+  });
   it('should use targetdefaults from nx.json', async () => {
     const hasher = new Hasher(
       {
