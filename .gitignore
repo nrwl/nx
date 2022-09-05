@@ -3,6 +3,7 @@ node_modules
 /.fleet
 /.vscode
 dist
+.yarn
 /build
 /coverage
 ./test
