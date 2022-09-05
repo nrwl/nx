@@ -121,13 +121,27 @@ async function getStagedFiles(path: string) {
 }
 
 async function getUnstagedFiles(path: string) {
+  //this command will list all parent repo's modefied files
   const { stdout: unstaged } = await spawnProcess(
     'git',
-    ['ls-files', '--recurse-submodules', '-m', '-z', '--exclude-standard', '.'],
+    ['ls-files', '-m', '-z', '--exclude-standard', '.'],
+    path
+  );
+  //and this command will only list nested submodules modefied files
+  const { stdout: unstagedInSubModules } = await spawnProcess(
+    'git',
+    [
+      'submodule',
+      'foreach',
+      '--recursive',
+      '--quiet',
+      'git ls-files -m -z --exclude-standard .',
+    ],
     path
   );
   const lines = unstaged.split('\0').filter((f) => !!f);
-  return getGitHashForFiles(lines, path);
+  const additionalLines = unstagedInSubModules.split('\0').filter((f) => !!f);
+  return getGitHashForFiles([...lines, ...additionalLines], path);
 }
 
 async function getUntrackedFiles(path: string) {
