@@ -16,7 +16,8 @@
           "build-base",
           "test",
           "sitemap",
-          "e2e"
+          "e2e",
+          "build-storybook"
         ],
         "useDaemonProcess": true,
         "cacheDirectory": "/tmp/nx-cache",

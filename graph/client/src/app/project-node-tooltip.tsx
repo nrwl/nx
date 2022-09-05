@@ -6,7 +6,11 @@ export interface ProjectNodeToolTipProps {
   tags: string[];
 }
 
-function ProjectNodeToolTip({ type, id, tags }: ProjectNodeToolTipProps) {
+export function ProjectNodeToolTip({
+  type,
+  id,
+  tags,
+}: ProjectNodeToolTipProps) {
   const depGraphService = getDepGraphService();
 
   function onFocus() {

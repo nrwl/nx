@@ -5,7 +5,7 @@ import { satisfies } from 'semver';
 const IGNORE_MATCHES = {
   '*': [],
   angular: ['webpack-merge', '@phenomnomnominal/tsquery'],
-  cypress: ['webpack'],
+  cypress: ['webpack', '@babel/core', 'babel-loader'],
 };
 
 export default function getDiscrepancies(
