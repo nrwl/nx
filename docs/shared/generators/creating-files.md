@@ -30,6 +30,39 @@ Example NOTES.md:
 Hello, my name is <%= name %>!
 ```
 
+Next, update the `schema.json` file for the generator.
+```json
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "MyPlugin",
+  "title": "",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use?"
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the project (used for linting)",
+      "alias": "t"
+    },
+    "directory": {
+      "type": "string",
+      "description": "A directory where the project is placed",
+      "alias": "d"
+    }
+  },
+  "required": ["name"]
+}
+```
+
 Next, update the `index.ts` file for the generator, and generate the new files.
 
 ```typescript
