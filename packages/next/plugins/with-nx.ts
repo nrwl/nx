@@ -128,7 +128,7 @@ export function withNx(nextConfig = {} as WithNxOptions) {
        */
 
       // Default SVGR support to be on for projects.
-      if (nx.svgr !== false) {
+      if (nx?.svgr !== false) {
         config.module.rules.push({
           test: /\.svg$/,
           oneOf: [
@@ -180,7 +180,7 @@ function getNxEnvironmentVariables() {
 }
 
 function addNxEnvVariables(config: any) {
-  const maybeDefinePlugin = config.plugins.find((plugin) => {
+  const maybeDefinePlugin = config.plugins?.find((plugin) => {
     return plugin.definitions?.['process.env.NODE_ENV'];
   });
 
