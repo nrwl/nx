@@ -318,6 +318,7 @@ export function newProject({
         `@nrwl/web`,
         `@nrwl/webpack`,
         `@nrwl/react-native`,
+        `@nrwl/expo`,
       ];
       packageInstall(packages.join(` `), projScope);
 
