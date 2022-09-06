@@ -1,6 +1,11 @@
-# Transitioning to Nx
+# Migrating an Angular CLI project to Nx
 
 Within an Nx workspace, you gain many capabilities that help you build applications and libraries using a monorepo approach. If you are currently using an Angular CLI workspace, you can transform it into an Nx workspace.
+
+{% youtube
+src="https://www.youtube.com/embed/dJG9zH30c-o"
+title="Nx in 100 seconds: Migrate an Angular CLI app to Nx"
+width="100%" /%}
 
 ## Prerequisites
 
@@ -151,7 +156,28 @@ Learn more about the advantages of Nx in the following guides:
 - [Computation Caching](/concepts/how-caching-works)
 - [Rebuilding and Retesting What is Affected](/concepts/affected)
 
-## Transitioning Manually
+## Migrating multiple Angular CLI workspaces into an Nx Monorepo
+
+Migrating multiple Angular CLI workspaces into a single Nx monorepo involves some more manual steps and decisions to take.
+
+- can we first align all apps to the same Angular version (e.g. using Angular CLI migrations)
+- convert each of the apps into an easy to copy "Nx shape" (with `project.json` etc) using some of the before mentioned migration scripts
+- copy everything into a new Nx workspace
+
+Very often however we might also need to do it incrementally, such as
+
+- migrating all apps into a monorepo
+- keep them at different Angular & external dependency versions until everything is migrated
+- migrate them one by one incrementally and over time
+
+The following video tutorial walks you through such a scenario.
+
+{% youtube
+src="https://www.youtube.com/embed/M5NwkRNrpK0"
+title="Nx Tutorial: Migrate Multiple Angular CLI apps into a Single Nx Monorepo"
+width="100%" /%}
+
+## Migrating an Angular app manually
 
 If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](#transforming-an-angular-cli-workspace-to-an-nx-workspace) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
 
