@@ -1,5 +1,5 @@
 export interface ComponentTestSchema {
-  projectPath: string;
+  project: string;
   // SomethingComponent
   componentName: string;
   // path from source root to component dir

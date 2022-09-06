@@ -32,26 +32,12 @@ describe('Angular Cypress Component Test Generator', () => {
     componentTestGenerator(tree, {
       componentName: 'MyLibComponent',
       componentFileName: './my-lib.component',
-      projectPath: 'libs/my-lib',
+      project: 'my-lib',
       componentDir: 'src/lib/my-lib',
     });
     expect(
       tree.read('libs/my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
-    ).toEqual(`import { MountConfig, mount } from 'cypress/angular';
-import { MyLibComponent } from './my-lib.component';
-
-describe(MyLibComponent.name, () => {
-  const config: MountConfig<MyLibComponent> = {
-    declarations: [],
-    imports: [],
-    providers: []
-  }
-
-  it('renders', () => {
-     mount(MyLibComponent, config);
-  })
-})
-`);
+    ).toMatchSnapshot();
   });
 
   it('should generate a component test', async () => {
@@ -97,35 +83,13 @@ export class MyLibComponent implements OnInit {
     componentTestGenerator(tree, {
       componentName: 'MyLibComponent',
       componentFileName: './my-lib.component',
-      projectPath: 'libs/my-lib',
+      project: 'my-lib',
       componentDir: 'src/lib/my-lib',
     });
 
     expect(
       tree.read('libs/my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
-    ).toEqual(`import { MountConfig, mount } from 'cypress/angular';
-import { MyLibComponent } from './my-lib.component';
-
-describe(MyLibComponent.name, () => {
-  const config: MountConfig<MyLibComponent> = {
-    declarations: [],
-    imports: [],
-    providers: []
-  }
-
-  it('renders', () => {
-     mount(MyLibComponent, {
-           ...config,
-           componentProperties: {
-               type:  'button',
-               style:  'default',
-               age:  0,
-               isOn:  false,
-          }
-       });
-  })
-})
-`);
+    ).toMatchSnapshot();
   });
 
   it('should work with standalone components', async () => {
@@ -171,34 +135,12 @@ export class MyLibComponent implements OnInit {
     componentTestGenerator(tree, {
       componentName: 'MyLibComponent',
       componentFileName: './my-lib.component',
-      projectPath: 'libs/my-lib',
+      project: 'my-lib',
       componentDir: 'src/lib/my-lib',
     });
     expect(
       tree.read('libs/my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
-    ).toEqual(`import { MountConfig, mount } from 'cypress/angular';
-import { MyLibComponent } from './my-lib.component';
-
-describe(MyLibComponent.name, () => {
-  const config: MountConfig<MyLibComponent> = {
-    declarations: [],
-    imports: [],
-    providers: []
-  }
-
-  it('renders', () => {
-     mount(MyLibComponent, {
-           ...config,
-           componentProperties: {
-               type:  'button',
-               style:  'default',
-               age:  0,
-               isOn:  false,
-          }
-       });
-  })
-})
-`);
+    ).toMatchSnapshot();
   });
 
   it('should not overwrite an existing component test', async () => {
@@ -217,7 +159,7 @@ describe(MyLibComponent.name, () => {
     componentTestGenerator(tree, {
       componentName: 'MyLibComponent',
       componentFileName: './my-lib.component',
-      projectPath: 'libs/my-lib',
+      project: 'my-lib',
       componentDir: 'src/lib/my-lib',
     });
 
@@ -254,7 +196,7 @@ describe(MyLibComponent.name, () => {
     componentTestGenerator(tree, {
       componentName: 'MyLibComponent',
       componentFileName: './my-lib.component',
-      projectPath: 'libs/my-lib',
+      project: 'my-lib',
       componentDir: 'src/lib/my-lib',
     });
     expect(
@@ -264,7 +206,7 @@ describe(MyLibComponent.name, () => {
     componentTestGenerator(tree, {
       componentName: 'MyLibComponent',
       componentFileName: './my-lib.component',
-      projectPath: 'libs/my-lib',
+      project: 'my-lib',
       componentDir: 'src/lib/my-lib',
     });
     expect(

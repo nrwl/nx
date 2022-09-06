@@ -205,7 +205,7 @@
       "description": "Creates a stories.ts file for a component."
     },
     "component-test": {
-      "factory": "./src/generators/component-test/compat",
+      "factory": "./src/generators/component-test/component-test",
       "schema": "./src/generators/component-test/schema.json",
       "description": "Creates a cypress component test file for a component."
     },

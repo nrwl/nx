@@ -5,10 +5,11 @@
   "cli": "nx",
   "description": "Create a `*.cy.ts` file for Cypress component testing for an Angular component.",
   "properties": {
-    "projectPath": {
+    "project": {
       "type": "string",
-      "description": "The path to the project.",
-      "examples": ["libs/my-fancy-ng-project"]
+      "description": "The name of the project where the component is located.",
+      "x-dropdown": "projects",
+      "x-prompt": "What project is the component located in?"
     },
     "componentName": {
       "type": "string",

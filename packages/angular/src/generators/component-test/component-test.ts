@@ -1,5 +1,10 @@
 import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import { generateFiles, joinPathFragments, Tree } from '@nrwl/devkit';
+import {
+  generateFiles,
+  joinPathFragments,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import {
   getArgsDefaultValue,
   getComponentProps,
@@ -11,10 +16,8 @@ export function componentTestGenerator(
   options: ComponentTestSchema
 ) {
   assertMinimumCypressVersion(10);
-  const componentDirPath = joinPathFragments(
-    options.projectPath,
-    options.componentDir
-  );
+  const { root } = readProjectConfiguration(tree, options.project);
+  const componentDirPath = joinPathFragments(root, options.componentDir);
   const componentFilePath = joinPathFragments(
     componentDirPath,
     `${options.componentFileName}.ts`

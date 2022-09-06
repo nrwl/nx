@@ -10,10 +10,12 @@ import {
 } from '@nrwl/cypress/src/utils/ct-helpers';
 import {
   ExecutorContext,
+  joinPathFragments,
   logger,
   offsetFromRoot,
   parseTargetString,
   ProjectConfiguration,
+  ProjectGraph,
   readCachedProjectGraph,
   readTargetOptions,
   stripIndents,
@@ -46,7 +48,19 @@ export function nxComponentTestingPreset(
   pathToConfig: string,
   options?: NxComponentTestingOptions
 ) {
-  const graph = readCachedProjectGraph();
+  let graph: ProjectGraph;
+  try {
+    graph = readCachedProjectGraph();
+  } catch (e) {
+    throw new Error(
+      // don't want to strip indents so error stack has correct indentation
+      `Unable to read the project graph for component testing.
+This is likely due to not running via nx. i.e. 'nx component-test my-project'.
+Please open an issue if this error persists.
+${e.stack ? e.stack : e}`
+    );
+  }
+
   const ctProjectConfig = getProjectConfigByPath(graph, pathToConfig);
   const ctConfigurationName = process.env.NX_CYPRESS_TARGET_CONFIGURATION;
   const ctContext = createExecutorContext(
@@ -61,7 +75,7 @@ export function nxComponentTestingPreset(
 
   if (!buildTarget.project && !graph.nodes?.[buildTarget.project]?.data) {
     throw new Error(stripIndents`Unable to find project configuration for build target. 
-    Has project? ${buildTarget.project}
+    Project Name? ${buildTarget.project}
     Has project config? ${!!graph.nodes?.[buildTarget.project]?.data}`);
   }
 
@@ -152,16 +166,20 @@ function normalizeBuildTargetOptions(
   );
   const buildOptions = withSchemaDefaults(options);
 
-  buildOptions.polyfills = join(offset, buildOptions.polyfills);
-  buildOptions.main = join(offset, buildOptions.main);
+  // paths need to be unix paths for angular devkit
+  buildOptions.polyfills = joinPathFragments(offset, buildOptions.polyfills);
+  buildOptions.main = joinPathFragments(offset, buildOptions.main);
   buildOptions.index =
     typeof buildOptions.index === 'string'
-      ? join(offset, buildOptions.index)
-      : (buildOptions.index.input = join(offset, buildOptions.index.input));
-  buildOptions.tsConfig = join(offset, buildOptions.tsConfig);
+      ? joinPathFragments(offset, buildOptions.index)
+      : (buildOptions.index.input = joinPathFragments(
+          offset,
+          buildOptions.index.input
+        ));
+  buildOptions.tsConfig = joinPathFragments(offset, buildOptions.tsConfig);
   buildOptions.fileReplacements = buildOptions.fileReplacements.map((fr) => {
-    fr.replace = join(offset, fr.replace);
-    fr.with = join(offset, fr.with);
+    fr.replace = joinPathFragments(offset, fr.replace);
+    fr.with = joinPathFragments(offset, fr.with);
     return fr;
   });
 
@@ -177,18 +195,18 @@ function normalizeBuildTargetOptions(
   ) {
     buildOptions.assets = buildOptions.assets.map((asset) => {
       return typeof asset === 'string'
-        ? join(offset, asset)
-        : (asset.input = join(offset, asset.input));
+        ? joinPathFragments(offset, asset)
+        : (asset.input = joinPathFragments(offset, asset.input));
     });
     buildOptions.styles = buildOptions.styles.map((style) => {
       return typeof style === 'string'
-        ? join(offset, style)
-        : (style.input = join(offset, style.input));
+        ? joinPathFragments(offset, style)
+        : (style.input = joinPathFragments(offset, style.input));
     });
     buildOptions.scripts = buildOptions.scripts.map((script) => {
       return typeof script === 'string'
-        ? join(offset, script)
-        : (script.input = join(offset, script.input));
+        ? joinPathFragments(offset, script)
+        : (script.input = joinPathFragments(offset, script.input));
     });
   } else {
     const stylePath = getTempStylesForTailwind(ctContext);
@@ -199,8 +217,8 @@ function normalizeBuildTargetOptions(
   const { root, sourceRoot } =
     buildContext.projectGraph.nodes[buildContext.projectName].data;
   return {
-    root: join(offset, root),
-    sourceRoot: join(offset, sourceRoot),
+    root: joinPathFragments(offset, root),
+    sourceRoot: joinPathFragments(offset, sourceRoot),
     buildOptions,
   };
 }

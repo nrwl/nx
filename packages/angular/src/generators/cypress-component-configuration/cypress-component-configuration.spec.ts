@@ -746,6 +746,7 @@ function getCmpsFromTree(
   tree: Tree,
   options: { basePath: string; name: string }
 ) {
+  console.log(tree.listChanges().map((c) => c.path));
   return [
     `${options.name}-one`,
     `${options.name}-two`,
@@ -754,6 +755,7 @@ function getCmpsFromTree(
     expect(
       tree.exists(joinPathFragments(options.basePath, n, `${n}.component.ts`))
     ).toBeTruthy();
+    console.log(options.basePath, n, `${n}.component.ts`);
     expect(
       tree.exists(
         joinPathFragments(options.basePath, n, `${n}.component.cy.ts`)

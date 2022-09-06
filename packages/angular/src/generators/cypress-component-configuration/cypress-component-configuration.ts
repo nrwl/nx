@@ -10,6 +10,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { relative } from 'path';
 import { componentTestGenerator } from '../component-test/component-test';
 import {
   getComponentsInfo,
@@ -49,7 +50,8 @@ function addFiles(
   options: CypressComponentConfigSchema
 ) {
   const cypressConfigPath = joinPathFragments(
-    joinPathFragments(projectConfig.root, 'cypress.config.ts')
+    projectConfig.root,
+    'cypress.config.ts'
   );
 
   if (tree.exists(cypressConfigPath)) {
@@ -85,10 +87,14 @@ function addFiles(
       if (info === undefined) {
         continue;
       }
+      const componentDirFromProjectRoot = relative(
+        projectConfig.root,
+        joinPathFragments(info.moduleFolderPath, info.path)
+      );
       componentTestGenerator(tree, {
-        projectPath: info.moduleFolderPath,
+        project: options.project,
         componentName: info.name,
-        componentDir: info.path,
+        componentDir: componentDirFromProjectRoot,
         componentFileName: info.componentFileName,
         skipFormat: true,
       });

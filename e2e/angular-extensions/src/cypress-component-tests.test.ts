@@ -23,6 +23,9 @@ describe('Angular Cypress Component Tests', () => {
     runCLI(
       `generate @nrwl/angular:component btn --project=${usedInAppLibName} --inlineTemplate --inlineStyle --export --no-interactive`
     );
+    runCLI(
+      `generate @nrwl/angular:component btn-standalone --project=${usedInAppLibName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
+    );
     updateFile(
       `libs/${usedInAppLibName}/src/lib/btn/btn.component.ts`,
       `
@@ -38,11 +41,29 @@ export class BtnComponent {
 }
 `
     );
+    updateFile(
+      `libs/${usedInAppLibName}/src/lib/btn-standalone/btn-standalone.component.ts`,
+      `
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+@Component({
+  selector: '${projectName}-btn-standalone',
+  standalone: true,
+  imports: [CommonModule],
+  template: '<button class="text-green-500">standlone-{{text}}</button>',
+  styles: [],
+})
+export class BtnStandaloneComponent {
+  @Input() text = 'something';
+}
+`
+    );
     // use lib in the app
     createFile(
       `apps/${appName}/src/app/app.component.html`,
       `
 <${projectName}-btn></${projectName}-btn>
+<${projectName}-btn-standalone></${projectName}-btn-standalone>
 <${projectName}-nx-welcome></${projectName}-nx-welcome>
 `
     );
@@ -74,17 +95,37 @@ export class AppModule {}
     runCLI(
       `generate @nrwl/angular:component input --project=${buildableLibName} --inlineTemplate --inlineStyle --export --no-interactive`
     );
+    runCLI(
+      `generate @nrwl/angular:component input-standalone --project=${buildableLibName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
+    );
     updateFile(
       `libs/${buildableLibName}/src/lib/input/input.component.ts`,
       `
 import {Component, Input} from '@angular/core';
 
 @Component({
-  selector: 'ng-tailwind-with-tailwind-alone',
+  selector: '${projectName}-input',
   template: \`<label class="text-green-500">Email: <input class="border-blue-500" type="email" [readOnly]="readOnly"></label>\`,
     styles  : []
   })
   export class InputComponent{
+    @Input() readOnly = false;
+  }
+  `
+    );
+    updateFile(
+      `libs/${buildableLibName}/src/lib/input-standalone/input-standalone.component.ts`,
+      `
+import {Component, Input} from '@angular/core';
+import {CommonModule} from '@angular/common';
+@Component({
+  selector: '${projectName}-input-standalone',
+  standalone: true,
+  imports: [CommonModule],
+  template: \`<label class="text-green-500">Email: <input class="border-blue-500" type="email" [readOnly]="readOnly"></label>\`,
+    styles  : []
+  })
+  export class InputStandaloneComponent{
     @Input() readOnly = false;
   }
   `
@@ -115,7 +156,6 @@ import {Component, Input} from '@angular/core';
       runCLI(
         `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests`
       );
-      // TODO(caleb): make sure it's the correct error.
     }).toThrow();
     createFile(
       `libs/${buildableLibName}/src/lib/input/input.component.cy.ts`,
@@ -148,6 +188,37 @@ describe(InputComponent.name, () => {
 `
     );
 
+    createFile(
+      `libs/${buildableLibName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
+      `
+import { MountConfig, mount } from 'cypress/angular';
+import { InputStandaloneComponent } from './input-standalone.component';
+
+describe(InputStandaloneComponent.name, () => {
+  const config: MountConfig<InputStandaloneComponent> = {
+    declarations: [],
+    imports: [],
+    providers: [],
+  };
+
+  it('renders', () => {
+    mount(InputStandaloneComponent, config);
+    // make sure tailwind isn't getting applied
+    cy.get('label').should('have.css', 'color', 'rgb(0, 0, 0)');
+  });
+  it('should be readonly', () => {
+    mount(InputStandaloneComponent, {
+      ...config,
+      componentProperties: {
+        readOnly: true,
+      },
+    });
+    cy.get('input').should('have.attr', 'readonly');
+  });
+});
+`
+    );
+
     runCLI(
       `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`
     );
@@ -161,6 +232,13 @@ describe(InputComponent.name, () => {
     );
     updateFile(
       `libs/${buildableLibName}/src/lib/input/input.component.cy.ts`,
+      (content) => {
+        // text-green-500 should now apply
+        return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
+      }
+    );
+    updateFile(
+      `libs/${buildableLibName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
       (content) => {
         // text-green-500 should now apply
         return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
