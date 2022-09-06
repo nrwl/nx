@@ -65,16 +65,8 @@ class PromptMessages {
   private messages = {
     nxCloud: [
       {
-        code: 'set-up-cloud',
-        message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
-      },
-      {
         code: 'set-up-distributed-caching-ci',
         message: `Enable distributed caching to make your CI faster`,
-      },
-      {
-        code: 'set-up-distributed-caching',
-        message: `Enable distributed caching to make your builds and tests faster`,
       },
     ],
   };
@@ -95,7 +87,7 @@ class PromptMessages {
   }
 
   codeOfSelectedPromptMessage(key: string): string {
-    if (!this.selectedMessages[key]) return null;
+    if (this.selectedMessages[key] === undefined) return null;
     return this.messages[key][this.selectedMessages[key]].code;
   }
 }

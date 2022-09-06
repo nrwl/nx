@@ -59,14 +59,12 @@ async function connectToNxCloudPrompt(prompt?: string) {
     .prompt([
       {
         name: 'NxCloud',
-        message:
-          prompt ??
-          `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
+        message: prompt ?? `Enable distributed caching to make your CI faster`,
         type: 'autocomplete',
         choices: [
           {
             name: 'Yes',
-            hint: 'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
+            hint: 'I want faster builds',
           },
           {
             name: 'No',
