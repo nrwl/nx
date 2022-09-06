@@ -895,6 +895,58 @@
             "type": "boolean",
             "description": "Generate a library that uses a standalone component instead of a module as the entry point.",
             "default": false
+          },
+          "displayBlock": {
+            "description": "Specifies if the component generated style will contain `:host { display: block; }`. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
+            "type": "boolean",
+            "default": false,
+            "alias": "b"
+          },
+          "inlineStyle": {
+            "description": "Include styles inline in the component.ts file. Only CSS styles can be included inline. By default, an external styles file is created and referenced in the component.ts file. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
+            "type": "boolean",
+            "default": false,
+            "alias": "s"
+          },
+          "inlineTemplate": {
+            "description": "Include template inline in the component.ts file. By default, an external template file is created and referenced in the component.ts file. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
+            "type": "boolean",
+            "default": false,
+            "alias": "t"
+          },
+          "viewEncapsulation": {
+            "description": "The view encapsulation strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
+            "enum": ["Emulated", "None", "ShadowDom"],
+            "type": "string",
+            "alias": "v"
+          },
+          "changeDetection": {
+            "description": "The change detection strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
+            "enum": ["Default", "OnPush"],
+            "type": "string",
+            "default": "Default",
+            "alias": "c"
+          },
+          "style": {
+            "description": "The file extension or preprocessor to use for style files, or `none` to skip generating the style file. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
+            "type": "string",
+            "default": "css",
+            "enum": ["css", "scss", "sass", "less", "none"]
+          },
+          "skipTests": {
+            "type": "boolean",
+            "description": "Do not create `spec.ts` test files for the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
+            "default": false
+          },
+          "selector": {
+            "type": "string",
+            "format": "html-selector",
+            "description": "The HTML selector to use for this component. Disclaimer: This option is only valid when `--standalone` is set to `true`."
+          },
+          "skipSelector": {
+            "type": "boolean",
+            "default": false,
+            "description": "Specifies if the component should have a selector or not. Disclaimer: This option is only valid when `--standalone` is set to `true`."
           }
         },
         "additionalProperties": false,

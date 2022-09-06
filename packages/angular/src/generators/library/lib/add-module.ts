@@ -5,7 +5,10 @@ import { addLoadChildren } from './add-load-children';
 import { addRouterConfiguration } from './add-router-configuration';
 import { NormalizedSchema } from './normalized-schema';
 
-export function addModule(host: Tree, options: NormalizedSchema) {
+export function addModule(
+  host: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   if (options.routing && options.lazy) {
     addLazyLoadedRouterConfiguration(host, options);
   }

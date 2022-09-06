@@ -14,7 +14,10 @@ import * as path from 'path';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
 
-export async function updateProject(host: Tree, options: NormalizedSchema) {
+export async function updateProject(
+  host: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   createFiles(host, options);
   updateProjectTsConfig(host, options);
   fixProjectWorkspaceConfig(host, options);
@@ -22,7 +25,7 @@ export async function updateProject(host: Tree, options: NormalizedSchema) {
   updateFiles(host, options);
 }
 
-function updateFiles(host: Tree, options: NormalizedSchema) {
+function updateFiles(host: Tree, options: NormalizedSchema['libraryOptions']) {
   const libRoot = `${options.projectRoot}/src/lib/`;
   const serviceSpecPath = path.join(libRoot, `${options.name}.service.spec.ts`);
   const componentSpecPath = path.join(
@@ -112,7 +115,7 @@ function updateFiles(host: Tree, options: NormalizedSchema) {
   );
 }
 
-function createFiles(host: Tree, options: NormalizedSchema) {
+function createFiles(host: Tree, options: NormalizedSchema['libraryOptions']) {
   generateFiles(
     host,
     path.join(__dirname, '../files/lib'),
@@ -128,7 +131,10 @@ function createFiles(host: Tree, options: NormalizedSchema) {
   );
 }
 
-function fixProjectWorkspaceConfig(host: Tree, options: NormalizedSchema) {
+function fixProjectWorkspaceConfig(
+  host: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   let project = readProjectConfiguration(host, options.name);
   project.tags = options.parsedTags;
 
@@ -170,7 +176,10 @@ function fixProjectWorkspaceConfig(host: Tree, options: NormalizedSchema) {
   updateProjectConfiguration(host, options.name, project);
 }
 
-function updateProjectTsConfig(host: Tree, options: NormalizedSchema) {
+function updateProjectTsConfig(
+  host: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   if (!host.exists(`${options.projectRoot}/tsconfig.lib.json`)) {
     host.write(`${options.projectRoot}/tsconfig.lib.json`, '{}');
   }

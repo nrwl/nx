@@ -1,8 +1,8 @@
 import type { Tree } from '@nrwl/devkit';
 import {
-  updateWorkspaceConfiguration,
   readWorkspaceConfiguration,
   updateJson,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -11,7 +11,7 @@ import { NormalizedSchema } from './normalized-schema';
  * */
 export function enableStrictTypeChecking(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema['libraryOptions']
 ) {
   updateTsConfig(host, options);
 }
@@ -31,7 +31,10 @@ export function setLibraryStrictDefault(host: Tree, isStrict: boolean) {
   updateWorkspaceConfiguration(host, workspace);
 }
 
-function updateTsConfig(host: Tree, options: NormalizedSchema) {
+function updateTsConfig(
+  host: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   // Update the settings in the tsconfig.app.json to enable strict type checking.
   // This matches the settings defined by the Angular CLI https://angular.io/guide/strict-mode
   updateJson(host, `${options.projectRoot}/tsconfig.json`, (json) => {
