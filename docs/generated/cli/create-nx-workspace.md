@@ -97,7 +97,7 @@ Workspace name (e.g. org name)
 
 Type: boolean
 
-Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)
+Enable distributed caching to make your CI faster
 
 ### packageManager
 

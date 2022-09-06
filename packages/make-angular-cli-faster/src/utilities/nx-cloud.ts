@@ -6,12 +6,12 @@ export async function promptForNxCloud(): Promise<boolean> {
   const { useNxCloud } = await prompt<{ useNxCloud: 'Yes' | 'No' }>([
     {
       name: 'useNxCloud',
-      message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
+      message: `Enable distributed caching to make your CI faster`,
       type: 'autocomplete',
       choices: [
         {
           name: 'Yes',
-          hint: 'Yes [Faster builds, run details, Github integration. Learn more at https://nx.app]',
+          hint: 'I want faster builds',
         },
         { name: 'No' },
       ],
