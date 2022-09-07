@@ -1,5 +1,9 @@
 # Webpack 5 Migration
 
+{% callout type="note" title="Customizing webpack" %}
+This page is for Nx 13 migration to Webpack 5, and is no longer applicable in Nx 14+. For customizing Webpack, see [our recipe on this topic](/recipe/customize-webpack).
+{% /callout %}
+
 Starting in Nx 13, we only support Webpack 5, which is automatically enabled for all workspaces.
 
 Workspaces with custom webpack configuration should make sure that all their plugins and loaders are compatible with Webpack 5.
