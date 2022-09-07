@@ -80,9 +80,10 @@ You can connect your workspace to Nx Cloud by running:
 npx nx connect-to-nx-cloud
 ```
 
-Learn more about Nx Cloud at [https://nx.app](https://nx.app).
-
 ## Related Documentation
+
+- [Nx Cloud Documentation](/nx-cloud/intro/what-is-nx-cloud)
+- [Nx Cloud Main Site](https://nx.app)
 
 ### Concepts
 

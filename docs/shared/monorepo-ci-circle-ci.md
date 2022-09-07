@@ -67,22 +67,17 @@ jobs:
   main:
     docker:
       - image: cimg/node:lts-browsers
-    environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
     steps:
       - checkout
       - run: npm ci
       - nx/set-shas
-      - run: npx nx-cloud start-ci-run
+      - run: npx nx-cloud start-ci-run --stop-agents-after="build"
 
       - run: npx nx-cloud record -- npx nx workspace-lint
       - run: npx nx-cloud record -- npx nx format:check
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
-
-      - run: npx nx-cloud stop-all-agents
-          when: always
 workflows:
   build:
     jobs:

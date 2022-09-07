@@ -73,7 +73,6 @@ Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci-setup#distr
 image: node:18
 variables:
   CI: 'true'
-  NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
 
 # Creating template for DTE agents
 .dte-agent:
@@ -118,14 +117,13 @@ nx-dte:
   stage: affected
   extends: .base-pipeline
   script:
-    - yarn nx-cloud start-ci-run
+    - yarn nx-cloud start-ci-run --stop-agents-after="build"
     - yarn nx-cloud record -- yarn nx workspace-lint --base=$NX_BASE --head=$NX_HEAD
     - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
-    - yarn nx-cloud stop-all-agents
 
 # Create as many agents as you want
 nx-dte-agent1:
