@@ -5,7 +5,7 @@ import {
   joinPathFragments,
   readProjectConfiguration,
 } from '@nrwl/devkit';
-import { getComponentProps } from '../utils/storybook';
+import { getComponentProps } from '../utils/storybook-ast/storybook-inputs';
 import { getArgsDefaultValue } from './lib/get-args-default-value';
 import { getComponentSelector } from './lib/get-component-selector';
 import type { ComponentCypressSpecGeneratorOptions } from './schema';

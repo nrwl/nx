@@ -27,7 +27,7 @@ interface FindTargetOptions {
 }
 
 interface FoundTarget {
-  config: TargetConfiguration;
+  config?: TargetConfiguration;
   target: string;
 }
 
@@ -35,27 +35,34 @@ export async function findBuildConfig(
   tree: Tree,
   options: FindTargetOptions
 ): Promise<FoundTarget> {
-  // attempt to use the provided target
-  const graph = await createProjectGraphAsync();
-  if (options.buildTarget) {
-    return {
-      target: options.buildTarget,
-      config: findInTarget(tree, graph, options),
-    };
-  }
-  // check to see if there is a valid config in the given project
-  const selfProject = findTargetOptionsInProject(
-    tree,
-    graph,
-    options.project,
-    options.validExecutorNames
-  );
-  if (selfProject) {
-    return selfProject;
-  }
+  try {
+    // attempt to use the provided target
+    const graph = await createProjectGraphAsync();
+    if (options.buildTarget) {
+      return {
+        target: options.buildTarget,
+        config: findInTarget(tree, graph, options),
+      };
+    }
+    // check to see if there is a valid config in the given project
+    const selfProject = findTargetOptionsInProject(
+      tree,
+      graph,
+      options.project,
+      options.validExecutorNames
+    );
+    if (selfProject) {
+      return selfProject;
+    }
 
-  // attempt to find any projects with the valid config in the graph that consumes this project
-  return await findInGraph(tree, graph, options);
+    // attempt to find any projects with the valid config in the graph that consumes this project
+    return await findInGraph(tree, graph, options);
+  } catch (e) {
+    throw new Error(stripIndents`Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
+    Provided project? ${options.project}
+    Provided build target? ${options.buildTarget}
+    Provided Executors? ${[...options.validExecutorNames].join(', ')}`);
+  }
 }
 
 function findInTarget(
@@ -103,7 +110,7 @@ async function findInGraph(
   }
 
   if (potentialTargets.length > 1) {
-    logger.warn(stripIndents`Multiple potential targets found for ${options.project}. Found ${potentialTargets.length}. 
+    logger.warn(stripIndents`Multiple potential targets found for ${options.project}. Found ${potentialTargets.length}.
     Using ${potentialTargets[0].target}.
     To specify a different target use the --build-target flag.
     `);

@@ -1,3 +1,4 @@
+import { getTempTailwindPath } from '../../utils/ct-helpers';
 import { stripIndents } from '@nrwl/devkit';
 import * as path from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';
@@ -7,7 +8,7 @@ jest.mock('@nrwl/devkit');
 let devkit = require('@nrwl/devkit');
 
 jest.mock('../../utils/cypress-version');
-
+jest.mock('../../utils/ct-helpers');
 const Cypress = require('cypress');
 
 describe('Cypress builder', () => {
@@ -33,6 +34,8 @@ describe('Cypress builder', () => {
     watch: true,
   });
   let runExecutor: any;
+  let mockGetTailwindPath: jest.Mock<ReturnType<typeof getTempTailwindPath>> =
+    getTempTailwindPath as any;
 
   beforeEach(async () => {
     runExecutor = (devkit as any).runExecutor = jest.fn().mockReturnValue([
@@ -409,6 +412,9 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
   });
 
   describe('Component Testing', () => {
+    beforeEach(() => {
+      mockGetTailwindPath.mockReturnValue(undefined);
+    });
     it('should forward testingType', async () => {
       const { success } = await cypressExecutor(
         {

@@ -1,36 +1,25 @@
-import { nxBaseCypressPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import {
+  createExecutorContext,
+  getProjectConfigByPath,
+  nxBaseCypressPreset,
+  NxComponentTestingOptions,
+} from '@nrwl/cypress/plugins/cypress-preset';
 import type { CypressExecutorOptions } from '@nrwl/cypress/src/executors/cypress/cypress.impl';
 import {
   ExecutorContext,
   logger,
   parseTargetString,
-  ProjectConfiguration,
   ProjectGraph,
   readCachedProjectGraph,
-  readNxJson,
   readTargetOptions,
   stripIndents,
   Target,
-  TargetConfiguration,
   workspaceRoot,
 } from '@nrwl/devkit';
 import type { WebWebpackExecutorOptions } from '@nrwl/web/src/executors/webpack/webpack.impl';
 import { normalizeWebBuildOptions } from '@nrwl/web/src/utils/normalize';
 import { getWebConfig } from '@nrwl/web/src/utils/web.config';
-import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
-import { lstatSync } from 'fs';
-import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { extname, relative } from 'path';
 import { buildBaseWebpackConfig } from './webpack-fallback';
-
-export interface ReactComponentTestingOptions {
-  /**
-   * the component testing target name.
-   * this is only when customized away from the default value of `component-test`
-   * @example 'component-test'
-   */
-  ctTargetName: string;
-}
 
 /**
  * React nx preset for Cypress Component Testing
@@ -52,12 +41,12 @@ export interface ReactComponentTestingOptions {
  */
 export function nxComponentTestingPreset(
   pathToConfig: string,
-  options?: ReactComponentTestingOptions
+  options?: NxComponentTestingOptions
 ) {
   let webpackConfig;
   try {
     const graph = readCachedProjectGraph();
-    const { targets: ctTargets, name: ctProjectName } = getConfigByPath(
+    const { targets: ctTargets, name: ctProjectName } = getProjectConfigByPath(
       graph,
       pathToConfig
     );
@@ -191,56 +180,4 @@ function buildTargetWebpack(
     isScriptOptimizeOn,
     parsed.configuration
   );
-}
-
-function getConfigByPath(
-  graph: ProjectGraph,
-  configPath: string
-): ProjectConfiguration {
-  const configFileFromWorkspaceRoot = relative(workspaceRoot, configPath);
-  const normalizedPathFromWorkspaceRoot = lstatSync(configPath).isFile()
-    ? configFileFromWorkspaceRoot.replace(extname(configPath), '')
-    : configFileFromWorkspaceRoot;
-
-  const mappedGraph = mapProjectGraphFiles(graph);
-  const componentTestingProjectName =
-    mappedGraph.allFiles[normalizedPathFromWorkspaceRoot];
-  if (
-    !componentTestingProjectName ||
-    !graph.nodes[componentTestingProjectName]?.data
-  ) {
-    throw new Error(
-      stripIndents`Unable to find the project configuration that includes ${normalizedPathFromWorkspaceRoot}. 
-      Found project name? ${componentTestingProjectName}. 
-      Graph has data? ${!!graph.nodes[componentTestingProjectName]?.data}`
-    );
-  }
-  // make sure name is set since it can be undefined
-  graph.nodes[componentTestingProjectName].data.name ??=
-    componentTestingProjectName;
-  return graph.nodes[componentTestingProjectName].data;
-}
-
-function createExecutorContext(
-  graph: ProjectGraph,
-  targets: Record<string, TargetConfiguration>,
-  projectName: string,
-  targetName: string,
-  configurationName: string
-): ExecutorContext {
-  const projectConfigs = readProjectsConfigurationFromProjectGraph(graph);
-  return {
-    cwd: process.cwd(),
-    projectGraph: graph,
-    target: targets[targetName],
-    targetName,
-    configurationName,
-    root: workspaceRoot,
-    isVerbose: false,
-    projectName,
-    workspace: {
-      ...readNxJson(),
-      ...projectConfigs,
-    },
-  };
 }

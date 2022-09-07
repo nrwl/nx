@@ -1,7 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { formatFiles, generateFiles, joinPathFragments } from '@nrwl/devkit';
-import { getComponentProps } from '../utils/storybook';
-import { getArgsDefaultValue } from './lib/get-args-default-value';
+import { getComponentProps } from '../utils/storybook-ast/storybook-inputs';
 import type { ComponentStoryGeneratorOptions } from './schema';
 
 export function componentStoryGenerator(
@@ -24,8 +23,7 @@ export function componentStoryGenerator(
 
   const props = getComponentProps(
     tree,
-    joinPathFragments(destinationDir, `${componentFileName}.ts`),
-    getArgsDefaultValue
+    joinPathFragments(destinationDir, `${componentFileName}.ts`)
   );
 
   generateFiles(tree, templatesDir, destinationDir, {

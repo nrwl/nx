@@ -1,0 +1,301 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Cypress Component Testing Configuration should work with complex component 1`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingOneComponent } from './something-one.component';
+
+describe(SomethingOneComponent.name, () => {
+  const config: MountConfig<SomethingOneComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingOneComponent, {
+           ...config,
+           componentProperties: {
+               type:  'button',
+               style:  'default',
+               age:  0,
+               isOn:  false,
+          }
+       });
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with complex component 2`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingTwoComponent } from './something-two.component';
+
+describe(SomethingTwoComponent.name, () => {
+  const config: MountConfig<SomethingTwoComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingTwoComponent, {
+           ...config,
+           componentProperties: {
+               type:  'button',
+               style:  'default',
+               age:  0,
+               isOn:  false,
+          }
+       });
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with complex component 3`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingThreeComponent } from './something-three.component';
+
+describe(SomethingThreeComponent.name, () => {
+  const config: MountConfig<SomethingThreeComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingThreeComponent, {
+           ...config,
+           componentProperties: {
+               type:  'button',
+               style:  'default',
+               age:  0,
+               isOn:  false,
+          }
+       });
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with complex standalone component 1`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingOneComponent } from './something-one.component';
+
+describe(SomethingOneComponent.name, () => {
+  const config: MountConfig<SomethingOneComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingOneComponent, {
+           ...config,
+           componentProperties: {
+               type:  'button',
+               style:  'default',
+               age:  0,
+               isOn:  false,
+          }
+       });
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with complex standalone component 2`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingTwoComponent } from './something-two.component';
+
+describe(SomethingTwoComponent.name, () => {
+  const config: MountConfig<SomethingTwoComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingTwoComponent, {
+           ...config,
+           componentProperties: {
+               type:  'button',
+               style:  'default',
+               age:  0,
+               isOn:  false,
+          }
+       });
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with complex standalone component 3`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingThreeComponent } from './something-three.component';
+
+describe(SomethingThreeComponent.name, () => {
+  const config: MountConfig<SomethingThreeComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingThreeComponent, {
+           ...config,
+           componentProperties: {
+               type:  'button',
+               style:  'default',
+               age:  0,
+               isOn:  false,
+          }
+       });
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with secondary entry point libs 1`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { FancyButtonComponent } from './fancy-button.component';
+
+describe(FancyButtonComponent.name, () => {
+  const config: MountConfig<FancyButtonComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(FancyButtonComponent, config);
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with secondary entry point libs 2`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { StandaloneFancyButtonComponent } from './standalone-fancy-button.component';
+
+describe(StandaloneFancyButtonComponent.name, () => {
+  const config: MountConfig<StandaloneFancyButtonComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(StandaloneFancyButtonComponent, config);
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with simple components 1`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingOneComponent } from './something-one.component';
+
+describe(SomethingOneComponent.name, () => {
+  const config: MountConfig<SomethingOneComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingOneComponent, config);
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with simple components 2`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingTwoComponent } from './something-two.component';
+
+describe(SomethingTwoComponent.name, () => {
+  const config: MountConfig<SomethingTwoComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingTwoComponent, config);
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with simple components 3`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingThreeComponent } from './something-three.component';
+
+describe(SomethingThreeComponent.name, () => {
+  const config: MountConfig<SomethingThreeComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingThreeComponent, config);
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with standalone component 1`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingOneComponent } from './something-one.component';
+
+describe(SomethingOneComponent.name, () => {
+  const config: MountConfig<SomethingOneComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingOneComponent, config);
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with standalone component 2`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingTwoComponent } from './something-two.component';
+
+describe(SomethingTwoComponent.name, () => {
+  const config: MountConfig<SomethingTwoComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingTwoComponent, config);
+  })
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with standalone component 3`] = `
+"import { MountConfig, mount } from 'cypress/angular';
+import { SomethingThreeComponent } from './something-three.component';
+
+describe(SomethingThreeComponent.name, () => {
+  const config: MountConfig<SomethingThreeComponent> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(SomethingThreeComponent, config);
+  })
+})
+"
+`;

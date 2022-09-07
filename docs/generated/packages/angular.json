@@ -460,7 +460,7 @@
       "name": "component-story",
       "factory": "./src/generators/component-story/component-story",
       "schema": {
-        "$schema": "http://json-schema.org/schema",
+        "$schema": "https://json-schema.org/schema",
         "$id": "NxAngularComponentStoryGenerator",
         "type": "object",
         "cli": "nx",
@@ -506,6 +506,58 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/generators/component-story/schema.json"
+    },
+    {
+      "name": "component-test",
+      "factory": "./src/generators/component-test/component-test",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularComponentTestGenerator",
+        "type": "object",
+        "cli": "nx",
+        "description": "Create a `*.cy.ts` file for Cypress component testing for an Angular component.",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project where the component is located.",
+            "x-dropdown": "projects",
+            "x-prompt": "What project is the component located in?"
+          },
+          "componentName": {
+            "type": "string",
+            "description": "Class name of the component to create a test for.",
+            "examples": ["MyFancyButtonComponent"]
+          },
+          "componentDir": {
+            "type": "string",
+            "description": "Relative path to the folder that contains the component from the project root.",
+            "example": ["src/lib/my-fancy-button"]
+          },
+          "componentFileName": {
+            "type": "string",
+            "description": "File name that contains the component without the `.ts` extension.",
+            "examples": ["my-fancy-button.component"]
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "projectPath",
+          "componentName",
+          "componentPath",
+          "componentFileName"
+        ],
+        "presets": []
+      },
+      "description": "Creates a cypress component test file for a component.",
+      "implementation": "/packages/angular/src/generators/component-test/component-test.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/component-test/schema.json"
     },
     {
       "name": "convert-tslint-to-eslint",
@@ -2069,6 +2121,48 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/generators/storybook-configuration/schema.json"
+    },
+    {
+      "name": "cypress-component-configuration",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration",
+      "schema": {
+        "$schema": "https://json-schema.org/schema",
+        "$id": "NxAngularCypressComponentConfigurationGenerator",
+        "type": "object",
+        "cli": "nx",
+        "title": "Add Cypress component testing",
+        "description": "Add a Cypress component testing configuration to an existing project. Cypress v10.7.0 or higher is required.",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project to add cypress component testing configuration to",
+            "$default": { "$source": "projectName" },
+            "x-prompt": "What project should we add Cypress component testing to?"
+          },
+          "generateTests": {
+            "type": "boolean",
+            "description": "Generate default component tests for existing components in the project",
+            "default": false
+          },
+          "buildTarget": {
+            "type": "string",
+            "description": "A build target used to configure Cypress component testing in the format of `project:target[:configuration]`. The build target should be an angular app. If not provided we will try to infer it from your projects usage.",
+            "pattern": "^[^:\\s]+:[^:\\s]+(:\\S+)?$"
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting files",
+            "default": false
+          }
+        },
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Setup Cypress component testing for a project.",
+      "implementation": "/packages/angular/src/generators/cypress-component-configuration/cypress-component-configuration.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/cypress-component-configuration/schema.json"
     },
     {
       "name": "upgrade-module",

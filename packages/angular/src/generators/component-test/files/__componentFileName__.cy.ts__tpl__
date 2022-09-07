@@ -1,0 +1,19 @@
+import { MountConfig, mount } from 'cypress/angular';
+import { <%= componentName %> } from './<%= componentFileName %>';
+
+describe(<%= componentName %>.name, () => {
+  const config: MountConfig<<%= componentName %>> = {
+    declarations: [],
+    imports: [],
+    providers: []
+  }
+
+  it('renders', () => {
+     mount(<%= componentName %>,<% if(props.length > 0) { %> {
+           ...config,
+           componentProperties: {<% for (let prop of props) { %>
+               <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+          }
+       }<% } else { %> config<% } %>);
+  })
+})

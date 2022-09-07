@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularComponentTestGenerator",
+  "type": "object",
+  "cli": "nx",
+  "description": "Create a `*.cy.ts` file for Cypress component testing for an Angular component.",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project where the component is located.",
+      "x-dropdown": "projects",
+      "x-prompt": "What project is the component located in?"
+    },
+    "componentName": {
+      "type": "string",
+      "description": "Class name of the component to create a test for.",
+      "examples": ["MyFancyButtonComponent"]
+    },
+    "componentDir": {
+      "type": "string",
+      "description": "Relative path to the folder that contains the component from the project root.",
+      "example": ["src/lib/my-fancy-button"]
+    },
+    "componentFileName": {
+      "type": "string",
+      "description": "File name that contains the component without the `.ts` extension.",
+      "examples": ["my-fancy-button.component"]
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "projectPath",
+    "componentName",
+    "componentPath",
+    "componentFileName"
+  ]
+}

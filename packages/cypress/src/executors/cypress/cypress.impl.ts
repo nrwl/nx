@@ -7,7 +7,9 @@ import {
   stripIndents,
 } from '@nrwl/devkit';
 import 'dotenv/config';
+import { existsSync, unlinkSync } from 'fs';
 import { basename, dirname, join } from 'path';
+import { getTempTailwindPath } from '../../utils/ct-helpers';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
@@ -40,6 +42,9 @@ export interface CypressExecutorOptions extends Json {
   tag?: string;
 }
 
+interface NormalizedCypressExecutorOptions extends CypressExecutorOptions {
+  ctTailwindPath?: string;
+}
 export default async function cypressExecutor(
   options: CypressExecutorOptions,
   context: ExecutorContext
@@ -66,12 +71,18 @@ export default async function cypressExecutor(
 function normalizeOptions(
   options: CypressExecutorOptions,
   context: ExecutorContext
-) {
+): NormalizedCypressExecutorOptions {
   options.env = options.env || {};
   if (options.tsConfig) {
     const tsConfigPath = join(context.root, options.tsConfig);
     options.env.tsConfig = tsConfigPath;
     process.env.TS_NODE_PROJECT = tsConfigPath;
+  }
+  if (options.testingType === 'component') {
+    const project = context?.projectGraph?.nodes?.[context.projectName];
+    if (project?.data?.root) {
+      options.ctTailwindPath = getTempTailwindPath(context);
+    }
   }
   checkSupportedBrowser(options);
   warnDeprecatedHeadless(options);
@@ -175,8 +186,11 @@ async function* startDevServer(
  * By default, Cypress will run tests from the CLI without the GUI and provide directly the results in the console output.
  * If `watch` is `true`: Open Cypress in the interactive GUI to interact directly with the application.
  */
-async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
-  // Cypress expects the folder where a `cypress.json` is present
+async function runCypress(
+  baseUrl: string,
+  opts: NormalizedCypressExecutorOptions
+) {
+  // Cypress expects the folder where a cypress config is present
   const projectFolderPath = dirname(opts.cypressConfig);
   const options: any = {
     project: projectFolderPath,
@@ -227,6 +241,9 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
     ? Cypress.open(options)
     : Cypress.run(options));
 
+  if (opts.ctTailwindPath && existsSync(opts.ctTailwindPath)) {
+    unlinkSync(opts.ctTailwindPath);
+  }
   /**
    * `cypress.open` is returning `0` and is not of the same type as `cypress.run`.
    * `cypress.open` is the graphical UI, so it will be obvious to know what wasn't

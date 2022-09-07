@@ -3,7 +3,7 @@ import * as devkit from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../library/library';
-import * as storybookUtils from '../utils/storybook';
+import * as storybookUtils from '../utils/storybook-ast/storybook-inputs';
 import { componentStoryGenerator } from './component-story';
 
 describe('componentStory generator', () => {

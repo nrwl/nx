@@ -25,6 +25,7 @@
         "component",
         "component-cypress-spec",
         "component-story",
+        "component-test",
         "convert-tslint-to-eslint",
         "downgrade-module",
         "init",
@@ -46,6 +47,7 @@
         "setup-tailwind",
         "stories",
         "storybook-configuration",
+        "cypress-component-configuration",
         "upgrade-module",
         "web-worker",
         "change-storybook-targets"
