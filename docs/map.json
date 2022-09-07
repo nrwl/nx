@@ -812,6 +812,11 @@
         "id": "set-up",
         "itemList": [
           {
+            "name": "Adding Nx Cloud to an Nx Workspace",
+            "id": "add-nx-cloud",
+            "file": "nx-cloud/set-up/add-nx-cloud"
+          },
+          {
             "name": "Set Up Distributed Caching",
             "id": "set-up-caching",
             "file": "nx-cloud/set-up/set-up-caching"

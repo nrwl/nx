@@ -6,11 +6,11 @@ By default, when you invite a member by email, they can create a separate NxClou
 
 If you'd like them to sign-in with Google directly, which ensures they automatically lose access to their NxCloud account if their email gets disabled, you need to enable this option when inviting them:
 
-![Require Google OAuth Sign-In toggle](/nx-cloud/account/require_google-signin.png)
+![Require Google OAuth Sign-In toggle](/nx-cloud/account/require_google_signin.png)
 
 They will then only be able to accept the invite if they sign-in with Google directly:
 
-![Log In with Google Button](/nx-cloud/account/google_oath.png)
+![Log In with Google Button](/nx-cloud/account/google_oauth.png)
 
 ## SAML integration
 

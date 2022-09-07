@@ -8,7 +8,7 @@ describe('nx-dev: Nx Cloud section', () => {
   (<{ title: string; path: string }[]>[
     { title: 'What is Nx Cloud?', path: '/nx-cloud/intro/what-is-nx-cloud' },
     {
-      title: 'Adding Nx Cloud to an Nx Workspace',
+      title: 'Enabling Distributed Caching',
       path: '/nx-cloud/set-up/set-up-caching',
     },
     {

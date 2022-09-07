@@ -56,7 +56,6 @@ pr:
 
 variables:
   CI: 'true'
-  NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
   ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
     NX_BRANCH: $(System.PullRequest.PullRequestNumber)
     TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
@@ -83,16 +82,13 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - script: npm ci
-      - script: npx nx-cloud start-ci-run
+      - script: npx nx-cloud start-ci-run --stop-agents-after="build"
 
       - script: npx nx-cloud record -- npx nx workspace-lint
       - script: npx nx-cloud record -- npx nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --ci --code-coverage
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
-
-      - script: npx nx-cloud stop-all-agents
-        condition: always()
 ```
 
 You can also use our [ci-workflow generator](/packages/workspace/generators/ci-workflow) to generate the pipeline file.
