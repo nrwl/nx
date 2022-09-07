@@ -140,7 +140,7 @@ Examples:
 
 - `{runtime: "node -v"}`
 
-Node the result value is hashed, so it is never displayed.
+Note the result value is hashed, so it is never displayed.
 
 _Env Variables_
 
@@ -148,7 +148,7 @@ Examples:
 
 - `{env: "MY_ENV_VAR"}`
 
-Node the result value is hashed, so it is never displayed.
+Note the result value is hashed, so it is never displayed.
 
 _Named Inputs_
 
