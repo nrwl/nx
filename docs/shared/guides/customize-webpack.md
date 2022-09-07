@@ -90,3 +90,25 @@ module.export = async (config, context) => {
 
 Reference the [webpack documentation](https://webpack.js.org/configuration/) for details on the structure of the webpack
 config object.
+
+## Next.js Applications
+
+Next.js supports webpack customization in the `next.config.js` file.
+
+```js
+const { withNx } = require('@nrwl/next/plugins/with-nx');
+
+const nextConfig = {
+  webpack: (
+    config,
+    { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }
+  ) => {
+    // Important: return the modified config
+    return config;
+  },
+};
+
+return withNx(nextConfig);
+```
+
+Read the [official documentation](https://nextjs.org/docs/api-reference/next.config.js/custom-webpack-config) for more details.
