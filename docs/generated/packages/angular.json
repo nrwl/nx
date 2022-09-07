@@ -1864,6 +1864,11 @@
             "default": false,
             "description": "Do not add dependencies to `package.json`."
           },
+          "skipE2E": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not set up E2E related config."
+          },
           "e2eProjectName": {
             "type": "string",
             "description": "The project name of the associated E2E project for the application. This is only required for Cypress E2E projects that do not follow the naming convention `<appName>-e2e`."

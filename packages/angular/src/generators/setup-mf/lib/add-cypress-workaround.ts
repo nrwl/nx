@@ -7,6 +7,7 @@ import {
   joinPathFragments,
   logger,
   readProjectConfiguration,
+  stripIndents,
 } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 
@@ -21,7 +22,7 @@ export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {
   try {
     e2eProject = readProjectConfiguration(tree, e2eProjectName);
   } catch {
-    logger.warn(`Could not find an associated e2e project for ${schema.appName} with name ${e2eProjectName}.
+    logger.warn(stripIndents`Could not find an associated e2e project for ${schema.appName} with name ${e2eProjectName}.
     If there is an associated e2e project for this application, and it uses Cypress, you will need to add a workaround to allow Cypress to test correctly.
     An error will be thrown in the console when you serve the application, coming from styles.js. It is an error that can be safely ignored and will not reach production due to how production builds of Angular are created.
     You can find how to implement that workaround here: https://docs.cypress.io/api/events/catalog-of-events#Uncaught-Exceptions

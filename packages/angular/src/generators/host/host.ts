@@ -15,6 +15,7 @@ import * as ts from 'typescript';
 import { addRoute } from '../../utils/nx-devkit/ast-utils';
 import { addStandaloneRoute } from '../../utils/nx-devkit/standalone-utils';
 import { setupMf } from '../setup-mf/setup-mf';
+import { E2eTestRunner } from '../../utils/test-runners';
 
 export default async function host(tree: Tree, options: Schema) {
   const projects = getProjects(tree);
@@ -41,6 +42,8 @@ export default async function host(tree: Tree, options: Schema) {
     skipFormat: true,
   });
 
+  const skipE2E =
+    !options.e2eTestRunner || options.e2eTestRunner === E2eTestRunner.None;
   await setupMf(tree, {
     appName,
     mfType: 'host',
@@ -50,7 +53,8 @@ export default async function host(tree: Tree, options: Schema) {
     federationType: options.dynamic ? 'dynamic' : 'static',
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
-    e2eProjectName: `${appName}-e2e`,
+    skipE2E,
+    e2eProjectName: skipE2E ? undefined : `${appName}-e2e`,
   });
 
   for (const remote of remotesToGenerate) {
