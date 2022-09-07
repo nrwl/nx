@@ -101,6 +101,24 @@ Next, add `packages/blog/src/index.html`:
 <p>Hello, Eleventy</p>
 ```
 
+## Adding the project to the workspace configuration
+
+Before running our project, we have to make sure nx knows where is our project located.
+
+So, your `workspace.json` should look like this:
+
+```json 
+{
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json",
+  "version": 2,
+  "projects": {
+    "blog": {
+      "root": "packages/blog"
+    }
+  }
+}
+```
+
 ## Running Eleventy with Nx
 
 Now that we have the bare minimum set up for Eleventy, you can run:
