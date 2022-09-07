@@ -619,12 +619,6 @@ Provided Executors? @nrwl/angular:webpack-browser, @angular-devkit/build-angular
       project: 'multiple-components',
       flat: true,
     });
-    console.log(
-      tree.read(
-        'libs/multiple-components/src/lib/multiple-components.module.ts',
-        'utf-8'
-      )
-    );
     tree.write(
       `libs/multiple-components/src/lib/cmp-one.component.ts`,
       `
@@ -746,7 +740,6 @@ function getCmpsFromTree(
   tree: Tree,
   options: { basePath: string; name: string }
 ) {
-  console.log(tree.listChanges().map((c) => c.path));
   return [
     `${options.name}-one`,
     `${options.name}-two`,
@@ -755,7 +748,6 @@ function getCmpsFromTree(
     expect(
       tree.exists(joinPathFragments(options.basePath, n, `${n}.component.ts`))
     ).toBeTruthy();
-    console.log(options.basePath, n, `${n}.component.ts`);
     expect(
       tree.exists(
         joinPathFragments(options.basePath, n, `${n}.component.cy.ts`)
