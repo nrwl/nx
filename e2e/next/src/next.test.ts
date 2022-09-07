@@ -1,4 +1,5 @@
 import {
+  rmDist,
   checkFilesExist,
   cleanupProject,
   expectJestTestsToPass,
@@ -263,6 +264,22 @@ describe('Next.js Applications', () => {
 
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
     expect(result).toContain('NODE_ENV is production');
+
+    updateFile(
+      `apps/${appName}/next.config.js`,
+      `
+        const { withNx } = require('@nrwl/next/plugins/with-nx');
+        // Not including "nx" entry should still work.
+        const nextConfig = {};
+        
+        module.exports = withNx(nextConfig);
+      `
+    );
+
+    rmDist();
+    runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/next.config.js`);
   }, 300_000);
 
   it('should support --js flag', async () => {
