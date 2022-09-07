@@ -139,13 +139,13 @@ export default function Community(props: CommunityProps): JSX.Element {
       description:
         "React Native brings React's declarative UI framework to iOS and Android.",
       name: '@nrwl/react-native',
-      url: 'https://nx.dev/react-packages/native',
+      url: 'https://nx.dev/packages/react-native',
       isOfficial: true,
     },
     {
       description: 'Storybook is a development environment for UI components.',
       name: '@nrwl/storybook',
-      url: 'https://nx.dev/storybook/overview-react',
+      url: 'https://nx.dev/packages/storybook',
       isOfficial: true,
     },
     {
