@@ -24,6 +24,12 @@ If you are using [WebStorm](https://www.jetbrains.com/webstorm/), you can instal
 
 These plugins are **NOT** built or maintained by the Nx team. They are maintained by independent community contributors.
 
+### Neovim
+
+If you are using [Neovim](https://neovim.io/), you can install [Equilibris/nx.nvim](https://github.com/Equilibris/nx.nvim) with your favorite package manager.
+
+This plugin is **NOT** built or maintained by the Nx team. They are maintained by independent community contributors.
+
 ## Related Documentation
 
 ### Recipes
