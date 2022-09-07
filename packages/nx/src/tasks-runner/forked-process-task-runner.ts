@@ -86,7 +86,9 @@ export class ForkedProcessTaskRunner {
             }
             default: {
               // Re-emit any non-batch messages from the task process
-              process.send(message);
+              if (process.send) {
+                process.send(message);
+              }
             }
           }
         });
@@ -137,7 +139,9 @@ export class ForkedProcessTaskRunner {
 
         // Re-emit any messages from the task process
         p.on('message', (message) => {
-          process.send(message);
+          if (process.send) {
+            process.send(message);
+          }
         });
 
         let out = [];
@@ -216,7 +220,9 @@ export class ForkedProcessTaskRunner {
 
         // Re-emit any messages from the task process
         p.on('message', (message) => {
-          process.send(message);
+          if (process.send) {
+            process.send(message);
+          }
         });
 
         p.on('exit', (code, signal) => {
