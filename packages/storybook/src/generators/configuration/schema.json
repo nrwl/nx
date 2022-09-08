@@ -20,7 +20,16 @@
     "uiFramework": {
       "type": "string",
       "description": "Storybook UI Framework to use.",
-      "enum": ["@storybook/angular", "@storybook/react"],
+      "enum": [
+        "@storybook/angular",
+        "@storybook/react",
+        "@storybook/react-native",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue",
+        "@storybook/vue3",
+        "@storybook/svelte"
+      ],
       "x-prompt": "What UI framework plugin should storybook use?"
     },
     "configureCypress": {

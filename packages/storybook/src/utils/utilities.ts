@@ -1,9 +1,7 @@
 import {
   ExecutorContext,
-  logger,
   readJson,
   readJsonFile,
-  readProjectConfiguration,
   TargetConfiguration,
   Tree,
 } from '@nrwl/devkit';
