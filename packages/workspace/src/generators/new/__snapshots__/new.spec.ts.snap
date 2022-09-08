@@ -75,18 +75,25 @@ Object {
   "affected": Object {
     "defaultBase": "main",
   },
-  "implicitDependencies": Object {
-    ".eslintrc.json": "*",
-    "package.json": Object {
-      "dependencies": "*",
-      "devDependencies": "*",
-    },
+  "namedInputs": Object {
+    "default": Array [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": Array [
+      "default",
+    ],
+    "sharedGlobals": Array [],
   },
   "npmScope": "npmScope",
   "targetDefaults": Object {
     "build": Object {
       "dependsOn": Array [
         "^build",
+      ],
+      "inputs": Array [
+        "production",
+        "^production",
       ],
     },
   },

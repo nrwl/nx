@@ -59,14 +59,14 @@ We can define a more precise configuration as follows:
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
-    "prod": ["!{projectRoot}/**/*.spec.tsx"]
+    "production": ["!{projectRoot}/**/*.spec.tsx"]
   },
   "targetDefaults": {
     "build": {
-      "inputs": ["prod", "^prod"]
+      "inputs": ["production", "^production"]
     },
     "test": {
-      "inputs": ["default", "^prod", "{workspaceRoot}/jest.config.ts"]
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.config.ts"]
     }
   }
 }

@@ -176,6 +176,12 @@ Object {
         "^build",
       ],
     },
+    "lint": Object {
+      "inputs": Array [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+      ],
+    },
   },
   "tasksRunnerOptions": Object {
     "default": Object {

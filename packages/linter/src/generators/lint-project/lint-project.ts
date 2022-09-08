@@ -42,8 +42,11 @@ function createEsLintConfiguration(
   projectConfig: ProjectConfiguration,
   setParserOptionsProject: boolean
 ) {
+  const eslintConfig = findEslintFile(tree);
   writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
-    extends: [`${offsetFromRoot(projectConfig.root)}${findEslintFile(tree)}`],
+    extends: eslintConfig
+      ? [`${offsetFromRoot(projectConfig.root)}${eslintConfig}`]
+      : undefined,
     // Include project files to be linted since the global one excludes all files.
     ignorePatterns: ['!**/*'],
     overrides: [

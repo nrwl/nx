@@ -45,24 +45,12 @@ describe('@nrwl/workspace:workspace', () => {
       affected: {
         defaultBase: 'main',
       },
-      implicitDependencies: {
-        'package.json': {
-          dependencies: '*',
-          devDependencies: '*',
-        },
-        '.eslintrc.json': '*',
-      },
       tasksRunnerOptions: {
         default: {
           runner: 'nx/tasks-runners/default',
           options: {
             cacheableOperations: ['build', 'lint', 'test', 'e2e'],
           },
-        },
-      },
-      targetDefaults: {
-        build: {
-          dependsOn: ['^build'],
         },
       },
     });
@@ -77,6 +65,43 @@ describe('@nrwl/workspace:workspace', () => {
     });
     const validateWorkspaceJson = ajv.compile(workspaceSchema);
     expect(validateWorkspaceJson(workspaceJson)).toEqual(true);
+  });
+
+  it('should setup named inputs and target defaults for non-empty presets', async () => {
+    await workspaceGenerator(tree, {
+      name: 'proj',
+      directory: 'proj',
+      cli: 'nx',
+      preset: Preset.React,
+      defaultBase: 'main',
+    });
+    const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
+    expect(nxJson).toEqual({
+      $schema: './node_modules/nx/schemas/nx-schema.json',
+      npmScope: 'proj',
+      affected: {
+        defaultBase: 'main',
+      },
+      tasksRunnerOptions: {
+        default: {
+          runner: 'nx/tasks-runners/default',
+          options: {
+            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+          },
+        },
+      },
+      namedInputs: {
+        default: ['{projectRoot}/**/*', 'sharedGlobals'],
+        production: ['default'],
+        sharedGlobals: [],
+      },
+      targetDefaults: {
+        build: {
+          dependsOn: ['^build'],
+          inputs: ['production', '^production'],
+        },
+      },
+    });
   });
 
   it('should create a prettierrc file', async () => {

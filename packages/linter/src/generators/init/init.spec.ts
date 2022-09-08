@@ -1,13 +1,13 @@
 import { Linter } from '../utils/linter';
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { lintInitGenerator } from './init';
 
 describe('@nrwl/linter:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace();
   });
 
   describe('--linter', () => {
@@ -18,6 +18,16 @@ describe('@nrwl/linter:init', () => {
         });
 
         expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+      });
+
+      it('should add the root eslint config to the lint targetDefaults for lint', async () => {
+        await lintInitGenerator(tree, {
+          linter: Linter.EsLint,
+        });
+
+        expect(readJson(tree, 'nx.json').targetDefaults.lint).toEqual({
+          inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
+        });
       });
 
       it('should not generate the global eslint config if it already exist', async () => {

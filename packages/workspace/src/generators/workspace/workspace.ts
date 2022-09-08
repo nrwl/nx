@@ -8,6 +8,7 @@ import {
   formatFiles,
   getPackageManagerVersion,
   PackageManager,
+  NxJsonConfiguration,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
 import {
@@ -59,8 +60,54 @@ function createAppsAndLibsFolders(host: Tree, options: Schema) {
   }
 }
 
+function createNxJson(
+  host: Tree,
+  { directory, npmScope, cli, packageManager, defaultBase, preset }: Schema
+) {
+  const nxJson: NxJsonConfiguration & { $schema: string } = {
+    $schema: './node_modules/nx/schemas/nx-schema.json',
+    npmScope: npmScope,
+    affected: {
+      defaultBase,
+    },
+    tasksRunnerOptions: {
+      default: {
+        runner: 'nx/tasks-runners/default',
+        options: {
+          cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+        },
+      },
+    },
+  };
+
+  if (
+    preset !== Preset.Core &&
+    preset !== Preset.NPM &&
+    preset !== Preset.Empty
+  ) {
+    nxJson.namedInputs = {
+      default: ['{projectRoot}/**/*', 'sharedGlobals'],
+      production: ['default'],
+      sharedGlobals: [],
+    };
+    nxJson.targetDefaults = {
+      build: {
+        dependsOn: ['^build'],
+        inputs: ['production', '^production'],
+      },
+    };
+  }
+
+  if (packageManager && cli === 'angular') {
+    nxJson.cli = {
+      packageManager: packageManager,
+    };
+  }
+
+  writeJson<NxJsonConfiguration>(host, join(directory, 'nx.json'), nxJson);
+}
+
 function createFiles(host: Tree, options: Schema) {
-  const npmScope = options.npmScope ?? options.name;
   const formattedNames = names(options.name);
   generateFiles(host, pathJoin(__dirname, './files'), options.directory, {
     formattedNames,
@@ -75,7 +122,6 @@ function createFiles(host: Tree, options: Schema) {
     angularCliVersion,
     ...(options as object),
     nxVersion,
-    npmScope,
     packageManager: options.packageManager,
   });
 }
@@ -157,6 +203,7 @@ export async function workspaceGenerator(host: Tree, options: Schema) {
   }
   options = normalizeOptions(options);
   createFiles(host, options);
+  createNxJson(host, options);
   createPrettierrc(host, options);
   if (options.cli === 'angular') {
     decorateAngularClI(host, options);
@@ -193,6 +240,7 @@ function addPropertyWithStableKeys(obj: any, key: string, value: string) {
 function normalizeOptions(options: Schema) {
   let defaultBase = options.defaultBase || deduceDefaultBase();
   return {
+    npmScope: options.name,
     ...options,
     defaultBase,
   };

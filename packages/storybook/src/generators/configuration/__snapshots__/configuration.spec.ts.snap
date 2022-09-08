@@ -39,7 +39,46 @@ Object {
   "affected": Object {
     "defaultBase": "main",
   },
+  "namedInputs": Object {
+    "production": Array [
+      "default",
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/jest.config.[jt]s",
+      "!{projectRoot}/.storybook/**/*",
+      "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+    ],
+  },
   "npmScope": "proj",
+  "targetDefaults": Object {
+    "build-storybook": Object {
+      "inputs": Array [
+        "default",
+        "^production",
+        "{workspaceRoot}/.storybook/**/*",
+      ],
+    },
+    "e2e": Object {
+      "inputs": Array [
+        "default",
+        "^production",
+      ],
+    },
+    "lint": Object {
+      "inputs": Array [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+      ],
+    },
+    "test": Object {
+      "inputs": Array [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js",
+      ],
+    },
+  },
   "tasksRunnerOptions": Object {
     "default": Object {
       "options": Object {

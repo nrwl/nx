@@ -1,8 +1,10 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  readWorkspaceConfiguration,
   removeDependenciesFromPackageJson,
   Tree,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import {
   cypressVersion,
@@ -11,11 +13,27 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 
-function updateDependencies(host: Tree) {
-  removeDependenciesFromPackageJson(host, ['@nrwl/cypress'], []);
+function setupE2ETargetDefaults(tree: Tree) {
+  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+
+  // E2e targets depend on all their project's sources + production sources of dependencies
+  workspaceConfiguration.targetDefaults ??= {};
+
+  const productionFileSet = !!workspaceConfiguration.namedInputs?.production;
+  workspaceConfiguration.targetDefaults.e2e ??= {};
+  workspaceConfiguration.targetDefaults.e2e.inputs ??= [
+    'default',
+    productionFileSet ? '^production' : '^default',
+  ];
+
+  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+}
+
+function updateDependencies(tree: Tree) {
+  removeDependenciesFromPackageJson(tree, ['@nrwl/cypress'], []);
 
   return addDependenciesToPackageJson(
-    host,
+    tree,
     {},
     {
       ['@nrwl/cypress']: nxVersion,
@@ -25,8 +43,9 @@ function updateDependencies(host: Tree) {
   );
 }
 
-export function cypressInitGenerator(host: Tree, options: Schema) {
-  return !options.skipPackageJson ? updateDependencies(host) : () => {};
+export function cypressInitGenerator(tree: Tree, options: Schema) {
+  setupE2ETargetDefaults(tree);
+  return !options.skipPackageJson ? updateDependencies(tree) : () => {};
 }
 
 export default cypressInitGenerator;

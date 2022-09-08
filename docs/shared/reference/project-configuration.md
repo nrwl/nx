@@ -64,18 +64,18 @@ You can add Nx-specific configuration as follows:
       "default": [
         "{projectRoot}/**/*"
       ],
-      "prod": [
+      "production": [
         "!{projectRoot}/**/*.spec.tsx"
       ]
     },
     "targets": {
       "build": {
-        "inputs": ["prod", "^prod"],
+        "inputs": ["production", "^production"],
         "outputs": ["dist/libs/mylib"],
         "dependsOn": ["^build"]
       },
       "test": {
-        "inputs": ["default", "^prod"],
+        "inputs": ["default", "^production"],
         "outputs": [],
         "dependsOn": ["build"]
       }
@@ -94,19 +94,19 @@ You can add Nx-specific configuration as follows:
   "projectType": "library",
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
-    "prod": ["!{projectRoot}/**/*.spec.tsx"]
+    "production": ["!{projectRoot}/**/*.spec.tsx"]
   },
   "targets": {
     "test": {
       "executor": "@nrwl/jest:jest",
-      "inputs": ["default", "^prod"],
+      "inputs": ["default", "^production"],
       "outputs": [],
       "dependsOn": ["build"],
       "options": {}
     },
     "build": {
       "executor": "@nrwl/js:tsc",
-      "inputs": ["prod", "^prod"],
+      "inputs": ["production", "^production"],
       "outputs": ["dist/libs/mylib"],
       "dependsOn": ["^build"],
       "options": {}
@@ -154,8 +154,8 @@ _Named Inputs_
 
 Examples:
 
-- `inputs: ["prod"]`
-- same as `inputs: [{input: "prod", projects: "self"}]`
+- `inputs: ["production"]`
+- same as `inputs: [{input: "production", projects: "self"}]`
 
 Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
 keeping them in sync is error-prone, we recommend defining named inputs, which you can then reference in all of those
@@ -165,15 +165,15 @@ places.
 
 Examples:
 
-- `inputs: ["^prod"]`
-- same as `inputs: [{input: "prod", projects: "dependencies"}]`
+- `inputs: ["^production"]`
+- same as `inputs: [{input: "production", projects: "dependencies"}]`
 
 Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
 an example.
 
 ```
 "test": {
-  "inputs": [ "default", "^prod" ]
+  "inputs": [ "default", "^production" ]
 }
 ```
 

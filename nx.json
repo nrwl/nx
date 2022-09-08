@@ -30,19 +30,22 @@
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
-    "prod": ["!{projectRoot}/**/*.spec.ts{,.snap}"]
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"
+    ]
   },
   "targetDefaults": {
     "build": {
       "dependsOn": ["build-base"],
-      "inputs": ["prod", "^prod"]
+      "inputs": ["production", "^production"]
     },
     "build-base": {
       "dependsOn": ["^build-base"],
-      "inputs": ["prod", "^prod"]
+      "inputs": ["production", "^production"]
     },
     "test": {
-      "inputs": ["default", "^prod", "{workspaceRoot}/jest.config.ts"]
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
     },
     "lint": {
       "inputs": [
@@ -54,7 +57,7 @@
     "e2e": {
       "inputs": [
         "default",
-        "^prod",
+        "^production",
         {
           "env": "SELECTED_CLI"
         },

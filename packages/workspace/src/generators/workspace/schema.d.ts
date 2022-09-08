@@ -1,3 +1,5 @@
+import { PackageManager } from '@nrwl/devkit';
+
 export interface Schema {
   name: string;
   directory: string;
@@ -9,5 +11,5 @@ export interface Schema {
   cli: 'nx' | 'angular';
   preset: string;
   defaultBase: string;
-  packageManager?: string;
+  packageManager?: PackageManager;
 }
