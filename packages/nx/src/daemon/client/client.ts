@@ -15,10 +15,11 @@ import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
   isDaemonDisabled,
+  removeSocketDir,
 } from '../tmp-dir';
 import { ProjectGraph } from '../../config/project-graph';
 import { isCI } from '../../utils/is-ci';
-import { NxJsonConfiguration } from 'nx/src/config/nx-json';
+import { NxJsonConfiguration } from '../../config/nx-json';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
@@ -204,6 +205,8 @@ export function stop(): void {
     cwd: __dirname,
     stdio: 'inherit',
   });
+
+  removeSocketDir();
 
   output.log({ title: 'Daemon Server - Stopped' });
 }

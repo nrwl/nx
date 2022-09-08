@@ -2,7 +2,6 @@ import { unlinkSync } from 'fs';
 import { platform } from 'os';
 import { resolve } from 'path';
 import { DAEMON_SOCKET_PATH } from './tmp-dir';
-import { ProjectGraph } from '../config/project-graph';
 
 export const isWindows = platform() === 'win32';
 
@@ -20,11 +19,6 @@ export function killSocketOrPath(): void {
   try {
     unlinkSync(FULL_OS_SOCKET_PATH);
   } catch {}
-}
-
-export interface ProjectGraphServerResult {
-  error: Error | null;
-  projectGraph: ProjectGraph | null;
 }
 
 // Include the original stack trace within the serialized error so that the client can show it to the user.
