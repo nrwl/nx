@@ -25,20 +25,35 @@ const nxPackageIds = ['nx', 'workspace', 'devkit', 'nx-plugin'];
 
 export default function Packages(props: ReferencesProps): JSX.Element {
   const router = useRouter();
-  const [pathname, hash] = router.asPath.split('#');
-  const updateTargetPackageId = useCallback(
-    (id: string) => router.push(`${pathname}#${id}`),
-    [pathname, router]
-  );
+  const [pathname, hash = ''] = router.asPath.split('#');
   const validIds = useMemo(
     () => props.references.itemList.map((item) => item.id),
     [props.references]
   );
-  const fromHash = validIds.some((id) => hash === id) ? hash : '';
+  const idFromHash = validIds.some((id) => hash === id) ? hash : '';
   const [targetPackageId, setTargetPackageId] = useState<string>('');
+
+  // Only run this effect initially to sync the id once, or else we run into a hydration warning.
   useEffect(() => {
-    setTargetPackageId(fromHash);
-  }, [fromHash]);
+    setTargetPackageId(idFromHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update URL for deep-links
+  useEffect(() => {
+    if (hash === targetPackageId) return;
+    if (targetPackageId) {
+      router.replace(`${pathname}#${targetPackageId}`);
+    } else {
+      router.replace(pathname, undefined, { scroll: false });
+    }
+  }, [pathname, router, targetPackageId, hash]);
+
+  const updateTargetPackageId = useCallback(
+    (id: string) =>
+      id === targetPackageId ? setTargetPackageId('') : setTargetPackageId(id),
+    [targetPackageId]
+  );
   const references: MenuItem[] = useMemo(
     () =>
       [
