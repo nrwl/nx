@@ -19,7 +19,7 @@ yarn add --dev @nrwl/storybook
 You can generate Storybook configuration for an individual project with this command:
 
 ```bash
-nx g @nrwl/react:storybook-configuration project-name
+nx g @nrwl/storybook:configuration project-name
 ```
 
 ### Running Storybook

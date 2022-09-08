@@ -12,6 +12,7 @@ import {
   babelCoreVersion,
   babelLoaderVersion,
   babelPresetTypescriptVersion,
+  litHtmlVersion,
   nxVersion,
   reactNativeStorybookLoader,
   storybookReactNativeVersion,
@@ -74,6 +75,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
   if (isFramework('web-components', schema)) {
     devDependencies['@storybook/web-components'] = storybookVersion;
+    devDependencies['lit-html'] = litHtmlVersion;
   }
 
   if (isFramework('svelte', schema)) {
