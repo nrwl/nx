@@ -38,7 +38,6 @@ describe('js e2e', () => {
   }, 120000);
 
   it('should create libs with js executors (--compiler=tsc)', async () => {
-    //
     const lib = uniq('lib');
     runCLI(`generate @nrwl/js:lib ${lib} --buildable --compiler=tsc`);
     const libPackageJson = readJson(`libs/${lib}/package.json`);
