@@ -1,10 +1,12 @@
 import { MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
-import { ReferencesIndexItem } from '@nrwl/nx-dev/ui-references';
+import {
+  ReferencesIndexItem,
+  ReferencesSection,
+} from '@nrwl/nx-dev/ui-references';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
-import { ReferencesSection } from '../../ui-references/src/lib/references-section';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { nxMenuApi } from '../lib/api';
 
 interface ReferencesProps {
@@ -19,20 +21,36 @@ export async function getStaticProps(): Promise<{ props: ReferencesProps }> {
   };
 }
 
+const nxPackageIds = ['nx', 'workspace', 'devkit', 'nx-plugin'];
+
 export default function Packages(props: ReferencesProps): JSX.Element {
   const router = useRouter();
+  const [pathname, hash] = router.asPath.split('#');
+  const updateTargetPackageId = useCallback(
+    (id: string) => router.push(`${pathname}#${id}`),
+    [pathname, router]
+  );
+  const validIds = useMemo(
+    () => props.references.itemList.map((item) => item.id),
+    [props.references]
+  );
+  const fromHash = validIds.some((id) => hash === id) ? hash : '';
   const [targetPackageId, setTargetPackageId] = useState<string>('');
-  const updateTargetPackageId = (id: string) =>
-    id === targetPackageId ? setTargetPackageId('') : setTargetPackageId(id);
-  const nxPackageIds = ['nx', 'workspace', 'devkit', 'nx-plugin'];
-  const references: MenuItem[] = [
-    ...nxPackageIds.map((id) =>
-      props.references.itemList.find((pkg) => pkg.id === id)
-    ),
-    ...props.references.itemList.filter(
-      (pkg) => !nxPackageIds.includes(pkg.id)
-    ),
-  ].filter((pkg): pkg is MenuItem => !!pkg);
+  useEffect(() => {
+    setTargetPackageId(fromHash);
+  }, [fromHash]);
+  const references: MenuItem[] = useMemo(
+    () =>
+      [
+        ...nxPackageIds.map((id) =>
+          props.references.itemList.find((pkg) => pkg.id === id)
+        ),
+        ...props.references.itemList.filter(
+          (pkg) => !nxPackageIds.includes(pkg.id)
+        ),
+      ].filter((pkg): pkg is MenuItem => !!pkg),
+    [props.references]
+  );
 
   return (
     <>

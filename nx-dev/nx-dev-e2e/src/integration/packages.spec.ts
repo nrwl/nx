@@ -494,3 +494,28 @@ describe('nx-dev: Packages Section', () => {
     },
   ]).forEach((page) => assertTextOnPage(page.path, page.title));
 });
+
+/**
+ * Asserting that URL applied filters are working as expected
+ */
+describe('nx-dev: Packages Section - URL hash as filter', () => {
+  it('should filter packages by the URL hash', () => {
+    cy.visit('/packages#storybook');
+    cy.get('section#storybook').should('exist');
+    cy.get('section#cypress').should('not.exist');
+    cy.get('section#angular').should('not.exist');
+    cy.get('section#detox').should('not.exist');
+    cy.get('section#react').should('not.exist');
+    cy.get('section#workspace').should('not.exist');
+  });
+
+  it('should show all packages if the hash does not correspond to a package', () => {
+    cy.visit('/packages#asdfg');
+    cy.get('section#storybook').should('exist');
+    cy.get('section#cypress').should('exist');
+    cy.get('section#angular').should('exist');
+    cy.get('section#detox').should('exist');
+    cy.get('section#react').should('exist');
+    cy.get('section#workspace').should('exist');
+  });
+});
