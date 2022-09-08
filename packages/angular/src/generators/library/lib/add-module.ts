@@ -12,13 +12,13 @@ export function addModule(
   if (options.routing && options.lazy) {
     addLazyLoadedRouterConfiguration(host, options);
   }
-  if (options.routing && options.lazy && options.parentModule) {
+  if (options.routing && options.lazy && options.parent) {
     addLoadChildren(host, options);
   }
   if (options.routing && !options.lazy) {
     addRouterConfiguration(host, options);
   }
-  if (options.routing && !options.lazy && options.parentModule) {
+  if (options.routing && !options.lazy && options.parent) {
     addChildren(host, options);
   }
 }

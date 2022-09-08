@@ -56,6 +56,7 @@ import { RouterModule } from '@angular/router'`
 };
 import { AppComponent } from './app/app.component';
 import { environment } from './environments/environment';
+${routerModuleSetup ? `import { appRoutes } from './app/app.routes';` : ''}
 
 if (environment.production) {
   enableProdMode();

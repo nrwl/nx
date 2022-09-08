@@ -5,6 +5,7 @@ import {
   readWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import type { Schema } from '../schema';
+import { addRoute } from '../../../utils/nx-devkit/route-utils';
 
 export function addRemoteEntry(
   tree: Tree,
@@ -30,7 +31,21 @@ export function addRemoteEntry(
       }
     );
 
-    if (!standalone) {
+    if (standalone && routing) {
+      addRoute(
+        tree,
+        joinPathFragments(appRoot, 'src/app/app.routes.ts'),
+        `{path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)}`
+      );
+    } else {
+      if (routing) {
+        addRoute(
+          tree,
+          joinPathFragments(appRoot, 'src/app/app.routes.ts'),
+          `{path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)}`
+        );
+      }
+
       tree.write(
         `${appRoot}/src/app/app.module.ts`,
         `/* 

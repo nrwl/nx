@@ -21,7 +21,7 @@ export interface Schema {
   prefix?: string;
   routing?: boolean;
   lazy?: boolean;
-  parentModule?: string;
+  parent?: string;
   tags?: string;
   strict?: boolean;
   linter?: AngularLinter;

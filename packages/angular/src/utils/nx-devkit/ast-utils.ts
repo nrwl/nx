@@ -2,11 +2,11 @@ import * as ts from 'typescript';
 import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
 import { getSourceNodes } from '@nrwl/workspace/src/utilities/typescript/get-source-nodes';
 import * as path from 'path';
-import { Tree, names, readProjectConfiguration } from '@nrwl/devkit';
+import { names, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import {
+  getImport,
   insertChange,
   removeChange,
-  getImport,
   replaceChange,
 } from '@nrwl/workspace/src/utilities/ast-utils';
 
@@ -458,7 +458,7 @@ function getMatchingProperty(
   return getMatchingObjectLiteralElement(node, source, property);
 }
 
-export function addRoute(
+export function addRouteToNgModule(
   host: Tree,
   ngModulePath: string,
   source: ts.SourceFile,

@@ -26,10 +26,17 @@ export function addRouterRootConfiguration(
     'RouterModule',
     '@angular/router'
   );
+  sourceFile = insertImport(
+    host,
+    sourceFile,
+    modulePath,
+    'appRoutes',
+    './app.routes'
+  );
   sourceFile = addImportToModule(
     host,
     sourceFile,
     modulePath,
-    `RouterModule.forRoot([], {initialNavigation: 'enabledBlocking'})`
+    `RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})`
   );
 }

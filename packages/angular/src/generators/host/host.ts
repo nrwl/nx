@@ -12,8 +12,7 @@ import applicationGenerator from '../application/application';
 import remoteGenerator from '../remote/remote';
 import { normalizeProjectName } from '../utils/project';
 import * as ts from 'typescript';
-import { addRoute } from '../../utils/nx-devkit/ast-utils';
-import { addStandaloneRoute } from '../../utils/nx-devkit/standalone-utils';
+import { addRoute } from '../../utils/nx-devkit/route-utils';
 import { setupMf } from '../setup-mf/setup-mf';
 import { E2eTestRunner } from '../../utils/test-runners';
 
@@ -106,13 +105,10 @@ ${remoteRoutes}
 
   const pathToHostRootRoutingFile = joinPathFragments(
     sourceRoot,
-    options.standalone ? 'bootstrap.ts' : 'app/app.module.ts'
+    'app/app.routes.ts'
   );
-  const hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
 
-  if (!hostRootRoutingFile.includes('RouterModule.forRoot(')) {
-    return;
-  }
+  const hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
 
   let sourceFile = ts.createSourceFile(
     pathToHostRootRoutingFile,
@@ -121,32 +117,20 @@ ${remoteRoutes}
     true
   );
 
-  if (hostRootRoutingFile.includes('@NgModule')) {
-    sourceFile = addRoute(
-      tree,
-      pathToHostRootRoutingFile,
-      sourceFile,
-      `{
-         path: '', 
-         component: NxWelcomeComponent
-     }`
-    );
-  } else {
-    addStandaloneRoute(
-      tree,
-      pathToHostRootRoutingFile,
-      `{
+  addRoute(
+    tree,
+    pathToHostRootRoutingFile,
+    `{
       path: '',
       component: NxWelcomeComponent
     }`
-    );
+  );
 
-    tree.write(
-      pathToHostRootRoutingFile,
-      `import { NxWelcomeComponent } from './app/nx-welcome.component';
+  tree.write(
+    pathToHostRootRoutingFile,
+    `import { NxWelcomeComponent } from './nx-welcome.component';
     ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
-    );
-  }
+  );
 
   generateFiles(
     tree,

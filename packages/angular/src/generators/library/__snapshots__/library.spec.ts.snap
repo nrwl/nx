@@ -169,14 +169,14 @@ describe('MyLibComponent', () => {
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup 1`] = `
 "export * from \\"./lib/my-lib/my-lib.component\\";
-        export * from './lib/routes'"
+        export * from './lib/lib.routes'"
 `;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup 2`] = `
 "import { Route } from '@angular/router';
     import { MyLibComponent } from './my-lib/my-lib.component';
     
-        export const MYLIB_ROUTES: Route[] = [
+        export const myLibRoutes: Route[] = [
           {path: '', component: MyLibComponent}
         ];"
 `;
@@ -232,77 +232,43 @@ describe('MyLibComponent', () => {
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child 1`] = `
 "export * from \\"./lib/my-lib/my-lib.component\\";
-        export * from './lib/routes'"
+        export * from './lib/lib.routes'"
 `;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child 2`] = `
 "import { Route } from '@angular/router';
     import { MyLibComponent } from './my-lib/my-lib.component';
     
-        export const MYLIB_ROUTES: Route[] = [
+        export const myLibRoutes: Route[] = [
           {path: '', component: MyLibComponent}
         ];"
 `;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child 3`] = `
-"import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+"import { Route } from '@angular/router';
 
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
-import { RouterModule } from '@angular/router';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    NxWelcomeComponent
-  ],
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot([{path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.MYLIB_ROUTES)}], {initialNavigation: 'enabledBlocking'})
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-"
+export const appRoutes: Route[] = [
+    {path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes)},]"
 `;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 1`] = `
 "export * from \\"./lib/my-lib/my-lib.component\\";
-        export * from './lib/routes'"
+        export * from './lib/lib.routes'"
 `;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 2`] = `
 "import { Route } from '@angular/router';
     import { MyLibComponent } from './my-lib/my-lib.component';
     
-        export const MYLIB_ROUTES: Route[] = [
+        export const myLibRoutes: Route[] = [
           {path: '', component: MyLibComponent}
         ];"
 `;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child 3`] = `
-"import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+"import { Route } from '@angular/router';
+import { myLibRoutes } from '@proj/my-lib';
 
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
-import { RouterModule } from '@angular/router';
-import { MYLIB_ROUTES } from '@proj/my-lib';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    NxWelcomeComponent
-  ],
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot([{ path: 'my-lib', children: MYLIB_ROUTES }], {initialNavigation: 'enabledBlocking'})
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-"
+export const appRoutes: Route[] = [
+    { path: 'my-lib', children: myLibRoutes },]"
 `;

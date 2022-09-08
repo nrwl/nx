@@ -76,10 +76,9 @@
       "default": false,
       "description": "Add `RouterModule.forChild` when set to true, and a simple array of routes when set to false."
     },
-    "parentModule": {
+    "parent": {
       "type": "string",
-      "description": "Update the router configuration of the parent module using `loadChildren` or `children`, depending on what `lazy` is set to.",
-      "alias": "parent"
+      "description": "Path to the parent route configuration using `loadChildren` or `children`, depending on what `lazy` is set to."
     },
     "tags": {
       "type": "string",
