@@ -269,6 +269,8 @@
     "@markdoc/markdoc": "0.1.6",
     "@monaco-editor/react": "^4.3.1",
     "@napi-rs/canvas": "^0.1.19",
+    "@pnpm/lockfile-file": "^5.3.4",
+    "@pnpm/logger": "^4.0.0",
     "@swc/helpers": "~0.4.11",
     "@tailwindcss/aspect-ratio": "^0.4.0",
     "@tailwindcss/forms": "^0.4.0",
