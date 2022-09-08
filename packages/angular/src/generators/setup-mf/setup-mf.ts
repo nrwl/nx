@@ -35,7 +35,9 @@ export async function setupMf(tree: Tree, options: Schema) {
 
   fixBootstrap(tree, projectConfig.root, options);
 
-  addCypressOnErrorWorkaround(tree, options);
+  if (!options.skipE2E) {
+    addCypressOnErrorWorkaround(tree, options);
+  }
 
   // format files
   if (!options.skipFormat) {

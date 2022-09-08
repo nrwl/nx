@@ -11,4 +11,5 @@ export interface Schema {
   e2eProjectName?: string;
   prefix?: string;
   standalone?: boolean;
+  skipE2E?: boolean;
 }

@@ -10,6 +10,7 @@ import applicationGenerator from '../application/application';
 import { getMFProjects } from '../../utils/get-mf-projects';
 import { normalizeProjectName } from '../utils/project';
 import { setupMf } from '../setup-mf/setup-mf';
+import { E2eTestRunner } from '../../utils/test-runners';
 
 function findNextAvailablePort(tree: Tree) {
   const mfProjects = getMFProjects(tree);
@@ -44,6 +45,9 @@ export default async function remote(tree: Tree, options: Schema) {
     port,
   });
 
+  const skipE2E =
+    !options.e2eTestRunner || options.e2eTestRunner === E2eTestRunner.None;
+
   await setupMf(tree, {
     appName,
     mfType: 'remote',
@@ -52,7 +56,8 @@ export default async function remote(tree: Tree, options: Schema) {
     port,
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
-    e2eProjectName: `${appName}-e2e`,
+    skipE2E,
+    e2eProjectName: skipE2E ? undefined : `${appName}-e2e`,
     standalone: options.standalone,
   });
 

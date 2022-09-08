@@ -1,6 +1,8 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import host from './host';
 import remote from '../remote/remote';
+import { E2eTestRunner } from '../../utils/test-runners';
+import { getProjects } from 'nx/src/generators/utils/project-configuration';
 
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
@@ -165,5 +167,22 @@ describe('Host App Generator', () => {
     expect(
       tree.read(`apps/test/dashboard/src/app/app.component.spec.ts`, 'utf-8')
     ).toMatchSnapshot();
+  });
+
+  it('should not generate an e2e project when e2eTestRunner is none', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    // ACT
+    await host(tree, {
+      name: 'dashboard',
+      remotes: ['remote1'],
+      e2eTestRunner: E2eTestRunner.None,
+    });
+
+    // ASSERT
+    const projects = getProjects(tree);
+    expect(projects.has('dashboard-e2e')).toBeFalsy();
+    expect(projects.has('remote1-e2e')).toBeFalsy();
   });
 });

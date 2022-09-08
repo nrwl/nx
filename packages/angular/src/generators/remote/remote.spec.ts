@@ -1,10 +1,12 @@
 import {
+  getProjects,
   readProjectConfiguration,
   readWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import host from '../host/host';
 import remote from './remote';
+import { E2eTestRunner } from '@nrwl/angular/src/utils/test-runners';
 
 describe('MF Remote App Generator', () => {
   it('should generate a remote mf app with no host', async () => {
@@ -131,5 +133,20 @@ describe('MF Remote App Generator', () => {
     expect(
       tree.read(`apps/test/src/app/remote-entry/routes.ts`, 'utf-8')
     ).toMatchSnapshot();
+  });
+
+  it('should not generate an e2e project when e2eTestRunner is none', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    // ACT
+    await remote(tree, {
+      name: 'remote1',
+      e2eTestRunner: E2eTestRunner.None,
+    });
+
+    // ASSERT
+    const projects = getProjects(tree);
+    expect(projects.has('remote1-e2e')).toBeFalsy();
   });
 });
