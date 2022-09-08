@@ -70,7 +70,7 @@ export function normalizeOptions(
     ? `${newProjectRoot}/${projectName}`
     : projectName;
 
-  return {
+  const allNormalizedOptions = {
     ...options,
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
@@ -86,5 +86,35 @@ export function normalizeOptions(
     importPath,
     ngCliSchematicLibRoot,
     standaloneComponentName: `${names(name).className}Component`,
+  };
+
+  const {
+    displayBlock,
+    inlineStyle,
+    inlineTemplate,
+    viewEncapsulation,
+    changeDetection,
+    style,
+    skipTests,
+    selector,
+    skipSelector,
+    ...libraryOptions
+  } = allNormalizedOptions;
+
+  return {
+    libraryOptions,
+    componentOptions: {
+      name: libraryOptions.name,
+      standalone: libraryOptions.standalone,
+      displayBlock,
+      inlineStyle,
+      inlineTemplate,
+      viewEncapsulation,
+      changeDetection,
+      style,
+      skipTests,
+      selector,
+      skipSelector,
+    },
   };
 }

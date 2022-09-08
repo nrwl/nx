@@ -4,7 +4,10 @@ import { addRoute } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 import { addStandaloneRoute } from '../../../utils/nx-devkit/standalone-utils';
 
-export function addLoadChildren(tree: Tree, options: NormalizedSchema) {
+export function addLoadChildren(
+  tree: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   if (!tree.exists(options.parentModule)) {
     throw new Error(`Cannot find '${options.parentModule}'`);
   }

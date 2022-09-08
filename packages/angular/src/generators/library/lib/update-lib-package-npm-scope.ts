@@ -3,7 +3,7 @@ import { NormalizedSchema } from './normalized-schema';
 
 export function updateLibPackageNpmScope(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema['libraryOptions']
 ) {
   return updateJson(host, `${options.projectRoot}/package.json`, (json) => {
     json.name = options.importPath;

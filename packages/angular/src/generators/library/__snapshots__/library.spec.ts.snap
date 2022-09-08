@@ -51,6 +51,122 @@ describe('MyLibComponent', () => {
 "
 `;
 
+exports[`lib --standalone should generate a library with a standalone component as entry point and set up view encapsulation and change detection 1`] = `"export * from \\"./lib/my-lib/my-lib.component\\";"`;
+
+exports[`lib --standalone should generate a library with a standalone component as entry point and set up view encapsulation and change detection 2`] = `
+"import { ChangeDetectionStrategy, Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'proj-my-lib',
+  standalone: true,
+  imports: [CommonModule],
+  template: \`
+    <p>
+      my-lib works!
+    </p>
+  \`,
+  styles: [
+  ],
+  encapsulation: ViewEncapsulation.ShadowDom,
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class MyLibComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+"
+`;
+
+exports[`lib --standalone should generate a library with a standalone component as entry point and skip tests 1`] = `"export * from \\"./lib/my-lib/my-lib.component\\";"`;
+
+exports[`lib --standalone should generate a library with a standalone component as entry point and skip tests 2`] = `
+"import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'proj-my-lib',
+  standalone: true,
+  imports: [CommonModule],
+  template: \`
+    <p>
+      my-lib works!
+    </p>
+  \`,
+  styles: [
+  ]
+})
+export class MyLibComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+"
+`;
+
+exports[`lib --standalone should generate a library with a standalone component as entry point following SFC pattern 1`] = `"export * from \\"./lib/my-lib/my-lib.component\\";"`;
+
+exports[`lib --standalone should generate a library with a standalone component as entry point following SFC pattern 2`] = `
+"import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'proj-my-lib',
+  standalone: true,
+  imports: [CommonModule],
+  template: \`
+    <p>
+      my-lib works!
+    </p>
+  \`,
+  styles: [
+  ]
+})
+export class MyLibComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+"
+`;
+
+exports[`lib --standalone should generate a library with a standalone component as entry point following SFC pattern 3`] = `
+"import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { MyLibComponent } from './my-lib.component';
+
+describe('MyLibComponent', () => {
+  let component: MyLibComponent;
+  let fixture: ComponentFixture<MyLibComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ MyLibComponent ]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(MyLibComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+"
+`;
+
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup 1`] = `
 "export * from \\"./lib/my-lib/my-lib.component\\";
         export * from './lib/routes'"

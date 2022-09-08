@@ -49,9 +49,10 @@ export async function libraryGenerator(tree: Tree, schema: Partial<Schema>) {
   }
 
   const options = normalizeOptions(tree, schema);
+  const { libraryOptions, componentOptions } = options;
 
   await init(tree, {
-    ...options,
+    ...libraryOptions,
     skipFormat: true,
     e2eTestRunner: E2eTestRunner.None,
   });
@@ -61,43 +62,44 @@ export async function libraryGenerator(tree: Tree, schema: Partial<Schema>) {
     'library'
   );
   await runAngularLibrarySchematic(tree, {
-    name: options.name,
-    prefix: options.prefix,
+    name: libraryOptions.name,
+    prefix: libraryOptions.prefix,
     entryFile: 'index',
     skipPackageJson:
-      options.skipPackageJson || !(options.publishable || options.buildable),
+      libraryOptions.skipPackageJson ||
+      !(libraryOptions.publishable || libraryOptions.buildable),
     skipTsConfig: true,
   });
 
-  if (options.ngCliSchematicLibRoot !== options.projectRoot) {
+  if (libraryOptions.ngCliSchematicLibRoot !== libraryOptions.projectRoot) {
     moveFilesToNewDirectory(
       tree,
-      options.ngCliSchematicLibRoot,
-      options.projectRoot
+      libraryOptions.ngCliSchematicLibRoot,
+      libraryOptions.projectRoot
     );
   }
-  await updateProject(tree, options);
-  updateTsConfig(tree, options);
-  await addUnitTestRunner(tree, options);
-  updateNpmScopeIfBuildableOrPublishable(tree, options);
+  await updateProject(tree, libraryOptions);
+  updateTsConfig(tree, libraryOptions);
+  await addUnitTestRunner(tree, libraryOptions);
+  updateNpmScopeIfBuildableOrPublishable(tree, libraryOptions);
 
-  if (!options.standalone) {
-    addModule(tree, options);
+  if (!libraryOptions.standalone) {
+    addModule(tree, libraryOptions);
   } else {
     await addStandaloneComponent(tree, options);
   }
 
-  setStrictMode(tree, options);
-  await addLinting(tree, options);
+  setStrictMode(tree, libraryOptions);
+  await addLinting(tree, libraryOptions);
 
-  if (options.addTailwind) {
+  if (libraryOptions.addTailwind) {
     await setupTailwindGenerator(tree, {
-      project: options.name,
+      project: libraryOptions.name,
       skipFormat: true,
     });
   }
 
-  if (options.buildable || options.publishable) {
+  if (libraryOptions.buildable || libraryOptions.publishable) {
     removeDependenciesFromPackageJson(tree, [], ['ng-packagr']);
     addDependenciesToPackageJson(
       tree,
@@ -109,15 +111,15 @@ export async function libraryGenerator(tree: Tree, schema: Partial<Schema>) {
     addBuildableLibrariesPostCssDependencies(tree);
   }
 
-  if (options.standaloneConfig) {
+  if (libraryOptions.standaloneConfig) {
     await convertToNxProjectGenerator(tree, {
-      project: options.name,
+      project: libraryOptions.name,
       all: false,
       skipFormat: true,
     });
   }
 
-  if (!options.skipFormat) {
+  if (!libraryOptions.skipFormat) {
     await formatFiles(tree);
   }
 
@@ -126,7 +128,10 @@ export async function libraryGenerator(tree: Tree, schema: Partial<Schema>) {
   };
 }
 
-async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
+async function addUnitTestRunner(
+  host: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   if (options.unitTestRunner === 'jest') {
     await jestProjectGenerator(host, {
       project: options.name,
@@ -145,14 +150,17 @@ async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
 
 function updateNpmScopeIfBuildableOrPublishable(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema['libraryOptions']
 ) {
   if (options.buildable || options.publishable) {
     updateLibPackageNpmScope(host, options);
   }
 }
 
-function setStrictMode(host: Tree, options: NormalizedSchema) {
+function setStrictMode(
+  host: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   if (options.strict) {
     enableStrictTypeChecking(host, options);
   } else {
@@ -160,7 +168,10 @@ function setStrictMode(host: Tree, options: NormalizedSchema) {
   }
 }
 
-async function addLinting(host: Tree, options: NormalizedSchema) {
+async function addLinting(
+  host: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   if (options.linter === Linter.None) {
     return;
   }

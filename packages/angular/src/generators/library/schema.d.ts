@@ -32,4 +32,13 @@ export interface Schema {
   skipPackageJson?: boolean;
   skipPostInstall?: boolean;
   standalone?: boolean;
+  displayBlock?: boolean;
+  inlineStyle?: boolean;
+  inlineTemplate?: boolean;
+  viewEncapsulation?: 'Emulated' | 'None' | 'ShadowDom';
+  changeDetection?: 'Default' | 'OnPush';
+  style?: 'css' | 'scss' | 'sass' | 'less' | 'none';
+  skipTests?: boolean;
+  selector?: string;
+  skipSelector?: boolean;
 }

@@ -7,7 +7,10 @@ import {
 } from '@nrwl/devkit';
 import { NormalizedSchema } from './normalized-schema';
 
-export function updateNgPackage(host: Tree, options: NormalizedSchema) {
+export function updateNgPackage(
+  host: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   if (!(options.publishable || options.buildable)) {
     return;
   }

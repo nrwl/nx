@@ -1675,5 +1675,56 @@ describe('lib', () => {
                 ]"
       `);
     });
+
+    it('should generate a library with a standalone component as entry point following SFC pattern', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        inlineStyle: true,
+        inlineTemplate: true,
+      });
+
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          'libs/my-lib/src/lib/my-lib/my-lib.component.spec.ts',
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component as entry point and skip tests', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        inlineStyle: true,
+        inlineTemplate: true,
+        skipTests: true,
+      });
+
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.exists('libs/my-lib/src/lib/my-lib/my-lib.component.spec.ts')
+      ).toBeFalsy();
+    });
+
+    it('should generate a library with a standalone component as entry point and set up view encapsulation and change detection', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        inlineStyle: true,
+        inlineTemplate: true,
+        viewEncapsulation: 'ShadowDom',
+        changeDetection: 'OnPush',
+      });
+
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
   });
 });

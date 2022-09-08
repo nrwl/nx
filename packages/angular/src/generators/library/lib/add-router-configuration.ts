@@ -1,14 +1,17 @@
 import type { Tree } from '@nrwl/devkit';
 import { names } from '@nrwl/devkit';
 import {
-  insertImport,
   addGlobal,
+  insertImport,
 } from '@nrwl/workspace/src/utilities/ast-utils';
 import * as ts from 'typescript';
 import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 
-export function addRouterConfiguration(host: Tree, options: NormalizedSchema) {
+export function addRouterConfiguration(
+  host: Tree,
+  options: NormalizedSchema['libraryOptions']
+) {
   const constName = `${names(options.fileName).propertyName}Routes`;
   const moduleSource = host.read(options.modulePath)!.toString('utf-8');
   let moduleSourceFile = ts.createSourceFile(

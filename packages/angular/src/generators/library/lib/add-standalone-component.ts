@@ -8,38 +8,41 @@ import { addChildren } from './add-children';
 
 export async function addStandaloneComponent(
   tree: Tree,
-  options: NormalizedSchema
+  { libraryOptions, componentOptions }: NormalizedSchema
 ) {
   await componentGenerator(tree, {
-    name: options.name,
+    ...componentOptions,
+    name: componentOptions.name,
     standalone: true,
     export: true,
-    project: options.name,
+    project: libraryOptions.name,
   });
 
-  if (options.routing) {
+  if (libraryOptions.routing) {
     const pathToRoutes = joinPathFragments(
-      options.projectRoot,
+      libraryOptions.projectRoot,
       'src/lib/routes.ts'
     );
 
     const routesContents = `import { Route } from '@angular/router';
-    import { ${options.standaloneComponentName} } from './${joinPathFragments(
-      options.fileName,
-      `${options.fileName}.component`
+    import { ${
+      libraryOptions.standaloneComponentName
+    } } from './${joinPathFragments(
+      libraryOptions.fileName,
+      `${libraryOptions.fileName}.component`
     )}';
     
         export const ${names(
-          options.name
+          libraryOptions.name
         ).className.toUpperCase()}_ROUTES: Route[] = [
-          {path: '', component: ${options.standaloneComponentName}}
+          {path: '', component: ${libraryOptions.standaloneComponentName}}
         ];`;
     tree.write(pathToRoutes, routesContents);
 
     const pathToEntryFile = joinPathFragments(
-      options.projectRoot,
+      libraryOptions.projectRoot,
       'src',
-      `${options.entryFile}.ts`
+      `${libraryOptions.entryFile}.ts`
     );
     const entryFileContents = tree.read(pathToEntryFile, 'utf-8');
     tree.write(
@@ -48,11 +51,11 @@ export async function addStandaloneComponent(
         export * from './lib/routes'`
     );
 
-    if (options.parentModule) {
-      if (options.lazy) {
-        addLoadChildren(tree, options);
+    if (libraryOptions.parentModule) {
+      if (libraryOptions.lazy) {
+        addLoadChildren(tree, libraryOptions);
       } else {
-        addChildren(tree, options);
+        addChildren(tree, libraryOptions);
       }
     }
   }

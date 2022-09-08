@@ -6,7 +6,7 @@ import { NormalizedSchema } from './normalized-schema';
 
 export function addLazyLoadedRouterConfiguration(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema['libraryOptions']
 ) {
   const moduleSource = host.read(options.modulePath)!.toString('utf-8');
   let sourceFile = ts.createSourceFile(
