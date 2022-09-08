@@ -267,28 +267,31 @@ export function createRootStorybookDir(
 
   const workspaceConfiguration = readWorkspaceConfiguration(tree);
 
-  const hasProductionFileset = !!workspaceConfiguration.namedInputs?.production;
-  if (hasProductionFileset) {
-    workspaceConfiguration.namedInputs.production.push(
-      '!{projectRoot}/.storybook/**/*'
+  if (workspaceConfiguration.namedInputs) {
+    const hasProductionFileset =
+      !!workspaceConfiguration.namedInputs?.production;
+    if (hasProductionFileset) {
+      workspaceConfiguration.namedInputs.production.push(
+        '!{projectRoot}/.storybook/**/*'
+      );
+      workspaceConfiguration.namedInputs.production.push(
+        '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
+      );
+    }
+
+    workspaceConfiguration.targetDefaults ??= {};
+    workspaceConfiguration.targetDefaults['build-storybook'] ??= {};
+    workspaceConfiguration.targetDefaults['build-storybook'].inputs ??= [
+      'default',
+      hasProductionFileset ? '^production' : '^default',
+    ];
+
+    workspaceConfiguration.targetDefaults['build-storybook'].inputs.push(
+      '{workspaceRoot}/.storybook/**/*'
     );
-    workspaceConfiguration.namedInputs.production.push(
-      '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-    );
+
+    updateWorkspaceConfiguration(tree, workspaceConfiguration);
   }
-
-  workspaceConfiguration.targetDefaults ??= {};
-  workspaceConfiguration.targetDefaults['build-storybook'] ??= {};
-  workspaceConfiguration.targetDefaults['build-storybook'].inputs ??= [
-    'default',
-    hasProductionFileset ? '^production' : '^default',
-  ];
-
-  workspaceConfiguration.targetDefaults['build-storybook'].inputs.push(
-    '{workspaceRoot}/.storybook/**/*'
-  );
-
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
 
   if (js) {
     toJS(tree);
