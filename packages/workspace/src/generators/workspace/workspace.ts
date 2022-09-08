@@ -80,6 +80,12 @@ function createNxJson(
     },
   };
 
+  nxJson.targetDefaults = {
+    build: {
+      dependsOn: ['^build'],
+    },
+  };
+
   if (
     preset !== Preset.Core &&
     preset !== Preset.NPM &&
@@ -90,12 +96,7 @@ function createNxJson(
       production: ['default'],
       sharedGlobals: [],
     };
-    nxJson.targetDefaults = {
-      build: {
-        dependsOn: ['^build'],
-        inputs: ['production', '^production'],
-      },
-    };
+    nxJson.targetDefaults.build.inputs = ['production', '^production'];
   }
 
   if (packageManager && cli === 'angular') {

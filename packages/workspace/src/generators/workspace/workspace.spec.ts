@@ -53,6 +53,11 @@ describe('@nrwl/workspace:workspace', () => {
           },
         },
       },
+      targetDefaults: {
+        build: {
+          dependsOn: ['^build'],
+        },
+      },
     });
     const validateNxJson = ajv.compile(nxSchema);
     expect(validateNxJson(nxJson)).toEqual(true);
