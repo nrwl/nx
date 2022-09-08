@@ -64,9 +64,9 @@ describe('cache', () => {
 
     // touch package.json
     // --------------------------------------------
-    updateFile(`package.json`, (c) => {
+    updateFile(`nx.json`, (c) => {
       const r = JSON.parse(c);
-      r.description = 'different';
+      r.affected.defaultBase = 'different';
       return JSON.stringify(r);
     });
     const outputWithNoBuildCached = runCLI(`affected:build ${files}`);
