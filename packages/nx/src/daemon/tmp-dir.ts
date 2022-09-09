@@ -11,8 +11,6 @@ import { createHash } from 'crypto';
 import { tmpdir } from 'tmp';
 import { workspaceRoot } from '../utils/workspace-root';
 
-const socketDir = createSocketDir();
-
 export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(
   projectGraphCacheDirectory,
   'd'
@@ -22,6 +20,8 @@ export const DAEMON_OUTPUT_LOG_FILE = join(
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   'daemon.log'
 );
+
+const socketDir = createSocketDir();
 
 export const DAEMON_SOCKET_PATH = join(
   socketDir,
