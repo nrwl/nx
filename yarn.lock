@@ -7167,7 +7167,7 @@
   resolved "https://registry.yarnpkg.com/@yarnpkg/lockfile/-/lockfile-1.1.0.tgz#e77a97fbd345b76d83245edcd17d393b1b41fb31"
   integrity sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==
 
-"@yarnpkg/parsers@^3.0.0-rc.18":
+"@yarnpkg/parsers@^3.0.0-rc.18", "@yarnpkg/parsers@^3.0.0-rc.6":
   version "3.0.0-rc.18"
   resolved "https://registry.yarnpkg.com/@yarnpkg/parsers/-/parsers-3.0.0-rc.18.tgz#e38a76e8039728dac3cbea92c445dd8409693843"
   integrity sha512-bnl6X1jTecByEg3YjCTxtXAEg+gwCiTA5qaK6391hqqbSijwH+42+D4crHvkLUJuquosGnu9oUDMHa4Wx42n5g==
@@ -7175,6 +7175,7 @@
     js-yaml "^3.10.0"
     tslib "^2.4.0"
 
+<<<<<<< HEAD
 "@yarnpkg/parsers@^3.0.0-rc.6":
   version "3.0.0-rc.15"
   resolved "https://registry.yarnpkg.com/@yarnpkg/parsers/-/parsers-3.0.0-rc.15.tgz#6d7ae39c67e20b4947d27a6dff9a0e9bc7f078e0"
@@ -7190,6 +7191,8 @@
   dependencies:
     argparse "^2.0.1"
 
+=======
+>>>>>>> 8c4462570 (chore(repo): update yarn lock file)
 "@zkochan/rimraf@^2.1.2":
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/@zkochan/rimraf/-/rimraf-2.1.2.tgz#84b502594321360e4a4ca864b9e6457af2f5212d"
