@@ -214,7 +214,6 @@ async function runExecutorInternal<T extends { success: boolean }>(
         target,
         configuration,
         runOptions: combinedOptions,
-        executor: targetConfig.executor,
       },
       isVerbose
     );

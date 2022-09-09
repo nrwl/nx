@@ -39,7 +39,7 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { readNxJson } from '../generators/utils/project-configuration';
-import { PackageJson, readModulePackageJson } from '../utils/package-json';
+import { readModulePackageJson } from '../utils/package-json';
 
 export async function scheduleTarget(
   root: string,
@@ -48,7 +48,6 @@ export async function scheduleTarget(
     target: string;
     configuration: string;
     runOptions: any;
-    executor: string;
   },
   verbose: boolean
 ): Promise<Observable<import('@angular-devkit/architect').BuilderOutput>> {
@@ -57,7 +56,7 @@ export async function scheduleTarget(
     WorkspaceNodeModulesArchitectHost,
   } = require('@angular-devkit/architect/node');
 
-  const logger = getTargetLogger(opts.executor, verbose);
+  const logger = getLogger(verbose);
   const fsHost = new NxScopedHost(root);
   const { workspace } = await workspaces.readWorkspace(
     workspaceConfigName(root),
@@ -1167,67 +1166,27 @@ export async function invokeNew(
 
 let logger: logging.Logger;
 
-const loggerColors: Partial<Record<logging.LogLevel, (s: string) => string>> = {
-  warn: (s) => chalk.bold(chalk.yellow(s)),
-  error: (s) => {
-    if (s.startsWith('NX ')) {
-      return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.slice(3)))}\n`;
-    }
-
-    return chalk.bold(chalk.red(s));
-  },
-  info: (s) => {
-    if (s.startsWith('NX ')) {
-      return `\n${NX_PREFIX} ${chalk.bold(s.slice(3))}\n`;
-    }
-
-    return chalk.white(s);
-  },
-};
-
 export const getLogger = (isVerbose = false): logging.Logger => {
   if (!logger) {
-    logger = createConsoleLogger(
-      isVerbose,
-      process.stdout,
-      process.stderr,
-      loggerColors
-    );
+    logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
+      warn: (s) => chalk.bold(chalk.yellow(s)),
+      error: (s) => {
+        if (s.startsWith('NX ')) {
+          return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.slice(3)))}\n`;
+        }
+
+        return chalk.bold(chalk.red(s));
+      },
+      info: (s) => {
+        if (s.startsWith('NX ')) {
+          return `\n${NX_PREFIX} ${chalk.bold(s.slice(3))}\n`;
+        }
+
+        return chalk.white(s);
+      },
+    });
   }
   return logger;
-};
-
-const getTargetLogger = (
-  executor: string,
-  isVerbose = false
-): logging.Logger => {
-  if (executor !== '@angular-devkit/build-angular:tslint') {
-    return getLogger(isVerbose);
-  }
-
-  const tslintExecutorLogger = createConsoleLogger(
-    isVerbose,
-    process.stdout,
-    process.stderr,
-    {
-      ...loggerColors,
-      warn: (s) => {
-        if (
-          s.startsWith(
-            `TSLint's support is discontinued and we're deprecating its support in Angular CLI.`
-          )
-        ) {
-          s =
-            `TSLint's support is discontinued and the @angular-devkit/build-angular:tslint executor is deprecated.\n` +
-            'To start using a modern linter tool, please consider replacing TSLint with ESLint. ' +
-            'You can use the "@nrwl/angular:convert-tslint-to-eslint" generator to automatically convert your projects.\n' +
-            'For more info, visit https://nx.dev/packages/angular/generators/convert-tslint-to-eslint.';
-        }
-        return chalk.bold(chalk.yellow(s));
-      },
-    }
-  );
-  return tslintExecutorLogger;
 };
 
 function saveWorkspaceConfigurationInWrappedSchematic(
