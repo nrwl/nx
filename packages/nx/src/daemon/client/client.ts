@@ -310,7 +310,7 @@ async function sendMessageToDaemon(message: {
           reject(
             daemonProcessException(
               [
-                'Could not deserialize response from Nx deamon.',
+                'Could not deserialize response from Nx daemon.',
                 `Message: ${e.message}`,
                 '\n',
                 `Received:`,

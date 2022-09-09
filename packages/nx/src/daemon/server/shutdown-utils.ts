@@ -45,14 +45,17 @@ export function respondToClient(
   response: string,
   description: string
 ) {
-  return new Promise((res) => {
-    socket.write(response, () => {
+  return new Promise(async (res) => {
+    socket.write(response, (err) => {
       if (description) {
         serverLogger.requestLog(`Responding to the client.`, description);
       }
+      if (err) {
+        console.error(err);
+      }
       // Close the connection once all data has been written so that the client knows when to read it.
       socket.end();
-      serverLogger.log(`Closed Connection to Client`);
+      serverLogger.log(`Closed Connection to Client`, description);
       res(null);
     });
   });
