@@ -1,7 +1,7 @@
 import { webpack } from './index';
 import { join } from 'path';
 
-jest.mock('@nrwl/web/src/utils/web.config', () => {
+jest.mock('@nrwl/webpack/src/executors/webpack/lib/get-webpack-config', () => {
   return {
     getStylesPartial: () => ({}),
   };

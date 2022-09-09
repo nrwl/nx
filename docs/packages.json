@@ -304,6 +304,15 @@
     }
   },
   {
+    "name": "webpack",
+    "packageName": "webpack",
+    "path": "generated/packages/webpack.json",
+    "schemas": {
+      "executors": ["webpack", "dev-server"],
+      "generators": ["init", "webpack-project"]
+    }
+  },
+  {
     "name": "workspace",
     "packageName": "workspace",
     "path": "generated/packages/workspace.json",

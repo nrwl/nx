@@ -1,7 +1,6 @@
 import { ExecutorContext, logger, runExecutor } from '@nrwl/devkit';
-import devServerExecutor, {
-  WebDevServerOptions,
-} from '@nrwl/web/src/executors/dev-server/dev-server.impl';
+import devServerExecutor from '@nrwl/webpack/src/executors/dev-server/dev-server.impl';
+import { WebDevServerOptions } from '@nrwl/webpack/src/executors/dev-server/schema';
 import { join } from 'path';
 import {
   combineAsyncIterators,

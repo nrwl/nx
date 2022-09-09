@@ -9,7 +9,7 @@ import {
   parseTargetString,
   readCachedProjectGraph,
 } from '@nrwl/devkit';
-import { WebpackNxBuildCoordinationPlugin } from '@nrwl/web/src/plugins/webpack-nx-build-coordination-plugin';
+import { WebpackNxBuildCoordinationPlugin } from '@nrwl/webpack/src/plugins/webpack-nx-build-coordination-plugin';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
