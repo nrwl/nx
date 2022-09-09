@@ -33,6 +33,7 @@
     "e2e-storybook-angular": "e2e/storybook-angular",
     "e2e-utils": "e2e/utils",
     "e2e-web": "e2e/web",
+    "e2e-webpack": "e2e/webpack",
     "e2e-workspace-create": "e2e/workspace-create",
     "eslint-plugin-nx": "packages/eslint-plugin-nx",
     "eslint-rules": "tools/eslint-rules",
@@ -74,6 +75,7 @@
     "tao": "packages/tao",
     "typedoc-theme": "typedoc-theme",
     "web": "packages/web",
+    "webpack": "packages/webpack",
     "workspace": "packages/workspace"
   },
   "$schema": "./node_modules/nx/schemas/workspace-schema.json"

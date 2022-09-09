@@ -324,7 +324,7 @@ describe('app', () => {
 
     const workspaceJson = getProjects(appTree);
     const targetConfig = workspaceJson.get('my-app').targets;
-    expect(targetConfig.build.executor).toEqual('@nrwl/web:webpack');
+    expect(targetConfig.build.executor).toEqual('@nrwl/webpack:webpack');
     expect(targetConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(targetConfig.build.options).toEqual({
       compiler: 'babel',
@@ -360,7 +360,7 @@ describe('app', () => {
 
     const workspaceJson = getProjects(appTree);
     const targetConfig = workspaceJson.get('my-app').targets;
-    expect(targetConfig.serve.executor).toEqual('@nrwl/web:dev-server');
+    expect(targetConfig.serve.executor).toEqual('@nrwl/webpack:dev-server');
     expect(targetConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
       hmr: true,

@@ -4,6 +4,7 @@ export interface Schema {
   name: string;
   prefix?: string;
   style?: string;
+  bundler?: 'webpack' | 'none';
   compiler?: 'babel' | 'swc';
   skipFormat?: boolean;
   directory?: string;

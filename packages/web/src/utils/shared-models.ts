@@ -9,7 +9,7 @@ export interface OptimizationOptions {
 export interface BuildBuilderOptions {
   main: string;
   outputPath: string;
-  compiler: 'babel' | 'swc';
+  compiler?: 'babel' | 'swc';
   tsConfig: string;
   watch?: boolean;
   sourceMap?: boolean | 'hidden';

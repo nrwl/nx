@@ -1,3 +1,5 @@
+import { join } from 'path';
+import { webpackProjectGenerator } from '@nrwl/webpack';
 import { cypressProjectGenerator } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
@@ -10,10 +12,11 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
-  ProjectConfiguration,
+  readProjectConfiguration,
   readWorkspaceConfiguration,
   TargetConfiguration,
   Tree,
+  updateProjectConfiguration,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
@@ -22,11 +25,7 @@ import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
-import { join } from 'path';
-
-import { WebWebpackExecutorOptions } from '../../executors/webpack/webpack.impl';
 import { swcLoaderVersion } from '../../utils/versions';
-
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 
@@ -54,29 +53,43 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
   }
 }
 
-function addBuildTarget(
-  project: ProjectConfiguration,
-  options: NormalizedSchema
-): ProjectConfiguration {
-  const buildOptions: WebWebpackExecutorOptions = {
-    outputPath: joinPathFragments('dist', options.appProjectRoot),
-    compiler: options.compiler ?? 'babel',
-    index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
-    baseHref: '/',
-    main: joinPathFragments(options.appProjectRoot, 'src/main.ts'),
-    polyfills: joinPathFragments(options.appProjectRoot, 'src/polyfills.ts'),
-    tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    assets: [
-      joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),
-      joinPathFragments(options.appProjectRoot, 'src/assets'),
-    ],
-    styles: [
+async function setupBundler(tree: Tree, options: NormalizedSchema) {
+  const main = joinPathFragments(options.appProjectRoot, 'src/main.ts');
+  const tsConfig = joinPathFragments(
+    options.appProjectRoot,
+    'tsconfig.app.json'
+  );
+  const assets = [
+    joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),
+    joinPathFragments(options.appProjectRoot, 'src/assets'),
+  ];
+
+  if (options.bundler === 'webpack') {
+    await webpackProjectGenerator(tree, {
+      project: options.projectName,
+      main,
+      tsConfig,
+      compiler: options.compiler ?? 'babel',
+      devServer: true,
+    });
+    const project = readProjectConfiguration(tree, options.projectName);
+    const prodConfig = project.targets.build.configurations.production;
+    const buildOptions = project.targets.build.options;
+    buildOptions.assets = assets;
+    buildOptions.index = joinPathFragments(
+      options.appProjectRoot,
+      'src/index.html'
+    );
+    buildOptions.baseHref = '/';
+    buildOptions.polyfills = joinPathFragments(
+      options.appProjectRoot,
+      'src/polyfills.ts'
+    );
+    buildOptions.styles = [
       joinPathFragments(options.appProjectRoot, `src/styles.${options.style}`),
-    ],
-    scripts: [],
-  };
-  const productionBuildOptions: Partial<WebWebpackExecutorOptions> = {
-    fileReplacements: [
+    ];
+    buildOptions.scripts = [];
+    prodConfig.fileReplacements = [
       {
         replace: joinPathFragments(
           options.appProjectRoot,
@@ -87,76 +100,50 @@ function addBuildTarget(
           `src/environments/environment.prod.ts`
         ),
       },
-    ],
-    optimization: true,
-    outputHashing: 'all',
-    sourceMap: false,
-    namedChunks: false,
-    extractLicenses: true,
-    vendorChunk: false,
-  };
-
-  return {
-    ...project,
-    targets: {
-      ...project.targets,
-      build: {
-        executor: '@nrwl/web:webpack',
-        outputs: ['{options.outputPath}'],
-        defaultConfiguration: 'production',
-        options: buildOptions,
-        configurations: {
-          production: productionBuildOptions,
-        },
+    ];
+    prodConfig.optimization = true;
+    prodConfig.outputHashing = 'all';
+    prodConfig.sourceMap = false;
+    prodConfig.namedChunks = false;
+    prodConfig.extractLicenses = true;
+    prodConfig.vendorChunk = false;
+    updateProjectConfiguration(tree, options.projectName, project);
+  } else if (options.bundler === 'none') {
+    // TODO(jack): Flush this out... no bundler should be possible for web but the experience isn't holistic due to missing features (e.g. writing index.html).
+    const project = readProjectConfiguration(tree, options.projectName);
+    project.targets.build = {
+      executor: `@nrwl/js:${options.compiler}`,
+      outputs: ['{options.outputPath}'],
+      options: {
+        main,
+        outputPath: joinPathFragments('dist', options.appProjectRoot),
+        tsConfig,
+        assets,
       },
-    },
-  };
+    };
+    updateProjectConfiguration(tree, options.projectName, project);
+  } else {
+    throw new Error('Unsupported bundler type');
+  }
 }
 
-function addServeTarget(
-  project: ProjectConfiguration,
-  options: NormalizedSchema
-) {
-  const serveTarget: TargetConfiguration = {
-    executor: '@nrwl/web:dev-server',
-    options: {
-      buildTarget: `${options.projectName}:build`,
-    },
-    configurations: {
-      production: {
-        buildTarget: `${options.projectName}:build:production`,
-      },
-    },
-  };
-
-  return {
-    ...project,
-    targets: {
-      ...project.targets,
-      serve: serveTarget,
-    },
-  };
-}
-
-function addProject(tree: Tree, options: NormalizedSchema) {
+async function addProject(tree: Tree, options: NormalizedSchema) {
   const targets: Record<string, TargetConfiguration> = {};
-  let project: ProjectConfiguration = {
-    projectType: 'application',
-    root: options.appProjectRoot,
-    sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
-    tags: options.parsedTags,
-    targets,
-  };
-
-  project = addBuildTarget(project, options);
-  project = addServeTarget(project, options);
 
   addProjectConfiguration(
     tree,
     options.projectName,
-    project,
+    {
+      projectType: 'application',
+      root: options.appProjectRoot,
+      sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
+      tags: options.parsedTags,
+      targets,
+    },
     options.standaloneConfig
   );
+
+  await setupBundler(tree, options);
 
   const workspace = readWorkspaceConfiguration(tree);
 
@@ -198,7 +185,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   tasks.push(webTask);
 
   createApplicationFiles(host, options);
-  addProject(host, options);
+  await addProject(host, options);
 
   const lintTask = await lintProjectGenerator(host, {
     linter: options.linter,
@@ -275,6 +262,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ...options,
     prefix: options.prefix ?? npmScope,
     name: names(options.name).fileName,
+    compiler: options.compiler ?? 'babel',
+    bundler: options.bundler ?? 'webpack',
     projectName: appProjectName,
     appProjectRoot,
     e2eProjectRoot,
