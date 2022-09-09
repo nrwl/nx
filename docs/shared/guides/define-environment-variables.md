@@ -17,12 +17,16 @@ This guide is divided into two sections:
 
 By default, Nx will load any environment variables you place in the following files:
 
-1. `apps/my-app/.local.env`
-2. `apps/my-app/.env.local`
-3. `apps/my-app/.env`
-4. `.local.env`
-5. `.env.local`
-6. `.env`
+1. `apps/my-app/.[target-name].env`
+2. `apps/my-app/.env.[target-name]`
+3. `apps/my-app/.local.env`
+4. `apps/my-app/.env.local`
+5. `apps/my-app/.env`
+6. `.[target-name].env`
+7. `.env.[target-name]`
+8. `.local.env`
+9. `.env.local`
+10. `.env`
 
 {% callout type="warning" title="Order is important" %}
 Nx will move through the above list, ignoring files it can't find, and loading environment variables
@@ -32,6 +36,7 @@ it will ignore it. It does this for two reasons:
 1. Developers can't accidentally overwrite important system level variables (like `NODE_ENV`)
 2. Allows developers to create `.env.local` or `.local.env` files for their local environment and override any project
    defaults set in `.env`
+3. Allows developers to create target specific `.env.[target-name]` or `.[target-name].env` to overwrite environment variables for specific targets. For instance, you could increase the memory use for node processes only for build targets by setting `NODE_OPTIONS=--max-old-space-size=4096` in `.build.env`
 
 For example:
 
