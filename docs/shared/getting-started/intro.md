@@ -11,8 +11,10 @@ up your productivity.
 Nx is similar. The core of Nx is generic, simple, and unobtrusive. Nx plugins, although very useful for many projects,
 are completely optional.
 
-Most examples on this site use Nx plugins. It's just easier to demonstrate many features Nx offers when Nx generates all
-the boilerplate. However, the vast majority of the features will work the same way in a workspace with no plugins.
+Most examples on this site use Nx plugins (integrated repo style). It's just easier to demonstrate many features Nx offers when Nx generates all
+the boilerplate. However, the vast majority of the features will work the same way in a workspace with no plugins (package-based repo).
+
+Here's a deep dive on [Integrated Repos vs. Package-Based Repos](/concepts/integrated-vs-package-based)
 
 ## Getting Started
 
