@@ -768,17 +768,15 @@ export async function getPromptsForSchema(
         availablePluginsPromise ??= getAvailablePlugins();
         const availablePlugins = await availablePluginsPromise;
 
-        console.log(JSON.stringify(availablePlugins, null, 2));
-
         const choices =
           v['x-dropdown'] === 'generators'
             ? availablePlugins.flatMap((p) =>
-                Object.keys(p.generators).map(
+                Object.keys(p.generators ?? {}).map(
                   (generatorName) => `${p.name}:${generatorName}`
                 )
               )
             : availablePlugins.flatMap((p) =>
-                Object.keys(p.executors).map(
+                Object.keys(p.executors ?? {}).map(
                   (executorName) => `${p.name}:${executorName}`
                 )
               );

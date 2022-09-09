@@ -21,5 +21,5 @@ export async function getAvailablePlugins(): Promise<PluginCapabilities[]> {
     []
   );
 
-  return [...Object.values(localPlugins), ...Object.values(installedPlugins)];
+  return [...localPlugins.values(), ...installedPlugins.values()];
 }
