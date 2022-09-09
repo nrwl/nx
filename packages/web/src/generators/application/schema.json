@@ -50,6 +50,12 @@
       "enum": ["babel", "swc"],
       "default": "babel"
     },
+    "bundler": {
+      "type": "string",
+      "description": "The bundler to use.",
+      "enum": ["webpack", "none"],
+      "default": "webpack"
+    },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",

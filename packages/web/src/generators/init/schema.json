@@ -6,6 +6,12 @@
   "description": "Init Web Plugin.",
   "type": "object",
   "properties": {
+    "bundler": {
+      "type": "string",
+      "description": "The bundler to use.",
+      "enum": ["webpack", "none"],
+      "default": "webpack"
+    },
     "unitTestRunner": {
       "description": "Adds the specified unit test runner",
       "type": "string",
