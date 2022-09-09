@@ -315,6 +315,11 @@
         "id": "concepts",
         "itemList": [
           {
+            "name": "Integrated Repos vs. Package-Based Repos",
+            "id": "integrated-vs-package-based",
+            "file": "shared/concepts/integrated-vs-package-based"
+          },
+          {
             "name": "Mental Model",
             "id": "mental-model",
             "file": "shared/mental-model"
