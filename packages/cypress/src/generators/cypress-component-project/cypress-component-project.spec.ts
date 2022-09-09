@@ -4,6 +4,7 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
@@ -121,15 +122,31 @@ describe('Cypress Component Project', () => {
 
   it('should update cacheable operations', async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
+    updateJson(tree, 'nx.json', (json) => {
+      json.namedInputs = {
+        production: [],
+        targetDefaults: [],
+      };
+      return json;
+    });
     await cypressComponentProject(tree, {
       project: 'cool-lib',
       skipFormat: false,
     });
 
+    const nxJson = readJson(tree, 'nx.json');
+
     expect(
-      readJson(tree, 'nx.json').tasksRunnerOptions.default.options
-        .cacheableOperations
+      nxJson.tasksRunnerOptions.default.options.cacheableOperations
     ).toEqual(expect.arrayContaining(['component-test']));
+    expect(nxJson.targetDefaults['component-test']).toEqual({
+      inputs: ['default', '^production'],
+    });
+    expect(nxJson.namedInputs.production).toEqual([
+      '!{projectRoot}/cypress/**/*',
+      '!{projectRoot}/**/*.cy.[jt]s?(x)',
+      '!{projectRoot}/cypress.config.[jt]s',
+    ]);
   });
 
   it('should not error when rerunning on an existing project', async () => {
