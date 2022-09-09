@@ -10,6 +10,8 @@ import {
   updateJson,
   updateProjectConfiguration,
   NxJsonConfiguration,
+  readWorkspaceConfiguration,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
@@ -37,7 +39,7 @@ export async function cypressComponentProject(
 
   addProjectFiles(tree, projectConfig, options);
   addTargetToProject(tree, projectConfig, options);
-  addToCacheableOperations(tree);
+  updateNxJson(tree);
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
@@ -90,24 +92,43 @@ function addTargetToProject(
   updateProjectConfiguration(tree, options.project, projectConfig);
 }
 
-export function addToCacheableOperations(tree: Tree) {
-  updateJson(tree, 'nx.json', (json) => ({
-    ...json,
-    tasksRunnerOptions: {
-      ...json.tasksRunnerOptions,
-      default: {
-        ...json.tasksRunnerOptions?.default,
-        options: {
-          ...json.tasksRunnerOptions?.default?.options,
-          cacheableOperations: Array.from(
-            new Set([
-              ...(json.tasksRunnerOptions?.default?.options
-                ?.cacheableOperations ?? []),
-              'component-test',
-            ])
-          ),
-        },
+function updateNxJson(tree: Tree) {
+  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  workspaceConfiguration.tasksRunnerOptions = {
+    ...workspaceConfiguration?.tasksRunnerOptions,
+    default: {
+      ...workspaceConfiguration?.tasksRunnerOptions?.default,
+      options: {
+        ...workspaceConfiguration?.tasksRunnerOptions?.default?.options,
+        cacheableOperations: Array.from(
+          new Set([
+            ...(workspaceConfiguration?.tasksRunnerOptions?.default?.options
+              ?.cacheableOperations ?? []),
+            'component-test',
+          ])
+        ),
       },
     },
-  }));
+  };
+
+  if (workspaceConfiguration.namedInputs) {
+    workspaceConfiguration.targetDefaults ??= {};
+    const productionFileSet = workspaceConfiguration.namedInputs?.production;
+    if (productionFileSet) {
+      workspaceConfiguration.namedInputs.production = Array.from(
+        new Set([
+          ...productionFileSet,
+          '!{projectRoot}/cypress/**/*',
+          '!{projectRoot}/**/*.cy.[jt]s?(x)',
+          '!{projectRoot}/cypress.config.[jt]s',
+        ])
+      );
+    }
+    workspaceConfiguration.targetDefaults['component-test'] ??= {};
+    workspaceConfiguration.targetDefaults['component-test'].inputs ??= [
+      'default',
+      productionFileSet ? '^production' : '^default',
+    ];
+  }
+  updateWorkspaceConfiguration(tree, workspaceConfiguration);
 }
