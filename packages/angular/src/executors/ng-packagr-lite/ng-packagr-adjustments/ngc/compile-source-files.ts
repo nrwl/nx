@@ -154,6 +154,7 @@ export async function compileSourceFiles(
   for (const sourceFile of builder.getSourceFiles()) {
     if (!ignoreForDiagnostics.has(sourceFile)) {
       allDiagnostics.push(
+        ...builder.getDeclarationDiagnostics(sourceFile),
         ...builder.getSyntacticDiagnostics(sourceFile),
         ...builder.getSemanticDiagnostics(sourceFile)
       );
