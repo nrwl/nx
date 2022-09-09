@@ -453,6 +453,11 @@
         "id": "recipe",
         "itemList": [
           {
+            "name": "Disable Graph Links Created from Analyzing Source Files",
+            "id": "analyze-source-files",
+            "file": "shared/recipes/analyze-source-files"
+          },
+          {
             "name": "Nx Console Generate Command",
             "id": "console-generate-command",
             "file": "shared/recipes/console-generate-command"
