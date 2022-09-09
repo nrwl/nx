@@ -5,7 +5,8 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { checkAndCleanWithSemver } from '@nrwl/workspace';
+// don't import from root level to prevent issue where angular isn't installed.
+import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { gte, lt } from 'semver';
 
 export function updateCypressVersionIf10(tree: Tree): GeneratorCallback {
