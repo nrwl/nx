@@ -145,15 +145,20 @@ function applyDefaultEagerPackages(
     '@angular/localize/init',
   ];
   for (const pkg of DEFAULT_PACKAGES_TO_LOAD_EAGERLY) {
-    sharedConfig[pkg] = {
-      ...(sharedConfig[pkg] ?? {}),
-      eager: true,
-    };
+    if (!sharedConfig[pkg]) {
+      continue;
+    }
+
+    sharedConfig[pkg] = { ...sharedConfig[pkg], eager: true };
   }
 }
 
 export async function withModuleFederation(options: MFConfig) {
   const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mf'];
+  const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
+    '@angular/animations',
+    '@angular/common',
+  ];
 
   let projectGraph: ProjectGraph<any>;
   try {
@@ -171,8 +176,13 @@ export async function withModuleFederation(options: MFConfig) {
   );
 
   const npmPackages = sharePackages(
-    dependencies.npmPackages.filter(
-      (pkg) => !DEFAULT_NPM_PACKAGES_TO_AVOID.includes(pkg)
+    Array.from(
+      new Set([
+        ...DEFAULT_ANGULAR_PACKAGES_TO_SHARE,
+        ...dependencies.npmPackages.filter(
+          (pkg) => !DEFAULT_NPM_PACKAGES_TO_AVOID.includes(pkg)
+        ),
+      ])
     )
   );
 
