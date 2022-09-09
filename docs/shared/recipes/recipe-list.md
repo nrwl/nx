@@ -87,3 +87,4 @@
 - [Tag in Multiple Dimensions](/recipe/tag-multiple-dimensions)
 - [Ban External Imports](/recipe/ban-external-imports)
 - [Tags Allow List](/recipe/tags-allow-list)
+- [Disable Graph Links Created from Analyzing Source Files](/recipe/analyze-source-files)
