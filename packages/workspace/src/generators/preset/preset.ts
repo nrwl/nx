@@ -170,8 +170,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: 'detox',
     });
   } else if (options.preset === Preset.Expo) {
-    const { applicationGenerator: expoApplicationGenerator } = require('@nrwl' +
-      '/expo');
+    const { expoApplicationGenerator } = require('@nrwl' + '/expo');
     await expoApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,

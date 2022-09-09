@@ -11,7 +11,9 @@ import {
 describe('expo', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
+  beforeEach(
+    () => (proj = newProject({ name: uniq('proj'), packageManager: 'npm' }))
+  );
 
   it('should test, lint', async () => {
     const appName = uniq('my-app');
@@ -23,14 +25,15 @@ describe('expo', () => {
     runCLI(
       `generate @nrwl/expo:component ${componentName} --project=${libName} --export`
     );
+    expectTestsPass(await runCLIAsync(`test ${appName}`));
+    expectTestsPass(await runCLIAsync(`test ${libName}`));
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
-      let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport ${componentName} from '${proj}/${libName}';\n${content}`;
+      let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport {${componentName}} from '${proj}/${libName}';\n${content}`;
       return updated;
     });
 
     expectTestsPass(await runCLIAsync(`test ${appName}`));
-    expectTestsPass(await runCLIAsync(`test ${libName}`));
 
     const appLintResults = await runCLIAsync(`lint ${appName}`);
     expect(appLintResults.combinedOutput).toContain('All files pass linting.');

@@ -381,6 +381,35 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.5.3": {
+      "version": "14.5.3-beta.0",
+      "packages": {
+        "expo": {
+          "version": "46.0.10",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "2.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.69.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.69.8",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "13.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.72.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
