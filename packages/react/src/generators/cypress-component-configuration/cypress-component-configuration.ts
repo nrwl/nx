@@ -1,7 +1,7 @@
 import { cypressComponentProject } from '@nrwl/cypress';
 import { formatFiles, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { addFiles } from './lib/add-files';
-import { updateProjectConfig, updateTsConfig } from './lib/update-configs';
+import { updateProjectConfig } from './lib/update-configs';
 import { CypressComponentConfigurationSchema } from './schema.d';
 
 /**
@@ -21,7 +21,6 @@ export async function cypressComponentConfigGenerator(
 
   await updateProjectConfig(tree, options);
   addFiles(tree, projectConfig, options);
-  updateTsConfig(tree, projectConfig);
   if (options.skipFormat) {
     await formatFiles(tree);
   }

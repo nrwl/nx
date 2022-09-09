@@ -116,8 +116,33 @@ describe('Cypress Component Project', () => {
     expect(tree.exists('libs/cool-lib/cypress/support/component.ts')).toEqual(
       true
     );
-    expect(tree.exists('libs/cool-lib/tsconfig.cy.json')).toEqual(true);
     expect(projectConfig.targets['component-test']).toMatchSnapshot();
+
+    expect(tree.exists('libs/cool-lib/cypress/tsconfig.cy.json')).toEqual(true);
+    const cyTsConfig = readJson(tree, 'libs/cool-lib/cypress/tsconfig.cy.json');
+    expect(cyTsConfig.include).toEqual([
+      '../cypress.config.ts',
+      '../**/*.cy.ts',
+      '../**/*.cy.tsx',
+      '../**/*.cy.js',
+      '../**/*.cy.jsx',
+      '../**/*.d.ts',
+    ]);
+    const libTsConfig = readJson(tree, 'libs/cool-lib/tsconfig.lib.json');
+    expect(libTsConfig.exclude).toEqual(
+      expect.arrayContaining([
+        'cypress/**/*',
+        'cypress.config.ts',
+        '**/*.cy.ts',
+        '**/*.cy.js',
+        '**/*.cy.tsx',
+        '**/*.cy.jsx',
+      ])
+    );
+    const baseTsConfig = readJson(tree, 'libs/cool-lib/tsconfig.json');
+    expect(baseTsConfig.references).toEqual(
+      expect.arrayContaining([{ path: './cypress/tsconfig.cy.json' }])
+    );
   });
 
   it('should update cacheable operations', async () => {
@@ -177,7 +202,7 @@ describe('Cypress Component Project', () => {
 
     expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);
     expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);
-    expect(tree.exists('libs/cool-lib/tsconfig.cy.json')).toEqual(true);
+    expect(tree.exists('libs/cool-lib/cypress/tsconfig.cy.json')).toEqual(true);
     expect(actualProjectConfig.targets['component-test']).toMatchSnapshot();
   });
 

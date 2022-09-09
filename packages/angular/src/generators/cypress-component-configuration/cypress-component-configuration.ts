@@ -4,7 +4,6 @@ import {
   formatFiles,
   generateFiles,
   joinPathFragments,
-  logger,
   ProjectConfiguration,
   readProjectConfiguration,
   Tree,
@@ -36,7 +35,6 @@ export async function cypressComponentConfiguration(
 
   await updateProjectConfig(tree, options);
   addFiles(tree, projectConfig, options);
-
   if (options.skipFormat) {
     await formatFiles(tree);
   }

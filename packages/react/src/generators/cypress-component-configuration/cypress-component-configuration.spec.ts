@@ -87,30 +87,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       'component: nxComponentTestingPreset(__filename),'
     );
 
-    const cyTsConfig = readJson(tree, 'libs/some-lib/tsconfig.cy.json');
-    expect(cyTsConfig.include).toEqual([
-      'cypress.config.ts',
-      '**/*.cy.ts',
-      '**/*.cy.tsx',
-      '**/*.cy.js',
-      '**/*.cy.jsx',
-      '**/*.d.ts',
-    ]);
-    const libTsConfig = readJson(tree, 'libs/some-lib/tsconfig.lib.json');
-    expect(libTsConfig.exclude).toEqual(
-      expect.arrayContaining([
-        'cypress/**/*',
-        'cypress.config.ts',
-        '**/*.cy.ts',
-        '**/*.cy.js',
-        '**/*.cy.tsx',
-        '**/*.cy.jsx',
-      ])
-    );
-    const baseTsConfig = readJson(tree, 'libs/some-lib/tsconfig.json');
-    expect(baseTsConfig.references).toEqual(
-      expect.arrayContaining([{ path: './tsconfig.cy.json' }])
-    );
     expect(
       readProjectConfiguration(tree, 'some-lib').targets['component-test']
     ).toEqual({
@@ -181,30 +157,6 @@ describe('React:CypressComponentTestConfiguration', () => {
       'component: nxComponentTestingPreset(__filename),'
     );
 
-    const cyTsConfig = readJson(tree, 'libs/some-lib/tsconfig.cy.json');
-    expect(cyTsConfig.include).toEqual([
-      'cypress.config.ts',
-      '**/*.cy.ts',
-      '**/*.cy.tsx',
-      '**/*.cy.js',
-      '**/*.cy.jsx',
-      '**/*.d.ts',
-    ]);
-    const libTsConfig = readJson(tree, 'libs/some-lib/tsconfig.lib.json');
-    expect(libTsConfig.exclude).toEqual(
-      expect.arrayContaining([
-        'cypress/**/*',
-        'cypress.config.ts',
-        '**/*.cy.ts',
-        '**/*.cy.js',
-        '**/*.cy.tsx',
-        '**/*.cy.jsx',
-      ])
-    );
-    const baseTsConfig = readJson(tree, 'libs/some-lib/tsconfig.json');
-    expect(baseTsConfig.references).toEqual(
-      expect.arrayContaining([{ path: './tsconfig.cy.json' }])
-    );
     expect(
       readProjectConfiguration(tree, 'some-lib').targets['component-test']
     ).toEqual({
