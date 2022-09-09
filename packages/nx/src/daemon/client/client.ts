@@ -56,8 +56,9 @@ export class DaemonClient {
         (useDaemonProcessOption === false && env === 'false')
       ) {
         this._enabled = false;
+      } else {
+        this._enabled = true;
       }
-      this._enabled = true;
     }
     return this._enabled;
   }
