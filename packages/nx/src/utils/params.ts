@@ -1,10 +1,12 @@
-import { logger } from './logger';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
-  TargetConfiguration,
   ProjectsConfigurations,
+  TargetConfiguration,
 } from '../config/workspace-json-project-json';
+import { logger } from './logger';
 import { output } from './output';
+import { getAvailablePlugins } from './plugins/available-plugins';
+import { PluginCapabilities } from './plugins/models';
 
 type PropertyDescription = {
   type?: string | string[];
@@ -36,7 +38,7 @@ type PropertyDescription = {
     | string
     | { message: string; type: string; items?: any[]; multiselect?: boolean };
   'x-deprecated'?: boolean | string;
-  'x-dropdown'?: 'projects';
+  'x-dropdown'?: 'projects' | 'generators' | 'executors';
 
   // Numbers Only
   multipleOf?: number;
@@ -719,17 +721,17 @@ interface Prompt {
   choices?: (string | { name: string; message: string })[];
 }
 
-export function getPromptsForSchema(
+let availablePluginsPromise: Promise<PluginCapabilities[]>;
+
+export async function getPromptsForSchema(
   opts: Options,
   schema: Schema,
   wc: (ProjectsConfigurations & NxJsonConfiguration) | null
-): Prompt[] {
+): Promise<Prompt[]> {
   const prompts: Prompt[] = [];
-  Object.entries(schema.properties).forEach(([k, v]) => {
+  for (const [k, v] of Object.entries(schema.properties)) {
     if (v['x-prompt'] && opts[k] === undefined) {
-      const question: Prompt = {
-        name: k,
-      } as any;
+      const question: Prompt = { name: k } as any;
 
       if (v.default) {
         question.initial = v.default;
@@ -759,6 +761,30 @@ export function getPromptsForSchema(
       ) {
         question.type = 'autocomplete';
         question.choices = Object.keys(wc.projects);
+      } else if (
+        v.type === 'string' &&
+        ['generators', 'executors'].includes(v['x-dropdown'])
+      ) {
+        availablePluginsPromise ??= getAvailablePlugins();
+        const availablePlugins = await availablePluginsPromise;
+
+        console.log(JSON.stringify(availablePlugins, null, 2));
+
+        const choices =
+          v['x-dropdown'] === 'generators'
+            ? availablePlugins.flatMap((p) =>
+                Object.keys(p.generators).map(
+                  (generatorName) => `${p.name}:${generatorName}`
+                )
+              )
+            : availablePlugins.flatMap((p) =>
+                Object.keys(p.executors).map(
+                  (executorName) => `${p.name}:${executorName}`
+                )
+              );
+
+        question.type = 'autocomplete';
+        question.choices = choices;
       } else if (v.type === 'number' || v['x-prompt'].type == 'number') {
         question.message = v['x-prompt'].message;
         question.type = 'numeral';
@@ -791,7 +817,7 @@ export function getPromptsForSchema(
       }
       prompts.push(question);
     }
-  });
+  }
 
   return prompts;
 }
@@ -804,7 +830,7 @@ async function promptForValues(
   return await (
     await import('enquirer')
   )
-    .prompt(getPromptsForSchema(opts, schema, wc))
+    .prompt(await getPromptsForSchema(opts, schema, wc))
     .then((values) => ({ ...opts, ...values }))
     .catch((e) => {
       console.error(e);
