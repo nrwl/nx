@@ -16,7 +16,7 @@ export async function updateProjectConfig(
   const found = await findBuildConfig(tree, {
     project: options.project,
     buildTarget: options.buildTarget,
-    validExecutorNames: new Set<string>(['@nrwl/web:webpack']),
+    validExecutorNames: new Set<string>(['@nrwl/webpack:webpack']),
   });
 
   assetValidConfig(found.config);

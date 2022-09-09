@@ -5,7 +5,7 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
 import { PHASE_PRODUCTION_BUILD } from './constants';
 
-jest.mock('@nrwl/web/src/utils/config', () => ({
+jest.mock('@nrwl/webpack', () => ({
   createCopyPlugin: () => {},
 }));
 jest.mock('tsconfig-paths-webpack-plugin');

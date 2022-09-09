@@ -41,6 +41,7 @@ module.exports = {
       description: 'anything testing specific (e.g., jest or cypress)',
     },
     { name: 'web', description: 'anything Web specific' },
+    { name: 'webpack', description: 'anything Webpack specific' },
   ],
 
   allowTicketNumber: true,

@@ -1,13 +1,12 @@
 import {
-  Tree,
   readProjectConfiguration,
+  Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { WebRollupOptions } from '@nrwl/web/src/executors/rollup/schema';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
 export async function updateExternalEmotionJsxRuntime(tree: Tree) {
-  forEachExecutorOptions<WebRollupOptions>(
+  forEachExecutorOptions<any>(
     tree,
     '@nrwl/web:rollup',
     (options: any, projectName, targetName, configurationName) => {

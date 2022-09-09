@@ -301,6 +301,7 @@ export function newProject({
         );
       }
 
+      // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
       const packages = [
         `@nrwl/angular`,
         `@nrwl/eslint-plugin-nx`,
@@ -315,6 +316,7 @@ export function newProject({
         `@nrwl/react`,
         `@nrwl/storybook`,
         `@nrwl/web`,
+        `@nrwl/webpack`,
         `@nrwl/react-native`,
       ];
       packageInstall(packages.join(` `), projScope);

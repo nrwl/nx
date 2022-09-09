@@ -352,7 +352,7 @@ ${jslib}();
       const nestapp = uniq('nestapp');
       runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
-      packageInstall('@nestjs/swagger', undefined, '~5.0.0');
+      packageInstall('@nestjs/swagger', undefined, '^6.0.0');
 
       updateProjectConfig(nestapp, (config) => {
         config.targets.build.options.tsPlugins = ['@nestjs/swagger/plugin'];
@@ -396,16 +396,8 @@ ${jslib}();
       await runCLIAsync(`build ${nestapp}`);
 
       const mainJs = readFile(`dist/apps/${nestapp}/main.js`);
-      expect(stripIndents`${mainJs}`).toContain(
-        stripIndents`
-  class FooDto {
-      static _OPENAPI_METADATA_FACTORY() {
-          return { foo: { required: true, type: () => String }, bar: { required: true, type: () => Number } };
-      }
-  }
-  exports.FooDto = FooDto;
-          `
-      );
+      expect(mainJs).toContain('FooDto');
+      expect(mainJs).toContain('_OPENAPI_METADATA_FACTORY');
     }, 300000);
   });
 });

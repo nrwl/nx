@@ -40,9 +40,11 @@ function getBuildConfig(
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: '@nrwl/node:webpack',
+    executor: '@nrwl/webpack:webpack',
     outputs: ['{options.outputPath}'],
     options: {
+      target: 'node',
+      compiler: 'tsc',
       outputPath: joinPathFragments('dist', options.appProjectRoot),
       main: joinPathFragments(
         project.sourceRoot,
@@ -75,7 +77,7 @@ function getBuildConfig(
 
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/node:node',
+    executor: '@nrwl/js:node',
     options: {
       buildTarget: `${options.name}:build`,
     },

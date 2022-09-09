@@ -16,9 +16,9 @@ import {
   Target,
   workspaceRoot,
 } from '@nrwl/devkit';
-import type { WebWebpackExecutorOptions } from '@nrwl/web/src/executors/webpack/webpack.impl';
-import { normalizeWebBuildOptions } from '@nrwl/web/src/utils/normalize';
-import { getWebConfig } from '@nrwl/web/src/utils/web.config';
+import type { WebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
+import { normalizeOptions } from '@nrwl/webpack/src/executors/webpack/lib/normalize-options';
+import { getWebpackConfig } from '@nrwl/webpack/src/executors/webpack/lib/get-webpack-config';
 import { buildBaseWebpackConfig } from './webpack-fallback';
 
 /**
@@ -108,8 +108,8 @@ export function nxComponentTestingPreset(
 function withSchemaDefaults(
   target: Target,
   context: ExecutorContext
-): WebWebpackExecutorOptions {
-  const options = readTargetOptions<WebWebpackExecutorOptions>(target, context);
+): WebpackExecutorOptions {
+  const options = readTargetOptions<WebpackExecutorOptions>(target, context);
 
   options.compiler ??= 'babel';
   options.deleteOutputPath ??= true;
@@ -149,18 +149,16 @@ function buildTargetWebpack(
     Has component config? ${!!ctProjectConfig}
     `);
   }
+  const context = createExecutorContext(
+    graph,
+    buildableProjectConfig.targets,
+    parsed.project,
+    parsed.target,
+    parsed.target
+  );
 
-  const options = normalizeWebBuildOptions(
-    withSchemaDefaults(
-      parsed,
-      createExecutorContext(
-        graph,
-        buildableProjectConfig.targets,
-        parsed.project,
-        parsed.target,
-        parsed.target
-      )
-    ),
+  const options = normalizeOptions(
+    withSchemaDefaults(parsed, context),
     workspaceRoot,
     buildableProjectConfig.sourceRoot!
   );
@@ -171,13 +169,10 @@ function buildTargetWebpack(
       : options.optimization && options.optimization.scripts
       ? options.optimization.scripts
       : false;
-  return getWebConfig(
-    workspaceRoot,
-    ctProjectConfig.root,
-    ctProjectConfig.sourceRoot,
-    options,
-    true,
-    isScriptOptimizeOn,
-    parsed.configuration
-  );
+
+  return getWebpackConfig(context, options, true, isScriptOptimizeOn, {
+    root: ctProjectConfig.root,
+    sourceRoot: ctProjectConfig.sourceRoot,
+    configuration: parsed.configuration,
+  });
 }

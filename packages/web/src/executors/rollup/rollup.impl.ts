@@ -15,7 +15,7 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import resolve from '@rollup/plugin-node-resolve';
 
-import { AssetGlobPattern } from '../../utils/shared-models';
+import { AssetGlobPattern } from '@nrwl/webpack';
 import { WebRollupOptions } from './schema';
 import { runRollup } from './lib/run-rollup';
 import {

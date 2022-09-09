@@ -1,7 +1,7 @@
 import {
   ExecutorContext,
-  offsetFromRoot,
   joinPathFragments,
+  offsetFromRoot,
 } from '@nrwl/devkit';
 // ignoring while we support both Next 11.1.0 and versions before it
 // @ts-ignore
@@ -16,18 +16,14 @@ import type {
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
-import {
-  FileReplacement,
-  NextBuildBuilderOptions,
-  WebpackConfigOptions,
-} from './types';
-import { normalizeAssets } from '@nrwl/web/src/utils/normalize';
-import { createCopyPlugin } from '@nrwl/web/src/utils/config';
+import { FileReplacement, NextBuildBuilderOptions } from './types';
+import { createCopyPlugin, normalizeAssets } from '@nrwl/webpack';
 import { WithNxOptions } from '../../plugins/with-nx';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+
 const loadConfig = require('next/dist/server/config').default;
 
 export function createWebpackConfig(

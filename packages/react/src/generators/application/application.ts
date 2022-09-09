@@ -25,7 +25,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import reactInitGenerator from '../init/init';
 import { lintProjectGenerator } from '@nrwl/linter';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-import { swcLoaderVersion } from '@nrwl/web/src/utils/versions';
+import { swcLoaderVersion } from '@nrwl/webpack/src/utils/versions';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];

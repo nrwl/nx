@@ -1,17 +1,22 @@
 import {
+  ExecutorContext,
   joinPathFragments,
-  readJsonFile,
   logger,
+  ProjectGraph,
+  readJsonFile,
+  readNxJson,
+  TargetConfiguration,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { getBaseWebpackPartial } from '@nrwl/web/src/utils/config';
-import { getStylesPartial } from '@nrwl/web/src/utils/web.config';
+import { getBaseWebpackPartial } from '@nrwl/webpack/src/utils/config';
+import { getStylesPartial } from '@nrwl/webpack/src/executors/webpack/lib/get-webpack-config';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { join } from 'path';
 import { gte } from 'semver';
-import { Configuration, WebpackPluginInstance, DefinePlugin } from 'webpack';
+import { Configuration, DefinePlugin, WebpackPluginInstance } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import { mergePlugins } from './merge-plugins';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
 const reactWebpackConfig = require('../webpack');
 

@@ -299,7 +299,7 @@ describe('app', () => {
     });
     const workspaceJson = readJson(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
-    expect(architectConfig.build.builder).toEqual('@nrwl/web:webpack');
+    expect(architectConfig.build.builder).toEqual('@nrwl/webpack:webpack');
     expect(architectConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(architectConfig.build.options).toEqual({
       compiler: 'babel',
@@ -336,7 +336,7 @@ describe('app', () => {
     });
     const workspaceJson = readJson(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
-    expect(architectConfig.serve.builder).toEqual('@nrwl/web:dev-server');
+    expect(architectConfig.serve.builder).toEqual('@nrwl/webpack:dev-server');
     expect(architectConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
     });

@@ -33,6 +33,12 @@
       "version": "13.8.5-beta.1",
       "description": "Renames @nrwl/node:package to @nrwl/js:tsc",
       "factory": "./src/migrations/update-13-8-5/update-package-to-tsc"
+    },
+    "update-webpack-executor": {
+      "cli": "nx",
+      "version": "14.7.5-beta.1",
+      "description": "Update usages of webpack executors to @nrwl/webpack",
+      "factory": "./src/migrations/update-14-7-5/update-webpack-executor"
     }
   },
   "packageJsonUpdates": {

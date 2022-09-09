@@ -1,4 +1,4 @@
-import { getCSSModuleLocalIdent } from '@nrwl/web/src/utils/web.config';
+import { getCSSModuleLocalIdent } from '@nrwl/webpack/src/executors/webpack/lib/get-webpack-config';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
 

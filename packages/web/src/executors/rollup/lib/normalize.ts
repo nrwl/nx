@@ -1,7 +1,7 @@
 import { dirname } from 'path';
 
-import { AssetGlobPattern } from '../../../utils/shared-models';
-import { normalizeAssets, normalizePluginPath } from '../../../utils/normalize';
+import { AssetGlobPattern } from '@nrwl/webpack';
+import { normalizeAssets, normalizePluginPath } from '@nrwl/webpack';
 import { WebRollupOptions } from '../schema';
 
 export interface NormalizedWebRollupOptions extends WebRollupOptions {

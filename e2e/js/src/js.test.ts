@@ -29,9 +29,6 @@ describe('js e2e', () => {
     expect(libPackageJson.scripts.test).toBeDefined();
     expect(libPackageJson.scripts.build).toBeDefined();
     expect(runCLI(`test ${npmScriptsLib}`)).toContain('implement test');
-    expect(runCLI(`test ${npmScriptsLib}`)).toContain(
-      'existing outputs match the cache, left as is'
-    );
 
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
@@ -46,9 +43,6 @@ describe('js e2e', () => {
     expect(libPackageJson.scripts).toBeUndefined();
     expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
       'Ran all test suites'
-    );
-    expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
-      'local cache'
     );
 
     const packageJson = readJson('package.json');
@@ -115,9 +109,6 @@ describe('js e2e', () => {
     expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
       'Ran all test suites'
     );
-    expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
-      'local cache'
-    );
 
     expect(runCLI(`build ${parentLib}`)).toContain(
       'Done compiling TypeScript files'
@@ -181,9 +172,6 @@ describe('js e2e', () => {
     expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
       'Ran all test suites'
     );
-    expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
-      'local cache'
-    );
 
     expect(runCLI(`build ${lib}`)).toContain(
       'Successfully compiled: 2 files with swc'
@@ -204,9 +192,6 @@ describe('js e2e', () => {
     expect(parentLibPackageJson.scripts).toBeUndefined();
     expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
       'Ran all test suites'
-    );
-    expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
-      'local cache'
     );
 
     expect(runCLI(`build ${parentLib}`)).toContain(
