@@ -8,6 +8,6 @@
 
 Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-This package is an [Express plugin for Nx](https://nx.dev/express/overview).
+This package is an [Express plugin for Nx](https://nx.dev/packages/express).
 
 {{content}}

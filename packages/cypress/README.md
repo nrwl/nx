@@ -8,6 +8,6 @@
 
 Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-This package is a [Cypress plugin for Nx](https://nx.dev/cypress/overview).
+This package is a [Cypress plugin for Nx](https://nx.dev/packages/cypress).
 
 {{content}}
