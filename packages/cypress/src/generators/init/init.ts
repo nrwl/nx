@@ -16,6 +16,10 @@ import { Schema } from './schema';
 function setupE2ETargetDefaults(tree: Tree) {
   const workspaceConfiguration = readWorkspaceConfiguration(tree);
 
+  if (!workspaceConfiguration.namedInputs) {
+    return;
+  }
+
   // E2e targets depend on all their project's sources + production sources of dependencies
   workspaceConfiguration.targetDefaults ??= {};
 
