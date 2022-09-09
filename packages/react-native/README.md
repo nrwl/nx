@@ -8,6 +8,6 @@
 
 Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-This package is a [React Native plugin for Nx](https://nx.dev/react-native/overview).
+This package is a [React Native plugin for Nx](https://nx.dev/packages/react-native).
 
 {{content}}

@@ -8,6 +8,6 @@
 
 Nx is a next generation build system with first class monorepo support and powerful integrations.
 
-This package is a [Detox plugin for Nx](https://nx.dev/detox/overview).
+This package is a [Detox plugin for Nx](https://nx.dev/packages/detox).
 
 {{content}}
