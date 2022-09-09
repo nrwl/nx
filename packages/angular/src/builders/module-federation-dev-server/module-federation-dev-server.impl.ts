@@ -182,7 +182,6 @@ export function executeModuleFederationDevServerBuilder(
         target,
         configuration: context.target.configuration,
         runOptions,
-        executor: context.builder.builderName,
       },
       options.verbose
     ).then((obs) => {
