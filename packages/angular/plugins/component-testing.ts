@@ -193,6 +193,8 @@ function normalizeBuildTargetOptions(
       ctContext.projectName
     )
   ) {
+    // TODO(caleb): there is an issue when an asset glob is being used from the root of the workspace and not project root
+    //  so the offset being applied is incorrect. causing the asset path must start with the project source root error
     buildOptions.assets = buildOptions.assets.map((asset) => {
       return typeof asset === 'string'
         ? joinPathFragments(offset, asset)

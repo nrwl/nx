@@ -1,5 +1,6 @@
 import {
   ExecutorContext,
+  normalizePath,
   ProjectConfiguration,
   ProjectGraph,
   readNxJson,
@@ -83,9 +84,11 @@ export function getProjectConfigByPath(
   configPath: string
 ): ProjectConfiguration {
   const configFileFromWorkspaceRoot = relative(workspaceRoot, configPath);
-  const normalizedPathFromWorkspaceRoot = lstatSync(configPath).isFile()
-    ? configFileFromWorkspaceRoot.replace(extname(configPath), '')
-    : configFileFromWorkspaceRoot;
+  const normalizedPathFromWorkspaceRoot = normalizePath(
+    lstatSync(configPath).isFile()
+      ? configFileFromWorkspaceRoot.replace(extname(configPath), '')
+      : configFileFromWorkspaceRoot
+  );
 
   const mappedGraph = mapProjectGraphFiles(graph);
   const componentTestingProjectName =
