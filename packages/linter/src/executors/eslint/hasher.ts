@@ -52,6 +52,9 @@ function allDeps(
   taskGraph: TaskGraph,
   projectGraph: ProjectGraph
 ): string[] {
+  if (!taskGraph.tasks) {
+    return [];
+  }
   const project = taskGraph.tasks[taskId].target.project;
   const dependencies = projectGraph.dependencies[project]
     .filter((d) => !!projectGraph.nodes[d.target])
