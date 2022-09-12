@@ -19,20 +19,19 @@
     "project": {
       "type": "string",
       "description": "The name of the project to add cypress component testing configuration to",
-      "$default": {
-        "$source": "projectName"
-      },
+      "x-dropdown": "projects",
       "x-prompt": "What project should we add Cypress component testing to?"
+    },
+    "generateTests": {
+      "type": "boolean",
+      "description": "Generate default component tests for existing components in the project",
+      "x-prompt": "Automatically generate tests for components declared in this project?",
+      "default": false
     },
     "buildTarget": {
       "type": "string",
       "description": "A build target used to configure Cypress component testing in the format of `project:target[:configuration]`. The build target should be from a React app. If not provided we will try to infer it from your projects usage.",
       "pattern": "^[^:\\s]+:[^:\\s]+(:\\S+)?$"
-    },
-    "generateTests": {
-      "type": "boolean",
-      "description": "Generate default component tests for existing components in the project",
-      "default": false
     },
     "skipFormat": {
       "type": "boolean",

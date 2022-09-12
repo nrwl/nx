@@ -9,14 +9,13 @@
     "project": {
       "type": "string",
       "description": "The name of the project to add cypress component testing configuration to",
-      "$default": {
-        "$source": "projectName"
-      },
+      "x-dropdown": "projects",
       "x-prompt": "What project should we add Cypress component testing to?"
     },
     "generateTests": {
       "type": "boolean",
       "description": "Generate default component tests for existing components in the project",
+      "x-prompt": "Automatically generate tests for components declared in this project?",
       "default": false
     },
     "buildTarget": {

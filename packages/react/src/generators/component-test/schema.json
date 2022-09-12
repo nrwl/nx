@@ -15,9 +15,7 @@
     "project": {
       "type": "string",
       "description": "The name of the project the component is apart of",
-      "$default": {
-        "$source": "projectName"
-      },
+      "x-dropdown": "projects",
       "x-prompt": "What project is this component apart of?"
     },
     "componentPath": {
