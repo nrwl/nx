@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-yarn check-lock-files
-yarn check-commit
-yarn documentation
+yarn check-lock-files &&
+yarn check-commit &&
+yarn documentation &&
 yarn pretty-quick --check
