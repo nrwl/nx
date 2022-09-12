@@ -14,4 +14,5 @@ export interface Schema {
   linter: Linter; // default is eslint
   setParserOptionsProject?: boolean; // default is false
   e2eTestRunner: 'detox' | 'none'; // default is detox
+  standaloneConfig?: boolean;
 }

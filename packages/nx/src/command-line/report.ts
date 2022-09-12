@@ -21,6 +21,7 @@ export const packagesWeCareAbout = [
   '@nrwl/detox',
   '@nrwl/devkit',
   '@nrwl/eslint-plugin-nx',
+  '@nrwl/expo',
   '@nrwl/express',
   '@nrwl/jest',
   '@nrwl/js',

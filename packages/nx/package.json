@@ -98,7 +98,8 @@
         "version": "latest"
       },
       "@nrwl/react-native",
-      "@nrwl/detox"
+      "@nrwl/detox",
+      "@nrwl/expo"
     ]
   },
   "executors": "./executors.json"

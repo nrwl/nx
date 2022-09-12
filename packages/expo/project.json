@@ -27,7 +27,7 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "dist/packages/expo",
+        "outputPath": "build/packages/expo",
         "tsConfig": "packages/expo/tsconfig.lib.json",
         "packageJson": "packages/expo/package.json",
         "main": "packages/expo/index.ts",
@@ -72,17 +72,9 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/angular"],
+      "outputs": ["build/packages/expo"],
       "options": {
-        "commands": [
-          {
-            "command": "node ./scripts/build-angular"
-          },
-          {
-            "command": "node ./scripts/copy-readme.js angular"
-          }
-        ],
-        "parallel": false
+        "command": "node ./scripts/copy-readme.js expo"
       }
     },
     "publish": {

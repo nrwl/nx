@@ -205,6 +205,9 @@ function getPresetDependencies(preset: string, version?: string) {
     case Preset.ReactNative:
       return { dependencies: {}, dev: { '@nrwl/react-native': nxVersion } };
 
+    case Preset.Expo:
+      return { dependencies: {}, dev: { '@nrwl/expo': nxVersion } };
+
     case Preset.WebComponents:
       return { dependencies: {}, dev: { '@nrwl/web': nxVersion } };
 

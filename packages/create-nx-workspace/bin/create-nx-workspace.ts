@@ -56,6 +56,7 @@ enum Preset {
   React = 'react',
   ReactWithExpress = 'react-express',
   ReactNative = 'react-native',
+  Expo = 'expo',
   NextJs = 'next',
   Nest = 'nest',
   Express = 'express',
@@ -140,6 +141,10 @@ const presetOptions: { name: Preset; message: string }[] = [
     name: Preset.ReactNative,
     message:
       'react-native      [a workspace with a single React Native application]',
+  },
+  {
+    name: Preset.Expo,
+    message: 'expo              [a workspace with a single Expo application]',
   },
   {
     name: Preset.ReactWithExpress,
@@ -625,7 +630,8 @@ async function determineStyle(
     preset === Preset.NPM ||
     preset === Preset.Nest ||
     preset === Preset.Express ||
-    preset === Preset.ReactNative
+    preset === Preset.ReactNative ||
+    preset === Preset.Expo
   ) {
     return Promise.resolve(null);
   }

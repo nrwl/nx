@@ -9,7 +9,7 @@ import {
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
-  const project: ProjectConfiguration = {
+  const projectConfiguration: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: `${options.appProjectRoot}/src`,
     projectType: 'application',
@@ -17,9 +17,12 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  addProjectConfiguration(host, options.projectName, {
-    ...project,
-  });
+  addProjectConfiguration(
+    host,
+    options.projectName,
+    projectConfiguration,
+    options.standaloneConfig
+  );
 
   const workspace = readWorkspaceConfiguration(host);
 

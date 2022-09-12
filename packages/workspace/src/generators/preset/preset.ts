@@ -3,7 +3,6 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
-  getWorkspaceLayout,
   installPackagesTask,
   names,
   readWorkspaceConfiguration,
@@ -161,10 +160,19 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
     });
-  } else if (options.preset === 'react-native') {
+  } else if (options.preset === Preset.ReactNative) {
     const { reactNativeApplicationGenerator } = require('@nrwl' +
       '/react-native');
     await reactNativeApplicationGenerator(tree, {
+      name: options.name,
+      linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
+      e2eTestRunner: 'detox',
+    });
+  } else if (options.preset === Preset.Expo) {
+    const { applicationGenerator: expoApplicationGenerator } = require('@nrwl' +
+      '/expo');
+    await expoApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,

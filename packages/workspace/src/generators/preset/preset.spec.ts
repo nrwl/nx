@@ -1,4 +1,4 @@
-import { Tree, readJson, NxJsonConfiguration } from '@nrwl/devkit';
+import { Tree, readJson } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
