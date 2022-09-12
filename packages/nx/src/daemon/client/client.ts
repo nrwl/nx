@@ -18,7 +18,6 @@ import {
   removeSocketDir,
 } from '../tmp-dir';
 import { ProjectGraph } from '../../config/project-graph';
-import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
@@ -59,7 +58,6 @@ export class DaemonClient {
       // option=true,env=true => daemon
       // option=false,env=true => daemon
       if (
-        isCI() ||
         isDocker() ||
         isDaemonDisabled() ||
         (useDaemonProcessOption === undefined && env === 'false') ||
