@@ -182,7 +182,7 @@ export function runCreateWorkspace(
     cwd: e2eCwd,
     // stdio: [0, 1, 2],
     stdio: ['pipe', 'pipe', 'pipe'],
-    env: process.env,
+    env: { CI: 'true', ...process.env },
     encoding: 'utf-8',
   });
   return create ? create.toString() : '';
@@ -414,6 +414,7 @@ export function runCommandAsync(
       {
         cwd: tmpProjPath(),
         env: {
+          CI: 'true',
           ...(opts.env || process.env),
           FORCE_COLOR: 'false',
         },
@@ -441,6 +442,7 @@ export function runCommandUntil(
   const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
     env: {
+      CI: 'true',
       ...process.env,
       FORCE_COLOR: 'false',
     },
@@ -533,7 +535,7 @@ export function runCLI(
     let r = stripConsoleColors(
       execSync(`${pm.runNx} ${command}`, {
         cwd: opts.cwd || tmpProjPath(),
-        env: { ...(opts.env || process.env) },
+        env: { CI: 'true', ...(opts.env || process.env) },
         encoding: 'utf-8',
         maxBuffer: 50 * 1024 * 1024,
       })

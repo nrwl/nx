@@ -29,7 +29,9 @@ describe('js e2e', () => {
     expect(libPackageJson.scripts.test).toBeDefined();
     expect(libPackageJson.scripts.build).toBeDefined();
     expect(runCLI(`test ${npmScriptsLib}`)).toContain('implement test');
-    expect(runCLI(`test ${npmScriptsLib}`)).toContain('match the cache');
+    expect(runCLI(`test ${npmScriptsLib}`)).toContain(
+      'existing outputs match the cache, left as is'
+    );
 
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
@@ -46,7 +48,7 @@ describe('js e2e', () => {
       'Ran all test suites'
     );
     expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
-      'match the cache'
+      'local cache'
     );
 
     const packageJson = readJson('package.json');
@@ -114,7 +116,7 @@ describe('js e2e', () => {
       'Ran all test suites'
     );
     expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
-      'match the cache'
+      'local cache'
     );
 
     expect(runCLI(`build ${parentLib}`)).toContain(
@@ -180,7 +182,7 @@ describe('js e2e', () => {
       'Ran all test suites'
     );
     expect((await runCLIAsync(`test ${lib}`)).combinedOutput).toContain(
-      'match the cache'
+      'local cache'
     );
 
     expect(runCLI(`build ${lib}`)).toContain(
@@ -204,7 +206,7 @@ describe('js e2e', () => {
       'Ran all test suites'
     );
     expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
-      'match the cache'
+      'local cache'
     );
 
     expect(runCLI(`build ${parentLib}`)).toContain(
