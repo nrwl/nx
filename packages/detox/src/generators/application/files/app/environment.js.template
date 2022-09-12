@@ -1,3 +1,4 @@
+// setup from https://github.com/wix/Detox/blob/master/docs/Guide.Jest.md#e2eenvironmentjs
 const {
   DetoxCircusEnvironment,
   SpecReporter,

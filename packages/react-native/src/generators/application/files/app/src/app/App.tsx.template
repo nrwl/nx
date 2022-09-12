@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   section: {
-    marginVertical: 24,
+    marginVertical: 12,
     marginHorizontal: 12,
   },
   shadowBox: {

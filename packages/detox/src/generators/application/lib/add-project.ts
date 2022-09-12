@@ -28,29 +28,29 @@ function getTargets(options: NormalizedSchema) {
   targets['build-ios'] = {
     executor: '@nrwl/detox:build',
     ...(options.framework === 'react-native'
-      ? reactNativeBuildTarget('ios')
-      : expoBuildTarget('ios')),
+      ? reactNativeBuildTarget('ios.sim')
+      : expoBuildTarget('ios.sim')),
   };
 
   targets['test-ios'] = {
     executor: '@nrwl/detox:test',
     ...(options.framework === 'react-native'
-      ? reactNativeTestTarget('ios', options.name)
-      : expoTestTarget('ios', options.name)),
+      ? reactNativeTestTarget('ios.sim', options.name)
+      : expoTestTarget('ios.sim', options.name)),
   };
 
   targets['build-android'] = {
     executor: '@nrwl/detox:build',
     ...(options.framework === 'react-native'
-      ? reactNativeBuildTarget('android')
-      : expoBuildTarget('android')),
+      ? reactNativeBuildTarget('android.emu')
+      : expoBuildTarget('android.emu')),
   };
 
   targets['test-android'] = {
     executor: '@nrwl/detox:test',
     ...(options.framework === 'react-native'
-      ? reactNativeTestTarget('android', options.name)
-      : expoTestTarget('android', options.name)),
+      ? reactNativeTestTarget('android.emu', options.name)
+      : expoTestTarget('android.emu', options.name)),
   };
 
   return targets;
