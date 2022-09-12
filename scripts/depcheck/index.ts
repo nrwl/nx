@@ -3,6 +3,7 @@ import { join } from 'path';
 import * as chalk from 'chalk';
 import getDiscrepancies from './discrepancies';
 import getMissingDependencies from './missing';
+import getUnusedDependencies from './unused';
 
 const argv = require('yargs')
   .usage('Check projects for dependency discrepancies.')
@@ -10,6 +11,12 @@ const argv = require('yargs')
     alias: 'p',
     type: 'array',
     description: 'Projects to check',
+  })
+  .option('unused', {
+    alias: 'm',
+    type: 'boolean',
+    default: true,
+    description: 'Check for unused dependencies',
   })
   .option('missing', {
     alias: 'm',
@@ -61,18 +68,28 @@ const argv = require('yargs')
             )
           : [];
 
+        const unused = argv.unused
+          ? await getUnusedDependencies(
+              project.name,
+              projectPath,
+
+              { ...dependencies, ...(peerDependencies || {}) },
+              argv.verbose
+            )
+          : [];
+
         const discrepancies = argv.discrepancies
           ? getDiscrepancies(project.name, dependencies, devDependencies)
           : [];
 
-        return { ...project, missing, discrepancies };
+        return { ...project, missing, discrepancies, unused };
       })
   );
 
-  const total = { missing: 0, discrepancies: 0 };
+  const total = { missing: 0, discrepancies: 0, unused: 0 };
 
-  results.forEach(({ name, missing, discrepancies }) => {
-    if (!missing.length && !discrepancies.length) {
+  results.forEach(({ name, missing, discrepancies, unused }) => {
+    if (!missing.length && !discrepancies.length && !unused.length) {
       return;
     }
 
@@ -90,6 +107,13 @@ const argv = require('yargs')
       );
     }
 
+    if (unused.length > 0) {
+      total.unused += unused.length;
+      console.log(
+        `⚠️  ${chalk.bold.inverse(` Unused`)}\n    ${unused.join('\n    ')}\n`
+      );
+    }
+
     if (discrepancies.length > 0) {
       total.discrepancies += discrepancies.length;
       console.log(
@@ -100,7 +124,7 @@ const argv = require('yargs')
     }
   });
 
-  if (total.discrepancies > 0 || total.missing > 0) {
+  if (total.discrepancies > 0 || total.missing > 0 || total.unused > 0) {
     process.exit(1);
   }
 

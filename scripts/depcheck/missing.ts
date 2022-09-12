@@ -112,7 +112,7 @@ const IGNORE_MATCHES = {
     'fibers',
     'node-sass',
   ],
-  webpack: ['@swc/core', 'swc-loader'],
+  webpack: ['@swc/core', 'style-loader', 'swc-loader'],
   workspace: [
     'tslint',
     '@angular-devkit/architect',

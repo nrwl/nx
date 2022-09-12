@@ -33,8 +33,6 @@
     "@nrwl/linter": "file:../linter",
     "dotenv": "~10.0.0",
     "fs-extra": "^10.1.0",
-    "rxjs": "^6.5.4",
-    "semver": "7.3.4",
     "tslib": "^2.3.0"
   }
 }
