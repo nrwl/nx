@@ -364,10 +364,6 @@
           "version": "0.69.4",
           "alwaysAddToPackageJson": false
         },
-        "react-native-safe-area-context": {
-          "version": "4.3.3",
-          "alwaysAddToPackageJson": false
-        },
         "react-native-svg": {
           "version": "13.0.0",
           "alwaysAddToPackageJson": false
@@ -376,24 +372,12 @@
           "version": "0.72.1",
           "alwaysAddToPackageJson": false
         },
-        "metro-babel-register": {
-          "version": "0.72.1",
-          "alwaysAddToPackageJson": false
-        },
         "@testing-library/jest-native": {
           "version": "4.0.11",
           "alwaysAddToPackageJson": false
         },
-        "expo-updates": {
-          "version": "~0.14.3",
-          "alwaysAddToPackageJson": false
-        },
         "@expo/metro-config": {
           "version": "0.3.22",
-          "alwaysAddToPackageJson": false
-        },
-        "expo-dev-client": {
-          "version": "~1.2.1",
           "alwaysAddToPackageJson": false
         }
       }

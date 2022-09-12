@@ -13,7 +13,7 @@ describe('expo', () => {
 
   beforeEach(() => (proj = newProject()));
 
-  it('should test, lint and build-web', async () => {
+  it('should test, lint', async () => {
     const appName = uniq('my-app');
     const libName = uniq('lib');
     const componentName = uniq('component');
@@ -37,11 +37,5 @@ describe('expo', () => {
 
     const libLintResults = await runCLIAsync(`lint ${libName}`);
     expect(libLintResults.combinedOutput).toContain('All files pass linting.');
-
-    const buildWebResult = await runCLIAsync(`build-web ${appName}`);
-    expect(buildWebResult.combinedOutput).toContain('Web Bundling complete');
-    expect(() =>
-      checkFilesExist(`apps/${appName}/web-build/index.html`)
-    ).not.toThrow();
   }, 1000000);
 });
