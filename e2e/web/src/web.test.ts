@@ -31,9 +31,9 @@ describe('Web Components Applications', () => {
     runCLI(`build ${appName} --outputHashing none --compiler babel`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/runtime.esm.js`,
-      `dist/apps/${appName}/polyfills.esm.js`,
-      `dist/apps/${appName}/main.esm.js`,
+      `dist/apps/${appName}/runtime.js`,
+      `dist/apps/${appName}/polyfills.js`,
+      `dist/apps/${appName}/main.js`,
       `dist/apps/${appName}/styles.css`
     );
 
@@ -119,7 +119,7 @@ describe('Web Components Applications', () => {
     runCLI(`build ${appName} --outputHashing=none`);
 
     checkFilesExist(
-      `dist/apps/${appName}/main.esm.js`,
+      `dist/apps/${appName}/main.js`,
       `dist/apps/${appName}/main.es5.js`
     );
   }, 120000);
@@ -159,7 +159,7 @@ describe('Web Components Applications', () => {
     });
     runCLI(`build ${appName} --outputHashing none`);
 
-    expect(readFile(`dist/apps/${appName}/main.esm.js`)).toMatch(
+    expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
       /Reflect\.metadata/
     );
 
@@ -172,7 +172,7 @@ describe('Web Components Applications', () => {
 
     runCLI(`build ${appName} --outputHashing none`);
 
-    expect(readFile(`dist/apps/${appName}/main.esm.js`)).not.toMatch(
+    expect(readFile(`dist/apps/${appName}/main.js`)).not.toMatch(
       /Reflect\.metadata/
     );
   }, 120000);
@@ -207,7 +207,7 @@ describe('Web Components Applications', () => {
     `
     );
     runCLI(`build ${appName} --outputHashing none`);
-    checkFilesExist(`dist/apps/${appName}/main.esm.js`);
+    checkFilesExist(`dist/apps/${appName}/main.js`);
 
     rmDist();
 
@@ -221,7 +221,7 @@ describe('Web Components Applications', () => {
     `
     );
     runCLI(`build ${appName} --outputHashing none`);
-    checkFilesExist(`dist/apps/${appName}/main.esm.js`);
+    checkFilesExist(`dist/apps/${appName}/main.js`);
 
     rmDist();
 
@@ -235,7 +235,7 @@ describe('Web Components Applications', () => {
     `
     );
     runCLI(`build ${appName} --outputHashing none`);
-    checkFilesExist(`dist/apps/${appName}/main.esm.js`);
+    checkFilesExist(`dist/apps/${appName}/main.js`);
   }, 100000);
 });
 

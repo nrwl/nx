@@ -1,6 +1,6 @@
 import { getProjects, ProjectGraph, DependencyType } from '@nrwl/devkit';
 import { reverse } from '@nrwl/devkit';
-import { hasDependentAppUsingWebBuild } from '@nrwl/web/src/migrations/update-11-5-2/utils';
+import { hasDependentAppUsingWebBuild } from './utils';
 
 describe('hasDependentAppUsingWebBuild', () => {
   const graph: ProjectGraph = reverse({

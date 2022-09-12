@@ -18,5 +18,6 @@ export const iconsMap: Record<string, string> = {
   'react-native': '/images/icons/react.svg',
   storybook: '/images/icons/storybook.svg',
   web: '/images/icons/html5.svg',
+  webpack: '/images/icons/webpack.svg',
   workspace: '/images/icons/nx.svg',
 };

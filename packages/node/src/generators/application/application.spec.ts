@@ -1,5 +1,5 @@
-import { NxJsonConfiguration, readJson, Tree, getProjects } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
+import { getProjects, NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 // nx-ignore-next-line
@@ -44,9 +44,11 @@ describe('app', () => {
       expect(project.architect).toEqual(
         expect.objectContaining({
           build: {
-            builder: '@nrwl/node:webpack',
+            builder: '@nrwl/webpack:webpack',
             outputs: ['{options.outputPath}'],
             options: {
+              target: 'node',
+              compiler: 'tsc',
               outputPath: 'dist/apps/my-node-app',
               main: 'apps/my-node-app/src/main.ts',
               tsConfig: 'apps/my-node-app/tsconfig.app.json',
@@ -67,7 +69,7 @@ describe('app', () => {
             },
           },
           serve: {
-            builder: '@nrwl/node:node',
+            builder: '@nrwl/js:node',
             options: {
               buildTarget: 'my-node-app:build',
             },

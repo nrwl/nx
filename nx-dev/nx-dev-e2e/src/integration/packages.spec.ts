@@ -6,7 +6,7 @@ import { assertTextOnPage } from './helpers';
  */
 describe('nx-dev: Packages Section', () => {
   (<{ title: string; path: string }[]>[
-    { title: '@nrwl/', path: '/packages/angular' },
+    { title: '@nrwl/angular', path: '/packages/angular' },
     {
       title: '@nrwl/angular:add-linting',
       path: '/packages/angular/generators/add-linting',

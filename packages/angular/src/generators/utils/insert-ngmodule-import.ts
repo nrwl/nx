@@ -2,7 +2,10 @@ import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
 import {
   __String,
   CallExpression,
+  ClassDeclaration,
   createSourceFile,
+  Decorator,
+  getDecorators,
   ImportDeclaration,
   isArrayLiteralExpression,
   isCallExpression,
@@ -17,13 +20,6 @@ import {
   ScriptTarget,
   SourceFile,
 } from 'typescript';
-
-/**
- * Importing this helper from @typescript-eslint/type-utils to ensure
- * compatibility with TS < 4.8 due to the API change in TS4.8.
- * This helper allows for support of TS <= 4.8.
- */
-import { getDecorators } from '@typescript-eslint/type-utils';
 
 type ngModuleDecoratorProperty =
   | 'imports'
@@ -57,14 +53,36 @@ export function insertNgModuleProperty(
 
   const ngModuleName = ngModuleNamedImport.name.escapedText;
 
-  const ngModuleClassDeclaration = findDecoratedClass(sourceFile, ngModuleName);
-
-  const ngModuleDecorator = getDecorators(ngModuleClassDeclaration).find(
-    (decorator) =>
-      isCallExpression(decorator.expression) &&
-      isIdentifier(decorator.expression.expression) &&
-      decorator.expression.expression.escapedText === ngModuleName
-  );
+  /**
+   * Ensure backwards compatibility with TS < 4.8 due to the API change in TS4.8.
+   * The getDecorators util is only in TS 4.8, so we need the previous logic to handle TS < 4.8.
+   *
+   * TODO: clean this up by removing the requirement to eslint (can we use typescript instead)?
+   */
+  let ngModuleClassDeclaration: ClassDeclaration;
+  let ngModuleDecorator: Decorator;
+  try {
+    ngModuleClassDeclaration = findDecoratedClass(sourceFile, ngModuleName);
+    ngModuleDecorator = getDecorators(ngModuleClassDeclaration).find(
+      (decorator) =>
+        isCallExpression(decorator.expression) &&
+        isIdentifier(decorator.expression.expression) &&
+        decorator.expression.expression.escapedText === ngModuleName
+    );
+  } catch {
+    // Support for TS < 4.8
+    ngModuleClassDeclaration = findDecoratedClassLegacy(
+      sourceFile,
+      ngModuleName
+    );
+    // @ts-ignore
+    ngModuleDecorator = ngModuleClassDeclaration.decorators.find(
+      (decorator) =>
+        isCallExpression(decorator.expression) &&
+        isIdentifier(decorator.expression.expression) &&
+        decorator.expression.expression.escapedText === ngModuleName
+    );
+  }
 
   const ngModuleCall = ngModuleDecorator.expression as CallExpression;
 
@@ -165,7 +183,10 @@ function getNamedImport(coreImport: ImportDeclaration, importName: string) {
   );
 }
 
-function findDecoratedClass(sourceFile: SourceFile, ngModuleName: __String) {
+function findDecoratedClass(
+  sourceFile: SourceFile,
+  ngModuleName: __String
+): ClassDeclaration | undefined {
   const classDeclarations = sourceFile.statements.filter(isClassDeclaration);
   return classDeclarations.find((declaration) => {
     const decorators = getDecorators(declaration);
@@ -179,6 +200,23 @@ function findDecoratedClass(sourceFile: SourceFile, ngModuleName: __String) {
     }
     return undefined;
   });
+}
+
+function findDecoratedClassLegacy(
+  sourceFile: SourceFile,
+  ngModuleName: __String
+) {
+  const classDeclarations = sourceFile.statements.filter(isClassDeclaration);
+  return classDeclarations.find(
+    (declaration) =>
+      declaration.decorators &&
+      (declaration.decorators as any[]).some(
+        (decorator) =>
+          isCallExpression(decorator.expression) &&
+          isIdentifier(decorator.expression.expression) &&
+          decorator.expression.expression.escapedText === ngModuleName
+      )
+  );
 }
 
 function findPropertyAssignment(

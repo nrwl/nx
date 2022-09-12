@@ -19,8 +19,17 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 
-function updateDependencies(tree: Tree) {
+function updateDependencies(tree: Tree, schema: Schema) {
   removeDependenciesFromPackageJson(tree, ['@nrwl/web'], []);
+
+  const devDependencies = {
+    '@nrwl/web': nxVersion,
+    '@types/node': typesNodeVersion,
+  };
+
+  if (schema.bundler === 'webpack') {
+    devDependencies['@nrwl/webpack'] = nxVersion;
+  }
 
   return addDependenciesToPackageJson(
     tree,
@@ -29,10 +38,7 @@ function updateDependencies(tree: Tree) {
       'regenerator-runtime': '0.13.7',
       tslib: tsLibVersion,
     },
-    {
-      '@nrwl/web': nxVersion,
-      '@types/node': typesNodeVersion,
-    }
+    devDependencies
   );
 }
 
@@ -66,7 +72,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     const cypressTask = cypressInitGenerator(tree, {});
     tasks.push(cypressTask);
   }
-  const installTask = updateDependencies(tree);
+  const installTask = updateDependencies(tree, schema);
   tasks.push(installTask);
   initRootBabelConfig(tree);
   if (!schema.skipFormat) {
