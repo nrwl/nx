@@ -120,6 +120,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "14.8.0": {
+      "version": "14.8.0-beta.0",
+      "packages": {
+        "typescript": {
+          "version": "~4.8.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

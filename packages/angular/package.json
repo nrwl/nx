@@ -48,6 +48,7 @@
     "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "4.1.1",
     "@schematics/angular": "~14.2.0",
+    "@typescript-eslint/type-utils": "^5.36.1",
     "chalk": "4.1.0",
     "chokidar": "^3.5.1",
     "http-server": "^14.1.0",

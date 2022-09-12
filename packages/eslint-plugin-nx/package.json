@@ -34,7 +34,7 @@
   "dependencies": {
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/workspace": "file:../workspace",
-    "@typescript-eslint/utils": "~5.33.1",
+    "@typescript-eslint/utils": "^5.36.1",
     "chalk": "4.1.0",
     "confusing-browser-globals": "^1.0.9",
     "semver": "7.3.4"

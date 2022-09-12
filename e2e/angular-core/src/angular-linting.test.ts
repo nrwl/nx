@@ -1,6 +1,6 @@
 import {
-  newProject,
   cleanupProject,
+  newProject,
   runCLI,
   uniq,
   updateFile,
@@ -61,10 +61,13 @@ describe('Angular Package', () => {
       expect(appLintStdOut).toContain(
         path.normalize(`apps/${myapp}/src/app/inline-template.component.ts`)
       );
+
+      expect(appLintStdOut).toContain(`5:21`);
       expect(appLintStdOut).toContain(
         `The selector should start with one of these prefixes`
       );
       expect(appLintStdOut).toContain(`7:18`);
+      expect(appLintStdOut).toContain(`Invalid binding syntax`);
     });
   });
 });
