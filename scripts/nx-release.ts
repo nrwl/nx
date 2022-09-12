@@ -81,6 +81,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
 
     process.on('exit', unhideFromGitIndex);
     process.on('SIGTERM', unhideFromGitIndex);
+    process.on('SIGINT', unhideFromGitIndex);
   }
 
   const publishOptions: Record<string, boolean | string | undefined> = {
