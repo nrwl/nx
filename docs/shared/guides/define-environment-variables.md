@@ -5,14 +5,6 @@ Environment variables are useful to store system-wide values such as the directo
 (PATH), OS version, Network Information, and custom variables. These env variables are passed at build time and used at
 the runtime of an app.
 
-This guide is divided into two sections:
-
-- [Define Environment Variables](#define-environment-variables)
-  - [Setting environment variables](#setting-environment-variables)
-    - [Pointing to custom env files](#pointing-to-custom-env-files)
-    - [Ad-hoc variables](#ad-hoc-variables)
-      [Angular](#using-environment-variables-in-angular-applications)
-
 ## Setting environment variables
 
 By default, Nx will load any environment variables you place in the following files:
