@@ -54,6 +54,7 @@ export async function* compileTypeScriptFiles(
     outputPath: normalizedOptions.outputPath,
     projectName: context.projectName,
     projectRoot: normalizedOptions.projectRoot,
+    rootDir: normalizedOptions.srcRootForCompilationRoot,
     tsConfig: normalizedOptions.tsConfig,
     watch: normalizedOptions.watch,
     deleteOutputPath: normalizedOptions.clean,
