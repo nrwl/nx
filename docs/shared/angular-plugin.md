@@ -11,6 +11,10 @@ The Nx Plugin for Angular contains executors, generators, and utilities for mana
 - NgRx helpers.
 - Utilities for automatic workspace refactoring.
 
+{% callout type="note" title="Currently using the Angular CLI?" %}
+You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn more [here](/recipe/migration-angular).
+{% /callout %}
+
 ## Setting up the Angular plugin
 
 Adding the Angular plugin to an existing Nx workspace can be done with the following:
@@ -78,6 +82,7 @@ Read more about:
 ## More Documentation
 
 - [Angular Nx Tutorial](/angular-tutorial/01-create-application)
+- [Migrating from the Angular CLI](recipe/migration-angular)
 - [Setup Module Federation with Angular and Nx](/recipe/faster-builds)
 - [Using NgRx](/recipe/misc-ngrx)
 - [Using Data Persistence operators](/recipe/misc-data-persistence)
