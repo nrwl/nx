@@ -19,6 +19,7 @@ import {
 import type { WebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
 import { normalizeOptions } from '@nrwl/webpack/src/executors/webpack/lib/normalize-options';
 import { getWebpackConfig } from '@nrwl/webpack/src/executors/webpack/lib/get-webpack-config';
+import { resolveCustomWebpackConfig } from '@nrwl/webpack/src/utils/webpack/custom-webpack';
 import { buildBaseWebpackConfig } from './webpack-fallback';
 
 /**
@@ -170,9 +171,40 @@ function buildTargetWebpack(
       ? options.optimization.scripts
       : false;
 
-  return getWebpackConfig(context, options, true, isScriptOptimizeOn, {
-    root: ctProjectConfig.root,
-    sourceRoot: ctProjectConfig.sourceRoot,
-    configuration: parsed.configuration,
-  });
+  let customWebpack;
+  if (options.webpackConfig) {
+    customWebpack = resolveCustomWebpackConfig(
+      options.webpackConfig,
+      options.tsConfig
+    );
+
+    if (typeof customWebpack.then === 'function') {
+      // cypress configs have to be sync.
+      // TODO(caleb): there might be a workaround with setUpNodeEvents preprocessor?
+      logger.warn(stripIndents`Nx React Component Testing Preset currently doesn't support custom async webpack configs. 
+      Skipping the custom webpack config option '${options.webpackConfig}'`);
+      customWebpack = null;
+    }
+  }
+
+  const defaultWebpack = getWebpackConfig(
+    context,
+    options,
+    true,
+    isScriptOptimizeOn,
+    {
+      root: ctProjectConfig.root,
+      sourceRoot: ctProjectConfig.sourceRoot,
+      configuration: parsed.configuration,
+    }
+  );
+
+  if (customWebpack) {
+    return customWebpack(defaultWebpack, {
+      options,
+      context,
+      configuration: parsed.configuration,
+    });
+  }
+  return defaultWebpack;
 }
