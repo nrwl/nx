@@ -5,13 +5,24 @@ import {
   readWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import type { NormalizedSchema, Schema } from '../schema';
+import { getProjectNameFromDirPath } from 'nx/src/utils/project-graph-utils';
+
+function getProjectFromPath(path: string) {
+  try {
+    return getProjectNameFromDirPath(path);
+  } catch {
+    return null;
+  }
+}
 
 export function normalizeOptions(
   tree: Tree,
   options: Schema
 ): NormalizedSchema {
   const project =
-    options.project ?? readWorkspaceConfiguration(tree).defaultProject;
+    options.project ??
+    getProjectFromPath(options.path) ??
+    readWorkspaceConfiguration(tree).defaultProject;
   const { projectType, root, sourceRoot } = readProjectConfiguration(
     tree,
     project
