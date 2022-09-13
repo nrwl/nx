@@ -797,6 +797,20 @@
             "name": "Environment Variables",
             "id": "environment-variables",
             "file": "shared/reference/environment-variables"
+          },
+          {
+            "name": "Packages",
+            "id": "packages",
+            "file": "",
+            "path": "/packages",
+            "isExternal": true
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "packages-devkit",
+            "file": "",
+            "path": "/packages#devkit",
+            "isExternal": true
           }
         ]
       }
