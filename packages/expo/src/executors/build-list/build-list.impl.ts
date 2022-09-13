@@ -41,11 +41,11 @@ function createBuildListOptions(options: ExpoEasBuildListOptions): string[] {
     if (!nxOptions.includes(k)) {
       if (typeof v === 'boolean') {
         if (v === true) {
-          // when true, does not need to pass the value true, just need to pass the flag in kebob case
-          acc.push(`--${names(k).fileName}`);
+          // when true, does not need to pass the value true, just need to pass the flag in camel case
+          acc.push(`--${names(k).propertyName}`);
         }
       } else {
-        acc.push(`--${names(k).fileName}`, v);
+        acc.push(`--${names(k).propertyName}`, v);
       }
     }
     return acc;

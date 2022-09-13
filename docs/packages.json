@@ -118,6 +118,7 @@
   {
     "name": "expo",
     "packageName": "expo",
+    "description": "Expo Plugin for Nx",
     "path": "generated/packages/expo.json",
     "schemas": {
       "executors": [
