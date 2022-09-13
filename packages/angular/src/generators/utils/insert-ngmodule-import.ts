@@ -57,7 +57,7 @@ export function insertNgModuleProperty(
    * Ensure backwards compatibility with TS < 4.8 due to the API change in TS4.8.
    * The getDecorators util is only in TS 4.8, so we need the previous logic to handle TS < 4.8.
    *
-   * TODO: clean this up by removing the requirement to eslint (can we use typescript instead)?
+   * TODO: clean this up using another util or when we don't need to support TS < 4.8 anymore.
    */
   let ngModuleClassDeclaration: ClassDeclaration;
   let ngModuleDecorator: Decorator;
