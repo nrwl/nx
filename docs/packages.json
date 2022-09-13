@@ -2,12 +2,14 @@
   {
     "name": "add-nx-to-monorepo",
     "packageName": "add-nx-to-monorepo",
+    "description": "Make any monorepo faster by adding Nx to it",
     "path": "generated/packages/add-nx-to-monorepo.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "angular",
     "packageName": "angular",
+    "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, Karma, and Protractor. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
     "path": "generated/packages/angular.json",
     "schemas": {
       "executors": [
@@ -63,18 +65,21 @@
   {
     "name": "create-nx-plugin",
     "packageName": "create-nx-plugin",
+    "description": "Smart, Fast and Extensible Build System",
     "path": "generated/packages/create-nx-plugin.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "create-nx-workspace",
     "packageName": "create-nx-workspace",
+    "description": "Smart, Fast and Extensible Build System",
     "path": "generated/packages/create-nx-workspace.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "cypress",
     "packageName": "cypress",
+    "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
     "path": "generated/packages/cypress.json",
     "schemas": {
       "executors": ["cypress"],
@@ -89,6 +94,7 @@
   {
     "name": "detox",
     "packageName": "detox",
+    "description": "The Nx Plugin for Detox that contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.",
     "path": "generated/packages/detox.json",
     "schemas": {
       "executors": ["build", "test"],
@@ -98,30 +104,35 @@
   {
     "name": "devkit",
     "packageName": "devkit",
+    "description": "Smart, Fast and Extensible Build System",
     "path": "generated/packages/devkit.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "eslint-plugin-nx",
     "packageName": "eslint-plugin-nx",
+    "description": "ESLint Plugin for Nx",
     "path": "generated/packages/eslint-plugin-nx.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "express",
     "packageName": "express",
+    "description": "The Nx Plugin for Express that contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
     "path": "generated/packages/express.json",
     "schemas": { "executors": [], "generators": ["init", "application"] }
   },
   {
     "name": "jest",
     "packageName": "jest",
+    "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
     "path": "generated/packages/jest.json",
     "schemas": { "executors": ["jest"], "generators": ["init", "jest-project"] }
   },
   {
     "name": "js",
     "packageName": "js",
+    "description": "The Nx plugin that provides the best experience for developing JavaScript and TypeScript projects.",
     "path": "generated/packages/js.json",
     "schemas": {
       "executors": ["tsc", "swc", "node"],
@@ -131,6 +142,7 @@
   {
     "name": "linter",
     "packageName": "linter",
+    "description": "The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
     "path": "generated/packages/linter.json",
     "schemas": {
       "executors": ["lint", "eslint"],
@@ -140,12 +152,14 @@
   {
     "name": "make-angular-cli-faster",
     "packageName": "make-angular-cli-faster",
+    "description": "Make Angular CLI faster by enabling distributed computation caching",
     "path": "generated/packages/make-angular-cli-faster.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "nest",
     "packageName": "nest",
+    "description": "The Nx Plugin for Nest that contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
     "path": "generated/packages/nest.json",
     "schemas": {
       "executors": [],
@@ -175,6 +189,7 @@
   {
     "name": "next",
     "packageName": "next",
+    "description": "When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.\n\nThe Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:\n\n\n- Scaffolding for creating, building, serving, linting, and testing Next.js applications.\n\n- Integration with building, serving, and exporting a Next.js application.\n\n- Integration with React libraries within the workspace.",
     "path": "generated/packages/next.json",
     "schemas": {
       "executors": ["build", "server", "export"],
@@ -191,6 +206,7 @@
   {
     "name": "node",
     "packageName": "node",
+    "description": "The Node Plugin contains generators and executors to manage Node applications within an Nx workspace.",
     "path": "generated/packages/node.json",
     "schemas": {
       "executors": ["webpack", "node"],
@@ -200,6 +216,7 @@
   {
     "name": "nx",
     "packageName": "nx",
+    "description": "Smart, Fast and Extensible Build System",
     "path": "generated/packages/nx.json",
     "schemas": {
       "executors": ["noop", "run-commands", "run-script"],
@@ -209,6 +226,7 @@
   {
     "name": "nx-plugin",
     "packageName": "nx-plugin",
+    "description": "Plugin for creating plugins for Nx :)",
     "path": "generated/packages/nx-plugin.json",
     "schemas": {
       "executors": ["e2e"],
@@ -225,6 +243,7 @@
   {
     "name": "react",
     "packageName": "react",
+    "description": "The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
     "path": "generated/packages/react.json",
     "schemas": {
       "executors": ["module-federation-dev-server"],
@@ -250,6 +269,7 @@
   {
     "name": "react-native",
     "packageName": "react-native",
+    "description": "React Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.\n\nThe Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Detox, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
     "path": "generated/packages/react-native.json",
     "schemas": {
       "executors": [
@@ -277,6 +297,7 @@
   {
     "name": "storybook",
     "packageName": "storybook",
+    "description": "The Nx Plugin for Storybook that contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
     "path": "generated/packages/storybook.json",
     "schemas": {
       "executors": ["storybook", "build"],
@@ -291,12 +312,14 @@
   {
     "name": "tao",
     "packageName": "tao",
+    "description": "CLI for generating code and running commands",
     "path": "generated/packages/tao.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "web",
     "packageName": "web",
+    "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
     "path": "generated/packages/web.json",
     "schemas": {
       "executors": ["webpack", "rollup", "dev-server", "file-server"],
@@ -306,6 +329,7 @@
   {
     "name": "webpack",
     "packageName": "webpack",
+    "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack",
     "path": "generated/packages/webpack.json",
     "schemas": {
       "executors": ["webpack", "dev-server"],
@@ -315,6 +339,7 @@
   {
     "name": "workspace",
     "packageName": "workspace",
+    "description": "Smart, Fast and Extensible Build System.",
     "path": "generated/packages/workspace.json",
     "schemas": {
       "executors": ["run-commands", "counter", "run-script"],
