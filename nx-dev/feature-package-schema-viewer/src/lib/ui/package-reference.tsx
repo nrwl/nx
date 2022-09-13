@@ -31,6 +31,7 @@ export function PackageReference({
       <ul className="divide-y divide-gray-200">
         {executors.map((executor) => (
           <SchemaListItem
+            key={executor.name}
             schema={executor}
             packageName={name}
             type="executors"
@@ -44,6 +45,7 @@ export function PackageReference({
       <ul className="divide-y divide-gray-200">
         {generators.map((generator) => (
           <SchemaListItem
+            key={generator.name}
             schema={generator}
             packageName={name}
             type="generators"
