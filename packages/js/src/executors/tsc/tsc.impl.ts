@@ -3,7 +3,14 @@ import {
   assetGlobsToFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
+import { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { join, resolve } from 'path';
+import {
+  CustomTransformers,
+  Program,
+  SourceFile,
+  TransformerFactory,
+} from 'typescript';
 import { checkDependencies } from '../../utils/check-dependencies';
 import {
   getHelperDependency,
@@ -12,16 +19,20 @@ import {
 import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
+import { loadTsTransformers } from '../../utils/typescript/load-ts-transformers';
 import { updatePackageJson } from '../../utils/update-package-json';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
 
 export function normalizeOptions(
   options: ExecutorOptions,
   contextRoot: string,
-  sourceRoot?: string,
-  projectRoot?: string
+  sourceRoot: string,
+  projectRoot: string
 ): NormalizedExecutorOptions {
   const outputPath = join(contextRoot, options.outputPath);
+  const rootDir = options.rootDir
+    ? join(contextRoot, options.rootDir)
+    : projectRoot;
 
   if (options.watch == null) {
     options.watch = false;
@@ -41,10 +52,42 @@ export function normalizeOptions(
     files,
     outputPath,
     tsConfig: join(contextRoot, options.tsConfig),
+    rootDir,
     mainOutputPath: resolve(
       outputPath,
       options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
     ),
+  };
+}
+
+export function createTypeScriptCompilationOptions(
+  normalizedOptions: NormalizedExecutorOptions,
+  context: ExecutorContext
+): TypeScriptCompilationOptions {
+  const { compilerPluginHooks } = loadTsTransformers(
+    normalizedOptions.transformers
+  );
+  const getCustomTransformers = (program: Program): CustomTransformers => ({
+    before: compilerPluginHooks.beforeHooks.map(
+      (hook) => hook(program) as TransformerFactory<SourceFile>
+    ),
+    after: compilerPluginHooks.afterHooks.map(
+      (hook) => hook(program) as TransformerFactory<SourceFile>
+    ),
+    afterDeclarations: compilerPluginHooks.afterDeclarationsHooks.map(
+      (hook) => hook(program) as TransformerFactory<SourceFile>
+    ),
+  });
+
+  return {
+    outputPath: normalizedOptions.outputPath,
+    projectName: context.projectName,
+    projectRoot: normalizedOptions.projectRoot,
+    rootDir: normalizedOptions.rootDir,
+    tsConfig: normalizedOptions.tsConfig,
+    watch: normalizedOptions.watch,
+    deleteOutputPath: normalizedOptions.clean,
+    getCustomTransformers,
   };
 }
 
@@ -98,10 +141,14 @@ export async function* tscExecutor(
     process.on('SIGTERM', () => handleTermination());
   }
 
-  return yield* compileTypeScriptFiles(options, context, async () => {
-    await assetHandler.processAllAssetsOnce();
-    updatePackageJson(options, context, target, dependencies);
-  });
+  return yield* compileTypeScriptFiles(
+    options,
+    createTypeScriptCompilationOptions(options, context),
+    async () => {
+      await assetHandler.processAllAssetsOnce();
+      updatePackageJson(options, context, target, dependencies);
+    }
+  );
 }
 
 export default tscExecutor;
