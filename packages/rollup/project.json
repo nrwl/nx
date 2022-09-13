@@ -1,0 +1,87 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/rollup",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/rollup/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["coverage/packages/rollup"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/rollup",
+        "tsConfig": "packages/rollup/tsconfig.lib.json",
+        "main": "packages/rollup/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/rollup",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/rollup",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/rollup",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/rollup",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/rollup",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["build/packages/rollup"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js rollup"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/rollup/**/*.ts",
+          "packages/rollup/**/*.spec.ts",
+          "packages/rollup/**/*_spec.ts",
+          "packages/rollup/**/*.spec.tsx",
+          "packages/rollup/**/*.spec.js",
+          "packages/rollup/**/*.spec.jsx",
+          "packages/rollup/**/*.d.ts",
+          "packages/rollup/**/executors/**/schema.json",
+          "packages/rollup/**/generators/**/schema.json",
+          "packages/rollup/generators.json",
+          "packages/rollup/executors.json",
+          "packages/rollup/package.json",
+          "packages/rollup/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

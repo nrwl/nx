@@ -83,6 +83,8 @@
       "@nrwl/react": ["packages/react"],
       "@nrwl/react-native": ["packages/react-native"],
       "@nrwl/react/*": ["packages/react/*"],
+      "@nrwl/rollup": ["packages/rollup"],
+      "@nrwl/rollup/*": ["packages/rollup/*"],
       "@nrwl/storybook": ["packages/storybook"],
       "@nrwl/storybook/*": ["packages/storybook/*"],
       "@nrwl/tao": ["packages/tao"],

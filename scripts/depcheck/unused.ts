@@ -19,6 +19,7 @@ const IGNORE_MATCHES = {
   node: [],
   'nx-plugin': [],
   react: [],
+  rollup: [],
   storybook: [],
   nx: ['glob'],
   web: ['http-server'],

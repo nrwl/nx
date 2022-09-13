@@ -295,6 +295,16 @@
     }
   },
   {
+    "name": "rollup",
+    "packageName": "rollup",
+    "description": "The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup",
+    "path": "generated/packages/rollup.json",
+    "schemas": {
+      "executors": ["rollup"],
+      "generators": ["init", "rollup-project"]
+    }
+  },
+  {
     "name": "storybook",
     "packageName": "storybook",
     "description": "The Nx Plugin for Storybook that contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",

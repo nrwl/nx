@@ -7,10 +7,10 @@ import {
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 import { PackageJson } from 'nx/src/utils/package-json';
-import { NormalizedWebRollupOptions } from './normalize';
+import { NormalizedRollupExecutorOptions } from './normalize';
 
 export function updatePackageJson(
-  options: NormalizedWebRollupOptions,
+  options: NormalizedRollupExecutorOptions,
   context: ExecutorContext,
   target: ProjectGraphProjectNode,
   dependencies: DependentBuildableProjectNode[],
@@ -20,7 +20,7 @@ export function updatePackageJson(
   const hasCjsFormat =
     options.format.includes('umd') || options.format.includes('cjs');
 
-  const types = `./${relative(options.entryRoot, options.entryFile).replace(
+  const types = `./${relative(options.entryRoot, options.main).replace(
     /\.[jt]sx?$/,
     '.d.ts'
   )}`;

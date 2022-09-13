@@ -16,6 +16,7 @@ export const iconsMap: Record<string, string> = {
   'nx-plugin': '/images/icons/nx.svg',
   react: '/images/icons/react.svg',
   'react-native': '/images/icons/react.svg',
+  rollup: '/images/icons/rollup.svg',
   storybook: '/images/icons/storybook.svg',
   web: '/images/icons/html5.svg',
   webpack: '/images/icons/webpack.svg',

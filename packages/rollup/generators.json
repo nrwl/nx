@@ -1,0 +1,33 @@
+{
+  "name": "Nx rollup",
+  "version": "0.1",
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#rollupInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/rollup` plugin.",
+      "hidden": true
+    },
+    "rollup-project": {
+      "factory": "./src/generators/rollup-project/rollup-project#rollupProjectSchematic",
+      "schema": "./src/generators/rollup-project/schema.json",
+      "description": "Add rollup configuration to a project.",
+      "hidden": true
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#rollupInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/rollup` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "rollup-project": {
+      "factory": "./src/generators/rollup-project/rollup-project#rollupProjectGenerator",
+      "schema": "./src/generators/rollup-project/schema.json",
+      "description": "Add rollup configuration to a project.",
+      "hidden": true
+    }
+  }
+}

@@ -313,6 +313,7 @@ export function newProject({
         `@nrwl/next`,
         `@nrwl/node`,
         `@nrwl/nx-plugin`,
+        `@nrwl/rollup`,
         `@nrwl/react`,
         `@nrwl/storybook`,
         `@nrwl/web`,

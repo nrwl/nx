@@ -155,7 +155,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
     const jsLib = uniq('tslib');
 
-    const port = 4201;
+    const port = 4200;
 
     runCLI(`generate @nrwl/next:app ${appName}`);
     runCLI(`generate @nrwl/js:lib ${jsLib} --no-interactive`);
@@ -217,12 +217,7 @@ describe('Next.js Applications', () => {
     expect(apiData).toContain(`Welcome`);
     expect(pageData).toContain(`test value from a file`);
 
-    try {
-      await promisifiedTreeKill(p.pid, 'SIGKILL');
-      expect(await killPorts(port)).toBeTruthy();
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
+    await killPorts();
   }, 300_000);
 
   it('should support custom next.config.js and output it in dist', async () => {
