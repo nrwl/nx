@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  cleanupProject,
   expectTestsPass,
   newProject,
   readJson,
@@ -14,6 +15,7 @@ describe('react native', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
+  afterEach(() => cleanupProject());
 
   it('should test, create ios and android JS bundles', async () => {
     const appName = uniq('my-app');
@@ -105,6 +107,23 @@ describe('react native', () => {
         `generate @nrwl/react-native:upgrade-native ${appName} --install=false`
       )
     ).not.toThrow();
+  });
+
+  it('should build publishable library', async () => {
+    const libName = uniq('lib');
+    const componentName = uniq('component');
+
+    runCLI(
+      `generate @nrwl/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
+    );
+    runCLI(
+      `generate @nrwl/react-native:component ${componentName} --project=${libName} --export`
+    );
+    expect(() => {
+      runCLI(`build ${libName}`);
+      checkFilesExist(`dist/libs/${libName}/index.js`);
+      checkFilesExist(`dist/libs/${libName}/index.d.ts`);
+    }).not.toThrow();
   });
 
   it('sync npm dependencies for autolink', async () => {
