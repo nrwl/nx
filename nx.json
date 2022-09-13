@@ -10,13 +10,13 @@
       "options": {
         "accessToken": "NmVmMDViMTgtMjU4Zi00ZGUwLThjMzUtZDY0ZWEwZmNmMWJmfHJlYWQtd3JpdGU=",
         "cacheableOperations": [
+          "build-base",
           "build",
           "lint-base",
           "lint",
-          "build-base",
-          "test",
           "sitemap",
-          "e2e"
+          "e2e",
+          "test"
         ],
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
