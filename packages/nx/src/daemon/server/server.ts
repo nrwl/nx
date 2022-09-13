@@ -43,6 +43,7 @@ export type HandlerResult = {
 };
 
 const server = createServer(async (socket) => {
+  serverLogger.log('Established a connection');
   resetInactivityTimeout(handleInactivityTimeout);
   if (!performanceObserver) {
     performanceObserver = new PerformanceObserver((list) => {
@@ -60,7 +61,17 @@ const server = createServer(async (socket) => {
     } else {
       message += chunk.substring(0, chunk.length - 1);
       await handleMessage(socket, message);
+      message = '';
     }
+  });
+
+  socket.on('error', (e) => {
+    serverLogger.log('Socket error');
+    console.error(e);
+  });
+
+  socket.on('close', () => {
+    serverLogger.log('Closed a connection');
   });
 });
 
@@ -94,7 +105,12 @@ async function handleMessage(socket, data) {
     );
   }
 
-  if (payload.type === 'REQUEST_PROJECT_GRAPH') {
+  if (payload.type === 'PING') {
+    await handleResult(socket, {
+      response: JSON.stringify(true),
+      description: 'ping',
+    });
+  } else if (payload.type === 'REQUEST_PROJECT_GRAPH') {
     await handleResult(socket, await handleRequestProjectGraph());
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
     await handleResult(socket, await handleProcessInBackground(payload));

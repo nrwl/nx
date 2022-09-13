@@ -40,11 +40,18 @@ export async function recordOutputsHash(_outputs: string[], hash: string) {
 
 export async function outputsHashesMatch(_outputs: string[], hash: string) {
   const outputs = await normalizeOutputs(_outputs);
-  if (outputs.length !== numberOfExpandedOutputs[hash]) return false;
-  for (const output of outputs) {
-    if (recordedHashes[output] !== hash) return false;
+  let invalidated = [];
+  if (outputs.length !== numberOfExpandedOutputs[hash]) {
+    invalidated = outputs;
+  } else {
+    for (const output of outputs) {
+      if (recordedHashes[output] !== hash) {
+        invalidated.push(output);
+      }
+    }
   }
-  return true;
+  await removeSubscriptionsForOutputs(invalidated);
+  return invalidated.length === 0;
 }
 
 function anyErrorsAssociatedWithOutputs(outputs: string[]) {

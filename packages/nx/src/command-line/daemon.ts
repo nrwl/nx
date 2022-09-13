@@ -5,13 +5,8 @@ import { generateDaemonHelpOutput } from '../daemon/client/generate-help-output'
 
 export async function daemonHandler(args: Arguments) {
   if (args.start) {
-    const { startInBackground, startInCurrentProcess } = await import(
-      '../daemon/client/client'
-    );
-    if (!args.background) {
-      return startInCurrentProcess();
-    }
-    const pid = await startInBackground();
+    const { daemonClient } = await import('../daemon/client/client');
+    const pid = await daemonClient.startInBackground();
     output.log({
       title: `Daemon Server - Started in a background process...`,
       bodyLines: [
@@ -20,6 +15,9 @@ export async function daemonHandler(args: Arguments) {
         )} ${DAEMON_OUTPUT_LOG_FILE}\n`,
       ],
     });
+  } else if (args.stop) {
+    const { daemonClient } = await import('../daemon/client/client');
+    daemonClient.stop();
   } else {
     console.log(generateDaemonHelpOutput());
   }
