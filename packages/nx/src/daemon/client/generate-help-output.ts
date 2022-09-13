@@ -11,7 +11,7 @@ export function generateDaemonHelpOutput(): string {
     cwd: __dirname,
   });
 
-  const isServerAvailable = res?.stdout?.toString().trim() === 'true';
+  const isServerAvailable = res?.stdout?.toString().trim().indexOf('true') > -1;
   if (!isServerAvailable) {
     return '';
   }

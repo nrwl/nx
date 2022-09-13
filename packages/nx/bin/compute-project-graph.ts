@@ -2,14 +2,14 @@ import { buildProjectGraphWithoutDaemon } from '../src/project-graph/project-gra
 import { workspaceRoot } from '../src/utils/workspace-root';
 import { fileExists } from '../src/utils/fileutils';
 import { join } from 'path';
-import { isServerAvailable, stop } from '../src/daemon/client/client';
+import { daemonClient } from '../src/daemon/client/client';
 
 (async () => {
   try {
     if (fileExists(join(workspaceRoot, 'nx.json'))) {
-      if (await isServerAvailable()) {
-        await stop();
-      }
+      try {
+        await daemonClient.stop();
+      } catch (e) {}
       const b = new Date();
       await buildProjectGraphWithoutDaemon();
       const a = new Date();

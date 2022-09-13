@@ -17,12 +17,6 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ## Options
 
-### background
-
-Type: boolean
-
-Default: true
-
 ### help
 
 Type: boolean
@@ -30,6 +24,12 @@ Type: boolean
 Show help
 
 ### start
+
+Type: boolean
+
+Default: false
+
+### stop
 
 Type: boolean
 

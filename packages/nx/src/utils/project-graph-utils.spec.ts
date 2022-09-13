@@ -1,3 +1,15 @@
+let jsonFileOverrides: Record<string, any> = {};
+
+jest.mock('nx/src/utils/fileutils', () => ({
+  ...(jest.requireActual('nx/src/utils/fileutils') as any),
+  readJsonFile: (path) => {
+    if (path.endsWith('nx.json')) return {};
+    if (!(path in jsonFileOverrides))
+      throw new Error('Tried to read non-mocked json file: ' + path);
+    return jsonFileOverrides[path];
+  },
+}));
+
 import { PackageJson } from './package-json';
 import { ProjectGraph } from '../config/project-graph';
 import {
@@ -5,17 +17,6 @@ import {
   getSourceDirOfDependentProjects,
   mergeNpmScriptsWithTargets,
 } from './project-graph-utils';
-
-jest.mock('nx/src/utils/fileutils', () => ({
-  ...(jest.requireActual('nx/src/utils/fileutils') as any),
-  readJsonFile: (path) => {
-    if (!(path in jsonFileOverrides))
-      throw new Error('Tried to read non-mocked json file: ' + path);
-    return jsonFileOverrides[path];
-  },
-}));
-
-let jsonFileOverrides: Record<string, any> = {};
 
 describe('project graph utils', () => {
   describe('getSourceDirOfDependentProjects', () => {

@@ -145,8 +145,10 @@ export const commandsObject = yargs
         withAffectedOptions(withPlainOption(yargs)),
         'affected:apps'
       ),
-    handler: async (args) =>
-      (await import('./affected')).affected('apps', { ...args }),
+    handler: async (args) => {
+      await (await import('./affected')).affected('apps', { ...args });
+      process.exit(0);
+    },
   })
   .command({
     command: 'affected:libs',
@@ -158,10 +160,14 @@ export const commandsObject = yargs
         withAffectedOptions(withPlainOption(yargs)),
         'affected:libs'
       ),
-    handler: async (args) =>
-      (await import('./affected')).affected('libs', {
+    handler: async (args) => {
+      await (
+        await import('./affected')
+      ).affected('libs', {
         ...args,
-      }),
+      });
+      process.exit(0);
+    },
   })
   .command({
     command: 'affected:graph',
@@ -172,10 +178,14 @@ export const commandsObject = yargs
         withAffectedOptions(withDepGraphOptions(yargs)),
         'affected:graph'
       ),
-    handler: async (args) =>
-      (await import('./affected')).affected('graph', {
+    handler: async (args) => {
+      await (
+        await import('./affected')
+      ).affected('graph', {
         ...args,
-      }),
+      });
+      process.exit(0);
+    },
   })
   .command({
     command: 'print-affected',
@@ -186,18 +196,19 @@ export const commandsObject = yargs
         withAffectedOptions(withPrintAffectedOptions(yargs)),
         'print-affected'
       ),
-    handler: async (args) =>
-      (await import('./affected')).affected(
-        'print-affected',
-        withOverrides(args)
-      ),
+    handler: async (args) => {
+      await (
+        await import('./affected')
+      ).affected('print-affected', withOverrides(args));
+      process.exit(0);
+    },
   })
   .command({
     command: 'daemon',
     describe:
       'Prints information about the Nx Daemon process or starts a daemon process',
     builder: (yargs) =>
-      linkToNxDevAndExamples(withDaemonStartOptions(yargs), 'daemon'),
+      linkToNxDevAndExamples(withDaemonOptions(yargs), 'daemon'),
     handler: async (args) => (await import('./daemon')).daemonHandler(args),
   })
 
@@ -207,8 +218,10 @@ export const commandsObject = yargs
     aliases: ['dep-graph'],
     builder: (yargs) =>
       linkToNxDevAndExamples(withDepGraphOptions(yargs), 'dep-graph'),
-    handler: async (args) =>
-      (await import('./dep-graph')).generateGraph(args as any, []),
+    handler: async (args) => {
+      await (await import('./dep-graph')).generateGraph(args as any, []);
+      process.exit(0);
+    },
   })
 
   .command({
@@ -216,7 +229,10 @@ export const commandsObject = yargs
     describe: 'Check for un-formatted files',
     builder: (yargs) =>
       linkToNxDevAndExamples(withFormatOptions(yargs), 'format:check'),
-    handler: async (args) => (await import('./format')).format('check', args),
+    handler: async (args) => {
+      await (await import('./format')).format('check', args);
+      process.exit(0);
+    },
   })
   .command({
     command: 'format:write',
@@ -224,12 +240,18 @@ export const commandsObject = yargs
     aliases: ['format'],
     builder: (yargs) =>
       linkToNxDevAndExamples(withFormatOptions(yargs), 'format:write'),
-    handler: async (args) => (await import('./format')).format('write', args),
+    handler: async (args) => {
+      await (await import('./format')).format('write', args);
+      process.exit(0);
+    },
   })
   .command({
     command: 'workspace-lint [files..]',
     describe: 'Lint nx specific workspace files (nx.json, workspace.json)',
-    handler: async () => (await import('./lint')).workspaceLint(),
+    handler: async () => {
+      await (await import('./lint')).workspaceLint();
+      process.exit(0);
+    },
   })
 
   .command({
@@ -241,37 +263,51 @@ export const commandsObject = yargs
         await withWorkspaceGeneratorOptions(yargs),
         'workspace-generator'
       ),
-    handler: async () =>
-      (await import('./workspace-generators')).workspaceGenerators(
-        process.argv.slice(3)
-      ),
+    handler: async () => {
+      await (
+        await import('./workspace-generators')
+      ).workspaceGenerators(process.argv.slice(3));
+      process.exit(0);
+    },
   })
   .command({
     command: 'migrate [packageAndVersion]',
     describe: `Creates a migrations file or runs migrations from the migrations file.
-- Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
-- Run migrations (e.g., nx migrate --run-migrations=migrations.json)`,
+  - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
+  - Run migrations (e.g., nx migrate --run-migrations=migrations.json)`,
     builder: (yargs) =>
       linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
-    handler: () => runMigration(),
+    handler: () => {
+      runMigration();
+      process.exit(0);
+    },
   })
   .command({
     command: 'report',
     describe:
       'Reports useful version numbers to copy into the Nx issue template',
-    handler: async () => (await import('./report')).reportHandler(),
+    handler: async () => {
+      await (await import('./report')).reportHandler();
+      process.exit(0);
+    },
   })
   .command({
     command: 'init',
     describe: 'Adds nx.json file and installs nx if not installed already',
-    handler: async () => (await import('./init')).initHandler(),
+    handler: async () => {
+      await (await import('./init')).initHandler();
+      process.exit(0);
+    },
   })
   .command({
     command: 'list [plugin]',
     describe:
       'Lists installed plugins, capabilities of installed plugins and other available plugins.',
     builder: (yargs) => withListOptions(yargs),
-    handler: async (args: any) => (await import('./list')).listHandler(args),
+    handler: async (args: any) => {
+      await (await import('./list')).listHandler(args);
+      process.exit(0);
+    },
   })
   .command({
     command: 'reset',
@@ -284,8 +320,10 @@ export const commandsObject = yargs
     command: 'connect-to-nx-cloud',
     describe: `Makes sure the workspace is connected to Nx Cloud`,
     builder: (yargs) => linkToNxDevAndExamples(yargs, 'connect-to-nx-cloud'),
-    handler: async () =>
-      (await import('./connect-to-nx-cloud')).connectToNxCloudCommand(),
+    handler: async () => {
+      await (await import('./connect-to-nx-cloud')).connectToNxCloudCommand();
+      process.exit(0);
+    },
   })
   .command({
     command: 'new [_..]',
@@ -342,10 +380,13 @@ function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
     });
 }
 
-function withDaemonStartOptions(yargs: yargs.Argv): yargs.Argv {
+function withDaemonOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
-    .option('background', { type: 'boolean', default: true })
     .option('start', {
+      type: 'boolean',
+      default: false,
+    })
+    .option('stop', {
       type: 'boolean',
       default: false,
     });
