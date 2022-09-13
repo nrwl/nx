@@ -124,7 +124,7 @@ export default Input;
     expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
       'All specs passed!'
     );
-  }, 1000000);
+  }, 300_000);
 
   it('should successfully component test lib being used in app', () => {
     runCLI(
@@ -133,7 +133,7 @@ export default Input;
     expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
       'All specs passed!'
     );
-  }, 1000000);
+  }, 300_000);
 
   it('should test buildable lib not being used in app', () => {
     createFile(
@@ -192,5 +192,5 @@ ${content}`;
     expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
       'All specs passed!'
     );
-  }, 1000000);
+  }, 300_000);
 });
