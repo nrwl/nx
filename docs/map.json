@@ -261,6 +261,7 @@
         "itemList": [
           {
             "name": "Run Tasks",
+            "tags": ["run-tasks"],
             "id": "run-tasks",
             "file": "shared/core-features/run-tasks"
           },
@@ -325,31 +326,37 @@
         "itemList": [
           {
             "name": "Integrated Repos vs. Package-Based Repos",
+            "tags": ["intro"],
             "id": "integrated-vs-package-based",
             "file": "shared/concepts/integrated-vs-package-based"
           },
           {
             "name": "Mental Model",
+            "tags": ["intro"],
             "id": "mental-model",
             "file": "shared/mental-model"
           },
           {
             "name": "How Caching Works",
+            "tags": ["cache-task-results"],
             "id": "how-caching-works",
             "file": "shared/concepts/how-caching-works"
           },
           {
             "name": "Distributed Task Execution Guide",
+            "tags": ["distribute-task-execution"],
             "id": "dte",
             "file": "shared/concepts/dte-guide"
           },
           {
             "name": "Task Pipeline Configuration",
+            "tags": ["run-tasks", "cache-task-results"],
             "id": "task-pipeline-configuration",
             "file": "shared/concepts/task-pipeline-configuration"
           },
           {
             "name": "Affected",
+            "tags": ["run-tasks"],
             "id": "affected",
             "file": "shared/using-nx/affected"
           },
@@ -1012,16 +1019,23 @@
             "id": "generate",
             "file": "generated/cli/generate"
           },
-          { "name": "run", "id": "run", "file": "generated/cli/run" },
+          {
+            "name": "run",
+            "tags": ["run-tasks"],
+            "id": "run",
+            "file": "generated/cli/run"
+          },
           { "name": "daemon", "id": "daemon", "file": "generated/cli/daemon" },
           { "name": "graph", "id": "dep-graph", "file": "generated/cli/graph" },
           {
             "name": "run-many",
+            "tags": ["run-tasks"],
             "id": "run-many",
             "file": "generated/cli/run-many"
           },
           {
             "name": "affected",
+            "tags": ["run-tasks"],
             "id": "affected",
             "file": "generated/cli/affected"
           },

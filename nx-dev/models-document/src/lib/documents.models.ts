@@ -13,4 +13,5 @@ export interface DocumentMetadata {
   path?: string;
   isExternal?: boolean;
   itemList?: DocumentMetadata[];
+  tags?: string[];
 }
