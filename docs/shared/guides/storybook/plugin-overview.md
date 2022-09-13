@@ -83,14 +83,88 @@ or
 nx build-storybook project-name
 ```
 
+### Anatomy of the Storybook setup
+
+When running the Nx Storybook generator, it'll configure the Nx workspace to be able to run Storybook seamlessly. It'll create
+
+- a global Storybook configuration
+- a project specific Storybook configuration
+
+The **global** Storybook configuration allows to set addon-ons or custom webpack configuration at a global level that applies to all Storybook's within the Nx workspace. You can find that folder at `.storybook/` at the root of the workspace.
+
+```treeview
+<workspace name>/
+├── .storybook/
+│   ├── main.js
+│   ├── tsconfig.json
+├── apps/
+├── libs/
+├── nx.json
+├── package.json
+├── README.md
+└── etc...
+```
+
+The project-specific Storybook configuration is pretty much similar what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
+
+```treeview
+<project root>/
+├── .storybook/
+│   ├── main.js
+│   ├── preview.js
+│   ├── tsconfig.json
+├── src/
+├── README.md
+├── tsconfig.json
+└── etc...
+```
+
+### Using Addons
+
+To register a [Storybook addon](https://storybook.js.org/addons/) for all storybook instances in your workspace:
+
+1. In `/.storybook/main.js`, in the `addons` array of the `module.exports` object, add the new addon:
+   ```typescript
+   module.exports = {
+   stories: [...],
+   ...,
+   addons: [..., '@storybook/addon-essentials'],
+   };
+   ```
+2. If a decorator is required, in each project's `<project-path>/.storybook/preview.js`, you can export an array called `decorators`.
+
+   ```typescript
+   import someDecorator from 'some-storybook-addon';
+   export const decorators = [someDecorator];
+   ```
+
+**-- OR --**
+
+To register an [addon](https://storybook.js.org/addons/) for a single storybook instance, go to that project's `.storybook` folder:
+
+1. In `main.js`, in the `addons` array of the `module.exports` object, add the new addon:
+   ```typescript
+   module.exports = {
+   stories: [...],
+   ...,
+   addons: [..., '@storybook/addon-essentials'],
+   };
+   ```
+2. If a decorator is required, in `preview.js` you can export an array called `decorators`.
+
+   ```typescript
+   import someDecorator from 'some-storybook-addon';
+   export const decorators = [someDecorator];
+   ```
+
 ## More Documentation
 
 You can find dedicated information for React and Angular:
 
-- [Overview Storybook For Angular](/storybook/overview-angular)
-- [Overview Storybook For React](/storybook/overview-react)
+- [Set up Storybook for Angular Projects](/storybook/overview-angular)
+- [Set up Storybook for React Projects](/storybook/overview-react)
 
-You can find all Storybook-related Nx topics [here](/packages#storybook).
+You can find all Storybook-related Nx documentation [here](/packages#storybook).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
