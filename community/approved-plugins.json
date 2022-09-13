@@ -240,6 +240,16 @@
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/e2e-runner"
   },
   {
+    "name": "@nx-extend/vercel",
+    "description": "Nx plugin to deploy your apps to Vercel",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/vercel"
+  },
+  {
+    "name": "@nx-extend/strapi",
+    "description": "Nx plugin for developing Strapi applications",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/strapi"
+  },
+  {
     "name": "@nativescript/nx",
     "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
     "url": "https://github.com/nativescript/nx"
