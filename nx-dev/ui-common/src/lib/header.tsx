@@ -100,15 +100,15 @@ export function Header(props: HeaderProps): JSX.Element {
                   isReferencesDoc ? 'font-bold' : ''
                 )}
               >
-                Reference
+                Packages
               </a>
             </Link>
-            <Link href="/community#create-nx-plugin">
+            <Link href="/community">
               <a
-                title="Check Nx available plugins"
+                title="Nx Community: Join us!"
                 className="hidden px-3 py-2 leading-tight text-white md:inline-flex"
               >
-                Plugins
+                Community
               </a>
             </Link>
             <Link href="/conf">
