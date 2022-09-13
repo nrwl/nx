@@ -23,7 +23,7 @@ import { resolveCustomWebpackConfig } from '../utilities/webpack';
 import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
-export function executeWebpackServerBuilder(
+export function executeWebpackDevServerBuilder(
   rawOptions: Schema,
   context: BuilderContext
 ) {
@@ -156,5 +156,5 @@ export function executeWebpackServerBuilder(
 }
 
 export default createBuilder<JsonObject & Schema>(
-  executeWebpackServerBuilder
+  executeWebpackDevServerBuilder
 ) as any;

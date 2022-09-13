@@ -15,7 +15,7 @@ Your `project.json` file should contain a `build` and `serve` target that matche
     }
 },
 "serve": {
-    "executor": "@nrwl/angular:webpack-server",
+    "executor": "@nrwl/angular:webpack-dev-server",
     "configurations": {
         "production": {
             "browserTarget": "appName:build:production"

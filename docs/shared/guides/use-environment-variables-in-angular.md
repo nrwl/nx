@@ -33,7 +33,7 @@ Next, update the `build` and `serve` targets (in `project.json` or `angular.json
   },
   "serve": {
     // NOTE: use dev-server that supports custom webpack config.
-    "executor": "@nrwl/angular:webpack-server"
+    "executor": "@nrwl/angular:webpack-dev-server"
     // snip
   }
 }

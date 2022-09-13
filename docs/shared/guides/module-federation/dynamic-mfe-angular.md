@@ -117,7 +117,7 @@ For both applications, the generator did the following:
 - Moved the code that is normally in `main.ts` to `bootstrap.ts`
 - Changed `main.ts` to dynamically import `bootstrap.ts` _(this is required for the Module Federation to correct load versions of shared libraries)_
 - Updated the `build` target in the `project.json` to use the `@nrwl/angular:webpack-browser` executor _(this is required as it supports passing a custom Webpack configuration to the Angular compiler)_
-- Updated the `serve` target to use `@nrwl/angular:webpack-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
+- Updated the `serve` target to use `@nrwl/angular:webpack-dev-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
 
 The key differences reside within the configuration of the Module Federation Plugin within each application's `module-federation.config.js`.
 

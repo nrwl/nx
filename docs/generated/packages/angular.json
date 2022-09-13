@@ -3165,13 +3165,13 @@
       "path": "/packages/angular/src/builders/webpack-browser/schema.json"
     },
     {
-      "name": "webpack-server",
-      "implementation": "/packages/angular/src/builders/webpack-server/webpack-server.impl.ts",
+      "name": "webpack-dev-server",
+      "implementation": "/packages/angular/src/builders/webpack-dev-server/webpack-dev-server.impl.ts",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "title": "Schema for Webpack Server",
-        "description": "The webpack-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
-        "examplesFile": "##### Seving an application with a custom webpack configuration\n\nThis executor should be used along with `@nrwl/angular:webpack-browser` to serve an application using a custom webpack configuration.\n\nYour `project.json` file should contain a `build` and `serve` target that matches the following:\n\n```json\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n},\n\"serve\": {\n    \"executor\": \"@nrwl/angular:webpack-server\",\n    \"configurations\": {\n        \"production\": {\n            \"browserTarget\": \"appName:build:production\"\n        },\n        \"development\": {\n            \"browserTarget\": \"appName:build:development\"\n        }\n    },\n    \"defaultConfiguration\": \"development\",\n}\n```\n",
+        "title": "Schema for Webpack Dev Server",
+        "description": "The webpack-dev-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+        "examplesFile": "##### Seving an application with a custom webpack configuration\n\nThis executor should be used along with `@nrwl/angular:webpack-browser` to serve an application using a custom webpack configuration.\n\nYour `project.json` file should contain a `build` and `serve` target that matches the following:\n\n```json\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n},\n\"serve\": {\n    \"executor\": \"@nrwl/angular:webpack-dev-server\",\n    \"configurations\": {\n        \"production\": {\n            \"browserTarget\": \"appName:build:production\"\n        },\n        \"development\": {\n            \"browserTarget\": \"appName:build:development\"\n        }\n    },\n    \"defaultConfiguration\": \"development\",\n}\n```\n",
         "type": "object",
         "presets": [
           {
@@ -3274,10 +3274,10 @@
         "additionalProperties": false,
         "required": ["browserTarget"]
       },
-      "description": "The `webpack-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+      "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
       "aliases": [],
       "hidden": false,
-      "path": "/packages/angular/src/builders/webpack-server/schema.json"
+      "path": "/packages/angular/src/builders/webpack-dev-server/schema.json"
     },
     {
       "name": "module-federation-dev-server",

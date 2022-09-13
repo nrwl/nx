@@ -122,7 +122,7 @@ describe('Init MF', () => {
       expect(serve.executor).toEqual(
         type === 'host'
           ? '@nrwl/angular:module-federation-dev-server'
-          : '@nrwl/angular:webpack-server'
+          : '@nrwl/angular:webpack-dev-server'
       );
       expect(build.executor).toEqual('@nrwl/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(

@@ -173,6 +173,12 @@
       "description": "Update the @angular/cli package version to ~14.2.0.",
       "factory": "./src/migrations/update-14-6-0/update-angular-cli"
     },
+    "rename-webpack-server-executor": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Rename @nrwl/angular:webpack-server executor to @nrwl/angular:webpack-dev-server",
+      "factory": "./src/migrations/update-14-8-0/rename-webpack-server"
+    },
     "switch-to-jasmine-marbles": {
       "cli": "nx",
       "version": "15.0.0-beta.0",

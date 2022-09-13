@@ -17,7 +17,7 @@
         "ng-packagr-lite",
         "package",
         "webpack-browser",
-        "webpack-server",
+        "webpack-dev-server",
         "module-federation-dev-server",
         "file-server"
       ],

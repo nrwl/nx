@@ -57,7 +57,9 @@ const schemaUrls = {
   '/angular/ng-packagr-lite': '/packages/angular/executors/ng-packagr-lite',
   '/angular/package': '/packages/angular/executors/package',
   '/angular/webpack-browser': '/packages/angular/executors/webpack-browser',
-  '/angular/webpack-server': '/packages/angular/executors/webpack-server',
+  '/angular/webpack-server': '/packages/angular/executors/webpack-dev-server',
+  '/packages/angular/executors/webpack-server':
+    '/packages/angular/executors/webpack-dev-server',
   '/react/application': '/packages/react/generators/application',
   '/react/component': '/packages/react/generators/component',
   '/react/component-cypress-spec':
