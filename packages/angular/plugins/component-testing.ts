@@ -196,17 +196,17 @@ function normalizeBuildTargetOptions(
     buildOptions.assets = buildOptions.assets.map((asset) => {
       return typeof asset === 'string'
         ? joinPathFragments(offset, asset)
-        : (asset.input = joinPathFragments(offset, asset.input));
+        : { ...asset, input: joinPathFragments(offset, asset.input) };
     });
     buildOptions.styles = buildOptions.styles.map((style) => {
       return typeof style === 'string'
         ? joinPathFragments(offset, style)
-        : (style.input = joinPathFragments(offset, style.input));
+        : { ...style, input: joinPathFragments(offset, style.input) };
     });
     buildOptions.scripts = buildOptions.scripts.map((script) => {
       return typeof script === 'string'
         ? joinPathFragments(offset, script)
-        : (script.input = joinPathFragments(offset, script.input));
+        : { ...script, input: joinPathFragments(offset, script.input) };
     });
   } else {
     const stylePath = getTempStylesForTailwind(ctContext);

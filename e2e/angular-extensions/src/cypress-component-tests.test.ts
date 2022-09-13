@@ -5,6 +5,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateProjectConfig,
 } from '../../utils';
 import { names } from '@nrwl/devkit';
 describe('Angular Cypress Component Tests', () => {
@@ -130,6 +131,17 @@ import {CommonModule} from '@angular/common';
   }
   `
     );
+
+    // make sure assets from the workspace root work.
+    createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
+    updateProjectConfig(appName, (config) => {
+      config.targets['build'].options.assets.push({
+        glob: '**/*',
+        input: 'libs/assets',
+        output: 'assets',
+      });
+      return config;
+    });
   });
 
   it('should test app', () => {
