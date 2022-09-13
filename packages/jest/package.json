@@ -44,7 +44,6 @@
     "jest-resolve": "28.1.1",
     "jest-util": "28.1.1",
     "resolve.exports": "1.1.0",
-    "rxjs": "^6.5.4",
     "tslib": "^2.3.0"
   }
 }

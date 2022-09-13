@@ -33,10 +33,7 @@
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
-    "core-js": "^3.6.5",
     "dotenv": "~10.0.0",
-    "semver": "7.3.4",
-    "ts-loader": "^9.3.1",
-    "tsconfig-paths-webpack-plugin": "3.5.2"
+    "semver": "7.3.4"
   }
 }

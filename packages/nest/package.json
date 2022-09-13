@@ -31,7 +31,6 @@
   "dependencies": {
     "@nestjs/schematics": "^9.0.0",
     "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
     "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
     "@nrwl/node": "file:../node"
