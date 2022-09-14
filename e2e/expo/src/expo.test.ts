@@ -1,5 +1,5 @@
 import {
-  checkFilesExist,
+  cleanupProject,
   expectTestsPass,
   newProject,
   runCLI,
@@ -14,6 +14,7 @@ describe('expo', () => {
   beforeEach(
     () => (proj = newProject({ name: uniq('proj'), packageManager: 'npm' }))
   );
+  afterEach(() => cleanupProject());
 
   it('should test, lint', async () => {
     const appName = uniq('my-app');
