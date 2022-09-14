@@ -138,7 +138,7 @@
         "ensure-symlink",
         "eject"
       ],
-      "generators": []
+      "generators": ["init", "application", "library", "component"]
     }
   },
   {

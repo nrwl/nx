@@ -56,11 +56,6 @@
       "schema": "./src/generators/component/schema.json",
       "description": "Create a component",
       "aliases": ["c"]
-    },
-    "preset": {
-      "factory": "./src/generators/preset/preset",
-      "schema": "./src/generators/preset/schema.json",
-      "description": "Create Expo preset"
     }
   }
 }
