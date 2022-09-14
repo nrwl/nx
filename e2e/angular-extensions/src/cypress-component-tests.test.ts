@@ -146,27 +146,27 @@ import {CommonModule} from '@angular/common';
 
   it('should test app', () => {
     runCLI(
-      `generate @nrwl/angular:cypress-component-configuration --project=${appName} --generate-tests`
+      `generate @nrwl/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
     expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
       'All specs passed!'
     );
-  }, 1000000);
+  }, 300_000);
 
   it('should successfully component test lib being used in app', () => {
     runCLI(
-      `generate @nrwl/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
+      `generate @nrwl/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
     );
     expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
       'All specs passed!'
     );
-  }, 1000000);
+  }, 300_000);
 
   it('should test buildable lib not being used in app', () => {
     expect(() => {
       // should error since no edge in graph between lib and app
       runCLI(
-        `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests`
+        `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --no-interactive`
       );
     }).toThrow();
     createFile(
@@ -232,7 +232,7 @@ describe(InputStandaloneComponent.name, () => {
     );
 
     runCLI(
-      `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`
+      `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
     expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
       'All specs passed!'
@@ -261,5 +261,5 @@ describe(InputStandaloneComponent.name, () => {
       'All specs passed!'
     );
     checkFilesDoNotExist(`tmp/libs/${buildableLibName}/ct-styles.css`);
-  }, 1000000);
+  }, 300_000);
 });

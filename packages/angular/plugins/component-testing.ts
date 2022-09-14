@@ -172,11 +172,14 @@ function normalizeBuildTargetOptions(
   buildOptions.index =
     typeof buildOptions.index === 'string'
       ? joinPathFragments(offset, buildOptions.index)
-      : (buildOptions.index.input = joinPathFragments(
-          offset,
-          buildOptions.index.input
-        ));
-  buildOptions.tsConfig = joinPathFragments(offset, buildOptions.tsConfig);
+      : {
+          ...buildOptions.index,
+          input: joinPathFragments(offset, buildOptions.index.input),
+        };
+  // cypress creates a tsconfig if one isn't preset
+  // that contains all the support required for angular and component tests
+  delete buildOptions.tsConfig;
+
   buildOptions.fileReplacements = buildOptions.fileReplacements.map((fr) => {
     fr.replace = joinPathFragments(offset, fr.replace);
     fr.with = joinPathFragments(offset, fr.with);
