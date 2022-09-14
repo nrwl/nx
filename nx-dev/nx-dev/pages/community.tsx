@@ -11,16 +11,18 @@ import {
 } from '@nrwl/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
+import { packagesApi } from '../lib/api';
 
 declare const fetch: any;
 
+interface PluginInfo {
+  description: string;
+  name: string;
+  url: string;
+  isOfficial: boolean;
+}
 interface CommunityProps {
-  pluginList: {
-    description: string;
-    name: string;
-    url: string;
-    isOfficial: boolean;
-  }[];
+  pluginList: PluginInfo[];
 }
 
 export async function getStaticProps(): Promise<{ props: CommunityProps }> {
@@ -28,141 +30,38 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
     'https://raw.githubusercontent.com/nrwl/nx/master/community/approved-plugins.json'
   );
   const pluginList = await res.json();
+
+  const officialPluginList = (
+    packagesApi.getPackageDocuments().itemList ?? []
+  ).filter(
+    (m) =>
+      m.id !== 'add-nx-to-monorepo' &&
+      m.id !== 'cra-to-nx' &&
+      m.id !== 'create-nx-plugin' &&
+      m.id !== 'create-nx-workspace' &&
+      m.id !== 'make-angular-cli-faster' &&
+      m.id !== 'tao'
+  );
+
   return {
     props: {
-      pluginList: pluginList.map((plugin) => ({
-        ...plugin,
-        isOfficial: false,
-      })),
+      pluginList: [
+        ...officialPluginList.map((plugin) => ({
+          name: `@nrwl/${plugin.id}`,
+          description: plugin.description ?? '',
+          url: plugin.path,
+          isOfficial: true,
+        })),
+        ...pluginList.map((plugin) => ({
+          ...plugin,
+          isOfficial: false,
+        })),
+      ],
     },
   };
 }
 
 export default function Community(props: CommunityProps): JSX.Element {
-  const firstPartyPlugins = [
-    {
-      description:
-        'Integration with libraries such as Storybook, Jest, Cypress, NgRx, Micro-frontend...',
-      name: '@nrwl/angular',
-      url: 'https://nx.dev/packages/angular',
-      isOfficial: true,
-    },
-    {
-      description: 'Cypress is an e2e test runner built for modern web.',
-      name: '@nrwl/cypress',
-      url: 'https://nx.dev/packages/cypress',
-      isOfficial: true,
-    },
-    {
-      description:
-        'Detox is gray box end-to-end testing and automation library for mobile apps.',
-      name: '@nrwl/detox',
-      url: 'https://nx.dev/packages/detox',
-      isOfficial: true,
-    },
-    {
-      description:
-        'It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.',
-      name: '@nrwl/devkit',
-      url: 'https://nx.dev/devkit/index',
-      isOfficial: true,
-    },
-    {
-      description:
-        'ESLint is powerful linter by itself, able to work on the syntax of your source files and assert things about based on the rules you configure.',
-      name: '@nrwl/eslint-plugin-nx',
-      url: 'https://nx.dev/guides/eslint#using-eslint-in-nx-workspaces',
-      isOfficial: true,
-    },
-    {
-      description:
-        'Express is mature, minimal, and an open source web framework for making web applications and apis.',
-      name: '@nrwl/express',
-      url: 'https://nx.dev/packages/express',
-      isOfficial: true,
-    },
-    {
-      description: 'Jest is an open source test runner created by Facebook.',
-      name: '@nrwl/jest',
-      url: 'https://nx.dev/packages/jest',
-      isOfficial: true,
-    },
-    {
-      description:
-        'Contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.',
-      name: '@nrwl/js',
-      url: 'https://nx.dev/packages/js',
-      isOfficial: true,
-    },
-    {
-      description:
-        'Contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.',
-      name: '@nrwl/linter',
-      url: 'https://nx.dev/packages/linter',
-      isOfficial: true,
-    },
-    {
-      description:
-        'Nest.js is a framework designed for building scalable server-side applications.',
-      name: '@nrwl/nest',
-      url: 'https://nx.dev/packages/nest',
-      isOfficial: true,
-    },
-    {
-      description:
-        'The Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace.',
-      name: '@nrwl/next',
-      url: 'https://nx.dev/packages/next',
-      isOfficial: true,
-    },
-    {
-      description:
-        'Contains generators and executors to manage Node applications within an Nx workspace.',
-      name: '@nrwl/node',
-      url: 'https://nx.dev/packages/node',
-      isOfficial: true,
-    },
-    {
-      description: 'Distributed caching and analytics for your Nx Workspace.',
-      name: '@nrwl/nx-cloud',
-      url: 'https://nx.app/',
-      isOfficial: true,
-    },
-    {
-      description:
-        'Contains executors and generators for managing React applications and libraries within an Nx workspace.',
-      name: '@nrwl/react',
-      url: 'https://nx.dev/packages/react',
-      isOfficial: true,
-    },
-    {
-      description:
-        "React Native brings React's declarative UI framework to iOS and Android.",
-      name: '@nrwl/react-native',
-      url: 'https://nx.dev/packages/react-native',
-      isOfficial: true,
-    },
-    {
-      description: 'Storybook is a development environment for UI components.',
-      name: '@nrwl/storybook',
-      url: 'https://nx.dev/packages/storybook',
-      isOfficial: true,
-    },
-    {
-      description:
-        'Contains generators for managing Web Component applications and libraries within an Nx workspace.',
-      name: '@nrwl/web',
-      url: 'https://nx.dev/packages/web',
-      isOfficial: true,
-    },
-    {
-      description:
-        'Contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.',
-      name: '@nrwl/workspace',
-      url: 'https://nx.dev/packages/workspace',
-      isOfficial: true,
-    },
-  ];
   const router = useRouter();
 
   return (
@@ -264,9 +163,7 @@ export default function Community(props: CommunityProps): JSX.Element {
           </div>
 
           <div id="plugin-directory" className="relative overflow-hidden py-24">
-            <PluginDirectory
-              pluginList={firstPartyPlugins.concat(props.pluginList)}
-            />
+            <PluginDirectory pluginList={props.pluginList} />
           </div>
         </div>
       </main>
