@@ -513,6 +513,12 @@
             "file": "shared/recipes/console-run-command"
           },
           {
+            "name": "Nx Console Add Dependency Command",
+            "id": "console-add-dependency-command",
+            "tags": ["integrate-with-editors"],
+            "file": "shared/recipes/console-add-dependency-command"
+          },
+          {
             "name": "Nx Console Project Pane",
             "id": "console-project-pane",
             "tags": ["integrate-with-editors"],
