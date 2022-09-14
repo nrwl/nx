@@ -81,6 +81,8 @@ const schemaUrls = {
     '/packages/storybook/generators/migrate-stories-to-6-2',
   '/storybook/executors-build': '/packages/storybook/executors/build',
   '/storybook/executors-storybook': '/packages/storybook/executors/storybook',
+  '/storybook/extra-topics-for-angular-projects':
+    '/storybook/overview-angular#more-documentation',
   '/linter/eslint': '/packages/linter/executors/eslint',
   '/linter/lint': '/packages/linter/executors/lint',
   '/linter/workspace-rule': '/packages/linter/generators/workspace-rule',
