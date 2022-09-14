@@ -23,6 +23,11 @@ const targetFolder: string = resolve(
 
 const data: { title: string; content: string; filename: string }[] = [];
 documents.map((category) => {
+  data.push({
+    title: category.name,
+    content: category.description,
+    filename: [category.id].join('-'),
+  });
   category.itemList.map((item) =>
     data.push({
       title: category.name,
@@ -90,7 +95,7 @@ function createOpenGraphImage(
       context.fillText(line, 600, 310 + index * 55);
     });
 
-    console.log('Generating: ' + resolve(targetFolder + `/${filename}.jpg`));
+    console.log('Generating: ', `${filename}.jpg`);
 
     return writeFileSync(
       resolve(targetFolder + `/${filename}.jpg`),
@@ -127,6 +132,10 @@ function splitLines(
   return lines;
 }
 
+console.log(
+  'Generated images will be on this path:\n',
+  resolve(targetFolder, '\n\n')
+);
 ensureDir(targetFolder).then(() =>
   data.map((item) =>
     createOpenGraphImage(

@@ -2,10 +2,12 @@
   {
     "name": "Nx docs",
     "id": "nx-documentation",
+    "description": "Nx documentation for you to discover!",
     "itemList": [
       {
         "name": "Getting Started",
         "id": "getting-started",
+        "description": "Get started with basic information, concepts and tutorials.",
         "itemList": [
           {
             "name": "Intro to Nx",
@@ -37,6 +39,7 @@
       {
         "name": "Core Tutorial",
         "id": "core-tutorial",
+        "description": "Learn to use Nx with this core tutorial where you will learn about all its main feature with a real project.",
         "itemList": [
           {
             "name": "1 - Create Blog",
@@ -73,6 +76,7 @@
       {
         "name": "React Tutorial",
         "id": "react-tutorial",
+        "description": "Learn to use Nx with this React tutorial where you will learn about all its main feature with a real project.",
         "itemList": [
           {
             "name": "1 - Create Application",
@@ -139,6 +143,7 @@
       {
         "name": "Angular Tutorial",
         "id": "angular-tutorial",
+        "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
         "itemList": [
           {
             "name": "1 - Create Application",
@@ -205,6 +210,7 @@
       {
         "name": "Node Tutorial",
         "id": "node-tutorial",
+        "description": "Learn to use Nx with this Node tutorial where you will learn about all its main feature with a real project.",
         "itemList": [
           {
             "name": "1 - Create Application",
@@ -251,6 +257,7 @@
       {
         "name": "Core Features",
         "id": "core-features",
+        "description": "Learn the core features of Nx with in depth guides.",
         "itemList": [
           {
             "name": "Run Tasks",
@@ -292,6 +299,7 @@
       {
         "name": "Plugin Features",
         "id": "plugin-features",
+        "description": "Learn what is a plugin, the different type of plugins and how to create one.",
         "itemList": [
           {
             "name": "Use Task Executors",
@@ -313,6 +321,7 @@
       {
         "name": "Concepts",
         "id": "concepts",
+        "description": "Learn about all the different concepts Nx uses to manage your tasks and enhance your productivity.",
         "itemList": [
           {
             "name": "Integrated Repos vs. Package-Based Repos",
@@ -354,6 +363,7 @@
       {
         "name": "More Concepts",
         "id": "more-concepts",
+        "description": "Get deeper into how Nx works and its different aspects.",
         "itemList": [
           {
             "name": "Incremental Builds",
@@ -435,6 +445,7 @@
       {
         "name": "Recipes",
         "id": "recipes",
+        "description": "Learn quickly how to do things with Nx.",
         "itemList": [
           {
             "name": "CI Setup",
@@ -456,6 +467,7 @@
       {
         "name": "Recipe",
         "id": "recipe",
+        "description": "Learn quickly how to do things with Nx.",
         "itemList": [
           {
             "name": "Disable Graph Links Created from Analyzing Source Files",
@@ -772,6 +784,7 @@
       {
         "name": "Reference",
         "id": "reference",
+        "description": "Understand how to use Nx functionalities, what arguments and options are available for each component.",
         "itemList": [
           {
             "name": "Commands",
@@ -819,10 +832,12 @@
   {
     "name": "Nx Cloud docs",
     "id": "nx-cloud-documentation",
+    "description": "Learn how to enable Distributed Tasks Executions, remote caching and more.",
     "itemList": [
       {
         "name": "Intro",
         "id": "intro",
+        "description": "Learn about basic Nx Cloud knowledge.",
         "itemList": [
           {
             "name": "What is Nx Cloud?",
@@ -834,6 +849,7 @@
       {
         "name": "Set Up",
         "id": "set-up",
+        "description": "Learn how to set up Nx Cloud for your workspace.",
         "itemList": [
           {
             "name": "Adding Nx Cloud to an Nx Workspace",
@@ -865,6 +881,7 @@
       {
         "name": "Account Management",
         "id": "account",
+        "description": "Learn how to manage Nx Cloud subscriptions and other options.",
         "itemList": [
           {
             "name": "Billing and Utilization",
@@ -901,6 +918,7 @@
       {
         "name": "On Prem",
         "id": "private-cloud",
+        "description": "Learn about Nx Cloud On Premise, dedicated Nx Cloud application hosted on your server, in your network with total private access.",
         "itemList": [
           {
             "name": "Get Started",
@@ -947,6 +965,7 @@
       {
         "name": "Reference",
         "id": "reference",
+        "description": "Understand how to use Nx Cloud, what arguments and options are available for each component.",
         "itemList": [
           {
             "name": "Configuration Options",
@@ -975,10 +994,12 @@
   {
     "name": "additional api references",
     "id": "additional-api-references",
+    "description": "Package reference.",
     "itemList": [
       {
         "name": "nx",
         "id": "nx",
+        "description": "Nx package",
         "itemList": [
           {
             "name": "create-nx-workspace",
@@ -1067,6 +1088,7 @@
       {
         "name": "workspace",
         "id": "workspace",
+        "description": "Workspace package.",
         "itemList": [
           {
             "name": "Overview",
@@ -1084,6 +1106,7 @@
       {
         "name": "Nx Plugin",
         "id": "nx-plugin",
+        "description": "Plugin package.",
         "itemList": [
           {
             "id": "overview",
@@ -1096,6 +1119,7 @@
       {
         "name": "Nx Devkit",
         "id": "devkit",
+        "description": "Devkit package.",
         "itemList": [
           {
             "id": "index",
@@ -1112,6 +1136,7 @@
       {
         "name": "js",
         "id": "js",
+        "description": "JS package.",
         "itemList": [
           {
             "name": "Overview",
@@ -1124,6 +1149,7 @@
       {
         "name": "web",
         "id": "web",
+        "description": "Web package.",
         "itemList": [
           {
             "name": "Overview",
@@ -1136,6 +1162,7 @@
       {
         "name": "angular",
         "id": "angular",
+        "description": "Angular package.",
         "itemList": [
           {
             "name": "Overview",
@@ -1154,6 +1181,7 @@
       {
         "name": "react",
         "id": "react",
+        "description": "React package.",
         "itemList": [
           {
             "name": "Overview",
@@ -1166,6 +1194,7 @@
       {
         "name": "jest",
         "id": "jest",
+        "description": "Jest package.",
         "itemList": [
           {
             "name": "Overview",
@@ -1178,6 +1207,7 @@
       {
         "name": "cypress",
         "id": "cypress",
+        "description": "Cypress package.",
         "itemList": [
           {
             "name": "Overview",
@@ -1200,6 +1230,7 @@
       {
         "name": "storybook",
         "id": "storybook",
+        "description": "Storybook package.",
         "itemList": [
           {
             "id": "overview",
@@ -1262,6 +1293,7 @@
       {
         "name": "linter",
         "id": "linter",
+        "description": "Linter package.",
         "itemList": [
           {
             "id": "overview",
@@ -1279,6 +1311,7 @@
       {
         "name": "eslint-plugin-nx",
         "id": "eslint-plugin-nx",
+        "description": "ESLint plugin package.",
         "itemList": [
           {
             "id": "overview",
@@ -1291,6 +1324,7 @@
       {
         "name": "node",
         "id": "node",
+        "description": "Node package.",
         "itemList": [
           {
             "id": "overview",
@@ -1303,6 +1337,7 @@
       {
         "name": "express",
         "id": "express",
+        "description": "Express package.",
         "itemList": [
           {
             "id": "overview",
@@ -1315,6 +1350,7 @@
       {
         "name": "nest",
         "id": "nest",
+        "description": "Nest package.",
         "itemList": [
           {
             "id": "overview",
@@ -1327,6 +1363,7 @@
       {
         "name": "next",
         "id": "next",
+        "description": "Next package.",
         "itemList": [
           {
             "id": "overview",
@@ -1339,6 +1376,7 @@
       {
         "name": "detox",
         "id": "detox",
+        "description": "Detox package.",
         "itemList": [
           {
             "id": "overview",
@@ -1351,6 +1389,7 @@
       {
         "name": "react native",
         "id": "react-native",
+        "description": "React Native package.",
         "itemList": [
           {
             "id": "overview",

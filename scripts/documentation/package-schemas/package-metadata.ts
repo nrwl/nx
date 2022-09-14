@@ -85,7 +85,7 @@ export function getPackageMetadataList(
   /**
    * Get all the custom overview information on each package if available
    */
-  const additionalApiReferences = DocumentationMap.find(
+  const additionalApiReferences: any = DocumentationMap.find(
     (data) => data.id === 'additional-api-references'
   ).itemList;
 
