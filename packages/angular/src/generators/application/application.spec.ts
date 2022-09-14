@@ -5,6 +5,7 @@ import {
   NxJsonConfiguration,
   parseJson,
   readJson,
+  readProjectConfiguration,
   readWorkspaceConfiguration,
   updateJson,
 } from '@nrwl/devkit';
