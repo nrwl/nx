@@ -1,5 +1,3 @@
-import org.apache.tools.ant.taskdefs.condition.Os
-
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
@@ -9,7 +7,7 @@ buildscript {
         compileSdkVersion = 31
         targetSdkVersion = 31
         <% if (e2eTestRunner === 'detox') { %>
-        kotlinVersion = '1.7.0'
+        kotlinVersion = '1.7.10'
         <% } %>
 
         if (System.properties['os.arch'] == "aarch64") {
@@ -25,7 +23,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.1.1")
+        classpath("com.android.tools.build:gradle:7.2.1")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("de.undercouch:gradle-download-task:5.0.1")
         <% if (e2eTestRunner === 'detox') { %>

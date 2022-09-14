@@ -85,6 +85,7 @@ export function updateDependencies(host: Tree) {
       'metro-resolver': metroVersion,
       'metro-babel-register': metroVersion,
       'metro-react-native-babel-preset': metroVersion,
+      'metro-react-native-babel-transformer': metroVersion,
       'react-test-renderer': reactTestRendererVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,

@@ -16407,10 +16407,10 @@ methods@~1.1.2:
   resolved "https://registry.yarnpkg.com/methods/-/methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee"
   integrity sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==
 
-metro-resolver@^0.72.1:
-  version "0.72.1"
-  resolved "https://registry.yarnpkg.com/metro-resolver/-/metro-resolver-0.72.1.tgz#3b1eb4f9053efb0b8e5a8a66e38280d10be89dff"
-  integrity sha512-/wAP/hSdjHz4EZsI/Mg/RFz1zybApjmGoB+gNwo4mPeLrwGOrkscazkWIQTS653fA4DLsXcZmsmOv3T9240L3Q==
+metro-resolver@^0.72.2:
+  version "0.72.2"
+  resolved "https://registry.yarnpkg.com/metro-resolver/-/metro-resolver-0.72.2.tgz#332ecd646d683a47923fc403e3df37a7cf96da3b"
+  integrity sha512-5KTWolUgA6ivLkg3DmFS2WltphBPQW7GT7An+6Izk/NU+y/6crmsoaLmNxjpZo4Fv+i/FxDSXqpbpQ6KrRWvlQ==
   dependencies:
     absolute-path "^0.0.0"
 

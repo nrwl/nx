@@ -89,11 +89,11 @@
       "app": "android.debug"
     },
 <% if (framework === 'expo') { %>
-    "android.sim.eas": {
+    "android.emu.eas": {
       "device": "simulator",
       "app": "android.eas"
     },
-    "android.sim.local": {
+    "android.emu.local": {
       "device": "simulator",
       "app": "android.local"
     },
