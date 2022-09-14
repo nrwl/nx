@@ -8,7 +8,7 @@
     "default": {
       "runner": "@nrwl/nx-cloud",
       "options": {
-        "accessToken": "NmVmMDViMTgtMjU4Zi00ZGUwLThjMzUtZDY0ZWEwZmNmMWJmfHJlYWQtd3JpdGU=",
+        "accessToken": "MjEyM2IwYWQtMTEyMS00ZGFmLThkY2UtYjg4YWRiZTNjZmI5fHJlYWQtd3JpdGU=",
         "cacheableOperations": [
           "build",
           "lint-base",
@@ -18,9 +18,10 @@
           "sitemap",
           "e2e"
         ],
+        "useDaemonProcess": true,
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
-        "url": "https://api.nrwl.io"
+        "url": "https://staging.nx.app"
       }
     }
   },
