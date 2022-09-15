@@ -1,16 +1,15 @@
 import type { Tree } from '@nrwl/devkit';
-import type { NormalizedSchema } from './normalized-schema';
-
 import {
-  updateJson,
+  addProjectConfiguration,
   getProjects,
-  readProjectConfiguration,
-  updateProjectConfiguration,
-  removeProjectConfiguration,
   offsetFromRoot,
+  readProjectConfiguration,
+  removeProjectConfiguration,
+  updateJson,
 } from '@nrwl/devkit';
 import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import type { NormalizedSchema } from './normalized-schema';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
   updateTsConfigOptions(host, options);
@@ -88,7 +87,23 @@ function updateAppAndE2EProjectConfigurations(
 
   project.tags = options.parsedTags;
 
-  updateProjectConfiguration(host, options.name, project);
+  /**
+   * The "$schema" property on our configuration files is only added when the
+   * project configuration is added and not when updating it. It's done this
+   * way to avoid re-adding "$schema" when updating a project configuration
+   * and that property was intentionally removed by the devs.
+   *
+   * Since the project gets created by the Angular application schematic,
+   * the "$schema" property is not added, so we remove the project and add
+   * it back to workaround that.
+   */
+  removeProjectConfiguration(host, options.name);
+  addProjectConfiguration(
+    host,
+    options.name,
+    project,
+    options.standaloneConfig
+  );
 
   if (options.unitTestRunner === UnitTestRunner.None) {
     host.delete(`${options.appProjectRoot}/src/app/app.component.spec.ts`);
