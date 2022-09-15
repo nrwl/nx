@@ -233,6 +233,149 @@ describe('convertToCypressTen', () => {
         readProjectConfiguration(tree, 'app-e2e').targets['e2e']
       ).toMatchSnapshot();
     });
+
+    it('should handle multiple configurations with no default cypressConfig option', async () => {
+      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      tree.write(
+        'apps/app-e2e/cypress.production.json',
+        JSON.stringify({
+          fileServerFolder: '.',
+          fixturesFolder: './src/fixtures',
+          integrationFolder: './src/release-integration',
+          modifyObstructiveCode: false,
+          pluginsFile: './src/plugins/index',
+          supportFile: './src/support/index.ts',
+          video: true,
+          videosFolder: '../../dist/cypress/apps/client-e2e/videos',
+          screenshotsFolder: '../../dist/cypress/apps/client-e2e/screenshots',
+          chromeWebSecurity: false,
+        })
+      );
+      const pc = readProjectConfiguration(tree, 'app-e2e');
+      pc.targets = {
+        ...pc.targets,
+        e2e: {
+          executor: '@nrwl/cypress:cypress',
+          options: {
+            baseUrl: 'http://localhost:4200',
+          },
+          configurations: {
+            production: {
+              cypressConfig: 'apps/app-e2e/cypress.production.json',
+              devServerTarget: 'target:serve:production',
+            },
+            static: {
+              baseUrl: 'http://localhost:3000',
+              cypressConfig: 'apps/app-e2e/cypress.json',
+            },
+          },
+        },
+      };
+
+      updateProjectConfiguration(tree, 'app-e2e', pc);
+
+      await migrateCypressProject(tree);
+
+      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(
+        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+        'src/**/*.ts',
+        'src/**/*.js',
+        'cypress.production.config.ts',
+        'cypress.config.ts',
+      ]);
+      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(
+        readProjectConfiguration(tree, 'app-e2e').targets['e2e']
+      ).toMatchSnapshot();
+    });
+
+    it('should handle sharing the same config across projects', async () => {
+      mockedInstalledCypressVersion.mockReturnValue(9);
+      addProjectConfiguration(tree, 'app-two', {
+        root: 'apps/app-two',
+        sourceRoot: 'apps/app-two/src',
+        targets: {
+          serve: {
+            executor: '@nrwl/web:file-server',
+            options: {},
+          },
+        },
+      });
+
+      await cypressProjectGenerator(tree, {
+        name: 'app-two-e2e',
+        skipFormat: true,
+        project: 'app-two',
+      });
+      const appOneProjectConfig = readProjectConfiguration(tree, 'app-e2e');
+      appOneProjectConfig.targets['e2e'].options.cypressConfig = 'cypress.json';
+      updateProjectConfiguration(tree, 'app-e2e', appOneProjectConfig);
+      const appTwoProjectConfig = readProjectConfiguration(tree, 'app-two-e2e');
+      appTwoProjectConfig.targets['e2e'].options.cypressConfig = 'cypress.json';
+      updateProjectConfiguration(tree, 'app-two-e2e', appTwoProjectConfig);
+
+      tree.write(
+        'cypress.json',
+        JSON.stringify({
+          fileServerFolder: '.',
+          fixturesFolder: './src/fixtures',
+          integrationFolder: './src/integration',
+          modifyObstructiveCode: false,
+          video: true,
+          chromeWebSecurity: false,
+        })
+      );
+
+      await migrateCypressProject(tree);
+
+      expect(tree.read('cypress.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+        'src/**/*.ts',
+        'src/**/*.js',
+        '../../cypress.config.ts',
+      ]);
+      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(readProjectConfiguration(tree, 'app-e2e').targets['e2e']).toEqual({
+        executor: '@nrwl/cypress:cypress',
+        options: {
+          cypressConfig: 'cypress.config.ts',
+          devServerTarget: 'app:serve',
+          testingType: 'e2e',
+        },
+        configurations: {
+          production: {
+            devServerTarget: 'app:serve:production',
+          },
+        },
+      });
+      expect(readJson(tree, 'apps/app-two-e2e/tsconfig.json').include).toEqual([
+        'src/**/*.ts',
+        'src/**/*.js',
+        '../../cypress.config.ts',
+      ]);
+      expect(tree.exists('apps/app-two-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('apps/app-two-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(
+        readProjectConfiguration(tree, 'app-two-e2e').targets['e2e']
+      ).toEqual({
+        executor: '@nrwl/cypress:cypress',
+        options: {
+          cypressConfig: 'cypress.config.ts',
+          devServerTarget: 'app-two:serve',
+          testingType: 'e2e',
+        },
+        configurations: {
+          production: {
+            devServerTarget: 'app-two:serve:production',
+          },
+        },
+      });
+    });
   });
 
   describe('updateProjectPaths', () => {

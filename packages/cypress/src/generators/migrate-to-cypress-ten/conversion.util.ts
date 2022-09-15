@@ -37,15 +37,20 @@ export function findCypressConfigs(
 } {
   const cypressConfigPathJson =
     projectConfig.targets[target]?.configurations?.[config]?.cypressConfig ||
-    // make sure it's a json file, since it could have been updated to ts file from previous configuration migration
-    (projectConfig.targets[target]?.options?.cypressConfig?.endsWith('json')
-      ? projectConfig.targets[target]?.options?.cypressConfig
-      : joinPathFragments(projectConfig.root, 'cypress.json'));
+    projectConfig.targets[target]?.options?.cypressConfig;
+
+  // make sure it's a json file, since it could have been updated to ts file from previous configuration migration
+  if (!cypressConfigPathJson || extname(cypressConfigPathJson) !== '.json') {
+    return {
+      cypressConfigPathJson: null,
+      cypressConfigPathTs: null,
+    };
+  }
 
   const cypressConfigPathTs = joinPathFragments(
-    projectConfig.root,
+    dirname(cypressConfigPathJson),
     // create matching ts config for custom cypress config if present
-    cypressConfigPathJson.endsWith('cypress.json')
+    cypressConfigPathJson?.endsWith('cypress.json')
       ? 'cypress.config.ts' //default
       : `${basename(
           cypressConfigPathJson,
