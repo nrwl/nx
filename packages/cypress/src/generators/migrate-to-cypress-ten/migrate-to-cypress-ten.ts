@@ -12,8 +12,6 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
-import { tsquery } from '@phenomnomnominal/tsquery';
-import { extname } from 'path';
 import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
 import { cypressVersion } from '../../utils/versions';
 import {
@@ -96,6 +94,15 @@ https://nx.dev/cypress/v10-migration-guide
   });
 
   await formatFiles(tree);
+
+  if (tree.exists('cypress.json')) {
+    logger.warn(stripIndents`A root cypress.json file was found. 
+    You should remove this file as it will cause an error when running Cypress.
+    If you want to share options between Cypress projects. 
+    You can create a root ts file and import it into each project's cypress config file.
+    More Info: https://github.com/nrwl/nx/issues/11512#issuecomment-1213420638
+    `);
+  }
   return () => {
     installPackagesTask(tree);
   };
