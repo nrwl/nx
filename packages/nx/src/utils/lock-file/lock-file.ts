@@ -8,15 +8,18 @@ import {
 } from '../package-manager';
 import { gte } from 'semver';
 import { parseLockFile as parseYarn } from './yarn';
-import { parseLockFile as parseNpm } from './npm';
+import {
+  parseLockFile as parseNpm,
+  stringifyLockFile as stringifyNpm,
+} from './npm';
 import { parseLockFile as parsePnpm } from './pnpm';
 import { LockFileData } from './lock-file-type';
 import { join } from 'path';
 
-export async function parseLockFile(
+export function parseLockFile(
   packageManager: PackageManager = detectPackageManager(),
   workingDirectory: string = ''
-): Promise<LockFileData> {
+): LockFileData {
   if (packageManager === 'yarn') {
     const file = readFileSync(join(workingDirectory, 'yarn.lock'), 'utf8');
     const yarnVersion = getPackageManagerVersion('yarn');
@@ -35,10 +38,11 @@ export async function parseLockFile(
   }
 }
 
-export async function writeLockFile(
+export function writeLockFile(
   lockFile: LockFileData,
-  packageManager: PackageManager = detectPackageManager()
-) {
+  packageManager: PackageManager = detectPackageManager(),
+  workingDirectory: string = ''
+): void {
   //   if (packageManager === 'yarn') {
   //     const yarnVersion = getPackageManagerVersion('yarn');
   //     const useBerry = gte(yarnVersion, '2.0.0');
@@ -50,8 +54,8 @@ export async function writeLockFile(
   //   if (packageManager === 'pnpm') {
   //     return await writePnpm('.', lockFile as PnpmLockFile);
   //   }
-  //   if (packageManager === 'npm') {
-  //     const content = JSON.stringify(lockFile, null, 2);
-  //     writeFileSync('package-lock.json', content + '\n');
-  //   }
+  if (packageManager === 'npm') {
+    const content = stringifyNpm(lockFile);
+    writeFileSync(join(workingDirectory, 'package-lock.json'), content + '\n');
+  }
 }

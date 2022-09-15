@@ -1,15 +1,14 @@
-export interface PackageDependency {
+export interface PackageDependency<T> {
   version: string;
-  requestedKey: string[];
+  packageMeta: T[];
   dependencies?: Record<string, string>;
   dependenciesMeta?: Record<string, { optional: string }>; // todo: THIS IS FOR YARN 2
   peerDependencies?: Record<string, string>;
   peerDependenciesMeta?: Record<string, { optional: string }>; // todo: THIS IS FOR YARN 2
-  dev: boolean;
   [key: string]: any;
 }
 
-export type LockFileData = {
-  dependencies: Record<string, PackageDependency>;
+export type LockFileData<T = any> = {
+  dependencies: Record<string, PackageDependency<T>>;
   lockFileMetadata?: Record<string, any>;
 };

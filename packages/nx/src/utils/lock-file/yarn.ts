@@ -1,7 +1,7 @@
 import { parseSyml } from '@yarnpkg/parsers';
 import { LockFileData, PackageDependency } from './lock-file-type';
 
-export type YarnLockFile = Record<string, PackageDependency>;
+export type YarnLockFile = Record<string, PackageDependency<string>>;
 
 export type YarnBerryLockFile = {
   __metadata: {
@@ -32,7 +32,7 @@ export type YarnBerryLockFile = {
  *  "{package}@npm:{version}": {
  *    version: {version},
  *    {additionalFields},
- *    requestedKey: ["{package}@npm:{versionRange}"]
+ *    packageMeta: ["{package}@npm:{versionRange}"]
  *    dependencies: {
  *     "{package}": "npm:{versionRange}"
  *    }
@@ -54,7 +54,7 @@ export type YarnBerryLockFile = {
  *  "{package}@{version}": {
  *    version: {version},
  *    {additionalFields},
- *   requestedKey: ["{package}@{versionRange}"]
+ *    packageMeta: ["{package}@{versionRange}"]
  *    dependencies: {
  *     "{package}": "{versionRange}"
  *    }
@@ -83,9 +83,9 @@ function mapPackages(packages: YarnLockFile): YarnLockFile {
     const newKey = `${packageName}@${value.version}`;
     mappedPackages[newKey] = mappedPackages[newKey] || {
       ...value,
-      requestedKey: [],
+      packageMeta: [],
     };
-    mappedPackages[newKey].requestedKey.push(key);
+    mappedPackages[newKey].packageMeta.push(key);
   });
   return mappedPackages;
 }

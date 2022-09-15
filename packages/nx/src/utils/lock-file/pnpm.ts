@@ -1,7 +1,7 @@
 import { LockFileData, PackageDependency } from './lock-file-type';
 import { load } from 'js-yaml';
 
-type Dependencies = Record<string, PackageDependency>;
+type Dependencies = Record<string, PackageDependency<string>>;
 
 export type PnpmLockFile = {
   lockfileVersion: number;

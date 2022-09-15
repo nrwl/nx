@@ -1,13 +1,27 @@
 import { LockFileData, PackageDependency } from './lock-file-type';
 
-type Dependencies = Record<string, PackageDependency>;
+type PackageMeta = {
+  path: string;
+  optional?: boolean;
+  dev?: boolean;
+};
+
+type Dependencies = Record<string, PackageDependency<PackageMeta>>;
+
+type NpmDependency = {
+  version: string;
+  resolved: string;
+  integrity: string;
+  requires?: Record<string, string>;
+  dependencies?: Record<string, NpmDependency>;
+};
 
 export type NpmLockFile = {
   name?: string;
   lockfileVersion: number;
   requires?: boolean;
   packages: Dependencies;
-  dependencies?: Dependencies;
+  dependencies?: Record<string, NpmDependency>;
 };
 
 /**
@@ -43,18 +57,156 @@ export function parseLockFile(lockFile: string): LockFileData {
   };
 }
 
+/**
+ * Generates package-lock.json file from `LockFileData` object
+ *
+ * @param lockFile
+ * @returns
+ */
+export function stringifyLockFile(lockFile: LockFileData): string {
+  const dependencies = {};
+  const packages = {
+    '': lockFile.lockFileMetadata.rootPackage,
+  };
+  Object.entries(lockFile.dependencies).forEach(
+    ([key, { packageMeta, ...value }]) => {
+      packageMeta.forEach(({ path, dev, optional }) => {
+        const {
+          version,
+          resolved,
+          integrity,
+          license,
+          devOptional,
+          hasInstallScript,
+          ...rest
+        } = value;
+        // we are sorting the properties to get as close as possible to the original package-lock.json
+        packages[path] = {
+          version,
+          resolved,
+          integrity,
+          dev,
+          devOptional,
+          hasInstallScript,
+          license,
+          optional,
+          ...rest,
+        };
+      });
+      const packageName = key.slice(0, key.lastIndexOf('@'));
+      unmapDependencies(dependencies, packageName, value, packageMeta);
+    }
+  );
+
+  const lockFileJson: NpmLockFile = {
+    ...lockFile.lockFileMetadata.metadata,
+    packages: sortPackages(packages),
+    dependencies: sortDependencies(dependencies),
+  };
+
+  return JSON.stringify(lockFileJson, null, 2);
+}
+
+function sortPackages(unsortedPackages: Dependencies): Dependencies {
+  const packages = {};
+  Object.entries(unsortedPackages)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([key, value]) => {
+      packages[key] = value;
+    });
+  return packages;
+}
+
+function sortDependencies(
+  unsortedDependencies: Record<string, NpmDependency>
+): Record<string, NpmDependency> {
+  const dependencies = {};
+  Object.entries(unsortedDependencies)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([key, value]) => {
+      dependencies[key] = {
+        ...value,
+        ...(value.dependencies && {
+          dependencies: sortDependencies(value.dependencies),
+        }),
+      };
+    });
+  return dependencies;
+}
+
+function unmapDependencies(
+  dependencies: Record<string, NpmDependency>,
+  packageName: string,
+  value: Omit<PackageDependency<PackageMeta>, 'packageMeta'>,
+  packageMeta: PackageMeta[]
+): void {
+  packageMeta.forEach(({ path, dev, optional }) => {
+    const projectPath = path.split('node_modules/').slice(1);
+    let current = dependencies;
+    while (projectPath.length > 1) {
+      const parentName = projectPath.shift().replace(/\/$/, '');
+      current[parentName] = current[parentName] || ({} as NpmDependency);
+      const parent = current[parentName];
+      parent.dependencies = parent.dependencies || {};
+      current = parent.dependencies;
+    }
+    let unsortedRequires;
+    if (value.dependencies) {
+      unsortedRequires = value.dependencies;
+    }
+    if (value.optionalDependencies) {
+      unsortedRequires = {
+        ...unsortedRequires,
+        ...value.optionalDependencies,
+      };
+    }
+    let requires;
+    if (unsortedRequires) {
+      Object.entries(unsortedRequires)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .forEach(([key, value]) => {
+          requires = requires || {};
+          requires[key] = value;
+        });
+    }
+    current[packageName] = {
+      version: value.version,
+      resolved: value.resolved,
+      integrity: value.integrity,
+      ...(dev !== undefined && { dev }),
+      ...(value.devOptional !== undefined && {
+        devOptional: value.devOptional,
+      }),
+      ...(optional !== undefined && { optional }),
+      ...(requires && { requires }),
+      ...current[packageName],
+    };
+  });
+}
+
+/**
+ * Strip of node modules and add new key
+ * @param packages
+ * @returns
+ */
 function mapPackages(packages: Dependencies): Dependencies {
   const mappedPackages: Dependencies = {};
-  Object.entries(packages).forEach(([key, value]) => {
+  Object.entries(packages).forEach(([key, { dev, optional, ...value }]) => {
     // skip root package
     if (!key) {
       return;
     }
     const packageName = key.slice(key.lastIndexOf('node_modules/') + 13);
-    mappedPackages[`${packageName}@${value.version}`] = {
+    const newKey = packageName + '@' + value.version;
+    mappedPackages[newKey] = mappedPackages[newKey] || {
       ...value,
-      requestedKey: [key],
+      packageMeta: [],
     };
+    mappedPackages[newKey].packageMeta.push({
+      path: key,
+      dev,
+      optional,
+    });
   });
   return mappedPackages;
 }
