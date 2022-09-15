@@ -33,8 +33,8 @@ describe('file-server', () => {
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
       await killPorts(port);
-    } catch (err) {
-      expect(err).toBeFalsy();
+    } catch {
+      // ignore
     }
   }, 1000000);
 });

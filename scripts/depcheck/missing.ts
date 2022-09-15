@@ -86,6 +86,7 @@ const IGNORE_MATCHES = {
     'swc-loader',
     'tsconfig-paths-webpack-plugin',
   ],
+  rollup: ['@swc/core'],
   storybook: [
     '@angular-devkit/architect',
     '@angular-devkit/core',

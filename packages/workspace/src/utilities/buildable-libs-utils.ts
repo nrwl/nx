@@ -1,12 +1,12 @@
-import { dirname, join, relative, resolve } from 'path';
+import { dirname, join, relative } from 'path';
 import { directoryExists, fileExists } from './fileutils';
 import type { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
 import {
+  getOutputsForTargetAndConfiguration,
   ProjectGraphExternalNode,
   readJsonFile,
   stripIndents,
   writeJsonFile,
-  getOutputsForTargetAndConfiguration,
 } from '@nrwl/devkit';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
@@ -163,8 +163,14 @@ function readTsConfigWithRemappedPaths(
   return generatedTsConfig;
 }
 
+/**
+ * Util function to create tsconfig compilerOptions object with support for workspace libs paths.
+ *
+ * @param tsConfig String of config path or object parsed via ts.parseJsonConfigFileContent.
+ * @param dependencies Dependencies calculated by Nx.
+ */
 export function computeCompilerOptionsPaths(
-  tsConfig: string,
+  tsConfig: string | ts.ParsedCommandLine,
   dependencies: DependentBuildableProjectNode[]
 ) {
   const paths = readPaths(tsConfig) || {};
@@ -172,16 +178,21 @@ export function computeCompilerOptionsPaths(
   return paths;
 }
 
-function readPaths(tsConfig: string) {
+function readPaths(tsConfig: string | ts.ParsedCommandLine) {
   try {
-    const parsedTSConfig = ts.readConfigFile(tsConfig, ts.sys.readFile).config;
-    if (
-      parsedTSConfig.compilerOptions &&
-      parsedTSConfig.compilerOptions.paths
-    ) {
-      return parsedTSConfig.compilerOptions.paths;
-    } else if (parsedTSConfig.extends) {
-      return readPaths(resolve(dirname(tsConfig), parsedTSConfig.extends));
+    let config: ts.ParsedCommandLine;
+    if (typeof tsConfig === 'string') {
+      const configFile = ts.readConfigFile(tsConfig, ts.sys.readFile);
+      config = ts.parseJsonConfigFileContent(
+        configFile.config,
+        ts.sys,
+        dirname(tsConfig)
+      );
+    } else {
+      config = tsConfig;
+    }
+    if (config.options?.paths) {
+      return config.options.paths;
     } else {
       return null;
     }

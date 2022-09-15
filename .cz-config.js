@@ -16,6 +16,10 @@ module.exports = {
   scopes: [
     { name: 'angular', description: 'anything Angular specific' },
     { name: 'core', description: 'anything Nx core specific' },
+    {
+      name: 'bundling',
+      description: 'anything bundling specific (e.g. rollup, webpack, etc.)',
+    },
     { name: 'detox', description: 'anything Detox specific' },
     { name: 'devkit', description: 'devkit-related changes' },
     { name: 'express', description: 'anything Express specific' },

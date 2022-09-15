@@ -1,0 +1,52 @@
+{
+  "name": "@nrwl/rollup",
+  "version": "0.0.1",
+  "description": "The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/rollup"
+  },
+  "keywords": [
+    "Monorepo",
+    "Rollup",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/js": "file:../js",
+    "@nrwl/workspace": "file:../workspace",
+    "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-commonjs": "^20.0.0",
+    "@rollup/plugin-image": "^2.1.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.0.4",
+    "autoprefixer": "^10.4.9",
+    "babel-plugin-transform-async-to-promises": "^0.8.15",
+    "chalk": "4.1.0",
+    "fs-extra": "^10.1.0",
+    "postcss": "^8.4.14",
+    "rollup": "^2.56.2",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-postcss": "^4.0.1",
+    "rollup-plugin-typescript2": "^0.31.1",
+    "rxjs": "^6.5.4",
+    "tslib": "^2.3.0"
+  }
+}

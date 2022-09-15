@@ -7,7 +7,7 @@ describe('updatePackageJson', () => {
     outputPath: 'dist/index.js',
     tsConfig: './tsconfig.json',
     project: './package.json',
-    entryFile: './index.js',
+    main: './index.js',
     entryRoot: '.',
     projectRoot: '.',
     assets: [],
