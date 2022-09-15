@@ -6,6 +6,7 @@ import {
   Tree,
   updateJson,
   visitNotIgnoredFiles,
+  normalizePath,
 } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { basename, dirname, extname, relative } from 'path';
@@ -230,17 +231,21 @@ export function updateProjectPaths(
   // tree.rename doesn't work on directories must update each file within
   // the directory to the new directory
   visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (path) => {
-    if (!path.includes(oldIntegrationFolder)) {
+    const normalizedPath = normalizePath(path);
+    if (!normalizedPath.includes(oldIntegrationFolder)) {
       return;
     }
-    const fileName = basename(path);
-    let newPath = path.replace(oldIntegrationFolder, newIntegrationFolder);
+    const fileName = basename(normalizedPath);
+    let newPath = normalizedPath.replace(
+      oldIntegrationFolder,
+      newIntegrationFolder
+    );
 
     if (fileName.includes('.spec.')) {
       newPath = newPath.replace('.spec.', '.cy.');
     }
-    if (newPath !== path && tree.exists(path)) {
-      tree.rename(path, newPath);
+    if (newPath !== normalizedPath && tree.exists(normalizedPath)) {
+      tree.rename(normalizedPath, newPath);
     }
     // if they weren't using the supportFile then there is no need to update the imports.
     if (
