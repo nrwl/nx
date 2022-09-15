@@ -23,12 +23,11 @@ function filePathExtractor(file: any): string[] {
 
   function recur(curr): void {
     if (curr.isExternal) return; // Removing external links
+    if (curr.file) paths.push(curr.file);
     if (curr.itemList) {
       curr.itemList.forEach((ii) => {
         recur(ii);
       });
-    } else {
-      paths.push(curr.file);
     }
   }
   recur(file);
@@ -39,8 +38,7 @@ const mapPathList: string[] = readJsonSync(`${basePath}/map.json`, {
   encoding: 'utf8',
 })
   .map((file: any) => filePathExtractor(file))
-  .flat()
-  .filter((item: string) => item.split('/').length > 1); // Removing "category" paths (not linked to a file)
+  .flat();
 const readmeMissList = readmePathList.filter((x) => !mapPathList.includes(x));
 const mapMissList = mapPathList.filter((x) => !readmePathList.includes(x));
 
@@ -73,6 +71,7 @@ if (!!mapMissList.length) {
       'ERROR'
     )} The 'map.json' file and the documentation files are out of sync!\n`
   );
+  console.log(mapPathList);
   console.log(mapMissList.map((x) => x.concat('.md')).join('\n'));
   console.log(
     `\n${chalk.red(

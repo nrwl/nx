@@ -10,6 +10,8 @@ import { CustomLink } from './lib/nodes/link.component';
 import { link } from './lib/nodes/link.schema';
 import { Callout } from './lib/tags/callout.component';
 import { callout } from './lib/tags/callout.schema';
+import { CardList } from './lib/tags/card-list.component';
+import { cardList } from './lib/tags/card-list.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
 import { Iframe } from './lib/tags/iframe.component';
@@ -35,6 +37,7 @@ export const getMarkdocCustomConfig = (
     },
     tags: {
       callout,
+      'card-list': cardList,
       'github-repository': githubRepository,
       iframe,
       'nx-cloud-section': nxCloudSection,
@@ -46,6 +49,7 @@ export const getMarkdocCustomConfig = (
   },
   components: {
     Callout,
+    CardList,
     CustomLink,
     Fence,
     GithubRepository,

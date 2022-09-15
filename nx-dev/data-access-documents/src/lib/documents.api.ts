@@ -44,6 +44,43 @@ export class DocumentsApi {
     };
   }
 
+  /**
+   * Generate the content of a "Category" or "Index" page, listing all its direct items.
+   * @param path
+   */
+  getDocumentIndex(path: string[]): DocumentData {
+    let items = this.documents?.itemList;
+    let found: DocumentMetadata | null = null;
+
+    for (const part of path) {
+      found = items?.find((item) => item.id === part) || null;
+      if (found) {
+        items = found.itemList;
+      }
+    }
+
+    const cardListItems = items?.map((i) => ({
+      name: i.name,
+      path: i.path ?? '/' + path.concat(i.id).join('/'),
+    }));
+
+    return {
+      filePath: '',
+      data: {
+        title: found?.name,
+      },
+      content: `# ${found?.name}\n\n ${
+        found?.description ?? ''
+      }\n\n {% card-list items="${encodeURI(
+        JSON.stringify(cardListItems)
+      )}" /%}`,
+    };
+  }
+
+  /**
+   * Retrieve content from an existing markdown file using the `file` property.
+   * @param path
+   */
   getDocument(path: string[]): DocumentData {
     const docPath = this.getFilePath(path);
 
@@ -75,19 +112,20 @@ export class DocumentsApi {
   getStaticDocumentPaths(): StaticDocumentPaths[] {
     const paths: StaticDocumentPaths[] = [];
 
-    function recur(curr, acc) {
+    function recur(curr: DocumentMetadata, acc: string[]): void {
       if (curr.isExternal) return;
+
+      // Enable addressable category path
+      paths.push({
+        params: {
+          segments: curr.path
+            ? curr.path.split('/').filter(Boolean).flat()
+            : [...acc, curr.id],
+        },
+      });
       if (curr.itemList) {
         curr.itemList.forEach((ii) => {
           recur(ii, [...acc, curr.id]);
-        });
-      } else {
-        paths.push({
-          params: {
-            segments: curr.path
-              ? curr.path.split('/').filter(Boolean).flat()
-              : [...acc, curr.id],
-          },
         });
       }
     }
@@ -102,7 +140,7 @@ export class DocumentsApi {
   }
 
   /**
-   * Getting the document's filePath is done in 2 steps
+   * Getting the document's filePath from the `file` property is done in 2 steps:
    * - traversing the tree by path segments
    * - if not found, try searching for it via the complete path string
    * @param path
@@ -112,7 +150,7 @@ export class DocumentsApi {
     let items = this.documents?.itemList;
 
     if (!items) {
-      throw new Error(`Document not found`);
+      throw new Error(`No document available for lookup`);
     }
 
     let found: DocumentMetadata | null = null;

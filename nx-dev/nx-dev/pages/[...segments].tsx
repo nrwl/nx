@@ -221,6 +221,11 @@ export const getStaticProps: GetStaticProps = async ({
   } catch (e) {
     // Do nothing
   }
+  try {
+    if (!document) document = documentsApi.getDocumentIndex(params.segments);
+  } catch (e) {
+    // Do nothing
+  }
 
   if (document) {
     return {
