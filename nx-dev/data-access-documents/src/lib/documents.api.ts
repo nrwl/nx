@@ -1,4 +1,5 @@
 import { DocumentData, DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import { MenuItem } from '@nrwl/nx-dev/models-menu';
 import { parseMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import { readFileSync } from 'fs';
 import { load as yamlLoad } from 'js-yaml';
@@ -42,6 +43,7 @@ export class DocumentsApi {
           ]
         : itemList,
     };
+    // this.allDocuments = options.allDocuments;
   }
 
   /**
@@ -82,9 +84,9 @@ export class DocumentsApi {
    * @param path
    */
   getDocument(path: string[]): DocumentData {
-    const docPath = this.getFilePath(path);
+    const { filePath, tags } = this.getDocumentInfo(path);
 
-    const originalContent = readFileSync(docPath, 'utf8');
+    const originalContent = readFileSync(filePath, 'utf8');
     const ast = parseMarkdown(originalContent);
     const frontmatter = ast.attributes.frontmatter
       ? yamlLoad(ast.attributes.frontmatter)
@@ -97,9 +99,10 @@ export class DocumentsApi {
     }
 
     return {
-      filePath: docPath,
+      filePath,
       data: frontmatter,
-      content: originalContent,
+      content:
+        originalContent + '\n\n' + this.getRelatedDocumentsSection(tags, path),
     };
   }
 
@@ -146,7 +149,10 @@ export class DocumentsApi {
    * @param path
    * @private
    */
-  private getFilePath(path: string[]): string {
+  private getDocumentInfo(path: string[]): {
+    filePath: string;
+    tags: string[];
+  } {
     let items = this.documents?.itemList;
 
     if (!items) {
@@ -181,7 +187,90 @@ export class DocumentsApi {
     }
 
     if (!found) throw new Error(`Document not found`);
-    const file = found.file ?? ['generated', ...path].join('/');
-    return join(this.options.publicDocsRoot, `${file}.md`);
+    const makeFilePath = (pathPart: string): string => {
+      return join(this.options.publicDocsRoot, `${pathPart}.md`);
+    };
+    const file = found.file
+      ? { filePath: makeFilePath(found.file), tags: found.tags || [] }
+      : { filePath: makeFilePath(['generated', ...path].join('/')), tags: [] };
+    return file;
+  }
+
+  /**
+   * Displays a list of all concepts, recipes or reference documents that are tagged with the specified tag
+   * Tags are defined in map.json
+   * @param tag
+   * @returns
+   */
+  private getRelatedDocumentsSection(tags: string[], path: string[]): string {
+    let relatedConcepts: MenuItem[] = [];
+    let relatedRecipes: MenuItem[] = [];
+    let relatedReference: MenuItem[] = [];
+    function recur(curr, acc) {
+      if (curr.itemList) {
+        curr.itemList.forEach((ii) => {
+          recur(ii, [...acc, curr.id]);
+        });
+      } else if (path.join('/') === [...acc, curr.id].join('/')) {
+        return;
+      } else {
+        if (
+          curr.tags &&
+          tags.some((tag) => curr.tags.includes(tag)) &&
+          ['concepts', 'more-concepts'].some((id) => acc.includes(id))
+        ) {
+          curr.path = [...acc, curr.id].join('/');
+          relatedConcepts.push(curr);
+        }
+        if (
+          curr.tags &&
+          tags.some((tag) => curr.tags.includes(tag)) &&
+          acc.includes('recipe')
+        ) {
+          curr.path = [...acc, curr.id].join('/');
+          relatedRecipes.push(curr);
+        }
+        if (
+          curr.tags &&
+          tags.some((tag) => curr.tags.includes(tag)) &&
+          ['nx', 'workspace'].some((id) => acc.includes(id))
+        ) {
+          curr.path = [...acc, curr.id].join('/');
+          relatedReference.push(curr);
+        }
+      }
+    }
+    this.documents.itemList!.forEach((item) => {
+      recur(item, []);
+    });
+
+    if (
+      relatedConcepts.length === 0 &&
+      relatedRecipes.length === 0 &&
+      relatedReference.length === 0
+    ) {
+      return '';
+    }
+
+    let output = '## Related Documentation\n';
+
+    function listify(items: MenuItem[]): string {
+      return items
+        .map((item) => {
+          return `- [${item.name}](${item.path})`;
+        })
+        .join('\n');
+    }
+    if (relatedConcepts.length > 0) {
+      output += '### Concepts\n' + listify(relatedConcepts) + '\n';
+    }
+    if (relatedRecipes.length > 0) {
+      output += '### Recipes\n' + listify(relatedRecipes) + '\n';
+    }
+    if (relatedReference.length > 0) {
+      output += '### Reference\n' + listify(relatedReference) + '\n';
+    }
+
+    return output;
   }
 }

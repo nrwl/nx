@@ -62,13 +62,3 @@ Note: You may want to keep the `migrations.json` until every branch that was cre
 ## Problems?
 
 If you can't run `nx migrate --run-migrations` all in one step, try the tips in [Advanced Update Process](/recipe/advanced-update)
-
-## Related Documentation
-
-### Recipes
-
-- [Advanced Update Process](/recipe/advanced-update)
-
-### Reference
-
-- [migrate command](/nx/migrate)

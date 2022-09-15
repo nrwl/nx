@@ -51,15 +51,7 @@ For more details about how distributed task execution works, check out the [illu
 
 [![how does distributed task execution work in Nx Cloud?](../images/dte/how-does-dte-work.jpeg)](../concepts/dte)
 
-## Related Documentation
+## See Also
 
 - [Nx Cloud Documentation](/nx-cloud/intro/what-is-nx-cloud)
 - [Nx Cloud Main Site](https://nx.app)
-
-### Recipes
-
-- [CI Setup](/recipes/ci-setup)
-
-### Reference
-
-- [connect-to-nx-cloud command](/nx/connect-to-nx-cloud)

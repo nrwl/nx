@@ -153,28 +153,6 @@ A project tagged with "scope:admin" can only depend on projects
 tagged with "scoped:shared" or "scope:admin".
 ```
 
-## Related Documentation
+## See Also
 
-### Concepts
-
-- [Using Nx at Enterprises](/more-concepts/monorepo-nx-enterprise)
-- [Applications and Libraries](/more-concepts/applications-and-libraries)
-- [Creating Libraries](/more-concepts/creating-libraries)
-- [Library Types](/more-concepts/library-types)
-- [Grouping Libraries](/more-concepts/grouping-libraries)
-
-### Recipes
-
-- [Using ESLint in Nx Workspaces](/recipe/eslint)
-- [Ban Dependencies with Certain Tags](/recipe/ban-dependencies-with-tags)
-- [Tag in Multiple Dimensions](/recipe/tag-multiple-dimensions)
-- [Ban External Imports](/recipe/ban-external-imports)
-- [Tags Allow List](/recipe/tags-allow-list)
-
-### Reference
-
-- [workspace-lint command](/nx/workspace-lint)
-- [format:check](/nx/format-check)
-- [format:write](/nx/format-write)
 - [nx.json workspaceLayout property](/reference/nx-json#workspace-layout)
-- [nxignore file](/reference/nxignore)
