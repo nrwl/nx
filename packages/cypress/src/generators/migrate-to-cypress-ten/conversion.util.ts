@@ -37,7 +37,7 @@ export function findCypressConfigs(
   const cypressConfigPathJson =
     projectConfig.targets[target]?.configurations?.[config]?.cypressConfig ||
     // make sure it's a json file, since it could have been updated to ts file from previous configuration migration
-    (projectConfig.targets[target]?.options?.cypressConfig.endsWith('json')
+    (projectConfig.targets[target]?.options?.cypressConfig?.endsWith('json')
       ? projectConfig.targets[target]?.options?.cypressConfig
       : joinPathFragments(projectConfig.root, 'cypress.json'));
 
