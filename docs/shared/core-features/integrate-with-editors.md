@@ -29,12 +29,3 @@ These plugins are **NOT** built or maintained by the Nx team. They are maintaine
 If you are using [Neovim](https://neovim.io/), you can install [Equilibris/nx.nvim](https://github.com/Equilibris/nx.nvim) with your favorite package manager.
 
 This plugin is **NOT** built or maintained by the Nx team. They are maintained by independent community contributors.
-
-## Related Documentation
-
-### Recipes
-
-- [Nx Console Generate Command](/recipe/console-generate-command)
-- [Nx Console Run Command](/recipe/console-run-command)
-- [Nx Console Project Pane](/recipe/console-project-pane)
-- [Nx Console Keyboard Shortcuts](/recipe/console-shortcuts)

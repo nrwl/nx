@@ -80,17 +80,9 @@ You can connect your workspace to Nx Cloud by running:
 npx nx connect-to-nx-cloud
 ```
 
-## Related Documentation
+## See Also:
 
 - [Nx Cloud Documentation](/nx-cloud/intro/what-is-nx-cloud)
 - [Nx Cloud Main Site](https://nx.app)
-
-### Concepts
-
-- [How Caching Works](/concepts/how-caching-works)
-
-### Reference
-
-- [--skip-nx-cache](/nx/affected#skip-nx-cache)
-- [reset command](/nx/reset)
-- [tasks-runner-options](/reference/nx-json#tasks-runner-options)
+- [--skip-nx-cache flag](/nx/affected#skip-nx-cache)
+- [tasks-runner-options property](/reference/nx-json#tasks-runner-options)

@@ -268,31 +268,37 @@
           {
             "name": "Cache Task Results",
             "id": "cache-task-results",
+            "tags": ["cache-task-results"],
             "file": "shared/core-features/cache-task-results"
           },
           {
             "name": "Explore the Graph",
             "id": "explore-graph",
+            "tags": ["explore-graph"],
             "file": "shared/core-features/explore-graph"
           },
           {
             "name": "Distribute Task Execution",
             "id": "distribute-task-execution",
+            "tags": ["distribute-task-execution"],
             "file": "shared/core-features/distribute-task-execution"
           },
           {
             "name": "Integrate with Editors",
             "id": "integrate-with-editors",
+            "tags": ["integrate-with-editors"],
             "file": "shared/core-features/integrate-with-editors"
           },
           {
             "name": "Automate Updating Dependencies",
             "id": "automate-updating-dependencies",
+            "tags": ["automate-updating-dependencies"],
             "file": "shared/core-features/automate-updating-dependencies"
           },
           {
             "name": "Enforce Project Boundaries",
             "id": "enforce-project-boundaries",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/core-features/enforce-project-boundaries"
           }
         ]
@@ -305,16 +311,19 @@
           {
             "name": "Use Task Executors",
             "id": "use-task-executors",
+            "tags": ["use-task-executors"],
             "file": "shared/plugin-features/use-task-executors"
           },
           {
             "name": "Use Code Generators",
             "id": "use-code-generators",
+            "tags": ["use-code-generators"],
             "file": "shared/plugin-features/use-code-generators"
           },
           {
             "name": "Create Your Own Plugin",
             "id": "create-your-own-plugin",
+            "tags": ["create-your-own-plugin"],
             "file": "shared/plugin-features/create-your-own-plugin"
           }
         ]
@@ -350,7 +359,7 @@
           },
           {
             "name": "Task Pipeline Configuration",
-            "tags": ["run-tasks", "cache-task-results"],
+            "tags": ["run-tasks", "cache-task-results", "use-task-executors"],
             "id": "task-pipeline-configuration",
             "file": "shared/concepts/task-pipeline-configuration"
           },
@@ -375,6 +384,7 @@
           {
             "name": "Incremental Builds",
             "id": "incremental-builds",
+            "tags": ["use-task-executors"],
             "file": "shared/incremental-builds"
           },
           {
@@ -390,6 +400,7 @@
           {
             "name": "Using Nx at Enterprises",
             "id": "monorepo-nx-enterprise",
+            "tags": ["enforce-project-boundaries", "use-code-generators"],
             "file": "shared/monorepo-nx-enterprise"
           },
           {
@@ -410,6 +421,7 @@
           {
             "name": "Nx Devkit and Angular Devkit",
             "id": "nx-devkit-angular-devkit",
+            "tags": ["create-your-own-plugin"],
             "file": "shared/guides/nx-devkit-angular-devkit"
           },
           {
@@ -420,21 +432,25 @@
           {
             "name": "Applications and Libraries",
             "id": "applications-and-libraries",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/workspace/applications-and-libraries"
           },
           {
             "name": "Creating Libraries",
             "id": "creating-libraries",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/workspace/creating-libraries"
           },
           {
             "name": "Library Types",
             "id": "library-types",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/workspace/library-types"
           },
           {
             "name": "Grouping Libraries",
             "id": "grouping-libraries",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/workspace/grouping-libraries"
           },
           {
@@ -445,6 +461,7 @@
           {
             "name": "How the Project Graph is Built",
             "id": "how-project-graph-is-built",
+            "tags": ["explore-graph"],
             "file": "shared/concepts/how-project-graph-is-built"
           }
         ]
@@ -457,6 +474,7 @@
           {
             "name": "CI Setup",
             "id": "ci-setup",
+            "tags": ["distribute-task-execution"],
             "file": "shared/ci-overview"
           },
           {
@@ -479,31 +497,37 @@
           {
             "name": "Disable Graph Links Created from Analyzing Source Files",
             "id": "analyze-source-files",
+            "tags": ["explore-graph"],
             "file": "shared/recipes/analyze-source-files"
           },
           {
             "name": "Nx Console Generate Command",
             "id": "console-generate-command",
+            "tags": ["integrate-with-editors"],
             "file": "shared/recipes/console-generate-command"
           },
           {
             "name": "Nx Console Run Command",
             "id": "console-run-command",
+            "tags": ["integrate-with-editors"],
             "file": "shared/recipes/console-run-command"
           },
           {
             "name": "Nx Console Project Pane",
             "id": "console-project-pane",
+            "tags": ["integrate-with-editors"],
             "file": "shared/recipes/console-project-pane"
           },
           {
             "name": "Nx Console Keyboard Shortcuts",
             "id": "console-shortcuts",
+            "tags": ["integrate-with-editors"],
             "file": "shared/recipes/console-shortcuts"
           },
           {
             "name": "Advanced Update Nx",
             "id": "advanced-update",
+            "tags": ["automate-updating-dependencies"],
             "file": "shared/recipes/advanced-update"
           },
           {
@@ -579,46 +603,55 @@
           {
             "name": "Running Custom Commands",
             "id": "run-commands-executor",
+            "tags": ["use-task-executors"],
             "file": "shared/running-custom-commands"
           },
           {
             "name": "Use Executor Configurations",
             "id": "use-executor-configurations",
+            "tags": ["use-task-executors"],
             "file": "shared/recipes/use-executor-configurations"
           },
           {
             "name": "Creating Custom Executors",
             "id": "creating-custom-executors",
+            "tags": ["use-task-executors"],
             "file": "shared/tools-workspace-builders"
           },
           {
             "name": "Compose Executors",
             "id": "compose-executors",
+            "tags": ["use-task-executors"],
             "file": "shared/recipes/compose-executors"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
+            "tags": ["use-code-generators"],
             "file": "shared/generators/workspace-generators"
           },
           {
             "name": "Composing Generators",
             "id": "composing-generators",
+            "tags": ["use-code-generators"],
             "file": "shared/generators/composing-generators"
           },
           {
             "name": "Generator Options",
             "id": "generator-options",
+            "tags": ["use-code-generators"],
             "file": "shared/generators/generator-options"
           },
           {
             "name": "Creating Files",
             "id": "creating-files",
+            "tags": ["use-code-generators"],
             "file": "shared/generators/creating-files"
           },
           {
             "name": "Modifying Files",
             "id": "modifying-files",
+            "tags": ["use-code-generators"],
             "file": "shared/generators/modifying-files"
           },
           {
@@ -639,16 +672,19 @@
           {
             "name": "Define Environment Variables",
             "id": "define-environment-variables",
+            "tags": ["environment-variables"],
             "file": "shared/guides/define-environment-variables"
           },
           {
             "name": "Use Environment Variables in React",
             "id": "use-environment-variables-in-react",
+            "tags": ["environment-variables"],
             "file": "shared/guides/use-environment-variables-in-react"
           },
           {
             "name": "Use Environment Variables in Angular",
             "id": "use-environment-variables-in-angular",
+            "tags": ["environment-variables"],
             "file": "shared/guides/use-environment-variables-in-angular"
           },
           {
@@ -659,11 +695,13 @@
           {
             "name": "Profiling Build Performance",
             "id": "performance-profiling",
+            "tags": ["use-task-executors", "environment-variables"],
             "file": "shared/guides/performance-profiling"
           },
           {
             "name": "Using ESLint in Nx Workspaces",
             "id": "eslint",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/eslint"
           },
           {
@@ -709,11 +747,13 @@
           {
             "name": "Customizing Webpack Config",
             "id": "customize-webpack",
+            "tags": ["use-task-executors"],
             "file": "shared/guides/customize-webpack"
           },
           {
             "name": "Faster Builds with Module Federation",
             "id": "faster-builds",
+            "tags": ["use-task-executors"],
             "file": "shared/guides/module-federation/faster-builds"
           },
           {
@@ -749,41 +789,49 @@
           {
             "name": "Project Inference Plugins",
             "id": "project-inference-plugins",
+            "tags": ["create-your-own-plugin"],
             "file": "shared/extending-nx/project-inference-plugins"
           },
           {
             "name": "Project Graph Plugins",
             "id": "project-graph-plugins",
+            "tags": ["create-your-own-plugin", "explore-graph"],
             "file": "shared/extending-nx/project-graph-plugins"
           },
           {
             "name": "Ban Dependencies with Certain Tags",
             "id": "ban-dependencies-with-tags",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/recipes/ban-dependencies-with-tags"
           },
           {
             "name": "Tag in Multiple Dimensions",
             "id": "tag-multiple-dimensions",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/recipes/tag-multiple-dimensions"
           },
           {
             "name": "Ban External Imports",
             "id": "ban-external-imports",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/recipes/ban-external-imports"
           },
           {
             "name": "Tags Allow List",
             "id": "tags-allow-list",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/recipes/tags-allow-list"
           },
           {
             "name": "Export Project Graph",
             "id": "export-project-graph",
+            "tags": ["explore-graph"],
             "file": "shared/recipes/export-project-graph"
           },
           {
             "name": "Resolve Circular Dependencies",
             "id": "resolve-circular-dependencies",
+            "tags": ["explore-graph"],
             "file": "shared/recipes/resolve-circular-dependencies"
           }
         ]
@@ -806,16 +854,19 @@
           {
             "name": "Project Configuration",
             "id": "project-configuration",
+            "tags": ["use-task-executors"],
             "file": "shared/reference/project-configuration"
           },
           {
             "name": ".nxignore",
             "id": "nxignore",
+            "tags": ["enforce-project-boundaries"],
             "file": "shared/reference/nxignore"
           },
           {
             "name": "Environment Variables",
             "id": "environment-variables",
+            "tags": ["environment-variables"],
             "file": "shared/reference/environment-variables"
           },
           {
@@ -828,6 +879,7 @@
           {
             "name": "Nx Devkit",
             "id": "packages-devkit",
+            "tags": ["create-your-own-plugin"],
             "file": "",
             "path": "/packages#devkit",
             "isExternal": true
@@ -1017,25 +1069,31 @@
           {
             "name": "generate",
             "id": "generate",
+            "tags": ["use-code-generators"],
             "file": "generated/cli/generate"
           },
           {
             "name": "run",
-            "tags": ["run-tasks"],
+            "tags": ["run-tasks", "use-task-executors"],
             "id": "run",
             "file": "generated/cli/run"
           },
           { "name": "daemon", "id": "daemon", "file": "generated/cli/daemon" },
-          { "name": "graph", "id": "dep-graph", "file": "generated/cli/graph" },
+          {
+            "name": "graph",
+            "id": "dep-graph",
+            "tags": ["explore-graph"],
+            "file": "generated/cli/graph"
+          },
           {
             "name": "run-many",
-            "tags": ["run-tasks"],
+            "tags": ["run-tasks", "use-task-executors"],
             "id": "run-many",
             "file": "generated/cli/run-many"
           },
           {
             "name": "affected",
-            "tags": ["run-tasks"],
+            "tags": ["run-tasks", "use-task-executors"],
             "id": "affected",
             "file": "generated/cli/affected"
           },
@@ -1062,16 +1120,19 @@
           {
             "name": "format:check",
             "id": "format-check",
+            "tags": ["enforce-project-boundaries"],
             "file": "generated/cli/format-check"
           },
           {
             "name": "format:write",
             "id": "format-write",
+            "tags": ["enforce-project-boundaries"],
             "file": "generated/cli/format-write"
           },
           {
             "name": "migrate",
             "id": "migrate",
+            "tags": ["automate-updating-dependencies"],
             "file": "generated/cli/migrate"
           },
           { "name": "report", "id": "report", "file": "generated/cli/report" },
@@ -1079,6 +1140,7 @@
           {
             "name": "workspace-lint",
             "id": "workspace-lint",
+            "tags": ["enforce-project-boundaries"],
             "file": "generated/cli/workspace-lint"
           },
           {
@@ -1089,9 +1151,15 @@
           {
             "name": "connect-to-nx-cloud",
             "id": "connect-to-nx-cloud",
+            "tags": ["cache-task-results", "distribute-task-execution"],
             "file": "generated/cli/connect-to-nx-cloud"
           },
-          { "name": "reset", "id": "reset", "file": "generated/cli/reset" },
+          {
+            "name": "reset",
+            "id": "reset",
+            "tags": ["cache-task-results"],
+            "file": "generated/cli/reset"
+          },
           {
             "name": "repair",
             "id": "repair",

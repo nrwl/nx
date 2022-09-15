@@ -21,22 +21,7 @@ nx generate @nrwl/react:component mycmp --project=myapp
 
 It is important to have a clean git working directory before invoking a generator so that you can easily revert changes and re-invoke the generator with different inputs.
 
-## Related Documentation
+## See Also
 
-### Concepts
-
-- [Using Nx at Enterprises](/more-concepts/monorepo-nx-enterprise)
-
-### Recipes
-
-- [Workspace Generators](/recipe/workspace-generators)
-- [Composing Generators](/recipe/composing-generators)
-- [Generator Options](/recipe/generator-options)
-- [Creating Files](/recipe/creating-files)
-- [Modifying Files](/recipe/modifying-files)
-
-### Reference
-
-- [generate command](/nx/generate)
 - [nx.json defaultCollection property](/reference/nx-json#cli-options)
 - [nx.json generator defaults](/reference/nx-json#generators)

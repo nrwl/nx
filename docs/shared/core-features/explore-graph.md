@@ -17,18 +17,3 @@ This will open a browser window with an interactive representation of the projec
 Once the graph is displayed, you can click on an individual dependency link to find out what specific file(s) created that dependency.
 
 ![Project Graph screenshot](../images/project-graph.png)
-
-## Related Documentation:
-
-### Concepts
-
-- [How the Project Graph is Built](/more-concepts/how-project-graph-is-built)
-
-### Recipes
-
-- [Export Project Graph to JSON](/recipe/export-project-graph)
-- [Resolve Circular Dependencies](/recipe/resolve-circular-dependencies)
-
-### Reference
-
-- [Graph Command](/nx/dep-graph)

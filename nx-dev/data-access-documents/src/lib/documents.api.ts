@@ -102,7 +102,7 @@ export class DocumentsApi {
       filePath,
       data: frontmatter,
       content:
-        originalContent + '\n\n' + this.getRelatedDocumentsSection(tags[0]),
+        originalContent + '\n\n' + this.getRelatedDocumentsSection(tags, path),
     };
   }
 
@@ -202,7 +202,7 @@ export class DocumentsApi {
    * @param tag
    * @returns
    */
-  private getRelatedDocumentsSection(tag: string): string {
+  private getRelatedDocumentsSection(tags: string[], path: string[]): string {
     let relatedConcepts: MenuItem[] = [];
     let relatedRecipes: MenuItem[] = [];
     let relatedReference: MenuItem[] = [];
@@ -211,22 +211,31 @@ export class DocumentsApi {
         curr.itemList.forEach((ii) => {
           recur(ii, [...acc, curr.id]);
         });
+      } else if (path.join('/') === [...acc, curr.id].join('/')) {
+        return;
       } else {
         if (
           curr.tags &&
-          curr.tags.includes(tag) &&
+          tags.some((tag) => curr.tags.includes(tag)) &&
           ['concepts', 'more-concepts'].some((id) => acc.includes(id))
         ) {
+          curr.path = [...acc, curr.id].join('/');
           relatedConcepts.push(curr);
         }
-        if (curr.tags && curr.tags.includes(tag) && acc.includes('recipe')) {
+        if (
+          curr.tags &&
+          tags.some((tag) => curr.tags.includes(tag)) &&
+          acc.includes('recipe')
+        ) {
+          curr.path = [...acc, curr.id].join('/');
           relatedRecipes.push(curr);
         }
         if (
           curr.tags &&
-          curr.tags.includes(tag) &&
+          tags.some((tag) => curr.tags.includes(tag)) &&
           ['nx', 'workspace'].some((id) => acc.includes(id))
         ) {
+          curr.path = [...acc, curr.id].join('/');
           relatedReference.push(curr);
         }
       }

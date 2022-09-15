@@ -83,27 +83,3 @@ Or you can overwrite individual executor options like this:
 nx [command] [project] --[optionNameInCamelCase]=[value]
 nx build cart --outputPath=some/other/path
 ```
-
-## Related Documentation
-
-### Concepts
-
-- [Task Pipeline Configuration](/concepts/task-pipeline-configuration)
-- [Incremental Builds](/more-concepts/incremental-builds)
-
-### Recipes
-
-- [Use Executor Configurations](/recipe/use-executor-configurations)
-- [Running Custom Commands](/recipe/run-commands-executor)
-- [Creating Custom Executors](/recipe/creating-custom-executors)
-- [Compose Executors](/recipe/compose-executors)
-- [Faster Builds with Module Federation](/recipe/faster-builds)
-- [Customizing Webpack Config](/recipe/customize-webpack)
-- [Profiling Performance](/recipe/performance-profiling)
-
-### Reference
-
-- [run command](/nx/run)
-- [run-many command](/nx/run-many)
-- [affected command](/nx/affected)
-- [Project Configuration](/reference/project-configuration)

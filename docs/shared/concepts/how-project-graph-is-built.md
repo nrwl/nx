@@ -60,10 +60,3 @@ Nx creates a graph of all the dependencies between projects in your workspace us
 {% /tabs %}
 
 Then `my-app` depends on `some-api`
-
-## Related Documentation
-
-### Recipes
-
-- [Disable Graph Links Created from Analyzing Source Files](/recipe/analyze-source-files)
-- [Modify the Project Graph with a Plugin](recipe/project-graph-plugins)
