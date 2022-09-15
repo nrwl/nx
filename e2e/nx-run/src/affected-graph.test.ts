@@ -589,7 +589,7 @@ describe('Nx Affected and Graph Tests', () => {
 
       const environmentJs = readFile('static/environment.js');
       const affectedProjects = environmentJs
-        .match(/"affected":\[(.*)\],/)[1]
+        .match(/"affected":\[(.*?)\]/)[1]
         ?.split(',');
 
       expect(affectedProjects).toContain(`"${myapp}"`);

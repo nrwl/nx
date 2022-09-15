@@ -10,7 +10,7 @@ window.appConfig = {
     {
       id: 'local',
       label: 'local',
-      url: 'projectGraph.json',
+      url: 'project-graph.json',
     },
   ],
   defaultProjectGraph: 'local',
