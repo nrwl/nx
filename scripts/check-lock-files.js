@@ -24,7 +24,7 @@ function checkLockFiles() {
   }
   try {
     require('child_process').execSync(
-      'yarn lockfile-lint -s -p yarn.lock -a hosts yarn npm',
+      'yarn lockfile-lint -s -n -p yarn.lock -a hosts yarn npm',
       { encoding: 'utf-8', stdio: 'pipe' }
     );
   } catch ({ stderr }) {
