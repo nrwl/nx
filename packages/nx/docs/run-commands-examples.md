@@ -19,12 +19,10 @@
 nx run frontend:ls-project-root
 ```
 
-##### Chaining commands, interpolating args and setting the cwd
+## Examples
 
-Let's say each of our workspace projects has some custom bash scripts in a `scripts` folder.
-We want a simple way to create empty bash script files for a given project, that have the execute permissions already set.
-
-Given that Nx knows our workspace structure, we should be able to give it a project and the name of our script, and it should take care of the rest.
+{% tabs %}
+{% tab label="Chaining commands" %}
 
 The `commands` option accepts as many commands as you want. By default, they all run in parallel.
 You can run them sequentially by setting `parallel: false`:
@@ -34,17 +32,54 @@ You can run them sequentially by setting `parallel: false`:
     "executor": "nx:run-commands",
     "options": {
         "commands": [
-          "mkdir -p scripts",
-          "touch scripts/{args.name}.sh",
-          "chmod +x scripts/{args.name}.sh"
+          "mkdir -p apps/frontend/scripts",
+          "touch apps/frontend/scripts/my-script.sh",
+          "chmod +x apps/frontend/scripts/my-script.sh"
         ],
-        "cwd": "apps/frontend",
         "parallel": false
     }
 }
 ```
 
+{% /tab %}
+{% tab label="Setting the cwd" %}
+
 By setting the `cwd` option, each command will run in the `apps/frontend` folder.
+
+```json
+"create-script": {
+    "executor": "nx:run-commands",
+    "options": {
+        "cwd": "apps/frontend",
+        "commands": [
+          "mkdir -p scripts",
+          "touch scripts/my-script.sh",
+          "chmod +x scripts/my-script.sh"
+        ],
+        "parallel": false
+    }
+}
+```
+
+{% /tab %}
+{% tab label="Interpolating Args" %}
+
+You can use custom arguments in your scripts with `{args.[someFlag]}`:
+
+```json
+"create-script": {
+    "executor": "nx:run-commands",
+    "options": {
+        "cwd": "apps/frontend",
+        "commands": [
+          "mkdir -p scripts",
+          "touch scripts/{args.name}.sh",
+          "chmod +x scripts/{args.name}.sh"
+        ],
+        "parallel": false
+    }
+}
+```
 
 We run the above with:
 
@@ -58,15 +93,17 @@ or simply with:
 nx run frontend:create-script --name=example
 ```
 
-##### Arguments forwarding
-
+{% /tab %}
+{% tab label="Arguments forwarding" %}
 When interpolation is not present in the command, all arguments are forwarded to the command by default.
 
 This is useful when you need to pass raw argument strings to your command.
 
 For example, when you run:
 
+```bash
 nx run frontend:webpack --args="--config=example.config.js"
+```
 
 ```json
 "webpack": {
@@ -96,7 +133,8 @@ that sets the `forwardAllArgs` option to `false` as shown below:
 }
 ```
 
-##### Custom **done** conditions
+{% /tab %}
+{% tab label="Custom done conditions" %}
 
 Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string that considers the commands finished the moment the string appears in `stdout` or `stderr`:
 
@@ -119,8 +157,8 @@ nx run frontend:finish-when-ready
 ```
 
 The above commands will finish immediately, instead of waiting for 5 seconds.
-
-##### Nx Affected
+{% /tab %}
+{% tab label="Nx Affected" %}
 
 The true power of `run-commands` comes from the fact that it runs through `nx`, which knows about your project graph. So you can run **custom commands** only for the projects that have been affected by a change.
 
@@ -155,3 +193,8 @@ nx affected --target=generate-docs
     }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
+
+---
