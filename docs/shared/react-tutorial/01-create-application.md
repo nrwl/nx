@@ -96,8 +96,7 @@ myorg/
 ├── nx.json
 ├── package.json
 ├── README.md
-├── tsconfig.base.json
-└── workspace.json
+└── tsconfig.base.json
 ```
 
 Two projects were added to the workspace:

@@ -67,7 +67,7 @@ In general, you should not replace the configuration files provided for you. You
 
 ### Nx Configuration Files
 
-In addition to configuration files for external libraries, your Nx workspace will have configuration files for Nx itself. This will be `angular.json` for workspaces using the Angular CLI and `workspace.json` for workspaces using the Nx CLI. This file will define all of the individual projects in your workspace (of which your application is one) and the tasks available for them.
+In addition to configuration files for external libraries, your Nx workspace will have configuration files for Nx itself. This will be `angular.json` for workspaces using the Angular CLI and `project.json` files for workspaces using the Nx CLI. This file will define all of the individual projects in your workspace (of which your application is one) and the tasks available for them.
 
 For example, your generated application should have four [tasks available](/plugin-features/use-task-executors) for it: `build`, `serve`, `lint`, and `test`. Each of these comes with its own configuration. If you find you need to adjust the configuration of a task for your codebase, this is the place to begin looking.
 

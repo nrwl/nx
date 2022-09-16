@@ -103,7 +103,6 @@ myorg/
 │       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
 ├── tools/
-├── workspace.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json

@@ -97,7 +97,6 @@ myorg/
 │   └── todos-e2e/
 ├── libs/
 ├── tools/
-├── workspace.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json

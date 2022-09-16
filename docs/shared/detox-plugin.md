@@ -55,7 +55,7 @@ Next, generate an E2E project based on an existing project.
 nx g @nrwl/detox:app your-app-name-e2e --project=your-app-name
 ```
 
-Replace `your-app-name` with the app's name as defined in your `workspace.json` file.
+Replace `your-app-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`.
 
 In addition, you need to follow [instructions at Detox](https://github.com/wix/Detox/blob/master/docs/Introduction.Android.md) to do manual setup for Android files.
 

@@ -30,7 +30,7 @@ A new plugin is created with a default generator, executor, and e2e app.
 The created generator contains boilerplate that will do the following:
 
 - Normalize a schema (the options that the generator accepts)
-- Update the `workspace.json`
+- Update the `project.json`
 - Add the plugin's project to the `nx.json` file
 - Add files to the disk using templates
 
@@ -227,8 +227,7 @@ happynrwl/
 	│       │   │   └── preset 		// <------------- Here
 	│       │   └── index.ts
 	├── tools
-	├── tsconfig.base.json
-	└── workspace.json
+	└── tsconfig.base.json
 ```
 
 After the command is finished, the preset generator is created under the folder named **preset**.
@@ -258,7 +257,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 }
 ```
 
-To get an in-depth guide on customizing/running or debugging your generator see [workspace generators](/recipe/workspace-generators#running-a-workspace-generator).
+To get an in-depth guide on customizing/running or debugging your generator see [local generators](/recipe/local-generators).
 
 #### Usage
 

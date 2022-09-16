@@ -156,7 +156,7 @@ Add the project configuration for the project:
 If using the workspace configuration v2:
 
 ```json
-// angular.json or workspace.json
+// angular.json or project.json
 {
   "version": 2,
   "projects": {
@@ -288,7 +288,7 @@ Add the project configuration for the project:
 If using the workspace configuration v2:
 
 ```json
-// angular.json or workspace.json
+// angular.json or project.json
 {
   "version": 2,
   "projects": {

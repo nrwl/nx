@@ -7,7 +7,6 @@ myorg/
 ├── apps/
 ├── libs/
 ├── tools/
-├── workspace.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json
@@ -17,9 +16,7 @@ myorg/
 
 `/libs/` contains the library projects. There are many kinds of libraries, and each library defines its own external API so that boundaries between libraries remain clear.
 
-`/tools/` contains scripts that act on your code base. This could be database scripts, [custom executors](/recipe/creating-custom-executors), or [workspace generators](/recipe/workspace-generators).
-
-`/workspace.json` lists every project in your workspace. (this file is optional)
+`/tools/` contains scripts that act on your code base. This could be database scripts, [local executors](/recipe/creating-custom-executors), or [local generators](/recipe/local-generators).
 
 `/nx.json` configures the Nx CLI itself. It tells Nx what needs to be cached, how to run tasks etc.
 

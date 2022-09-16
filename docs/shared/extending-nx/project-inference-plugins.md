@@ -4,9 +4,9 @@
 This API is experimental and might change.
 {% /callout %}
 
-Project inference describes the ability of Nx to discover and work with projects based on source code and configuration files in your repo.
+Project inference describes the ability of Nx to discover and work with projects based on source code and configuration files in your repo. Out of the box, Nx identifies projects based on the presence of `package.json` and `project.json` files. It also identifies targets in the `package.json` scripts and the `project.json` `target`s.
 
-One of the best examples of this in Nx is that `package.json` scripts are automatically inferred as targets for your workspace. If using nx core, without `workspace.json`, `nx` can also infer projects defined in your `package.json` workspace are inferred as Nx projects.
+Project inference plugins allow you to extend this functionality of Nx to other languages and file structures.
 
 ## Adding Plugins to Workspace
 
@@ -25,7 +25,7 @@ You can register a plugin by adding it to the plugins array in `nx.json`:
 
 Project file patterns are used in two scenarios:
 
-- Inferring projects when `workspace.json` is not present
+- Inferring projects
 - Determining which files should be passed into `registerProjectTargets`.
 
 Let's use the below plugin and workspace layout as an example:
@@ -55,9 +55,7 @@ my-workspace/
 
 ```
 
-During initialization, we would expect to see "libs/my-project/my-other-project-file", "libs/nx-project/my-other-project-file", "libs/nx-project/project.json" all logged out to the console. Since `workspace.json` is not present, Nx was able to infer `my-project` from the layout.
-
-If `workspace.json` was present, `my-project` wouldn't be able to be inferred, since full project inference requires `workspace.json` to be absent.
+During initialization, we would expect to see "libs/my-project/my-other-project-file", "libs/nx-project/my-other-project-file", "libs/nx-project/project.json" all logged out to the console. Nx was able to infer `my-project` from the layout.
 
 ## Implementing a Project Target Configurator
 

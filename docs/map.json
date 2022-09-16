@@ -613,10 +613,10 @@
             "file": "shared/recipes/use-executor-configurations"
           },
           {
-            "name": "Creating Custom Executors",
+            "name": "Local Executors",
             "id": "creating-custom-executors",
             "tags": ["use-task-executors"],
-            "file": "shared/tools-workspace-builders"
+            "file": "shared/recipes/local-executors"
           },
           {
             "name": "Compose Executors",
@@ -625,10 +625,10 @@
             "file": "shared/recipes/compose-executors"
           },
           {
-            "name": "Workspace Generators",
-            "id": "workspace-generators",
+            "name": "Local Generators",
+            "id": "local-generators",
             "tags": ["use-code-generators"],
-            "file": "shared/generators/workspace-generators"
+            "file": "shared/recipes/local-generators"
           },
           {
             "name": "Composing Generators",
@@ -883,6 +883,38 @@
             "file": "",
             "path": "/packages#devkit",
             "isExternal": true
+          }
+        ]
+      },
+      {
+        "name": "Deprecated",
+        "id": "deprecated",
+        "description": "Functionality that has been superseded in the current version of Nx.  Listed here for those running older versions.",
+        "itemList": [
+          {
+            "name": "workspace.json",
+            "id": "workspace-json",
+            "file": "shared/deprecated/workspace-json"
+          },
+          {
+            "name": "Workspace Generators",
+            "id": "workspace-generators",
+            "file": "shared/deprecated/workspace-generators"
+          },
+          {
+            "name": "Workspace Executors",
+            "id": "workspace-executors",
+            "file": "shared/deprecated/workspace-executors"
+          },
+          {
+            "name": "defaultCollection",
+            "id": "default-collection",
+            "file": "shared/deprecated/default-collection"
+          },
+          {
+            "name": "runtimeCacheInputs",
+            "id": "runtime-cache-inputs",
+            "file": "shared/deprecated/runtime-cache-inputs"
           }
         ]
       }

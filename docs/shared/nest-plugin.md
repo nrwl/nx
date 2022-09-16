@@ -113,7 +113,7 @@ By default, the serve command will run in `watch` mode. This allows code to be c
 
 Nest applications also have the `inspect` flag set, so you can attach your debugger to the running instance.
 
-Debugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` architect in the workspace.json. Or by running the serve command with `--port <number>`.
+Debugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` target in the `project.json`. Or by running the serve command with `--port <number>`.
 
 For additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 

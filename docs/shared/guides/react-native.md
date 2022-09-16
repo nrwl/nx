@@ -75,8 +75,7 @@ happynrwl/
 ├── nx.json
 ├── package-lock.json
 ├── package.json
-├── tsconfig.base.json
-└── workspace.json
+└── tsconfig.base.json
 ```
 
 To run the application in development mode:
@@ -190,8 +189,7 @@ happynrwl/
 ├── nx.json
 ├── package-lock.json
 ├── package.json
-├── tsconfig.base.json
-└── workspace.json
+└── tsconfig.base.json
 ```
 
 Run:
