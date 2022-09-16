@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/nx-plugin",
   "version": "0.0.1",
-  "description": "Plugin for creating plugins for Nx :)",
+  "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",

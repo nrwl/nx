@@ -2,7 +2,7 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "rollup",
   "packageName": "@nrwl/rollup",
-  "description": "The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup",
+  "description": "The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.",
   "root": "/packages/rollup",
   "source": "/packages/rollup/src",
   "documentation": [],

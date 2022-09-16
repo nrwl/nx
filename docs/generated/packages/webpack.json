@@ -2,7 +2,7 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "webpack",
   "packageName": "@nrwl/webpack",
-  "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack",
+  "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
   "root": "/packages/webpack",
   "source": "/packages/webpack/src",
   "documentation": [],

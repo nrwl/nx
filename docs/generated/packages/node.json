@@ -2,7 +2,7 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "node",
   "packageName": "@nrwl/node",
-  "description": "The Node Plugin contains generators and executors to manage Node applications within an Nx workspace.",
+  "description": "The Node Plugin for Nx contains generators and executors to manage Node applications within an Nx workspace.",
   "root": "/packages/node",
   "source": "/packages/node/src",
   "documentation": [

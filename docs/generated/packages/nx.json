@@ -2,7 +2,7 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "nx",
   "packageName": "nx",
-  "description": "Smart, Fast and Extensible Build System",
+  "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
   "root": "/packages/nx",
   "source": "/packages/nx/src",
   "documentation": [

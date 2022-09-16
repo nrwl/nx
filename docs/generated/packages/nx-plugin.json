@@ -2,7 +2,7 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "nx-plugin",
   "packageName": "@nrwl/nx-plugin",
-  "description": "Plugin for creating plugins for Nx :)",
+  "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
   "root": "/packages/nx-plugin",
   "source": "/packages/nx-plugin/src",
   "documentation": [

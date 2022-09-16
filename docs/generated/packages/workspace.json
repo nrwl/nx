@@ -2,7 +2,7 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "workspace",
   "packageName": "@nrwl/workspace",
-  "description": "Smart, Fast and Extensible Build System.",
+  "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
   "root": "/packages/workspace",
   "source": "/packages/workspace/src",
   "documentation": [
