@@ -1,15 +1,16 @@
 import {
+  addProjectConfiguration,
   generateFiles,
   getWorkspaceLayout,
   joinPathFragments,
   offsetFromRoot,
   readProjectConfiguration,
+  removeProjectConfiguration,
   Tree,
   updateJson,
-  updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import * as path from 'path';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
@@ -173,7 +174,23 @@ function fixProjectWorkspaceConfig(
 
   delete project.targets.test;
 
-  updateProjectConfiguration(host, options.name, project);
+  /**
+   * The "$schema" property on our configuration files is only added when the
+   * project configuration is added and not when updating it. It's done this
+   * way to avoid re-adding "$schema" when updating a project configuration
+   * and that property was intentionally removed by the devs.
+   *
+   * Since the project gets created by the Angular application schematic,
+   * the "$schema" property is not added, so we remove the project and add
+   * it back to workaround that.
+   */
+  removeProjectConfiguration(host, options.name);
+  addProjectConfiguration(
+    host,
+    options.name,
+    project,
+    options.standaloneConfig
+  );
 }
 
 function updateProjectTsConfig(
