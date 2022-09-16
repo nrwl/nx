@@ -36,7 +36,7 @@ This is a simple example of an E2E test, but it suffices for the purposes of thi
 
 If you have not done so already, stop the `npx nx serve` command and run `npx nx e2e todos-e2e --watch`.
 
-A UI opens. Click the button in the top right corner that says "Run 1 integration spec". Keep the E2E tests running.
+Once the Cypress UI opens, select any browser you want. You'll see the `app.cy.ts` file that you just updated. Click on the file and the test will run. Keep the E2E tests running.
 
 As you progress through the tutorial, you work on making these E2E tests pass.
 
