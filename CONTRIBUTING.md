@@ -258,9 +258,8 @@ Please follow the following guidelines:
     with `npx jest angular/src/utils/ast-utils` or `npx jest packages/angular/src/utils/ast-utils`
   - For more options on running tests - check `npx jest --help` or visit [jestjs.io](https://jestjs.io/)
   - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
-- Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`yarn e2e`)
-  - Target a specific e2e test (i.e. `/build/e2e/cypress.test.js`) with `yarn e2e cypress`
-  - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/e2e/cypress.test.js`
+- Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`nx affected --target=e2e`)
+  - Target a specific e2e test with `nx e2e e2e-cypress`
 - Make sure you run `yarn format`
 - Update documentation with `yarn documentation`. For documentation, check for spelling and grammatical errors.
 - Update your commit message to follow the guidelines below (use `yarn commit` to automate compliance)
@@ -312,6 +311,7 @@ The scope must be one of the following:
 - storybook - anything Storybook specific
 - testing - anything testing specific (e.g., Jest or Cypress)
 - web - anything Web specific
+- webpack - anything Webpack specific
 - misc - misc stuff
 
 ##### Subject and Body
