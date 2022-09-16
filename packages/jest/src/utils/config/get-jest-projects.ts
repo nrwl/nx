@@ -12,7 +12,7 @@ export function getJestProjects() {
   const ws = readWorkspaceConfig({
     format: 'nx',
   }) as ProjectsConfigurations;
-  const jestConfigurationSet = new Set();
+  const jestConfigurationSet = new Set<string>();
   for (const projectConfig of Object.values(ws.projects)) {
     if (!projectConfig.targets) {
       continue;
