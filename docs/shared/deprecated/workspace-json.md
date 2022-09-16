@@ -17,7 +17,7 @@ To remove `workspace.json` in favor of `project.json` files, run:
 nx g @nrwl/workspace:convert-to-nx-project --all
 ```
 
-See [convert-to-nx-project](/workspace/generators/convert-to-nx-project) for more options.
+See [convert-to-nx-project](/packages/workspace/generators/convert-to-nx-project) for more options.
 
 After this command, `workspace.json` should look like this:
 
