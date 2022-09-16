@@ -318,7 +318,6 @@
     "weak-napi": "^2.0.2"
   },
   "resolutions": {
-    "**/xmlhttprequest-ssl": "~1.6.2",
     "minimist": "^1.2.6"
   }
 }
