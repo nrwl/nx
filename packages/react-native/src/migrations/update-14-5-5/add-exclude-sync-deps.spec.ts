@@ -3,14 +3,14 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import update from './add-exclude-sync-deps';
 
 describe('add-exclude-sync-deps', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'products', {
       root: 'apps/products',
       sourceRoot: 'apps/products/src',

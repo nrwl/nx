@@ -1,0 +1,21 @@
+{
+  "cli": "nx",
+  "$id": "NxExpoEject",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Expo Eject",
+  "description": "Create native iOS and Android project files",
+  "type": "object",
+  "properties": {
+    "install": {
+      "type": "boolean",
+      "description": "Install CocoaPods.",
+      "default": true
+    },
+    "platform": {
+      "type": "string",
+      "description": "Platforms to sync",
+      "default": "all",
+      "examples": ["ios", "android", "all"]
+    }
+  }
+}

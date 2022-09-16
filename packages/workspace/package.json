@@ -51,6 +51,7 @@
       "@nrwl/tao": "*",
       "@nrwl/nx-cloud": "latest",
       "@nrwl/react-native": "*",
+      "@nrwl/expo": "*",
       "@nrwl/detox": "*",
       "nx": "*"
     }

@@ -255,6 +255,7 @@ export class Migrator {
         '@nrwl/nx-cloud': 'latest',
         '@nrwl/react-native': targetVersion,
         '@nrwl/detox': targetVersion,
+        '@nrwl/expo': targetVersion,
       };
     }
 

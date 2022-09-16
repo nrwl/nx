@@ -35,6 +35,7 @@ module.exports = {
     { name: 'nxdev', description: 'anything related to docs infrastructure' },
     { name: 'react', description: 'anything React specific' },
     { name: 'react-native', description: 'anything React Native specific' },
+    { name: 'expo', description: 'anything Expo specific' },
     {
       name: 'repo',
       description: 'anything related to managing the repo itself',

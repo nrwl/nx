@@ -10,6 +10,7 @@ export enum Preset {
   React = 'react',
   ReactWithExpress = 'react-express',
   ReactNative = 'react-native',
+  Expo = 'expo',
   NextJs = 'next',
   Nest = 'nest',
   Express = 'express',

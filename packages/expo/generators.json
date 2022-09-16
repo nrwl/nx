@@ -1,0 +1,61 @@
+{
+  "name": "Nx Expo",
+  "version": "0.1",
+  "extends": ["@nrwl/workspace"],
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#expoInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the @nrwl/expo plugin",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#expoApplicationSchematic",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create an application"
+    },
+    "library": {
+      "factory": "./src/generators/library/library#expoLibrarySchematic",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library"
+    },
+    "component": {
+      "factory": "./src/generators/component/component#expoComponentSchematic",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Create a component",
+      "aliases": ["c"]
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#expoInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the @nrwl/expo plugin",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#expoApplicationGenerator",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create an application"
+    },
+    "library": {
+      "factory": "./src/generators/library/library#expoLibraryGenerator",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library"
+    },
+    "component": {
+      "factory": "./src/generators/component/component#expoComponentGenerator",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Create a component",
+      "aliases": ["c"]
+    }
+  }
+}

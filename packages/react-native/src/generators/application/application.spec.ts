@@ -3,8 +3,9 @@ import {
   readWorkspaceConfiguration,
   getProjects,
   readJson,
+  readProjectConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { reactNativeApplicationGenerator } from './application';
 
@@ -12,7 +13,7 @@ describe('app', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyV1Workspace();
+    appTree = createTreeWithEmptyWorkspace();
     appTree.write('.gitignore', '');
   });
 
@@ -41,11 +42,9 @@ describe('app', () => {
       install: false,
     });
 
-    const { projects } = readJson(appTree, '/workspace.json');
-    expect(projects).toMatchObject({
-      'my-app': {
-        tags: ['one', 'two'],
-      },
+    const projectConfiguration = readProjectConfiguration(appTree, 'my-app');
+    expect(projectConfiguration).toMatchObject({
+      tags: ['one', 'two'],
     });
   });
 

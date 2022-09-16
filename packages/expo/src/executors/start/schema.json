@@ -1,0 +1,85 @@
+{
+  "cli": "nx",
+  "$id": "NxExpoStart",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Packager Server for Expo",
+  "description": "Packager Server target options",
+  "type": "object",
+  "properties": {
+    "port": {
+      "type": "number",
+      "description": "Port to start the native Metro bundler on (does not apply to web or tunnel)",
+      "default": 19000,
+      "alias": "p"
+    },
+    "clear": {
+      "type": "boolean",
+      "description": "Clear the Metro bundler cache",
+      "alias": "c"
+    },
+    "maxWorkers": {
+      "type": "number",
+      "description": "Maximum number of tasks to allow Metro to spawn"
+    },
+    "dev": {
+      "type": "boolean",
+      "description": "Turn development mode on or off"
+    },
+    "devClient": {
+      "type": "boolean",
+      "description": "Experimental: Starts the bundler for use with the expo-development-client"
+    },
+    "minify": {
+      "type": "boolean",
+      "description": "Whether or not to minify code"
+    },
+    "https": {
+      "type": "boolean",
+      "description": "To start webpack with https or http protocol"
+    },
+    "scheme": {
+      "type": "string",
+      "description": "Custom URI protocol to use with a development build"
+    },
+    "sentTo": {
+      "type": "string",
+      "description": "An email address to send a link to",
+      "alias": "s"
+    },
+    "android": {
+      "type": "boolean",
+      "description": "Opens your app in Expo Go on a connected Android device",
+      "alias": "a"
+    },
+    "ios": {
+      "type": "boolean",
+      "description": "Opens your app in Expo Go in a currently running iOS simulator on your computer",
+      "alias": "i"
+    },
+    "host": {
+      "type": "string",
+      "description": "lan (default), tunnel, localhost. Type of host to use. \"tunnel\" allows you to view your link on other networks",
+      "alias": "m"
+    },
+    "tunnel": {
+      "type": "boolean",
+      "description": "Same as --host tunnel"
+    },
+    "lan": {
+      "type": "boolean",
+      "description": "Same as --host lan"
+    },
+    "localhost": {
+      "type": "boolean",
+      "description": "Same as --host localhost"
+    },
+    "offline": {
+      "type": "boolean",
+      "description": "Allows this command to run while offline"
+    },
+    "webpack": {
+      "type": "boolean",
+      "description": "Start a Webpack dev server for the web app."
+    }
+  }
+}
