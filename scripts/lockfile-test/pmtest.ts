@@ -3,7 +3,7 @@ import {
   writeLockFile,
 } from '../../packages/nx/src/utils/lock-file/lock-file';
 
-const pm = 'npm';
+const pm = 'yarn';
 
 const value = parseLockFile(pm, 'scripts/lockfile-test');
 
