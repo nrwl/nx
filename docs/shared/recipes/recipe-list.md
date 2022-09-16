@@ -39,7 +39,7 @@
 
 ## Generators
 
-- [Workspace Generators](/recipe/workspace-generators)
+- [Local Generators](/recipe/local-generators)
 - [Composing Generators](/recipe/composing-generators)
 - [Generator Options](/recipe/generator-options)
 - [Creating Files](/recipe/creating-files)

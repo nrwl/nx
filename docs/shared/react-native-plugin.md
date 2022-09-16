@@ -63,7 +63,7 @@ To generate a new component inside library run:
 npx nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export
 ```
 
-Replace `your-lib-name` with the app's name as defined in your workspace.json file.
+Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`
 
 ## Using React Native
 

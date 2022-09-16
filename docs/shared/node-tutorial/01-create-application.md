@@ -70,8 +70,7 @@ myorg/
 ├── nx.json
 ├── package.json
 ├── README.md
-├── tsconfig.base.json
-└── workspace.json
+└── tsconfig.base.json
 ```
 
 The generate command added one project to our workspace:

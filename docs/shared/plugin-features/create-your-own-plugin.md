@@ -36,14 +36,14 @@ Plugins have:
   - Plugins can provide an array of glob patterns, `projectFilePatterns` that are used to infer project information.
   - Plugins can provide a function `registerProjectTargets` that takes in one of the matched project files, and
     returns an object containing inferred targets from the file.
-  - This allows plugins to add new projects to the workspace when it doesn't contain `workspace.json`, and infer extra
+  - This allows plugins to add new projects to the workspace that aren't identified by `project.json` or `package.json` files, and infer extra
     targets without adding them into project configuration.
 
 All the core plugins are written using Nx Devkit, and you can use the same utilities to write your own generators and
 executors.
 
 {% callout type="check" title="Plugins!" %}
-The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [custom generators](/recipe/workspace-generators) and [executors](/recipe/creating-custom-executors) for your own workspace. You can also write your own plugin and share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
+The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [custom generators](/recipe/local-generators) and [executors](/recipe/creating-custom-executors) for your own workspace. You can also write your own plugin and share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
 {% /callout %}
 
 ### Local workspace plugins
@@ -82,6 +82,6 @@ and generators.
 
 ## Learn more
 
-- [Workspace generators](/recipe/workspace-generators)
-- [Workspace executors](/recipe/creating-custom-executors)
+- [Local generators](/recipe/local-generators)
+- [Local executors](/recipe/creating-custom-executors)
 - [Nx Community Plugins](/community)

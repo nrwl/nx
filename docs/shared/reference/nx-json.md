@@ -15,7 +15,6 @@ The following is an expanded version showing all options. Your `nx.json` will li
     "libsDir": "packages"
   },
   "implicitDependencies": {
-    "workspace.json": "*",
     "package.json": {
       "dependencies": "*",
       "devDependencies": "*"
@@ -32,9 +31,6 @@ The following is an expanded version showing all options. Your `nx.json` will li
       "inputs": ["production", "^production"],
       "dependsOn": ["^build"]
     }
-  },
-  "cli": {
-    "defaultCollection": "@nrwl/js"
   },
   "generators": {
     "@nrwl/js:library": {
@@ -87,7 +83,6 @@ statically. You can configure those using `implicitDependencies`.
 ```json
 {
   "implicitDependencies": {
-    "workspace.json": "*",
     "package.json": {
       "dependencies": "*",
       "devDependencies": {
@@ -105,7 +100,6 @@ statically. You can configure those using `implicitDependencies`.
 
 In the example above:
 
-- Changing `workspace.json` affects every project.
 - Changing the `dependencies` property in `package.json` affects every project.
 - Changing the `mypackage` property in `package.json` only affects `mylib`.
 - Changing any of the custom check `scripts` in `package.json` affects every project.
@@ -180,19 +174,6 @@ Another target default you can configure is `outputs`:
 }
 ```
 
-### CLI Options
-
-The following command generates a new library: `nx g @nrwl/js:lib mylib`. After setting the `defaultCollection`property,
-the lib is generated without mentioning the collection name: `nx g lib mylib`.
-
-```json
-{
-  "cli": {
-    "defaultCollection": "@nrwl/js"
-  }
-}
-```
-
 ### Generators
 
 Default generator options are configured in `nx.json` as well. For instance, the following tells Nx to always
@@ -226,24 +207,7 @@ by `"nx/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 | skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                          |
 | cacheDirectory          | defines where the local cache is stored (defaults to `node_modules/.cache/nx`)                                                                                                                                                                                                                                                                |
 | encryptionKey           | (when using `"@nrwl/nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
-| runtimeCacheInputs      | defines the list of commands that are run by the runner to include into the computation hash value                                                                                                                                                                                                                                            |
 | selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                              |
-
-`runtimeCacheInputs` are set as follows:
-
-```json
-{
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "cacheableOperations": ["build", "lint", "test", "e2e"],
-        "runtimeCacheInputs": ["node -v"]
-      }
-    }
-  }
-}
-```
 
 You can configure `parallel` in `nx.json`, but you can also pass them in the
 terminal `nx run-many --target=test --parallel=5`.

@@ -80,7 +80,7 @@ You can designate any type for the node. This differentiates third party project
 
 ## Adding New Dependencies to the Project Graph
 
-It's more common for plugins to create new dependencies. First-party code contained in the workspace is registered in `workspace.json` and is added to the project graph automatically. Whether your project contains TypeScript or say Java, both projects will be created in the same way. However, Nx does not know how to analyze Java sources, and that's what plugins can do.
+It's more common for plugins to create new dependencies. First-party code contained in the workspace is added to the project graph automatically. Whether your project contains TypeScript or say Java, both projects will be created in the same way. However, Nx does not know how to analyze Java sources, and that's what plugins can do.
 
 You can create 2 types of dependencies.
 

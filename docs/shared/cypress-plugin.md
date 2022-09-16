@@ -45,7 +45,7 @@ Optionally, you can use the `--baseUrl` option if you don't want cypress plugin 
 nx g @nrwl/cypress:cypress-project your-app-name-e2e --baseUrl=http://localhost:4200
 ```
 
-Replace `your-app-name` with the app's name as defined in your `workspace.json` file.
+Replace `your-app-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`.
 
 ### Testing Applications
 

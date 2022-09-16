@@ -47,8 +47,7 @@ myorg/
 ├── tools/
 ├── nx.json
 ├── package.json
-├── tsconfig.base.json
-└── workspace.json
+└── tsconfig.base.json
 ```
 
 Modify the `libs/auth/src/lib/auth.controller.ts` file like this:

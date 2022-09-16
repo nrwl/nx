@@ -68,7 +68,7 @@ Use the `-d` or `--dry-run` flag to see your changes without applying them. This
 {% /callout %}
 
 ```bash
-nx workspace-generator my-generator mylib
+nx generate my-generator mylib
 ```
 
 The following information will be displayed.
@@ -82,7 +82,6 @@ CREATE libs/mylib/src/lib/mylib.ts
 CREATE libs/mylib/tsconfig.json
 CREATE libs/mylib/tsconfig.lib.json
 UPDATE tsconfig.base.json
-UPDATE workspace.json
 UPDATE nx.json
 CREATE libs/mylib/.eslintrc.json
 CREATE libs/mylib/jest.config.ts

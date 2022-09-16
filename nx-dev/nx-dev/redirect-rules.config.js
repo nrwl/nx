@@ -255,6 +255,7 @@ const diataxis = {
   '/examples/apollo-react': '/recipe/apollo-react',
   '/examples/caching': '/recipe/caching',
   '/examples/dte': '/recipe/dte',
+  '/recipe/workspace-generators': '/recipe/local-generators',
 };
 
 /**
