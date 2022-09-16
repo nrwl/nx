@@ -3,11 +3,11 @@ import {
   writeLockFile,
 } from '../../packages/nx/src/utils/lock-file/lock-file';
 
-const pm = 'yarn';
+const pm = 'pnpm';
 
 const value = parseLockFile(pm, 'scripts/lockfile-test');
 
-// console.log(value.dependencies['pify@4.0.1']);
+// console.log(value.dependencies['ts-node@10.9.1']);
 // // console.log(value['importers']);
 // console.log(value['lockfileVersion']);
 // console.log(value['overrides']);

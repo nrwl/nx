@@ -78,7 +78,7 @@ export function parseLockFile(lockFile: string): LockFileData {
 }
 
 /**
- * Generates package-lock.json file from `LockFileData` object
+ * Generates yarn.lock file from `LockFileData` object
  *
  * @param lockFile
  * @returns

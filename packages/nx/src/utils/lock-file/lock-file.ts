@@ -1,10 +1,11 @@
 import { readFileSync, writeFileSync } from 'fs-extra';
+import { join } from 'path';
+import { gte } from 'semver';
 import {
   detectPackageManager,
   getPackageManagerVersion,
   PackageManager,
 } from '../package-manager';
-import { gte } from 'semver';
 import {
   parseLockFile as parseYarn,
   stringifyLockFile as stringifyYarn,
@@ -13,9 +14,11 @@ import {
   parseLockFile as parseNpm,
   stringifyLockFile as stringifyNpm,
 } from './npm';
-import { parseLockFile as parsePnpm } from './pnpm';
+import {
+  parseLockFile as parsePnpm,
+  stringifyLockFile as stringifyPnpm,
+} from './pnpm';
 import { LockFileData } from './lock-file-type';
-import { join } from 'path';
 
 export function parseLockFile(
   packageManager: PackageManager = detectPackageManager(),
@@ -48,9 +51,11 @@ export function writeLockFile(
     writeFileSync(join(root, 'yarn.lock'), content);
     return;
   }
-  //   if (packageManager === 'pnpm') {
-  //     return await writePnpm('.', lockFile as PnpmLockFile);
-  //   }
+  if (packageManager === 'pnpm') {
+    const content = stringifyPnpm(lockFile);
+    writeFileSync(join(root, 'pnpm-lock.yaml'), content);
+    return;
+  }
   if (packageManager === 'npm') {
     const content = stringifyNpm(lockFile);
     writeFileSync(join(root, 'package-lock.json'), content + '\n');

@@ -1,5 +1,5 @@
 export interface PackageDependency<T> {
-  version: string;
+  version?: string;
   packageMeta: T[];
   dependencies?: Record<string, string>;
   dependenciesMeta?: Record<string, { optional: string }>; // todo: THIS IS FOR YARN 2
