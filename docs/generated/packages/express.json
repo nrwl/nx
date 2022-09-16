@@ -2,7 +2,7 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "express",
   "packageName": "@nrwl/express",
-  "description": "The Nx Plugin for Express that contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
+  "description": "The Nx Plugin for Express contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
   "root": "/packages/express",
   "source": "/packages/express/src",
   "documentation": [

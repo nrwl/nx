@@ -2,7 +2,7 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "linter",
   "packageName": "@nrwl/linter",
-  "description": "The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
+  "description": "The Linter plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
   "root": "/packages/linter",
   "source": "/packages/linter/src",
   "documentation": [

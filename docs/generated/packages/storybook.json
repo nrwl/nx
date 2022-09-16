@@ -2,7 +2,7 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "storybook",
   "packageName": "@nrwl/storybook",
-  "description": "The Nx Plugin for Storybook that contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+  "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
   "root": "/packages/storybook",
   "source": "/packages/storybook/src",
   "documentation": [
