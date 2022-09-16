@@ -63,12 +63,12 @@ export function parseLockFile(lockFile: string): LockFileData {
  * @param lockFile
  * @returns
  */
-export function stringifyLockFile(lockFile: LockFileData): string {
+export function stringifyLockFile(lockFileData: LockFileData): string {
   const dependencies = {};
   const packages = {
-    '': lockFile.lockFileMetadata.rootPackage,
+    '': lockFileData.lockFileMetadata.rootPackage,
   };
-  Object.entries(lockFile.dependencies).forEach(
+  Object.entries(lockFileData.dependencies).forEach(
     ([key, { packageMeta, ...value }]) => {
       packageMeta.forEach(({ path, dev, optional }) => {
         const {
@@ -99,7 +99,7 @@ export function stringifyLockFile(lockFile: LockFileData): string {
   );
 
   const lockFileJson: NpmLockFile = {
-    ...lockFile.lockFileMetadata.metadata,
+    ...lockFileData.lockFileMetadata.metadata,
     packages: sortPackages(packages),
     dependencies: sortDependencies(dependencies),
   };
