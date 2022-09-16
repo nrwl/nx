@@ -1,4 +1,5 @@
 import { LockFileData, PackageDependency } from './lock-file-type';
+import { sortObject } from './utils';
 
 type PackageMeta = {
   path: string;
@@ -100,23 +101,14 @@ export function stringifyLockFile(lockFileData: LockFileData): string {
 
   const lockFileJson: NpmLockFile = {
     ...lockFileData.lockFileMetadata.metadata,
-    packages: sortPackages(packages),
+    packages: sortObject(packages),
     dependencies: sortDependencies(dependencies),
   };
 
   return JSON.stringify(lockFileJson, null, 2);
 }
 
-function sortPackages(unsortedPackages: Dependencies): Dependencies {
-  const packages = {};
-  Object.entries(unsortedPackages)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .forEach(([key, value]) => {
-      packages[key] = value;
-    });
-  return packages;
-}
-
+// todo(meeroslav): use sortObject here as well
 function sortDependencies(
   unsortedDependencies: Record<string, NpmDependency>
 ): Record<string, NpmDependency> {
