@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/rollup",
   "version": "0.0.1",
+  "private": false,
   "description": "The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.",
   "repository": {
     "type": "git",
@@ -48,5 +49,8 @@
     "rollup-plugin-typescript2": "^0.31.1",
     "rxjs": "^6.5.4",
     "tslib": "^2.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

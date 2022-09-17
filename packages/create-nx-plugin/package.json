@@ -1,6 +1,7 @@
 {
   "name": "create-nx-plugin",
   "version": "0.0.1",
+  "private": false,
   "description": "Smart, Fast and Extensible Build System",
   "repository": {
     "type": "git",
@@ -34,5 +35,8 @@
     "nx": "file:../nx",
     "tmp": "~0.2.1",
     "yargs-parser": "21.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,6 +1,7 @@
 {
   "name": "create-nx-workspace",
   "version": "0.0.1",
+  "private": false,
   "description": "Smart, Fast and Extensible Build System",
   "repository": {
     "type": "git",
@@ -36,5 +37,8 @@
     "tslib": "^2.3.0",
     "yargs": "^17.4.0",
     "axios": "0.21.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

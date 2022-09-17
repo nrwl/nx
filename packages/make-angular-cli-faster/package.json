@@ -1,6 +1,7 @@
 {
   "name": "make-angular-cli-faster",
   "version": "0.0.1",
+  "private": false,
   "description": "Make Angular CLI faster by enabling distributed computation caching",
   "repository": {
     "type": "git",
@@ -35,5 +36,8 @@
     "tmp": "~0.2.1",
     "yargs": "^17.4.0",
     "yargs-parser": "21.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

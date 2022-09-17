@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/web",
   "version": "0.0.1",
+  "private": false,
   "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
@@ -52,5 +53,8 @@
     "http-server": "14.1.0",
     "ignore": "^5.0.4",
     "tslib": "^2.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

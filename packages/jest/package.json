@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/jest",
   "version": "0.0.1",
+  "private": false,
   "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
   "repository": {
     "type": "git",
@@ -45,5 +46,8 @@
     "jest-util": "28.1.1",
     "resolve.exports": "1.1.0",
     "tslib": "^2.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

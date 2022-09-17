@@ -1,6 +1,7 @@
 {
   "name": "add-nx-to-monorepo",
   "version": "0.0.1",
+  "private": false,
   "description": "Make any monorepo faster by adding Nx to it",
   "repository": {
     "type": "git",
@@ -33,5 +34,8 @@
     "ignore": "^5.0.4",
     "nx": "file:../nx",
     "yargs-parser": "21.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/detox",
   "version": "0.0.1",
+  "private": false,
   "description": "The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.",
   "keywords": [
     "Monorepo",
@@ -39,5 +40,8 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "schematics": "./generators.json"
+  "schematics": "./generators.json",
+  "publishConfig": {
+    "access": "public"
+  }
 }

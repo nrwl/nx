@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/eslint-plugin-nx",
   "version": "0.0.1",
+  "private": false,
   "description": "The ESLint Plugin for Nx contains a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx specific enforce-module-boundaries rule.",
   "repository": {
     "type": "git",
@@ -38,5 +39,8 @@
     "chalk": "4.1.0",
     "confusing-browser-globals": "^1.0.9",
     "semver": "7.3.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

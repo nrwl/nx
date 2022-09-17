@@ -101,7 +101,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "serve": {
-      "executor": "@nrwl/web:dev-server",
+      "executor": "@nrwl/webpack:dev-server",
       "configurations": {
         "dev": {
           "buildTarget": "graph-client:build-base:dev"

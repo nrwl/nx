@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/webpack",
   "version": "0.0.1",
+  "private": false,
   "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
   "repository": {
     "type": "git",
@@ -73,5 +74,8 @@
     "webpack-node-externals": "^3.0.0",
     "webpack-sources": "^3.2.3",
     "webpack-subresource-integrity": "^5.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/linter",
   "version": "0.0.1",
+  "private": false,
   "description": "The Linter plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
   "repository": {
     "type": "git",
@@ -44,5 +45,8 @@
     "eslint": {
       "optional": true
     }
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

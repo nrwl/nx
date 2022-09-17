@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/workspace",
   "version": "0.0.1",
+  "private": false,
   "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
   "repository": {
     "type": "git",
@@ -87,5 +88,8 @@
     "tslib": "^2.3.0",
     "yargs": "^17.4.0",
     "yargs-parser": "21.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

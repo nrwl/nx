@@ -1,6 +1,7 @@
 {
   "name": "nx",
   "version": "0.0.1",
+  "private": false,
   "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
   "repository": {
     "type": "git",
@@ -102,5 +103,8 @@
       "@nrwl/expo"
     ]
   },
-  "executors": "./executors.json"
+  "executors": "./executors.json",
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/js",
   "version": "0.0.1",
+  "private": false,
   "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
   "repository": {
     "type": "git",
@@ -44,5 +45,8 @@
     "minimatch": "3.0.5",
     "source-map-support": "0.5.19",
     "tree-kill": "1.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

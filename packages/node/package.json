@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/node",
   "version": "0.0.1",
+  "private": false,
   "description": "The Node Plugin for Nx contains generators and executors to manage Node applications within an Nx workspace.",
   "repository": {
     "type": "git",
@@ -38,5 +39,8 @@
     "@nrwl/workspace": "file:../workspace",
     "chalk": "4.1.0",
     "tslib": "^2.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
