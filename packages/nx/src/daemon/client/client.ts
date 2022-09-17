@@ -22,6 +22,7 @@ import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
+import { consumeMessagesFromSocket } from 'nx/src/utils/consume-messages-from-socket';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
@@ -133,20 +134,12 @@ export class DaemonClient {
     this.socket = connect(FULL_OS_SOCKET_PATH);
 
     this.socket.on('ready', () => {
-      let message = '';
-      this.socket.on('data', (data) => {
-        const chunk = data.toString();
-        if (chunk.length === 0 || chunk.codePointAt(chunk.length - 1) != 4) {
-          message += chunk;
-        } else {
-          message += chunk.substring(0, chunk.length - 1);
+      this.socket.on(
+        'data',
+        consumeMessagesFromSocket(async (message) => {
           this.handleMessage(message);
-          message = '';
-          this.currentMessage = null;
-          this.currentResolve = null;
-          this.currentReject = null;
-        }
-      });
+        })
+      );
     });
 
     this.socket.on('close', () => {

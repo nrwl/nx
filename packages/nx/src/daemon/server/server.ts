@@ -31,6 +31,7 @@ import {
   handleOutputsHashesMatch,
   handleRecordOutputsHash,
 } from './handle-output-contents';
+import { consumeMessagesFromSocket } from 'nx/src/utils/consume-messages-from-socket';
 
 let watcherSubscription: WatcherSubscription | undefined;
 let performanceObserver: PerformanceObserver | undefined;
@@ -53,17 +54,12 @@ const server = createServer(async (socket) => {
     performanceObserver.observe({ entryTypes: ['measure'] });
   }
 
-  let message = '';
-  socket.on('data', async (data) => {
-    const chunk = data.toString();
-    if (chunk.length === 0 || chunk.codePointAt(chunk.length - 1) != 4) {
-      message += chunk;
-    } else {
-      message += chunk.substring(0, chunk.length - 1);
+  socket.on(
+    'data',
+    consumeMessagesFromSocket(async (message) => {
       await handleMessage(socket, message);
-      message = '';
-    }
-  });
+    })
+  );
 
   socket.on('error', (e) => {
     serverLogger.log('Socket error');
@@ -75,7 +71,7 @@ const server = createServer(async (socket) => {
   });
 });
 
-async function handleMessage(socket, data) {
+async function handleMessage(socket, data: string) {
   if (watcherError) {
     await respondWithErrorAndExit(
       socket,
@@ -93,7 +89,7 @@ async function handleMessage(socket, data) {
 
   resetInactivityTimeout(handleInactivityTimeout);
 
-  const unparsedPayload = data.toString();
+  const unparsedPayload = data;
   let payload;
   try {
     payload = JSON.parse(unparsedPayload);
