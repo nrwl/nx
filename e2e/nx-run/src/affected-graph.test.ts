@@ -46,7 +46,7 @@ describe('Nx Affected and Graph Tests', () => {
       updateFile(
         `apps/${myapp}/src/app/app.element.spec.ts`,
         `
-              import '@${proj}/${mylib}';
+              import * as x from '@${proj}/${mylib}';
               describe('sample test', () => {
                 it('should test', () => {
                   expect(1).toEqual(1);
@@ -57,7 +57,7 @@ describe('Nx Affected and Graph Tests', () => {
       updateFile(
         `libs/${mypublishablelib}/src/lib/${mypublishablelib}.spec.ts`,
         `
-              import '@${proj}/${mylib}';
+              import * as x from '@${proj}/${mylib}';
               describe('sample test', () => {
                 it('should test', () => {
                   expect(1).toEqual(1);
@@ -580,9 +580,9 @@ describe('Nx Affected and Graph Tests', () => {
 
       expect(() => checkFilesExist('project-graph.html')).not.toThrow();
       expect(() => checkFilesExist('static/styles.css')).not.toThrow();
-      expect(() => checkFilesExist('static/runtime.esm.js')).not.toThrow();
-      expect(() => checkFilesExist('static/polyfills.esm.js')).not.toThrow();
-      expect(() => checkFilesExist('static/main.esm.js')).not.toThrow();
+      expect(() => checkFilesExist('static/runtime.js')).not.toThrow();
+      expect(() => checkFilesExist('static/polyfills.js')).not.toThrow();
+      expect(() => checkFilesExist('static/main.js')).not.toThrow();
       expect(() => checkFilesExist('static/environment.js')).not.toThrow();
 
       const environmentJs = readFile('static/environment.js');
