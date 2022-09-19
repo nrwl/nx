@@ -1,6 +1,7 @@
 import * as path from 'path';
 import {
   checkFilesExist,
+  cleanupProject,
   createFile,
   newProject,
   readFile,
@@ -19,212 +20,215 @@ import * as ts from 'typescript';
 import { getDecorators, getModifiers } from '@typescript-eslint/type-utils';
 
 describe('Linter', () => {
-  it('should handle linting errors', () => {
-    const myapp = uniq('myapp');
+  describe('linting errors', () => {
+    afterEach(() => cleanupProject());
 
-    newProject();
-    runCLI(`generate @nrwl/react:app ${myapp}`);
-    // create faulty file
-    updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
-    const eslintrc = readJson('.eslintrc.json');
+    it('should handle linting errors', () => {
+      const myapp = uniq('myapp');
 
-    // set the eslint rules to error
-    eslintrc.overrides.forEach((override) => {
-      if (override.files.includes('*.ts')) {
-        override.rules['no-console'] = 'error';
+      newProject();
+      runCLI(`generate @nrwl/react:app ${myapp}`);
+      // create faulty file
+      updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
+      const eslintrc = readJson('.eslintrc.json');
+
+      // set the eslint rules to error
+      eslintrc.overrides.forEach((override) => {
+        if (override.files.includes('*.ts')) {
+          override.rules['no-console'] = 'error';
+        }
+      });
+      updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+
+      // 1. linting should error when rules are not followed
+      let out = runCLI(`lint ${myapp}`, { silenceError: true });
+      expect(out).toContain('Unexpected console statement');
+
+      // 2. linting should not error when rules are not followed and the force flag is specified
+      expect(() => runCLI(`lint ${myapp} --force`)).not.toThrow();
+
+      eslintrc.overrides.forEach((override) => {
+        if (override.files.includes('*.ts')) {
+          override.rules['no-console'] = undefined;
+        }
+      });
+      updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+
+      // 3. linting should not error when all rules are followed
+      out = runCLI(`lint ${myapp}`, { silenceError: true });
+      expect(out).toContain('All files pass linting');
+    }, 1000000);
+
+    it('should cache eslint with --cache', () => {
+      function readCacheFile(cacheFile) {
+        const cacheInfo = readFile(cacheFile);
+        return process.platform === 'win32'
+          ? cacheInfo.replace(/\\\\/g, '\\')
+          : cacheInfo;
       }
-    });
-    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+      const myapp = uniq('myapp');
 
-    // 1. linting should error when rules are not followed
-    let out = runCLI(`lint ${myapp}`, { silenceError: true });
-    expect(out).toContain('Unexpected console statement');
+      newProject();
+      runCLI(`generate @nrwl/react:app ${myapp}`);
 
-    // 2. linting should not error when rules are not followed and the force flag is specified
-    expect(() => runCLI(`lint ${myapp} --force`)).not.toThrow();
+      // should generate a default cache file
+      expect(() => checkFilesExist(`.eslintcache`)).toThrow();
+      runCLI(`lint ${myapp} --cache`, { silenceError: true });
+      expect(() => checkFilesExist(`.eslintcache`)).not.toThrow();
+      expect(readCacheFile(`.eslintcache`)).toContain(
+        path.normalize(`${myapp}/src/app/app.spec.tsx`)
+      );
 
-    eslintrc.overrides.forEach((override) => {
-      if (override.files.includes('*.ts')) {
-        override.rules['no-console'] = undefined;
-      }
-    });
-    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
-
-    // 3. linting should not error when all rules are followed
-    out = runCLI(`lint ${myapp}`, { silenceError: true });
-    expect(out).toContain('All files pass linting');
-  }, 1000000);
-
-  it('should cache eslint with --cache', () => {
-    function readCacheFile(cacheFile) {
-      const cacheInfo = readFile(cacheFile);
-      return process.platform === 'win32'
-        ? cacheInfo.replace(/\\\\/g, '\\')
-        : cacheInfo;
-    }
-    const myapp = uniq('myapp');
-
-    newProject();
-    runCLI(`generate @nrwl/react:app ${myapp}`);
-
-    // should generate a default cache file
-    expect(() => checkFilesExist(`.eslintcache`)).toThrow();
-    runCLI(`lint ${myapp} --cache`, { silenceError: true });
-    expect(() => checkFilesExist(`.eslintcache`)).not.toThrow();
-    expect(readCacheFile(`.eslintcache`)).toContain(
-      path.normalize(`${myapp}/src/app/app.spec.tsx`)
-    );
-
-    // should let you specify a cache file location
-    expect(() => checkFilesExist(`my-cache`)).toThrow();
-    runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
-      silenceError: true,
-    });
-    expect(() => checkFilesExist(`my-cache/${myapp}`)).not.toThrow();
-    expect(readCacheFile(`my-cache/${myapp}`)).toContain(
-      path.normalize(`${myapp}/src/app/app.spec.tsx`)
-    );
-  });
-
-  it('linting should generate an output file with a specific format', () => {
-    newProject();
-    const myapp = uniq('myapp');
-    runCLI(`generate @nrwl/react:app ${myapp}`);
-
-    const eslintrc = readJson('.eslintrc.json');
-    eslintrc.overrides.forEach((override) => {
-      if (override.files.includes('*.ts')) {
-        override.rules['no-console'] = 'error';
-      }
-    });
-    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
-    updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
-
-    const outputFile = 'a/b/c/lint-output.json';
-    expect(() => {
-      checkFilesExist(outputFile);
-    }).toThrow();
-    const stdout = runCLI(
-      `lint ${myapp} --output-file="${outputFile}" --format=json`,
-      {
+      // should let you specify a cache file location
+      expect(() => checkFilesExist(`my-cache`)).toThrow();
+      runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
         silenceError: true,
-      }
-    );
-    expect(stdout).not.toContain('Unexpected console statement');
-    expect(() => checkFilesExist(outputFile)).not.toThrow();
-    const outputContents = JSON.parse(readFile(outputFile));
-    const outputForApp: any = Object.values(outputContents).filter(
-      (result: any) =>
-        result.filePath.includes(path.normalize(`${myapp}/src/main.ts`))
-    )[0];
-    expect(outputForApp.errorCount).toBe(1);
-    expect(outputForApp.messages[0].ruleId).toBe('no-console');
-    expect(outputForApp.messages[0].message).toBe(
-      'Unexpected console statement.'
-    );
-  }, 1000000);
-
-  it('should support creating, testing and using workspace lint rules', () => {
-    const myapp = uniq('myapp');
-    const mylib = uniq('mylib');
-
-    const messageId = 'e2eMessageId';
-    const libMethodName = 'getMessageId';
-
-    const projScope = newProject();
-    runCLI(`generate @nrwl/react:app ${myapp}`);
-    runCLI(`generate @nrwl/workspace:lib ${mylib}`);
-    // add custom function
-    updateFile(
-      `libs/${mylib}/src/lib/${mylib}.ts`,
-      `export const ${libMethodName} = (): '${messageId}' => '${messageId}';`
-    );
-
-    // Generate a new rule (should also scaffold the required workspace project and tests)
-    const newRuleName = 'e2e-test-rule-name';
-    runCLI(`generate @nrwl/linter:workspace-rule ${newRuleName}`);
-
-    // Ensure that the unit tests for the new rule are runnable
-    const unitTestsOutput = runCLI(`test eslint-rules`);
-    expect(unitTestsOutput).toContain('Successfully ran target test');
-
-    // Update the rule for the e2e test so that we can assert that it produces the expected lint failure when used
-    const knownLintErrorMessage = 'e2e test known error message';
-    const newRulePath = `tools/eslint-rules/rules/${newRuleName}.ts`;
-    const newRuleGeneratedContents = readFile(newRulePath);
-    const updatedRuleContents = updateGeneratedRuleImplementation(
-      newRulePath,
-      newRuleGeneratedContents,
-      knownLintErrorMessage,
-      messageId,
-      libMethodName,
-      `@${projScope}/${mylib}`
-    );
-    updateFile(newRulePath, updatedRuleContents);
-
-    const newRuleNameForUsage = `@nrwl/nx/workspace/${newRuleName}`;
-
-    // Add the new workspace rule to the lint config and run linting
-    const eslintrc = readJson('.eslintrc.json');
-    eslintrc.overrides.forEach((override) => {
-      if (override.files.includes('*.ts')) {
-        override.rules[newRuleNameForUsage] = 'error';
-      }
+      });
+      expect(() => checkFilesExist(`my-cache/${myapp}`)).not.toThrow();
+      expect(readCacheFile(`my-cache/${myapp}`)).toContain(
+        path.normalize(`${myapp}/src/app/app.spec.tsx`)
+      );
     });
-    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
-    const lintOutput = runCLI(`lint ${myapp} --verbose`, {
-      silenceError: true,
-    });
-    expect(lintOutput).toContain(newRuleNameForUsage);
-    expect(lintOutput).toContain(knownLintErrorMessage);
-  }, 1000000);
+    it('linting should generate an output file with a specific format', () => {
+      newProject();
+      const myapp = uniq('myapp');
+      runCLI(`generate @nrwl/react:app ${myapp}`);
 
-  it('lint plugin should ensure module boundaries', () => {
-    const proj = newProject();
-    const myapp = uniq('myapp');
-    const myapp2 = uniq('myapp2');
-    const mylib = uniq('mylib');
-    const lazylib = uniq('lazylib');
-    const invalidtaglib = uniq('invalidtaglib');
-    const validtaglib = uniq('validtaglib');
+      const eslintrc = readJson('.eslintrc.json');
+      eslintrc.overrides.forEach((override) => {
+        if (override.files.includes('*.ts')) {
+          override.rules['no-console'] = 'error';
+        }
+      });
+      updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+      updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
 
-    runCLI(`generate @nrwl/angular:app ${myapp} --tags=validtag`);
-    runCLI(`generate @nrwl/angular:app ${myapp2}`);
-    runCLI(`generate @nrwl/angular:lib ${mylib}`);
-    runCLI(`generate @nrwl/angular:lib ${lazylib}`);
-    runCLI(`generate @nrwl/angular:lib ${invalidtaglib} --tags=invalidtag`);
-    runCLI(`generate @nrwl/angular:lib ${validtaglib} --tags=validtag`);
+      const outputFile = 'a/b/c/lint-output.json';
+      expect(() => {
+        checkFilesExist(outputFile);
+      }).toThrow();
+      const stdout = runCLI(
+        `lint ${myapp} --output-file="${outputFile}" --format=json`,
+        {
+          silenceError: true,
+        }
+      );
+      expect(stdout).not.toContain('Unexpected console statement');
+      expect(() => checkFilesExist(outputFile)).not.toThrow();
+      const outputContents = JSON.parse(readFile(outputFile));
+      const outputForApp: any = Object.values(outputContents).filter(
+        (result: any) =>
+          result.filePath.includes(path.normalize(`${myapp}/src/main.ts`))
+      )[0];
+      expect(outputForApp.errorCount).toBe(1);
+      expect(outputForApp.messages[0].ruleId).toBe('no-console');
+      expect(outputForApp.messages[0].message).toBe(
+        'Unexpected console statement.'
+      );
+    }, 1000000);
 
-    const eslint = readJson('.eslintrc.json');
-    eslint.overrides[0].rules[
-      '@nrwl/nx/enforce-module-boundaries'
-    ][1].depConstraints = [
-      { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
-      ...eslint.overrides[0].rules['@nrwl/nx/enforce-module-boundaries'][1]
-        .depConstraints,
-    ];
-    updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
+    it('should support creating, testing and using workspace lint rules', () => {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
 
-    const tsConfig = readJson('tsconfig.base.json');
+      const messageId = 'e2eMessageId';
+      const libMethodName = 'getMessageId';
 
-    /**
-     * apps do not add themselves to the tsconfig file.
-     *
-     * Let's add it so that we can trigger the lint failure
-     */
-    tsConfig.compilerOptions.paths[`@${proj}/${myapp2}`] = [
-      `apps/${myapp2}/src/main.ts`,
-    ];
+      const projScope = newProject();
+      runCLI(`generate @nrwl/react:app ${myapp}`);
+      runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+      // add custom function
+      updateFile(
+        `libs/${mylib}/src/lib/${mylib}.ts`,
+        `export const ${libMethodName} = (): '${messageId}' => '${messageId}';`
+      );
 
-    tsConfig.compilerOptions.paths[`@secondScope/${lazylib}`] =
-      tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
-    delete tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
-    updateFile('tsconfig.base.json', JSON.stringify(tsConfig, null, 2));
+      // Generate a new rule (should also scaffold the required workspace project and tests)
+      const newRuleName = 'e2e-test-rule-name';
+      runCLI(`generate @nrwl/linter:workspace-rule ${newRuleName}`);
 
-    updateFile(
-      `apps/${myapp}/src/main.ts`,
-      `
+      // Ensure that the unit tests for the new rule are runnable
+      const unitTestsOutput = runCLI(`test eslint-rules`);
+      expect(unitTestsOutput).toContain('Successfully ran target test');
+
+      // Update the rule for the e2e test so that we can assert that it produces the expected lint failure when used
+      const knownLintErrorMessage = 'e2e test known error message';
+      const newRulePath = `tools/eslint-rules/rules/${newRuleName}.ts`;
+      const newRuleGeneratedContents = readFile(newRulePath);
+      const updatedRuleContents = updateGeneratedRuleImplementation(
+        newRulePath,
+        newRuleGeneratedContents,
+        knownLintErrorMessage,
+        messageId,
+        libMethodName,
+        `@${projScope}/${mylib}`
+      );
+      updateFile(newRulePath, updatedRuleContents);
+
+      const newRuleNameForUsage = `@nrwl/nx/workspace/${newRuleName}`;
+
+      // Add the new workspace rule to the lint config and run linting
+      const eslintrc = readJson('.eslintrc.json');
+      eslintrc.overrides.forEach((override) => {
+        if (override.files.includes('*.ts')) {
+          override.rules[newRuleNameForUsage] = 'error';
+        }
+      });
+      updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+
+      const lintOutput = runCLI(`lint ${myapp} --verbose`, {
+        silenceError: true,
+      });
+      expect(lintOutput).toContain(newRuleNameForUsage);
+      expect(lintOutput).toContain(knownLintErrorMessage);
+    }, 1000000);
+
+    it('lint plugin should ensure module boundaries', () => {
+      const proj = newProject();
+      const myapp = uniq('myapp');
+      const myapp2 = uniq('myapp2');
+      const mylib = uniq('mylib');
+      const lazylib = uniq('lazylib');
+      const invalidtaglib = uniq('invalidtaglib');
+      const validtaglib = uniq('validtaglib');
+
+      runCLI(`generate @nrwl/angular:app ${myapp} --tags=validtag`);
+      runCLI(`generate @nrwl/angular:app ${myapp2}`);
+      runCLI(`generate @nrwl/angular:lib ${mylib}`);
+      runCLI(`generate @nrwl/angular:lib ${lazylib}`);
+      runCLI(`generate @nrwl/angular:lib ${invalidtaglib} --tags=invalidtag`);
+      runCLI(`generate @nrwl/angular:lib ${validtaglib} --tags=validtag`);
+
+      const eslint = readJson('.eslintrc.json');
+      eslint.overrides[0].rules[
+        '@nrwl/nx/enforce-module-boundaries'
+      ][1].depConstraints = [
+        { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
+        ...eslint.overrides[0].rules['@nrwl/nx/enforce-module-boundaries'][1]
+          .depConstraints,
+      ];
+      updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
+
+      const tsConfig = readJson('tsconfig.base.json');
+
+      /**
+       * apps do not add themselves to the tsconfig file.
+       *
+       * Let's add it so that we can trigger the lint failure
+       */
+      tsConfig.compilerOptions.paths[`@${proj}/${myapp2}`] = [
+        `apps/${myapp2}/src/main.ts`,
+      ];
+
+      tsConfig.compilerOptions.paths[`@secondScope/${lazylib}`] =
+        tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
+      delete tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
+      updateFile('tsconfig.base.json', JSON.stringify(tsConfig, null, 2));
+
+      updateFile(
+        `apps/${myapp}/src/main.ts`,
+        `
       import '../../../libs/${mylib}';
       import '@secondScope/${lazylib}';
       import '@${proj}/${myapp2}';
@@ -233,17 +237,18 @@ describe('Linter', () => {
 
       const s = {loadChildren: '@${proj}/${lazylib}'};
     `
-    );
+      );
 
-    const out = runCLI(`lint ${myapp}`, { silenceError: true });
-    expect(out).toContain(
-      'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
-    );
-    expect(out).toContain('Imports of apps are forbidden');
-    expect(out).toContain(
-      'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
-    );
-  }, 1000000);
+      const out = runCLI(`lint ${myapp}`, { silenceError: true });
+      expect(out).toContain(
+        'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
+      );
+      expect(out).toContain('Imports of apps are forbidden');
+      expect(out).toContain(
+        'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
+      );
+    }, 1000000);
+  });
 
   describe('workspace boundary rules', () => {
     const libA = uniq('tslib-a');
@@ -378,6 +383,8 @@ export function tslibC(): string {
       `
       );
     });
+
+    afterAll(() => cleanupProject());
 
     it('should fix noSelfCircularDependencies', () => {
       const stdout = runCLI(`lint ${libC}`, {
