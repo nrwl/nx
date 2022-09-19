@@ -7,12 +7,12 @@ width="100%" /%}
 
 In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies.
 
-{% callout type="check" title="Nx has first-class Next.js support" %}
-Nx has first-class Next.js support, if you are looking to try or use it for your project. Read more about it [here](/packages/next)
+{% callout type="note" title="Nx has first-class Next.js support" %}
+Nx has first-class Next.js support, if you are looking to use it for your project. Read more about it [here](/packages/next)
 {% /callout %}
 
-{% callout type="note" title="Plugins for a rich developer experience" %}
-In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.**
+{% callout type="check" title="Integrated Repo" %}
+This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) repo. If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Core Tutorial](/getting-started/core-tutorial).
 {% /callout %}
 
 ## Contents
