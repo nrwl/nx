@@ -1,4 +1,5 @@
 import {
+  cleanupProject,
   createNonNxProjectDirectory,
   getPackageManagerCommand,
   getSelectedPackageManager,
@@ -12,6 +13,8 @@ describe('nx init', () => {
   const packageManagerCommand = getPackageManagerCommand({
     packageManager: getSelectedPackageManager(),
   }).runUninstalledPackage;
+
+  afterEach(() => cleanupProject());
 
   it('should work', () => {
     createNonNxProjectDirectory();

@@ -14,7 +14,7 @@ import {
 describe('cache', () => {
   beforeEach(() => newProject());
 
-  afterAll(() => cleanupProject());
+  afterEach(() => cleanupProject());
 
   it('should cache command execution', async () => {
     const myapp1 = uniq('myapp1');

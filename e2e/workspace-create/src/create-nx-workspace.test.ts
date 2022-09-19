@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  cleanupProject,
   e2eCwd,
   expectNoAngularDevkit,
   expectNoTsJestInJestConfig,
@@ -19,6 +20,8 @@ import { execSync } from 'child_process';
 
 describe('create-nx-workspace', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
+
+  afterEach(() => cleanupProject());
 
   it('should be able to create an empty workspace built for apps', () => {
     const wsName = uniq('apps');
