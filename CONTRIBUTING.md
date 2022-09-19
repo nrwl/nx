@@ -293,18 +293,21 @@ The type must be one of the following:
 The scope must be one of the following:
 
 - angular - anything Angular specific
+- bundling - anything bundling specific (e.g. rollup, webpack, etc.)
 - core - anything Nx core specific
-- graph - anything graph app specific
 - detox - anything Detox specific
 - devkit - devkit-related changes
+- graph - anything graph app specific
+- expo - anything Expo specific
 - express - anything Express specific
 - js - anything related to @nrwl/js package or general js/ts support
 - linter - anything Linter specific
 - nest - anything Nest specific
 - nextjs - anything Next specific
-- nxdev - anything related to docs infrastructure
-- nx-plugin - anything Nx Plugin specific
 - node - anything Node specific
+- nx-cloud - anything NxCloud specific
+- nx-plugin - anything Nx Plugin specific
+- nxdev - anything related to docs infrastructure
 - react - anything React specific
 - react-native - anything React Native specific
 - repo - anything related to managing the Nx repo itself
