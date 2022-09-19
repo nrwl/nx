@@ -2,7 +2,7 @@
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "expo",
   "packageName": "@nrwl/expo",
-  "description": "Expo Plugin for Nx",
+  "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
   "root": "/packages/expo",
   "source": "/packages/expo/src",
   "documentation": [],
