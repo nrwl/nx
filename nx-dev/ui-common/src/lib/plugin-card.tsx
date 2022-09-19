@@ -34,7 +34,7 @@ export function PluginCard({
           className="focus:outline-none"
         >
           <span className="absolute inset-0" aria-hidden="true"></span>
-          <p className="mb-6 sm:text-sm">{description}</p>
+          <p className="line-clamp-3 mb-6 sm:text-sm">{description}</p>
 
           {isOfficial ? (
             <span
