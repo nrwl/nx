@@ -76,6 +76,7 @@
 - [Using Tailwind CSS in React](/recipe/using-tailwind-css-in-react)
 - [React 18 Migration](/recipe/react-18)
 - [Using Tailwind CSS with Angular projects](/recipe/using-tailwind-css-with-angular-projects)
+- [Using Storybook in a Nx workspace - Best practices](/recipe/storybook-best-practices)
 - [Using NgRx](/recipe/misc-ngrx)
 - [Using Data Persistence operators](/recipe/misc-data-persistence)
 - [Customizing Webpack Config](/recipe/customize-webpack)
