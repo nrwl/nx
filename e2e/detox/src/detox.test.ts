@@ -6,6 +6,7 @@ import {
   runCLIAsync,
   uniq,
   killPorts,
+  cleanupProject,
 } from '@nrwl/e2e/utils';
 
 describe('Detox', () => {
@@ -14,6 +15,8 @@ describe('Detox', () => {
   beforeAll(() => {
     newProject();
   });
+
+  afterAll(() => cleanupProject());
 
   it('should create files and run lint command for react-native apps', async () => {
     runCLI(
