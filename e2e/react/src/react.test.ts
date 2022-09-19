@@ -1,12 +1,12 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  cleanupProject,
   createFile,
   expectJestTestsToPass,
   killPorts,
   newProject,
   readFile,
-  renameFile,
   runCLI,
   runCLIAsync,
   runCypressTests,
@@ -20,6 +20,8 @@ describe('React Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
+
+  afterEach(() => cleanupProject());
 
   it('should be able to generate a react app + lib', async () => {
     const appName = uniq('app');

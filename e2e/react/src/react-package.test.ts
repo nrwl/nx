@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  cleanupProject,
   getSize,
   killPorts,
   newProject,
@@ -94,7 +95,10 @@ describe('Build React libraries and apps', () => {
     updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
   });
 
-  afterEach(() => killPorts());
+  afterEach(() => {
+    killPorts();
+    cleanupProject();
+  });
 
   describe('Buildable libraries', () => {
     it('should build libraries with and without dependencies', () => {
