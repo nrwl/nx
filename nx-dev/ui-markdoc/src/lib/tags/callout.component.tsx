@@ -68,23 +68,26 @@ export function Callout({
 }) {
   const ui = typeMap[type] || typeMap.note;
 
+  // We use `<span>`s because we are inside `<p>`s
   return (
-    <aside
+    <span
       className={cx(
-        'my-6 rounded-md p-4 ring-1',
+        'my-6 block rounded-md p-4 ring-1',
         ui.backgroundColor,
         ui.borderColor
       )}
     >
-      <div className="flex">
-        <div className="flex-shrink-0">{ui.icon}</div>
-        <div className="ml-3">
-          <h5 className={cx('mt-0 text-sm font-medium', ui.titleColor)}>
+      <span className="flex">
+        <span className="flex-shrink-0">{ui.icon}</span>
+        <span className="ml-3">
+          <span className={cx('mt-0 block text-sm font-medium', ui.titleColor)}>
             {title}
-          </h5>
-          <div className={cx('prose-sm mt-2', ui.textColor)}>{children}</div>
-        </div>
-      </div>
-    </aside>
+          </span>
+          <span className={cx('prose-sm mt-2 block', ui.textColor)}>
+            {children}
+          </span>
+        </span>
+      </span>
+    </span>
   );
 }
