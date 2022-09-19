@@ -8,7 +8,7 @@ import { getPackageManagerCommand } from '@nrwl/devkit';
  * @param command
  * @param opts
  */
- export function runCommandAsync(
+export function runCommandAsync(
   command: string,
   opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv } = {
     silenceError: false,
