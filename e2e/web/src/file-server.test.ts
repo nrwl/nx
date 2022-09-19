@@ -1,4 +1,5 @@
 import {
+  cleanupProject,
   killPorts,
   newProject,
   promisifiedTreeKill,
@@ -9,6 +10,8 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('file-server', () => {
+  afterEach(() => cleanupProject());
+
   it('should serve folder of files', async () => {
     newProject({ name: uniq('fileserver') });
     const appName = uniq('app');
