@@ -105,7 +105,7 @@ export function stringifyLockFile(lockFileData: LockFileData): string {
     dependencies: sortDependencies(dependencies),
   };
 
-  return JSON.stringify(lockFileJson, null, 2);
+  return JSON.stringify(lockFileJson, null, 2) + '\n';
 }
 
 // todo(meeroslav): use sortObject here as well

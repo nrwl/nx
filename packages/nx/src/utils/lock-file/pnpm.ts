@@ -110,21 +110,30 @@ function mapPackages(
     let isDependency, isDevDependency, specifier;
     if (inlineSpecifiers) {
       if (
+        dependencies &&
         (dependencies[packageName] as InlineSpecifier)?.version ===
-        matchingVersion
+          matchingVersion
       ) {
         isDependency = true;
         specifier = (dependencies[packageName] as InlineSpecifier).specifier;
-      } else if (
+      } else {
+        isDependency = false;
+      }
+      if (
+        devDependencies &&
         (devDependencies[packageName] as InlineSpecifier)?.version ===
-        matchingVersion
+          matchingVersion
       ) {
         isDevDependency = true;
         specifier = (devDependencies[packageName] as InlineSpecifier).specifier;
+      } else {
+        isDevDependency = false;
       }
     } else {
-      isDependency = dependencies[packageName] === matchingVersion;
-      isDevDependency = devDependencies[packageName] === matchingVersion;
+      isDependency =
+        dependencies && dependencies[packageName] === matchingVersion;
+      isDevDependency =
+        devDependencies && devDependencies[packageName] === matchingVersion;
       if (isDependency || isDevDependency) {
         specifier = specifiers[packageName];
       }

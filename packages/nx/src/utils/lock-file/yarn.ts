@@ -83,13 +83,11 @@ export function parseLockFile(lockFile: string): LockFileData {
  * @param lockFile
  * @returns
  */
-export function stringifyLockFile(
-  lockFileData: LockFileData,
-  isBerry?: boolean
-): string {
+export function stringifyLockFile(lockFileData: LockFileData): string {
+  const isBerry = !!lockFileData.lockFileMetadata?.__metadata;
   const lockFile = {
     ...lockFileData.lockFileMetadata,
-    ...unmapPackages(lockFileData.dependencies),
+    ...unmapPackages(lockFileData.dependencies, isBerry),
   };
   if (isBerry) {
     return (
@@ -103,8 +101,9 @@ export function stringifyLockFile(
 
 function mapPackages(packages: YarnLockFile): LockFileData['dependencies'] {
   const mappedPackages: LockFileData['dependencies'] = {};
-  Object.entries(packages).forEach(([key, value]) => {
-    const packageName = key.slice(0, key.lastIndexOf('@'));
+  Object.entries(packages).forEach(([keyExpr, value]) => {
+    const keys = keyExpr.split(', ');
+    const packageName = keys[0].slice(0, keys[0].lastIndexOf('@'));
     const newKey = `${packageName}@${value.version}`;
     mappedPackages[newKey] =
       mappedPackages[newKey] ||
@@ -112,18 +111,25 @@ function mapPackages(packages: YarnLockFile): LockFileData['dependencies'] {
         ...value,
         packageMeta: [],
       } as PackageDependency<string>);
-    mappedPackages[newKey].packageMeta.push(key);
+    mappedPackages[newKey].packageMeta.push(...keys);
   });
   return mappedPackages;
 }
 
-function unmapPackages(mappedPackages: YarnLockFile): YarnLockFile {
+function unmapPackages(
+  mappedPackages: YarnLockFile,
+  isBerry: boolean
+): YarnLockFile {
   const packages: YarnLockFile = {};
   Object.values(mappedPackages).forEach((value) => {
     const { packageMeta, ...rest } = value;
-    packageMeta.forEach((key) => {
-      packages[key] = rest;
-    });
+    if (isBerry) {
+      packages[packageMeta.join(', ')] = rest;
+    } else {
+      packageMeta.forEach((key) => {
+        packages[key] = rest;
+      });
+    }
   });
   return packages;
 }

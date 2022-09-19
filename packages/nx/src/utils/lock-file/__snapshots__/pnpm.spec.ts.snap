@@ -1,0 +1,103 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pnpm LockFile utility lock file with inline specifiers should parse lockfile (IS) 1`] = `
+Object {
+  "engines": Object {
+    "node": ">=6.0.0",
+  },
+  "packageMeta": Array [
+    Object {
+      "dependencyDetails": Object {
+        "dependencies": Object {
+          "@jridgewell/gen-mapping": "0.1.1",
+          "@jridgewell/trace-mapping": "0.3.15",
+        },
+        "dev": true,
+      },
+      "isDependency": false,
+      "isDevDependency": false,
+      "key": "/@ampproject/remapping/2.2.0",
+      "specifier": undefined,
+    },
+  ],
+  "resolution": Object {
+    "integrity": "sha512-qRmjj8nj9qmLTQXXmaR1cck3UXSRMPrbsLJAasZpF+t3riI71BXed5ebIOYwQntykeZuhjsdweEc9BxH5Jc26w==",
+  },
+  "version": "2.2.0",
+}
+`;
+
+exports[`pnpm LockFile utility lock file with inline specifiers should parse lockfile (IS) 2`] = `
+Object {
+  "engines": Object {
+    "node": ">=4.2.0",
+  },
+  "packageMeta": Array [
+    Object {
+      "dependencyDetails": Object {
+        "dev": true,
+        "hasBin": true,
+      },
+      "isDependency": false,
+      "isDevDependency": true,
+      "key": "/typescript/4.8.3",
+      "specifier": "~4.8.2",
+    },
+  ],
+  "resolution": Object {
+    "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
+  },
+  "version": "4.8.3",
+}
+`;
+
+exports[`pnpm LockFile utility standard lock file should parse lockfile correctly 1`] = `
+Object {
+  "engines": Object {
+    "node": ">=6.0.0",
+  },
+  "packageMeta": Array [
+    Object {
+      "dependencyDetails": Object {
+        "dependencies": Object {
+          "@jridgewell/gen-mapping": "0.1.1",
+          "@jridgewell/trace-mapping": "0.3.15",
+        },
+        "dev": true,
+      },
+      "isDependency": undefined,
+      "isDevDependency": false,
+      "key": "/@ampproject/remapping/2.2.0",
+      "specifier": undefined,
+    },
+  ],
+  "resolution": Object {
+    "integrity": "sha512-qRmjj8nj9qmLTQXXmaR1cck3UXSRMPrbsLJAasZpF+t3riI71BXed5ebIOYwQntykeZuhjsdweEc9BxH5Jc26w==",
+  },
+  "version": "2.2.0",
+}
+`;
+
+exports[`pnpm LockFile utility standard lock file should parse lockfile correctly 2`] = `
+Object {
+  "engines": Object {
+    "node": ">=4.2.0",
+  },
+  "packageMeta": Array [
+    Object {
+      "dependencyDetails": Object {
+        "dev": true,
+        "hasBin": true,
+      },
+      "isDependency": undefined,
+      "isDevDependency": true,
+      "key": "/typescript/4.8.3",
+      "specifier": "~4.8.2",
+    },
+  ],
+  "resolution": Object {
+    "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
+  },
+  "version": "4.8.3",
+}
+`;
