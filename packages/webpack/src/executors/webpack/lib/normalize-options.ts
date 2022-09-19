@@ -21,6 +21,7 @@ export function normalizeOptions(
     target: options.target ?? 'web',
     main: resolve(root, options.main),
     outputPath: resolve(root, options.outputPath),
+    outputFileName: options.outputFileName ?? 'main.js',
     tsConfig: resolve(root, options.tsConfig),
     fileReplacements: normalizeFileReplacements(root, options.fileReplacements),
     assets: normalizeAssets(options.assets, root, sourceRoot),
