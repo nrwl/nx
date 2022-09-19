@@ -1,10 +1,10 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  cleanupProject,
   e2eCwd,
   expectNoAngularDevkit,
   expectNoTsJestInJestConfig,
-  getPackageManagerCommand,
   getSelectedPackageManager,
   packageManagerLockFile,
   readJson,
@@ -15,7 +15,6 @@ import {
   updateJson,
 } from '@nrwl/e2e/utils';
 import { existsSync, mkdirSync } from 'fs-extra';
-import { execSync } from 'child_process';
 
 describe('create-nx-workspace', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
@@ -243,26 +242,6 @@ describe('create-nx-workspace', () => {
     });
   });
 
-  it('should handle spaces in workspace path', () => {
-    const wsName = uniq('empty');
-
-    const tmpDir = `${e2eCwd}/${uniq('with space')}`;
-
-    mkdirSync(tmpDir, { recursive: true });
-
-    const createCommand = getPackageManagerCommand({
-      packageManager,
-    }).createWorkspace;
-    const fullCommand = `${createCommand} ${wsName} --cli=nx --preset=apps --no-nxCloud --no-interactive`;
-    execSync(fullCommand, {
-      cwd: tmpDir,
-      stdio: [0, 1, 2],
-      env: process.env,
-    });
-
-    expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
-  });
-
   it('should respect package manager preference', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
@@ -361,5 +340,25 @@ describe('create-nx-workspace', () => {
         process.env.SELECTED_PM = packageManager;
       }, 90000);
     }
+  });
+});
+
+describe('create-nx-workspace custom parent folder', () => {
+  const tmpDir = `${e2eCwd}/${uniq('with space')}`;
+  const wsName = uniq('empty');
+  const packageManager = getSelectedPackageManager() || 'pnpm';
+
+  afterEach(() => cleanupProject({ cwd: `${tmpDir}/${wsName}` }));
+
+  it('should handle spaces in workspace path', () => {
+    mkdirSync(tmpDir, { recursive: true });
+
+    runCreateWorkspace(wsName, {
+      preset: 'apps',
+      packageManager,
+      cwd: tmpDir,
+    });
+
+    expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
   });
 });

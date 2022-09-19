@@ -137,6 +137,7 @@ export function runCreateWorkspace(
     extraArgs,
     ci,
     useDetectedPm = false,
+    cwd = e2eCwd,
   }: {
     preset: string;
     appName?: string;
@@ -147,6 +148,7 @@ export function runCreateWorkspace(
     extraArgs?: string;
     ci?: 'azure' | 'github' | 'circleci';
     useDetectedPm?: boolean;
+    cwd?: string;
   }
 ) {
   projName = name;
@@ -179,7 +181,7 @@ export function runCreateWorkspace(
   }
 
   const create = execSync(command, {
-    cwd: e2eCwd,
+    cwd,
     // stdio: [0, 1, 2],
     stdio: ['pipe', 'pipe', 'pipe'],
     env: { CI: 'true', ...process.env },
@@ -377,8 +379,10 @@ export async function killPorts(port?: number): Promise<boolean> {
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
-export async function cleanupProject() {
+export async function cleanupProject(opts?: RunCmdOpts) {
   if (isCI) {
+    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
+    runCLI('reset', opts);
     try {
       removeSync(tmpProjPath());
     } catch (e) {}
