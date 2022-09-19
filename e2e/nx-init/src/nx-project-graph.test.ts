@@ -8,9 +8,8 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('project graph creation', () => {
-  let proj;
-
   beforeEach(() => newProject());
+
   afterEach(() => cleanupProject());
 
   it('should correctly build the nxdeps.json containing files for the project', () => {

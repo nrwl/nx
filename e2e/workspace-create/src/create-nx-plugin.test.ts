@@ -5,10 +5,13 @@ import {
   runCLI,
   uniq,
   runCreatePlugin,
+  cleanupProject,
 } from '@nrwl/e2e/utils';
 
 describe('create-nx-plugin', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
+
+  afterEach(() => cleanupProject());
 
   it('should be able to create a plugin repo and run plugin e2e', () => {
     const wsName = uniq('ws-plugin');

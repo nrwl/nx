@@ -19,6 +19,8 @@ describe('Nx Commands', () => {
   let proj: string;
   beforeAll(() => (proj = newProject()));
 
+  afterAll(() => cleanupProject());
+
   describe('report and list', () => {
     it(`should report package versions`, async () => {
       const reportOutput = runCLI('report');
@@ -79,6 +81,7 @@ describe('Nx Commands', () => {
       );
     }, 120000);
   });
+
   describe('format', () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
@@ -87,8 +90,6 @@ describe('Nx Commands', () => {
       runCLI(`generate @nrwl/web:app ${myapp}`);
       runCLI(`generate @nrwl/js:lib ${mylib}`);
     });
-
-    afterAll(() => cleanupProject());
 
     beforeEach(() => {
       updateFile(
