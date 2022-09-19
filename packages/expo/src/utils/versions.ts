@@ -2,6 +2,8 @@ export const nxVersion = '*';
 
 export const expoVersion = '46.0.10';
 export const expoMetroConfigVersion = '0.3.22';
+export const expoSplashScreenVersion = '~0.16.2';
+export const expoStatusBarVersion = '~1.4.0';
 export const jestExpoVersion = '46.0.1';
 export const expoCliVersion = '6.0.5';
 export const easCliVersion = '2.1.0';
