@@ -151,7 +151,8 @@ describe('Next.js Applications', () => {
     );
   }, 300_000);
 
-  it('should be able to serve with a proxy configuration', async () => {
+  // TODO(jack): re-enable this test
+  xit('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
     const jsLib = uniq('tslib');
 
