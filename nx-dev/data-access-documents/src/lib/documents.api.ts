@@ -53,12 +53,18 @@ export class DocumentsApi {
   getDocumentIndex(path: string[]): DocumentData {
     let items = this.documents?.itemList;
     let found: DocumentMetadata | null = null;
+    let itemPathToValidate: string[] = [];
 
     for (const part of path) {
       found = items?.find((item) => item.id === part) || null;
       if (found) {
+        itemPathToValidate.push(found.id);
         items = found.itemList;
       }
+    }
+    // If the ids have found the item, check that the segment correspond to the id tree
+    if (found && path.join('/') !== itemPathToValidate.join('/')) {
+      found = null;
     }
 
     const cardListItems = items?.map((i) => ({
@@ -160,12 +166,18 @@ export class DocumentsApi {
     }
 
     let found: DocumentMetadata | null = null;
+    let itemPathToValidate: string[] = [];
     // Traversing the tree by matching item's ids with path's segments
     for (const part of path) {
       found = items?.find((item) => item.id === part) || null;
       if (found) {
+        itemPathToValidate.push(found.id);
         items = found.itemList;
       }
+    }
+    // If the ids have found the item, check that the segment correspond to the id tree
+    if (found && path.join('/') !== itemPathToValidate.join('/')) {
+      found = null;
     }
 
     // If still not found, then attempt to match any item's id with the current path as a string
