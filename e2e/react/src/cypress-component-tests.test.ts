@@ -1,4 +1,5 @@
 import {
+  cleanupProject,
   createFile,
   newProject,
   runCLI,
@@ -12,6 +13,7 @@ describe('React Cypress Component Tests', () => {
   const appName = uniq('cy-react-app');
   const usedInAppLibName = uniq('cy-react-lib');
   const buildableLibName = uniq('cy-react-buildable-lib');
+
   beforeAll(() => {
     projectName = newProject({ name: uniq('cy-react') });
     runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
@@ -96,8 +98,8 @@ export interface InputProps {
 }
 
 export function Input(props: InputProps) {
-  return ( 
-      <label className="text-green-500">Email: 
+  return (
+      <label className="text-green-500">Email:
         <input className="border-blue-500" type="email" readOnly={props.readOnly}/>
       </label>
   );
@@ -116,6 +118,8 @@ export default Input;
       return config;
     });
   });
+
+  afterAll(() => cleanupProject());
 
   it('should test app', () => {
     runCLI(

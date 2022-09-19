@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  cleanupProject,
   createFile,
   killPorts,
   newProject,
@@ -12,9 +13,13 @@ import {
 
 describe('Cypress E2E Test runner', () => {
   const myapp = uniq('myapp');
+
   beforeAll(() => {
     newProject();
   });
+
+  afterAll(() => cleanupProject());
+
   it('should generate an app with the Cypress as e2e test runner', () => {
     runCLI(
       `generate @nrwl/react:app ${myapp} --e2eTestRunner=cypress --linter=eslint`

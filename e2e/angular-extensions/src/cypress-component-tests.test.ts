@@ -1,5 +1,6 @@
 import {
   checkFilesDoNotExist,
+  cleanupProject,
   createFile,
   newProject,
   runCLI,
@@ -143,6 +144,8 @@ import {CommonModule} from '@angular/common';
       return config;
     });
   });
+
+  afterAll(() => cleanupProject());
 
   it('should test app', () => {
     runCLI(
