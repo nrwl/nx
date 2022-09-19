@@ -347,6 +347,11 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   }
 
   await recordWorkspaceCreationStats(nxCloud);
+
+  // vsavkin: temporary workaround
+  try {
+    await execAndWait('npx nx reset', directory);
+  } catch (e) {}
 }
 
 async function getConfiguration(
