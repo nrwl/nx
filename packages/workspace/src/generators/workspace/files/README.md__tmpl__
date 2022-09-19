@@ -10,11 +10,11 @@ This project was generated using [Nx](https://nx.dev).
 
 ## Quick Start & Documentation
 
-[Nx Documentation](https://nx.dev/angular)
+[Nx Documentation](https://nx.dev/getting-started/intro)
 
-[10-minute video showing all Nx features](https://nx.dev/getting-started/intro)
+[Mental model is a good starting point for those who like to understand things theoretically first.](https://nx.dev/concepts/mental-model)
 
-[Interactive Tutorial](https://nx.dev/react-tutorial/01-create-application)
+[Interactive Tutorial](https://nx.dev/getting-started/angular-tutorial)
 
 ## Adding capabilities to your workspace
 

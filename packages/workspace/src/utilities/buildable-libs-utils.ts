@@ -248,8 +248,8 @@ export function checkDependentProjectsHaveBeenBuilt(
       It looks like all of ${projectName}'s dependencies have not been built yet:
       ${missing.map((x) => ` - ${x.node.name}`).join('\n')}
 
-      You might be missing a "targetDefaults" configuration in your root nx.json (https://nx.dev/configuration/projectjson#target-defaults),
-      or "dependsOn" configured in ${projectName}'s project.json (https://nx.dev/configuration/projectjson#dependson) 
+      You might be missing a "targetDefaults" configuration in your root nx.json (https://nx.dev/reference/project-configuration#target-defaults),
+      or "dependsOn" configured in ${projectName}'s project.json (https://nx.dev/reference/project-configuration#dependson) 
     `);
     return false;
   } else {

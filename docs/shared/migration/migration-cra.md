@@ -8,7 +8,7 @@ You can either use a CLI tool to migrate your app automatically, or you can foll
 This guide has been updated for Nx 13 and may not work for earlier versions of Nx.
 {% /callout %}
 
-If you have a monorepo (more than one project in the same repo), follow the [Adding Nx to Lerna/Yarn/PNPM/NPM Workspace](https://nx.dev/migration/adding-to-monorepo) guide instead.
+If you have a monorepo (more than one project in the same repo), follow the [Adding Nx to Lerna/Yarn/PNPM/NPM Workspace](/recipe/adding-to-monorepo) guide instead.
 
 ## Using a tool that will do it for you
 

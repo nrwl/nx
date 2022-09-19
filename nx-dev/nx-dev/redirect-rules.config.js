@@ -148,7 +148,7 @@ const schemaUrls = {
  * Guide specific rules (added 2022-01-04)
  */
 const guideUrls = {
-  '/core-concepts/configuration': '/configuration/projectjson',
+  '/core-concepts/configuration': '/reference/project-configuration',
   '/core-concepts/mental-model': '/using-nx/mental-model',
   '/core-concepts/updating-nx': '/using-nx/updating-nx',
   '/core-concepts/ci-overview': '/using-nx/ci-overview',

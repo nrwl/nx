@@ -323,7 +323,7 @@ function printFinalMessage(repoRoot) {
       `- Run "${
         getPackageManagerCommand(repoRoot).exec
       } nx graph" to see the structure of the monorepo.`,
-      `- Learn more at https://nx.dev/migration/adding-to-monorepo`,
+      `- Learn more at /recipe/adding-to-monorepo`,
     ],
   });
 }
