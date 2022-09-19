@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  cleanupProject,
   killPorts,
   newProject,
   runCLI,
@@ -28,6 +29,7 @@ describe('Storybook schematics', () => {
   });
 
   afterAll(() => {
+    cleanupProject();
     process.env.SELECTED_PM = previousPM;
   });
 
