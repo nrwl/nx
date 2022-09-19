@@ -44,7 +44,7 @@ You can always read more in the [official Storybook docs](https://storybook.js.o
 
 It's quite easy to use this feature, in Nx and in general, since you do not need to make any code changes, you just need to have the "composed" Storybook instances (the ones you need to "compose") running, choose a "host" Storybook, and just add the composed Storybooks in it's `.storybook/main.js` file.
 
-Nx provides the [`run-many`](https://nx.dev/l/a/cli/run-many) command, which will allow you to easily run multiple Storybooks at the same time. You need to run the `run-many` command with the parallel flag (eg. `--parallel=3`), because you want to run all your Storybooks in parallel. You can change the value of the `parallel` flag to be of as many Storybooks you want to run in parallel as you need. However, be **very carefull** with putting large numbers in this
+Nx provides the [`run-many`](/nx/run-many) command, which will allow you to easily run multiple Storybooks at the same time. You need to run the `run-many` command with the parallel flag (eg. `--parallel=3`), because you want to run all your Storybooks in parallel. You can change the value of the `parallel` flag to be of as many Storybooks you want to run in parallel as you need. However, be **very carefull** with putting large numbers in this
 flag, since it can cause big delays or get stuck. You can play around and adjust that number to one your machine runs comfortably with. Keep in mind that you can add in this feature however many live/public Storybooks as you need (Storybooks that you do not run locally).
 
 In order to get get it working for you, you need to two two things:

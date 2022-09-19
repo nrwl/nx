@@ -97,7 +97,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-yellow-500',
-    link: '/recipe/workspace-generators',
+    link: '/recipe/local-generators',
     title: 'Workspace generators',
     subTitle: 'Nx helps enforce best practices and organizational standards.',
     svg: (

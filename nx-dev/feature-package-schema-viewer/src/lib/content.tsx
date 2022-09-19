@@ -233,7 +233,7 @@ const getMarkdown = (data: {
   type: 'executors' | 'generators';
 }): string => {
   const hasExamplesFile = !!data.schema['examplesFile'];
-  const executorNotice: string = `Options can be configured in \`project.json\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: [https://nx.dev/configuration/projectjson#targets](https://nx.dev/configuration/projectjson#targets).`;
+  const executorNotice: string = `Options can be configured in \`project.json\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: [https://nx.dev/reference/project-configuration#targets](https://nx.dev/reference/project-configuration#targets).`;
 
   return [
     `# ${data.packageName}:${data.schemaName}`,
