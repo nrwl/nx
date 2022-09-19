@@ -31,25 +31,16 @@ export type PnpmLockFile = {
   packages: Dependencies;
 };
 
+const LOCKFILE_YAML_FORMAT = {
+  blankLines: true,
+  lineWidth: 1000,
+  noCompatMode: true,
+  noRefs: true,
+  sortKeys: false,
+};
+
 /**
- * Parses pnpm-lock.yaml file
- * ```
- * lockfileVersion: 5.2
- *
- * overrides:
- *  minimist: 1.2.4
- *
- * specifiers:
- *   {package}: {versionRange}
- *
- * dependencies:
- *   {package}: {versionWithHashOrPackage}
- *
- * devDependencies:
- *   {package}: {versionWithHashOrPackage}
- * ```
- *
- * to `LockFileData` object
+ * Parses pnpm-lock.yaml file to `LockFileData` object
  *
  * @param lockFile
  * @returns
@@ -70,26 +61,6 @@ export function parseLockFile(lockFile: string): LockFileData {
   };
 }
 
-const LOCKFILE_YAML_FORMAT = {
-  blankLines: true,
-  lineWidth: 1000,
-  noCompatMode: true,
-  noRefs: true,
-  sortKeys: false,
-};
-
-/**
- * Generates pnpm-lock.yml file from `LockFileData` object
- *
- * @param lockFile
- * @returns
- */
-export function stringifyLockFile(lockFileData: LockFileData): string {
-  const pnpmLockFile = unmapPackages(lockFileData);
-
-  return dump(pnpmLockFile, LOCKFILE_YAML_FORMAT);
-}
-
 function mapPackages(
   dependencies: Record<string, string | InlineSpecifier>,
   devDependencies: Record<string, string | InlineSpecifier>,
@@ -100,6 +71,8 @@ function mapPackages(
   const mappedPackages: LockFileData['dependencies'] = {};
   Object.entries(packages).forEach(([key, value]) => {
     const packageName = key.slice(1, key.lastIndexOf('/'));
+    mappedPackages[packageName] = mappedPackages[packageName] || {};
+
     const matchingVersion = key.slice(key.lastIndexOf('/') + 1);
     const version = matchingVersion.split('_')[0];
     let isDependency, isDevDependency, specifier;
@@ -141,17 +114,30 @@ function mapPackages(
       specifier,
       dependencyDetails: rest,
     };
-    mappedPackages[`${packageName}@${version}`] = mappedPackages[
-      `${packageName}@${version}`
+    const newKey = `${packageName}@${version}`;
+    mappedPackages[packageName][newKey] = mappedPackages[packageName][
+      newKey
     ] || {
       resolution,
       engines,
       version,
       packageMeta: [],
     };
-    mappedPackages[`${packageName}@${version}`].packageMeta.push(meta);
+    mappedPackages[packageName][newKey].packageMeta.push(meta);
   });
   return mappedPackages;
+}
+
+/**
+ * Generates pnpm-lock.yml file from `LockFileData` object
+ *
+ * @param lockFile
+ * @returns
+ */
+export function stringifyLockFile(lockFileData: LockFileData): string {
+  const pnpmLockFile = unmapPackages(lockFileData);
+
+  return dump(pnpmLockFile, LOCKFILE_YAML_FORMAT);
 }
 
 function unmapPackages(lockFileData: LockFileData): PnpmLockFile {
@@ -163,12 +149,8 @@ function unmapPackages(lockFileData: LockFileData): PnpmLockFile {
     .toString()
     .endsWith('inlineSpecifiers');
 
-  Object.entries(lockFileData.dependencies).forEach(
-    ([dependencyKey, { packageMeta, resolution, engines }]) => {
-      const packageName = dependencyKey.slice(
-        0,
-        dependencyKey.lastIndexOf('@')
-      );
+  Object.entries(lockFileData.dependencies).forEach(([packageName, versions]) =>
+    Object.values(versions).forEach(({ packageMeta, resolution, engines }) => {
       (packageMeta as PackageMeta[]).forEach(
         ({
           key,
@@ -198,7 +180,7 @@ function unmapPackages(lockFileData: LockFileData): PnpmLockFile {
           };
         }
       );
-    }
+    })
   );
 
   return {

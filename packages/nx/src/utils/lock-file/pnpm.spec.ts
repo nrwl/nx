@@ -10,77 +10,83 @@ describe('pnpm LockFile utility', () => {
 
     it('should parse lockfile correctly', () => {
       expect(parsedLockFile.lockFileMetadata).toEqual({ lockfileVersion: 5.4 });
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(349);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(324);
       expect(
-        parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
+        parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
-      expect(parsedLockFile.dependencies['typescript@4.8.3']).toMatchSnapshot();
+      expect(parsedLockFile.dependencies['typescript']).toMatchSnapshot();
     });
 
     it('should map various versions of packages', () => {
       expect(
-        parsedLockFile.dependencies['@jridgewell/gen-mapping@0.1.1']
+        Object.keys(parsedLockFile.dependencies['@jridgewell/gen-mapping'])
+          .length
+      ).toEqual(2);
+      expect(
+        parsedLockFile.dependencies['@jridgewell/gen-mapping'][
+          '@jridgewell/gen-mapping@0.1.1'
+        ]
       ).toBeDefined();
       expect(
-        parsedLockFile.dependencies['@jridgewell/gen-mapping@0.3.2']
+        parsedLockFile.dependencies['@jridgewell/gen-mapping'][
+          '@jridgewell/gen-mapping@0.3.2'
+        ]
       ).toBeDefined();
     });
 
     it('should map various instances of the same version', () => {
-      expect(
-        parsedLockFile.dependencies['jest-pnp-resolver@1.2.2'].packageMeta
-          .length
-      ).toEqual(2);
-      expect(
-        (
-          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
-            .packageMeta[0] as any
-        ).key
-      ).toEqual('/jest-pnp-resolver/1.2.2_jest-resolve@28.1.1');
-      expect(
-        (
-          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
-            .packageMeta[1] as any
-        ).key
-      ).toEqual('/jest-pnp-resolver/1.2.2_jest-resolve@28.1.3');
+      const jestResolveDependency =
+        parsedLockFile.dependencies['jest-pnp-resolver'][
+          'jest-pnp-resolver@1.2.2'
+        ];
+
+      expect(jestResolveDependency.packageMeta.length).toEqual(2);
+      expect((jestResolveDependency.packageMeta[0] as any).key).toEqual(
+        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.1'
+      );
+      expect((jestResolveDependency.packageMeta[1] as any).key).toEqual(
+        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.3'
+      );
 
       expect(
-        (
-          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
-            .packageMeta[0] as any
-        ).dependencyDetails.dependencies
+        (jestResolveDependency.packageMeta[0] as any).dependencyDetails
+          .dependencies
       ).toEqual({ 'jest-resolve': '28.1.1' });
       expect(
-        (
-          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
-            .packageMeta[1] as any
-        ).dependencyDetails.dependencies
+        (jestResolveDependency.packageMeta[1] as any).dependencyDetails
+          .dependencies
       ).toEqual({ 'jest-resolve': '28.1.3' });
     });
 
     it('should properly extract specifier', () => {
       expect(
         (
-          parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
-            .packageMeta[0] as any
+          parsedLockFile.dependencies['@ampproject/remapping'][
+            '@ampproject/remapping@2.2.0'
+          ].packageMeta[0] as any
         ).specifier
       ).toBeUndefined();
       expect(
-        (parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0] as any)
-          .specifier
+        (
+          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+            .packageMeta[0] as any
+        ).specifier
       ).toEqual('~4.8.2');
     });
 
     it('should properly extract dev dependency', () => {
       expect(
         (
-          parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
-            .packageMeta[0] as any
+          parsedLockFile.dependencies['@ampproject/remapping'][
+            '@ampproject/remapping@2.2.0'
+          ].packageMeta[0] as any
         ).isDevDependency
       ).toEqual(false);
       expect(
-        (parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0] as any)
-          .isDevDependency
+        (
+          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+            .packageMeta[0] as any
+        ).isDevDependency
       ).toEqual(true);
     });
 
@@ -96,77 +102,83 @@ describe('pnpm LockFile utility', () => {
       expect(parsedLockFile.lockFileMetadata).toEqual({
         lockfileVersion: '5.4-inlineSpecifiers',
       });
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(349);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(324);
       expect(
-        parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
+        parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
-      expect(parsedLockFile.dependencies['typescript@4.8.3']).toMatchSnapshot();
+      expect(parsedLockFile.dependencies['typescript']).toMatchSnapshot();
     });
 
     it('should map various versions of packages (IS)', () => {
       expect(
-        parsedLockFile.dependencies['@jridgewell/gen-mapping@0.1.1']
+        Object.keys(parsedLockFile.dependencies['@jridgewell/gen-mapping'])
+          .length
+      ).toEqual(2);
+      expect(
+        parsedLockFile.dependencies['@jridgewell/gen-mapping'][
+          '@jridgewell/gen-mapping@0.1.1'
+        ]
       ).toBeDefined();
       expect(
-        parsedLockFile.dependencies['@jridgewell/gen-mapping@0.3.2']
+        parsedLockFile.dependencies['@jridgewell/gen-mapping'][
+          '@jridgewell/gen-mapping@0.3.2'
+        ]
       ).toBeDefined();
     });
 
     it('should map various instances of the same version (IS)', () => {
-      expect(
-        parsedLockFile.dependencies['jest-pnp-resolver@1.2.2'].packageMeta
-          .length
-      ).toEqual(2);
-      expect(
-        (
-          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
-            .packageMeta[0] as any
-        ).key
-      ).toEqual('/jest-pnp-resolver/1.2.2_jest-resolve@28.1.1');
-      expect(
-        (
-          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
-            .packageMeta[1] as any
-        ).key
-      ).toEqual('/jest-pnp-resolver/1.2.2_jest-resolve@28.1.3');
+      const jestResolveDependency =
+        parsedLockFile.dependencies['jest-pnp-resolver'][
+          'jest-pnp-resolver@1.2.2'
+        ];
+
+      expect(jestResolveDependency.packageMeta.length).toEqual(2);
+      expect((jestResolveDependency.packageMeta[0] as any).key).toEqual(
+        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.1'
+      );
+      expect((jestResolveDependency.packageMeta[1] as any).key).toEqual(
+        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.3'
+      );
 
       expect(
-        (
-          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
-            .packageMeta[0] as any
-        ).dependencyDetails.dependencies
+        (jestResolveDependency.packageMeta[0] as any).dependencyDetails
+          .dependencies
       ).toEqual({ 'jest-resolve': '28.1.1' });
       expect(
-        (
-          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
-            .packageMeta[1] as any
-        ).dependencyDetails.dependencies
+        (jestResolveDependency.packageMeta[1] as any).dependencyDetails
+          .dependencies
       ).toEqual({ 'jest-resolve': '28.1.3' });
     });
 
     it('should properly extract specifier (IS)', () => {
       expect(
         (
-          parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
-            .packageMeta[0] as any
+          parsedLockFile.dependencies['@ampproject/remapping'][
+            '@ampproject/remapping@2.2.0'
+          ].packageMeta[0] as any
         ).specifier
       ).toBeUndefined();
       expect(
-        (parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0] as any)
-          .specifier
+        (
+          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+            .packageMeta[0] as any
+        ).specifier
       ).toEqual('~4.8.2');
     });
 
     it('should properly extract dev dependency (IS)', () => {
       expect(
         (
-          parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
-            .packageMeta[0] as any
+          parsedLockFile.dependencies['@ampproject/remapping'][
+            '@ampproject/remapping@2.2.0'
+          ].packageMeta[0] as any
         ).isDevDependency
       ).toEqual(false);
       expect(
-        (parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0] as any)
-          .isDevDependency
+        (
+          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+            .packageMeta[0] as any
+        ).isDevDependency
       ).toEqual(true);
     });
 

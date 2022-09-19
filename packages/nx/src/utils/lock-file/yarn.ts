@@ -15,56 +15,7 @@ export type YarnBerryLockFile = {
 } & YarnLockFile;
 
 /**
- * Parses Berry yarn.lock syml file
- * ```
- * __metadata:
- *    version: 7
- *    cacheKey: 9
- *
- * "{package}@npm:{versionRange}":
- *   version {version}
- *   {additionalFields}
- *   dependencies?:
- *     "{package}": "npm:{versionRange}"
- * ```
- * and maps to `LockFileData` object:
- * ```
- * {
- *  lockFileMetadata: {
- *   __metadata: { version: 7, cacheKey: 9 }
- *  },
- *  "{package}@npm:{version}": {
- *    version: {version},
- *    {additionalFields},
- *    packageMeta: ["{package}@npm:{versionRange}"]
- *    dependencies: {
- *     "{package}": "npm:{versionRange}"
- *    }
- *  }
- * }
- * ```
- *
- * or parses classic yarn.lock file to `LockFileData` object
- * ```
- * "{package}@{versionRange}":
- *   version {version}
- *   {additionalFields}
- *   dependencies?:
- *     "{package}": "{versionRange}"
- * ```
- * and maps to `LockFileData` object:
- * ```
- * {
- *  "{package}@{version}": {
- *    version: {version},
- *    {additionalFields},
- *    packageMeta: ["{package}@{versionRange}"]
- *    dependencies: {
- *     "{package}": "{versionRange}"
- *    }
- *  }
- * }
- * ```
+ * Parses yarn.lock syml file and maps to `LockFileData` object
  *
  * @param lockFile
  * @returns
@@ -77,10 +28,29 @@ export function parseLockFile(lockFile: string): LockFileData {
   };
 }
 
+function mapPackages(packages: YarnLockFile): LockFileData['dependencies'] {
+  const mappedPackages: LockFileData['dependencies'] = {};
+  Object.entries(packages).forEach(([keyExpr, value]) => {
+    const keys = keyExpr.split(', ');
+    const packageName = keys[0].slice(0, keys[0].lastIndexOf('@'));
+    mappedPackages[packageName] = mappedPackages[packageName] || {};
+
+    const newKey = `${packageName}@${value.version}`;
+    mappedPackages[packageName][newKey] =
+      mappedPackages[packageName][newKey] ||
+      ({
+        ...value,
+        packageMeta: [],
+      } as PackageDependency);
+    mappedPackages[packageName][newKey].packageMeta.push(...keys);
+  });
+  return mappedPackages;
+}
+
 /**
  * Generates yarn.lock file from `LockFileData` object
  *
- * @param lockFile
+ * @param lockFileData
  * @returns
  */
 export function stringifyLockFile(lockFileData: LockFileData): string {
@@ -99,37 +69,22 @@ export function stringifyLockFile(lockFileData: LockFileData): string {
   }
 }
 
-function mapPackages(packages: YarnLockFile): LockFileData['dependencies'] {
-  const mappedPackages: LockFileData['dependencies'] = {};
-  Object.entries(packages).forEach(([keyExpr, value]) => {
-    const keys = keyExpr.split(', ');
-    const packageName = keys[0].slice(0, keys[0].lastIndexOf('@'));
-    const newKey = `${packageName}@${value.version}`;
-    mappedPackages[newKey] =
-      mappedPackages[newKey] ||
-      ({
-        ...value,
-        packageMeta: [],
-      } as PackageDependency);
-    mappedPackages[newKey].packageMeta.push(...keys);
-  });
-  return mappedPackages;
-}
-
 function unmapPackages(
   mappedPackages: YarnLockFile,
   isBerry: boolean
 ): YarnLockFile {
   const packages: YarnLockFile = {};
-  Object.values(mappedPackages).forEach((value) => {
-    const { packageMeta, ...rest } = value;
-    if (isBerry) {
-      packages[packageMeta.join(', ')] = rest;
-    } else {
-      packageMeta.forEach((key) => {
-        packages[key] = rest;
-      });
-    }
+  Object.values(mappedPackages).forEach((versions) => {
+    Object.values(versions).forEach((value) => {
+      const { packageMeta, ...rest } = value;
+      if (isBerry) {
+        packages[packageMeta.join(', ')] = rest;
+      } else {
+        packageMeta.forEach((key) => {
+          packages[key] = rest;
+        });
+      }
+    });
   });
   return packages;
 }

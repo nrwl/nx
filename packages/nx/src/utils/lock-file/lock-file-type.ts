@@ -8,7 +8,9 @@ export interface PackageDependency {
   [key: string]: any;
 }
 
+export type PackageVersions = Record<string, PackageDependency>;
+
 export type LockFileData = {
-  dependencies: Record<string, PackageDependency>;
+  dependencies: Record<string, PackageVersions>;
   lockFileMetadata?: Record<string, any>;
 };

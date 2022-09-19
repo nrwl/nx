@@ -1,4 +1,8 @@
-import { LockFileData, PackageDependency } from './lock-file-type';
+import {
+  LockFileData,
+  PackageDependency,
+  PackageVersions,
+} from './lock-file-type';
 import { sortObject } from './utils';
 
 type PackageMeta = {
@@ -26,21 +30,7 @@ export type NpmLockFile = {
 };
 
 /**
- * Parses package-lock.json file
- * ```
- * {
- *  name: string;
- *  lockfileVersion: number;
- *  requires?: boolean;
- *  packages: {
- *  },
- *  dependencies: {
- *  }
- * }
- * ```
- *
- *
- * to `LockFileData` object
+ * Parses package-lock.json file to `LockFileData` object
  *
  * @param lockFile
  * @returns
@@ -58,6 +48,33 @@ export function parseLockFile(lockFile: string): LockFileData {
   };
 }
 
+// Maps /node_modules/@abc/def with version 1.2.3 => @abc/def > @abc/dev@1.2.3
+function mapPackages(packages: Dependencies): LockFileData['dependencies'] {
+  const mappedPackages: LockFileData['dependencies'] = {};
+  Object.entries(packages).forEach(([key, { dev, optional, ...value }]) => {
+    // skip root package
+    if (!key) {
+      return;
+    }
+    const packageName = key.slice(key.lastIndexOf('node_modules/') + 13);
+    mappedPackages[packageName] = mappedPackages[packageName] || {};
+
+    const newKey = packageName + '@' + value.version;
+    mappedPackages[packageName][newKey] = mappedPackages[packageName][
+      newKey
+    ] || {
+      ...value,
+      packageMeta: [],
+    };
+    mappedPackages[packageName][newKey].packageMeta.push({
+      path: key,
+      dev,
+      optional,
+    });
+  });
+  return mappedPackages;
+}
+
 /**
  * Generates package-lock.json file from `LockFileData` object
  *
@@ -70,37 +87,38 @@ export function stringifyLockFile(lockFileData: LockFileData): string {
     '': lockFileData.lockFileMetadata.rootPackage,
   };
   Object.entries(lockFileData.dependencies).forEach(
-    ([key, { packageMeta, ...value }]) => {
-      (packageMeta as PackageMeta[]).forEach(({ path, dev, optional }) => {
-        const {
-          version,
-          resolved,
-          integrity,
-          license,
-          devOptional,
-          hasInstallScript,
-          ...rest
-        } = value;
-        // we are sorting the properties to get as close as possible to the original package-lock.json
-        packages[path] = {
-          version,
-          resolved,
-          integrity,
-          dev,
-          devOptional,
-          hasInstallScript,
-          license,
-          optional,
-          ...rest,
-        };
+    ([packageName, packageVersions]) => {
+      Object.values(packageVersions).forEach(({ packageMeta, ...value }) => {
+        (packageMeta as PackageMeta[]).forEach(({ path, dev, optional }) => {
+          const {
+            version,
+            resolved,
+            integrity,
+            license,
+            devOptional,
+            hasInstallScript,
+            ...rest
+          } = value;
+          // we are sorting the properties to get as close as possible to the original package-lock.json
+          packages[path] = {
+            version,
+            resolved,
+            integrity,
+            dev,
+            devOptional,
+            hasInstallScript,
+            license,
+            optional,
+            ...rest,
+          };
+        });
+        unmapDependencies(
+          dependencies,
+          packageName,
+          value,
+          packageMeta as PackageMeta[]
+        );
       });
-      const packageName = key.slice(0, key.lastIndexOf('@'));
-      unmapDependencies(
-        dependencies,
-        packageName,
-        value,
-        packageMeta as PackageMeta[]
-      );
     }
   );
 
@@ -111,24 +129,6 @@ export function stringifyLockFile(lockFileData: LockFileData): string {
   };
 
   return JSON.stringify(lockFileJson, null, 2) + '\n';
-}
-
-// todo(meeroslav): use sortObject here as well
-function sortDependencies(
-  unsortedDependencies: Record<string, NpmDependency>
-): Record<string, NpmDependency> {
-  const dependencies = {};
-  Object.entries(unsortedDependencies)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .forEach(([key, value]) => {
-      dependencies[key] = {
-        ...value,
-        ...(value.dependencies && {
-          dependencies: sortDependencies(value.dependencies),
-        }),
-      };
-    });
-  return dependencies;
 }
 
 function unmapDependencies(
@@ -181,29 +181,20 @@ function unmapDependencies(
   });
 }
 
-/**
- * Strip of node modules and add new key
- * @param packages
- * @returns
- */
-function mapPackages(packages: Dependencies): Dependencies {
-  const mappedPackages: Dependencies = {};
-  Object.entries(packages).forEach(([key, { dev, optional, ...value }]) => {
-    // skip root package
-    if (!key) {
-      return;
-    }
-    const packageName = key.slice(key.lastIndexOf('node_modules/') + 13);
-    const newKey = packageName + '@' + value.version;
-    mappedPackages[newKey] = mappedPackages[newKey] || {
-      ...value,
-      packageMeta: [],
-    };
-    mappedPackages[newKey].packageMeta.push({
-      path: key,
-      dev,
-      optional,
+// todo(meeroslav): use sortObject here as well
+function sortDependencies(
+  unsortedDependencies: Record<string, NpmDependency>
+): Record<string, NpmDependency> {
+  const dependencies = {};
+  Object.entries(unsortedDependencies)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([key, value]) => {
+      dependencies[key] = {
+        ...value,
+        ...(value.dependencies && {
+          dependencies: sortDependencies(value.dependencies),
+        }),
+      };
     });
-  });
-  return mappedPackages;
+  return dependencies;
 }
