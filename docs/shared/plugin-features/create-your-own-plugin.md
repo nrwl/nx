@@ -82,6 +82,7 @@ and generators.
 
 ## Learn more
 
+- [Creating and Publishing Your Own Nx Plugin - Youtube](https://www.youtube.com/watch?v=vVT7Al01VZc)
 - [Local generators](/recipe/local-generators)
 - [Local executors](/recipe/creating-custom-executors)
 - [Nx Community Plugins](/community)
