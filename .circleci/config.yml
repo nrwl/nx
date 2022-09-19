@@ -57,15 +57,14 @@ commands:
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
-            - node-deps-{{ arch }}-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+            - node-deps-{{ arch }}-v2-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
       - run:
           name: Install dependencies
           command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
       - save_cache:
           name: Save Yarn Package Cache
-          key: node-deps-{{ arch }}-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+          key: node-deps-{{ arch }}-v2-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
           paths:
-            - node_modules
             - ~/.cache/yarn
             - ~/.cache/Cypress
   install-pnpm:
@@ -188,7 +187,7 @@ jobs:
             npx nx-cloud record yarn depcheck) &
             pids+=($!)
 
-            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 && 
+            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
             npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular,e2e-react-native,e2e-detox,e2e-make-angular-cli-faster --parallel=1) &
             pids+=($!)
             yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
