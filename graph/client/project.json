@@ -104,16 +104,20 @@
       "executor": "@nrwl/webpack:dev-server",
       "configurations": {
         "dev": {
-          "buildTarget": "graph-client:build-base:dev"
+          "buildTarget": "graph-client:build-base:dev",
+          "port": 4201
         },
         "nx-console": {
-          "buildTarget": "graph-client:build-base:nx-console"
+          "buildTarget": "graph-client:build-base:nx-console",
+          "port": 4202
         },
         "release": {
-          "buildTarget": "graph-client:build-base:release"
+          "buildTarget": "graph-client:build-base:release",
+          "port": 4203
         },
         "watch": {
-          "buildTarget": "graph-client:build-base:watch"
+          "buildTarget": "graph-client:build-base:watch",
+          "port": 4204
         }
       },
       "defaultConfiguration": "dev"
