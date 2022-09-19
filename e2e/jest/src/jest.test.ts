@@ -6,12 +6,15 @@ import {
   uniq,
   updateFile,
   expectJestTestsToPass,
+  cleanupProject,
 } from '@nrwl/e2e/utils';
 
 describe('Jest', () => {
   beforeAll(() => {
     newProject({ name: uniq('proj-jest') });
   });
+
+  afterAll(() => cleanupProject());
 
   it('should be able test projects using jest', async () => {
     await expectJestTestsToPass('@nrwl/workspace:lib');
@@ -50,10 +53,10 @@ describe('Jest', () => {
       stripIndents`
       const { registerTsProject } = require('nx/src/utils/register');
       const cleanup = registerTsProject('.', 'tsconfig.base.json');
-      
-      import {setup} from '@global-fun/globals'; 
+
+      import {setup} from '@global-fun/globals';
       export default async function() {setup();}
-      
+
       cleanup();
     `
     );
@@ -63,8 +66,8 @@ describe('Jest', () => {
       stripIndents`
       import { registerTsProject } from 'nx/src/utils/register';
       const cleanup = registerTsProject('.', 'tsconfig.base.json');
-      
-      import {teardown} from '@global-fun/globals'; 
+
+      import {teardown} from '@global-fun/globals';
       export default async function() {teardown();}
       cleanup();
     `
