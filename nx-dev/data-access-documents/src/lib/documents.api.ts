@@ -50,7 +50,7 @@ export class DocumentsApi {
    * Generate the content of a "Category" or "Index" page, listing all its direct items.
    * @param path
    */
-  getDocumentIndex(path: string[]): DocumentData {
+  getDocumentIndex(path: string[]): DocumentData | null {
     let items = this.documents?.itemList;
     let found: DocumentMetadata | null = null;
     let itemPathToValidate: string[] = [];
@@ -62,10 +62,13 @@ export class DocumentsApi {
         items = found.itemList;
       }
     }
+
     // If the ids have found the item, check that the segment correspond to the id tree
     if (found && path.join('/') !== itemPathToValidate.join('/')) {
       found = null;
     }
+
+    if (!found) return null;
 
     const cardListItems = items?.map((i) => ({
       name: i.name,

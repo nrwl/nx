@@ -215,7 +215,7 @@ export const getStaticProps: GetStaticProps = async ({
     };
   }
 
-  let document: DocumentData | undefined;
+  let document: DocumentData | null = null;
   try {
     document = documentsApi.getDocument(params.segments);
   } catch (e) {
@@ -226,6 +226,7 @@ export const getStaticProps: GetStaticProps = async ({
   } catch (e) {
     // Do nothing
   }
+
   if (document) {
     return {
       props: {
