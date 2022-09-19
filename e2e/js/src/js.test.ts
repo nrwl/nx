@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  cleanupProject,
   createFile,
   expectJestTestsToPass,
   newProject,
@@ -21,6 +22,8 @@ describe('js e2e', () => {
   beforeEach(() => {
     scope = newProject();
   });
+
+  afterEach(() => cleanupProject());
 
   it('should create libs with npm scripts', () => {
     const npmScriptsLib = uniq('npmscriptslib');
@@ -259,7 +262,7 @@ describe('js e2e', () => {
       return `
         import { ${lib} } from '@${scope}/${lib}'
         export * from './lib/${base}';
-        
+
         ${lib}();
       `;
     });
@@ -289,7 +292,7 @@ export function ${lib}Wildcard() {
         import { ${lib} } from '@${scope}/${lib}';
         import { ${lib}Wildcard } from '@${scope}/${lib}/src/${lib}';
         export * from './lib/${base}';
-        
+
         ${lib}();
         ${lib}Wildcard();
       `;
