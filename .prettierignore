@@ -21,5 +21,3 @@ packages/**/generators/**/files/**/*.html
 /.yarn
 /.verdaccio/build/local-registry
 /dist
-
-/scripts/lockfile-test/*.*
