@@ -51,7 +51,7 @@ export function PackageSchemaList({
     },
     get markdown(): ReactNode {
       return renderMarkdown({
-        content: this.pkg.readme.content,
+        content: this.pkg.readme.content || this.pkg.description,
         filePath: this.pkg.readme.filePath,
         data: {},
       });
