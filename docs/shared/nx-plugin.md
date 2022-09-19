@@ -9,6 +9,8 @@ src="https://www.youtube.com/embed/fC1-4fAZDP4"
 title="Nx Tutorial: Building Custom Plugins for Nx"
 width="100%" /%}
 
+> For a detailed video explaining the things covered here and more, check out [Creating and Publishing Your Own Nx Plugin](https://www.youtube.com/watch?v=vVT7Al01VZc).
+
 ## Generating a Plugin
 
 To get started with building a Nx Plugin, run the following command:
