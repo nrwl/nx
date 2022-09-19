@@ -46,19 +46,23 @@ describe('npm LockFile utility', () => {
       parsedLockFile.dependencies['jest-resolve@28.1.3'].packageMeta.length
     ).toEqual(2);
     expect(
-      parsedLockFile.dependencies['jest-resolve@28.1.3'].packageMeta[0].path
+      (parsedLockFile.dependencies['jest-resolve@28.1.3'].packageMeta[0] as any)
+        .path
     ).toEqual('node_modules/jest-runner/node_modules/jest-resolve');
     expect(
-      parsedLockFile.dependencies['jest-resolve@28.1.3'].packageMeta[1].path
+      (parsedLockFile.dependencies['jest-resolve@28.1.3'].packageMeta[1] as any)
+        .path
     ).toEqual('node_modules/jest-runtime/node_modules/jest-resolve');
   });
 
   it('should map optional field', () => {
     expect(
-      parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0].optional
+      (parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0] as any)
+        .optional
     ).toBeFalsy();
     expect(
-      parsedLockFile.dependencies['fsevents@2.3.2'].packageMeta[0].optional
+      (parsedLockFile.dependencies['fsevents@2.3.2'].packageMeta[0] as any)
+        .optional
     ).toBeTruthy();
   });
 

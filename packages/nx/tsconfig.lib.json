@@ -10,7 +10,7 @@
     "**/*.spec.ts",
     "**/*_spec.ts",
     "jest.config.ts",
-    "**/fixtures/**"
+    "**/__fixtures__/*.*"
   ],
   "include": ["**/*.ts"]
 }

@@ -32,41 +32,54 @@ describe('pnpm LockFile utility', () => {
           .length
       ).toEqual(2);
       expect(
-        parsedLockFile.dependencies['jest-pnp-resolver@1.2.2'].packageMeta[0]
-          .key
+        (
+          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
+            .packageMeta[0] as any
+        ).key
       ).toEqual('/jest-pnp-resolver/1.2.2_jest-resolve@28.1.1');
       expect(
-        parsedLockFile.dependencies['jest-pnp-resolver@1.2.2'].packageMeta[1]
-          .key
+        (
+          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
+            .packageMeta[1] as any
+        ).key
       ).toEqual('/jest-pnp-resolver/1.2.2_jest-resolve@28.1.3');
 
       expect(
-        parsedLockFile.dependencies['jest-pnp-resolver@1.2.2'].packageMeta[0]
-          .dependencyDetails.dependencies
+        (
+          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
+            .packageMeta[0] as any
+        ).dependencyDetails.dependencies
       ).toEqual({ 'jest-resolve': '28.1.1' });
       expect(
-        parsedLockFile.dependencies['jest-pnp-resolver@1.2.2'].packageMeta[1]
-          .dependencyDetails.dependencies
+        (
+          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
+            .packageMeta[1] as any
+        ).dependencyDetails.dependencies
       ).toEqual({ 'jest-resolve': '28.1.3' });
     });
 
     it('should properly extract specifier', () => {
       expect(
-        parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
-          .packageMeta[0].specifier
+        (
+          parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
+            .packageMeta[0] as any
+        ).specifier
       ).toBeUndefined();
       expect(
-        parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0].specifier
+        (parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0] as any)
+          .specifier
       ).toEqual('~4.8.2');
     });
 
     it('should properly extract dev dependency', () => {
       expect(
-        parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
-          .packageMeta[0].isDevDependency
+        (
+          parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
+            .packageMeta[0] as any
+        ).isDevDependency
       ).toEqual(false);
       expect(
-        parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0]
+        (parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0] as any)
           .isDevDependency
       ).toEqual(true);
     });
@@ -105,41 +118,54 @@ describe('pnpm LockFile utility', () => {
           .length
       ).toEqual(2);
       expect(
-        parsedLockFile.dependencies['jest-pnp-resolver@1.2.2'].packageMeta[0]
-          .key
+        (
+          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
+            .packageMeta[0] as any
+        ).key
       ).toEqual('/jest-pnp-resolver/1.2.2_jest-resolve@28.1.1');
       expect(
-        parsedLockFile.dependencies['jest-pnp-resolver@1.2.2'].packageMeta[1]
-          .key
+        (
+          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
+            .packageMeta[1] as any
+        ).key
       ).toEqual('/jest-pnp-resolver/1.2.2_jest-resolve@28.1.3');
 
       expect(
-        parsedLockFile.dependencies['jest-pnp-resolver@1.2.2'].packageMeta[0]
-          .dependencyDetails.dependencies
+        (
+          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
+            .packageMeta[0] as any
+        ).dependencyDetails.dependencies
       ).toEqual({ 'jest-resolve': '28.1.1' });
       expect(
-        parsedLockFile.dependencies['jest-pnp-resolver@1.2.2'].packageMeta[1]
-          .dependencyDetails.dependencies
+        (
+          parsedLockFile.dependencies['jest-pnp-resolver@1.2.2']
+            .packageMeta[1] as any
+        ).dependencyDetails.dependencies
       ).toEqual({ 'jest-resolve': '28.1.3' });
     });
 
     it('should properly extract specifier (IS)', () => {
       expect(
-        parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
-          .packageMeta[0].specifier
+        (
+          parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
+            .packageMeta[0] as any
+        ).specifier
       ).toBeUndefined();
       expect(
-        parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0].specifier
+        (parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0] as any)
+          .specifier
       ).toEqual('~4.8.2');
     });
 
     it('should properly extract dev dependency (IS)', () => {
       expect(
-        parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
-          .packageMeta[0].isDevDependency
+        (
+          parsedLockFile.dependencies['@ampproject/remapping@2.2.0']
+            .packageMeta[0] as any
+        ).isDevDependency
       ).toEqual(false);
       expect(
-        parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0]
+        (parsedLockFile.dependencies['typescript@4.8.3'].packageMeta[0] as any)
           .isDevDependency
       ).toEqual(true);
     });

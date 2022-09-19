@@ -10,10 +10,7 @@ type PackageMeta = {
   dependencyDetails: Record<string, Record<string, string>>;
 };
 
-type Dependencies = Record<
-  string,
-  Omit<PackageDependency<string>, 'packageMeta'>
->;
+type Dependencies = Record<string, Omit<PackageDependency, 'packageMeta'>>;
 
 type InlineSpecifier = {
   version: string;
@@ -57,7 +54,7 @@ export type PnpmLockFile = {
  * @param lockFile
  * @returns
  */
-export function parseLockFile(lockFile: string): LockFileData<PackageMeta> {
+export function parseLockFile(lockFile: string): LockFileData {
   const { dependencies, devDependencies, packages, specifiers, ...metadata } =
     load(lockFile) as PnpmLockFile;
 
@@ -87,9 +84,7 @@ const LOCKFILE_YAML_FORMAT = {
  * @param lockFile
  * @returns
  */
-export function stringifyLockFile(
-  lockFileData: LockFileData<PackageMeta>
-): string {
+export function stringifyLockFile(lockFileData: LockFileData): string {
   const pnpmLockFile = unmapPackages(lockFileData);
 
   return dump(pnpmLockFile, LOCKFILE_YAML_FORMAT);
@@ -101,8 +96,8 @@ function mapPackages(
   specifiers: Record<string, string>,
   packages: Dependencies,
   inlineSpecifiers: boolean
-): LockFileData<PackageMeta>['dependencies'] {
-  const mappedPackages: LockFileData<PackageMeta>['dependencies'] = {};
+): LockFileData['dependencies'] {
+  const mappedPackages: LockFileData['dependencies'] = {};
   Object.entries(packages).forEach(([key, value]) => {
     const packageName = key.slice(1, key.lastIndexOf('/'));
     const matchingVersion = key.slice(key.lastIndexOf('/') + 1);
@@ -159,7 +154,7 @@ function mapPackages(
   return mappedPackages;
 }
 
-function unmapPackages(lockFileData: LockFileData<PackageMeta>): PnpmLockFile {
+function unmapPackages(lockFileData: LockFileData): PnpmLockFile {
   const devDependencies: Record<string, string | InlineSpecifier> = {};
   const dependencies: Record<string, string | InlineSpecifier> = {};
   const packages: Dependencies = {};
@@ -174,7 +169,7 @@ function unmapPackages(lockFileData: LockFileData<PackageMeta>): PnpmLockFile {
         0,
         dependencyKey.lastIndexOf('@')
       );
-      packageMeta.forEach(
+      (packageMeta as PackageMeta[]).forEach(
         ({
           key,
           specifier,

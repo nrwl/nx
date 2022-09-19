@@ -4,7 +4,7 @@ import { LockFileData, PackageDependency } from './lock-file-type';
 
 export type YarnLockFile = Record<
   string,
-  Omit<PackageDependency<string>, 'packageMeta'>
+  Omit<PackageDependency, 'packageMeta'>
 >;
 
 export type YarnBerryLockFile = {
@@ -110,7 +110,7 @@ function mapPackages(packages: YarnLockFile): LockFileData['dependencies'] {
       ({
         ...value,
         packageMeta: [],
-      } as PackageDependency<string>);
+      } as PackageDependency);
     mappedPackages[newKey].packageMeta.push(...keys);
   });
   return mappedPackages;

@@ -7,7 +7,7 @@ type PackageMeta = {
   dev?: boolean;
 };
 
-type Dependencies = Record<string, PackageDependency<PackageMeta>>;
+type Dependencies = Record<string, PackageDependency>;
 
 type NpmDependency = {
   version: string;
@@ -45,7 +45,7 @@ export type NpmLockFile = {
  * @param lockFile
  * @returns
  */
-export function parseLockFile(lockFile: string): LockFileData<PackageMeta> {
+export function parseLockFile(lockFile: string): LockFileData {
   const { packages, dependencies, ...metadata } = JSON.parse(
     lockFile
   ) as NpmLockFile;
@@ -71,7 +71,7 @@ export function stringifyLockFile(lockFileData: LockFileData): string {
   };
   Object.entries(lockFileData.dependencies).forEach(
     ([key, { packageMeta, ...value }]) => {
-      packageMeta.forEach(({ path, dev, optional }) => {
+      (packageMeta as PackageMeta[]).forEach(({ path, dev, optional }) => {
         const {
           version,
           resolved,
@@ -95,7 +95,12 @@ export function stringifyLockFile(lockFileData: LockFileData): string {
         };
       });
       const packageName = key.slice(0, key.lastIndexOf('@'));
-      unmapDependencies(dependencies, packageName, value, packageMeta);
+      unmapDependencies(
+        dependencies,
+        packageName,
+        value,
+        packageMeta as PackageMeta[]
+      );
     }
   );
 
@@ -129,7 +134,7 @@ function sortDependencies(
 function unmapDependencies(
   dependencies: Record<string, NpmDependency>,
   packageName: string,
-  value: Omit<PackageDependency<PackageMeta>, 'packageMeta'>,
+  value: Omit<PackageDependency, 'packageMeta'>,
   packageMeta: PackageMeta[]
 ): void {
   packageMeta.forEach(({ path, dev, optional }) => {
