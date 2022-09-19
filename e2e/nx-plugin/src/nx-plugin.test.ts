@@ -14,15 +14,19 @@ import {
   createFile,
   readFile,
   removeFile,
+  cleanupProject,
 } from '@nrwl/e2e/utils';
 
 import { ASYNC_GENERATOR_EXECUTOR_CONTENTS } from './nx-plugin.fixtures';
 
 describe('Nx Plugin', () => {
   let npmScope: string;
+
   beforeEach(() => {
     npmScope = newProject();
   });
+
+  afterEach(() => cleanupProject());
 
   it('should be able to generate a Nx Plugin ', async () => {
     const plugin = uniq('plugin');
@@ -288,7 +292,7 @@ describe('Nx Plugin', () => {
       updateFile(
         `libs/${plugin}/src/index.ts`,
         `import {basename} from 'path'
-  
+
   export function registerProjectTargets(f) {
     if (basename(f) === 'my-project-file') {
       return {
@@ -301,7 +305,7 @@ describe('Nx Plugin', () => {
       }
     }
   }
-  
+
   export const projectFilePatterns = ['my-project-file'];
   `
       );
