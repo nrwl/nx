@@ -2,6 +2,7 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  cleanupProject,
   createFile,
   expectJestTestsToPass,
   killPorts,
@@ -38,6 +39,8 @@ function getData(port): Promise<any> {
 
 describe('Node Applications', () => {
   beforeEach(() => newProject());
+
+  afterEach(() => cleanupProject());
 
   it('should be able to generate an empty application', async () => {
     const nodeapp = uniq('nodeapp');
@@ -296,7 +299,7 @@ describe('Build Node apps', () => {
     updateFile(
       `apps/${nodeapp}/src/main.ts`,
       `
-import { ${jslib} } from '@${scope}/${jslib}';   
+import { ${jslib} } from '@${scope}/${jslib}';
 console.log('Hello World!');
 ${jslib}();
 `
