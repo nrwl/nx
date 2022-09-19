@@ -5,6 +5,7 @@ export const iconsMap: Record<string, string> = {
   detox: '/images/icons/react.svg',
   devkit: '/images/icons/nx.svg',
   'eslint-plugin-nx': '/images/icons/eslint.svg',
+  expo: '/images/icons/expo.svg',
   express: '/images/icons/express.svg',
   jest: '/images/icons/jest.svg',
   js: '/images/icons/javascript.svg',
