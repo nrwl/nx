@@ -59,13 +59,14 @@
   {
     "name": "cra-to-nx",
     "packageName": "cra-to-nx",
+    "description": "This package will turn your React app into an Nx workspace. To use this package, your React app must have been generated and kept the structure of Create-React-App, with files generated either in js/jsx or ts/tsx.",
     "path": "generated/packages/cra-to-nx.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {
     "name": "create-nx-plugin",
     "packageName": "create-nx-plugin",
-    "description": "Smart, Fast and Extensible Build System",
+    "description": "This package is used to scaffold a brand-new workspace used to develop an Nx plugin, and sets up a pre-configured plugin with the specified name. The new plugin is created with a default generator, executor, and e2e app.",
     "path": "generated/packages/create-nx-plugin.json",
     "schemas": { "executors": [], "generators": [] }
   },
@@ -118,7 +119,7 @@
   {
     "name": "expo",
     "packageName": "expo",
-    "description": "Expo Plugin for Nx",
+    "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
     "path": "generated/packages/expo.json",
     "schemas": {
       "executors": [
