@@ -1,6 +1,7 @@
 import { stripIndents } from '@nrwl/devkit';
 import {
   checkFilesExist,
+  cleanupProject,
   killPort,
   newProject,
   readProjectConfig,
@@ -14,6 +15,8 @@ describe('React Module Federation', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
+
+  afterEach(() => cleanupProject());
 
   it('should generate host and remote apps', async () => {
     const shell = uniq('shell');
