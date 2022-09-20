@@ -463,10 +463,7 @@ export class TaskOrchestrator {
   }
 
   private async shouldCopyOutputsFromCache(outputs: string[], hash: string) {
-    if (
-      this.daemon?.enabled() &&
-      process.env.NX_DAEMON_OUTPUT_OPTIMIZATION === 'true'
-    ) {
+    if (this.daemon?.enabled()) {
       return !(await this.daemon.outputsHashesMatch(outputs, hash));
     } else {
       return true;
@@ -474,10 +471,7 @@ export class TaskOrchestrator {
   }
 
   private async recordOutputsHash(task: Task) {
-    if (
-      this.daemon?.enabled() &&
-      process.env.NX_DAEMON_OUTPUT_OPTIMIZATION === 'true'
-    ) {
+    if (this.daemon?.enabled()) {
       return this.daemon.recordOutputsHash(
         getOutputs(this.projectGraph.nodes, task),
         task.hash

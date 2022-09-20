@@ -4,6 +4,7 @@ import * as fastGlob from 'fast-glob';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { serverLogger } from './logger';
 import { collapseExpandedOutputs } from '../../utils/collapse-expanded-outputs';
+import { isWindows } from '../socket-utils';
 
 const watcher = require('@parcel/watcher');
 
@@ -14,7 +15,7 @@ const watcher = require('@parcel/watcher');
  * If we start the file watcher without the delay, we will see an invalidation
  * of the write that is the write itself.
  */
-const FILE_WATCHING_DELAY = 1000;
+const FILE_WATCHING_DELAY = isWindows ? 10000 : 2000;
 
 const errors = {} as { [output: string]: Error };
 const subscriptions = {} as { [output: string]: { unsubscribe: Function } };
