@@ -1,8 +1,4 @@
-import {
-  LockFileData,
-  PackageDependency,
-  PackageVersions,
-} from './lock-file-type';
+import { LockFileData, PackageDependency } from './lock-file-type';
 import { sortObject } from './utils';
 
 type PackageMeta = {
@@ -21,7 +17,7 @@ type NpmDependency = {
   dependencies?: Record<string, NpmDependency>;
 };
 
-export type NpmLockFile = {
+type NpmLockFile = {
   name?: string;
   lockfileVersion: number;
   requires?: boolean;

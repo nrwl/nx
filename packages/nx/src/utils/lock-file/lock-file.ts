@@ -17,6 +17,9 @@ import {
 } from './pnpm';
 import { LockFileData } from './lock-file-type';
 
+/**
+ * Parses lock file and maps dependencies and metadata to {@link LockFileData}
+ */
 export function parseLockFile(
   packageManager: PackageManager = detectPackageManager()
 ): LockFileData {
@@ -35,6 +38,9 @@ export function parseLockFile(
   throw Error(`Unknown package manager: ${packageManager}`);
 }
 
+/**
+ * Stringifies {@link LockFileData} content and writes it to lock file
+ */
 export function writeLockFile(
   lockFile: LockFileData,
   packageManager: PackageManager = detectPackageManager()
@@ -57,6 +63,10 @@ export function writeLockFile(
   throw Error(`Unknown package manager: ${packageManager}`);
 }
 
+/**
+ * Prunes {@link LockFileData} based on minimal necessary set of packages
+ * Returns new {@link LockFileData}
+ */
 export function pruneLockFile(
   lockFile: LockFileData,
   packages: string[],
