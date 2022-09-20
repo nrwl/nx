@@ -8,4 +8,5 @@ export default {
   displayName: 'angular',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
 };
