@@ -66,17 +66,13 @@ export abstract class FileHasherBase {
         ? path.slice(workspaceRoot.length + 1)
         : path
     );
-    if (this.fileHashes.has(relativePath)) {
-      return this.fileHashes.get(relativePath);
-    } else {
-      try {
-        // this has to be absolute to avoid issues with cwd
-        return defaultHashing.hashFile(
-          joinPathFragments(workspaceRoot, relativePath)
-        );
-      } catch {
-        return '';
-      }
+    try {
+      // this has to be absolute to avoid issues with cwd
+      return defaultHashing.hashFile(
+        joinPathFragments(workspaceRoot, relativePath)
+      );
+    } catch {
+      return '';
     }
   }
 }

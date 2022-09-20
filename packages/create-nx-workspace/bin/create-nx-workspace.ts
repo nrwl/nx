@@ -347,11 +347,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   }
 
   await recordWorkspaceCreationStats(nxCloud);
-
-  // vsavkin: temporary workaround
-  try {
-    await execAndWait('npx nx reset', directory);
-  } catch (e) {}
 }
 
 async function getConfiguration(
@@ -980,15 +975,19 @@ function mapErrorToBodyLines(error: {
 
 function execAndWait(command: string, cwd: string) {
   return new Promise((res, rej) => {
-    exec(command, { cwd }, (error, stdout, stderr) => {
-      if (error) {
-        const logFile = path.join(cwd, 'error.log');
-        writeFileSync(logFile, `${stdout}\n${stderr}`);
-        rej({ code: error.code, logFile, logMessage: stderr });
-      } else {
-        res({ code: 0, stdout });
+    exec(
+      command,
+      { cwd, env: { ...process.env, NX_DAEMON: 'false' } },
+      (error, stdout, stderr) => {
+        if (error) {
+          const logFile = path.join(cwd, 'error.log');
+          writeFileSync(logFile, `${stdout}\n${stderr}`);
+          rej({ code: error.code, logFile, logMessage: stderr });
+        } else {
+          res({ code: 0, stdout });
+        }
       }
-    });
+    );
   });
 }
 
