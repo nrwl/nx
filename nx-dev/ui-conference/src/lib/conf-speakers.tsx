@@ -86,6 +86,19 @@ export function ConfSpeakers(): JSX.Element {
       name: 'James Henry',
       twitter: 'MrJamesHenry',
     },
+    {
+      description:
+        'Mike Ryan is a principal architect at LiveLoveApp, helping companies find absolute joy in shipping apps. He is a Google Developer Expert in Web Technologies and one of the co-creators of NgRx, an open-source collection of high-quality reactive extensions for Angular.',
+      imageUrl: '/images/conf/mike-ryan.webp',
+      name: 'Mike Ryan',
+      twitter: 'MikeRyanDev',
+    },
+    {
+      description: 'Coming soon',
+      imageUrl: '/images/conf/ryan-diehl.webp',
+      name: 'Ryan Diehl',
+      twitter: '',
+    },
   ];
 
   function chunkList<ITEM>(itemList: ITEM[], chunkSize: number): Array<ITEM[]> {
