@@ -15,7 +15,7 @@ documented.
 ## Resources
 
 - [Nx Cloud K8s Example + All Config Options](https://github.com/nrwl/nx-cloud-helm)
-- [Nx Cloud K8s Example + All Config Options (no Helm)](https://github.com/nrwl/nx-cloud-helm/no-helm)
+- [Nx Cloud K8s Example + All Config Options (no Helm)](https://github.com/nrwl/nx-cloud-helm/tree/main/no-helm)
 - [Standalone Container](/nx-cloud/private-cloud/standalone)
 - [GitHub PR Integration](/nx-cloud/private-cloud/github)
 - [Auth (Basic)](/nx-cloud/private-cloud/auth-single-admin)
