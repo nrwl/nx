@@ -165,7 +165,18 @@ Object {
           },
         ],
         "@typescript-eslint/member-ordering": "error",
-        "@typescript-eslint/naming-convention": "error",
+        "@typescript-eslint/naming-convention": Array [
+          "error",
+          Object {
+            "format": Array [
+              "camelCase",
+              "UPPER_CASE",
+            ],
+            "leadingUnderscore": "forbid",
+            "selector": "variable",
+            "trailingUnderscore": "forbid",
+          },
+        ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "error",
         "@typescript-eslint/no-inferrable-types": Array [
@@ -459,7 +470,18 @@ Object {
           },
         ],
         "@typescript-eslint/member-ordering": "error",
-        "@typescript-eslint/naming-convention": "error",
+        "@typescript-eslint/naming-convention": Array [
+          "error",
+          Object {
+            "format": Array [
+              "camelCase",
+              "UPPER_CASE",
+            ],
+            "leadingUnderscore": "forbid",
+            "selector": "variable",
+            "trailingUnderscore": "forbid",
+          },
+        ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "error",
         "@typescript-eslint/no-inferrable-types": Array [

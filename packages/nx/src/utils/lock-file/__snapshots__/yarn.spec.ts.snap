@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`yarn LockFile utility berry should parse lockfile correctly 1`] = `
+Object {
+  "@ampproject/remapping@2.2.0": Object {
+    "checksum": "d74d170d06468913921d72430259424b7e4c826b5a7d39ff839a29d547efb97dc577caa8ba3fb5cf023624e9af9d09651afc3d4112a45e2050328abc9b3a2292",
+    "dependencies": Object {
+      "@jridgewell/gen-mapping": "^0.1.0",
+      "@jridgewell/trace-mapping": "^0.3.9",
+    },
+    "languageName": "node",
+    "linkType": "hard",
+    "packageMeta": Array [
+      "@ampproject/remapping@npm:^2.1.0",
+    ],
+    "resolution": "@ampproject/remapping@npm:2.2.0",
+    "version": "2.2.0",
+  },
+}
+`;
+
+exports[`yarn LockFile utility berry should parse lockfile correctly 2`] = `
+Object {
+  "typescript@4.8.3": Object {
+    "bin": Object {
+      "tsc": "bin/tsc",
+      "tsserver": "bin/tsserver",
+    },
+    "checksum": "8286a5edcaf3d68e65c451aa1e7150ad1cf53ee0813c07ec35b7abdfdb10f355ecaa13c6a226a694ae7a67785fd7eeebf89f845da0b4f7e4a35561ddc459aba0",
+    "languageName": "node",
+    "linkType": "hard",
+    "packageMeta": Array [
+      "typescript@npm:~4.8.2",
+    ],
+    "resolution": "typescript@npm:4.8.3",
+    "version": "4.8.3",
+  },
+}
+`;
+
+exports[`yarn LockFile utility classic should parse lockfile correctly 1`] = `
+Object {
+  "@ampproject/remapping@2.2.0": Object {
+    "dependencies": Object {
+      "@jridgewell/gen-mapping": "^0.1.0",
+      "@jridgewell/trace-mapping": "^0.3.9",
+    },
+    "integrity": "sha512-qRmjj8nj9qmLTQXXmaR1cck3UXSRMPrbsLJAasZpF+t3riI71BXed5ebIOYwQntykeZuhjsdweEc9BxH5Jc26w==",
+    "packageMeta": Array [
+      "@ampproject/remapping@^2.1.0",
+    ],
+    "resolved": "https://registry.yarnpkg.com/@ampproject/remapping/-/remapping-2.2.0.tgz#56c133824780de3174aed5ab6834f3026790154d",
+    "version": "2.2.0",
+  },
+}
+`;
+
+exports[`yarn LockFile utility classic should parse lockfile correctly 2`] = `
+Object {
+  "typescript@4.8.3": Object {
+    "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
+    "packageMeta": Array [
+      "typescript@~4.8.2",
+    ],
+    "resolved": "https://registry.yarnpkg.com/typescript/-/typescript-4.8.3.tgz#d59344522c4bc464a65a730ac695007fdb66dd88",
+    "version": "4.8.3",
+  },
+}
+`;

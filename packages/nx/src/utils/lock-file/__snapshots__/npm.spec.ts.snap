@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`npm LockFile utility should parse lockfile correctly 1`] = `
+Object {
+  "@ampproject/remapping@2.2.0": Object {
+    "dependencies": Object {
+      "@jridgewell/gen-mapping": "^0.1.0",
+      "@jridgewell/trace-mapping": "^0.3.9",
+    },
+    "engines": Object {
+      "node": ">=6.0.0",
+    },
+    "integrity": "sha512-qRmjj8nj9qmLTQXXmaR1cck3UXSRMPrbsLJAasZpF+t3riI71BXed5ebIOYwQntykeZuhjsdweEc9BxH5Jc26w==",
+    "packageMeta": Array [
+      Object {
+        "dev": true,
+        "optional": undefined,
+        "path": "node_modules/@ampproject/remapping",
+      },
+    ],
+    "resolved": "https://registry.npmjs.org/@ampproject/remapping/-/remapping-2.2.0.tgz",
+    "version": "2.2.0",
+  },
+}
+`;
+
+exports[`npm LockFile utility should parse lockfile correctly 2`] = `
+Object {
+  "typescript@4.8.3": Object {
+    "bin": Object {
+      "tsc": "bin/tsc",
+      "tsserver": "bin/tsserver",
+    },
+    "engines": Object {
+      "node": ">=4.2.0",
+    },
+    "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
+    "packageMeta": Array [
+      Object {
+        "dev": true,
+        "optional": undefined,
+        "path": "node_modules/typescript",
+      },
+    ],
+    "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.8.3.tgz",
+    "version": "4.8.3",
+  },
+}
+`;

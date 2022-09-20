@@ -33,6 +33,9 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "@parcel/watcher": "2.0.4",
+    "@yarnpkg/lockfile": "^1.1.0",
+    "@yarnpkg/parsers": "^3.0.0-rc.18",
+    "@zkochan/js-yaml": "0.0.6",
     "chalk": "4.1.0",
     "chokidar": "^3.5.1",
     "cli-cursor": "3.1.0",
