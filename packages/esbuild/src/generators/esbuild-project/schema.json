@@ -4,6 +4,20 @@
   "cli": "nx",
   "title": "Add EsBuild Configuration to a project",
   "description": "Add EsBuild Configuration to a project.",
+  "examples": [
+    {
+      "command": "nx g @nrwl/esbuild:esbuild-project my-package",
+      "description": "Add a build target to 'my-package' library."
+    },
+    {
+      "command": "nx g @nrwl/esbuild:esbuild-project my-package --importPath=@acme/package",
+      "description": "Add a build target with a custom npm import path."
+    },
+    {
+      "command": "nx g @nrwl/esbuild:esbuild-project my-package --main=packages/my-package/custom-entry.ts",
+      "description": "Add a build target with a custom main entry file."
+    }
+  ],
   "type": "object",
   "properties": {
     "project": {
