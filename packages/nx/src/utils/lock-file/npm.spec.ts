@@ -1,8 +1,8 @@
-import { parseLockFile, stringifyLockFile } from './npm';
+import { parseNpmLockFile, stringifyNpmLockFile } from './npm';
 import { lockFile } from './__fixtures__/npm.lock';
 
 describe('npm LockFile utility', () => {
-  const parsedLockFile = parseLockFile(lockFile);
+  const parsedLockFile = parseNpmLockFile(lockFile);
 
   it('should parse lockfile correctly', () => {
     expect(parsedLockFile.lockFileMetadata).toEqual({
@@ -70,6 +70,6 @@ describe('npm LockFile utility', () => {
   });
 
   it('should match the original file on stringification', () => {
-    expect(stringifyLockFile(parsedLockFile)).toEqual(lockFile);
+    expect(stringifyNpmLockFile(parsedLockFile)).toEqual(lockFile);
   });
 });

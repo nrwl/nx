@@ -2,17 +2,7 @@ import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
 import { stringify } from '@yarnpkg/lockfile';
 import { LockFileData, PackageDependency } from './lock-file-type';
 
-export type YarnLockFile = Record<
-  string,
-  Omit<PackageDependency, 'packageMeta'>
->;
-
-export type YarnBerryLockFile = {
-  __metadata: {
-    version: string;
-    cacheKey: string;
-  };
-} & YarnLockFile;
+type YarnLockFile = Record<string, Omit<PackageDependency, 'packageMeta'>>;
 
 /**
  * Parses yarn.lock syml file and maps to `LockFileData` object
@@ -20,7 +10,7 @@ export type YarnBerryLockFile = {
  * @param lockFile
  * @returns
  */
-export function parseLockFile(lockFile: string): LockFileData {
+export function parseYarnLockFile(lockFile: string): LockFileData {
   const { __metadata, ...dependencies } = parseSyml(lockFile);
   return {
     dependencies: mapPackages(dependencies),
@@ -53,7 +43,7 @@ function mapPackages(packages: YarnLockFile): LockFileData['dependencies'] {
  * @param lockFileData
  * @returns
  */
-export function stringifyLockFile(lockFileData: LockFileData): string {
+export function stringifyYarnLockFile(lockFileData: LockFileData): string {
   const isBerry = !!lockFileData.lockFileMetadata?.__metadata;
   const lockFile = {
     ...lockFileData.lockFileMetadata,

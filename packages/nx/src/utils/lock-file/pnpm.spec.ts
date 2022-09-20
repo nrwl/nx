@@ -1,4 +1,4 @@
-import { parseLockFile, stringifyLockFile } from './pnpm';
+import { parsePnpmLockFile, stringifyPnpmLockFile } from './pnpm';
 import {
   lockFile,
   lockFileWithInlineSpecifiers,
@@ -6,7 +6,7 @@ import {
 
 describe('pnpm LockFile utility', () => {
   describe('standard lock file', () => {
-    const parsedLockFile = parseLockFile(lockFile);
+    const parsedLockFile = parsePnpmLockFile(lockFile);
 
     it('should parse lockfile correctly', () => {
       expect(parsedLockFile.lockFileMetadata).toEqual({ lockfileVersion: 5.4 });
@@ -91,12 +91,12 @@ describe('pnpm LockFile utility', () => {
     });
 
     it('should match the original file on stringification', () => {
-      expect(stringifyLockFile(parsedLockFile)).toEqual(lockFile);
+      expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(lockFile);
     });
   });
 
   describe('lock file with inline specifiers', () => {
-    const parsedLockFile = parseLockFile(lockFileWithInlineSpecifiers);
+    const parsedLockFile = parsePnpmLockFile(lockFileWithInlineSpecifiers);
 
     it('should parse lockfile (IS)', () => {
       expect(parsedLockFile.lockFileMetadata).toEqual({
@@ -183,7 +183,7 @@ describe('pnpm LockFile utility', () => {
     });
 
     it('should match the original file on stringification (IS)', () => {
-      expect(stringifyLockFile(parsedLockFile)).toEqual(
+      expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
         lockFileWithInlineSpecifiers
       );
     });

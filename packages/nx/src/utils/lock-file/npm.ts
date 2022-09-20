@@ -35,7 +35,7 @@ export type NpmLockFile = {
  * @param lockFile
  * @returns
  */
-export function parseLockFile(lockFile: string): LockFileData {
+export function parseNpmLockFile(lockFile: string): LockFileData {
   const { packages, dependencies, ...metadata } = JSON.parse(
     lockFile
   ) as NpmLockFile;
@@ -81,7 +81,7 @@ function mapPackages(packages: Dependencies): LockFileData['dependencies'] {
  * @param lockFile
  * @returns
  */
-export function stringifyLockFile(lockFileData: LockFileData): string {
+export function stringifyNpmLockFile(lockFileData: LockFileData): string {
   const dependencies = {};
   const packages = {
     '': lockFileData.lockFileMetadata.rootPackage,

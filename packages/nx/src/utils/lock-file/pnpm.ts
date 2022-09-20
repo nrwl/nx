@@ -17,7 +17,7 @@ type InlineSpecifier = {
   specifier: string;
 };
 
-export type PnpmLockFile = {
+type PnpmLockFile = {
   lockfileVersion: string;
   specifiers?: Record<string, string>;
   dependencies?: Record<
@@ -45,7 +45,7 @@ const LOCKFILE_YAML_FORMAT = {
  * @param lockFile
  * @returns
  */
-export function parseLockFile(lockFile: string): LockFileData {
+export function parsePnpmLockFile(lockFile: string): LockFileData {
   const { dependencies, devDependencies, packages, specifiers, ...metadata } =
     load(lockFile) as PnpmLockFile;
 
@@ -134,7 +134,7 @@ function mapPackages(
  * @param lockFile
  * @returns
  */
-export function stringifyLockFile(lockFileData: LockFileData): string {
+export function stringifyPnpmLockFile(lockFileData: LockFileData): string {
   const pnpmLockFile = unmapPackages(lockFileData);
 
   return dump(pnpmLockFile, LOCKFILE_YAML_FORMAT);
