@@ -1,6 +1,7 @@
 {
   "name": "@nrwl/esbuild",
   "version": "0.0.1",
+  "private": false,
   "description": "The Nx Plugin for EsBuild contains executors and generators that support building applications using EsBuild",
   "repository": {
     "type": "git",
@@ -35,5 +36,8 @@
     "esbuild": "^0.15.7",
     "fs-extra": "^10.1.0",
     "tslib": "^2.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
