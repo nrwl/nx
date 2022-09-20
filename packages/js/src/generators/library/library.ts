@@ -52,7 +52,7 @@ export async function projectGenerator(
 
   addProject(tree, options, destinationDir);
 
-  // tasks.push(addProjectDependencies(tree, options));
+  tasks.push(addProjectDependencies(tree, options));
 
   if (!schema.skipTsConfig) {
     updateRootTsConfig(tree, options);
