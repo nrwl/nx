@@ -182,7 +182,7 @@
     "jest-preset-angular": "~12.2.2",
     "js-yaml": "4.1.0",
     "jsonc-eslint-parser": "^2.1.0",
-    "jsonc-parser": "3.0.0",
+    "jsonc-parser": "3.2.0",
     "karma": "~4.0.0",
     "karma-chrome-launcher": "~2.2.0",
     "karma-coverage-istanbul-reporter": "~2.0.1",
