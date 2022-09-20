@@ -100,8 +100,8 @@ describe('Workspace Tests', () => {
       checkFilesExist(`dist/libs/${buildableLib}/README.md`);
 
       const json = readJson(`dist/libs/${buildableLib}/package.json`);
-      expect(json.main).toEqual('./src/index.js');
-      expect(json.typings).toEqual('./src/index.d.ts');
+      expect(json.main).toEqual('./src/index.cjs');
+      expect(json.types).toEqual('./src/index.d.ts');
     });
   });
 

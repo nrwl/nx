@@ -7,7 +7,7 @@ export type FileInputOutput = {
 };
 export type AssetGlob = FileInputOutput & {
   glob: string;
-  ignore: string[];
+  ignore?: string[];
   dot?: boolean;
 };
 

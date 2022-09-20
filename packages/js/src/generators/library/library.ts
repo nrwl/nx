@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
   formatFiles,
@@ -9,10 +10,10 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  readJson,
   toJS,
   Tree,
   updateJson,
-  readJson,
   writeJson,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
@@ -28,6 +29,7 @@ import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { nxVersion } from '../../utils/versions';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -43,17 +45,18 @@ export async function projectGenerator(
   destinationDir: string,
   filesDir: string
 ) {
+  const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(tree, schema, destinationDir);
 
   createFiles(tree, options, `${filesDir}/lib`);
 
   addProject(tree, options, destinationDir);
 
+  // tasks.push(addProjectDependencies(tree, options));
+
   if (!schema.skipTsConfig) {
     updateRootTsConfig(tree, options);
   }
-
-  const tasks: GeneratorCallback[] = [];
 
   if (options.linter !== 'none') {
     const lintCallback = await addLint(tree, options);
@@ -99,7 +102,7 @@ function addProject(
   if (options.buildable && options.config !== 'npm-scripts') {
     const outputPath = `dist/${destinationDir}/${options.projectDirectory}`;
     projectConfiguration.targets.build = {
-      executor: `@nrwl/js:${options.compiler}`,
+      executor: getBuildExecutor(options),
       outputs: ['{options.outputPath}'],
       options: {
         outputPath,
@@ -406,6 +409,51 @@ function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
 
     return json;
   });
+}
+
+function addProjectDependencies(
+  tree: Tree,
+  options: NormalizedSchema
+): GeneratorCallback {
+  if (options.bundler == 'esbuild') {
+    return addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@nrwl/esbuild': nxVersion }
+    );
+  }
+
+  if (options.bundler == 'rollup') {
+    return addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@nrwl/rollup': nxVersion }
+    );
+  }
+
+  if (options.bundler == 'webpack') {
+    return addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@nrwl/webpack': nxVersion }
+    );
+  }
+
+  // noop
+  return () => {};
+}
+
+function getBuildExecutor(options: NormalizedSchema) {
+  switch (options.bundler) {
+    case 'esbuild':
+      return `@nrwl/esbuild:esbuild`;
+    case 'rollup':
+      return `@nrwl/rollup:rollup`;
+    case 'webpack':
+      return `@nrwl/webpack:webpack`;
+    default:
+      return `@nrwl/js:${options.compiler}`;
+  }
 }
 
 export default libraryGenerator;

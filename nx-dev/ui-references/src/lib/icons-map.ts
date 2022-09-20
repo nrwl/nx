@@ -4,6 +4,7 @@ export const iconsMap: Record<string, string> = {
   cypress: '/images/icons/cypress.svg',
   detox: '/images/icons/react.svg',
   devkit: '/images/icons/nx.svg',
+  esbuild: '/images/icons/esbuild.svg',
   'eslint-plugin-nx': '/images/icons/eslint.svg',
   expo: '/images/icons/expo.svg',
   express: '/images/icons/express.svg',
