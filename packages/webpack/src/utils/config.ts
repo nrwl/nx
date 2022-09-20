@@ -129,7 +129,7 @@ export function getBaseWebpackPartial(
     performance: {
       hints: false,
     },
-    plugins: [new webpack.DefinePlugin(getClientEnvironment(mode).stringified)],
+    plugins: [],
     watch: options.watch,
     watchOptions: {
       poll: options.poll,
@@ -149,36 +149,46 @@ export function getBaseWebpackPartial(
   if (options.target === 'node') {
     webpackConfig.output.libraryTarget = 'commonjs';
     webpackConfig.node = false;
-  }
 
-  if (options.compiler !== 'swc' && internalOptions.isScriptOptimizeOn) {
-    webpackConfig.optimization = {
-      sideEffects: true,
-      minimizer: [
-        options.target === 'web'
-          ? new TerserPlugin({
-              parallel: true,
-              terserOptions: {
-                ecma: (internalOptions.esm
-                  ? 2016
-                  : 5) as TerserPlugin.TerserECMA,
-                safari10: true,
-                output: {
-                  ascii_only: true,
-                  comments: false,
-                  webkit: true,
-                },
+    // could be an object { scripts: boolean; styles: boolean }
+    if (options.optimization === true) {
+      webpackConfig.optimization = {
+        minimize: true,
+        minimizer: [
+          new TerserPlugin({
+            terserOptions: {
+              mangle: false,
+              keep_classnames: true,
+            },
+          }),
+        ],
+        concatenateModules: true,
+      };
+    }
+  } else {
+    webpackConfig.plugins.push(
+      new webpack.DefinePlugin(getClientEnvironment(mode).stringified)
+    );
+    if (options.compiler !== 'swc' && internalOptions.isScriptOptimizeOn) {
+      webpackConfig.optimization = {
+        sideEffects: true,
+        minimizer: [
+          new TerserPlugin({
+            parallel: true,
+            terserOptions: {
+              ecma: (internalOptions.esm ? 2016 : 5) as TerserPlugin.TerserECMA,
+              safari10: true,
+              output: {
+                ascii_only: true,
+                comments: false,
+                webkit: true,
               },
-            })
-          : new TerserPlugin({
-              terserOptions: {
-                mangle: false,
-                keep_classnames: true,
-              },
-            }),
-      ],
-      runtimeChunk: options.target !== 'node',
-    };
+            },
+          }),
+        ],
+        runtimeChunk: true,
+      };
+    }
   }
 
   const extraPlugins: WebpackPluginInstance[] = [];
