@@ -6,7 +6,6 @@ import type { Tree } from 'nx/src/generators/tree';
  */
 export function createTreeWithEmptyWorkspace(): Tree {
   const tree = new FsTree('/virtual', false);
-  tree.write('/workspace.json', JSON.stringify({ version: 2, projects: {} }));
   return addCommonFiles(tree);
 }
 

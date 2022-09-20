@@ -23,12 +23,12 @@ describe('@nrwl/workspace:workspace', () => {
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/nx.json')).toBe(true);
-    expect(tree.exists('/proj/workspace.json')).toBe(true);
+    expect(tree.exists('/proj/workspace.json')).toBe(false);
     expect(tree.exists('/proj/.prettierrc')).toBe(true);
     expect(tree.exists('/proj/.prettierignore')).toBe(true);
   });
 
-  it('should create nx.json and workspace.json', async () => {
+  it('should create nx.json', async () => {
     const ajv = new Ajv();
 
     await workspaceGenerator(tree, {
@@ -61,15 +61,6 @@ describe('@nrwl/workspace:workspace', () => {
     });
     const validateNxJson = ajv.compile(nxSchema);
     expect(validateNxJson(nxJson)).toEqual(true);
-
-    const workspaceJson = readJson(tree, '/proj/workspace.json');
-    expect(workspaceJson).toEqual({
-      $schema: './node_modules/nx/schemas/workspace-schema.json',
-      version: 2,
-      projects: {},
-    });
-    const validateWorkspaceJson = ajv.compile(workspaceSchema);
-    expect(validateWorkspaceJson(workspaceJson)).toEqual(true);
   });
 
   it('should setup named inputs and target defaults for non-empty presets', async () => {
