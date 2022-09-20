@@ -13,7 +13,7 @@ export function generateDaemonHelpOutput(): string {
 
   const isServerAvailable = res?.stdout?.toString().trim().indexOf('true') > -1;
   if (!isServerAvailable) {
-    return '';
+    return 'Nx Daemon is not running.';
   }
 
   const pid = getDaemonProcessId();
