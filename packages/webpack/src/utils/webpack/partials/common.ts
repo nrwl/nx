@@ -9,7 +9,6 @@ import { BuildBrowserFeatures } from '../build-browser-features';
 import { getOutputHashFormat } from '../../hash-format';
 import { findAllNodeModules, findUp } from '../../fs';
 import type { CreateWebpackConfigOptions, ExtraEntryPoint } from '../../models';
-import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 export function getCommonConfig(
   wco: CreateWebpackConfigOptions
@@ -193,15 +192,6 @@ export function getCommonConfig(
     alias = rxPaths(nodeModules);
   } catch {}
 
-  const extraMinimizers = [];
-  if (stylesOptimization) {
-    extraMinimizers.push(
-      new CssMinimizerPlugin({
-        test: /\.(?:css|scss|sass|less|styl)$/,
-      })
-    );
-  }
-
   return {
     mode:
       scriptsOptimization || stylesOptimization ? 'production' : 'development',
@@ -215,7 +205,6 @@ export function getCommonConfig(
     resolveLoader: {
       modules: loaderNodeModules,
     },
-    context: projectRoot,
     entry: entryPoints,
     output: {
       path: resolve(root, buildOptions.outputPath as string),
@@ -256,11 +245,6 @@ export function getCommonConfig(
           ...sourceMapUseRule,
         },
       ],
-    },
-    optimization: {
-      emitOnErrors: false,
-      moduleIds: 'deterministic',
-      minimizer: [new ids.HashedModuleIdsPlugin(), ...extraMinimizers],
     },
     plugins: extraPlugins,
   };

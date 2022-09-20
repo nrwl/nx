@@ -24,18 +24,19 @@ import { BuildBrowserFeatures } from '../../utils/webpack/build-browser-features
 import { deleteOutputDir } from '../../utils/fs';
 import { writeIndexHtml } from '../../utils/webpack/write-index-html';
 import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
-import type { WebpackExecutorOptions } from './schema';
+import type {
+  NormalizedWebpackExecutorOptions,
+  WebpackExecutorOptions,
+} from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { EmittedFile } from '../../utils/models';
 
 async function getWebpackConfigs(
-  _options: WebpackExecutorOptions,
+  options: NormalizedWebpackExecutorOptions,
   context: ExecutorContext
 ): Promise<Configuration[]> {
   const metadata = context.workspace.projects[context.projectName];
-  const sourceRoot = metadata.sourceRoot;
   const projectRoot = metadata.root;
-  const options = normalizeOptions(_options, context.root, sourceRoot);
   const isScriptOptimizeOn =
     typeof options.optimization === 'boolean'
       ? options.optimization
@@ -98,9 +99,12 @@ export type WebpackExecutorEvent =
     };
 
 export async function* webpackExecutor(
-  options: WebpackExecutorOptions,
+  _options: WebpackExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<WebpackExecutorEvent, WebpackExecutorEvent, undefined> {
+  const metadata = context.workspace.projects[context.projectName];
+  const sourceRoot = metadata.sourceRoot;
+  const options = normalizeOptions(_options, context.root, sourceRoot);
   const isScriptOptimizeOn =
     typeof options.optimization === 'boolean'
       ? options.optimization
@@ -109,8 +113,6 @@ export async function* webpackExecutor(
       : false;
 
   process.env.NODE_ENV ||= isScriptOptimizeOn ? 'production' : 'development';
-
-  const metadata = context.workspace.projects[context.projectName];
 
   if (options.compiler === 'swc') {
     try {
@@ -140,7 +142,7 @@ export async function* webpackExecutor(
       context.configurationName
     );
     options.tsConfig = createTmpTsConfig(
-      join(context.root, options.tsConfig),
+      options.tsConfig,
       context.root,
       metadata.root,
       dependencies
