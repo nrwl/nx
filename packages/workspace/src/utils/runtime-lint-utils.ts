@@ -431,7 +431,9 @@ export function isAngularSecondaryEntrypoint(
     targetFiles &&
     targetFiles.some(
       (file) =>
-        file.endsWith('src/index.ts') &&
+        // The `ng-packagr` defaults to the `src/public_api.ts` entry file to
+        // the public API if the `lib.entryFile` is not specified explicitly.
+        (file.endsWith('src/public_api.ts') || file.endsWith('src/index.ts')) &&
         existsSync(joinPathFragments(file, '../../', 'ng-package.json'))
     )
   );
