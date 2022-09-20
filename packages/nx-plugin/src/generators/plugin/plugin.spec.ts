@@ -1,3 +1,4 @@
+import { pluginGenerator } from './plugin';
 import {
   getProjects,
   joinPathFragments,
@@ -6,9 +7,8 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
-import { pluginGenerator } from './plugin';
 import { Schema } from './schema';
+import { Linter } from '@nrwl/linter';
 
 const getSchema: (overrides?: Partial<Schema>) => Schema = (
   overrides = {}
