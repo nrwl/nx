@@ -1,6 +1,6 @@
 {
-  "title": "Web Library EsBuild Target (Experimental)",
-  "description": "Packages a library for different web usages (`UMD`, `ESM`, `CJS`).",
+  "title": "EsBuild Target",
+  "description": "Bundle a package for different platforms.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -36,7 +36,7 @@
       "alias": "f",
       "items": {
         "type": "string",
-        "enum": ["esm", "umd", "cjs"]
+        "enum": ["esm", "cjs"]
       }
     },
     "watch": {
