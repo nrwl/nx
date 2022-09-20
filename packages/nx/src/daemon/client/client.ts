@@ -58,8 +58,12 @@ export class DaemonClient {
       // option=undefined,env=undefined => daemon
       // option=true,env=true => daemon
       // option=false,env=true => daemon
+
+      // CI=true,env=undefined => no daemon
+      // CI=true,env=false => no daemon
+      // CI=true,env=true => daemon
       if (
-        isCI() ||
+        (isCI() && env !== 'true') ||
         isDocker() ||
         isDaemonDisabled() ||
         (useDaemonProcessOption === undefined && env === 'false') ||

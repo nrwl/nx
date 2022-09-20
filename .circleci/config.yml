@@ -160,6 +160,7 @@ jobs:
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
       NX_VERBOSE_LOGGING: 'false'
+      NX_DAEMON: 'true'
     steps:
       - run:
           name: Set dynamic nx run variable
@@ -188,7 +189,7 @@ jobs:
             npx nx-cloud record yarn depcheck) &
             pids+=($!)
 
-            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 && 
+            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
             npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular,e2e-react-native,e2e-detox,e2e-make-angular-cli-faster --parallel=1) &
             pids+=($!)
             yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
@@ -205,6 +206,7 @@ jobs:
     executor: macos
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
+      NX_DAEMON: 'true'
     steps:
       - run:
           name: Set dynamic nx run variable
