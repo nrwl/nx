@@ -1,8 +1,20 @@
 import { readFileSync, writeFileSync } from 'fs-extra';
 import { detectPackageManager, PackageManager } from '../package-manager';
-import { parseYarnLockFile, stringifyYarnLockFile } from './yarn';
-import { parseNpmLockFile, stringifyNpmLockFile } from './npm';
-import { parsePnpmLockFile, stringifyPnpmLockFile } from './pnpm';
+import {
+  parseYarnLockFile,
+  pruneYarnLockFile,
+  stringifyYarnLockFile,
+} from './yarn';
+import {
+  parseNpmLockFile,
+  pruneNpmLockFile,
+  stringifyNpmLockFile,
+} from './npm';
+import {
+  parsePnpmLockFile,
+  prunePnpmLockFile,
+  stringifyPnpmLockFile,
+} from './pnpm';
 import { LockFileData } from './lock-file-type';
 
 export function parseLockFile(
@@ -41,6 +53,23 @@ export function writeLockFile(
     const content = stringifyNpmLockFile(lockFile);
     writeFileSync('package-lock.json', content);
     return;
+  }
+  throw Error(`Unknown package manager: ${packageManager}`);
+}
+
+export function pruneLockFile(
+  lockFile: LockFileData,
+  packages: string[],
+  packageManager: PackageManager = detectPackageManager()
+): LockFileData {
+  if (packageManager === 'yarn') {
+    return pruneYarnLockFile(lockFile, packages);
+  }
+  if (packageManager === 'pnpm') {
+    return prunePnpmLockFile(lockFile, packages);
+  }
+  if (packageManager === 'npm') {
+    return pruneNpmLockFile(lockFile, packages);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
 }

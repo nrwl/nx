@@ -191,3 +191,20 @@ function unmapPackages(lockFileData: LockFileData): PnpmLockFile {
     packages: sortObject(packages),
   };
 }
+
+/**
+ * Prunes the lock file data based on the list of packages and their transitive dependencies
+ *
+ * @param lockFileData
+ * @returns
+ */
+export function prunePnpmLockFile(
+  lockFileData: LockFileData,
+  packages: string[]
+): LockFileData {
+  // todo(meeroslav): This functionality has not been implemented yet
+  console.warn(
+    'Pruning pnpm-lock.yaml is not yet implemented. Returning entire lock file'
+  );
+  return lockFileData;
+}

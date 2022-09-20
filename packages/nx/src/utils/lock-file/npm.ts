@@ -198,3 +198,20 @@ function sortDependencies(
     });
   return dependencies;
 }
+
+/**
+ * Prunes the lock file data based on the list of packages and their transitive dependencies
+ *
+ * @param lockFileData
+ * @returns
+ */
+export function pruneNpmLockFile(
+  lockFileData: LockFileData,
+  packages: string[]
+): LockFileData {
+  // todo(meeroslav): This functionality has not been implemented yet
+  console.warn(
+    'Pruning package-lock.json is not yet implemented. Returning entire lock file'
+  );
+  return lockFileData;
+}
