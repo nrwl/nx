@@ -105,9 +105,15 @@ export function getUpdatedPackageJsonContent(
     exports['.']['import'] = mainJsFile;
   }
 
+  // If CJS file ends with .cjs then use that, otherwise default to main file.
+  // Bundlers like webpack, rollup and, esbuild supports .cjs for CJS and .js for ESM.
+  // Compilers like tsc, swc do not have different file extensions.
   if (hasCjsFormat) {
     const { dir, name } = parse(mainJsFile);
-    const cjsMain = `${dir}/${name}.cjs`;
+    let cjsMain = `${dir}/${name}.cjs`;
+    cjsMain = fileExists(join(options.outputPath, cjsMain))
+      ? cjsMain
+      : mainJsFile;
     packageJson.main ??= cjsMain;
     exports['.']['require'] = cjsMain;
   }

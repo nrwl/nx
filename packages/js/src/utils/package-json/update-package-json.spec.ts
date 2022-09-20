@@ -16,7 +16,7 @@ describe('getUpdatedPackageJsonContent', () => {
 
     expect(json).toEqual({
       name: 'test',
-      main: './src/index.cjs',
+      main: './src/index.js',
       types: './src/index.d.ts',
       version: '0.0.1',
     });
@@ -62,7 +62,7 @@ describe('getUpdatedPackageJsonContent', () => {
 
     expect(json).toEqual({
       name: 'test',
-      main: './src/index.cjs',
+      main: './src/index.js',
       module: './src/index.js',
       types: './src/index.d.ts',
       version: '0.0.1',
@@ -85,7 +85,7 @@ describe('getUpdatedPackageJsonContent', () => {
 
     expect(json).toEqual({
       name: 'test',
-      main: './src/index.cjs',
+      main: './src/index.js',
       version: '0.0.1',
     });
   });
@@ -100,19 +100,20 @@ describe('getUpdatedPackageJsonContent', () => {
         main: 'proj/src/index.ts',
         outputPath: 'dist/proj',
         projectRoot: 'proj',
-        format: ['esm', 'cjs'],
+        format: ['esm'],
         generateExportsField: true,
       }
     );
 
     expect(json).toEqual({
       name: 'test',
+      type: 'module',
+      main: './src/index.js',
       module: './src/index.js',
-      main: './src/index.cjs',
       types: './src/index.d.ts',
       version: '0.0.1',
       exports: {
-        '.': { require: './src/index.cjs', import: './src/index.js' },
+        '.': { import: './src/index.js' },
       },
     });
   });
