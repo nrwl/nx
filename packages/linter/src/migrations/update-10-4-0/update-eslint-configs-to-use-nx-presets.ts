@@ -77,7 +77,7 @@ function updateReactESLintConfigs(host: Tree) {
         /**
          * There isn't a way to know for sure if a project was started with the Nx
          * original inline React ESLint config (for applications it is easy to know
-         * from the workspace.json, but that is not the case for all libraries).
+         * from the project configuration, but that is not the case for all libraries).
          *
          * We therefore try and infer it based on the presence of react eslint plugins
          * within the config that is currently there.

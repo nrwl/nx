@@ -92,8 +92,5 @@ function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
         host.overwrite(workspaceConfigPath, serializeJson(reformatted));
       }
     }
-  } catch (e) {
-    console.error(`Failed to format workspace config: ${workspaceConfigPath}`);
-    console.error(e);
-  }
+  } catch (e) {}
 }

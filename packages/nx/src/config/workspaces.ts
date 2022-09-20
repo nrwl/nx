@@ -474,6 +474,7 @@ export function toOldFormatOrNull(w: any) {
       renamePropertyWithStableKeys(projectConfig, 'generators', 'schematics');
       formatted = true;
     }
+    delete projectConfig.name;
     Object.values(projectConfig.architect || {}).forEach((target: any) => {
       if (target.executor !== undefined) {
         renamePropertyWithStableKeys(target, 'executor', 'builder');

@@ -15,7 +15,7 @@ describe('Add Linting', () => {
     });
   });
 
-  it('should add update `workspace.json` file properly when eslint is passed', () => {
+  it('should add update `project configuration` file properly when eslint is passed', () => {
     addLinting(
       tree,
       'my-lib',
@@ -29,7 +29,7 @@ describe('Add Linting', () => {
     expect(project.targets.lint.executor).toEqual('@nrwl/linter:eslint');
   });
 
-  it('should add update `workspace.json` file properly when tslint is passed', () => {
+  it('should add update `project configuration` file properly when tslint is passed', () => {
     addLinting(
       tree,
       'my-lib',

@@ -18,7 +18,7 @@ describe('remove-library-generator-style-default migration', () => {
 
   it('should do nothing when angular library generator is not configured', async () => {
     const workspace: WorkspaceConfiguration = {
-      version: 1,
+      version: 2,
       generators: { '@nrwl/angular:application': { style: 'scss' } },
     };
     updateWorkspaceConfiguration(tree, workspace);
@@ -30,7 +30,7 @@ describe('remove-library-generator-style-default migration', () => {
 
   it('should do nothing when other vertical library generator is configured with the style entry', async () => {
     const workspace: WorkspaceConfiguration = {
-      version: 1,
+      version: 2,
       generators: { '@nrwl/react:library': { style: 'scss' } },
     };
     updateWorkspaceConfiguration(tree, workspace);
@@ -43,7 +43,7 @@ describe('remove-library-generator-style-default migration', () => {
   describe('collection:generator', () => {
     it('should remove style entry when configured', async () => {
       const workspace: WorkspaceConfiguration = {
-        version: 1,
+        version: 2,
         generators: { '@nrwl/angular:library': { style: 'scss' } },
       };
       updateWorkspaceConfiguration(tree, workspace);
@@ -51,14 +51,14 @@ describe('remove-library-generator-style-default migration', () => {
       await removeLibraryGeneratorStyleDefault(tree);
 
       expect(readWorkspaceConfiguration(tree)).toStrictEqual({
-        version: 1,
+        version: 2,
         generators: { '@nrwl/angular:library': {} },
       });
     });
 
     it('should do nothing when style is not set', async () => {
       const workspace: WorkspaceConfiguration = {
-        version: 1,
+        version: 2,
         generators: { '@nrwl/angular:library': { linter: 'eslint' } },
       };
       updateWorkspaceConfiguration(tree, workspace);
@@ -72,7 +72,7 @@ describe('remove-library-generator-style-default migration', () => {
   describe('nested generator', () => {
     it('should remove style entry when configured', async () => {
       const workspace: WorkspaceConfiguration = {
-        version: 1,
+        version: 2,
         generators: { '@nrwl/angular': { library: { style: 'scss' } } },
       };
       updateWorkspaceConfiguration(tree, workspace);
@@ -80,14 +80,14 @@ describe('remove-library-generator-style-default migration', () => {
       await removeLibraryGeneratorStyleDefault(tree);
 
       expect(readWorkspaceConfiguration(tree)).toStrictEqual({
-        version: 1,
+        version: 2,
         generators: { '@nrwl/angular': { library: {} } },
       });
     });
 
     it('should do nothing when style is not set', async () => {
       const workspace: WorkspaceConfiguration = {
-        version: 1,
+        version: 2,
         generators: { '@nrwl/angular': { library: { linter: 'eslint' } } },
       };
       updateWorkspaceConfiguration(tree, workspace);
@@ -101,7 +101,7 @@ describe('remove-library-generator-style-default migration', () => {
   it('should format files', async () => {
     jest.spyOn(devkit, 'formatFiles');
     const workspace: WorkspaceConfiguration = {
-      version: 1,
+      version: 2,
       generators: { '@nrwl/angular:library': { style: 'scss' } },
     };
     updateWorkspaceConfiguration(tree, workspace);

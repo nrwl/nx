@@ -38,51 +38,10 @@ describe('lib', () => {
 
     it('should default to standalone project for first project', async () => {
       await libraryGenerator(tree, { ...defaultOptions, name: 'my-lib' });
-      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
-        'my-lib'
-      ];
       const projectConfig = readProjectConfiguration(tree, 'my-lib');
       expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(workspaceJsonEntry).toEqual('libs/my-lib');
-    });
-
-    it('should obey standalone === false for first project', async () => {
-      await libraryGenerator(tree, {
-        ...defaultOptions,
-        name: 'my-lib',
-        standaloneConfig: false,
-      });
-      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
-        'my-lib'
-      ];
-      const projectConfig = readProjectConfiguration(tree, 'my-lib');
-      expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(projectConfig).toMatchObject(workspaceJsonEntry);
     });
   });
-
-  // describe('workspace v1', () => {
-  //   beforeEach(() => {
-  //     tree = createTreeWithEmptyV1Workspace();
-  //   });
-  //
-  //   it('should default to inline project for first project', async () => {
-  //     await libraryGenerator(tree, { ...defaultOptions, name: 'my-lib' });
-  //     const workspaceJsonEntry = toNewFormat(readJson(tree, 'workspace.json'))
-  //       .projects['my-lib'];
-  //     const projectConfig = readProjectConfiguration(tree, 'my-lib');
-  //     expect(projectConfig.root).toEqual('libs/my-lib');
-  //     expect(projectConfig).toMatchObject(workspaceJsonEntry);
-  //   });
-  //
-  //   it('should throw for standaloneConfig === true', async () => {
-  //     const promise = libraryGenerator(tree, {
-  //       standaloneConfig: true,
-  //       name: 'my-lib',
-  //     });
-  //     await expect(promise).rejects.toThrow();
-  //   });
-  // });
 
   describe('not nested', () => {
     it('should update workspace.json', async () => {

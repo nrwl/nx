@@ -12,5 +12,4 @@ export function cleanUpFiles(appName: string) {
   );
 
   removeSync('temp-workspace');
-  removeSync('workspace.json');
 }

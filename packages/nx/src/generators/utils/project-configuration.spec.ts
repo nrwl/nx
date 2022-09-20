@@ -6,7 +6,7 @@ import {
   createTreeWithEmptyWorkspace,
   createTreeWithEmptyV1Workspace,
 } from '../testing-utils/create-tree-with-empty-workspace';
-import { readJson, updateJson } from '../utils/json';
+import { readJson, updateJson, writeJson } from '../utils/json';
 import {
   addProjectConfiguration,
   getProjects,
@@ -20,6 +20,7 @@ import {
 } from './project-configuration';
 
 import * as projectSchema from '../../../schemas/project-schema.json';
+import { joinPathFragments } from 'nx/src/utils/path';
 
 type ProjectConfigurationV1 = Pick<
   ProjectConfiguration,
@@ -38,6 +39,7 @@ const baseTestProjectConfigV1: ProjectConfigurationV1 = {
   architect: {},
 };
 const baseTestProjectConfigV2: ProjectConfiguration = {
+  name: 'test',
   root: 'libs/test',
   sourceRoot: 'libs/test/src',
   targets: {},
@@ -195,11 +197,13 @@ describe('project configuration', () => {
 
     describe('readProjectConfiguration', () => {
       it('should get info from workspace.json', () => {
-        updateJson(tree, getWorkspacePath(tree), (json) => {
-          json.projects['proj1'] = {
-            root: 'proj1',
-          };
-          return json;
+        writeJson(tree, 'workspace.json', {
+          version: 2,
+          projects: {
+            proj1: {
+              root: 'proj1',
+            },
+          },
         });
 
         const config = readProjectConfiguration(tree, 'proj1');
@@ -209,11 +213,8 @@ describe('project configuration', () => {
       });
 
       it('should should not fail if projects is not defined in nx.json', () => {
-        updateJson(tree, getWorkspacePath(tree), (json) => {
-          json.projects['proj1'] = {
-            root: 'proj1',
-          };
-          return json;
+        writeJson(tree, 'libs/proj1/project.json', {
+          name: 'proj1',
         });
         updateJson(tree, 'nx.json', (json) => {
           delete json.projects;
@@ -222,7 +223,8 @@ describe('project configuration', () => {
 
         const config = readProjectConfiguration(tree, 'proj1');
         expect(config).toEqual({
-          root: 'proj1',
+          name: 'proj1',
+          root: 'libs/proj1',
         });
       });
     });
@@ -244,19 +246,18 @@ describe('project configuration', () => {
           },
           true
         );
-        addProjectConfiguration(
-          tree,
-          'project-b',
-          {
-            root: 'apps/project-b',
-            targets: {},
-          },
-          true
-        );
+        addProjectConfiguration(tree, 'project-b', {
+          root: 'apps/project-b',
+          targets: {},
+        });
         expect(tree.exists('apps/project-b/project.json')).toBeTruthy();
       });
 
       it("should not create project.json file if any other app in the workspace doesn't use project.json", () => {
+        writeJson(tree, 'workspace.json', {
+          version: 2,
+          projects: {},
+        });
         addProjectConfiguration(
           tree,
           'project-a',
@@ -275,6 +276,10 @@ describe('project configuration', () => {
       });
 
       it('should not create project.json file when adding a project if standalone is false', () => {
+        writeJson(tree, 'workspace.json', {
+          version: 2,
+          projects: {},
+        });
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
 
         expect(tree.exists('libs/test/project.json')).toBeFalsy();
@@ -307,17 +312,21 @@ describe('project configuration', () => {
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
         const expectedProjectConfig = {
           ...baseTestProjectConfigV2,
-          root: undefined,
           targets: { build: { executor: '' } },
         };
         updateProjectConfiguration(tree, 'test', expectedProjectConfig);
 
-        expect(readJson(tree, 'libs/test/project.json')).toEqual(
-          expectedProjectConfig
-        );
+        expect(readJson(tree, 'libs/test/project.json')).toEqual({
+          ...expectedProjectConfig,
+          root: undefined,
+        });
       });
 
       it('should update workspace.json file when updating an inline project', () => {
+        writeJson(tree, 'workspace.json', {
+          version: 2,
+          projects: {},
+        });
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
         const expectedProjectConfig = {
           ...baseTestProjectConfigV2,
@@ -334,19 +343,25 @@ describe('project configuration', () => {
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
         removeProjectConfiguration(tree, 'test');
 
-        expect(readJson(tree, 'workspace.json').projects.test).toBeUndefined();
         expect(tree.exists('test/project.json')).toBeFalsy();
       });
 
       it('should support workspaces with standalone and inline projects', () => {
+        writeJson(tree, 'workspace.json', {
+          version: 2,
+          projects: {},
+        });
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
         addProjectConfiguration(tree, 'test2', baseTestProjectConfigV2, false);
         const configurations = getProjects(tree);
         expect(configurations.get('test')).toEqual({
           $schema: '../../node_modules/nx/schemas/project-schema.json',
+          name: 'test',
           ...baseTestProjectConfigV2,
         });
-        expect(configurations.get('test2')).toEqual(baseTestProjectConfigV2);
+        expect(configurations.get('test2')).toEqual({
+          ...baseTestProjectConfigV2,
+        });
       });
 
       describe('JSON schema', () => {
@@ -375,6 +390,10 @@ describe('project configuration', () => {
       let workspaceConfiguration: WorkspaceConfiguration;
 
       beforeEach(() => {
+        writeJson(tree, 'workspace.json', {
+          version: 2,
+          projects: {},
+        });
         workspaceConfiguration = readWorkspaceConfiguration(tree);
       });
 
@@ -447,6 +466,10 @@ describe('project configuration', () => {
       });
 
       it("should not create project.json file if any other app in the workspace doesn't use project.json", () => {
+        writeJson(tree, 'workspace.json', {
+          version: 2,
+          projects: {},
+        });
         addProjectConfiguration(
           tree,
           'project-a',
@@ -456,20 +479,19 @@ describe('project configuration', () => {
           },
           false
         );
-        addProjectConfiguration(
-          tree,
-          'project-b',
-          {
-            root: 'apps/project-b',
-            targets: {},
-          },
-          false
-        );
+        addProjectConfiguration(tree, 'project-b', {
+          root: 'apps/project-b',
+          targets: {},
+        });
         expect(tree.exists('apps/project-a/project.json')).toBeFalsy();
         expect(tree.exists('apps/project-b/project.json')).toBeFalsy();
       });
 
       it('should not create project.json file when adding a project if standalone is false', () => {
+        writeJson(tree, 'workspace.json', {
+          version: 2,
+          projects: {},
+        });
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
 
         expect(tree.exists('libs/test/project.json')).toBeFalsy();
@@ -502,17 +524,21 @@ describe('project configuration', () => {
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
         const expectedProjectConfig = {
           ...baseTestProjectConfigV2,
-          root: undefined,
           targets: { build: { executor: '' } },
         };
         updateProjectConfiguration(tree, 'test', expectedProjectConfig);
 
-        expect(readJson(tree, 'libs/test/project.json')).toEqual(
-          expectedProjectConfig
-        );
+        expect(readJson(tree, 'libs/test/project.json')).toEqual({
+          ...expectedProjectConfig,
+          root: undefined,
+        });
       });
 
       it('should update workspace.json file when updating an inline project', () => {
+        writeJson(tree, 'workspace.json', {
+          version: 2,
+          projects: {},
+        });
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
         const expectedProjectConfig = {
           ...baseTestProjectConfigV2,
@@ -536,20 +562,11 @@ describe('project configuration', () => {
         addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, false);
         removeProjectConfiguration(tree, 'test');
 
-        expect(readJson(tree, 'workspace.json').projects.test).toBeUndefined();
-      });
-
-      it('should support workspaces with standalone and inline projects', () => {
-        addProjectConfiguration(tree, 'test', baseTestProjectConfigV2, true);
-        addProjectConfiguration(tree, 'test2', baseTestProjectConfigV2, false);
-
-        const configurations = getProjects(tree);
-
-        expect(configurations.get('test')).toEqual({
-          $schema: '../../node_modules/nx/schemas/project-schema.json',
-          ...baseTestProjectConfigV2,
-        });
-        expect(configurations.get('test2')).toEqual(baseTestProjectConfigV2);
+        expect(
+          tree.exists(
+            joinPathFragments(baseTestProjectConfigV2.root, 'project.json')
+          )
+        ).toBeFalsy();
       });
     });
   });

@@ -15,7 +15,7 @@ describe('lib', () => {
   });
 
   describe('not nested', () => {
-    it('should update workspace.json', async () => {
+    it('should update project configuration', async () => {
       await libraryGenerator(tree, { name: libName });
 
       const workspaceJson = readJson(tree, '/workspace.json');

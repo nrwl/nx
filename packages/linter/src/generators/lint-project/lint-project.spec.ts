@@ -39,7 +39,7 @@ describe('@nrwl/linter:lint-project', () => {
         ).toMatchSnapshot();
       });
 
-      it('should configure the target in workspace.json', async () => {
+      it('should configure the target in project configuration', async () => {
         await lintProjectGenerator(tree, {
           ...defaultOptions,
           linter: Linter.EsLint,
@@ -96,7 +96,7 @@ describe('@nrwl/linter:lint-project', () => {
         ).toMatchSnapshot();
       });
 
-      it('should configure the target in workspace.json', async () => {
+      it('should configure the target in project configuration', async () => {
         await lintProjectGenerator(tree, {
           ...defaultOptions,
           linter: Linter.TsLint,

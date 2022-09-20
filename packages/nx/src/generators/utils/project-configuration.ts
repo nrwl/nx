@@ -226,6 +226,7 @@ export function readProjectConfiguration(
   projectName: string
 ): ProjectConfiguration {
   const workspace = readWorkspace(tree);
+  console.log(workspace);
   if (!workspace.projects[projectName]) {
     throw new Error(
       `Cannot find configuration for '${projectName}' in ${getWorkspacePath(
@@ -373,6 +374,7 @@ function addProjectToWorkspaceJson(
       // update the project.json file
       writeJson(tree, configFile, {
         ...jsonSchema,
+        name: mode === 'create' ? projectName : project.name,
         ...project,
         root: undefined,
       });

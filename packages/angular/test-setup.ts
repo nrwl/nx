@@ -4,6 +4,21 @@ const allowedProjectExtensions = [
   'configFilePath',
   '$schema',
   'generators',
+  'namedInputs',
+  'name',
+];
+
+const allowedWorkspaceExtensions = [
+  'implicitDependencies',
+  'affected',
+  'npmScope',
+  'tasksRunnerOptions',
+  'workspaceLayout',
+  'plugins',
+  'targetDefaults',
+  'files',
+  'generators',
+  'namedInputs',
 ];
 
 const possiblePaths = [
@@ -23,6 +38,7 @@ for (const possiblePath of possiblePaths) {
           return originalReadJsonWorkspace(path, host, {
             ...options,
             allowedProjectExtensions,
+            allowedWorkspaceExtensions,
           });
         },
       };

@@ -37,8 +37,7 @@ describe('detox application generator', () => {
     });
 
     it('should add update `workspace.json` file', async () => {
-      const workspaceJson = readJson(tree, 'workspace.json');
-      const project = workspaceJson.projects['my-app-e2e'];
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
 
       expect(project.root).toEqual('apps/my-app-e2e');
     });
@@ -73,8 +72,7 @@ describe('detox application generator', () => {
     });
 
     it('should add update `workspace.json` file', async () => {
-      const workspaceJson = readJson(tree, 'workspace.json');
-      const project = workspaceJson.projects['my-dir-my-app-e2e'];
+      const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
 
       expect(project.root).toEqual('apps/my-dir/my-app-e2e');
     });
@@ -108,8 +106,7 @@ describe('detox application generator', () => {
     });
 
     it('should add update `workspace.json` file', async () => {
-      const workspaceJson = readJson(tree, 'workspace.json');
-      const project = workspaceJson.projects['my-dir-my-app-e2e'];
+      const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
 
       expect(project.root).toEqual('apps/my-dir/my-app-e2e');
     });

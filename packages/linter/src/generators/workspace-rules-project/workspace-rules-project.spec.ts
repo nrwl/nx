@@ -76,6 +76,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
       .toMatchInlineSnapshot(`
       Object {
         "$schema": "../../node_modules/nx/schemas/project-schema.json",
+        "name": "eslint-rules",
         "root": "tools/eslint-rules",
         "sourceRoot": "tools/eslint-rules",
         "targets": Object {

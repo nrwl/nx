@@ -12,6 +12,10 @@ export function moveProjectConfiguration(
   schema: NormalizedSchema,
   projectConfig: ProjectConfiguration
 ) {
+  if (projectConfig.name) {
+    projectConfig.name = schema.newProjectName;
+  }
+
   const isStandalone = isStandaloneProject(tree, schema.projectName);
   const projectString = JSON.stringify(projectConfig);
   const newProjectString = projectString.replace(

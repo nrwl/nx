@@ -284,7 +284,7 @@ function setDefaultLinter(host: Tree, options: Schema) {
  * This sets ESLint as the default for any schematics that default to TSLint
  */
 function setESLintDefault(host: Tree, options: Schema) {
-  updateJson(host, getWorkspacePath(host, options), (json) => {
+  updateJson(host, join(options.directory, 'nx.json'), (json) => {
     setDefault(json, '@nrwl/angular', 'application', 'linter', 'eslint');
     setDefault(json, '@nrwl/angular', 'library', 'linter', 'eslint');
     setDefault(
@@ -302,7 +302,7 @@ function setESLintDefault(host: Tree, options: Schema) {
  * This sets TSLint as the default for any schematics that default to ESLint
  */
 function setTSLintDefault(host: Tree, options: Schema) {
-  updateJson(host, getWorkspacePath(host, options), (json) => {
+  updateJson(host, 'nx.json', (json) => {
     setDefault(json, '@nrwl/workspace', 'library', 'linter', 'tslint');
     setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
     setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
@@ -315,10 +315,6 @@ function setTSLintDefault(host: Tree, options: Schema) {
 
     return json;
   });
-}
-
-function getWorkspacePath(host: Tree, { directory, cli }: Schema) {
-  return join(directory, cli === 'angular' ? 'angular.json' : 'workspace.json');
 }
 
 function setDefault(

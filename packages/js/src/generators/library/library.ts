@@ -137,10 +137,8 @@ function addProject(
     }
   }
 
-  if (options.config === 'workspace') {
-    addProjectConfiguration(tree, options.name, projectConfiguration, false);
-  } else if (options.config === 'project') {
-    addProjectConfiguration(tree, options.name, projectConfiguration, true);
+  if (options.config === 'workspace' || options.config === 'project') {
+    addProjectConfiguration(tree, options.name, projectConfiguration);
   } else {
     addProjectConfiguration(
       tree,

@@ -360,9 +360,10 @@ describe('app', () => {
       await generateApp(appTree, 'myApp', { directory: 'src/9-websites' });
 
       // ASSERT
-      const workspaceJson = readJson(appTree, '/workspace.json');
 
-      expect(workspaceJson.projects['src-9-websites-my-app']).toMatchSnapshot();
+      expect(
+        readProjectConfiguration(appTree, 'src-9-websites-my-app').root
+      ).toMatchSnapshot();
     });
 
     it('should generate files', async () => {

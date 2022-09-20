@@ -65,7 +65,7 @@ describe('jestProject', () => {
     expect(tree.exists('babel.config.json')).toBeTruthy();
   });
 
-  it('should alter workspace.json', async () => {
+  it('should alter project configuration', async () => {
     await jestProjectGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
@@ -160,7 +160,7 @@ describe('jestProject', () => {
       expect(jestConfig).toMatchSnapshot();
     });
 
-    it('should not list the setup file in workspace.json', async () => {
+    it('should not list the setup file in project configuration', async () => {
       await jestProjectGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
@@ -191,7 +191,7 @@ describe('jestProject', () => {
       expect(tree.exists('src/test-setup.ts')).toBeFalsy();
     });
 
-    it('should not list the setup file in workspace.json', async () => {
+    it('should not list the setup file in project configuration', async () => {
       await jestProjectGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',

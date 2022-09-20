@@ -112,11 +112,3 @@ Object {
   },
 }
 `;
-
-exports[`new should generate an empty workspace.json 1`] = `
-Object {
-  "$schema": "./node_modules/nx/schemas/workspace-schema.json",
-  "projects": Object {},
-  "version": 2,
-}
-`;

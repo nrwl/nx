@@ -64,6 +64,7 @@ export function replaceAppNameWithPath(
       'tags',
       'defaultConfiguration',
       'maximumError',
+      'name',
     ]; // Some of the properties should not be renamed
     return Object.keys(node).reduce(
       (m, c) => (

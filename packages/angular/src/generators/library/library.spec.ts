@@ -59,24 +59,9 @@ describe('lib', () => {
 
     it('should default to standalone project for first project', async () => {
       await runLibraryGeneratorWithOpts();
-      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
-        'my-lib'
-      ];
       const projectConfig = readProjectConfiguration(tree, 'my-lib');
       expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(workspaceJsonEntry).toEqual('libs/my-lib');
-    });
-
-    it('should obey standalone === false for first project', async () => {
-      await runLibraryGeneratorWithOpts({
-        standaloneConfig: false,
-      });
-      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
-        'my-lib'
-      ];
-      const projectConfig = readProjectConfiguration(tree, 'my-lib');
-      expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(projectConfig).toMatchObject(workspaceJsonEntry);
+      expect(tree.exists('workspace.json')).toEqual(false);
     });
   });
 
@@ -732,22 +717,15 @@ describe('lib', () => {
     it('should accept numbers in the path', async () => {
       await runLibraryGeneratorWithOpts({ directory: 'src/1-api' });
 
-      // ASSERT
-      const workspaceJson = readJson(tree, '/workspace.json');
-
-      expect(workspaceJson.projects['src-api-my-lib']).toEqual(
+      expect(readProjectConfiguration(tree, 'src-api-my-lib').root).toEqual(
         'src/1-api/my-lib'
       );
     });
 
     it('should have root relative routes', async () => {
       await runLibraryGeneratorWithOpts({ directory: 'myDir' });
-      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
-        'my-dir-my-lib'
-      ];
       const projectConfig = readProjectConfiguration(tree, 'my-dir-my-lib');
       expect(projectConfig.root).toEqual('my-dir/my-lib');
-      expect(workspaceJsonEntry).toEqual('my-dir/my-lib');
     });
 
     it('should generate files with correct output paths', async () => {

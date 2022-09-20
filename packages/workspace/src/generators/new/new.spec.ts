@@ -19,7 +19,7 @@ describe('new', () => {
     tree = createTree();
   });
 
-  it('should generate an empty workspace.json', async () => {
+  it('should not generate a workspace.json', async () => {
     await newGenerator(tree, {
       ...defaultOptions,
       name: 'my-workspace',
@@ -27,7 +27,7 @@ describe('new', () => {
       npmScope: 'npmScope',
       appName: 'app',
     });
-    expect(readJson(tree, 'my-workspace/workspace.json')).toMatchSnapshot();
+    expect(tree.exists('my-workspace/workspace.json')).toBeFalsy();
   });
 
   it('should generate an empty nx.json', async () => {
