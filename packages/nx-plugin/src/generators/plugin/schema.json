@@ -63,6 +63,11 @@
       "default": false,
       "description": "Do not eslint configuration for plugin json files."
     },
+    "skipE2eProject": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add an e2e test project."
+    },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"

@@ -7,6 +7,7 @@ export interface Schema {
   skipTsConfig: boolean;
   skipFormat: boolean;
   skipLintChecks: boolean;
+  skipE2eProject?: boolean;
   tags?: string;
   unitTestRunner: 'jest' | 'none';
   linter: Linter;
