@@ -1,9 +1,8 @@
-import { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
+import { ExecutorContext } from '@nrwl/devkit';
 import {
   assetGlobsToFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { join, relative, resolve } from 'path';
 
 import { checkDependencies } from '../../utils/check-dependencies';
@@ -11,15 +10,14 @@ import {
   getHelperDependency,
   HelperDependency,
 } from '../../utils/compiler-helper-dependency';
-import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
 import {
   NormalizedSwcExecutorOptions,
   SwcExecutorOptions,
 } from '../../utils/schema';
 import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc';
 import { getSwcrcPath } from '../../utils/swc/get-swcrc-path';
-import { updatePackageJson } from '../../utils/update-package-json';
-import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
+import { copyAssets } from '../../utils/assets';
+import { copyPackageJson } from '../../utils/package-json';
 
 export function normalizeOptions(
   options: SwcExecutorOptions,
@@ -75,32 +73,13 @@ export function normalizeOptions(
   } as NormalizedSwcExecutorOptions;
 }
 
-function processAssetsAndPackageJsonOnce(
-  assetHandler: CopyAssetsHandler,
-  options: NormalizedSwcExecutorOptions,
-  context: ExecutorContext,
-  target: ProjectGraphProjectNode<any>,
-  dependencies: DependentBuildableProjectNode[]
-) {
-  return async () => {
-    await assetHandler.processAllAssetsOnce();
-    updatePackageJson(
-      options,
-      context,
-      target,
-      dependencies,
-      !options.skipTypeCheck
-    );
-  };
-}
-
 export async function* swcExecutor(
   _options: SwcExecutorOptions,
   context: ExecutorContext
 ) {
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
-  const { tmpTsConfig, projectRoot, target, dependencies } = checkDependencies(
+  const { tmpTsConfig, dependencies } = checkDependencies(
     context,
     options.tsConfig
   );
@@ -120,58 +99,38 @@ export async function* swcExecutor(
     dependencies.push(swcHelperDependency);
   }
 
-  const assetHandler = new CopyAssetsHandler({
-    projectDir: projectRoot,
-    rootDir: context.root,
-    outputDir: options.outputPath,
-    assets: options.assets,
-  });
-
   if (options.watch) {
-    const disposeWatchAssetChanges =
-      await assetHandler.watchAndProcessOnAssetChange();
-    const disposePackageJsonChanges = await watchForSingleFileChanges(
-      join(context.root, projectRoot),
-      'package.json',
-      () =>
-        updatePackageJson(
-          options,
-          context,
-          target,
-          dependencies,
-          !options.skipTypeCheck
-        )
-    );
-    const handleTermination = async () => {
-      await disposeWatchAssetChanges();
-      await disposePackageJsonChanges();
-    };
-    process.on('SIGINT', () => handleTermination());
-    process.on('SIGTERM', () => handleTermination());
+    let disposeFn: () => void;
+    process.on('SIGINT', () => disposeFn());
+    process.on('SIGTERM', () => disposeFn());
 
-    return yield* compileSwcWatch(
-      context,
-      options,
-      processAssetsAndPackageJsonOnce(
-        assetHandler,
-        options,
-        context,
-        target,
-        dependencies
-      )
-    );
+    return yield* compileSwcWatch(context, options, async () => {
+      const assetResult = await copyAssets(options, context);
+      const packageJsonResult = await copyPackageJson(
+        {
+          ...options,
+          skipTypings: !options.skipTypeCheck,
+        },
+        context
+      );
+      disposeFn = () => {
+        assetResult?.stop();
+        packageJsonResult?.stop();
+      };
+    });
   } else {
-    return yield compileSwc(
-      context,
-      options,
-      processAssetsAndPackageJsonOnce(
-        assetHandler,
-        options,
-        context,
-        target,
-        dependencies
-      )
-    );
+    return yield compileSwc(context, options, async () => {
+      await copyAssets(options, context);
+      await copyPackageJson(
+        {
+          ...options,
+          generateExportsField: true,
+          skipTypings: !options.skipTypeCheck,
+          extraDependencies: swcHelperDependency ? [swcHelperDependency] : [],
+        },
+        context
+      );
+    });
   }
 }
 

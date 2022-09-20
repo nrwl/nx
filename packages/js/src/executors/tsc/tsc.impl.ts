@@ -16,11 +16,11 @@ import {
   getHelperDependency,
   HelperDependency,
 } from '../../utils/compiler-helper-dependency';
-import { CopyAssetsHandler } from '../../utils/copy-assets-handler';
+import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
 import { loadTsTransformers } from '../../utils/typescript/load-ts-transformers';
-import { updatePackageJson } from '../../utils/update-package-json';
+import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
 
 export function normalizeOptions(

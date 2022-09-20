@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';

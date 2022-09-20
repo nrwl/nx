@@ -308,6 +308,7 @@ export function newProject({
         `@nrwl/angular`,
         `@nrwl/eslint-plugin-nx`,
         `@nrwl/express`,
+        `@nrwl/esbuild`,
         `@nrwl/jest`,
         `@nrwl/js`,
         `@nrwl/linter`,

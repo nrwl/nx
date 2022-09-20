@@ -153,6 +153,11 @@ describe('nx-dev: Packages Section', () => {
     { title: '@nrwl/detox:build', path: '/packages/detox/executors/build' },
     { title: '@nrwl/detox:test', path: '/packages/detox/executors/test' },
     { title: '@nrwl/devkit', path: '/packages/devkit' },
+    { title: '@nrwl/esbuild', path: '/packages/esbuild' },
+    {
+      title: '@nrwl/esbuild:esbuild',
+      path: '/packages/esbuild/executors/esbuild',
+    },
     { title: '@nrwl/eslint-plugin-nx', path: '/packages/eslint-plugin-nx' },
     { title: '@nrwl/express', path: '/packages/express' },
     { title: '@nrwl/express:init', path: '/packages/express/generators/init' },

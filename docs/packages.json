@@ -110,6 +110,16 @@
     "schemas": { "executors": [], "generators": [] }
   },
   {
+    "name": "esbuild",
+    "packageName": "esbuild",
+    "description": "The Nx Plugin for EsBuild contains executors and generators that support building applications using EsBuild",
+    "path": "generated/packages/esbuild.json",
+    "schemas": {
+      "executors": ["esbuild"],
+      "generators": ["init", "esbuild-project"]
+    }
+  },
+  {
     "name": "eslint-plugin-nx",
     "packageName": "eslint-plugin-nx",
     "description": "The ESLint Plugin for Nx contains a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx specific enforce-module-boundaries rule.",
