@@ -3,7 +3,7 @@
 exports[`lib --standalone should generate a library with a standalone component and have it flat 1`] = `"export * from \\"./lib/my-lib.component\\";"`;
 
 exports[`lib --standalone should generate a library with a standalone component and have it flat 2`] = `
-"import { Component, OnInit } from '@angular/core';
+"import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -13,12 +13,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './my-lib.component.html',
   styleUrls: ['./my-lib.component.css']
 })
-export class MyLibComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
+export class MyLibComponent {
 
 }
 "
@@ -57,7 +52,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 `;
 
 exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 2`] = `
-"import { Component, OnInit } from '@angular/core';
+"import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -67,12 +62,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './my-lib.component.html',
   styleUrls: ['./my-lib.component.css']
 })
-export class MyLibComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
+export class MyLibComponent {
 
 }
 "
@@ -117,7 +107,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 exports[`lib --standalone should generate a library with a standalone component as entry point 1`] = `"export * from \\"./lib/my-lib/my-lib.component\\";"`;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point 2`] = `
-"import { Component, OnInit } from '@angular/core';
+"import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -127,12 +117,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './my-lib.component.html',
   styleUrls: ['./my-lib.component.css']
 })
-export class MyLibComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
+export class MyLibComponent {
 
 }
 "
@@ -168,7 +153,7 @@ describe('MyLibComponent', () => {
 exports[`lib --standalone should generate a library with a standalone component as entry point and set up view encapsulation and change detection 1`] = `"export * from \\"./lib/my-lib/my-lib.component\\";"`;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point and set up view encapsulation and change detection 2`] = `
-"import { ChangeDetectionStrategy, Component, OnInit, ViewEncapsulation } from '@angular/core';
+"import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -185,12 +170,7 @@ import { CommonModule } from '@angular/common';
   encapsulation: ViewEncapsulation.ShadowDom,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MyLibComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
+export class MyLibComponent {
 
 }
 "
@@ -199,7 +179,7 @@ export class MyLibComponent implements OnInit {
 exports[`lib --standalone should generate a library with a standalone component as entry point and skip tests 1`] = `"export * from \\"./lib/my-lib/my-lib.component\\";"`;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point and skip tests 2`] = `
-"import { Component, OnInit } from '@angular/core';
+"import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -214,12 +194,7 @@ import { CommonModule } from '@angular/common';
   styles: [
   ]
 })
-export class MyLibComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
+export class MyLibComponent {
 
 }
 "
@@ -228,7 +203,7 @@ export class MyLibComponent implements OnInit {
 exports[`lib --standalone should generate a library with a standalone component as entry point following SFC pattern 1`] = `"export * from \\"./lib/my-lib/my-lib.component\\";"`;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point following SFC pattern 2`] = `
-"import { Component, OnInit } from '@angular/core';
+"import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -243,12 +218,7 @@ import { CommonModule } from '@angular/common';
   styles: [
   ]
 })
-export class MyLibComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
+export class MyLibComponent {
 
 }
 "
@@ -296,7 +266,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 `;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point with routing setup 3`] = `
-"import { Component, OnInit } from '@angular/core';
+"import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -306,12 +276,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './my-lib.component.html',
   styleUrls: ['./my-lib.component.css']
 })
-export class MyLibComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
+export class MyLibComponent {
 
 }
 "

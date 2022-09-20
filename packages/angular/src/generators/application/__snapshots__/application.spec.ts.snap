@@ -1,16 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`app --standalone should generate a standalone app correctly with routing 1`] = `
-"import { enableProdMode } from '@angular/core';
-import { bootstrapApplication } from '@angular/platform-browser';
+"import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
 import { AppComponent } from './app/app.component';
-import { environment } from './environments/environment';
 import { appRoutes } from './app/app.routes';
-
-if (environment.production) {
-  enableProdMode();
-}
 
 bootstrapApplication(AppComponent, {
   providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
@@ -74,15 +68,9 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 1`] = `
-"import { enableProdMode } from '@angular/core';
-import { bootstrapApplication } from '@angular/platform-browser';;
+"import { bootstrapApplication } from '@angular/platform-browser';;
 import { AppComponent } from './app/app.component';
-import { environment } from './environments/environment';
 
-
-if (environment.production) {
-  enableProdMode();
-}
 
 bootstrapApplication(AppComponent).catch((err) => console.error(err));"
 `;
@@ -164,12 +152,6 @@ Object {
               "type": "anyComponentStyle",
             },
           ],
-          "fileReplacements": Array [
-            Object {
-              "replace": "apps/my-dir/my-app/src/environments/environment.ts",
-              "with": "apps/my-dir/my-app/src/environments/environment.prod.ts",
-            },
-          ],
           "outputHashing": "all",
         },
       },
@@ -182,7 +164,9 @@ Object {
         "index": "apps/my-dir/my-app/src/index.html",
         "main": "apps/my-dir/my-app/src/main.ts",
         "outputPath": "dist/apps/my-dir/my-app",
-        "polyfills": "apps/my-dir/my-app/src/polyfills.ts",
+        "polyfills": Array [
+          "zone.js",
+        ],
         "scripts": Array [],
         "styles": Array [
           "apps/my-dir/my-app/src/styles.css",
@@ -336,12 +320,6 @@ Object {
               "type": "anyComponentStyle",
             },
           ],
-          "fileReplacements": Array [
-            Object {
-              "replace": "apps/my-app/src/environments/environment.ts",
-              "with": "apps/my-app/src/environments/environment.prod.ts",
-            },
-          ],
           "outputHashing": "all",
         },
       },
@@ -354,7 +332,9 @@ Object {
         "index": "apps/my-app/src/index.html",
         "main": "apps/my-app/src/main.ts",
         "outputPath": "dist/apps/my-app",
-        "polyfills": "apps/my-app/src/polyfills.ts",
+        "polyfills": Array [
+          "zone.js",
+        ],
         "scripts": Array [],
         "styles": Array [
           "apps/my-app/src/styles.css",

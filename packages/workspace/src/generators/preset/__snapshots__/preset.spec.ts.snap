@@ -2,7 +2,6 @@
 
 exports[`preset should create files (preset = angular) 1`] = `
 Array [
-  ".browserslistrc",
   "tsconfig.app.json",
   "tsconfig.spec.json",
   "src",
@@ -18,10 +17,8 @@ Array [
   "favicon.ico",
   "index.html",
   "main.ts",
-  "polyfills.ts",
   "styles.css",
   "assets",
-  "environments",
   "app",
   "test-setup.ts",
 ]

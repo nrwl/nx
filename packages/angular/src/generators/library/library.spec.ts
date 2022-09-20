@@ -288,7 +288,8 @@ describe('lib', () => {
           noImplicitOverride: true,
           noImplicitReturns: true,
           strict: true,
-          target: 'es2020',
+          target: 'es2022',
+          useDefineForClassFields: false,
         },
         files: [],
         include: [],
@@ -397,7 +398,6 @@ describe('lib', () => {
         // ASSERT
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
         expect(tsconfigJson.exclude).toEqual([
-          'src/test.ts',
           '**/*.spec.ts',
           'jest.config.ts',
           '**/*.test.ts',
@@ -677,7 +677,8 @@ describe('lib', () => {
           noImplicitOverride: true,
           noImplicitReturns: true,
           strict: true,
-          target: 'es2020',
+          target: 'es2022',
+          useDefineForClassFields: false,
         },
         files: [],
         include: [],

@@ -184,13 +184,13 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check project configuration
     const projectConfig = readJson(`apps/${project}/project.json`);
     expect(projectConfig.sourceRoot).toEqual(`apps/${project}/src`);
-    expect(projectConfig.targets.build).toEqual({
+    expect(projectConfig.targets.build).toStrictEqual({
       executor: '@angular-devkit/build-angular:browser',
       options: {
         outputPath: `dist/apps/${project}`,
         index: `apps/${project}/src/index.html`,
         main: `apps/${project}/src/main.ts`,
-        polyfills: `apps/${project}/src/polyfills.ts`,
+        polyfills: [`zone.js`],
         tsConfig: `apps/${project}/tsconfig.app.json`,
         assets: [
           `apps/${project}/src/favicon.ico`,
@@ -201,12 +201,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
       configurations: {
         production: {
-          fileReplacements: [
-            {
-              replace: `apps/${project}/src/environments/environment.ts`,
-              with: `apps/${project}/src/environments/environment.prod.ts`,
-            },
-          ],
           budgets: [
             {
               type: 'initial',
@@ -240,13 +234,11 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
       defaultConfiguration: 'development',
     });
-    expect(projectConfig.targets.test).toEqual({
+    expect(projectConfig.targets.test).toStrictEqual({
       executor: '@angular-devkit/build-angular:karma',
       options: {
-        main: `apps/${project}/src/test.ts`,
-        polyfills: `apps/${project}/src/polyfills.ts`,
+        polyfills: [`zone.js`, `zone.js/testing`],
         tsConfig: `apps/${project}/tsconfig.spec.json`,
-        karmaConfig: `apps/${project}/karma.conf.js`,
         assets: [
           `apps/${project}/src/favicon.ico`,
           `apps/${project}/src/assets`,

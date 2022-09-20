@@ -26,7 +26,7 @@ describe('scam-to-standalone', () => {
 
     expect(tree.read('apps/foo/src/app/bar/bar.component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -36,12 +36,7 @@ describe('scam-to-standalone', () => {
         templateUrl: './bar.component.html',
         styleUrls: ['./bar.component.css']
       })
-      export class BarComponent implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class BarComponent {
 
       }
       "
