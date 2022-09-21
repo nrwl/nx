@@ -1,12 +1,8 @@
 import { appendFileSync, openSync, writeFileSync } from 'fs';
 import { run } from '../src/command-line/run';
-import { addCommandPrefixIfNeeded } from '../src/utils/add-command-prefix';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
-  setUpOutputWatching(
-    process.env.NX_TERMINAL_CAPTURE_STDERR === 'true',
-    process.env.NX_STREAM_OUTPUT === 'true'
-  );
+  setUpOutputWatching(process.env.NX_TERMINAL_CAPTURE_STDERR === 'true');
 }
 
 if (!process.env.NX_WORKSPACE_ROOT) {
@@ -52,10 +48,7 @@ function requireCli() {
  * And the cached output should be correct unless the CLI bypasses process.stdout or console.log and uses some
  * C-binary to write to stdout.
  */
-function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
-  const stdoutWrite = process.stdout._write;
-  const stderrWrite = process.stderr._write;
-
+function setUpOutputWatching(captureStderr: boolean) {
   // The terminal output file gets out and err
   const outputPath = process.env.NX_TERMINAL_OUTPUT_PATH;
   const stdoutAndStderrLogFileHandle = openSync(outputPath, 'w');
@@ -68,20 +61,7 @@ function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
   ) => {
     onlyStdout.push(chunk);
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
-    if (streamOutput) {
-      const updatedChunk = addCommandPrefixIfNeeded(
-        projectName,
-        chunk,
-        encoding
-      );
-      stdoutWrite.apply(process.stdout, [
-        updatedChunk.content,
-        updatedChunk.encoding,
-        callback,
-      ]);
-    } else {
-      callback();
-    }
+    callback();
   };
 
   process.stderr._write = (
@@ -90,20 +70,7 @@ function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
     callback: Function
   ) => {
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
-    if (streamOutput) {
-      const updatedChunk = addCommandPrefixIfNeeded(
-        projectName,
-        chunk,
-        encoding
-      );
-      stderrWrite.apply(process.stderr, [
-        updatedChunk.content,
-        updatedChunk.encoding,
-        callback,
-      ]);
-    } else {
-      callback();
-    }
+    callback();
   };
 
   process.on('exit', (code) => {

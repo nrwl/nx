@@ -1,6 +1,5 @@
-import * as yargs from 'yargs';
 import { runCommand } from '../tasks-runner/run-command';
-import type { NxArgs, RawNxArgs } from '../utils/command-line-utils';
+import type { NxArgs } from '../utils/command-line-utils';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { output } from '../utils/output';
