@@ -157,7 +157,12 @@ export class Hasher {
    */
   async hashSource(task: Task): Promise<string> {
     const hash = await this.taskHasher.hashTask(task, [task.target.project]);
-    return hash.details[`${task.target.project}:$filesets`];
+    for (let n of Object.keys(hash.details)) {
+      if (n.startsWith(`${task.target.project}:`)) {
+        return hash.details[n];
+      }
+    }
+    return '';
   }
 
   hashArray(values: string[]): string {
@@ -232,7 +237,6 @@ class TaskHasher {
 
       return this.hashSelfAndDepsInputs(
         task.target.project,
-        'default',
         selfInputs,
         depsInputs,
         visited
@@ -259,7 +263,6 @@ class TaskHasher {
     const depsInputs = [{ input: namedInput }];
     return this.hashSelfAndDepsInputs(
       projectName,
-      namedInput,
       selfInputs,
       depsInputs,
       visited
@@ -268,14 +271,13 @@ class TaskHasher {
 
   private async hashSelfAndDepsInputs(
     projectName: string,
-    namedInput: string,
     selfInputs: ExpandedSelfInput[],
     depsInputs: { input: string }[],
     visited: string[]
   ) {
     const projectGraphDeps = this.projectGraph.dependencies[projectName] ?? [];
 
-    const self = await this.hashSelfInputs(projectName, namedInput, selfInputs);
+    const self = await this.hashSelfInputs(projectName, selfInputs);
     const deps = await this.hashDepsInputs(
       depsInputs,
       projectGraphDeps,
@@ -357,7 +359,6 @@ class TaskHasher {
 
   private async hashSelfInputs(
     projectName: string,
-    namedInput: string,
     inputs: ExpandedSelfInput[]
   ): Promise<PartialHash[]> {
     const filesets = inputs
@@ -403,7 +404,7 @@ class TaskHasher {
 
     const notFilesets = inputs.filter((r) => !r['fileset']);
     return Promise.all([
-      this.hashProjectFileset(projectName, namedInput, projectFilesets),
+      this.hashProjectFileset(projectName, projectFilesets),
       ...[
         ...workspaceFilesets,
         ...this.legacyFilesetInputs.map((r) => r.fileset),
@@ -446,10 +447,9 @@ class TaskHasher {
 
   private async hashProjectFileset(
     projectName: string,
-    namedInput: string,
     filesetPatterns: string[]
   ): Promise<PartialHash> {
-    const mapKey = `${projectName}:$filesets:${namedInput}`;
+    const mapKey = `${projectName}:${filesetPatterns.join(',')}`;
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
