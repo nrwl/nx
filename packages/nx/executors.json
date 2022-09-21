@@ -1,4 +1,16 @@
 {
+  "builders": {
+    "run-commands": {
+      "implementation": "./src/executors/run-commands/compat",
+      "schema": "./src/executors/run-commands/schema.json",
+      "description": "Run any custom commands with Nx."
+    },
+    "run-script": {
+      "implementation": "./src/executors/run-script/compat",
+      "schema": "./src/executors/run-script/schema.json",
+      "description": "Run an NPM script using Nx."
+    }
+  },
   "executors": {
     "noop": {
       "implementation": "./src/executors/noop/noop.impl",

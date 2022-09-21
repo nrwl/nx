@@ -71,6 +71,12 @@
       "description": "Explicitly enable sourceAnalysis for all workspaces extending from npm.json or core.json (this was default behavior prior to 14.2)",
       "cli": "nx",
       "implementation": "./src/migrations/update-14-2-0/enable-source-analysis"
+    },
+    "14-8-0-change-run-commands-executor": {
+      "version": "14.8.0-beta.0",
+      "description": "Migrates from @nrwl/workspace:run-commands to nx:run-commands",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-14-8-0/change-run-commands-executor"
     }
   },
   "packageJsonUpdates": {
