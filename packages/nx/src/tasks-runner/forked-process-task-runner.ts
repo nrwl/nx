@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as dotenv from 'dotenv';
 import { ChildProcess, fork, Serializable } from 'child_process';
+import * as chalk from 'chalk';
+import * as logTransformer from 'strong-log-transformer';
 import { workspaceRoot } from '../utils/workspace-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
@@ -18,7 +20,6 @@ import {
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task } from '../config/task-graph';
-import { addCommandPrefixIfNeeded } from '../utils/add-command-prefix';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
 
@@ -144,25 +145,28 @@ export class ForkedProcessTaskRunner {
           }
         });
 
-        let out = [];
+        if (streamOutput) {
+          if (process.env.NX_PREFIX_OUTPUT === 'true') {
+            const color = getColor(task.target.project);
+            const prefixText = `${task.target.project}:`;
+
+            p.stdout
+              .pipe(logTransformer({ tag: color.bold(prefixText) }))
+              .pipe(process.stdout);
+            p.stderr
+              .pipe(logTransformer({ tag: color(prefixText) }))
+              .pipe(process.stderr);
+          } else {
+            p.stdout.pipe(logTransformer()).pipe(process.stdout);
+            p.stderr.pipe(logTransformer()).pipe(process.stderr);
+          }
+        }
+
         let outWithErr = [];
         p.stdout.on('data', (chunk) => {
-          if (streamOutput) {
-            process.stdout.write(
-              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
-                .content
-            );
-          }
-          out.push(chunk.toString());
           outWithErr.push(chunk.toString());
         });
         p.stderr.on('data', (chunk) => {
-          if (streamOutput) {
-            process.stderr.write(
-              addCommandPrefixIfNeeded(task.target.project, chunk, 'utf-8')
-                .content
-            );
-          }
           outWithErr.push(chunk.toString());
         });
 
@@ -433,4 +437,27 @@ function parseEnv(path: string) {
     const envContents = readFileSync(path);
     return dotenv.parse(envContents);
   } catch (e) {}
+}
+
+const colors = [
+  chalk.green,
+  chalk.greenBright,
+  chalk.red,
+  chalk.redBright,
+  chalk.cyan,
+  chalk.cyanBright,
+  chalk.yellow,
+  chalk.yellowBright,
+  chalk.magenta,
+  chalk.magentaBright,
+];
+
+function getColor(projectName: string) {
+  let code = 0;
+  for (let i = 0; i < projectName.length; ++i) {
+    code += projectName.charCodeAt(i);
+  }
+  const colorIndex = code % colors.length;
+
+  return colors[colorIndex];
 }
