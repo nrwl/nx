@@ -72,14 +72,12 @@ export function addExportsToBarrel(
     );
   }
 
-  if (options.syntax === 'creators') {
-    sourceFile = addGlobal(
-      tree,
-      sourceFile,
-      indexFilePath,
-      `export * from '${statePath}.models';`
-    );
-  }
+  sourceFile = addGlobal(
+    tree,
+    sourceFile,
+    indexFilePath,
+    `export * from '${statePath}.models';`
+  );
 
   if (options.facade) {
     sourceFile = addGlobal(

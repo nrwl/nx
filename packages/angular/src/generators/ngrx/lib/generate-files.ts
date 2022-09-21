@@ -12,22 +12,13 @@ export function generateNgrxFilesFromTemplates(
 ): void {
   const name = options.name;
   const moduleDir = dirname(options.module);
-  const templatesDir =
-    !options.syntax || options.syntax === 'creators'
-      ? './files/creator-syntax'
-      : './files/classes-syntax';
   const projectNames = names(name);
 
-  generateFiles(
-    tree,
-    joinPathFragments(__dirname, '..', templatesDir),
-    moduleDir,
-    {
-      ...options,
-      tmpl: '',
-      ...projectNames,
-    }
-  );
+  generateFiles(tree, joinPathFragments(__dirname, '..', 'files'), moduleDir, {
+    ...options,
+    ...projectNames,
+    tmpl: '',
+  });
 
   if (!options.facade) {
     tree.delete(

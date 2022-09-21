@@ -7,7 +7,7 @@ import * as <%= className %>Feature from './<%= fileName %>.reducer';
 
 @Injectable()
 export class <%= className %>Effects {
-  <% if (useDataPersistence) { %>init$ = createEffect(() => this.dataPersistence.fetch(<%= className %>Actions.<%= className %>init, {
+  <% if (useDataPersistence) { %>init$ = createEffect(() => this.dataPersistence.fetch(<%= className %>Actions.init<%= className %>, {
     run: (action: ReturnType<typeof <%= className %>Actions.init<%= className %>>, state: <%= className %>Feature.<%= className %>PartialState) => {
       // Your custom service 'load' logic goes here. For now just return a success action...
       return <%= className %>Actions.load<%= className %>Success({ <%= propertyName %>: [] });

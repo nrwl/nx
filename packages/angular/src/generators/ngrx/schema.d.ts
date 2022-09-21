@@ -14,9 +14,4 @@ export interface NgRxGeneratorOptions {
    * Using the individual operators is recommended.
    */
   useDataPersistence?: boolean;
-  /**
-   * @deprecated Always use the `creators` value. The `classes` syntax is
-   * deprecated and this option will be removed in v15.
-   */
-  syntax?: 'classes' | 'creators';
 }
