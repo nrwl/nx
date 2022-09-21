@@ -179,7 +179,18 @@ export default function ConfPage(): JSX.Element {
                   </div>
                 </h2>
                 <h3 className="mb-6">
-                  <div className="font-input-mono text-lg">Tempe, AZ</div>
+                  <div className="font-input-mono text-lg">
+                    <span role="img" aria-label="location pointer emoji">
+                      📍
+                    </span>{' '}
+                    in-person in Tempe, AZ
+                  </div>
+                  <div className="font-input-mono text-lg">
+                    <span role="img" aria-label="globe emoji">
+                      🌎
+                    </span>{' '}
+                    online
+                  </div>
                 </h3>
                 <p className="mb-6 sm:text-lg">
                   Nx Conf is a conference featuring members of the Nx team and

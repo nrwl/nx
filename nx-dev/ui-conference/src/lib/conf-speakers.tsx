@@ -94,10 +94,11 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'MikeRyanDev',
     },
     {
-      description: 'Coming soon',
+      description:
+        'Based out of State College, PA, Ryan is an Engineering Architect at Cisco, where he works in the Customer and Partner Experience team to help drive engineering excellence using Nx, Angular, and NgRx.  Outside of work, he enjoys spending time with his family, enjoying various sports, and the outdoors.',
       imageUrl: '/images/conf/ryan-diehl.webp',
       name: 'Ryan Diehl',
-      twitter: '',
+      twitter: 'DiehlWithRyan',
     },
   ];
 

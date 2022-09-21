@@ -56,11 +56,28 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'event',
-      time: '12:15 - 12:45pm (UTC-07:00)',
-      title: 'Extending Nx: Polyglot Superpowers',
+      time: '12:15 - 12:25pm (UTC-07:00)',
+      title: 'CI/CD tricks with Nx',
+      description: '⚡️ Lightning talk - (more soon)',
+      speakers: [''],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '12:25 - 12:35pm (UTC-07:00)',
+      title: 'Exploring Library Boundaries for State Management Libraries',
       description:
-        "Extensibility is in Nx's DNA, and having a tool that you can extend and customize to your monorepo setup is crucial. Sharing different languages in a monorepo is extremely common yet toolchains usually don't play well together. Fortunately, Nx allows you to extend its capabilities to integrate your whole stack. Use Nx's graph on your Go or Python code and see what is affected, or generate Go code via Nx. Make Nx polyglot to take advantage of affected tests and remote caching for all your tech stack.",
-      speakers: ['Jack Hsu', 'Benjamin Cabanes'],
+        '⚡️ Lightning talk - State management libraries like Redux, Vuex, and NgRx give developers tools to introduce indirection between state management, side effects, and the view layer. Quickly learn about the ramifications indirection introduces for Nx libraries and explore ideas about creating module boundaries around your state management code.',
+      speakers: ['Mike Ryan'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '12:35 - 12:45pm (UTC-07:00)',
+      title: 'Nx Workspace Guardrails',
+      description:
+        '⚡️ Lightning talk - Concept: in a Nx monorepo with lots of contributors, how do you help ensure engineers follow the desired patterns for development?  You may have a roadmap for where you want to go, but how do you make sure folks don’t slide off the cliff along the way?  You need some guardrails to help keep people on track.  Thankfully, Nx has got you covered. We’ll show how built-in tools like workspace lint, ESLint, and workspace ESLint rules can help put checks in place to ensure the overall health of your workspace.',
+      speakers: ['Ryan Diehl'],
       videoUrl: '',
     },
     {
@@ -74,6 +91,15 @@ export function ConfScheduleShort(): JSX.Element {
     {
       type: 'event',
       time: '2:00 - 2:30pm (UTC-07:00)',
+      title: 'Extending Nx: Polyglot Superpowers',
+      description:
+        "Extensibility is in Nx's DNA, and having a tool that you can extend and customize to your monorepo setup is crucial. Sharing different languages in a monorepo is extremely common yet toolchains usually don't play well together. Fortunately, Nx allows you to extend its capabilities to integrate your whole stack. Use Nx's graph on your Go or Python code and see what is affected, or generate Go code via Nx. Make Nx polyglot to take advantage of affected tests and remote caching for all your tech stack.",
+      speakers: ['Jack Hsu', 'Benjamin Cabanes'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '2:30 - 3:00pm (UTC-07:00)',
       title: 'Nx, Ionic, Appflow: Navigating the Wild West of Hybrid Apps',
       description:
         'These days there are a lot of ways to build mobile apps. But what if you want to share your types across the frontend and backend, or share components and logic across your mobile and web app, and maybe an admin panel? At this point, your options get pretty limited, and things only get more complicated once you start thinking about how to automate building and deploying your native apps to the app store. In this talk, we’ll explore how to develop Ionic applications in an Nx workspace and how to configure Appflow for automated app store deployments.',
@@ -82,7 +108,7 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'event',
-      time: '2:30 - 3:00pm (UTC-07:00)',
+      time: '3:00 - 3:30pm (UTC-07:00)',
       title: 'Nx at Celonis',
       description:
         'Celonis adopted AngularJS in 2011, 5 years later in 2016 we had fewer applications to manage, and individual teams were responsible for each application, soon we found there are many issues with each team owning the code, we are duplicating some code, some teams dont have frontend developers and are sometimes dependent on each other is delaying the development workflow. Celonis decided to introduce the project "One Frontend" and we chose Nx and use Module Federation, join us to learn about the journey of Celonis migrating to Nx, why we chose Nx, and how CLI made our life easier, and what Nx\'s future is at Celonis.',
@@ -91,7 +117,7 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'event',
-      time: '3:00 - 3:30pm (UTC-07:00)',
+      time: '3:30 - 3:45pm (UTC-07:00)',
       title: 'Make Nx Work for You with Custom Generators',
       description:
         'There is a lot the Nx can do for your application right out of the box, but did you know you can write custom workspace generators specific to YOUR application to help automate the various tasks your team performs on a daily basis? Why write yet another confluence page documenting all of the little things that have to be done after generating a library when you can write a workspace generator that handles all of the little details for you? In this talk we will cover everything you need to know to create your own workspace generator to help reduce manual tasks, enforce architectural patterns, and generate more consistent predictable code.',
@@ -100,7 +126,7 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'break',
-      time: '3:30 - 3:45pm (UTC-07:00)',
+      time: '3:45 - 4:15pm (UTC-07:00)',
       title: 'Break',
       description: '',
       speakers: [],
@@ -108,19 +134,11 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'event',
-      time: '3:45 - 4:15pm (UTC-07:00)',
+      time: '4:15 - 4:45pm (UTC-07:00)',
       title: 'The power of Nx Console',
       description:
         'Are you tired of searching the docs for the exact name of that Nx command flag? Or do you want to explore what’s possible but don’t know where to start? Nx isn’t just fast! We deeply care about the developer experience too! Every command, with all its options, running tasks, and the Nx graph. Just fingertips away so you can keep focused and remain in the flow. In this talk, we’re going deep into how to augment your Nx experience in VSCode! Not a VSCode user? Then be all ears: we might have a surprise.',
       speakers: ['Jonathan Cammisuli'],
-      videoUrl: '',
-    },
-    {
-      type: 'event',
-      time: '4:15 - 4:45pm (UTC-07:00)',
-      title: 'TBA',
-      description: '',
-      speakers: ['TBA'],
       videoUrl: '',
     },
     {
