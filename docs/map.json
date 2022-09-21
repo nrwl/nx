@@ -833,6 +833,24 @@
             "id": "resolve-circular-dependencies",
             "tags": ["explore-graph"],
             "file": "shared/recipes/resolve-circular-dependencies"
+          },
+          {
+            "name": "Publishing Storybook: One main Storybook instance for all projects",
+            "id": "one-storybook-for-all",
+            "tags": ["storybook"],
+            "file": "shared/recipes/one-storybook-for-all"
+          },
+          {
+            "name": "Publishing Storybook: One Storybook instance per scope",
+            "id": "one-storybook-per-scope",
+            "tags": ["storybook"],
+            "file": "shared/recipes/one-storybook-per-scope"
+          },
+          {
+            "name": "Publishing Storybook: One main Storybook instance using Storybook Composition",
+            "id": "one-storybook-with-composition",
+            "tags": ["storybook"],
+            "file": "shared/recipes/one-storybook-with-composition"
           }
         ]
       },
@@ -1361,6 +1379,11 @@
             "id": "overview-angular",
             "name": "Set up Storybook for Angular Projects",
             "file": "shared/guides/storybook/plugin-angular"
+          },
+          {
+            "id": "best-practices",
+            "name": "Storybook best practices for making the most out of Nx",
+            "file": "shared/guides/storybook/best-practices"
           },
           {
             "id": "storybook-composition-setup",

@@ -74,7 +74,7 @@ and the result would be the following:
 
 ## Cypress tests for Stories
 
-Both `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
+The `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
 To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
 

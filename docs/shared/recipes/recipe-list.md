@@ -62,6 +62,12 @@
 - [Advanced Micro Frontends with Angular using Dynamic Federation](/recipe/dynamic-module-federation-with-angular)
 - [Nx Micro-Frontend Example](/recipe/nx-examples)
 
+## Storybook
+
+- [Publishing Storybook: One main Storybook instance for all projects](/recipe/one-storybook-for-all)
+- [Publishing Storybook: One Storybook instance per scope](/recipe/one-storybook-per-scope)
+- [Publishing Storybook: One main Storybook instance using Storybook Composition](/recipe/one-storybook-with-composition)
+
 ## Other
 
 - [JavaScript and TypeScript](/recipe/js-and-ts)
