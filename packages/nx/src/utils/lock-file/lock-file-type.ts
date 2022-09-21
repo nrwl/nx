@@ -1,6 +1,6 @@
 export interface PackageDependency {
   version?: string;
-  packageMeta: unknown[];
+  packageMeta: any[];
   dependencies?: Record<string, string>;
   [key: string]: any;
 }
