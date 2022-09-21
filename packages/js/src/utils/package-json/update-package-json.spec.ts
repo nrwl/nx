@@ -117,4 +117,32 @@ describe('getUpdatedPackageJsonContent', () => {
       },
     });
   });
+
+  it('should support different CJS file extension', () => {
+    const json = getUpdatedPackageJsonContent(
+      {
+        name: 'test',
+        version: '0.0.1',
+      },
+      {
+        main: 'proj/src/index.ts',
+        outputPath: 'dist/proj',
+        projectRoot: 'proj',
+        format: ['esm', 'cjs'],
+        outputFileExtensionForCjs: '.cjs',
+        generateExportsField: true,
+      }
+    );
+
+    expect(json).toEqual({
+      name: 'test',
+      main: './src/index.cjs',
+      module: './src/index.js',
+      types: './src/index.d.ts',
+      version: '0.0.1',
+      exports: {
+        '.': { require: './src/index.cjs', import: './src/index.js' },
+      },
+    });
+  });
 });
