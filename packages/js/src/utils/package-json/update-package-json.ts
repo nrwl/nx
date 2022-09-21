@@ -22,13 +22,16 @@ function getMainFileDirRelativeToProjectRoot(
   return relativeDir === '' ? `./` : `./${relativeDir}/`;
 }
 
+export type SupportedFormat = 'cjs' | 'esm';
+
 export interface UpdatePackageJsonOption {
   projectRoot: string;
-  outputPath: string;
   main: string;
-  format?: string[];
-  skipTypings?: boolean;
+  format?: SupportedFormat[];
+  outputPath: string;
   outputFileName?: string;
+  outputFileExtensionForCjs?: `.${string}`;
+  skipTypings?: boolean;
   generateExportsField?: boolean;
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
@@ -105,15 +108,14 @@ export function getUpdatedPackageJsonContent(
     exports['.']['import'] = mainJsFile;
   }
 
-  // If CJS file ends with .cjs then use that, otherwise default to main file.
-  // Bundlers like webpack, rollup and, esbuild supports .cjs for CJS and .js for ESM.
-  // Compilers like tsc, swc do not have different file extensions.
+  // CJS output may have .cjs or .js file extensions.
+  // Bundlers like rollup and esbuild supports .cjs for CJS and .js for ESM.
+  // Bundlers/Compilers like webpack, tsc, swc do not have different file extensions.
   if (hasCjsFormat) {
     const { dir, name } = parse(mainJsFile);
-    let cjsMain = `${dir}/${name}.cjs`;
-    cjsMain = fileExists(join(options.outputPath, cjsMain))
-      ? cjsMain
-      : mainJsFile;
+    const cjsMain = `${dir}/${name}${
+      options.outputFileExtensionForCjs ?? '.js'
+    }`;
     packageJson.main ??= cjsMain;
     exports['.']['require'] = cjsMain;
   }

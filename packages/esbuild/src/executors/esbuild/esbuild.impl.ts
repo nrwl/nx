@@ -17,6 +17,8 @@ import { removeSync, writeJsonSync } from 'fs-extra';
 import { getClientEnvironment } from '../../utils/environment-variables';
 import { createAsyncIterable } from '@nrwl/js/src/utils/create-async-iterable/create-async-iteratable';
 
+const CJS_FILE_EXTENSION = '.cjs';
+
 export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
   context: ExecutorContext
@@ -30,6 +32,7 @@ export async function* esbuildExecutor(
     {
       ...options,
       skipTypings: options.skipTypeCheck,
+      outputFileExtensionForCjs: CJS_FILE_EXTENSION,
     },
     context
   );
@@ -185,7 +188,7 @@ function getOutfile(
     return candidate;
   } else {
     const { dir, name } = parse(candidate);
-    return `${dir}/${name}.cjs`;
+    return `${dir}/${name}${CJS_FILE_EXTENSION}`;
   }
 }
 
