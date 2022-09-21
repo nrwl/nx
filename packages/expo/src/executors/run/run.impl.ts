@@ -50,7 +50,7 @@ function runCliRun(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/expo-cli/bin/expo.js'),
+      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
       ['run:' + options.platform, ...createRunOptions(options)],
       {
         cwd: projectRoot,

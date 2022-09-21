@@ -44,7 +44,7 @@ function startAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/expo-cli/bin/expo.js'),
+      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
       [options.webpack ? 'web' : 'start', ...createStartOptions(options)],
       { cwd: join(workspaceRoot, projectRoot) }
     );

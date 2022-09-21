@@ -36,7 +36,7 @@ function runCliRollback(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/expo-cli/bin/expo.js'),
+      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
       ['publish:rollback', ...createRollbackOptions(options)],
       {
         cwd: projectRoot,

@@ -23,6 +23,12 @@
       "cli": "nx",
       "description": "Add target update for expo projects in project.json",
       "factory": "./src/migrations/update-14-5-1/add-eas-update-target"
+    },
+    "remove-expo-cli-14-5-1": {
+      "version": "14.5.1-beta.0",
+      "cli": "nx",
+      "description": "Remove expo-cli package for expo projects in project.json",
+      "factory": "./src/migrations/update-14-5-1/remove-expo-cli"
     }
   },
   "packageJsonUpdates": {
