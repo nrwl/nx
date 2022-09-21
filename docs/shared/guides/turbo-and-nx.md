@@ -6,9 +6,11 @@ Turborepo is a build tool that has just been released (Dec 2021). It borrows man
 Note that the relationship between Nx and Turborepo isn’t the same as with Nx and say Yarn workspaces or Lerna. Nx and Yarn workspaces are complementary, so it makes sense to use both in some situations. Turborepo is a subset of Nx (at this point), so we don’t think it makes sense to use both.
 {% /callout %}
 
-We do our best to be unbiased, but, of course you should do your own research. Read the docs, try things out, etc.
+We do our best to be unbiased, but, of course you should do your own research. Read the docs, try things out and build your own opinion.
 
+{% callout type="note" title="December 14, 2021" %}
 This document was written on December 14, 2021. At this point Turborepo has just been released, it’s about 5k lines of code. It’s a small project. Many of the things listed below are the things Turborepo cannot do now and Nx can. We’re sure Turborepo will eventually support some of them. So if you read this later, consult the documentation.
+{% /callout %}
 
 We clearly separate Nx (the open source tool) and [Nx Cloud](https://nx.app) (the SAAS product). Turborepo doesn’t have such a separation. Hence, in this guide we compare Turborepo with Nx+Nx Cloud (so it’s apples to apples). That said, you don’t have to use Nx Cloud to get features such as distributed caching and distributed task execution. We provide public APIs so you can build your own, if you'd prefer not to use Nx Cloud.
 
@@ -16,7 +18,19 @@ We are going to compare the tools in three different ways: **features**, **tech 
 
 ## Features
 
-#### 1. Understanding your workspace
+#### 1. Incremental Adoption
+
+We should distinguish between [package-based vs integrated approach](/concepts/integrated-vs-package-based) to monorepos. Turbo uses a package-based approach to monorepos, while Nx can do both. To be able to compare the two from an incremental adoption point of view, let's focus on the package-based approach for now:
+
+- both, Turbo and Nx can be added to a repo with almost no friction. Install `turbo` and add a `turbo.json` or install `nx` and add a `nx.json`.
+- with Nx you have the possibility to also transition to a more [integrated monorepo style](/concepts/integrated-vs-package-based#integrated-repos) that has been proven to lead to better maintainability and DX in the long-run.
+
+Here are some examples for Nx:
+
+- [Article: Setup a Monorepo with PNPM and speed it up with Nx](https://dev.to/nx/setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx-1eem)
+- [Video: Nx in 100 seconds: Adding Nx to an existing PNPM workspace](https://youtu.be/8X2sGZn_ffY)
+
+#### 2. Understanding your workspace
 
 The starting point of any non-trivial monorepo management tool is to be able to understand the monorepo workspace structure, what projects there are and how they relate to each other.
 
@@ -24,14 +38,14 @@ The starting point of any non-trivial monorepo management tool is to be able to 
 - Since the computation of the project graph can take a lot of time for complex workspaces, **Nx does its analysis in the background. Turborepo does it at request time.**
 - **Nx has visibility rules, which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have visibility rules. **Visibility rules prevent the monorepo from becoming the “big ball of mud”.**
 
-#### 2. Project graph visualization
+#### 3. Project graph visualization
 
 Being able to visually explore a monorepo workspace can be a deal breaker when it comes to debug and troubleshoot large monorepo workspaces.
 
 - Nx has a rich, interactive visualiser (watch a video [here](https://www.youtube.com/watch?v=UTB5dOJF43o))
 - Turborepo has a basic graphviz image export.
 
-#### 3. Detecting affected projects/packages
+#### 4. Detecting affected projects/packages
 
 Optimizing for speed is crucial to be able to scale. One strategy is to leverage the knowledge about the monorepo workspace structure in combination with Git to determine what projects/packages might be affected by a given pull request.
 
@@ -39,14 +53,14 @@ Optimizing for speed is crucial to be able to scale. One strategy is to leverage
 
 Learn more about it in this [Egghead lesson on scaling CI runs with Nx Affected Commands](https://egghead.io/lessons/javascript-scale-ci-runs-with-nx-affected-commands).
 
-#### 4. Local task coordination
+#### 5. Local task coordination
 
 Running multiple tasks in parallel, in the right order, on a single machine is crucial for a monorepo.
 
 - Both Nx and Turborepo support it. And both can run different types of targets (e.g., tests and builds) as part of the same command.
 - **Everything in Nx is pluggable, including task coordination**. You can provide your own strategy (e.g., running multiple jest tasks using the jest monorepo mode when possible). Nx plugins supply custom strategies. Turborepos’s coordination logic at this point isn’t pluggable.
 
-#### 5. Local computation caching
+#### 6. Local computation caching
 
 Local computation caching (often also refered to as "build caching") is the process of not having to run the same command twice, but rather to restore file artifacts and terminal outputs from a local cache. We refer to it as "computation caching", because in Nx you can really apply it to any type of task (not just builds).
 
@@ -55,7 +69,7 @@ Local computation caching (often also refered to as "build caching") is the proc
 - Turborepo only uses piping to capture the terminal output. Piping doesn’t work well for the tasks emitting “interesting” output (cypress, webpack, etc). As a result, **the terminal output with Turborepo and without it doesn’t look the same**. Nx can use piping, but it also supports other strategies. As a result, Nx is able to capture the output “as is”. **Running say Cypress with Nx or without Nx results in the same output**, and the replayed output matches the original output exactly as well.
 - Once again, Nx is pluggable, so you can write plugins which determine what can affect a given computation, and some Nx plugins do that.
 
-#### 6. Distributed computation caching
+#### 7. Distributed computation caching
 
 Local computation caching helps speed up things locally, but the real benefits start when you distribute and share that cache remotely with your CI system and teammates.
 
@@ -63,7 +77,7 @@ Local computation caching helps speed up things locally, but the real benefits s
 - Nx exposes a public API, which allows you to provide your own implementation of the remote cache (and some companies do). Turborepo’s implementation is not customizable, so you have to use Turborepo’s distributed cache.
 - If you choose not to implement your own version of the distributed cache, you can use Nx Cloud. **There is an on-prem version of Nx Cloud, so you can host your own cached artifacts. Turborepo doesn’t offer an on-prem solution.**
 
-#### 7. Distributed task execution
+#### 8. Distributed task execution
 
 A crucial feature in Nx is the ability to not only parallelize your tasks on a single machine, but to be able to fully automatically distribute them across multiple machines. Nx makes sure they run in parallel, in the right order while still preserving the dev ergonomics as if all the tasks would be running on a single machine.
 
@@ -75,7 +89,7 @@ A crucial feature in Nx is the ability to not only parallelize your tasks on a s
 
 If you want to learn more, check out our article on [Distributing CI - Binning and Distributed Task Execution](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953)
 
-#### 8. Editor support
+#### 9. Editor support
 
 All the available Nx commands can be executed via the command line. But as your monorepo grows, with multiple teams and hundreds of projects, even just finding the project to run a command against can sometimes be difficult. Having a high quality IDE integration can be a time saver there.
 
@@ -84,7 +98,7 @@ All the available Nx commands can be executed via the command line. But as your 
 
 Learn more [by watching this Egghead lesson](https://egghead.io/lessons/javascript-generate-new-projects-for-nx-with-nx-console).
 
-#### 9. Configuration
+#### 10. Configuration
 
 Nx has grown over the last 5 years, providing curated presets for common setups, but at the same time focusing on remaining flexible and extensible.
 
@@ -92,10 +106,11 @@ Nx has grown over the last 5 years, providing curated presets for common setups,
 
 Getting started quickly is very easy. Check out some of the examples below:
 
-- [Nx with Minimal Configuration - Adding Nx to the Strapi repository](https://youtu.be/sVSLIyghhGo)
-- [How Nx leverages package.json scripts in Nx 13.3](https://youtu.be/XOZkjDMxsA8)
+- [Video: Adding Nx to a PNPM based monorepo](https://youtu.be/8X2sGZn_ffY)
+- [Video: Nx with Minimal Configuration - Adding Nx to the Strapi repository](https://youtu.be/sVSLIyghhGo)
+- [Video: How Nx leverages package.json scripts in Nx 13.3](https://youtu.be/XOZkjDMxsA8)
 
-#### 10. Transparency
+#### 11. Transparency
 
 Nx core make things faster but doesn't change how your commands run or how the terminal output looks. Compare Nx's and Turbo's terminal outputs:
 
@@ -158,9 +173,9 @@ It’s also worth noting that the backend of Nx Cloud is written in Kotlin. This
 
 Nx was released 5 years ago. Turborepo has just been open sourced (Dec 2021). Turborepo doesn't have a large community yet, but it probably will at some point.
 
-- There are about [1 million downloads per week](https://www.npmjs.com/package/@nrwl/tao) (3.4x growth in 2021).
-- There are about 900k unique [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) (a plugin for VSCode) installations.
+- There are about [2.5 million downloads per week](https://www.npmjs.com/package/@nrwl/tao).
+- There are about 1 million+ unique [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) (a plugin for VSCode) installations.
 - There is a rich ecosystem of [third-party plugins.](https://nx.dev/community)
-- There are 3000+ active users in [the community slack.](https://nrwlcommunity.slack.com/join/shared_invite/zt-jba969hz-e5zm1Ou_jiOP1J2h8UTu0w#/shared-invite/email)
+- There are 5500+ active users in [the community slack.](https://nrwlcommunity.slack.com/join/shared_invite/zt-jba969hz-e5zm1Ou_jiOP1J2h8UTu0w#/shared-invite/email)
 
 From day 1 Nx has always been an **MIT-licensed open source project**, and we did everything to make sure companies using Nx won’t end up in the vendor lock-in. We clearly separated Nx the open source project and Nx Cloud the SAAS product. For instance, Nx Cloud is built using the public APIs Nx provides (you can build your own and some companies do). Nx Cloud docs are on a separate domain etc.
