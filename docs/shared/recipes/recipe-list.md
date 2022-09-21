@@ -62,6 +62,12 @@
 - [Advanced Micro Frontends with Angular using Dynamic Federation](/recipe/dynamic-module-federation-with-angular)
 - [Nx Micro-Frontend Example](/recipe/nx-examples)
 
+## Storybook
+
+- [Publishing Storybook: One main Storybook instance for all projects](/recipe/one-storybook-for-all)
+- [Publishing Storybook: One Storybook instance per scope](/recipe/one-storybook-per-scope)
+- [Publishing Storybook: One main Storybook instance using Storybook Composition](/recipe/one-storybook-with-composition)
+
 ## Other
 
 - [JavaScript and TypeScript](/recipe/js-and-ts)
@@ -76,7 +82,6 @@
 - [Using Tailwind CSS in React](/recipe/using-tailwind-css-in-react)
 - [React 18 Migration](/recipe/react-18)
 - [Using Tailwind CSS with Angular projects](/recipe/using-tailwind-css-with-angular-projects)
-- [Using Storybook in a Nx workspace - Best practices](/recipe/storybook-best-practices)
 - [Using NgRx](/recipe/misc-ngrx)
 - [Using Data Persistence operators](/recipe/misc-data-persistence)
 - [Customizing Webpack Config](/recipe/customize-webpack)
