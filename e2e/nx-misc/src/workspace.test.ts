@@ -14,6 +14,7 @@ import {
   updateProjectConfig,
   readProjectConfig,
   tmpProjPath,
+  readResolvedWorkspaceConfiguration,
 } from '@nrwl/e2e/utils';
 
 let proj: string;
@@ -281,7 +282,7 @@ describe('Workspace Tests', () => {
     /**
      * Tries moving a library from ${lib}/data-access -> shared/${lib}/data-access
      */
-    it('should work for libraries', () => {
+    it('should work for libraries', async () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
@@ -374,8 +375,8 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
       checkFilesExist(rootClassPath);
 
-      let workspaceJson = readJson(workspaceConfigName());
-      expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
+      let workspace = await readResolvedWorkspaceConfiguration();
+      expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
       const newConfig = readProjectConfig(newName);
       expect(newConfig).toMatchObject({
         tags: [],
@@ -396,9 +397,8 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
-      expect(moveOutput).toContain(`UPDATE workspace.json`);
-      workspaceJson = readJson(workspaceConfigName());
-      expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
+      workspace = readJson(workspaceConfigName());
+      expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
       const project = readProjectConfig(newName);
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
@@ -416,7 +416,7 @@ describe('Workspace Tests', () => {
       );
     });
 
-    it('should work for libs created with --importPath', () => {
+    it('should work for libs created with --importPath', async () => {
       const importPath = '@wibble/fish';
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
@@ -523,9 +523,8 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
-      expect(moveOutput).toContain(`UPDATE workspace.json`);
-      const workspaceJson = readJson(workspaceConfigName());
-      expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
+      const workspace = await readResolvedWorkspaceConfiguration();
+      expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
       const project = readProjectConfig(newName);
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
@@ -547,7 +546,7 @@ describe('Workspace Tests', () => {
       );
     });
 
-    it('should work for custom workspace layouts', () => {
+    it('should work for custom workspace layouts', async () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
@@ -656,9 +655,8 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 
-      expect(moveOutput).toContain(`UPDATE workspace.json`);
-      const workspaceJson = readJson(workspaceConfigName());
-      expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
+      const workspace = await readResolvedWorkspaceConfiguration();
+      expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
       const project = readProjectConfig(newName);
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
@@ -681,7 +679,7 @@ describe('Workspace Tests', () => {
       updateFile('nx.json', JSON.stringify(nxJson));
     });
 
-    it('should work for libraries when scope is unset', () => {
+    it('should work for libraries when scope is unset', async () => {
       const json = readJson('nx.json');
       delete json.npmScope;
       updateFile('nx.json', JSON.stringify(json));
@@ -800,7 +798,7 @@ describe('Workspace Tests', () => {
     /**
      * Tries creating then deleting a lib
      */
-    it('should work', () => {
+    it('should work', async () => {
       const lib1 = uniq('myliba');
       const lib2 = uniq('mylibb');
 

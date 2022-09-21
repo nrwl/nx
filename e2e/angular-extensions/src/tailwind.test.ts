@@ -360,7 +360,7 @@ describe('Tailwind support', () => {
       expect(mainBundle).toMatch(expectedStylesRegex);
     };
 
-    it('should build correctly and only output the tailwind utilities used', () => {
+    it('should build correctly and only output the tailwind utilities used', async () => {
       const appWithTailwind = uniq('app-with-tailwind');
       runCLI(
         `generate @nrwl/angular:app ${appWithTailwind} --add-tailwind --no-interactive`

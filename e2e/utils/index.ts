@@ -1,4 +1,5 @@
 import {
+  createProjectGraphAsync,
   joinPathFragments,
   parseJson,
   ProjectConfiguration,
@@ -89,10 +90,17 @@ export function updateProjectConfig(
   projectName: string,
   callback: (c: ProjectConfiguration) => ProjectConfiguration
 ) {
-  const root = readJson(workspaceConfigName()).projects[projectName];
+  const workspace = readResolvedWorkspaceConfiguration();
+  const root = workspace.projects[projectName].root;
   const path = join(root, 'project.json');
   const current = readJson(path);
   updateFile(path, JSON.stringify(callback(current), null, 2));
+}
+
+export function readResolvedWorkspaceConfiguration() {
+  process.env.NX_PROJECT_GLOB_CACHE = 'false';
+  const ws = new Workspaces(tmpProjPath());
+  return ws.readWorkspaceConfiguration();
 }
 
 /**
@@ -109,7 +117,7 @@ export function readWorkspaceConfig(): Omit<
 }
 
 export function readProjectConfig(projectName: string): ProjectConfiguration {
-  const root = readJson(workspaceConfigName()).projects[projectName];
+  const root = readResolvedWorkspaceConfiguration().projects[projectName].root;
   const path = join(root, 'project.json');
   return readJson(path);
 }

@@ -97,7 +97,7 @@ describe('Angular Projects', () => {
     }
   }, 1000000);
 
-  it('should build the dependent buildable lib and its child lib, as well as the app', () => {
+  it('should build the dependent buildable lib and its child lib, as well as the app', async () => {
     // ARRANGE
     const app = uniq('app');
     const buildableLib = uniq('buildlib1');

@@ -286,10 +286,6 @@ describe('Nx Plugin', () => {
     });
 
     it('should be able to infer projects and targets', async () => {
-      // Cache workspace json, to test inference and restore afterwards
-      const workspaceJsonContents = readFile('workspace.json');
-      removeFile('workspace.json');
-
       // Setup project inference + target inference
       updateFile(
         `libs/${plugin}/src/index.ts`,
@@ -327,9 +323,6 @@ describe('Nx Plugin', () => {
       expect(runCLI(`build ${inferredProject}`)).toContain(
         'custom registered target'
       );
-
-      // Restore workspace.json
-      createFile('workspace.json', workspaceJsonContents);
     });
 
     it('should be able to use local generators and executors', async () => {
