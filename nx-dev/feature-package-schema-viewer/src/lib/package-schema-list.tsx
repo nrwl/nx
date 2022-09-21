@@ -133,6 +133,7 @@ export function PackageSchemaList({
                 name={vm.pkg.id}
                 executors={pkg.executors}
                 generators={pkg.generators}
+                guides={pkg.documentation}
               ></PackageReference>
             </div>
           </div>

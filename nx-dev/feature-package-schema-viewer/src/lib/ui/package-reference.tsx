@@ -12,10 +12,18 @@ import { Heading2 } from './headings';
 export function PackageReference({
   executors,
   generators,
+  guides,
   name,
 }: {
   executors: SchemaMetadata[];
   generators: SchemaMetadata[];
+  guides: {
+    id: string;
+    name: string;
+    content: string;
+    file: string;
+    path: string;
+  }[];
   name: string;
 }): JSX.Element {
   return (
@@ -23,8 +31,8 @@ export function PackageReference({
       <Heading2 title="Package reference" />
 
       <p className="mb-16">
-        Here is a list of all the executors and generators available from this
-        package.
+        Here is a list of all the guides, executors and generators available
+        from this package.
       </p>
 
       <Heading2 title={'Executors'} />
@@ -53,7 +61,50 @@ export function PackageReference({
         ))}
         {generators.length === 0 && <EmptyList type="generator" />}
       </ul>
+
+      <div className="h-12">{/* SPACER */}</div>
+      <Heading2 title={'Guides'} />
+      <ul>
+        {guides.map((guide) => (
+          <GuideListItem key={guide.id} guide={guide} packageName={name} />
+        ))}
+        {guides.length === 0 && <EmptyList type="guide" />}
+      </ul>
     </>
+  );
+}
+
+function GuideListItem({
+  guide,
+  packageName,
+}: {
+  guide: {
+    id: string;
+    name: string;
+    content: string;
+    file: string;
+    path: string;
+  };
+  packageName: string;
+}) {
+  return (
+    <li>
+      <Link href={`/${packageName}/${guide.id}`}>
+        <a className="block hover:bg-gray-50">
+          <div className="flex items-center px-4 py-4 sm:px-6">
+            <div className="flex min-w-0 flex-1 items-center">
+              <div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
+                <div>
+                  <p className="text-black-600 truncate text-sm font-medium">
+                    {guide.name}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+      </Link>
+    </li>
   );
 }
 
@@ -103,7 +154,11 @@ function SchemaListItem({
   );
 }
 
-function EmptyList({ type }: { type: 'executor' | 'generator' }): JSX.Element {
+function EmptyList({
+  type,
+}: {
+  type: 'executor' | 'generator' | 'guide';
+}): JSX.Element {
   return (
     <li className="focus-within:ring-blue-nx-base relative flex px-2 py-4 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50">
       <InformationCircleIcon
