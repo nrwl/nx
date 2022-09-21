@@ -27,7 +27,7 @@ describe('Angular Package', () => {
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nrwl/angular:ngrx users --module=apps/${myapp}/src/app/app.module.ts --root --minimal=false --syntax=classes --useDataPersistence=true`
+        `generate @nrwl/angular:ngrx users --module=apps/${myapp}/src/app/app.module.ts --root --minimal=false --useDataPersistence=true`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
@@ -39,7 +39,7 @@ describe('Angular Package', () => {
       // Generate feature library and ngrx state within that library
       runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
       runCLI(
-        `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade --syntax=classes`
+        `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade`
       );
 
       expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
