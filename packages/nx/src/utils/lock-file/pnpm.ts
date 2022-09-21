@@ -1,6 +1,7 @@
 import { LockFileData, PackageDependency } from './lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
 import { sortObject } from './utils';
+import { transpileModule } from 'typescript';
 
 type PackageMeta = {
   key: string;
@@ -12,7 +13,7 @@ type PackageMeta = {
 
 type Dependencies = Record<string, Omit<PackageDependency, 'packageMeta'>>;
 
-type InlineSpecifier = {
+type VersionInfoWithInlineSpecifier = {
   version: string;
   specifier: string;
 };
@@ -46,8 +47,9 @@ const LOCKFILE_YAML_FORMAT = {
  * @returns
  */
 export function parsePnpmLockFile(lockFile: string): LockFileData {
+  const data: PnpmLockFile = load(lockFile);
   const { dependencies, devDependencies, packages, specifiers, ...metadata } =
-    load(lockFile) as PnpmLockFile;
+    data;
 
   return {
     dependencies: mapPackages(
@@ -62,70 +64,118 @@ export function parsePnpmLockFile(lockFile: string): LockFileData {
 }
 
 function mapPackages(
-  dependencies: Record<string, string | InlineSpecifier>,
-  devDependencies: Record<string, string | InlineSpecifier>,
+  dependencies: Record<string, string | VersionInfoWithInlineSpecifier>,
+  devDependencies: Record<string, string | VersionInfoWithInlineSpecifier>,
   specifiers: Record<string, string>,
   packages: Dependencies,
   inlineSpecifiers: boolean
 ): LockFileData['dependencies'] {
   const mappedPackages: LockFileData['dependencies'] = {};
-  Object.entries(packages).forEach(([key, value]) => {
-    const packageName = key.slice(1, key.lastIndexOf('/'));
-    mappedPackages[packageName] = mappedPackages[packageName] || {};
 
-    const matchingVersion = key.slice(key.lastIndexOf('/') + 1);
-    const version = matchingVersion.split('_')[0];
-    let isDependency, isDevDependency, specifier;
-    if (inlineSpecifiers) {
-      if (
-        dependencies &&
-        (dependencies[packageName] as InlineSpecifier)?.version ===
-          matchingVersion
-      ) {
-        isDependency = true;
-        specifier = (dependencies[packageName] as InlineSpecifier).specifier;
-      } else {
-        isDependency = false;
-      }
-      if (
-        devDependencies &&
-        (devDependencies[packageName] as InlineSpecifier)?.version ===
-          matchingVersion
-      ) {
-        isDevDependency = true;
-        specifier = (devDependencies[packageName] as InlineSpecifier).specifier;
-      } else {
-        isDevDependency = false;
-      }
+  Object.entries(packages).forEach(([key, value]) => {
+    const { resolution, engines, ...dependencyDetails } = value;
+
+    // construct packageMeta object
+    const meta = mapMetaInformation(
+      { dependencies, devDependencies, specifiers },
+      inlineSpecifiers,
+      key,
+      dependencyDetails
+    );
+
+    // create new key
+    const version = key.split('/').pop().split('_')[0];
+    const packageName = key.slice(1, key.lastIndexOf('/'));
+    const newKey = `${packageName}@${version}`;
+
+    if (!mappedPackages[packageName]) {
+      mappedPackages[packageName] = {};
+    }
+    if (mappedPackages[packageName][newKey]) {
+      mappedPackages[packageName][newKey].packageMeta.push(meta);
     } else {
-      isDependency =
-        dependencies && dependencies[packageName] === matchingVersion;
-      isDevDependency =
-        devDependencies && devDependencies[packageName] === matchingVersion;
+      mappedPackages[packageName][newKey] = {
+        resolution,
+        engines,
+        version,
+        packageMeta: [meta],
+      };
+    }
+  });
+  return mappedPackages;
+}
+
+// maps packageMeta based on dependencies, devDependencies and (inline) specifiers
+function mapMetaInformation(
+  {
+    dependencies,
+    devDependencies,
+    specifiers,
+  }: Omit<PnpmLockFile, 'lockfileVersion' | 'packages'>,
+  hasInlineSpefiers,
+  key: string,
+  dependencyDetails: Record<string, Record<string, string>>
+): PackageMeta {
+  const matchingVersion = key.split('/').pop();
+  const packageName = key.slice(1, key.lastIndexOf('/'));
+
+  const isDependency = isVersionMatch(
+    dependencies?.[packageName],
+    matchingVersion,
+    hasInlineSpefiers
+  );
+  const isDevDependency = isVersionMatch(
+    devDependencies?.[packageName],
+    matchingVersion,
+    hasInlineSpefiers
+  );
+
+  let specifier;
+  if (isDependency || isDevDependency) {
+    if (hasInlineSpefiers) {
+      specifier =
+        getSpecifier(dependencies?.[packageName]) ||
+        getSpecifier(devDependencies?.[packageName]);
+    } else {
       if (isDependency || isDevDependency) {
         specifier = specifiers[packageName];
       }
     }
-    const { resolution, engines, ...rest } = value;
-    const meta = {
-      key,
-      isDependency,
-      isDevDependency,
-      specifier,
-      dependencyDetails: rest,
-    };
-    const newKey = `${packageName}@${version}`;
-    mappedPackages[packageName][newKey] = mappedPackages[packageName][
-      newKey
-    ] || {
-      resolution,
-      engines,
-      version,
-      packageMeta: [],
-    };
-    mappedPackages[packageName][newKey].packageMeta.push(meta);
-  });
-  return mappedPackages;
+  }
+
+  return {
+    key,
+    isDependency,
+    isDevDependency,
+    specifier,
+    dependencyDetails,
+  };
+}
+
+// version match for dependencies w/ or w/o inline specifier
+function isVersionMatch(
+  versionInfo: string | { version: string; specifier: string },
+  matchingVersion,
+  hasInlineSpefiers
+): boolean {
+  if (!versionInfo) {
+    return false;
+  }
+  if (!hasInlineSpefiers) {
+    return versionInfo === matchingVersion;
+  }
+
+  return (
+    (versionInfo as VersionInfoWithInlineSpecifier).version === matchingVersion
+  );
+}
+
+function getSpecifier(
+  versionInfo: string | { version: string; specifier: string }
+): string {
+  return (
+    versionInfo && (versionInfo as VersionInfoWithInlineSpecifier).specifier
+  );
 }
 
 /**
@@ -135,53 +185,59 @@ function mapPackages(
  * @returns
  */
 export function stringifyPnpmLockFile(lockFileData: LockFileData): string {
-  const pnpmLockFile = unmapPackages(lockFileData);
+  const pnpmLockFile = unmapLockFile(lockFileData);
 
   return dump(pnpmLockFile, LOCKFILE_YAML_FORMAT);
 }
 
-function unmapPackages(lockFileData: LockFileData): PnpmLockFile {
-  const devDependencies: Record<string, string | InlineSpecifier> = {};
-  const dependencies: Record<string, string | InlineSpecifier> = {};
+// revert lock file to it's original state
+function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
+  const devDependencies: Record<
+    string,
+    string | VersionInfoWithInlineSpecifier
+  > = {};
+  const dependencies: Record<string, string | VersionInfoWithInlineSpecifier> =
+    {};
   const packages: Dependencies = {};
   const specifiers: Record<string, string> = {};
   const inlineSpecifiers = lockFileData.lockFileMetadata.lockfileVersion
     .toString()
     .endsWith('inlineSpecifiers');
 
-  Object.entries(lockFileData.dependencies).forEach(([packageName, versions]) =>
-    Object.values(versions).forEach(({ packageMeta, resolution, engines }) => {
-      (packageMeta as PackageMeta[]).forEach(
-        ({
-          key,
-          specifier,
-          isDependency,
-          isDevDependency,
-          dependencyDetails,
-        }) => {
-          const version = key.slice(key.lastIndexOf('/') + 1);
-          if (isDependency) {
-            dependencies[packageName] = inlineSpecifiers
-              ? { specifier, version }
-              : version;
-          }
-          if (isDevDependency) {
-            devDependencies[packageName] = inlineSpecifiers
-              ? { specifier, version }
-              : version;
-          }
-          if (!inlineSpecifiers && specifier) {
+  const packageNames = Object.keys(lockFileData.dependencies);
+  for (let i = 0; i < packageNames.length; i++) {
+    const packageName = packageNames[i];
+    const versions = Object.values(lockFileData.dependencies[packageName]);
+
+    versions.forEach(({ packageMeta, resolution, engines }) => {
+      (packageMeta as PackageMeta[]).forEach((meta) => {
+        const { key, specifier } = meta;
+
+        let version;
+        if (inlineSpecifiers) {
+          version = { specifier, version: key.slice(key.lastIndexOf('/') + 1) };
+        } else {
+          version = key.slice(key.lastIndexOf('/') + 1);
+
+          if (specifier) {
             specifiers[packageName] = specifier;
           }
-          packages[key] = {
-            resolution,
-            engines,
-            ...dependencyDetails,
-          };
         }
-      );
-    })
-  );
+
+        if (meta.isDependency) {
+          dependencies[packageName] = version;
+        }
+        if (meta.isDevDependency) {
+          devDependencies[packageName] = version;
+        }
+        packages[key] = {
+          resolution,
+          engines,
+          ...meta.dependencyDetails,
+        };
+      });
+    });
+  }
 
   return {
     ...(lockFileData.lockFileMetadata as { lockfileVersion: string }),
@@ -190,4 +246,21 @@ function unmapPackages(lockFileData: LockFileData): PnpmLockFile {
     devDependencies: sortObject(devDependencies),
     packages: sortObject(packages),
   };
+}
+
+/**
+ * Prunes the lock file data based on the list of packages and their transitive dependencies
+ *
+ * @param lockFileData
+ * @returns
+ */
+export function prunePnpmLockFile(
+  lockFileData: LockFileData,
+  packages: string[]
+): LockFileData {
+  // todo(meeroslav): This functionality has not been implemented yet
+  console.warn(
+    'Pruning pnpm-lock.yaml is not yet implemented. Returning entire lock file'
+  );
+  return lockFileData;
 }

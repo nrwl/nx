@@ -1,10 +1,7 @@
 export interface PackageDependency {
   version?: string;
-  packageMeta: unknown[];
+  packageMeta: any[];
   dependencies?: Record<string, string>;
-  dependenciesMeta?: Record<string, { optional: string }>; // todo: THIS IS FOR YARN 2
-  peerDependencies?: Record<string, string>;
-  peerDependenciesMeta?: Record<string, { optional: string }>; // todo: THIS IS FOR YARN 2
   [key: string]: any;
 }
 
