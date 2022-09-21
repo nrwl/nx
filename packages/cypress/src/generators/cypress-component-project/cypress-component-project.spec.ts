@@ -121,6 +121,7 @@ describe('Cypress Component Project', () => {
     expect(tree.exists('libs/cool-lib/cypress/tsconfig.cy.json')).toEqual(true);
     const cyTsConfig = readJson(tree, 'libs/cool-lib/cypress/tsconfig.cy.json');
     expect(cyTsConfig.include).toEqual([
+      'support/**/*.ts',
       '../cypress.config.ts',
       '../**/*.cy.ts',
       '../**/*.cy.tsx',

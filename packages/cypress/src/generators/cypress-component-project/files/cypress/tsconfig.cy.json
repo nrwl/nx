@@ -6,6 +6,7 @@
     "types": ["cypress", "node"]
   },
   "include": [
+    "support/**/*.ts",
     "../cypress.config.ts",
     "../**/*.cy.ts",
     "../**/*.cy.tsx",
