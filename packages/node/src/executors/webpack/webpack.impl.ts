@@ -15,6 +15,8 @@ export async function* webpackExecutor(
       ...options,
       target: 'node',
       compiler: 'tsc',
+      scripts: [],
+      styles: [],
     },
     context
   );
