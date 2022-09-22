@@ -42,17 +42,20 @@ export async function recordOutputsHash(_outputs: string[], hash: string) {
 export async function outputsHashesMatch(_outputs: string[], hash: string) {
   const outputs = await normalizeOutputs(_outputs);
   let invalidated = [];
+  let matches = true;
   if (outputs.length !== numberOfExpandedOutputs[hash]) {
+    matches = false;
     invalidated = outputs;
   } else {
     for (const output of outputs) {
       if (recordedHashes[output] !== hash) {
+        matches = false;
         invalidated.push(output);
       }
     }
   }
   await removeSubscriptionsForOutputs(invalidated);
-  return invalidated.length === 0;
+  return matches;
 }
 
 function anyErrorsAssociatedWithOutputs(outputs: string[]) {
