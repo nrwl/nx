@@ -37,14 +37,14 @@ describe('Extra Nx Misc Tests', () => {
       const withPrefixes = runCLI(`echo ${myapp} --output-style=stream`).split(
         isNotWindows() ? '\n' : '\r\n'
       );
-      expect(withPrefixes).toContain(`[${myapp}] 1`);
-      expect(withPrefixes).toContain(`[${myapp}] 2`);
-      expect(withPrefixes).toContain(`[${myapp}] inner`);
+      expect(withPrefixes).toContain(`${myapp}: 1`);
+      expect(withPrefixes).toContain(`${myapp}: 2`);
+      expect(withPrefixes).toContain(`${myapp}: inner`);
 
       const noPrefixes = runCLI(
         `echo ${myapp} --output-style=stream-without-prefixes`
       );
-      expect(noPrefixes).not.toContain(`[${myapp}]`);
+      expect(noPrefixes).not.toContain(`${myapp}: `);
     });
   });
 
