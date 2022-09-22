@@ -6,7 +6,7 @@ import {
   copyAssets,
   copyPackageJson,
   printDiagnostics,
-  runTypeCheck,
+  runTypeCheck as _runTypeCheck,
   TypeCheckOptions,
 } from '@nrwl/js';
 import * as esbuild from 'esbuild';
@@ -51,6 +51,8 @@ export async function* esbuildExecutor(
   if (options.watch) {
     return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
       async ({ next, done }) => {
+        let hasTypeErrors = false;
+
         const results = await Promise.all(
           options.format.map((format, idx) => {
             const outfile = getOutfile(format, options, context);
@@ -61,7 +63,7 @@ export async function* esbuildExecutor(
                 // Only emit info on one of the watch processes.
                 idx === 0
                   ? {
-                      onRebuild: (
+                      onRebuild: async (
                         error: esbuild.BuildFailure,
                         result: esbuild.BuildResult
                       ) => {
@@ -76,7 +78,16 @@ export async function* esbuildExecutor(
                         } else {
                           logger.info(`[watch] build succeeded`);
                         }
-                        next({ success: !!error, outfile });
+
+                        if (!options.skipTypeCheck) {
+                          const { errors } = await runTypeCheck(
+                            options,
+                            context
+                          );
+                          hasTypeErrors = errors.length > 0;
+                        }
+
+                        next({ success: !!error && !hasTypeErrors, outfile });
                       },
                     }
                   : true,
@@ -102,8 +113,14 @@ export async function* esbuildExecutor(
         process.on('SIGTERM', processOnExit);
         process.on('exit', processOnExit);
 
+        if (!options.skipTypeCheck) {
+          const { errors } = await runTypeCheck(options, context);
+          hasTypeErrors = errors.length > 0;
+        }
+
         next({
-          success: results.every((r) => r.errors?.length === 0),
+          success:
+            results.every((r) => r.errors?.length === 0) && !hasTypeErrors,
           outfile: getOutfile(options.format[0], options, context),
         });
       }
@@ -120,18 +137,10 @@ export async function* esbuildExecutor(
     );
     const buildSuccess = buildResults.every((r) => r.errors?.length === 0);
 
-    if (options.skipTypeCheck) {
-      return { success: buildSuccess };
-    }
-
-    const { errors, warnings } = await runTypeCheck(
-      getTypeCheckOptions(options, context)
-    );
-    const hasErrors = errors.length > 0;
-    const hasWarnings = warnings.length > 0;
-
-    if (hasErrors || hasWarnings) {
-      await printDiagnostics(errors, warnings);
+    let hasTypeErrors = false;
+    if (!options.skipTypeCheck) {
+      const { errors } = await runTypeCheck(options, context);
+      hasTypeErrors = errors.length > 0;
     }
 
     if (options.metafile) {
@@ -147,7 +156,7 @@ export async function* esbuildExecutor(
       });
     }
 
-    return { success: buildSuccess && !hasErrors };
+    return { success: buildSuccess && !hasTypeErrors };
   }
 }
 
@@ -188,6 +197,23 @@ function getOutfile(
     const { dir, name } = parse(candidate);
     return `${dir}/${name}${CJS_FILE_EXTENSION}`;
   }
+}
+
+async function runTypeCheck(
+  options: EsBuildExecutorOptions,
+  context: ExecutorContext
+) {
+  const { errors, warnings } = await _runTypeCheck(
+    getTypeCheckOptions(options, context)
+  );
+  const hasErrors = errors.length > 0;
+  const hasWarnings = warnings.length > 0;
+
+  if (hasErrors || hasWarnings) {
+    await printDiagnostics(errors, warnings);
+  }
+
+  return { errors, warnings };
 }
 
 export default esbuildExecutor;
