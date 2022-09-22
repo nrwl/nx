@@ -6,7 +6,7 @@ To help with that Nx uses code analysis to make sure projects can only depend on
 
 ## Project APIs
 
-Nx provides an `enfore-module-boundaries` eslint rule that enforces the public API of projects in the repo. Each project defines its public API in an `index.ts` (or `index.js`) file. If another project tries to import a variable from a file deep within a different project, an error will be thrown during linting.
+Nx provides an `enforce-module-boundaries` eslint rule that enforces the public API of projects in the repo. Each project defines its public API in an `index.ts` (or `index.js`) file. If another project tries to import a variable from a file deep within a different project, an error will be thrown during linting.
 
 To set up the lint rule, install these dependencies:
 
