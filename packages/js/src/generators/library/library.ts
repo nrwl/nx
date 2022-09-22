@@ -29,7 +29,7 @@ import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, typesNodeVersion } from '../../utils/versions';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -56,6 +56,10 @@ export async function projectGenerator(
 
   if (!schema.skipTsConfig) {
     updateRootTsConfig(tree, options);
+  }
+
+  if (schema.bundler === 'webpack' || schema.bundler === 'rollup') {
+    ensureBabelRootConfigExists(tree);
   }
 
   if (options.linter !== 'none') {
@@ -108,7 +112,11 @@ function addProject(
         outputPath,
         main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
-        assets: [`${options.projectRoot}/*.md`],
+        // TODO(jack): assets for webpack and rollup have validation that we need to fix (assets must be under <project-root>/src)
+        assets:
+          options.bundler === 'webpack' || options.bundler === 'rollup'
+            ? []
+            : [`${options.projectRoot}/*.md`],
       },
     };
 
@@ -419,7 +427,7 @@ function addProjectDependencies(
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@nrwl/esbuild': nxVersion }
+      { '@nrwl/esbuild': nxVersion, '@types/node': typesNodeVersion }
     );
   }
 
@@ -427,7 +435,7 @@ function addProjectDependencies(
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@nrwl/rollup': nxVersion }
+      { '@nrwl/rollup': nxVersion, '@types/node': typesNodeVersion }
     );
   }
 
@@ -435,7 +443,7 @@ function addProjectDependencies(
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@nrwl/webpack': nxVersion }
+      { '@nrwl/webpack': nxVersion, '@types/node': typesNodeVersion }
     );
   }
 
@@ -454,6 +462,14 @@ function getBuildExecutor(options: NormalizedSchema) {
     default:
       return `@nrwl/js:${options.compiler}`;
   }
+}
+
+function ensureBabelRootConfigExists(tree: Tree) {
+  if (tree.exists('babel.config.json')) return;
+
+  writeJson(tree, 'babel.config.json', {
+    babelrcRoots: ['*'],
+  });
 }
 
 export default libraryGenerator;
