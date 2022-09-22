@@ -81,7 +81,7 @@ Next, generate the host and remote applications.
 # React
 nx g @nrwl/react:host host --remotes=shop,cart,about
 
-#a Angular
+# Angular
 nx g @nrwl/angular:host host --remotes=shop,cart,about
 ```
 
