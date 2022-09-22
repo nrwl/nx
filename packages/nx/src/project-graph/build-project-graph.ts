@@ -422,8 +422,12 @@ async function updateProjectGraphWithPlugins(
 }
 
 function readRootTsConfig() {
-  const tsConfigPath = getRootTsConfigPath();
-  if (tsConfigPath) {
-    return readJsonFile(tsConfigPath);
+  try {
+    const tsConfigPath = getRootTsConfigPath();
+    if (tsConfigPath) {
+      return readJsonFile(tsConfigPath, { expectComments: true });
+    }
+  } catch (e) {
+    return {};
   }
 }
