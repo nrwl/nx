@@ -178,14 +178,12 @@ export const commandsObject = yargs
         withAffectedOptions(withDepGraphOptions(yargs)),
         'affected:graph'
       ),
-    handler: async (args) => {
+    handler: async (args) =>
       await (
         await import('./affected')
       ).affected('graph', {
         ...args,
-      });
-      process.exit(0);
-    },
+      }),
   })
   .command({
     command: 'print-affected',
@@ -218,10 +216,8 @@ export const commandsObject = yargs
     aliases: ['dep-graph'],
     builder: (yargs) =>
       linkToNxDevAndExamples(withDepGraphOptions(yargs), 'dep-graph'),
-    handler: async (args) => {
-      await (await import('./dep-graph')).generateGraph(args as any, []);
-      process.exit(0);
-    },
+    handler: async (args) =>
+      await (await import('./dep-graph')).generateGraph(args as any, []),
   })
 
   .command({
