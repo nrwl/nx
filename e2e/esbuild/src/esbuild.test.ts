@@ -61,7 +61,7 @@ describe('EsBuild Plugin', () => {
     expect(runCommand(`node dist/libs/${myPkg}/main.js`)).toMatch(/Bye/);
   }, 300_000);
 
-  fit('should bundle in workspace libs', async () => {
+  it('should bundle in workspace libs', async () => {
     const parentLib = uniq('parent-lib');
     const childLib = uniq('child-lib');
     runCLI(`generate @nrwl/js:lib ${parentLib} --bundler=esbuild`);
