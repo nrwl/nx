@@ -20,7 +20,7 @@ import { createAsyncIterable } from '@nrwl/js/src/utils/create-async-iterable/cr
 
 const CJS_FILE_EXTENSION = '.cjs';
 
-const BUILD_WATCH_FAILED = `[ ${chalk.green(
+const BUILD_WATCH_FAILED = `[ ${chalk.red(
   'watch'
 )} ] build finished with errors (see above), watching for changes...`;
 const BUILD_WATCH_SUCCEEDED = `[ ${chalk.green(
@@ -54,6 +54,7 @@ export async function* esbuildExecutor(
     platform: options.platform,
     target: options.target,
     metafile: options.metafile,
+    tsconfig: options.tsConfig,
   };
 
   if (options.watch) {
