@@ -16,6 +16,29 @@ import {
   stringifyPnpmLockFile,
 } from './pnpm';
 import { LockFileData } from './lock-file-type';
+import { hashLockFile } from './utils';
+
+export function lockFileHash(
+  packageManager: PackageManager = detectPackageManager()
+): string {
+  let file: string;
+  if (packageManager === 'yarn') {
+    file = readFileSync('yarn.lock', 'utf8');
+  }
+  if (packageManager === 'pnpm') {
+    file = readFileSync('pnpm-lock.yaml', 'utf8');
+  }
+  if (packageManager === 'npm') {
+    file = readFileSync('package-lock.json', 'utf8');
+  }
+  if (file) {
+    return hashLockFile(file);
+  } else {
+    throw Error(
+      `Unknown package manager ${packageManager} or lock file missing`
+    );
+  }
+}
 
 /**
  * Parses lock file and maps dependencies and metadata to {@link LockFileData}

@@ -1,7 +1,7 @@
 import { LockFileData, PackageDependency } from './lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
-import { sortObject } from './utils';
-import { transpileModule } from 'typescript';
+import { hashLockFile, sortObject } from './utils';
+import { defaultHashing } from '../../hasher/hashing-impl';
 
 type PackageMeta = {
   key: string;
@@ -50,6 +50,7 @@ export function parsePnpmLockFile(lockFile: string): LockFileData {
   const data: PnpmLockFile = load(lockFile);
   const { dependencies, devDependencies, packages, specifiers, ...metadata } =
     data;
+  const hash = hashLockFile(lockFile);
 
   return {
     dependencies: mapPackages(
@@ -60,6 +61,7 @@ export function parsePnpmLockFile(lockFile: string): LockFileData {
       metadata.lockfileVersion.toString().endsWith('inlineSpecifiers')
     ),
     lockFileMetadata: { ...metadata },
+    hash,
   };
 }
 
