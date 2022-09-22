@@ -2,21 +2,22 @@ import { appendFileSync, openSync, writeFileSync } from 'fs';
 import { run } from '../src/command-line/run';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
-  setUpOutputWatching(process.env.NX_TERMINAL_CAPTURE_STDERR === 'true');
+  setUpOutputWatching(
+    process.env.NX_TERMINAL_CAPTURE_STDERR === 'true',
+    process.env.NX_STREAM_OUTPUT === 'true'
+  );
 }
 
 if (!process.env.NX_WORKSPACE_ROOT) {
   console.error('Invalid Nx command invocation');
   process.exit(1);
 }
-let projectName;
 requireCli();
 
 function requireCli() {
   process.env.NX_CLI_SET = 'true';
   try {
     const args = JSON.parse(process.argv[2]);
-    projectName = args.targetDescription.project;
     run(
       process.cwd(),
       process.env.NX_WORKSPACE_ROOT,
@@ -48,7 +49,10 @@ function requireCli() {
  * And the cached output should be correct unless the CLI bypasses process.stdout or console.log and uses some
  * C-binary to write to stdout.
  */
-function setUpOutputWatching(captureStderr: boolean) {
+function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
+  const stdoutWrite = process.stdout._write;
+  const stderrWrite = process.stderr._write;
+
   // The terminal output file gets out and err
   const outputPath = process.env.NX_TERMINAL_OUTPUT_PATH;
   const stdoutAndStderrLogFileHandle = openSync(outputPath, 'w');
@@ -61,7 +65,11 @@ function setUpOutputWatching(captureStderr: boolean) {
   ) => {
     onlyStdout.push(chunk);
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
-    callback();
+    if (streamOutput) {
+      stdoutWrite.apply(process.stdout, [chunk, encoding, callback]);
+    } else {
+      callback();
+    }
   };
 
   process.stderr._write = (
@@ -70,7 +78,11 @@ function setUpOutputWatching(captureStderr: boolean) {
     callback: Function
   ) => {
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
-    callback();
+    if (streamOutput) {
+      stderrWrite.apply(process.stderr, [chunk, encoding, callback]);
+    } else {
+      callback();
+    }
   };
 
   process.on('exit', (code) => {
