@@ -645,23 +645,6 @@
     "14.6.0": {
       "version": "14.6.0-beta.0",
       "packages": {
-        "@types/node": {
-          "version": "18.7.9",
-          "alwaysAddToPackageJson": false
-        },
-        "@emotion/babel-plugin": {
-          "version": "11.10.2",
-          "alwaysAddToPackageJson": false
-        },
-        "@reduxjs/toolkit": {
-          "version": "1.8.5",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "14.6.0": {
-      "version": "14.6.0-beta.0",
-      "packages": {
         "@types/react": {
           "version": "18.0.18",
           "alwaysAddToPackageJson": false
@@ -680,6 +663,39 @@
         },
         "eslint-plugin-react": {
           "version": "7.31.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.7.10": {
+      "version": "14.7.10-beta.1",
+      "packages": {
+        "@types/react": {
+          "version": "18.0.20",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/node": {
+          "version": "18.7.18",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-jsx": {
+          "version": "5.0.7",
+          "alwaysAddToPackageJson": false
+        },
+        "react-router-dom": {
+          "version": "6.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "13.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.31.8",
+          "alwaysAddToPackageJson": false
+        },
+        "autoprefixer": {
+          "version": "10.4.12",
           "alwaysAddToPackageJson": false
         }
       }
