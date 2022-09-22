@@ -272,6 +272,7 @@ export async function generateGraph(
       });
       process.exit(1);
     }
+    process.exit(0);
   } else {
     const environmentJs = buildEnvironmentJs(
       args.exclude || [],
