@@ -8,6 +8,8 @@ import {
 import { Schema } from './schema';
 import {
   expoVersion,
+  expoSplashScreenVersion,
+  expoStatusBarVersion,
   nxVersion,
   reactNativeVersion,
   reactNativeWebVersion,
@@ -69,6 +71,8 @@ export function updateDependencies(host: Tree) {
       'react-dom': reactDomVersion,
       'react-native': reactNativeVersion,
       expo: expoVersion,
+      'expo-splash-screen': expoSplashScreenVersion,
+      'expo-status-bar': expoStatusBarVersion,
       'react-native-web': reactNativeWebVersion,
       '@expo/metro-config': expoMetroConfigVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
