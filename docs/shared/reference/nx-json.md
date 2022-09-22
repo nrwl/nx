@@ -133,7 +133,7 @@ And projects can define their prod fileset, without having to redefine the input
   "namedInputs": {
     "production": [
       "!{projectRoot}/**/*.test.js",
-      "{workspacRoot}/jest.config.js"
+      "{workspaceRoot}/jest.config.js"
     ]
   }
 }
