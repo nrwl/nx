@@ -1,11 +1,11 @@
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { Linter } from '@nrwl/linter';
 import { moveGenerator } from '@nrwl/workspace/generators';
+import { UnitTestRunner } from '../../../utils/test-runners';
+import libraryGenerator from '../../library/library';
 import { Schema } from '../schema';
 import { updateModuleName } from './update-module-name';
-import libraryGenerator from '../../library/library';
-import { Linter } from '@nrwl/linter';
-import { UnitTestRunner } from '../../../utils/test-runners';
 
 describe('updateModuleName Rule', () => {
   let tree: Tree;
@@ -132,7 +132,7 @@ describe('updateModuleName Rule', () => {
 
       const importerFile = tree.read(secondModulePath).toString('utf-8');
       expect(importerFile).toContain(
-        `import { SharedMyFirstModule } from '@proj/shared-my-first';`
+        `import { SharedMyFirstModule } from '@proj/shared/my-first';`
       );
       expect(importerFile).toContain(
         `export class MySecondModule extends SharedMyFirstModule {}`
