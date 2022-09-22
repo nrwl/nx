@@ -236,8 +236,23 @@
   },
   {
     "name": "@nx-extend/e2e-runner",
-    "description": "Nx plugin that can start your API before running Cypress",
+    "description": "Nx plugin that can start your API before running Cypress/Playwright",
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/e2e-runner"
+  },
+  {
+    "name": "@nx-extend/vercel",
+    "description": "Nx plugin to deploy your apps to Vercel",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/vercel"
+  },
+  {
+    "name": "@nx-extend/strapi",
+    "description": "Nx plugin for developing Strapi applications",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/strapi"
+  },
+  {
+    "name": "@nx-extend/playwright",
+    "description": "Nx plugin to run playwright e2e tests in an Nx workspace",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/playwright"
   },
   {
     "name": "@nativescript/nx",
