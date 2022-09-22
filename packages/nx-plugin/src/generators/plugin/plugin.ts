@@ -116,7 +116,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
   await addFiles(host, options);
   updateWorkspaceJson(host, options);
 
-  if (options.skipE2eProject !== true) {
+  if (options.e2eTestRunner !== 'none') {
     await e2eProjectGenerator(host, {
       pluginName: options.name,
       projectDirectory: options.projectDirectory,

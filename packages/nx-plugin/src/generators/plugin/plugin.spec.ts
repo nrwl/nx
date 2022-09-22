@@ -1,4 +1,3 @@
-import { pluginGenerator } from './plugin';
 import {
   getProjects,
   joinPathFragments,
@@ -7,8 +6,9 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Schema } from './schema';
 import { Linter } from '@nrwl/linter';
+import { pluginGenerator } from './plugin';
+import { Schema } from './schema';
 
 const getSchema: (overrides?: Partial<Schema>) => Schema = (
   overrides = {}
@@ -269,9 +269,9 @@ describe('NxPlugin Plugin Generator', () => {
     });
   });
 
-  describe('--skipE2eProject', () => {
+  describe('--e2eTestRunner', () => {
     it('should allow the e2e project to be skipped', async () => {
-      await pluginGenerator(tree, getSchema({ skipE2eProject: true }));
+      await pluginGenerator(tree, getSchema({ e2eTestRunner: 'none' }));
       const projects = getProjects(tree);
       expect(projects.has('plugins-my-plugin-e2e')).toBe(false);
     });
