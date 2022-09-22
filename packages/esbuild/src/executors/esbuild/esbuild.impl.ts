@@ -175,9 +175,10 @@ function getTypeCheckOptions(
   const { watch, tsConfig, outputPath } = options;
 
   const typeCheckOptions: TypeCheckOptions = {
-    mode: 'emitDeclarationOnly',
+    // TODO(jack): Add support for d.ts declaration files -- once the `@nrwl/js:tsc` changes are in we can use the same logic.
+    mode: 'noEmit',
     tsConfigPath: tsConfig,
-    outDir: outputPath,
+    // outDir: outputPath,
     workspaceRoot: context.root,
     rootDir: context.root,
   };
