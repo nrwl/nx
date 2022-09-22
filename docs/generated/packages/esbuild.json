@@ -110,8 +110,8 @@
       "name": "esbuild",
       "implementation": "/packages/esbuild/src/executors/esbuild/esbuild.impl.ts",
       "schema": {
-        "title": "EsBuild Target",
-        "description": "Bundle a package for different platforms.",
+        "title": "esbuild (experimental)",
+        "description": "Bundle a package for different platforms. Note: declaration (*.d.ts) file are not currently generated.",
         "cli": "nx",
         "type": "object",
         "properties": {
