@@ -393,7 +393,7 @@ function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .option('select', {
       type: 'string',
       describe:
-        'Select the subset of the returned json document (e.g., --selected=projects)',
+        'Select the subset of the returned json document (e.g., --select=projects)',
     })
     .option('type', {
       type: 'string',

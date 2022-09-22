@@ -129,7 +129,7 @@ This is the name of the tasks runner configured in nx.json
 
 Type: string
 
-Select the subset of the returned json document (e.g., --selected=projects)
+Select the subset of the returned json document (e.g., --select=projects)
 
 ### skip-nx-cache
 
