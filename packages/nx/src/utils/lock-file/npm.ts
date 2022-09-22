@@ -1,4 +1,3 @@
-import { defaultHashing } from '../../hasher/hashing-impl';
 import { LockFileData, PackageDependency } from './lock-file-type';
 import { hashLockFile, sortObject } from './utils';
 

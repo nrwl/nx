@@ -1,7 +1,6 @@
 import { LockFileData, PackageDependency } from './lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
 import { hashLockFile, sortObject } from './utils';
-import { defaultHashing } from '../../hasher/hashing-impl';
 
 type PackageMeta = {
   key: string;

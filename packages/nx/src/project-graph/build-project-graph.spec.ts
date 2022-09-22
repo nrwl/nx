@@ -13,6 +13,7 @@ import { DependencyType } from '../config/project-graph';
 
 describe('project graph', () => {
   let packageJson: any;
+  let packageLockJson: any;
   let workspaceJson: WorkspaceJsonConfiguration;
   let nxJson: NxJsonConfiguration;
   let tsConfigJson: any;
@@ -22,12 +23,63 @@ describe('project graph', () => {
     defaultFileHasher.ensureInitialized();
     packageJson = {
       name: '@nrwl/workspace-src',
+      version: '0.0.0',
       dependencies: {
         express: '4.0.0',
         'happy-nrwl': '1.0.0',
       },
       devDependencies: {
         '@nrwl/workspace': '*',
+      },
+    };
+    packageLockJson = {
+      name: '@nrwl/workspace-src',
+      version: '0.0.0',
+      lockfileVersion: 2,
+      requires: true,
+      packages: {
+        '': packageJson,
+        'node_modules/@nrwl/workspace': {
+          version: '15.0.0',
+          resolved:
+            'https://registry.npmjs.org/@nrwl/workspace/-/@nrwl/workspace-15.0.0.tgz',
+          integrity: 'sha512-12345678==',
+          dev: true,
+        },
+        'node_modules/express': {
+          version: '4.0.0',
+          resolved: 'https://registry.npmjs.org/express/-/express-4.0.0.tgz',
+          integrity: 'sha512-12345678==',
+          engines: {
+            node: '>=4.2.0',
+          },
+        },
+        'node_modules/happy-nrwl': {
+          version: '4.0.0',
+          resolved:
+            'https://registry.npmjs.org/happy-nrwl/-/happy-nrwl-1.0.0.tgz',
+          integrity: 'sha512-12345678==',
+        },
+      },
+      dependencies: {
+        '@nrwl/workspace': {
+          version: '15.0.0',
+          resolved:
+            'https://registry.npmjs.org/@nrwl/workspace/-/@nrwl/workspace-15.0.0.tgz',
+          integrity: 'sha512-12345678==',
+          dev: true,
+        },
+        express: {
+          version: '4.0.0',
+          resolved: 'https://registry.npmjs.org/express/-/express-4.0.0.tgz',
+          integrity: 'sha512-12345678==',
+        },
+        'happy-nrwl': {
+          version: '1.0.0',
+          resolved:
+            'https://registry.npmjs.org/happy-nrwl/-/happy-nrwl-1.0.0.tgz',
+          integrity: 'sha512-12345678==',
+        },
       },
     };
     workspaceJson = {
@@ -125,6 +177,7 @@ describe('project graph', () => {
         export const LAZY = 'lazy lib';
       `,
       './package.json': JSON.stringify(packageJson),
+      './package-lock.json': JSON.stringify(packageLockJson),
       './nx.json': JSON.stringify(nxJson),
       './workspace.json': JSON.stringify(workspaceJson),
       './tsconfig.base.json': JSON.stringify(tsConfigJson),

@@ -15,10 +15,12 @@ import {
 import { readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { LockFileData } from '../utils/lock-file/lock-file-type';
 
 export interface ProjectGraphCache {
   version: string;
   deps: Record<string, string>;
+  lockFile: LockFileData;
   pathMappings: Record<string, any>;
   nxJsonPlugins: { name: string; version: string }[];
   pluginsConfig?: any;
@@ -81,7 +83,8 @@ export function createCache(
   nxJson: NxJsonConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
   projectGraph: ProjectGraph,
-  tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
+  tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } },
+  lockFileData: LockFileData
 ) {
   const nxJsonPlugins = (nxJson.plugins || []).map((p) => ({
     name: p,
@@ -90,6 +93,7 @@ export function createCache(
   const newValue: ProjectGraphCache = {
     version: projectGraph.version || '5.0',
     deps: packageJsonDeps,
+    lockFile: lockFileData,
     // compilerOptions may not exist, especially for repos converted through add-nx-to-monorepo
     pathMappings: tsConfig?.compilerOptions?.paths || {},
     nxJsonPlugins,
