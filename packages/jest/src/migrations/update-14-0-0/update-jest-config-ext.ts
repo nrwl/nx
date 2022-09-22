@@ -1,10 +1,10 @@
 import {
   formatFiles,
+  getProjects,
   joinPathFragments,
   logger,
   ProjectConfiguration,
   readJson,
-  readProjectConfiguration,
   stripIndents,
   Tree,
   updateJson,
@@ -112,11 +112,13 @@ export async function updateJestConfigExt(tree: Tree) {
     tree.rename('jest.config.js', 'jest.config.ts');
   }
 
+  const projects = getProjects(tree);
+
   forEachExecutorOptions<JestExecutorOptions>(
     tree,
     '@nrwl/jest:jest',
     (options, projectName, target, configuration) => {
-      const projectConfig = readProjectConfiguration(tree, projectName);
+      const projectConfig = projects.get(projectName);
 
       if (!options.jestConfig || !isJestConfigValid(tree, options)) {
         return;
