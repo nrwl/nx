@@ -33,7 +33,8 @@
     },
     "target": {
       "type": "string",
-      "description": "Target platform for the build, same as the Webpack config option.",
+      "alias": "platform",
+      "description": "Target platform for the build, same as the Webpack target option.",
       "enum": ["node", "web"],
       "default": "web"
     },
