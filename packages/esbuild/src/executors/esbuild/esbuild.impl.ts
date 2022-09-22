@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import * as chalk from 'chalk';
 import type { ExecutorContext } from '@nrwl/devkit';
 import { cacheDir, joinPathFragments, logger } from '@nrwl/devkit';
 import { parse } from 'path';
@@ -18,6 +19,13 @@ import { getClientEnvironment } from '../../utils/environment-variables';
 import { createAsyncIterable } from '@nrwl/js/src/utils/create-async-iterable/create-async-iteratable';
 
 const CJS_FILE_EXTENSION = '.cjs';
+
+const BUILD_WATCH_FAILED = `[ ${chalk.green(
+  'watch'
+)} ] build finished with errors (see above), watching for changes...`;
+const BUILD_WATCH_SUCCEEDED = `[ ${chalk.green(
+  'watch'
+)} ] build succeeded, watching for changes...`;
 
 export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
@@ -58,7 +66,6 @@ export async function* esbuildExecutor(
             const outfile = getOutfile(format, options, context);
             return esbuild.build({
               ...esbuildOptions,
-              metafile: true, // Always include metafile so we can see what files have changed.
               watch:
                 // Only emit info on one of the watch processes.
                 idx === 0
@@ -67,24 +74,19 @@ export async function* esbuildExecutor(
                         error: esbuild.BuildFailure,
                         result: esbuild.BuildResult
                       ) => {
-                        if (error) {
-                          logger.info(`[watch] build failed`);
-                        } else if (result?.metafile) {
-                          logger.info(
-                            `[watch] build succeeded (change: "${
-                              Object.keys(result.metafile?.inputs)[0]
-                            }")`
-                          );
-                        } else {
-                          logger.info(`[watch] build succeeded`);
-                        }
-
                         if (!options.skipTypeCheck) {
                           const { errors } = await runTypeCheck(
                             options,
                             context
                           );
                           hasTypeErrors = errors.length > 0;
+                        }
+                        const success = !error && !hasTypeErrors;
+
+                        if (!success) {
+                          logger.info(BUILD_WATCH_FAILED);
+                        } else {
+                          logger.info(BUILD_WATCH_SUCCEEDED);
                         }
 
                         next({ success: !!error && !hasTypeErrors, outfile });
@@ -96,9 +98,6 @@ export async function* esbuildExecutor(
             });
           })
         );
-
-        logger.info(`[watch] build finished, watching for changes...`);
-
         const processOnExit = () => {
           assetsResult?.stop();
           packageJsonResult?.stop();
@@ -118,9 +117,17 @@ export async function* esbuildExecutor(
           hasTypeErrors = errors.length > 0;
         }
 
+        const success =
+          results.every((r) => r.errors?.length === 0) && !hasTypeErrors;
+
+        if (!success) {
+          logger.info(BUILD_WATCH_FAILED);
+        } else {
+          logger.info(BUILD_WATCH_SUCCEEDED);
+        }
+
         next({
-          success:
-            results.every((r) => r.errors?.length === 0) && !hasTypeErrors,
+          success,
           outfile: getOutfile(options.format[0], options, context),
         });
       }
