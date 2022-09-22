@@ -52,9 +52,10 @@
         "$ref": "#/definitions/assetPattern"
       }
     },
-    "clean": {
+    "deleteOutputPath": {
       "type": "boolean",
       "description": "Remove previous output before build.",
+      "alias": "clean",
       "default": true
     },
     "external": {

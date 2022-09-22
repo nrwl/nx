@@ -1,6 +1,6 @@
 import {
-  checkFilesExist,
   checkFilesDoNotExist,
+  checkFilesExist,
   cleanupProject,
   newProject,
   readFile,
@@ -8,12 +8,12 @@ import {
   runCommand,
   uniq,
   updateFile,
-  updateJson,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
 
 describe('EsBuild Plugin', () => {
-  beforeEach(() => newProject());
+  let proj: string;
+  beforeEach(() => (proj = newProject()));
   afterEach(() => cleanupProject());
 
   it('should setup and build projects using build', async () => {
@@ -59,5 +59,26 @@ describe('EsBuild Plugin', () => {
     expect(() => runCLI(`build ${myPkg}`)).toThrow();
     expect(() => runCLI(`build ${myPkg} --skipTypeCheck`)).not.toThrow();
     expect(runCommand(`node dist/libs/${myPkg}/main.js`)).toMatch(/Bye/);
+  }, 300_000);
+
+  fit('should bundle in workspace libs', async () => {
+    const parentLib = uniq('parent-lib');
+    const childLib = uniq('child-lib');
+    runCLI(`generate @nrwl/js:lib ${parentLib} --bundler=esbuild`);
+    runCLI(`generate @nrwl/js:lib ${childLib} --buildable=false`);
+    updateFile(
+      `libs/${parentLib}/src/index.ts`,
+      `import '@${proj}/${childLib}';`
+    );
+    updateFile(
+      `libs/${childLib}/src/index.ts`,
+      `console.log('Hello from lib');\n`
+    );
+
+    runCLI(`build ${parentLib}`);
+
+    expect(runCommand(`node dist/libs/${parentLib}/main.js`)).toMatch(
+      /Hello from lib/
+    );
   }, 300_000);
 });

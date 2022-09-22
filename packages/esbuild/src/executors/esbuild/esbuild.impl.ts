@@ -155,16 +155,14 @@ function getTypeCheckOptions(
   options: EsBuildExecutorOptions,
   context: ExecutorContext
 ) {
-  const root = context.root;
-  const projectRoot = context.workspace.projects[context.projectName].root;
   const { watch, tsConfig, outputPath } = options;
 
   const typeCheckOptions: TypeCheckOptions = {
     mode: 'emitDeclarationOnly',
     tsConfigPath: tsConfig,
     outDir: outputPath,
-    workspaceRoot: root,
-    rootDir: projectRoot,
+    workspaceRoot: context.root,
+    rootDir: context.root,
   };
 
   if (watch) {
