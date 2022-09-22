@@ -164,7 +164,6 @@ function getTypeCheckOptions(
     tsConfigPath: tsConfig,
     outDir: outputPath,
     workspaceRoot: root,
-    rootDir: projectRoot,
   };
 
   if (watch) {
