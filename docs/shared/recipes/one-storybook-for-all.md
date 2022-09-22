@@ -26,7 +26,7 @@ Now, you have a new library, which will act as a shell/host for all your stories
 Now let’s configure our new library to use Storybook, using the [`@nrwl/storybook:configuration` generator](/packages/storybook/generators/configuration). Run:
 
 ```bash
-nx g @nrwl/storybook:configuration –-name:storybook-host
+nx g @nrwl/storybook:configuration storybook-host
 ```
 
 and choose the framework you want to use (in our case, choose `@storybook/react`).
