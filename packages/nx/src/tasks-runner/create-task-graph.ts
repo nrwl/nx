@@ -44,12 +44,28 @@ export class ProcessTasks {
       }
     }
 
-    if (!excludeTaskDependencies) {
-      for (const taskId of Object.keys(this.tasks)) {
-        const task = this.tasks[taskId];
-        this.processTask(task, task.target.project, configuration, overrides);
+    // used when excluding tasks
+    const initialTasks = { ...this.tasks };
+
+    for (const taskId of Object.keys(this.tasks)) {
+      const task = this.tasks[taskId];
+      this.processTask(task, task.target.project, configuration, overrides);
+    }
+
+    if (excludeTaskDependencies) {
+      for (let t of Object.keys(this.tasks)) {
+        if (!initialTasks[t]) {
+          delete this.tasks[t];
+          delete this.dependencies[t];
+        }
+      }
+      for (let d of Object.keys(this.dependencies)) {
+        this.dependencies[d] = this.dependencies[d].filter(
+          (dd) => !!initialTasks[dd]
+        );
       }
     }
+
     return Object.keys(this.dependencies).filter(
       (d) => this.dependencies[d].length === 0
     );

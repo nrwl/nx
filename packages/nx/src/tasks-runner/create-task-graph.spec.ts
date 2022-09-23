@@ -1,4 +1,4 @@
-import { ProjectGraph } from '../config/project-graph';
+import { DependencyType, ProjectGraph } from '../config/project-graph';
 import { createTaskGraph } from 'nx/src/tasks-runner/create-task-graph';
 
 describe('createTaskGraph', () => {
@@ -741,14 +741,31 @@ describe('createTaskGraph', () => {
             files: [],
             targets: {
               build: {
-                dependsOn: [{ target: 'test', projects: 'self' }],
+                dependsOn: [
+                  { target: 'prebuild', projects: 'self' },
+                  { target: 'build', projects: 'dependencies' },
+                ],
               },
-              test: {},
+              prebuild: {},
+            },
+          },
+        },
+        app2: {
+          name: 'app2',
+          type: 'app',
+          data: {
+            root: 'app2-root',
+            files: [],
+            targets: {
+              build: {},
             },
           },
         },
       },
-      dependencies: {},
+      dependencies: {
+        app1: [{ source: 'app1', target: 'app2', type: DependencyType.static }],
+        app2: [],
+      },
     };
 
     const taskGraph = createTaskGraph(
@@ -780,6 +797,50 @@ describe('createTaskGraph', () => {
       },
       dependencies: {
         'app1:build': [],
+      },
+    });
+
+    const taskGraph2 = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1', 'app2'],
+      ['build'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      },
+      true
+    );
+    // prebuild should also be in here
+    expect(taskGraph2).toEqual({
+      roots: ['app2:build'],
+      tasks: {
+        'app1:build': {
+          id: 'app1:build',
+          target: {
+            project: 'app1',
+            target: 'build',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+        },
+        'app2:build': {
+          id: 'app2:build',
+          target: {
+            project: 'app2',
+            target: 'build',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app2-root',
+        },
+      },
+      dependencies: {
+        'app1:build': ['app2:build'],
+        'app2:build': []
       },
     });
   });
