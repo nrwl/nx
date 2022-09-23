@@ -392,7 +392,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-          `@${proj}/shared-${lib1}-data-access`
+          `@${proj}/shared/${lib1}/data-access`
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
@@ -412,7 +412,7 @@ describe('Workspace Tests', () => {
       const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
       const lib2File = readFile(lib2FilePath);
       expect(lib2File).toContain(
-        `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
+        `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
       );
     });
 
@@ -519,7 +519,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-          `@${proj}/shared-${lib1}-data-access`
+          `@${proj}/shared/${lib1}/data-access`
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
@@ -543,7 +543,7 @@ describe('Workspace Tests', () => {
       const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
       const lib2File = readFile(lib2FilePath);
       expect(lib2File).toContain(
-        `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
+        `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
       );
     });
 
@@ -652,7 +652,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-          `@${proj}/shared-${lib1}-data-access`
+          `@${proj}/shared/${lib1}/data-access`
         ]
       ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 
@@ -673,7 +673,7 @@ describe('Workspace Tests', () => {
       const lib2FilePath = `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`;
       const lib2File = readFile(lib2FilePath);
       expect(lib2File).toContain(
-        `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
+        `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
       );
 
       nxJson = readJson('nx.json');
@@ -772,7 +772,7 @@ describe('Workspace Tests', () => {
         rootTsConfig.compilerOptions.paths[`${lib1}/data-access`]
       ).toBeUndefined();
       expect(
-        rootTsConfig.compilerOptions.paths[`shared-${lib1}-data-access`]
+        rootTsConfig.compilerOptions.paths[`shared/${lib1}/data-access`]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
       expect(moveOutput).toContain(`UPDATE workspace.json`);
@@ -791,7 +791,7 @@ describe('Workspace Tests', () => {
       const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
       const lib2File = readFile(lib2FilePath);
       expect(lib2File).toContain(
-        `import { fromLibOne } from 'shared-${lib1}-data-access';`
+        `import { fromLibOne } from 'shared/${lib1}/data-access';`
       );
     });
   });
