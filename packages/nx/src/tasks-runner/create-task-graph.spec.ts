@@ -840,7 +840,7 @@ describe('createTaskGraph', () => {
       },
       dependencies: {
         'app1:build': ['app2:build'],
-        'app2:build': []
+        'app2:build': [],
       },
     });
   });
