@@ -77,7 +77,7 @@ const { merge } = require('webpack-merge');
 const withModuleFederation = require('@nrwl/react/module-federation');
 // or `const withModuleFederation = require('@nrwl/angular/module-federation');`
 
-module.export = async (config, context) => {
+module.exports = async (config, context) => {
   const federatedModules = await withModuleFederation({
     // your options here
   });
