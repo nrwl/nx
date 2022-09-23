@@ -141,5 +141,6 @@
         }
       ]
     }
-  }
+  },
+  "examplesFile": "../../../docs/esbuild-examples.md"
 }
