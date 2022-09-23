@@ -6,7 +6,7 @@ The Nx Plugin for Web Components contains generators for managing Web Component 
 
 ## Setting Up Web
 
-To create a new workspace with web, run `npx create-nx-workspace@latest --preset=web`.
+To create a new workspace with web, run `npx create-nx-workspace@latest --preset=web-components`.
 
 To add the web plugin to an existing workspace, run one of the following:
 
