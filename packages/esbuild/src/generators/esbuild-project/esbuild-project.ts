@@ -81,12 +81,11 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
         defaultConfiguration: 'production',
         options: buildOptions,
         configurations: {
+          development: {
+            minify: false,
+          },
           production: {
-            optimization: true,
-            sourceMap: false,
-            namedChunks: false,
-            extractLicenses: true,
-            vendorChunk: false,
+            minify: true,
           },
         },
       },
