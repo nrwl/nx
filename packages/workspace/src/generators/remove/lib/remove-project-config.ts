@@ -36,11 +36,16 @@ export function removeProjectConfig(tree: Tree, schema: Schema) {
 
   // Remove implicit dependencies onto removed project
   getProjects(tree).forEach((project, projectName) => {
-    if (project.implicitDependencies) {
+    if (
+      project.implicitDependencies &&
+      project.implicitDependencies.some(
+        (projectName) => projectName === schema.projectName
+      )
+    ) {
       project.implicitDependencies = project.implicitDependencies.filter(
         (projectName) => projectName !== schema.projectName
       );
+      updateProjectConfiguration(tree, projectName, project);
     }
-    updateProjectConfiguration(tree, projectName, project);
   });
 }

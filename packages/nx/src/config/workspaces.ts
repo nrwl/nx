@@ -553,8 +553,11 @@ export function toProjectName(
 let projectGlobCache: string[];
 let projectGlobCacheKey: string;
 
-function getGlobPatternsFromPlugins(nxJson: NxJsonConfiguration): string[] {
-  const plugins = loadNxPlugins(nxJson?.plugins);
+function getGlobPatternsFromPlugins(
+  nxJson: NxJsonConfiguration,
+  paths: string[]
+): string[] {
+  const plugins = loadNxPlugins(nxJson?.plugins, paths);
 
   const patterns = [];
   for (const plugin of plugins) {
@@ -637,7 +640,7 @@ export function globForProjectFiles(
   ];
 
   if (!ignorePluginInference) {
-    projectGlobPatterns.push(...getGlobPatternsFromPlugins(nxJson));
+    projectGlobPatterns.push(...getGlobPatternsFromPlugins(nxJson, [root]));
   }
 
   const combinedProjectGlobPattern = '{' + projectGlobPatterns.join(',') + '}';

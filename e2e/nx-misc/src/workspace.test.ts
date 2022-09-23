@@ -9,12 +9,12 @@ import {
   expectJestTestsToPass,
   readFile,
   exists,
-  workspaceConfigName,
   renameFile,
   updateProjectConfig,
   readProjectConfig,
   tmpProjPath,
   readResolvedWorkspaceConfiguration,
+  removeFile,
 } from '@nrwl/e2e/utils';
 
 let proj: string;
@@ -24,7 +24,9 @@ describe('Workspace Tests', () => {
     proj = newProject();
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    cleanupProject();
+  });
 
   describe('@nrwl/workspace:library', () => {
     it('should create a library that can be tested and linted', async () => {
@@ -212,13 +214,14 @@ describe('Workspace Tests', () => {
         `workspace-generator ${custom} ${workspace} --no-interactive --directory=dir --skipTsConfig=true -d`
       );
       expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
-      expect(dryRunOutput).toContain(`UPDATE ${workspaceConfigName()}`);
+      expect(dryRunOutput).toContain(
+        `CREATE libs/dir/${workspace}/src/index.ts`
+      );
 
       const output = runCLI(
         `workspace-generator ${custom} ${workspace} --no-interactive --directory=dir`
       );
       checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
-      expect(output).toContain(`UPDATE ${workspaceConfigName()}`);
       expect(output).not.toContain('UPDATE nx.json');
 
       const jsonFailing = readJson(`tools/generators/${failing}/schema.json`);
@@ -397,7 +400,7 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
-      workspace = readJson(workspaceConfigName());
+      workspace = readResolvedWorkspaceConfiguration();
       expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
       const project = readProjectConfig(newName);
       expect(project).toBeTruthy();
@@ -773,8 +776,7 @@ describe('Workspace Tests', () => {
         rootTsConfig.compilerOptions.paths[`shared/${lib1}/data-access`]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
-      expect(moveOutput).toContain(`UPDATE workspace.json`);
-      const workspaceJson = readJson(workspaceConfigName());
+      const workspaceJson = readResolvedWorkspaceConfiguration();
       expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
       const project = readProjectConfig(newName);
       expect(project).toBeTruthy();
@@ -846,20 +848,31 @@ describe('Workspace Tests', () => {
       expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
 
       expect(removeOutputForced).not.toContain(`UPDATE nx.json`);
-      const workspaceJson = readJson(workspaceConfigName());
+      const workspaceJson = readResolvedWorkspaceConfiguration();
       expect(workspaceJson.projects[`${lib1}`]).toBeUndefined();
       const lib2Config = readProjectConfig(lib2);
       expect(lib2Config.implicitDependencies).toEqual([]);
 
-      expect(removeOutputForced).toContain(`UPDATE workspace.json`);
       expect(workspaceJson.projects[`${lib1}`]).toBeUndefined();
     });
   });
 
   describe('workspace-lint', () => {
-    it('should identify issues with the workspace', () => {
+    beforeAll(() => {
       // Unfortunately, this is required as this test is testing a different workspace layout
+      // workspace-lint only picks up missing projects and such when workspace.json exists.
       newProject();
+      updateFile(
+        'workspace.json',
+        JSON.stringify({ version: 2, projects: {} })
+      );
+    });
+
+    afterAll(() => {
+      removeFile('workspace.json');
+    });
+
+    it('should identify issues with the workspace', () => {
       const appBefore = uniq('before');
       const appAfter = uniq('after');
 
