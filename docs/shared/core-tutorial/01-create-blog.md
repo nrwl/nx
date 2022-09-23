@@ -64,7 +64,7 @@ To install Eleventy run:
 {% tab label="yarn" %}
 
 ```bash
-yarn add -D @11ty/eleventy@1.0.0
+yarn add -D -W @11ty/eleventy@1.0.0
 ```
 
 {% /tab %}
@@ -104,6 +104,10 @@ Next, add `packages/blog/src/index.html`:
 ```html
 <p>Hello, Eleventy</p>
 ```
+
+## Clean Up
+
+If you have a `workspace.json` file in the root, delete it.
 
 ## Running Eleventy with Nx
 
