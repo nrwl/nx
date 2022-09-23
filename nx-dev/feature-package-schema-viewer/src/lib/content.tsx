@@ -244,9 +244,7 @@ const getMarkdown = (data: {
     `\n\n`,
     hasExamplesFile ? data.schema['examplesFile'] : '',
     data.type === 'generators'
-      ? hasExamplesFile
-        ? data.schema['examplesFile']
-        : getUsage(data.packageName, data.schemaName, data.schemaAlias)
+      ? getUsage(data.packageName, data.schemaName, data.schemaAlias)
       : '',
     !!data.schema['examples']
       ? `### Examples \n ${data.schema['examples']
