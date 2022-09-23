@@ -64,7 +64,7 @@ Then you can reference that shared asset file in a blog post.
 
 `packages/blog/src/posts/ascii.md`:
 
-```markdown
+```markdown {% process=false %}
 ---
 pageTitle: Some ASCII Art
 ---
