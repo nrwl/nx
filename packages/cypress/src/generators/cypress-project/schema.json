@@ -61,5 +61,6 @@
       "description": "Do not add dependencies to `package.json`."
     }
   },
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/cypress-project-examples.md"
 }

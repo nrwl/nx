@@ -21,5 +21,6 @@
       "x-prompt": "What project should we add Cypress component testing to?"
     }
   },
-  "required": ["project"]
+  "required": ["project"],
+  "examplesFile": "../../../docs/cypress-component-project-examples.md"
 }
