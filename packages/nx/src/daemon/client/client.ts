@@ -31,18 +31,20 @@ const DAEMON_ENV_SETTINGS = {
 };
 
 export class DaemonClient {
-  constructor(private readonly nxJson: NxJsonConfiguration) {}
+  constructor(private readonly nxJson: NxJsonConfiguration) {
+    this.reset();
+  }
 
-  private queue = new PromisedBasedQueue();
+  private queue: PromisedBasedQueue;
 
-  private socket = null;
+  private socket;
 
-  private currentMessage = null;
-  private currentResolve = null;
-  private currentReject = null;
+  private currentMessage;
+  private currentResolve;
+  private currentReject;
 
   private _enabled: boolean | undefined;
-  private _connected: boolean = false;
+  private _connected: boolean;
 
   enabled() {
     if (this._enabled === undefined) {
@@ -77,6 +79,16 @@ export class DaemonClient {
       }
     }
     return this._enabled;
+  }
+
+  reset() {
+    this.queue = new PromisedBasedQueue();
+    this.socket = null;
+    this.currentMessage = null;
+    this.currentResolve = null;
+    this.currentReject = null;
+    this._enabled = undefined;
+    this._connected = false;
   }
 
   async getProjectGraph(): Promise<ProjectGraph> {

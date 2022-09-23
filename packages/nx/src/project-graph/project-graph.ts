@@ -118,7 +118,10 @@ function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
  * stored in the daemon process. To reset both run: `nx reset`.
  */
 export async function createProjectGraphAsync(
-  opts: { exitOnError: boolean } = { exitOnError: false }
+  opts: { exitOnError: boolean; resetDaemonClient?: boolean } = {
+    exitOnError: false,
+    resetDaemonClient: false,
+  }
 ): Promise<ProjectGraph> {
   if (!daemonClient.enabled()) {
     try {
@@ -128,6 +131,9 @@ export async function createProjectGraphAsync(
     }
   } else {
     try {
+      if (opts.resetDaemonClient) {
+        daemonClient.reset();
+      }
       return await daemonClient.getProjectGraph();
     } catch (e) {
       if (!e.internalDaemonError) {
