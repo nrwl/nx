@@ -3,6 +3,20 @@
   "description": "Jest target options for Build Facade.",
   "cli": "nx",
   "type": "object",
+  "presets": [
+    {
+      "name": "Pass Without Tests",
+      "keys": ["jestConfig", "passWithNoTests"]
+    },
+    {
+      "name": "Code Coverage",
+      "keys": ["jestConfig", "coverageReporters"]
+    },
+    {
+      "name": "Stop After 'n' Failed",
+      "keys": ["jestConfig", "bail"]
+    }
+  ],
   "properties": {
     "codeCoverage": {
       "description": "Indicates that test coverage information should be collected and reported in the output. (https://jestjs.io/docs/cli#--coverageboolean)",
@@ -183,5 +197,6 @@
       "type": "number"
     }
   },
-  "required": ["jestConfig"]
+  "required": ["jestConfig"],
+  "examplesFile": "../../../docs/jest-examples.md"
 }

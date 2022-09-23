@@ -145,6 +145,17 @@
         "description": "Jest target options for Build Facade.",
         "cli": "nx",
         "type": "object",
+        "presets": [
+          {
+            "name": "Pass Without Tests",
+            "keys": ["jestConfig", "passWithNoTests"]
+          },
+          {
+            "name": "Code Coverage",
+            "keys": ["jestConfig", "coverageReporters"]
+          },
+          { "name": "Stop After 'n' Failed", "keys": ["jestConfig", "bail"] }
+        ],
         "properties": {
           "codeCoverage": {
             "description": "Indicates that test coverage information should be collected and reported in the output. (https://jestjs.io/docs/cli#--coverageboolean)",
@@ -318,7 +329,7 @@
           }
         },
         "required": ["jestConfig"],
-        "presets": []
+        "examplesFile": "Jest can be configured in many ways, but primarily you'll need to at least have the jestConfig options\n\n```json\n\"test\": {\n  \"executor\": \"@nrwl/jest:jest\",\n  \"options\": {\n    \"jestConfig\": \"libs/my-lib/jest.config.ts\"\n  }\n}\n```\n\nIt is also helpful to have `passWithNoTests: true` set so your project doesn't fail testing while tests are still being added.\n\n```json\n\"test\": {\n  \"executor\": \"@nrwl/jest:jest\",\n  \"options\": {\n    \"jestConfig\": \"libs/my-lib/jest.config.ts\",\n    \"passWithNoTests\": true\n  }\n}\n```\n\n### Snapshots\n\nUpdate snapshots running with `--update-snapshot` or `-u` for short.\n\n```bash\nnx test my-project -u\n```\n\nOther times you might not want to allow updating snapshots such as in CI.\nAdding a _ci_ configuration is helpful for adding this behavior.\n\n```json\n\"test\": {\n  \"executor\": \"@nrwl/jest:jest\",\n  \"options\": {\n    \"jestConfig\": \"libs/my-lib/jest.config.ts\",\n    \"passWithNoTests\": true\n  },\n  \"configurations\": {\n    \"ci\": {\n      \"ci\": true\n    }\n  }\n}\n```\n\n```bash\nnx affected --target=test --configuration=ci\n```\n\nLearn more [about _affected_](/concepts/affected)\n"
       },
       "description": "Run Jest unit tests.",
       "aliases": [],
