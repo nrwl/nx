@@ -91,7 +91,7 @@ export function getCommonConfig(
 
   // process global scripts
   const globalScriptsByBundleName = normalizeExtraEntryPoints(
-    buildOptions.scripts,
+    buildOptions.scripts || [],
     'scripts'
   ).reduce(
     (
