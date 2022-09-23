@@ -35,3 +35,33 @@ pipelines:
 ```
 
 The `pull-requests` and `main` jobs implement the CI workflow.
+
+## Troubleshoot
+
+### Bitbucket base `no such ref`
+
+```shell
+fatal: Not a valid object name master
+fatal: No such ref: 'main'
+```
+
+If you found this issue in bitbucket pipelines, maybe you `bitbucket-pielines.yml` can defined like this:
+
+```yaml
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          caches: # optional
+            - node
+          script:
+            - git checkout main # checkout base branch 
+            - git checkout - # go checkout previous branch
+            - npm ci
+            - npx nx workspace-lint
+            - npx nx format:check
+            - npx nx affected --target=lint --base=origin/master --parallel --max-parallel=3
+            - npx nx affected --target=test --base=origin/master --parallel --max-parallel=3 --ci --code-coverage
+            - npx nx affected --target=build --base=origin/master --head=HEAD --parallel  --max-parallel=3
+```
