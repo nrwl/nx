@@ -1,9 +1,23 @@
 {
   "title": "Cypress Target",
-  "description": "Cypress target option for Build Facade.",
+  "description": "Run Cypress for e2e, integration and component testing.",
   "type": "object",
   "outputCapture": "pipe",
   "cli": "nx",
+  "presets": [
+    {
+      "name": "Starting Dev Server",
+      "keys": ["cypressConfig", "devServerTarget"]
+    },
+    {
+      "name": "Custom Base Url",
+      "keys": ["cypressConfig", "baseUrl"]
+    },
+    {
+      "name": "Component Testing",
+      "keys": ["cypressConfig", "devServerTarget", "testingType", "skipServe"]
+    }
+  ],
   "properties": {
     "cypressConfig": {
       "type": "string",
@@ -122,5 +136,6 @@
     }
   },
   "additionalProperties": true,
-  "required": ["cypressConfig"]
+  "required": ["cypressConfig"],
+  "examplesFile": "../../../docs/cypress-examples.md"
 }

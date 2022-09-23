@@ -114,6 +114,7 @@
           }
         },
         "required": ["name"],
+        "examplesFile": "Adding Cypress to an existing application requires two options. The name of the e2e app to create and what project that e2e app is for.\n\n```bash\nnx g cypress-project --name=my-app-e2e --project=my-app\n```\n\nWhen providing `--project` option, the generator will look for the `serve` target in that given project. This allows the [cypress executor](/packages/cypress/executors/cypress) to spin up the project and start the cypress runner.\n\nIf you prefer to not have the project served automatically, you can provide a `--base-url` argument in place of `--project`\n\n```bash\nnx g cypress-project --name=my-app-e2e --base-url=http://localhost:1234\n```\n\n{% callout type=\"note\" title=\"What about API Projects?\" %}\nYou can also run the `cypress-project` generator against API projects like a [Nest API](/packages/nest/generators/application#@nrwl/nest:application).\nIf there is a URL to visit then you can test it with Cypress!\n{% /callout %}\n",
         "presets": []
       },
       "description": "Add a Cypress E2E Project.",
@@ -147,6 +148,7 @@
           }
         },
         "required": ["project"],
+        "examplesFile": "This is a framework-agnostic generator for adding component testing to a project.\n\n```bash\nnx g cypress-component-project --project=my-cool-project\n```\n\nRunning this generator, adds the required files to the specified project without any configurations for Cypress. It's best to use the framework specific generator, instead `cypress-component-project` directly\n\n- [React component testing](/packages/react/generators/cypress-component-configuration)\n- [Angular component testing](/packages/angular/generators/cypress-component-configuration)\n\nA new `component-test` target will be added to the specified project.\n\n```bash\nnx g component-test my-cool-project\n```\n\nRead more about [Cypress Component Testing](/cypress/cypress-component-testing)\n",
         "presets": []
       },
       "description": "Set up Cypress Component Test for a project",
@@ -187,10 +189,26 @@
       "implementation": "/packages/cypress/src/executors/cypress/cypress.impl.ts",
       "schema": {
         "title": "Cypress Target",
-        "description": "Cypress target option for Build Facade.",
+        "description": "Run Cypress for e2e, integration and component testing.",
         "type": "object",
         "outputCapture": "pipe",
         "cli": "nx",
+        "presets": [
+          {
+            "name": "Starting Dev Server",
+            "keys": ["cypressConfig", "devServerTarget"]
+          },
+          { "name": "Custom Base Url", "keys": ["cypressConfig", "baseUrl"] },
+          {
+            "name": "Component Testing",
+            "keys": [
+              "cypressConfig",
+              "devServerTarget",
+              "testingType",
+              "skipServe"
+            ]
+          }
+        ],
         "properties": {
           "cypressConfig": {
             "type": "string",
@@ -303,7 +321,7 @@
         },
         "additionalProperties": true,
         "required": ["cypressConfig"],
-        "presets": []
+        "examplesFile": "Depending on your testing type, the Cypress executor is configured in different ways. The following are sample configurations that are created via the [cypress-project](/packages/cypress/generators/cypress-project) and [cypress-component-project](/packages/cypress/generators/cypress-component-project) generators.\n\n{% tabs %}\n{% tab label=\"E2E Testing\" %}\n\n```json\n\"targets\": {\n  \"e2e\": {\n    \"executor\": \"@nrwl/cypress:cypress\",\n    \"options\": {\n      \"cypressConfig\": \"apps/app-e2e/cypres.config.ts\",\n      \"devServerTarget\": \"my-react-app:serve\",\n      \"testingType\": \"e2e\"\n    }\n  }\n}\n```\n\n{% callout type=\"note\" title=\"API Testing\" %}\nAPI testing with Cypress is the same setup as e2e testing. Just change which `devServerTarget` is used!\n{% /callout %}\n\n### Providing a Base URL\n\nIf `devServerTarget` is provided, the url returned from started the dev server will be passed to cypress as the `baseUrl` option.\n\nDefining a `baseUrl` in the executor options will override the inferred `baseUrl` from the `devServerTarget`.\n\nThe `baseUrl` defined in the Cypress config file is the last value used if no url is found in the `devServerTarget` or executor options.\n\n### Static Serving\n\nWhen running in CI it doesn't make sense to start up a dev server since there aren't changes to watch for.\n\nYou can use [`@nrwl/web:file-server`](/packages/web/executors/file-server) to serve the pre-built static files of your frontend project.\n\nIn some _frontend_ application, add a 'static-serve' target.\n\n```json\n\"serve-static\": {\n  \"executor\": \"@nrwl/web:file-server\",\n  \"options\":{\n    \"buildTarget\": \"frontend:build\"\n  }\n}\n```\n\nIn the _e2e_ application add a configuration to change `devServerTarget` to point to the `static-serve` from the _frontend_ application\n\n```json\n\"e2e\": {\n  //...\n  \"configurations\": {\n    \"ci\": {\n      \"devServerTarget\": \"frontend:serve-static\"\n    }\n  }\n}\n```\n\n{% callout type=\"note\" title=\"What about Node projects?\" %}\nThe same can be done for backend node apps with [`@nrwl/js:node` executor](/packages/js/executors/node)\n{% /callout %}\n\n```bash\nnx e2e my-app-e2e --configuration=ci\n```\n\n{% /tab %}\n{% tab label=\"Component Testing\" %}\n\n{% callout type=\"note\" title=\"Cypress Component Testing\" %}\nWhen adding component testing to a project, it's best to use the framework specific generator, instead `cypress-component-project` directly.\n\n- [React component testing](/packages/react/generators/cypress-component-configuration)\n- [Angular component testing](/packages/angular/generators/cypress-component-configuration)\n\n{% /callout %}\n\n```json\n\"targets\": {\n  \"component-test\": {\n    \"executor\": \"@nrwl/cypress:cypress\",\n    \"options\": {\n      \"cypressConfig\": \"apps/app/cypres.config.ts\",\n      \"devServerTarget\": \"my-react-app:build\",\n      \"testingType\": \"component\",\n      \"skipServe\": true\n    }\n  }\n}\n```\n\nIt's important `skipServe` is set to true. Nx doesn't need to run the `devServerTarget`, Cypress creates its own dev server for component testing.\nInstead, Nx needs to know what build target to create the correct configuration to pass to Cypress, which is why it's still used in component testing.\n\n{% /tab %}\n{% /tabs %}\n\n### Environment Variables\n\nUsing [executor configurations](/recipe/use-executor-configurations#use-executor-configurations) offers flexibility to set environment variables\n\n```json\n\"targets\": {\n  \"e2e\": {\n    \"executor\": \"@nrwl/cypress:cypress\",\n    \"options\": {\n      \"cypressConfig\": \"apps/app-e2e/cypres.config.ts\",\n      \"devServerTarget\": \"my-react-app:serve\",\n      \"testingType\": \"e2e\"\n    },\n    \"configurations\": {\n      \"qa\": {\n        \"env\": {\n          \"API_URL\": \"https://api.qa.company.com\"\n        }\n      },\n      \"dev\": {\n        \"env\": {\n          \"API_URL\": \"http://locahost:3333/api\"\n        }\n      }\n    }\n  }\n}\n```\n\nRead more on different ways to use [environment variables for cypress executor](/packages/cypress#environment-variables)\n"
       },
       "description": "Run Cypress E2E tests.",
       "aliases": [],
