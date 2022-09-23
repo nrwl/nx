@@ -4,21 +4,15 @@ You probably noticed that you're using the same friendly cow ASCII art in the bl
 
 ## Create an Asset Library
 
-You can make a library project just for holding the ASCII asset files. Let Nx know about the project by creating a `project.json` file like this:
+You can make a library project just for holding the ASCII asset files. Let Nx know about the project by creating a `package.json` file like this:
 
-`packages/ascii/project.json`:
+`packages/ascii/package.json`:
 
 ```json
 {
-  "root": "packages/ascii",
-  "sourceRoot": "packages/ascii/assets",
-  "projectType": "library"
+  "name": "ascii"
 }
 ```
-
-{% callout type="note" title="Prefer a `package.json` file?" %}
-You could choose to make a `package.json` file here instead, if you prefer.
-{% /callout %}
 
 Then move `cow.txt` out of the `cli` project to:
 

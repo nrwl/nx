@@ -4,19 +4,32 @@ Manually telling Nx about the dependencies between your projects is helpful, but
 
 Luckily, Nx core can automatically detect dependencies that are created in `.ts` or `.js` files.
 
-**Side note 1:** If you want to disable detecting dependencies from source code and want to only use the dependencies as defined in `package.json` (the same way yarn does), you can add the following configuration to your `nx.json` file:
+## Analyze Source Files
+
+Because we chose `npm` for the preset when we created the nx workspace, the `nx.json` is set to extend the npm preset settings.
+
+```jsonc
+// nx.json
+{
+  "extends": "nx/presets/npm.json"
+}
+```
+
+This preset is set to only load dependencies from `package.json` or `project.json` files. To enable automatically detecting dependencies from source code, you can add the following configuration to your `nx.json` file:
 
 ```json
 {
   "pluginsConfig": {
     "@nrwl/js": {
-      "analyzeSourceFiles": false
+      "analyzeSourceFiles": true
     }
   }
 }
 ```
 
-**Side note 2:** If you want Nx to automatically detect dependencies for other languages, you can install a plugin for that language. There is a list of Nrwl maintained and third party plugins on the [community page](/community#plugin-directory).
+Other presets default this property to true.
+
+**Side note:** If you want Nx to automatically detect dependencies for other languages, you can install a plugin for that language. There is a list of Nrwl maintained and third party plugins on the [community page](/community#plugin-directory).
 
 ## Create Messages Library
 
