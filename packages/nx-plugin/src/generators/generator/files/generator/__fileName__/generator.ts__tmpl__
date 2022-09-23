@@ -14,7 +14,7 @@ interface NormalizedSchema extends <%= className %>GeneratorSchema {
   projectName: string;
   projectRoot: string;
   projectDirectory: string;
-  parsedTags: string[]
+  parsedTags: string[];
 }
 
 function normalizeOptions(tree: Tree, options: <%= className %>GeneratorSchema): NormalizedSchema {

@@ -80,6 +80,12 @@
             "default": false,
             "description": "Do not eslint configuration for plugin json files."
           },
+          "e2eTestRunner": {
+            "type": "string",
+            "enum": ["jest", "none"],
+            "description": "Test runner to use for end to end (E2E) tests.",
+            "default": "jest"
+          },
           "standaloneConfig": {
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
             "type": "boolean"

@@ -3,9 +3,9 @@ import { <%= className %>ExecutorSchema } from './schema';
 export default async function runExecutor(
   options: <%= className %>ExecutorSchema,
 ) {
-  console.log('Executor ran for <%= className %>', options)
+  console.log('Executor ran for <%= className %>', options);
   return {
     success: true
-  }
+  };
 }
 
