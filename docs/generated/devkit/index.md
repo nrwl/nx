@@ -927,10 +927,11 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 #### Parameters
 
-| Name               | Type      |
-| :----------------- | :-------- |
-| `opts`             | `Object`  |
-| `opts.exitOnError` | `boolean` |
+| Name                      | Type      |
+| :------------------------ | :-------- |
+| `opts`                    | `Object`  |
+| `opts.exitOnError`        | `boolean` |
+| `opts.resetDaemonClient?` | `boolean` |
 
 #### Returns
 
