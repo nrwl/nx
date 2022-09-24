@@ -20,7 +20,7 @@ export function runCommandAsync(
       command,
       {
         cwd: tmpProjPath(),
-        env: { ...process.env, ...(opts.env ? opts.env : {}) },
+        env: { ...process.env, ...opts.env},
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
