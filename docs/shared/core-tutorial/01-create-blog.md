@@ -20,7 +20,7 @@ This tutorial sets up a [package-based repo](/concepts/integrated-vs-package-bas
 **Start by creating a new workspace.**
 
 ```bash
-npx create-nx-workspace@latest
+npx create-nx-workspace@latest --preset=core
 ```
 
 You then receive the following prompts in your command line:
