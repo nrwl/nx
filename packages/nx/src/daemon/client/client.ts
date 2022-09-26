@@ -22,7 +22,8 @@ import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import { consumeMessagesFromSocket } from 'nx/src/utils/consume-messages-from-socket';
+import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
+import { Workspaces } from 'nx/src/config/workspaces';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
@@ -68,6 +69,7 @@ export class DaemonClient {
         (isCI() && env !== 'true') ||
         isDocker() ||
         isDaemonDisabled() ||
+        nxJsonIsNotPresent() ||
         (useDaemonProcessOption === undefined && env === 'false') ||
         (useDaemonProcessOption === true && env === 'false') ||
         (useDaemonProcessOption === false && env === undefined) ||
@@ -330,6 +332,10 @@ function isDocker() {
   } catch {
     return false;
   }
+}
+
+function nxJsonIsNotPresent() {
+  return !new Workspaces(workspaceRoot).hasNxJson();
 }
 
 function daemonProcessException(message: string) {

@@ -1,5 +1,5 @@
 import { HandlerResult } from './server';
-import { outputsHashesMatch, recordOutputsHash } from './output-watcher';
+import { outputsHashesMatch, recordOutputsHash } from './outputs-tracking';
 
 export async function handleRecordOutputsHash(payload: {
   type: string;

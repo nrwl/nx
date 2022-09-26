@@ -1,28 +1,51 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { Server, Socket } from 'net';
 import { serverLogger } from './logger';
-import type { WatcherSubscription } from './watcher';
 import { serializeResult } from 'nx/src/daemon/socket-utils';
+import type { AsyncSubscription } from '@parcel/watcher';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
+
+let sourceWatcherSubscription: AsyncSubscription | undefined;
+let outputsWatcherSubscription: AsyncSubscription | undefined;
+
+export function getSourceWatcherSubscription() {
+  return sourceWatcherSubscription;
+}
+
+export function getOutputsWatcherSubscription() {
+  return outputsWatcherSubscription;
+}
+
+export function storeSourceWatcherSubscription(s: AsyncSubscription) {
+  sourceWatcherSubscription = s;
+}
+
+export function storeOutputsWatcherSubscription(s: AsyncSubscription) {
+  outputsWatcherSubscription = s;
+}
 
 interface HandleServerProcessTerminationParams {
   server: Server;
   reason: string;
-  watcherSubscription: WatcherSubscription | undefined;
 }
 
 export async function handleServerProcessTermination({
   server,
   reason,
-  watcherSubscription,
 }: HandleServerProcessTerminationParams) {
   try {
     server.close();
-    if (watcherSubscription) {
-      await watcherSubscription.unsubscribe();
+    if (sourceWatcherSubscription) {
+      await sourceWatcherSubscription.unsubscribe();
       serverLogger.watcherLog(
-        `Unsubscribed from changes within: ${workspaceRoot}`
+        `Unsubscribed from changes within: ${workspaceRoot} (sources)`
+      );
+    }
+    if (outputsWatcherSubscription) {
+      await outputsWatcherSubscription.unsubscribe();
+      serverLogger.watcherLog(
+        `Unsubscribed from changes within: ${workspaceRoot} (outputs)`
       );
     }
     serverLogger.log(`Server stopped because: "${reason}"`);
