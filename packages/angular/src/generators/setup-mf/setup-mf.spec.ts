@@ -283,7 +283,7 @@ describe('Init MF', () => {
 
     // ASSERT
     const cypressCommands = tree.read(
-      'apps/test-app-e2e/src/support/index.ts',
+      'apps/test-app-e2e/src/support/e2e.ts',
       'utf-8'
     );
     expect(cypressCommands).toContain(
