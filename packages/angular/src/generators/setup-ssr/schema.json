@@ -19,7 +19,7 @@
     "appId": {
       "type": "string",
       "format": "html-selector",
-      "description": "The appId to use withServerTransition.",
+      "description": "The `appId` to use with `withServerTransition`.",
       "default": "serverApp"
     },
     "main": {
