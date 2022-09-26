@@ -214,6 +214,11 @@ export class Workspaces {
     }
   }
 
+  hasNxJson(): boolean {
+    const nxJson = path.join(this.root, 'nx.json');
+    return existsSync(nxJson);
+  }
+
   readNxJson(): NxJsonConfiguration {
     const nxJson = path.join(this.root, 'nx.json');
     if (existsSync(nxJson)) {

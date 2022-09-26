@@ -77,6 +77,10 @@ export class Hasher {
         : []
     ).map((r) => ({ runtime: r }));
 
+    if (process.env.NX_CLOUD_ENCRYPTION_KEY) {
+      legacyRuntimeInputs.push({ env: 'NX_CLOUD_ENCRYPTION_KEY' });
+    }
+
     const legacyFilesetInputs = [
       ...Object.keys(this.nxJson.implicitDependencies ?? {}),
       'nx.json',
