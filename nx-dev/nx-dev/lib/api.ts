@@ -1,3 +1,4 @@
+import { ContentApi } from '@nrwl/nx-dev/data-access-content';
 import { DocumentsApi } from '@nrwl/nx-dev/data-access-documents/node-only';
 import { MenuApi } from '@nrwl/nx-dev/data-access-menu';
 import { PackagesApi } from '@nrwl/nx-dev/data-access-packages/node-only';
@@ -12,28 +13,40 @@ import {
 // Also provides some test safety.
 import documents from '../public/documentation/map.json';
 import packages from '../public/documentation/packages.json';
+import content from '../public/documentation/content.json';
 
 export const packagesApi = new PackagesApi({
   publicPackagesRoot: 'nx-dev/nx-dev/public/documentation',
   packagesIndex: packages,
 });
 
-export const nxDocumentsApi = new DocumentsApi({
-  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
-  documentSources: [
-    documents.find((x) => x.id === 'nx-documentation'),
-    documents.find((x) => x.id === 'additional-api-references'),
-  ].filter((x) => !!x) as DocumentMetadata[],
-  addAncestor: null,
+const contentApi = new ContentApi({
+  publicContentRoot: 'nx-dev/nx-dev/public/documentation',
+  contentIndex: content,
 });
 
-export const nxCloudDocumentsApi = new DocumentsApi({
-  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
-  documentSources: [
-    documents.find((x) => x.id === 'nx-cloud-documentation'),
-  ].filter((x) => !!x) as DocumentMetadata[],
-  addAncestor: { id: 'nx-cloud', name: 'Nx Cloud' },
-});
+export const nxDocumentsApi = new DocumentsApi(
+  {
+    publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+    documentSources: [
+      documents.find((x) => x.id === 'nx-documentation'),
+      documents.find((x) => x.id === 'additional-api-references'),
+    ].filter((x) => !!x) as DocumentMetadata[],
+    addAncestor: null,
+  },
+  contentApi
+);
+
+export const nxCloudDocumentsApi = new DocumentsApi(
+  {
+    publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+    documentSources: [
+      documents.find((x) => x.id === 'nx-cloud-documentation'),
+    ].filter((x) => !!x) as DocumentMetadata[],
+    addAncestor: { id: 'nx-cloud', name: 'Nx Cloud' },
+  },
+  contentApi
+);
 
 export const nxMenuApi = new MenuApi(
   nxDocumentsApi.getDocuments(),

@@ -1,3 +1,4 @@
+import { ContentApi } from '@nrwl/nx-dev/data-access-content';
 import { DocumentData, DocumentMetadata } from '@nrwl/nx-dev/models-document';
 import { MenuItem } from '@nrwl/nx-dev/models-menu';
 import { parseMarkdown } from '@nrwl/nx-dev/ui-markdoc';
@@ -17,7 +18,8 @@ export class DocumentsApi {
       publicDocsRoot: string;
       documentSources: DocumentMetadata[];
       addAncestor: { id: string; name: string } | null;
-    }
+    },
+    private readonly contentApi: ContentApi
   ) {
     if (!options.publicDocsRoot) {
       throw new Error('public docs root cannot be undefined');
@@ -259,17 +261,25 @@ export class DocumentsApi {
       recur(item, []);
     });
 
+    const relatedContent = tags.flatMap((tag) =>
+      this.contentApi.getContentByTag(tag).map((content) => ({
+        path: content.link,
+        name: content.name,
+      }))
+    );
+
     if (
       relatedConcepts.length === 0 &&
       relatedRecipes.length === 0 &&
-      relatedReference.length === 0
+      relatedReference.length === 0 &&
+      relatedContent.length === 0
     ) {
       return '';
     }
 
     let output = '## Related Documentation\n';
 
-    function listify(items: MenuItem[]): string {
+    function listify(items: Omit<MenuItem, 'id'>[]): string {
       return items
         .map((item) => {
           return `- [${item.name}](${item.path})`;
@@ -286,6 +296,9 @@ export class DocumentsApi {
       output += '### Reference\n' + listify(relatedReference) + '\n';
     }
 
+    if (relatedContent.length > 0) {
+      output += '## Related Content\n' + listify(relatedContent) + '\n';
+    }
     return output;
   }
 }
