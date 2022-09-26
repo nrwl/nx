@@ -28,7 +28,9 @@ import {
 import { PackageJson } from '../utils/package-json';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
-export function workspaceConfigName(root: string) {
+export function workspaceConfigName(
+  root: string
+): 'angular.json' | 'workspace.json' | null {
   if (existsSync(path.join(root, 'angular.json'))) {
     return 'angular.json';
   } else if (existsSync(path.join(root, 'workspace.json'))) {
@@ -553,7 +555,7 @@ export function toProjectName(
 let projectGlobCache: string[];
 let projectGlobCacheKey: string;
 
-function getGlobPatternsFromPlugins(
+export function getGlobPatternsFromPlugins(
   nxJson: NxJsonConfiguration,
   paths: string[]
 ): string[] {
@@ -575,7 +577,9 @@ function getGlobPatternsFromPlugins(
 /**
  * Get the package.json globs from package manager workspaces
  */
-function getGlobPatternsFromPackageManagerWorkspaces(root: string): string[] {
+export function getGlobPatternsFromPackageManagerWorkspaces(
+  root: string
+): string[] {
   try {
     try {
       const obj = yaml.load(readFileSync(join(root, 'pnpm-workspace.yaml')));

@@ -1,6 +1,6 @@
 import { getTouchedProjectsInWorkspaceJson } from './workspace-json-changes';
 import { WholeFileChange } from '../../file-utils';
-import { DiffType } from '../../../utils/json-diff';
+import { JsonDiffType } from '../../../utils/json-diff';
 
 describe('getTouchedProjectsInWorkspaceJson', () => {
   it('should not return changes when workspace.json is not touched', () => {
@@ -61,7 +61,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           hash: 'some-hash',
           getChanges: () => [
             {
-              type: DiffType.Modified,
+              type: JsonDiffType.Modified,
               path: ['newProjectRoot'],
               value: {
                 lhs: '',
@@ -103,7 +103,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           hash: 'some-hash',
           getChanges: () => [
             {
-              type: DiffType.Added,
+              type: JsonDiffType.Added,
               path: ['projects', 'proj1'],
               value: {
                 lhs: undefined,
@@ -114,7 +114,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
             },
 
             {
-              type: DiffType.Added,
+              type: JsonDiffType.Added,
               path: ['projects', 'proj1', 'root'],
               value: {
                 lhs: undefined,
@@ -147,7 +147,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           hash: 'some-hash',
           getChanges: () => [
             {
-              type: DiffType.Deleted,
+              type: JsonDiffType.Deleted,
               path: ['projects', 'proj3'],
               value: {
                 lhs: {
@@ -191,7 +191,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
           hash: 'some-hash',
           getChanges: () => [
             {
-              type: DiffType.Modified,
+              type: JsonDiffType.Modified,
               path: ['projects', 'proj1'],
               value: {
                 lhs: {
@@ -203,7 +203,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
               },
             },
             {
-              type: DiffType.Modified,
+              type: JsonDiffType.Modified,
               path: ['projects', 'proj1', 'root'],
               value: {
                 lhs: 'proj3',

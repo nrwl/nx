@@ -198,7 +198,7 @@ describe('Nx Running Tests', () => {
         env: { ...process.env, NX_DAEMON: 'true' },
       });
 
-      expect(buildAgain).toContain('local cache');
+      expect(buildAgain).toContain('[local cache]');
     }, 10000);
 
     it('should build the project when within the project root', () => {

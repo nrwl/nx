@@ -228,9 +228,11 @@ export function readProjectConfiguration(
   const workspace = readWorkspace(tree);
   if (!workspace.projects[projectName]) {
     throw new Error(
-      `Cannot find configuration for '${projectName}' in ${getWorkspacePath(
-        tree
-      )}.`
+      getWorkspacePath(tree)
+        ? `Cannot find configuration for '${projectName}' in ${getWorkspacePath(
+            tree
+          )}.`
+        : `Cannot find configuration for '${projectName}'`
     );
   }
 

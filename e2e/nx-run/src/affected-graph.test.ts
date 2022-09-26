@@ -17,6 +17,7 @@ import {
   isWindows,
   fileExists,
   removeFile,
+  readResolvedWorkspaceConfiguration,
 } from '@nrwl/e2e/utils';
 
 describe('Nx Affected and Graph Tests', () => {
@@ -251,7 +252,8 @@ describe('Nx Affected and Graph Tests', () => {
 
     it('should affect all projects by removing projects', () => {
       generateAll();
-      removeFile(readProjectConfig(mylib).root);
+      const root = readResolvedWorkspaceConfiguration().projects[mylib].root;
+      removeFile(root);
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).toContain(myapp2);
       expect(runCLI('affected:libs')).not.toContain(mylib);

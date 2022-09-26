@@ -1,5 +1,9 @@
 import { isWholeFileChange, WholeFileChange } from '../../file-utils';
-import { DiffType, isJsonChange, JsonChange } from '../../../utils/json-diff';
+import {
+  JsonDiffType,
+  isJsonChange,
+  JsonChange,
+} from '../../../utils/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
@@ -20,7 +24,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       c.path.length === 2
     ) {
       // A package was deleted so mark all workspace projects as touched.
-      if (c.type === DiffType.Deleted) {
+      if (c.type === JsonDiffType.Deleted) {
         touched = Object.keys(projectGraph.nodes);
         break;
       } else {

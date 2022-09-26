@@ -1,13 +1,13 @@
 import { Change } from '../project-graph/file-utils';
 
-export enum DiffType {
+export enum JsonDiffType {
   Deleted = 'JsonPropertyDeleted',
   Added = 'JsonPropertyAdded',
   Modified = 'JsonPropertyModified',
 }
 
 export interface JsonChange extends Change {
-  type: DiffType;
+  type: JsonDiffType;
   path: string[];
   value: {
     lhs: any;
@@ -17,9 +17,9 @@ export interface JsonChange extends Change {
 
 export function isJsonChange(change: Change): change is JsonChange {
   return (
-    change.type === DiffType.Added ||
-    change.type === DiffType.Deleted ||
-    change.type === DiffType.Modified
+    change.type === JsonDiffType.Added ||
+    change.type === JsonDiffType.Deleted ||
+    change.type === JsonDiffType.Modified
   );
 }
 
@@ -32,7 +32,7 @@ export function jsonDiff(lhs: any, rhs: any): JsonChange[] {
     const rhsValue = getJsonValue(path, rhs);
     if (rhsValue === undefined) {
       result.push({
-        type: DiffType.Deleted,
+        type: JsonDiffType.Deleted,
         path,
         value: {
           lhs: lhsValue,
@@ -41,7 +41,7 @@ export function jsonDiff(lhs: any, rhs: any): JsonChange[] {
       });
     } else if (!deepEquals(lhsValue, rhsValue)) {
       result.push({
-        type: DiffType.Modified,
+        type: JsonDiffType.Modified,
         path,
         value: {
           lhs: lhsValue,
@@ -56,7 +56,7 @@ export function jsonDiff(lhs: any, rhs: any): JsonChange[] {
     const addedInRhs = !seenInLhs.has(hashArray(path));
     if (addedInRhs) {
       result.push({
-        type: DiffType.Added,
+        type: JsonDiffType.Added,
         path,
         value: {
           lhs: undefined,

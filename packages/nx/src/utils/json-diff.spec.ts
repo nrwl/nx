@@ -1,4 +1,4 @@
-import { jsonDiff, DiffType } from './json-diff';
+import { jsonDiff, JsonDiffType } from './json-diff';
 
 describe('jsonDiff', () => {
   it('should return deep diffs of two JSON objects (including parents of children changes)', () => {
@@ -10,7 +10,7 @@ describe('jsonDiff', () => {
     expect(result).toEqual(
       expect.arrayContaining([
         {
-          type: DiffType.Modified,
+          type: JsonDiffType.Modified,
           path: ['a'],
           value: {
             lhs: {
@@ -27,7 +27,7 @@ describe('jsonDiff', () => {
           },
         },
         {
-          type: DiffType.Modified,
+          type: JsonDiffType.Modified,
           path: ['a', 'b'],
           value: {
             lhs: {
@@ -40,22 +40,22 @@ describe('jsonDiff', () => {
           },
         },
         {
-          type: DiffType.Modified,
+          type: JsonDiffType.Modified,
           path: ['a', 'b', 'c'],
           value: { lhs: 1, rhs: 2 },
         },
         {
-          type: DiffType.Deleted,
+          type: JsonDiffType.Deleted,
           path: ['x'],
           value: { lhs: 1, rhs: undefined },
         },
         {
-          type: DiffType.Added,
+          type: JsonDiffType.Added,
           path: ['y'],
           value: { lhs: undefined, rhs: 2 },
         },
         {
-          type: DiffType.Added,
+          type: JsonDiffType.Added,
           path: ['a', 'b', 'd'],
           value: { lhs: undefined, rhs: 2 },
         },
@@ -74,7 +74,7 @@ describe('jsonDiff', () => {
       }
     );
     expect(result).toContainEqual({
-      type: DiffType.Modified,
+      type: JsonDiffType.Modified,
       path: ['a'],
       value: {
         lhs: {
@@ -86,7 +86,7 @@ describe('jsonDiff', () => {
       },
     });
     expect(result).toContainEqual({
-      type: DiffType.Modified,
+      type: JsonDiffType.Modified,
       path: ['a', 'b'],
       value: {
         lhs: 0,
@@ -102,7 +102,7 @@ describe('jsonDiff', () => {
       }
     );
     expect(result2).toContainEqual({
-      type: DiffType.Added,
+      type: JsonDiffType.Added,
       path: ['a'],
       value: { lhs: undefined, rhs: {} },
     });
@@ -121,7 +121,7 @@ describe('jsonDiff', () => {
     expect(result).toEqual(
       expect.arrayContaining([
         {
-          type: DiffType.Modified,
+          type: JsonDiffType.Modified,
           path: ['rules'],
           value: {
             lhs: undefined,
@@ -129,7 +129,7 @@ describe('jsonDiff', () => {
           },
         },
         {
-          type: DiffType.Added,
+          type: JsonDiffType.Added,
           path: ['rules', '0'],
           value: {
             lhs: undefined,
@@ -153,7 +153,7 @@ describe('jsonDiff', () => {
     expect(result).toEqual(
       expect.arrayContaining([
         {
-          type: DiffType.Modified,
+          type: JsonDiffType.Modified,
           path: ['rules'],
           value: {
             lhs: ['rule1'],
@@ -161,7 +161,7 @@ describe('jsonDiff', () => {
           },
         },
         {
-          type: DiffType.Added,
+          type: JsonDiffType.Added,
           path: ['rules', '1'],
           value: {
             lhs: undefined,
@@ -189,19 +189,19 @@ describe('jsonDiff', () => {
     );
 
     expect(result).toContainEqual({
-      type: DiffType.Modified,
+      type: JsonDiffType.Modified,
       path: ['dependencies', 'happy-nrwl'],
       value: { lhs: '0.0.1', rhs: '0.0.2' },
     });
 
     expect(result).toContainEqual({
-      type: DiffType.Deleted,
+      type: JsonDiffType.Deleted,
       path: ['dependencies', 'not-awesome-nrwl'],
       value: { lhs: '0.0.1', rhs: undefined },
     });
 
     expect(result).toContainEqual({
-      type: DiffType.Added,
+      type: JsonDiffType.Added,
       path: ['dependencies', 'awesome-nrwl'],
       value: { lhs: undefined, rhs: '0.0.1' },
     });
