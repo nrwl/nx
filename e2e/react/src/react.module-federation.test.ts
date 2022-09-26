@@ -13,10 +13,17 @@ import {
 
 describe('React Module Federation', () => {
   let proj: string;
+  let previousPM = process.env.SELECTED_PM;
 
-  beforeEach(() => (proj = newProject()));
+  beforeEach(() => {
+    process.env.SELECTED_PM = 'yarn';
+    proj = newProject();
+  });
 
-  afterEach(() => cleanupProject());
+  afterEach(() => {
+    cleanupProject();
+    process.env.SELECTED_PM = previousPM;
+  });
 
   it('should generate host and remote apps', async () => {
     const shell = uniq('shell');
