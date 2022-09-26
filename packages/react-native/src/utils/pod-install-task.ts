@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { execSync } from 'child_process';
 import { platform } from 'os';
 import * as chalk from 'chalk';
 import { GeneratorCallback, logger } from '@nrwl/devkit';
@@ -42,21 +42,14 @@ export function runPodInstall(
 
 export function podInstall(iosDirectory: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const process = spawn('pod', ['install'], {
+    const result = execSync('pod install', {
       cwd: iosDirectory,
-      stdio: [0, 1, 2],
     });
-
-    process.on('close', (code: number) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(podInstallErrorMessage));
-      }
-    });
-
-    process.on('error', () => {
+    logger.info(result.toString);
+    if (result.toString().includes('Pod installation complete')) {
+      resolve();
+    } else {
       reject(new Error(podInstallErrorMessage));
-    });
+    }
   });
 }
