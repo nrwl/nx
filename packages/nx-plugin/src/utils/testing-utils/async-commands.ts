@@ -12,7 +12,6 @@ export function runCommandAsync(
   command: string,
   opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv } = {
     silenceError: false,
-    env: {},
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
@@ -41,7 +40,6 @@ export function runNxCommandAsync(
   command: string,
   opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv } = {
     silenceError: false,
-    env: {},
   }
 ): Promise<{ stdout: string; stderr: string }> {
   const pmc = getPackageManagerCommand();
