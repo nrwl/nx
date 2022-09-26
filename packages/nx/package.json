@@ -108,6 +108,7 @@
     ]
   },
   "executors": "./executors.json",
+  "builders": "./executors.json",
   "publishConfig": {
     "access": "public"
   }
