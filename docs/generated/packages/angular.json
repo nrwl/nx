@@ -1600,12 +1600,6 @@
             "default": false,
             "description": "Do not update the `package.json` with NgRx dependencies."
           },
-          "useDataPersistence": {
-            "type": "boolean",
-            "default": false,
-            "description": "Generate NgRx Effects with the `DataPersistence` helper service. Set to false to use plain effects data persistence operators.",
-            "x-deprecated": "This option is deprecated and will be removed in v15. Using the individual operators is recommended."
-          },
           "barrels": {
             "type": "boolean",
             "default": false,

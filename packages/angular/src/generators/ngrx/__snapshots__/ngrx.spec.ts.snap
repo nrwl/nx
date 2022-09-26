@@ -5,7 +5,6 @@ exports[`ngrx generated unit tests should generate specs for the ngrx effects 1`
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Action } from '@ngrx/store';
 import { provideMockStore } from '@ngrx/store/testing';
-import { NxModule } from '@nrwl/angular';
 import { hot } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 
@@ -18,56 +17,9 @@ describe('SuperUsersEffects', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        NxModule.forRoot(),
-      ],
+      imports: [],
       providers: [
         SuperUsersEffects,
-        provideMockActions(() => actions),
-        provideMockStore()
-      ],
-    });
-
-    effects = TestBed.inject(SuperUsersEffects);
-  });
-
-  describe('init$', () => {
-    it('should work', () => {
-      actions = hot('-a-|', { a: SuperUsersActions.initSuperUsers() });
-
-      const expected = hot('-a-|', { a: SuperUsersActions.loadSuperUsersSuccess({ superUsers: [] }) });
-
-      expect(effects.init$).toBeObservable(expected);
-    });
-  });
-});
-"
-`;
-
-exports[`ngrx generated unit tests should generate specs for the ngrx effects correctly when useDataPersistence is true 1`] = `
-"import { TestBed } from '@angular/core/testing';
-import { provideMockActions } from '@ngrx/effects/testing';
-import { Action } from '@ngrx/store';
-import { provideMockStore } from '@ngrx/store/testing';
-import { NxModule, DataPersistence } from '@nrwl/angular';
-import { hot } from 'jasmine-marbles';
-import { Observable } from 'rxjs';
-
-import * as SuperUsersActions from './super-users.actions';
-import { SuperUsersEffects } from './super-users.effects';
-
-describe('SuperUsersEffects', () => {
-  let actions: Observable<Action>;
-  let effects: SuperUsersEffects;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        NxModule.forRoot(),
-      ],
-      providers: [
-        SuperUsersEffects,
-        DataPersistence,
         provideMockActions(() => actions),
         provideMockStore()
       ],
@@ -94,7 +46,6 @@ exports[`ngrx generated unit tests should generate specs for the ngrx facade 1`]
 import { TestBed } from '@angular/core/testing';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule, Store } from '@ngrx/store';
-import { NxModule } from '@nrwl/angular';
 import { readFirst } from '@nrwl/angular/testing';
 
 import * as SuperUsersActions from './super-users.actions';
@@ -134,7 +85,6 @@ describe('SuperUsersFacade', () => {
 
       @NgModule({
         imports: [
-          NxModule.forRoot(),
           StoreModule.forRoot({}),
           EffectsModule.forRoot([]),
           CustomFeatureModule,
@@ -307,12 +257,11 @@ import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
-import { NxModule } from '@nrwl/angular';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { environment } from '../environments/environment';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
      @NgModule({
-       imports: [BrowserModule, RouterModule.forRoot([]), NxModule.forRoot(), StoreModule.forRoot({}, {
+       imports: [BrowserModule, RouterModule.forRoot([]), StoreModule.forRoot({}, {
       metaReducers: !environment.production ? [] : [],
       runtimeChecks: {
         strictActionImmutability: true,
@@ -395,7 +344,7 @@ export class UsersEffects {
   init$ = createEffect(() => this.actions$.pipe(
     ofType(UsersActions.initUsers),
     fetch({
-      run: action => {
+      run: (action) => {
         // Your custom service 'load' logic goes here. For now just return a success action...
         return UsersActions.loadUsersSuccess({ users: [] });
       },
@@ -406,9 +355,7 @@ export class UsersEffects {
     })
   ));
 
-  constructor(
-    private readonly actions$: Actions
-  ) {}
+  constructor(private readonly actions$: Actions) {}
 }
 "
 `;
@@ -582,33 +529,4 @@ export * from './lib/+state/super-users.actions';
 
     export * from './lib/flights.module';
   "
-`;
-
-exports[`ngrx should use DataPersistence when useDataPersistence is true 1`] = `
-"import { Injectable } from '@angular/core';
-import { createEffect, Actions, ofType } from '@ngrx/effects';
-import { DataPersistence } from '@nrwl/angular';
-
-import * as UsersActions from './users.actions';
-import * as UsersFeature from './users.reducer';
-
-@Injectable()
-export class UsersEffects {
-  init$ = createEffect(() => this.dataPersistence.fetch(UsersActions.initUsers, {
-    run: (action: ReturnType<typeof UsersActions.initUsers>, state: UsersFeature.UsersPartialState) => {
-      // Your custom service 'load' logic goes here. For now just return a success action...
-      return UsersActions.loadUsersSuccess({ users: [] });
-    },
-    onError: (action: ReturnType<typeof UsersActions.initUsers>, error) => {
-      console.error('Error', error);
-      return UsersActions.loadUsersFailure({ error });
-    }
-  }));
-
-  constructor(
-    private readonly actions$: Actions,
-    private readonly dataPersistence: DataPersistence<UsersFeature.UsersPartialState>
-  ) {}
-}
-"
 `;

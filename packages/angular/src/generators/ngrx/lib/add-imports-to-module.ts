@@ -59,7 +59,6 @@ export function addImportsToModule(
         strictStateImmutability: true
       }
     })`;
-  const nxModule = 'NxModule.forRoot()';
   const effectsForRoot = `EffectsModule.forRoot([${effectsName}])`;
   const effectsForEmptyRoot = `EffectsModule.forRoot([])`;
   const storeForFeature = `StoreModule.forFeature(from${className}.${constantName}_FEATURE_KEY, from${className}.${propertyName}Reducer)`;
@@ -69,7 +68,6 @@ export function addImportsToModule(
 
   // this is just a heuristic
   const hasRouter = sourceText.indexOf('RouterModule') > -1;
-  const hasNxModule = sourceText.includes(nxModule);
 
   sourceFile = addImport(sourceFile, 'StoreModule', '@ngrx/store');
   sourceFile = addImport(sourceFile, 'EffectsModule', '@ngrx/effects');
@@ -128,11 +126,6 @@ export function addImportsToModule(
 
     if (options.root) {
       sourceFile = addCommonImports();
-
-      if (!hasNxModule) {
-        sourceFile = addImport(sourceFile, 'NxModule', '@nrwl/angular');
-        sourceFile = addImportToModule(tree, sourceFile, modulePath, nxModule);
-      }
 
       sourceFile = addImport(
         sourceFile,

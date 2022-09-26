@@ -1,9 +1,13 @@
-import { Injectable, Type } from '@angular/core';
-import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { Actions, ofType } from '@ngrx/effects';
-import { ROUTER_NAVIGATION, RouterNavigationAction } from '@ngrx/router-store';
-import { Action, Store, ActionCreator } from '@ngrx/store';
-import { isObservable, Observable, of } from 'rxjs';
+import type { Type } from '@angular/core';
+import type {
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+} from '@angular/router';
+import type { RouterNavigationAction } from '@ngrx/router-store';
+import { ROUTER_NAVIGATION } from '@ngrx/router-store';
+import type { Action } from '@ngrx/store';
+import type { Observable } from 'rxjs';
+import { isObservable, of } from 'rxjs';
 import {
   catchError,
   concatMap,
@@ -12,7 +16,6 @@ import {
   map,
   mergeMap,
   switchMap,
-  withLatestFrom,
 } from 'rxjs/operators';
 
 export interface PessimisticUpdateOpts<T extends Array<unknown>, A> {
@@ -416,83 +419,6 @@ function normalizeActionAndState<T extends Array<unknown>, A>(
   }
 
   return [action, ...slices];
-}
-
-/**
- * @whatItDoes Provides convenience methods for implementing common operations of persisting data.
- *
- * @deprecated Use the individual operators instead. Will be removed in v15.
- */
-@Injectable()
-export class DataPersistence<T> {
-  constructor(public store: Store<T>, public actions: Actions) {}
-
-  /**
-   * See {@link pessimisticUpdate} operator for more information.
-   *
-   * @deprecated Use the {@link pessimisticUpdate} operator instead.
-   * The {@link DataPersistence} class will be removed in v15.
-   */
-  pessimisticUpdate<A extends Action = Action>(
-    actionType: string | ActionCreator,
-    opts: PessimisticUpdateOpts<[T], A>
-  ): Observable<any> {
-    return this.actions.pipe(
-      ofType<A>(actionType),
-      withLatestFrom(this.store),
-      pessimisticUpdate(opts)
-    );
-  }
-
-  /**
-   * See {@link optimisticUpdate} operator for more information.
-   *
-   * @deprecated Use the {@link optimisticUpdate} operator instead.
-   * The {@link DataPersistence} class will be removed in v15.
-   */
-  optimisticUpdate<A extends Action = Action>(
-    actionType: string | ActionCreator,
-    opts: OptimisticUpdateOpts<[T], A>
-  ): Observable<any> {
-    return this.actions.pipe(
-      ofType<A>(actionType),
-      withLatestFrom(this.store),
-      optimisticUpdate(opts)
-    );
-  }
-
-  /**
-   * See {@link fetch} operator for more information.
-   *
-   * @deprecated Use the {@link fetch} operator instead.
-   * The {@link DataPersistence} class will be removed in v15.
-   */
-  fetch<A extends Action = Action>(
-    actionType: string | ActionCreator,
-    opts: FetchOpts<[T], A>
-  ): Observable<any> {
-    return this.actions.pipe(
-      ofType<A>(actionType),
-      withLatestFrom(this.store),
-      fetch(opts)
-    );
-  }
-
-  /**
-   * See {@link navigation} operator for more information.
-   *
-   * @deprecated Use the {@link navigation} operator instead.
-   * The {@link DataPersistence} class will be removed in v15.
-   */
-  navigation(
-    component: Type<any>,
-    opts: HandleNavigationOpts<[T]>
-  ): Observable<any> {
-    return this.actions.pipe(
-      withLatestFrom(this.store),
-      navigation(component, opts)
-    );
-  }
 }
 
 function findSnapshot(
