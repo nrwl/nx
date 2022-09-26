@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { platform } from 'os';
-import { removeSync, existsSync, symlinkSync } from 'fs-extra';
+import { removeSync, existsSync, symlinkSync, lstatSync } from 'fs-extra';
 
 /**
  * This function symlink workspace node_modules folder with app project's node_mdules folder.
@@ -14,9 +14,10 @@ export function ensureNodeModulesSymlink(
   workspaceRoot: string,
   projectRoot: string
 ): void {
-  const worksapceNodeModulesPath = join(workspaceRoot, 'node_modules');
-  if (!existsSync(worksapceNodeModulesPath)) {
-    throw new Error(`Cannot find ${worksapceNodeModulesPath}`);
+  const workspaceNodeModulesPath = join(workspaceRoot, 'node_modules');
+  // Not using `existsSync` because it will return `true` it always follows symlinks, and will return `true` if the symlink is broken
+  if (!lstatSync(workspaceNodeModulesPath, { throwIfNoEntry: false })) {
+    throw new Error(`Cannot find ${workspaceNodeModulesPath}`);
   }
 
   const appNodeModulesPath = join(workspaceRoot, projectRoot, 'node_modules');
@@ -26,5 +27,5 @@ export function ensureNodeModulesSymlink(
   if (existsSync(appNodeModulesPath)) {
     removeSync(appNodeModulesPath);
   }
-  symlinkSync(worksapceNodeModulesPath, appNodeModulesPath, symlinkType);
+  symlinkSync(workspaceNodeModulesPath, appNodeModulesPath, symlinkType);
 }
