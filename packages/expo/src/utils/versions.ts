@@ -17,7 +17,7 @@ export const reactNativeSvgTransformerVersion = '1.0.0';
 export const reactNativeSvgVersion = '12.3.0';
 export const svgrWebpackVersion = '^6.3.1';
 
-export const metroVersion = '0.72.2';
+export const metroVersion = '0.72.3';
 
-export const testingLibraryReactNativeVersion = '11.0.0';
-export const testingLibraryJestNativeVersion = '4.0.11';
+export const testingLibraryReactNativeVersion = '11.2.0';
+export const testingLibraryJestNativeVersion = '4.0.13';

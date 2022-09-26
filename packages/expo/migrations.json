@@ -405,8 +405,25 @@
           "version": "13.1.0",
           "alwaysAddToPackageJson": false
         },
-        "metro": {
+        "metro-resolver": {
           "version": "0.72.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.0.0": {
+      "version": "15.0.0-beta.0",
+      "packages": {
+        "metro-resolver": {
+          "version": "0.72.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "4.0.13",
           "alwaysAddToPackageJson": false
         }
       }

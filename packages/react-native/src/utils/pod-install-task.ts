@@ -45,7 +45,7 @@ export function podInstall(iosDirectory: string): Promise<void> {
     const result = execSync('pod install', {
       cwd: iosDirectory,
     });
-    logger.info(result.toString);
+    logger.info(result.toString());
     if (result.toString().includes('Pod installation complete')) {
       resolve();
     } else {
