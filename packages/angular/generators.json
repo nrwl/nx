@@ -136,6 +136,11 @@
       "schema": "./src/generators/setup-mf/schema.json",
       "description": "Generate a Module Federation configuration for a given Angular application."
     },
+    "setup-ssr": {
+      "factory": "./src/generators/setup-ssr/setup-ssr.compat",
+      "schema": "./src/generators/setup-ssr/schema.json",
+      "description": "Generate Angular Universal (SSR) setup for an Angular application."
+    },
     "setup-tailwind": {
       "factory": "./src/generators/setup-tailwind/setup-tailwind.compat",
       "schema": "./src/generators/setup-tailwind/schema.json",
@@ -306,6 +311,11 @@
       "factory": "./src/generators/setup-mf/setup-mf",
       "schema": "./src/generators/setup-mf/schema.json",
       "description": "Generate a Module Federation configuration for a given Angular application."
+    },
+    "setup-ssr": {
+      "factory": "./src/generators/setup-ssr/setup-ssr",
+      "schema": "./src/generators/setup-ssr/schema.json",
+      "description": "Generate Angular Universal (SSR) setup for an Angular application."
     },
     "setup-tailwind": {
       "factory": "./src/generators/setup-tailwind/setup-tailwind",
