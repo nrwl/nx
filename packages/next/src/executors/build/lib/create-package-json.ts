@@ -15,20 +15,16 @@ export async function createPackageJson(
       projectRoot: context.workspace.projects[context.projectName].sourceRoot,
     }
   );
+
+  // By default we remove devDependencies since this is a production build.
+  if (!options.includeDevDependenciesInPackageJson) {
+    delete packageJson.devDependencies;
+  }
+
   if (!packageJson.scripts) {
     packageJson.scripts = {};
   }
   packageJson.scripts.start = 'next start';
-  if (!packageJson.devDependencies) {
-    packageJson.devDependencies = {};
-  }
-  const nrwlWorkspaceNode =
-    context.projectGraph.externalNodes['npm:@nrwl/workspace'];
-
-  if (nrwlWorkspaceNode) {
-    packageJson.dependencies['@nrwl/workspace'] =
-      nrwlWorkspaceNode.data.version;
-  }
 
   const typescriptNode = context.projectGraph.externalNodes['npm:typescript'];
   if (typescriptNode) {

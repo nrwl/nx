@@ -1,12 +1,14 @@
 import type { NextConfig } from 'next';
-import type { WebpackConfigOptions } from '../src/utils/types';
-
-const { join } = require('path');
-const { workspaceRoot } = require('@nrwl/devkit');
-const { workspaceLayout } = require('@nrwl/devkit');
 
 export interface WithNxOptions extends NextConfig {
-  nx?: WebpackConfigOptions;
+  nx?: {
+    svgr?: boolean;
+  };
+}
+
+export interface WithNxContext {
+  workspaceRoot: string;
+  libsDir: string;
 }
 
 function regexEqual(x, y) {
@@ -20,7 +22,22 @@ function regexEqual(x, y) {
   );
 }
 
-export function withNx(nextConfig = {} as WithNxOptions) {
+/**
+ * Do not remove or rename this function. Production builds inline `with-nx.js` file with a replacement
+ * To this function that hard-codes the libsDir.
+ */
+function getWithNxContext(): WithNxContext {
+  const { workspaceRoot, workspaceLayout } = require('@nrwl/devkit');
+  return {
+    workspaceRoot,
+    libsDir: workspaceLayout().libsDir,
+  };
+}
+
+export function withNx(
+  nextConfig = {} as WithNxOptions,
+  context: WithNxContext = getWithNxContext()
+) {
   const userWebpack = nextConfig.webpack || ((x) => x);
   const { nx, ...validNextConfig } = nextConfig;
   return {
@@ -43,7 +60,9 @@ export function withNx(nextConfig = {} as WithNxOptions) {
        */
 
       // Include workspace libs in css/sass loaders
-      const includes = [join(workspaceRoot, workspaceLayout().libsDir)];
+      const includes = [
+        require('path').join(context.workspaceRoot, context.libsDir),
+      ];
 
       const nextCssLoaders = config.module.rules.find(
         (rule) => typeof rule.oneOf === 'object'

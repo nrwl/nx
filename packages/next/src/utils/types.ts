@@ -36,6 +36,7 @@ export interface NextBuildBuilderOptions {
   assets?: any[];
   nextConfig?: string;
   buildLibsFromSource?: boolean;
+  includeDevDependenciesInPackageJson?: boolean;
   watch?: boolean;
 }
 

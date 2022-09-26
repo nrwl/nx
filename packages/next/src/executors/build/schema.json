@@ -47,6 +47,11 @@
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately.",
       "default": true
+    },
+    "includeDevDependenciesInPackageJson": {
+      "type": "boolean",
+      "description": "Include `devDependencies` in the generated package.json file. By default only production `dependencies` are included.",
+      "default": false
     }
   },
   "required": ["root", "outputPath"]
