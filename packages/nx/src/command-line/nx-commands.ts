@@ -256,7 +256,7 @@ export const commandsObject = yargs
     aliases: ['workspace-schematic [name]'],
     builder: async (yargs) =>
       linkToNxDevAndExamples(
-        await withWorkspaceGeneratorOptions(yargs),
+        await withWorkspaceGeneratorOptions(yargs, process.argv.slice(3)),
         'workspace-generator'
       ),
     handler: async () => {
@@ -749,24 +749,118 @@ function withRunOneOptions(yargs: yargs.Argv) {
   }
 }
 
-async function withWorkspaceGeneratorOptions(yargs: yargs.Argv) {
-  yargs
-    .option('list-generators', {
-      describe: 'List the available workspace-generators',
-      type: 'boolean',
-    })
-    .positional('name', {
-      type: 'string',
-      describe: 'The name of your generator',
-    });
+type WorkspaceGeneratorProperties = {
+  [name: string]:
+    | {
+        type: yargs.Options['type'];
+        description?: string;
+        default?: any;
+        enum?: yargs.Options['type'][];
+      }
+    | {
+        type: yargs.PositionalOptionsType;
+        description?: string;
+        default?: any;
+        enum?: yargs.PositionalOptionsType[];
+        $default: {
+          $source: 'argv';
+          index: number;
+        };
+      };
+};
 
-  /**
-   * Don't require `name` if only listing available
-   * schematics
-   */
-  if ((await yargs.argv).listGenerators !== true) {
-    yargs.demandOption('name');
+function isPositionalProperty(
+  property: WorkspaceGeneratorProperties[keyof WorkspaceGeneratorProperties]
+): property is { type: yargs.PositionalOptionsType } {
+  return property['$default']?.['$source'] === 'argv';
+}
+
+async function withWorkspaceGeneratorOptions(
+  yargs: yargs.Argv,
+  args: string[]
+) {
+  // filter out only positional arguments
+  args = args.filter((a) => !a.startsWith('-'));
+  if (args.length) {
+    // this is an actual workspace generator
+    return withCustomGeneratorOptions(yargs, args[0]);
+  } else {
+    yargs
+      .option('list-generators', {
+        describe: 'List the available workspace-generators',
+        type: 'boolean',
+      })
+      .positional('name', {
+        type: 'string',
+        describe: 'The name of your generator',
+      });
+    /**
+     * Don't require `name` if only listing available
+     * schematics
+     */
+    if ((await yargs.argv).listGenerators !== true) {
+      yargs.demandOption('name');
+    }
+    return yargs;
   }
+}
+
+async function withCustomGeneratorOptions(
+  yargs: yargs.Argv,
+  generatorName: string
+) {
+  const schema = (
+    await import('./workspace-generators')
+  ).workspaceGeneratorSchema(generatorName);
+  const options = [];
+  const positionals = [];
+
+  Object.entries(schema.properties as WorkspaceGeneratorProperties).forEach(
+    ([name, prop]) => {
+      options.push({
+        name,
+        definition: {
+          describe: prop.description,
+          type: prop.type,
+          default: prop.default,
+          choices: prop.enum,
+        },
+      });
+      if (isPositionalProperty(prop)) {
+        positionals.push({
+          name,
+          definition: {
+            describe: prop.description,
+            type: prop.type,
+            choices: prop.enum,
+          },
+        });
+      }
+    }
+  );
+
+  let command = generatorName;
+  positionals.forEach(({ name }) => {
+    command += ` [${name}]`;
+  });
+  if (options.length) {
+    command += ' [options]';
+  }
+
+  yargs.wrap(yargs.terminalWidth()).command(
+    // this is the default and only command
+    command,
+    schema.description || '',
+    (yargs) => {
+      options.forEach(({ name, definition }) => {
+        yargs.option(name, definition);
+      });
+      positionals.forEach(({ name, definition }) => {
+        yargs.positional(name, definition);
+      });
+    }
+  );
+
   return yargs;
 }
 

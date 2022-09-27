@@ -195,6 +195,9 @@ describe('Workspace Tests', () => {
         type: 'boolean',
         description: 'skip changes to tsconfig',
       };
+      json.properties['inlineprop'] = json.properties['name'];
+      delete json.properties['name'];
+
       updateFile(
         `tools/generators/${custom}/schema.json`,
         JSON.stringify(json)
@@ -205,9 +208,16 @@ describe('Workspace Tests', () => {
         `tools/generators/${custom}/index.ts`,
         indexFile.replace(
           'name: schema.name',
-          'name: schema.name, directory: schema.directory, skipTsConfig: schema.skipTsConfig'
+          'inlineprop: schema.inlineprop, directory: schema.directory, skipTsConfig: schema.skipTsConfig'
         )
       );
+
+      const helpOutput = runCLI(`workspace-generator ${custom} --help`);
+      expect(helpOutput).toContain(
+        `nx workspace-generator ${custom} [inlineprop] [options]`
+      );
+      expect(helpOutput).toContain(`--directory`);
+      expect(helpOutput).toContain(`--skipTsConfig`);
 
       const workspace = uniq('workspace');
       const dryRunOutput = runCLI(
