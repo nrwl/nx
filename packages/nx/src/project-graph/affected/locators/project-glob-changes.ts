@@ -15,9 +15,11 @@ import { workspaceRoot } from 'nx/src/utils/workspace-root';
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator<
   WholeFileChange | JsonChange | DeletedFileChange
 > = (touchedFiles, projectGraphNodes, nxJson): string[] => {
-  const pluginGlobPatterns = getGlobPatternsFromPlugins(nxJson, [
-    workspaceRoot,
-  ]);
+  const pluginGlobPatterns = getGlobPatternsFromPlugins(
+    nxJson,
+    [workspaceRoot],
+    workspaceRoot
+  );
   const workspacesGlobPatterns =
     getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot);
 

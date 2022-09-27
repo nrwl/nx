@@ -46,7 +46,8 @@ export interface NxPlugin {
 let nxPluginCache: NxPlugin[] = null;
 export function loadNxPlugins(
   plugins?: string[],
-  paths = [workspaceRoot]
+  paths = [workspaceRoot],
+  root = workspaceRoot
 ): NxPlugin[] {
   return plugins?.length
     ? nxPluginCache ||
@@ -58,17 +59,12 @@ export function loadNxPlugins(
             });
           } catch (e) {
             if (e.code === 'MODULE_NOT_FOUND') {
-              const plugin = resolveLocalNxPlugin(
-                moduleName,
-                paths[0] ?? workspaceRoot
-              );
+              const plugin = resolveLocalNxPlugin(moduleName, root);
               if (plugin) {
                 const main = readPluginMainFromProjectConfiguration(
                   plugin.projectConfig
                 );
-                pluginPath = main
-                  ? path.join(workspaceRoot, main)
-                  : plugin.path;
+                pluginPath = main ? path.join(root, main) : plugin.path;
               } else {
                 logger.error(
                   `Plugin listed in \`nx.json\` not found: ${moduleName}`

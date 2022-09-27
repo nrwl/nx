@@ -148,7 +148,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
     mergePluginTargetsWithNxTargets(
       proj.root,
       proj.targets,
-      loadNxPlugins(workspace.plugins)
+      loadNxPlugins(workspace.plugins, [root], root)
     )[target];
 
   if (!targetConfig) {
