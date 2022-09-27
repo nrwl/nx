@@ -24,10 +24,13 @@ import {
 import { StorybookConfigureSchema } from './schema';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 
+const DEFAULT_PORT = 4400;
+
 export function addStorybookTask(
   tree: Tree,
   projectName: string,
-  uiFramework: string
+  uiFramework: string,
+  configureTestRunner: boolean
 ) {
   if (uiFramework === '@storybook/react-native') {
     return;
@@ -37,7 +40,7 @@ export function addStorybookTask(
     executor: '@nrwl/storybook:storybook',
     options: {
       uiFramework,
-      port: 4400,
+      port: DEFAULT_PORT,
       config: {
         configFolder: `${projectConfig.root}/.storybook`,
       },
@@ -48,6 +51,7 @@ export function addStorybookTask(
       },
     },
   };
+
   projectConfig.targets['build-storybook'] = {
     executor: '@nrwl/storybook:build',
     outputs: ['{options.outputPath}'],
@@ -65,10 +69,23 @@ export function addStorybookTask(
     },
   };
 
+  if (configureTestRunner === true) {
+    projectConfig.targets['test-storybook'] = {
+      executor: 'nx:run-commands',
+      options: {
+        command: `test-storybook -c ${projectConfig.root}/.storybook --url=http://localhost:${DEFAULT_PORT}`,
+      },
+    };
+  }
+
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
-export function addAngularStorybookTask(tree: Tree, projectName: string) {
+export function addAngularStorybookTask(
+  tree: Tree,
+  projectName: string,
+  configureTestRunner: boolean
+) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   const { ngBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
     projectConfig.targets
@@ -89,6 +106,7 @@ export function addAngularStorybookTask(tree: Tree, projectName: string) {
       },
     },
   };
+
   projectConfig.targets['build-storybook'] = {
     executor: '@storybook/angular:build-storybook',
     outputs: ['{options.outputDir}'],
@@ -106,6 +124,15 @@ export function addAngularStorybookTask(tree: Tree, projectName: string) {
       },
     },
   };
+
+  if (configureTestRunner === true) {
+    projectConfig.targets['test-storybook'] = {
+      executor: 'nx:run-commands',
+      options: {
+        command: `test-storybook -c ${projectConfig.root}/.storybook --url=http://localhost:${DEFAULT_PORT}`,
+      },
+    };
+  }
 
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
