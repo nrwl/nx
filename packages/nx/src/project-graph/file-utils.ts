@@ -29,8 +29,18 @@ export class WholeFileChange implements Change {
   type = 'WholeFileChange';
 }
 
+export class DeletedFileChange implements Change {
+  type = 'WholeFileDeleted';
+}
+
 export function isWholeFileChange(change: Change): change is WholeFileChange {
   return change.type === 'WholeFileChange';
+}
+
+export function isDeletedFileChange(
+  change: Change
+): change is DeletedFileChange {
+  return change.type === 'WholeFileDeleted';
 }
 
 export function readFileIfExisting(path: string) {
@@ -66,6 +76,10 @@ export function calculateFileChanges(
       ext,
       hash,
       getChanges: (): Change[] => {
+        if (!existsSync(join(workspaceRoot, f))) {
+          return [new DeletedFileChange()];
+        }
+
         if (!nxArgs) {
           return [new WholeFileChange()];
         }
@@ -77,7 +91,6 @@ export function calculateFileChanges(
           case '.json':
             const atBase = readFileAtRevision(f, nxArgs.base);
             const atHead = readFileAtRevision(f, nxArgs.head);
-
             try {
               return jsonDiff(JSON.parse(atBase), JSON.parse(atHead));
             } catch (e) {

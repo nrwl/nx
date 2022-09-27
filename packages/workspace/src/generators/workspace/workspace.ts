@@ -151,26 +151,6 @@ function createYarnrcYml(host: Tree, options: Schema) {
   );
 }
 
-function formatWorkspaceJson(host: Tree, options: Schema) {
-  const path = join(
-    options.directory,
-    options.cli === 'angular' ? 'angular.json' : 'workspace.json'
-  );
-
-  try {
-    updateJson(host, path, (workspaceJson) => {
-      const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
-      if (reformatted) {
-        return reformatted;
-      }
-      return workspaceJson;
-    });
-  } catch (e) {
-    console.error(`Failed to format: ${path}`);
-    console.error(e);
-  }
-}
-
 function addNpmScripts(host: Tree, options: Schema) {
   if (options.cli === 'angular') {
     updateJson(host, join(options.directory, 'package.json'), (json) => {
@@ -222,7 +202,6 @@ export async function workspaceGenerator(host: Tree, options: Schema) {
   createAppsAndLibsFolders(host, options);
 
   await formatFiles(host);
-  formatWorkspaceJson(host, options);
 }
 
 export const workspaceSchematic = convertNxGenerator(workspaceGenerator);

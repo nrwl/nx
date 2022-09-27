@@ -96,6 +96,7 @@ describe('React default development configuration', () => {
     const config = readProjectConfiguration(tree, 'example');
     expect(config).toEqual({
       $schema: '../../node_modules/nx/schemas/project-schema.json',
+      name: 'example',
       root: 'apps/example',
       projectType: 'application',
     });

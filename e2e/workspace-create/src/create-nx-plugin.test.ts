@@ -24,10 +24,10 @@ describe('create-nx-plugin', () => {
     });
 
     checkFilesExist(
-      'workspace.json',
       'package.json',
       packageManagerLockFile[packageManager],
-      `packages/${pluginName}/package.json`
+      `packages/${pluginName}/package.json`,
+      `packages/${pluginName}/project.json`
     );
 
     expect(() => runCLI(`e2e ${pluginName}-e2e`)).not.toThrow();

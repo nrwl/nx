@@ -415,6 +415,7 @@ describe('e2e migrator', () => {
         const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(e2eProject).toStrictEqual({
           $schema: '../../node_modules/nx/schemas/project-schema.json',
+          name: 'app1-e2e',
           root: 'apps/app1-e2e',
           sourceRoot: 'apps/app1-e2e/src',
           projectType: 'application',
@@ -544,6 +545,7 @@ describe('e2e migrator', () => {
         const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(e2eProject).toStrictEqual({
           $schema: '../../node_modules/nx/schemas/project-schema.json',
+          name: 'app1-e2e',
           root: 'apps/app1-e2e',
           sourceRoot: 'apps/app1-e2e/src',
           projectType: 'application',
@@ -609,6 +611,7 @@ describe('e2e migrator', () => {
         const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(e2eProject).toStrictEqual({
           $schema: '../../node_modules/nx/schemas/project-schema.json',
+          name: 'app1-e2e',
           root: 'apps/app1-e2e',
           sourceRoot: 'apps/app1-e2e/src',
           projectType: 'application',
@@ -662,6 +665,7 @@ describe('e2e migrator', () => {
         const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(e2eProject).toStrictEqual({
           $schema: '../../node_modules/nx/schemas/project-schema.json',
+          name: 'app1-e2e',
           root: 'apps/app1-e2e',
           sourceRoot: 'apps/app1-e2e/src',
           projectType: 'application',

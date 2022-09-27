@@ -51,10 +51,6 @@ describe('lib', () => {
       // unitTestRunner property is ignored.
       // It only works with our executors.
       expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
-      const workspaceJson = readJson(tree, '/workspace.json');
-      // Blocked on Craigory merging optional config PR
-      // expect(workspaceJson.projects['my-lib']).toBeUndefined();
-      // expect(tree.exists('libs/my-lib/project.json')).toBeFalsy();
     });
 
     it('should generate an empty ts lib using --config=project', async () => {
@@ -63,12 +59,8 @@ describe('lib', () => {
         name: 'my-lib',
         config: 'project',
       });
-      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
-        'my-lib'
-      ];
       const projectConfig = readProjectConfiguration(tree, 'my-lib');
       expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(workspaceJsonEntry).toEqual('libs/my-lib');
     });
 
     it('should generate an empty ts lib using --config=workspace', async () => {
@@ -77,12 +69,8 @@ describe('lib', () => {
         name: 'my-lib',
         config: 'workspace',
       });
-      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
-        'my-lib'
-      ];
       const projectConfig = readProjectConfiguration(tree, 'my-lib');
       expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(projectConfig).toMatchObject(workspaceJsonEntry);
     });
   });
 
@@ -225,16 +213,15 @@ describe('lib', () => {
         expect(tree.exists(`libs/my-dir/my-lib/package.json`)).toBeFalsy();
       });
 
-      it('should update workspace.json', async () => {
+      it('should update project configuration', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
           directory: 'myDir',
           config: 'workspace',
         });
-        const workspaceJson = readJson(tree, '/workspace.json');
 
-        expect(workspaceJson.projects['my-dir-my-lib'].root).toEqual(
+        expect(readProjectConfiguration(tree, 'my-dir-my-lib').root).toEqual(
           'libs/my-dir/my-lib'
         );
       });

@@ -21,3 +21,6 @@ CHANGELOG.md
 
 # Next.js
 .next
+
+# Local dev files
+.env

@@ -26,6 +26,7 @@ const allowedProjectExtensions = [
   '$schema',
   'generators',
   'namedInputs',
+  'name',
 ];
 
 const allowedWorkspaceExtensions = [

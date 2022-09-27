@@ -15,7 +15,7 @@ describe('Angular Cypress Component Tests', () => {
   const usedInAppLibName = uniq('cy-angular-lib');
   const buildableLibName = uniq('cy-angular-buildable-lib');
 
-  beforeAll(() => {
+  beforeAll(async () => {
     projectName = newProject({ name: uniq('cy-ng') });
     runCLI(`generate @nrwl/angular:app ${appName} --no-interactive`);
     runCLI(

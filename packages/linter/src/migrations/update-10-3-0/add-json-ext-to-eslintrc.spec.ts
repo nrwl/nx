@@ -73,7 +73,7 @@ describe('Add explicit .json file extension to .eslintrc files', () => {
     );
   });
 
-  it('should rename .eslintrc files to .eslintrc.json and update any workspace.json references', async () => {
+  it('should rename .eslintrc files to .eslintrc.json and update any project configuration references', async () => {
     const result = await runMigration('add-json-ext-to-eslintrc', {}, tree);
 
     const workspace = readWorkspace(tree);

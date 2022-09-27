@@ -1,5 +1,10 @@
-import { calculateFileChanges, WholeFileChange } from './file-utils';
-import { DiffType } from '../utils/json-diff';
+import {
+  calculateFileChanges,
+  DeletedFileChange,
+  WholeFileChange,
+} from './file-utils';
+import * as fs from 'fs';
+import { JsonDiffType } from '../utils/json-diff';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import ignore from 'ignore';
 
@@ -7,7 +12,8 @@ describe('calculateFileChanges', () => {
   beforeEach(() => {
     defaultFileHasher.ensureInitialized();
   });
-  it('should return a whole file change by default', () => {
+  it('should return a whole file change by default for files that exist', () => {
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     const changes = calculateFileChanges(
       ['proj/index.ts'],
       [],
@@ -46,7 +52,7 @@ describe('calculateFileChanges', () => {
     );
 
     expect(changes[0].getChanges()).toContainEqual({
-      type: DiffType.Modified,
+      type: JsonDiffType.Modified,
       path: ['dependencies', 'happy-nrwl'],
       value: {
         lhs: '0.0.1',
@@ -54,7 +60,7 @@ describe('calculateFileChanges', () => {
       },
     });
     expect(changes[0].getChanges()).toContainEqual({
-      type: DiffType.Deleted,
+      type: JsonDiffType.Deleted,
       path: ['dependencies', 'not-awesome-nrwl'],
       value: {
         lhs: '0.0.1',
@@ -62,13 +68,30 @@ describe('calculateFileChanges', () => {
       },
     });
     expect(changes[0].getChanges()).toContainEqual({
-      type: DiffType.Added,
+      type: JsonDiffType.Added,
       path: ['dependencies', 'awesome-nrwl'],
       value: {
         lhs: undefined,
         rhs: '0.0.1',
       },
     });
+  });
+
+  it('should pick up deleted changes for deleted files', () => {
+    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+    const changes = calculateFileChanges(
+      ['i-dont-exist.json'],
+      [],
+      {
+        base: 'sha1',
+        head: 'sha2',
+      },
+      (path, revision) => {
+        return '';
+      }
+    );
+
+    expect(changes[0].getChanges()).toEqual([new DeletedFileChange()]);
   });
 
   it('should ignore *.md changes', () => {

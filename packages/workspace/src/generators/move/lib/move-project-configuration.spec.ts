@@ -230,8 +230,6 @@ describe('moveProjectConfiguration', () => {
     expect(() => {
       readProjectConfiguration(tree, projectName);
     }).toThrow();
-    const ws = readJson(tree, 'workspace.json');
-    expect(typeof ws.projects[newProjectName]).toBe('string');
     expect(readProjectConfiguration(tree, newProjectName)).toBeDefined();
   });
 });

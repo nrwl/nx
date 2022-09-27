@@ -421,14 +421,14 @@ export class ProjectConverter {
     );
 
     /**
-     * Update global linter configuration defaults in workspace.json
+     * Update global linter configuration defaults in project configuration
      */
     const workspace = readWorkspaceConfiguration(this.host);
     this.cleanUpGeneratorsConfig(workspace);
     updateWorkspaceConfiguration(this.host, workspace);
 
     /**
-     * Update project-level linter configuration defaults in workspace.json
+     * Update project-level linter configuration defaults in project configuration
      */
     const projects = getProjects(this.host);
     for (const [projectName, { generators }] of projects.entries()) {

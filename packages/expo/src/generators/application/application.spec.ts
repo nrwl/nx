@@ -17,7 +17,7 @@ describe('app', () => {
     appTree.write('.gitignore', '');
   });
 
-  it('should update workspace.json', async () => {
+  it('should update workspace', async () => {
     await expoApplicationGenerator(appTree, {
       name: 'myApp',
       displayName: 'myApp',
@@ -27,11 +27,11 @@ describe('app', () => {
       js: false,
       unitTestRunner: 'none',
     });
-    const workspaceJson = readWorkspaceConfiguration(appTree);
+    const workspace = readWorkspaceConfiguration(appTree);
     const projects = getProjects(appTree);
 
     expect(projects.get('my-app').root).toEqual('apps/my-app');
-    expect(workspaceJson.defaultProject).toEqual('my-app');
+    expect(workspace.defaultProject).toEqual('my-app');
   });
 
   it('should update nx.json', async () => {

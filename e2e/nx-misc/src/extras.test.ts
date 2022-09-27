@@ -188,7 +188,7 @@ describe('Extra Nx Misc Tests', () => {
       expect(resultArgs).toContain('camel: d');
     }, 120000);
 
-    it('ttt should fail when a process exits non-zero', () => {
+    it('ttt should fail when a process exits non-zero', async () => {
       updateProjectConfig(mylib, (config) => {
         config.targets.error = {
           executor: '@nrwl/workspace:run-commands',
@@ -209,7 +209,7 @@ describe('Extra Nx Misc Tests', () => {
       }
     });
 
-    it('run command should not break if output property is missing in options and arguments', () => {
+    it('run command should not break if output property is missing in options and arguments', async () => {
       updateProjectConfig(mylib, (config) => {
         config.targets.lint.outputs = ['{options.outputFile}'];
         return config;

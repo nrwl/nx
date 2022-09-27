@@ -3,7 +3,11 @@ import {
   WholeFileChange,
   workspaceFileName,
 } from '../../file-utils';
-import { DiffType, isJsonChange, JsonChange } from '../../../utils/json-diff';
+import {
+  JsonDiffType,
+  isJsonChange,
+  JsonChange,
+} from '../../../utils/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 
 export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
@@ -45,7 +49,7 @@ export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
     }
 
     switch (change.type) {
-      case DiffType.Deleted: {
+      case JsonDiffType.Deleted: {
         // We are not sure which projects used to depend on a deleted project
         // so return all projects to be safe
         return Object.keys(projectGraphNodes);

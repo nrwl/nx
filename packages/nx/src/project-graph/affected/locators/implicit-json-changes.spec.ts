@@ -1,11 +1,11 @@
 import { getImplicitlyTouchedProjectsByJsonChanges } from './implicit-json-changes';
 import { WholeFileChange } from '../../file-utils';
-import { DiffType } from '../../../utils/json-diff';
+import { JsonDiffType } from '../../../utils/json-diff';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 
 function getModifiedChange(path: string[]) {
   return {
-    type: DiffType.Modified,
+    type: JsonDiffType.Modified,
     path,
     value: {
       lhs: 'before',

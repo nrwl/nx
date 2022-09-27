@@ -3,9 +3,11 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
+import * as nxDevkit from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateBuildTargets } from './update-build-targets';
+import { array } from 'yargs';
 
 describe('updateBuildTargets', () => {
   let tree: Tree;
@@ -81,5 +83,13 @@ describe('updateBuildTargets', () => {
     expect(e2eProject.targets.e2e.options.browserTarget).toBe(
       'subfolder-my-destination:serve'
     );
+  });
+
+  it('should NOT attempt to update unrelated projects', async () => {
+    addProjectConfiguration(tree, 'unrelated', { root: 'libs/unrelated' });
+    const spy = jest.spyOn(nxDevkit, 'updateProjectConfiguration');
+    schema.projectName = 'storybook';
+    updateBuildTargets(tree, schema);
+    expect(spy.mock.calls.map((x) => x[1])).not.toContain('unrelated');
   });
 });

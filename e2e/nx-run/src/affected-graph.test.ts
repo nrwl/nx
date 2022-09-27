@@ -2,23 +2,22 @@ import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   isNotWindows,
-  listFiles,
   newProject,
   readFile,
   readJson,
   readProjectConfig,
   cleanupProject,
-  rmDist,
   runCLI,
   runCLIAsync,
   runCommand,
   uniq,
   updateFile,
   updateProjectConfig,
-  workspaceConfigName,
   checkFilesExist,
   isWindows,
   fileExists,
+  removeFile,
+  readResolvedWorkspaceConfiguration,
 } from '@nrwl/e2e/utils';
 
 describe('Nx Affected and Graph Tests', () => {
@@ -253,11 +252,8 @@ describe('Nx Affected and Graph Tests', () => {
 
     it('should affect all projects by removing projects', () => {
       generateAll();
-      updateFile(workspaceConfigName(), (old) => {
-        const workspaceJson = JSON.parse(old);
-        delete workspaceJson.projects[mylib];
-        return JSON.stringify(workspaceJson, null, 2);
-      });
+      const root = readResolvedWorkspaceConfiguration().projects[mylib].root;
+      removeFile(root);
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).toContain(myapp2);
       expect(runCLI('affected:libs')).not.toContain(mylib);

@@ -28,7 +28,9 @@ import {
 import { PackageJson } from '../utils/package-json';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
-export function workspaceConfigName(root: string) {
+export function workspaceConfigName(
+  root: string
+): 'angular.json' | 'workspace.json' | null {
   if (existsSync(path.join(root, 'angular.json'))) {
     return 'angular.json';
   } else if (existsSync(path.join(root, 'workspace.json'))) {
@@ -71,8 +73,9 @@ export class Workspaces {
     if (
       this.cachedWorkspaceConfig &&
       process.env.NX_CACHE_WORKSPACE_CONFIG !== 'false'
-    )
+    ) {
       return this.cachedWorkspaceConfig;
+    }
     const nxJson = this.readNxJson();
     const workspaceFile = workspaceConfigName(this.root);
     const workspacePath = workspaceFile
@@ -474,6 +477,7 @@ export function toOldFormatOrNull(w: any) {
       renamePropertyWithStableKeys(projectConfig, 'generators', 'schematics');
       formatted = true;
     }
+    delete projectConfig.name;
     Object.values(projectConfig.architect || {}).forEach((target: any) => {
       if (target.executor !== undefined) {
         renamePropertyWithStableKeys(target, 'executor', 'builder');
@@ -551,8 +555,12 @@ export function toProjectName(
 let projectGlobCache: string[];
 let projectGlobCacheKey: string;
 
-function getGlobPatternsFromPlugins(nxJson: NxJsonConfiguration): string[] {
-  const plugins = loadNxPlugins(nxJson?.plugins);
+export function getGlobPatternsFromPlugins(
+  nxJson: NxJsonConfiguration,
+  paths: string[],
+  root = workspaceRoot
+): string[] {
+  const plugins = loadNxPlugins(nxJson?.plugins, paths, root);
 
   const patterns = [];
   for (const plugin of plugins) {
@@ -570,7 +578,9 @@ function getGlobPatternsFromPlugins(nxJson: NxJsonConfiguration): string[] {
 /**
  * Get the package.json globs from package manager workspaces
  */
-function getGlobPatternsFromPackageManagerWorkspaces(root: string): string[] {
+export function getGlobPatternsFromPackageManagerWorkspaces(
+  root: string
+): string[] {
   try {
     try {
       const obj = yaml.load(readFileSync(join(root, 'pnpm-workspace.yaml')));
@@ -635,7 +645,9 @@ export function globForProjectFiles(
   ];
 
   if (!ignorePluginInference) {
-    projectGlobPatterns.push(...getGlobPatternsFromPlugins(nxJson));
+    projectGlobPatterns.push(
+      ...getGlobPatternsFromPlugins(nxJson, [root], root)
+    );
   }
 
   const combinedProjectGlobPattern = '{' + projectGlobPatterns.join(',') + '}';
