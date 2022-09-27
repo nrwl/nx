@@ -45,6 +45,8 @@ export interface ExecutorOptions {
   transformers: TransformerEntry[];
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
+  external?: 'all' | 'none' | string[];
+  externalBuildTargets?: string[];
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {
@@ -72,6 +74,7 @@ export interface SwcCliOptions {
 
 export interface NormalizedSwcExecutorOptions
   extends NormalizedExecutorOptions {
+  originalProjectRoot: string;
   swcExclude: string[];
   skipTypeCheck: boolean;
   swcCliOptions: SwcCliOptions;
