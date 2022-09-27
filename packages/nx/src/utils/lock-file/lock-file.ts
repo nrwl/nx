@@ -24,19 +24,14 @@ export function lockFileHash(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
   let file: string;
-  try {
-    if (packageManager === 'yarn') {
-      file = readFileSync(join(workspaceRoot, 'yarn.lock'), 'utf8');
-    }
-    if (packageManager === 'pnpm') {
-      file = readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8');
-    }
-    if (packageManager === 'npm') {
-      file = readFileSync(join(workspaceRoot, 'package-lock.json'), 'utf8');
-    }
-  } catch (e) {
-    console.log(readdirSync(workspaceRoot, { encoding: 'utf-8' }));
-    throw e;
+  if (packageManager === 'yarn') {
+    file = readFileSync(join(workspaceRoot, 'yarn.lock'), 'utf8');
+  }
+  if (packageManager === 'pnpm') {
+    file = readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8');
+  }
+  if (packageManager === 'npm') {
+    file = readFileSync(join(workspaceRoot, 'package-lock.json'), 'utf8');
   }
   if (file) {
     return hashLockFile(file);
