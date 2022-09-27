@@ -52,6 +52,12 @@
     "importPath": {
       "type": "string",
       "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
+    },
+    "platform": {
+      "type": "string",
+      "description": "Platform target for outputs.",
+      "enum": ["browser", "node", "neutral"],
+      "default": "node"
     }
   },
   "required": []

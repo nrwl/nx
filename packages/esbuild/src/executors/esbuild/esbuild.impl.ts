@@ -18,6 +18,7 @@ import { removeSync, writeJsonSync } from 'fs-extra';
 import { getClientEnvironment } from '../../utils/environment-variables';
 import { createAsyncIterable } from '@nrwl/js/src/utils/create-async-iterable/create-async-iteratable';
 
+const ESM_FILE_EXTENSION = '.js';
 const CJS_FILE_EXTENSION = '.cjs';
 
 const BUILD_WATCH_FAILED = `[ ${chalk.red(
@@ -32,7 +33,7 @@ export async function* esbuildExecutor(
   context: ExecutorContext
 ) {
   const options = normalizeOptions(_options);
-  if (options.clean) removeSync(options.outputPath);
+  if (options.deleteOutputPath) removeSync(options.outputPath);
 
   const assetsResult = await copyAssets(options, context);
 
@@ -46,8 +47,12 @@ export async function* esbuildExecutor(
   );
 
   const esbuildOptions: esbuild.BuildOptions = {
-    entryPoints: [options.main],
-    bundle: true,
+    ...options.esbuildOptions,
+    entryPoints: [options.main, ...options.additionalEntryPoints],
+    entryNames:
+      options.outputHashing === 'all' ? '[dir]/[name].[hash]' : '[dir]/[name]',
+    outdir: options.outputPath,
+    bundle: true, // TODO(jack): support non-bundled builds
     define: getClientEnvironment(),
     external: options.external,
     minify: options.minify,
@@ -95,7 +100,9 @@ export async function* esbuildExecutor(
                     }
                   : true,
               format,
-              outfile,
+              outExtension: {
+                '.js': getOutExtension(format),
+              },
             });
           })
         );
@@ -139,7 +146,9 @@ export async function* esbuildExecutor(
         esbuild.build({
           ...esbuildOptions,
           format,
-          outfile: getOutfile(format, options, context),
+          outExtension: {
+            '.js': getOutExtension(format),
+          },
         })
       )
     );
@@ -191,6 +200,10 @@ function getTypeCheckOptions(
   return typeCheckOptions;
 }
 
+function getOutExtension(format: 'cjs' | 'esm') {
+  return format === 'esm' ? ESM_FILE_EXTENSION : CJS_FILE_EXTENSION;
+}
+
 function getOutfile(
   format: 'cjs' | 'esm',
   options: EsBuildExecutorOptions,
@@ -200,12 +213,9 @@ function getOutfile(
     context.target.options.outputPath,
     options.outputFileName
   );
-  if (format === 'esm') {
-    return candidate;
-  } else {
-    const { dir, name } = parse(candidate);
-    return `${dir}/${name}${CJS_FILE_EXTENSION}`;
-  }
+  const ext = getOutExtension(format);
+  const { dir, name } = parse(candidate);
+  return `${dir}/${name}${ext}`;
 }
 
 async function runTypeCheck(

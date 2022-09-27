@@ -28,6 +28,7 @@
       "@nrwl/e2e/utils": ["e2e/utils"],
       "@nrwl/eslint-plugin-nx": ["packages/eslint-plugin-nx/src"],
       "@nrwl/expo": ["packages/expo"],
+      "@nrwl/esbuild": ["packages/esbuild"],
       "@nrwl/express": ["packages/express"],
       "@nrwl/jest": ["packages/jest"],
       "@nrwl/jest/*": ["packages/jest/*"],

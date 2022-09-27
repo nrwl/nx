@@ -7,4 +7,5 @@ export interface EsBuildProjectSchema {
   skipPackageJson?: boolean;
   importPath?: string;
   esbuildConfig?: string;
+  platform?: 'node' | 'browser' | 'neutral';
 }
