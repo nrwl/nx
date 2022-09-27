@@ -2,6 +2,7 @@ import { ExecutorContext, logger, runExecutor } from '@nrwl/devkit';
 import devServerExecutor from '@nrwl/webpack/src/executors/dev-server/dev-server.impl';
 import { WebDevServerOptions } from '@nrwl/webpack/src/executors/dev-server/schema';
 import { join } from 'path';
+import * as chalk from 'chalk';
 import {
   combineAsyncIterators,
   tapAsyncIterator,
@@ -66,7 +67,9 @@ export default async function* moduleFederationDevServer(
     numAwaiting--;
     if (numAwaiting === 0) {
       logger.info(
-        `Host is ready: ${options.host ?? 'localhost'}:${options.port ?? 4200}`
+        `[ ${chalk.green('ready')} ] http://${options.host ?? 'localhost'}:${
+          options.port ?? 4200
+        }`
       );
     }
   });
