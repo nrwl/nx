@@ -77,5 +77,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/storybook-configuration-examples.md"
 }

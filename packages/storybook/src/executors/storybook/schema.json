@@ -98,5 +98,6 @@
     }
   },
   "definitions": {},
-  "required": ["uiFramework", "config"]
+  "required": ["uiFramework", "config"],
+  "examplesFile": "../../../docs/storybook-executor-examples.md"
 }
