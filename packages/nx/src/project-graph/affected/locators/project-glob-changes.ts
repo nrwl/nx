@@ -41,14 +41,8 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator<
         return Object.keys(projectGraphNodes);
       }
 
-      // Find the project that contains it, and mark it as affected
-      const [project] =
-        Object.entries(projectGraphNodes).find(([p, c]) =>
-          c.data.files.some((f) => f.file === touchedFile.file)
-        ) ?? [];
-      if (project) {
-        touchedProjects.add(project);
-      }
+      // Modified project config files are under a project's root, and implicitly
+      // mark it as affected. Thus, we don't need to handle it here.
     }
   }
 

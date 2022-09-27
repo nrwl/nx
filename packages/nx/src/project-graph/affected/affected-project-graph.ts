@@ -32,10 +32,11 @@ export function filterAffected(
     getImplicitlyTouchedProjects,
     getTouchedNpmPackages,
     getImplicitlyTouchedProjectsByJsonChanges,
-    getTouchedProjectsInWorkspaceJson,
     getTouchedProjectsFromTsConfig,
   ];
-  if (!workspaceConfigName(workspaceRoot)) {
+  if (workspaceConfigName(workspaceRoot)) {
+    touchedProjectLocators.push(getTouchedProjectsInWorkspaceJson);
+  } else {
     touchedProjectLocators.push(getTouchedProjectsFromProjectGlobChanges);
   }
   const touchedProjects = touchedProjectLocators.reduce((acc, f) => {

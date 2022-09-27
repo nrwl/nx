@@ -12,12 +12,6 @@ export async function handleRecordOutputsHash(payload: {
       response: '{}',
     };
   } catch (e) {
-    console.error(
-      '[DEBUG] Outputs: ' +
-        '\n' +
-        payload.data.outputs.map((x) => `- ${x}`).join('\n')
-    );
-    console.error('[DEBUG] Hash: ' + payload.data.hash);
     return {
       description: 'recordOutputsHash failed',
       error: new Error(
