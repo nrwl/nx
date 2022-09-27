@@ -1,4 +1,4 @@
-import { MountConfig, mount } from 'cypress/angular';
+import { MountConfig } from 'cypress/angular';
 import { <%= componentName %> } from './<%= componentFileName %>';
 
 describe(<%= componentName %>.name, () => {
@@ -9,7 +9,7 @@ describe(<%= componentName %>.name, () => {
   }
 
   it('renders', () => {
-     mount(<%= componentName %>,<% if(props.length > 0) { %> {
+     cy.mount(<%= componentName %>,<% if(props.length > 0) { %> {
            ...config,
            componentProperties: {<% for (let prop of props) { %>
                <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>

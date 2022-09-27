@@ -2,6 +2,7 @@ import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { ProjectGraph } from 'nx/src/config/project-graph';
 import { join } from 'path';
 
+export const CY_FILE_MATCHER = new RegExp(/\.cy\.[tj]sx?$/);
 /**
  * return a path to a temp css file
  * temp file is scoped to the project root

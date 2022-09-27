@@ -177,7 +177,7 @@ export class MyLibComponent implements OnInit {
 
     await componentGenerator(tree, { name: 'my-lib', project: 'my-lib' });
 
-    const expected = `import { MountConfig, mount } from 'cypress/angular';
+    const expected = `import { MountConfig } from 'cypress/angular';
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
@@ -188,7 +188,7 @@ describe(MyLibComponent.name, () => {
   }
 
   it('renders', () => {
-     mount(MyLibComponent, config);
+     cy.mount(MyLibComponent, config);
   })
 })
 `;
