@@ -55,10 +55,11 @@ describe('react:component-story', () => {
           import { ComponentStory, ComponentMeta } from '@storybook/react';
           import { TestUiLib } from './test-ui-lib';
           
-          export default {
+          const Story: ComponentMeta<typeof TestUiLib> = {
             component: TestUiLib,
-            title: 'TestUiLib',
-          } as ComponentMeta<typeof TestUiLib>;
+            title: 'TestUiLib'
+          };
+          export default Story;
           
           const Template: ComponentStory<typeof TestUiLib> = (args) => <TestUiLib {...args} />;
           
@@ -108,7 +109,7 @@ describe('react:component-story', () => {
           
           export default {
             component: Test,
-            title: 'Test',
+            title: 'Test'
           };
           
           const Template = (args) => <Test {...args} />;
@@ -151,10 +152,11 @@ describe('react:component-story', () => {
           import { ComponentStory, ComponentMeta } from '@storybook/react';
           import { Test } from './test-ui-lib';
           
-          export default {
+          const Story: ComponentMeta<typeof Test> = {
             component: Test,
-            title: 'Test',
-          } as ComponentMeta<typeof Test>;
+            title: 'Test'
+          };
+          export default Story;
           
           const Template: ComponentStory<typeof Test> = (args) => <Test {...args} />;
           
@@ -201,10 +203,11 @@ describe('react:component-story', () => {
             import { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Test } from './test-ui-lib';
 
-            export default {
+            const Story: ComponentMeta<typeof Test> = {
               component: Test,
-              title: 'Test',
-            } as ComponentMeta<typeof Test>;
+              title: 'Test'
+            };
+            export default Story;
 
             const Template: ComponentStory<typeof Test> = (args) => <Test {...args} />;
 
@@ -259,13 +262,14 @@ describe('react:component-story', () => {
             import { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Test } from './test-ui-lib';
 
-            export default {
+            const Story: ComponentMeta<typeof Test> = {
               component: Test,
               title: 'Test',
               argTypes: {
                 someAction: { action: 'someAction executed!' },
-              },
-            } as ComponentMeta<typeof Test>;
+              }
+            };
+            export default Story;
 
             const Template: ComponentStory<typeof Test> = (args) => <Test {...args} />;
 
@@ -422,10 +426,11 @@ describe('react:component-story', () => {
             import { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Test } from './test-ui-lib';
 
-            export default {
+            const Story: ComponentMeta<typeof Test> = {
               component: Test,
-              title: 'Test',
-            } as ComponentMeta<typeof Test>;
+              title: 'Test'
+            };
+            export default Story;
 
             const Template: ComponentStory<typeof Test> = (args) => <Test {...args} />;
 
@@ -554,10 +559,11 @@ describe('react:component-story', () => {
               import { ComponentStory, ComponentMeta } from '@storybook/react';
               import { Test } from './test-ui-lib';
   
-              export default {
+              const Story: ComponentMeta<typeof Test> = {
                 component: Test,
-                title: 'Test',
-              } as ComponentMeta<typeof Test>;
+                title: 'Test'
+              };
+              export default Story;
   
               const Template: ComponentStory<typeof Test> = (args) => <Test {...args} />;
   
@@ -617,10 +623,11 @@ describe('react:component-story', () => {
             import { ComponentStory, ComponentMeta } from '@storybook/react';
             import { One } from './test-ui-lib';
             
-            export default {
+            const Story: ComponentMeta<typeof One> = {
               component: One,
-              title: 'One',
-            } as ComponentMeta<typeof One>;
+              title: 'One'
+            };
+            export default Story;
             
             const Template: ComponentStory<typeof One> = (args) => <One {...args} />;
             
@@ -633,10 +640,11 @@ describe('react:component-story', () => {
             import { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Two } from './test-ui-lib';
             
-            export default {
+            const Story: ComponentMeta<typeof Two> = {
               component: Two,
-              title: 'Two',
-            } as ComponentMeta<typeof Two>;
+              title: 'Two'
+            };
+            export default Story;
             
             const Template: ComponentStory<typeof Two> = (args) => <Two {...args} />;
             
@@ -649,10 +657,11 @@ describe('react:component-story', () => {
             import { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Three } from './test-ui-lib';
             
-            export default {
+            const Story: ComponentMeta<typeof Three> = {
               component: Three,
-              title: 'Three',
-            } as ComponentMeta<typeof Three>;
+              title: 'Three'
+            };
+            export default Story;
             
             const Template: ComponentStory<typeof Three> = (args) => <Three {...args} />;
             
@@ -681,10 +690,11 @@ describe('react:component-story', () => {
         import { ComponentStory, ComponentMeta } from '@storybook/react';
         import { TestUiLib } from './test-ui-lib';
         
-        export default {
+        const Story: ComponentMeta<typeof TestUiLib> = {
           component: TestUiLib,
-          title: 'TestUiLib',
-        } as ComponentMeta<typeof TestUiLib>;
+          title: 'TestUiLib'
+        };
+        export default Story;
         
         const Template: ComponentStory<typeof TestUiLib> = (args) => <TestUiLib {...args} />;
         
