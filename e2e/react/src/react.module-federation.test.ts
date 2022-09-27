@@ -2,6 +2,7 @@ import { stripIndents } from '@nrwl/devkit';
 import {
   checkFilesExist,
   cleanupProject,
+  getSelectedPackageManager,
   killPort,
   newProject,
   readProjectConfig,
@@ -18,7 +19,8 @@ describe('React Module Federation', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should generate host and remote apps', async () => {
+  // TODO: Re-enable this to work with pnpm
+  xit('should generate host and remote apps', async () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
