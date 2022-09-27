@@ -29,7 +29,11 @@ import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
-import { nxVersion, typesNodeVersion } from '../../utils/versions';
+import {
+  esbuildVersion,
+  nxVersion,
+  typesNodeVersion,
+} from '../../utils/versions';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -427,7 +431,11 @@ function addProjectDependencies(
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@nrwl/esbuild': nxVersion, '@types/node': typesNodeVersion }
+      {
+        '@nrwl/esbuild': nxVersion,
+        '@types/node': typesNodeVersion,
+        esbuild: esbuildVersion,
+      }
     );
   }
 

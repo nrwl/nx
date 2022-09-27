@@ -30,14 +30,17 @@
       "type": "string",
       "description": "The path to package.json file."
     },
+    "additionalEntryPoints": {
+      "type": "array",
+      "description": "List of additional entry points.",
+      "items": { "type": "string" },
+      "default": []
+    },
     "format": {
       "type": "array",
       "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
       "alias": "f",
-      "items": {
-        "type": "string",
-        "enum": ["esm", "cjs"]
-      }
+      "items": { "type": "string", "enum": ["esm", "cjs"] }
     },
     "watch": {
       "type": "boolean",
@@ -75,9 +78,21 @@
       },
       "default": ["esm"]
     },
+    "outputHashing": {
+      "type": "string",
+      "description": "Define the output filename cache-busting hashing mode.",
+      "default": "none",
+      "enum": ["none", "all"]
+    },
     "metafile": {
       "type": "boolean",
       "description": "Generate a meta.json file in the output folder that includes metadata about the build. This file can be analyzed by other tools.",
+      "default": false
+    },
+    "sourcemap": {
+      "type": "boolean",
+      "alias": "sourceMap",
+      "description": "Generate sourcemap.",
       "default": false
     },
     "minify": {
@@ -111,6 +126,11 @@
       "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
       "enum": ["dependencies", "peerDependencies"],
       "default": "peerDependencies"
+    },
+    "esbuildOptions": {
+      "type": "object",
+      "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/.",
+      "additionalProperties": true
     }
   },
   "required": ["tsConfig", "main", "outputPath"],
@@ -142,5 +162,6 @@
       ]
     }
   },
+  "additionalProperties": true,
   "examplesFile": "../../../docs/esbuild-examples.md"
 }

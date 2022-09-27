@@ -34,9 +34,16 @@
     "@nrwl/workspace": "file:../workspace",
     "chalk": "4.1.0",
     "dotenv": "~10.0.0",
-    "esbuild": "^0.15.7",
     "fs-extra": "^10.1.0",
     "tslib": "^2.3.0"
+  },
+  "peerDependencies": {
+    "esbuild": "~0.15.9"
+  },
+  "peerDependenciesMeta": {
+    "esbuild": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

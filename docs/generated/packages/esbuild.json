@@ -93,6 +93,12 @@
           "importPath": {
             "type": "string",
             "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
+          },
+          "platform": {
+            "type": "string",
+            "description": "Platform target for outputs.",
+            "enum": ["browser", "node", "neutral"],
+            "default": "node"
           }
         },
         "required": [],
@@ -140,6 +146,12 @@
           "project": {
             "type": "string",
             "description": "The path to package.json file."
+          },
+          "additionalEntryPoints": {
+            "type": "array",
+            "description": "List of additional entry points.",
+            "items": { "type": "string" },
+            "default": []
           },
           "format": {
             "type": "array",
@@ -193,9 +205,21 @@
             "description": "Mark one or more module as external. Can use * wildcards, such as '*.png'.",
             "items": { "type": "string" }
           },
+          "outputHashing": {
+            "type": "string",
+            "description": "Define the output filename cache-busting hashing mode.",
+            "default": "none",
+            "enum": ["none", "all"]
+          },
           "metafile": {
             "type": "boolean",
             "description": "Generate a meta.json file in the output folder that includes metadata about the build. This file can be analyzed by other tools.",
+            "default": false
+          },
+          "sourcemap": {
+            "type": "boolean",
+            "alias": "sourceMap",
+            "description": "Generate sourcemap.",
             "default": false
           },
           "minify": {
@@ -229,6 +253,11 @@
             "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
             "enum": ["dependencies", "peerDependencies"],
             "default": "peerDependencies"
+          },
+          "esbuildOptions": {
+            "type": "object",
+            "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/.",
+            "additionalProperties": true
           }
         },
         "required": ["tsConfig", "main", "outputPath"],
@@ -258,6 +287,7 @@
             ]
           }
         },
+        "additionalProperties": true,
         "examplesFile": "`<app-root>/project.json`:\n\n```json\n{\n  //...\n  \"targets\": {\n    //...\n    \"build\": {\n      \"executor\": \"@nrwl/esbuild:esbuild\",\n      \"options\": {\n        \"main\": \"<app-root>\",\n        \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n        \"outputPath\": \"dist/<app-root>\"\n      }\n    }\n  }\n}\n```\n\n```bash\nnx build <app-name>\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"CommonJS output\" %}\n\nThe CommonJS format is required in some environments, such as Electron applications. By default, `esbuild` will use the ESM format, which is recommended for Web and Node applications. You may also output to multiple formats.\n\n```bash\nnx build <app-name> --format=cjs\nnx build <app-name> --format=esm,cjs\nnx build <app-name> # defaults to es# defaults to esm\n```\n\n```json\n\"build\": {\n  \"executor\": \"@nrwl/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n    \"format\": [\"esm\", \"cjs\"]\n}\n```\n\n{% /tab %}\n{% tab label=\"External packages\" %}\n\nYou can avoid packages from being bundled by providing the `external` option with a list of packages to skip.\n\nYou can also use `*` wildcard to match assets.\n\n```json\n\"build\": {\n  \"executor\": \"@nrwl/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n    \"external\": [\"lodash\", \"*.png\"]\n}\n```\n\n{% /tab %}\n{% tab label=\"Skip type checking\" %}\n\nType checking is the slowest part of the build. You may want to skip type checking during build and run it as another job in CI.\n\n```json\n\"build\": {\n  \"executor\": \"@nrwl/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n  \"skipTypeCheck\": true\n}\n```\n\n{% /tab %}\n{% tabs %}\n",
         "presets": []
       },

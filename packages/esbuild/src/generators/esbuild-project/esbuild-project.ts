@@ -59,7 +59,13 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
     tsConfig,
     project: `${project.root}/package.json`,
     assets: [],
+    platform: options.platform,
   };
+
+  if (options.platform === 'browser') {
+    buildOptions.outputHashing = 'all';
+    buildOptions.minify = true;
+  }
 
   if (tree.exists(joinPathFragments(project.root, 'README.md'))) {
     buildOptions.assets = [
