@@ -150,6 +150,30 @@ describe('MF Remote App Generator', () => {
     expect(projects.has('remote1-e2e')).toBeFalsy();
   });
 
+  it('should generate a correct app component when inline template is used', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    // ACT
+    await remote(tree, {
+      name: 'test',
+      inlineTemplate: true,
+    });
+
+    // ASSERT
+    expect(tree.read('apps/test/src/app/app.component.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { Component } from '@angular/core';
+
+      @Component({
+        selector: 'proj-root',
+        template: '<router-outlet></router-outlet>'
+
+      })
+      export class AppComponent {}"
+    `);
+  });
+
   it('should update the index.html to use the remote entry component selector for root when standalone', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
