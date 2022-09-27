@@ -103,8 +103,11 @@ function removeDeadCode(tree: Tree, options: Schema) {
   );
   if (!options.standalone) {
     const component =
-      tree.read(pathToAppComponent, 'utf-8').split('templateUrl')[0] +
+      tree
+        .read(pathToAppComponent, 'utf-8')
+        .split(options.inlineTemplate ? 'template' : 'templateUrl')[0] +
       `template: '<router-outlet></router-outlet>'
+
 })
 export class AppComponent {}`;
 
