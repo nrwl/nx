@@ -11,7 +11,7 @@ import { join, relative } from 'path';
 import type { Mode } from 'fs';
 
 class RunCallbackTask {
-  constructor(private callback: GeneratorCallback) {}
+  constructor(private callback: GeneratorCallback) { }
   toConfiguration() {
     return {
       name: 'RunCallback',
@@ -103,14 +103,21 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
     private tree,
     private _root: string,
     private skipWritingConfigInOldFormat?: boolean
-  ) {}
+  ) { }
 
   get root(): string {
     return this._root;
   }
 
-  children(dirPath: string): string[] {
+  children(dirPath: string): string[];
+  children(dirPath: string, recursive?: boolean) {
+    if (recursive) {
+      const files: string[] = [];
+      this.tree.visit((x) => files.push(x));
+      return files;
+    }
     const { subdirs, subfiles } = this.tree.getDir(dirPath);
+
     return [...subdirs, ...subfiles];
   }
 

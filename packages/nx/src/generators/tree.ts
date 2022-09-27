@@ -77,8 +77,16 @@ export interface Tree {
 
   /**
    * Returns the list of children of a folder.
+   * @param dirPath A path to a directory.
    */
   children(dirPath: string): string[];
+
+  /**
+   * Returns the list of children of a folder.
+   * @param dirPath A path to a directory.
+   * @param recursive If set to `true`, it will return all subfiles in the directory.
+   */
+  children(dirPath: string, recursive: boolean): string[];
 
   /**
    * Returns the list of currently recorded changes.
@@ -240,11 +248,31 @@ export class FsTree implements Tree {
     }
   }
 
-  children(dirPath: string): string[] {
+  children(dirPath: string): string[];
+  children(dirPath: string, recursive: boolean);
+  children(dirPath: string, recursive?: boolean) {
     dirPath = this.normalize(dirPath);
-    let res = this.fsReadDir(dirPath);
+    let res: string[] = [];
 
-    res = [...res, ...this.directChildrenOfDir(this.rp(dirPath))];
+    if (recursive) {
+      const readDir = (dir: string) => {
+        let files = this.fsReadDir(dir);
+        files = [...files, ...this.directChildrenOfDir(this.rp(dir))];
+        files.forEach((file) => {
+          const fileAbsolutePath = join(dir, file);
+          if (this.fsIsDirectory(fileAbsolutePath)) {
+            readDir(fileAbsolutePath);
+            return;
+          }
+          res.push(relative(dirPath, fileAbsolutePath));
+        });
+      };
+      readDir(dirPath);
+    } else {
+      res = this.fsReadDir(dirPath);
+      res = [...res, ...this.directChildrenOfDir(this.rp(dirPath))];
+    }
+
     res = res.filter((q) => {
       const r = this.recordedChanges[join(this.rp(dirPath), q)];
       return !r?.isDeleted;
@@ -325,6 +353,11 @@ export class FsTree implements Tree {
   private fsIsFile(filePath: string): boolean {
     const stat = statSync(join(this.root, filePath));
     return stat.isFile();
+  }
+
+  private fsIsDirectory(dirPath: string): boolean {
+    const stat = statSync(join(this.root, dirPath));
+    return stat.isDirectory();
   }
 
   private fsReadFile(filePath: string): Buffer {
