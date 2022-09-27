@@ -1,6 +1,7 @@
 <% if ( !isPlainJs ) { %>import { ComponentStory, ComponentMeta } from '@storybook/react';<% } %>
 import<% if ( !isPlainJs ) { %> { <% } %> <%= componentName %> <% if ( !isPlainJs ) { %> } <% } %> from './<%= componentImportFileName %>';
 
+<% if ( isPlainJs ) { %>
 export default {
   component: <%= componentName %>,
   title: '<%= componentName %>',<% if ( argTypes && argTypes.length > 0 ) { %> 
@@ -8,7 +9,21 @@ export default {
     <%= argType.name %>: { <%- argType.type %> : "<%- argType.actionText %>" },<% } %>
 }
    <% } %> 
-}<% if ( !isPlainJs ) { %> as ComponentMeta<typeof <%= componentName %>> <% } %>;
+};
+<% } %>
+
+
+<% if ( !isPlainJs ) { %>
+const Story: ComponentMeta<typeof <%= componentName %>> = {
+  component: <%= componentName %>,
+  title: '<%= componentName %>',<% if ( argTypes && argTypes.length > 0 ) { %> 
+  argTypes: {<% for (let argType of argTypes) { %>
+    <%= argType.name %>: { <%- argType.type %> : "<%- argType.actionText %>" },<% } %>
+}
+   <% } %> 
+};
+export default Story;
+<% } %>
 
 const Template<% if ( !isPlainJs ) { %>: ComponentStory< typeof <%= componentName %> ><% } %> = (args) => <<%= componentName %> {...args} />;
 
