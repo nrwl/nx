@@ -117,7 +117,7 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'event',
-      time: '3:30 - 3:45pm (UTC-07:00)',
+      time: '3:30 - 4:00pm (UTC-07:00)',
       title: 'Make Nx Work for You with Custom Generators',
       description:
         'There is a lot the Nx can do for your application right out of the box, but did you know you can write custom workspace generators specific to YOUR application to help automate the various tasks your team performs on a daily basis? Why write yet another confluence page documenting all of the little things that have to be done after generating a library when you can write a workspace generator that handles all of the little details for you? In this talk we will cover everything you need to know to create your own workspace generator to help reduce manual tasks, enforce architectural patterns, and generate more consistent predictable code.',
@@ -126,7 +126,7 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'break',
-      time: '3:45 - 4:15pm (UTC-07:00)',
+      time: '4:00 - 4:15pm (UTC-07:00)',
       title: 'Break',
       description: '',
       speakers: [],
