@@ -67,5 +67,6 @@
       "x-prompt": "Add a Storybook Test-Runner target?"
     }
   },
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/configuration-generator-examples.md"
 }

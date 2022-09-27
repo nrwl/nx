@@ -114,5 +114,6 @@
       ]
     }
   },
-  "required": ["uiFramework", "config"]
+  "required": ["uiFramework", "config"],
+  "examplesFile": "../../../docs/build-storybook-executor-examples.md"
 }
