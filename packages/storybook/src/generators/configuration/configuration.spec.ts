@@ -426,6 +426,27 @@ describe('@nrwl/storybook:configuration', () => {
         tree.exists('libs/test-ui-lib-2/.storybook/preview.js')
       ).toBeFalsy();
     });
+
+    it.only('should add test-storybook target', async () => {
+      await configurationGenerator(tree, {
+        name: 'test-ui-lib',
+        uiFramework: '@storybook/react',
+        configureTestRunner: true,
+      });
+
+      expect(
+        readJson(tree, 'package.json').devDependencies['@storybook/test-runner']
+      ).toBeTruthy();
+
+      const project = readProjectConfiguration(tree, 'test-ui-lib');
+      expect(project.targets['test-storybook']).toEqual({
+        executor: 'nx:run-commands',
+        options: {
+          command:
+            'test-storybook -c libs/test-ui-lib/.storybook --url=http://localhost:4400',
+        },
+      });
+    });
   });
 
   describe('for other types of projects - Next.js and the swc compiler', () => {
