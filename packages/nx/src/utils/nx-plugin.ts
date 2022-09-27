@@ -58,7 +58,10 @@ export function loadNxPlugins(
             });
           } catch (e) {
             if (e.code === 'MODULE_NOT_FOUND') {
-              const plugin = resolveLocalNxPlugin(moduleName);
+              const plugin = resolveLocalNxPlugin(
+                moduleName,
+                paths[0] ?? workspaceRoot
+              );
               if (plugin) {
                 const main = readPluginMainFromProjectConfiguration(
                   plugin.projectConfig
