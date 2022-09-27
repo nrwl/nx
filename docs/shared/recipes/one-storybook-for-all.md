@@ -7,7 +7,7 @@ This case would work if all your projects (applications and libraries) containin
 
 Let’s see how we can implement this solution:
 
-{% github-repository url="https://github.com/mandarini/nx-recipes/tree/storybook/publishing-recipe-1/storybook-recipes/publishing-strategies-single-framework" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-publishing-strategies-single-framework" /%}
 
 ## Steps
 
