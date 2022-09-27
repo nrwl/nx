@@ -149,4 +149,23 @@ describe('MF Remote App Generator', () => {
     const projects = getProjects(tree);
     expect(projects.has('remote1-e2e')).toBeFalsy();
   });
+
+  it('should update the index.html to use the remote entry component selector for root when standalone', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    // ACT
+    await remote(tree, {
+      name: 'test',
+      standalone: true,
+    });
+
+    // ASSERT
+    expect(tree.read('apps/test/src/index.html', 'utf-8')).not.toContain(
+      'proj-root'
+    );
+    expect(tree.read('apps/test/src/index.html', 'utf-8')).toContain(
+      'proj-test-entry'
+    );
+  });
 });
