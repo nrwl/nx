@@ -206,9 +206,11 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nrwl/web:app ${myapp}`);
 
       // Should work within the project directory
-      expect(runCommand(`cd apps/${myapp}/src && npx nx build`)).toContain(
-        `nx run ${myapp}:build:production`
-      );
+      expect(
+        runCommand(
+          `cd apps/${myapp}/src && NX_VERBOSE_LOGGING=true npx nx build --verbose`
+        )
+      ).toContain(`nx run ${myapp}:build:production`);
     }, 10000);
 
     describe('target dependencies', () => {
