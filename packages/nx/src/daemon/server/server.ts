@@ -293,11 +293,21 @@ export async function startServer(): Promise<Server> {
               `Subscribed to changes within: ${workspaceRoot}`
             );
           }
-          if (!getOutputsWatcherSubscription()) {
-            storeOutputsWatcherSubscription(
-              await subscribeToOutputsChanges(handleOutputsChanges)
-            );
+
+          // temporary disable outputs tracking when using WSL
+          const outputsTrackingIsEnabled =
+            process.env['WSL_DISTRO_NAME'] === undefined;
+
+          if (outputsTrackingIsEnabled) {
+            if (!getOutputsWatcherSubscription()) {
+              storeOutputsWatcherSubscription(
+                await subscribeToOutputsChanges(handleOutputsChanges)
+              );
+            }
+          } else {
+            disableOutputsTracking();
           }
+
           return resolve(server);
         } catch (err) {
           reject(err);
