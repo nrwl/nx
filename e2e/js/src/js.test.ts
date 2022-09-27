@@ -303,42 +303,6 @@ export function ${lib}Wildcard() {
     );
   }, 120000);
 
-  it.only('should inline non-buildable libraries with --external=all', async () => {
-    const parent = uniq('parent');
-    runCLI(`generate @nrwl/js:lib ${parent}`);
-
-    const buildable = uniq('buildable');
-    runCLI(`generate @nrwl/js:lib ${buildable}`);
-
-    const nonBuildable = uniq('nonbuildable');
-    runCLI(`generate @nrwl/js:lib ${nonBuildable} --buildable=false`);
-
-    updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
-      return `
-import { ${buildable} } from '@${scope}/${buildable}';
-import { ${nonBuildable} } from '@${scope}/${nonBuildable}';
-
-export function ${parent}() {
-  ${buildable}();
-  ${nonBuildable}();
-}
-        `;
-    });
-
-    expect(runCLI(`build ${parent}`)).toContain(
-      'Done compiling TypeScript files'
-    );
-
-    checkFilesExist(
-      `dist/libs/${buildable}/src/index.js`, // buildable
-      `dist/libs/${parent}/src/index.js`, // parent
-      `dist/libs/${parent}/${nonBuildable}/src/index.js` // non buildable
-    );
-
-    const fileContent = readFile(`dist/libs/${parent}/src/lib/${parent}.js`);
-    expect(fileContent).toContain(`${nonBuildable}/src`);
-  }, 120000);
-
   it('should not create a `.babelrc` file when creating libs with js executors (--compiler=tsc)', () => {
     const lib = uniq('lib');
     runCLI(

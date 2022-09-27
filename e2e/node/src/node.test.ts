@@ -481,10 +481,11 @@ describe('nest libraries', function () {
   }, 200000);
 
   it('should have plugin output if specified in `transformers`', async () => {
+    newProject();
     const nestlib = uniq('nestlib');
     runCLI(`generate @nrwl/nest:lib ${nestlib} --buildable`);
 
-    packageInstall('@nestjs/swagger', undefined, '^6.0.0');
+    packageInstall('@nestjs/swagger', undefined, '~5.0.0');
 
     updateProjectConfig(nestlib, (config) => {
       config.targets.build.options.transformers = [
@@ -507,7 +508,7 @@ export class FooModel {
 }`
     );
 
-    runCLI(`build ${nestlib}`);
+    await runCLIAsync(`build ${nestlib}`);
 
     const fooModelJs = readFile(`dist/libs/${nestlib}/src/lib/foo.model.js`);
     expect(stripIndents`${fooModelJs}`).toContain(
@@ -517,13 +518,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.FooModel = void 0;
 const openapi = require("@nestjs/swagger");
 class FooModel {
-  static _OPENAPI_METADATA_FACTORY() {
-      return { foo: { required: true, type: () => String }, bar: { required: true, type: () => Number } };
-  }
+    static _OPENAPI_METADATA_FACTORY() {
+        return { foo: { required: true, type: () => String }, bar: { required: true, type: () => Number } };
+    }
 }
 exports.FooModel = FooModel;
 //# sourceMappingURL=foo.model.js.map
-            `
+        `
     );
   }, 300000);
 

@@ -1,8 +1,8 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import { ExecutorOptions } from '../../utils/schema';
 import {
-  createTypeScriptCompilationOptions,
   normalizeOptions,
+  createTypeScriptCompilationOptions,
 } from './tsc.impl';
 
 describe('tscExecutor', () => {
