@@ -139,6 +139,13 @@ export function readModulePackageJsonWithoutFallbacks(
  *
  * Includes a fallback that accounts for modules that don't export package.json
  *
+ * @param {string} moduleSpecifier The module to look up
+ * @param {string[]} requirePaths List of paths look in. Pass `module.paths` to ensure non-hoisted dependencies are found.
+ *
+ * @example
+ * // Use the caller's lookup paths for non-hoisted dependencies
+ * readModulePackageJson('http-server', module.paths);
+ *
  * @returns package json contents and path
  */
 export function readModulePackageJson(
