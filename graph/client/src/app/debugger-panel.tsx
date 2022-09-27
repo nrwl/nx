@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { ProjectGraphList } from './interfaces';
 import { GraphPerfReport } from './machines/interfaces';
+import Dropdown from './ui-components/dropdown';
 
 export interface DebuggerPanelProps {
   projectGraphs: ProjectGraphList[];
@@ -23,20 +24,22 @@ export const DebuggerPanel = memo(function ({
       <h4 className="dark:text-sidebar-title-dark mr-4 text-lg font-normal">
         Debugger
       </h4>
-      <select
-        className="flex w-auto items-center rounded-md rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+      <Dropdown
         data-cy="project-select"
-        onChange={(event) => projectGraphChange(event.target.value)}
-        value={selectedProjectGraph}
+        onChange={(event) => projectGraphChange(event.currentTarget.value)}
       >
         {projectGraphs.map((projectGraph) => {
           return (
-            <option key={projectGraph.id} value={projectGraph.id}>
+            <option
+              key={projectGraph.id}
+              value={projectGraph.id}
+              selected={projectGraph.id === selectedProjectGraph}
+            >
               {projectGraph.label}
             </option>
           );
         })}
-      </select>
+      </Dropdown>
       <p className="text-sm">
         Last render took {lastPerfReport.renderTime}ms:{' '}
         <b className="text-medium font-mono">{lastPerfReport.numNodes} nodes</b>{' '}

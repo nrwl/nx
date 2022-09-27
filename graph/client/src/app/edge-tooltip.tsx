@@ -1,3 +1,5 @@
+import Tag from './ui-components/tag';
+
 export interface EdgeNodeTooltipProps {
   type: 'static' | 'dynamic' | 'implicit';
   source: string;
@@ -14,7 +16,7 @@ export function EdgeNodeTooltip({
   return (
     <div>
       <h4 className={type !== 'implicit' ? 'mb-3' : ''}>
-        <span className="tag">{type ?? 'unknown'}</span>
+        <Tag>{type ?? 'unknown'}</Tag>
         {source} &rarr; {target}
       </h4>
       {type !== 'implicit' ? (

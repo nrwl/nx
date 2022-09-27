@@ -4,6 +4,7 @@ import {
   FlagIcon,
   MapPinIcon,
 } from '@heroicons/react/24/solid';
+import Tag from './ui-components/tag';
 
 export interface ProjectNodeToolTipProps {
   type: 'app' | 'lib' | 'e2e';
@@ -49,7 +50,7 @@ export function ProjectNodeToolTip({
   return (
     <div>
       <h4>
-        <span className="tag">{type}</span>
+        <Tag>{type}</Tag>
         {id}
       </h4>
       {tags.length > 0 ? (
