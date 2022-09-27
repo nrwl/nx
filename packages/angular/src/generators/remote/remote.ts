@@ -3,6 +3,7 @@ import {
   getProjects,
   joinPathFragments,
   readProjectConfiguration,
+  readWorkspaceConfiguration,
   Tree,
 } from '@nrwl/devkit';
 import type { Schema } from './schema';
@@ -132,5 +133,19 @@ export class AppModule {}`
     );
   } else {
     tree.delete(pathToAppComponent);
+
+    const prefix = options.prefix ?? readWorkspaceConfiguration(tree).npmScope;
+    const remoteEntrySelector = `${prefix}-${projectName}-entry`;
+
+    const pathToIndexHtml = project.targets.build.options.index;
+    const indexContents = tree.read(pathToIndexHtml, 'utf-8');
+
+    const rootSelectorRegex = new RegExp(`${prefix}-root`, 'ig');
+    const newIndexContents = indexContents.replace(
+      rootSelectorRegex,
+      remoteEntrySelector
+    );
+
+    tree.write(pathToIndexHtml, newIndexContents);
   }
 }
