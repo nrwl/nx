@@ -13,7 +13,7 @@ First of all, you have to create two Storybook host apps, one for Angular and on
 
 Now, we are going to combine the two Storybook host apps into one, using Storybook composition. You can read our [Storybook Composition guide](/storybook/storybook-composition-setup) for a detailed explanation for how Storybook Composition works. In a nutshell, you can have one “host” Storybook instance running, where you can link other running Storybook instances.
 
-{% github-repository url="https://github.com/mandarini/nx-recipes/tree/storybook/publishing-recipe-1/storybook-recipes/publishing-strategies-multiple-frameworks" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-publishing-strategies-multiple-frameworks" /%}
 
 ## Steps
 
