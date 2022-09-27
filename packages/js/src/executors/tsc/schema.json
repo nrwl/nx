@@ -61,6 +61,20 @@
       "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
       "enum": ["dependencies", "peerDependencies"],
       "default": "peerDependencies"
+    },
+    "external": {
+      "type": "string",
+      "description": "A list projects to be treated as external.",
+      "enum": ["all", "none"],
+      "default": "all"
+    },
+    "externalBuildTargets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of target names that annotate a build target for a project",
+      "default": ["build"]
     }
   },
   "required": ["main", "outputPath", "tsConfig"],

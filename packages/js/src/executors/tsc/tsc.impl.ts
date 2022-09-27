@@ -3,7 +3,7 @@ import {
   assetGlobsToFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
-import { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript/compilation';
+import type { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { join, resolve } from 'path';
 import {
   CustomTransformers,
@@ -11,16 +11,20 @@ import {
   SourceFile,
   TransformerFactory,
 } from 'typescript';
+import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
 import { checkDependencies } from '../../utils/check-dependencies';
 import {
   getHelperDependency,
   HelperDependency,
 } from '../../utils/compiler-helper-dependency';
-import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
+import {
+  handleInliningBuild,
+  postProcessInlinedDependencies,
+} from '../../utils/inline';
+import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
 import { loadTsTransformers } from '../../utils/typescript/load-ts-transformers';
-import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
 
 export function normalizeOptions(
@@ -36,6 +40,10 @@ export function normalizeOptions(
 
   if (options.watch == null) {
     options.watch = false;
+  }
+
+  if (options.external == null) {
+    options.external = 'all';
   }
 
   const files: FileInputOutput[] = assetGlobsToFiles(
@@ -141,12 +149,28 @@ export async function* tscExecutor(
     process.on('SIGTERM', () => handleTermination());
   }
 
+  const tsCompilationOptions = createTypeScriptCompilationOptions(
+    options,
+    context
+  );
+
+  const inlinedDependencies = handleInliningBuild(
+    context,
+    options,
+    tsCompilationOptions.tsConfig
+  );
+
+  if (inlinedDependencies.length > 0) {
+    tsCompilationOptions.rootDir = '.';
+  }
+
   return yield* compileTypeScriptFiles(
     options,
-    createTypeScriptCompilationOptions(options, context),
+    tsCompilationOptions,
     async () => {
       await assetHandler.processAllAssetsOnce();
       updatePackageJson(options, context, target, dependencies);
+      postProcessInlinedDependencies(tsCompilationOptions, inlinedDependencies);
     }
   );
 }
