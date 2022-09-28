@@ -139,7 +139,7 @@ describe('Extra Nx Misc Tests', () => {
     it('should pass options', async () => {
       updateProjectConfig(mylib, (config) => {
         config.targets.echo = {
-          executor: '@nrwl/workspace:run-commands',
+          executor: 'nx:run-commands',
           options: {
             command: 'echo --var1={args.var1}',
             var1: 'a',
@@ -156,7 +156,7 @@ describe('Extra Nx Misc Tests', () => {
       const echoTarget = uniq('echo');
       updateProjectConfig(mylib, (config) => {
         config.targets[echoTarget] = {
-          executor: '@nrwl/workspace:run-commands',
+          executor: 'nx:run-commands',
           options: {
             commands: [
               'echo "Arguments:"',
@@ -191,7 +191,7 @@ describe('Extra Nx Misc Tests', () => {
     it('ttt should fail when a process exits non-zero', async () => {
       updateProjectConfig(mylib, (config) => {
         config.targets.error = {
-          executor: '@nrwl/workspace:run-commands',
+          executor: 'nx:run-commands',
           options: {
             command: `exit 1`,
           },

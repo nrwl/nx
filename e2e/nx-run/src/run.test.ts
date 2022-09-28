@@ -164,7 +164,7 @@ describe('Nx Running Tests', () => {
   projectFilePatterns: ['inferred-project.nxproject'],
   registerProjectTargets: () => ({
     "echo": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "echo inferred-target"
       }

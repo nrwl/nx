@@ -165,7 +165,7 @@ describe('project graph utils', () => {
     it('should prefer project.json targets', () => {
       const projectJsonTargets = {
         build: {
-          executor: '@nrwl/workspace:run-commands',
+          executor: 'nx:run-commands',
           options: {
             command: 'echo 2',
           },
@@ -182,7 +182,7 @@ describe('project graph utils', () => {
     it('should provide targets from project.json and package.json', () => {
       const projectJsonTargets = {
         clean: {
-          executor: '@nrwl/workspace:run-commands',
+          executor: 'nx:run-commands',
           options: {
             command: 'echo 2',
           },
@@ -243,14 +243,14 @@ describe('project graph utils', () => {
 
       const result = mergeNpmScriptsWithTargets('', {
         build: {
-          executor: '@nrwl/workspace:run-commands',
+          executor: 'nx:run-commands',
           options: { command: 'echo hi' },
         },
       });
 
       expect(result).toEqual({
         build: {
-          executor: '@nrwl/workspace:run-commands',
+          executor: 'nx:run-commands',
           options: { command: 'echo hi' },
         },
         test: {
