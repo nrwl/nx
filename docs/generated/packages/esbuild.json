@@ -185,6 +185,11 @@
                     "output": {
                       "type": "string",
                       "description": "Relative path within the output folder."
+                    },
+                    "ignore": {
+                      "description": "An array of globs to ignore.",
+                      "type": "array",
+                      "items": { "type": "string" }
                     }
                   },
                   "additionalProperties": false,
@@ -278,6 +283,11 @@
                   "output": {
                     "type": "string",
                     "description": "Relative path within the output folder."
+                  },
+                  "ignore": {
+                    "description": "An array of globs to ignore.",
+                    "type": "array",
+                    "items": { "type": "string" }
                   }
                 },
                 "additionalProperties": false,
