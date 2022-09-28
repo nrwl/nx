@@ -2,7 +2,7 @@
   "name": "@nrwl/esbuild",
   "version": "0.0.1",
   "private": false,
-  "description": "The Nx Plugin for EsBuild contains executors and generators that support building applications using EsBuild",
+  "description": "The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",

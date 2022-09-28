@@ -5,6 +5,7 @@ export interface EsBuildProjectSchema {
   devServer?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
+  skipValidation?: boolean;
   importPath?: string;
   esbuildConfig?: string;
   platform?: 'node' | 'browser' | 'neutral';

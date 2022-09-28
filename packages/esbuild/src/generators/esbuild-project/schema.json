@@ -2,22 +2,8 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxEsBuildProject",
   "cli": "nx",
-  "title": "Add EsBuild Configuration to a project",
-  "description": "Add EsBuild Configuration to a project.",
-  "examples": [
-    {
-      "command": "nx g @nrwl/esbuild:esbuild-project my-package",
-      "description": "Add a build target to 'my-package' library."
-    },
-    {
-      "command": "nx g @nrwl/esbuild:esbuild-project my-package --importPath=@acme/package",
-      "description": "Add a build target with a custom npm import path."
-    },
-    {
-      "command": "nx g @nrwl/esbuild:esbuild-project my-package --main=packages/my-package/custom-entry.ts",
-      "description": "Add a build target with a custom main entry file."
-    }
-  ],
+  "title": "Add esbuild configuration to a project",
+  "description": "Add esbuild configuration to a project.",
   "type": "object",
   "properties": {
     "project": {
@@ -32,12 +18,12 @@
     },
     "main": {
       "type": "string",
-      "description": "Path relative to the workspace root for the main entry file. Defaults to '<projectRoot>/src/main.ts'.",
+      "description": "Path relative to the workspace root for the main entry file. Defaults to `<project-root>/src/main.ts` or `<project-root>src/index.ts`, whichever is found.",
       "alias": "entryFile"
     },
     "tsConfig": {
       "type": "string",
-      "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to '<projectRoot>/tsconfig.app.json'."
+      "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to `<project-root>/tsconfig.app.json` or `<project-root>/tsconfig.lib.json`, whichever is found."
     },
     "skipFormat": {
       "description": "Skip formatting files.",
@@ -48,6 +34,11 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add dependencies to `package.json`."
+    },
+    "skipValidation": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not perform any validation on existing project."
     },
     "importPath": {
       "type": "string",
@@ -60,5 +51,6 @@
       "default": "node"
     }
   },
-  "required": []
+  "required": [],
+  "examplesFile": "../../../docs/esbuild-project-examples.md"
 }
