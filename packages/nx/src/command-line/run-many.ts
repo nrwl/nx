@@ -9,6 +9,7 @@ import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
+import * as minimatch from 'minimatch';
 
 export async function runMany(
   args: { [k: string]: any },
@@ -54,7 +55,13 @@ function projectsToRun(
   projectGraph: ProjectGraph
 ): ProjectGraphProjectNode[] {
   const allProjects = Object.values(projectGraph.nodes);
-  const excludedProjects = new Set(nxArgs.exclude ?? []);
+  const excludedProjects = new Set(
+    allProjects
+      .map((proj) => proj.name)
+      .filter((proj) =>
+        nxArgs.exclude.some((name) => proj === name || minimatch(proj, name))
+      )
+  );
   // --all is default now, if --projects is provided, it'll override the --all
   if (nxArgs.all && nxArgs.projects.length === 0) {
     const res = runnableForTarget(allProjects, nxArgs.target).filter(
@@ -64,8 +71,10 @@ function projectsToRun(
     return res;
   }
   checkForInvalidProjects(nxArgs, allProjects);
-  const selectedProjects = nxArgs.projects.map((name) =>
-    allProjects.find((project) => project.name === name)
+  const selectedProjects = allProjects.filter((proj) =>
+    nxArgs.projects.some(
+      (name) => proj.name === name || minimatch(proj.name, name)
+    )
   );
   return runnableForTarget(selectedProjects, nxArgs.target, true).filter(
     (proj) => !excludedProjects.has(proj.name)
@@ -77,7 +86,8 @@ function checkForInvalidProjects(
   allProjects: ProjectGraphProjectNode[]
 ) {
   const invalid = nxArgs.projects.filter(
-    (name) => !allProjects.find((p) => p.name === name)
+    (name) =>
+      !allProjects.find((p) => p.name === name || minimatch(p.name, name))
   );
   if (invalid.length !== 0) {
     throw new Error(`Invalid projects: ${invalid.join(', ')}`);
