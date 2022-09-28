@@ -725,22 +725,23 @@ function buildProjectConfigurationFromPackageJson(
 ): ProjectConfiguration & { name: string } {
   const directory = dirname(path).split('\\').join('/');
   let name = packageJson.name ?? toProjectName(directory, nxJson);
-  if (nxJson.npmScope) {
+  if (nxJson?.npmScope) {
     const npmPrefix = `@${nxJson.npmScope}/`;
     if (name.startsWith(npmPrefix)) {
       name = name.replace(npmPrefix, '');
     }
   }
+  const projectType =
+    nxJson?.workspaceLayout?.appsDir != nxJson?.workspaceLayout?.libsDir &&
+    nxJson?.workspaceLayout?.appsDir &&
+    directory.startsWith(nxJson.workspaceLayout.appsDir)
+      ? 'application'
+      : 'library';
   return {
     root: directory,
     sourceRoot: directory,
     name,
-    projectType:
-      nxJson.workspaceLayout?.appsDir != nxJson.workspaceLayout?.libsDir &&
-      nxJson.workspaceLayout?.appsDir &&
-      directory.startsWith(nxJson.workspaceLayout.appsDir)
-        ? 'application'
-        : 'library',
+    projectType,
   };
 }
 

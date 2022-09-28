@@ -2,6 +2,7 @@ import Ajv from 'ajv';
 import { Tree } from '../tree';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
+import { createTree } from '../testing-utils/create-tree';
 import {
   createTreeWithEmptyWorkspace,
   createTreeWithEmptyV1Workspace,
@@ -432,6 +433,23 @@ describe('project configuration', () => {
       });
     });
 
+    describe('getProjects', () => {
+      it('should get a map of projects', () => {
+        addProjectConfiguration(tree, 'proj', {
+          root: 'proj',
+        });
+
+        const projects = getProjects(tree);
+
+        expect(projects.size).toEqual(1);
+        expect(projects.get('proj')).toEqual({
+          $schema: '../node_modules/nx/schemas/project-schema.json',
+          name: 'proj',
+          root: 'proj',
+        });
+      });
+    });
+
     describe('without nx.json', () => {
       beforeEach(() => tree.delete('nx.json'));
 
@@ -567,6 +585,64 @@ describe('project configuration', () => {
             joinPathFragments(baseTestProjectConfigV2.root, 'project.json')
           )
         ).toBeFalsy();
+      });
+
+      describe('getProjects', () => {
+        it('should get a map of projects', () => {
+          addProjectConfiguration(tree, 'proj', {
+            root: 'proj',
+          });
+
+          const projects = getProjects(tree);
+
+          expect(projects.size).toEqual(1);
+          expect(projects.get('proj')).toEqual({
+            $schema: '../node_modules/nx/schemas/project-schema.json',
+            name: 'proj',
+            root: 'proj',
+          });
+        });
+      });
+    });
+  });
+
+  describe('for npm workspaces', () => {
+    beforeEach(() => {
+      tree = createTree();
+    });
+
+    describe('readProjectConfiguration', () => {
+      it('should read project configuration from package.json files', () => {
+        writeJson(tree, 'proj/package.json', {
+          name: 'proj',
+        });
+
+        const proj = readProjectConfiguration(tree, 'proj');
+
+        expect(proj).toEqual({
+          root: 'proj',
+          sourceRoot: 'proj',
+          projectType: 'library',
+        });
+      });
+    });
+
+    describe('getProjects', () => {
+      beforeEach(() => {
+        writeJson(tree, 'proj/package.json', {
+          name: 'proj',
+        });
+      });
+
+      it('should get a map of projects', () => {
+        const projects = getProjects(tree);
+
+        expect(projects.size).toEqual(1);
+        expect(projects.get('proj')).toEqual({
+          root: 'proj',
+          sourceRoot: 'proj',
+          projectType: 'library',
+        });
       });
     });
   });
