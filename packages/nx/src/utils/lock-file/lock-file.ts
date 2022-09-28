@@ -19,6 +19,7 @@ import { LockFileData } from './lock-file-type';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
 import { hashString } from './utils';
+import { ProjectGraphExternalNode } from 'nx/src/config/project-graph';
 
 /**
  * Hashes lock file content
@@ -64,6 +65,12 @@ export function parseLockFile(
     return parseNpmLockFile(file);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
+}
+
+export function mapLockFileDataToExternalNodes(
+  lockFileData: LockFileData
+): Record<string, ProjectGraphExternalNode> {
+  return {};
 }
 
 /**

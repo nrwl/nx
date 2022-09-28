@@ -39,6 +39,11 @@ import {
   readAllWorkspaceConfiguration,
   readNxJson,
 } from '../config/configuration';
+import {
+  lockFileHash,
+  mapLockFileDataToExternalNodes,
+  parseLockFile,
+} from '../utils/lock-file/lock-file';
 
 export async function buildProjectGraph() {
   const projectConfigurations = readAllWorkspaceConfiguration();
@@ -95,6 +100,13 @@ export async function buildProjectGraphUsingProjectFileMap(
     filesToProcess = projectFileMap;
     cachedFileData = {};
   }
+  let externalNodes;
+  const lockHash = lockFileHash();
+  if (cache && cache.lockFileHash === lockHash) {
+    externalNodes = cache.externalNodes;
+  } else {
+    externalNodes = mapLockFileDataToExternalNodes(parseLockFile());
+  }
   const context = createContext(
     projectsConfigurations,
     nxJson,
@@ -112,7 +124,8 @@ export async function buildProjectGraphUsingProjectFileMap(
     nxJson,
     packageJsonDeps,
     projectGraph,
-    rootTsConfig
+    rootTsConfig,
+    lockHash
   );
   if (shouldWriteCache) {
     writeCache(projectGraphCache);

@@ -4,7 +4,6 @@ import {
   ProjectGraphCache,
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
-import { createCache } from './nx-deps-cache';
 import { ProjectGraph } from '../config/project-graph';
 import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -299,7 +298,8 @@ describe('nx deps utils', () => {
         createNxJson({}),
         createPackageJsonDeps({}),
         createCache({}) as ProjectGraph,
-        {}
+        {},
+        'abcd1234'
       );
     });
 
@@ -308,7 +308,8 @@ describe('nx deps utils', () => {
         createNxJson({}),
         createPackageJsonDeps({}),
         createCache({}) as ProjectGraph,
-        undefined
+        undefined,
+        'abcd1234'
       );
 
       expect(result).toBeDefined();
@@ -322,6 +323,7 @@ describe('nx deps utils', () => {
         '@nrwl/workspace': '12.0.0',
         plugin: '1.0.0',
       },
+      lockFileHash: 'abcd1234',
       pathMappings: {
         mylib: ['libs/mylib/index.ts'],
       },

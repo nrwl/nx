@@ -15,6 +15,7 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 
 describe('project graph', () => {
   let packageJson: any;
+  let packageLockJson: any;
   let workspaceJson: WorkspaceJsonConfiguration;
   let tsConfigJson: any;
   let nxJson: NxJsonConfiguration;
@@ -24,6 +25,7 @@ describe('project graph', () => {
     process.env.NX_CACHE_PROJECT_GRAPH = 'false';
     packageJson = {
       name: '@nrwl/workspace-src',
+      version: '0.0.0',
       scripts: {
         deploy: 'echo deploy',
       },
@@ -32,6 +34,43 @@ describe('project graph', () => {
       },
       devDependencies: {
         '@nrwl/workspace': '8.0.0',
+      },
+    };
+    packageLockJson = {
+      name: '@nrwl/workspace-src',
+      version: '0.0.0',
+      lockfileVersion: 2,
+      requires: true,
+      packages: {
+        '': packageJson,
+        'node_modules/@nrwl/workspace': {
+          version: '15.0.0',
+          resolved:
+            'https://registry.npmjs.org/@nrwl/workspace/-/@nrwl/workspace-15.0.0.tgz',
+          integrity: 'sha512-12345678==',
+          dev: true,
+        },
+        'node_modules/happy-nrwl': {
+          version: '4.0.0',
+          resolved:
+            'https://registry.npmjs.org/happy-nrwl/-/happy-nrwl-1.0.0.tgz',
+          integrity: 'sha512-12345678==',
+        },
+      },
+      dependencies: {
+        '@nrwl/workspace': {
+          version: '15.0.0',
+          resolved:
+            'https://registry.npmjs.org/@nrwl/workspace/-/@nrwl/workspace-15.0.0.tgz',
+          integrity: 'sha512-12345678==',
+          dev: true,
+        },
+        'happy-nrwl': {
+          version: '1.0.0',
+          resolved:
+            'https://registry.npmjs.org/happy-nrwl/-/happy-nrwl-1.0.0.tgz',
+          integrity: 'sha512-12345678==',
+        },
       },
     };
     workspaceJson = {
@@ -110,6 +149,7 @@ describe('project graph', () => {
         import * as happyNrwl from 'happy-nrwl';
       `,
       './package.json': JSON.stringify(packageJson),
+      './package-lock.json': JSON.stringify(packageLockJson),
       './nx.json': JSON.stringify(nxJson),
       './workspace.json': JSON.stringify(workspaceJson),
       './tsconfig.base.json': JSON.stringify(tsConfigJson),
