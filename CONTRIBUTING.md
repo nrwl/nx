@@ -56,29 +56,17 @@ it can be useful to publish to a local registry.
 
 Check out [this video for a live walkthrough](https://youtu.be/Tx257WpNsxc) or follow the instructions below:
 
-```bash
-# Starts the local registry. Keep this running in a separate terminal.
-yarn local-registry start
-
-# Set npm and yarn to use the local registry.
-# Note: This reroutes your installs to your local registry
-yarn local-registry enable
-
-# Revert npm and yarn to use their default registries
-yarn local-registry disable
-```
-
-To publish packages to a local registry, do the following:
-
 - Run `yarn local-registry start` in Terminal 1 (keep it running)
 - Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to
   be logged in. You can use test/test/test@test.io.)
 - Run `yarn local-registry enable` in Terminal 2
-- Run `yarn nx-release 999.9.9 --local` in Terminal 2
+- Run `yarn nx-release 15.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
 - Run `cd ./tmp` in Terminal 2
-- Run `npx create-nx-workspace@999.9.9` in Terminal 2
+- Run `npx create-nx-workspace@15.0.0` in Terminal 2
 
 If you have problems publishing, make sure you use Node 16 and NPM 6 or 8.
+
+**NOTE:** After you finish with local testing don't forget to stop the local registry (either closing the Terminal 1 or running `yarn local-registry stop`) and disabling the local registy using `yarn local-registry disable`. Keeping local registry enabled will change your lock file resolutions to `localhost:4873` on the next `yarn install`.
 
 ### Publishing for Yarn 2+ (Berry)
 
