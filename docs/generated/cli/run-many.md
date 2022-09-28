@@ -35,6 +35,12 @@ Test proj1 and proj2 in parallel:
 nx run-many --target=test --projects=proj1,proj2 --parallel=2
 ```
 
+Test all projects that starts with `proj1-`:
+
+```bash
+nx nx run-many --target=test --projects=proj1-*
+```
+
 ## Options
 
 ### all
