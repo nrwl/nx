@@ -3,10 +3,10 @@ import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
-  updateJson,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
-import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
+import { createReactEslintJson, extraEslintDependencies } from '@nrwl/react';
 import { NormalizedSchema } from './normalize-options';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
@@ -23,10 +23,6 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });
-
-  if (options.linter === Linter.TsLint) {
-    return () => {};
-  }
 
   const reactEslintJson = createReactEslintJson(
     options.projectRoot,

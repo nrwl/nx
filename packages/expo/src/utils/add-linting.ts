@@ -3,10 +3,10 @@ import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
-  updateJson,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
-import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
+import { createReactEslintJson, extraEslintDependencies } from '@nrwl/react';
 import type { Linter as ESLintLinter } from 'eslint';
 
 export async function addLinting(
@@ -28,10 +28,6 @@ export async function addLinting(
     eslintFilePatterns: [`${appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });
-
-  if (linter === Linter.TsLint) {
-    return () => {};
-  }
 
   const reactEslintJson = createReactEslintJson(
     appProjectRoot,

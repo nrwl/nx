@@ -323,7 +323,7 @@ describe('Cypress Project', () => {
       await cypressProjectGenerator(tree, {
         name: 'my-app-e2e',
         project: 'my-app',
-        linter: Linter.TsLint,
+        linter: Linter.EsLint,
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, 'workspace.json');
@@ -339,7 +339,7 @@ describe('Cypress Project', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         baseUrl: 'http://localhost:3000',
-        linter: Linter.TsLint,
+        linter: Linter.EsLint,
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, 'workspace.json');
@@ -359,7 +359,7 @@ describe('Cypress Project', () => {
       await cypressProjectGenerator(tree, {
         name: 'my-app-e2e',
         project: 'my-app',
-        linter: Linter.TsLint,
+        linter: Linter.EsLint,
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, 'workspace.json');
@@ -376,7 +376,7 @@ describe('Cypress Project', () => {
           name: 'my-app-e2e',
           project: 'my-dir-my-app',
           directory: 'my-dir',
-          linter: Linter.TsLint,
+          linter: Linter.EsLint,
           standaloneConfig: false,
         });
         const projectConfig = readJson(tree, 'workspace.json').projects[
@@ -413,7 +413,7 @@ describe('Cypress Project', () => {
         await cypressProjectGenerator(tree, {
           name: 'my-dir/my-app-e2e',
           project: 'my-dir-my-app',
-          linter: Linter.TsLint,
+          linter: Linter.EsLint,
           standaloneConfig: false,
         });
       });
