@@ -131,7 +131,10 @@ describe('MF Remote App Generator', () => {
       tree.read(`apps/test/src/app/remote-entry/entry.component.ts`, 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read(`apps/test/src/app/remote-entry/routes.ts`, 'utf-8')
+      tree.read(`apps/test/src/app/app.routes.ts`, 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read(`apps/test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
     ).toMatchSnapshot();
   });
 

@@ -19,28 +19,20 @@ module.exports = withModuleFederation(config);"
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 1`] = `
-"import { NxWelcomeComponent } from './app/nx-welcome.component';
-    import { enableProdMode, importProvidersFrom } from '@angular/core';
+"import { enableProdMode, importProvidersFrom } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app/app.component';
 import { environment } from './environments/environment';
+import { appRoutes } from './app/app.routes';
 
 if (environment.production) {
   enableProdMode();
 }
 
 bootstrapApplication(AppComponent, {
-  providers: [importProvidersFrom(RouterModule.forRoot([
-    {
-      path: '',
-      component: NxWelcomeComponent
-    },
-    {
-    path: 'remote1',
-    loadChildren: () => import('remote1/Routes').then(m => m.RemoteRoutes)
-    },], {initialNavigation: 'enabledBlocking'}))],
-}).catch((err) => console.error(err)"
+  providers: [importProvidersFrom(RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'}))],
+}).catch((err) => console.error(err));"
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 2`] = `

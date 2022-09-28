@@ -1,19 +1,17 @@
 import type { Tree } from '@nrwl/devkit';
-import { names } from '@nrwl/devkit';
-import {
-  addGlobal,
-  insertImport,
-} from '@nrwl/workspace/src/utilities/ast-utils';
+import { joinPathFragments, names } from '@nrwl/devkit';
+import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import * as ts from 'typescript';
 import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
+import { dirname } from 'path';
 
 export function addRouterConfiguration(
-  host: Tree,
+  tree: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
   const constName = `${names(options.fileName).propertyName}Routes`;
-  const moduleSource = host.read(options.modulePath)!.toString('utf-8');
+  const moduleSource = tree.read(options.modulePath, 'utf-8');
   let moduleSourceFile = ts.createSourceFile(
     options.modulePath,
     moduleSource,
@@ -22,22 +20,38 @@ export function addRouterConfiguration(
   );
 
   moduleSourceFile = addImportToModule(
-    host,
+    tree,
     moduleSourceFile,
     options.modulePath,
     `RouterModule`
   );
   moduleSourceFile = insertImport(
-    host,
+    tree,
     moduleSourceFile,
     options.modulePath,
     'RouterModule, Route',
     '@angular/router'
   );
-  moduleSourceFile = addGlobal(
-    host,
+  moduleSourceFile = insertImport(
+    tree,
     moduleSourceFile,
     options.modulePath,
-    `export const ${constName}: Route[] = [];`
+    constName,
+    './lib.routes'
+  );
+
+  tree.write(
+    joinPathFragments(dirname(options.modulePath), 'lib.routes.ts'),
+    `import { Route } from '@angular/router';
+
+export const ${constName}: Route[] = [];`
+  );
+
+  const pathToIndex = joinPathFragments(options.projectRoot, 'src/index.ts');
+  const indexFileContents = tree.read(pathToIndex, 'utf-8');
+  tree.write(
+    pathToIndex,
+    `${indexFileContents}
+  export * from './lib/lib.routes';`
   );
 }

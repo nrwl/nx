@@ -10,33 +10,17 @@ exports[`Init MF --federationType=dynamic should create a host with the correct 
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications router config 1`] = `
-"import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+"import { Route } from '@angular/router';
 
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
-import { RouterModule } from '@angular/router';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    NxWelcomeComponent
-  ],
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot([{
-         path: 'remote1', 
-         loadChildren: () => import('remote1/Module').then(m => m.RemoteEntryModule)
-     }, {
-         path: 'remote2', 
-         loadChildren: () => import('remote2/Module').then(m => m.RemoteEntryModule)
-     }], {initialNavigation: 'enabledBlocking'})
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-"
+export const appRoutes: Route[] = [
+    {
+    path: 'remote2',
+    loadChildren: () => import('remote2/Module').then(m => m.RemoteEntryModule)
+    },
+    {
+    path: 'remote1',
+    loadChildren: () => import('remote1/Module').then(m => m.RemoteEntryModule)
+    },"
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
@@ -54,31 +38,14 @@ exports[`Init MF should add a remote application and add it to a specified host 
 `;
 
 exports[`Init MF should add a remote to dynamic host correctly 1`] = `
-"import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
-import { RouterModule } from '@angular/router';
+"import { Route } from '@angular/router';
 import { loadRemoteModule } from '@nrwl/angular/mf';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    NxWelcomeComponent
-  ],
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot([{
-         path: 'remote1', 
-         loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
-     }], {initialNavigation: 'enabledBlocking'})
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-"
+export const appRoutes: Route[] = [
+    {
+    path: 'remote1',
+    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    },]"
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 1`] = `

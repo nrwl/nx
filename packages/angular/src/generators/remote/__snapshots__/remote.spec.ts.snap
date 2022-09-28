@@ -24,7 +24,7 @@ import {enableProdMode, importProvidersFrom} from \\"@angular/core\\";
 import {bootstrapApplication} from \\"@angular/platform-browser\\";
 import {RouterModule} from \\"@angular/router\\";
 import {RemoteEntryComponent} from \\"./app/remote-entry/entry.component\\";
-import {RemoteRoutes} from \\"./app/remote-entry/routes\\";
+import {appRoutes} from \\"./app/app.routes\\";
 
 if (environment.production) {
   enableProdMode();
@@ -33,7 +33,7 @@ if (environment.production) {
 bootstrapApplication(RemoteEntryComponent, {
   providers: [
     importProvidersFrom(
-      RouterModule.forRoot(RemoteRoutes, {initialNavigation: 'enabledBlocking'})
+      RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})
     )
   ]
 });"
@@ -43,7 +43,7 @@ exports[`MF Remote App Generator should generate the a remote setup for standalo
 "module.exports = {
   name: 'test',
   exposes: {
-    './Routes': 'apps/test/src/app/remote-entry/routes.ts',
+    './Routes': 'apps/test/src/app/remote-entry/entry.routes.ts',
   },
 }"
 `;
@@ -65,7 +65,14 @@ export class RemoteEntryComponent {}
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 4`] = `
 "import { Route } from '@angular/router';
+
+export const appRoutes: Route[] = [
+    {path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)},]"
+`;
+
+exports[`MF Remote App Generator should generate the a remote setup for standalone components 5`] = `
+"import { Route } from '@angular/router';
 import { RemoteEntryComponent } from './entry.component';
 
-export const RemoteRoutes: Route[] = [{path: '', component: RemoteEntryComponent}]"
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
 `;

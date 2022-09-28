@@ -30,17 +30,24 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app/app.component';
 import { environment } from './environments/environment';
+import { appRoutes } from './app/app.routes';
 
 if (environment.production) {
   enableProdMode();
 }
 
 bootstrapApplication(AppComponent, {
-  providers: [importProvidersFrom(RouterModule.forRoot([], {initialNavigation: 'enabledBlocking'}))],
+  providers: [importProvidersFrom(RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'}))],
 }).catch((err) => console.error(err));"
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
+"import { Route } from '@angular/router';
+
+export const appRoutes: Route[] = [];"
+`;
+
+exports[`app --standalone should generate a standalone app correctly with routing 3`] = `
 "import { NxWelcomeComponent } from './nx-welcome.component';
 import { RouterModule } from '@angular/router';
 import { Component } from '@angular/core';
@@ -57,7 +64,7 @@ export class AppComponent {
 }"
 `;
 
-exports[`app --standalone should generate a standalone app correctly with routing 3`] = `
+exports[`app --standalone should generate a standalone app correctly with routing 4`] = `
 "import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';
@@ -95,6 +102,7 @@ exports[`app --standalone should generate a standalone app correctly without rou
 import { bootstrapApplication } from '@angular/platform-browser';;
 import { AppComponent } from './app/app.component';
 import { environment } from './environments/environment';
+
 
 if (environment.production) {
   enableProdMode();

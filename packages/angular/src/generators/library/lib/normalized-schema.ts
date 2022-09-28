@@ -19,7 +19,7 @@ export interface NormalizedSchema {
     commonModule?: boolean;
     routing?: boolean;
     lazy?: boolean;
-    parentModule?: string;
+    parent?: string;
     tags?: string;
     strict?: boolean;
     compilationMode?: 'full' | 'partial';
