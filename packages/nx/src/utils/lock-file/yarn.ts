@@ -5,7 +5,7 @@ import {
   PackageDependency,
   PackageVersions,
 } from './lock-file-type';
-import { sortObject } from './utils';
+import { sortObject, hashString } from './utils';
 
 type LockFileDependencies = Record<
   string,
@@ -26,6 +26,7 @@ export function parseYarnLockFile(lockFile: string): LockFileData {
   // Yarn Berry has workspace packages includes, so we need to extract those to metadata
   const [mappedPackages, workspacePackages] = mapPackages(dependencies);
   const isBerry = !!__metadata;
+  const hash = hashString(lockFile);
   if (isBerry) {
     return {
       dependencies: mappedPackages,
@@ -33,9 +34,10 @@ export function parseYarnLockFile(lockFile: string): LockFileData {
         __metadata,
         workspacePackages,
       },
+      hash,
     };
   } else {
-    return { dependencies: mappedPackages };
+    return { dependencies: mappedPackages, hash };
   }
 }
 
@@ -148,9 +150,10 @@ export function pruneYarnLockFile(
     packages
   );
 
+  let prunedLockFileData: LockFileData;
   if (isBerry) {
     const { __metadata, workspacePackages } = lockFileData.lockFileMetadata;
-    return {
+    prunedLockFileData = {
       lockFileMetadata: {
         __metadata,
         workspacePackages: pruneWorkspacePackages(
@@ -160,10 +163,14 @@ export function pruneYarnLockFile(
         ),
       },
       dependencies: prunedDependencies,
+      hash: '',
     };
   } else {
-    return { dependencies: prunedDependencies };
+    prunedLockFileData = { dependencies: prunedDependencies, hash: '' };
   }
+
+  prunedLockFileData.hash = hashString(JSON.stringify(prunedLockFileData));
+  return prunedLockFileData;
 }
 
 // iterate over packages to collect the affected tree of dependencies

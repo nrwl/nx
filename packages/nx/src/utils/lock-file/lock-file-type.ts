@@ -10,4 +10,5 @@ export type PackageVersions = Record<string, PackageDependency>;
 export type LockFileData = {
   dependencies: Record<string, PackageVersions>;
   lockFileMetadata?: Record<string, any>;
+  hash: string;
 };

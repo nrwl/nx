@@ -1,5 +1,5 @@
 import { LockFileData, PackageDependency } from './lock-file-type';
-import { sortObject } from './utils';
+import { sortObject, hashString } from './utils';
 
 type PackageMeta = {
   path: string;
@@ -42,6 +42,7 @@ export function parseNpmLockFile(lockFile: string): LockFileData {
       metadata,
       rootPackage: packages[''],
     },
+    hash: hashString(lockFile),
   };
 }
 
