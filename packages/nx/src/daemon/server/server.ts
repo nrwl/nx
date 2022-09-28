@@ -294,10 +294,8 @@ export async function startServer(): Promise<Server> {
             );
           }
 
-          // temporary disable outputs tracking when using WSL
-          const outputsTrackingIsEnabled =
-            process.env['WSL_DISTRO_NAME'] === undefined;
-
+          // temporary disable outputs tracking on linux
+          const outputsTrackingIsEnabled = process.platform != 'linux';
           if (outputsTrackingIsEnabled) {
             if (!getOutputsWatcherSubscription()) {
               storeOutputsWatcherSubscription(
