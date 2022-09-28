@@ -16,23 +16,25 @@ import {
   stringifyPnpmLockFile,
 } from './pnpm';
 import { LockFileData } from './lock-file-type';
+import { workspaceRoot } from '../workspace-root';
+import { join } from 'path';
 
 /**
  * Parses lock file and maps dependencies and metadata to {@link LockFileData}
  */
 export function parseLockFile(
-  packageManager: PackageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): LockFileData {
   if (packageManager === 'yarn') {
-    const file = readFileSync('yarn.lock', 'utf8');
+    const file = readFileSync(join(workspaceRoot, 'yarn.lock'), 'utf8');
     return parseYarnLockFile(file);
   }
   if (packageManager === 'pnpm') {
-    const file = readFileSync('pnpm-lock.yaml', 'utf8');
+    const file = readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8');
     return parsePnpmLockFile(file);
   }
   if (packageManager === 'npm') {
-    const file = readFileSync('package-lock.json', 'utf8');
+    const file = readFileSync(join(workspaceRoot, 'package-lock.json'), 'utf8');
     return parseNpmLockFile(file);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
@@ -43,21 +45,21 @@ export function parseLockFile(
  */
 export function writeLockFile(
   lockFile: LockFileData,
-  packageManager: PackageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): void {
   if (packageManager === 'yarn') {
     const content = stringifyYarnLockFile(lockFile);
-    writeFileSync('yarn.lock', content);
+    writeFileSync(join(workspaceRoot, 'yarn.lock'), content);
     return;
   }
   if (packageManager === 'pnpm') {
     const content = stringifyPnpmLockFile(lockFile);
-    writeFileSync('pnpm-lock.yaml', content);
+    writeFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), content);
     return;
   }
   if (packageManager === 'npm') {
     const content = stringifyNpmLockFile(lockFile);
-    writeFileSync('package-lock.json', content);
+    writeFileSync(join(workspaceRoot, 'package-lock.json'), content);
     return;
   }
   throw Error(`Unknown package manager: ${packageManager}`);
@@ -70,7 +72,7 @@ export function writeLockFile(
 export function pruneLockFile(
   lockFile: LockFileData,
   packages: string[],
-  packageManager: PackageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): LockFileData {
   if (packageManager === 'yarn') {
     return pruneYarnLockFile(lockFile, packages);
