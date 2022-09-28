@@ -59,7 +59,7 @@ You can also use `*` wildcard to match assets.
   "main": "<app-root>",
   "tsConfig": "<app-root>/tsconfig.app.json",
   "outputPath": "dist/<app-root>",
-    "external": ["lodash", "*.png"]
+  "external": ["lodash", "*.png"]
 }
 ```
 
@@ -76,6 +76,30 @@ Type checking is the slowest part of the build. You may want to skip type checki
   "tsConfig": "<app-root>/tsconfig.app.json",
   "outputPath": "dist/<app-root>",
   "skipTypeCheck": true
+}
+```
+
+{% /tab %}
+{% tab label="Additional esbuild options" %}
+
+Additional [esbuild options](https://esbuild.github.io/api/) can be passed using `esbuildOptions` in your project configuration.
+
+```json
+"build": {
+  "executor": "@nrwl/esbuild:esbuild",
+  "options": {
+  "main": "<app-root>",
+  "tsConfig": "<app-root>/tsconfig.app.json",
+  "outputPath": "dist/<app-root>",
+  "esbuildOptions": {
+    "legalComments": "inline"
+    "banner": {
+      ".js": "// banner"
+    },
+    "footer": {
+      ".js": "// footer"
+    }
+  }
 }
 ```
 
