@@ -18,6 +18,32 @@ import {
 import { LockFileData } from './lock-file-type';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
+import { hashString } from './utils';
+
+/**
+ * Hashes lock file content
+ */
+export function lockFileHash(
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+): string {
+  let file: string;
+  if (packageManager === 'yarn') {
+    file = readFileSync(join(workspaceRoot, 'yarn.lock'), 'utf8');
+  }
+  if (packageManager === 'pnpm') {
+    file = readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8');
+  }
+  if (packageManager === 'npm') {
+    file = readFileSync(join(workspaceRoot, 'package-lock.json'), 'utf8');
+  }
+  if (file) {
+    return hashString(file);
+  } else {
+    throw Error(
+      `Unknown package manager ${packageManager} or lock file missing`
+    );
+  }
+}
 
 /**
  * Parses lock file and maps dependencies and metadata to {@link LockFileData}

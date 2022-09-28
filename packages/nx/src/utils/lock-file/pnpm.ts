@@ -1,7 +1,6 @@
 import { LockFileData, PackageDependency } from './lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
-import { sortObject } from './utils';
-import { transpileModule } from 'typescript';
+import { sortObject, hashString } from './utils';
 
 type PackageMeta = {
   key: string;
@@ -60,6 +59,7 @@ export function parsePnpmLockFile(lockFile: string): LockFileData {
       metadata.lockfileVersion.toString().endsWith('inlineSpecifiers')
     ),
     lockFileMetadata: { ...metadata },
+    hash: hashString(lockFile),
   };
 }
 
