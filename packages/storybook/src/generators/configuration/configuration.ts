@@ -135,7 +135,7 @@ function normalizeSchema(
 ): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
-    linter: Linter.TsLint,
+    linter: Linter.EsLint,
     js: false,
   };
   return {

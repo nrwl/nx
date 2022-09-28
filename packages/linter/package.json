@@ -12,7 +12,6 @@
     "Monorepo",
     "Web",
     "Lint",
-    "TSLint",
     "ESLint",
     "CLI"
   ],

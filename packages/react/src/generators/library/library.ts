@@ -19,7 +19,7 @@ import {
 import { getImportPath } from 'nx/src/utils/path';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
   getRelativePathToRootTsConfig,
@@ -151,10 +151,6 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });
-
-  if (options.linter === Linter.TsLint) {
-    return;
-  }
 
   const reactEslintJson = createReactEslintJson(
     options.projectRoot,

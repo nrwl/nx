@@ -12,7 +12,7 @@ describe('react:component-story', () => {
 
   describe('default setup', () => {
     beforeEach(async () => {
-      appTree = await createTestUILib('test-ui-lib', true);
+      appTree = await createTestUILib('test-ui-lib');
     });
 
     describe('when file does not contain a component', () => {
@@ -677,7 +677,7 @@ describe('react:component-story', () => {
 
   describe('using eslint', () => {
     beforeEach(async () => {
-      appTree = await createTestUILib('test-ui-lib', false);
+      appTree = await createTestUILib('test-ui-lib');
       await componentStoryGenerator(appTree, {
         componentPath: 'lib/test-ui-lib.tsx',
         project: 'test-ui-lib',
@@ -705,14 +705,11 @@ describe('react:component-story', () => {
   });
 });
 
-export async function createTestUILib(
-  libName: string,
-  useEsLint = false
-): Promise<Tree> {
+export async function createTestUILib(libName: string): Promise<Tree> {
   let appTree = createTreeWithEmptyV1Workspace();
   await libraryGenerator(appTree, {
     name: libName,
-    linter: useEsLint ? Linter.EsLint : Linter.TsLint,
+    linter: Linter.EsLint,
     component: true,
     skipFormat: true,
     skipTsConfig: false,
@@ -721,14 +718,12 @@ export async function createTestUILib(
     standaloneConfig: false,
   });
 
-  if (useEsLint) {
-    const currentWorkspaceJson = getProjects(appTree);
+  const currentWorkspaceJson = getProjects(appTree);
 
-    const projectConfig = currentWorkspaceJson.get(libName);
-    projectConfig.targets.lint.options.linter = 'eslint';
+  const projectConfig = currentWorkspaceJson.get(libName);
+  projectConfig.targets.lint.options.linter = 'eslint';
 
-    updateProjectConfiguration(appTree, libName, projectConfig);
-  }
+  updateProjectConfiguration(appTree, libName, projectConfig);
 
   return appTree;
 }

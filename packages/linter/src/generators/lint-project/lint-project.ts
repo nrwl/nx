@@ -23,20 +23,6 @@ interface LintProjectOptions {
   unitTestRunner?: string;
 }
 
-function createTsLintConfiguration(
-  tree: Tree,
-  projectConfig: ProjectConfiguration
-) {
-  writeJson(tree, join(projectConfig.root, `tslint.json`), {
-    extends: `${offsetFromRoot(projectConfig.root)}tslint.json`,
-    // Include project files to be linted since the global one excludes all files.
-    linterOptions: {
-      exclude: ['!**/*'],
-    },
-    rules: {},
-  });
-}
-
 function createEsLintConfiguration(
   tree: Tree,
   projectConfig: ProjectConfiguration,
@@ -99,29 +85,18 @@ export async function lintProjectGenerator(
   });
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  if (options.linter === Linter.EsLint) {
-    projectConfig.targets['lint'] = {
-      executor: '@nrwl/linter:eslint',
-      outputs: ['{options.outputFile}'],
-      options: {
-        lintFilePatterns: options.eslintFilePatterns,
-      },
-    };
-    createEsLintConfiguration(
-      tree,
-      projectConfig,
-      options.setParserOptionsProject
-    );
-  } else {
-    projectConfig.targets['lint'] = {
-      executor: '@angular-devkit/build-angular:tslint',
-      options: {
-        tsConfig: options.tsConfigPaths,
-        exclude: ['**/node_modules/**', `!${projectConfig.root}/**/*`],
-      },
-    };
-    createTsLintConfiguration(tree, projectConfig);
-  }
+  projectConfig.targets['lint'] = {
+    executor: '@nrwl/linter:eslint',
+    outputs: ['{options.outputFile}'],
+    options: {
+      lintFilePatterns: options.eslintFilePatterns,
+    },
+  };
+  createEsLintConfiguration(
+    tree,
+    projectConfig,
+    options.setParserOptionsProject
+  );
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 
