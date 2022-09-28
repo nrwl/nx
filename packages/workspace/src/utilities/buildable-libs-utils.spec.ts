@@ -103,7 +103,7 @@ describe('missingDependencies', () => {
         example: [
           {
             source: 'example',
-            target: 'npm:formik',
+            target: 'missing',
             type: DependencyType.static,
           },
         ],

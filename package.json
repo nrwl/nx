@@ -60,7 +60,7 @@
     "@nrwl/js": "14.7.16",
     "@nrwl/linter": "14.7.16",
     "@nrwl/next": "14.7.16",
-    "@nrwl/nx-cloud": "14.6.2",
+    "@nrwl/nx-cloud": "14.7.0-beta.1",
     "@nrwl/react": "14.7.16",
     "@nrwl/web": "14.7.16",
     "@parcel/watcher": "2.0.4",
