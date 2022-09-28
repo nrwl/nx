@@ -63,7 +63,8 @@
     "v8-compile-cache": "2.3.0",
     "yargs": "^17.4.0",
     "yargs-parser": "21.0.1",
-    "js-yaml": "4.1.0"
+    "js-yaml": "4.1.0",
+    "axios": "0.21.1"
   },
   "peerDependencies": {
     "@swc-node/register": "^1.4.2",

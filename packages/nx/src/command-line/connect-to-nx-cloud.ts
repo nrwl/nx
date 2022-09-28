@@ -29,7 +29,7 @@ export async function connectToNxCloudIfExplicitlyAsked(opts: {
 
 export async function connectToNxCloudCommand(
   promptOverride?: string
-): Promise<void> {
+): Promise<boolean> {
   const nxJson = readNxJson();
   const nxCloudUsed = Object.values(nxJson.tasksRunnerOptions).find(
     (r) => r.runner == '@nrwl/nx-cloud'
@@ -38,16 +38,17 @@ export async function connectToNxCloudCommand(
     output.log({
       title: 'This workspace is already connected to Nx Cloud.',
     });
-    return;
+    return false;
   }
 
   const res = await connectToNxCloudPrompt(promptOverride);
-  if (!res) return;
+  if (!res) return false;
   const pmc = getPackageManagerCommand();
   execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`);
   execSync(`${pmc.exec} nx g @nrwl/nx-cloud:init`, {
     stdio: [0, 1, 2],
   });
+  return true;
 }
 
 async function connectToNxCloudPrompt(prompt?: string) {
