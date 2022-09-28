@@ -172,6 +172,12 @@
       "version": "14.6.0-beta.0",
       "description": "Update the @angular/cli package version to ~14.2.0.",
       "factory": "./src/migrations/update-14-6-0/update-angular-cli"
+    },
+    "switch-to-jasmine-marbles": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Update the usages of @nrwl/angular/testing to import jasmine-marbles symbols from jasmine-marbles itself.",
+      "factory": "./src/migrations/update-15-0-0/switch-to-jasmine-marbles"
     }
   },
   "packageJsonUpdates": {
