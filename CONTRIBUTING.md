@@ -66,6 +66,8 @@ Check out [this video for a live walkthrough](https://youtu.be/Tx257WpNsxc) or f
 
 If you have problems publishing, make sure you use Node 16 and NPM 6 or 8.
 
+**NOTE:** After you finish with local testing don't forget to stop the local registry (either closing the Terminal 1 or running `yarn local-registry stop`) and disabling the local registy using `yarn local-registry disable`. Keeping local registry enabled will change your lock file resolutions to `localhost:4873` on the next `yarn install`.
+
 ### Publishing for Yarn 2+ (Berry)
 
 Yarn Berry operates slightly differently than Yarn Classic. In order to publish packages for Berry follow next steps:
