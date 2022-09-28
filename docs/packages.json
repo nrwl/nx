@@ -112,7 +112,7 @@
   {
     "name": "esbuild",
     "packageName": "esbuild",
-    "description": "The Nx Plugin for EsBuild contains executors and generators that support building applications using EsBuild",
+    "description": "The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild",
     "path": "generated/packages/esbuild.json",
     "schemas": {
       "executors": ["esbuild"],
