@@ -107,7 +107,7 @@ describe('cache', () => {
     // updateFile('workspace.json', (c) => {
     //   const workspaceJson = JSON.parse(c);
     //   workspaceJson.projects[myapp1].targets.lint = {
-    //     executor: '@nrwl/workspace:run-commands',
+    //     executor: 'nx:run-commands',
     //     options: {
     //       command: 'echo hi && exit 1',
     //     },

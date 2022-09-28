@@ -52,7 +52,7 @@ function getTargets(options: NormalizedSchema) {
   };
 
   architect.serve = {
-    executor: '@nrwl/workspace:run-commands',
+    executor: 'nx:run-commands',
     options: {
       command: `nx start ${options.name}`,
     },

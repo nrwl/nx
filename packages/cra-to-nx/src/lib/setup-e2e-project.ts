@@ -5,7 +5,7 @@ export function setupE2eProject(appName: string) {
   const data = fs.readFileSync(`apps/${appName}-e2e/project.json`);
   const json = JSON.parse(data.toString());
   json.targets.e2e = {
-    executor: '@nrwl/workspace:run-commands',
+    executor: 'nx:run-commands',
     options: {
       commands: [`nx e2e-serve ${appName}-e2e`, `nx e2e-run ${appName}-e2e`],
     },
@@ -19,7 +19,7 @@ export function setupE2eProject(appName: string) {
     },
   };
   json.targets['e2e-serve'] = {
-    executor: '@nrwl/workspace:run-commands',
+    executor: 'nx:run-commands',
     options: {
       commands: [`nx serve ${appName}`],
       readyWhen: 'can now view',
