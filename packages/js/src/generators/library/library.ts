@@ -132,7 +132,7 @@ function addProject(
       const publishScriptPath = addMinimalPublishScript(tree);
 
       projectConfiguration.targets.publish = {
-        executor: '@nrwl/workspace:run-commands',
+        executor: 'nx:run-commands',
         options: {
           command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
         },

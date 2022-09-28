@@ -295,7 +295,7 @@ describe('Nx Plugin', () => {
     if (basename(f) === 'my-project-file') {
       return {
         build: {
-          executor: "@nrwl/workspace:run-commands",
+          executor: "nx:run-commands",
           options: {
             command: "echo 'custom registered target'"
           }
