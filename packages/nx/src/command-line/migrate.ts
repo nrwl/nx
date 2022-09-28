@@ -34,6 +34,8 @@ import {
 import { handleErrors } from '../utils/params';
 import { connectToNxCloudCommand } from './connect-to-nx-cloud';
 import { output } from '../utils/output';
+import { messages, recordStat } from 'nx/src/utils/ab-testing';
+import { nxVersion } from '../utils/versions';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: NxMigrationsConfiguration['packageGroup'];
@@ -815,9 +817,15 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           opts.targetVersion
         ))
       ) {
-        await connectToNxCloudCommand(
-          'We noticed you are migrating to a new major version, but are not taking advantage of Nx Cloud. Nx Cloud can make your CI up to 10 times faster. Learn more about it here: nx.app. Would you like to add it?'
+        const useCloud = await connectToNxCloudCommand(
+          messages.getPromptMessage('nxCloudMigration')
         );
+        await recordStat({
+          command: 'migrate',
+          nxVersion,
+          useCloud,
+          meta: messages.codeOfSelectedPromptMessage('nxCloudMigration'),
+        });
         originalPackageJson = readJsonFile<PackageJson>(
           join(root, 'package.json')
         );

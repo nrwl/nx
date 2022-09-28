@@ -5,7 +5,7 @@ import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as yargs from 'yargs';
 import { showNxWarning, unparse } from './shared';
-import { isCI, output } from './output';
+import { output } from './output';
 import * as ora from 'ora';
 import {
   detectInvokedPackageManager,
@@ -23,7 +23,7 @@ import chalk = require('chalk');
 import { ciList } from './ci';
 import { join } from 'path';
 import { initializeGitRepo } from './git';
-import axios from 'axios';
+import { messages, recordStat } from './ab-testing';
 
 type Arguments = {
   name: string;
@@ -60,37 +60,6 @@ enum Preset {
   NextJs = 'next',
   Nest = 'nest',
   Express = 'express',
-}
-
-class PromptMessages {
-  private messages = {
-    nxCloud: [
-      {
-        code: 'set-up-distributed-caching-ci',
-        message: `Enable distributed caching to make your CI faster`,
-      },
-    ],
-  };
-
-  private selectedMessages = {};
-
-  getPromptMessage(key: string): string {
-    if (this.selectedMessages[key] === undefined) {
-      if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
-        this.selectedMessages[key] = 0;
-      } else {
-        this.selectedMessages[key] = Math.floor(
-          Math.random() * this.messages[key].length
-        );
-      }
-    }
-    return this.messages[key][this.selectedMessages[key]].message;
-  }
-
-  codeOfSelectedPromptMessage(key: string): string {
-    if (this.selectedMessages[key] === undefined) return null;
-    return this.messages[key][this.selectedMessages[key]].code;
-  }
 }
 
 const presetOptions: { name: Preset; message: string }[] = [
@@ -162,8 +131,6 @@ const nxVersion = require('../package.json').version;
 const tsVersion = 'TYPESCRIPT_VERSION'; // This gets replaced with the typescript version in the root package.json during build
 const prettierVersion = 'PRETTIER_VERSION'; // This gets replaced with the prettier version in the root package.json during build
 
-const messages = new PromptMessages();
-
 export const commandsObject: yargs.Argv<Arguments> = yargs
   .wrap(yargs.terminalWidth())
   .parserConfiguration({
@@ -208,7 +175,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           type: 'string',
         })
         .option('nxCloud', {
-          describe: chalk.dim(messages.getPromptMessage('nxCloud')),
+          describe: chalk.dim(messages.getPromptMessage('nxCloudCreation')),
           type: 'boolean',
         })
         .option('ci', {
@@ -346,7 +313,12 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     printNxCloudSuccessMessage(nxCloudInstallRes.stdout);
   }
 
-  await recordWorkspaceCreationStats(nxCloud);
+  await recordStat({
+    nxVersion,
+    command: 'create-nx-workspace',
+    useCloud: nxCloud,
+    meta: messages.codeOfSelectedPromptMessage('nxCloudCreation'),
+  });
 }
 
 async function getConfiguration(
@@ -718,7 +690,7 @@ async function determineNxCloud(
       .prompt([
         {
           name: 'NxCloud',
-          message: messages.getPromptMessage('nxCloud'),
+          message: messages.getPromptMessage('nxCloudCreation'),
           type: 'autocomplete',
           choices: [
             {
@@ -1037,34 +1009,5 @@ function pointToTutorialAndCourse(preset: Preset) {
         bodyLines: [`https://nx.dev/node-tutorial/01-create-application`],
       });
       break;
-  }
-}
-
-/**
- * We are incrementing a counter to track how often create-nx-workspace is used in CI
- * vs dev environments. No personal information is collected.
- */
-async function recordWorkspaceCreationStats(useCloud: boolean) {
-  try {
-    const major = Number(nxVersion.split('.')[0]);
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.log(`Record stat. Major: ${major}`);
-    }
-    if (major < 10 || major > 14) return; // test version, skip it
-    await axios
-      .create({
-        baseURL: 'https://cloud.nx.app',
-        timeout: 400,
-      })
-      .post('/nx-cloud/stats', {
-        command: 'create-nx-workspace',
-        isCI: isCI(),
-        useCloud,
-        meta: messages.codeOfSelectedPromptMessage('nxCloud'),
-      });
-  } catch (e) {
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.error(e);
-    }
   }
 }
