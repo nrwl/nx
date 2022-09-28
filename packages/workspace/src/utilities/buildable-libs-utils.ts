@@ -128,6 +128,14 @@ function collectDependencies(
 ): { name: string; isTopLevel: boolean }[] {
   (projGraph.dependencies[project] || []).forEach((dependency) => {
     if (!acc.some((dep) => dep.name === dependency.target)) {
+      // Temporary skip this. Currently the set of external nodes is built from package.json, not lock file.
+      // As a result, some nodes might be missing. This should not cause any issues, we can just skip them.
+      if (
+        dependency.target.startsWith('npm:') &&
+        !projGraph.externalNodes[dependency.target]
+      )
+        return;
+
       acc.push({ name: dependency.target, isTopLevel: areTopLevelDeps });
       if (!shallow) {
         collectDependencies(dependency.target, projGraph, acc, shallow, false);

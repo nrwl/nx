@@ -3811,14 +3811,15 @@
     url-loader "^4.1.1"
     webpack-merge "^5.8.0"
 
-"@nrwl/nx-cloud@14.6.2":
-  version "14.6.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-14.6.2.tgz#2eef39b790ba93a7003042c4045981327a64af0c"
-  integrity sha512-w8ujbFMOxE7lJg52O3JjnpTGlBKc+/vovxVTplIfGU9TYgEgAo/v4HS9svztzGd9Era7qmNaoYOmxm6Ebtbo5g==
+"@nrwl/nx-cloud@14.7.0-beta.1":
+  version "14.7.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-14.7.0-beta.1.tgz#7d59370465f83bc753b27ec04bed734d11f8b611"
+  integrity sha512-BRV7EPOlCPB9O6sjNOZSrmjb9u9n0AAcdWYkV5bg6RJIv8kjYri6IU2tYk7+mOPayDbINYN09UiTKycCWoMyLg==
   dependencies:
     axios "^0.21.1"
     chalk "4.1.0"
     dotenv "~10.0.0"
+    fs-extra "^10.1.0"
     node-machine-id "^1.1.12"
     strip-json-comments "^3.1.1"
     tar "6.1.11"
