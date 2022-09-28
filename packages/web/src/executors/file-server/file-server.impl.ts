@@ -159,8 +159,10 @@ export default async function* fileServerExecutor(
 
   const args = getHttpServerArgs(options);
 
-  const { path: pathToHttpServerPkgJson, packageJson } =
-    readModulePackageJson('http-server');
+  const { path: pathToHttpServerPkgJson, packageJson } = readModulePackageJson(
+    'http-server',
+    module.paths
+  );
   const pathToHttpServerBin = packageJson.bin['http-server'];
   const pathToHttpServer = resolve(
     pathToHttpServerPkgJson.replace('package.json', ''),

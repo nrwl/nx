@@ -8,6 +8,7 @@ import {
   readProjectConfig,
   runCLI,
   runCLIAsync,
+  runCommand,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
@@ -19,8 +20,7 @@ describe('React Module Federation', () => {
 
   afterEach(() => cleanupProject());
 
-  // TODO: Re-enable this to work with pnpm
-  xit('should generate host and remote apps', async () => {
+  it('should generate host and remote apps', async () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
@@ -94,7 +94,7 @@ describe('React Module Federation', () => {
       `
     );
 
-    const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch`);
+    const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
     expect(e2eResults).toContain('All specs passed!');
     expect(
       await killPorts([

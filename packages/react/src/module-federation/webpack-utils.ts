@@ -90,7 +90,7 @@ export function getNpmPackageSharedConfig(
     return undefined;
   }
 
-  return { singleton: true, strictVersion: true, requiredVersion: version };
+  return { singleton: true, requiredVersion: version };
 }
 
 export function sharePackages(
