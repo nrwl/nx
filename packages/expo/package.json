@@ -33,7 +33,7 @@
     "@nrwl/react": "file:../react",
     "@nrwl/web": "file:../web",
     "@nrwl/workspace": "file:../workspace",
-    "@svgr/webpack": "^6.1.2",
+    "@svgr/webpack": "^5.5.0",
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^10.1.0",
