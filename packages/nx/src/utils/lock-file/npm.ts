@@ -1,5 +1,5 @@
 import { LockFileData, PackageDependency } from './lock-file-type';
-import { hashLockFile, sortObject } from './utils';
+import { hashString, sortObject } from './utils';
 
 type PackageMeta = {
   path: string;
@@ -36,7 +36,7 @@ type NpmLockFile = {
  */
 export function parseNpmLockFile(lockFile: string): LockFileData {
   const { packages, dependencies, ...metadata } = JSON.parse(lockFile);
-  const hash = hashLockFile(lockFile);
+  const hash = hashString(lockFile);
   return {
     dependencies: mapPackages(packages),
     lockFileMetadata: {

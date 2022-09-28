@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { detectPackageManager, PackageManager } from '../package-manager';
 import {
   parseYarnLockFile,
@@ -16,9 +16,11 @@ import {
   stringifyPnpmLockFile,
 } from './pnpm';
 import { LockFileData } from './lock-file-type';
-import { hashLockFile } from './utils';
+import { getProjectExternalDependencies, hashString } from './utils';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
+import { ProjectGraph } from '../../config/project-graph';
+import { TargetConfiguration } from '../../config/workspace-json-project-json';
 
 export function lockFileHash(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
@@ -34,7 +36,7 @@ export function lockFileHash(
     file = readFileSync(join(workspaceRoot, 'package-lock.json'), 'utf8');
   }
   if (file) {
-    return hashLockFile(file);
+    return hashString(file);
   } else {
     throw Error(
       `Unknown package manager ${packageManager} or lock file missing`
@@ -107,4 +109,29 @@ export function pruneLockFile(
     return pruneNpmLockFile(lockFile, packages);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
+}
+
+/**
+ * Prunes {@link LockFileData} based on projects dependencies in {@link ProjectGraph} and {@link TargetConfiguration}
+ * Returns new {@link LockFileData}
+ */
+export function pruneLockFileBasedOnProjectAndTarget(
+  lockFile: LockFileData,
+  projectName: string,
+  targetName: string,
+  projectGraph: ProjectGraph,
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+): LockFileData {
+  const target = projectGraph.nodes[projectName].data.targets[targetName];
+  if (!target) {
+    // target does not exist so there is nothing to prune
+    return undefined;
+  }
+
+  const packages = getProjectExternalDependencies(projectName, projectGraph);
+  const executorDependency = target.executor.split(':')[0];
+  if (packages.indexOf(executorDependency) === -1) {
+    packages.push(executorDependency);
+  }
+  return pruneLockFile(lockFile, packages, packageManager);
 }

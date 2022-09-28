@@ -1,3 +1,4 @@
+import { ProjectGraph } from 'nx/src/config/project-graph';
 import { defaultHashing } from '../../hasher/hashing-impl';
 
 /**
@@ -21,6 +22,22 @@ export function sortObject<T = string>(
   return result;
 }
 
-export function hashLockFile(fileContent: string): string {
+export function hashString(fileContent: string): string {
   return defaultHashing.hashArray([fileContent]);
+}
+
+export function getProjectExternalDependencies(
+  projectName: string,
+  projectGraph: ProjectGraph
+): string[] {
+  const deps = [];
+  projectGraph.dependencies[projectName].forEach((d) => {
+    if (d.target.startsWith('npm:')) {
+      const externalPackage = d.target.substring(4);
+      if (deps.indexOf(externalPackage) === -1) {
+        deps.push(externalPackage);
+      }
+    }
+  });
+  return deps;
 }
