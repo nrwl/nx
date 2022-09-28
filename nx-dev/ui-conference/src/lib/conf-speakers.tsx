@@ -100,6 +100,12 @@ export function ConfSpeakers(): JSX.Element {
       name: 'Ryan Diehl',
       twitter: 'DiehlWithRyan',
     },
+    {
+      description: 'Senior Engineer II @ Carvana',
+      imageUrl: '/images/conf/kennie-davis.webp',
+      name: 'Kennie Davis',
+      twitter: 'kenniejaydavis',
+    },
   ];
 
   function chunkList<ITEM>(itemList: ITEM[], chunkSize: number): Array<ITEM[]> {

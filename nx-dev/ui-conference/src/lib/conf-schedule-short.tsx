@@ -8,7 +8,38 @@ interface ScheduleItem {
 }
 
 export function ConfScheduleShort(): JSX.Element {
-  const scheduleItemsFor16: ScheduleItem[] = [
+  const scheduleItemsForSunday16: ScheduleItem[] = [
+    {
+      type: 'event',
+      time: '9:00am - 5:00pm (UTC-07:00)',
+      title: 'Nx Workshop - Day 1',
+      description:
+        'Note, environment setup starts at 8am. This is the introductory part of the workshop which will give you all you need to get set up and running with your brand new Nx workspace. More details in the workshop section further down.',
+      speakers: ['Zack DeRose', 'Miroslav Jonas'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
+      time: '7:00pm (UTC-07:00)',
+      title: 'Speaker + VIP dinner (all attendees invited)',
+      description:
+        'All speakers as well as attendees are invited. Enjoy some food and good conversations!',
+      speakers: ['Speakers', 'Attendees'],
+      videoUrl: '',
+    },
+  ];
+  const scheduleItemsForTuesday18: ScheduleItem[] = [
+    {
+      type: 'event',
+      time: '9:00am - 5:00pm (UTC-07:00)',
+      title: 'Nx Workshop - Day 2',
+      description:
+        'Note, environment setup starts at 8am. Join day 2 to take a deep dive into advanced Nx concepts that help you leverage Nx to its fullest. More details in the workshop section further down.',
+      speakers: ['Zack DeRose', 'Miroslav Jonas'],
+      videoUrl: '',
+    },
+  ];
+  const scheduleItemsForMonday17: ScheduleItem[] = [
     {
       type: 'event',
       time: '10:00 - 10:30am (UTC-07:00)',
@@ -58,8 +89,9 @@ export function ConfScheduleShort(): JSX.Element {
       type: 'event',
       time: '12:15 - 12:25pm (UTC-07:00)',
       title: 'CI/CD tricks with Nx',
-      description: '⚡️ Lightning talk - (more soon)',
-      speakers: [''],
+      description:
+        '⚡️ Lightning talk - Nx is great at telling us what changed and what needs to be rebuilt and/or deployed. How do we use this information to dynamically trigger CICD pipelines or workflows? In this talk we’ll review some tricks to generate dynamic configuration for both Azure DevOps and CircleCI that help to solve this problem. ',
+      speakers: ['Kennie Davis'],
       videoUrl: '',
     },
     {
@@ -151,7 +183,7 @@ export function ConfScheduleShort(): JSX.Element {
     },
     {
       type: 'break',
-      time: '7:00pm (UTC-07:00)',
+      time: '8:00pm - 12:00am (UTC-07:00)',
       title: 'After Party',
       description: '',
       speakers: [],
@@ -163,11 +195,31 @@ export function ConfScheduleShort(): JSX.Element {
     <div className="border-t border-gray-600">
       <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
         <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-gray-600">
-          <div className="p-8 text-center">October 17th</div>
+          <div className="p-8 text-center">Sunday, October 16th</div>
         </div>
       </div>
       <section className="w-full divide-y divide-gray-600 border-t border-b border-gray-600">
-        {scheduleItemsFor16.map((item) =>
+        {scheduleItemsForSunday16.map((item) =>
+          item.type === 'event' ? scheduleRow(item) : breakRow(item)
+        )}
+      </section>
+      <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
+        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-gray-600">
+          <div className="p-8 text-center">Monday, October 17th</div>
+        </div>
+      </div>
+      <section className="w-full divide-y divide-gray-600 border-t border-b border-gray-600">
+        {scheduleItemsForMonday17.map((item) =>
+          item.type === 'event' ? scheduleRow(item) : breakRow(item)
+        )}
+      </section>
+      <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
+        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-gray-600">
+          <div className="p-8 text-center">Tuesday, October 18th</div>
+        </div>
+      </div>
+      <section className="w-full divide-y divide-gray-600 border-t border-b border-gray-600">
+        {scheduleItemsForTuesday18.map((item) =>
           item.type === 'event' ? scheduleRow(item) : breakRow(item)
         )}
       </section>
