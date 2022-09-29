@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`app --standalone should generate a standalone app correctly with routing 1`] = `
-"import { enableProdMode, importProvidersFrom } from '@angular/core';
+"import { enableProdMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
+import { provideRouter, withNonEnabledBlockingInitialNavigation } from '@angular/router';
 import { AppComponent } from './app/app.component';
 import { environment } from './environments/environment';
 import { appRoutes } from './app/app.routes';
@@ -13,7 +13,7 @@ if (environment.production) {
 }
 
 bootstrapApplication(AppComponent, {
-  providers: [importProvidersFrom(RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'}))],
+  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
 }).catch((err) => console.error(err));"
 `;
 

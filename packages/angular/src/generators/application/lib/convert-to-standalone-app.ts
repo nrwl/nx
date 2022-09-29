@@ -45,13 +45,11 @@ function updateMainEntrypoint(
 
 const standaloneComponentMainContents = (
   routerModuleSetup
-) => `import { enableProdMode${
-  routerModuleSetup ? `, importProvidersFrom` : ``
-} } from '@angular/core';
+) => `import { enableProdMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';${
   routerModuleSetup
     ? `
-import { RouterModule } from '@angular/router'`
+import { provideRouter, withNonEnabledBlockingInitialNavigation } from '@angular/router'`
     : ``
 };
 import { AppComponent } from './app/app.component';
@@ -65,7 +63,7 @@ if (environment.production) {
 bootstrapApplication(AppComponent${
   routerModuleSetup
     ? `, {
-  providers: [importProvidersFrom(${routerModuleSetup})],
+  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
 }`
     : ''
 }).catch((err) => console.error(err));`;
