@@ -183,7 +183,6 @@
     "magic-string": "~0.26.2",
     "memfs": "^3.0.1",
     "metro-resolver": "^0.72.2",
-    "mime": "2.4.4",
     "mini-css-extract-plugin": "~2.4.7",
     "minimatch": "3.0.5",
     "next-sitemap": "^3.1.10",
@@ -308,4 +307,3 @@
     "minimist": "^1.2.6"
   }
 }
-
