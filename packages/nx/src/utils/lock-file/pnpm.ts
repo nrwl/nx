@@ -73,14 +73,12 @@ function mapPackages(
   const mappedPackages: LockFileData['dependencies'] = {};
 
   Object.entries(packages).forEach(([key, value]) => {
-    const { resolution, engines, ...dependencyDetails } = value;
-
     // construct packageMeta object
     const meta = mapMetaInformation(
       { dependencies, devDependencies, specifiers },
       inlineSpecifiers,
       key,
-      dependencyDetails
+      value
     );
 
     // create new key
@@ -95,8 +93,7 @@ function mapPackages(
       mappedPackages[packageName][newKey].packageMeta.push(meta);
     } else {
       mappedPackages[packageName][newKey] = {
-        resolution,
-        engines,
+        ...value,
         version,
         packageMeta: [meta],
       };
@@ -114,7 +111,7 @@ function mapMetaInformation(
   }: Omit<PnpmLockFile, 'lockfileVersion' | 'packages'>,
   hasInlineSpefiers,
   key: string,
-  dependencyDetails: Record<string, Record<string, string>>
+  dependencyDetails: Omit<PackageDependency, 'packageMeta'>
 ): PackageMeta {
   const matchingVersion = key.split('/').pop();
   const packageName = key.slice(1, key.lastIndexOf('/'));
@@ -148,7 +145,14 @@ function mapMetaInformation(
     isDependency,
     isDevDependency,
     specifier,
-    dependencyDetails,
+    dependencyDetails: {
+      ...(dependencyDetails.dependencies && {
+        dependencies: dependencyDetails.dependencies,
+      }),
+      ...(dependencyDetails.peerDependencies && {
+        peerDependencies: dependencyDetails.peerDependencies,
+      }),
+    },
   };
 }
 
@@ -209,7 +213,7 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
     const packageName = packageNames[i];
     const versions = Object.values(lockFileData.dependencies[packageName]);
 
-    versions.forEach(({ packageMeta, resolution, engines }) => {
+    versions.forEach(({ packageMeta, version: _, ...rest }) => {
       (packageMeta as PackageMeta[]).forEach((meta) => {
         const { key, specifier } = meta;
 
@@ -231,8 +235,7 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
           devDependencies[packageName] = version;
         }
         packages[key] = {
-          resolution,
-          engines,
+          ...rest,
           ...meta.dependencyDetails,
         };
       });

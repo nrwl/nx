@@ -107,6 +107,7 @@ export interface ProjectGraphProjectNode<T = any> {
 
 /**
  * A node describing an external dependency
+ * `name` has as form of `npm:packageName` for primary dependencies or `npm:packageName@version` for hoisted ones
  */
 export interface ProjectGraphExternalNode {
   type: 'npm';
@@ -114,6 +115,8 @@ export interface ProjectGraphExternalNode {
   data: {
     version: string;
     packageName: string;
+    dependencies?: Record<string, [string, string]>; // dependencies of this version { [packageName]: [versionRange, actualVersion] }
+    peerDependencies?: Record<string, [string, string]>; // dependencies of this version { [packageName]: [versionRange, actualVersion] }
   };
 }
 

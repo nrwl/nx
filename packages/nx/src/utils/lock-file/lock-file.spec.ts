@@ -1,54 +1,40 @@
 import { mapLockFileDataToExternalNodes } from './lock-file';
 import { LockFileData } from './lock-file-type';
+import { parseNpmLockFile } from './npm';
+import { parsePnpmLockFile } from './pnpm';
+import { parseYarnLockFile } from './yarn';
+import { lockFileYargsOnly } from './__fixtures__/npm.lock';
+import { lockFileYargsOnly as pnpmLockFileYargsOnly } from './__fixtures__/pnpm.lock';
+import { lockFileDevkitAndYargs } from './__fixtures__/yarn.lock';
 
 describe('lock-file', () => {
   describe('mapLockFileDataToExternalNodes', () => {
-    it('should map lock file data to external nodes', () => {
-      const lockFileData: LockFileData = {
-        dependencies: {
-          'happy-nrwl': {
-            'happy-nrwl@1.0.0': {
-              version: '1.0.0',
-              resolved:
-                'https://registry.npmjs.org/happy-nrwl/-/happy-nrwl-1.0.0.tgz',
-              integrity: 'sha512-1',
-              packageMeta: ['happy-nrwl@1.0.0'],
-            },
-          },
-          'happy-nrwl2': {
-            'happy-nrwl2@^1.0.0': {
-              version: '1.2.0',
-              resolved:
-                'https://registry.npmjs.org/happy-nrwl2/-/happy-nrwl2-1.2.0.tgz',
-              integrity: 'sha512-2',
-              packageMeta: ['happy-nrwl@^1.0.0'],
-            },
-          },
-        },
-      };
-      const externalNodes = mapLockFileDataToExternalNodes(lockFileData);
-      expect(externalNodes).toEqual({
-        'npm:happy-nrwl': {
-          type: 'npm',
-          name: 'npm:happy-nrwl',
-          data: {
-            version: '1.0.0',
-            resolved:
-              'https://registry.npmjs.org/happy-nrwl/-/happy-nrwl-1.0.0.tgz',
-            integrity: 'sha512-1',
-          },
-        },
-        'npm:happy-nrwl2': {
-          type: 'npm',
-          name: 'npm:happy-nrwl2',
-          data: {
-            version: '1.2.0',
-            resolved:
-              'https://registry.npmjs.org/happy-nrwl2/-/happy-nrwl2-1.2.0.tgz',
-            integrity: 'sha512-2',
-          },
-        },
-      });
+    it('should map yarn lock file data to external nodes', () => {
+      const lockFileData = parseYarnLockFile(lockFileDevkitAndYargs);
+
+      const mappedExernalNodes = mapLockFileDataToExternalNodes(lockFileData);
+
+      expect(mappedExernalNodes['npm:yargs']).toMatchSnapshot();
+    });
+
+    it('should map npm lock file data to external nodes', () => {
+      const lockFileData = parseNpmLockFile(lockFileYargsOnly);
+
+      const mappedExernalNodes = mapLockFileDataToExternalNodes(lockFileData);
+
+      expect(mappedExernalNodes['npm:yargs']).toMatchSnapshot();
+    });
+
+    it('should map pnpm lock file data to external nodes', () => {
+      const lockFileData = parsePnpmLockFile(pnpmLockFileYargsOnly);
+
+      const mappedExernalNodes = mapLockFileDataToExternalNodes(lockFileData);
+
+      console.log(JSON.stringify(lockFileData.dependencies['yargs'], null, 2));
+
+      console.log(JSON.stringify(mappedExernalNodes['npm:yargs'], null, 2));
+
+      expect(mappedExernalNodes['npm:yargs']).toMatchSnapshot();
     });
   });
 });

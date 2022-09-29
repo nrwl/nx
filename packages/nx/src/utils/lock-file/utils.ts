@@ -1,4 +1,6 @@
+import { satisfies } from 'semver';
 import { defaultHashing } from '../../hasher/hashing-impl';
+import { PackageVersions } from './lock-file-type';
 
 /**
  * Simple sort function to ensure keys are ordered alphabetically
@@ -28,4 +30,12 @@ export function sortObject<T = string>(
  */
 export function hashString(fileContent: string): string {
   return defaultHashing.hashArray([fileContent]);
+}
+
+export function findMatchingVersion(
+  packageVersions: PackageVersions,
+  version: string
+) {
+  const versions = Object.values(packageVersions).map((v) => v.version);
+  return versions.find((v) => satisfies(v, version));
 }

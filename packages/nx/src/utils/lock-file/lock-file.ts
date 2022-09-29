@@ -15,11 +15,11 @@ import {
   prunePnpmLockFile,
   stringifyPnpmLockFile,
 } from './pnpm';
-import { LockFileData } from './lock-file-type';
+import { LockFileData, PackageVersions } from './lock-file-type';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
-import { hashString } from './utils';
-import { ProjectGraphExternalNode } from 'nx/src/config/project-graph';
+import { findMatchingVersion, hashString } from './utils';
+import { ProjectGraphExternalNode } from '../../config/project-graph';
 
 /**
  * Hashes lock file content
@@ -67,10 +67,71 @@ export function parseLockFile(
   throw Error(`Unknown package manager: ${packageManager}`);
 }
 
+/**
+ * Maps lock file data to {@link ProjectGraphExternalNode} hash map
+ * @param lockFileData
+ * @returns
+ */
 export function mapLockFileDataToExternalNodes(
   lockFileData: LockFileData
 ): Record<string, ProjectGraphExternalNode> {
-  return {};
+  const result: Record<string, ProjectGraphExternalNode> = {};
+  Object.keys(lockFileData.dependencies).forEach((dep) => {
+    Object.keys(lockFileData.dependencies[dep]).forEach((version, index) => {
+      const nodeName: `npm:${string}` = !index
+        ? `npm:${dep}`
+        : `npm:${dep}@${version}`;
+      const packageVersion = lockFileData.dependencies[dep][version];
+
+      // map packages' transitive dependencies and peer dependencies to external nodes' versions
+      const dependencies = mapTransitiveDependencies(
+        lockFileData.dependencies,
+        packageVersion.dependencies
+      );
+      const peerDependencies = mapTransitiveDependencies(
+        lockFileData.dependencies,
+        packageVersion.peerDependencies
+      );
+
+      // save external node
+      result[nodeName] = {
+        type: 'npm',
+        name: nodeName,
+        data: {
+          version: packageVersion.version,
+          packageName: dep,
+          ...(dependencies && { dependencies }),
+          ...(peerDependencies && { peerDependencies }),
+        },
+      };
+    });
+  });
+  return result;
+}
+
+// Finds the maching version of each dependency of the package and
+// maps each {package}:{versionRange} pair to {package}:[{versionRange}, {version}]
+function mapTransitiveDependencies(
+  packages: Record<string, PackageVersions>,
+  dependencies: Record<string, string>
+): Record<string, [string, string]> {
+  if (!dependencies) {
+    return undefined;
+  }
+  const result: Record<string, [string, string]> = {};
+
+  Object.keys(dependencies).forEach((packageName) => {
+    const version = findMatchingVersion(
+      packages[packageName],
+      dependencies[packageName]
+    );
+    result[packageName] = [
+      dependencies[packageName],
+      version || dependencies[packageName],
+    ];
+  });
+
+  return result;
 }
 
 /**
