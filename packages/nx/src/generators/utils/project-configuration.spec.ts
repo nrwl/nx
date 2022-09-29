@@ -104,6 +104,27 @@ describe('project configuration', () => {
       });
     });
 
+    describe('readWorkspaceConfiguration', () => {
+      it('should read the workspace configuration', () => {
+        const result = readWorkspaceConfiguration(tree);
+        expect(result).toEqual({
+          affected: {
+            defaultBase: 'main',
+          },
+          npmScope: 'proj',
+          tasksRunnerOptions: {
+            default: {
+              options: {
+                cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+              },
+              runner: 'nx/tasks-runners/default',
+            },
+          },
+          version: 1,
+        });
+      });
+    });
+
     describe('updateWorkspaceConfiguration', () => {
       let workspaceConfiguration: WorkspaceConfiguration;
 
@@ -387,6 +408,27 @@ describe('project configuration', () => {
       });
     });
 
+    describe('readWorkspaceConfiguration', () => {
+      it('should read the workspace configuration', () => {
+        const result = readWorkspaceConfiguration(tree);
+        expect(result).toEqual({
+          affected: {
+            defaultBase: 'main',
+          },
+          npmScope: 'proj',
+          tasksRunnerOptions: {
+            default: {
+              options: {
+                cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+              },
+              runner: 'nx/tasks-runners/default',
+            },
+          },
+          version: 2,
+        });
+      });
+    });
+
     describe('updateWorkspaceConfiguration', () => {
       let workspaceConfiguration: WorkspaceConfiguration;
 
@@ -609,6 +651,20 @@ describe('project configuration', () => {
   describe('for npm workspaces', () => {
     beforeEach(() => {
       tree = createTree();
+    });
+
+    describe('readWorkspaceConfiguration', () => {
+      it('should read project configuration from package.json files', () => {
+        writeJson(tree, 'proj/package.json', {
+          name: 'proj',
+        });
+
+        const workspace = readWorkspaceConfiguration(tree);
+
+        expect(workspace).toEqual({
+          version: 2,
+        });
+      });
     });
 
     describe('readProjectConfiguration', () => {

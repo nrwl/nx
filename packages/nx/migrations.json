@@ -29,6 +29,12 @@
       "version": "14.3.4-beta.1",
       "description": "Replace targetDependencies with targetDefaults",
       "implementation": "./src/migrations/update-14-3-4/create-target-defaults"
+    },
+    "15.0.0-migrate-to-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.1",
+      "description": "Replace implicitDependencies with namedInputs + target inputs",
+      "implementation": "./src/migrations/update-15-0-0/migrate-to-inputs"
     }
   }
 }

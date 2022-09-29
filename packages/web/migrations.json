@@ -68,6 +68,12 @@
       "version": "14.7.6-beta.1",
       "description": "Update usages of webpack executors to @nrwl/webpack",
       "factory": "./src/migrations/update-14-7-6/update-webpack-executor"
+    },
+    "add-babel-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Adds babel.config.json to the hash of all tasks",
+      "factory": "./src/migrations/update-15-0-0/add-babel-inputs"
     }
   },
   "packageJsonUpdates": {
