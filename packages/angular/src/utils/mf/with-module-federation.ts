@@ -4,7 +4,7 @@ import {
   readCachedProjectGraph,
 } from '@nrwl/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import {
   getNpmPackageSharedConfig,
   SharedLibraryConfig,
@@ -59,7 +59,11 @@ function mapRemotes(remotes: MFRemotes) {
       const remoteLocationExt = extname(remoteLocation);
       mappedRemotes[remoteName] = ['.js', '.mjs'].includes(remoteLocationExt)
         ? remoteLocation
-        : join(remoteLocation, 'remoteEntry.mjs');
+        : `${
+            remoteLocation.endsWith('/')
+              ? remoteLocation.slice(0, -1)
+              : remoteLocation
+          }/remoteEntry.mjs`;
     } else if (typeof remote === 'string') {
       mappedRemotes[remote] = determineRemoteUrl(remote);
     }
