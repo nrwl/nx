@@ -20,6 +20,29 @@ import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
 import { findMatchingVersion, hashString } from './utils';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
+import { existsSync } from 'fs';
+
+const YARN_LOCK_PATH = join(workspaceRoot, 'yarn.lock');
+const NPM_LOCK_PATH = join(workspaceRoot, 'package-lock.json');
+const PNPM_LOCK_PATH = join(workspaceRoot, 'pnpm-lock.yaml');
+
+/**
+ * Check if lock file exists
+ */
+export function lockFileExists(
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+): boolean {
+  if (packageManager === 'yarn') {
+    return existsSync(YARN_LOCK_PATH);
+  }
+  if (packageManager === 'pnpm') {
+    return existsSync(PNPM_LOCK_PATH);
+  }
+  if (packageManager === 'npm') {
+    return existsSync(NPM_LOCK_PATH);
+  }
+  throw Error(`Unknown package manager ${packageManager} or lock file missing`);
+}
 
 /**
  * Hashes lock file content
@@ -29,13 +52,13 @@ export function lockFileHash(
 ): string {
   let file: string;
   if (packageManager === 'yarn') {
-    file = readFileSync(join(workspaceRoot, 'yarn.lock'), 'utf8');
+    file = readFileSync(YARN_LOCK_PATH, 'utf8');
   }
   if (packageManager === 'pnpm') {
-    file = readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8');
+    file = readFileSync(PNPM_LOCK_PATH, 'utf8');
   }
   if (packageManager === 'npm') {
-    file = readFileSync(join(workspaceRoot, 'package-lock.json'), 'utf8');
+    file = readFileSync(NPM_LOCK_PATH, 'utf8');
   }
   if (file) {
     return hashString(file);
@@ -53,15 +76,15 @@ export function parseLockFile(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): LockFileData {
   if (packageManager === 'yarn') {
-    const file = readFileSync(join(workspaceRoot, 'yarn.lock'), 'utf8');
+    const file = readFileSync(YARN_LOCK_PATH, 'utf8');
     return parseYarnLockFile(file);
   }
   if (packageManager === 'pnpm') {
-    const file = readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8');
+    const file = readFileSync(PNPM_LOCK_PATH, 'utf8');
     return parsePnpmLockFile(file);
   }
   if (packageManager === 'npm') {
-    const file = readFileSync(join(workspaceRoot, 'package-lock.json'), 'utf8');
+    const file = readFileSync(NPM_LOCK_PATH, 'utf8');
     return parseNpmLockFile(file);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
@@ -160,17 +183,17 @@ export function writeLockFile(
 ): void {
   if (packageManager === 'yarn') {
     const content = stringifyYarnLockFile(lockFile);
-    writeFileSync(join(workspaceRoot, 'yarn.lock'), content);
+    writeFileSync(YARN_LOCK_PATH, content);
     return;
   }
   if (packageManager === 'pnpm') {
     const content = stringifyPnpmLockFile(lockFile);
-    writeFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), content);
+    writeFileSync(PNPM_LOCK_PATH, content);
     return;
   }
   if (packageManager === 'npm') {
     const content = stringifyNpmLockFile(lockFile);
-    writeFileSync(join(workspaceRoot, 'package-lock.json'), content);
+    writeFileSync(NPM_LOCK_PATH, content);
     return;
   }
   throw Error(`Unknown package manager: ${packageManager}`);

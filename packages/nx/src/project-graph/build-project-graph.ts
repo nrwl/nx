@@ -40,6 +40,7 @@ import {
   readNxJson,
 } from '../config/configuration';
 import {
+  lockFileExists,
   lockFileHash,
   mapLockFileDataToExternalNodes,
   parseLockFile,
@@ -101,11 +102,15 @@ export async function buildProjectGraphUsingProjectFileMap(
     cachedFileData = {};
   }
   let externalNodes;
-  const lockHash = lockFileHash();
-  if (cache && cache.lockFileHash === lockHash) {
-    externalNodes = cache.externalNodes;
-  } else {
-    externalNodes = mapLockFileDataToExternalNodes(parseLockFile());
+  let lockHash = 'n/a';
+  // during the create-nx-workspace lock file might not exists yet
+  if (lockFileExists()) {
+    lockHash = lockFileHash();
+    if (cache && cache.lockFileHash === lockHash) {
+      externalNodes = cache.externalNodes;
+    } else {
+      externalNodes = mapLockFileDataToExternalNodes(parseLockFile());
+    }
   }
   const context = createContext(
     projectsConfigurations,
