@@ -425,6 +425,18 @@
         "@testing-library/jest-native": {
           "version": "4.0.13",
           "alwaysAddToPackageJson": false
+        },
+        "expo": {
+          "version": "46.0.13",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-cli": {
+          "version": "6.0.6",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.69.6",
+          "alwaysAddToPackageJson": false
         }
       }
     }
