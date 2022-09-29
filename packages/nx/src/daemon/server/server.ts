@@ -51,8 +51,13 @@ export type HandlerResult = {
   response?: string;
 };
 
+let numberOfOpenConnections = 0;
+
 const server = createServer(async (socket) => {
-  serverLogger.log('Established a connection');
+  numberOfOpenConnections += 1;
+  serverLogger.log(
+    `Established a connection. Number of open connections: ${numberOfOpenConnections}`
+  );
   resetInactivityTimeout(handleInactivityTimeout);
   if (!performanceObserver) {
     performanceObserver = new PerformanceObserver((list) => {
@@ -75,7 +80,10 @@ const server = createServer(async (socket) => {
   });
 
   socket.on('close', () => {
-    serverLogger.log('Closed a connection');
+    numberOfOpenConnections -= 1;
+    serverLogger.log(
+      `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
+    );
   });
 });
 
@@ -140,10 +148,17 @@ async function handleResult(socket: Socket, hr: HandlerResult) {
 }
 
 function handleInactivityTimeout() {
-  handleServerProcessTermination({
-    server,
-    reason: `${SERVER_INACTIVITY_TIMEOUT_MS}ms of inactivity`,
-  });
+  if (numberOfOpenConnections > 0) {
+    serverLogger.log(
+      `There are ${numberOfOpenConnections} open connections. Reset inactivity timer.`
+    );
+    resetInactivityTimeout(handleInactivityTimeout);
+  } else {
+    handleServerProcessTermination({
+      server,
+      reason: `${SERVER_INACTIVITY_TIMEOUT_MS}ms of inactivity`,
+    });
+  }
 }
 
 process
