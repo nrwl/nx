@@ -12,13 +12,12 @@
  text: text-blue-500 dark:text-sky-500
 */
 
-
 .DocSearch--active {
   @apply overflow-hidden !important;
 }
 
 .DocSearch-Container {
-  @apply fixed top-0 left-0 z-[50] flex h-screen w-screen cursor-auto flex-col bg-black/10 dark:bg-white/10 p-4 backdrop-blur-sm sm:p-6 md:p-[10vh] lg:p-[12vh];
+  @apply fixed top-0 left-0 z-[50] flex h-screen w-screen cursor-auto flex-col bg-black/10 p-4 backdrop-blur-sm dark:bg-white/10 sm:p-6 md:p-[10vh] lg:p-[12vh];
 }
 
 .DocSearch-LoadingIndicator svg {
@@ -222,7 +221,7 @@
   /*background: theme('colors.slate.100');*/
   border-radius: 999px;
   padding: 0 0.375rem;
-  @apply text-slate-700 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700;
+  @apply border border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400;
 }
 
 .DocSearch-Hit-title {
@@ -308,7 +307,7 @@
 
 .DocSearch-Hits mark {
   background: none;
-  @apply text-blue-500 border-blue-500 border-b-2 font-semibold dark:text-sky-500 dark:border-sky-500;
+  @apply border-b-2 border-blue-500 font-semibold text-blue-500 dark:border-sky-500 dark:text-sky-500;
 }
 
 .DocSearch-Hit-path mark {
@@ -316,7 +315,7 @@
 }
 
 .DocSearch-Footer {
-  @apply flex flex-none justify-end border-t border-slate-100 dark:border-slate-800 py-4 px-6;
+  @apply flex flex-none justify-end border-t border-slate-100 py-4 px-6 dark:border-slate-800;
 }
 
 .DocSearch-Commands {
@@ -430,7 +429,8 @@
   @apply pointer-events-none absolute inset-0 bg-slate-50 content-[''];
 }
 
-.DocSearch-Hit[aria-selected='true'] [title='Remove this search from favorites']::before {
+.DocSearch-Hit[aria-selected='true']
+  [title='Remove this search from favorites']::before {
   @apply bg-slate-100 dark:bg-slate-800;
 }
 
@@ -455,5 +455,5 @@
 }
 
 .DocSearch-Hit-action + .DocSearch-Hit-action {
-  @apply ml-3 border-l border-slate-100 dark:border-slate-800 pl-3;
+  @apply ml-3 border-l border-slate-100 pl-3 dark:border-slate-800;
 }

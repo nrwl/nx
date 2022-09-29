@@ -4,11 +4,14 @@ export function NxStatistics(): JSX.Element {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-            Trusted by developers, OSS & Enterprise
+            Trusted by developers, OSS & Enterprises
           </h2>
           <p className="mt-3 text-lg text-slate-700 dark:text-slate-400 sm:mt-4">
-            Works for projects of any size, Whether you have one project or one
-            thousand, Nx will keep your CI fast and your workspace maintainable.
+            Works for projects of any size, whether you{' '}
+            <span className="font-semibold">
+              have a single project or a tousand
+            </span>
+            , Nx will keep your CI fast and your workspace maintainable.
           </p>
         </div>
       </div>
@@ -39,7 +42,7 @@ export function NxStatistics(): JSX.Element {
                     Weekly downloads on npmjs.com
                   </dt>
                   <dd className="order-1 text-4xl font-semibold text-slate-800 drop-shadow-sm dark:text-slate-200 dark:drop-shadow-[0_1px_1px_rgba(255,255,255,0.35)]">
-                    2M+
+                    2.5M+
                   </dd>
                 </div>
               </dl>

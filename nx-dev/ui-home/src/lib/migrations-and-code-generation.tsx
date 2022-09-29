@@ -18,16 +18,22 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
         <div>
           <header>
             <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
-              <span className="underline">Automated migrations</span> workflow
+              Evergreen setup
             </h1>
             <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-              A stack always up to date, without effort
+              Stay up to date, without effort
             </p>
           </header>
           <div className="mt-8 flex gap-16 font-normal">
             <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
-              Stay always up to date with your tooling stack via automated Nx
-              migrations that takes care of all these complicated updates.
+              Keeping your stack up to date can be a struggle. Nx comes with a
+              smart system that is capable of automatically upgrading your
+              codebase. Think of it like{' '}
+              <span className="font-medium">
+                database migration scripts, but for your config files, npm
+                packages and even source code
+              </span>
+              .
             </p>
           </div>
           <div className="action mt-6 flex">

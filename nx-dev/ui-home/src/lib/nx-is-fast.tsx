@@ -83,14 +83,16 @@ export function NxIsFast(): JSX.Element {
               Nx is fast
             </h1>
             <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-              Making sure you're not wasting your time
+              Don't waste your time
             </p>
           </header>
           <div className="mt-8 flex gap-16 font-normal">
             <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
-              Nx uses its distributed task execution and computation caching to
-              keep your CI time the same, whether you build one project or a
-              thousand. Scale confidently with performance.
+              Nx makes scaling easy. Modern techniques such as{' '}
+              <span className="font-semibold">distributed task execution</span>{' '}
+              and <span className="font-semibold">computation caching</span>{' '}
+              make sure your CI times remain fast, even as you keep adding
+              projects to your workspace.
             </p>
           </div>
         </div>
@@ -152,15 +154,20 @@ export function NxIsFast(): JSX.Element {
               </p>
             </dt>
             <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
-              Nx won't run the tasks it executed before, and instead will
-              restore the files and the terminal output from its cache.
+              Nx is smart! It can figure out whether the same computation has
+              run before and{' '}
+              <span className="font-medium">
+                just restores the files and the terminal output
+              </span>
+              from its cache.
             </dd>
             <Link href="/core-features/cache-task-results">
               <a
                 title="Learn how to setup Distributed Task Executions"
                 className="mt-4 inline-flex items-center font-medium text-blue-500 transition hover:text-blue-600 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:text-sky-500 dark:hover:text-sky-400"
               >
-                Enable caching <ArrowRightCircleIcon className="ml-2 h-5 w-5" />
+                Enable caching now{' '}
+                <ArrowRightCircleIcon className="ml-2 h-5 w-5" />
               </a>
             </Link>
           </div>
@@ -182,8 +189,12 @@ export function NxIsFast(): JSX.Element {
               </p>
             </dt>
             <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
-              Nx can run any command across multiple machines without having to
-              configure anything. Everything is taken cared of.
+              Smart, automated, dynamic distribution of tasks across multiple
+              machines to get{' '}
+              <span className="font-medium">
+                maximum parallelization and CPU efficient
+              </span>{' '}
+              CI runs.
             </dd>
             <Link href="/core-features/distribute-task-execution">
               <a
@@ -212,12 +223,14 @@ export function NxIsFast(): JSX.Element {
               </div>
               <p className="relative mt-4 text-base font-medium leading-6 text-gray-900 dark:text-slate-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
-                Computation caching
+                Remote distributed caching
               </p>
             </dt>
             <dd className="mt-2 text-base text-gray-500 dark:text-slate-400">
-              Remote and local computation caching makes greatly improve your
-              developer experience and CI.
+              <span className="font-medium">
+                Share your local computation cache
+              </span>{' '}
+              with team mates and your CI system for maximum efficiency.
             </dd>
             <Link href="/concepts/how-caching-works">
               <a
@@ -247,19 +260,23 @@ export function NxIsFast(): JSX.Element {
               </div>
               <p className="relative mt-4 text-base font-medium leading-6 text-gray-900 dark:text-slate-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
-                Efficient execution
+                Only touch what changed
               </p>
             </dt>
             <dd className="mt-2 text-base text-gray-500 dark:text-slate-400">
-              Nx runs any command in the most efficient way with the max degree
-              of parallelization while respecting the execution order.
+              Nothing is faster than not running a task. Nx analyzes your
+              project graph and can{' '}
+              <span className="font-medium">
+                diff it against a baseline to determine which projects changed
+              </span>{' '}
+              and where tasks need to be re-run.
             </dd>
-            <Link href="/concepts/dte">
+            <Link href="/concepts/affected">
               <a
-                title="Learn how to setup Distributed Task Executions"
+                title="Learn how to Nx affected commands allow you to determine what changed"
                 className="mt-4 inline-flex items-center font-medium text-blue-500 transition hover:text-blue-600 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:text-sky-500 dark:hover:text-sky-400"
               >
-                Learn about DTE{' '}
+                Learn about affected commands{' '}
                 <ArrowRightCircleIcon className="ml-2 h-5 w-5" />
               </a>
             </Link>

@@ -720,7 +720,7 @@ function VscodeIntegration(): JSX.Element {
       name: 'Integrated UI',
       icon: <PaintBrushIcon className="h-5 w-5" />,
       description:
-        'Nx Console uses native VSCode UI elements, follows behaviour guidelines so your experience is as native as it can get. No bad surprises.',
+        'Nx Console uses native VSCode UI elements, follows behaviour guidelines so your experience is as native as it can get.',
       link: '/recipe/console-project-pane',
     },
     {
@@ -728,7 +728,7 @@ function VscodeIntegration(): JSX.Element {
       name: 'Generate anything',
       icon: <CogIcon className="h-5 w-5" />,
       description:
-        'No need to remember the commands and options available, you see everything at once which make a far better user experience.',
+        'No need to remember the commands and options available, you see everything at a glance. Perfect for exploring.',
       link: '/recipe/console-generate-command',
     },
     {
@@ -736,7 +736,7 @@ function VscodeIntegration(): JSX.Element {
       name: 'Run Anything',
       icon: <CommandLineIcon className="h-5 w-5" />,
       description:
-        'You have easy and fast access to all your projects and targets, and via the command palette, this allows you to run them from anywhere instantly.',
+        'Easy and fast access to your projects and targets to run. Whether from the context menu, command palette or augmented config files. Perfectly integrated into your flow.',
       link: '/recipe/console-run-command',
     },
     {
@@ -744,7 +744,7 @@ function VscodeIntegration(): JSX.Element {
       name: 'The best companion for Nx',
       icon: <SparklesIcon className="h-5 w-5" />,
       description:
-        "Carefully crafted by the Nx team itself, it is in constant evolution and get new features and enhancements regularly. Nx Console is integrated to Nx's development path.",
+        'The Nx team is obsessed with providing the best possible DX. Nx Console is the culmination of that. Carefully crafted, in constant evolution, always in search of making the life of developers easier.',
       link: '#',
     },
   ];
@@ -838,47 +838,43 @@ export function ExtensibleAndIntegrated(): JSX.Element {
       <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
         <header className="max-w-xl">
           <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
-            Extensible and integrated
+            Extensible and Integrated
           </h1>
           <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
-            Covers all your needs
+            Make Nx work for you
           </p>
         </header>
         <div className="mt-8 flex flex-col gap-16 font-normal md:flex-row">
           <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
-            Nx allows your to extend its capability and build on top of it. A
-            lot of plugins have been made for making it work with different
-            languages and tools. With the combination of{' '}
-            <Link href="/community#plugin-directory">
+            Have a monorepo already?{' '}
+            <Link href="/recipe/adding-to-monorepo">
               <a
-                title="Check Nx available plugins"
+                title="Install VSCode's native extension for Nx"
                 className="font-medium text-blue-500 dark:text-sky-500"
               >
-                community plugins
-              </a>
-            </Link>
-            ,{' '}
-            <Link href="/concepts/integrated-vs-package-based">
-              <a
-                title="Nx help you follow best practices"
-                className="font-medium text-blue-500 dark:text-sky-500"
-              >
-                follow the best practices
+                Add Nx on top!
               </a>
             </Link>{' '}
-            and official packages (supported by the Nx team){' '}
-            <Link href="/concepts/mental-model">
+            <span className="font-medium">You control everything</span>, Nx
+            makes things fast. Or, focus on what matters and{' '}
+            <span className="font-medium">let Nx do the heavy lifting</span>{' '}
+            with its vast set of{' '}
+            <Link href="/community#plugin-directory">
               <a
-                title="Understand how it is fast"
+                title="Install VSCode's native extension for Nx"
                 className="font-medium text-blue-500 dark:text-sky-500"
               >
-                performance
+                powerful plugins
               </a>
             </Link>
-            , you will find your perfect stack.
+            . Extend Nx by creating custom plugins that{' '}
+            <span className="font-medium">work for your organization</span> and
+            you'll get the best possible DX you can have in a monorepo.
           </p>
           <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
-            IDE extension are available for{' '}
+            No need to browse the docs for finding suitable commands to run.{' '}
+            <span className="font-medium">Stay in the flow!</span> Augment your
+            editor with Nx Console, a dedicated extension available for{' '}
             <Link href="/core-features/integrate-with-editors">
               <a
                 title="Install VSCode's native extension for Nx"
@@ -899,10 +895,8 @@ export function ExtensibleAndIntegrated(): JSX.Element {
                 Webstorm
               </a>
             </Link>
-            . It helps you generate components in folders, refactor your
-            projects, construct commands, and much more. Nx comes with an
-            interactive dependency diagram to help explore and understand your
-            workspace.
+            . Generating a new library, running e2e tests, building your app,
+            everything just a fingertip away.
           </p>
         </div>
       </div>
