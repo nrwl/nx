@@ -76,34 +76,43 @@ export function mapLockFileDataToExternalNodes(
   lockFileData: LockFileData
 ): Record<string, ProjectGraphExternalNode> {
   const result: Record<string, ProjectGraphExternalNode> = {};
+  const versionCache: Record<string, string> = {};
+
   Object.keys(lockFileData.dependencies).forEach((dep) => {
-    Object.keys(lockFileData.dependencies[dep]).forEach((version, index) => {
-      const nodeName: `npm:${string}` = !index
-        ? `npm:${dep}`
-        : `npm:${dep}@${version}`;
-      const packageVersion = lockFileData.dependencies[dep][version];
+    const versions = lockFileData.dependencies[dep];
+    Object.keys(versions).forEach((nameVersion, index) => {
+      const packageVersion = versions[nameVersion];
 
       // map packages' transitive dependencies and peer dependencies to external nodes' versions
       const dependencies = mapTransitiveDependencies(
         lockFileData.dependencies,
-        packageVersion.dependencies
+        packageVersion.dependencies,
+        versionCache
       );
       const peerDependencies = mapTransitiveDependencies(
         lockFileData.dependencies,
-        packageVersion.peerDependencies
+        packageVersion.peerDependencies,
+        versionCache
       );
 
       // save external node
+      const nodeName: `npm:${string}` = !index
+        ? `npm:${dep}`
+        : `npm:${nameVersion}`;
       result[nodeName] = {
         type: 'npm',
         name: nodeName,
         data: {
           version: packageVersion.version,
           packageName: dep,
-          ...(dependencies && { dependencies }),
-          ...(peerDependencies && { peerDependencies }),
         },
       };
+      if (dependencies) {
+        result[nodeName].data.dependencies = dependencies;
+      }
+      if (peerDependencies) {
+        result[nodeName].data.peerDependencies = peerDependencies;
+      }
     });
   });
   return result;
@@ -113,7 +122,8 @@ export function mapLockFileDataToExternalNodes(
 // maps each {package}:{versionRange} pair to {package}:[{versionRange}, {version}]
 function mapTransitiveDependencies(
   packages: Record<string, PackageVersions>,
-  dependencies: Record<string, string>
+  dependencies: Record<string, string>,
+  versionCache: Record<string, string>
 ): Record<string, [string, string]> {
   if (!dependencies) {
     return undefined;
@@ -121,14 +131,21 @@ function mapTransitiveDependencies(
   const result: Record<string, [string, string]> = {};
 
   Object.keys(dependencies).forEach((packageName) => {
-    const version = findMatchingVersion(
-      packages[packageName],
-      dependencies[packageName]
-    );
-    result[packageName] = [
-      dependencies[packageName],
-      version || dependencies[packageName],
-    ];
+    const key = `${packages[packageName]}@${dependencies[packageName]}`;
+
+    // if we already processed this dependency, use the version from the cache
+    if (versionCache[key]) {
+      result[packageName] = [dependencies[packageName], versionCache[key]];
+    } else {
+      const version =
+        findMatchingVersion(
+          packageName,
+          packages[packageName],
+          dependencies[packageName]
+        ) || dependencies[packageName];
+      result[packageName] = [dependencies[packageName], version];
+      versionCache[key] = version;
+    }
   });
 
   return result;

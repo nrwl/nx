@@ -33,9 +33,16 @@ export function hashString(fileContent: string): string {
 }
 
 export function findMatchingVersion(
+  packageName: string,
   packageVersions: PackageVersions,
   version: string
-) {
-  const versions = Object.values(packageVersions).map((v) => v.version);
-  return versions.find((v) => satisfies(v, version));
+): string {
+  // if it's fixed version, just return it
+  if (packageVersions[`${packageName}@${version}`]) {
+    return version;
+  }
+  // otherwise search for the matching version
+  return Object.values(packageVersions).find((v) =>
+    satisfies(v.version, version)
+  )?.version;
 }
