@@ -1298,6 +1298,19 @@
         ]
       },
       {
+        "name": "esbuild",
+        "id": "esbuild",
+        "description": "esbuild package.",
+        "itemList": [
+          {
+            "name": "Overview",
+            "id": "overview",
+            "path": "/packages/esbuild",
+            "file": "shared/esbuild-plugin"
+          }
+        ]
+      },
+      {
         "name": "angular",
         "id": "angular",
         "description": "Angular package.",
