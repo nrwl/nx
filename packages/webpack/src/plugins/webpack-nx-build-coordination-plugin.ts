@@ -4,6 +4,7 @@ import { workspaceLayout } from '@nrwl/devkit';
 import { joinPathFragments } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
+import type { Compiler } from 'webpack';
 
 export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
@@ -13,7 +14,7 @@ export class WebpackNxBuildCoordinationPlugin {
     this.startWatchingBuildableLibs();
   }
 
-  apply(compiler) {
+  apply(compiler: Compiler) {
     compiler.hooks.beforeCompile.tapPromise(
       'IncrementalDevServerPlugin',
       async () => {
