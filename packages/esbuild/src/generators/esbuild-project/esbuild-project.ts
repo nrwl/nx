@@ -29,7 +29,9 @@ function checkForTargetConflicts(tree: Tree, options: EsBuildProjectSchema) {
   if (options.skipValidation) return;
   const project = readProjectConfiguration(tree, options.project);
   if (project.targets?.build) {
-    throw new Error(`Project "${project.name}" already has a build target.`);
+    throw new Error(
+      `Project "${options.project}" already has a build target. Pass --skipValidation to ignore this error.`
+    );
   }
 }
 
