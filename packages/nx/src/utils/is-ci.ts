@@ -13,6 +13,7 @@ export function isCI() {
     process.env.BUILD_ID ||
     process.env.BUILD_BUILDID ||
     process.env.TEAMCITY_VERSION ||
-    process.env.TRAVIS === 'true'
+    process.env.TRAVIS === 'true' ||
+    process.env.STI_SCRIPTS_PATH
   );
 }
