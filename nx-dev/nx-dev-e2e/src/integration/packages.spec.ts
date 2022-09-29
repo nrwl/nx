@@ -117,8 +117,8 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/angular/executors/webpack-browser',
     },
     {
-      title: '@nrwl/angular:webpack-server',
-      path: '/packages/angular/executors/webpack-server',
+      title: '@nrwl/angular:webpack-dev-server',
+      path: '/packages/angular/executors/webpack-dev-server',
     },
     {
       title: '@nrwl/angular:module-federation-dev-server',

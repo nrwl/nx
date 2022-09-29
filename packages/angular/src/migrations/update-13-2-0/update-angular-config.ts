@@ -5,7 +5,7 @@ import {
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
-import { Schema as WebpackServerOptions } from '../../builders/webpack-server/schema';
+import { Schema as WebpackServerOptions } from '../../builders/webpack-dev-server/schema';
 import { BrowserBuilderSchema as WebpackBrowserOptions } from '../../builders/webpack-browser/webpack-browser.impl';
 
 export default async function (tree: Tree) {

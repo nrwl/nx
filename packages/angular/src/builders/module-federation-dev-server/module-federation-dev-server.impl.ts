@@ -9,7 +9,7 @@ import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { join } from 'path';
-import { executeWebpackServerBuilder } from '../webpack-server/webpack-server.impl';
+import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
 import { existsSync, readFileSync } from 'fs';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
@@ -193,7 +193,7 @@ export function executeModuleFederationDevServerBuilder(
     });
   }
 
-  return executeWebpackServerBuilder(options, context);
+  return executeWebpackDevServerBuilder(options, context);
 }
 
 export default createBuilder<JsonObject & Schema>(
