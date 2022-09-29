@@ -2,31 +2,47 @@ import * as chalk from 'chalk';
 import { output } from '../output';
 import type { CorePlugin, PluginCapabilities } from './models';
 
-export function fetchCorePlugins() {
-  const corePlugins: CorePlugin[] = [
+export function fetchCorePlugins(): CorePlugin[] {
+  return [
     {
       name: '@nrwl/angular',
-      capabilities: 'generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/cypress',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/express',
+      name: '@nrwl/detox',
       capabilities: 'executors,generators',
+    },
+    {
+      name: '@nrwl/esbuild',
+      capabilities: 'executors,generators',
+    },
+    {
+      name: '@nrwl/expo',
+      capabilities: 'executors,generators',
+    },
+    {
+      name: '@nrwl/express',
+      capabilities: 'generators',
     },
     {
       name: '@nrwl/jest',
       capabilities: 'executors,generators',
     },
     {
+      name: '@nrwl/js',
+      capabilities: 'executors,generators',
+    },
+    {
       name: '@nrwl/linter',
-      capabilities: 'executors',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/nest',
-      capabilities: 'executors,generators',
+      capabilities: 'generators',
     },
     {
       name: '@nrwl/next',
@@ -37,6 +53,10 @@ export function fetchCorePlugins() {
       capabilities: 'executors,generators',
     },
     {
+      name: 'nx',
+      capabilities: 'executors',
+    },
+    {
       name: '@nrwl/nx-plugin',
       capabilities: 'executors,generators',
     },
@@ -45,7 +65,11 @@ export function fetchCorePlugins() {
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/js',
+      name: '@nrwl/react-native',
+      capabilities: 'executors,generators',
+    },
+    {
+      name: '@nrwl/rollup',
       capabilities: 'executors,generators',
     },
     {
@@ -57,11 +81,14 @@ export function fetchCorePlugins() {
       capabilities: 'executors,generators',
     },
     {
+      name: '@nrwl/webpack',
+      capabilities: 'executors,generators',
+    },
+    {
       name: '@nrwl/workspace',
       capabilities: 'executors,generators',
     },
   ];
-  return corePlugins;
 }
 
 export function listCorePlugins(
