@@ -68,7 +68,7 @@ If you are only planning to use incremental builds to speed up your CI, then the
 
 ## Custom Serve Target
 
-If you are implementing a custom serve command, you can use `WebpackNxBuildCoordinationPlugin` provided by `@nrwl/web`. It's a webpack plugin you can use to coordinate the compiling of the libs and the webpack linking.
+If you are implementing a custom serve command, you can use `WebpackNxBuildCoordinationPlugin` provided by `@nrwl/webpack`. It's a webpack plugin you can use to coordinate the compiling of the libs and the webpack linking.
 
 ## Using Webpack Module Federation to implement incremental builds
 
