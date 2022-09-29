@@ -25,6 +25,7 @@ import { getRootTsConfigPath } from '../utils/typescript';
 import {
   ProjectFileMap,
   ProjectGraph,
+  ProjectGraphExternalNode,
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
@@ -101,7 +102,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     filesToProcess = projectFileMap;
     cachedFileData = {};
   }
-  let externalNodes;
+  let externalNodes: Record<string, ProjectGraphExternalNode> = {};
   let lockHash = 'n/a';
   // during the create-nx-workspace lock file might not exists yet
   if (lockFileExists()) {
@@ -123,6 +124,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     context,
     cachedFileData,
     projectGraphVersion,
+    externalNodes,
     packageJsonDeps
   );
   const projectGraphCache = createCache(
@@ -152,14 +154,19 @@ async function buildProjectGraphUsingContext(
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   projectGraphVersion: string,
-  packageJsonDeps: { [packageName: string]: string }
+  externalNodes: Record<string, ProjectGraphExternalNode>,
+  packageJsonDeps: Record<string, string>
 ) {
   performance.mark('build project graph:start');
 
-  const builder = new ProjectGraphBuilder();
+  const builder = new ProjectGraphBuilder(
+    externalNodes && { externalNodes, nodes: {}, dependencies: {} }
+  );
 
   buildWorkspaceProjectNodes(ctx, builder, nxJson);
-  buildNpmPackageNodes(builder);
+  if (!externalNodes) {
+    buildNpmPackageNodes(builder);
+  }
   for (const proj of Object.keys(cachedFileData)) {
     for (const f of builder.graph.nodes[proj].data.files) {
       const cached = cachedFileData[proj][f.file];
