@@ -22,7 +22,7 @@ import {
   SharedLibraryConfig,
 } from './models';
 import { readRootPackageJson } from './package-json';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 function collectDependencies(
@@ -133,7 +133,11 @@ function mapRemotes(remotes: Remotes, projectGraph: ProjectGraph) {
       const remoteLocationExt = extname(remoteLocation);
       mappedRemotes[remoteName] = ['.js', '.mjs'].includes(remoteLocationExt)
         ? remoteLocation
-        : join(remoteLocation, 'remoteEntry.js');
+        : `${
+            remoteLocation.endsWith('/')
+              ? remoteLocation.slice(0, -1)
+              : remoteLocation
+          }/remoteEntry.js`;
     } else if (typeof remote === 'string') {
       mappedRemotes[remote] = determineRemoteUrl(remote, projectGraph);
     }
