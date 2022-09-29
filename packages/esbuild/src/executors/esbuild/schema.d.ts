@@ -24,3 +24,8 @@ export interface EsBuildExecutorOptions {
   updateBuildableProjectDepsInPackageJson?: boolean;
   watch?: boolean;
 }
+
+export interface NormalizedEsBuildExecutorOptions
+  extends EsBuildExecutorOptions {
+  singleEntry: boolean;
+}

@@ -13,7 +13,9 @@ import {
 
 describe('EsBuild Plugin', () => {
   let proj: string;
+
   beforeEach(() => (proj = newProject()));
+
   afterEach(() => cleanupProject());
 
   it('should setup and build projects using build', async () => {
@@ -30,8 +32,10 @@ describe('EsBuild Plugin', () => {
     runCLI(`build ${myPkg}`);
 
     expect(runCommand(`node dist/libs/${myPkg}/index.js`)).toMatch(/Hello/);
-
+    // main field should be set correctly in package.json
     checkFilesExist(`dist/libs/${myPkg}/package.json`);
+    expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
+
     expect(readFile(`dist/libs/${myPkg}/assets/a.md`)).toMatch(/file a/);
     expect(readFile(`dist/libs/${myPkg}/assets/b.md`)).toMatch(/file b/);
 

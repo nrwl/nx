@@ -15,8 +15,8 @@ import { normalizeOptions } from './lib/normalize';
 
 import { EsBuildExecutorOptions } from './schema';
 import { removeSync, writeJsonSync } from 'fs-extra';
-import { getClientEnvironment } from '../../utils/environment-variables';
 import { createAsyncIterable } from '@nrwl/js/src/utils/create-async-iterable/create-async-iteratable';
+import { buildEsbuildOptions } from './lib/build-esbuild-options';
 
 const ESM_FILE_EXTENSION = '.js';
 const CJS_FILE_EXTENSION = '.cjs';
@@ -46,31 +46,19 @@ export async function* esbuildExecutor(
     context
   );
 
-  const esbuildOptions: esbuild.BuildOptions = {
-    ...options.esbuildOptions,
-    entryPoints: [options.main, ...options.additionalEntryPoints],
-    entryNames:
-      options.outputHashing === 'all' ? '[dir]/[name].[hash]' : '[dir]/[name]',
-    outdir: options.outputPath,
-    bundle: true, // TODO(jack): support non-bundled builds
-    define: getClientEnvironment(),
-    external: options.external,
-    minify: options.minify,
-    platform: options.platform,
-    target: options.target,
-    metafile: options.metafile,
-    tsconfig: options.tsConfig,
-  };
-
   if (options.watch) {
-    return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
+    return yield* createAsyncIterable<{ success: boolean; outfile?: string }>(
       async ({ next, done }) => {
         let hasTypeErrors = false;
 
         const results = await Promise.all(
-          options.format.map((format, idx) => {
-            const outfile = getOutfile(format, options, context);
-            return esbuild.build({
+          options.format.map(async (format, idx) => {
+            const esbuildOptions = buildEsbuildOptions(
+              format,
+              options,
+              context
+            );
+            const result = await esbuild.build({
               ...esbuildOptions,
               watch:
                 // Only emit info on one of the watch processes.
@@ -95,15 +83,21 @@ export async function* esbuildExecutor(
                           logger.info(BUILD_WATCH_SUCCEEDED);
                         }
 
-                        next({ success: !!error && !hasTypeErrors, outfile });
+                        next({
+                          success: !!error && !hasTypeErrors,
+                          outfile: esbuildOptions.outfile,
+                        });
                       },
                     }
                   : true,
-              format,
-              outExtension: {
-                '.js': getOutExtension(format),
-              },
             });
+
+            next({
+              success,
+              outfile: esbuildOptions.outfile,
+            });
+
+            return result;
           })
         );
         const processOnExit = () => {
@@ -133,23 +127,12 @@ export async function* esbuildExecutor(
         } else {
           logger.info(BUILD_WATCH_SUCCEEDED);
         }
-
-        next({
-          success,
-          outfile: getOutfile(options.format[0], options, context),
-        });
       }
     );
   } else {
     const buildResults = await Promise.all(
       options.format.map((format) =>
-        esbuild.build({
-          ...esbuildOptions,
-          format,
-          outExtension: {
-            '.js': getOutExtension(format),
-          },
-        })
+        esbuild.build(buildEsbuildOptions(format, options, context))
       )
     );
     const buildSuccess = buildResults.every((r) => r.errors?.length === 0);
@@ -198,24 +181,6 @@ function getTypeCheckOptions(
   }
 
   return typeCheckOptions;
-}
-
-function getOutExtension(format: 'cjs' | 'esm') {
-  return format === 'esm' ? ESM_FILE_EXTENSION : CJS_FILE_EXTENSION;
-}
-
-function getOutfile(
-  format: 'cjs' | 'esm',
-  options: EsBuildExecutorOptions,
-  context: ExecutorContext
-) {
-  const candidate = joinPathFragments(
-    context.target.options.outputPath,
-    options.outputFileName
-  );
-  const ext = getOutExtension(format);
-  const { dir, name } = parse(candidate);
-  return `${dir}/${name}${ext}`;
 }
 
 async function runTypeCheck(
