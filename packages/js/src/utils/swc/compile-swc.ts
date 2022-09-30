@@ -66,7 +66,10 @@ export async function compileSwc(
   }
 
   await postCompilationCallback();
-  return { success: !hasErrors && isCompileSuccess };
+  return {
+    success: !hasErrors && isCompileSuccess,
+    outfile: normalizedOptions.mainOutputPath,
+  };
 }
 
 export async function* compileSwcWatch(
