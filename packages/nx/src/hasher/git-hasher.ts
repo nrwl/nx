@@ -105,7 +105,13 @@ async function spawnProcess(
 async function getStagedFiles(path: string) {
   const { stdout: staged } = await spawnProcess(
     'git',
-    ['ls-files', '--recurse-submodules', '-s', '-z', '--exclude-standard', '.'],
+    [
+      'ls-files',
+      /*'--recurse-submodules',*/ '-s',
+      '-z',
+      '--exclude-standard',
+      '.',
+    ],
     path
   );
   const res = new Map();
