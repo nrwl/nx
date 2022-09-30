@@ -15,9 +15,14 @@
             "file": "shared/getting-started/intro"
           },
           {
-            "name": "Core Tutorial",
-            "id": "core-tutorial",
-            "file": "shared/core-tutorial/01-create-blog"
+            "name": "Package-Based Repo Tutorial",
+            "id": "package-based-repo-tutorial",
+            "file": "shared/npm-tutorial/package-based"
+          },
+          {
+            "name": "Integrated Repo Tutorial",
+            "id": "integrated-repo-tutorial",
+            "file": "shared/npm-tutorial/integrated"
           },
           {
             "name": "React Tutorial",

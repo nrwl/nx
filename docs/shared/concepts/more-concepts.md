@@ -2,6 +2,7 @@
 
 - [Incremental Builds](/more-concepts/incremental-builds)
 - [Nx and Turborepo](/more-concepts/turbo-and-nx)
+- [Nx and the Angular CLI](/more-concepts/nx-and-angular)
 - [Monorepos](/more-concepts/why-monorepos)
 - [Using Nx at Enterprises](/more-concepts/monorepo-nx-enterprise)
 - [Nx Daemon](/more-concepts/nx-daemon)

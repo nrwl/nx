@@ -8,7 +8,7 @@ width="100%" /%}
 In this tutorial you use Nx to build a server application out of common libraries using modern technologies.
 
 {% callout type="check" title="Integrated Repo" %}
-This tutorial sets up an [integrated repo](/concepts/integrated-vs-package-based). If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Core Tutorial](/getting-started/core-tutorial).
+This tutorial sets up an [integrated repo](/concepts/integrated-vs-package-based). If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Package-Based Repo Tutorial](/getting-started/package-based-repo-tutorial).
 {% /callout %}
 
 ## Contents
