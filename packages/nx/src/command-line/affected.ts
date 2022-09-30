@@ -97,7 +97,6 @@ export async function affected(
           const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
           await printAffected(
             projectsWithTarget,
-            projects,
             projectGraph,
             { nxJson },
             nxArgs,
@@ -105,7 +104,6 @@ export async function affected(
           );
         } else {
           await printAffected(
-            [],
             projects,
             projectGraph,
             { nxJson },

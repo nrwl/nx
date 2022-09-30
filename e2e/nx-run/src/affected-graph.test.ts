@@ -260,7 +260,7 @@ describe('Nx Affected and Graph Tests', () => {
     });
   });
 
-  describe('print-affected', () => {
+  fdescribe('print-affected', () => {
     it('should print information about affected projects', async () => {
       const myapp = uniq('myapp-a');
       const myapp2 = uniq('myapp-b');
@@ -274,18 +274,18 @@ describe('Nx Affected and Graph Tests', () => {
       runCLI(`generate @nrwl/js:lib ${mylib2}`);
       runCLI(`generate @nrwl/js:lib ${mypublishablelib}`);
 
-      const app1ElementSpec = readFile(
-        `apps/${myapp}/src/app/app.element.spec.ts`
-      );
-
-      updateFile(
-        `apps/${myapp}/src/app/app.element.spec.ts`,
-        `
-          import "@${proj}/${mylib}";
-          import "@${proj}/${mypublishablelib}";
-          ${app1ElementSpec}
-          `
-      );
+      // const app1ElementSpec = readFile(
+      //   `apps/${myapp}/src/app/app.element.spec.ts`
+      // );
+      //
+      // updateFile(
+      //   `apps/${myapp}/src/app/app.element.spec.ts`,
+      //   `
+      //     import "@${proj}/${mylib}";
+      //     import "@${proj}/${mypublishablelib}";
+      //     ${app1ElementSpec}
+      //     `
+      // );
 
       const app2ElementSpec = readFile(
         `apps/${myapp2}/src/app/app.element.spec.ts`
@@ -334,6 +334,19 @@ describe('Nx Affected and Graph Tests', () => {
         outputs: [`coverage/apps/${myapp}`],
       });
       compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
+
+      const app1ElementSpec = readFile(
+        `apps/${myapp}/src/app/app.element.spec.ts`
+      );
+
+      updateFile(
+        `apps/${myapp}/src/app/app.element.spec.ts`,
+        `
+          import "@${proj}/${mylib}";
+          import "@${proj}/${mypublishablelib}";
+          ${app1ElementSpec}
+          `
+      );
 
       const resWithTargetWithSelect1 = (
         await runCLIAsync(
