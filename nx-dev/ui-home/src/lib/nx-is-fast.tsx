@@ -157,7 +157,7 @@ export function NxIsFast(): JSX.Element {
               run before and can{' '}
               <span className="font-medium">
                 restore the files and the terminal output
-              </span>
+              </span>{' '}
               from its cache.
             </dd>
           </div>
@@ -210,7 +210,7 @@ export function NxIsFast(): JSX.Element {
             </dt>
             <dd className="mt-2 text-base text-gray-500 dark:text-slate-400">
               <span className="font-medium">
-                Distribute your local computation cache
+                Share your local computation cache
               </span>{' '}
               with team mates and your CI system for maximum efficiency.
             </dd>
@@ -233,7 +233,7 @@ export function NxIsFast(): JSX.Element {
               </div>
               <p className="relative mt-4 text-base font-medium leading-6 text-gray-900 dark:text-slate-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
-                Only touch what changed
+                Only run what changed
               </p>
             </dt>
             <dd className="mt-2 text-base text-gray-500 dark:text-slate-400">

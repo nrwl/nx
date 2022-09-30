@@ -837,7 +837,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
         </header>
         <div className="mt-8 flex flex-col gap-16 font-normal md:flex-row">
           <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
-            No need to browse the docs for finding suitable commands to run.{' '}
+            No need to browse the docs to find the right commands to run.{' '}
             <span className="font-medium">Stay in the flow!</span> Augment your
             editor with Nx Console, a dedicated extension available for{' '}
             <Link href="/core-features/integrate-with-editors">

@@ -131,7 +131,7 @@ export function MonorepoStyles(): JSX.Element {
                   <span className="mr-2 bg-pink-300 px-1 py-0.5 dark:bg-fuchsia-600">
                     NX
                   </span>
-                  🧑‍🔧 Analyzing the source code and creating configuration file
+                  🧑‍🔧 Analyzing the source code and creating configuration files
                 </p>
               </div>{' '}
               <div className="mt-4 flex">

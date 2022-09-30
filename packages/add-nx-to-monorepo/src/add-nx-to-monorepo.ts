@@ -30,7 +30,7 @@ export async function addNxToMonorepo() {
   const useCloud = await askAboutNxCloud(parsedArgs);
 
   output.log({
-    title: `🧑‍🔧 Analyzing the source code and creating configuration file`,
+    title: `🧑‍🔧 Analyzing the source code and creating configuration files`,
   });
 
   const packageJsonFiles = allProjectPackageJsonFiles(repoRoot);

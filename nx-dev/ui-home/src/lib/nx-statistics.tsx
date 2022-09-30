@@ -31,7 +31,7 @@ export function NxStatistics(): JSX.Element {
                 </div>
                 <div className="flex flex-col border-t border-b border-slate-50 p-6 text-center dark:border-slate-800/40 sm:border-0 sm:border-l sm:border-r">
                   <dt className="order-2 mt-2 text-base font-medium leading-6">
-                    Fortune 500 use it for key projects
+                    of Fortune 500 companies use Nx for key projects
                   </dt>
                   <dd className="order-1 text-4xl font-semibold text-slate-800 drop-shadow-sm dark:text-slate-200 dark:drop-shadow-[0_1px_1px_rgba(255,255,255,0.35)]">
                     50%
