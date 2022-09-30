@@ -1,4 +1,5 @@
 import {
+  getProjects,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -13,6 +14,7 @@ export interface NormalizedSchema extends Schema {
   projectName: string; // the name of e2e project
   projectDirectory: string; // the directory of e2e project
   projectRoot: string; // the root path of e2e project
+  appProjectRoot: string; // the root path of app to be tested
 }
 
 /**
@@ -37,21 +39,21 @@ export function normalizeOptions(
     ? joinPathFragments(appsDir, directoryFileName)
     : appsDir;
   const projectRoot = joinPathFragments(projectDirectory, fileName);
+  const project = getProjects(host).get(names(options.project).fileName);
+  const appProjectRoot = project.root;
 
-  const { fileName: appFileName, className: appClassName } = names(
-    options.project
-  );
+  const { fileName: appFileName } = names(options.project);
 
   return {
     ...options,
     appFileName,
-    appClassName,
     appDisplayName: options.displayName
       ? names(options.displayName).className
-      : appClassName,
+      : options.appClassName,
     name: fileName,
     projectName,
     projectDirectory,
     projectRoot,
+    appProjectRoot,
   };
 }

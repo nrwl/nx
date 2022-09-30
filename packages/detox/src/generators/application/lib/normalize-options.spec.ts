@@ -20,6 +20,7 @@ describe('Normalize Options', () => {
       framework: 'react-native',
       name: 'my-app-e2e',
       project: 'my-app',
+      appClassName: 'MyApp',
       linter: Linter.EsLint,
     };
     const options = normalizeOptions(appTree, schema);
@@ -29,6 +30,7 @@ describe('Normalize Options', () => {
       projectName: 'my-app-e2e',
       projectDirectory: 'apps',
       projectRoot: 'apps/my-app-e2e',
+      appProjectRoot: 'apps/my-app',
       project: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
@@ -46,6 +48,7 @@ describe('Normalize Options', () => {
       framework: 'react-native',
       name: 'myAppE2e',
       project: 'myApp',
+      appClassName: 'MyApp',
     };
     const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -57,6 +60,7 @@ describe('Normalize Options', () => {
       projectName: 'my-app-e2e',
       projectDirectory: 'apps',
       projectRoot: 'apps/my-app-e2e',
+      appProjectRoot: 'apps/my-app',
       framework: 'react-native',
     });
   });
@@ -70,6 +74,7 @@ describe('Normalize Options', () => {
       framework: 'react-native',
       name: 'myAppE2e',
       project: 'myApp',
+      appClassName: 'MyApp',
       displayName: 'app display name',
     };
     const options = normalizeOptions(appTree, schema);
@@ -83,6 +88,7 @@ describe('Normalize Options', () => {
       projectName: 'my-app-e2e',
       projectDirectory: 'apps',
       projectRoot: 'apps/my-app-e2e',
+      appProjectRoot: 'apps/my-app',
       framework: 'react-native',
     });
   });
@@ -96,6 +102,7 @@ describe('Normalize Options', () => {
       framework: 'react-native',
       name: 'my-app-e2e',
       project: 'my-app',
+      appClassName: 'MyApp',
       directory: 'directory',
     };
     const options = normalizeOptions(appTree, schema);
@@ -106,6 +113,7 @@ describe('Normalize Options', () => {
       appFileName: 'my-app',
       projectDirectory: 'apps/directory',
       projectRoot: 'apps/directory/my-app-e2e',
+      appProjectRoot: 'apps/my-app',
       name: 'my-app-e2e',
       directory: 'directory',
       projectName: 'directory-my-app-e2e',
@@ -121,6 +129,7 @@ describe('Normalize Options', () => {
     const schema: Schema = {
       framework: 'react-native',
       name: 'directory/my-app-e2e',
+      appClassName: 'MyApp',
       project: 'my-app',
     };
     const options = normalizeOptions(appTree, schema);
@@ -130,6 +139,7 @@ describe('Normalize Options', () => {
       appDisplayName: 'MyApp',
       appFileName: 'my-app',
       projectRoot: 'apps/directory/my-app-e2e',
+      appProjectRoot: 'apps/my-app',
       projectDirectory: 'apps',
       name: 'directory/my-app-e2e',
       projectName: 'directory-my-app-e2e',

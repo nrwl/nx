@@ -16,6 +16,7 @@ describe('Create Files', () => {
       projectName: 'my-app-e2e',
       projectDirectory: 'apps',
       projectRoot: 'apps/my-app-e2e',
+      appProjectRoot: 'apps/my-app',
       project: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',

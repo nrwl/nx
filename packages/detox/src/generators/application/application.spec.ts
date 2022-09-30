@@ -26,6 +26,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         name: 'my-app-e2e',
         project: 'my-app',
+        appClassName: 'MyApp',
         linter: Linter.None,
         framework: 'react-native',
       });
@@ -59,6 +60,7 @@ describe('detox application generator', () => {
         name: 'my-app-e2e',
         directory: 'my-dir',
         project: 'my-dir-my-app',
+        appClassName: 'MyApp',
         linter: Linter.None,
         framework: 'react-native',
       });
@@ -69,6 +71,21 @@ describe('detox application generator', () => {
       expect(
         tree.exists('apps/my-dir/my-app-e2e/src/app.spec.ts')
       ).toBeTruthy();
+    });
+
+    it('should have correct path to app', async () => {
+      expect(tree.exists('apps/my-dir/my-app-e2e/.detoxrc.json')).toBeTruthy();
+      const detoxrc = tree.read(
+        'apps/my-dir/my-app-e2e/.detoxrc.json',
+        'utf-8'
+      );
+      // Strip trailing commas
+      const detoxrcJson = JSON.parse(
+        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
+      );
+      expect(detoxrcJson.apps['ios.debug'].build).toEqual(
+        `cd ../../../my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet`
+      );
     });
 
     it('should add update `workspace.json` file', async () => {
@@ -93,6 +110,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         name: 'my-dir/my-app-e2e',
         project: 'my-dir-my-app',
+        appClassName: 'MyApp',
         linter: Linter.None,
         framework: 'react-native',
       });
@@ -127,6 +145,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         name: 'my-app-e2e',
         project: 'my-app',
+        appClassName: 'MyApp',
         linter: Linter.None,
         framework: 'react-native',
       });
@@ -141,6 +160,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         name: 'my-app-e2e',
         project: 'my-app',
+        appClassName: 'MyApp',
         linter: Linter.None,
         framework: 'react-native',
       });

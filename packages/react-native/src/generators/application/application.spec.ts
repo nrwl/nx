@@ -79,4 +79,27 @@ describe('app', () => {
     const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');
     expect(tsconfig.extends).toEqual('../../tsconfig.json');
   });
+  it('should create e2e app with correct paths', async () => {
+    await reactNativeApplicationGenerator(appTree, {
+      name: 'myApp',
+      displayName: 'myAppWithDisplayName',
+      directory: 'myDir',
+      linter: Linter.EsLint,
+      e2eTestRunner: 'detox',
+      install: false,
+    });
+
+    expect(appTree.exists('apps/my-dir/my-app-e2e/.detoxrc.json')).toBeTruthy();
+    const detoxrc = appTree.read(
+      'apps/my-dir/my-app-e2e/.detoxrc.json',
+      'utf-8'
+    );
+    // Strip trailing commas
+    const detoxrcJson = JSON.parse(
+      detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
+    );
+    expect(detoxrcJson.apps['ios.debug'].build).toEqual(
+      `cd ../../../apps/my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet`
+    );
+  });
 });
