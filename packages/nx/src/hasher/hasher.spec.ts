@@ -110,7 +110,6 @@ describe('Hasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(hash.value).toContain('yarn.lock.hash'); //implicits
     expect(hash.value).toContain('file.hash'); //project files
     expect(hash.value).toContain('prop-value'); //overrides
     expect(hash.value).toContain('parent'); //project
@@ -123,9 +122,6 @@ describe('Hasher', () => {
     expect(hash.details.nodes).toEqual({
       'parent:{projectRoot}/**/*':
         '/file|file.hash|{"root":"libs/parent","targets":{"build":{"inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"}]}}}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
-      '{workspaceRoot}/yarn.lock': 'yarn.lock.hash',
-      '{workspaceRoot}/package-lock.json': 'package-lock.json.hash',
-      '{workspaceRoot}/pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
       '{workspaceRoot}/nx.json': 'nx.json.hash',
       '{workspaceRoot}/.gitignore': '',
       '{workspaceRoot}/.nxignore': '',
@@ -531,7 +527,6 @@ describe('Hasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(hash.value).toContain('yarn.lock.hash'); //implicits
     expect(hash.value).toContain('file.hash'); //project files
     expect(hash.value).toContain('prop-value'); //overrides
     expect(hash.value).toContain('parent'); //project
@@ -588,7 +583,6 @@ describe('Hasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(tasksHash.value).toContain('yarn.lock.hash'); //implicits
     expect(tasksHash.value).toContain('a.hash'); //project files
     expect(tasksHash.value).toContain('b.hash'); //project files
     expect(tasksHash.value).toContain('prop-value'); //overrides
@@ -612,7 +606,6 @@ describe('Hasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(hashb.value).toContain('yarn.lock.hash'); //implicits
     expect(hashb.value).toContain('a.hash'); //project files
     expect(hashb.value).toContain('b.hash'); //project files
     expect(hashb.value).toContain('prop-value'); //overrides

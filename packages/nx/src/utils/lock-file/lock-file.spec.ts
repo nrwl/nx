@@ -46,8 +46,6 @@ describe('lock-file', () => {
 
       const mappedExernalNodes = mapLockFileDataToExternalNodes(lockFileData);
 
-      console.log(mappedExernalNodes, lockFileData);
-
       expect(mappedExernalNodes['npm:nx']).toMatchSnapshot();
     });
 
