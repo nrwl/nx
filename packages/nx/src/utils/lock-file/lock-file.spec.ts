@@ -1,11 +1,19 @@
 import { mapLockFileDataToExternalNodes } from './lock-file';
-import { LockFileData } from './lock-file-type';
 import { parseNpmLockFile } from './npm';
 import { parsePnpmLockFile } from './pnpm';
 import { parseYarnLockFile } from './yarn';
-import { lockFileYargsOnly } from './__fixtures__/npm.lock';
-import { lockFileYargsOnly as pnpmLockFileYargsOnly } from './__fixtures__/pnpm.lock';
-import { lockFileDevkitAndYargs } from './__fixtures__/yarn.lock';
+import {
+  lockFileYargsOnly as npmLockFileYargsOnly,
+  lockFile as npmLockFile,
+} from './__fixtures__/npm.lock';
+import {
+  lockFileYargsOnly as pnpmLockFileYargsOnly,
+  lockFile as pnpmLockFile,
+} from './__fixtures__/pnpm.lock';
+import {
+  lockFileDevkitAndYargs,
+  lockFile as yarnLockFile,
+} from './__fixtures__/yarn.lock';
 
 describe('lock-file', () => {
   describe('mapLockFileDataToExternalNodes', () => {
@@ -17,12 +25,30 @@ describe('lock-file', () => {
       expect(mappedExernalNodes['npm:yargs']).toMatchSnapshot();
     });
 
+    it('should map successfully complex yarn lock file', () => {
+      const lockFileData = parseYarnLockFile(yarnLockFile);
+
+      const mappedExernalNodes = mapLockFileDataToExternalNodes(lockFileData);
+
+      expect(mappedExernalNodes['npm:nx']).toMatchSnapshot();
+    });
+
     it('should map npm lock file data to external nodes', () => {
-      const lockFileData = parseNpmLockFile(lockFileYargsOnly);
+      const lockFileData = parseNpmLockFile(npmLockFileYargsOnly);
 
       const mappedExernalNodes = mapLockFileDataToExternalNodes(lockFileData);
 
       expect(mappedExernalNodes['npm:yargs']).toMatchSnapshot();
+    });
+
+    it('should map successfully complex npm lock file', () => {
+      const lockFileData = parseNpmLockFile(npmLockFile);
+
+      const mappedExernalNodes = mapLockFileDataToExternalNodes(lockFileData);
+
+      console.log(mappedExernalNodes, lockFileData);
+
+      expect(mappedExernalNodes['npm:nx']).toMatchSnapshot();
     });
 
     it('should map pnpm lock file data to external nodes', () => {
@@ -30,11 +56,18 @@ describe('lock-file', () => {
 
       const mappedExernalNodes = mapLockFileDataToExternalNodes(lockFileData);
 
-      console.log(JSON.stringify(lockFileData.dependencies['yargs'], null, 2));
-
-      console.log(JSON.stringify(mappedExernalNodes['npm:yargs'], null, 2));
-
       expect(mappedExernalNodes['npm:yargs']).toMatchSnapshot();
+    });
+
+    it('should map successfully complex pnpm lock file', () => {
+      const lockFileData = parsePnpmLockFile(pnpmLockFile);
+
+      const mappedExernalNodes = mapLockFileDataToExternalNodes(lockFileData);
+
+      expect(mappedExernalNodes['npm:nx']).toMatchSnapshot();
+      expect(
+        mappedExernalNodes['npm:@phenomnomnominal/tsquery']
+      ).toMatchSnapshot();
     });
   });
 });

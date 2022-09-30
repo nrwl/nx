@@ -82,6 +82,452 @@ Object {
 }
 `;
 
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex npm lock file 1`] = `
+Object {
+  "data": Object {
+    "dependencies": Object {
+      "@nrwl/cli": Array [
+        "14.7.5",
+        "14.7.5",
+      ],
+      "@nrwl/tao": Array [
+        "14.7.5",
+        "14.7.5",
+      ],
+      "@parcel/watcher": Array [
+        "2.0.4",
+        "2.0.4",
+      ],
+      "chalk": Array [
+        "4.1.0",
+        "4.1.0",
+      ],
+      "chokidar": Array [
+        "^3.5.1",
+        "3.5.3",
+      ],
+      "cli-cursor": Array [
+        "3.1.0",
+        "3.1.0",
+      ],
+      "cli-spinners": Array [
+        "2.6.1",
+        "2.6.1",
+      ],
+      "cliui": Array [
+        "^7.0.2",
+        "7.0.4",
+      ],
+      "dotenv": Array [
+        "~10.0.0",
+        "10.0.0",
+      ],
+      "enquirer": Array [
+        "~2.3.6",
+        "2.3.6",
+      ],
+      "fast-glob": Array [
+        "3.2.7",
+        "3.2.7",
+      ],
+      "figures": Array [
+        "3.2.0",
+        "3.2.0",
+      ],
+      "flat": Array [
+        "^5.0.2",
+        "5.0.2",
+      ],
+      "fs-extra": Array [
+        "^10.1.0",
+        "10.1.0",
+      ],
+      "glob": Array [
+        "7.1.4",
+        "7.1.4",
+      ],
+      "ignore": Array [
+        "^5.0.4",
+        "5.2.0",
+      ],
+      "js-yaml": Array [
+        "4.1.0",
+        "4.1.0",
+      ],
+      "jsonc-parser": Array [
+        "3.0.0",
+        "3.0.0",
+      ],
+      "minimatch": Array [
+        "3.0.5",
+        "3.0.5",
+      ],
+      "npm-run-path": Array [
+        "^4.0.1",
+        "4.0.1",
+      ],
+      "open": Array [
+        "^8.4.0",
+        "8.4.0",
+      ],
+      "semver": Array [
+        "7.3.4",
+        "7.3.4",
+      ],
+      "string-width": Array [
+        "^4.2.3",
+        "4.2.3",
+      ],
+      "tar-stream": Array [
+        "~2.2.0",
+        "2.2.0",
+      ],
+      "tmp": Array [
+        "~0.2.1",
+        "0.2.1",
+      ],
+      "tsconfig-paths": Array [
+        "^3.9.0",
+        "3.14.1",
+      ],
+      "tslib": Array [
+        "^2.3.0",
+        "2.4.0",
+      ],
+      "v8-compile-cache": Array [
+        "2.3.0",
+        "2.3.0",
+      ],
+      "yargs": Array [
+        "^17.4.0",
+        "17.5.1",
+      ],
+      "yargs-parser": Array [
+        "21.0.1",
+        "21.0.1",
+      ],
+    },
+    "packageName": "nx",
+    "peerDependencies": Object {
+      "@swc-node/register": Array [
+        "^1.4.2",
+        undefined,
+      ],
+      "@swc/core": Array [
+        "^1.2.173",
+        undefined,
+      ],
+    },
+    "version": "14.7.5",
+  },
+  "name": "npm:nx",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex pnpm lock file 1`] = `
+Object {
+  "data": Object {
+    "dependencies": Object {
+      "@nrwl/cli": Array [
+        "14.7.5",
+        "14.7.5",
+      ],
+      "@nrwl/tao": Array [
+        "14.7.5",
+        "14.7.5",
+      ],
+      "@parcel/watcher": Array [
+        "2.0.4",
+        "2.0.4",
+      ],
+      "chalk": Array [
+        "4.1.0",
+        "4.1.0",
+      ],
+      "chokidar": Array [
+        "3.5.3",
+        "3.5.3",
+      ],
+      "cli-cursor": Array [
+        "3.1.0",
+        "3.1.0",
+      ],
+      "cli-spinners": Array [
+        "2.6.1",
+        "2.6.1",
+      ],
+      "cliui": Array [
+        "7.0.4",
+        "7.0.4",
+      ],
+      "dotenv": Array [
+        "10.0.0",
+        "10.0.0",
+      ],
+      "enquirer": Array [
+        "2.3.6",
+        "2.3.6",
+      ],
+      "fast-glob": Array [
+        "3.2.7",
+        "3.2.7",
+      ],
+      "figures": Array [
+        "3.2.0",
+        "3.2.0",
+      ],
+      "flat": Array [
+        "5.0.2",
+        "5.0.2",
+      ],
+      "fs-extra": Array [
+        "10.1.0",
+        "10.1.0",
+      ],
+      "glob": Array [
+        "7.1.4",
+        "7.1.4",
+      ],
+      "ignore": Array [
+        "5.2.0",
+        "5.2.0",
+      ],
+      "js-yaml": Array [
+        "4.1.0",
+        "4.1.0",
+      ],
+      "jsonc-parser": Array [
+        "3.0.0",
+        "3.0.0",
+      ],
+      "minimatch": Array [
+        "3.0.5",
+        "3.0.5",
+      ],
+      "npm-run-path": Array [
+        "4.0.1",
+        "4.0.1",
+      ],
+      "open": Array [
+        "8.4.0",
+        "8.4.0",
+      ],
+      "semver": Array [
+        "7.3.4",
+        "7.3.4",
+      ],
+      "string-width": Array [
+        "4.2.3",
+        "4.2.3",
+      ],
+      "tar-stream": Array [
+        "2.2.0",
+        "2.2.0",
+      ],
+      "tmp": Array [
+        "0.2.1",
+        "0.2.1",
+      ],
+      "tsconfig-paths": Array [
+        "3.14.1",
+        "3.14.1",
+      ],
+      "tslib": Array [
+        "2.4.0",
+        "2.4.0",
+      ],
+      "v8-compile-cache": Array [
+        "2.3.0",
+        "2.3.0",
+      ],
+      "yargs": Array [
+        "17.5.1",
+        "17.5.1",
+      ],
+      "yargs-parser": Array [
+        "21.0.1",
+        "21.0.1",
+      ],
+    },
+    "packageName": "nx",
+    "peerDependencies": Object {
+      "@swc-node/register": Array [
+        "^1.4.2",
+        undefined,
+      ],
+      "@swc/core": Array [
+        "^1.2.173",
+        undefined,
+      ],
+    },
+    "version": "14.7.5",
+  },
+  "name": "npm:nx",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex pnpm lock file 2`] = `
+Object {
+  "data": Object {
+    "dependencies": Object {
+      "esquery": Array [
+        "1.4.0",
+        "1.4.0",
+      ],
+      "typescript": Array [
+        "4.8.3",
+        "4.8.3",
+      ],
+    },
+    "packageName": "@phenomnomnominal/tsquery",
+    "peerDependencies": Object {
+      "typescript": Array [
+        "^3 || ^4",
+        "4.8.3",
+      ],
+    },
+    "version": "4.1.1",
+  },
+  "name": "npm:@phenomnomnominal/tsquery",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex yarn lock file 1`] = `
+Object {
+  "data": Object {
+    "dependencies": Object {
+      "@nrwl/cli": Array [
+        "14.7.5",
+        "14.7.5",
+      ],
+      "@nrwl/tao": Array [
+        "14.7.5",
+        "14.7.5",
+      ],
+      "@parcel/watcher": Array [
+        "2.0.4",
+        "2.0.4",
+      ],
+      "chalk": Array [
+        "4.1.0",
+        "4.1.0",
+      ],
+      "chokidar": Array [
+        "^3.5.1",
+        "3.5.3",
+      ],
+      "cli-cursor": Array [
+        "3.1.0",
+        "3.1.0",
+      ],
+      "cli-spinners": Array [
+        "2.6.1",
+        "2.6.1",
+      ],
+      "cliui": Array [
+        "^7.0.2",
+        "7.0.4",
+      ],
+      "dotenv": Array [
+        "~10.0.0",
+        "10.0.0",
+      ],
+      "enquirer": Array [
+        "~2.3.6",
+        "2.3.6",
+      ],
+      "fast-glob": Array [
+        "3.2.7",
+        "3.2.7",
+      ],
+      "figures": Array [
+        "3.2.0",
+        "3.2.0",
+      ],
+      "flat": Array [
+        "^5.0.2",
+        "5.0.2",
+      ],
+      "fs-extra": Array [
+        "^10.1.0",
+        "10.1.0",
+      ],
+      "glob": Array [
+        "7.1.4",
+        "7.1.4",
+      ],
+      "ignore": Array [
+        "^5.0.4",
+        "5.2.0",
+      ],
+      "js-yaml": Array [
+        "4.1.0",
+        "4.1.0",
+      ],
+      "jsonc-parser": Array [
+        "3.0.0",
+        "3.0.0",
+      ],
+      "minimatch": Array [
+        "3.0.5",
+        "3.0.5",
+      ],
+      "npm-run-path": Array [
+        "^4.0.1",
+        "4.0.2",
+      ],
+      "open": Array [
+        "^8.4.0",
+        "8.4.0",
+      ],
+      "semver": Array [
+        "7.3.4",
+        "7.3.4",
+      ],
+      "string-width": Array [
+        "^4.2.3",
+        "4.2.3",
+      ],
+      "tar-stream": Array [
+        "~2.2.0",
+        "2.2.0",
+      ],
+      "tmp": Array [
+        "~0.2.1",
+        "0.2.1",
+      ],
+      "tsconfig-paths": Array [
+        "^3.9.0",
+        "3.14.1",
+      ],
+      "tslib": Array [
+        "^2.3.0",
+        "2.4.0",
+      ],
+      "v8-compile-cache": Array [
+        "2.3.0",
+        "2.3.0",
+      ],
+      "yargs": Array [
+        "^17.4.0",
+        "17.5.1",
+      ],
+      "yargs-parser": Array [
+        "21.0.1",
+        "21.0.1",
+      ],
+    },
+    "packageName": "nx",
+    "version": "14.7.5",
+  },
+  "name": "npm:nx",
+  "type": "npm",
+}
+`;
+
 exports[`lock-file mapLockFileDataToExternalNodes should map yarn lock file data to external nodes 1`] = `
 Object {
   "data": Object {

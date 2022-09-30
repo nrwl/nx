@@ -154,7 +154,15 @@ function mapTransitiveDependencies(
   const result: Record<string, [string, string]> = {};
 
   Object.keys(dependencies).forEach((packageName) => {
-    const key = `${packages[packageName]}@${dependencies[packageName]}`;
+    const key = `${packageName}@${dependencies[packageName]}`;
+
+    // some of the peer dependencies might not be installed,
+    // we don't need them as nodes in externalNodes
+    if (!packages[packageName]) {
+      result[packageName] = [dependencies[packageName], undefined];
+      versionCache[key] = undefined;
+      return;
+    }
 
     // if we already processed this dependency, use the version from the cache
     if (versionCache[key]) {
