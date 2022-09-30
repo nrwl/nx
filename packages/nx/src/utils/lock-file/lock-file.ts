@@ -19,8 +19,12 @@ import { LockFileData, PackageVersions } from './lock-file-type';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
 import { findMatchingVersion, hashString } from './utils';
-import { ProjectGraphExternalNode } from '../../config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphExternalNode,
+} from '../../config/project-graph';
 import { existsSync } from 'fs';
+import { version } from 'yargs';
 
 const YARN_LOCK_PATH = join(workspaceRoot, 'yarn.lock');
 const NPM_LOCK_PATH = join(workspaceRoot, 'package-lock.json');
@@ -95,10 +99,14 @@ export function parseLockFile(
  * @param lockFileData
  * @returns
  */
-export function mapLockFileDataToExternalNodes(
+export function mapLockFileDataToPartialGraph(
   lockFileData: LockFileData
-): Record<string, ProjectGraphExternalNode> {
-  const result: Record<string, ProjectGraphExternalNode> = {};
+): ProjectGraph {
+  const result: ProjectGraph = {
+    dependencies: {},
+    externalNodes: {},
+    nodes: {},
+  };
   const versionCache: Record<string, string> = {};
 
   Object.keys(lockFileData.dependencies).forEach((dep) => {
@@ -107,14 +115,17 @@ export function mapLockFileDataToExternalNodes(
       const packageVersion = versions[nameVersion];
 
       // map packages' transitive dependencies and peer dependencies to external nodes' versions
+      const combinedDependencies =
+        packageVersion.dependencies || packageVersion.peerDependencies
+          ? {
+              ...(packageVersion.dependencies || {}),
+              ...(packageVersion.peerDependencies || {}),
+            }
+          : undefined;
+
       const dependencies = mapTransitiveDependencies(
         lockFileData.dependencies,
-        packageVersion.dependencies,
-        versionCache
-      );
-      const peerDependencies = mapTransitiveDependencies(
-        lockFileData.dependencies,
-        packageVersion.peerDependencies,
+        combinedDependencies,
         versionCache
       );
 
@@ -122,7 +133,7 @@ export function mapLockFileDataToExternalNodes(
       const nodeName: `npm:${string}` = !index
         ? `npm:${dep}`
         : `npm:${nameVersion}`;
-      result[nodeName] = {
+      result.externalNodes[nodeName] = {
         type: 'npm',
         name: nodeName,
         data: {
@@ -130,43 +141,46 @@ export function mapLockFileDataToExternalNodes(
           packageName: dep,
         },
       };
-      if (dependencies) {
-        result[nodeName].data.dependencies = dependencies;
-      }
-      if (peerDependencies) {
-        result[nodeName].data.peerDependencies = peerDependencies;
-      }
+
+      // map transitive dependencies to dependencies hash map
+      dependencies.forEach((dep) => {
+        result.dependencies[nodeName] = result.dependencies[nodeName] || [];
+        result.dependencies[nodeName].push({
+          type: 'static',
+          source: nodeName,
+          target: dep,
+        });
+      });
     });
   });
   return result;
 }
 
 // Finds the maching version of each dependency of the package and
-// maps each {package}:{versionRange} pair to {package}:[{versionRange}, {version}]
+// maps each {package}:{versionRange} pair to "npm:{package}@{version}"
 function mapTransitiveDependencies(
   packages: Record<string, PackageVersions>,
   dependencies: Record<string, string>,
   versionCache: Record<string, string>
-): Record<string, [string, string]> {
+): string[] {
   if (!dependencies) {
-    return undefined;
+    return [];
   }
-  const result: Record<string, [string, string]> = {};
+  const result: string[] = [];
 
   Object.keys(dependencies).forEach((packageName) => {
     const key = `${packageName}@${dependencies[packageName]}`;
 
     // some of the peer dependencies might not be installed,
-    // we don't need them as nodes in externalNodes
+    // we don't have them as nodes in externalNodes
+    // so there's no need to map them as dependencies
     if (!packages[packageName]) {
-      result[packageName] = [dependencies[packageName], undefined];
-      versionCache[key] = undefined;
       return;
     }
 
     // if we already processed this dependency, use the version from the cache
     if (versionCache[key]) {
-      result[packageName] = [dependencies[packageName], versionCache[key]];
+      result.push(versionCache[key]);
     } else {
       const version =
         findMatchingVersion(
@@ -174,8 +188,9 @@ function mapTransitiveDependencies(
           packages[packageName],
           dependencies[packageName]
         ) || dependencies[packageName];
-      result[packageName] = [dependencies[packageName], version];
-      versionCache[key] = version;
+      const node = `npm:${packageName}@${version}`;
+      result.push(node);
+      versionCache[key] = node;
     }
   });
 

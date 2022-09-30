@@ -115,8 +115,6 @@ export interface ProjectGraphExternalNode {
   data: {
     version: string;
     packageName: string;
-    dependencies?: Record<string, [string, string]>; // dependencies of this version { [packageName]: [versionRange, actualVersion] }
-    peerDependencies?: Record<string, [string, string]>; // dependencies of this version { [packageName]: [versionRange, actualVersion] }
   };
 }
 

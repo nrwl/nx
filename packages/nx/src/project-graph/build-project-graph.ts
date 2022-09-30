@@ -43,7 +43,7 @@ import {
 import {
   lockFileExists,
   lockFileHash,
-  mapLockFileDataToExternalNodes,
+  mapLockFileDataToPartialGraph,
   parseLockFile,
 } from '../utils/lock-file/lock-file';
 
@@ -102,15 +102,15 @@ export async function buildProjectGraphUsingProjectFileMap(
     filesToProcess = projectFileMap;
     cachedFileData = {};
   }
-  let externalNodes: Record<string, ProjectGraphExternalNode> = {};
+  let partialGraph: ProjectGraph;
   let lockHash = 'n/a';
   // during the create-nx-workspace lock file might not exists yet
   if (lockFileExists()) {
     lockHash = lockFileHash();
     if (cache && cache.lockFileHash === lockHash) {
-      externalNodes = cache.externalNodes;
+      partialGraph = isolatePartialGraphFromCache(cache);
     } else {
-      externalNodes = mapLockFileDataToExternalNodes(parseLockFile());
+      partialGraph = mapLockFileDataToPartialGraph(parseLockFile());
     }
   }
   const context = createContext(
@@ -124,7 +124,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     context,
     cachedFileData,
     projectGraphVersion,
-    externalNodes,
+    partialGraph,
     packageJsonDeps
   );
   const projectGraphCache = createCache(
@@ -149,22 +149,36 @@ function readCombinedDeps() {
   return { ...json.dependencies, ...json.devDependencies };
 }
 
+// extract only external nodes and their dependencies
+function isolatePartialGraphFromCache(cache: ProjectGraphCache): ProjectGraph {
+  const dependencies = {};
+  Object.keys(cache.dependencies).forEach((k) => {
+    if (cache.externalNodes[k]) {
+      dependencies[k] = cache.dependencies[k];
+    }
+  });
+
+  return {
+    nodes: {},
+    dependencies,
+    externalNodes: cache.externalNodes,
+  };
+}
+
 async function buildProjectGraphUsingContext(
   nxJson: NxJsonConfiguration,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   projectGraphVersion: string,
-  externalNodes: Record<string, ProjectGraphExternalNode>,
+  partialGraph: ProjectGraph,
   packageJsonDeps: Record<string, string>
 ) {
   performance.mark('build project graph:start');
 
-  const builder = new ProjectGraphBuilder(
-    externalNodes && { externalNodes, nodes: {}, dependencies: {} }
-  );
+  const builder = new ProjectGraphBuilder(partialGraph);
 
   buildWorkspaceProjectNodes(ctx, builder, nxJson);
-  if (!externalNodes) {
+  if (!partialGraph) {
     buildNpmPackageNodes(builder);
   }
   for (const proj of Object.keys(cachedFileData)) {
