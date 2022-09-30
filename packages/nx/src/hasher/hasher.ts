@@ -84,10 +84,6 @@ export class Hasher {
     const legacyFilesetInputs = [
       ...Object.keys(this.nxJson.implicitDependencies ?? {}),
       'nx.json',
-      //TODO: vsavkin move the special cases into explicit ts support
-      'package-lock.json',
-      'yarn.lock',
-      'pnpm-lock.yaml',
 
       // ignore files will change the set of inputs to the hasher
       '.gitignore',
