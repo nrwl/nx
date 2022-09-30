@@ -65,7 +65,7 @@ npx nx test header
 To run the `build` target for all projects in the repo, run:
 
 ```bash
-npx nx run-many --target=build
+npx nx run-many --target=build --all
 ```
 
 This will build the projects in the right order: `footer` and `header` and then `myapp`.
