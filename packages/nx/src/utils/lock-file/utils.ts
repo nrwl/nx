@@ -9,15 +9,19 @@ import { PackageVersions } from './lock-file-type';
  */
 export function sortObject<T = string>(
   obj: Record<string, T>,
-  valueTransformator: (value: T) => any = (value) => value
+  valueTransformator: (value: T) => any = (value) => value,
+  descending = false
 ): Record<string, T> | undefined {
   const keys = Object.keys(obj);
   if (keys.length === 0) {
     return;
   }
-
+  keys.sort();
+  if (descending) {
+    keys.reverse();
+  }
   const result: Record<string, T> = {};
-  keys.sort().forEach((key) => {
+  keys.forEach((key) => {
     result[key] = valueTransformator(obj[key]);
   });
   return result;

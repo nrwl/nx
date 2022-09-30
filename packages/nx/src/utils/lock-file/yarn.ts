@@ -70,6 +70,14 @@ function mapPackages(
       }
     }
   });
+  // sort the version in descending order
+  Object.keys(mappedPackages).forEach((packageName) => {
+    mappedPackages[packageName] = sortObject(
+      mappedPackages[packageName],
+      undefined,
+      true
+    );
+  });
   return [mappedPackages, workspacePackages];
 }
 
