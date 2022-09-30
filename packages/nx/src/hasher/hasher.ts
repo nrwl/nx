@@ -235,12 +235,21 @@ class TaskHasher {
         namedInputs
       );
 
-      return this.hashSelfAndDepsInputs(
+      const selfAndInputs = await this.hashSelfAndDepsInputs(
         task.target.project,
         selfInputs,
         depsInputs,
         visited
       );
+
+      const target = this.hashTarget(task.target.project, task.target.target);
+      if (target) {
+        return {
+          value: this.hashing.hashArray([selfAndInputs.value, target.value]),
+          details: { ...selfAndInputs.details, ...target.details },
+        };
+      }
+      return selfAndInputs;
     });
   }
 
@@ -334,7 +343,9 @@ class TaskHasher {
     const version = n?.data?.version;
     let hash: string;
     if (version) {
-      hash = this.hashing.hashArray([version]);
+      const deps = [`${projectName}@${version}`];
+      this.traverseExternalNodesDependencies(projectName, deps);
+      hash = this.hashing.hashArray(deps.sort());
     } else {
       // unknown dependency
       // this may occur dependency is not an npm package
@@ -346,6 +357,48 @@ class TaskHasher {
       value: hash,
       details: {
         [projectName]: version || hash,
+      },
+    };
+  }
+
+  private traverseExternalNodesDependencies(
+    projectName: string,
+    visited: string[]
+  ) {
+    const dependencies = this.projectGraph.dependencies[projectName] ?? [];
+    dependencies.forEach((d) => {
+      if (visited.indexOf(d.target) === -1) {
+        visited.push(d.target);
+        this.traverseExternalNodesDependencies(d.target, visited);
+      }
+    });
+  }
+
+  private hashTarget(projectName: string, targetName: string): PartialHash {
+    const projectNode = this.projectGraph.nodes[projectName];
+    const target = projectNode.data.targets[targetName];
+
+    if (!target) {
+      return;
+    }
+
+    // if it's run commands we skip traversing since we have no info
+    // what this command depends on
+    if (target.executor !== `@nrwl/workspace:run-commands`) {
+      const executorPackage = target.executor.split(':')[0];
+      const executorNode = `npm:${executorPackage}`;
+      if (this.projectGraph.externalNodes?.[executorNode]) {
+        return this.hashExternalDependency(executorNode);
+      }
+    }
+
+    const hash = this.hashing.hashArray([
+      JSON.stringify(this.projectGraph.externalNodes),
+    ]);
+    return {
+      value: hash,
+      details: {
+        [projectNode.name]: target.executor,
       },
     };
   }
