@@ -12,7 +12,7 @@ Nx has first-class Next.js support, if you are looking to use it for your projec
 {% /callout %}
 
 {% callout type="check" title="Integrated Repo" %}
-This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) repo. If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Core Tutorial](/getting-started/core-tutorial).
+This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) repo. If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Package-Based Repo Tutorial](/getting-started/package-based-repo-tutorial).
 {% /callout %}
 
 ## Contents

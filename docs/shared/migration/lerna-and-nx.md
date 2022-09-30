@@ -18,7 +18,7 @@ For a discussion on #2, see [dependency management](#dependency-management) belo
 
 ## Speed up Lerna with Nx's powerful task scheduler
 
-Nx comes with a powerful task scheduler that intelligenty runs operations and makes sure they are quick. This happens in a variety of ways:
+Nx comes with a powerful task scheduler that intelligently runs operations and makes sure they are quick. This happens in a variety of ways:
 
 - **Parallelization and task dependencies -** Nx automatically [knows how your projects relate to each other](/more-concepts/how-project-graph-is-built). As a result, if `project-a` depends on `project-b` and you run the build command for `project-a`, Nx first runs the builds for all of `project-a`'s dependencies and then the invoked project itself. Nx sorts these tasks to maximize parallelism.
 - **Only run what changed -** Using [Nx affected commands](/concepts/affected) you only really execute tasks on the projects that changed, compared to a given baseline (usually the main branch).

@@ -81,7 +81,7 @@ third_party # nx will ignore everything in the third-party dir
 
 ### Enabling JS Analysis
 
-After running `add-nx-to-monorepo` Nx will only analyze `package.json` files like Lerna or Turborepo.
+After running `add-nx-to-monorepo` Nx will only analyze `package.json` files in the same way Lerna or Turborepo do.
 
 ```json
 {

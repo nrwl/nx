@@ -20,6 +20,8 @@ import { NxCloudSection } from './lib/tags/nx-cloud-section.component';
 import { nxCloudSection } from './lib/tags/nx-cloud-section.schema';
 import { InstallNxConsole } from './lib/tags/install-nx-console.component';
 import { installNxConsole } from './lib/tags/install-nx-console.schema';
+import { Persona, Personas } from './lib/tags/personas.component';
+import { persona, personas } from './lib/tags/personas.schema';
 import { SideBySide } from './lib/tags/side-by-side.component';
 import { sideBySide } from './lib/tags/side-by-side.schema';
 import { Tab, Tabs } from './lib/tags/tabs.component';
@@ -45,6 +47,8 @@ export const getMarkdocCustomConfig = (
       iframe,
       'install-nx-console': installNxConsole,
       'nx-cloud-section': nxCloudSection,
+      persona,
+      personas,
       'side-by-side': sideBySide,
       tab,
       tabs,
@@ -62,6 +66,8 @@ export const getMarkdocCustomConfig = (
     Iframe,
     InstallNxConsole,
     NxCloudSection,
+    Persona,
+    Personas,
     SideBySide,
     Tab,
     Tabs,
