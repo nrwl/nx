@@ -193,8 +193,6 @@ export function getCommonConfig(
   } catch {}
 
   return {
-    mode:
-      scriptsOptimization || stylesOptimization ? 'production' : 'development',
     profile: buildOptions.statsJson,
     resolve: {
       extensions: ['.ts', '.tsx', '.mjs', '.js'],
