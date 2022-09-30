@@ -645,7 +645,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "standaloneConfig": {
@@ -956,7 +956,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "skipFormat": {
@@ -1113,7 +1113,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "routing": {

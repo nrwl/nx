@@ -8,14 +8,14 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": ["eslint"],
       "default": "eslint"
     },
     "config": {
       "type": "string",
       "description": "The name of the configuration file.",
       "x-completion-type": "file",
-      "x-completion-glob": "(tslint.json|.eslintrc.json)"
+      "x-completion-glob": ".eslintrc.json)"
     },
     "tsConfig": {
       "description": "The name of the TypeScript configuration file.",
@@ -57,7 +57,9 @@
             "tap"
           ]
         },
-        { "minLength": 1 }
+        {
+          "minLength": 1
+        }
       ]
     },
     "exclude": {

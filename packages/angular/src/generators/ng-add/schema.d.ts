@@ -14,6 +14,6 @@ export interface GeneratorOptions {
   skipInstall?: boolean;
   skipPostInstall?: boolean;
   style?: Styles;
-  linter?: Exclude<Linter, Linter.TsLint>;
+  linter?: Linter;
   skipPackageJson?: boolean;
 }

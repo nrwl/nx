@@ -5,7 +5,7 @@ export interface ApplicationGeneratorOptions {
   name: string;
   directory?: string;
   frontendProject?: string;
-  linter?: Exclude<Linter, Linter.TsLint>;
+  linter?: Linter;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   standaloneConfig?: boolean;

@@ -6,10 +6,8 @@ import {
   getWorkspacePath as devkitGetWorkspacePath,
   installPackagesTask,
   names,
-  NxJsonConfiguration,
   PackageManager,
   Tree,
-  updateJson,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -19,6 +17,7 @@ import { workspaceGenerator } from '../workspace/workspace';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import { getNpmPackageVersion } from '../utils/get-npm-package-version';
+import { Linter } from '../../utils/lint';
 
 export interface Schema {
   cli: 'nx' | 'angular';
@@ -31,7 +30,7 @@ export interface Schema {
   nxCloud?: boolean;
   preset: string;
   defaultBase: string;
-  linter: 'tslint' | 'eslint';
+  linter: Linter;
   packageManager?: PackageManager;
 }
 
@@ -143,7 +142,6 @@ export async function newGenerator(host: Tree, options: Schema) {
 
   await workspaceGenerator(host, { ...options, nxCloud: undefined } as any);
 
-  setDefaultLinter(host, options);
   addPresetDependencies(host, options);
   addCloudDependencies(host, options);
 
@@ -260,89 +258,4 @@ function normalizeOptions(options: NormalizedSchema): NormalizedSchema {
   }
 
   return options;
-}
-
-function setDefaultLinter(host: Tree, options: Schema) {
-  const { linter, preset } = options;
-  // Don't do anything if someone doesn't pick angular
-  if (preset !== Preset.Angular && preset !== Preset.AngularWithNest) {
-    return;
-  }
-
-  switch (linter) {
-    case 'eslint': {
-      setESLintDefault(host, options);
-      break;
-    }
-    case 'tslint': {
-      setTSLintDefault(host, options);
-      break;
-    }
-  }
-}
-
-/**
- * This sets ESLint as the default for any schematics that default to TSLint
- */
-function setESLintDefault(host: Tree, options: Schema) {
-  updateJson<NxJsonConfiguration>(
-    host,
-    join(options.directory, 'nx.json'),
-    (json) => {
-      setDefault(json, '@nrwl/angular', 'application', 'linter', 'eslint');
-      setDefault(json, '@nrwl/angular', 'library', 'linter', 'eslint');
-      setDefault(
-        json,
-        '@nrwl/angular',
-        'storybook-configuration',
-        'linter',
-        'eslint'
-      );
-      return json;
-    }
-  );
-}
-
-/**
- * This sets TSLint as the default for any schematics that default to ESLint
- */
-function setTSLintDefault(host: Tree, options: Schema) {
-  updateJson<NxJsonConfiguration>(
-    host,
-    join(options.directory, 'nx.json'),
-    (json) => {
-      setDefault(json, '@nrwl/workspace', 'library', 'linter', 'tslint');
-      setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
-      setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
-      setDefault(json, '@nrwl/node', 'application', 'linter', 'tslint');
-      setDefault(json, '@nrwl/node', 'library', 'linter', 'tslint');
-      setDefault(json, '@nrwl/nest', 'application', 'linter', 'tslint');
-      setDefault(json, '@nrwl/nest', 'library', 'linter', 'tslint');
-      setDefault(json, '@nrwl/express', 'application', 'linter', 'tslint');
-      setDefault(json, '@nrwl/express', 'library', 'linter', 'tslint');
-
-      return json;
-    }
-  );
-}
-
-function setDefault(
-  json: NxJsonConfiguration,
-  collectionName: string,
-  generatorName: string,
-  key: string,
-  value: any
-) {
-  if (!json.generators) json.generators = {};
-  if (
-    json.generators[collectionName] &&
-    json.generators[collectionName][generatorName]
-  ) {
-    json.generators[collectionName][generatorName][key] = value;
-  } else if (json.generators[`${collectionName}:${generatorName}`]) {
-    json.generators[`${collectionName}:${generatorName}`][key] = value;
-  } else {
-    json.generators[collectionName] = json.generators[collectionName] || {};
-    json.generators[collectionName][generatorName] = { [key]: value };
-  }
 }

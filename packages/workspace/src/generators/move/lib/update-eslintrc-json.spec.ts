@@ -30,7 +30,7 @@ describe('updateEslint', () => {
   it('should handle .eslintrc.json not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
-      linter: Linter.TsLint,
+      linter: Linter.None,
       standaloneConfig: false,
     });
 
