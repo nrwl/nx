@@ -50,9 +50,8 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
-            "default": "eslint",
-            "x-deprecated": "TSLint support is deprecated and will be removed"
+            "enum": ["eslint"],
+            "default": "eslint"
           },
           "unitTestRunner": {
             "type": "string",
