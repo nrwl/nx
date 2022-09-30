@@ -17,7 +17,9 @@ export async function printAffected(
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
-  const projectsForType = affectedProjects.filter((p) => (nxArgs.type ? p.type === nxArgs.type : true));
+  const projectsForType = affectedProjects.filter((p) =>
+    nxArgs.type ? p.type === nxArgs.type : true
+  );
   const projectNames = projectsForType.map((p) => p.name);
   const tasksJson = await createTasks(
     projectsForType,
