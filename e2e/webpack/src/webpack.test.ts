@@ -27,6 +27,8 @@ describe('Webpack Plugin', () => {
     runCLI(`build ${myPkg}`);
     let output = runCommand(`node dist/libs/${myPkg}/main.js`);
     expect(output).toMatch(/Hello/);
+    expect(output).not.toMatch(/Conflicting/);
+    expect(output).not.toMatch(/process.env.NODE_ENV/);
 
     updateProjectConfig(myPkg, (config) => {
       delete config.targets.build;
