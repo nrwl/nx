@@ -189,6 +189,8 @@ export function getBaseWebpackPartial(
         runtimeChunk: true,
       };
     }
+    webpackConfig.optimization ??= {};
+    webpackConfig.optimization.nodeEnv = process.env.NODE_ENV ?? mode;
   }
 
   const extraPlugins: WebpackPluginInstance[] = [];
