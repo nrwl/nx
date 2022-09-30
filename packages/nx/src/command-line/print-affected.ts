@@ -10,6 +10,7 @@ import { Hasher } from '../hasher/hasher';
 import { hashTask } from '../hasher/hash-task';
 import { workspaceRoot } from '../utils/workspace-root';
 
+// dont need both collections
 export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
   affectedProjects: ProjectGraphProjectNode[],
