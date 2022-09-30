@@ -10,22 +10,17 @@ import { Hasher } from '../hasher/hasher';
 import { hashTask } from '../hasher/hash-task';
 import { workspaceRoot } from '../utils/workspace-root';
 
-// dont need both collections
 export async function printAffected(
-  affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
   affectedProjects: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
   { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
-  const projectNames = affectedProjects
-    .filter((p) => (nxArgs.type ? p.type === nxArgs.type : true))
-    .map((p) => p.name);
+  const projectsForType = affectedProjects.filter((p) => (nxArgs.type ? p.type === nxArgs.type : true));
+  const projectNames = projectsForType.map((p) => p.name);
   const tasksJson = await createTasks(
-    affectedProjectsWithTargetAndConfig.filter((p) =>
-      nxArgs.type ? p.type === nxArgs.type : true
-    ),
+    projectsForType,
     projectGraph,
     nxArgs,
     nxJson,
