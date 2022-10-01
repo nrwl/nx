@@ -14,6 +14,7 @@ export async function addDetox(host: Tree, options: NormalizedSchema) {
     name: `${options.name}-e2e`,
     directory: options.directory,
     project: options.projectName,
+    appClassName: options.className,
     framework: 'expo',
     setParserOptionsProject: options.setParserOptionsProject,
   });
