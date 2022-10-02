@@ -240,6 +240,10 @@ describe('js e2e', () => {
     runCLI(`build ${lib}`);
 
     expect(
+      readJson(`dist/libs/${lib}/package.json`).peerDependencies['@swc/helpers']
+    ).toEqual(swcHelpersVersion);
+
+    expect(
       satisfies(
         readJson(`dist/libs/${lib}/package.json`).peerDependencies[
           '@swc/helpers'
