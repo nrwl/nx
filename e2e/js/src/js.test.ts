@@ -17,6 +17,10 @@ import {
   waitUntil,
 } from '../../utils';
 
+// copy from packages/nx/src/utils/version.ts
+// TODO(meeroslav) this should be in sync with the version in the package.json
+const swcHelpersVersion = '~0.3.3';
+
 describe('js e2e', () => {
   let scope: string;
 
@@ -235,14 +239,12 @@ describe('js e2e', () => {
 
     runCLI(`build ${lib}`);
 
-    const rootPackageJson = readJson(`package.json`);
-
     expect(
       satisfies(
         readJson(`dist/libs/${lib}/package.json`).peerDependencies[
           '@swc/helpers'
         ],
-        rootPackageJson.dependencies['@swc/helpers']
+        swcHelpersVersion
       )
     ).toBeTruthy();
 
