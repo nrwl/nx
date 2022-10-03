@@ -1,13 +1,3 @@
-import {
-  AcademicCapIcon,
-  BeakerIcon,
-  ChartBarIcon,
-  CloudArrowDownIcon,
-  CubeTransparentIcon,
-  ServerStackIcon,
-} from '@heroicons/react/24/outline';
-import { CogIcon } from '@heroicons/react/24/solid';
-
 export function WhyIsNxFast(): JSX.Element {
   return (
     <article

@@ -1,6 +1,5 @@
 import {
   AcademicCapIcon,
-  ArrowRightCircleIcon,
   BeakerIcon,
   ChartBarIcon,
   CloudArrowDownIcon,
@@ -16,7 +15,6 @@ import {
   useMotionValue,
   useTransform,
 } from 'framer-motion';
-import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 
