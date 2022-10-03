@@ -48,7 +48,7 @@ export default function Packages(props: ReferencesProps): JSX.Element {
             {
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
-              height: 400,
+              height: 242,
               alt: 'Nx: Smart, Fast and Extensible Build System',
               type: 'image/jpeg',
             },
