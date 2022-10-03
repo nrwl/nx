@@ -87,6 +87,8 @@ async function createTasks(
 function serializeProjectGraph(projectGraph: ProjectGraph) {
   const nodes = Object.values(projectGraph.nodes).map((n) => n.name);
   const dependencies = {};
+  // we don't need external dependencies' dependencies for print-affected
+  // having them included makes the output unreadable
   Object.keys(projectGraph.dependencies).forEach((key) => {
     if (!key.startsWith('npm:')) {
       dependencies[key] = projectGraph.dependencies[key];

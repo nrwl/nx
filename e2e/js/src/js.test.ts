@@ -235,16 +235,12 @@ describe('js e2e', () => {
 
     runCLI(`build ${lib}`);
 
-    const rootPackageJson = readJson(`package.json`);
+    const swcHelpersFromRoot =
+      readJson(`package.json`).dependencies['@swc/helpers'];
+    const swcHelpersFromDist = readJson(`dist/libs/${lib}/package.json`)
+      .peerDependencies['@swc/helpers'];
 
-    expect(
-      satisfies(
-        readJson(`dist/libs/${lib}/package.json`).peerDependencies[
-          '@swc/helpers'
-        ],
-        rootPackageJson.dependencies['@swc/helpers']
-      )
-    ).toBeTruthy();
+    expect(satisfies(swcHelpersFromDist, swcHelpersFromRoot)).toBeTruthy();
 
     updateJson(`libs/${lib}/.lib.swcrc`, (json) => {
       json.jsc.externalHelpers = false;
