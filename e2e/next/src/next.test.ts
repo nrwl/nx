@@ -1,14 +1,12 @@
 import {
-  rmDist,
   checkFilesExist,
   cleanupProject,
-  expectJestTestsToPass,
   isNotWindows,
   killPorts,
   newProject,
-  promisifiedTreeKill,
   readFile,
   readJson,
+  rmDist,
   runCLI,
   runCLIAsync,
   runCommandUntil,
@@ -414,9 +412,6 @@ describe('Next.js Applications', () => {
       checkExport: false,
     });
   }, 300_000);
-  it('should run default jest tests', async () => {
-    await expectJestTestsToPass('@nrwl/next:app');
-  }, 100_000);
 });
 
 function getData(port: number, path = ''): Promise<any> {
