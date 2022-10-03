@@ -1,16 +1,16 @@
 import { AnnouncementBanner, Footer, Header } from '@nrwl/nx-dev/ui-common';
 import {
-  MigrationsAndCodeGeneration,
   ExtensibleAndIntegrated,
   GettingStarted,
   Hero,
   LogoCloud,
   Migrate,
+  MigrationsAndCodeGeneration,
+  MonorepoStyles,
   Newsletter,
   NxIsFast,
   NxStatistics,
   Testimonials,
-  MonorepoStyles,
 } from '@nrwl/nx-dev/ui-home';
 import { NextSeo } from 'next-seo';
 

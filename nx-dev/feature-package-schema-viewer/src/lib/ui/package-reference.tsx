@@ -1,5 +1,4 @@
 import {
-  BookmarkIcon,
   CogIcon,
   CpuChipIcon,
   DocumentIcon,
