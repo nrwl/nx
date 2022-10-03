@@ -178,6 +178,13 @@ module.exports = withNx({
       destination: '/',
       permanent: true,
     });
+
+    // Docs
+    rules.push({
+      source: '/docs',
+      destination: '/getting-started/intro',
+      permanent: true,
+    });
     return rules;
   },
 });
