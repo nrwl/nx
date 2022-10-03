@@ -30,6 +30,11 @@ pre,
   font-family: 'InputMono', monospace;
 }
 
+/** Scrollbars **/
+.dark {
+  color-scheme: dark;
+}
+
 /** Layout **/
 #__next {
   height: 100%;
