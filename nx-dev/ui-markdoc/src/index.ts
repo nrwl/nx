@@ -12,6 +12,8 @@ import { Callout } from './lib/tags/callout.component';
 import { callout } from './lib/tags/callout.schema';
 import { CardList } from './lib/tags/card-list.component';
 import { cardList } from './lib/tags/card-list.schema';
+import { card, cards } from './lib/tags/cards.schema';
+import { Card, Cards } from './lib/tags/cards.component';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
 import { Iframe } from './lib/tags/iframe.component';
@@ -37,6 +39,8 @@ export const getMarkdocCustomConfig = (
     },
     tags: {
       callout,
+      card,
+      cards,
       'card-list': cardList,
       'github-repository': githubRepository,
       iframe,
@@ -49,6 +53,8 @@ export const getMarkdocCustomConfig = (
   },
   components: {
     Callout,
+    Card,
+    Cards,
     CardList,
     CustomLink,
     Fence,

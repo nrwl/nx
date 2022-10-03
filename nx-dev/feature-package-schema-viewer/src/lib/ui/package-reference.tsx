@@ -1,8 +1,11 @@
 import {
-  ChipIcon,
+  BookmarkIcon,
   CogIcon,
+  CpuChipIcon,
+  DocumentIcon,
   InformationCircleIcon,
-} from '@heroicons/react/solid';
+} from '@heroicons/react/24/outline';
+import { MenuItem } from '@nrwl/nx-dev/models-menu';
 import { SchemaMetadata } from '@nrwl/nx-dev/models-package';
 import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import Link from 'next/link';
@@ -12,10 +15,12 @@ import { Heading2 } from './headings';
 export function PackageReference({
   executors,
   generators,
+  guides,
   name,
 }: {
   executors: SchemaMetadata[];
   generators: SchemaMetadata[];
+  guides: MenuItem;
   name: string;
 }): JSX.Element {
   return (
@@ -27,8 +32,21 @@ export function PackageReference({
         package.
       </p>
 
+      <Heading2 title={'Guides'} />
+      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+        {guides &&
+          guides.itemList &&
+          guides.itemList
+            .filter((x) => x.id !== 'overview')
+            .map((guide) => <GuideListItem key={guide.id} guide={guide} />)}
+        {(!guides || (guides && guides.itemList?.length === 0)) && (
+          <EmptyList type="guides" />
+        )}
+      </ul>
+
+      <div className="h-12">{/* SPACER */}</div>
       <Heading2 title={'Executors'} />
-      <ul className="divide-y divide-gray-200">
+      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
         {executors.map((executor) => (
           <SchemaListItem
             key={executor.name}
@@ -42,7 +60,7 @@ export function PackageReference({
 
       <div className="h-12">{/* SPACER */}</div>
       <Heading2 title={'Generators'} />
-      <ul className="divide-y divide-gray-200">
+      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
         {generators.map((generator) => (
           <SchemaListItem
             key={generator.name}
@@ -54,6 +72,29 @@ export function PackageReference({
         {generators.length === 0 && <EmptyList type="generator" />}
       </ul>
     </>
+  );
+}
+
+function GuideListItem({ guide }: { guide: MenuItem }) {
+  return (
+    <li
+      key={guide.name}
+      className="focus-within:ring-blue-nx-base relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+    >
+      <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
+        <DocumentIcon className="h-5 w-5" role="img" />
+      </div>
+      <div className="ml-3 py-2">
+        <p className="text-sm font-bold">
+          <Link href={guide.path as string}>
+            <a className="focus:outline-none">
+              <span className="absolute inset-0" aria-hidden="true"></span>
+              {guide.name}
+            </a>
+          </Link>
+        </p>
+      </div>
+    </li>
   );
 }
 
@@ -69,21 +110,17 @@ function SchemaListItem({
   return (
     <li
       key={schema.name}
-      className="focus-within:ring-blue-nx-base relative flex px-2 py-4 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50"
+      className="focus-within:ring-blue-nx-base relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-slate-50 dark:hover:bg-slate-800/60"
     >
-      {type === 'executors' ? (
-        <ChipIcon
-          className="h-8 w-8 flex-shrink-0 rounded-full text-gray-300"
-          role="img"
-        />
-      ) : (
-        <CogIcon
-          className="h-8 w-8 flex-shrink-0 rounded-full text-gray-300"
-          role="img"
-        />
-      )}
-      <div className="ml-3">
-        <p className="text-sm font-medium text-gray-900">
+      <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
+        {type === 'executors' ? (
+          <CpuChipIcon className="h-5 w-5 " role="img" />
+        ) : (
+          <CogIcon className="h-5 w-5" role="img" />
+        )}
+      </div>
+      <div className="ml-3 py-2">
+        <p className="text-sm font-bold">
           <Link href={`/packages/${packageName}/${type}/${schema.name}`}>
             <a className="focus:outline-none">
               <span className="absolute inset-0" aria-hidden="true"></span>
@@ -91,7 +128,7 @@ function SchemaListItem({
             </a>
           </Link>
         </p>
-        <div className="prose-sm">
+        <div className="prose prose-slate dark:prose-invert prose-sm">
           {renderMarkdown({
             content: schema.description,
             data: {},
@@ -103,15 +140,21 @@ function SchemaListItem({
   );
 }
 
-function EmptyList({ type }: { type: 'executor' | 'generator' }): JSX.Element {
+function EmptyList({
+  type,
+}: {
+  type: 'executor' | 'generator' | 'guides';
+}): JSX.Element {
   return (
-    <li className="focus-within:ring-blue-nx-base relative flex px-2 py-4 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-50">
-      <InformationCircleIcon
-        className="h-8 w-8 flex-shrink-0 rounded-full text-gray-300"
-        role="img"
-      />
-      <div className="ml-3">
-        <p className="text-sm font-medium text-gray-900">
+    <li className="focus-within:ring-blue-nx-base relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-slate-50 dark:hover:bg-slate-800/60">
+      <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
+        <InformationCircleIcon
+          className="h-5 w-5 flex-shrink-0 rounded-md border-slate-100 bg-slate-50 dark:bg-slate-800 dark:bg-slate-700"
+          role="img"
+        />
+      </div>
+      <div className="ml-3 py-2">
+        <p className="text-sm font-medium">
           <Link href="https://github.com/nrwl/nx/discussions">
             <a className="focus:outline-none" rel="noreferrer" target="_blank">
               <span className="absolute inset-0" aria-hidden="true"></span>
@@ -119,7 +162,7 @@ function EmptyList({ type }: { type: 'executor' | 'generator' }): JSX.Element {
             </a>
           </Link>
         </p>
-        <div className="prose-sm">
+        <div className="prose prose-slate dark:prose-invert prose-sm">
           <a
             href="https://github.com/nrwl/nx/discussions"
             target="_blank"

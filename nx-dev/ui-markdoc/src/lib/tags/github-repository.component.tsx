@@ -1,10 +1,10 @@
-import { ChevronRightIcon } from '@heroicons/react/outline';
+import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export function GithubRepository({ url }: { url: string }): JSX.Element {
   return (
-    <div className="not-prose group relative my-12 mx-auto flex w-full max-w-md items-center gap-3 overflow-hidden rounded-lg bg-white shadow-md transition hover:text-white">
-      <div className="bg-blue-nx-base absolute inset-0 z-0 w-2 transition-all duration-150 group-hover:w-full"></div>
-      <div className="bg-blue-nx-base w-2"></div>
+    <div className="not-prose group relative my-12 mx-auto flex w-full max-w-md items-center gap-3 overflow-hidden rounded-lg bg-slate-50 shadow-md transition hover:text-white dark:bg-slate-800/60">
+      <div className="absolute inset-0 z-0 w-2 bg-blue-500 transition-all duration-150 group-hover:w-full dark:bg-sky-500"></div>
+      <div className="w-2 bg-blue-500 dark:bg-sky-500"></div>
 
       <div className="z-10 flex flex-grow items-center py-3">
         <svg

@@ -14,7 +14,6 @@ copy(
 );
 
 module.exports = withNx({
-  scrollRestoration: true,
   experimental: {
     nextScriptWorkers: true, // Enable PartyTown offloading script strategy
   },

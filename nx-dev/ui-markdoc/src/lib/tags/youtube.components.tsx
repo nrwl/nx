@@ -1,4 +1,3 @@
-// TODO@ben: add tailwindcss classes
 export function YouTube(props: any): JSX.Element {
   return (
     <iframe
@@ -7,6 +6,7 @@ export function YouTube(props: any): JSX.Element {
       frameBorder="0"
       allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
       loading="lazy"
+      className="rounded-lg shadow-lg"
     />
   );
 }

@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 export function NxCloudSection({ children }: { children: ReactNode }) {
   return (
     <div className="border-green-nx-base mt-16 mb-4 border-l-4 pl-4">
-      <aside className="not-prose mb-4 flex flex-wrap items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-4">
+      <aside className="not-prose mb-4 flex flex-wrap items-center justify-between rounded-lg border border-slate-100 bg-slate-50/40 p-4 dark:border-slate-800 dark:bg-slate-800/60">
         <div className="flex flex w-0 flex-1 items-center">
           <span className="flex">
             <svg
@@ -29,7 +29,7 @@ export function NxCloudSection({ children }: { children: ReactNode }) {
         <div className="order-3 mt-2 w-full flex-shrink-0 sm:order-2 sm:mt-0 sm:w-auto">
           <a
             href="https://nx.app/?utm_source=nxdev"
-            className="text-blue-nx-base flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-slate-100"
+            className="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
           >
             Learn more
           </a>

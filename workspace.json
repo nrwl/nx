@@ -73,6 +73,7 @@
     "nx-dev-ui-member-card": "nx-dev/ui-member-card",
     "nx-dev-ui-references": "nx-dev/ui-references",
     "nx-dev-ui-sponsor-card": "nx-dev/ui-sponsor-card",
+    "nx-dev-ui-theme": "nx-dev/ui-theme",
     "nx-plugin": "packages/nx-plugin",
     "react": "packages/react",
     "react-native": "packages/react-native",

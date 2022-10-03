@@ -1,17 +1,17 @@
 export function ConfLocation(): JSX.Element {
   return (
-    <div className="border-t border-b border-gray-600">
-      <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
-        <article className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-gray-600">
+    <div className="border-t border-b border-slate-200 dark:border-slate-700">
+      <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
+        <article className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
           <div className="px-5 py-12 md:pr-12">
-            <p className="mb-8 text-slate-300">
+            <p className="mb-8">
               Nx Conf 2022 will be located at the Tempe Mission Palms in Tempe,
               AZ.{' '}
               <a
                 href="https://www.hyatt.com/en-US/group-booking/PHXDT/G-NXCF"
                 rel="noreferrer"
                 target="_blank"
-                className="underline hover:text-white"
+                className="text-blue-500 underline dark:text-sky-500"
               >
                 Use this link to book your room at a discounted rate
               </a>
@@ -24,7 +24,7 @@ export function ConfLocation(): JSX.Element {
               className="h-96 w-full rounded-lg shadow"
             ></iframe>
           </div>
-          <div className="divide-y divide-gray-600 py-12"></div>
+          <div className="divide-y divide-slate-200 py-12 dark:divide-slate-700"></div>
         </article>
       </div>
     </div>

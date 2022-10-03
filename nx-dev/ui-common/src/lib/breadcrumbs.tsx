@@ -1,4 +1,4 @@
-import { ChevronRightIcon } from '@heroicons/react/solid';
+import { ChevronRightIcon } from '@heroicons/react/24/solid';
 import classNames from 'classnames';
 
 export function Breadcrumbs({ path }: { path: string }): JSX.Element {

@@ -1,6 +1,8 @@
+import { ClipboardDocumentIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+// @ts-ignore
 import SyntaxHighlighter from 'react-syntax-highlighter';
 
 function resolveLanguage(lang: string) {
@@ -13,13 +15,12 @@ function resolveLanguage(lang: string) {
       return lang;
   }
 }
-
-function showLineNumber(lang: string, content: string) {
-  if (['bash', 'text', 'treeview'].includes(lang)) {
-    return false;
-  }
-
-  return content.split(/\r\n|\r|\n/).length > 2;
+function CodeWrapper({ children }: any) {
+  return (
+    <div className="hljs not-prose my-4 w-full overflow-x-auto rounded-lg border border-slate-100 bg-slate-50/20 p-4 font-mono text-sm dark:border-slate-700 dark:bg-slate-800/60">
+      {children}
+    </div>
+  );
 }
 
 export function Fence({
@@ -43,7 +44,7 @@ export function Fence({
   }, [copied]);
 
   return (
-    <div className="code-block group relative">
+    <div className="code-block group relative inline-flex w-auto min-w-[50%] max-w-full">
       <CopyToClipboard
         text={children}
         onCopy={() => {
@@ -52,30 +53,17 @@ export function Fence({
       >
         <button
           type="button"
-          className="not-prose absolute top-2 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
+          className="not-prose absolute top-5 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-            />
-          </svg>
-          <span className="ml-1 text-sm">{copied ? 'Copied!' : 'Copy'}</span>
+          <ClipboardDocumentIcon className="h-4 w-4" />
+          <span className="ml-1 text-xs">{copied ? 'Copied!' : 'Copy'}</span>
         </button>
       </CopyToClipboard>
       <SyntaxHighlighter
-        showLineNumbers={showLineNumber(language, children)}
         useInlineStyles={false}
         language={resolveLanguage(language)}
         children={children}
+        PreTag={CodeWrapper}
       />
     </div>
   );
