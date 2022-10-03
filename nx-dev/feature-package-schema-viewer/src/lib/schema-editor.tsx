@@ -20,7 +20,9 @@ export const SchemaEditor = ({
   const monaco = useMonaco();
 
   useEffect(() => {
-    monaco?.languages.json.jsonDefaults.setDiagnosticsOptions({
+    console.log(theme);
+    if (!monaco) return;
+    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
       validate: true,
       allowComments: true,
       schemas: [
@@ -31,7 +33,14 @@ export const SchemaEditor = ({
         },
       ],
     });
-  }, [monaco, schema]);
+
+    if (theme === 'system') {
+      const darkThemeMq = window.matchMedia('(prefers-color-scheme: dark)');
+      monaco.editor.setTheme(darkThemeMq.matches ? 'vs-dark' : 'vs-light');
+    } else {
+      monaco.editor.setTheme(theme === 'dark' ? 'vs-dark' : 'vs-light');
+    }
+  }, [monaco, schema, theme]);
 
   return (
     <Editor
