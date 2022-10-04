@@ -83,7 +83,6 @@ function shouldDelegateToAngularCLI() {
   const commands = [
     'add',
     'analytics',
-    'deploy',
     'config',
     'doc',
     'update',
