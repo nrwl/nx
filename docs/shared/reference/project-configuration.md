@@ -134,7 +134,7 @@ Examples:
 - `{workspaceRoot}/jest.config.ts`
 - same as `{fileset: "{workspaceRoot}/jest.config.ts}`
 
-{% callout type="note" %}
+{% callout type="note" title="{projectRoot} and {workspaceRoot}" %}
 `{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
 `{workspaceRoot}` is a key word that is replaced by the path to the workspace root directory.
 {% /callout %}

@@ -72,7 +72,7 @@ We can define a more precise configuration as follows:
 }
 ```
 
-{% callout type="note" %}
+{% callout type="note" title="{projectRoot}" %}
 `{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
 {% /callout %}
 
