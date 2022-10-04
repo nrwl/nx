@@ -3,9 +3,9 @@ export interface RollupProjectSchema {
   main?: string;
   tsConfig?: string;
   compiler?: 'babel' | 'swc' | 'tsc';
-  devServer?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
+  skipValidation?: boolean;
   importPath?: string;
   external?: string[];
   rollupConfig?: string;

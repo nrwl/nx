@@ -26,13 +26,12 @@ export async function rollupProjectGenerator(
 }
 
 function checkForTargetConflicts(tree: Tree, options: RollupProjectSchema) {
+  if (options.skipValidation) return;
   const project = readProjectConfiguration(tree, options.project);
-  if (project.targets.build) {
-    throw new Error(`Project "${project.name}" already has a build target.`);
-  }
-
-  if (options.devServer && project.targets.serve) {
-    throw new Error(`Project "${project.name}" already has a serve target.`);
+  if (project.targets?.build) {
+    throw new Error(
+      `Project "${options.project}" already has a build target. Pass --skipValidation to ignore this error.`
+    );
   }
 }
 
