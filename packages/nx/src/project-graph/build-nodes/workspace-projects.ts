@@ -50,7 +50,7 @@ export function buildWorkspaceProjectNodes(
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,
       p.targets,
-      loadNxPlugins(ctx.workspace.plugins, [p.root], p.root)
+      loadNxPlugins(ctx.workspace.plugins)
     );
 
     const projectType =
