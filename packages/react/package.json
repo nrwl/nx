@@ -49,6 +49,7 @@
     "minimatch": "3.0.5",
     "react-refresh": "^0.10.0",
     "semver": "7.3.4",
+    "style-loader": "^3.3.0",
     "stylus": "^0.55.0",
     "stylus-loader": "^6.2.0",
     "url-loader": "^4.1.1",
