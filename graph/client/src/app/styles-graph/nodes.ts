@@ -11,23 +11,26 @@ const allNodes: Stylesheet = {
   style: {
     'font-size': '32px',
     'font-family': FONTS,
+    backgroundColor: selectValueByThemeDynamic(
+      NrwlPalette.slate_600,
+      NrwlPalette.slate_200
+    ),
     'border-style': 'solid',
     'border-color': selectValueByThemeDynamic(
-      NrwlPalette.gray,
-      NrwlPalette.darkGray
+      NrwlPalette.slate_700,
+      NrwlPalette.slate_300
     ),
-    'border-width': selectValueByThemeDynamic('2px', '1px'),
+    'border-width': '1px',
     'text-halign': 'center',
     'text-valign': 'center',
     'padding-left': '16px',
-    color: selectValueByThemeDynamic(NrwlPalette.white, NrwlPalette.black),
+    color: selectValueByThemeDynamic(
+      NrwlPalette.slate_200,
+      NrwlPalette.slate_600
+    ),
     label: 'data(id)',
     // width: (node) => node.data('id').length * 16,
     width: (node) => labelWidthCalculator.calculateWidth(node),
-    backgroundColor: selectValueByThemeDynamic(
-      NrwlPalette.black,
-      NrwlPalette.white
-    ),
     'transition-property':
       'background-color, border-color, line-color, target-arrow-color',
     'transition-duration': 250,
@@ -40,8 +43,14 @@ const focusedNodes: Stylesheet = {
   selector: 'node.focused',
   style: {
     color: NrwlPalette.white,
-    'border-color': NrwlPalette.gray,
-    backgroundColor: NrwlPalette.green,
+    'border-color': selectValueByThemeDynamic(
+      NrwlPalette.slate_700,
+      NrwlPalette.slate_200
+    ),
+    backgroundColor: selectValueByThemeDynamic(
+      NrwlPalette.sky_500,
+      NrwlPalette.blue_500
+    ),
   },
 };
 
@@ -49,17 +58,31 @@ const affectedNodes: Stylesheet = {
   selector: 'node.affected',
   style: {
     color: NrwlPalette.white,
-    'border-color': NrwlPalette.gray,
-    backgroundColor: NrwlPalette.red,
+    'border-color': selectValueByThemeDynamic(
+      NrwlPalette.fuchsia_800,
+      NrwlPalette.pink_500
+    ),
+    backgroundColor: selectValueByThemeDynamic(
+      NrwlPalette.fuchsia_700,
+      NrwlPalette.pink_400
+    ),
   },
 };
 
 const parentNodes: Stylesheet = {
   selector: ':parent',
   style: {
-    'background-opacity': 0.5,
-    'background-color': NrwlPalette.gray,
-    'border-color': NrwlPalette.darkGray,
+    'background-opacity': selectValueByThemeDynamic(0.5, 0.8),
+    backgroundColor: selectValueByThemeDynamic(
+      NrwlPalette.slate_700,
+      NrwlPalette.slate_50
+    ),
+    'border-color': selectValueByThemeDynamic(
+      NrwlPalette.slate_500,
+      NrwlPalette.slate_400
+    ),
+    'border-style': 'dashed',
+    'border-width': 2,
     label: 'data(label)',
     'text-halign': 'center',
     'text-valign': 'top',
@@ -72,8 +95,14 @@ const highlightedNodes: Stylesheet = {
   selector: 'node.highlight',
   style: {
     color: NrwlPalette.white,
-    'border-color': NrwlPalette.gray,
-    backgroundColor: NrwlPalette.blue,
+    'border-color': selectValueByThemeDynamic(
+      NrwlPalette.sky_600,
+      NrwlPalette.blue_600
+    ),
+    backgroundColor: selectValueByThemeDynamic(
+      NrwlPalette.sky_500,
+      NrwlPalette.blue_500
+    ),
   },
 };
 

@@ -1,7 +1,7 @@
 import {
   ArrowLeftCircleIcon,
   ArrowDownTrayIcon,
-} from '@heroicons/react/24/solid';
+} from '@heroicons/react/24/outline';
 import Tippy from '@tippyjs/react';
 import classNames from 'classnames';
 // nx-ignore-next-line
@@ -28,7 +28,7 @@ import EdgeNodeTooltip from './edge-tooltip';
 
 const tooltipService = getTooltipService();
 
-export function Shell() {
+export function Shell(): JSX.Element {
   const depGraphService = useDepGraphService();
 
   const currentTooltip = useSyncExternalStore(
@@ -114,7 +114,7 @@ export function Shell() {
 
   return (
     <>
-      <Sidebar></Sidebar>
+      <Sidebar />
       <div
         id="main-content"
         className="flex-grow overflow-hidden transition-all"
@@ -168,7 +168,7 @@ export function Shell() {
               type="button"
               className={classNames(
                 !projectIsSelected ? 'opacity-0' : '',
-                'bg-green-nx-base fixed bottom-4 right-4 z-50 block h-16 w-16 transform rounded-full text-white shadow-sm transition duration-300'
+                'fixed bottom-4 right-4 z-50 block h-16 w-16 transform rounded-full bg-blue-500 text-white shadow-sm transition duration-300 dark:bg-sky-500'
               )}
               data-cy="downloadImageButton"
               onClick={downloadImage}

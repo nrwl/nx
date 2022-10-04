@@ -95,7 +95,7 @@ export function TextFilterPanel({
               name="textFilterCheckbox"
               type="checkbox"
               value="includeInPath"
-              className="accent-green-nx-base h-4 w-4"
+              className="h-4 w-4 accent-blue-500 dark:accent-sky-500"
               checked={includePath}
               onChange={toggleIncludeLibsInPathChange}
             />

@@ -5,20 +5,26 @@ import { NrwlPalette } from './palette';
 const allEdges: Stylesheet = {
   selector: 'edge',
   style: {
-    width: selectValueByThemeDynamic('2px', '1px'),
+    width: '1px',
     'line-color': selectValueByThemeDynamic(
-      NrwlPalette.gray,
-      NrwlPalette.black
+      NrwlPalette.slate_400,
+      NrwlPalette.slate_500
     ),
-    'text-outline-color': NrwlPalette.black,
-    'text-outline-width': selectValueByThemeDynamic('1px', '0px'),
-    color: selectValueByThemeDynamic(NrwlPalette.white, NrwlPalette.black),
+    'text-outline-color': selectValueByThemeDynamic(
+      NrwlPalette.slate_400,
+      NrwlPalette.slate_500
+    ),
+    'text-outline-width': '0px',
+    color: selectValueByThemeDynamic(
+      NrwlPalette.slate_400,
+      NrwlPalette.slate_500
+    ),
     'curve-style': 'unbundled-bezier',
     'target-arrow-shape': 'triangle',
     'target-arrow-fill': 'filled',
     'target-arrow-color': selectValueByThemeDynamic(
-      NrwlPalette.gray,
-      NrwlPalette.black
+      NrwlPalette.slate_400,
+      NrwlPalette.slate_500
     ),
   },
 };
@@ -26,8 +32,14 @@ const allEdges: Stylesheet = {
 const affectedEdges: Stylesheet = {
   selector: 'edge.affected',
   style: {
-    'line-color': NrwlPalette.red,
-    'target-arrow-color': NrwlPalette.red,
+    'line-color': selectValueByThemeDynamic(
+      NrwlPalette.fuchsia_500,
+      NrwlPalette.pink_500
+    ),
+    'target-arrow-color': selectValueByThemeDynamic(
+      NrwlPalette.fuchsia_500,
+      NrwlPalette.pink_500
+    ),
     'curve-style': 'unbundled-bezier',
   },
 };

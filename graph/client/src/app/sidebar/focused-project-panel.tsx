@@ -1,4 +1,4 @@
-import { ArrowRightCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
+import { ArrowRightCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { memo } from 'react';
 
 export interface FocusedProjectPanelProps {
@@ -11,7 +11,7 @@ export const FocusedProjectPanel = memo(
     return (
       <div className="mt-10 px-4">
         <div
-          className="bg-green-nx-base group relative flex cursor-pointer items-center overflow-hidden rounded-md border border-slate-200 p-2 text-slate-50 shadow-sm dark:border-slate-700"
+          className="group relative flex cursor-pointer items-center overflow-hidden rounded-md border border-slate-200 bg-blue-500 p-2 text-slate-50 shadow-sm dark:border-slate-700 dark:bg-sky-500"
           data-cy="unfocusButton"
           onClick={() => resetFocus()}
         >

@@ -7,7 +7,7 @@ themeInit();
 export function App() {
   return (
     <GlobalStateProvider>
-      <Shell></Shell>
+      <Shell />
     </GlobalStateProvider>
   );
 }

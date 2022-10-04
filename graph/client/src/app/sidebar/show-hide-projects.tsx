@@ -14,7 +14,7 @@ export const ShowHideAllProjects = memo(
     hideAllProjects,
     showAffectedProjects,
     hasAffectedProjects: affectedProjects,
-  }: ShowHideAllProjectsProps) => {
+  }: ShowHideAllProjectsProps): JSX.Element => {
     return (
       <div className="mt-8 px-4">
         <button
@@ -31,10 +31,10 @@ export const ShowHideAllProjects = memo(
           <button
             onClick={showAffectedProjects}
             type="button"
-            className="mt-3 flex w-full items-center rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-500 shadow-sm hover:bg-red-50 dark:border-red-700 dark:bg-slate-800 hover:dark:bg-slate-700"
+            className="mt-3 flex w-full items-center rounded-md border border-pink-500 bg-pink-400 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-pink-500 dark:border-fuchsia-800 dark:bg-fuchsia-700 dark:text-white hover:dark:bg-fuchsia-600"
             data-cy="affectedButton"
           >
-            <BoltIcon className="-ml-1 mr-2 h-5 w-5 text-red-500"></BoltIcon>
+            <BoltIcon className="-ml-1 mr-2 h-5 w-5 text-white"></BoltIcon>
             Show affected projects
           </button>
         ) : null}

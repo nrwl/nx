@@ -2,7 +2,7 @@ import {
   DocumentMagnifyingGlassIcon,
   FlagIcon,
   MapPinIcon,
-} from '@heroicons/react/24/solid';
+} from '@heroicons/react/24/outline';
 // nx-ignore-next-line
 import type { ProjectGraphNode } from '@nrwl/devkit';
 import { useDepGraphService } from '../hooks/use-dep-graph';
@@ -105,7 +105,7 @@ function ProjectListItem({
               onClick={() => startTrace(project.projectGraphNode.name)}
               className={`${
                 tracingInfo.start === project.projectGraphNode.name
-                  ? 'ring-blue-nx-base'
+                  ? 'ring-blue-500 dark:ring-sky-500'
                   : 'ring-slate-200 dark:ring-slate-600'
               } flex items-center rounded-l-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
             >
@@ -118,7 +118,7 @@ function ProjectListItem({
               onClick={() => endTrace(project.projectGraphNode.name)}
               className={`${
                 tracingInfo.end === project.projectGraphNode.name
-                  ? 'ring-blue-nx-base'
+                  ? 'ring-blue-500 dark:ring-sky-500'
                   : 'ring-slate-200 dark:ring-slate-600'
               } flex items-center rounded-r-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700`}
             >
@@ -143,7 +143,7 @@ function ProjectListItem({
       {project.isSelected ? (
         <span
           title="This library is visible"
-          className="text-green-nx-base absolute inset-y-0 right-0 flex cursor-pointer items-center"
+          className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-blue-500 dark:text-sky-500"
           onClick={() =>
             toggleProject(project.projectGraphNode.name, project.isSelected)
           }
