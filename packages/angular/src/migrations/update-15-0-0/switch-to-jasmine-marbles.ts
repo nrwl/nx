@@ -9,7 +9,7 @@ import {
 } from '@nrwl/devkit';
 import { extname } from 'path';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { jasmineMarblesVersion } from '@nrwl/angular/src/utils/versions';
+import { jasmineMarblesVersion } from '../../utils/versions';
 
 export default async function switchToJasmineMarbles(tree: Tree) {
   const usesJasmineMarbles = await replaceJasmineMarbleUsagesInFiles(tree);
