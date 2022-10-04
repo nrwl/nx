@@ -35,7 +35,6 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
   const globalFiles = [
     ...extractGlobalFilesFromInputs(nxJson, projectGraphNodes),
     'nx.json',
-    'package.json',
   ];
   globalFiles.forEach((file) => {
     implicits[file] = '*' as any;
