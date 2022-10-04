@@ -6,6 +6,7 @@ export interface WebpackProjectGeneratorSchema {
   devServer?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
+  skipValidation?: boolean;
   target?: 'node' | 'web';
   webpackConfig?: string;
 }
