@@ -342,10 +342,15 @@ class TaskHasher {
     const n = this.projectGraph.externalNodes[projectName];
     const version = n?.data?.version;
     let hash: string;
-    if (version) {
+    if (n?.data?.hash) {
+      // we already know the hash of this dependency
+      hash = n.data.hash;
+    } else if (version) {
       const deps = [`${projectName}@${version}`];
       this.traverseExternalNodesDependencies(projectName, deps);
       hash = this.hashing.hashArray(deps.sort());
+      // store hash of given dependency for later use
+      n.data.hash = hash;
     } else {
       // unknown dependency
       // this may occur dependency is not an npm package

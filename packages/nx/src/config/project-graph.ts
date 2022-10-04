@@ -107,7 +107,13 @@ export interface ProjectGraphProjectNode<T = any> {
 
 /**
  * A node describing an external dependency
- * `name` has as form of `npm:packageName` for primary dependencies or `npm:packageName@version` for hoisted ones
+ * `name` has as form of:
+ * - `npm:packageName` for root dependencies or
+ * - `npm:packageName@version` for nested transitive dependencies
+ *
+ * This is vital for our node discovery to always point to root dependencies,
+ * while allowing tracking of the full tree of different nested versions
+ *
  */
 export interface ProjectGraphExternalNode {
   type: 'npm';
@@ -115,6 +121,7 @@ export interface ProjectGraphExternalNode {
   data: {
     version: string;
     packageName: string;
+    hash?: string;
   };
 }
 
