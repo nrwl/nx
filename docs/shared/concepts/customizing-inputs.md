@@ -114,7 +114,7 @@ In the `ui-library` library, we have some `*.spec.tsx` files that we don't want 
 
 Note that I need to copy the entire definition of `production` from `nx.json`. This entry overwrites the existing `production` entry defined in `nx.json`, but `default` and `sharedGlobals` are inherited. Now when I modify a `spec.tsx` file in `ui-library`, the build for `ui-library` is unaffected and the build for `react-app` is unaffected.
 
-{% callout type="note" %}
+{% callout type="note" title="Modifying production in nx.json" %}
 
 You could also handle this scenario by modifying the `production` definition in the `nx.json` so that it applies to all projects in the repo. In fact, the defaults created by Nx do exactly that: `"!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"`. This is a complex glob expression though and is not particularly helpful for explaining the concepts of `inputs` and `namedInputs`.
 
