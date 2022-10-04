@@ -1,5 +1,3 @@
-![React Logo](/shared/react-logo.png)
-
 React Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.
 
 The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:

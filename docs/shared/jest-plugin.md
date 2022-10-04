@@ -1,5 +1,3 @@
-![Jest logo](/shared/jest-logo.png)
-
 [Jest](https://jestjs.io/) is an open source test runner created by Facebook. It has a lot of great features:
 
 - Immersive watch mode for providing near instant feedback when developing tests.

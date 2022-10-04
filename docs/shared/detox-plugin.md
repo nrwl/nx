@@ -1,5 +1,3 @@
-![Detox logo](/shared/detox-logo.png)
-
 Detox is gray box end-to-end testing and automation library for mobile apps. It has a lot of great features:
 
 - Cross Platform

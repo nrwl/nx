@@ -1,5 +1,3 @@
-![Storybook logo](/shared/storybook-logo.png)
-
 [Storybook](https://storybook.js.org) is a development environment for UI components. It allows you to browse a component library, view the different states of each component, and interactively develop and test components.
 
 This guide will briefly walk you through using Storybook within an Nx workspace.

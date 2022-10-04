@@ -1,5 +1,3 @@
-![Cypress logo](/shared/cypress-logo.png)
-
 Cypress is a test runner built for the modern web. It has a lot of great features:
 
 - Time travel
