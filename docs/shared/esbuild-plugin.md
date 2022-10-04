@@ -1,5 +1,3 @@
-![esbuild logo](/shared/esbuild-logo.png)
-
 The Nx Plugin for [esbuild](https://esbuild.github.io/api/), an extremely fast JavaScript bundler.
 
 Why should you use this plugin?
