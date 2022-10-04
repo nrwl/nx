@@ -15,6 +15,7 @@ export const callout: Schema = {
     },
     title: {
       type: 'String',
+      required: true,
       description: 'The title displayed at the top of the callout',
     },
   },
