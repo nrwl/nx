@@ -16,7 +16,7 @@ const pluginList = [
       </svg>
     ),
     name: '@nrwl/cypress',
-    url: 'https://nx.dev/cypress/overview',
+    url: '/packages/cypress',
     description: 'Cypress is an e2e test runner built for modern web.',
     isOfficial: true,
   },
@@ -52,12 +52,11 @@ const pluginList = [
       </svg>
     ),
     name: '@nrwl/react',
-    url: 'https://nx.dev/react/overview',
+    url: '/packages/react',
     description:
       'Contains executors and generators for managing React applications and libraries within an Nx workspace.',
     isOfficial: true,
   },
-
   {
     logo: (
       <svg
@@ -108,7 +107,7 @@ const pluginList = [
       </svg>
     ),
     name: '@nrwl/storybook',
-    url: 'https://nx.dev/storybook/overview',
+    url: '/packages/storybook',
     description: 'Storybook is a development environment for UI components.',
     isOfficial: true,
   },
@@ -126,11 +125,10 @@ const pluginList = [
       </svg>
     ),
     name: '@nrwl/jest',
-    url: 'https://nx.dev/jest/overview',
+    url: '/packages/jest',
     description: 'Jest is an open source test runner created by Facebook.',
     isOfficial: true,
   },
-
   {
     logo: (
       <svg
@@ -164,7 +162,7 @@ const pluginList = [
       </svg>
     ),
     name: '@nrwl/angular',
-    url: 'https://nx.dev/angular/overview',
+    url: '/packages/angular',
     description:
       'Integration with libraries such as Storybook, Jest, Cypress, NgRx, Micro-frontend...',
     isOfficial: true,
@@ -278,7 +276,7 @@ export function PluginsTab(): JSX.Element {
                 href={plugin.url}
                 target="_blank"
                 rel="noreferrer"
-                title="@nrwl/cypress"
+                title={plugin.name}
                 className="focus:outline-none"
               >
                 <span className="absolute inset-0" aria-hidden="true"></span>
@@ -315,7 +313,7 @@ export function PluginsTab(): JSX.Element {
                 href={plugin.url}
                 target="_blank"
                 rel="noreferrer"
-                title="@nrwl/cypress"
+                title={plugin.name}
                 className="focus:outline-none"
               >
                 <span className="absolute inset-0" aria-hidden="true"></span>
