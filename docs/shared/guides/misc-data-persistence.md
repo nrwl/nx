@@ -133,10 +133,12 @@ class TodoEffects {
 
         // provides an action
         run: (todo: GetTodo) => {
-          return this.backend.getTodo(todo.id).map((response) => ({
-            type: 'LOAD_TODO_SUCCESS',
-            todo: response.todo,
-          }));
+          return this.backend.getTodo(todo.id).pipe(
+            map((response) => ({
+              type: 'LOAD_TODO_SUCCESS',
+              todo: response.todo,
+            }))
+          );
         },
 
         onError: (action: GetTodo, error: any) => {
