@@ -15,8 +15,8 @@
           "lint",
           "build-base",
           "test",
-          "sitemap",
           "e2e",
+          "sitemap",
           "build-storybook"
         ],
         "useDaemonProcess": true,
