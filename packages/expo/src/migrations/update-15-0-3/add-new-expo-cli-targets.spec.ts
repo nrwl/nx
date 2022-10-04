@@ -1,6 +1,6 @@
 import { addProjectConfiguration, getProjects, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import update from './add-eas-update-target';
+import update from './add-new-expo-cli-targets';
 
 describe('add-eas-update-target', () => {
   let tree: Tree;
@@ -18,10 +18,24 @@ describe('add-eas-update-target', () => {
     });
   });
 
-  it(`should update project.json with target update`, async () => {
+  it(`should update project.json with target prebuild, install and eject`, async () => {
     await update(tree);
 
     getProjects(tree).forEach((project) => {
+      expect(project.targets['eject']).toEqual({
+        executor: 'nx:run-commands',
+        options: {
+          command: `nx prebuild product`,
+        },
+      });
+      expect(project.targets['install']).toEqual({
+        executor: '@nrwl/expo:install',
+        options: {},
+      });
+      expect(project.targets['prebuild']).toEqual({
+        executor: '@nrwl/expo:prebuild',
+        options: {},
+      });
       expect(project.targets['update']).toEqual({
         executor: '@nrwl/expo:update',
         options: {},

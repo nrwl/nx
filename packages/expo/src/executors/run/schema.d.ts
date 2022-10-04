@@ -1,11 +1,23 @@
-// options from https://docs.expo.dev/workflow/expo-cli/#expo-runios and https://docs.expo.dev/workflow/expo-cli/#expo-runandroid
+/*
+ * options from
+ * - android: https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/run/android/resolveOptions.ts
+ * - ios: https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/run/ios/options/resolveOptions.ts
+ */
 export interface ExpoRunOptions {
   platform: 'ios' | 'android';
-  xcodeConfiguration: string; // iOS only, default is Debug
-  scheme?: string; // iOS only
-  variant: string; // android only, default is debug
+  sync: boolean; // default is true
+
+  // ios only
+  scheme?: string | boolean; //  Xcode scheme to build.
+  xcodeConfiguration?: XcodeConfiguration; // Xcode configuration to build. Default `Debug`
+
+  // android only
+  variant?: string;
+
+  // shared between ios and android
+  device?: string | boolean;
   port: number; // default is 8081
   bundler: boolean; // default is true
-  sync: boolean; // default is true
-  device?: string;
+  install?: boolean;
+  buildCache?: boolean;
 }

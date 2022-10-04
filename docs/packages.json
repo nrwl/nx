@@ -149,7 +149,9 @@
         "start",
         "sync-deps",
         "ensure-symlink",
-        "eject"
+        "prebuild",
+        "install",
+        "export"
       ],
       "generators": ["init", "application", "library", "component"]
     }

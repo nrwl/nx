@@ -39,7 +39,9 @@ function createBuildListOptions(options: ExpoEasBuildListOptions): string[] {
   return Object.keys(options).reduce((acc, k) => {
     const v = options[k];
     if (!nxOptions.includes(k)) {
-      if (typeof v === 'boolean') {
+      if (k === 'nonInteractive') {
+        acc.push(`--non-interactive`);
+      } else if (typeof v === 'boolean') {
         if (v === true) {
           // when true, does not need to pass the value true, just need to pass the flag in camel case
           acc.push(`--${names(k).propertyName}`);

@@ -83,6 +83,7 @@ export function getBuild(
 ) {
   const buildList = runCliBuildList(workspaceRoot, projectRoot, {
     ...options,
+    nonInteractive: true,
     json: true,
     status: 'finished',
     limit: 1,

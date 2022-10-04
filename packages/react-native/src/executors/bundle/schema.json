@@ -16,6 +16,7 @@
     },
     "platform": {
       "enum": ["ios", "android"],
+      "alias": "p",
       "description": "Platform to build for."
     },
     "transformer": {

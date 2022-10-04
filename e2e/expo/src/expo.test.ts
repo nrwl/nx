@@ -16,7 +16,7 @@ describe('expo', () => {
   );
   afterEach(() => cleanupProject());
 
-  it('should test, lint', async () => {
+  it('should test, lint and export', async () => {
     const appName = uniq('my-app');
     const libName = uniq('lib');
     const componentName = uniq('component');
@@ -41,5 +41,10 @@ describe('expo', () => {
 
     const libLintResults = await runCLIAsync(`lint ${libName}`);
     expect(libLintResults.combinedOutput).toContain('All files pass linting.');
+
+    const exportResults = await runCLIAsync(`export ${appName}`);
+    expect(exportResults.combinedOutput).toContain(
+      'Export was successful. Your exported files can be found'
+    );
   }, 1000000);
 });

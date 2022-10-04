@@ -1,33 +1,27 @@
-import * as chalk from 'chalk';
-import { ExecutorContext, logger, names } from '@nrwl/devkit';
+import { ExecutorContext, names } from '@nrwl/devkit';
 import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
-import { ExpoStartOptions } from './schema';
+import { ExpoInstallOptions } from './schema';
 
-export interface ExpoStartOutput {
-  baseUrl?: string;
+export interface ExpoInstallOutput {
   success: boolean;
 }
 
 let childProcess: ChildProcess;
 
-export default async function* startExecutor(
-  options: ExpoStartOptions,
+export default async function* installExecutor(
+  options: ExpoInstallOptions,
   context: ExecutorContext
-): AsyncGenerator<ExpoStartOutput> {
+): AsyncGenerator<ExpoInstallOutput> {
   const projectRoot = context.workspace.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
-    const baseUrl = `http://localhost:${options.port}`;
-    logger.info(chalk.cyan(`Packager is ready at ${baseUrl}`));
-
-    await startAsync(context.root, projectRoot, options);
+    await installAsync(context.root, options);
+    ensureNodeModulesSymlink(context.root, projectRoot);
 
     yield {
-      baseUrl,
       success: true,
     };
   } finally {
@@ -37,16 +31,15 @@ export default async function* startExecutor(
   }
 }
 
-function startAsync(
+export function installAsync(
   workspaceRoot: string,
-  projectRoot: string,
-  options: ExpoStartOptions
+  options: ExpoInstallOptions
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
       join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
-      ['start', ...createStartOptions(options)],
-      { cwd: join(workspaceRoot, projectRoot) }
+      ['install', ...createInstallOptions(options)],
+      { cwd: workspaceRoot }
     );
 
     // Ensure the child process is killed when the parent exits
@@ -66,14 +59,13 @@ function startAsync(
   });
 }
 
-// options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/start/index.ts
-function createStartOptions(options: ExpoStartOptions) {
+// options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/install/index.ts
+function createInstallOptions(options: ExpoInstallOptions) {
   return Object.keys(options).reduce((acc, k) => {
     const v = options[k];
-    if (k === 'dev') {
-      if (v === false) {
-        acc.push(`--no-dev`);
-      }
+    if (k === 'packages') {
+      const packages = typeof v === 'string' ? v.split(',') : v;
+      acc.push(...packages);
     } else {
       if (typeof v === 'boolean') {
         if (v === true) {

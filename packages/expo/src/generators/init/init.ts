@@ -24,6 +24,7 @@ import {
   svgrWebpackVersion,
   babelPresetExpoVersion,
   easCliVersion,
+  deprecatedExpoCliVersion,
 } from '../../utils/versions';
 
 import {
@@ -85,7 +86,8 @@ export function updateDependencies(host: Tree) {
       'react-test-renderer': reactTestRendererVersion,
       '@testing-library/react-native': testingLibraryReactNativeVersion,
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
-      'expo-cli': expoCliVersion,
+      'expo-cli': deprecatedExpoCliVersion,
+      '@expo/cli': expoCliVersion,
       'eas-cli': easCliVersion,
       '@svgr/webpack': svgrWebpackVersion,
       'babel-preset-expo': babelPresetExpoVersion,

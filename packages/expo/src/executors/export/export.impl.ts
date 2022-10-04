@@ -1,30 +1,25 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, names } from '@nrwl/devkit';
 import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
-import { podInstall } from '../../utils/pod-install-task';
-import { ExpoEjectOptions } from './schema';
+import { ExportExecutorSchema } from './schema';
 
-export interface ExpoEjectOutput {
+export interface ExpoExportOutput {
   success: boolean;
 }
 
 let childProcess: ChildProcess;
 
-export default async function* ejectExecutor(
-  options: ExpoEjectOptions,
+export default async function* exportExecutor(
+  options: ExportExecutorSchema,
   context: ExecutorContext
-): AsyncGenerator<ExpoEjectOutput> {
+): AsyncGenerator<ExpoExportOutput> {
   const projectRoot = context.workspace.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
-    await ejectAsync(context.root, projectRoot, options);
-
-    if (options.install) {
-      await podInstall(join(context.root, projectRoot, 'ios'));
-    }
+    await exportAsync(context.root, projectRoot, options);
 
     yield {
       success: true,
@@ -36,15 +31,19 @@ export default async function* ejectExecutor(
   }
 }
 
-function ejectAsync(
+function exportAsync(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExpoEjectOptions
+  options: ExportExecutorSchema
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/expo-cli/bin/expo.js'),
-      ['eject', ...createEjectOptions(options), '--no-install'],
+      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
+      [
+        `export${options.bundler === 'webpack' ? ':web' : ''}`,
+        '.',
+        ...createExportOptions(options),
+      ],
       { cwd: join(workspaceRoot, projectRoot) }
     );
 
@@ -65,12 +64,20 @@ function ejectAsync(
   });
 }
 
-const nxOptions = ['install'];
-function createEjectOptions(options: ExpoEjectOptions) {
+const nxOptions = ['bundler'];
+// options from https://github.com/expo/expo/blob/main/packages/@expo/cli/src/export/index.ts
+function createExportOptions(options: ExportExecutorSchema) {
   return Object.keys(options).reduce((acc, k) => {
-    const v = options[k];
     if (!nxOptions.includes(k)) {
-      acc.push(`--${k}`, v);
+      const v = options[k];
+      if (typeof v === 'boolean') {
+        if (v === true) {
+          // when true, does not need to pass the value true, just need to pass the flag in kebob case
+          acc.push(`--${names(k).fileName}`);
+        }
+      } else {
+        acc.push(`--${names(k).fileName}`, v);
+      }
     }
     return acc;
   }, []);
