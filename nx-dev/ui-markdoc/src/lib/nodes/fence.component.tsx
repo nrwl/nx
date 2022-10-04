@@ -44,27 +44,29 @@ export function Fence({
   }, [copied]);
 
   return (
-    <div className="code-block group relative inline-flex w-auto min-w-[50%] max-w-full">
-      <CopyToClipboard
-        text={children}
-        onCopy={() => {
-          setCopied(true);
-        }}
-      >
-        <button
-          type="button"
-          className="not-prose absolute top-5 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
+    <div className="w-full">
+      <div className="code-block group relative inline-flex w-auto min-w-[50%] max-w-full">
+        <CopyToClipboard
+          text={children}
+          onCopy={() => {
+            setCopied(true);
+          }}
         >
-          <ClipboardDocumentIcon className="h-4 w-4" />
-          <span className="ml-1 text-xs">{copied ? 'Copied!' : 'Copy'}</span>
-        </button>
-      </CopyToClipboard>
-      <SyntaxHighlighter
-        useInlineStyles={false}
-        language={resolveLanguage(language)}
-        children={children}
-        PreTag={CodeWrapper}
-      />
+          <button
+            type="button"
+            className="not-prose absolute top-6 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            <ClipboardDocumentIcon className="h-4 w-4" />
+            <span className="ml-1 text-xs">{copied ? 'Copied!' : 'Copy'}</span>
+          </button>
+        </CopyToClipboard>
+        <SyntaxHighlighter
+          useInlineStyles={false}
+          language={resolveLanguage(language)}
+          children={children}
+          PreTag={CodeWrapper}
+        />
+      </div>
     </div>
   );
 }
