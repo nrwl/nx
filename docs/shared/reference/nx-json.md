@@ -136,11 +136,12 @@ And projects can define their `production` fileset, without having to redefine t
 }
 ```
 
-More documentation is available in the [Project Configuration reference](/reference/project-configuration#inputs-&-namedinputs)
-
 In this case Nx will use the right `production` input for each project.
 
-For more information about modifying `inputs` and `namedInputs` for your own repo, read [Customizing Inputs](/more-concepts/customizing-inputs)
+{% cards %}
+{% card title="Project Configuration reference" type="documentation" description="inputs and namedInputs are also described in the project configuration reference" url="/reference/project-configuration#inputs-&-namedinputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/more-concepts/customizing-inputs" /%}
+{% /cards %}
 
 ### Target Defaults
 
@@ -164,6 +165,9 @@ defining `targetDefaults` in `nx.json` is helpful.
 The configuration above is identical to adding `{"dependsOn": ["^build"]}` to every build target of every project.
 
 For full documentation of the `dependsOn` property, see the [project configuration reference](/reference/project-configuration#dependson).
+{% cards %}
+{% card title="Project Configuration reference" type="documentation" description="For full documentation of the `dependsOn` property, see the project configuration reference" url="/reference/project-configuration#dependson" /%}
+{% /cards %}
 
 Another target default you can configure is `outputs`:
 

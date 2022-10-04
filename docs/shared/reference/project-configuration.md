@@ -185,7 +185,10 @@ an example.
 The configuration above means that the test target depends on all source files of a given project and only prod
 sources (non-test sources) of its dependencies. In other words, it treats test sources as private.
 
-For more information about modifying `inputs` and `namedInputs` for your own repo, read [Customizing Inputs](/more-concepts/customizing-inputs)
+{% cards %}
+{% card title="nx.json reference" type="documentation" description="inputs and namedInputs are also described in the nx.json reference" url="/reference/nx-json#inputs-&-namedinputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/more-concepts/customizing-inputs" /%}
+{% /cards %}
 
 ### outputs
 

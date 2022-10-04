@@ -1,8 +1,29 @@
-# Customizing Inputs
+# Customizing Inputs and Named Inputs
 
-Tasks can have `input`s defined for them [globally in the `nx.json` file](/reference/nx-json#inputs-&-namedinputs) or [on a per-project basis in the project configuration](/reference/project-configuration#inputs-&-namedinputs). Those `input`s can be `fileset`s, `runtime` inputs or `env` variables. The `fileset` inputs can be defined inline as an object or using a `namedInput` that is defined in the project configuration or `nx.json`.
+The `inputs` property of a task allows you to define under what conditions the cache for that task should be invalidated and the task should be run again. Tasks can have `inputs` defined for them [globally in the `nx.json` file](/reference/nx-json#inputs-&-namedinputs) or [on a per-project basis in the project configuration](/reference/project-configuration#inputs-&-namedinputs). Those `inputs` can be `fileset`s, `runtime` inputs or `env` variables.
+
+If you find yourself reusing the same `inputs` definitions, you can instead create a `namedInput` in the project configuration or `nx.json` and use that `namedInput` in your `inputs` array.
 
 Knowing the syntax doesn't always explain how you would use the feature, so here are two scenarios explaining how to customize `inputs` to match your particular set up.
+
+## Defaults
+
+If you don't specify any `inputs`, Nx uses as inputs every file in the task's project and every file in that project's dependencies. It's the same as writing this:
+
+```jsonc
+{
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"]
+  },
+  "targetDefaults": {
+    "build": {
+      "inputs": ["default", "^default"]
+    }
+  }
+}
+```
+
+This default behavior works and will always give you correct output, but it might re-run a task in some cases where the cache could have been used instead. Modifying `inputs` and `namedInputs` is all about getting the most you can out of the caching mechanism.
 
 ## Scenario 1: React App
 
@@ -41,6 +62,17 @@ With these `namedInputs` in place, we can set default `inputs` for project targe
 
 ```jsonc
 {
+  "namedInputs": {
+    "sharedGlobals": [
+      /* ... */
+    ],
+    "default": [
+      /* ... */
+    ],
+    "production": [
+      /* ... */
+    ]
+  },
   "targetDefaults": {
     "build": {
       "inputs": ["production", "^production"],
