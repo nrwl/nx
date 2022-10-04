@@ -14,6 +14,7 @@ import {
 } from '@nrwl/nx-dev/ui-home';
 import { NextSeo } from 'next-seo';
 
+//test
 export default function Index(): JSX.Element {
   return (
     <>
