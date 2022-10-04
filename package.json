@@ -53,16 +53,16 @@
     "@ngrx/effects": "~14.0.0",
     "@ngrx/router-store": "~14.0.0",
     "@ngrx/store": "~14.0.0",
-    "@nrwl/cypress": "14.8.0",
-    "@nrwl/devkit": "14.8.0",
-    "@nrwl/eslint-plugin-nx": "14.8.0",
-    "@nrwl/jest": "14.8.0",
-    "@nrwl/js": "14.8.0",
-    "@nrwl/linter": "14.8.0",
-    "@nrwl/next": "14.8.0",
+    "@nrwl/cypress": "14.8.2",
+    "@nrwl/devkit": "14.8.2",
+    "@nrwl/eslint-plugin-nx": "14.8.2",
+    "@nrwl/jest": "14.8.2",
+    "@nrwl/js": "14.8.2",
+    "@nrwl/linter": "14.8.2",
+    "@nrwl/next": "14.8.2",
     "@nrwl/nx-cloud": "14.7.0",
-    "@nrwl/react": "14.8.0",
-    "@nrwl/web": "14.8.0",
+    "@nrwl/react": "14.8.2",
+    "@nrwl/web": "14.8.2",
     "@parcel/watcher": "2.0.4",
     "@phenomnomnominal/tsquery": "4.1.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
@@ -188,7 +188,7 @@
     "next-sitemap": "^3.1.10",
     "ng-packagr": "~14.2.0",
     "node-fetch": "^2.6.7",
-    "nx": "14.8.0",
+    "nx": "14.8.2",
     "open": "^8.4.0",
     "parse-markdown-links": "^1.0.4",
     "parse5": "4.0.0",
@@ -251,7 +251,7 @@
     "xstate": "^4.25.0",
     "yargs": "^17.4.0",
     "yargs-parser": "21.0.1",
-    "@nrwl/storybook": "14.8.0"
+    "@nrwl/storybook": "14.8.2"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -308,3 +308,4 @@
     "minimist": "^1.2.6"
   }
 }
+
