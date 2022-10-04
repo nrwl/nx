@@ -1,15 +1,21 @@
 import {
+  checkFilesExist,
   cleanupProject,
   newProject,
   runCLI,
-  runCommandUntil,
   uniq,
 } from '@nrwl/e2e/utils';
 
 describe('Next.js Applications', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
+  beforeEach(
+    () =>
+      (proj = newProject({
+        name: 'proj',
+        packageManager: 'npm',
+      }))
+  );
 
   afterEach(() => cleanupProject());
 
@@ -21,18 +27,14 @@ describe('Next.js Applications', () => {
     );
 
     // Currently due to auto-installing peer deps in pnpm, the generator can fail while installing deps with unmet peet deps.
-    try {
-      // runCLI(
-      //   `generate @nrwl/react:storybook-configuration ${appName} --generateStories --no-interactive`
-      // );
-    } catch {
-      // nothing
-    }
+    runCLI(
+      `generate @nrwl/react:storybook-configuration ${appName} --generateStories --no-interactive`,
+      {
+        silenceError: true,
+      }
+    );
 
-    // const p = await runCommandUntil(`run ${appName}:storybook`, (output) => {
-    //   return /Storybook.*started/gi.test(output);
-    // });
-    //
-    // p.kill();
+    runCLI(`build-storybook ${appName}`);
+    checkFilesExist(`dist/storybook/${appName}/index.html`);
   }, 1_000_000);
 });
