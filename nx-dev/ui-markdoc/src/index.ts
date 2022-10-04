@@ -18,6 +18,8 @@ import { Iframe } from './lib/tags/iframe.component';
 import { iframe } from './lib/tags/iframe.schema';
 import { NxCloudSection } from './lib/tags/nx-cloud-section.component';
 import { nxCloudSection } from './lib/tags/nx-cloud-section.schema';
+import { InstallNxConsole } from './lib/tags/install-nx-console.component';
+import { installNxConsole } from './lib/tags/install-nx-console.schema';
 import { SideBySide } from './lib/tags/side-by-side.component';
 import { sideBySide } from './lib/tags/side-by-side.schema';
 import { Tab, Tabs } from './lib/tags/tabs.component';
@@ -41,6 +43,7 @@ export const getMarkdocCustomConfig = (
       cards,
       'github-repository': githubRepository,
       iframe,
+      'install-nx-console': installNxConsole,
       'nx-cloud-section': nxCloudSection,
       'side-by-side': sideBySide,
       tab,
@@ -57,6 +60,7 @@ export const getMarkdocCustomConfig = (
     GithubRepository,
     Heading,
     Iframe,
+    InstallNxConsole,
     NxCloudSection,
     SideBySide,
     Tab,
