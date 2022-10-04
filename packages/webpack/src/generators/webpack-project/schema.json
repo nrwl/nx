@@ -46,6 +46,11 @@
       "default": false,
       "description": "Do not add dependencies to `package.json`."
     },
+    "skipValidation": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not perform any validation on existing project."
+    },
     "devServer": {
       "type": "boolean",
       "description": "Add a serve target to run a local webpack dev-server",

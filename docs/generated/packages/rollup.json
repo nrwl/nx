@@ -82,6 +82,11 @@
             "default": false,
             "description": "Do not add dependencies to `package.json`."
           },
+          "skipValidation": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not perform any validation on existing project."
+          },
           "importPath": {
             "type": "string",
             "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
