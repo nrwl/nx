@@ -1,6 +1,8 @@
 import { satisfies } from 'semver';
 import { defaultHashing } from '../../hasher/hashing-impl';
 import { PackageVersions } from './lock-file-type';
+import { workspaceRoot } from '../workspace-root';
+import { existsSync, readFileSync } from 'fs';
 
 /**
  * Simple sort function to ensure keys are ordered alphabetically
@@ -49,4 +51,15 @@ export function findMatchingVersion(
   return Object.values(packageVersions).find((v) =>
     satisfies(v.version, version)
   )?.version;
+}
+
+export function isRootVersion(packageName: string, version: string): boolean {
+  const fullPath = `${workspaceRoot}/node_modules/${packageName}/package.json`;
+  if (existsSync(fullPath)) {
+    const content = readFileSync(fullPath, 'utf-8');
+    return JSON.parse(content).version === version;
+  } else {
+    return false;
+  }
+  return true;
 }

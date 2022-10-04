@@ -29,9 +29,19 @@ describe('pnpm LockFile utility', () => {
       ).toBeDefined();
       expect(
         parsedLockFile.dependencies['@jridgewell/gen-mapping'][
+          '@jridgewell/gen-mapping@0.1.1'
+        ].rootVersion
+      ).toBeFalsy();
+      expect(
+        parsedLockFile.dependencies['@jridgewell/gen-mapping'][
           '@jridgewell/gen-mapping@0.3.2'
         ]
       ).toBeDefined();
+      expect(
+        parsedLockFile.dependencies['@jridgewell/gen-mapping'][
+          '@jridgewell/gen-mapping@0.3.2'
+        ].rootVersion
+      ).toBeTruthy();
     });
 
     it('should map various instances of the same version', () => {

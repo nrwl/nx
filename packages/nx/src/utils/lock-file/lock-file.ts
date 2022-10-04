@@ -24,7 +24,6 @@ import {
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
 import { existsSync } from 'fs';
-import { version } from 'yargs';
 
 const YARN_LOCK_PATH = join(workspaceRoot, 'yarn.lock');
 const NPM_LOCK_PATH = join(workspaceRoot, 'package-lock.json');
@@ -111,7 +110,7 @@ export function mapLockFileDataToPartialGraph(
 
   Object.keys(lockFileData.dependencies).forEach((dep) => {
     const versions = lockFileData.dependencies[dep];
-    Object.keys(versions).forEach((nameVersion, index) => {
+    Object.keys(versions).forEach((nameVersion) => {
       const packageVersion = versions[nameVersion];
 
       // map packages' transitive dependencies and peer dependencies to external nodes' versions
@@ -130,9 +129,11 @@ export function mapLockFileDataToPartialGraph(
       );
 
       // save external node
-      const nodeName: `npm:${string}` = !index
-        ? `npm:${dep}`
-        : `npm:${nameVersion}`;
+      const nodeName = getNodeName(
+        dep,
+        packageVersion.version,
+        packageVersion.rootVersion
+      );
       result.externalNodes[nodeName] = {
         type: 'npm',
         name: nodeName,
@@ -154,6 +155,14 @@ export function mapLockFileDataToPartialGraph(
     });
   });
   return result;
+}
+
+function getNodeName(
+  dep: string,
+  version: string,
+  rootVersion: boolean
+): `npm:${string}` {
+  return rootVersion ? `npm:${dep}` : `npm:${dep}@${version}`;
 }
 
 // Finds the maching version of each dependency of the package and
@@ -182,15 +191,17 @@ function mapTransitiveDependencies(
     if (versionCache[key]) {
       result.push(versionCache[key]);
     } else {
+      const versions = packages[packageName];
       const version =
-        findMatchingVersion(
-          packageName,
-          packages[packageName],
-          dependencies[packageName]
-        ) || dependencies[packageName];
-      const node = `npm:${packageName}@${version}`;
-      result.push(node);
-      versionCache[key] = node;
+        findMatchingVersion(packageName, versions, dependencies[packageName]) ||
+        dependencies[packageName];
+      const nodeName = getNodeName(
+        packageName,
+        version,
+        versions[version]?.rootVersion
+      );
+      result.push(nodeName);
+      versionCache[key] = nodeName;
     }
   });
 

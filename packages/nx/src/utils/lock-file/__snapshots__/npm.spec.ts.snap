@@ -19,6 +19,7 @@ Object {
       },
     ],
     "resolved": "https://registry.npmjs.org/@ampproject/remapping/-/remapping-2.2.0.tgz",
+    "rootVersion": true,
     "version": "2.2.0",
   },
 }
@@ -43,6 +44,7 @@ Object {
       },
     ],
     "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.8.3.tgz",
+    "rootVersion": true,
     "version": "4.8.3",
   },
 }

@@ -28,6 +28,7 @@ Object {
     "resolution": Object {
       "integrity": "sha512-qRmjj8nj9qmLTQXXmaR1cck3UXSRMPrbsLJAasZpF+t3riI71BXed5ebIOYwQntykeZuhjsdweEc9BxH5Jc26w==",
     },
+    "rootVersion": true,
     "version": "2.2.0",
   },
 }
@@ -53,6 +54,7 @@ Object {
     "resolution": Object {
       "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
     },
+    "rootVersion": true,
     "version": "4.8.3",
   },
 }
@@ -86,6 +88,7 @@ Object {
     "resolution": Object {
       "integrity": "sha512-qRmjj8nj9qmLTQXXmaR1cck3UXSRMPrbsLJAasZpF+t3riI71BXed5ebIOYwQntykeZuhjsdweEc9BxH5Jc26w==",
     },
+    "rootVersion": true,
     "version": "2.2.0",
   },
 }
@@ -111,6 +114,7 @@ Object {
     "resolution": Object {
       "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
     },
+    "rootVersion": true,
     "version": "4.8.3",
   },
 }

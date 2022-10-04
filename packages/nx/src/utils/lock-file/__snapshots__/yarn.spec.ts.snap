@@ -14,6 +14,7 @@ Object {
       "@ampproject/remapping@npm:^2.1.0",
     ],
     "resolution": "@ampproject/remapping@npm:2.2.0",
+    "rootVersion": true,
     "version": "2.2.0",
   },
 }
@@ -33,6 +34,7 @@ Object {
       "typescript@npm:~4.8.2",
     ],
     "resolution": "typescript@npm:4.8.3",
+    "rootVersion": true,
     "version": "4.8.3",
   },
 }
@@ -50,6 +52,7 @@ Object {
       "@ampproject/remapping@^2.1.0",
     ],
     "resolved": "https://registry.yarnpkg.com/@ampproject/remapping/-/remapping-2.2.0.tgz#56c133824780de3174aed5ab6834f3026790154d",
+    "rootVersion": true,
     "version": "2.2.0",
   },
 }
@@ -63,6 +66,7 @@ Object {
       "typescript@~4.8.2",
     ],
     "resolved": "https://registry.yarnpkg.com/typescript/-/typescript-4.8.3.tgz#d59344522c4bc464a65a730ac695007fdb66dd88",
+    "rootVersion": true,
     "version": "4.8.3",
   },
 }

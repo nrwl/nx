@@ -69,19 +69,13 @@ function mapPackages(packages: Dependencies): LockFileData['dependencies'] {
     if (mappedPackages[packageName][newKey]) {
       mappedPackages[packageName][newKey].packageMeta.push(packageMeta);
     } else {
+      const rootVersion = key.split('/node_modules/').length === 1;
       mappedPackages[packageName][newKey] = {
         ...value,
         packageMeta: [packageMeta],
+        rootVersion,
       };
     }
-  });
-  // sort the version in descending order
-  Object.keys(mappedPackages).forEach((packageName) => {
-    mappedPackages[packageName] = sortObject(
-      mappedPackages[packageName],
-      undefined,
-      true
-    );
   });
   return mappedPackages;
 }
@@ -123,7 +117,7 @@ export function stringifyNpmLockFile(lockFileData: LockFileData): string {
 // remapping the package back to package-lock format
 function unmapPackage(
   packages: Dependencies,
-  { packageMeta, ...value }: PackageDependency
+  { packageMeta, rootVersion, ...value }: PackageDependency
 ) {
   // we need to decompose value, to achieve particular field ordering
   const {

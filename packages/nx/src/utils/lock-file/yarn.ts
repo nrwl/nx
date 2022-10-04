@@ -5,7 +5,7 @@ import {
   PackageDependency,
   PackageVersions,
 } from './lock-file-type';
-import { sortObject, hashString } from './utils';
+import { sortObject, hashString, isRootVersion } from './utils';
 
 type LockFileDependencies = Record<
   string,
@@ -70,13 +70,21 @@ function mapPackages(
       }
     }
   });
-  // sort the version in descending order
   Object.keys(mappedPackages).forEach((packageName) => {
-    mappedPackages[packageName] = sortObject(
-      mappedPackages[packageName],
-      undefined,
-      true
-    );
+    const versions = mappedPackages[packageName];
+    const versionKeys = Object.keys(versions);
+
+    if (versionKeys.length === 1) {
+      versions[versionKeys[0]].rootVersion = true;
+    } else {
+      const rootVersionKey = versionKeys.find((v) =>
+        isRootVersion(packageName, versions[v].version)
+      );
+      // this should never happen, but just in case
+      if (rootVersionKey) {
+        versions[rootVersionKey].rootVersion = true;
+      }
+    }
   });
   return [mappedPackages, workspacePackages];
 }
@@ -126,7 +134,7 @@ function unmapPackages(
 
   Object.values(dependencies).forEach((packageVersions) => {
     Object.values(packageVersions).forEach((value) => {
-      const { packageMeta, ...rest } = value;
+      const { packageMeta, rootVersion, ...rest } = value;
       if (isBerry) {
         // berry's `stringifySyml` does not combine packages
         // we have to do it manually

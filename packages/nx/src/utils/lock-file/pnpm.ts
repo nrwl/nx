@@ -1,6 +1,6 @@
 import { LockFileData, PackageDependency } from './lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
-import { sortObject, hashString } from './utils';
+import { sortObject, hashString, isRootVersion } from './utils';
 
 type PackageMeta = {
   key: string;
@@ -99,14 +99,23 @@ function mapPackages(
       };
     }
   });
-  // sort the version in descending order
   Object.keys(mappedPackages).forEach((packageName) => {
-    mappedPackages[packageName] = sortObject(
-      mappedPackages[packageName],
-      undefined,
-      true
-    );
+    const versions = mappedPackages[packageName];
+    const versionKeys = Object.keys(versions);
+
+    if (versionKeys.length === 1) {
+      versions[versionKeys[0]].rootVersion = true;
+    } else {
+      const rootVersionKey = versionKeys.find((v) =>
+        isRootVersion(packageName, versions[v].version)
+      );
+      // this should never happen, but just in case
+      if (rootVersionKey) {
+        versions[rootVersionKey].rootVersion = true;
+      }
+    }
   });
+
   return mappedPackages;
 }
 
@@ -221,7 +230,7 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
     const packageName = packageNames[i];
     const versions = Object.values(lockFileData.dependencies[packageName]);
 
-    versions.forEach(({ packageMeta, version: _, ...rest }) => {
+    versions.forEach(({ packageMeta, version: _, rootVersion, ...rest }) => {
       (packageMeta as PackageMeta[]).forEach((meta) => {
         const { key, specifier } = meta;
 
