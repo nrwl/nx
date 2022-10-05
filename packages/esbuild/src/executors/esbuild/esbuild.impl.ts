@@ -2,7 +2,6 @@ import 'dotenv/config';
 import * as chalk from 'chalk';
 import type { ExecutorContext } from '@nrwl/devkit';
 import { cacheDir, joinPathFragments, logger } from '@nrwl/devkit';
-import { parse } from 'path';
 import {
   copyAssets,
   copyPackageJson,
@@ -18,7 +17,6 @@ import { removeSync, writeJsonSync } from 'fs-extra';
 import { createAsyncIterable } from '@nrwl/js/src/utils/create-async-iterable/create-async-iteratable';
 import { buildEsbuildOptions } from './lib/build-esbuild-options';
 
-const ESM_FILE_EXTENSION = '.js';
 const CJS_FILE_EXTENSION = '.cjs';
 
 const BUILD_WATCH_FAILED = `[ ${chalk.red(
@@ -40,7 +38,8 @@ export async function* esbuildExecutor(
   const packageJsonResult = await copyPackageJson(
     {
       ...options,
-      skipTypings: options.skipTypeCheck,
+      // TODO(jack): make types generate with esbuild
+      skipTypings: true,
       outputFileExtensionForCjs: CJS_FILE_EXTENSION,
     },
     context
