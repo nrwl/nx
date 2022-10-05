@@ -10,7 +10,7 @@ import { getPackageManagerCommand } from '@nrwl/devkit';
  */
 export function runCommandAsync(
   command: string,
-  opts = {
+  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv } = {
     silenceError: false,
   }
 ): Promise<{ stdout: string; stderr: string }> {
@@ -19,6 +19,7 @@ export function runCommandAsync(
       command,
       {
         cwd: tmpProjPath(),
+        env: { ...process.env, ...opts.env },
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
@@ -37,7 +38,7 @@ export function runCommandAsync(
  */
 export function runNxCommandAsync(
   command: string,
-  opts = {
+  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv } = {
     silenceError: false,
   }
 ): Promise<{ stdout: string; stderr: string }> {
