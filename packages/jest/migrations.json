@@ -69,8 +69,14 @@
     "update-tests-jest-28": {
       "version": "14.6.0-beta.0",
       "cli": "nx",
-      "description": "Update jest test files  to support jest 28 changes (https://jestjs.io/docs/upgrading-to-jest28)",
+      "description": "Update jest test files to support jest 28 changes (https://jestjs.io/docs/upgrading-to-jest28)",
       "factory": "./src/migrations/update-14-6-0/update-tests-jest-28"
+    },
+    "add-jest-inputs": {
+      "version": "15.0.0-beta.0",
+      "cli": "nx",
+      "description": "Stop hashing jest spec files and config files for build targets and dependent tasks",
+      "factory": "./src/migrations/update-15-0-0/add-jest-inputs"
     }
   },
   "packageJsonUpdates": {

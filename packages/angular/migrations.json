@@ -184,6 +184,12 @@
       "version": "15.0.0-beta.0",
       "description": "Update the usages of @nrwl/angular/testing to import jasmine-marbles symbols from jasmine-marbles itself.",
       "factory": "./src/migrations/update-15-0-0/switch-to-jasmine-marbles"
+    },
+    "add-karma-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.1",
+      "description": "Stop hashing karma spec files and config files for build targets and dependent tasks",
+      "factory": "./src/migrations/update-15-0-0/add-karma-inputs"
     }
   },
   "packageJsonUpdates": {

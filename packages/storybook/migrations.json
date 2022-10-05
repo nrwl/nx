@@ -79,6 +79,12 @@
       "cli": "nx",
       "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
       "factory": "./src/migrations/update-14-1-8/change-storybook-targets"
+    },
+    "update-15.0.8-add-storybook-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Stop hashing storybook config files and story files for build targets and dependent tasks",
+      "factory": "./src/migrations/update-15-0-0/add-storybook-inputs"
     }
   },
   "packageJsonUpdates": {

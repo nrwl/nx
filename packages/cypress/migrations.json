@@ -42,6 +42,12 @@
       "version": "14.7.0-beta.0",
       "description": "Update Cypress if using v10 to support latest component testing features",
       "factory": "./src/migrations/update-14-7-0/update-cypress-version-if-10"
+    },
+    "add-cypress-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Stop hashing cypress spec files and config files for build targets and dependent tasks",
+      "factory": "./src/migrations/update-15-0-0/add-cypress-inputs"
     }
   },
   "packageJsonUpdates": {
