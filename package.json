@@ -168,7 +168,6 @@
     "jasmine-marbles": "~0.8.4",
     "jasmine-spec-reporter": "~4.2.1",
     "jest": "28.1.3",
-    "jest-circus": "27.2.3",
     "jest-environment-jsdom": "28.1.1",
     "js-yaml": "4.1.0",
     "jsonc-eslint-parser": "^2.1.0",
