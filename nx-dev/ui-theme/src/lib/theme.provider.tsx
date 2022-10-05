@@ -1,95 +1,65 @@
 import {
-  createContext,
-  Dispatch,
-  SetStateAction,
-  useContext,
   useEffect,
   useLayoutEffect,
-  useRef,
-  useState,
+  useMemo,
+  useSyncExternalStore,
 } from 'react';
 
-const useAvailableLayoutEffect =
-  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+export type Theme = 'light' | 'dark' | 'system';
 
-function changeDocumentClassName(): void {
-  if (
-    localStorage['theme'] === 'dark' ||
-    (!('theme' in localStorage) &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches)
-  ) {
-    document.documentElement.classList.add('dark', 'changing-theme');
-  } else {
-    document.documentElement.classList.remove('dark', 'changing-theme');
-  }
-  window.setTimeout(() => {
-    document.documentElement.classList.remove('changing-theme');
-  });
-}
+export function useTheme(): [Theme, (theme: Theme) => void] {
+  const [subscribe, getSnapshot, getServerSnapshot] = useMemo(() => {
+    return [
+      (notify: () => void) => {
+        const handleStorageEvent = (evt: StorageEvent) => {
+          if (evt.key === 'theme') {
+            changeDocumentClassName();
+            notify();
+          }
+        };
+        const changeDocumentClassName = () => {
+          if (
+            localStorage['theme'] === 'dark' ||
+            ((!localStorage['theme'] || localStorage['theme'] === 'system') &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          ) {
+            document.documentElement.classList.add('dark', 'changing-theme');
+          } else {
+            document.documentElement.classList.remove('dark', 'changing-theme');
+          }
+          window.setTimeout(() => {
+            document.documentElement.classList.remove('changing-theme');
+          });
+        };
 
-export const ThemeContext = createContext({
-  theme: 'system' as 'light' | 'dark' | 'system',
-  setTheme: (() => void 0) as Dispatch<SetStateAction<any>>,
-});
-export const useThemeContext = () => useContext(ThemeContext);
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        mediaQuery.addEventListener('change', changeDocumentClassName);
 
-export function useTheme(): [
-  'light' | 'dark' | 'system',
-  (value: 'light' | 'dark' | 'system') => void
-] {
-  const [theme, setTheme] = useState('system');
-  let initial = useRef(true);
+        window.addEventListener('storage', handleStorageEvent);
 
-  useAvailableLayoutEffect(() => {
-    let theme = localStorage['theme'];
-    if (theme === 'light' || theme === 'dark') {
-      setTheme(theme);
-    }
+        changeDocumentClassName();
+
+        return () => {
+          mediaQuery.removeEventListener('change', changeDocumentClassName);
+          window.removeEventListener('storage', handleStorageEvent);
+        };
+      },
+      () => window.localStorage['theme'] ?? 'system',
+      () => 'system',
+    ];
   }, []);
 
-  useAvailableLayoutEffect(() => {
-    if (theme === 'system') {
-      localStorage.removeItem('theme');
-    } else if (theme === 'light' || theme === 'dark') {
+  return [
+    useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot),
+    (theme: Theme) => {
       localStorage['theme'] = theme;
-    }
-    if (initial.current) {
-      initial.current = false;
-      return;
-    }
-    changeDocumentClassName();
-  }, [theme]);
-
-  useEffect(() => {
-    let mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', changeDocumentClassName);
-
-    function onStorage() {
-      changeDocumentClassName();
-      let theme = localStorage['theme'];
-      if (theme === 'light' || theme === 'dark') {
-        setTheme(theme);
-      } else {
-        setTheme('system');
-      }
-    }
-    window.addEventListener('storage', onStorage);
-
-    return () => {
-      mediaQuery.removeEventListener('change', changeDocumentClassName);
-      window.removeEventListener('storage', onStorage);
-    };
-  }, []);
-
-  return [theme as 'light' | 'dark' | 'system', setTheme];
+      // For current window
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: 'theme',
+          newValue: theme,
+        })
+      );
+    },
+  ];
 }
-
-export const ThemeProvider = ({ children }: { children: JSX.Element }) => {
-  const [theme, setTheme] = useTheme();
-
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
