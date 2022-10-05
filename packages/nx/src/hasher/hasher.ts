@@ -345,12 +345,6 @@ class TaskHasher {
     if (n?.data?.hash) {
       // we already know the hash of this dependency
       hash = n.data.hash;
-    } else if (version) {
-      const deps = [`${projectName}@${version}`];
-      this.traverseExternalNodesDependencies(projectName, deps);
-      hash = this.hashing.hashArray(deps.sort());
-      // store hash of given dependency for later use
-      n.data.hash = hash;
     } else {
       // unknown dependency
       // this may occur dependency is not an npm package
@@ -364,19 +358,6 @@ class TaskHasher {
         [projectName]: version || hash,
       },
     };
-  }
-
-  private traverseExternalNodesDependencies(
-    projectName: string,
-    visited: string[]
-  ) {
-    const dependencies = this.projectGraph.dependencies[projectName] ?? [];
-    dependencies.forEach((d) => {
-      if (visited.indexOf(d.target) === -1) {
-        visited.push(d.target);
-        this.traverseExternalNodesDependencies(d.target, visited);
-      }
-    });
   }
 
   private hashTarget(projectName: string, targetName: string): PartialHash {

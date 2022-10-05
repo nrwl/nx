@@ -3,6 +3,11 @@ import { defaultHashing } from '../../hasher/hashing-impl';
 import { PackageDependency, PackageVersions } from './lock-file-type';
 import { workspaceRoot } from '../workspace-root';
 import { existsSync, readFileSync } from 'fs';
+import {
+  ProjectGraph,
+  ProjectGraphDependency,
+  ProjectGraphExternalNode,
+} from '../../config/project-graph';
 
 /**
  * Simple sort function to ensure keys are ordered alphabetically
@@ -61,7 +66,6 @@ export function isRootVersion(packageName: string, version: string): boolean {
   } else {
     return false;
   }
-  return true;
 }
 
 /**
@@ -120,7 +124,8 @@ function mapTransitiveDependencies(
   const result: string[] = [];
 
   Object.keys(dependencies).forEach((packageName) => {
-    const key = `${packageName}@${dependencies[packageName]}`;
+    const cleanVersion = dependencies[packageName].split('_')[0];
+    const key = `${packageName}@${cleanVersion}`;
 
     // some of the peer dependencies might not be installed,
     // we don't have them as nodes in externalNodes
@@ -134,18 +139,56 @@ function mapTransitiveDependencies(
       result.push(versionCache[key]);
     } else {
       const versions = packages[packageName];
-      const version =
-        findMatchingVersion(packageName, versions, dependencies[packageName]) ||
-        dependencies[packageName];
-      const nodeName = getNodeName(
-        packageName,
-        version,
-        versions[version]?.rootVersion
-      );
-      result.push(nodeName);
-      versionCache[key] = nodeName;
+      const version = findMatchingVersion(packageName, versions, cleanVersion);
+      // for some peer dependencies, we won't find installed version so we'll just ignore those
+      if (version) {
+        const nodeName = getNodeName(
+          packageName,
+          version,
+          versions[`${packageName}@${version}`]?.rootVersion
+        );
+        result.push(nodeName);
+        versionCache[key] = nodeName;
+      }
     }
   });
 
   return result;
+}
+
+export function hashExternalNodes(projectGraph: ProjectGraph) {
+  Object.keys(projectGraph.externalNodes).forEach((key) => {
+    if (!projectGraph.externalNodes[key].data.hash) {
+      // hash it using it's dependencies
+      hashExternalNode(projectGraph.externalNodes[key], projectGraph);
+    }
+  });
+}
+
+function hashExternalNode(node: ProjectGraphExternalNode, graph: ProjectGraph) {
+  const hashKey = `${node.data.packageName}@${node.data.version}`;
+  if (!graph.dependencies[node.name]) {
+    node.data.hash = hashString(hashKey);
+  } else {
+    const hashingInput = [hashKey];
+    traverseExternalNodesDependencies(node.name, graph, hashingInput);
+    node.data.hash = defaultHashing.hashArray(hashingInput.sort());
+  }
+}
+
+function traverseExternalNodesDependencies(
+  projectName: string,
+  graph: ProjectGraph,
+  visited: string[]
+) {
+  graph.dependencies[projectName].forEach((d) => {
+    const target = graph.externalNodes[d.target];
+    const targetKey = `${target.data.packageName}@${target.data.version}`;
+    if (visited.indexOf(targetKey) === -1) {
+      visited.push(targetKey);
+      if (graph.dependencies[d.target]) {
+        traverseExternalNodesDependencies(d.target, graph, visited);
+      }
+    }
+  });
 }

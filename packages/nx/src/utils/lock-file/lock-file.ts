@@ -15,12 +15,12 @@ import {
   prunePnpmLockFile,
   stringifyPnpmLockFile,
 } from './pnpm';
-import { LockFileData, PackageVersions } from './lock-file-type';
+import { LockFileData } from './lock-file-type';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
 import {
-  findMatchingVersion,
   getNodeName,
+  hashExternalNodes,
   hashString,
   mapExternalNodeDependencies,
 } from './utils';
@@ -144,6 +144,7 @@ export function mapLockFileDataToPartialGraph(
       }
     });
   });
+  hashExternalNodes(result);
   return result;
 }
 
