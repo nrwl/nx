@@ -22,7 +22,7 @@ locally, and then if it is missing, and if a remote cache is configured, it chec
 If Nx finds the computation, Nx retrieves it and replays it. Nx places the right files in the right folders and
 prints the terminal output. From the user’s point of view, the command ran the same, just a lot faster.
 
-![cache](../images/caching/cache.png)
+![cache](../images/caching/cache.svg)
 
 If Nx doesn’t find a corresponding computation hash, Nx runs the task, and after it completes, it takes the
 outputs and the terminal logs and stores them locally (and if configured remotely as well). All of this happens
@@ -38,7 +38,7 @@ instance, Nx:
 
 As your workspace grows, the task graph looks more like this:
 
-![cache](../images/caching/task-graph-big.png)
+![cache](../images/caching/task-graph-big.svg)
 
 All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
 work happens. The rest is either left as is or restored from the cache.

@@ -23,7 +23,7 @@ that can be affected by this change. It then runs the `run-many` command with th
 For instance, if my PR changes `lib`, and I then run `nx affected --target=test`, Nx figures out that `app1` and `app2`
 depend on `lib`, so it will invoke `nx run-many --target=test --projects=app1,app2,lib`.
 
-![affected](/shared/mental-model/affected.png)
+![affected](/shared/mental-model/affected.svg)
 
 Nx analyzes the nature of the changes. For example, if you change the version of Next.js in the package.json, Nx knows
 that `app2` cannot be affected by it, so it only retests `app1`.

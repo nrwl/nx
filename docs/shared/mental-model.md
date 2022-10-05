@@ -9,7 +9,7 @@ with project graphs, task graphs, affected commands, computation hashing and cac
 A project graph is used to reflect the source code in your repository and all the external dependencies that aren’t
 authored in your repository, such as Webpack, React, Angular, and so forth.
 
-![project-graph](/shared/mental-model/project-graph.png)
+![project-graph](/shared/mental-model/project-graph.svg)
 
 With Nx, nodes in the project graph are defined in `project.json` files. You can manually define dependencies between
 the
@@ -17,7 +17,7 @@ nodes, but you don’t have to do it very often. Nx analyzes files’ source cod
 files, and others figuring out these dependencies for you. Nx also stores the cached project graph, so it only
 reanalyzes the files you have changed.
 
-![project-graph-updated](/shared/mental-model/project-graph-updated.png)
+![project-graph-updated](/shared/mental-model/project-graph-updated.svg)
 
 Nx provides an updated graph after each analysis is done.
 
@@ -40,7 +40,7 @@ graph and then executes the tasks in that graph.
 
 For instance `nx test lib` creates a task graph with a single node:
 
-![task-graph](/shared/mental-model/task-graph.png)
+![task-graph](/shared/mental-model/task-graph.svg)
 
 A task is an invocation of a target. If you invoke the same target twice, you create two tasks.
 
@@ -48,7 +48,7 @@ Nx uses the [project graph](#the-project-graph), but the task graph and project 
 aren’t directly connected. In the case above, `app1` and `app2` depend on `lib`, but
 running `nx run-many --target=test --projects=app1,app2,lib`, the created task graph will look like this:
 
-![task-graph-creation](/shared/mental-model/task-graph-creation.png)
+![task-graph-creation](/shared/mental-model/task-graph-creation.svg)
 
 Even though the apps depend on `lib`, testing `app1` doesn’t depend on the testing `lib`. This means that the two tasks
 can
@@ -72,7 +72,7 @@ Let’s look at the test target relying on its dependencies.
 
 With this, running the same test command creates the following task graph:
 
-![task-graph-run](/shared/mental-model/task-graph-run.png)
+![task-graph-run](/shared/mental-model/task-graph-run.svg)
 
 This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define
 similar
@@ -81,7 +81,7 @@ relationships between targets of the same project, including a test target that 
 A task graph can contain different targets, and those can run in parallel. For instance, as Nx is building `app2`, it
 can be testing `app1` at the same time.
 
-![task-graph-execution](/shared/mental-model/task-graph-execution.png)
+![task-graph-execution](/shared/mental-model/task-graph-execution.svg)
 
 Nx also runs the tasks in the task graph in the right order. Nx executing tasks in parallel speeds up your overall
 execution time.
@@ -106,7 +106,7 @@ that can be affected by this change. It then runs the `run-many` command with th
 For instance, if my PR changes `lib`, and I then run `nx affected --target=test`, Nx figures out that `app1` and `app2`
 depend on `lib`, so it will invoke `nx run-many --target=test --projects=app1,app2,lib`.
 
-![affected](/shared/mental-model/affected.png)
+![affected](/shared/mental-model/affected.svg)
 
 Nx analyzes the nature of the changes. For example, if you change the version of Next.js in the package.json, Nx knows
 that `app2` cannot be affected by it, so it only retests `app1`.
@@ -126,7 +126,7 @@ By default, the computation hash for say `nx test app1` includes:
 - [Runtime values provisioned by the user](/concepts/how-caching-works#runtime-hash-inputs)
 - CLI Command flags
 
-![computation-hashing](/shared/mental-model/computation-hashing-v2.png)
+![computation-hashing](/shared/mental-model/computation-hashing.svg)
 
 This behavior is customizable. For instance, lint checks may only depend on the source code of the project and global
 configs. Builds can depend on the dts files of the compiled libs instead of their source.
@@ -137,7 +137,7 @@ and then if it is missing, and if a remote cache is configured, it checks remote
 If Nx finds the computation, Nx retrieves it and replay it. Nx places the right files in the right folders and prints
 the terminal output. So from the user’s point of view, the command ran the same, just a lot faster.
 
-![cache](/shared/mental-model/cache.png)
+![cache](/shared/mental-model/cache.svg)
 
 If Nx doesn’t find this computation, Nx runs the task, and after it completes, it takes the outputs and the terminal
 output and stores it locally (and if configured remotely). All of this happens transparently, so you don’t have to worry
@@ -153,7 +153,7 @@ instance, Nx:
 
 As your workspace grows, the task graph looks more like this:
 
-![cache](/shared/mental-model/task-graph-big.png)
+![cache](/shared/mental-model/task-graph-big.svg)
 
 All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
 work happens. The rest is either left as is or restored from the cache.
@@ -177,7 +177,7 @@ terminal outputs.
 After `nx affected --build` completes, the machine will have the build files and all the terminal outputs as if it ran
 it locally.
 
-![DTE](/shared/mental-model/dte.png)
+![DTE](/shared/mental-model/dte.svg)
 
 ## In summary
 
