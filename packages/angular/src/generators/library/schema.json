@@ -4,6 +4,7 @@
   "title": "Create a library",
   "description": "Creates an Angular library.",
   "type": "object",
+
   "cli": "nx",
   "properties": {
     "name": {
@@ -188,5 +189,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/library-examples.md"
 }

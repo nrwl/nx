@@ -4,6 +4,12 @@
   "cli": "nx",
   "title": "SCAM Generator Options Schema",
   "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nrwl/angular:scam --project=my-lib my-sample",
+      "description": "Generate a `MySampleComponent` component in the `my-lib` library."
+    }
+  ],
   "description": "Creates a new, generic Angular component definition in the given or default project.",
   "additionalProperties": false,
   "properties": {
