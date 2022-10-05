@@ -173,7 +173,7 @@
     "jsonc-eslint-parser": "^2.1.0",
     "jsonc-parser": "3.2.0",
     "kill-port": "^1.6.1",
-    "lerna": "5.5.4",
+    "lerna": "5.6.1",
     "less": "3.12.2",
     "less-loader": "^10.1.0",
     "license-webpack-plugin": "^4.0.2",
