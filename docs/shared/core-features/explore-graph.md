@@ -16,4 +16,4 @@ This will open a browser window with an interactive representation of the projec
 
 Once the graph is displayed, you can click on an individual dependency link to find out what specific file(s) created that dependency.
 
-![Project Graph screenshot](../images/project-graph.png)
+![Project Graph screenshot](../images/project-graph.svg)

@@ -24,6 +24,7 @@ function isNotImage(linkPath: string): boolean {
     !linkPath.endsWith('.png') &&
     !linkPath.endsWith('.gif') &&
     !linkPath.endsWith('.webp') &&
+    !linkPath.endsWith('.svg') &&
     !linkPath.endsWith('.avif')
   );
 }
