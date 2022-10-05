@@ -113,7 +113,7 @@ For the blog project, you'll need to add `ascii` as a `dependency` (or `devDepen
   "name": "blog",
   "description": "eleventy blog",
   "version": "1.0.0",
-  "dependency": {
+  "dependencies": {
     "ascii": "*"
   },
   "scripts": {
