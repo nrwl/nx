@@ -11,10 +11,11 @@ import { logger, NX_PREFIX } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
 import * as yaml from 'js-yaml';
 
-import type { NxJsonConfiguration } from './nx-json';
+import type { NxJsonConfiguration, TargetDefaults } from './nx-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
+  TargetConfiguration,
 } from './workspace-json-project-json';
 import {
   CustomHasher,
@@ -140,16 +141,19 @@ export class Workspaces {
     for (const proj of Object.values(config.projects)) {
       if (proj.targets) {
         for (const targetName of Object.keys(proj.targets)) {
-          if (nxJson.targetDefaults[targetName]) {
-            const projectTargetDefinition = proj.targets[targetName];
-            if (!projectTargetDefinition.outputs) {
-              projectTargetDefinition.outputs =
-                nxJson.targetDefaults[targetName].outputs;
-            }
-            if (!projectTargetDefinition.dependsOn) {
-              projectTargetDefinition.dependsOn =
-                nxJson.targetDefaults[targetName].dependsOn;
-            }
+          const projectTargetDefinition = proj.targets[targetName];
+          const defaults = readTargetDefaultsForTarget(
+            targetName,
+            nxJson,
+            projectTargetDefinition.executor
+          );
+
+          if (defaults) {
+            const defaults = nxJson.targetDefaults[targetName];
+            proj.targets[targetName] = mergeTargetConfigurations(
+              projectTargetDefinition,
+              defaults
+            );
           }
         }
       }
@@ -926,6 +930,68 @@ export function buildWorkspaceConfigurationFromGlobs(
     version: 2,
     projects: projects,
   };
+}
+
+export function mergeTargetConfigurations(
+  targetConfiguration: Partial<TargetConfiguration>,
+  targetDefaults: TargetDefaults[string]
+): TargetConfiguration {
+  const {
+    configurations: defaultConfigurations,
+    options: defaultOptions,
+    ...defaults
+  } = targetDefaults;
+  const result = {
+    ...defaults,
+    ...targetConfiguration,
+  };
+
+  if (!targetDefaults.executor && !targetConfiguration.executor) {
+    throw new Error('Unable to determine executor for target');
+  }
+
+  // Target is "homogenous", e.g. executor is defined only once or is the same
+  // in both places
+  if (
+    !targetDefaults.executor ||
+    !targetConfiguration.executor ||
+    targetDefaults.executor === targetConfiguration.executor
+  ) {
+    result.options = {
+      ...defaultOptions,
+      ...targetConfiguration.options,
+    };
+    result.configurations = {
+      ...defaultConfigurations,
+      ...targetConfiguration.configurations,
+    };
+  }
+  return result as TargetConfiguration;
+}
+
+export function readTargetDefaultsForTarget(
+  targetName: string,
+  nxJson: NxJsonConfiguration<'*' | string[]>,
+  executor?: string
+): TargetDefaults[string] {
+  if (executor) {
+    // If an executor is defined in project.json, defaults should be read
+    // from the most specific key that matches that executor.
+    // e.g. If executor === run-commands, and the target is named build:
+    // Use build|run-commands if it is present
+    // If not, use *|run-commands if it is present
+    // If not, use build if it is present.
+    const separator = '|';
+    const key = [
+      `${targetName}${separator}${executor}`,
+      `*${separator}${executor}`,
+      targetName,
+    ].find((x) => nxJson.targetDefaults[x]);
+    return key ? nxJson.targetDefaults[key] : null;
+  } else {
+    // If the executor is not defined, the only key we have is the target name.
+    return nxJson.targetDefaults[targetName];
+  }
 }
 
 // we have to do it this way to preserve the order of properties
