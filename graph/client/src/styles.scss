@@ -4,6 +4,11 @@
 @tailwind base;
 @tailwind utilities;
 
+/** Scrollbars **/
+.dark {
+  color-scheme: dark;
+}
+
 $gray: rgb(100, 116, 139, 1);
 
 #app,
