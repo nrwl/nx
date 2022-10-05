@@ -145,4 +145,25 @@ describe('getUpdatedPackageJsonContent', () => {
       },
     });
   });
+
+  it('should not set types when { skipTypings: true }', () => {
+    const json = getUpdatedPackageJsonContent(
+      {
+        name: 'test',
+        version: '0.0.1',
+      },
+      {
+        main: 'proj/src/index.ts',
+        outputPath: 'dist/proj',
+        projectRoot: 'proj',
+        skipTypings: true,
+      }
+    );
+
+    expect(json).toEqual({
+      name: 'test',
+      main: './src/index.js',
+      version: '0.0.1',
+    });
+  });
 });
