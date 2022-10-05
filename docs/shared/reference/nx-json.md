@@ -113,6 +113,14 @@ In this case Nx will use the right `production` input for each project.
 
 ### Target Defaults
 
+Target defaults provide ways to set common options for a particular target in your workspace. When building your project's configuration, we merge it with up to 1 default from this map. For a given target, we look at its name and its executor. We then check target defaults for any of the following combinations:
+
+- `` `${targetName}|${executor}` ``
+- `` `*|${executor}` ``
+- `` `${targetName}` ``
+
+Whichever of these we find first, we use as the base for that target's configuration. Some common scenarios for this follow.
+
 Targets can depend on other targets. A common scenario is having to build dependencies of a project first before
 building the project. The `dependsOn` property in `project.json` can be used to define the list of dependencies of an
 individual target.
@@ -174,7 +182,7 @@ named "default" is used by default. Specify a different one like this `nx run-ma
 Tasks runners can accept different options. The following are the options supported
 by `"nx/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 
-| Property                | Descrtipion                                                                                                                                                                                                                                                                                                                                   |
+| Property                | Description                                                                                                                                                                                                                                                                                                                                   |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | cacheableOperations     | defines the list of targets/operations that are cached by Nx                                                                                                                                                                                                                                                                                  |
 | parallel                | defines the max number of targets ran in parallel (in older versions of Nx you had to pass `--parallel --maxParallel=3` instead of `--parallel=3`)                                                                                                                                                                                            |
