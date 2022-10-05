@@ -2,13 +2,12 @@
 
 ## Adding Nx Cloud When Creating a Workspace
 
-You can enable Nx Cloud when creating a new workspace with `npx create-nx-workspace`.
+You can enable Nx Cloud when creating a new workspace with `npx create-nx-workspace`. Just reply with `Yes` to the prompt that asks about adding Nx Cloud to your workspace.
 
 ```bash
-? Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)
+? Enable distributed caching to make your CI faster
   (Use arrow keys)
-❯ Yes [Faster builds, run details, Github integration. Learn
-  more at https://nx.app]
+❯ Yes I want faster builds
   No
 ```
 
@@ -16,8 +15,12 @@ This will connect your workspace to Nx Cloud, so you can start testing it out ri
 
 ## Adding Nx Cloud to an Existing Workspace
 
-If you are on the latest version of Nx, you can connect your existing Nx workspace to Nx Cloud by
-running `nx connect-to-nx-cloud`.
+If you are on the latest version of Nx, you can **connect your existing Nx workspace** to Nx Cloud by
+running:
+
+```bash
+npx nx connect-to-nx-cloud
+```
 
 If you are using an older version of Nx (`< 12.0.0`), you can connect your workspace by adding the `@nrwl/nx-cloud`
 package to your workspace and running `nx g @nrwl/nx-cloud:init`.
