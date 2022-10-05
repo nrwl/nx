@@ -72,9 +72,15 @@ We can define a more precise configuration as follows:
 }
 ```
 
+{% callout type="note" title="{projectRoot}" %}
+`{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
+{% /callout %}
+
 With this configuration, the build script will only consider the non-test files of `remixapp`, `header` and `footer`.
 The test script will consider all the source files for the project under test and only non-test files of its
 dependencies. The test script will also consider the jest config file at the root of the workspace.
+
+For more information about modifying `inputs` and `namedInputs` for your own repo, read [Customizing Inputs](/more-concepts/customizing-inputs)
 
 ## Runtime Hash Inputs
 

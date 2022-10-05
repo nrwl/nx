@@ -382,6 +382,12 @@
         "description": "Get deeper into how Nx works and its different aspects.",
         "itemList": [
           {
+            "name": "Customizing Inputs",
+            "id": "customizing-inputs",
+            "tags": ["cache-task-results"],
+            "file": "shared/concepts/customizing-inputs"
+          },
+          {
             "name": "Incremental Builds",
             "id": "incremental-builds",
             "tags": ["use-task-executors"],

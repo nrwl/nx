@@ -134,6 +134,11 @@ Examples:
 - `{workspaceRoot}/jest.config.ts`
 - same as `{fileset: "{workspaceRoot}/jest.config.ts}`
 
+{% callout type="note" title="{projectRoot} and {workspaceRoot}" %}
+`{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
+`{workspaceRoot}` is a key word that is replaced by the path to the workspace root directory.
+{% /callout %}
+
 _Runtime Inputs_
 
 Examples:
@@ -158,7 +163,7 @@ Examples:
 - same as `inputs: [{input: "production", projects: "self"}]`
 
 Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
-keeping them in sync is error-prone, we recommend defining named inputs, which you can then reference in all of those
+keeping them in sync is error-prone, we recommend defining `namedInputs`, which you can then reference in all of those
 places.
 
 #### Using ^
@@ -179,6 +184,11 @@ an example.
 
 The configuration above means that the test target depends on all source files of a given project and only prod
 sources (non-test sources) of its dependencies. In other words, it treats test sources as private.
+
+{% cards %}
+{% card title="nx.json reference" type="documentation" description="inputs and namedInputs are also described in the nx.json reference" url="/reference/nx-json#inputs-&-namedinputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/more-concepts/customizing-inputs" /%}
+{% /cards %}
 
 ### outputs
 
