@@ -1,6 +1,6 @@
 import { satisfies } from 'semver';
 import { defaultHashing } from '../../hasher/hashing-impl';
-import { PackageVersions } from './lock-file-type';
+import { PackageDependency, PackageVersions } from './lock-file-type';
 import { workspaceRoot } from '../workspace-root';
 import { existsSync, readFileSync } from 'fs';
 
@@ -62,4 +62,90 @@ export function isRootVersion(packageName: string, version: string): boolean {
     return false;
   }
   return true;
+}
+
+/**
+ * Returns node name depending whether it's root version or nested
+ */
+export function getNodeName(
+  dep: string,
+  version: string,
+  rootVersion: boolean
+): `npm:${string}` {
+  return rootVersion ? `npm:${dep}` : `npm:${dep}@${version}`;
+}
+
+export function mapExternalNodeDependencies(
+  nodeName: string,
+  packageVersion: PackageDependency,
+  dependencies: Record<string, PackageVersions>,
+  versionCache: Record<string, string>
+) {
+  const result = [];
+
+  const combinedDependencies =
+    packageVersion.dependencies || packageVersion.peerDependencies
+      ? {
+          ...(packageVersion.dependencies || {}),
+          ...(packageVersion.peerDependencies || {}),
+        }
+      : undefined;
+  const transitiveDeps = mapTransitiveDependencies(
+    dependencies,
+    combinedDependencies,
+    versionCache
+  );
+  // map transitive dependencies to dependencies hash map
+  transitiveDeps.forEach((dep) => {
+    result.push({
+      type: 'static',
+      source: nodeName,
+      target: dep,
+    });
+  });
+
+  return result;
+}
+
+// Finds the maching version of each dependency of the package and
+// maps each {package}:{versionRange} pair to "npm:{package}@{version}" (when transitive) or "npm:{package}" (when root)
+function mapTransitiveDependencies(
+  packages: Record<string, PackageVersions>,
+  dependencies: Record<string, string>,
+  versionCache: Record<string, string>
+): string[] {
+  if (!dependencies) {
+    return [];
+  }
+  const result: string[] = [];
+
+  Object.keys(dependencies).forEach((packageName) => {
+    const key = `${packageName}@${dependencies[packageName]}`;
+
+    // some of the peer dependencies might not be installed,
+    // we don't have them as nodes in externalNodes
+    // so there's no need to map them as dependencies
+    if (!packages[packageName]) {
+      return;
+    }
+
+    // if we already processed this dependency, use the version from the cache
+    if (versionCache[key]) {
+      result.push(versionCache[key]);
+    } else {
+      const versions = packages[packageName];
+      const version =
+        findMatchingVersion(packageName, versions, dependencies[packageName]) ||
+        dependencies[packageName];
+      const nodeName = getNodeName(
+        packageName,
+        version,
+        versions[version]?.rootVersion
+      );
+      result.push(nodeName);
+      versionCache[key] = nodeName;
+    }
+  });
+
+  return result;
 }
