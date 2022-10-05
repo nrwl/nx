@@ -20,7 +20,6 @@ export const SchemaEditor = ({
   const monaco = useMonaco();
 
   useEffect(() => {
-    console.log(theme);
     if (!monaco) return;
     monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
       validate: true,
