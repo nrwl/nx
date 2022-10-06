@@ -1,10 +1,10 @@
 import {
   formatFiles,
+  joinPathFragments,
   readWorkspaceConfiguration,
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { join } from 'path';
 
 export default async function (tree: Tree) {
   const workspaceConfiguration = readWorkspaceConfiguration(tree);
@@ -17,7 +17,9 @@ export default async function (tree: Tree) {
     const sharedGlobalFileset = new Set(
       workspaceConfiguration.namedInputs.sharedGlobals
     );
-    sharedGlobalFileset.add(join('{workspaceRoot}', globalBabelFile));
+    sharedGlobalFileset.add(
+      joinPathFragments('{workspaceRoot}', globalBabelFile)
+    );
     workspaceConfiguration.namedInputs.sharedGlobals =
       Array.from(sharedGlobalFileset);
   }

@@ -1,11 +1,11 @@
 import {
   formatFiles,
+  joinPathFragments,
   readWorkspaceConfiguration,
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
-import { join } from 'path';
 
 export default async function (tree: Tree) {
   const workspaceConfiguration = readWorkspaceConfiguration(tree);
@@ -31,7 +31,9 @@ export default async function (tree: Tree) {
 
     lintTargetDefaults.inputs ??= [
       'default',
-      ...(globalEslintFile ? [join('{workspaceRoot}', globalEslintFile)] : []),
+      ...(globalEslintFile
+        ? [joinPathFragments('{workspaceRoot}', globalEslintFile)]
+        : []),
     ];
   }
 
