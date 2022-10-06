@@ -16,6 +16,7 @@ import {
 import { parseParentDirectoriesFromFilePath } from '../util';
 import { TracingAlgorithmType } from '../machines/interfaces';
 import ExperimentalFeature from '../experimental-feature';
+import { EyeIcon } from '@heroicons/react/24/outline';
 
 function getProjectsByType(type: string, projects: ProjectGraphNode[]) {
   return projects
@@ -147,26 +148,7 @@ function ProjectListItem({
             toggleProject(project.projectGraphNode.name, project.isSelected)
           }
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-            />
-          </svg>
+          <EyeIcon className="h-5 w-5"></EyeIcon>
         </span>
       ) : null}
     </li>
