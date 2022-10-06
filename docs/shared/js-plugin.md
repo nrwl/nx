@@ -6,25 +6,43 @@ The JS plugin contains executors and generators that are useful for JavaScript/T
 
 In any Nx workspace, you can install `@nrwl/js` by running the following commands if `@nrwl/js` package is not installed:
 
-```shell
+{% tabs %}
+{%tab label="npm"%}
+
+```bash
 npm i --save-dev @nrwl/js
 ```
 
-```shell
+{% /tab %}
+{%tab label="yarn"%}
+
+```bash
 yarn add --dev @nrwl/js
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ### `ts` Preset
 
 When initializing a new Nx workspace, specifying `--preset=ts` will generate a workspace with `@nrwl/js` pre-installed.
 
-```shell
+{% tabs %}
+{%tab label="npm"%}
+
+```bash
 npx create-nx-workspace my-org --preset=ts
 ```
 
-```shell
+{% /tab %}
+{%tab label="yarn"%}
+
+```bash
 yarn create nx-workspace my-org --preset=ts
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Create Libraries
 
