@@ -17,8 +17,7 @@ export function updatePackageJson(
   packageJson: PackageJson
 ) {
   const hasEsmFormat = options.format.includes('esm');
-  const hasCjsFormat =
-    options.format.includes('umd') || options.format.includes('cjs');
+  const hasCjsFormat = options.format.includes('cjs');
 
   const types = `./${relative(options.entryRoot, options.main).replace(
     /\.[jt]sx?$/,
@@ -54,7 +53,7 @@ export function updatePackageJson(
   // Support for older TS versions < 4.5
   packageJson.types = types;
 
-  // TODO(jack): remove this for Nx 15
+  // TODO(jack): remove this for Nx 16
   if (options.generateExportsField) {
     packageJson.exports = {
       ...packageJson.exports,

@@ -62,16 +62,6 @@ export async function* rollupExecutor(
     sourceRoot
   );
 
-  // TODO(jack): Remove UMD in Nx 15
-  if (options.format.includes('umd')) {
-    if (options.format.includes('cjs')) {
-      throw new Error(
-        'Cannot use both UMD and CJS. We recommend you use ESM or CJS.'
-      );
-    } else {
-      logger.warn('UMD format is deprecated and will be removed in Nx 15');
-    }
-  }
   const packageJson = readJsonFile(options.project);
 
   const npmDeps = (context.projectGraph.dependencies[context.projectName] ?? [])
@@ -253,7 +243,7 @@ export function createRollupOptions(
             // @ts-ignore
             // Ignoring type checks for caller since we have custom attributes
             isNxPackage: true,
-            // Always target esnext and let rollup handle cjs/umd
+            // Always target esnext and let rollup handle cjs
             supportsStaticESM: true,
             isModern: true,
           },
@@ -274,16 +264,6 @@ export function createRollupOptions(
       analyze(),
     ];
 
-    const globals = options.globals
-      ? options.globals.reduce(
-          (acc, item) => {
-            acc[item.moduleId] = item.global;
-            return acc;
-          },
-          { 'react/jsx-runtime': 'jsxRuntime' }
-        )
-      : { 'react/jsx-runtime': 'jsxRuntime' };
-
     const externalPackages = dependencies
       .map((d) => d.name)
       .concat(options.external || [])
@@ -296,14 +276,11 @@ export function createRollupOptions(
           }
         : options.main,
       output: {
-        globals,
         format,
         dir: `${options.outputPath}`,
-        name: options.umdName || names(context.projectName).className,
+        name: names(context.projectName).className,
         entryFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
         chunkFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
-        // umd doesn't support code-split bundles
-        inlineDynamicImports: format === 'umd',
       },
       external: (id) =>
         externalPackages.some(
@@ -356,10 +333,9 @@ function convertCopyAssetsToRollupOptions(
 function readCompatibleFormats(config: ts.ParsedCommandLine) {
   switch (config.options.module) {
     case ts.ModuleKind.CommonJS:
-      return ['cjs'];
     case ts.ModuleKind.UMD:
     case ts.ModuleKind.AMD:
-      return ['umd'];
+      return ['cjs'];
     default:
       return ['esm'];
   }
