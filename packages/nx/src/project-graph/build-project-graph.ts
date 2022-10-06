@@ -25,6 +25,7 @@ import { getRootTsConfigPath } from '../utils/typescript';
 import {
   ProjectFileMap,
   ProjectGraph,
+  ProjectGraphExternalNode,
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
@@ -39,6 +40,12 @@ import {
   readAllWorkspaceConfiguration,
   readNxJson,
 } from '../config/configuration';
+import {
+  lockFileExists,
+  lockFileHash,
+  mapLockFileDataToPartialGraph,
+  parseLockFile,
+} from '../utils/lock-file/lock-file';
 
 export async function buildProjectGraph() {
   const projectConfigurations = readAllWorkspaceConfiguration();
@@ -95,6 +102,17 @@ export async function buildProjectGraphUsingProjectFileMap(
     filesToProcess = projectFileMap;
     cachedFileData = {};
   }
+  let partialGraph: ProjectGraph;
+  let lockHash = 'n/a';
+  // during the create-nx-workspace lock file might not exists yet
+  if (lockFileExists()) {
+    lockHash = lockFileHash();
+    if (cache && cache.lockFileHash === lockHash) {
+      partialGraph = isolatePartialGraphFromCache(cache);
+    } else {
+      partialGraph = mapLockFileDataToPartialGraph(parseLockFile());
+    }
+  }
   const context = createContext(
     projectsConfigurations,
     nxJson,
@@ -106,13 +124,15 @@ export async function buildProjectGraphUsingProjectFileMap(
     context,
     cachedFileData,
     projectGraphVersion,
+    partialGraph,
     packageJsonDeps
   );
   const projectGraphCache = createCache(
     nxJson,
     packageJsonDeps,
     projectGraph,
-    rootTsConfig
+    rootTsConfig,
+    lockHash
   );
   if (shouldWriteCache) {
     writeCache(projectGraphCache);
@@ -129,19 +149,38 @@ function readCombinedDeps() {
   return { ...json.dependencies, ...json.devDependencies };
 }
 
+// extract only external nodes and their dependencies
+function isolatePartialGraphFromCache(cache: ProjectGraphCache): ProjectGraph {
+  const dependencies = {};
+  Object.keys(cache.dependencies).forEach((k) => {
+    if (cache.externalNodes[k]) {
+      dependencies[k] = cache.dependencies[k];
+    }
+  });
+
+  return {
+    nodes: {},
+    dependencies,
+    externalNodes: cache.externalNodes,
+  };
+}
+
 async function buildProjectGraphUsingContext(
   nxJson: NxJsonConfiguration,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   projectGraphVersion: string,
-  packageJsonDeps: { [packageName: string]: string }
+  partialGraph: ProjectGraph,
+  packageJsonDeps: Record<string, string>
 ) {
   performance.mark('build project graph:start');
 
-  const builder = new ProjectGraphBuilder();
+  const builder = new ProjectGraphBuilder(partialGraph);
 
   buildWorkspaceProjectNodes(ctx, builder, nxJson);
-  buildNpmPackageNodes(builder);
+  if (!partialGraph) {
+    buildNpmPackageNodes(builder);
+  }
   for (const proj of Object.keys(cachedFileData)) {
     for (const f of builder.graph.nodes[proj].data.files) {
       const cached = cachedFileData[proj][f.file];

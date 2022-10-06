@@ -1,3 +1,4 @@
+import { satisfies } from 'semver';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -150,10 +151,12 @@ describe('js e2e', () => {
 
     const rootPackageJson = readJson(`package.json`);
 
-    expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
-      'peerDependencies.tslib',
-      rootPackageJson.dependencies.tslib
-    );
+    expect(
+      satisfies(
+        readJson(`dist/libs/${lib}/package.json`).peerDependencies.tslib,
+        rootPackageJson.dependencies.tslib
+      )
+    ).toBeTruthy();
 
     updateJson(`libs/${lib}/tsconfig.json`, (json) => {
       json.compilerOptions = { ...json.compilerOptions, importHelpers: false };
@@ -232,12 +235,12 @@ describe('js e2e', () => {
 
     runCLI(`build ${lib}`);
 
-    const rootPackageJson = readJson(`package.json`);
+    const swcHelpersFromRoot =
+      readJson(`package.json`).dependencies['@swc/helpers'];
+    const swcHelpersFromDist = readJson(`dist/libs/${lib}/package.json`)
+      .peerDependencies['@swc/helpers'];
 
-    expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
-      'peerDependencies.@swc/helpers',
-      rootPackageJson.dependencies['@swc/helpers']
-    );
+    expect(satisfies(swcHelpersFromDist, swcHelpersFromRoot)).toBeTruthy();
 
     updateJson(`libs/${lib}/.lib.swcrc`, (json) => {
       json.jsc.externalHelpers = false;

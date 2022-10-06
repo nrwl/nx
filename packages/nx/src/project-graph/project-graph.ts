@@ -182,7 +182,7 @@ export function projectGraphAdapter(
   if (sourceVersion === targetVersion) {
     return projectGraph;
   }
-  if (sourceVersion === '5.0' && targetVersion === '4.0') {
+  if (+sourceVersion >= 5 && targetVersion === '4.0') {
     return projectGraphCompat5to4(projectGraph as ProjectGraph);
   }
   throw new Error(

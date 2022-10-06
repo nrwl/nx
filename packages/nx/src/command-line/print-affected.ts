@@ -86,7 +86,15 @@ async function createTasks(
 
 function serializeProjectGraph(projectGraph: ProjectGraph) {
   const nodes = Object.values(projectGraph.nodes).map((n) => n.name);
-  return { nodes, dependencies: projectGraph.dependencies };
+  const dependencies = {};
+  // we don't need external dependencies' dependencies for print-affected
+  // having them included makes the output unreadable
+  Object.keys(projectGraph.dependencies).forEach((key) => {
+    if (!key.startsWith('npm:')) {
+      dependencies[key] = projectGraph.dependencies[key];
+    }
+  });
+  return { nodes, dependencies };
 }
 
 export function selectPrintAffected(wholeJson: any, wholeSelect: string) {

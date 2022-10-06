@@ -1,0 +1,685 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`lock-file mapLockFileDataToExternalNodes should map npm lock file data to external nodes 1`] = `
+Object {
+  "data": Object {
+    "hash": "54342be9f4609650eba8e995881c5eb98c29b9d7bb95b9a699d9e9df68d6428e",
+    "packageName": "yargs",
+    "version": "17.5.1",
+  },
+  "name": "npm:yargs",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map npm lock file data to external nodes 2`] = `
+Array [
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:cliui",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:escalade",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:get-caller-file",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:require-directory",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:string-width",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:y18n",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:yargs-parser",
+    "type": "static",
+  },
+]
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map pnpm lock file data to external nodes 1`] = `
+Object {
+  "data": Object {
+    "hash": "c22918aa52c9fdce78bf82451d8114e00b6d4375a8e5b1d1d96c6cf4755dbe1a",
+    "packageName": "yargs",
+    "version": "17.5.1",
+  },
+  "name": "npm:yargs",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map pnpm lock file data to external nodes 2`] = `
+Array [
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:cliui",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:escalade",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:get-caller-file",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:require-directory",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:string-width",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:y18n",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:yargs-parser",
+    "type": "static",
+  },
+]
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex npm lock file 1`] = `
+Object {
+  "data": Object {
+    "hash": "1e61b9db38c17534ce427d40ce84f9c03b4c439253f659e9a48513a10a52b465",
+    "packageName": "nx",
+    "version": "14.7.5",
+  },
+  "name": "npm:nx",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex npm lock file 2`] = `
+Array [
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@nrwl/cli",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@nrwl/tao",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@parcel/watcher",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:chalk",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:chokidar",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cli-cursor",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cli-spinners",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cliui",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:dotenv",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:enquirer",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:fast-glob",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:figures",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:flat",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:fs-extra",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:glob",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:ignore",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:js-yaml@4.1.0",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:jsonc-parser",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:minimatch",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:npm-run-path",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:open",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:semver",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:string-width",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tar-stream",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tmp",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tsconfig-paths",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tslib",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:v8-compile-cache",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:yargs",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:yargs-parser",
+    "type": "static",
+  },
+]
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex pnpm lock file 1`] = `
+Object {
+  "data": Object {
+    "hash": "1e61b9db38c17534ce427d40ce84f9c03b4c439253f659e9a48513a10a52b465",
+    "packageName": "nx",
+    "version": "14.7.5",
+  },
+  "name": "npm:nx",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex pnpm lock file 2`] = `
+Array [
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@nrwl/cli",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@nrwl/tao",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@parcel/watcher",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:chalk",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:chokidar",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cli-cursor",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cli-spinners",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cliui",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:dotenv",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:enquirer",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:fast-glob",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:figures",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:flat",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:fs-extra",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:glob",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:ignore",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:js-yaml",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:jsonc-parser",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:minimatch",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:npm-run-path",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:open",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:semver",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:string-width",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tar-stream",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tmp",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tsconfig-paths",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tslib",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:v8-compile-cache",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:yargs",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:yargs-parser",
+    "type": "static",
+  },
+]
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex pnpm lock file 3`] = `
+Object {
+  "data": Object {
+    "hash": "6c5961e1a6ab89174727587860e480508f945407ce4c2cc7c9f1e46f181e6468",
+    "packageName": "@phenomnomnominal/tsquery",
+    "version": "4.1.1",
+  },
+  "name": "npm:@phenomnomnominal/tsquery",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex pnpm lock file 4`] = `
+Array [
+  Object {
+    "source": "npm:@phenomnomnominal/tsquery",
+    "target": "npm:esquery",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:@phenomnomnominal/tsquery",
+    "target": "npm:typescript",
+    "type": "static",
+  },
+]
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex yarn lock file 1`] = `
+Object {
+  "data": Object {
+    "hash": "1e61b9db38c17534ce427d40ce84f9c03b4c439253f659e9a48513a10a52b465",
+    "packageName": "nx",
+    "version": "14.7.5",
+  },
+  "name": "npm:nx",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map successfully complex yarn lock file 2`] = `
+Array [
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@nrwl/cli",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@nrwl/tao",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@parcel/watcher",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:chalk",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:chokidar",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cli-cursor",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cli-spinners",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cliui",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:dotenv",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:enquirer",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:fast-glob",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:figures",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:flat",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:fs-extra",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:glob",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:ignore",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:js-yaml",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:jsonc-parser",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:minimatch",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:npm-run-path",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:open",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:semver",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:string-width",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tar-stream",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tmp",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tsconfig-paths",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tslib",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:v8-compile-cache",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:yargs",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:yargs-parser",
+    "type": "static",
+  },
+]
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map yarn lock file data to external nodes 1`] = `
+Object {
+  "data": Object {
+    "hash": "c22918aa52c9fdce78bf82451d8114e00b6d4375a8e5b1d1d96c6cf4755dbe1a",
+    "packageName": "yargs",
+    "version": "17.5.1",
+  },
+  "name": "npm:yargs",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes should map yarn lock file data to external nodes 2`] = `
+Array [
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:cliui",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:escalade",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:get-caller-file",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:require-directory",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:string-width",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:y18n",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:yargs",
+    "target": "npm:yargs-parser",
+    "type": "static",
+  },
+]
+`;

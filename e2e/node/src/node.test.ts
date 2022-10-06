@@ -10,7 +10,6 @@ import {
   packageInstall,
   promisifiedTreeKill,
   readFile,
-  removeFile,
   runCLI,
   runCLIAsync,
   runCommandUntil,
@@ -21,6 +20,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
+import { satisfies } from 'semver';
 
 function getData(port): Promise<any> {
   return new Promise((resolve) => {
@@ -276,19 +276,25 @@ describe('Build Node apps', () => {
     );
     expect(packageJson).toEqual(
       expect.objectContaining({
-        dependencies: {
-          '@nestjs/common': '^9.0.0',
-          '@nestjs/core': '^9.0.0',
-          '@nestjs/platform-express': '^9.0.0',
-          'reflect-metadata': '^0.1.13',
-          rxjs: '^7.0.0',
-          tslib: '^2.3.0',
-        },
         main: 'main.js',
         name: expect.any(String),
         version: '0.0.1',
       })
     );
+    expect(
+      satisfies(packageJson.dependencies['@nestjs/common'], '^9.0.0')
+    ).toBeTruthy();
+    expect(
+      satisfies(packageJson.dependencies['@nestjs/core'], '^9.0.0')
+    ).toBeTruthy();
+    expect(
+      satisfies(packageJson.dependencies['@nestjs/platform-express'], '^9.0.0')
+    ).toBeTruthy();
+    expect(
+      satisfies(packageJson.dependencies['reflect-metadata'], '^0.1.13')
+    ).toBeTruthy();
+    expect(satisfies(packageJson.dependencies['rxjs'], '^7.0.0')).toBeTruthy();
+    expect(satisfies(packageJson.dependencies['tslib'], '^2.3.0')).toBeTruthy();
 
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nrwl/node:app ${nodeapp}`);

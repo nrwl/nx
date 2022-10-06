@@ -41,11 +41,22 @@ describe('npm LockFile utility', () => {
         '@jridgewell/gen-mapping@0.1.1'
       ]
     ).toBeDefined();
+    // This is opposite from yarn and pnpm
+    expect(
+      parsedLockFile.dependencies['@jridgewell/gen-mapping'][
+        '@jridgewell/gen-mapping@0.1.1'
+      ].rootVersion
+    ).toBeTruthy();
     expect(
       parsedLockFile.dependencies['@jridgewell/gen-mapping'][
         '@jridgewell/gen-mapping@0.3.2'
       ]
     ).toBeDefined();
+    expect(
+      parsedLockFile.dependencies['@jridgewell/gen-mapping'][
+        '@jridgewell/gen-mapping@0.3.2'
+      ].rootVersion
+    ).toBeFalsy();
   });
 
   it('should map various instances of the same version', () => {

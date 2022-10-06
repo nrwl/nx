@@ -13,7 +13,9 @@ import {
 
 describe('yarn LockFile utility', () => {
   describe('classic', () => {
+    console.time('before');
     const parsedLockFile = parseYarnLockFile(lockFile);
+    console.timeEnd('before');
 
     it('should parse lockfile correctly', () => {
       expect(parsedLockFile.lockFileMetadata).toBeUndefined();
@@ -36,9 +38,19 @@ describe('yarn LockFile utility', () => {
       ).toBeDefined();
       expect(
         parsedLockFile.dependencies['@jridgewell/gen-mapping'][
+          '@jridgewell/gen-mapping@0.1.1'
+        ].rootVersion
+      ).toBeFalsy();
+      expect(
+        parsedLockFile.dependencies['@jridgewell/gen-mapping'][
           '@jridgewell/gen-mapping@0.3.2'
         ]
       ).toBeDefined();
+      expect(
+        parsedLockFile.dependencies['@jridgewell/gen-mapping'][
+          '@jridgewell/gen-mapping@0.3.2'
+        ].rootVersion
+      ).toBeTruthy();
     });
 
     it('should map various instances of the same version', () => {
