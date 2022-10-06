@@ -227,7 +227,7 @@ Object {
         "passWithNoTests": true,
       },
       "outputs": Array [
-        "coverage/apps/my-dir/my-app",
+        "{workspaceRoot}/coverage/{projectRoot}",
       ],
     },
   },
@@ -399,7 +399,7 @@ Object {
         "passWithNoTests": true,
       },
       "outputs": Array [
-        "coverage/apps/my-app",
+        "{workspaceRoot}/coverage/{projectRoot}",
       ],
     },
   },

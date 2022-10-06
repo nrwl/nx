@@ -300,7 +300,7 @@ describe('Nx Running Tests', () => {
         ];
         nxJson.targetDefaults = {
           prep: {
-            outputs: ['one.txt'],
+            outputs: ['{workspaceRoot}/one.txt'],
           },
           outside: {
             dependsOn: ['prep'],

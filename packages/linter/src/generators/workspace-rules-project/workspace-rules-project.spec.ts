@@ -87,7 +87,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
               "passWithNoTests": true,
             },
             "outputs": Array [
-              "coverage/tools/eslint-rules",
+              "{workspaceRoot}/coverage/{projectRoot}",
             ],
           },
         },
