@@ -6,15 +6,17 @@ import { readdirSync, statSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
 import ignore, { Ignore } from 'ignore';
 import { normalizePath } from '../utils/path';
-import { getIgnoredGlobs } from '../utils/ignore-patterns';
+import {
+  getIgnoredGlobsAndIgnore,
+} from '../utils/ignore-patterns';
 
 export class NodeBasedFileHasher extends FileHasherBase {
-  ignoredGlobs: Ignore;
+  fileIsIgnored: (p) => boolean;
 
   async init() {
     performance.mark('init hashing:start');
     this.clear();
-    this.ignoredGlobs = await getAllIgnoredGlobs();
+    this.fileIsIgnored = await getAllIgnoredGlobs();
     this.allFilesInDir(workspaceRoot, true);
 
     performance.mark('init hashing:end');
@@ -38,14 +40,14 @@ export class NodeBasedFileHasher extends FileHasherBase {
     recurse: boolean = true
   ): FileData[] {
     const relDirName = relative(workspaceRoot, absoluteDirName);
-    if (relDirName && this.ignoredGlobs.ignores(relDirName)) {
+    if (relDirName && this.fileIsIgnored(relDirName)) {
       return;
     }
     try {
       readdirSync(absoluteDirName).forEach((c) => {
         const absoluteChild = join(absoluteDirName, c);
         const relChild = relative(workspaceRoot, absoluteChild);
-        if (this.ignoredGlobs.ignores(relChild)) {
+        if (this.fileIsIgnored(relChild)) {
           return;
         }
         try {
@@ -65,9 +67,7 @@ export class NodeBasedFileHasher extends FileHasherBase {
 }
 
 async function getAllIgnoredGlobs() {
-  const ig = ignore();
-  const globs = await getIgnoredGlobs({ ig });
-  ig.add(['node_modules', 'tmp', 'dist', 'build']);
-
-  return ig;
+  return (await getIgnoredGlobsAndIgnore({
+    knownIgnoredPaths: ['tmp', 'dist', 'build'],
+  })).fileIsIgnored;
 }

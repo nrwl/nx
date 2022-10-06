@@ -7,7 +7,6 @@
  */
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { AsyncSubscription, Event } from '@parcel/watcher';
-import { readFileSync } from 'fs';
 import { join, relative } from 'path';
 import { FULL_OS_SOCKET_PATH } from '../socket-utils';
 import { handleServerProcessTermination } from './shutdown-utils';
@@ -15,9 +14,9 @@ import { Server } from 'net';
 import ignore from 'ignore';
 import { normalizePath } from '../../utils/path';
 import {
-  getIgnoredGlobs,
+  getIgnoredGlobsAndIgnore,
   locatedIgnoreFiles,
-} from 'nx/src/utils/ignore-patterns';
+} from '../../utils/ignore-patterns';
 
 export type WatcherSubscription = AsyncSubscription;
 export type SubscribeToWorkspaceChangesCallback = (
@@ -46,11 +45,10 @@ export type FileWatcherCallback = (
  * https://github.com/parcel-bundler/watcher/issues/64
  */
 async function configureIgnoredFiles() {
-  const ig = ignore();
-  const ignoredGlobs = await getIgnoredGlobs({ ig });
-  ig.add(FULL_OS_SOCKET_PATH);
-  ignoredGlobs.push(FULL_OS_SOCKET_PATH);
-  return { ignoreObject: ig, ignoredGlobs };
+  const { patterns, fileIsIgnored } = await getIgnoredGlobsAndIgnore({
+    knownIgnoredPaths: [FULL_OS_SOCKET_PATH],
+  });
+  return { fileIsIgnored, ignoredGlobPatterns: patterns };
 }
 
 export async function subscribeToOutputsChanges(
@@ -90,7 +88,7 @@ export async function subscribeToWorkspaceChanges(
    * executed by packages which do not have its necessary native binaries available.
    */
   const watcher = await import('@parcel/watcher');
-  const { ignoreObject, ignoredGlobs } = await configureIgnoredFiles();
+  const { fileIsIgnored, ignoredGlobPatterns } = await configureIgnoredFiles();
 
   return await watcher.subscribe(
     workspaceRoot,
@@ -123,15 +121,14 @@ export async function subscribeToWorkspaceChanges(
       }
 
       const nonIgnoredEvents = workspaceRelativeEvents
-        .filter(({ path }) => !!path)
-        .filter(({ path }) => !ignoreObject.ignores(path));
+        .filter(({ path }) => !!path && !fileIsIgnored(path))
 
       if (nonIgnoredEvents && nonIgnoredEvents.length > 0) {
         cb(null, nonIgnoredEvents);
       }
     },
     {
-      ignore: ignoredGlobs,
+      ignore: ignoredGlobPatterns,
     }
   );
 }

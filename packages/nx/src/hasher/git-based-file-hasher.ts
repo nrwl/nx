@@ -1,10 +1,8 @@
 import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
 import { getFileHashes, getGitHashForFiles } from './git-hasher';
-import { existsSync, readFileSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
-import ignore from 'ignore';
-import { getIgnoredGlobs } from '../utils/ignore-patterns';
+import { getIgnoredGlobsAndIgnore } from '../utils/ignore-patterns';
 
 export class GitBasedFileHasher extends FileHasherBase {
   /**
@@ -17,10 +15,11 @@ export class GitBasedFileHasher extends FileHasherBase {
     this.clear();
 
     const gitResult = await getFileHashes(workspaceRoot);
-    const ig = ignore();
-    await getIgnoredGlobs({ ig, nxIgnoreOnly: true });
+    const { fileIsIgnored } = await getIgnoredGlobsAndIgnore({
+      ignoreFiles: ['.nxignore'],
+    });
     gitResult.allFiles.forEach((hash, filename) => {
-      if (!ig.ignores(filename)) {
+      if (!fileIsIgnored(filename)) {
         this.fileHashes.set(filename, hash);
       }
     });

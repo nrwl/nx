@@ -655,8 +655,7 @@ export function globForProjectFiles(
 
   performance.mark('start-glob-for-projects');
 
-  const ig = ignore();
-  const ignoredPatterns = getIgnoredGlobsSync({ ig });
+  const ignoredPatterns = getIgnoredGlobsSync();
 
   const globResults = globSync(combinedProjectGlobPattern, {
     ignore: ignoredPatterns,
@@ -664,7 +663,7 @@ export function globForProjectFiles(
     cwd: root,
     dot: true,
   });
-  projectGlobCache = deduplicateProjectFiles(globResults, ig);
+  projectGlobCache = deduplicateProjectFiles(globResults);
   performance.mark('finish-glob-for-projects');
   performance.measure(
     'glob-for-project-files',
@@ -674,13 +673,12 @@ export function globForProjectFiles(
   return projectGlobCache;
 }
 
-export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
+export function deduplicateProjectFiles(files: string[]) {
   const filtered = new Map();
   files.forEach((file) => {
     const projectFolder = dirname(file);
     const projectFile = basename(file);
     if (
-      ig?.ignores(file) || // file is in .gitignore or .nxignore
       file === 'package.json' || // file is workspace root package json
       // project.json or equivallent inferred project file has been found
       (filtered.has(projectFolder) && projectFile !== 'project.json')

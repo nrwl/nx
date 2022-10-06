@@ -7,21 +7,24 @@ import { logger } from './logger';
 import { normalizePath } from './path';
 import { workspaceRoot } from './workspace-root';
 
-const ALWAYS_IGNORE = [join('node_modules'), join('.git')];
+const ALWAYS_IGNORE = ['node_modules', '.git'];
 
 export const locatedIgnoreFiles = new Set<string>();
 
 export interface GetIgnoredGlobsOptions {
-  ig?: Ignore;
-  nxIgnoreOnly?: boolean;
+  ignoreFiles?: string[];
+  knownIgnoredPaths?: string[];
 }
 
 function getGlobOptions(
   provided?: GetIgnoredGlobsOptions
 ): Required<GetIgnoredGlobsOptions> {
   return {
-    ig: provided?.ig ?? ignore(),
-    nxIgnoreOnly: provided?.nxIgnoreOnly ?? false,
+    ignoreFiles: provided?.ignoreFiles ?? ['.nxignore', '.gitignore'],
+    knownIgnoredPaths: [
+      ...(provided?.knownIgnoredPaths ?? []),
+      ...ALWAYS_IGNORE,
+    ],
   };
 }
 
@@ -36,26 +39,52 @@ function getGlobOptions(
 export async function getIgnoredGlobs(
   options?: GetIgnoredGlobsOptions
 ): Promise<string[]> {
-  const { ig, nxIgnoreOnly } = getGlobOptions(options);
-  const p = [
-    ...ALWAYS_IGNORE,
-    ...(await getIgnoredGlobsFromDirectory(
-      nxIgnoreOnly ? ['.nxignore'] : ['.nxignore', '.gitignore'],
-      ig.add(ALWAYS_IGNORE)
-    )),
-  ];
-  return p;
+  return getIgnoredGlobsAndIgnore(options).then((x) => x.patterns);
 }
 
-export function getIgnoredGlobsSync(options?: GetIgnoredGlobsOptions) {
-  const { ig, nxIgnoreOnly } = getGlobOptions(options);
-  return [
-    ...ALWAYS_IGNORE,
-    ...getIgnoredGlobsFromDirectorySync(
-      nxIgnoreOnly ? ['.nxignore'] : ['.nxignore', '.gitignore'],
-      ig.add(ALWAYS_IGNORE)
-    ),
+/**
+ * Synchronously crawls workspace file system to determine files which should be ignored when
+ * performing glob searches
+ *
+ * @param options see GetIgnoredGlobsOptions
+ * @returns a string[] containing glob patterns that should be ignored
+ * relative to workspace root
+ */
+export function getIgnoredGlobsSync(
+  options?: GetIgnoredGlobsOptions
+): string[] {
+  return getIgnoredGlobsAndIgnoreSync(options).patterns;
+}
+
+export async function getIgnoredGlobsAndIgnore(
+  options?: GetIgnoredGlobsOptions
+) {
+  const ig = ignore();
+  const { ignoreFiles, knownIgnoredPaths } = getGlobOptions(options);
+  const patterns = [
+    ...knownIgnoredPaths,
+    ...(await getIgnoredGlobsFromDirectory(
+      ignoreFiles,
+      ig.add(knownIgnoredPaths)
+    )),
   ];
+  return { patterns, fileIsIgnored: ig.ignores.bind(ig) };
+}
+
+export function getIgnoredGlobsAndIgnoreSync(options?: GetIgnoredGlobsOptions) {
+  const ig = ignore();
+  const { ignoreFiles, knownIgnoredPaths } = getGlobOptions(options);
+  return {
+    patterns: [
+      ...knownIgnoredPaths,
+      ...getIgnoredGlobsFromDirectorySync(
+        ignoreFiles,
+        ig.add(knownIgnoredPaths)
+      ),
+    ],
+    fileIsIgnored: ig.ignores.bind(ig),
+  };
+}
 }
 
 async function getIgnoredGlobsFromDirectory(

@@ -7,10 +7,11 @@ import {
   removeSync,
   chmodSync,
 } from 'fs-extra';
-import type { Mode } from 'fs';
+import type { Dirent, Mode } from 'fs';
 import { logger } from '../utils/logger';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
+import { joinPathFragments } from '../utils/path';
 
 /**
  * Options to set when writing a file in the Virtual file system tree.
@@ -23,6 +24,8 @@ export interface TreeWriteOptions {
    */
   mode?: Mode;
 }
+
+export type VirtualDirEnt = Pick<Dirent, 'name' | 'isFile' | 'isDirectory'>;
 
 /**
  * Virtual file system tree.
@@ -78,6 +81,7 @@ export interface Tree {
   /**
    * Returns the list of children of a folder.
    */
+  children(dirPath: string, options: { withFileTypes: true }): VirtualDirEnt[];
   children(dirPath: string): string[];
 
   /**
@@ -240,7 +244,12 @@ export class FsTree implements Tree {
     }
   }
 
-  children(dirPath: string): string[] {
+  children(dirPath: string): string[];
+  children(dirPath: string, options: { withFileTypes: true }): VirtualDirEnt[];
+  children(
+    dirPath: string,
+    options?: { withFileTypes: true }
+  ): string[] | VirtualDirEnt[] {
     dirPath = this.normalize(dirPath);
     let res = this.fsReadDir(dirPath);
 
@@ -250,7 +259,16 @@ export class FsTree implements Tree {
       return !r?.isDeleted;
     });
     // Dedupe
-    return Array.from(new Set(res));
+    const childPaths = Array.from(new Set(res));
+    if (options?.withFileTypes) {
+      return childPaths.map((x) => ({
+        name: x,
+        isDirectory: () => !this.isFile(joinPathFragments(dirPath, x)),
+        isFile: () => this.isFile(joinPathFragments(dirPath, x)),
+      }));
+    } else {
+      return childPaths
+    }
   }
 
   listChanges(): FileChange[] {
