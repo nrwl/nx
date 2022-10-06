@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 export interface SearchDepthProps {
   searchDepth: number;
@@ -52,20 +53,7 @@ export const SearchDepth = memo(
               className="inline-flex items-center rounded-l-md border border-slate-300 bg-slate-50 py-2 px-4 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={decrementDepthFilter}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M20 12H4"
-                />
-              </svg>
+              <MinusIcon className="h-4 w-4"></MinusIcon>
             </button>
             <span
               id="depthFilterValue"
@@ -79,20 +67,7 @@ export const SearchDepth = memo(
               className="inline-flex items-center rounded-r-md border border-slate-300 bg-slate-50 py-2 px-4 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={incrementDepthFilter}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
+              <PlusIcon className="h-4 w-4"></PlusIcon>
             </button>
           </div>
         </div>
