@@ -57,46 +57,45 @@ export async function* esbuildExecutor(
               options,
               context
             );
-            const result = await esbuild.build({
-              ...esbuildOptions,
-              watch:
-                // Only emit info on one of the watch processes.
-                idx === 0
-                  ? {
-                      onRebuild: async (
-                        error: esbuild.BuildFailure,
-                        result: esbuild.BuildResult
-                      ) => {
-                        if (!options.skipTypeCheck) {
-                          const { errors } = await runTypeCheck(
-                            options,
-                            context
-                          );
-                          hasTypeErrors = errors.length > 0;
-                        }
-                        const success = !error && !hasTypeErrors;
+            const watch =
+              // Only emit info on one of the watch processes.
+              idx === 0
+                ? {
+                    onRebuild: async (
+                      error: esbuild.BuildFailure,
+                      result: esbuild.BuildResult
+                    ) => {
+                      if (!options.skipTypeCheck) {
+                        const { errors } = await runTypeCheck(options, context);
+                        hasTypeErrors = errors.length > 0;
+                      }
+                      const success = !error && !hasTypeErrors;
 
-                        if (!success) {
-                          logger.info(BUILD_WATCH_FAILED);
-                        } else {
-                          logger.info(BUILD_WATCH_SUCCEEDED);
-                        }
+                      if (!success) {
+                        logger.info(BUILD_WATCH_FAILED);
+                      } else {
+                        logger.info(BUILD_WATCH_SUCCEEDED);
+                      }
 
-                        next({
-                          success: !!error && !hasTypeErrors,
-                          outfile: esbuildOptions.outfile,
-                        });
-                      },
-                    }
-                  : true,
-            });
+                      next({
+                        success: !!error && !hasTypeErrors,
+                        outfile: esbuildOptions.outfile,
+                      });
+                    },
+                  }
+                : true;
+            try {
+              const result = await esbuild.build({ ...esbuildOptions, watch });
 
-            next({
-              success,
-              outfile: esbuildOptions.outfile,
-            });
+              next({
+                success: true,
+                outfile: esbuildOptions.outfile,
+              });
 
-            return result;
+              return result;
+            } catch {
+              next({ success: false });
+            }
           })
         );
         const processOnExit = () => {
