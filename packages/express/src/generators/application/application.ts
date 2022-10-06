@@ -37,8 +37,11 @@ function addMainFile(tree: Tree, options: NormalizedSchema) {
  */
 
 import * as express from 'express';
+import * as path from 'path';
 
 const app = express();
+
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.get('/api', (req, res) => {
   res.send({ message: 'Welcome to ${options.name}!' });
