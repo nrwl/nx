@@ -6,13 +6,23 @@ A plugin containing a collection of recommended ESLint rule configurations wrapp
 
 In any Nx workspace, you can install `@nrwl/eslint-plugin-nx` by running the following commands if the package is not already installed:
 
+{% tabs %}
+{%tab label="npm"%}
+
+````bash
 ```bash
 npm i --save-dev @nrwl/eslint-plugin-nx
-```
+````
+
+{% /tab %}
+{%tab label="yarn"%}
 
 ```bash
 yarn add --dev @nrwl/eslint-plugin-nx
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## ESLint plugins
 
