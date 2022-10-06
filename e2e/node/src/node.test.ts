@@ -22,16 +22,20 @@ import { exec, execSync } from 'child_process';
 import * as http from 'http';
 import { satisfies } from 'semver';
 
-function getData(port): Promise<any> {
+function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
-    http.get(`http://localhost:${port}/api`, (res) => {
+    http.get(`http://localhost:${port}${path}`, (res) => {
       expect(res.statusCode).toEqual(200);
       let data = '';
       res.on('data', (chunk) => {
         data += chunk;
       });
       res.once('end', () => {
-        resolve(JSON.parse(data));
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          resolve(data);
+        }
       });
     });
   });
@@ -71,24 +75,6 @@ describe('Node Applications', () => {
 
     await runCLIAsync(`build ${nodeapp}`);
     checkFilesExist(`dist/apps/${nodeapp}/index.js`);
-  }, 300000);
-
-  // TODO: This test fails in CI, but succeeds locally. It should be re-enabled once the reasoning is understood.
-  xit('should be able to generate an empty application with standalone configuration', async () => {
-    const nodeapp = uniq('nodeapp');
-
-    runCLI(
-      `generate @nrwl/node:app ${nodeapp} --linter=eslint --standaloneConfig`
-    );
-
-    updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
-    await runCLIAsync(`build ${nodeapp}`);
-
-    checkFilesExist(`dist/apps/${nodeapp}/main.js`);
-    const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
-      cwd: tmpProjPath(),
-    }).toString();
-    expect(result).toContain('Hello World!');
   }, 300000);
 
   it('should be able to generate an empty application with additional entries', async () => {
@@ -134,9 +120,11 @@ describe('Node Applications', () => {
     expect(additionalResult).toContain('Hello Additional World!');
   }, 60000);
 
-  xit('should be able to generate an express application', async () => {
+  it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
-    const port = 3334;
+    const originalEnvPort = process.env.port;
+    const port = 3333;
+    process.env.port = `${port}`;
 
     runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
     const lintResults = runCLI(`lint ${nodeapp}`);
@@ -153,52 +141,28 @@ describe('Node Applications', () => {
         `
     );
 
-    updateFile(`apps/${nodeapp}/src/assets/file.txt`, ``);
-    const jestResult = await runCLIAsync(`test ${nodeapp}`);
-    expect(jestResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-    await runCLIAsync(`build ${nodeapp}`);
+    const jestResult = runCLI(`test ${nodeapp}`);
+    expect(jestResult).toContain('Successfully ran target test');
 
-    checkFilesExist(
-      `dist/apps/${nodeapp}/main.js`,
-      `dist/apps/${nodeapp}/assets/file.txt`,
-      `dist/apps/${nodeapp}/main.js.map`
-    );
-
-    // checking build
-    const server = exec(`node ./dist/apps/${nodeapp}/main.js`, {
-      cwd: tmpProjPath(),
-    });
-
-    await new Promise((resolve) => {
-      server.stdout.on('data', async (data) => {
-        expect(data.toString()).toContain(
-          `Listening at http://localhost:${port}`
-        );
-        const result = await getData(port);
-
-        expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-
-        console.log('kill server');
-        server.kill();
-        resolve(null);
-      });
-    });
     // checking serve
-    const p = await runCommandUntil(
-      `serve ${nodeapp} --port=${port}`,
-      (output) => output.includes(`Listening at http://localhost:${port}`)
+    updateFile(`apps/${nodeapp}/src/assets/file.txt`, `Test`);
+    const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
+      output.includes(`Listening at http://localhost:${port}`)
     );
-    const result = await getData(port);
-    expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
+
+    let result = await getData(port);
+    expect(result.message).toMatch(`Welcome to ${nodeapp}!`);
+
+    result = await getData(port, '/assets/file.txt');
+    expect(result).toMatch(`Test`);
+
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
-      expect(await killPorts(port)).toBeTruthy();
-    } catch (err) {
-      expect(err).toBeFalsy();
+      await killPorts(port);
+    } finally {
+      process.env.port = originalEnvPort;
     }
-  }, 120000);
+  }, 120_000);
 
   xit('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
