@@ -10,13 +10,14 @@ import type { NxArgs } from '../utils/command-line-utils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { fileExists } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
-import ignore from 'ignore';
 import { readJsonFile } from '../utils/fileutils';
 import {
   readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
 } from './project-graph';
-import { getIgnoredGlobsSync } from '../utils/ignore-patterns';
+import {
+  getIgnoredGlobsAndIgnoreSync,
+} from '../utils/ignore-patterns';
 
 export interface Change {
   type: string;
@@ -48,12 +49,6 @@ export function readFileIfExisting(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
-function getIgnoredGlobs() {
-  const ig = ignore();
-  getIgnoredGlobsSync({ ig });
-  return ig;
-}
-
 export function calculateFileChanges(
   files: string[],
   allWorkspaceFiles: FileData[],
@@ -61,10 +56,10 @@ export function calculateFileChanges(
   readFileAtRevision: (
     f: string,
     r: void | string
-  ) => string = defaultReadFileAtRevision,
-  ignore = getIgnoredGlobs()
+  ) => string = defaultReadFileAtRevision
 ): FileChange[] {
-  files = files.filter((f) => !ignore.ignores(f));
+  const { fileIsIgnored } = getIgnoredGlobsAndIgnoreSync();
+  files = files.filter((f) => !fileIsIgnored(f));
 
   return files.map((f) => {
     const ext = extname(f);

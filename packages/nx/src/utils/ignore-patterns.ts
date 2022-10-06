@@ -3,6 +3,7 @@ import { readFileSync } from 'fs-extra';
 import { readdir } from 'fs/promises';
 import ignore, { Ignore } from 'ignore';
 import { join, relative } from 'path';
+import { Tree, VirtualDirEnt } from '../generators/tree';
 import { logger } from './logger';
 import { normalizePath } from './path';
 import { workspaceRoot } from './workspace-root';
@@ -85,6 +86,25 @@ export function getIgnoredGlobsAndIgnoreSync(options?: GetIgnoredGlobsOptions) {
     fileIsIgnored: ig.ignores.bind(ig),
   };
 }
+
+export function getIgnoredGlobsInTree(
+  tree: Tree,
+  options?: GetIgnoredGlobsOptions
+) {
+  const ig = ignore();
+  const { ignoreFiles, knownIgnoredPaths } = getGlobOptions(options);
+  return {
+    patterns: [
+      ...knownIgnoredPaths,
+      ...getIgnoredGlobsFromDirectorySync(
+        ignoreFiles,
+        ig.add(knownIgnoredPaths),
+        '.',
+        tree
+      ),
+    ],
+    fileIsIgnored: ig.ignores.bind(ig),
+  };
 }
 
 async function getIgnoredGlobsFromDirectory(
@@ -107,31 +127,40 @@ async function getIgnoredGlobsFromDirectory(
 function getIgnoredGlobsFromDirectorySync(
   ignoreFiles: string[],
   ig = ignore(),
-  directory = workspaceRoot
+  directory = workspaceRoot,
+  tree?: Tree
 ) {
-  const patterns = getPatternsFromDirectory(directory, ignoreFiles);
+  const patterns = getPatternsFromDirectory(directory, ignoreFiles, tree);
   ig.add(patterns);
   const childPatterns: string[] = visitChildDirectoriesSync(
     directory,
     ig,
-    (p) => getIgnoredGlobsFromDirectorySync(ignoreFiles, ig, p)
+    (childDirectory) =>
+      getIgnoredGlobsFromDirectorySync(ignoreFiles, ig, childDirectory, tree),
+    tree
   ).flat();
 
   patterns.push(...childPatterns);
   return patterns;
 }
 
-function getPatternsFromDirectory(directory: string, ignoreFiles: string[]) {
+function getPatternsFromDirectory(
+  directory: string,
+  ignoreFiles: string[],
+  tree?: Tree
+) {
   try {
     let patterns: string[] = [];
     const validIgnoreFiles = ignoreFiles.map((x) => join(directory, x));
     for (const ignoreFile of validIgnoreFiles) {
-      if (existsSync(ignoreFile)) {
-        locatedIgnoreFiles.add(
-          normalizePath(relative(workspaceRoot, ignoreFile))
-        );
+      if (tree ? tree.exists(ignoreFile) : existsSync(ignoreFile)) {
+        if (!tree) {
+          locatedIgnoreFiles.add(
+            normalizePath(relative(workspaceRoot, ignoreFile))
+          );
+        }
         patterns = patterns.concat(
-          getIgnoredGlobsFromFile(ignoreFile, directory)
+          getIgnoredGlobsFromFile(ignoreFile, directory, tree)
         );
       }
     }
@@ -161,10 +190,14 @@ async function visitChildDirectories<T>(
 function visitChildDirectoriesSync<T>(
   directory: string,
   ignore: Ignore,
-  visitor: (p: string) => T
+  visitor: (p: string) => T,
+  tree?: Tree
 ): T[] {
   try {
-    const directoryEntries = readdirSync(directory, { withFileTypes: true });
+    const directoryEntries: (Dirent | VirtualDirEnt)[] = tree
+      ? tree.children(directory, { withFileTypes: true })
+      : readdirSync(directory, { withFileTypes: true });
+
     return visitChildDirectoriesFromDirEnts(
       directory,
       directoryEntries,
@@ -178,16 +211,17 @@ function visitChildDirectoriesSync<T>(
 
 function visitChildDirectoriesFromDirEnts<T>(
   directory: string,
-  directoryEntries: Dirent[],
+  directoryEntries: (Dirent | VirtualDirEnt)[],
   ignore: Ignore,
-  visitor: (p: string) => T
+  visitor: (p: string) => T,
+  tree?: Tree
 ): T[] {
   const returnValues: T[] = [];
   for (const directoryEntry of directoryEntries) {
     const filePath = join(directory, directoryEntry.name);
     if (
       directoryEntry.isDirectory() &&
-      !ignore.ignores(relative(workspaceRoot, filePath))
+      !ignore.ignores(tree ? filePath : relative(workspaceRoot, filePath))
     ) {
       returnValues.push(visitor(filePath));
     }
@@ -195,27 +229,30 @@ function visitChildDirectoriesFromDirEnts<T>(
   return returnValues;
 }
 
-function getIgnoredGlobsFromFile(file: string, prefix: string): string[] {
+function getIgnoredGlobsFromFile(
+  file: string,
+  prefix: string,
+  tree?: Tree
+): string[] {
+  const patterns = [];
   try {
-    return readFileSync(file, 'utf-8')
-      .split('\n')
-      .map((i) => i.trim())
-      .filter((i) => !!i && !i.startsWith('#'))
-      .map((i) => {
-        // Path should be underneath current root
-        if (prefix !== workspaceRoot) {
-          if (i.startsWith('/')) {
-            return join(prefix, i);
-          }
-
-          return join(prefix, '**', i);
-          // Path should be left as is
-        } else {
-          return i;
+    const lines = (
+      tree ? tree.read(file, 'utf-8') : readFileSync(file, 'utf-8')
+    ).split('\n');
+    for (const line of lines) {
+      const l = line.trim();
+      if (l.startsWith('#')) continue;
+      if (prefix === workspaceRoot || (tree && prefix === '.')) {
+        patterns.push(l);
+      } else {
+        patterns.push(join(prefix, l));
+        if (!l.startsWith('/')) {
+          patterns.push(join(prefix, '**', l));
         }
-      });
+      }
+    }
   } catch (e) {
     logger.warn(`NX was unable to parse ignore file: ${file}`);
-    return [];
   }
+  return patterns;
 }

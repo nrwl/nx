@@ -1,33 +1,38 @@
 import type { Tree } from 'nx/src/generators/tree';
-import ignore, { Ignore } from 'ignore';
 import { join, relative, sep } from 'path';
+import { getIgnoredGlobsInTree } from 'nx/src/utils/ignore-patterns';
 
 /**
- * Utility to act on all files in a tree that are not ignored by git.
+ * Utility to act on all files in a tree that are not ignored by git or Nx.
  */
 export function visitNotIgnoredFiles(
   tree: Tree,
   dirPath: string = tree.root,
   visitor: (path: string) => void
 ): void {
-  let ig: Ignore;
-  if (tree.exists('.gitignore')) {
-    ig = ignore();
-    ig.add(tree.read('.gitignore', 'utf-8'));
-  }
+  const { fileIsIgnored } = getIgnoredGlobsInTree(tree);
+  inner(tree, dirPath, visitor, fileIsIgnored);
+}
+
+function inner(
+  tree: Tree,
+  dirPath: string = tree.root,
+  visitor: (path: string) => void,
+  fileIsIgnored: (path: string) => boolean
+): void {
   dirPath = normalizePathRelativeToRoot(dirPath, tree.root);
-  if (dirPath !== '' && ig?.ignores(dirPath)) {
+  if (dirPath !== '' && fileIsIgnored(dirPath)) {
     return;
   }
   for (const child of tree.children(dirPath)) {
     const fullPath = join(dirPath, child);
-    if (ig?.ignores(fullPath)) {
+    if (fileIsIgnored(fullPath)) {
       continue;
     }
     if (tree.isFile(fullPath)) {
       visitor(fullPath);
     } else {
-      visitNotIgnoredFiles(tree, fullPath, visitor);
+      inner(tree, fullPath, visitor, fileIsIgnored);
     }
   }
 }
