@@ -11,9 +11,11 @@ export async function addDetox(host: Tree, options: NormalizedSchema) {
   return detoxApplicationGenerator(host, {
     ...options,
     linter: Linter.EsLint,
-    name: `${options.name}-e2e`,
-    directory: options.directory,
-    project: options.projectName,
+    e2eName: `${options.name}-e2e`,
+    e2eDirectory: options.directory,
+    appProject: options.projectName,
+    appDisplayName: options.displayName,
+    appName: options.name,
     framework: 'react-native',
   });
 }

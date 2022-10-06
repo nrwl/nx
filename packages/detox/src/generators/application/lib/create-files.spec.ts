@@ -12,14 +12,16 @@ describe('Create Files', () => {
 
   it('should generate files', () => {
     createFiles(tree, {
-      name: 'my-app-e2e',
-      projectName: 'my-app-e2e',
-      projectDirectory: 'apps',
-      projectRoot: 'apps/my-app-e2e',
-      project: 'my-app',
+      e2eName: 'my-app-e2e',
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectDirectory: 'apps',
+      e2eProjectRoot: 'apps/my-app-e2e',
+      appProject: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
       appDisplayName: 'MyApp',
+      appExpoName: 'MyApp',
+      appRoot: 'apps/my-app',
       linter: Linter.EsLint,
       framework: 'react-native',
     });
