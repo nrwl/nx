@@ -144,14 +144,14 @@ export class Workspaces {
           const projectTargetDefinition = proj.targets[targetName];
           const defaults = readTargetDefaultsForTarget(
             targetName,
-            nxJson,
+            nxJson.targetDefaults,
             projectTargetDefinition.executor
           );
 
           if (defaults) {
-            const defaults = nxJson.targetDefaults[targetName];
             proj.targets[targetName] = mergeTargetConfigurations(
-              projectTargetDefinition,
+              proj,
+              targetName,
               defaults
             );
           }
@@ -933,9 +933,12 @@ export function buildWorkspaceConfigurationFromGlobs(
 }
 
 export function mergeTargetConfigurations(
-  targetConfiguration: Partial<TargetConfiguration>,
+  projectConfiguration: ProjectConfiguration,
+  target: string,
   targetDefaults: TargetDefaults[string]
 ): TargetConfiguration {
+  const { targets, root } = projectConfiguration;
+  const targetConfiguration = targets?.[target] ?? {};
   const {
     configurations: defaultConfigurations,
     options: defaultOptions,
@@ -946,7 +949,12 @@ export function mergeTargetConfigurations(
     ...targetConfiguration,
   };
 
-  if (!targetDefaults.executor && !targetConfiguration.executor) {
+  if (
+    !targetDefaults.executor &&
+    !targetConfiguration.executor &&
+    !targetDefaults.command &&
+    !targetConfiguration.command
+  ) {
     throw new Error('Unable to determine executor for target');
   }
 
@@ -958,7 +966,7 @@ export function mergeTargetConfigurations(
     targetDefaults.executor === targetConfiguration.executor
   ) {
     result.options = {
-      ...defaultOptions,
+      ...resolvePathTokensInOptions(defaultOptions, root, target),
       ...targetConfiguration.options,
     };
     result.configurations = {
@@ -969,28 +977,55 @@ export function mergeTargetConfigurations(
   return result as TargetConfiguration;
 }
 
+function resolvePathTokensInOptions<T extends Object>(
+  object: T,
+  projectRoot: string,
+  key: string
+): T {
+  for (let [opt, value] of Object.entries(object ?? {})) {
+    if (typeof value === 'string') {
+      if (value.startsWith('{workspaceRoot}/')) {
+        value = value.replace(/^\{workspaceRoot\}\//, '');
+      }
+      if (value.includes('{workspaceRoot}')) {
+        output.error({
+          title: `${NX_PREFIX}: {workspaceRoot} is only valid at the beginning of an option`,
+          bodyLines: [`Found {workspaceRoot} in property: ${key}`],
+        });
+        throw new Error(
+          '{workspaceRoot} is only valid at the beginning of an option.'
+        );
+      }
+      object[opt] = value.replace('{projectRoot}', projectRoot);
+    } else if (typeof value === 'object' && value) {
+      resolvePathTokensInOptions(value, projectRoot, [key, opt].join('.'));
+    }
+  }
+  return object;
+}
+
 export function readTargetDefaultsForTarget(
   targetName: string,
-  nxJson: NxJsonConfiguration<'*' | string[]>,
+  targetDefaults: TargetDefaults,
   executor?: string
 ): TargetDefaults[string] {
   if (executor) {
     // If an executor is defined in project.json, defaults should be read
     // from the most specific key that matches that executor.
     // e.g. If executor === run-commands, and the target is named build:
-    // Use build|run-commands if it is present
-    // If not, use *|run-commands if it is present
+    // Use build#nx:run-commands if it is present
+    // If not, use nx:run-commands if it is present
     // If not, use build if it is present.
-    const separator = '|';
+    const separator = '#';
     const key = [
       `${targetName}${separator}${executor}`,
-      `*${separator}${executor}`,
+      executor,
       targetName,
-    ].find((x) => nxJson.targetDefaults[x]);
-    return key ? nxJson.targetDefaults[key] : null;
+    ].find((x) => targetDefaults?.[x]);
+    return key ? targetDefaults?.[key] : null;
   } else {
     // If the executor is not defined, the only key we have is the target name.
-    return nxJson.targetDefaults[targetName];
+    return targetDefaults?.[targetName];
   }
 }
 

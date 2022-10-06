@@ -115,8 +115,8 @@ In this case Nx will use the right `production` input for each project.
 
 Target defaults provide ways to set common options for a particular target in your workspace. When building your project's configuration, we merge it with up to 1 default from this map. For a given target, we look at its name and its executor. We then check target defaults for any of the following combinations:
 
-- `` `${targetName}|${executor}` ``
-- `` `*|${executor}` ``
+- `` `${targetName}#${executor}` ``
+- `` `${executor}` ``
 - `` `${targetName}` ``
 
 Whichever of these we find first, we use as the base for that target's configuration. Some common scenarios for this follow.

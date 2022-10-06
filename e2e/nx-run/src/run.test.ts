@@ -275,12 +275,14 @@ describe('Nx Running Tests', () => {
           JSON.stringify({
             name: lib,
             targets: {
-              target: {},
+              [target]: {},
             },
           })
         );
 
-        expect(runCLI(`${target} ${lib}`)).toContain(`Hello from ${target}`);
+        expect(runCLI(`${target} ${lib} --verbose`)).toContain(
+          `Hello from ${target}`
+        );
       });
 
       it('should be able to pull options from targetDefaults based on executor', () => {
@@ -289,7 +291,7 @@ describe('Nx Running Tests', () => {
 
         updateJson('nx.json', (nxJson) => {
           nxJson.targetDefaults ??= {};
-          nxJson.targetDefaults[`*|nx:run-commands}`] = {
+          nxJson.targetDefaults[`nx:run-commands`] = {
             options: {
               command: `echo Hello from ${target}`,
             },
@@ -302,14 +304,16 @@ describe('Nx Running Tests', () => {
           JSON.stringify({
             name: lib,
             targets: {
-              target: {
+              [target]: {
                 executor: 'nx:run-commands',
               },
             },
           })
         );
 
-        expect(runCLI(`${target} ${lib}`)).toContain(`Hello from ${target}`);
+        expect(runCLI(`${target} ${lib} --verbose`)).toContain(
+          `Hello from ${target}`
+        );
       });
     });
 

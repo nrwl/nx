@@ -145,52 +145,55 @@ describe('Workspaces', () => {
   });
 
   describe('target defaults', () => {
-    const nxJson = {
-      targetDefaults: {
-        'build|nx:run-commands': {
-          options: {
-            key: 't:e',
-          },
+    const targetDefaults = {
+      'build#nx:run-commands': {
+        options: {
+          key: 't:e',
         },
-        '*|nx:run-commands': {
-          options: {
-            key: '*:e',
-          },
+      },
+      'nx:run-commands': {
+        options: {
+          key: '*:e',
         },
-        build: {
-          options: {
-            key: 't',
-          },
+      },
+      build: {
+        options: {
+          key: 't',
         },
       },
     };
 
-    it('should prefer target|executor key', () => {
+    it('should prefer target#executor key', () => {
       expect(
-        readTargetDefaultsForTarget('build', nxJson, 'run-commands').options[
-          'key'
-        ]
+        readTargetDefaultsForTarget('build', targetDefaults, 'nx:run-commands')
+          .options['key']
       ).toEqual('t:e');
     });
 
-    it('should prefer *|executor key', () => {
+    it('should prefer executor key', () => {
       expect(
-        readTargetDefaultsForTarget('other-target', nxJson, 'run-commands')
-          .options['key']
+        readTargetDefaultsForTarget(
+          'other-target',
+          targetDefaults,
+          'nx:run-commands'
+        ).options['key']
       ).toEqual('*:e');
     });
 
     it('should fallback to target key', () => {
       expect(
-        readTargetDefaultsForTarget('build', nxJson, 'other-executor').options[
-          'key'
-        ]
+        readTargetDefaultsForTarget('build', targetDefaults, 'other-executor')
+          .options['key']
       ).toEqual('t');
     });
 
     it('should return undefined if not found', () => {
       expect(
-        readTargetDefaultsForTarget('other-target', nxJson, 'other-executor')
+        readTargetDefaultsForTarget(
+          'other-target',
+          targetDefaults,
+          'other-executor'
+        )
       ).toBeNull();
     });
 
@@ -200,11 +203,17 @@ describe('Workspaces', () => {
         expect(
           mergeTargetConfigurations(
             {
-              executor: 'target',
-              [property]: {
-                a: {},
+              root: '.',
+              targets: {
+                build: {
+                  executor: 'target',
+                  [property]: {
+                    a: {},
+                  },
+                },
               },
             },
+            'build',
             {
               executor: 'target',
               [property]: {
@@ -223,11 +232,17 @@ describe('Workspaces', () => {
         expect(
           mergeTargetConfigurations(
             {
-              executor: 'target',
-              [property]: {
-                a: {},
+              root: '',
+              targets: {
+                build: {
+                  executor: 'target',
+                  [property]: {
+                    a: {},
+                  },
+                },
               },
             },
+            'build',
             {
               [property]: {
                 b: {},
@@ -244,10 +259,16 @@ describe('Workspaces', () => {
         expect(
           mergeTargetConfigurations(
             {
-              [property]: {
-                a: {},
+              root: '',
+              targets: {
+                build: {
+                  [property]: {
+                    a: {},
+                  },
+                },
               },
             },
+            'build',
             {
               executor: 'target',
               [property]: {
@@ -265,10 +286,16 @@ describe('Workspaces', () => {
         expect(
           mergeTargetConfigurations(
             {
-              [property]: {
-                a: {},
+              root: '',
+              targets: {
+                build: {
+                  [property]: {
+                    a: {},
+                  },
+                },
               },
             },
+            'build',
             {
               executor: 'target',
               [property]: {
