@@ -38,7 +38,7 @@ You can create a new Detox E2E project for an existing mobile project.
 If the `@nrwl/detox` package is not installed, install the version that matches your `@nrwl/workspace` version.
 
 {% tabs %}
-{tab title="npm"}
+{%tab label="npm"%}
 
 ```sh
 # npm
@@ -46,7 +46,7 @@ npm install --save-dev @nrwl/detox
 ```
 
 {% /tab %}
-{tab title="yarn"}
+{%tab label="yarn"%}
 
 ```sh
 # yarn
