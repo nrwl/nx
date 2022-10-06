@@ -3123,10 +3123,10 @@
     npmlog "^6.0.2"
     write-file-atomic "^4.0.1"
 
-"@markdoc/markdoc@0.1.6":
-  version "0.1.6"
-  resolved "https://registry.yarnpkg.com/@markdoc/markdoc/-/markdoc-0.1.6.tgz#3ac13e8d135378231e83dc7faf3a4c73fb0fad0a"
-  integrity sha512-I+QvtEjeZpl8H8uRbSuILwlUw/8ngogQnHeXKmxigJcvLXqZ8BJSldCPXjiVKpQ5vZOpjrblwAAkTI4JeEN3ZA==
+"@markdoc/markdoc@0.1.12":
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/@markdoc/markdoc/-/markdoc-0.1.12.tgz#4665c9d34c99da264b80aea90d2b08496145ac6a"
+  integrity sha512-/TtQ12tMbPSTqeds62kGukgwmN+UeCURIRtEHC6ypU7XY9cW/+6IbHaekpmnXttOeoJV71eSVxbNABQOAoCYiA==
 
 "@mdx-js/mdx@^1.6.22":
   version "1.6.22"
