@@ -37,15 +37,24 @@ You can create a new Detox E2E project for an existing mobile project.
 
 If the `@nrwl/detox` package is not installed, install the version that matches your `@nrwl/workspace` version.
 
-```sh
-# yarn
-yarn add --dev @nrwl/detox
-```
+{% tabs %}
+{tab title="npm"}
 
 ```sh
 # npm
 npm install --save-dev @nrwl/detox
 ```
+
+{% /tab %}
+{tab title="yarn"}
+
+```sh
+# yarn
+yarn add --dev @nrwl/detox
+```
+
+{% /tab %}
+{% /tabs %}
 
 Next, generate an E2E project based on an existing project.
 
@@ -90,7 +99,7 @@ For iOS, in terminal, run `xcrun simctl list` to view a list of simulators on yo
 
 For Android, in terminal, run `emulator -list-avds` to view a list of emulators installed. To open your emulator, run `emulator -avd <your emulator name>`. In `frontend-e2e/.detoxrc.json`, you could change the simulator under `devices.emulator.device`.
 
-In additon, to override the device name specified in a configuration, you could use `--device-name` option: `nx test-ios <app-name-e2e> --device-name "iPhone 11"`. The `device-name` property provides you the ability to test an application run on specific device.
+In addition, to override the device name specified in a configuration, you could use `--device-name` option: `nx test-ios <app-name-e2e> --device-name "iPhone 11"`. The `device-name` property provides you the ability to test an application run on specific device.
 
 ```bash
 nx test-ios frontend-e2e --device-name "iPhone 11"
