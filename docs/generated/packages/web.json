@@ -752,30 +752,6 @@
             ],
             "description": "Path to a function which takes a rollup config and returns an updated rollup config."
           },
-          "umdName": {
-            "type": "string",
-            "description": "The name of your module in `UMD` format. Defaulted to your project name."
-          },
-          "globals": {
-            "description": "A mapping of node modules to their `UMD` global names. Used by the `UMD` bundle.",
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "moduleId": {
-                  "type": "string",
-                  "description": "The node module to map from (e.g. `react-dom`)."
-                },
-                "global": {
-                  "type": "string",
-                  "description": "The global name to map to (e.g. `ReactDOM`)."
-                }
-              },
-              "additionalProperties": false,
-              "required": ["moduleId", "global"]
-            },
-            "default": []
-          },
           "extractCss": {
             "type": ["boolean", "string"],
             "description": "CSS files will be extracted to the output folder. Alternatively custom filename can be provided (e.g. styles.css)",

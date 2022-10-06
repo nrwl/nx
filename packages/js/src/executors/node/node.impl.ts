@@ -192,9 +192,6 @@ async function* startBuild(
 ) {
   const buildTarget = parseTargetString(options.buildTarget);
 
-  // TODO(jack): [Nx 14] Remove this line once we generate `development` configuration by default + add migration for it if missing
-  buildTarget.configuration ??= '';
-
   yield* await runExecutor<ExecutorEvent>(
     buildTarget,
     {
