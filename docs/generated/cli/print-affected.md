@@ -13,7 +13,7 @@ Prints information about the projects and targets affected by changes
 nx print-affected
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
+Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
 
 ### Examples
 
