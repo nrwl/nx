@@ -11,13 +11,17 @@ export async function workspaceLint(): Promise<void> {
   const allWorkspaceFiles = graph.allWorkspaceFiles;
   const projectGraph = pruneExternalNodes(graph);
 
-  const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
+  const integrityMessages = new WorkspaceIntegrityChecks(
     projectGraph,
     readAllFilesFromAppsAndLibs(allWorkspaceFiles)
   ).run();
 
-  if (cliErrorOutputConfigs.length > 0) {
-    cliErrorOutputConfigs.forEach((errorConfig) => {
+  for (const message of integrityMessages.warn) {
+    output.warn(message);
+  }
+
+  if (integrityMessages.error?.length > 0) {
+    integrityMessages.error.forEach((errorConfig) => {
       output.error(errorConfig);
     });
     process.exit(1);
