@@ -21,7 +21,11 @@ import {
 } from '../config/project-graph';
 import { pruneExternalNodes } from '../project-graph/operators';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { getIgnoredGlobs } from '../utils/ignore-patterns';
+import {
+  getIgnoredGlobs,
+  getIgnoredGlobsAndIgnore,
+} from '../utils/ignore-patterns';
+import { createFor } from 'typescript';
 
 export interface DepGraphClientResponse {
   hash: string;
@@ -409,14 +413,6 @@ let currentDepGraphClientResponse: DepGraphClientResponse = {
   exclude: [],
 };
 
-async function getIgnoreObject(root: string) {
-  const ig = ignore();
-  try {
-    await getIgnoredGlobs({ ig });
-  } catch {}
-  return ig;
-}
-
 function startWatcher() {
   return createFileWatcher(workspaceRoot, async () => {
     output.note({ title: 'Recalculating project graph...' });
@@ -449,7 +445,7 @@ async function createFileWatcher(
   root: string,
   changeHandler: () => Promise<void>
 ) {
-  const ig = await getIgnoreObject(root);
+  const { fileIsIgnored } = await getIgnoredGlobsAndIgnore();
   const layout = workspaceLayout();
 
   const watcher = watch(
@@ -465,7 +461,7 @@ async function createFileWatcher(
   watcher.on(
     'all',
     debounce(async (event: string, path: string) => {
-      if (ig.ignores(path)) return;
+      if (fileIsIgnored(path)) return;
       await changeHandler();
     }, 500)
   );

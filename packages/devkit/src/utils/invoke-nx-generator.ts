@@ -3,12 +3,14 @@ import type {
   FileChange,
   Tree,
   TreeWriteOptions,
+  VirtualDirEnt,
 } from 'nx/src/generators/tree';
 import { toNewFormat, toOldFormatOrNull } from 'nx/src/config/workspaces';
 import { Generator, GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import { parseJson, serializeJson } from 'nx/src/utils/json';
 import { join, relative } from 'path';
 import type { Mode } from 'fs';
+import { joinPathFragments } from 'nx/src/utils/path';
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}
@@ -109,9 +111,23 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
     return this._root;
   }
 
-  children(dirPath: string): string[] {
+  children(dirPath: string): string[];
+  children(dirPath: string, options: { withFileTypes: true }): VirtualDirEnt[];
+  children(
+    dirPath: string,
+    options?: { withFileTypes: true }
+  ): string[] | VirtualDirEnt[] {
     const { subdirs, subfiles } = this.tree.getDir(dirPath);
-    return [...subdirs, ...subfiles];
+    const childPaths = [...subdirs, ...subfiles];
+    if (options?.withFileTypes) {
+      return childPaths.map((x) => ({
+        name: x,
+        isDirectory: () => !this.isFile(joinPathFragments(dirPath, x)),
+        isFile: () => this.isFile(joinPathFragments(dirPath, x)),
+      }));
+    } else {
+      return childPaths;
+    }
   }
 
   delete(filePath: string): void {

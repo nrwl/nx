@@ -267,7 +267,7 @@ export class FsTree implements Tree {
         isFile: () => this.isFile(joinPathFragments(dirPath, x)),
       }));
     } else {
-      return childPaths
+      return childPaths;
     }
   }
 

@@ -6,9 +6,7 @@ import { readdirSync, statSync } from 'fs';
 import { FileHasherBase } from './file-hasher-base';
 import ignore, { Ignore } from 'ignore';
 import { normalizePath } from '../utils/path';
-import {
-  getIgnoredGlobsAndIgnore,
-} from '../utils/ignore-patterns';
+import { getIgnoredGlobsAndIgnore } from '../utils/ignore-patterns';
 
 export class NodeBasedFileHasher extends FileHasherBase {
   fileIsIgnored: (p) => boolean;
@@ -67,7 +65,9 @@ export class NodeBasedFileHasher extends FileHasherBase {
 }
 
 async function getAllIgnoredGlobs() {
-  return (await getIgnoredGlobsAndIgnore({
-    knownIgnoredPaths: ['tmp', 'dist', 'build'],
-  })).fileIsIgnored;
+  return (
+    await getIgnoredGlobsAndIgnore({
+      knownIgnoredPaths: ['tmp', 'dist', 'build'],
+    })
+  ).fileIsIgnored;
 }

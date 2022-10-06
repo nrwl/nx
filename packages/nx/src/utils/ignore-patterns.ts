@@ -2,10 +2,10 @@ import { Dirent, existsSync, readdirSync } from 'fs';
 import { readFileSync } from 'fs-extra';
 import { readdir } from 'fs/promises';
 import ignore, { Ignore } from 'ignore';
-import { join, relative } from 'path';
+import { dirname, join, relative } from 'path';
 import { Tree, VirtualDirEnt } from '../generators/tree';
 import { logger } from './logger';
-import { normalizePath } from './path';
+import { joinPathFragments, normalizePath } from './path';
 import { workspaceRoot } from './workspace-root';
 
 const ALWAYS_IGNORE = ['node_modules', '.git'];
@@ -13,7 +13,15 @@ const ALWAYS_IGNORE = ['node_modules', '.git'];
 export const locatedIgnoreFiles = new Set<string>();
 
 export interface GetIgnoredGlobsOptions {
+  /**
+   * Files that should be parsed. Defaults to [.nxignore, .gitignore]
+   */
   ignoreFiles?: string[];
+
+  /**
+   * Extra paths which should be ignored, but may not be specified in an ignore file.
+   * Defaults to [`node_modules`, `.git`].
+   */
   knownIgnoredPaths?: string[];
 }
 
@@ -159,9 +167,7 @@ function getPatternsFromDirectory(
             normalizePath(relative(workspaceRoot, ignoreFile))
           );
         }
-        patterns = patterns.concat(
-          getIgnoredGlobsFromFile(ignoreFile, directory, tree)
-        );
+        patterns = patterns.concat(getIgnoredGlobsFromFile(ignoreFile, tree));
       }
     }
     return patterns;
@@ -229,30 +235,51 @@ function visitChildDirectoriesFromDirEnts<T>(
   return returnValues;
 }
 
-function getIgnoredGlobsFromFile(
-  file: string,
-  prefix: string,
-  tree?: Tree
-): string[] {
-  const patterns = [];
+/**
+ * Parses a .gitignore syntax file.
+ * @param file Path to the .gitignore file
+ * @param tree A tree to use instead of fs operations
+ * @returns string[]: a list of patterns to ignore
+ */
+function getIgnoredGlobsFromFile(file: string, tree?: Tree): string[] {
+  const patterns: string[] = [];
+  const directory = dirname(file);
   try {
     const lines = (
       tree ? tree.read(file, 'utf-8') : readFileSync(file, 'utf-8')
     ).split('\n');
     for (const line of lines) {
       const l = line.trim();
-      if (l.startsWith('#')) continue;
-      if (prefix === workspaceRoot || (tree && prefix === '.')) {
+      if (!l.length || l.startsWith('#')) continue;
+      // Prefix is at workspace root, and we want paths that are relative to the workspaceRoot.
+      if (directory === workspaceRoot || directory === '.') {
         patterns.push(l);
-      } else {
-        patterns.push(join(prefix, l));
+        // Testing revealed that fast-glob's `ignore` method will **not** ignore glob patterns that
+        // are a directory layer deep, even if the pattern doesn't start with a `/`. To mimic this
+        // functionality, we need to add a globstar pattern.
         if (!l.startsWith('/')) {
-          patterns.push(join(prefix, '**', l));
+          patterns.push(joinPathFragments('**', l));
+        }
+      } else {
+        patterns.push(joinPathFragments(directory, l));
+        // For nested gitignore files, we need a similar globstar pattern. In this case, we scope it
+        // to the directory that contains the ignore file.
+        if (!l.startsWith('/')) {
+          patterns.push(joinPathFragments(directory, '**', l));
         }
       }
     }
   } catch (e) {
     logger.warn(`NX was unable to parse ignore file: ${file}`);
   }
-  return patterns;
+  return normalizePatterns(patterns, tree ? tree.root : workspaceRoot);
+}
+
+/**
+ * Ensure all patterns are relative to workspace root
+ */
+function normalizePatterns(patterns: string[], root) {
+  return patterns.map((x) =>
+    x.replace(`^${normalizePath(workspaceRoot)}/`, '')
+  );
 }

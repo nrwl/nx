@@ -1917,7 +1917,7 @@ This does _not_ update projects configuration, use [updateProjectConfiguration](
 
 ▸ **visitNotIgnoredFiles**(`tree`, `dirPath?`, `visitor`): `void`
 
-Utility to act on all files in a tree that are not ignored by git.
+Utility to act on all files in a tree that are not ignored by git or Nx.
 
 #### Parameters
 

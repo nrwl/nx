@@ -15,9 +15,7 @@ import {
   readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
 } from './project-graph';
-import {
-  getIgnoredGlobsAndIgnoreSync,
-} from '../utils/ignore-patterns';
+import { getIgnoredGlobsAndIgnoreSync } from '../utils/ignore-patterns';
 
 export interface Change {
   type: string;

@@ -120,8 +120,9 @@ export async function subscribeToWorkspaceChanges(
         });
       }
 
-      const nonIgnoredEvents = workspaceRelativeEvents
-        .filter(({ path }) => !!path && !fileIsIgnored(path))
+      const nonIgnoredEvents = workspaceRelativeEvents.filter(
+        ({ path }) => !!path && !fileIsIgnored(path)
+      );
 
       if (nonIgnoredEvents && nonIgnoredEvents.length > 0) {
         cb(null, nonIgnoredEvents);

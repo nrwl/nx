@@ -37,7 +37,7 @@ describe('visitNotIgnoredFiles', () => {
 
   it('should not visit ignored files in a sub directory', () => {
     tree.write('.gitignore', 'node_modules');
-    tree.write('dir/.gitignore', 'dir2')
+    tree.write('dir/.gitignore', 'dir2');
 
     tree.write('dir/file1.ts', '');
     tree.write('dir/node_modules/file1.ts', '');
