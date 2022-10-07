@@ -31,7 +31,7 @@ Cards allow to show content in a grid system with a title, a description, a type
 You can add specific languages, a filename and allow or not to process interpolation _(default is `false`)_ on the code snippet displayed.
 
 ````
-‎```javascript {% fileName="main.css" %}
+‎```javascript {% fileName="main.js" %}
 ‎ const code = "goes here";
 ‎```
 ````
