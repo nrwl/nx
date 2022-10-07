@@ -64,7 +64,7 @@
     "yargs": "^17.4.0",
     "yargs-parser": "21.0.1",
     "js-yaml": "4.1.0",
-    "axios": "0.21.1"
+    "axios": "^1.0.0"
   },
   "peerDependencies": {
     "@swc-node/register": "^1.4.2",
