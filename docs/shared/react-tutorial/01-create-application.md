@@ -51,6 +51,8 @@ Enter the indicated answers.
 
 > You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
 
+When once the script has run, your workspace will look like this:
+
 ```treeview
 myorg/
 ├── apps/
@@ -88,7 +90,10 @@ myorg/
 │       └── tsconfig.json
 ├── libs/
 ├── tools/
+├── .editorconfig
 ├── .eslintrc.json
+├── .gitignore
+├── .prettierignore
 ├── .prettierrc
 ├── babel.config.json
 ├── jest.config.ts
@@ -99,7 +104,7 @@ myorg/
 └── tsconfig.base.json
 ```
 
-Two projects were added to the workspace:
+Since we specified in the prompts to create a React project, we can see that two projects were added to the workspace:
 
 - A React application
 - E2E tests for the React application

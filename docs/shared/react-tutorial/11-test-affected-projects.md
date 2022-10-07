@@ -19,7 +19,7 @@ git checkout -b testbranch
 
 ```typescript
 import { Todo } from '@myorg/data';
-import './todos.module.css';
+import styles from './todos.module.css';
 
 export interface TodosProps {
   todos: Todo[];
@@ -51,17 +51,27 @@ Printing the affected projects can be handy, but usually you want to do somethin
 As you can see, since we updated the code, without updating the tests, the unit tests failed.
 
 ```bash
->  NX  Running target test for projects:
+> npx nx affected:test
 
-  - ui
-  - todos
+ >  NX   Affected criteria defaulted to --base=main --head=HEAD
+
+
+ >  NX   Running target test for 2 projects
+
+    →    Executing 2/2 remaining tasks in parallel...
+
+    ⠋    nx run ui:test
+    ⠋    nx run todos:test
 
 ...
 
-  Failed projects:
+>  NX   Ran target test for 2 projects (2s)
 
-  - todos
-  - ui
+    ✔    0/2 succeeded [0 read from cache]
+
+    ✖    2/2 targets failed, including the following:
+         - nx run ui:test
+         - nx run todos:test
 ```
 
 Note that Nx only tried to retest `ui` and `todos`. It didn't retest `api` or `data` because there is no way that could be affected by the changes in this branch.

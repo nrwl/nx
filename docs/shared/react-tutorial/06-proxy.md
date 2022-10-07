@@ -54,26 +54,32 @@ Every target uses an executor which actually runs this target. So targets are an
 There are a lot of advantages to providing additional metadata to the build tool. For instance, you can introspect targets. `npx nx serve todos --help` results in:
 
 ```bash
-nx run todos:serve [options,...]
+>  NX   run todos:serve [options,...]
+
+
+Executor:  @nrwl/webpack:dev-server (v14.8.3)
+
+
+  Serve a web application.
+
 
 Options:
-  --buildTarget           Target which builds the application
-  --port                  Port to listen on. (default: 4200)
-  --host                  Host to listen on. (default: localhost)
-  --ssl                   Serve using HTTPS.
-  --sslKey                SSL key to use for serving HTTPS.
-  --sslCert               SSL certificate to use for serving HTTPS.
-  --watch                 Watches for changes and rebuilds application (default: true)
-  --liveReload            Whether to reload the page on change, using live-reload. (default: true)
-  --hmr                   Enable hot module replacement.
-  --publicHost            Public URL where the application will be served
-  --open                  Open the application in the browser.
-  --allowedHosts          This option allows you to whitelist services that are allowed to access the dev server.
-  --memoryLimit           Memory limit for type checking service process in MB.
-  --maxWorkers            Number of workers to use for type checking.
-  --baseHref              Base url for the application being built.
-  --skip-nx-cache         Skip the use of Nx cache.
-  --help                  Show available options for project target.
+    --buildTarget     Target which builds the application.                                        [string]
+    --port            Port to listen on.                                          [number] [default: 4200]
+    --host            Host to listen on.                                   [string] [default: "localhost"]
+    --ssl             Serve using `HTTPS`.                                                       [boolean]
+    --sslKey          SSL key to use for serving `HTTPS`.                                         [string]
+    --sslCert         SSL certificate to use for serving `HTTPS`.                                 [string]
+    --watch           Watches for changes and rebuilds application.              [boolean] [default: true]
+    --liveReload      Whether to reload the page on change, using live-reload.   [boolean] [default: true]
+    --hmr             Enable hot module replacement.                                             [boolean]
+    --publicHost      Public URL where the application will be served.                            [string]
+    --open            Open the application in the browser.                                       [boolean]
+    --allowedHosts    This option allows you to whitelist services that are allowed to            [string]
+                      access the dev server.
+    --memoryLimit     Memory limit for type checking service process in `MB`.                     [number]
+    --maxWorkers      Number of workers to use for type checking.                                 [number]
+    --baseHref        Base url for the application being built.                                   [string]
 ```
 
 It helps with good editor integration (see [VSCode Support](/core-features/integrate-with-editors#nx-console-for-vscode)).

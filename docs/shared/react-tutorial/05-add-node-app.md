@@ -12,26 +12,38 @@ The requests fail because the API has not been created yet. Using Nx you develop
 Nx is an open platform with plugins for many modern tools and frameworks. **To see some plugins, run `npx nx list`:**
 
 ```bash
->  NX   Installed plugins:
-
-  @nrwl/cypress (executors,generators)
-  @nrwl/jest (executors,generators)
-  @nrwl/linter (executors,generators)
-  @nrwl/nx-cloud (generators)
-  @nrwl/react (generators)
-  @nrwl/storybook (executors,generators)
-  @nrwl/web (executors,generators)
-  @nrwl/workspace (executors,generators)
+ >  NX   Local workspace plugins:
 
 
->  NX   Also available:
 
-  @nrwl/angular (generators)
-  @nrwl/express (executors,generators)
-  @nrwl/nest (executors,generators)
-  @nrwl/next (executors,generators)
-  @nrwl/node (executors,generators)
-  @nrwl/nx-plugin (executors,generators)
+ >  NX   Installed plugins:
+
+   @nrwl/cypress (executors,generators)
+   @nrwl/jest (executors,generators)
+   @nrwl/js (executors,generators)
+   @nrwl/linter (executors,generators)
+   @nrwl/nx-cloud (generators)
+   @nrwl/react (executors,generators)
+   @nrwl/rollup (executors,generators)
+   @nrwl/storybook (executors,generators)
+   @nrwl/web (executors,generators)
+   @nrwl/webpack (executors,generators)
+   @nrwl/workspace (executors,generators)
+   nx (executors)
+
+
+ >  NX   Also available:
+
+   @nrwl/angular (executors,generators)
+   @nrwl/detox (executors,generators)
+   @nrwl/esbuild (executors,generators)
+   @nrwl/expo (executors,generators)
+   @nrwl/express (generators)
+   @nrwl/nest (generators)
+   @nrwl/next (executors,generators)
+   @nrwl/node (executors,generators)
+   @nrwl/nx-plugin (executors,generators)
+   @nrwl/react-native (executors,generators)
 
 
 >  NX   Community plugins:
