@@ -16,7 +16,7 @@ import { addRoute } from '../../utils/nx-devkit/route-utils';
 import { setupMf } from '../setup-mf/setup-mf';
 import { E2eTestRunner } from '../../utils/test-runners';
 
-export default async function host(tree: Tree, options: Schema) {
+export async function host(tree: Tree, options: Schema) {
   const projects = getProjects(tree);
 
   const remotesToGenerate: string[] = [];
@@ -142,3 +142,5 @@ ${remoteRoutes}
     }
   );
 }
+
+export default host;
