@@ -74,7 +74,6 @@ const runOne: string[] = [
   'parallel',
   'maxParallel',
   'exclude',
-  'onlyFailed',
   'help',
   'skipNxCache',
   'outputStyle',
@@ -116,7 +115,6 @@ export interface NxArgs {
   head?: string;
   exclude?: string[];
   files?: string[];
-  onlyFailed?: boolean;
   verbose?: boolean;
   help?: boolean;
   version?: boolean;
@@ -216,13 +214,6 @@ export function splitArgsIntoNxArgsAndOverrides(
   if (nxArgs.prod) {
     delete nxArgs.prod;
     nxArgs.configuration = 'production';
-  }
-
-  // TODO(v15): onlyFailed should not be an option
-  if (options.printWarnings && nxArgs.onlyFailed) {
-    output.warn({
-      title: `--onlyFailed is deprecated. All tasks will be run.`,
-    });
   }
 
   if (mode === 'affected') {

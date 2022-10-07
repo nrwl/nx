@@ -67,11 +67,7 @@ You will see the following:
 
 Note that Nx only tried to retest `ui` and `todos`. It didn't retest `api` or `data` because there is no way that could be affected by the changes in this branch.
 
-Run the command to retest the failed projects.
-
-```sh
-npx nx affected:test -- --only-failed
-```
+Simply, re-run the command to retest the failed projects. The already successful projects will be cached.
 
 ## Affected:
 
