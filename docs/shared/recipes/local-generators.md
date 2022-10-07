@@ -32,7 +32,7 @@ happynrwl/
 │   │   │   |   └── my-generator/
 │   │   │   |   |    ├── generator.spec.ts
 │   │   │   |   |    ├── generator.ts
-│   │   │   |   |    ├── scehma.d.ts
+│   │   │   |   |    ├── schema.d.ts
 │   │   │   |   |    └── schema.json
 ├── nx.json
 ├── package.json
