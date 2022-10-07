@@ -449,7 +449,7 @@ export class GraphService {
       this.renderGraph.$id(currentFocusedProjectName).addClass('focused');
     }
 
-    this.renderGraph.on('zoom', () => {
+    this.renderGraph.on('zoom pan', () => {
       this.tooltipService.hideAll();
     });
 
