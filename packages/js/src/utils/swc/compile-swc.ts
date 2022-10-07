@@ -1,11 +1,10 @@
-import { ExecutorContext, logger } from '@nrwl/devkit';
+import { cacheDir, ExecutorContext, logger } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
-import { cacheDir } from '@nrwl/devkit';
+import { removeSync } from 'fs-extra';
 import { createAsyncIterable } from '../create-async-iterable/create-async-iteratable';
 import { NormalizedSwcExecutorOptions, SwcCliOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
-import { removeSync } from 'fs-extra';
 
 function getSwcCmd(
   { swcrcPath, srcPath, destPath }: SwcCliOptions,
@@ -51,9 +50,8 @@ export async function compileSwc(
   logger.log(swcCmdLog.replace(/\n/, ''));
   const isCompileSuccess = swcCmdLog.includes('Successfully compiled');
 
-  await postCompilationCallback();
-
   if (normalizedOptions.skipTypeCheck) {
+    await postCompilationCallback();
     return { success: isCompileSuccess };
   }
 
@@ -67,6 +65,7 @@ export async function compileSwc(
     await printDiagnostics(errors, warnings);
   }
 
+  await postCompilationCallback();
   return { success: !hasErrors && isCompileSuccess };
 }
 
