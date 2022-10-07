@@ -140,6 +140,7 @@ describe('shared-ui', () => {
 
 ## More Documentation
 
+- [Set up Compodoc for Storybook on Nx](/storybook/angular-storybook-compodoc)
 - [Information about the `storybook` targets](/storybook/angular-storybook-targets)
 - [Configuring styles and preprocessor options](/storybook/angular-configuring-styles)
 - [The `browserTarget`](/storybook/angular-browser-target)
