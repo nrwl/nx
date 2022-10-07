@@ -28,9 +28,8 @@ describe('nx init', () => {
       })
     );
 
-    const output = runCommand(`${packageManagerCommand} nx init`);
-    expect(output).toContain('Nx has been installed');
-    expect(output).toContain('nx.json has been created');
+    const output = runCommand(`${packageManagerCommand} nx init -y`);
+    expect(output).toContain('Done!');
 
     expect(runCLI('run package:echo')).toContain('123');
     renameFile('nx.json', 'nx.json.old');

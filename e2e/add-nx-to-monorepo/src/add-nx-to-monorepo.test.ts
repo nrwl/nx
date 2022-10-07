@@ -42,19 +42,10 @@ describe('add-nx-to-monorepo', () => {
 
       // Act
       const output = runCommand(
-        `${packageManagerCommand} add-nx-to-monorepo@${getPublishedVersion()} --nx-cloud false`
+        `${packageManagerCommand} add-nx-to-monorepo@${getPublishedVersion()} -y`
       );
       // Assert
       expect(output).toContain('🎉 Done!');
-      expect(readWorkspaceConfig().projects['package-a']).toBeTruthy();
-      expect(readWorkspaceConfig().projects['package-b']).toBeTruthy();
-      expect(readWorkspaceConfig().targetDefaults).toEqual({
-        build: { dependsOn: ['^build'] },
-      });
-      expect(
-        readWorkspaceConfig().tasksRunnerOptions['default'].options
-          .cacheableOperations
-      ).toEqual(['build', 'test', 'lint']);
     }
   });
 
@@ -74,7 +65,7 @@ describe('add-nx-to-monorepo', () => {
 
       // Act
       runCommand(
-        `${packageManagerCommand} add-nx-to-monorepo@${getPublishedVersion()} --nx-cloud false`
+        `${packageManagerCommand} add-nx-to-monorepo@${getPublishedVersion()} -y`
       );
       const output = runCLI('build package-a');
       // Assert
@@ -82,6 +73,3 @@ describe('add-nx-to-monorepo', () => {
     }
   });
 });
-
-const readWorkspaceConfig = () =>
-  new Workspaces(tmpProjPath()).readWorkspaceConfiguration();
