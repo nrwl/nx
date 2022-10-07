@@ -323,5 +323,10 @@
     "name": "@koliveira15/nx-sonarqube",
     "description": "Nx plugin that analyses projects using SonarQube / SonarCloud.",
     "url": "https://github.com/koliveira15/nx-sonarqube"
+  },
+  {
+    "name": "@mands/nx-playwright",
+    "description": "The Playwright plugin allows your workspace to use the power of Playwright end-to-end testing using a native runner.",
+    "url": "https://github.com/marksandspencer/nx-plugins/tree/main/packages/nx-playwright"
   }
 ]
