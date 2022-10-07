@@ -73,5 +73,6 @@
       "description": "Run packager server in interactive mode.",
       "default": true
     }
-  }
+  },
+  "examplesFile": "../../../docs/run-android-examples.md"
 }

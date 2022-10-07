@@ -19,5 +19,6 @@
       "description": "Override default gradle task incase of multi build variants"
     }
   },
-  "required": []
+  "required": [],
+  "examplesFile": "../../../docs/build-android-examples.md"
 }

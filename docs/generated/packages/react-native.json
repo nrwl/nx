@@ -606,7 +606,8 @@
             "description": "Run packager server in interactive mode.",
             "default": true
           }
-        }
+        },
+        "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a specific device/simulator\" %}\nTo see all the avaiable emulators, run command:\n\n```bash\nemulator -list-avds\n```\n\nThe `deviceId` option allows you to launch your android app in a specific device/simulator:\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {\n        \"deviceId\": \"Pixel_5_API_30\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the debug/release app\" %}\nThe `variant` option allows to specify the build variant, such as `debug` or `release`.\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {\n        \"variant\": \"release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
       },
       "description": "Runs Android application.",
       "aliases": [],
@@ -650,8 +651,8 @@
           "simulator": {
             "type": "string",
             "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: `iPhone X (12.1)`.",
-            "default": "iPhone X",
-            "examples": ["iPhone X"]
+            "default": "iPhone 13",
+            "examples": ["iPhone 13", "iPhone X"]
           },
           "device": {
             "type": "string",
@@ -691,7 +692,8 @@
             "description": "Run packager server in interactive mode.",
             "default": true
           }
-        }
+        },
+        "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-ios\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a simulator\" %}\nTo see all the avaiable simulators, run command:\n\n```bash\nxcrun simctl list\n```\n\nThe `simulator` option allows you to launch your iOS app in a specific simulator:\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"simulator\": \"iPhone 13 Pro\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run on a device\" %}\nThe `device` option allows you to launch your iOS app in a specific device.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"device\": \"deviceName\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the Debug/Release app\" %}\nThe `xcodeConfiguration` option allows to specify the xcode configuartion, such as `Debug` or `Release`.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"xcodeConfiguration\": \"Release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
       },
       "description": "Runs iOS application.",
       "aliases": [],
@@ -770,6 +772,7 @@
           }
         },
         "required": ["platform", "entryFile", "bundleOutput"],
+        "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"bundle-ios\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"outputs\": [\"apps/mobile/build\"],\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"ios\",\n        \"bundleOutput\": \"dist/apps/mobile/ios/main.jsbundle\"\n      }\n    },\n    \"bundle-android\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"android\",\n        \"bundleOutput\": \"dist/apps/mobile/android/main.jsbundle\"\n      }\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:bundle-ios\nnx run mobile:bundle-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Bundle with sourcemap\" %}\nThe `sourcemapOutput` option allows you to specify the path of the source map relative to app folder:\n\n```json\n    \"bundle-ios\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"ios\",\n        \"bundleOutput\": \"dist/apps/mobile/ios/main.jsbundle\",\n        \"sourcemapOutput\": \"../../dist/apps/mobile/ios/main.map\",\n      }\n    },\n    \"bundle-android\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"android\",\n        \"bundleOutput\": \"dist/apps/mobile/android/main.jsbundle\",\n        \"sourcemapOutput\": \"../../dist/apps/mobile/android/main.map\",\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Create a dev/release bundle\" %}\n\nThe `dev` option determines whether to create a dev or release bundle. The default value is `true`, by setting it as `false`, warnings are disabled and the bundle is minified.\n\n```json\n    \"bundle-ios\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"ios\",\n        \"bundleOutput\": \"dist/apps/mobile/ios/main.jsbundle\",\n        \"dev\": false\n      }\n    },\n    \"bundle-android\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"android\",\n        \"bundleOutput\": \"dist/apps/mobile/android/main.jsbundle\",\n        \"dev\": false\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Create a minified bundle\" %}\n\nThe `minify` option allows you to create a minified bundle:\n\n```json\n    \"bundle-ios\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"ios\",\n        \"bundleOutput\": \"dist/apps/mobile/ios/main.jsbundle\",\n        \"minify\": true\n      }\n    },\n    \"bundle-android\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"android\",\n        \"bundleOutput\": \"dist/apps/mobile/android/main.jsbundle\",\n        \"minify\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
         "presets": []
       },
       "description": "Builds the JavaScript bundle for offline use.",
@@ -802,6 +805,7 @@
           }
         },
         "required": [],
+        "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"apps/mobile/android/app/build/outputs/bundle\",\n        \"apps/mobile/android/app/build/outputs/apk\"\n      ],\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:build-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Build with custom gradleTask\" %}\nThe `gradleTask` option accepts any custom gradle task, such as `assembleDebug`, `assembleRelease`, `bundleDebug`, `bundleRelease`:\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"apps/mobile/android/app/build/outputs/bundle\",\n        \"apps/mobile/android/app/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"gradleTask\": \"assembleDebug\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Create a build with apk format\" %}\n\nThe `apk` option allows you determine the format of android build. If set as true, it will create a build with `.apk` extension under apk folder; if set as false, it will create with `.aab` extension under bundle folder.\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"apps/mobile/android/app/build/outputs/bundle\",\n        \"apps/mobile/android/app/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"apk\": true\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Build for debug/release\" %}\n\nIf set `debug` option as `true`, it will create a debug build; if set as `false`, it will create a release build.\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"apps/mobile/android/app/build/outputs/bundle\",\n        \"apps/mobile/android/app/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"debug\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
         "presets": []
       },
       "description": "Release Build for Android.",
@@ -836,6 +840,7 @@
             "default": true
           }
         },
+        "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"start\": {\n      \"executor\": \"@nrwl/react-native:start\",\n      \"options\": {\n        \"port\": 8081\n      }\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:start\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Starts the server non-interactively\" %}\nThe `interactive` option allows you to specify whether to use interactive mode:\n\n```json\n    \"start\": {\n      \"executor\": \"@nrwl/react-native:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"interactive\": false\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Starts the server with cache reset\" %}\n\nThe `resetCache` option allows you to remove cached files.\n\n```json\n    \"start\": {\n      \"executor\": \"@nrwl/react-native:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"resetCache\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
         "presets": []
       },
       "description": "Starts the Javascript server that communicates with connected devices.",
