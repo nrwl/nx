@@ -26,7 +26,7 @@ export const SearchDepth = memo(
               name="depthFilter"
               value="depthFilterActivated"
               type="checkbox"
-              className="accent-green-nx-base h-4 w-4"
+              className="h-4 w-4 accent-blue-500 dark:accent-sky-500"
               checked={searchDepthEnabled}
               onChange={(event) =>
                 searchDepthFilterEnabledChange(event.target.checked)

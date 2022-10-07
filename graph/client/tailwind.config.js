@@ -8,15 +8,6 @@ module.exports = {
   darkMode: 'class', // or 'media' or 'class'
   theme: {
     extend: {
-      colors: {
-        blue: {
-          'nx-dark': 'hsla(214, 61%, 11%, 1)',
-          'nx-base': 'hsla(214, 62%, 21%, 1)',
-        },
-        green: {
-          'nx-base': 'hsla(162, 47%, 50%, 1)',
-        },
-      },
       typography: {
         DEFAULT: {
           css: {

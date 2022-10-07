@@ -3,7 +3,7 @@ import {
   FlagIcon,
   MapPinIcon,
   XCircleIcon,
-} from '@heroicons/react/24/solid';
+} from '@heroicons/react/24/outline';
 import { memo } from 'react';
 import { TracingAlgorithmType } from '../machines/interfaces';
 
@@ -36,8 +36,8 @@ export const TracingPanel = memo(
               onClick={() => setAlgorithm('shortest')}
               className={`${
                 algorithm === 'shortest'
-                  ? 'border-blue-nx-base dark:border-slate-200'
-                  : 'border-gray-300 dark:border-slate-600'
+                  ? 'border-blue-500 dark:border-sky-500'
+                  : 'border-slate-300 dark:border-slate-600'
               } flex-1 rounded-l-md border bg-slate-50 py-2 px-4 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700`}
             >
               <span>Shortest</span>
@@ -46,8 +46,8 @@ export const TracingPanel = memo(
               onClick={() => setAlgorithm('all')}
               className={`${
                 algorithm === 'all'
-                  ? 'border-blue-nx-base dark:border-slate-200'
-                  : 'border-gray-300 dark:border-slate-600'
+                  ? 'border-blue-500 dark:border-sky-500'
+                  : 'border-slate-300 dark:border-slate-600'
               } flex-1 rounded-r-md border bg-slate-50 py-2 px-4 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700`}
             >
               <span>All</span>
@@ -62,7 +62,7 @@ export const TracingPanel = memo(
                 data-cy="resetTraceButton"
                 onClick={resetStart}
               >
-                <div className="bg-green-nx-base flex-1 truncate rounded-md border border-slate-200 p-2 text-slate-50 shadow-sm transition duration-200 ease-in-out group-hover:opacity-60 dark:border-slate-700">
+                <div className="flex-1 truncate rounded-md border border-slate-200 bg-blue-500 p-2 text-slate-50 shadow-sm transition duration-200 ease-in-out group-hover:opacity-60 dark:border-slate-700 dark:bg-sky-500">
                   <span>{start}</span>
                 </div>
 
@@ -91,7 +91,7 @@ export const TracingPanel = memo(
                 data-cy="resetTraceButton"
                 onClick={resetEnd}
               >
-                <div className="bg-green-nx-base flex-1 truncate rounded-md border border-slate-200 p-2 text-slate-50 shadow-sm transition duration-200 ease-in-out group-hover:opacity-60 dark:border-slate-700">
+                <div className="flex-1 truncate rounded-md border border-slate-200 bg-blue-500 p-2 text-slate-50 shadow-sm transition duration-200 ease-in-out group-hover:opacity-60 dark:border-slate-700 dark:bg-sky-500">
                   <span>{end}</span>
                 </div>
 

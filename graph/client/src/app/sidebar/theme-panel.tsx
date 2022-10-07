@@ -3,12 +3,12 @@ import {
   ComputerDesktopIcon,
   MoonIcon,
   SunIcon,
-} from '@heroicons/react/24/solid';
+} from '@heroicons/react/24/outline';
 import classNames from 'classnames';
 import { Fragment, useEffect, useState } from 'react';
 import { localStorageThemeKey, Theme, themeResolver } from '../theme-resolver';
 
-export default function ThemePanel() {
+export default function ThemePanel(): JSX.Element {
   const [theme, setTheme] = useState(
     (localStorage.getItem(localStorageThemeKey) as Theme) || 'system'
   );
@@ -21,18 +21,18 @@ export default function ThemePanel() {
     <Menu as="div" className="relative inline-block text-left">
       <div>
         <Menu.Button
-          className="dark:text-green-nx-base inline-flex w-full justify-center rounded-md p-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
+          className="inline-flex w-full justify-center rounded-md p-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 dark:text-sky-500"
           data-cy="theme-open-modal-button"
         >
           <span className="sr-only">Theme switcher</span>
           {theme === 'system' && (
-            <ComputerDesktopIcon className="h-5 w-5" aria-hidden="true" />
+            <ComputerDesktopIcon className="h-4 w-4" aria-hidden="true" />
           )}
           {theme === 'light' && (
-            <SunIcon className="h-5 w-5" aria-hidden="true" />
+            <SunIcon className="h-4 w-4" aria-hidden="true" />
           )}
           {theme === 'dark' && (
-            <MoonIcon className="h-5 w-5" aria-hidden="true" />
+            <MoonIcon className="h-4 w-4" aria-hidden="true" />
           )}
         </Menu.Button>
       </div>
@@ -52,14 +52,14 @@ export default function ThemePanel() {
                 <button
                   data-cy="system-theme-button"
                   className={classNames(
-                    theme === 'system' ? 'text-green-nx-base' : '',
+                    theme === 'system' ? 'text-blue-500 dark:text-sky-500' : '',
                     active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
                     'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                   )}
                   onClick={() => setTheme('system')}
                 >
                   <ComputerDesktopIcon
-                    className="mr-2 h-5 w-5"
+                    className="mr-2 h-4 w-4"
                     aria-hidden="true"
                   />
                   System
@@ -71,13 +71,13 @@ export default function ThemePanel() {
                 <button
                   data-cy="light-theme-button"
                   className={classNames(
-                    theme === 'light' ? 'text-green-nx-base' : '',
+                    theme === 'light' ? 'text-blue-500 dark:text-sky-500' : '',
                     active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
                     'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                   )}
                   onClick={() => setTheme('light')}
                 >
-                  <SunIcon className="mr-2 h-5 w-5" aria-hidden="true" />
+                  <SunIcon className="mr-2 h-4 w-4" aria-hidden="true" />
                   Light
                 </button>
               )}
@@ -87,13 +87,13 @@ export default function ThemePanel() {
                 <button
                   data-cy="dark-theme-button"
                   className={classNames(
-                    theme === 'dark' ? 'text-green-nx-base' : '',
+                    theme === 'dark' ? 'text-blue-500 dark:text-sky-500' : '',
                     active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
                     'group flex w-full items-center rounded-md px-2 py-2 text-sm'
                   )}
                   onClick={() => setTheme('dark')}
                 >
-                  <MoonIcon className="mr-2 h-5 w-5" aria-hidden="true" />
+                  <MoonIcon className="mr-2 h-4 w-4" aria-hidden="true" />
                   Dark
                 </button>
               )}
