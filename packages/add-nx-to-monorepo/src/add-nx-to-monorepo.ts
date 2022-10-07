@@ -5,44 +5,103 @@ import * as fs from 'fs';
 import * as cp from 'child_process';
 import { execSync } from 'child_process';
 import * as enquirer from 'enquirer';
-import * as yargsParser from 'yargs-parser';
-import { output, readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import {
+  getPackageManagerCommand,
+  joinPathFragments,
+  output,
+  readJsonFile,
+  writeJsonFile,
+} from '@nrwl/devkit';
 import ignore from 'ignore';
-import { directoryExists } from 'nx/src/utils/fileutils';
+import * as yargsParser from 'yargs-parser';
 
 const parsedArgs = yargsParser(process.argv, {
-  boolean: ['nxCloud'],
-  configuration: {
-    'strip-dashed': true,
-    'strip-aliased': true,
+  boolean: ['yes'],
+  alias: {
+    yes: ['y'],
   },
 });
 
-addNxToMonorepo().catch((e) => console.error(e));
+addNxToMonorepo().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
 
 export async function addNxToMonorepo() {
   const repoRoot = process.cwd();
+
+  if (!fs.existsSync(joinPathFragments(repoRoot, 'package.json'))) {
+    output.error({
+      title: `Run the command in the folder with a package.json file.`,
+    });
+    process.exit(1);
+  }
 
   output.log({
     title: `🐳 Nx initialization`,
   });
 
-  const useCloud = await askAboutNxCloud(parsedArgs);
-
-  output.log({
-    title: `🧑‍🔧 Analyzing the source code and creating configuration files`,
-  });
-
   const packageJsonFiles = allProjectPackageJsonFiles(repoRoot);
+  const scripts = combineAllScriptNames(repoRoot, packageJsonFiles);
 
-  const pds = createProjectDesc(repoRoot, packageJsonFiles);
+  let targetDefaults: string[];
+  let cacheableOperations: string[];
+  let scriptOutputs = {};
+  let useCloud;
 
-  if (pds.length === 0) {
-    output.error({ title: `Cannot find any projects in this monorepo` });
-    process.exit(1);
+  if (parsedArgs.yes !== true) {
+    output.log({
+      title: `🧑‍🔧 Please answer the following questions about the scripts found in your workspace in order to generate task runner configuration`,
+    });
+
+    targetDefaults = (
+      (await enquirer.prompt([
+        {
+          type: 'multiselect',
+          name: 'targetDefaults',
+          message:
+            'Which of the following scripts need to be run in deterministic/topoglogical order?',
+          choices: scripts,
+        },
+      ])) as any
+    ).targetDefaults;
+
+    cacheableOperations = (
+      (await enquirer.prompt([
+        {
+          type: 'multiselect',
+          name: 'cacheableOperations',
+          message:
+            'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
+          choices: scripts,
+        },
+      ])) as any
+    ).cacheableOperations;
+
+    for (const scriptName of cacheableOperations) {
+      // eslint-disable-next-line no-await-in-loop
+      scriptOutputs[scriptName] = await enquirer.prompt([
+        {
+          type: 'input',
+          name: scriptName,
+          message: `Does the "${scriptName}" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage)`,
+        },
+      ]);
+    }
+
+    useCloud = await askAboutNxCloud();
+  } else {
+    targetDefaults = [];
+    cacheableOperations = [];
+    useCloud = false;
   }
 
-  createNxJsonFile(repoRoot, pds);
+  createNxJsonFile(
+    repoRoot,
+    targetDefaults,
+    cacheableOperations,
+    scriptOutputs
+  );
 
   addDepsToPackageJson(repoRoot, useCloud);
 
@@ -53,34 +112,30 @@ export async function addNxToMonorepo() {
     initCloud(repoRoot);
   }
 
-  printFinalMessage(repoRoot);
+  printFinalMessage();
 }
 
-async function askAboutNxCloud(parsedArgs: any) {
-  if (parsedArgs.nxCloud === undefined) {
-    return enquirer
-      .prompt([
-        {
-          name: 'NxCloud',
-          message: `Enable distributed caching to make your CI faster`,
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-              hint: 'I want faster builds',
-            },
+async function askAboutNxCloud() {
+  return enquirer
+    .prompt([
+      {
+        name: 'NxCloud',
+        message: `Enable distributed caching to make your CI faster`,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'Yes',
+            hint: 'I want faster builds',
+          },
 
-            {
-              name: 'No',
-            },
-          ],
-          initial: 'Yes' as any,
-        },
-      ])
-      .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
-  } else {
-    return parsedArgs.nxCloud;
-  }
+          {
+            name: 'No',
+          },
+        ],
+        initial: 'Yes' as any,
+      },
+    ])
+    .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
 }
 
 // scanning package.json files
@@ -109,7 +164,7 @@ function allPackageJsonFiles(repoRoot: string, dirName: string) {
       }
       try {
         const s = fs.statSync(child);
-        if (!s.isDirectory() && c == 'package.json') {
+        if (s.isFile() && c == 'package.json') {
           res.push(path.relative(repoRoot, child));
         } else if (s.isDirectory()) {
           res = [...res, ...allPackageJsonFiles(repoRoot, child)];
@@ -131,95 +186,58 @@ function getIgnoredGlobs(repoRoot: string) {
   return ig;
 }
 
-// creating project descs
-interface ProjectDesc {
-  name: string;
-  dir: string;
-  mainFilePath: string;
-  scripts: string[];
-}
-
-function createProjectDesc(
+function combineAllScriptNames(
   repoRoot: string,
   packageJsonFiles: string[]
-): ProjectDesc[] {
-  const res = [];
+): string[] {
+  const res = new Set<string>();
   packageJsonFiles.forEach((p) => {
-    const dir = path.dirname(p);
     const packageJson = readJsonFile(path.join(repoRoot, p));
-    if (!packageJson.name) return;
-
-    const scripts = Object.keys(packageJson.scripts || {});
-    if (packageJson.main) {
-      res.push({
-        name: packageJson.name,
-        dir,
-        mainFilePath: path.join(dir, packageJson.main),
-        scripts,
-      });
-    } else if (packageJson.index) {
-      res.push({
-        name: packageJson.name,
-        dir,
-        mainFilePath: path.join(dir, packageJson.index),
-        scripts,
-      });
-    } else {
-      res.push({ name: packageJson.name, dir, mainFilePath: null, scripts });
-    }
-  });
-  return res;
-}
-
-function createNxJsonFile(repoRoot: string, projects: ProjectDesc[]) {
-  const allScripts = {};
-  for (const p of projects) {
-    for (const s of p.scripts) {
-      allScripts[s] = true;
-    }
-  }
-
-  const cacheableOperations = Object.keys(allScripts).filter(
-    (s) => s.indexOf('serve') === -1 && s.indexOf('start') === -1
-  );
-  const targetDefaults = cacheableOperations
-    .filter((c) => c === 'build' || c === 'prepare' || c === 'package')
-    .reduce(
-      (m, c) => ({
-        ...m,
-        [c]: { dependsOn: [`^${c}`] },
-      }),
-      {}
+    Object.keys(packageJson.scripts || {}).forEach((scriptName) =>
+      res.add(scriptName)
     );
-
-  const res = {
-    extends: 'nx/presets/npm.json',
-    tasksRunnerOptions: {
-      default: {
-        runner: 'nx/tasks-runners/default',
-        options: {
-          cacheableOperations,
-        },
-      },
-    },
-    targetDefaults,
-    affected: {
-      defaultBase: deduceDefaultBase(),
-    },
-    workspaceLayout: deduceWorkspaceLayout(repoRoot),
-  };
-
-  writeJsonFile(`${repoRoot}/nx.json`, res);
+  });
+  return [...res];
 }
 
-function deduceWorkspaceLayout(repoRoot: string) {
-  if (directoryExists(path.join(repoRoot, 'packages'))) {
-    return undefined;
-  } else if (directoryExists(path.join(repoRoot, 'projects'))) {
-    return { libsDir: 'projects', appsDir: 'projects' };
-  } else {
-    return undefined;
+function createNxJsonFile(
+  repoRoot: string,
+  targetDefaults: string[],
+  cacheableOperations: string[],
+  scriptOutputs: { [name: string]: string }
+) {
+  const nxJsonPath = joinPathFragments(repoRoot, 'nx.json');
+  let nxJson = {} as any;
+  try {
+    nxJson = readJsonFile(nxJsonPath);
+    // eslint-disable-next-line no-empty
+  } catch {}
+
+  nxJson.tasksRunnerOptions = nxJson.tasksRunnerOptions || {};
+  nxJson.tasksRunnerOptions.default = nxJson.tasksRunnerOptions.default || {};
+  nxJson.tasksRunnerOptions.default.runner =
+    nxJson.tasksRunnerOptions.default.runner || 'nx/tasks-runners/default';
+  nxJson.tasksRunnerOptions.default.options =
+    nxJson.tasksRunnerOptions.default.options || {};
+  nxJson.tasksRunnerOptions.default.options.cacheableOperations =
+    cacheableOperations;
+  nxJson.targetDefaults = nxJson.targetDefaults || {};
+  for (const scriptName of targetDefaults) {
+    nxJson.targetDefaults[scriptName] = nxJson.targetDefaults[scriptName] || {};
+    nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
   }
+  for (const [scriptName, scriptAnswerData] of Object.entries(scriptOutputs)) {
+    if (!scriptAnswerData[scriptName]) {
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+    nxJson.targetDefaults[scriptName] = nxJson.targetDefaults[scriptName] || {};
+    nxJson.targetDefaults[scriptName].outputs = [
+      `{projectRoot}/${scriptAnswerData[scriptName]}`,
+    ];
+  }
+  nxJson.defaultBase = deduceDefaultBase();
+  writeJsonFile(nxJsonPath, nxJson);
 }
 
 function deduceDefaultBase() {
@@ -256,7 +274,7 @@ function deduceDefaultBase() {
 
 // add dependencies
 function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
-  const json = readJsonFile(path.join(repoRoot, `package.json`));
+  const json = readJsonFile(joinPathFragments(repoRoot, `package.json`));
   if (!json.devDependencies) json.devDependencies = {};
   json.devDependencies['nx'] = require('../package.json').version;
   if (useCloud) {
@@ -266,64 +284,37 @@ function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
 }
 
 function runInstall(repoRoot: string) {
-  cp.execSync(getPackageManagerCommand(repoRoot).install, { stdio: [0, 1, 2] });
+  cp.execSync(getPackageManagerCommand().install, {
+    stdio: [0, 1, 2],
+    cwd: repoRoot,
+  });
 }
 
 function initCloud(repoRoot: string) {
   execSync(
     `${
-      getPackageManagerCommand(repoRoot).exec
+      getPackageManagerCommand().exec
     } nx g @nrwl/nx-cloud:init --installationSource=add-nx-to-monorepo`,
     {
       stdio: [0, 1, 2],
+      cwd: repoRoot,
     }
   );
 }
 
-function getPackageManagerCommand(repoRoot: string): {
-  install: string;
-  exec: string;
-} {
-  const packageManager = fs.existsSync(path.join(repoRoot, 'yarn.lock'))
-    ? 'yarn'
-    : fs.existsSync(path.join(repoRoot, 'pnpm-lock.yaml'))
-    ? 'pnpm'
-    : 'npm';
-
-  switch (packageManager) {
-    case 'yarn':
-      return {
-        install: 'yarn',
-        exec: 'yarn',
-      };
-
-    case 'pnpm':
-      return {
-        install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
-        exec: 'pnpx',
-      };
-
-    case 'npm':
-      return {
-        install: 'npm install --legacy-peer-deps',
-        exec: 'npx',
-      };
-  }
-}
-
-function printFinalMessage(repoRoot) {
+function printFinalMessage() {
   output.success({
     title: `🎉 Done!`,
     bodyLines: [
       `- Enabled Computation caching!`,
       `- Run "${
-        getPackageManagerCommand(repoRoot).exec
+        getPackageManagerCommand().exec
       } nx run-many --target=build" to run the build script for every project in the monorepo.`,
       `- Run it again to replay the cached computation.`,
       `- Run "${
-        getPackageManagerCommand(repoRoot).exec
+        getPackageManagerCommand().exec
       } nx graph" to see the structure of the monorepo.`,
-      `- Learn more at /recipe/adding-to-monorepo`,
+      `- Learn more at https://nx.dev/recipe/adding-to-monorepo`,
     ],
   });
 }
