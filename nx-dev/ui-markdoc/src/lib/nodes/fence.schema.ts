@@ -5,6 +5,7 @@ export const fence: Schema = {
   attributes: {
     content: { type: 'String', render: false, required: true },
     language: { type: 'String' },
+    fileName: { type: 'String', default: '' },
     process: { type: 'Boolean', render: false, default: true },
   },
   transform(node, config) {
