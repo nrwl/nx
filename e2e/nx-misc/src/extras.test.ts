@@ -264,4 +264,30 @@ describe('Extra Nx Misc Tests', () => {
       checkFilesExist(`${folder}/dummy.txt`);
     }, 120000);
   });
+
+  describe('Nested ignore files', () => {
+    it('should not find project in excluded folder', () => {
+      const lib = uniq('lib');
+      updateFile(
+        `libs/${lib}/project.json`,
+        JSON.stringify({
+          name: lib,
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                command: `echo Built ${lib}`,
+              },
+            },
+          },
+        })
+      );
+      const result = runCLI(`build ${lib}`);
+      expect(result).toContain(`Built ${lib}`);
+      updateFile('libs/.gitignore', lib);
+      expect(runCLI(`build ${lib}`, { silenceError: true })).toContain(
+        `Cannot find project '${lib}'`
+      );
+    });
+  });
 });

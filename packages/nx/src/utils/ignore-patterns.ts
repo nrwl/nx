@@ -258,14 +258,23 @@ function getIgnoredGlobsFromFile(file: string, tree?: Tree): string[] {
         // are a directory layer deep, even if the pattern doesn't start with a `/`. To mimic this
         // functionality, we need to add a globstar pattern.
         if (!l.startsWith('/')) {
-          patterns.push(joinPathFragments('**', l));
+          if (l.startsWith('!')) {
+            patterns.push('!' + joinPathFragments('**', l.substring(1)));
+          } else {
+            patterns.push(joinPathFragments('**', l));
+          }
         }
       } else {
-        patterns.push(joinPathFragments(directory, l));
+        // Exclamation points must be moved to the front of a pattern.
+        const [prefix, suffix] = l.startsWith('!')
+          ? ['!', l.substring(1)]
+          : ['', l];
+
+        patterns.push(prefix + joinPathFragments(directory, suffix));
         // For nested gitignore files, we need a similar globstar pattern. In this case, we scope it
         // to the directory that contains the ignore file.
         if (!l.startsWith('/')) {
-          patterns.push(joinPathFragments(directory, '**', l));
+          patterns.push(prefix + joinPathFragments(directory, '**', suffix));
         }
       }
     }
@@ -280,6 +289,6 @@ function getIgnoredGlobsFromFile(file: string, tree?: Tree): string[] {
  */
 function normalizePatterns(patterns: string[], root) {
   return patterns.map((x) =>
-    x.replace(`^${normalizePath(workspaceRoot)}/`, '')
+    x.replace(new RegExp(`^${normalizePath(workspaceRoot)}/`), '')
   );
 }

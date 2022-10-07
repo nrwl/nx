@@ -7,14 +7,13 @@
  */
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { AsyncSubscription, Event } from '@parcel/watcher';
-import { join, relative } from 'path';
+import { basename, join, relative } from 'path';
 import { FULL_OS_SOCKET_PATH } from '../socket-utils';
 import { handleServerProcessTermination } from './shutdown-utils';
 import { Server } from 'net';
-import ignore from 'ignore';
 import { normalizePath } from '../../utils/path';
 import {
-  getIgnoredGlobsAndIgnore,
+  getIgnoredGlobsAndIgnoreSync,
   locatedIgnoreFiles,
 } from '../../utils/ignore-patterns';
 
@@ -44,8 +43,8 @@ export type FileWatcherCallback = (
  * It's possible that glob support will be added in the C++ layer in the future as well:
  * https://github.com/parcel-bundler/watcher/issues/64
  */
-async function configureIgnoredFiles() {
-  const { patterns, fileIsIgnored } = await getIgnoredGlobsAndIgnore({
+function configureIgnoredFiles() {
+  const { patterns, fileIsIgnored } = getIgnoredGlobsAndIgnoreSync({
     knownIgnoredPaths: [FULL_OS_SOCKET_PATH],
   });
   return { fileIsIgnored, ignoredGlobPatterns: patterns };
@@ -88,7 +87,7 @@ export async function subscribeToWorkspaceChanges(
    * executed by packages which do not have its necessary native binaries available.
    */
   const watcher = await import('@parcel/watcher');
-  const { fileIsIgnored, ignoredGlobPatterns } = await configureIgnoredFiles();
+  let { fileIsIgnored, ignoredGlobPatterns } = configureIgnoredFiles();
 
   return await watcher.subscribe(
     workspaceRoot,
@@ -106,7 +105,12 @@ export async function subscribeToWorkspaceChanges(
           type: event.type,
           path: normalizePath(relative(workspaceRoot, event.path)),
         };
-        if (locatedIgnoreFiles.has(workspaceRelativeEvent.path)) {
+        if (
+          locatedIgnoreFiles.has(workspaceRelativeEvent.path) ||
+          ['.nxignore', '.gitignore'].includes(
+            basename(workspaceRelativeEvent.path)
+          )
+        ) {
           hasIgnoreFileUpdate = true;
         }
         workspaceRelativeEvents.push(workspaceRelativeEvent);
@@ -114,10 +118,9 @@ export async function subscribeToWorkspaceChanges(
 
       // If the ignore files themselves have changed we need to dynamically update our cached ignoreGlobs
       if (hasIgnoreFileUpdate) {
-        handleServerProcessTermination({
-          server,
-          reason: 'Stopping the daemon the set of ignored files changed.',
-        });
+        // By updating the fileIsIgnored function we know to ignore events from
+        // the new ignore files. We still recieve them, since the watcher is not restarted.
+        ({ fileIsIgnored } = configureIgnoredFiles());
       }
 
       const nonIgnoredEvents = workspaceRelativeEvents.filter(

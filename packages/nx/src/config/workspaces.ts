@@ -655,7 +655,9 @@ export function globForProjectFiles(
 
   performance.mark('start-glob-for-projects');
 
-  const ignoredPatterns = getIgnoredGlobsSync();
+  const ignoredPatterns = getIgnoredGlobsSync({
+    knownIgnoredPaths: globsToExclude,
+  });
 
   const globResults = globSync(combinedProjectGlobPattern, {
     ignore: ignoredPatterns,
