@@ -28,7 +28,7 @@ function findNextAvailablePort(tree: Tree) {
   return nextAvailablePort;
 }
 
-export default async function remote(tree: Tree, options: Schema) {
+export async function remote(tree: Tree, options: Schema) {
   const projects = getProjects(tree);
   if (options.host && !projects.has(options.host)) {
     throw new Error(
@@ -152,3 +152,5 @@ export class AppModule {}`
     tree.write(pathToIndexHtml, newIndexContents);
   }
 }
+
+export default remote;
