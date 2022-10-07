@@ -1416,6 +1416,11 @@
             "file": "shared/guides/storybook/storybook-composition-setup"
           },
           {
+            "id": "angular-storybook-compodoc",
+            "name": "Angular: Set up Compodoc for Storybook on Nx",
+            "file": "shared/guides/storybook/angular-storybook-compodoc"
+          },
+          {
             "id": "angular-storybook-targets",
             "name": "Angular: Information about the Storybook targets",
             "file": "shared/guides/storybook/angular-storybook-targets"
