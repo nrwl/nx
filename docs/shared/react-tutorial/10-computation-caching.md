@@ -25,6 +25,14 @@ chunk    {2} polyfills.55535a35b1529d884ca3.esm.js (polyfills) 239 KiB ={0}= [in
 chunk    {3} styles.3ff695c00d717f2d2a11.css (styles) 147 bytes ={0}= [initial] [rendered]
 ```
 
+Note the usage of carot here in the `^build` value. This is used to signify that all project's `build` targets are dependent on the `build` target of all dependencies.
+
+2. Our `@myorg/data` lib is a dependency of our application, and if we look at `libs/data/project.json`, we can see that it has a `build` target.
+   (As you may recall, we used the `@nrwl/js:lib` generator to create this lib, which includes a `build` target by default.)
+
+You can read more about the Nx Task Graph and how to define your own task graph rules [here](concepts/mental-model#the-task-graph).
+{% /callout %}
+
 **Now, run `npx nx build todos` again, and you see the results appearing instantly:**
 
 ```shell
@@ -55,7 +63,7 @@ Based on the state of the source code and the environment, Nx figured out that i
 Nx read the output from the cache instead of running the command for 1 out of 2 projects.
 ```
 
-Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache [here](/concepts/how-caching-works).
+Nx built `api` and retrieved `todos` and its dependent tasks from its computation cache. Read more about the cache [here](/concepts/how-caching-works).
 
 > Add --parallel to any command, and Nx does most of the work in parallel.
 

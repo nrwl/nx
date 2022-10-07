@@ -27,8 +27,12 @@ myorg/
 │       │   ├── lib/
 │       │   │   └── data.ts
 │       │   └── index.ts
+│       ├── .babelrc
+│       ├── .eslintrc.json
 │       ├── jest.config.ts
+│       ├── package.json
 │       ├── project.json
+│       ├── README.md
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
@@ -81,7 +85,7 @@ import { useEffect, useState } from 'react';
 import { Todo } from '@myorg/data';
 
 export const App = () => {
-  ...
+  // ...
 };
 
 export default App;

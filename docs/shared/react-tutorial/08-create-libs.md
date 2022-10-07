@@ -38,8 +38,11 @@ myorg/
 │       │   │   ├── ui.spec.tsx
 │       │   │   └── ui.tsx
 │       │   └── index.ts
+│       ├── .babelrc
+│       ├── .estlintrx.json
 │       ├── jest.config.ts
 │       ├── project.json
+│       ├── README.md
 │       ├── tsconfig.json
 │       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
@@ -52,14 +55,14 @@ myorg/
 The `libs/ui/src/lib/ui.tsx` file looks like this:
 
 ```typescript
-import './ui.module.css';
+import styles from './ui.module.css';
 
 /* eslint-disable-next-line */
 export interface UiProps {}
 
 export function Ui(props: UiProps) {
   return (
-    <div>
+    <div className={styles['container']}>
       <h1>Welcome to Ui!</h1>
     </div>
   );
@@ -97,11 +100,7 @@ myorg/
 │       │   │   ├── ui.spec.tsx
 │       │   │   └── ui.tsx
 │       │   └── index.ts
-│       ├── jest.config.ts
-│       ├── project.json
-│       ├── tsconfig.json
-│       ├── tsconfig.lib.json
-│       └── tsconfig.spec.json
+│       └── ...
 ├── tools/
 ├── nx.json
 ├── package.json
@@ -114,7 +113,7 @@ myorg/
 
 ```typescript
 import { Todo } from '@myorg/data';
-import './todos.module.css';
+import styles from './todos.module.css';
 
 export interface TodosProps {
   todos: Todo[];
