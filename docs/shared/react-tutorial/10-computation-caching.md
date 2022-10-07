@@ -30,7 +30,7 @@ Note the usage of carot here in the `^build` value. This is used to signify that
 2. Our `@myorg/data` lib is a dependency of our application, and if we look at `libs/data/project.json`, we can see that it has a `build` target.
    (As you may recall, we used the `@nrwl/js:lib` generator to create this lib, which includes a `build` target by default.)
 
-You can read more about the Nx Task Graph and how to define your own task graph rules [here](concepts/mental-model#the-task-graph).
+You can read more about [the mental model of Nx Task Graph](concepts/mental-model#the-task-graph), and [how to define your own Task Pipeline Connfiguration](concepts/task-pipeline-configuration).
 {% /callout %}
 
 **Now, run `npx nx build todos` again, and you see the results appearing instantly:**
