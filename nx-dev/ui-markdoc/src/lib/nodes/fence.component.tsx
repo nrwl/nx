@@ -1,5 +1,5 @@
 import { ClipboardDocumentIcon } from '@heroicons/react/24/outline';
-import React, { useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 // @ts-ignore
@@ -15,19 +15,28 @@ function resolveLanguage(lang: string) {
       return lang;
   }
 }
-function CodeWrapper({ children }: any) {
-  return (
-    <div className="hljs not-prose my-4 w-full overflow-x-auto rounded-lg border border-slate-100 bg-slate-50/20 p-4 font-mono text-sm dark:border-slate-700 dark:bg-slate-800/60">
-      {children}
+function CodeWrapper(
+  fileName: string
+): ({ children }: { children: ReactNode }) => JSX.Element {
+  return ({ children }: { children: ReactNode }) => (
+    <div className="hljs not-prose my-4 w-full overflow-x-auto rounded-lg border border-slate-100 bg-slate-50/20 font-mono text-sm dark:border-slate-700 dark:bg-slate-800/60">
+      {!!fileName && (
+        <div className="flex border-b border-slate-100 bg-slate-50/50 px-4 py-2 italic text-slate-400 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-500">
+          {fileName}
+        </div>
+      )}
+      <div className="p-4">{children}</div>
     </div>
   );
 }
 
 export function Fence({
   children,
+  fileName,
   language,
 }: {
   children: string;
+  fileName: string;
   language: string;
 }) {
   const [copied, setCopied] = useState(false);
@@ -54,7 +63,7 @@ export function Fence({
         >
           <button
             type="button"
-            className="not-prose absolute top-6 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
+            className="not-prose absolute top-7 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
           >
             <ClipboardDocumentIcon className="h-4 w-4" />
             <span className="ml-1 text-xs">{copied ? 'Copied!' : 'Copy'}</span>
@@ -64,7 +73,7 @@ export function Fence({
           useInlineStyles={false}
           language={resolveLanguage(language)}
           children={children}
-          PreTag={CodeWrapper}
+          PreTag={CodeWrapper(fileName)}
         />
       </div>
     </div>

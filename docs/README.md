@@ -26,6 +26,16 @@ Cards allow to show content in a grid system with a title, a description, a type
 {% /cards %}
 ```
 
+#### Code
+
+You can add specific languages, a filename and allow or not to process interpolation _(default is `false`)_ on the code snippet displayed.
+
+````
+‎```javascript {% fileName="main.css" %}
+‎ const code = "goes here";
+‎```
+````
+
 #### Custom iframes
 
 We can display a special iframe and setting its width inside the document.
