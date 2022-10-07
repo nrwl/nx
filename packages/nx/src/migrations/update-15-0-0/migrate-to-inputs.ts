@@ -6,7 +6,7 @@ import {
   updateProjectConfiguration,
   updateWorkspaceConfiguration,
 } from '../../generators/utils/project-configuration';
-import { join } from 'path';
+import { joinPathFragments } from '../../utils/path';
 
 const skippedFiles = [
   'package.json', // Not to be added to filesets
@@ -73,7 +73,9 @@ export default async function (tree: Tree) {
           const projectSpecificFileset = new Set(
             project.namedInputs.projectSpecificFiles ?? []
           );
-          projectSpecificFileset.add(join('{workspaceRoot}', files));
+          projectSpecificFileset.add(
+            joinPathFragments('{workspaceRoot}', files)
+          );
           project.namedInputs.projectSpecificFiles = Array.from(
             projectSpecificFileset
           );
@@ -81,7 +83,7 @@ export default async function (tree: Tree) {
         }
       } else {
         workspaceConfiguration.namedInputs.sharedGlobals.push(
-          join('{workspaceRoot}', files)
+          joinPathFragments('{workspaceRoot}', files)
         );
       }
     }
