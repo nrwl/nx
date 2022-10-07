@@ -1,12 +1,12 @@
-import { Dirent, existsSync, readdirSync } from 'fs';
 import { readFileSync } from 'fs-extra';
-import { readdir } from 'fs/promises';
-import ignore, { Ignore } from 'ignore';
-import { dirname, join, relative } from 'path';
-import { Tree, VirtualDirEnt } from '../generators/tree';
+import ignore from 'ignore';
+import { dirname } from 'path';
 import { logger } from './logger';
 import { joinPathFragments, normalizePath } from './path';
 import { workspaceRoot } from './workspace-root';
+import * as fg from 'fast-glob';
+import { readFile } from 'fs/promises';
+import { Tree } from '../generators/tree';
 
 const ALWAYS_IGNORE = ['node_modules', '.git'];
 
@@ -68,29 +68,41 @@ export function getIgnoredGlobsSync(
 export async function getIgnoredGlobsAndIgnore(
   options?: GetIgnoredGlobsOptions
 ) {
-  const ig = ignore();
   const { ignoreFiles, knownIgnoredPaths } = getGlobOptions(options);
-  const patterns = [
-    ...knownIgnoredPaths,
-    ...(await getIgnoredGlobsFromDirectory(
-      ignoreFiles,
-      ig.add(knownIgnoredPaths)
-    )),
-  ];
-  return { patterns, fileIsIgnored: ig.ignores.bind(ig) };
+  const foundIgnoreFiles = await fg(`**/{${ignoreFiles.join(',')}}`, {
+    ignore: knownIgnoredPaths,
+    cwd: workspaceRoot,
+  });
+  for (const ignoreFile of foundIgnoreFiles) {
+    const fileContents = await readFile(ignoreFile, { encoding: 'utf-8' });
+    knownIgnoredPaths.push(
+      ...parseIgnoredGlobsFromFile(fileContents, dirname(ignoreFile))
+    );
+  }
+
+  const ig = ignore().add(knownIgnoredPaths);
+  return {
+    patterns: knownIgnoredPaths,
+    fileIsIgnored: ig.ignores.bind(ig),
+  };
 }
 
 export function getIgnoredGlobsAndIgnoreSync(options?: GetIgnoredGlobsOptions) {
-  const ig = ignore();
   const { ignoreFiles, knownIgnoredPaths } = getGlobOptions(options);
+  const foundIgnoreFiles = fg.sync(`**/{${ignoreFiles.join(',')}}`, {
+    ignore: knownIgnoredPaths,
+    cwd: workspaceRoot,
+  });
+  for (const ignoreFile of foundIgnoreFiles) {
+    const fileContents = readFileSync(ignoreFile, { encoding: 'utf-8' });
+    knownIgnoredPaths.push(
+      ...parseIgnoredGlobsFromFile(fileContents, dirname(ignoreFile))
+    );
+  }
+
+  const ig = ignore().add(knownIgnoredPaths);
   return {
-    patterns: [
-      ...knownIgnoredPaths,
-      ...getIgnoredGlobsFromDirectorySync(
-        ignoreFiles,
-        ig.add(knownIgnoredPaths)
-      ),
-    ],
+    patterns: knownIgnoredPaths,
     fileIsIgnored: ig.ignores.bind(ig),
   };
 }
@@ -99,140 +111,31 @@ export function getIgnoredGlobsInTree(
   tree: Tree,
   options?: GetIgnoredGlobsOptions
 ) {
-  const ig = ignore();
   const { ignoreFiles, knownIgnoredPaths } = getGlobOptions(options);
-  return {
-    patterns: [
-      ...knownIgnoredPaths,
-      ...getIgnoredGlobsFromDirectorySync(
-        ignoreFiles,
-        ig.add(knownIgnoredPaths),
-        '.',
-        tree
-      ),
-    ],
-    fileIsIgnored: ig.ignores.bind(ig),
-  };
-}
+  const ig = ignore();
 
-async function getIgnoredGlobsFromDirectory(
-  ignoreFiles: string[],
-  ignore: Ignore,
-  directory = workspaceRoot
-): Promise<string[]> {
-  const patterns = getPatternsFromDirectory(directory, ignoreFiles);
-  ignore.add(patterns);
-  const promises: Promise<string[]>[] = await visitChildDirectories(
-    directory,
-    ignore,
-    (p) => getIgnoredGlobsFromDirectory(ignoreFiles, ignore, p)
-  );
-
-  patterns.push(...(await Promise.all(promises)).flat());
-  return patterns;
-}
-
-function getIgnoredGlobsFromDirectorySync(
-  ignoreFiles: string[],
-  ig = ignore(),
-  directory = workspaceRoot,
-  tree?: Tree
-) {
-  const patterns = getPatternsFromDirectory(directory, ignoreFiles, tree);
-  ig.add(patterns);
-  const childPatterns: string[] = visitChildDirectoriesSync(
-    directory,
-    ig,
-    (childDirectory) =>
-      getIgnoredGlobsFromDirectorySync(ignoreFiles, ig, childDirectory, tree),
-    tree
-  ).flat();
-
-  patterns.push(...childPatterns);
-  return patterns;
-}
-
-function getPatternsFromDirectory(
-  directory: string,
-  ignoreFiles: string[],
-  tree?: Tree
-) {
-  try {
-    let patterns: string[] = [];
-    const validIgnoreFiles = ignoreFiles.map((x) => join(directory, x));
-    for (const ignoreFile of validIgnoreFiles) {
-      if (tree ? tree.exists(ignoreFile) : existsSync(ignoreFile)) {
-        if (!tree) {
-          locatedIgnoreFiles.add(
-            normalizePath(relative(workspaceRoot, ignoreFile))
-          );
-        }
-        patterns = patterns.concat(getIgnoredGlobsFromFile(ignoreFile, tree));
+  function addGlobPatternsFromChildDirectories(directory) {
+    const dirEnts = tree.children(directory, { withFileTypes: true });
+    for (const entry of dirEnts) {
+      const fullPath = joinPathFragments(directory, entry.name);
+      if (entry.isDirectory() && !ALWAYS_IGNORE.includes(entry.name)) {
+        addGlobPatternsFromChildDirectories(fullPath);
+      } else if (ignoreFiles.includes(entry.name)) {
+        const fileContents = tree.read(fullPath).toString();
+        const newPatterns = parseIgnoredGlobsFromFile(fileContents, directory);
+        ig.add(newPatterns);
+        knownIgnoredPaths.push(...newPatterns);
       }
     }
-    return patterns;
-  } catch (e) {
-    console.warn(e);
+    ig.add(knownIgnoredPaths);
   }
-  return [];
-}
 
-async function visitChildDirectories<T>(
-  directory: string,
-  ignore: Ignore,
-  visitor: (p: string) => T
-): Promise<T[]> {
-  const directoryEntries = await readdir(directory, {
-    withFileTypes: true,
-  }).catch(() => []);
-  return visitChildDirectoriesFromDirEnts(
-    directory,
-    directoryEntries,
-    ignore,
-    visitor
-  );
-}
+  addGlobPatternsFromChildDirectories('.');
 
-function visitChildDirectoriesSync<T>(
-  directory: string,
-  ignore: Ignore,
-  visitor: (p: string) => T,
-  tree?: Tree
-): T[] {
-  try {
-    const directoryEntries: (Dirent | VirtualDirEnt)[] = tree
-      ? tree.children(directory, { withFileTypes: true })
-      : readdirSync(directory, { withFileTypes: true });
-
-    return visitChildDirectoriesFromDirEnts(
-      directory,
-      directoryEntries,
-      ignore,
-      visitor
-    );
-  } catch {
-    return [];
-  }
-}
-
-function visitChildDirectoriesFromDirEnts<T>(
-  directory: string,
-  directoryEntries: (Dirent | VirtualDirEnt)[],
-  ignore: Ignore,
-  visitor: (p: string) => T,
-  tree?: Tree
-): T[] {
-  const returnValues: T[] = [];
-  for (const directoryEntry of directoryEntries) {
-    const filePath = join(directory, directoryEntry.name);
-    if (
-      directoryEntry.isDirectory() &&
-      !ignore.ignores(tree ? filePath : relative(workspaceRoot, filePath))
-    ) {
-      returnValues.push(visitor(filePath));
-    }
-  }
-  return returnValues;
+  return {
+    patterns: knownIgnoredPaths,
+    fileIsIgnored: ig.ignores.bind(ig),
+  };
 }
 
 /**
@@ -241,13 +144,14 @@ function visitChildDirectoriesFromDirEnts<T>(
  * @param tree A tree to use instead of fs operations
  * @returns string[]: a list of patterns to ignore
  */
-function getIgnoredGlobsFromFile(file: string, tree?: Tree): string[] {
+function parseIgnoredGlobsFromFile(
+  fileContents: string,
+  prefix: string
+): string[] {
   const patterns: string[] = [];
-  const directory = dirname(file);
+  const directory = prefix;
   try {
-    const lines = (
-      tree ? tree.read(file, 'utf-8') : readFileSync(file, 'utf-8')
-    ).split('\n');
+    const lines = fileContents.split('\n');
     for (const line of lines) {
       const l = line.trim();
       if (!l.length || l.startsWith('#')) continue;
@@ -279,16 +183,15 @@ function getIgnoredGlobsFromFile(file: string, tree?: Tree): string[] {
       }
     }
   } catch (e) {
-    logger.warn(`NX was unable to parse ignore file: ${file}`);
+    logger.warn(`NX was unable to parse ignore file: ${directory}`);
   }
-  return normalizePatterns(patterns, tree ? tree.root : workspaceRoot);
+  return normalizePatterns(patterns, workspaceRoot);
 }
 
 /**
  * Ensure all patterns are relative to workspace root
  */
+const regex = new RegExp(`^${normalizePath(workspaceRoot)}/`);
 function normalizePatterns(patterns: string[], root) {
-  return patterns.map((x) =>
-    x.replace(new RegExp(`^${normalizePath(workspaceRoot)}/`), '')
-  );
+  return patterns.map((x) => x.replace(regex, ''));
 }
