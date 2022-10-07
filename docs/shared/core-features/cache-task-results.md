@@ -10,7 +10,7 @@ about to run has been executed before, so it can use the cache to restore the re
 
 To enable caching for `build` and `test`, edit the `cacheableOperations` property in `nx.json` to include the `build` and `test` tasks:
 
-```json title="nx.json"
+```json {% fileName="nx.json" %}
 {
   "tasksRunnerOptions": {
     "default": {

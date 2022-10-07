@@ -16,7 +16,7 @@ npm i @nrwl/eslint-plugin-nx @nrwl/devkit
 
 And configure the rule in your root `.eslintrc.json` file:
 
-```jsonc
+```jsonc {% fileName=".eslintrc.json" %}
 {
   "plugins": ["@nrwl/nx"],
   // ...
@@ -40,8 +40,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
-// client/package.json
+```jsonc {% fileName="client/package.json" %}
 {
   // ... more project configuration here
   "nx": {
@@ -50,8 +49,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 }
 ```
 
-```jsonc
-// admin/package.json
+```jsonc {% fileName="admin/package.json" %}
 {
   // ... more project configuration here
   "nx": {
@@ -60,8 +58,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 }
 ```
 
-```jsonc
-// utils/package.json
+```jsonc {% fileName="utils/package.json" %}
 {
   // ... more project configuration here
   "nx": {
@@ -73,24 +70,21 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
-// client/project.json
+```jsonc {% fileName="client/package.json" %}
 {
   // ... more project configuration here
   "tags": ["scope:client"]
 }
 ```
 
-```jsonc
-// admin/project.json
+```jsonc {% fileName="admin/project.json" %}
 {
   // ... more project configuration here
   "tags": ["scope:admin"]
 }
 ```
 
-```jsonc
-// utils/project.json
+```jsonc {% fileName="utils/project.json" %}
 {
   // ... more project configuration here
   "tags": ["scope:shared"]
