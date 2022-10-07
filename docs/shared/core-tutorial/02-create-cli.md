@@ -29,7 +29,7 @@ Create a `project.json` file for your Go CLI.
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "go build -o='../../dist/packages/cli/' ./src/ascii.go",
+        "command": "go build -o=../../dist/packages/cli/ ./src/ascii.go",
         "cwd": "packages/cli"
       }
     },
@@ -49,7 +49,7 @@ You could have the exact same functionality with a `package.json` file with a `s
 ```json
 {
   "scripts": {
-    "build": "go build -o='../../dist/packages/cli/' ./src/ascii.go",
+    "build": "go build -o ../../dist/packages/cli/ ./src/ascii.go",
     "serve": "go run ./src/ascii.˙go"
   }
 }
