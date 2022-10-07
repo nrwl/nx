@@ -109,16 +109,6 @@ Default: false
 
 Ignore cycles in the task graph
 
-### ~~only-failed~~
-
-Type: boolean
-
-Default: false
-
-**Deprecated:** The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.
-
-Isolate projects which previously failed
-
 ### runner
 
 Type: string

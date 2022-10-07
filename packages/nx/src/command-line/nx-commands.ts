@@ -478,13 +478,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
         'This is the configuration to use when performing tasks on projects',
       type: 'string',
     })
-    .options('only-failed', {
-      deprecated:
-        'The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.',
-      describe: 'Isolate projects which previously failed',
-      type: 'boolean',
-      default: false,
-    })
     .option('verbose', {
       type: 'boolean',
       describe:
@@ -539,13 +532,6 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       describe:
         'This is the configuration to use when performing tasks on projects',
       type: 'string',
-    })
-    .options('only-failed', {
-      deprecated:
-        'The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.',
-      describe: 'Only run the target on projects which previously failed',
-      type: 'boolean',
-      default: false,
     })
     .option('exclude', {
       describe: 'Exclude certain projects from being processed',
