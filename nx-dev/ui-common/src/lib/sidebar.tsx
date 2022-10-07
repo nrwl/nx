@@ -44,7 +44,7 @@ function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
       <ul>
         <li className="mt-2">
           {section.itemList
-            .filter((i) => !!i.itemList.length)
+            .filter((i) => !!i.itemList?.length)
             .map((item, index) => (
               <SidebarSectionItems key={item.id + '-' + index} item={item} />
             ))}
@@ -81,9 +81,14 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         )}
         onClick={handleCollapseToggle}
       >
-        {item.name}
-        {item.disableCollapsible ? null : (
-          <CollapsibleIcon isCollapsed={collapsed} />
+        {item.disableCollapsible ? (
+          <Link href={item.id as string} passHref>
+            <a className="hover:underline">{item.name}</a>
+          </Link>
+        ) : (
+          <>
+            {item.name} <CollapsibleIcon isCollapsed={collapsed} />
+          </>
         )}
       </h5>
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
