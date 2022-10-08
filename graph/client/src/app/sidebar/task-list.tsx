@@ -181,7 +181,6 @@ function mapToSidebarProjectWithTasks(
 
 export interface TaskListProps {
   projects: ProjectGraphNode[];
-  taskGraphs: Record<string, Record<string, Record<string, Task>>>;
   workspaceLayout: WorkspaceLayout;
   selectedTask: string;
   selectTask: (

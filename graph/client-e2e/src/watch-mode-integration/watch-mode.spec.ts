@@ -3,8 +3,8 @@ import { getProjectItems } from '../support/app.po';
 describe('graph-client in watch mode', () => {
   beforeEach(() => {
     cy.clock();
-    cy.visit('/');
-    cy.tick(2000);
+    cy.visit('/projects');
+    cy.tick(3000);
   });
 
   it('should auto-select new libs as they are created', () => {
@@ -26,14 +26,14 @@ describe('graph-client in watch mode', () => {
     cy.get('[data-project="existing-app-1"]').click();
     cy.get('[data-project="existing-lib-1"]').click();
 
-    cy.tick(6000);
+    cy.tick(5000);
 
     checkSelectedProjects(3, []);
 
-    cy.tick(6000);
+    cy.tick(5000);
     checkSelectedProjects(4, []);
 
-    cy.tick(6000);
+    cy.tick(5000);
     checkSelectedProjects(5, []);
   });
 

@@ -346,15 +346,8 @@ async function startServer(
 
     let pathname = join(__dirname, '../core/graph/', sanitizePath);
 
-    if (!existsSync(pathname)) {
-      // if the file is not found, return 404
-      res.statusCode = 404;
-      res.end(`File ${pathname} not found!`);
-      return;
-    }
-
-    // if is a directory, then look for index.html
-    if (statSync(pathname).isDirectory()) {
+    // if the file is not found or is a directory, return index.html
+    if (!existsSync(pathname) || statSync(pathname).isDirectory()) {
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(html);
       return;

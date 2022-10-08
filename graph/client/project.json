@@ -86,6 +86,34 @@
             }
           ]
         },
+        "release-static": {
+          "assets": [
+            "graph/client/src/favicon.ico",
+            {
+              "input": "graph/client/src/assets/graphs",
+              "output": "/assets/graphs",
+              "glob": "nx-examples.json"
+            },
+            {
+              "input": "graph/client/src/assets/release-static",
+              "output": "/",
+              "glob": "environment.js"
+            }
+          ],
+          "optimization": true,
+          "sourceMap": false,
+          "extractCss": true,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false,
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "2mb",
+              "maximumError": "5mb"
+            }
+          ]
+        },
         "watch": {
           "assets": [
             "graph/client/src/favicon.ico",
@@ -118,6 +146,10 @@
         "watch": {
           "buildTarget": "graph-client:build-base:watch",
           "port": 4204
+        },
+        "release-static": {
+          "buildTarget": "graph-client:build-base:release-static",
+          "port": 4205
         }
       },
       "defaultConfiguration": "dev"
