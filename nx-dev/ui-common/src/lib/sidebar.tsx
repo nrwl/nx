@@ -82,7 +82,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         onClick={handleCollapseToggle}
       >
         {item.disableCollapsible ? (
-          <Link href={item.id as string} passHref>
+          <Link href={item.path as string} passHref>
             <a className="hover:underline">{item.name}</a>
           </Link>
         ) : (
