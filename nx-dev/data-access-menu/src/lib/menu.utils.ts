@@ -7,7 +7,7 @@ export function createMenuItems(root: DocumentMetadata): MenuItem[] {
   const createPathMetadata = (g: DocumentMetadata, parentId = ''): MenuItem => {
     const pathData = {
       ...g,
-      path: g.path ?? `/${parentId}/${g.id}`,
+      path: g.path ?? `${parentId}/${g.id}`,
     };
 
     if (Array.isArray(g.itemList)) {
@@ -18,15 +18,7 @@ export function createMenuItems(root: DocumentMetadata): MenuItem[] {
 
     return pathData;
   };
-
-  return (
-    items?.map((item) => {
-      return {
-        ...item,
-        itemList: item.itemList?.map((ii) => createPathMetadata(ii, item.id)),
-      };
-    }) ?? []
-  );
+  return items?.map((item) => createPathMetadata(item)) ?? [];
 }
 
 export function getBasicSection(items: MenuItem[]): MenuSection {
