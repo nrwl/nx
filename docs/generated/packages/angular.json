@@ -652,6 +652,12 @@
         "title": "Init Angular Plugin",
         "description": "Initializes the `@nrwl/angular` plugin. NOTE: Does not work in the `--dry-run` mode.",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:init --style=scss",
+            "description": "Installs angular dependencies and initializes the `@nrwl/angular` plugin with the `scss` stylesheet format."
+          }
+        ],
         "properties": {
           "unitTestRunner": {
             "type": "string",
@@ -981,6 +987,7 @@
         },
         "additionalProperties": false,
         "required": ["name"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Library\" %}\n\nCreates the `my-ui-lib` library with an `ui` tag:\n\n```bash\nnx g @nrwl/angular:library my-ui-lib --tags=ui\n```\n\n{% /tab %}\n\n{% tab label=\"Nested Folder & Import\"%}\nCreates the `my-lib` library in the `nested` directory and sets the import path to `@myorg/nested/my-lib`:\n\n```bash\nnx g @nrwl/angular:library --directory=nested --importPath=@myorg/nested/my-lib my-lib\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone component\"%}\nCreates the `my-standalone-lib` library with a standalone component as an entry point instead of an ng-module. The component can be used via the `myorg-standalone-component` selector.\n\n```bash\nnx g @nrwl/angular:library --standalone --selector=myorg-standalone-component  my-standalone-lib\n```\n\n{% /tab %}\n",
         "presets": []
       },
       "aliases": ["lib"],
@@ -1526,6 +1533,16 @@
         "description": "Adds NgRx support to an application or library.",
         "cli": "nx",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:ngrx --root --module=apps/my-app/src/app/app.module.ts --facade=false placeholder",
+            "description": "Add root ngrx configration to the `my-app` application"
+          },
+          {
+            "command": "nx g @nrwl/angular:ngrx --module=libs/my-lib/src/lib/my-lib.module.ts --facade=true --root=false users",
+            "description": "Add a `users` state with a facade to the `my-lib` library. It will be tracked under the default `+state` folder in the lib"
+          }
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -1635,6 +1652,12 @@
         "cli": "nx",
         "title": "SCAM Generator Options Schema",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:scam --project=my-lib my-sample",
+            "description": "Generate a `MySampleComponent` component in the `my-lib` library."
+          }
+        ],
         "description": "Creates a new, generic Angular component definition in the given or default project.",
         "additionalProperties": false,
         "properties": {
@@ -1755,6 +1778,12 @@
         "cli": "nx",
         "title": "SCAM Directive Generator Options Schema",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:scam-directive --project=my-lib --flat=false my-sample",
+            "description": "Generate a `MySampleDirective` directive in a `my-sample` folder in the `my-lib` library"
+          }
+        ],
         "description": "Creates a new, generic Angular directive definition in the given or default project.",
         "additionalProperties": false,
         "properties": {
@@ -1828,6 +1857,12 @@
         "cli": "nx",
         "title": "SCAM Pipe Generator Options Schema",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:scam-pipe --project=my-lib --flat=false my-transformation",
+            "description": "Generates a `MyTransformationPipe` in a `my-transformation` folder in the `my-lib` project"
+          }
+        ],
         "description": "Creates a new, generic Angular pipe definition in the given or default project.",
         "additionalProperties": false,
         "properties": {

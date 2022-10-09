@@ -5,6 +5,16 @@
   "description": "Adds NgRx support to an application or library.",
   "cli": "nx",
   "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nrwl/angular:ngrx --root --module=apps/my-app/src/app/app.module.ts --facade=false placeholder",
+      "description": "Add root ngrx configration to the `my-app` application"
+    },
+    {
+      "command": "nx g @nrwl/angular:ngrx --module=libs/my-lib/src/lib/my-lib.module.ts --facade=true --root=false users",
+      "description": "Add a `users` state with a facade to the `my-lib` library. It will be tracked under the default `+state` folder in the lib"
+    }
+  ],
   "properties": {
     "name": {
       "type": "string",
