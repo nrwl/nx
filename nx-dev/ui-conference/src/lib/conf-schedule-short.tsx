@@ -203,8 +203,8 @@ export function ConfScheduleShort(): JSX.Element {
           item.type === 'event' ? scheduleRow(item) : breakRow(item)
         )}
       </section>
-      <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
-        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-gray-600">
+      <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
+        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
           <div className="p-8 text-center">Monday, October 17th</div>
         </div>
       </div>
@@ -213,8 +213,8 @@ export function ConfScheduleShort(): JSX.Element {
           item.type === 'event' ? scheduleRow(item) : breakRow(item)
         )}
       </section>
-      <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
-        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-gray-600">
+      <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
+        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
           <div className="p-8 text-center">Tuesday, October 18th</div>
         </div>
       </div>
