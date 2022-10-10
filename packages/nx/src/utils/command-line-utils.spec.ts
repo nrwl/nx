@@ -99,6 +99,7 @@ describe('splitArgs', () => {
         {
           files: [''],
           notNxArg: true,
+          notNxArgObject: { objectKey: 'my value' },
           __positional_overrides__: [],
           $0: '',
         },
@@ -107,8 +108,12 @@ describe('splitArgs', () => {
         {} as any
       ).overrides
     ).toEqual({
-      __overrides_unparsed__: ['--notNxArg=true'],
+      __overrides_unparsed__: [
+        '--notNxArg=true',
+        '--notNxArgObject={"objectKey":"my value"}',
+      ],
       notNxArg: true,
+      notNxArgObject: { objectKey: 'my value' },
     });
   });
 
