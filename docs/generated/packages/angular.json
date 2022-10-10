@@ -2037,6 +2037,7 @@
         },
         "additionalProperties": false,
         "required": ["project"],
+        "examplesFile": "## Examples\n\nThe `setup-tailwind` generator can be used to add [Tailwind](https://tailwindcss.com) configuration to apps and publishable libraries.\n\n{% tabs %}\n\n{% tab label=\"Standard Setup\" %}\n\nTo generate a standard Tailwind setup, just run the following command.\n\n```bash\nnx g @nrwl/angular:setup-tailwind myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Specifying the Styles Entrypoint\" %}\n\nTo specify the styles file that should be used as the entrypoint for Tailwind, simply pass the `--stylesEntryPoint` flag, relative to workspace root.\n\n```bash\nnx g @nrwl/angular:setup-tailwind myapp --stylesEntryPoint=apps/myapp/src/styles.css\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Configures Tailwind CSS for an application or a buildable/publishable library.",
