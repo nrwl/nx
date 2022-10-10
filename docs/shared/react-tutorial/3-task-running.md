@@ -58,7 +58,7 @@ You can see that three targets are defined here: `build`, `lint`, and `test`.
 The properties inside each of these these targets is defined as follows:
 
 - `executor` - which Nx executor to run. The syntax here is: `<plugin name>:<executor name>`
-- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Workspace Optimizations](/react-tutorial/4-workspace-optimizations)).
+- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Workspace Optimizations](/4-workspace-optimizations)).
 - `options` - this is a object defining which executor options to use for the given target. Every Nx executor allows for options as a way to parameterize it's functionality.
 
 {% callout type="note" title="Target Configurations" }
