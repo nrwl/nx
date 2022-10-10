@@ -2327,6 +2327,7 @@
         },
         "additionalProperties": false,
         "required": ["name", "project"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Simple Usage\" %}\n\nThe basic usage of the `web-worker` generator is defined below. You must provide a name for the web worker and the project to assign it to.\n\n```bash\nnx g @nrwl/angular:web-worker myWebWorker --project=myapp\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Creates a Web Worker.",
