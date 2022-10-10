@@ -12,11 +12,11 @@ In this tutorial you'll create a frontend-focused workspace with Nx.
 
 ## Contents
 
-- [1 - Code Generation](/react-tutorial/1-create-application)
-- [2 - Nx Graph](/react-tutorial/2-nx-graph)
-- [3 - Task Running](/react-tutorial/3-task-running)
-- [4 - Workspace Optimization](/react-tutorial/4-workspace-optimization)
-- [5 - Summary](/react-tutorial/5-summary)
+- 1 - Code Generation (You are here!)
+- [2 - Nx Graph](/shared/react-tutorial/2-nx-graph)
+- [3 - Task Running](/shared/react-tutorial/3-task-running)
+- [4 - Workspace Optimization](/shared/react-tutorial/4-workspace-optimization)
+- [5 - Summary](/shared/react-tutorial/5-summary)
 
 ## Your Objective
 
@@ -344,7 +344,7 @@ We should now be able to see all four required projects:
 
 ## What's Next
 
-- Continue to [2: Project Graph](/react-tutorial/2-project-graph)
+- Continue to [2: Project Graph](/shared/react-tutorial/2-nx-graph)
 
 {% callout type="note" title="Advanced Code Generation With Nx" %}
 The Nx Plugin API allows for ways to create your own generators that extend the code generators that we used in this lesson. This can be a great tool for promoting consistent architecture in your workspace and organization.
