@@ -10,7 +10,7 @@ In this tutorial you:
 ## Learn more
 
 {% cards %}
-{% card title="Free Nx Course on YouTube" description="Follow up this tutorial with our free Nx Course." type="video" url="string" %}
+{% card title="Free Nx Course on YouTube" description="Follow up this tutorial with our free Nx Course." type="video" url="https://www.youtube.com/playlist?list=PLakNactNC1dH38AfqmwabvOszDmKriGco" %}
 {% card title="Core Features" description="Learn more about the Core Features of Nx" type="documentation" url="/core-features" %}
 {% card title="The Nx Mental Model" description="Expand on your Mental of Nx" type="documentation" url="/concepts/mental-model" %}
 {% card title="Distributed Task Execution" description="Learn how to use Nx Cloud for Distributed Task Execution to speed up your CI times even more." type="documentation" url="/concepts/dte" %}

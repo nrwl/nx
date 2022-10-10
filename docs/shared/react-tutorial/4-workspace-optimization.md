@@ -14,7 +14,7 @@ git add . && git commit -m "commiting to test affected"
 
 Then make a change to the styles of your `common-ui` project:
 
-```css {% filename="libs/common-ui/src/lib/common-ui.module.css" }
+```css {% fileName="libs/common-ui/src/lib/common-ui.module.css" }
 .container {
   color: 'blue;';
 }
@@ -26,7 +26,7 @@ We can visualize how our workspace is affected by this change using the command:
 npx nx affected:graph
 ```
 
-[Nx Graph with Affected](/react-tutorial/nx-graph-with-affected.png)
+![Nx Graph with Affected](/react-tutorial/nx-graph-with-affected.png)
 
 {% callout type="note" title="Listing Affected Projects" %}
 Printing out a list of affectected projects can also sometimes be helpful, especially for custom workflows. You can use the Nx `print-affected` command for this.
@@ -113,7 +113,7 @@ Outputs are defined for every target in your workspace (this was also mentioned 
 Outputs are stored in the cache so that terminal output can be replayed, and any created files can be pulled from your cache, and placed where they were created the original time the task was run.
 
 {% callout type="note" title="Distributed Caching" %}
-Without using Nx Cloud, your cache is only on your local filesystem (you can see it in your `node_modules/.cache` directory of your worksapce).
+Without using Nx Cloud, your cache is only on your local filesystem (you can see it in your `node_modules/.cache` directory of your workspace).
 
 However if you are using Nx Cloud, running tasks will also populate the centralized cache by sharing your runs with Nx Cloud. This can be particularly helpful for not duplicating tasks between you and your CI processes, as well as for caching tasks from other teammates.
 
@@ -174,8 +174,6 @@ webpack compiled successfully (0c0df3e6c70c6b7b)
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
-</details>
-
 Notice that the output is annotated to show that this task's result was cached in your `[local cache]`, and that this time the command only took 59ms to run.
 
 {% callout type="note" title="More Cache Details" %}
@@ -184,9 +182,7 @@ See the [Core Features documentation page for Cache Task Results](/core-features
 
 ## The Task Graph
 
-Next, run the command:
-
-<details>
+Next, run the command `npx nx build store`:
 
 ```bash
 > npx nx build store
@@ -214,8 +210,6 @@ webpack compiled successfully (06e95dfdacea84c7)
  >  NX   Successfully ran target build for project store and 1 task(s) it depends on (5s)
 ```
 
-</details>
-
 Notice the line here:
 
 ```bash
@@ -224,11 +218,13 @@ Notice the line here:
 
 This is because your `store` project is dependent on your `products` project, which is also buildable. By default Nx is configured to run (or pull results from cache) for any dependent project's `build`s.
 
-{% callout type="note" title="Customizing Task Inputs" }
+{% callout type="note" title="Customizing Task Inputs" %}
 When you generated your workspace, those scripts set reasonable `targetDefaults` in your `nx.json` file.
 
 See our [guide for Customizing Inputs and Named Inputs](/more-concepts/customizing-inputs) for more information on how to customize these to better fit your workspace.
-{% /callout }
+{% /callout %}
+
+This can be particularly helpful in relying on your Nx graph to dynamically maintain task dependencies, rather than having to manually maintain those task dependencies as your workspace continues to grow.
 
 ## What's Next
 

@@ -16,7 +16,7 @@ When you ran your Nx generators in the first step of this tutorial, you actually
 
 Here's the `project.json` file for your `products` project:
 
-```json {% filename="libs/products/project.json" %}
+```json {% fileName="libs/products/project.json" %}
 {
   "name": "products",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
@@ -113,13 +113,11 @@ Ran all test suites.
 
 ```
 
-</details>
-
 As we can see, our tests are currently failing as we haven't adjusted any of our tests since generating and making some changes to this project.
 
 You can find the `jest.config.ts` file for this project here:
 
-```ts {% filename="libs/products/jest.config.ts" %}
+```ts {% fileName="libs/products/jest.config.ts" %}
 /* eslint-disable */
 export default {
   displayName: 'products',

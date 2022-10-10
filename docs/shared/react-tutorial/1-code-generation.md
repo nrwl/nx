@@ -59,10 +59,10 @@ We can see that two projects were added to the workspace:
 {% callout type="note" title="Nx Cypress Support" %}
 While we see the Cypress project here, we won't go deeper on Cypress in this tutorial.
 
-You can find more materials on Nx Cypress support at the [the @nrwl/cypress package page](/packages/cypress).
+You can find more materials on Nx Cypress support on [the @nrwl/cypress package page](/packages/cypress).
 {% /callout %}
 
-## Adding Another Application to our Workspace
+## Adding Another Application to Your Workspace
 
 Using the `create-nx-workspace` script is a special case that will get you started. To generate the other required `admin` application to this workspace, you'll want to use [Nx generators](/plugin-features/use-code-generators).
 
@@ -173,9 +173,9 @@ Find more information and examples at: https://nx.dev/packages/react/generators/
 Additionally, the [Nx Console VsCode Plugin]() provides a form for all generators that creates good discoverability for generator options as well.
 {% /callout %}
 
-Running generators uses the following syntax:
+The following syntax is used to run generators:
 
-!(Nx Generator Syntax](/shared/react-tutorials/generator-syntax.png)
+![Nx Generator Syntax](/shared/react-tutorials/generator-syntax.png)
 
 To run the generator and create our `admin` application, we can run the command:
 
