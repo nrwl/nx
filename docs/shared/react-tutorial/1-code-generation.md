@@ -139,7 +139,7 @@ To list the generators of the `@nrwl/react` package, you can run the command `np
 ```
 
 {% callout type="note" title="Nx Console" %}
-The [Nx Console VsCode Plugin]() can also be used to give you a full filterable list of all generators you have currently installed.
+The [Nx Console VsCode Plugin](/core-features/integrate-with-editors) can also be used to give you a full filterable list of all generators you have currently installed.
 {% /callout %}
 
 Since we want to add another React application to our workspace, the `application` generator above looks most helpful.
@@ -170,7 +170,7 @@ Find more information and examples at: https://nx.dev/packages/react/generators/
 
 ```
 
-Additionally, the [Nx Console VsCode Plugin]() provides a form for all generators that creates good discoverability for generator options as well.
+Additionally, the [Nx Console VsCode Plugin](/core-features/integrate-with-editors) provides a form for all generators that creates good discoverability for generator options as well.
 {% /callout %}
 
 The following syntax is used to run generators:
