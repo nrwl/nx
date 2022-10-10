@@ -4,7 +4,7 @@ A significant part of the power of Nx is in the Nx graph.
 
 Run the command: `npx nx graph`. A browser should open up with the following:
 
-[Initial Nx Graph](/shared/react/initial-project-graph.png)
+[Initial Nx Graph](/shared/react-tutorial/initial-project-graph.png)
 
 Notice how this is still different than the architectural design that we laid out at the start of Part 1:
 
@@ -157,9 +157,9 @@ Now if we run `npx nx graph` again, we can see that our graph matches our design
 {% callout type="note" title="More Than Just A Picture" %}
 The Nx Graph is more than just a visualization!
 
-Nx provides exceptional tooling to optimize your task-running based and even automate your CI based on this graph. We'll see this in detail in: [4: Workspace Optimization](/shared/react-tutorial/4-workspace-optimization).
+Nx provides exceptional tooling to optimize your task-running based and even automate your CI based on this graph. We'll see this in detail in: [4: Workspace Optimization](/react-tutorial/4-workspace-optimization).
 {% /callout %}
 
 ## What's Next
 
-- Continue to [3: Tasks](/shared/react-tutorials/3-task-running)
+- Continue to [3: Tasks](/react-tutorial/3-task-running)

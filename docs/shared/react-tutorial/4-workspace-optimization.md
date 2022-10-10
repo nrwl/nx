@@ -26,7 +26,7 @@ We can visualize how our workspace is affected by this change using the command:
 npx nx affected:graph
 ```
 
-[Nx Graph with Affected](/shared/react-tutorial/nx-graph-with-affected.png)
+[Nx Graph with Affected](/react-tutorial/nx-graph-with-affected.png)
 
 {% callout type="note" title="Listing Affected Projects" %}
 Printing out a list of affectected projects can also sometimes be helpful, especially for custom workflows. You can use the Nx `print-affected` command for this.

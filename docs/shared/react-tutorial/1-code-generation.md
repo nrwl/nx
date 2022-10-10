@@ -13,10 +13,10 @@ In this tutorial you'll create a frontend-focused workspace with Nx.
 ## Contents
 
 - 1 - Code Generation (You are here!)
-- [2 - Nx Graph](/shared/react-tutorial/2-nx-graph)
-- [3 - Task Running](/shared/react-tutorial/3-task-running)
-- [4 - Workspace Optimization](/shared/react-tutorial/4-workspace-optimization)
-- [5 - Summary](/shared/react-tutorial/5-summary)
+- [2 - Nx Graph](/react-tutorial/2-nx-graph)
+- [3 - Task Running](/react-tutorial/3-task-running)
+- [4 - Workspace Optimization](/react-tutorial/4-workspace-optimization)
+- [5 - Summary](/react-tutorial/5-summary)
 
 ## Your Objective
 
@@ -332,7 +332,7 @@ Generally, `applications` are projects that are expected to be at the "top" of t
 
 While `library`s are generally intended to be consumed by `applications` and other `library`s.
 
-Functionally the difference will be in the `targets` defined for each (see our later lesson: [3 - Tasks](/shared/react-tutorial/3-task-running)), and by default, `applications` will go in the `apps` directory while `library`s will go in the `libs` directory.
+Functionally the difference will be in the `targets` defined for each (see our later lesson: [3 - Tasks](/react-tutorial/3-task-running)), and by default, `applications` will go in the `apps` directory while `library`s will go in the `libs` directory.
 {% /callout %}
 
 We should now be able to see all four required projects:
@@ -344,7 +344,7 @@ We should now be able to see all four required projects:
 
 ## What's Next
 
-- Continue to [2: Project Graph](/shared/react-tutorial/2-nx-graph)
+- Continue to [2: Project Graph](/react-tutorial/2-nx-graph)
 
 {% callout type="note" title="Advanced Code Generation With Nx" %}
 The Nx Plugin API allows for ways to create your own generators that extend the code generators that we used in this lesson. This can be a great tool for promoting consistent architecture in your workspace and organization.
