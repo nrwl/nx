@@ -2286,6 +2286,7 @@
         },
         "additionalProperties": false,
         "required": ["name", "project"],
+        "examplesFile": "## Examples\n\nBelow are some examples of how to generate configuration and setup for using `ngUpgrade`'s `UpgradeModule` for your application.\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\n```bash\nnx g @nrwl/angular:upgrade-module --name=myAngularJsModule --project=myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Setup Router\" %}\n\nAllow a setup that configures routing for `UpgradeModule`.\n\n```bash\nnx g @nrwl/angular:upgrade-module --name=myAngularJsModule --project=myapp --router=true\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Sets up an Upgrade Module.",
