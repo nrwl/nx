@@ -110,5 +110,6 @@
       "default": false
     }
   },
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/component-examples.md"
 }
