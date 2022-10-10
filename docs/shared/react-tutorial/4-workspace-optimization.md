@@ -1,6 +1,6 @@
 # React Nx Tutorial - 4: Workspace Optimization
 
-In this step of the tutorial, you will learn about the tools available to optimize your Nx Workspace
+In this step of the tutorial, you will learn about the tools available to optimize your Nx Workspace.
 
 ## The Affected Command
 
@@ -31,10 +31,10 @@ npx nx affected:graph
 {% callout type="note" title="Listing Affected Projects" %}
 Printing out a list of affectected projects can also sometimes be helpful, especially for custom workflows. You can use the Nx `print-affected` command for this.
 
-See the (Nx API documentation for `print-affected`)[nx/print-affected] for full details!
+See the [Nx API documentation for `print-affected`](nx/print-affected) for full details.
 {% /callout %}
 
-Here we can see that the change we made to our `common-ui` project also affected the `admin` and `store` projects. We can leverage this fact to run commands against on the projects that were affected by this commit. For example to run out `test`s for the affected projects, run the command:
+Here we can see that the change we made to our `common-ui` project also affected the `admin` and `store` projects. We can leverage this fact to run commands against on the projects that were affected by this commit. For example to run the `test`s for the affected projects, run the command:
 
 ```bash
 npx nx affected --target=test
@@ -48,7 +48,7 @@ This will run the `test` target for all projects that:
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
 
 {% callout type="note" title="Affected API Documentation" %}
-See the (Nx API documentation for affected)[nx/affected] for full details!
+See the [Nx API documentation for affected](nx/affected) for full details.
 {% /callout %}
 
 ## Task Caching
@@ -118,16 +118,14 @@ Without using Nx Cloud, your cache is only on your local filesystem (you can see
 However if you are using Nx Cloud, running tasks will also populate the centralized cache by sharing your runs with Nx Cloud. This can be particularly helpful for not duplicating tasks between you and your CI processes, as well as for caching tasks from other teammates.
 
 You can read more about Nx Cloud in [the Nx Cloud introduction](/nx-cloud/intro/what-is-nx-cloud).
-{% /callout}
+{% /callout %}
 
-### Examples
+### Example
 
-To see this in action, run the command:
-
-<details>
-<summary>`npx nx build admin`</summary>
+To see caching in action, run the command:
 
 ```bash
+> npx nx build admin
 
 > nx run admin:build:production
 
@@ -145,8 +143,6 @@ webpack compiled successfully (0c0df3e6c70c6b7b)
  >  NX   Successfully ran target build for project admin (4s)
 ```
 
-</details>
-
 Since you had not run the `build` target before for the `admin` project, Nx ran the `build`, and populated the results in `dist/apps/admin` as specified in the `admin` project's `project.json` file for the `build` target, which we can see took 4 seconds.
 
 Next, remove your dist directory:
@@ -157,10 +153,8 @@ rm -rf dist
 
 And run the command again:
 
-<details>
-<summary>`npx nx build admin`</summary>
-
 ```bash
+`npx nx build admin`
 
 > nx run admin:build:production  [local cache]
 
@@ -193,9 +187,10 @@ See the [Core Features documentation page for Cache Task Results](/core-features
 Next, run the command:
 
 <details>
-<summary>`npx nx build store`</summary>
 
 ```bash
+> npx nx build store
+
    ✔    1/1 dependent project tasks succeeded [0 read from cache]
 
    Hint: you can run the command with --verbose to see the full dependent project outputs
@@ -234,3 +229,7 @@ When you generated your workspace, those scripts set reasonable `targetDefaults`
 
 See our [guide for Customizing Inputs and Named Inputs](/more-concepts/customizing-inputs) for more information on how to customize these to better fit your workspace.
 {% /callout }
+
+## What's Next
+
+- Continue to [5: Summary](/react-tutorial/5-summary)

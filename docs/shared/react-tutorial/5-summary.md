@@ -1,17 +1,18 @@
-# React Nx Tutorial - Step 12: Summary
+# React Nx Tutorial - 5: Summary
 
 In this tutorial you:
 
-- Built a full stack application using React and Express
-- Shared code between the frontend and the backend
-- Created a UI library
-- Used Nx affected commands to only retest and rebuild what is affected
+- Learned how to use Nx's Generators to generate code for your workspace.
+- Learned how Nx determines a graph of your workspace
+- Learned how to configure and run tasks in your workspace
+- Learned how Nx's built-in optimizations work, and how to apply those to your own workspace
 
 ## Learn more
 
-- [Free Nx Course on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dH38AfqmwabvOszDmKriGco)
-
-**Dive Deep:**
-
-- [Computation Caching](/concepts/how-caching-works)
-- [Rebuilding What is Affected](/concepts/affected)
+{% cards %}
+{% card title="Free Nx Course on YouTube" description="Follow up this tutorial with our free Nx Course." type="video" url="string" %}
+{% card title="Core Features" description="Learn more about the Core Features of Nx" type="documentation" url="/core-features" %}
+{% card title="The Nx Mental Model" description="Expand on your Mental of Nx" type="documentation" url="/concepts/mental-model" %}
+{% card title="Distributed Task Execution" description="Learn how to use Nx Cloud for Distributed Task Execution to speed up your CI times even more." type="documentation" url="/concepts/dte" %}
+{% card title="Configure CI For Your Workspace" description="Learn how to create CI configuration for your workspace using our ci-workflow generator, or by creating your own workflow" type="documentation" url="/recipes/ci-setup" %}
+{% /cards %}

@@ -48,7 +48,7 @@ Default stylesheet format           CSS
 {% callout type="note" title="Opting into Nx Cloud" %}
 The `create-nx-workspace` script will also prompt you whether you want to add [Nx Cloud](https://nx.app) to your workspace.
 
-We won't address this in this tutorial, but you can find more Nx Cloud
+We won't address this in this tutorial, but you can see the [introduction to Nx Cloud](/nx-cloud/intro/what-is-nx-cloud) for more details.
 {% /callout %}
 
 We can see that two projects were added to the workspace:
@@ -59,21 +59,20 @@ We can see that two projects were added to the workspace:
 {% callout type="note" title="Nx Cypress Support" %}
 While we see the Cypress project here, we won't go deeper on Cypress in this tutorial.
 
-You can materials for e2e test on [the @nrwl/cypress package page](/packages/cypress).
+You can find more materials on Nx Cypress support at the [the @nrwl/cypress package page](/packages/cypress).
 {% /callout %}
 
 ## Adding Another Application to our Workspace
 
-Using the `create-nx-workspace` script is a special case that will get you started. To generate the required `admin` application to this workspace, you'll want to use [Nx generators](/plugin-features/use-code-generators).
+Using the `create-nx-workspace` script is a special case that will get you started. To generate the other required `admin` application to this workspace, you'll want to use [Nx generators](/plugin-features/use-code-generators).
 
 Nx follows a plugin-based architecture - so by installing an Nx plugin, we gain access to the generators provided by the plugin.
 
-When you ran the `create-nx-workspace`, you added the required plugins for a React project, and so you've already installed several plugins. You can see the full list of installed plugins by running:
-
-<details>
-<summary>`npx nx list`</summary>
+When you ran the `create-nx-workspace`, you added the required plugins for a React project, and so you've already installed several plugins. You can see the full list of installed plugins by running `npx nx list`:
 
 ```bash
+> npx nx list
+
  >  NX   Local workspace plugins:
 
  > NX Installed plugins:
@@ -111,14 +110,10 @@ nx-plugins - Nx plugin integrations with ESBuild / Vite / Snowpack / Prisma, wit
 ...
 ```
 
-</details>
-
-To list the generators of the `@nrwl/react` package, you can run the command:
-
-<details>
-<summary>`npx nx list @nrwl/react`</summary>
+To list the generators of the `@nrwl/react` package, you can run the command `npx nx list @nrwl/react`:
 
 ```bash
+> npx nx list @nrwl/react
 
  >  NX   Capabilities in @nrwl/react:
 
@@ -150,12 +145,10 @@ The [Nx Console VsCode Plugin]() can also be used to give you a full filterable 
 Since we want to add another React application to our workspace, the `application` generator above looks most helpful.
 
 {% callout type="note" title="Discovering Generator Options" %}
-To see all options for the `application` generator, you can run the command:
-
-<details>
-<summary>`npx nx generate @nrwl/react:application --help`</summary>
+To see all options for the `application` generator, you can run the command: `npx nx generate @nrwl/react:application --help`:
 
 ```bash
+> npx nx generate @nrwl/react:application --help
 >  NX   generate @nrwl/react:application [name] [options,...]
 
 From: @nrwl/react (v14.8.3)
@@ -166,42 +159,7 @@ Create a React application for Nx.
 Options:
 --name The name of the application. [string]
 --directory, -dir The directory of the new application. [string]
---style, -s The file extension to be used for style files. [string] [default: "css"]
---linter The tool to use for running lint checks. [string] [choices: "eslint", "tslint"] [default:
-"eslint"]
---routing Generate application with routes. [boolean]
---skipFormat Skip formatting files. [boolean]
---skipWorkspaceJson Skip updating `workspace.json` with default options [boolean]
-based on values provided to this app (e.g. babel,
-style).
---unitTestRunner Test runner to use for unit tests. [string] [choices: "jest", "none"] [default:
-"jest"]
---e2eTestRunner Test runner to use for end to end (E2E) tests. [string] [choices: "cypress", "none"] [default:
-"cypress"]
---tags, -t Add tags to the application (used for linting). [string]
---pascalCaseFiles, -P Use pascal case component file name (e.g. [boolean]
-`App.tsx`).
---classComponent, -C Use class components instead of functional [boolean]
-component.
---js Generate JavaScript files rather than TypeScript [boolean]
-files.
---globalCss Default is `false`. When `true`, the component is [boolean]
-generated with `*.css`/`*.scss` instead of
-`*.module.css`/`*.module.scss`.
---strict Creates an application with strict mode and strict [boolean] [default: true]
-type checking.
---setParserOptionsProject Whether or not to configure the ESLint [boolean]
-`parserOptions.project` option. We do not do this
-by default for lint performance reasons.
---standaloneConfig Split the project configuration into [boolean]
-`<projectRoot>/project.json` rather than including
-it inside `workspace.json`.
---compiler The compiler to use. [string] [choices: "babel", "swc"] [default:
-"babel"]
---skipDefaultProject Skip setting the project as the default project. [boolean]
-When `false` (the default), the project is set as
-the default project only if there is no default
-project already set.
+.....
 
 Examples:
 nx g app myapp --directory=myorg Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`
@@ -212,21 +170,18 @@ Find more information and examples at: https://nx.dev/packages/react/generators/
 
 ```
 
-</details>
-
 Additionally, the [Nx Console VsCode Plugin]() provides a form for all generators that creates good discoverability for generator options as well.
 {% /callout %}
 
 Running generators uses the following syntax:
 
-![Nx Generator Syntax)[/shared/react-tutorials/generator-syntax.png]
+!(Nx Generator Syntax](/shared/react-tutorials/generator-syntax.png)
 
 To run the generator and create our `admin` application, we can run the command:
 
-<details>
-<summary>`npx nx g @nrwl/react:app admin`</summary>
-
 ```bash
+> npx nx g @nrwl/react:app admin
+
 >  NX  Generating @nrwl/react:application
 
 CREATE apps/admin/.babelrc
@@ -258,14 +213,11 @@ CREATE apps/admin-e2e/project.json
 CREATE apps/admin-e2e/.eslintrc.json
 CREATE apps/admin/jest.config.ts
 CREATE apps/admin/tsconfig.spec.json
-
 ```
 
 {% callout type="note" title="Dry Run" %}
 Adding the option `--dry-run` to your `nx generate` command will allow you to preview in the terminal what the results of the generator would be, without actually running the generator.
 {% /callout %}
-
-</details>
 
 ## Generating Libraries
 
@@ -273,9 +225,8 @@ To create our `common-ui` and `product` libraries, we'll use the `@nrwl/react:li
 
 {% side-by-side %}
 
-<details>
-<summary>`npx nx g @nrwl/react:lib common-ui`</summary>
 ```bash
+> npx nx g @nrwl/react:lib common-ui
 
 > NX Generating @nrwl/react:library
 
@@ -292,13 +243,10 @@ CREATE libs/common-ui/tsconfig.spec.json
 CREATE libs/common-ui/src/lib/common-ui.module.css
 CREATE libs/common-ui/src/lib/common-ui.spec.tsx
 CREATE libs/common-ui/src/lib/common-ui.tsx
+```
 
-````
-</details>
-
-<details>
-<summary>`npx nx g @nrwl/js:lib products`</summary>
 ```bash
+`npx nx g @nrwl/js:lib products`
 >  NX  Generating @nrwl/js:library
 
 CREATE libs/products/README.md
@@ -314,14 +262,13 @@ UPDATE tsconfig.base.json
 CREATE libs/products/.eslintrc.json
 CREATE libs/products/jest.config.ts
 CREATE libs/products/tsconfig.spec.json
-````
+```
+
+{% /side-by-side %}
 
 {% callout type="note" title="Using JS Source Code Instead of TS" %}
 By default, our generators create `.ts` files for your source code. To opt into `.js` files instead, the `--js` option can be added for most applicable generators. See the [`@nrwl/js:lib` generator](/packages/js/generators/library#js) for example.
 {% /callout %}
-
-</details>
-{% /side-by-side %}
 
 {% callout type="note" title="Differences Between Apps and Libs" %}
 Note that we used `application` generators for our two apps, while we used `library` generators for our `products` and `common-ui` projects.

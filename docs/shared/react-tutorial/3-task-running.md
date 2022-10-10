@@ -1,4 +1,4 @@
-# React Nx Tutorial - 3: Tasks
+# React Nx Tutorial - 3: Task-Running
 
 Now that you've created your projects in your Nx workspace, it's time to address how to run tasks in your workspace.
 
@@ -59,9 +59,9 @@ The properties inside each of these these targets is defined as follows:
 
 - `executor` - which Nx executor to run. The syntax here is: `<plugin name>:<executor name>`
 - `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Workspace Optimizations](/react-tutorial/4-workspace-optimization)).
-- `options` - this is a object defining which executor options to use for the given target. Every Nx executor allows for options as a way to parameterize it's functionality.
+- `options` - this is an object defining which executor options to use for the given target. Every Nx executor allows for options as a way to parameterize it's functionality.
 
-{% callout type="note" title="Target Configurations" }
+{% callout type="note" title="Target Configurations" %}
 In addition to allowing for option overrides at the command level, Nx also has a mechism called "configurations" for defining sets of option overrides. Common use-cases for this include a `development` and `production` configuration on your applications' `build` target.
 
 You can read more in [this recipe for Executor configurations](/recipe/use-executor-configurations).
@@ -69,7 +69,7 @@ You can read more in [this recipe for Executor configurations](/recipe/use-execu
 
 These targets are sufficient for your `products` project, but if more targets were required in the future, you could create more targets by defining them here.
 
-{% callout type="note" title="Configuration-less Tasks" }
+{% callout type="note" title="Configuration-less Tasks"%}
 In addition to configuring your tasks via Nx executors in a `project.json` file, Nx also supports configuration-less setup, where Nx can run tasks as defined by the `scripts` in your project's `package.json` file.
 
 You can read more about configuring your project in [the Project Configuration reference page](/reference/project-configuration).
@@ -83,12 +83,10 @@ To run a target in Nx, use the following syntax:
 
 ![Syntax for Running Tasks in Nx](/shared/react-tutorial/run-target-syntax.png)
 
-For example, let's run the `test` target for our `products` project now:
-
-<details>
-<summary>`npx nx test products`</summary>
+To see this in action, run the `test` target for our `products` project by running the command `npx nx test products`:
 
 ```bash
+> npx nx test products
 
 > nx run products:test
 
@@ -112,8 +110,6 @@ Ran all test suites.
 
     ✖    1/1 failed
     ✔    0/1 succeeded [0 read from cache]
-
-See Nx Cloud run details at https://nx.app/runs/kV2W3MCgLC
 
 ```
 
@@ -143,13 +139,11 @@ export default {
 
 The generators you ran in part 1 of this tutorial created this file. Generally, you wouldn't need to touch this file as you add tests, you'd just need to add `<test name>.spec.ts` files anywhere in the project's source directory. You can however adjust the contents of this file (like you would outside the context of an Nx workspace) to match your workspace's specific requirements.
 
-{% callout type="note" title="Discovering Executor Options" }
+{% callout type="note" title="Discovering Executor Options" %}
 To learn more about the options available for an executor you can add the `--help` option to your task command. For example:
 
-<details>
-<summary>`npx nx build products --help`</summary>
-
 ```bash
+> npx nx build products --help
 
 >  NX   run products:build [options,...]
 
@@ -174,8 +168,6 @@ Options:
 Find more information and examples at: https://nx.dev/packages/js/executors/tsc
 ```
 
-</details>
-
 {% /callout %}
 
 {% callout type="note" title="Running Multiple Targets" %}
@@ -183,3 +175,7 @@ Nx also supports running multiple targets across projects with the `run-many` co
 
 See [the documentatation for `run-many`](/nx/run-many) for more details.
 {% /callout %}
+
+## What's Next
+
+- Continue to [4: Workspace Optimization](/react-tutorial/4-workspace-optimization)

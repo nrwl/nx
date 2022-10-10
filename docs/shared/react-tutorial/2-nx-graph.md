@@ -1,7 +1,5 @@
 # React Nx Tutorial - Part 2: Project Graph
 
-A significant part of the power of Nx is in the Nx graph.
-
 Run the command: `npx nx graph`. A browser should open up with the following:
 
 ![Initial Nx Graph](/shared/react-tutorial/initial-project-graph.png)
@@ -20,28 +18,22 @@ You can read more about this in [our blog article on Mastering Project Boundarie
 
 Accordingly, to reflect the intended architect, we'll need to add the following to our libraries:
 
-<details>
-<summary>Adding Code to Reflect Expected Design</summary>
-
 ### `common-ui`
 
 Run the generator:
 
-<details>
-<summary>`npx nx g @nrwl/react:component banner --project=common-ui --export`</summary>
-
 ```bash
+> npx nx g @nrwl/react:component banner --project=common-ui --export
+
 >  NX  Generating @nrwl/react:component
 
 CREATE libs/common-ui/src/lib/banner/banner.module.css
 CREATE libs/common-ui/src/lib/banner/banner.spec.tsx
 CREATE libs/common-ui/src/lib/banner/banner.tsx
 UPDATE libs/common-ui/src/index.ts
-
 ```
 
-</details>
-to create a banner component in this library and export it from the library's `index.ts` file.
+This creates a `banner` component in this library and exports it from the project's `index.ts` file.
 
 We'll then implement a simple banner component:
 
@@ -76,7 +68,7 @@ export function App() {
 export default App;
 ```
 
-{% callout type="note" title="Importing from Other Nx Projects" }
+{% callout type="note" title="Importing from Other Nx Projects" %}
 Note that the `Banner` component here was available from the import path: `@myorg/common-ui`. This matches the syntax: `@<workspace name>/<project name>`.
 
 When we run a `library` generator for the `common-ui` lib, that generator also adds the path for this library to our `tsconfig.base.json` file:
@@ -92,7 +84,7 @@ When we run a `library` generator for the `common-ui` lib, that generator also a
 }
 ```
 
-{% /callout }
+{% /callout %}
 
 ### `products`
 
@@ -124,27 +116,27 @@ export const exampleProducts: Product[] = [
 Import and use both the `Banner` component from your `common-ui` lib, and the `exampleProducts` from your `products` lib:
 
 ```javascript {% fileName="libs/products/src/lib/products.ts" %}
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
+import { Banner } from '@myorg/common-ui';
+import { exampleProducts } from '@myorg/products';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function App() {
+  return (
+    <>
+      <Banner text="Welcome to the store!" />
+      <ul>
+        {exampleProducts.map((product) => (
+          <li key={product.id}>
+            <strong>{product.name}</strong> Price: {product.price}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
 }
 
-export const exampleProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Product 1',
-    price: 100,
-  },
-  {
-    id: '2',
-    name: 'Product 2',
-    price: 200,
-  },
-];
+export default App;
 ```
-
-</details>
 
 Now if we run `npx nx graph` again, we can see that our graph matches our design:
 
@@ -162,4 +154,4 @@ Nx provides exceptional tooling to optimize your task-running based and even aut
 
 ## What's Next
 
-- Continue to [3: Tasks](/react-tutorial/3-task-running)
+- Continue to [3: Task Running](/react-tutorial/3-task-running)
