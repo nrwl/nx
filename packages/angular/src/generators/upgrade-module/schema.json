@@ -43,5 +43,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name", "project"]
+  "required": ["name", "project"],
+  "examplesFile": "../../../docs/upgrade-module-examples.md"
 }
