@@ -359,6 +359,7 @@
           }
         },
         "required": ["name"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nCreate a component named `my-component`:\n\n```bash\nnx g @nrwl/angular:component my-component\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone Component\" %}\n\nCreate a standalone component named `my-component`:\n\n```bash\nnx g @nrwl/angular:component my-component --standalone\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Component\" %}\n\nCreate a component named `my-component` with inline styles and inline template:\n\n```bash\nnx g @nrwl/angular:component my-component --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Component with OnPush Change Detection Strategy\" %}\n\nCreate a component named `my-component` with OnPush Change Detection Strategy:\n\n```bash\nnx g @nrwl/angular:component my-component --changeDetection=OnPush\n```\n\n{% /tab %}\n",
         "presets": []
       },
       "aliases": ["c"],
