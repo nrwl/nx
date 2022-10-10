@@ -13,11 +13,11 @@ In this tutorial you:
 
 {% card title="Free Nx Course on YouTube" description="Follow up this tutorial with our free Nx Course." type="video" url="https://www.youtube.com/playlist?list=PLakNactNC1dH38AfqmwabvOszDmKriGco" /%}
 
-{% card title="Free Nx Course From Eggehad" type="external" description="Follow up this tutorial with a free course on React development with Nx we made in collaboration with Egghead." url="https://egghead.io/courses/scale-react-development-with-nx-4038" /%}
+{% card title="Free Nx Course From Egghead" type="external" description="Follow up this tutorial with a free course on React development with Nx we made in collaboration with Egghead." url="https://egghead.io/courses/scale-react-development-with-nx-4038" /%}
 
 {% card title="Core Features" description="Learn more about the Core Features of Nx." url="/core-features" /%}
 
-{% card title="The Nx Mental Model" description="Expand your Mental of Nx." url="/concepts/mental-model" /%}
+{% card title="The Nx Mental Model" description="Expand your Mental Model of Nx." url="/concepts/mental-model" /%}
 
 {% card title="Distributed Task Execution" description="Learn how to use Nx Cloud for Distributed Task Execution to speed up your CI times even more." url="/concepts/dte" /%}
 
