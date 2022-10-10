@@ -743,6 +743,12 @@
         "description": "Add Karma configuration to an Nx workspace.",
         "cli": "nx",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:karma",
+            "description": "Add a base karma configuration to the workspace."
+          }
+        ],
         "properties": {
           "skipPackageJson": {
             "type": "boolean",
