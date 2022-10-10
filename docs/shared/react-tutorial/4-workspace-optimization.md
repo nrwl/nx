@@ -26,7 +26,7 @@ We can visualize how our workspace is affected by this change using the command:
 npx nx affected:graph
 ```
 
-![Nx Graph with Affected](/react-tutorial/nx-graph-with-affected.png)
+![Nx Graph with Affected](/shared/react-tutorial/nx-graph-with-affected.png)
 
 {% callout type="note" title="Listing Affected Projects" %}
 Printing out a list of affectected projects can also sometimes be helpful, especially for custom workflows. You can use the Nx `print-affected` command for this.
@@ -34,7 +34,7 @@ Printing out a list of affectected projects can also sometimes be helpful, espec
 See the [Nx API documentation for `print-affected`](nx/print-affected) for full details.
 {% /callout %}
 
-Here we can see that the change we made to our `common-ui` project also affected the `admin` and `store` projects. We can leverage this fact to run commands against on the projects that were affected by this commit. For example to run the `test`s for the affected projects, run the command:
+Here we can see that the change we made to our `common-ui` project also affected the `admin` and `store` projects. We can leverage this fact to run commands only on the projects that were affected by this commit. For example to run the `test`s for the affected projects, run the command:
 
 ```bash
 npx nx affected --target=test
@@ -73,7 +73,7 @@ Outputs of the cache include the terminal output craeted by the task, as well as
 
 Outputs are defined for every target in your workspace (this was also mentioned in our previous section on tasks):
 
-```json {% filename="libs/products/project.json" %}
+```json {% fileName="libs/products/project.json" %}
 {
   "name": "products",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
@@ -122,7 +122,7 @@ You can read more about Nx Cloud in [the Nx Cloud introduction](/nx-cloud/intro/
 
 ### Example
 
-To see caching in action, run the command:
+To see caching in action, run the command `npx nx build admin`:
 
 ```bash
 > npx nx build admin

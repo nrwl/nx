@@ -12,7 +12,7 @@ In this tutorial you'll create a frontend-focused workspace with Nx.
 
 ## Contents
 
-- 1 - Code Generation (You are here!)
+- [1 - Code Generation](/react-tutorial/1-code-generation)
 - [2 - Nx Graph](/react-tutorial/2-nx-graph)
 - [3 - Task Running](/react-tutorial/3-task-running)
 - [4 - Workspace Optimization](/react-tutorial/4-workspace-optimization)
@@ -175,7 +175,7 @@ Additionally, the [Nx Console VsCode Plugin]() provides a form for all generator
 
 The following syntax is used to run generators:
 
-![Nx Generator Syntax](/shared/react-tutorials/generator-syntax.png)
+![Nx Generator Syntax](/shared/react-tutorial/generator-syntax.png)
 
 To run the generator and create our `admin` application, we can run the command:
 
@@ -246,7 +246,8 @@ CREATE libs/common-ui/src/lib/common-ui.tsx
 ```
 
 ```bash
-`npx nx g @nrwl/js:lib products`
+> npx nx g @nrwl/js:lib products
+
 >  NX  Generating @nrwl/js:library
 
 CREATE libs/products/README.md
