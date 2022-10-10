@@ -1,3 +1,4 @@
+import { NextConfigComplete } from 'next/dist/server/config-shared';
 import { withNx } from './with-nx';
 
 describe('withNx', () => {
@@ -10,6 +11,13 @@ describe('withNx', () => {
           module: { rules: [{ oneOf: [] }] },
         },
         {
+          buildId: 'build-id',
+          config: config as NextConfigComplete,
+          dev: true,
+          dir: 'dir',
+          isServer: false,
+          totalPages: 0,
+          webpack: undefined,
           defaultLoaders: {
             babel: {
               options: {},
@@ -35,6 +43,13 @@ describe('withNx', () => {
           module: { rules: [{ oneOf: [] }] },
         },
         {
+          buildId: 'build-id',
+          config: config as NextConfigComplete,
+          dev: true,
+          dir: 'dir',
+          isServer: false,
+          totalPages: 0,
+          webpack: undefined,
           defaultLoaders: {
             babel: {
               options: {},
