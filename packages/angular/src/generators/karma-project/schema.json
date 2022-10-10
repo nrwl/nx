@@ -23,5 +23,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["project"]
+  "required": ["project"],
+  "examplesFile": "../../../docs/karma-project-examples.md"
 }
