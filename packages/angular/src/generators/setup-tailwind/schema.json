@@ -35,5 +35,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["project"]
+  "required": ["project"],
+  "examplesFile": "../../../docs/setup-tailwind-examples.md"
 }
