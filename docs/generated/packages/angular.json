@@ -795,6 +795,7 @@
         },
         "additionalProperties": false,
         "required": ["project"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\nTo add karma to project, run the following command.\n\n```bash\nnx g @nrwl/angular:karma-project --project=myapp\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Adds Karma configuration to a project.",
