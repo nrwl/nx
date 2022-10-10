@@ -27,7 +27,7 @@
           {
             "name": "React Tutorial",
             "id": "react-tutorial",
-            "file": "shared/react-tutorial/01-create-application"
+            "file": "shared/react-tutorial/1-code-generation"
           },
           {
             "name": "Angular Tutorial",
@@ -81,67 +81,32 @@
       {
         "name": "React Tutorial",
         "id": "react-tutorial",
-        "description": "Learn to use Nx with this React tutorial where you will learn about all its main feature with a real project.",
+        "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
         "itemList": [
           {
-            "name": "1 - Create Application",
-            "id": "01-create-application",
-            "file": "shared/react-tutorial/01-create-application"
+            "name": "1 - Code Generation",
+            "id": "1-code-generation",
+            "file": "shared/react-tutorial/1-code-generation"
           },
           {
-            "name": "2 - Add E2E Test",
-            "id": "02-add-e2e-test",
-            "file": "shared/react-tutorial/02-add-e2e-test"
+            "name": "2 - Project Graph",
+            "id": "2-nx-graph",
+            "file": "shared/react-tutorial/2-nx-graph"
           },
           {
-            "name": "3 - Display Todos",
-            "id": "03-display-todos",
-            "file": "shared/react-tutorial/03-display-todos"
+            "name": "3 - Task Running",
+            "id": "3-task-running",
+            "file": "shared/react-tutorial/3-task-running"
           },
           {
-            "name": "4 - Connect to API",
-            "id": "04-connect-to-api",
-            "file": "shared/react-tutorial/04-connect-to-api"
+            "name": "4 - Workspace Optimization",
+            "id": "4-workspace-optimization",
+            "file": "shared/react-tutorial/4-workspace-optimization"
           },
           {
-            "name": "5 - Add Node Application",
-            "id": "05-add-node-app",
-            "file": "shared/react-tutorial/05-add-node-app"
-          },
-          {
-            "name": "6 - Proxy Configuration",
-            "id": "06-proxy",
-            "file": "shared/react-tutorial/06-proxy"
-          },
-          {
-            "name": "7 - Share Code",
-            "id": "07-share-code",
-            "file": "shared/react-tutorial/07-share-code"
-          },
-          {
-            "name": "8 - Create Libraries",
-            "id": "08-create-libs",
-            "file": "shared/react-tutorial/08-create-libs"
-          },
-          {
-            "name": "9 - Project Graph",
-            "id": "09-dep-graph",
-            "file": "shared/react-tutorial/09-dep-graph"
-          },
-          {
-            "name": "10 - Use Computation Caching",
-            "id": "10-computation-caching",
-            "file": "shared/react-tutorial/10-computation-caching"
-          },
-          {
-            "name": "11 - Test Affected Projects",
-            "id": "11-test-affected-projects",
-            "file": "shared/react-tutorial/11-test-affected-projects"
-          },
-          {
-            "name": "12 - Summary",
-            "id": "12-summary",
-            "file": "shared/react-tutorial/12-summary"
+            "name": "5 - Summary",
+            "id": "5-summary",
+            "file": "shared/react-tutorial/5-summary"
           }
         ]
       },
