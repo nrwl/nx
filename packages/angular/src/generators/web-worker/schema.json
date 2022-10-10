@@ -37,5 +37,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name", "project"]
+  "required": ["name", "project"],
+  "examplesFile": "../../../docs/web-worker-examples.md"
 }
