@@ -73,5 +73,6 @@
     }
   },
   "required": ["appName", "mfType"],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "examplesFile": "../../../docs/setup-mf-examples.md"
 }

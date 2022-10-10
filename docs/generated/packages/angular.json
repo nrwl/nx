@@ -1991,6 +1991,7 @@
         },
         "required": ["appName", "mfType"],
         "additionalProperties": false,
+        "examplesFile": "## Examples\n\nThe `setup-mf` generator is used to add Module Federation support to existing applications.\n\n{% tabs %}\n\n{% tab label=\"Convert to Host\" %}\nTo convert an existing application to a host application, run the following\n\n```bash\nnx g setup-mf myapp --mfType=host --routing=true\n```\n\n{% /tab %}\n\n{% tab label=\"Convert to Remote\" %}\nTo convert an existing application to a remote application, run the following\n\n```bash\nnx g setup-mf myapp --mfType=remote --routing=true\n```\n\n{% /tab %}\n\n{% tab label=\"Convert to Remote and attach to a host application\" %}\nTo convert an existing application to a remote application and attach it to an existing host application name `myhostapp`, run the following\n\n```bash\nnx g setup-mf myapp --mfType=remote --routing=true --host=myhostapp\n```\n\n{% /tab %}\n\n{% tab label=\"Convert to Host and attach to existing remote applications\" %}\nTo convert an existing application to a host application and attaching existing remote applications named `remote1` and `remote2`, run the following\n\n```bash\nnx g setup-mf myapp --mfType=host --routing=true --remotes=remote1,remote2\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Generate a Module Federation configuration for a given Angular application.",
