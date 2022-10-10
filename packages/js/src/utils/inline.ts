@@ -73,7 +73,16 @@ export function postProcessInlinedDependencies(
         inlineDependency.buildOutputPath ||
         join(outputPath, inlineDependency.root);
       const destDepOutputPath = join(outputPath, inlineDependency.name);
-      movePackage(depOutputPath, destDepOutputPath);
+      const isBuildable = !!inlineDependency.buildOutputPath;
+
+      if (isBuildable) {
+        copySync(depOutputPath, destDepOutputPath, {
+          overwrite: true,
+          recursive: true,
+        });
+      } else {
+        movePackage(depOutputPath, destDepOutputPath);
+      }
 
       // TODO: hard-coded "src"
       inlinedDepsDestOutputRecord[inlineDependency.pathAlias] =
@@ -238,7 +247,7 @@ function buildInlineGraphExternals(
   }
 }
 
-export function movePackage(from: string, to: string) {
+function movePackage(from: string, to: string) {
   copySync(from, to, { overwrite: true, recursive: true });
   removeSync(from);
 }
@@ -309,13 +318,12 @@ function getBuildOutputPath(
   context: ExecutorContext,
   options: NormalizedExecutorOptions
 ): string {
+  const projectTargets = context.projectGraph.nodes[projectName]?.data?.targets;
+  if (!projectTargets) return '';
+
   const buildTarget = options.externalBuildTargets.find(
-    (buildTarget) =>
-      context.projectGraph.nodes[projectName]?.data?.targets?.[buildTarget]
+    (buildTarget) => projectTargets[buildTarget]
   );
 
-  if (buildTarget)
-    return context.projectGraph.nodes[projectName].data.targets?.[buildTarget]
-      .options['outputPath'];
-  return '';
+  return buildTarget ? projectTargets[buildTarget].options['outputPath'] : '';
 }
