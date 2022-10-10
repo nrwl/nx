@@ -24,7 +24,7 @@ For this tutorial, your objective is to create the initial architecture for a wo
 
 Your organization prioritizes consistent UI, so you'll also need to create a collection of common React components called: `common-ui`. Finally there's some domain logic that you are required to break out into a `product` Typescript library that your `store` app will need, but your `admin` app won't (at least for this tutorial).
 
-[Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
+![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
 
 ## Creating an Nx Workspace
 
@@ -219,7 +219,7 @@ Additionally, the [Nx Console VsCode Plugin]() provides a form for all generator
 
 Running generators uses the following syntax:
 
-[Nx Generator Syntax)[/shared/react-tutorials/generator-syntax.png]
+![Nx Generator Syntax)[/shared/react-tutorials/generator-syntax.png]
 
 To run the generator and create our `admin` application, we can run the command:
 

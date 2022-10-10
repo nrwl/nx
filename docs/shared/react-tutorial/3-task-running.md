@@ -81,7 +81,7 @@ You can also check the `project.json` files of your other projects in the worksp
 
 To run a target in Nx, use the following syntax:
 
-[Syntax for Running Tasks in Nx](/shared/react-tutorial/run-target-syntax.png)
+![Syntax for Running Tasks in Nx](/shared/react-tutorial/run-target-syntax.png)
 
 For example, let's run the `test` target for our `products` project now:
 

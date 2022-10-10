@@ -4,11 +4,11 @@ A significant part of the power of Nx is in the Nx graph.
 
 Run the command: `npx nx graph`. A browser should open up with the following:
 
-[Initial Nx Graph](/shared/react-tutorial/initial-project-graph.png)
+![Initial Nx Graph](/shared/react-tutorial/initial-project-graph.png)
 
 Notice how this is still different than the architectural design that we laid out at the start of Part 1:
 
-[Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
+![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
 
 In Nx, your graph is primarily descriptive in nature, rather than prescriptive. Edges connecting nodes are created based on your projects' source code.
 
@@ -149,9 +149,9 @@ export const exampleProducts: Product[] = [
 Now if we run `npx nx graph` again, we can see that our graph matches our design:
 
 {% side-by-side %}
-[Matching Graph](/shared/react/matching-graph.png)
+![Matching Graph](/shared/react-tutorial/matching-graph.png)
 
-[Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
+![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
 {% /side-by-side %}
 
 {% callout type="note" title="More Than Just A Picture" %}
