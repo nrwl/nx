@@ -144,22 +144,6 @@ export async function* tscExecutor(
     assets: _options.assets,
   });
 
-  if (options.watch) {
-    const disposeWatchAssetChanges =
-      await assetHandler.watchAndProcessOnAssetChange();
-    const disposePackageJsonChanges = await watchForSingleFileChanges(
-      join(context.root, projectRoot),
-      'package.json',
-      () => updatePackageJson(options, context, target, dependencies)
-    );
-    const handleTermination = async () => {
-      await disposeWatchAssetChanges();
-      await disposePackageJsonChanges();
-    };
-    process.on('SIGINT', () => handleTermination());
-    process.on('SIGTERM', () => handleTermination());
-  }
-
   const tsCompilationOptions = createTypeScriptCompilationOptions(
     options,
     context
@@ -175,7 +159,7 @@ export async function* tscExecutor(
     tsCompilationOptions.rootDir = '.';
   }
 
-  return yield* compileTypeScriptFiles(
+  const typescriptCompilation = compileTypeScriptFiles(
     options,
     tsCompilationOptions,
     async () => {
@@ -188,6 +172,26 @@ export async function* tscExecutor(
       );
     }
   );
+
+  if (options.watch) {
+    const disposeWatchAssetChanges =
+      await assetHandler.watchAndProcessOnAssetChange();
+    const disposePackageJsonChanges = await watchForSingleFileChanges(
+      join(context.root, projectRoot),
+      'package.json',
+      () => updatePackageJson(options, context, target, dependencies)
+    );
+    const handleTermination = async (exitCode: number) => {
+      await disposeWatchAssetChanges();
+      await disposePackageJsonChanges();
+      await typescriptCompilation.close();
+      process.exit(exitCode);
+    };
+    process.on('SIGINT', () => handleTermination(128 + 2));
+    process.on('SIGTERM', () => handleTermination(128 + 15));
+  }
+
+  return yield* typescriptCompilation.iterator;
 }
 
 export default tscExecutor;
