@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as enquirer from 'enquirer';
 import * as path from 'path';
+import { join } from 'path';
 import { dirSync } from 'tmp';
 import * as yargs from 'yargs';
 import { showNxWarning, unparse } from './shared';
@@ -9,21 +10,20 @@ import { output } from './output';
 import * as ora from 'ora';
 import {
   detectInvokedPackageManager,
+  generatePackageManagerFiles,
   getPackageManagerCommand,
   getPackageManagerVersion,
   PackageManager,
   packageManagerList,
-  generatePackageManagerFiles,
 } from './package-manager';
 import { validateNpmPackage } from './validate-npm-package';
 import { deduceDefaultBase } from './default-base';
 import { getFileName, stringifyCollection } from './utils';
 import { yargsDecorator } from './decorator';
-import chalk = require('chalk');
 import { ciList } from './ci';
-import { join } from 'path';
 import { initializeGitRepo } from './git';
 import { messages, recordStat } from './ab-testing';
+import chalk = require('chalk');
 
 type Arguments = {
   name: string;
@@ -67,11 +67,6 @@ const presetOptions: { name: Preset; message: string }[] = [
     name: Preset.Apps,
     message:
       'apps              [an empty workspace with no plugins with a layout that works best for building apps]',
-  },
-  {
-    name: Preset.NPM,
-    message:
-      'npm               [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]',
   },
   {
     name: Preset.TS,
@@ -325,13 +320,25 @@ async function getConfiguration(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
-    let style, appName;
+    let name, appName, style, preset;
 
-    const name = await determineWorkspaceName(argv);
-    let preset = await determineThirdPartyPackage(argv);
-
-    if (!preset) {
-      preset = await determinePreset(argv);
+    const thirdPartyPreset = await determineThirdPartyPackage(argv);
+    if (thirdPartyPreset) {
+      preset = thirdPartyPreset;
+      name = await determineRepoName(argv);
+      appName = '';
+      style = null;
+    } else {
+      if (!argv.preset) {
+        if ((await determineMonorepoStyle()) === 'package-based') {
+          preset = 'npm';
+        } else {
+          preset = await determinePreset(argv);
+        }
+      } else {
+        preset = argv.preset;
+      }
+      name = await determineRepoName(argv);
       appName = await determineAppName(preset, argv);
       style = await determineStyle(preset, argv);
     }
@@ -359,34 +366,66 @@ async function getConfiguration(
   }
 }
 
-function determineWorkspaceName(
+function determineRepoName(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
-  const workspaceName: string = parsedArgs._[0]
+  const repoName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
 
-  if (workspaceName) {
-    return Promise.resolve(workspaceName);
+  if (repoName) {
+    return Promise.resolve(repoName);
   }
 
   return enquirer
     .prompt([
       {
-        name: 'WorkspaceName',
-        message: `Workspace name (e.g., org name)    `,
+        name: 'RepoName',
+        message: `Repository name                      `,
         type: 'input',
       },
     ])
-    .then((a: { WorkspaceName: string }) => {
-      if (!a.WorkspaceName) {
+    .then((a: { RepoName: string }) => {
+      if (!a.RepoName) {
         output.error({
-          title: 'Invalid workspace name',
-          bodyLines: [`Workspace name cannot be empty`],
+          title: 'Invalid repository name',
+          bodyLines: [`Repository name cannot be empty`],
         });
         process.exit(1);
       }
-      return a.WorkspaceName;
+      return a.RepoName;
+    });
+}
+
+function determineMonorepoStyle(): Promise<string> {
+  return enquirer
+    .prompt([
+      {
+        name: 'MonorepoStyle',
+        message: `Package-based or integrated monorepo?`,
+        type: 'select',
+        choices: [
+          {
+            name: 'package-based',
+            message:
+              'Create a package-based monorepo with Yarn, NPM or PNPM. Nx makes it fast, but stays out of your way.',
+          },
+          {
+            name: 'integrated',
+            message:
+              'Create an integrated monorepo using Nx’s plugin system. Focus on shipping code, not fixing your tooling.',
+          },
+        ],
+      },
+    ])
+    .then((a: { MonorepoStyle: string }) => {
+      if (!a.MonorepoStyle) {
+        output.error({
+          title: 'Invalid monorepo style',
+        });
+        process.exit(1);
+      }
+      return a.MonorepoStyle;
     });
 }
 
@@ -415,7 +454,7 @@ async function determinePackageManager(
       .prompt([
         {
           name: 'PackageManager',
-          message: `Which package manager to use       `,
+          message: `Which package manager to use         `,
           initial: 'npm' as any,
           type: 'autocomplete',
           choices: [
@@ -513,7 +552,7 @@ async function determinePreset(parsedArgs: any): Promise<Preset> {
     .prompt([
       {
         name: 'Preset',
-        message: `What to create in the new workspace`,
+        message: `What to create in the new workspace  `,
         initial: 'empty' as any,
         type: 'autocomplete',
         choices: presetOptions,
@@ -544,7 +583,7 @@ async function determineAppName(
     .prompt([
       {
         name: 'AppName',
-        message: `Application name                   `,
+        message: `Application name                     `,
         type: 'input',
       },
     ])
@@ -655,7 +694,7 @@ async function determineStyle(
       .prompt([
         {
           name: 'style',
-          message: `Default stylesheet format          `,
+          message: `Default stylesheet format            `,
           initial: 'css' as any,
           type: 'autocomplete',
           choices: choices,

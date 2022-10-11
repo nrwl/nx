@@ -110,7 +110,11 @@ function createNxJson(
 
 function createFiles(host: Tree, options: Schema) {
   const formattedNames = names(options.name);
-  generateFiles(host, pathJoin(__dirname, './files'), options.directory, {
+  const filesDirName =
+    options.preset === Preset.NPM || options.preset === Preset.Core
+      ? './files-npm'
+      : './files';
+  generateFiles(host, pathJoin(__dirname, filesDirName), options.directory, {
     formattedNames,
     dot: '.',
     tmpl: '',

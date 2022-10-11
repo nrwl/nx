@@ -32,6 +32,16 @@
           },
           {
             "input": "packages/workspace",
+            "glob": "**/files-npm/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-npm/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
             "glob": "**/*.json",
             "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"

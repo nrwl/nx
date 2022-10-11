@@ -148,7 +148,9 @@ export async function newGenerator(host: Tree, options: Schema) {
   await formatFiles(host);
   return async () => {
     installPackagesTask(host, false, options.directory, options.packageManager);
-    await generatePreset(host, options);
+    if (options.preset !== Preset.NPM && options.preset !== Preset.Core) {
+      await generatePreset(host, options);
+    }
   };
 }
 
