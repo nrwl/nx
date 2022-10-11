@@ -1,8 +1,8 @@
+# Information about `storybook` and `build-storybook` targets for Angular projects with a Storybook configuration
+
 {% callout type="note" title="Note" %}
 This documentation page contains information about the [Storybook plugin](/packages/storybook), specifically regarding [Angular projects that are using Storybook](/storybook/overview-angular).
 {% /callout %}
-
-## Information about `storybook` and `build-storybook` targets for Angular projects with a Storybook configuration
 
 If you are on Nx version `>=14.1.8`, the [Nx Storybook plugin for _Angular_ projects](/storybook/overview-angular) uses the original Storybook executors for Angular (`"@storybook/angular:start-storybook"` and `"@storybook/angular:build-storybook"`) to serve and build Storybook.
 

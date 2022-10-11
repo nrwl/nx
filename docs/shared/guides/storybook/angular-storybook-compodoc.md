@@ -1,8 +1,8 @@
+# Set up Compodoc for Storybook on Nx
+
 {% callout type="note" title="Note" %}
 This documentation page contains information about the [Storybook plugin](/packages/storybook), specifically regarding [Angular projects that are using Storybook](/storybook/overview-angular).
 {% /callout %}
-
-# Set up Compodoc for Storybook on Nx
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-compodoc-angular" /%}
 
