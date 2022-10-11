@@ -111,5 +111,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["browserTarget"]
+  "required": ["browserTarget"],
+  "examplesFile": "../../../docs/module-federation-dev-server-examples.md"
 }
