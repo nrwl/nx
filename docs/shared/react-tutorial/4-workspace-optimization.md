@@ -65,7 +65,7 @@ If this index does not exist, Nx will run the command and if the command succeed
 
 Outputs of the cache include the terminal output created by the task, as well as any files created by the task - for example: the artifact created by running a `build` task.
 
-Outputs are defined for every target in your workspace (this was also mentioned in [3 - Task Running](/react-tutorials/3-task-running)):
+Outputs are defined for every target in your workspace (this was also mentioned in [3 - Task Running](/react-tutorial/3-task-running)):
 
 ```json {% fileName="libs/products/project.json" %}
 {
