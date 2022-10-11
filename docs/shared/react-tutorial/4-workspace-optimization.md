@@ -28,13 +28,9 @@ npx nx affected:graph
 
 ![Nx Graph with Affected](/shared/react-tutorial/nx-graph-with-affected.png)
 
-{% callout type="note" title="Listing Affected Projects" %}
-Printing out a list of affectected projects can also sometimes be helpful, especially for custom workflows. You can use the Nx `print-affected` command for this.
+The change made to the `common-ui` project is also affecting the `admin` and `store` projects. This can be leveraged run tasks only on the projects that were affected by this commit.
 
-See the [Nx API documentation for `print-affected`](nx/print-affected) for full details.
-{% /callout %}
-
-Here we can see that the change we made to our `common-ui` project also affected the `admin` and `store` projects. We can leverage this fact to run commands only on the projects that were affected by this commit. For example to run the `test`s for the affected projects, run the command:
+To run the `test` targets only for affected projects, run the command:
 
 ```bash
 npx nx affected --target=test
@@ -47,15 +43,13 @@ This will run the `test` target for all projects that:
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
 
-{% callout type="note" title="Affected API Documentation" %}
-See the [Nx API documentation for affected](nx/affected) for full details.
-{% /callout %}
+{% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/nx/affected" /%}
 
 ## Task Caching
 
 Task Caching is another mechanism to optimize your workspace.
 
-Whereas `affected` allows you to "skip" tasks that couldn't possibly be affected by your changes, Task Caching allows you to "replay" tasks that had already been run.
+`affected` allows you to "skip" tasks that couldn't possibly be affected by your changes. Task Caching allows you to "replay" tasks that have already been run.
 
 Also, while `affected` is informed by your git metadata, Task Caching is informed by "inputs" and "outputs":
 
@@ -63,15 +57,15 @@ Also, while `affected` is informed by your git metadata, Task Caching is informe
 
 Inputs for your task caching includes by default any environment details and all the source code of the projects and dependencies affecting your project.
 
-When running a task, Nx will determine all the inputs for your project and create a hash that will be used to index your cache. If you've already run this task with the same inputs, your cache will already be populated for at this index, and Nx will replay the results stored in the cache.
+When running a task, Nx will determine all the inputs for your task and create a hash that will be used to index your cache. If you've already run this task with the same inputs, your cache will already be populated at this index, and Nx will replay the results stored in the cache.
 
-If this index does not exist, Nx will actually run the command and then store those results in the cache.
+If this index does not exist, Nx will run the command and if the command succeeds, it will store the result in the cache.
 
 ### Outputs
 
-Outputs of the cache include the terminal output craeted by the task, as well as any files created by the task - for example: the artifact created by running a `build` task.
+Outputs of the cache include the terminal output created by the task, as well as any files created by the task - for example: the artifact created by running a `build` task.
 
-Outputs are defined for every target in your workspace (this was also mentioned in our previous section on tasks):
+Outputs are defined for every target in your workspace (this was also mentioned in [3 - Task Running](/react-tutorials/3-task-running)):
 
 ```json {% fileName="libs/products/project.json" %}
 {
@@ -112,20 +106,12 @@ Outputs are defined for every target in your workspace (this was also mentioned 
 
 Outputs are stored in the cache so that terminal output can be replayed, and any created files can be pulled from your cache, and placed where they were created the original time the task was run.
 
-{% callout type="note" title="Distributed Caching" %}
-Without using Nx Cloud, your cache is only on your local filesystem (you can see it in your `node_modules/.cache` directory of your workspace).
-
-However if you are using Nx Cloud, running tasks will also populate the centralized cache by sharing your runs with Nx Cloud. This can be particularly helpful for not duplicating tasks between you and your CI processes, as well as for caching tasks from other teammates.
-
-You can read more about Nx Cloud in [the Nx Cloud introduction](/nx-cloud/intro/what-is-nx-cloud).
-{% /callout %}
-
 ### Example
 
 To see caching in action, run the command `npx nx build admin`:
 
 ```bash
-> npx nx build admin
+% npx nx build admin
 
 > nx run admin:build:production
 
@@ -143,7 +129,7 @@ webpack compiled successfully (0c0df3e6c70c6b7b)
  >  NX   Successfully ran target build for project admin (4s)
 ```
 
-Since you had not run the `build` target before for the `admin` project, Nx ran the `build`, and populated the results in `dist/apps/admin` as specified in the `admin` project's `project.json` file for the `build` target, which we can see took 4 seconds.
+Since you have not run the `build` target before for the `admin` project, Nx runs the `build`, and populates the results in `dist/apps/admin` as specified in the `admin` project's `project.json` file for the `build` target.
 
 Next, remove your dist directory:
 
@@ -176,9 +162,9 @@ webpack compiled successfully (0c0df3e6c70c6b7b)
 
 Notice that the output is annotated to show that this task's result was cached in your `[local cache]`, and that this time the command only took 59ms to run.
 
-{% callout type="note" title="More Cache Details" %}
-See the [Core Features documentation page for Cache Task Results](/core-features/cache-task-results) for more information on caching.
-{% /callout %}
+Also notice that the result of your build has been added back to the `dist/apps/admin` directory.
+
+{% card title="More Task Caching Details" description="See the documentation for more information on caching." url="/core-features/cache-task-results" /%}
 
 ## The Task Graph
 
@@ -218,13 +204,7 @@ Notice the line here:
 
 This is because your `store` project is dependent on your `products` project, which is also buildable. By default Nx is configured to run (or pull results from cache) for any dependent project's `build`s.
 
-{% callout type="note" title="Customizing Task Inputs" %}
-When you generated your workspace, those scripts set reasonable `targetDefaults` in your `nx.json` file.
-
-See our [guide for Customizing Inputs and Named Inputs](/more-concepts/customizing-inputs) for more information on how to customize these to better fit your workspace.
-{% /callout %}
-
-This can be particularly helpful in relying on your Nx graph to dynamically maintain task dependencies, rather than having to manually maintain those task dependencies as your workspace continues to grow.
+This feature allow the Nx graph to dynamically maintain task dependencies, rather than having to manually maintain those task dependencies as your workspace continues to grow.
 
 ## What's Next
 

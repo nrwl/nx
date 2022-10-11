@@ -1,29 +1,23 @@
 # React Nx Tutorial - Part 2: Project Graph
 
-Run the command: `npx nx graph`. A browser should open up with the following:
+Run the command: `npx nx graph`. A browser should open up with the following contents:
 
 ![Initial Nx Graph](/shared/react-tutorial/initial-project-graph.png)
 
-Notice how this is still different than the architectural design that we laid out at the start of Part 1:
+Notice how this is still different from the architectural design that we laid out at the start of Part 1:
 
 ![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
 
 In Nx, your graph is primarily descriptive in nature, rather than prescriptive. Edges connecting nodes are created based on your projects' source code.
 
-{% callout type="note" title="Enforcing An Architectural Design with Tags and Boundary Rules" %}
-An optional tagging feature exists in Nx which can enable you to define rules and be more prescriptive on how projects can depend on each other in your workspace.
-
-You can read more about this in [our blog article on Mastering Project Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf43).
-{% /callout %}
-
-Accordingly, to reflect the intended architect, we'll need to add the following to our libraries:
+To reflect the intended architecture, make the following adjustments to your existing projects:
 
 ### `common-ui`
 
-Run the generator:
+Run the `@nrwl/react:component` generator to create a `banner` component using the command: `npx nx g @nrwl/react:component banner --project=common-ui --export`
 
 ```bash
-> npx nx g @nrwl/react:component banner --project=common-ui --export
+% npx nx g @nrwl/react:component banner --project=common-ui --export
 
 >  NX  Generating @nrwl/react:component
 
@@ -33,9 +27,7 @@ CREATE libs/common-ui/src/lib/banner/banner.tsx
 UPDATE libs/common-ui/src/index.ts
 ```
 
-This creates a `banner` component in this library and exports it from the project's `index.ts` file.
-
-We'll then implement a simple banner component:
+Next create a simple banner component in your generated file:
 
 ```javascript {% fileName="libs/common-ui/src/lib/banner.tsx" %}
 export interface BannerProps {
@@ -68,27 +60,9 @@ export function App() {
 export default App;
 ```
 
-{% callout type="note" title="Importing from Other Nx Projects" %}
-Note that the `Banner` component here was available from the import path: `@myorg/common-ui`. This matches the syntax: `@<workspace name>/<project name>`.
-
-When we run a `library` generator for the `common-ui` lib, that generator also adds the path for this library to our `tsconfig.base.json` file:
-
-```json {% fileName="tsconfig.base.json" %}
-{
-  "compilerOptions": {
-    "paths": {
-      "@myorg/common-ui": ["libs/common-ui/src/index.ts"],
-      "@myorg/products": ["libs/products/src/index.ts"]
-    }
-  }
-}
-```
-
-{% /callout %}
-
 ### `products`
 
-Export a `Product` TS interface and some example products from this lib:
+Export a `Product` TS interface and some example products from this lib by making the following change:
 
 ```javascript {% fileName="libs/products/src/lib/products.ts" %}
 export interface Product {
@@ -138,7 +112,7 @@ export function App() {
 export default App;
 ```
 
-Now if we run `npx nx graph` again, we can see that our graph matches our design:
+Now run `npx nx graph` again:
 
 {% side-by-side %}
 ![Matching Graph](/shared/react-tutorial/matching-graph.png)
@@ -146,11 +120,9 @@ Now if we run `npx nx graph` again, we can see that our graph matches our design
 ![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
 {% /side-by-side %}
 
-{% callout type="note" title="More Than Just A Picture" %}
-The Nx Graph is more than just a visualization!
+You can confirm that your grpah now matches your required structure.
 
-Nx provides exceptional tooling to optimize your task-running based and even automate your CI based on this graph. We'll see this in detail in: [4: Workspace Optimization](/react-tutorial/4-workspace-optimization).
-{% /callout %}
+The Nx Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/react-tutorial/4-workspace-optimization).
 
 ## What's Next
 
