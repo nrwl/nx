@@ -68,5 +68,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["buildTarget"]
+  "required": ["buildTarget"],
+  "examplesFile": "../../../docs/file-server-examples.md"
 }
