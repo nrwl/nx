@@ -237,6 +237,7 @@
         },
         "additionalProperties": false,
         "required": ["name"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/angular:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory and style extension\" %}\n\nCreate an application named `my-app` in the `my-dir` directory and use `scss` for styles:\n\n```bash\nnx g @nrwl/angular:app my-app --directory=my-dir --style=scss\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Components application\" %}\n\nCreate an application with Single File Components (inline styles and inline templates):\n\n```bash\nnx g @nrwl/angular:app my-app --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone Components application\" %}\n\nCreate an application that is setup to use standalone components:\n\n```bash\nnx g @nrwl/angular:app my-app --standalone\n```\n\n{% /tab %}\n\n{% tab label=\"Set custom prefix and tags\" %}\n\nSet the prefix to apply to generated selectors and add tags to the application (used for linting).\n\n```bash\nnx g @nrwl/angular:app my-app --prefix=admin --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["app"],
@@ -479,9 +480,9 @@
         "presets": []
       },
       "description": "Creates a stories.ts file for a component.",
+      "hidden": true,
       "implementation": "/packages/angular/src/generators/component-story/component-story.ts",
       "aliases": [],
-      "hidden": false,
       "path": "/packages/angular/src/generators/component-story/schema.json"
     },
     {
@@ -2365,6 +2366,7 @@
         },
         "additionalProperties": false,
         "required": [],
+        "examplesFile": "This generator will change the `storybook` and `build-storybook` targets in all your Angular projects that are configured to use Storybook. The new target configuration will use the native Storybook builders (`@storybook/angular:build-storybook` and `@storybook/angular:start-storybook`) instead of the Nx Storybook builders (`@nrwl/storybook:build-storybook` and `@nrwl/storybook:storybook`).\n\nThis generator is usually invoked through a migrator, when you are using `nx migrate` to upgrade your workspace to Nx `14.1.8` or later.\n\nIf you are on Nx `14.1.8` or later and you did not use `nx migrate`, you can run this generator manually by running the following command:\n\n```bash\nnx g @nrwl/angular:change-storybook-targets\n```\n\nYou can read more about how this generator works, and why we are changing the Storybook targets, in the [Angular Storybook targets documentation page](/storybook/angular-storybook-targets).\n",
         "presets": []
       },
       "description": "Change storybook targets for Angular projects to use @storybook/angular executors",

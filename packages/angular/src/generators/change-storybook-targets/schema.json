@@ -13,5 +13,6 @@
     }
   },
   "additionalProperties": false,
-  "required": []
+  "required": [],
+  "examplesFile": "../../../docs/change-storybook-targets-examples.md"
 }

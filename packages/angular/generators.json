@@ -31,7 +31,8 @@
     "component-story": {
       "factory": "./src/generators/component-story/compat",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Creates a `stories.ts` file for a component."
+      "description": "Creates a `stories.ts` file for a component.",
+      "hidden": true
     },
     "component-test": {
       "factory": "./src/generators/component-test/compat",
@@ -202,7 +203,8 @@
     "component-story": {
       "factory": "./src/generators/component-story/component-story",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Creates a stories.ts file for a component."
+      "description": "Creates a stories.ts file for a component.",
+      "hidden": true
     },
     "component-test": {
       "factory": "./src/generators/component-test/component-test",
