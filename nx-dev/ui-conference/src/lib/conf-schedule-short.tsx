@@ -194,18 +194,26 @@ export function ConfScheduleShort(): JSX.Element {
   return (
     <div className="border-t border-slate-200 dark:border-slate-700">
       <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
-        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
-          <div className="p-8 text-center">Sunday, October 16th</div>
+        <div className="date-container-l font-input-mono mt-16 grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
+          <div className="p-8 text-center">
+            <span className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
+              Sunday, October 16th
+            </span>
+          </div>
         </div>
       </div>
-      <section className="w-full divide-y divide-gray-600 border-t border-b border-gray-600">
+      <section className="w-full divide-y divide-slate-200 border-t border-b dark:border-slate-700">
         {scheduleItemsForSunday16.map((item) =>
           item.type === 'event' ? scheduleRow(item) : breakRow(item)
         )}
       </section>
       <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
-        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
-          <div className="p-8 text-center">Monday, October 17th</div>
+        <div className="date-container-l font-input-mono mt-16 grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
+          <div className="p-8 text-center">
+            <span className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
+              Monday, October 17th
+            </span>
+          </div>
         </div>
       </div>
       <section className="w-full divide-y divide-slate-200 border-t border-b border-slate-200 dark:divide-slate-700 dark:border-slate-700">
@@ -214,11 +222,15 @@ export function ConfScheduleShort(): JSX.Element {
         )}
       </section>
       <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
-        <div className="date-container-l font-input-mono grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
-          <div className="p-8 text-center">Tuesday, October 18th</div>
+        <div className="date-container-l font-input-mono mt-16 grid grid-cols-1 divide-x divide-slate-200 dark:divide-slate-700">
+          <div className="p-8 text-center">
+            <span className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
+              Tuesday, October 18th
+            </span>
+          </div>
         </div>
       </div>
-      <section className="w-full divide-y divide-gray-600 border-t border-b border-gray-600">
+      <section className="w-full divide-y divide-slate-200 border-t border-b dark:border-slate-700">
         {scheduleItemsForTuesday18.map((item) =>
           item.type === 'event' ? scheduleRow(item) : breakRow(item)
         )}
