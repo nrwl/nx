@@ -6,9 +6,9 @@ The default markdown syntax is supported when writing documentation.
 
 ### Front matter
 
-Front matter is used to add metadata to your Markdown file (`title` & `description`). It is provided at the very top of the file, enclosed by three dashes `---`. The content is parsed as YAML.
+Front matter is used to add metadata to your Markdown file (`title` & `description`). It is provided at the very top of the file, enclosed by three dashes `---`. The content is parsed as `YAML`.
 
-If not Front matter is detected, the metadata will be populated with the following:
+If no Front matter is detected, the metadata will be populated with the following:
 
 - `title`: first main title detected
 - `description`: first paragraph detected
