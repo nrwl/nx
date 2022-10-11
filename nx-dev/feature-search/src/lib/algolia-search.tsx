@@ -33,29 +33,29 @@ export function AlgoliaSearch({
   tiny?: boolean;
 }): JSX.Element {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isDisplayed, setIsDisplayed] = useState(false);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [initialQuery, setInitialQuery] = useState('');
   const [browserDetected, setBrowserDetected] = useState(false);
   const [actionKey, setActionKey] = useState(ACTION_KEY_DEFAULT);
 
   const handleOpen = useCallback(() => {
-    setIsOpen(true);
-  }, [setIsOpen]);
+    setIsDisplayed(true);
+  }, [setIsDisplayed]);
   const handleClose = useCallback(() => {
-    setIsOpen(false);
-  }, [setIsOpen]);
+    setIsDisplayed(false);
+  }, [setIsDisplayed]);
 
   const handleInput = useCallback(
     (event: KeyboardEvent) => {
-      setIsOpen(true);
+      setIsDisplayed(true);
       setInitialQuery(event.key);
     },
-    [setIsOpen, setInitialQuery]
+    [setIsDisplayed, setInitialQuery]
   );
 
   useDocSearchKeyboardEvents({
-    isOpen,
+    isOpen: isDisplayed,
     onOpen: handleOpen,
     onClose: handleClose,
     onInput: handleInput,
@@ -132,7 +132,7 @@ export function AlgoliaSearch({
         </button>
       )}
 
-      {isOpen &&
+      {isDisplayed &&
         createPortal(
           <DocSearchModal
             searchParameters={{
@@ -148,7 +148,7 @@ export function AlgoliaSearch({
             appId="PCTGM1JTQL"
             navigator={{
               navigate({ itemUrl }) {
-                setIsOpen(false);
+                setIsDisplayed(false);
                 router.push(itemUrl);
               },
             }}
