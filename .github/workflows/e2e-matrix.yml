@@ -21,10 +21,8 @@ jobs:
         include:
           - os: ubuntu-latest
             os-name: ubuntu
-            os-cache-dir: /tmp/nx-cache
           - os: macos-latest
             os-name: osx
-            os-cache-dir: /tmp/nx-cache
         node_version:
           - '16'
         package_manager:
@@ -169,7 +167,7 @@ jobs:
           YARN_REGISTRY: http://localhost:4872
           NX_VERBOSE_LOGGING: ${{ 'true' }}
           NX_E2E_SKIP_BUILD_CLEANUP: ${{ 'true' }}
-          NX_CACHE_DIRECTORY: ${{ matrix.os-cache-dir }}
+          NX_CACHE_DIRECTORY: ${{ 'tmp' }}
 
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
