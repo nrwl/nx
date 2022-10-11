@@ -10,5 +10,4 @@ export interface Schema {
   style?: Styles;
   linter?: Linter;
   skipPackageJson?: boolean;
-  skipPostInstall?: boolean;
 }
