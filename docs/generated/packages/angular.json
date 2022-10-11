@@ -2408,6 +2408,7 @@
         },
         "additionalProperties": false,
         "required": ["buildTarget", "outputPath", "tsConfig"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nDelegate the build of the project to a different target.\n\n```json\n{\n  \"prod-build\": {\n    \"executor\": \"@nrwl/angular:delegate-build\",\n    \"options\": {\n      \"buildTarget\": \"app:build:production\",\n      \"outputPath\": \"dist/apps/app/production\",\n      \"tsConfig\": \"apps/app/tsconfig.json\",\n      \"watch\": false\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Watch for build changes\" %}\nDelegate the build of the project to a different target.\n\n```json\n{\n  \"prod-build\": {\n    \"executor\": \"@nrwl/angular:delegate-build\",\n    \"options\": {\n      \"buildTarget\": \"app:build:production\",\n      \"outputPath\": \"dist/apps/app/production\",\n      \"tsConfig\": \"apps/app/tsconfig.json\",\n      \"watch\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Delegates the build to a different target while supporting incremental builds.",
