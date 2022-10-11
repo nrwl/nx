@@ -1,7 +1,9 @@
 export class PromisedBasedQueue {
+  private counter = 0;
   private promise = Promise.resolve(null);
 
   sendToQueue(fn: () => Promise<any>): Promise<any> {
+    this.counter++;
     let res, rej;
     const r = new Promise((_res, _rej) => {
       res = _res;
@@ -12,17 +14,25 @@ export class PromisedBasedQueue {
       .then(async () => {
         try {
           res(await fn());
+          this.counter--;
         } catch (e) {
           rej(e);
+          this.counter--;
         }
       })
       .catch(async () => {
         try {
           res(await fn());
+          this.counter--;
         } catch (e) {
           rej(e);
+          this.counter--;
         }
       });
     return r;
+  }
+
+  isEmpty() {
+    return this.counter === 0;
   }
 }
