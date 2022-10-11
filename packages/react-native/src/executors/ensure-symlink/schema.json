@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "cli": "nx",
   "$id": "NxReactNativeEnsureSymlink",
   "$schema": "http://json-schema.org/schema",

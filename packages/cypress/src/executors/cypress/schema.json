@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "title": "Cypress Target",
   "description": "Run Cypress for e2e, integration and component testing.",
   "type": "object",

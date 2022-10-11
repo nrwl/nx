@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "Storybook Builder",
   "cli": "nx",
   "description": "Build storybook in production mode.",

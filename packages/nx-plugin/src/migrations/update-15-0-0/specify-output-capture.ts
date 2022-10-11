@@ -40,16 +40,17 @@ export default async function update(tree: Tree): Promise<void> {
           const schemaPath = joinPathFragments(root, entry.schema);
           if (tree.exists(schemaPath)) {
             updateJson(tree, schemaPath, (json: ExecutorConfig['schema']) => {
-              console.log(json);
-              return json.version
-                ? json
-                : {
-                    version: 2,
-                    outputCapture: json.outputCapture
-                      ? json.outputCapture
-                      : 'direct-nodejs',
-                    ...json,
-                  };
+              if (json.version) {
+                return json;
+              } else {
+                const newProperties: Partial<ExecutorConfig['schema']> = {
+                  version: 2,
+                };
+                if (!json.outputCapture) {
+                  newProperties.outputCapture = 'direct-nodejs';
+                }
+                return { ...newProperties, ...json };
+              }
             });
           }
         }

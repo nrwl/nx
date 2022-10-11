@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "Module Federation Dev Server",
   "description": "Serve a web application.",
   "cli": "nx",

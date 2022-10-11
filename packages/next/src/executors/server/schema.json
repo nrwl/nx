@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "cli": "nx",
   "title": "Next Serve",
   "description": "Serve a Next.js app.",

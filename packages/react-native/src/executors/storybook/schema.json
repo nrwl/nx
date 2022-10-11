@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "React Native Storybook Load Stories",
   "cli": "nx",
   "description": "Load stories for react native.",

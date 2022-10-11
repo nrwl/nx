@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "esbuild (experimental)",
   "description": "Bundle a package for different platforms. Note: declaration (*.d.ts) file are not currently generated.",
   "cli": "nx",
@@ -33,14 +35,20 @@
     "additionalEntryPoints": {
       "type": "array",
       "description": "List of additional entry points.",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "default": []
     },
     "format": {
       "type": "array",
-      "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
+      "description": "Set the output format(s).",
       "alias": "f",
-      "items": { "type": "string", "enum": ["esm", "cjs"] }
+      "items": {
+        "type": "string",
+        "enum": ["esm", "cjs"]
+      },
+      "default": ["esm"]
     },
     "watch": {
       "type": "boolean",
@@ -67,16 +75,6 @@
       "items": {
         "type": "string"
       }
-    },
-    "format": {
-      "type": "array",
-      "description": "Set the output format(s).",
-      "alias": "f",
-      "items": {
-        "type": "string",
-        "enum": ["esm", "cjs"]
-      },
-      "default": ["esm"]
     },
     "outputHashing": {
       "type": "string",

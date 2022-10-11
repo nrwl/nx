@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "Webpack Executor",
   "description": "Builds web applications using webpack.",
   "cli": "nx",

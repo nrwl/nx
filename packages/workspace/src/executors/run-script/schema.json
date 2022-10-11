@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "title": "Run Script",
   "description": "Run any NPM script of a project in the project's root directory.",
   "type": "object",

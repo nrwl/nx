@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "cli": "nx",
   "title": "Next Export",
   "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",

@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "Jest Builder",
   "description": "Jest target options for Build Facade.",
   "cli": "nx",
@@ -66,7 +68,14 @@
     "bail": {
       "alias": "b",
       "description": "Exit the test suite immediately after `n` number of failing tests. (https://jestjs.io/docs/cli#--bail)",
-      "oneOf": [{ "type": "number" }, { "type": "boolean" }]
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
     },
     "ci": {
       "description": "Whether to run Jest in continuous integration (CI) mode. This option is on by default in most popular CI environments. It will prevent snapshots from being written unless explicitly requested. (https://jestjs.io/docs/cli#--ci)",
@@ -88,7 +97,14 @@
     "maxWorkers": {
       "alias": "w",
       "description": "Specifies the maximum number of workers the worker-pool will spawn for running tests. This defaults to the number of the cores available on your machine. Useful for CI. (its usually best not to override this default) (https://jestjs.io/docs/cli#--maxworkersnumstring)",
-      "oneOf": [{ "type": "number" }, { "type": "string" }]
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "onlyChanged": {
       "alias": "o",

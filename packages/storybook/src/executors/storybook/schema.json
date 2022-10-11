@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "Storybook Dev Builder",
   "cli": "nx",
   "description": "Serve up storybook in development mode.",

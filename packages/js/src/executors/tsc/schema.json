@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "Typescript Build Target",
   "description": "Builds using TypeScript.",
   "cli": "nx",

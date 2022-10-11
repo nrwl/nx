@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "Run detox build",
   "description": "Run detox build options.",
   "type": "object",
