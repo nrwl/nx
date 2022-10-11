@@ -4,7 +4,9 @@ import { parsePnpmLockFile } from './pnpm';
 import { parseYarnLockFile } from './yarn';
 import {
   lockFileYargsOnly as npmLockFileYargsOnly,
+  lockFileV1YargsOnly as npmLockFileV1YargsOnly,
   lockFile as npmLockFile,
+  lockFileV1 as npmLockFileV1,
 } from './__fixtures__/npm.lock';
 import {
   lockFileYargsOnly as pnpmLockFileYargsOnly,
@@ -44,8 +46,26 @@ describe('lock-file', () => {
       expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
     });
 
+    it('should map npm lock file v1 data to external nodes', () => {
+      const lockFileData = parseNpmLockFile(npmLockFileV1YargsOnly);
+
+      const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+
+      expect(partialGraph.externalNodes['npm:yargs']).toMatchSnapshot();
+      expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
+    });
+
     it('should map successfully complex npm lock file', () => {
       const lockFileData = parseNpmLockFile(npmLockFile);
+
+      const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+
+      expect(partialGraph.externalNodes['npm:nx']).toMatchSnapshot();
+      expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
+    });
+
+    it('should map successfully complex npm v1 lock file', () => {
+      const lockFileData = parseNpmLockFile(npmLockFileV1);
 
       const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
 
