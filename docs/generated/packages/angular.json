@@ -421,6 +421,7 @@
           "componentPath",
           "componentFileName"
         ],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\nCreate a cypress spec for a component that is set up with Storybook.\n\n```bash\nnx g @nrwl/angular:component-cypress-spec --componentName=MyButtonComponent --componentPath=libs/ui/src/lib/button/button.component.ts --componentFileName=button.component --projectName=ui --projectPath=libs/ui\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Creates a Cypress spec for a UI component that has a story.",
