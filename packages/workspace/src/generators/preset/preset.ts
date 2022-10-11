@@ -28,7 +28,6 @@ export async function presetGenerator(tree: Tree, options: Schema) {
     installPackagesTask(tree);
   };
 }
-
 export const presetSchematic = convertNxGenerator(presetGenerator);
 export default presetGenerator;
 
@@ -179,9 +178,6 @@ async function createPreset(tree: Tree, options: Schema) {
     });
   } else if (options.preset === Preset.Core || options.preset === Preset.NPM) {
     setupPackageManagerWorkspaces(tree, options);
-    if (options.preset === Preset.Core) {
-      tree.delete('workspace.json');
-    }
   } else if (options.preset === Preset.TS) {
     const c = readWorkspaceConfiguration(tree);
     c.workspaceLayout = {
@@ -199,7 +195,7 @@ function setupPackageManagerWorkspaces(tree: Tree, options: Schema) {
     generateFiles(tree, join(__dirname, './files/pnpm-workspace'), '.', {});
   } else {
     updateJson(tree, 'package.json', (json) => {
-      json.workspaces = ['packages/**'];
+      json.workspaces = ['packages/*'];
       return json;
     });
   }

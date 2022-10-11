@@ -151,19 +151,6 @@ describe('preset', () => {
   });
 
   describe('core preset', () => {
-    it('should not contain workspace.json or angular.json', async () => {
-      await presetGenerator(tree, {
-        name: 'proj',
-        preset: Preset.Core,
-        linter: 'eslint',
-        cli: 'nx',
-        standaloneConfig: false,
-        packageManager: 'npm',
-      });
-      expect(tree.exists('workspace.json')).toBeFalsy();
-      expect(tree.exists('angular.json')).toBeFalsy();
-    });
-
     describe('package manager workspaces', () => {
       it('should be configured in package.json', async () => {
         await presetGenerator(tree, {
@@ -178,7 +165,7 @@ describe('preset', () => {
         expect(readJson(tree, 'package.json').workspaces)
           .toMatchInlineSnapshot(`
           Array [
-            "packages/**",
+            "packages/*",
           ]
         `);
       });
@@ -196,7 +183,7 @@ describe('preset', () => {
         expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
           .toMatchInlineSnapshot(`
           "packages:
-            - 'packages/**'
+            - 'packages/*'
           "
         `);
       });
