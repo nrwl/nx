@@ -1,6 +1,13 @@
 import type { Tree } from '@nrwl/devkit';
 
-const eslintFileList = ['.eslintrc.json', '.eslintrc.js'];
+export const eslintFileList = [
+  '.eslintrc',
+  '.eslintrc.js',
+  '.eslintrc.cjs',
+  '.eslintrc.yaml',
+  '.eslintrc.yml',
+  '.eslintrc.json',
+];
 
 export function findEslintFile(tree: Tree): string | null {
   for (const file of eslintFileList) {
@@ -8,5 +15,6 @@ export function findEslintFile(tree: Tree): string | null {
       return file;
     }
   }
+
   return null;
 }
