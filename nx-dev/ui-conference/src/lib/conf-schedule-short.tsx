@@ -42,6 +42,14 @@ export function ConfScheduleShort(): JSX.Element {
   const scheduleItemsForMonday17: ScheduleItem[] = [
     {
       type: 'event',
+      time: '9:45 - 9:55am (UTC-07:00)',
+      title: 'Opening remarks',
+      description: '',
+      speakers: ['Jeff Cross'],
+      videoUrl: '',
+    },
+    {
+      type: 'event',
       time: '10:00 - 10:25am (UTC-07:00)',
       title: 'Keynote - Nx and Lerna: Integrated vs Package-Based Monorepos',
       description:

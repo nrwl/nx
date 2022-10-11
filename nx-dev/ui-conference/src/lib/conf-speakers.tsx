@@ -3,15 +3,13 @@ import { Member, MemberCard } from '@nrwl/nx-dev/ui-member-card';
 export function ConfSpeakers(): JSX.Element {
   const speakers: Array<Member> = [
     {
-      description:
-        'Jeff Cross is a co-founder and Angular consultant at nrwl.io, and is the former tech lead of the Angular Mobile Team at Google.',
+      description: 'Co-Founder/CEO of Nrwl, and collector of kunekune pigs.',
       imageUrl: '/images/conf/jeff-cross.webp',
       name: 'Jeff Cross',
       twitter: 'jeffbcross',
     },
     {
-      description:
-        'Nrwlio co-founder, ex-Googler. Work on dev tools for TS/JS. Nx and Nx Cloud creator. Calligraphy and philosophy enthusiast. Stoic.',
+      description: 'Co-Founder/CTO of Nrwl',
       imageUrl: '/images/conf/victor-savkin.webp',
       name: 'Victor Savkin',
       twitter: 'victorsavkin',
