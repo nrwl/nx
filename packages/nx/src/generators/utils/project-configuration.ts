@@ -498,10 +498,11 @@ function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
         delete projects[matchingStaticProject[0]];
       }
     });
-    return {
+    staticFSWorkspace = {
       ...staticFSWorkspace,
       projects,
     };
+    return staticFSWorkspace;
   }
 }
 
