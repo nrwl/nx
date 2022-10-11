@@ -464,6 +464,8 @@ function findDeletedProjects(tree: Tree) {
   });
 }
 
+let staticFSWorkspace: RawProjectsConfigurations;
+let cachedTree: Tree;
 function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
   const path = getWorkspacePath(tree);
   if (path && tree.exists(path)) {
@@ -476,14 +478,15 @@ function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
       findCreatedProjects(tree),
       (file) => readJson(tree, file)
     ).projects;
-    // We already have built a cache
-    // if (!staticFSWorkspace) {
-    const staticFSWorkspace = buildWorkspaceConfigurationFromGlobs(
-      nxJson,
-      [...globForProjectFiles(tree.root, nxJson)],
-      (file) => readJson(tree, file)
-    );
-    // }
+    // We already have built a cache but need to confirm it's the same tree
+    if (!staticFSWorkspace || tree !== cachedTree) {
+      staticFSWorkspace = buildWorkspaceConfigurationFromGlobs(
+        nxJson,
+        [...globForProjectFiles(tree.root, nxJson)],
+        (file) => readJson(tree, file)
+      );
+      cachedTree = tree;
+    }
     const projects = { ...staticFSWorkspace.projects, ...createdProjects };
     findDeletedProjects(tree).forEach((file) => {
       const matchingStaticProject = Object.entries(projects).find(
@@ -497,10 +500,11 @@ function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
         delete projects[matchingStaticProject[0]];
       }
     });
-    return {
+    staticFSWorkspace = {
       ...staticFSWorkspace,
       projects,
     };
+    return staticFSWorkspace;
   }
 }
 
