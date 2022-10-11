@@ -1026,6 +1026,7 @@
         },
         "additionalProperties": false,
         "required": ["name", "library"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nCreate a secondary entrypoint named `button` in the `ui` library.\n\n```bash\nnx g @nrwl/angular:library-secondary-entry-point --library=ui --name=button\n```\n\n{% /tab %}\n\n{% tab label=\"Skip generating module\" %}\nCreate a secondary entrypoint named `button` in the `ui` library but skip creating an NgModule.\n\n```bash\nnx g @nrwl/angular:library-secondary-entry-point --library=ui --name=button --skipModule\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["secondary-entry-point", "entry-point"],
