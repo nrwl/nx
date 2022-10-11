@@ -30,6 +30,8 @@ export interface GeneratorsJsonEntry {
   'x-type'?: 'library' | 'application';
 }
 
+export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';
+
 export interface ExecutorsJsonEntry {
   schema: string;
   implementation: string;
@@ -84,7 +86,11 @@ export interface ExecutorsJson {
 }
 
 export interface ExecutorConfig {
-  schema: any;
+  schema: {
+    version?: number;
+    outputCapture?: OutputCaptureMethod;
+    properties: any;
+  };
   hasherFactory?: () => CustomHasher;
   implementationFactory: () => Executor;
   batchImplementationFactory?: () => TaskGraphExecutor;
