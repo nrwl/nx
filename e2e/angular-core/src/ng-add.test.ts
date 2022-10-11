@@ -148,6 +148,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       cli: {
         packageManager: packageManager,
       },
+      defaultProject: project,
       implicitDependencies: {
         '.eslintrc.json': '*',
         'package.json': {

@@ -3,8 +3,10 @@ import {
   formatFiles,
   installPackagesTask,
   readJson,
+  readWorkspaceConfiguration,
   Tree,
   updateJson,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { nxVersion } from '../../utils/versions';
 import type { GeneratorOptions } from './schema';
@@ -35,6 +37,8 @@ export async function migrateFromAngularCli(
   validateWorkspace(tree);
   const projects = getAllProjects(tree);
   const options = normalizeOptions(tree, rawOptions, projects);
+
+  const defaultProject = projects.apps.find((app) => app.config.root === '');
 
   if (options.preserveAngularCliLayout) {
     addDependenciesToPackageJson(
@@ -101,6 +105,14 @@ export async function migrateFromAngularCli(
     }
 
     await formatFiles(tree);
+  }
+
+  if (defaultProject) {
+    const workspaceConfig = readWorkspaceConfiguration(tree);
+    updateWorkspaceConfiguration(tree, {
+      ...workspaceConfig,
+      defaultProject: defaultProject.name,
+    });
   }
 
   if (!options.skipInstall) {
