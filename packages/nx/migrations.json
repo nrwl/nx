@@ -35,6 +35,12 @@
       "version": "15.0.0-beta.1",
       "description": "Replace implicitDependencies with namedInputs + target inputs",
       "implementation": "./src/migrations/update-15-0-0/migrate-to-inputs"
+    },
+    "15.0.0-prefix-outputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.1",
+      "description": "Prefix outputs with {workspaceRoot}/{projectRoot} if needed",
+      "implementation": "./src/migrations/update-15-0-0/prefix-outputs"
     }
   }
 }

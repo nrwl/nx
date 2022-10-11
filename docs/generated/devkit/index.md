@@ -1081,7 +1081,7 @@ Prefixes project name with npm scope
 
 ### getOutputsForTargetAndConfiguration
 
-▸ **getOutputsForTargetAndConfiguration**(`task`, `node`): `any`
+▸ **getOutputsForTargetAndConfiguration**(`task`, `node`): `string`[]
 
 Returns the list of outputs that will be cached.
 
@@ -1094,7 +1094,7 @@ Returns the list of outputs that will be cached.
 
 #### Returns
 
-`any`
+`string`[]
 
 ---
 

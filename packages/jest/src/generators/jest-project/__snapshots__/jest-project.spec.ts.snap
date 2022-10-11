@@ -117,7 +117,7 @@ Object {
     "passWithNoTests": true,
   },
   "outputs": Array [
-    "coverage/libs/lib1",
+    "{workspaceRoot}/coverage/{projectRoot}",
   ],
 }
 `;

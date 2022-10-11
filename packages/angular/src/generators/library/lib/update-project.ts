@@ -161,13 +161,7 @@ function fixProjectWorkspaceConfig(
       executor: options.publishable
         ? '@nrwl/angular:package'
         : '@nrwl/angular:ng-packagr-lite',
-      outputs: [
-        joinPathFragments(
-          'dist',
-          getWorkspaceLayout(host).libsDir,
-          options.projectDirectory
-        ),
-      ],
+      outputs: ['{workspaceRoot}/dist/{projectRoot}'],
       ...rest,
     };
   }

@@ -771,7 +771,7 @@ describe('lib', () => {
         {
           path: 'my-dir/my-lib/project.json',
           lookupFn: (json) => json.targets.build.outputs,
-          expectedValue: ['dist/my-dir/my-lib'],
+          expectedValue: ['{workspaceRoot}/dist/{projectRoot}'],
         },
         {
           path: 'my-dir/my-lib/tsconfig.lib.json',

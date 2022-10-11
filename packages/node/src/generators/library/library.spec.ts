@@ -38,7 +38,7 @@ describe('lib', () => {
       });
       expect(workspaceJson.projects['my-lib'].architect.test).toEqual({
         builder: '@nrwl/jest:jest',
-        outputs: ['coverage/libs/my-lib'],
+        outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
         options: {
           jestConfig: 'libs/my-lib/jest.config.ts',
           passWithNoTests: true,
