@@ -75,12 +75,10 @@ Snapshots:   0 total
 Time:        0.84 s, estimated 1 s
 Ran all test suites.
 
- ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+ ———————————————————————————————————————————————————————————————————————————————————————————————————
 
  >  NX   Successfully ran target test for project common-ui (2s)
 ```
-
-Your tests are currently failing as we haven't adjusted any of our tests since generating and making some changes to this project.
 
 Next, run a lint check on your `common-ui` project by running the command: `npx nx lint common-ui`:
 
@@ -95,7 +93,7 @@ Linting "common-ui"...
 All files pass linting.
 
 
- ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+———————————————————————————————————————————————————————————————————————————————————————————————————
 
  >  NX   Successfully ran target lint for project common-ui (2s)
 ```

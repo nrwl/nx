@@ -89,7 +89,7 @@ export const exampleProducts: Product[] = [
 
 Import and use both the `Banner` component from your `common-ui` lib, and the `exampleProducts` from your `products` lib:
 
-```javascript {% fileName="libs/products/src/lib/products.ts" %}
+```javascript {% fileName="apps/store/src/app/app.tsx" %}
 import { Banner } from '@myorg/common-ui';
 import { exampleProducts } from '@myorg/products';
 
@@ -120,7 +120,7 @@ Now run `npx nx graph` again:
 ![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
 {% /side-by-side %}
 
-You can confirm that your grpah now matches your required structure.
+You can confirm that your graph now matches your required structure.
 
 The Nx Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/react-tutorial/4-workspace-optimization).
 
