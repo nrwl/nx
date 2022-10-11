@@ -14,7 +14,7 @@ git add . && git commit -m "commiting to test affected"
 
 Then make a change to the styles of your `common-ui` project:
 
-```css {% fileName="libs/common-ui/src/lib/common-ui.module.css" }
+```css {% fileName="libs/common-ui/src/lib/common-ui.module.css" %}
 .container {
   color: 'blue;';
 }
@@ -202,9 +202,11 @@ Notice the line here:
    ✔    1/1 dependent project tasks succeeded [0 read from cache]
 ```
 
-This is because your `store` project is dependent on your `products` project, which is also buildable. By default Nx is configured to run (or pull results from cache) for any dependent project's `build`s.
+This is because your `store` project depends on your `products` project, which also has a `build` target. By default Nx is configured to run the `build` target for any dependencies that have a `build` target, before running the `build` on the original project.
 
 This feature allow the Nx graph to dynamically maintain task dependencies, rather than having to manually maintain those task dependencies as your workspace continues to grow.
+
+{% card title="More On The Task Pipeline Configuration" description="The the Task Pipeline Configuration guids for more details on how to configure your Task Graph." url="/concepts/task-pipeline-configuration" /%}
 
 ## What's Next
 

@@ -29,7 +29,7 @@ UPDATE libs/common-ui/src/index.ts
 
 Next create a simple banner component in your generated file:
 
-```javascript {% fileName="libs/common-ui/src/lib/banner.tsx" %}
+```javascript {% fileName="libs/common-ui/src/lib/banner/banner.tsx" %}
 export interface BannerProps {
   text: string;
 }

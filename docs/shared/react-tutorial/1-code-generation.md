@@ -60,7 +60,7 @@ The following syntax is used to run generators:
 
 ![Nx Generator Syntax](/shared/react-tutorial/generator-syntax.png)
 
-You should use the `application` generator found in the `@nrwl/react` plugin. To run the generator and create the `admin` application, run the command:
+You should use the `application` generator found in the `@nrwl/react` plugin. To run the generator and create the `admin` application, run the command: `npx nx g @nrwl/react:app admin`:
 
 ```bash
 % npx nx g @nrwl/react:app admin

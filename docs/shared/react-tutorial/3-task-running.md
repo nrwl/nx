@@ -16,7 +16,7 @@ When you ran your Nx generators in the first step of this tutorial, you actually
 
 Here's the `project.json` file for your `common-ui` project:
 
-```json {% fileName="libs/products/common-ui.json" %}
+```json {% fileName="libs/common-ui/project.json" %}
 {
   "name": "common-ui",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
@@ -59,7 +59,7 @@ Running a target in Nx uses the following syntax:
 
 ![Syntax for Running Tasks in Nx](/shared/react-tutorial/run-target-syntax.png)
 
-Run the `test` target for our `common-ui` project now, by running the command `npx nx test products`:
+Run the `test` target for our `common-ui` project now, by running the command `npx nx test common-ui`:
 
 ```bash
 % npx nx test common-ui
