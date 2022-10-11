@@ -241,6 +241,11 @@ describe('workspace', () => {
       ).not.toBeDefined();
     });
 
+    it('should set the default project correctly', async () => {
+      await migrateFromAngularCli(tree, {});
+      expect(readJson(tree, 'nx.json').defaultProject).toBe('myApp');
+    });
+
     it('should create nx.json', async () => {
       await migrateFromAngularCli(tree, { defaultBase: 'main' });
       expect(readJson(tree, 'nx.json')).toMatchSnapshot();

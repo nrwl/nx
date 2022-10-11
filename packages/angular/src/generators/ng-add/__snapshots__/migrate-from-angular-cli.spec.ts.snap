@@ -44,6 +44,7 @@ Object {
   "affected": Object {
     "defaultBase": "main",
   },
+  "defaultProject": "app1",
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
     "package.json": Object {
