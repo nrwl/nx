@@ -3507,6 +3507,7 @@
         },
         "additionalProperties": false,
         "required": ["buildTarget"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Serve static files with http-server\" %}\n\nSet up `http-server` to host static files on a local webserver.\n\n```json\n{\n  \"static-serve\": {\n    \"executor\": \"@nrwl/angular:file-server\",\n    \"options\": {\n      \"buildTarget\": \"app:build\",\n      \"port\": 4201\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Watch for changes\" %}\n\nTo allow watching for changes, simply add the watch property.\n\n```json\n{\n  \"static-serve\": {\n    \"executor\": \"@nrwl/angular:file-server\",\n    \"options\": {\n      \"buildTarget\": \"app:build\",\n      \"port\": 4201,\n      \"watch\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Serve a web application from a folder.",
