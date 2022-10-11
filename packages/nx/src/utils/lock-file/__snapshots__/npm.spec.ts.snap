@@ -1,14 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`npm LockFile utility should parse lockfile correctly 1`] = `
+exports[`npm LockFile utility v1 should parse lockfile correctly 1`] = `
 Object {
   "@ampproject/remapping@2.2.0": Object {
     "dependencies": Object {
       "@jridgewell/gen-mapping": "^0.1.0",
       "@jridgewell/trace-mapping": "^0.3.9",
-    },
-    "engines": Object {
-      "node": ">=6.0.0",
     },
     "integrity": "sha512-qRmjj8nj9qmLTQXXmaR1cck3UXSRMPrbsLJAasZpF+t3riI71BXed5ebIOYwQntykeZuhjsdweEc9BxH5Jc26w==",
     "packageMeta": Array [
@@ -18,6 +15,7 @@ Object {
         "path": "node_modules/@ampproject/remapping",
       },
     ],
+    "requires": undefined,
     "resolved": "https://registry.npmjs.org/@ampproject/remapping/-/remapping-2.2.0.tgz",
     "rootVersion": true,
     "version": "2.2.0",
@@ -25,17 +23,11 @@ Object {
 }
 `;
 
-exports[`npm LockFile utility should parse lockfile correctly 2`] = `
+exports[`npm LockFile utility v1 should parse lockfile correctly 2`] = `
 Object {
-  "typescript@4.8.3": Object {
-    "bin": Object {
-      "tsc": "bin/tsc",
-      "tsserver": "bin/tsserver",
-    },
-    "engines": Object {
-      "node": ">=4.2.0",
-    },
-    "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
+  "typescript@4.8.4": Object {
+    "dependencies": undefined,
+    "integrity": "sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==",
     "packageMeta": Array [
       Object {
         "dev": true,
@@ -43,6 +35,76 @@ Object {
         "path": "node_modules/typescript",
       },
     ],
+    "requires": undefined,
+    "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.8.4.tgz",
+    "rootVersion": true,
+    "version": "4.8.4",
+  },
+}
+`;
+
+exports[`npm LockFile utility v2 should parse lockfile correctly 1`] = `
+Object {
+  "@ampproject/remapping@2.2.0": Object {
+    "dependencies": Object {
+      "@jridgewell/gen-mapping": "^0.1.0",
+      "@jridgewell/trace-mapping": "^0.3.9",
+    },
+    "integrity": "sha512-qRmjj8nj9qmLTQXXmaR1cck3UXSRMPrbsLJAasZpF+t3riI71BXed5ebIOYwQntykeZuhjsdweEc9BxH5Jc26w==",
+    "packageMeta": Array [
+      Object {
+        "dev": true,
+        "optional": undefined,
+        "packageData": Object {
+          "dependencies": Object {
+            "@jridgewell/gen-mapping": "^0.1.0",
+            "@jridgewell/trace-mapping": "^0.3.9",
+          },
+          "dev": true,
+          "engines": Object {
+            "node": ">=6.0.0",
+          },
+          "integrity": "sha512-qRmjj8nj9qmLTQXXmaR1cck3UXSRMPrbsLJAasZpF+t3riI71BXed5ebIOYwQntykeZuhjsdweEc9BxH5Jc26w==",
+          "resolved": "https://registry.npmjs.org/@ampproject/remapping/-/remapping-2.2.0.tgz",
+          "version": "2.2.0",
+        },
+        "path": "node_modules/@ampproject/remapping",
+      },
+    ],
+    "requires": undefined,
+    "resolved": "https://registry.npmjs.org/@ampproject/remapping/-/remapping-2.2.0.tgz",
+    "rootVersion": true,
+    "version": "2.2.0",
+  },
+}
+`;
+
+exports[`npm LockFile utility v2 should parse lockfile correctly 2`] = `
+Object {
+  "typescript@4.8.3": Object {
+    "dependencies": undefined,
+    "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
+    "packageMeta": Array [
+      Object {
+        "dev": true,
+        "optional": undefined,
+        "packageData": Object {
+          "bin": Object {
+            "tsc": "bin/tsc",
+            "tsserver": "bin/tsserver",
+          },
+          "dev": true,
+          "engines": Object {
+            "node": ">=4.2.0",
+          },
+          "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
+          "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.8.3.tgz",
+          "version": "4.8.3",
+        },
+        "path": "node_modules/typescript",
+      },
+    ],
+    "requires": undefined,
     "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.8.3.tgz",
     "rootVersion": true,
     "version": "4.8.3",

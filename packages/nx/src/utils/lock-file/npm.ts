@@ -5,6 +5,7 @@ type PackageMeta = {
   path: string;
   optional?: boolean;
   dev?: boolean;
+  [key: string]: any;
 };
 
 type Dependencies = Record<string, Omit<PackageDependency, 'packageMeta'>>;
@@ -24,7 +25,7 @@ type NpmLockFile = {
   name?: string;
   lockfileVersion: number;
   requires?: boolean;
-  packages: Dependencies;
+  packages?: Dependencies;
   dependencies?: Record<string, NpmDependency>;
 };
 
@@ -35,49 +36,105 @@ type NpmLockFile = {
  * @returns
  */
 export function parseNpmLockFile(lockFile: string): LockFileData {
-  const { packages, dependencies, ...metadata } = JSON.parse(lockFile);
+  const { packages, dependencies, ...metadata } = JSON.parse(
+    lockFile
+  ) as NpmLockFile;
   return {
-    dependencies: mapPackages(packages),
+    dependencies: mapPackages(dependencies, packages),
     lockFileMetadata: {
       metadata,
-      rootPackage: packages[''],
+      ...(packages && { rootPackage: packages[''] }),
     },
     hash: hashString(lockFile),
   };
 }
 
 // Maps /node_modules/@abc/def with version 1.2.3 => @abc/def > @abc/dev@1.2.3
-function mapPackages(packages: Dependencies): LockFileData['dependencies'] {
+function mapPackages(
+  dependencies: Record<string, NpmDependency>,
+  packages: Dependencies
+): LockFileData['dependencies'] {
   const mappedPackages: LockFileData['dependencies'] = {};
 
-  Object.entries(packages).forEach(([key, { dev, optional, ...value }]) => {
-    // skip root package
-    if (!key) {
-      return;
-    }
-    // key can have several instances of 'node_modules' if hoisted package
-    const packageName = key.slice(key.lastIndexOf('node_modules/') + 13);
+  Object.entries(dependencies).forEach(([packageName, value]) => {
     mappedPackages[packageName] = mappedPackages[packageName] || {};
+    const packagePath = `node_modules/${packageName}`;
+    const newKey = packageName + '@' + value.version;
+    mappedPackages[packageName][newKey] = mapDependency(
+      packagePath,
+      value,
+      true,
+      packages && { packageData: packages[packagePath] }
+    );
+    mapPackageDependencies(
+      mappedPackages,
+      packages,
+      value.dependencies,
+      packagePath
+    );
+  });
 
-    const packageMeta = {
-      path: key,
-      dev,
-      optional,
-    };
+  return mappedPackages;
+}
 
+function mapDependency(
+  packagePath: string,
+  { dev, optional, ...value }: NpmDependency,
+  rootVersion: boolean,
+  packageData?: { packageData: Omit<PackageDependency, 'packageMeta'> }
+): PackageDependency {
+  const packageMeta = {
+    path: packagePath,
+    dev,
+    optional,
+    ...packageData,
+  };
+  return {
+    ...value,
+    // invert those two fields to match other package managers
+    requires: value.dependencies,
+    dependencies: value.requires,
+    packageMeta: [packageMeta],
+    rootVersion,
+  };
+}
+
+function mapPackageDependencies(
+  mappedPackages: LockFileData['dependencies'],
+  packages: Dependencies,
+  dependencies: Record<string, NpmDependency>,
+  parentPath: string
+): void {
+  if (!dependencies) {
+    return;
+  }
+
+  Object.entries(dependencies).forEach(([packageName, value]) => {
+    mappedPackages[packageName] = mappedPackages[packageName] || {};
+    const packagePath = `${parentPath}/node_modules/${packageName}`;
     const newKey = packageName + '@' + value.version;
     if (mappedPackages[packageName][newKey]) {
-      mappedPackages[packageName][newKey].packageMeta.push(packageMeta);
+      mappedPackages[packageName][newKey].packageMeta.push({
+        path: packagePath,
+        dev: value.dev,
+        optional: value.optional,
+        ...(packages && { packageData: packages[packagePath] }),
+      });
     } else {
-      const rootVersion = key.split('/node_modules/').length === 1;
-      mappedPackages[packageName][newKey] = {
-        ...value,
-        packageMeta: [packageMeta],
-        rootVersion,
-      };
+      mappedPackages[packageName][newKey] = mapDependency(
+        packagePath,
+        value,
+        false,
+        packages && { packageData: packages[packagePath] }
+      );
     }
+    mapPackageDependencies(
+      mappedPackages,
+      packages,
+      value.dependencies,
+      packagePath
+    );
   });
-  return mappedPackages;
 }
 
 /**
@@ -88,8 +145,9 @@ function mapPackages(packages: Dependencies): LockFileData['dependencies'] {
  */
 export function stringifyNpmLockFile(lockFileData: LockFileData): string {
   const dependencies = {};
+  const isV2 = lockFileData.lockFileMetadata.metadata.lockfileVersion > 1;
   const packages: Dependencies = {
-    '': lockFileData.lockFileMetadata.rootPackage,
+    ...(isV2 && { '': lockFileData.lockFileMetadata.rootPackage }),
   };
 
   const keys = Object.keys(lockFileData.dependencies);
@@ -99,7 +157,9 @@ export function stringifyNpmLockFile(lockFileData: LockFileData): string {
     const values = Object.values(packageVersions);
 
     values.forEach((value) => {
-      unmapPackage(packages, value);
+      if (isV2) {
+        unmapPackage(packages, value);
+      }
       unmapPackageDependencies(dependencies, packageName, value);
     });
   }
@@ -107,7 +167,7 @@ export function stringifyNpmLockFile(lockFileData: LockFileData): string {
   // generate package lock JSON
   const lockFileJson: NpmLockFile = {
     ...lockFileData.lockFileMetadata.metadata,
-    packages: sortObject(packages),
+    ...(isV2 && { packages: sortObject(packages) }),
     dependencies: sortDependencies(dependencies),
   };
 
@@ -117,33 +177,14 @@ export function stringifyNpmLockFile(lockFileData: LockFileData): string {
 // remapping the package back to package-lock format
 function unmapPackage(
   packages: Dependencies,
-  { packageMeta, rootVersion, ...value }: PackageDependency
+  { packageMeta }: PackageDependency
 ) {
   // we need to decompose value, to achieve particular field ordering
-  const {
-    version,
-    resolved,
-    integrity,
-    license,
-    devOptional,
-    hasInstallScript,
-    ...rest
-  } = value;
 
   for (let i = 0; i < packageMeta.length; i++) {
-    const { path, dev, optional } = packageMeta[i];
+    const { path, packageData } = packageMeta[i];
     // we are sorting the properties to get as close as possible to the original package-lock.json
-    packages[path] = {
-      version,
-      resolved,
-      integrity,
-      dev,
-      devOptional,
-      hasInstallScript,
-      license,
-      optional,
-      ...rest,
-    };
+    packages[path] = packageData;
   }
 }
 
