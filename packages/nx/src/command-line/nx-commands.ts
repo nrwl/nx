@@ -259,12 +259,7 @@ export const commandsObject = yargs
         await withWorkspaceGeneratorOptions(yargs, process.argv.slice(3)),
         'workspace-generator'
       ),
-    handler: async () => {
-      await (
-        await import('./workspace-generators')
-      ).workspaceGenerators(process.argv.slice(3));
-      process.exit(0);
-    },
+    handler: workspaceGeneratorHandler,
   })
   .command({
     command: 'migrate [packageAndVersion]',
@@ -847,21 +842,30 @@ async function withCustomGeneratorOptions(
     command += ' [options]';
   }
 
-  yargs.wrap(yargs.terminalWidth()).command(
+  yargs.command({
     // this is the default and only command
     command,
-    schema.description || '',
-    (yargs) => {
+    describe: schema.description || '',
+    builder: (y) => {
       options.forEach(({ name, definition }) => {
-        yargs.option(name, definition);
+        y.option(name, definition);
       });
       positionals.forEach(({ name, definition }) => {
-        yargs.positional(name, definition);
+        y.positional(name, definition);
       });
-    }
-  );
+      return linkToNxDevAndExamples(y, 'workspace-generator');
+    },
+    handler: workspaceGeneratorHandler,
+  });
 
   return yargs;
+}
+
+async function workspaceGeneratorHandler() {
+  await (
+    await import('./workspace-generators')
+  ).workspaceGenerators(process.argv.slice(3));
+  process.exit(0);
 }
 
 function withMigrationOptions(yargs: yargs.Argv) {

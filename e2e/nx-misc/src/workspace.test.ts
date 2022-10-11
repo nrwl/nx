@@ -24,9 +24,7 @@ describe('Workspace Tests', () => {
     proj = newProject();
   });
 
-  afterAll(() => {
-    cleanupProject();
-  });
+  afterAll(() => cleanupProject());
 
   describe('@nrwl/workspace:library', () => {
     it('should create a library that can be tested and linted', async () => {
@@ -196,6 +194,7 @@ describe('Workspace Tests', () => {
         description: 'skip changes to tsconfig',
       };
       json.properties['inlineprop'] = json.properties['name'];
+      json.required = ['inlineprop'];
       delete json.properties['name'];
 
       updateFile(
@@ -208,7 +207,7 @@ describe('Workspace Tests', () => {
         `tools/generators/${custom}/index.ts`,
         indexFile.replace(
           'name: schema.name',
-          'inlineprop: schema.inlineprop, directory: schema.directory, skipTsConfig: schema.skipTsConfig'
+          'name: schema.inlineprop, directory: schema.directory, skipTsConfig: schema.skipTsConfig'
         )
       );
 
@@ -228,11 +227,10 @@ describe('Workspace Tests', () => {
         `CREATE libs/dir/${workspace}/src/index.ts`
       );
 
-      const output = runCLI(
+      runCLI(
         `workspace-generator ${custom} ${workspace} --no-interactive --directory=dir`
       );
       checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
-      expect(output).not.toContain('UPDATE nx.json');
 
       const jsonFailing = readJson(`tools/generators/${failing}/schema.json`);
       jsonFailing.properties = {};
