@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularStorybookCompodocConfig",
+  "title": "Configure Compodoc for Storybook",
+  "description": "Configure Compodoc for Angular projects with Storybook.",
+  "type": "object",
+  "cli": "nx",
+  "examples": [
+    {
+      "command": "nx g @nrwl/angular:storybook-compodoc-config --name=my-lib",
+      "description": "Congifure compodoc for Storybook for the `my-lib` Angular project."
+    },
+    {
+      "command": "x g @nrwl/angular:storybook-compodoc-config --all",
+      "description": "Congifure compodoc for Storybook for all Angular projects with Storybook."
+    }
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "aliases": ["project", "projectName"],
+      "description": "Project for which to configure compodoc.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What's the name of the project for which you want to configure compodoc?",
+      "x-dropdown": "projects"
+    },
+    "all": {
+      "description": "Configure compodoc for all Angular projects with Storybook.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": [],
+  "examplesFile": "../../../docs/storybook-compodoc-config-examples.md"
+}

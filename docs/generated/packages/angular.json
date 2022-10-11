@@ -2367,6 +2367,57 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/generators/change-storybook-targets/schema.json"
+    },
+    {
+      "name": "storybook-compodoc-config",
+      "factory": "./src/generators/storybook-compodoc-config/storybook-compodoc-config",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "NxAngularStorybookCompodocConfig",
+        "title": "Configure Compodoc for Storybook",
+        "description": "Configure Compodoc for Angular projects with Storybook.",
+        "type": "object",
+        "cli": "nx",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:storybook-compodoc-config --name=my-lib",
+            "description": "Congifure compodoc for Storybook for the `my-lib` Angular project."
+          },
+          {
+            "command": "x g @nrwl/angular:storybook-compodoc-config --all",
+            "description": "Congifure compodoc for Storybook for all Angular projects with Storybook."
+          }
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "aliases": ["project", "projectName"],
+            "description": "Project for which to configure compodoc.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What's the name of the project for which you want to configure compodoc?",
+            "x-dropdown": "projects"
+          },
+          "all": {
+            "description": "Configure compodoc for all Angular projects with Storybook.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipFormat": {
+            "description": "Skip formatting files.",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": [],
+        "examplesFile": "This generator will configure Compodoc for your Angular project that is already configured with Storybook.\n\nYou can configure Compodoc for just one project, or for all the Angular projects with Storybook in your workspace, using the following commands:\n\n{% tabs %}\n{% tab label=\"Compodoc for one project\" %}\n\nConfigure Compodoc for an Angular project with Storybook nameds `my-app`:\n\n```bash\nnx g @nrwl/angular:storybook-compodoc-config --name=my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Compodoc for all projects\" %}\n\nCongifure compodoc for Storybook for all Angular projects with Storybook:\n\n```bash\nnx g @nrwl/angular:storybook-compodoc-config --all\n```\n\n{% /tab %}\n\n{% /tabs %}\n\nYou can read more about Compodoc and Storybook in the [Set up Compodoc for Storybook on Nx documentation page](/storybook/angular-storybook-compodoc.md).\n",
+        "presets": []
+      },
+      "description": "Configure Compodoc for Angular projects with Storybook.",
+      "hidden": false,
+      "implementation": "/packages/angular/src/generators/storybook-compodoc-config/storybook-compodoc-config.ts",
+      "aliases": [],
+      "path": "/packages/angular/src/generators/storybook-compodoc-config/schema.json"
     }
   ],
   "executors": [
