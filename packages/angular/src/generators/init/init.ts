@@ -1,10 +1,11 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
-import { GeneratorCallback, logger, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
+  GeneratorCallback,
+  logger,
   readWorkspaceConfiguration,
-  updateJson,
+  Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
@@ -12,18 +13,18 @@ import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
-  angularVersion,
   angularDevkitVersion,
-  jestPresetAngularVersion,
-  rxjsVersion,
-  tsNodeVersion,
-  tsLibVersion,
-  zoneJsVersion,
-  protractorVersion,
+  angularVersion,
   jasmineCoreVersion,
   jasmineSpecReporterVersion,
+  jestPresetAngularVersion,
+  protractorVersion,
+  rxjsVersion,
+  tsLibVersion,
+  tsNodeVersion,
   typesJasmineVersion,
   typesJasminewd2Version,
+  zoneJsVersion,
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
@@ -34,10 +35,6 @@ export async function angularInitGenerator(
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(rawOptions);
   setDefaults(host, options);
-
-  if (!options.skipPostInstall) {
-    addPostInstall(host);
-  }
 
   const depsTask = !options.skipPackageJson
     ? updateDependencies(host)
@@ -59,7 +56,6 @@ function normalizeOptions(options: Schema): Required<Schema> {
     linter: options.linter ?? Linter.EsLint,
     skipFormat: options.skipFormat ?? false,
     skipInstall: options.skipInstall ?? false,
-    skipPostInstall: options.skipPostInstall ?? false,
     skipPackageJson: options.skipPackageJson ?? false,
     style: options.style ?? 'css',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
@@ -88,19 +84,6 @@ function setDefaults(host: Tree, options: Schema) {
   };
 
   updateWorkspaceConfiguration(host, workspace);
-}
-
-function addPostInstall(host: Tree) {
-  updateJson(host, 'package.json', (pkgJson) => {
-    pkgJson.scripts = pkgJson.scripts ?? {};
-    const command = 'ngcc --properties es2020 browser module main';
-    if (!pkgJson.scripts.postinstall) {
-      pkgJson.scripts.postinstall = command;
-    } else if (!pkgJson.scripts.postinstall.includes('ngcc')) {
-      pkgJson.scripts.postinstall = `${pkgJson.scripts.postinstall} && ${command}`;
-    }
-    return pkgJson;
-  });
 }
 
 function updateDependencies(host: Tree): GeneratorCallback {

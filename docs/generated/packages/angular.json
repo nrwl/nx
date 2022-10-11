@@ -170,11 +170,6 @@
             "default": false,
             "description": "Do not add dependencies to `package.json`."
           },
-          "skipPostInstall": {
-            "type": "boolean",
-            "default": false,
-            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
-          },
           "unitTestRunner": {
             "type": "string",
             "enum": ["karma", "jest", "none"],
@@ -719,11 +714,6 @@
             "type": "boolean",
             "default": false,
             "description": "Do not add dependencies to `package.json`."
-          },
-          "skipPostInstall": {
-            "type": "boolean",
-            "default": false,
-            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
           }
         },
         "additionalProperties": false,
@@ -863,11 +853,6 @@
             "type": "boolean",
             "default": false,
             "description": "Do not add dependencies to `package.json`."
-          },
-          "skipPostInstall": {
-            "type": "boolean",
-            "default": false,
-            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
           },
           "skipTsConfig": {
             "type": "boolean",

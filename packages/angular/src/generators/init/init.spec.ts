@@ -4,7 +4,6 @@ import { Linter } from '@nrwl/linter';
 
 import init from './init';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
-import { Styles } from '../utils/types';
 
 describe('init', () => {
   let host: Tree;
@@ -40,37 +39,6 @@ describe('init', () => {
 
     // codelyzer should no longer be there by default
     expect(devDependencies['codelyzer']).toBeUndefined();
-  });
-
-  it('should add a postinstall script for ngcc by default', async () => {
-    // ACT
-    await init(host, {
-      unitTestRunner: UnitTestRunner.Karma,
-      linter: Linter.EsLint,
-      skipFormat: false,
-    });
-
-    const packageJson = readJson(host, 'package.json');
-
-    // ASSERT
-    expect(packageJson.scripts.postinstall).toEqual(
-      'ngcc --properties es2020 browser module main'
-    );
-  });
-
-  it('should not add a postinstall script for ngcc if skipPostInstall=true', async () => {
-    // ACT
-    await init(host, {
-      unitTestRunner: UnitTestRunner.Karma,
-      linter: Linter.EsLint,
-      skipFormat: false,
-      skipPostInstall: true,
-    });
-
-    const packageJson = readJson(host, 'package.json');
-
-    // ASSERT
-    expect(packageJson?.scripts?.postinstall).toBeFalsy();
   });
 
   describe('--unit-test-runner', () => {
