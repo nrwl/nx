@@ -7,8 +7,10 @@ import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import { DocumentData } from '@nrwl/nx-dev/models-document';
 import { Menu, MenuItem } from '@nrwl/nx-dev/models-menu';
 import { PackageMetadata } from '@nrwl/nx-dev/models-package';
-import { DocumentationHeader } from '@nrwl/nx-dev/ui-common';
+import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
 import type { GetStaticPaths, GetStaticProps } from 'next';
+import { useRouter } from 'next/router';
+import { useEffect, useRef } from 'react';
 import {
   nxCloudDocumentsApi,
   nxCloudMenuApi,
@@ -35,7 +37,25 @@ type DocumentationPageProps =
 export default function DocumentationPage(
   props: DocumentationPageProps
 ): JSX.Element {
+  const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
+  const wrapperElement = useRef(null);
+
+  useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      if (url.includes('#')) return;
+      if (!wrapperElement) return;
+
+      (wrapperElement as any).current.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth',
+      });
+    };
+
+    router.events.on('routeChangeComplete', handleRouteChange);
+    return () => router.events.off('routeChangeComplete', handleRouteChange);
+  }, [router, wrapperElement]);
 
   if (props.statusCode === 404) {
     return <FourOhFour />;
@@ -43,43 +63,33 @@ export default function DocumentationPage(
 
   const { menu, document, pkg, schemaRequest } = props;
 
-  const vm: { entryComponent: JSX.Element } = {
-    entryComponent: (
-      <DocViewer
-        document={document || ({} as any)}
-        menu={{
-          sections: menu.sections.filter((x) => x.id !== 'official-packages'),
-        }}
-        toc={null}
-        navIsOpen={navIsOpen}
-      />
-    ),
+  const vm: { entryComponent: JSX.Element; menu: { sections: MenuItem[] } } = {
+    entryComponent: <DocViewer document={document || ({} as any)} toc={null} />,
+    menu: {
+      sections: menu.sections.filter((x) => x.id !== 'official-packages'),
+    },
   };
+
   if (!!pkg) {
+    vm.menu = {
+      sections: sortCorePackagesFirst<MenuItem>(
+        menu.sections.filter((x) => x.id === 'official-packages')[0]?.itemList
+      ),
+    };
     vm.entryComponent = (
-      <PackageSchemaList
-        navIsOpen={navIsOpen}
-        menu={{
-          sections: sortCorePackagesFirst<MenuItem>(
-            menu.sections.filter((x) => x.id === 'official-packages')[0]
-              ?.itemList
-          ),
-        }}
-        pkg={pkg}
-      />
+      <PackageSchemaList navIsOpen={navIsOpen} menu={vm.menu} pkg={pkg} />
     );
   }
 
   if (!!pkg && !!schemaRequest) {
+    vm.menu = {
+      sections: sortCorePackagesFirst<MenuItem>(
+        menu.sections.filter((x) => x.id === 'official-packages')[0]?.itemList
+      ),
+    };
     vm.entryComponent = (
       <PackageSchemaViewer
-        navIsOpen={navIsOpen}
-        menu={{
-          sections: sortCorePackagesFirst<MenuItem>(
-            menu.sections.filter((x) => x.id === 'official-packages')[0]
-              ?.itemList
-          ),
-        }}
+        menu={vm.menu}
         schemaRequest={{
           ...schemaRequest,
           pkg,
@@ -99,7 +109,15 @@ export default function DocumentationPage(
           role="main"
           className="flex h-full flex-1 overflow-y-hidden"
         >
-          {vm.entryComponent}
+          <SidebarContainer menu={vm.menu} navIsOpen={navIsOpen} />
+          <div
+            ref={wrapperElement}
+            id="wrapper"
+            data-testid="wrapper"
+            className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
+          >
+            {vm.entryComponent}
+          </div>
         </main>
       </div>
     </>
