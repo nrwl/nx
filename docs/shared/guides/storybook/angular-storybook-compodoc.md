@@ -4,7 +4,7 @@ This documentation page contains information about the [Storybook plugin](/packa
 
 # Set up Compodoc for Storybook on Nx
 
-{% github-repository url="https://github.com/mandarini/nx-recipes/tree/feat/storybook-compodoc/storybook-compodoc-angular" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-compodoc-angular" /%}
 
 ## What is Compodoc
 
@@ -28,7 +28,7 @@ This comment would result in the following documentation in Compodoc:
 
 ![Button size `@Input` generated documentation](/shared/guides/storybook/button-size-input.png)
 
-If we add a description and a default value to each of our component `@Input`s, we will end up with a full documentation page. See a full example of the button component [here](https://github.com/mandarini/nx-recipes/blob/feat/storybook-compodoc/storybook-compodoc-angular/apps/web/src/app/butn/butn.component.ts). The generated documentation of this example will look like this:
+If we add a description and a default value to each of our component `@Input`s, we will end up with a full documentation page. See a full example of the button component [here](https://github.com/nrwl/nx-recipes/tree/main/storybook-compodoc-angular/apps/web/src/app/butn/butn.component.ts). The generated documentation of this example will look like this:
 
 ![Generated Docs page for the Button](/shared/guides/storybook/button-docs.png)
 
