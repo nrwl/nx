@@ -108,6 +108,8 @@
       "name": "build",
       "implementation": "/packages/detox/src/executors/build/build.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Run detox build",
         "description": "Run detox build options.",
         "type": "object",
@@ -138,6 +140,8 @@
       "name": "test",
       "implementation": "/packages/detox/src/executors/test/test.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Run detox test",
         "description": "Run detox test options.",
         "type": "object",

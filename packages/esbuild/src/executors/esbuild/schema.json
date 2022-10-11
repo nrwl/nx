@@ -42,7 +42,7 @@
     },
     "format": {
       "type": "array",
-      "description": "Set the output format(s).",
+      "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
       "alias": "f",
       "items": {
         "type": "string",

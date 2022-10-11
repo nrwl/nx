@@ -677,6 +677,7 @@
       "name": "run-commands",
       "implementation": "/packages/workspace/src/executors/run-commands/run-commands.impl.ts",
       "schema": {
+        "version": 2,
         "title": "Run Commands",
         "description": "Run any custom commands with Nx.",
         "type": "object",
@@ -809,6 +810,7 @@
       "implementation": "/packages/workspace/src/executors/counter/counter.impl.ts",
       "batchImplementation": "./src/executors/counter/counter.impl#batchCounter",
       "schema": {
+        "version": 2,
         "title": "Counter",
         "description": "A dummy executor useful for E2E tests.",
         "type": "object",
@@ -831,6 +833,7 @@
       "name": "run-script",
       "implementation": "/packages/workspace/src/executors/run-script/run-script.impl.ts",
       "schema": {
+        "version": 2,
         "title": "Run Script",
         "description": "Run any NPM script of a project in the project's root directory.",
         "type": "object",

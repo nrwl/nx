@@ -383,13 +383,19 @@ export class Workspaces {
   }
 }
 
-function normalizeExecutorSchema(schema: any): ExecutorConfig['schema'] {
+function normalizeExecutorSchema(
+  schema: Partial<ExecutorConfig['schema']>
+): ExecutorConfig['schema'] {
   const version = (schema.version ??= 1);
   return {
-    properties:
-      (!schema.properties || typeof schema.properties !== 'object') ?? {},
     version,
-    outputCapture: version < 2 ? 'direct-nodejs' : 'pipe',
+    outputCapture:
+      schema.outputCapture ?? version < 2 ? 'direct-nodejs' : 'pipe',
+    properties:
+      !schema.properties || typeof schema.properties !== 'object'
+        ? {}
+        : schema.properties,
+    ...schema,
   };
 }
 

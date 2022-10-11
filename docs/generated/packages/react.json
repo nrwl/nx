@@ -1357,6 +1357,8 @@
       "name": "module-federation-dev-server",
       "implementation": "/packages/react/src/executors/module-federation-dev-server/module-federation-dev-server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Module Federation Dev Server",
         "description": "Serve a web application.",
         "cli": "nx",

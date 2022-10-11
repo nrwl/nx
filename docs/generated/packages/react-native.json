@@ -532,6 +532,8 @@
       "name": "run-android",
       "implementation": "/packages/react-native/src/executors/run-android/run-android.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeRunAndroid",
         "$schema": "http://json-schema.org/schema",
@@ -617,6 +619,8 @@
       "name": "run-ios",
       "implementation": "/packages/react-native/src/executors/run-ios/run-ios.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeRunIos",
         "$schema": "http://json-schema.org/schema",
@@ -702,6 +706,8 @@
       "name": "bundle",
       "implementation": "/packages/react-native/src/executors/bundle/bundle.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeBundle",
         "$schema": "http://json-schema.org/schema",
@@ -781,6 +787,8 @@
       "name": "build-android",
       "implementation": "/packages/react-native/src/executors/build-android/build-android.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeBuildAndroid",
         "$schema": "http://json-schema.org/schema",
@@ -813,6 +821,8 @@
       "name": "start",
       "implementation": "/packages/react-native/src/executors/start/start.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeStart",
         "$schema": "http://json-schema.org/schema",
@@ -847,6 +857,8 @@
       "name": "sync-deps",
       "implementation": "/packages/react-native/src/executors/sync-deps/sync-deps.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeSyncDeps",
         "$schema": "http://json-schema.org/schema",
@@ -878,6 +890,8 @@
       "name": "ensure-symlink",
       "implementation": "/packages/react-native/src/executors/ensure-symlink/ensure-symlink.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeEnsureSymlink",
         "$schema": "http://json-schema.org/schema",
@@ -896,6 +910,8 @@
       "name": "storybook",
       "implementation": "/packages/react-native/src/executors/storybook/storybook.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "React Native Storybook Load Stories",
         "cli": "nx",
         "description": "Load stories for react native.",

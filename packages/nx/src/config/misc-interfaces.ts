@@ -7,6 +7,7 @@ import {
 } from './workspace-json-project-json';
 
 import type { NxJsonConfiguration } from './nx-json';
+import { Schema } from '../utils/params';
 /**
  * A callback function that is executed after changes are made to the file system
  */
@@ -89,8 +90,7 @@ export interface ExecutorConfig {
   schema: {
     version?: number;
     outputCapture?: OutputCaptureMethod;
-    properties: any;
-  };
+  } & Schema;
   hasherFactory?: () => CustomHasher;
   implementationFactory: () => Executor;
   batchImplementationFactory?: () => TaskGraphExecutor;

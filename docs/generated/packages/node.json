@@ -275,6 +275,8 @@
       "name": "webpack",
       "implementation": "/packages/node/src/executors/webpack/webpack.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Node Application Build Target",
         "description": "Node application build target options for Build Facade.",
         "cli": "nx",
@@ -562,6 +564,8 @@
       "name": "node",
       "implementation": "/packages/node/src/executors/node/node.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
         "title": "Node executor",

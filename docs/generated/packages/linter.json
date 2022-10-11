@@ -95,6 +95,8 @@
       "name": "lint",
       "implementation": "/packages/linter/src/executors/lint/lint.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "title": "Lint Target",
         "description": "Linter.",
@@ -222,6 +224,8 @@
       "name": "eslint",
       "implementation": "/packages/linter/src/executors/eslint/lint.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "title": "ESLint Lint Target",
         "description": "ESLint Lint Target.",

@@ -274,6 +274,8 @@
       "name": "storybook",
       "implementation": "/packages/storybook/src/executors/storybook/storybook.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Storybook Dev Builder",
         "cli": "nx",
         "description": "Serve up storybook in development mode.",
@@ -383,6 +385,8 @@
       "name": "build",
       "implementation": "/packages/storybook/src/executors/build-storybook/build-storybook.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Storybook Builder",
         "cli": "nx",
         "description": "Build storybook in production mode.",

@@ -370,6 +370,8 @@
       "name": "e2e",
       "implementation": "/packages/nx-plugin/src/executors/e2e/e2e.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Nx Plugin Playground Target",
         "description": "Creates a playground for a Nx Plugin.",
         "cli": "nx",
