@@ -27,5 +27,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["buildTarget", "outputPath", "tsConfig"]
+  "required": ["buildTarget", "outputPath", "tsConfig"],
+  "examplesFile": "../../../docs/delegate-build-examples.md"
 }
