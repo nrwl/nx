@@ -6,135 +6,193 @@ import {
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import addEslintInputs from './add-eslint-inputs';
+import { eslintConfigFileWhitelist } from '../../generators/utils/eslint-file';
 
 describe('15.0.0 migration (add-eslint-inputs)', () => {
   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+  describe('production', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+
+      updateWorkspaceConfiguration(tree, {
+        version: 2,
+        namedInputs: {
+          default: ['{projectRoot}/**/*', 'sharedGlobals'],
+          sharedGlobals: [],
+          production: ['default'],
+        },
+      });
+
+      addProjectConfiguration(tree, 'proj', {
+        root: 'proj',
+        targets: {
+          lint: {
+            executor: '@nrwl/linter:eslint',
+            options: {},
+          },
+          lint2: {
+            executor: '@nrwl/linter:eslint',
+            options: {},
+          },
+          notTest: {
+            executor: 'nx:run-commands',
+          },
+        },
+      });
+    });
+
+    test.each(eslintConfigFileWhitelist)(
+      'should ignore %p for production',
+      async (eslintConfigFilename) => {
+        tree.write(eslintConfigFilename, '{}');
+
+        await addEslintInputs(tree);
+
+        const updated = readWorkspaceConfiguration(tree);
+
+        expect(updated.namedInputs.production).toEqual([
+          'default',
+          `!{projectRoot}/${eslintConfigFilename}`,
+        ]);
+      }
+    );
+
+    test.each(eslintConfigFileWhitelist)(
+      'should add %p to all lint targets',
+      async (eslintConfigFilename) => {
+        tree.write(eslintConfigFilename, '{}');
+
+        await addEslintInputs(tree);
+
+        const updated = readWorkspaceConfiguration(tree);
+        const result = ['default', `{workspaceRoot}/${eslintConfigFilename}`];
+
+        expect(updated.targetDefaults.lint.inputs).toEqual(result);
+        expect(updated.targetDefaults.lint2.inputs).toEqual(result);
+      }
+    );
   });
 
-  it('should add inputs configuration for lint targets', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
-      namedInputs: {
-        default: ['{projectRoot}/**/*', 'sharedGlobals'],
-        sharedGlobals: [],
-        production: ['default'],
-      },
-    });
-    addProjectConfiguration(tree, 'proj', {
-      root: 'proj',
-      targets: {
-        lint: {
-          executor: '@nrwl/linter:eslint',
-          options: {},
-        },
-        lint2: {
-          executor: '@nrwl/linter:eslint',
-          options: {},
-        },
-        notTest: {
-          executor: 'nx:run-commands',
-        },
-      },
-    });
-    tree.write('.eslintrc.json', '');
+  describe('development', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
 
-    await addEslintInputs(tree);
-
-    const updated = readWorkspaceConfiguration(tree);
-    expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
-            "{projectRoot}/**/*",
-            "sharedGlobals",
-          ],
-          "production": Array [
-            "default",
-            "!{projectRoot}/.eslintrc.json",
-          ],
-          "sharedGlobals": Array [],
-        },
-        "targetDefaults": Object {
-          "lint": Object {
-            "inputs": Array [
-              "default",
-              "{workspaceRoot}/.eslintrc.json",
-            ],
+      addProjectConfiguration(tree, 'proj', {
+        root: 'proj',
+        targets: {
+          lint: {
+            executor: '@nrwl/linter:eslint',
+            options: {},
           },
-          "lint2": Object {
-            "inputs": Array [
-              "default",
-              "{workspaceRoot}/.eslintrc.json",
-            ],
+          lint2: {
+            executor: '@nrwl/linter:eslint',
+            options: {},
+          },
+          notTest: {
+            executor: 'nx:run-commands',
           },
         },
-        "version": 2,
+      });
+    });
+
+    test.each(eslintConfigFileWhitelist)(
+      'should not add `!{projectRoot}/%s` if `workspaceConfiguration.namedInputs` is undefined',
+      async (eslintConfigFilename) => {
+        updateWorkspaceConfiguration(tree, {
+          version: 2,
+        });
+
+        tree.write(eslintConfigFilename, '{}');
+
+        await addEslintInputs(tree);
+
+        const updated = readWorkspaceConfiguration(tree);
+
+        expect(updated.namedInputs?.production).toBeUndefined();
       }
-    `);
+    );
+
+    test.each(eslintConfigFileWhitelist)(
+      'should not add `!{projectRoot}/%s` if `workspaceConfiguration.namedInputs.production` is undefined',
+      async (eslintConfigFilename) => {
+        updateWorkspaceConfiguration(tree, {
+          version: 2,
+          namedInputs: {},
+        });
+
+        tree.write(eslintConfigFilename, '{}');
+
+        await addEslintInputs(tree);
+
+        const updated = readWorkspaceConfiguration(tree);
+
+        expect(updated.namedInputs?.production).toBeUndefined();
+      }
+    );
   });
 
-  it('should add inputs configuration for .eslintrc.js', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
-      namedInputs: {
-        default: ['{projectRoot}/**/*', 'sharedGlobals'],
-        sharedGlobals: [],
-        production: ['default'],
-      },
-    });
-    addProjectConfiguration(tree, 'proj', {
-      root: 'proj',
-      targets: {
-        lint: {
-          executor: '@nrwl/linter:eslint',
-          options: {},
-        },
-        lint2: {
-          executor: '@nrwl/linter:eslint',
-          options: {},
-        },
-        notTest: {
-          executor: 'nx:run-commands',
-        },
-      },
-    });
-    tree.write('.eslintrc.js', '');
+  describe('lintTargetDefaults.input fallback values', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
 
-    await addEslintInputs(tree);
-
-    const updated = readWorkspaceConfiguration(tree);
-    expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
-            "{projectRoot}/**/*",
-            "sharedGlobals",
-          ],
-          "production": Array [
-            "default",
-            "!{projectRoot}/.eslintrc.json",
-          ],
-          "sharedGlobals": Array [],
-        },
-        "targetDefaults": Object {
-          "lint": Object {
-            "inputs": Array [
-              "default",
-              "{workspaceRoot}/.eslintrc.js",
-            ],
+      addProjectConfiguration(tree, 'proj', {
+        root: 'proj',
+        targets: {
+          lint: {
+            executor: '@nrwl/linter:eslint',
+            options: {},
           },
-          "lint2": Object {
-            "inputs": Array [
-              "default",
-              "{workspaceRoot}/.eslintrc.js",
-            ],
+          lint2: {
+            executor: '@nrwl/linter:eslint',
+            options: {},
+          },
+          notTest: {
+            executor: 'nx:run-commands',
           },
         },
-        "version": 2,
+      });
+    });
+
+    test.each(eslintConfigFileWhitelist)(
+      'should not override `targetDefaults.lint.inputs` with `%s` as there was a default target set in the workspace config',
+      async (eslintConfigFilename) => {
+        updateWorkspaceConfiguration(tree, {
+          version: 2,
+          targetDefaults: {
+            lint: {
+              inputs: ['{workspaceRoot}/.eslintrc.default'],
+            },
+          },
+        });
+
+        tree.write(eslintConfigFilename, '{}');
+
+        await addEslintInputs(tree);
+
+        const updated = readWorkspaceConfiguration(tree);
+
+        expect(updated.targetDefaults.lint.inputs).toEqual([
+          '{workspaceRoot}/.eslintrc.default',
+        ]);
+        expect(updated.targetDefaults.lint2.inputs).toEqual([
+          'default',
+          `{workspaceRoot}/${eslintConfigFilename}`,
+        ]);
       }
-    `);
+    );
+
+    it('should return `default` if there is no globalEslintFile', async () => {
+      updateWorkspaceConfiguration(tree, {
+        version: 2,
+      });
+
+      await addEslintInputs(tree);
+
+      const updated = readWorkspaceConfiguration(tree);
+
+      expect(updated.targetDefaults.lint.inputs).toEqual(['default']);
+      expect(updated.targetDefaults.lint2.inputs).toEqual(['default']);
+    });
   });
 });

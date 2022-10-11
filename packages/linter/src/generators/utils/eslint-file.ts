@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 
-export const eslintFileList = [
+export const eslintConfigFileWhitelist = [
   '.eslintrc',
   '.eslintrc.js',
   '.eslintrc.cjs',
@@ -10,7 +10,7 @@ export const eslintFileList = [
 ];
 
 export function findEslintFile(tree: Tree): string | null {
-  for (const file of eslintFileList) {
+  for (const file of eslintConfigFileWhitelist) {
     if (tree.exists(file)) {
       return file;
     }

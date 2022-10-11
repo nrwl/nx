@@ -6,11 +6,12 @@ import {
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { eslintConfigFileWhitelist } from '../../generators/utils/eslint-file';
 
-export default async function (tree: Tree) {
+export default async function addEslintInputs(tree: Tree) {
   const workspaceConfiguration = readWorkspaceConfiguration(tree);
 
-  const globalEslintFile = ['.eslintrc.js', '.eslintrc.json'].find((file) =>
+  const globalEslintFile = eslintConfigFileWhitelist.find((file) =>
     tree.exists(file)
   );
 
@@ -18,13 +19,16 @@ export default async function (tree: Tree) {
     const productionFileset = new Set(
       workspaceConfiguration.namedInputs.production
     );
-    productionFileset.add('!{projectRoot}/.eslintrc.json');
+
+    productionFileset.add(`!{projectRoot}/${globalEslintFile}`);
+
     workspaceConfiguration.namedInputs.production =
       Array.from(productionFileset);
   }
 
   for (const targetName of getEslintTargets(tree)) {
     workspaceConfiguration.targetDefaults ??= {};
+
     const lintTargetDefaults = (workspaceConfiguration.targetDefaults[
       targetName
     ] ??= {});
