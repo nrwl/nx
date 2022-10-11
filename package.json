@@ -303,7 +303,8 @@
   },
   "resolutions": {
     "**/xmlhttprequest-ssl": "~1.6.2",
-    "minimist": "^1.2.6"
+    "minimist": "^1.2.6",
+    "underscore": "^1.12.1"
   }
 }
 
