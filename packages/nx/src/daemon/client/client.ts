@@ -161,11 +161,19 @@ export class DaemonClient {
     });
 
     this.socket.on('close', () => {
-      output.error({
-        title: 'Daemon process terminated and closed the connection',
-        bodyLines: ['Please rerun the command, which will restart the daemon.'],
-      });
-      process.exit(1);
+      // it's ok for the daemon to terminate if the client doesn't wait on
+      // any messages from the daemon
+      if (this.queue.isEmpty()) {
+        this._connected = false;
+      } else {
+        output.error({
+          title: 'Daemon process terminated and closed the connection',
+          bodyLines: [
+            'Please rerun the command, which will restart the daemon.',
+          ],
+        });
+        process.exit(1);
+      }
     });
 
     this.socket.on('error', (err) => {
