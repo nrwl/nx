@@ -89,9 +89,9 @@ export function calculateFileChanges(
         }
         switch (ext) {
           case '.json':
-            const atBase = readFileAtRevision(f, nxArgs.base);
-            const atHead = readFileAtRevision(f, nxArgs.head);
             try {
+              const atBase = readFileAtRevision(f, nxArgs.base);
+              const atHead = readFileAtRevision(f, nxArgs.head);
               return jsonDiff(JSON.parse(atBase), JSON.parse(atHead));
             } catch (e) {
               return [new WholeFileChange()];
@@ -122,6 +122,7 @@ function defaultReadFileAtRevision(
       ? readFileSync(file, 'utf-8')
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
           maxBuffer: TEN_MEGABYTES,
+          stdio: ['pipe', 'pipe', 'ignore'],
         })
           .toString()
           .trim();
