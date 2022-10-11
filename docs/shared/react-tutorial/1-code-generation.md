@@ -50,7 +50,7 @@ We can see that two projects were added to the workspace:
 - A React application located in `apps/store`.
 - A Project for Cypress e2e tests for our `store` application in `apps/store-e2e`.
 
-{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nrwl/cypress package page" url="/packages/cypress" /%}
+{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nrwl/cypress package page." url="/packages/cypress" /%}
 
 ## Adding Another Application to Your Workspace
 
@@ -60,7 +60,7 @@ The following syntax is used to run generators:
 
 ![Nx Generator Syntax](/shared/react-tutorial/generator-syntax.png)
 
-You should use the `application` generator found in the `@nrwl/react` plugin. To run the generator and create the `admin` application, run the command: `npx nx g @nrwl/react:app admin`:
+You should use the `application` generator found in the `@nrwl/react` plugin. To run the generator and create the `admin` application, run the command `npx nx g @nrwl/react:app admin`:
 
 ```bash
 % npx nx g @nrwl/react:app admin
@@ -98,7 +98,7 @@ CREATE apps/admin/jest.config.ts
 CREATE apps/admin/tsconfig.spec.json
 ```
 
-To see all options for the `application` generator, you can run the command: `npx nx generate @nrwl/react:application --help`:
+To see all options for the `application` generator, you can run the command `npx nx generate @nrwl/react:application --help`:
 
 ```bash
 % npx nx generate @nrwl/react:application --help
