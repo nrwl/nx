@@ -13,6 +13,13 @@ If not Front matter is detected, the metadata will be populated with the followi
 - `title`: first main title detected
 - `description`: first paragraph detected
 
+```markdown
+---
+title: This is a custom title
+description: This is a custom description
+---
+```
+
 ### Custom markdown syntax
 
 The documentation website [nx.dev](https://nx.dev) is using custom Markdown syntax to enable the authors to add functionality to its content.
