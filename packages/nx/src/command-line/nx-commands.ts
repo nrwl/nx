@@ -839,7 +839,7 @@ async function withCustomGeneratorOptions(
     command += ` [${name}]`;
   });
   if (options.length) {
-    command += ' [options]';
+    command += ' (options)';
   }
 
   yargs.command({

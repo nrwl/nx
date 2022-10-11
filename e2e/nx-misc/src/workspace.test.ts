@@ -213,7 +213,7 @@ describe('Workspace Tests', () => {
 
       const helpOutput = runCLI(`workspace-generator ${custom} --help`);
       expect(helpOutput).toContain(
-        `nx workspace-generator ${custom} [inlineprop] [options]`
+        `workspace-generator ${custom} [inlineprop] (options)`
       );
       expect(helpOutput).toContain(`--directory`);
       expect(helpOutput).toContain(`--skipTsConfig`);
