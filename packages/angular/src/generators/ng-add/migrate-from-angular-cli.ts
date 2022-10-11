@@ -38,9 +38,7 @@ export async function migrateFromAngularCli(
   const projects = getAllProjects(tree);
   const options = normalizeOptions(tree, rawOptions, projects);
 
-  const defaultProject = projects.apps.find((app) =>
-    app.config.sourceRoot?.startsWith('src')
-  );
+  const defaultProject = projects.apps.find((app) => app.config.root === '');
 
   if (options.preserveAngularCliLayout) {
     addDependenciesToPackageJson(
