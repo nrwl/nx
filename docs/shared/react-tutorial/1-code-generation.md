@@ -1,5 +1,5 @@
 ---
-title: React Nx Tutorial - Part 1: Code Generation
+title: React Nx Tutorial
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 ---
 
