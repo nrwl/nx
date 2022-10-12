@@ -117,6 +117,8 @@
       "name": "webpack",
       "implementation": "/packages/webpack/src/executors/webpack/webpack.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Webpack Executor",
         "description": "Builds web applications using webpack.",
         "cli": "nx",
@@ -702,6 +704,8 @@
       "name": "dev-server",
       "implementation": "/packages/webpack/src/executors/dev-server/dev-server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Web Dev Server",
         "description": "Serve a web application.",
         "cli": "nx",

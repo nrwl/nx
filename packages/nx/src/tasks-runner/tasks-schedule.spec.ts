@@ -3,6 +3,7 @@ import { Workspaces } from '../config/workspaces';
 import { removeTasksFromTaskGraph } from './utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
+import { ExecutorConfig } from '../config/misc-interfaces';
 
 function createMockTask(id: string): Task {
   const [project, target] = id.split(':');
@@ -44,10 +45,13 @@ describe('TasksSchedule', () => {
     const workspace: Partial<Workspaces> = {
       readExecutor() {
         return {
-          schema: {},
+          schema: {
+            version: 2,
+            properties: {},
+          },
           implementationFactory: jest.fn(),
           batchImplementationFactory: jest.fn(),
-        };
+        } as ExecutorConfig;
       },
       readNxJson() {
         return {};

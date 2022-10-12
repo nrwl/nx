@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/schema",
   "title": "ng-packagr Target",
   "description": "ng-packagr target options for Build Architect. Use to build and package library projects for publishing.",

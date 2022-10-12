@@ -144,10 +144,8 @@ export class Workspaces {
       );
       const executorsDir = path.dirname(executorsFilePath);
       const schemaPath = path.join(executorsDir, executorConfig.schema || '');
-      const schema = readJsonFile(schemaPath);
-      if (!schema.properties || typeof schema.properties !== 'object') {
-        schema.properties = {};
-      }
+      const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
+
       const implementationFactory = this.getImplementationFactory<Executor>(
         executorConfig.implementation,
         executorsDir
@@ -383,6 +381,22 @@ export class Workspaces {
     );
     return resolveNewFormatWithInlineProjects(rawWorkspace, this.root);
   }
+}
+
+function normalizeExecutorSchema(
+  schema: Partial<ExecutorConfig['schema']>
+): ExecutorConfig['schema'] {
+  const version = (schema.version ??= 1);
+  return {
+    version,
+    outputCapture:
+      schema.outputCapture ?? version < 2 ? 'direct-nodejs' : 'pipe',
+    properties:
+      !schema.properties || typeof schema.properties !== 'object'
+        ? {}
+        : schema.properties,
+    ...schema,
+  };
 }
 
 function assertValidWorkspaceConfiguration(

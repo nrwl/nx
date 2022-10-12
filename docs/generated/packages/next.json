@@ -620,6 +620,8 @@
       "name": "build",
       "implementation": "/packages/next/src/executors/build/build.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
         "title": "Next Build",
@@ -683,6 +685,8 @@
       "name": "server",
       "implementation": "/packages/next/src/executors/server/server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "title": "Next Serve",
         "description": "Serve a Next.js app.",
@@ -748,6 +752,8 @@
       "name": "export",
       "implementation": "/packages/next/src/executors/export/export.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "title": "Next Export",
         "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",

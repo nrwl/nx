@@ -212,6 +212,8 @@
       "name": "tsc",
       "implementation": "/packages/js/src/executors/tsc/tsc.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Typescript Build Target",
         "description": "Builds using TypeScript.",
         "cli": "nx",
@@ -386,6 +388,8 @@
       "name": "swc",
       "implementation": "/packages/js/src/executors/swc/swc.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
         "title": "Typescript Build Target",
@@ -543,6 +547,8 @@
       "name": "node",
       "implementation": "/packages/js/src/executors/node/node.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
         "title": "Node executor",

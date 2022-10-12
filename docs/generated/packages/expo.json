@@ -330,6 +330,8 @@
       "name": "update",
       "implementation": "/packages/expo/src/executors/update/update.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "$id": "NxExpoEasUpdate",
         "cli": "nx",
@@ -401,6 +403,8 @@
       "name": "build",
       "implementation": "/packages/expo/src/executors/build/build.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "$id": "NxExpoEasBuild",
         "cli": "nx",
@@ -466,6 +470,8 @@
       "name": "build-list",
       "implementation": "/packages/expo/src/executors/build-list/build-list.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "$id": "NxExpoEasBuildList",
         "cli": "nx",
@@ -546,6 +552,8 @@
       "name": "download",
       "implementation": "/packages/expo/src/executors/download/download.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "$id": "NxExpoDownloadEasBuild",
         "cli": "nx",
@@ -611,6 +619,8 @@
       "name": "build-ios",
       "implementation": "/packages/expo/src/executors/build-ios/build-ios.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "$id": "NxExpoBuildIOS",
         "cli": "nx",
@@ -708,6 +718,8 @@
       "name": "build-android",
       "implementation": "/packages/expo/src/executors/build-android/build-android.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "$id": "NxExpoBuildAndroid",
         "cli": "nx",
@@ -771,6 +783,8 @@
       "name": "build-web",
       "implementation": "/packages/expo/src/executors/build-web/build-web.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "$id": "NxExpoBuildWeb",
         "cli": "nx",
@@ -804,6 +818,8 @@
       "name": "build-status",
       "implementation": "/packages/expo/src/executors/build-status/build-status.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "$id": "NxExpoBuildStatus",
         "cli": "nx",
@@ -828,6 +844,8 @@
       "name": "publish",
       "implementation": "/packages/expo/src/executors/publish/publish.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxExpoPublish",
         "$schema": "http://json-schema.org/schema",
@@ -879,6 +897,8 @@
       "name": "publish-set",
       "implementation": "/packages/expo/src/executors/publish-set/publish-set.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxExpoPublishSet",
         "$schema": "http://json-schema.org/schema",
@@ -907,6 +927,8 @@
       "name": "rollback",
       "implementation": "/packages/expo/src/executors/rollback/rollback.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxExpoRollback",
         "$schema": "http://json-schema.org/schema",
@@ -939,6 +961,8 @@
       "name": "run",
       "implementation": "/packages/expo/src/executors/run/run.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxExpoRun",
         "$schema": "http://json-schema.org/schema",
@@ -999,6 +1023,8 @@
       "name": "start",
       "implementation": "/packages/expo/src/executors/start/start.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxExpoStart",
         "$schema": "http://json-schema.org/schema",
@@ -1090,6 +1116,8 @@
       "name": "sync-deps",
       "implementation": "/packages/expo/src/executors/sync-deps/sync-deps.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxExpoSyncDeps",
         "$schema": "http://json-schema.org/schema",
@@ -1113,6 +1141,8 @@
       "name": "ensure-symlink",
       "implementation": "/packages/expo/src/executors/ensure-symlink/ensure-symlink.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxExpoEnsureSymlink",
         "$schema": "http://json-schema.org/schema",
@@ -1131,6 +1161,8 @@
       "name": "eject",
       "implementation": "/packages/expo/src/executors/eject/eject.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxExpoEject",
         "$schema": "http://json-schema.org/schema",

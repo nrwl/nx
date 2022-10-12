@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "File Server",
   "description": "Serve a web application from a folder.",
   "type": "object",

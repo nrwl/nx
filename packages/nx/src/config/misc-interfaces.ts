@@ -7,6 +7,7 @@ import {
 } from './workspace-json-project-json';
 
 import type { NxJsonConfiguration } from './nx-json';
+import { Schema } from '../utils/params';
 /**
  * A callback function that is executed after changes are made to the file system
  */
@@ -29,6 +30,8 @@ export interface GeneratorsJsonEntry {
   cli?: 'nx';
   'x-type'?: 'library' | 'application';
 }
+
+export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';
 
 export interface ExecutorsJsonEntry {
   schema: string;
@@ -84,7 +87,10 @@ export interface ExecutorsJson {
 }
 
 export interface ExecutorConfig {
-  schema: any;
+  schema: {
+    version?: number;
+    outputCapture?: OutputCaptureMethod;
+  } & Schema;
   hasherFactory?: () => CustomHasher;
   implementationFactory: () => Executor;
   batchImplementationFactory?: () => TaskGraphExecutor;

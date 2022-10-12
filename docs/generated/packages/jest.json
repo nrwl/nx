@@ -141,6 +141,8 @@
       "implementation": "/packages/jest/src/executors/jest/jest.impl.ts",
       "batchImplementation": "./src/executors/jest/jest.impl#batchJest",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Jest Builder",
         "description": "Jest target options for Build Facade.",
         "cli": "nx",

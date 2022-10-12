@@ -170,6 +170,8 @@
       "name": "webpack",
       "implementation": "/packages/web/src/executors/webpack/webpack.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Webpack Executor",
         "description": "Builds web applications using webpack.",
         "cli": "nx",
@@ -675,6 +677,8 @@
       "name": "rollup",
       "implementation": "/packages/web/src/executors/rollup/rollup.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Web Library Rollup Target (Experimental)",
         "description": "Packages a library for different web usages (`UMD`, `ESM`, `CJS`).",
         "cli": "nx",
@@ -846,6 +850,8 @@
       "name": "dev-server",
       "implementation": "/packages/web/src/executors/dev-server/dev-server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Web Dev Server",
         "description": "Serve a web application.",
         "cli": "nx",
@@ -930,6 +936,8 @@
       "name": "file-server",
       "implementation": "/packages/web/src/executors/file-server/file-server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "File Server",
         "description": "Serve a web application from a folder.",
         "type": "object",

@@ -2374,6 +2374,8 @@
       "name": "delegate-build",
       "implementation": "/packages/angular/src/executors/delegate-build/delegate-build.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/draft-07/schema",
         "title": "Schema for an executor which delegates a build.",
         "description": "Options for delegating a build to a different target.",
@@ -2415,6 +2417,8 @@
       "name": "ng-packagr-lite",
       "implementation": "/packages/angular/src/executors/ng-packagr-lite/ng-packagr-lite.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "title": "ng-packagr Target",
         "description": "ng-packagr target options for Build Architect. Use to build library projects.",
@@ -2478,6 +2482,8 @@
       "name": "package",
       "implementation": "/packages/angular/src/executors/package/package.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "title": "ng-packagr Target",
         "description": "ng-packagr target options for Build Architect. Use to build and package library projects for publishing.",
@@ -2543,6 +2549,8 @@
       "name": "webpack-browser",
       "implementation": "/packages/angular/src/builders/webpack-browser/webpack-browser.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/draft-07/schema",
         "title": "Schema for Webpack Browser",
         "description": "The webpack-browser executor is very similar to the standard browser builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
@@ -3220,6 +3228,8 @@
       "name": "webpack-dev-server",
       "implementation": "/packages/angular/src/builders/webpack-dev-server/webpack-dev-server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/draft-07/schema",
         "title": "Schema for Webpack Dev Server",
         "description": "The webpack-dev-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
@@ -3335,6 +3345,8 @@
       "name": "module-federation-dev-server",
       "implementation": "/packages/angular/src/builders/module-federation-dev-server/module-federation-dev-server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/draft-07/schema",
         "title": "Schema for Module Federation Dev Server",
         "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
@@ -3451,6 +3463,8 @@
       "name": "file-server",
       "implementation": "/packages/angular/src/executors/file-server/file-server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "File Server",
         "description": "Serve a web application from a folder.",
         "type": "object",

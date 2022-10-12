@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
   "title": "Next Build",
@@ -23,7 +25,6 @@
           "replace": {
             "type": "string",
             "description": "The file to be replaced.",
-
             "x-completion-type": "file"
           },
           "with": {

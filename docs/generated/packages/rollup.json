@@ -116,6 +116,8 @@
       "name": "rollup",
       "implementation": "/packages/rollup/src/executors/rollup/rollup.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Web Library Rollup Target (Experimental)",
         "description": "Packages a library for different web usages (ESM, CommonJS).",
         "cli": "nx",
