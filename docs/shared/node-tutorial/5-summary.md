@@ -1,4 +1,4 @@
-# Node Nx Tutorial - 5: Summary
+# Node Nx Tutorial - Part 5: Summary
 
 In this tutorial you:
 

@@ -1,4 +1,4 @@
-# Node Nx Tutorial - 4: Workspace Optimization
+# Node Nx Tutorial - Part 4: Workspace Optimization
 
 In this step of the tutorial, you will learn about the tools available to optimize your Nx Workspace.
 
