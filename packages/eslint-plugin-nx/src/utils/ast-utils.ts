@@ -28,7 +28,7 @@ export function getBarrelEntryPointByImportScope(
   importScope: string
 ): string[] | null {
   const tsConfigBase = tryReadBaseJson();
-  return tsConfigBase?.compilerOptions?.paths[importScope] || null;
+  return tsConfigBase?.compilerOptions?.paths?.[importScope] || null;
 }
 
 export function getBarrelEntryPointProjectNode(
@@ -36,10 +36,11 @@ export function getBarrelEntryPointProjectNode(
 ): { path: string; importScope: string }[] | null {
   const tsConfigBase = tryReadBaseJson();
 
-  if (tsConfigBase?.compilerOptions?.paths) {
-    const potentialEntryPoints = Object.keys(tsConfigBase.compilerOptions.paths)
+  const paths = tsConfigBase?.compilerOptions?.paths;
+  if (paths) {
+    const potentialEntryPoints = Object.keys(paths)
       .filter((entry) => {
-        const sourceFolderPaths = tsConfigBase.compilerOptions.paths[entry];
+        const sourceFolderPaths = paths[entry];
         return sourceFolderPaths.some((sourceFolderPath) => {
           return (
             sourceFolderPath === projectNode.data.sourceRoot ||
@@ -48,8 +49,8 @@ export function getBarrelEntryPointProjectNode(
         });
       })
       .map((entry) =>
-        tsConfigBase.compilerOptions.paths[entry].map((x) => ({
-          path: x,
+        paths[entry].map((x) => ({
+          path: [x, `${x}.ts`, `${x}.js`].find(existsSync) || x,
           importScope: entry,
         }))
       );
@@ -60,7 +61,7 @@ export function getBarrelEntryPointProjectNode(
   return null;
 }
 
-function hasMemberExport(exportedMember, filePath) {
+function hasMemberExport(exportedMember: string, filePath: string) {
   const fileContent = readFileSync(filePath, 'utf8');
 
   // use the TypeScript AST to find the path to the file where exportedMember is defined
@@ -79,8 +80,18 @@ function hasMemberExport(exportedMember, filePath) {
   );
 }
 
-export function getRelativeImportPath(exportedMember, filePath, basePath) {
-  const fileContent = readFileSync(filePath, 'utf8');
+export function getRelativeImportPath(
+  exportedMember: string,
+  filePath: string,
+  basePath?: string
+): string | null {
+  let fileContent: string;
+  try {
+    fileContent = readFileSync(filePath, 'utf8');
+  } catch (e) {
+    logger.warn(`Error reading "${filePath}": \n${JSON.stringify(e)}`);
+    return null;
+  }
 
   // use the TypeScript AST to find the path to the file where exportedMember is defined
   const sourceFile = ts.createSourceFile(
@@ -199,12 +210,10 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
 
       const modulePath = (exportDeclaration as any).moduleSpecifier.text;
 
-      let moduleFilePath = joinPathFragments(
-        './',
-        dirname(filePath),
-        `${modulePath}.ts`
-      );
-      if (!existsSync(moduleFilePath)) {
+      let moduleFilePath =
+        modulePath &&
+        joinPathFragments('./', dirname(filePath), `${modulePath}.ts`);
+      if (moduleFilePath && !existsSync(moduleFilePath)) {
         // might be a index.ts
         moduleFilePath = joinPathFragments(
           './',
@@ -213,7 +222,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
         );
       }
 
-      if (hasMemberExport(exportedMember, moduleFilePath)) {
+      if (moduleFilePath && hasMemberExport(exportedMember, moduleFilePath)) {
         const foundFilePath = getRelativeImportPath(
           exportedMember,
           moduleFilePath,
