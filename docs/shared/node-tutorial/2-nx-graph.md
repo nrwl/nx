@@ -1,4 +1,4 @@
-# React Nx Tutorial - Part 2: Project Graph
+# Node Nx Tutorial - Part 2: Project Graph
 
 Run the command: `npx nx graph`. A browser should open up with the following contents:
 
@@ -73,7 +73,7 @@ function getProvidedId() {
 
 ### `products-api`
 
-Update this generated `main.ts` file of this project to also import the `createProductsDataClient()` function. Then use the data client and the express api to create an express app with 2 GET request handlers:
+Update the generated `main.ts` file of this project to also import the `createProductsDataClient()` function. Then use the data client and the express api to create an express app with 2 GET request handlers:
 
 ```javascript {% fileName="apps/products-api/src/main.ts" %}
 /**

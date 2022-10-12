@@ -1,4 +1,4 @@
-# React Nx Tutorial - 3: Task-Running
+# Node Nx Tutorial - 3: Task-Running
 
 Now that you've created your projects in your Nx workspace, it's time to address how to run tasks in your workspace.
 
@@ -68,7 +68,7 @@ Running a target in Nx uses the following syntax:
 
 ![Syntax for Running Tasks in Nx](/shared/node-tutorial/run-target-syntax.png)
 
-Run the `build` target for our `products-data-client` project now, by running the command `npx nx test common-ui`:
+Run the `build` target for our `products-data-client` project now, by running the command `npx nx test products-data-client`:
 
 ```bash
 % npx nx build products-data-client
