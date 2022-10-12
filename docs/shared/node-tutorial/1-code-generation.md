@@ -8,11 +8,11 @@ In this tutorial you'll create a frontend-focused workspace with Nx.
 
 ## Contents
 
-- [1 - Code Generation](/react-tutorial/1-code-generation)
-- [2 - Nx Graph](/react-tutorial/2-nx-graph)
-- [3 - Task Running](/react-tutorial/3-task-running)
-- [4 - Workspace Optimization](/react-tutorial/4-workspace-optimization)
-- [5 - Summary](/react-tutorial/5-summary)
+- [1 - Code Generation](/node-tutorial/1-code-generation)
+- [2 - Nx Graph](/node-tutorial/2-nx-graph)
+- [3 - Task Running](/node-tutorial/3-task-running)
+- [4 - Workspace Optimization](/node-tutorial/4-workspace-optimization)
+- [5 - Summary](/node-tutorial/5-summary)
 
 ## Your Objective
 
@@ -24,7 +24,7 @@ For this tutorial, your objective is to create the initial architecture for a wo
 - your `store` app should depend on `common-ui` and `products`
 - your `admin` app should only depend on `common-ui`
 
-![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
+![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
 
 ## Creating an Nx Workspace
 
@@ -58,7 +58,7 @@ Initializing your workspace created your `store` application. Next you'll use [N
 
 The following syntax is used to run generators:
 
-![Nx Generator Syntax](/shared/react-tutorial/generator-syntax.png)
+![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.png)
 
 You should use the `application` generator found in the `@nrwl/react` plugin. To run the generator and create the `admin` application, run the command `npx nx g @nrwl/react:app admin`:
 
@@ -181,4 +181,4 @@ We should now be able to see all four required projects:
 
 ## What's Next
 
-- Continue to [2: Project Graph](/react-tutorial/2-nx-graph)
+- Continue to [2: Project Graph](/node-tutorial/2-nx-graph)

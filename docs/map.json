@@ -37,7 +37,7 @@
           {
             "name": "Node Tutorial",
             "id": "node-tutorial",
-            "file": "shared/node-tutorial/01-create-application"
+            "file": "shared/node-tutorial/1-code-generation"
           }
         ]
       },
@@ -183,44 +183,29 @@
         "description": "Learn to use Nx with this Node tutorial where you will learn about all its main feature with a real project.",
         "itemList": [
           {
-            "name": "1 - Create Application",
-            "id": "01-create-application",
-            "file": "shared/node-tutorial/01-create-application"
+            "name": "1 - Code Generation",
+            "id": "1-code-generation",
+            "file": "shared/node-tutorial/1-code-generation"
           },
           {
-            "name": "2 - Display Todos",
-            "id": "02-display-todos",
-            "file": "shared/node-tutorial/02-display-todos"
+            "name": "2 - Nx Graph",
+            "id": "2-nx-graph",
+            "file": "shared/node-tutorial/2-nx-graph"
           },
           {
-            "name": "3 - Share Code",
-            "id": "03-share-code",
-            "file": "shared/node-tutorial/03-share-code"
+            "name": "3 - Task Running",
+            "id": "3-task-running",
+            "file": "shared/node-tutorial/3-task-running"
           },
           {
-            "name": "4 - Create Libraries",
-            "id": "04-create-libs",
-            "file": "shared/node-tutorial/04-create-libs"
+            "name": "4 - Workspace Optimization",
+            "id": "4-workspace-optimization",
+            "file": "shared/node-tutorial/4-workspace-optimization"
           },
           {
-            "name": "5 - Project Graph",
-            "id": "05-dep-graph",
-            "file": "shared/node-tutorial/05-dep-graph"
-          },
-          {
-            "name": "6 - Use Computation Caching",
-            "id": "06-computation-caching",
-            "file": "shared/node-tutorial/06-computation-caching"
-          },
-          {
-            "name": "7 - Test Affected Projects",
-            "id": "07-test-affected-projects",
-            "file": "shared/node-tutorial/07-test-affected-projects"
-          },
-          {
-            "name": "8 - Summary",
-            "id": "08-summary",
-            "file": "shared/node-tutorial/08-summary"
+            "name": "5 - Summary",
+            "id": "5-summary",
+            "file": "shared/node-tutorial/5-summary"
           }
         ]
       },

@@ -2,11 +2,11 @@
 
 Run the command: `npx nx graph`. A browser should open up with the following contents:
 
-![Initial Nx Graph](/shared/react-tutorial/initial-project-graph.png)
+![Initial Nx Graph](/shared/node-tutorial/initial-project-graph.png)
 
 Notice how this is still different from the architectural design that we laid out at the start of Part 1:
 
-![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
+![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
 
 In Nx, your graph is primarily descriptive in nature, rather than prescriptive. Edges connecting nodes are created based on your projects' source code.
 
@@ -115,15 +115,15 @@ export default App;
 Now run `npx nx graph` again:
 
 {% side-by-side %}
-![Matching Graph](/shared/react-tutorial/matching-graph.png)
+![Matching Graph](/shared/node-tutorial/matching-graph.png)
 
-![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
+![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
 {% /side-by-side %}
 
 You can confirm that your graph now matches your required structure.
 
-The Nx Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/react-tutorial/4-workspace-optimization).
+The Nx Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/node-tutorial/4-workspace-optimization).
 
 ## What's Next
 
-- Continue to [3: Task Running](/react-tutorial/3-task-running)
+- Continue to [3: Task Running](/node-tutorial/3-task-running)

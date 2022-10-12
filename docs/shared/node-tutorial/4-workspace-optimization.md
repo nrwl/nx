@@ -26,7 +26,7 @@ We can visualize how our workspace is affected by this change using the command:
 npx nx affected:graph
 ```
 
-![Nx Graph with Affected](/shared/react-tutorial/nx-graph-with-affected.png)
+![Nx Graph with Affected](/shared/node-tutorial/nx-graph-with-affected.png)
 
 The change made to the `common-ui` project is also affecting the `admin` and `store` projects. This can be leveraged run tasks only on the projects that were affected by this commit.
 
@@ -65,7 +65,7 @@ If this index does not exist, Nx will run the command and if the command succeed
 
 Outputs of the cache include the terminal output created by the task, as well as any files created by the task - for example: the artifact created by running a `build` task.
 
-Outputs are defined for every target in your workspace (this was also mentioned in [3 - Task Running](/react-tutorial/3-task-running)):
+Outputs are defined for every target in your workspace (this was also mentioned in [3 - Task Running](/node-tutorial/3-task-running)):
 
 ```json {% fileName="libs/products/project.json" %}
 {
@@ -210,4 +210,4 @@ This feature allow the Nx graph to dynamically maintain task dependencies, rathe
 
 ## What's Next
 
-- Continue to [5: Summary](/react-tutorial/5-summary)
+- Continue to [5: Summary](/node-tutorial/5-summary)
