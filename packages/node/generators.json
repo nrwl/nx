@@ -1,7 +1,7 @@
 {
   "name": "nx/node",
   "version": "0.1",
-  "extends": ["@nrwl/js"],
+  "extends": ["@nrwl/workspace"],
   "generators": {
     "init": {
       "factory": "./src/generators/init/init",
@@ -16,6 +16,13 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create a node application."
+    },
+    "library": {
+      "factory": "./src/generators/library/library",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a node library."
     }
   },
   "schematics": {
@@ -32,6 +39,13 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create a node application."
+    },
+    "library": {
+      "factory": "./src/generators/library/library#librarySchematic",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a node library."
     }
   }
 }
