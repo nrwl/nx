@@ -36,7 +36,9 @@ export const defaultFileEventHandler = (events: FileEvent[]) => {
   dirs.forEach((d) => fse.ensureDirSync(d));
   events.forEach((event) => {
     if (event.type === 'create' || event.type === 'update') {
-      fse.copyFileSync(event.src, event.dest);
+      if (fse.lstatSync(event.src).isFile()) {
+        fse.copyFileSync(event.src, event.dest);
+      }
     } else if (event.type === 'delete') {
       fse.removeSync(event.dest);
     } else {
