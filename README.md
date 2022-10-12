@@ -26,7 +26,7 @@ Nx is a next generation build system with first class monorepo support and power
 A few links to help you get started:
 
 - [Nx.Dev: Documentation, Guides, Interactive Tutorials](https://nx.dev)
-- [Nx.Dev: Core Tutorials](https://nx.dev/core-tutorial/01-create-blog)
+- [Nx.Dev: Core Tutorials](https://nx.dev/getting-started/core-tutorial)
 - [Recipe: Adding Nx to an Existing Monorepo](https://nx.dev/recipe/adding-to-monorepo)
 - [Official Nx YouTube Channel](https://www.youtube.com/c/Nrwl_io)
 - [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
