@@ -296,7 +296,6 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/node:application',
       path: '/packages/node/generators/application',
     },
-    { title: '@nrwl/node:library', path: '/packages/node/generators/library' },
     { title: '@nrwl/node:webpack', path: '/packages/node/executors/webpack' },
     { title: '@nrwl/node:node', path: '/packages/node/executors/node' },
     { title: 'nx', path: '/packages/nx' },
