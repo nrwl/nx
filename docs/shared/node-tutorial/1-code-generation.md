@@ -1,5 +1,5 @@
 ---
-title: Node Nx Tutorial
+title: 'Node Nx Tutorial - Part 1: Code Generation'
 description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
