@@ -2,7 +2,7 @@
 This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) repo. If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Core Tutorial](/getting-started/core-tutorial).
 {% /callout %}
 
-# React Nx Tutorial - Part 1: Code Generation
+# Node Nx Tutorial - Part 1: Code Generation
 
 In this tutorial you'll create a backend-focused workspace with Nx.
 
@@ -54,7 +54,7 @@ The following syntax is used to run generators:
 
 ![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.png)
 
-To run the node application generation to `products-cli` application, run the command `npx nx g @nrwl/node:app products-cli`:
+To run the node application generator and create your `products-cli` application, run the command `npx nx g @nrwl/node:app products-cli`:
 
 ```bash
 % npx nx g @nrwl/node:app products-cli
@@ -128,4 +128,4 @@ You have now created all three required projects:
 
 ## What's Next
 
-- Continue to [2: Project Graph](/node-tutorial/2-nx-graph)
+- Continue to [2: Nx Graph](/node-tutorial/2-nx-graph)

@@ -1,4 +1,4 @@
-# React Nx Tutorial - 4: Workspace Optimization
+# Node Nx Tutorial - 4: Workspace Optimization
 
 In this step of the tutorial, you will learn about the tools available to optimize your Nx Workspace.
 
@@ -72,7 +72,7 @@ npx nx affected:graph
 
 ![Nx Graph with One Affected](/shared/node-tutorial/nx-graph-with-one-affected.png)
 
-This can be leveraged run tasks only on the projects that were affected by this commit. For example, to run the `test` targets only for affected projects, run the command:
+This can be leveraged to run tasks only on the projects that were affected by this commit. For example, to run the `test` targets only for affected projects, run the command:
 
 ```bash
 npx nx affected --target=test
@@ -146,7 +146,7 @@ Outputs are defined for every target in your workspace (this was also mentioned 
 }
 ```
 
-Outputs are stored in the cache so that terminal output can be replayed, and any created files can be pulled from your cache, and placed where they were created the original time the task was run.
+Outputs are stored in the cache so that terminal output can be replayed, and any created files can be pulled from your cache and placed where they were created the original time the task was run.
 
 ### Example
 
