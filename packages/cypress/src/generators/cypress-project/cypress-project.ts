@@ -27,6 +27,7 @@ import {
   cypressVersion,
   eslintPluginCypressVersion,
 } from '../../utils/versions';
+import { cypressInitGenerator } from '../init/init';
 // app
 import { Schema } from './schema';
 
@@ -248,13 +249,21 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
 
 export async function cypressProjectGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
+  const tasks = [];
+  const cypressVersion = installedCypressVersion();
+  // if there is an installed cypress version, then we don't call
+  // init since we want to keep the existing version that is installed
+  if (!cypressVersion) {
+    tasks.push(cypressInitGenerator(host, options));
+  }
   createFiles(host, options);
   addProject(host, options);
   const installTask = await addLinter(host, options);
+  tasks.push(installTask);
   if (!options.skipFormat) {
     await formatFiles(host);
   }
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
