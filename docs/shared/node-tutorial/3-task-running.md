@@ -1,4 +1,4 @@
-# Node Nx Tutorial - 3: Task-Running
+# Node Nx Tutorial - Part 3: Task-Running
 
 Now that you've created your projects in your Nx workspace, it's time to address how to run tasks in your workspace.
 
