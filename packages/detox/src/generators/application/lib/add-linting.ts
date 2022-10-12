@@ -16,22 +16,22 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
 
   const lintTask = await lintProjectGenerator(host, {
     linter: options.linter,
-    project: options.projectName,
+    project: options.e2eProjectName,
     tsConfigPaths: [
-      joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
+      joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
     ],
-    eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
+    eslintFilePatterns: [`${options.e2eProjectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });
 
   const reactEslintJson = createReactEslintJson(
-    options.projectRoot,
+    options.e2eProjectRoot,
     options.setParserOptionsProject
   );
 
   updateJson(
     host,
-    joinPathFragments(options.projectRoot, '.eslintrc.json'),
+    joinPathFragments(options.e2eProjectRoot, '.eslintrc.json'),
     () => reactEslintJson
   );
 

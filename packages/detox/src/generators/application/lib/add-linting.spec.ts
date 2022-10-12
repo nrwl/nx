@@ -10,14 +10,16 @@ describe('Add Linting', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyV1Workspace();
     addProject(tree, {
-      name: 'my-app-e2e',
-      projectName: 'my-app-e2e',
-      projectDirectory: 'apps',
-      projectRoot: 'apps/my-app-e2e',
-      project: 'my-app',
+      e2eName: 'my-app-e2e',
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectDirectory: 'apps',
+      e2eProjectRoot: 'apps/my-app-e2e',
+      appProject: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
       appDisplayName: 'MyApp',
+      appExpoName: 'MyApp',
+      appRoot: 'apps/my-app',
       linter: Linter.EsLint,
       framework: 'react-native',
     });
@@ -25,14 +27,16 @@ describe('Add Linting', () => {
 
   it('should add update `workspace.json` file properly when eslint is passed', () => {
     addLinting(tree, {
-      name: 'my-app-e2e',
-      projectName: 'my-app-e2e',
-      projectDirectory: 'apps',
-      projectRoot: 'apps/my-app-e2e',
-      project: 'my-app',
+      e2eName: 'my-app-e2e',
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectDirectory: 'apps',
+      e2eProjectRoot: 'apps/my-app-e2e',
+      appProject: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
       appDisplayName: 'MyApp',
+      appExpoName: 'MyApp',
+      appRoot: 'apps/my-app',
       linter: Linter.EsLint,
       framework: 'react-native',
     });
@@ -44,14 +48,16 @@ describe('Add Linting', () => {
 
   it('should not add lint target when "none" is passed', async () => {
     addLinting(tree, {
-      name: 'my-app-e2e',
-      projectName: 'my-app-e2e',
-      projectDirectory: 'apps',
-      projectRoot: 'apps/my-app-e2e',
-      project: 'my-app',
+      e2eName: 'my-app-e2e',
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectDirectory: 'apps',
+      e2eProjectRoot: 'apps/my-app-e2e',
+      appProject: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
       appDisplayName: 'MyApp',
+      appExpoName: 'MyApp',
+      appRoot: 'apps/my-app',
       linter: Linter.None,
       framework: 'react-native',
     });

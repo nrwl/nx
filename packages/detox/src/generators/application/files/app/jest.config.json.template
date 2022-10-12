@@ -1,5 +1,5 @@
 {
-  "preset": "../../jest.preset",
+  "preset": "<%= offsetFromRoot %>jest.preset",
   "testEnvironment": "./environment",
   "testRunner": "jest-circus/runner",
   "testTimeout": 120000,

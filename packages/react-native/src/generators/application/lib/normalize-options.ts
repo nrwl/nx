@@ -8,10 +8,10 @@ import { join } from 'path';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
-  className: string;
-  projectName: string;
-  appProjectRoot: string;
-  lowerCaseName: string;
+  className: string; // app name in class name
+  projectName: string; // directory + app name in kebab case
+  appProjectRoot: string; // app directory path
+  lowerCaseName: string; // app name in lower case
   iosProjectRoot: string;
   androidProjectRoot: string;
   parsedTags: string[];
@@ -32,7 +32,7 @@ export function normalizeOptions(
     ? `${directoryName}/${fileName}`
     : fileName;
 
-  const appProjectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const appProjectName = projectDirectory.replace(/\//g, '-');
 
   const appProjectRoot = joinPathFragments(appsDir, projectDirectory);
   const iosProjectRoot = join(appProjectRoot, 'ios');
