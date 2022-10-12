@@ -48,6 +48,12 @@
       "version": "15.0.0-beta.0",
       "description": "Stop hashing cypress spec files and config files for build targets and dependent tasks",
       "factory": "./src/migrations/update-15-0-0/add-cypress-inputs"
+    },
+    "update-cy-mount-usage": {
+      "cli": "nx",
+      "version": "15.0.0-beta.4",
+      "description": "Update to using cy.mount in the commands.ts file instead of importing mount for each component test file",
+      "factory": "./src/migrations/update-15-0-0/update-cy-mount-usage"
     }
   },
   "packageJsonUpdates": {

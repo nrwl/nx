@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Angular Cypress Component Test Generator should generate a component test 1`] = `
-"import { MountConfig, mount } from 'cypress/angular';
+"import { MountConfig } from 'cypress/angular';
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
@@ -12,7 +12,7 @@ describe(MyLibComponent.name, () => {
   }
 
   it('renders', () => {
-     mount(MyLibComponent, {
+     cy.mount(MyLibComponent, {
            ...config,
            componentProperties: {
                type:  'button',
@@ -27,7 +27,7 @@ describe(MyLibComponent.name, () => {
 `;
 
 exports[`Angular Cypress Component Test Generator should handle component w/o inputs 1`] = `
-"import { MountConfig, mount } from 'cypress/angular';
+"import { MountConfig } from 'cypress/angular';
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
@@ -38,14 +38,14 @@ describe(MyLibComponent.name, () => {
   }
 
   it('renders', () => {
-     mount(MyLibComponent, config);
+     cy.mount(MyLibComponent, config);
   })
 })
 "
 `;
 
 exports[`Angular Cypress Component Test Generator should work with standalone components 1`] = `
-"import { MountConfig, mount } from 'cypress/angular';
+"import { MountConfig } from 'cypress/angular';
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
@@ -56,7 +56,7 @@ describe(MyLibComponent.name, () => {
   }
 
   it('renders', () => {
-     mount(MyLibComponent, {
+     cy.mount(MyLibComponent, {
            ...config,
            componentProperties: {
                type:  'button',

@@ -175,7 +175,7 @@ import {CommonModule} from '@angular/common';
     createFile(
       `libs/${buildableLibName}/src/lib/input/input.component.cy.ts`,
       `
-import { MountConfig, mount } from 'cypress/angular';
+import { MountConfig } from 'cypress/angular';
 import { InputComponent } from './input.component';
 
 describe(InputComponent.name, () => {
@@ -186,12 +186,12 @@ describe(InputComponent.name, () => {
   };
 
   it('renders', () => {
-    mount(InputComponent, config);
+    cy.mount(InputComponent, config);
     // make sure tailwind isn't getting applied
     cy.get('label').should('have.css', 'color', 'rgb(0, 0, 0)');
   });
   it('should be readonly', () => {
-    mount(InputComponent, {
+    cy.mount(InputComponent, {
       ...config,
       componentProperties: {
         readOnly: true,
@@ -206,7 +206,7 @@ describe(InputComponent.name, () => {
     createFile(
       `libs/${buildableLibName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
       `
-import { MountConfig, mount } from 'cypress/angular';
+import { MountConfig } from 'cypress/angular';
 import { InputStandaloneComponent } from './input-standalone.component';
 
 describe(InputStandaloneComponent.name, () => {
@@ -217,12 +217,12 @@ describe(InputStandaloneComponent.name, () => {
   };
 
   it('renders', () => {
-    mount(InputStandaloneComponent, config);
+    cy.mount(InputStandaloneComponent, config);
     // make sure tailwind isn't getting applied
     cy.get('label').should('have.css', 'color', 'rgb(0, 0, 0)');
   });
   it('should be readonly', () => {
-    mount(InputStandaloneComponent, {
+    cy.mount(InputStandaloneComponent, {
       ...config,
       componentProperties: {
         readOnly: true,

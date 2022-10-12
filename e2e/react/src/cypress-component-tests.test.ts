@@ -144,17 +144,16 @@ export default Input;
       `libs/${buildableLibName}/src/lib/input/input.cy.tsx`,
       `
 import * as React from 'react'
-import { mount } from 'cypress/react'
 import Input from './input'
 
 
 describe(Input.name, () => {
   it('renders', () => {
-    mount(<Input readOnly={false} />)
+    cy.mount(<Input readOnly={false} />)
     cy.get('label').should('have.css', 'color', 'rgb(0, 0, 0)');
   })
   it('should be read only', () => {
-    mount(<Input readOnly={true}/>)
+    cy.mount(<Input readOnly={true}/>)
     cy.get('input').should('have.attr', 'readonly');
   })
 });

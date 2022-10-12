@@ -2,7 +2,6 @@
 
 exports[`componentTestGenerator multiple components per file should handle default export 1`] = `
 "import * as React from 'react'
-import { mount } from 'cypress/react'
 import AnotherCmp, { AnotherCmpProps, AnotherCmp2 } from './some-lib'
 
 
@@ -19,13 +18,13 @@ describe(AnotherCmp.name, () => {
   })
 
   it('renders', () => {
-    mount(<AnotherCmp {...props}/>)
+    cy.mount(<AnotherCmp {...props}/>)
   })
 })
 
 describe(AnotherCmp2.name, () => {
   it('renders', () => {
-    mount(<AnotherCmp2 />)
+    cy.mount(<AnotherCmp2 />)
   })
 })
 
@@ -34,7 +33,6 @@ describe(AnotherCmp2.name, () => {
 
 exports[`componentTestGenerator multiple components per file should handle named exports 1`] = `
 "import * as React from 'react'
-import { mount } from 'cypress/react'
 import { AnotherCmpProps, AnotherCmp, AnotherCmp2 } from './some-lib'
 
 
@@ -51,13 +49,13 @@ describe(AnotherCmp.name, () => {
   })
 
   it('renders', () => {
-    mount(<AnotherCmp {...props}/>)
+    cy.mount(<AnotherCmp {...props}/>)
   })
 })
 
 describe(AnotherCmp2.name, () => {
   it('renders', () => {
-    mount(<AnotherCmp2 />)
+    cy.mount(<AnotherCmp2 />)
   })
 })
 
@@ -66,7 +64,6 @@ describe(AnotherCmp2.name, () => {
 
 exports[`componentTestGenerator multiple components per file should handle no props 1`] = `
 "import * as React from 'react'
-import { mount } from 'cypress/react'
 import SomeLib, { SomeLibProps, AnotherCmp } from './some-lib'
 
 
@@ -79,13 +76,13 @@ describe(SomeLib.name, () => {
   })
 
   it('renders', () => {
-    mount(<SomeLib {...props}/>)
+    cy.mount(<SomeLib {...props}/>)
   })
 })
 
 describe(AnotherCmp.name, () => {
   it('renders', () => {
-    mount(<AnotherCmp />)
+    cy.mount(<AnotherCmp />)
   })
 })
 
@@ -94,7 +91,6 @@ describe(AnotherCmp.name, () => {
 
 exports[`componentTestGenerator multiple components per file should handle props 1`] = `
 "import * as React from 'react'
-import { mount } from 'cypress/react'
 import SomeLib, { SomeLibProps, AnotherCmpProps, AnotherCmp } from './some-lib'
 
 
@@ -107,7 +103,7 @@ describe(SomeLib.name, () => {
   })
 
   it('renders', () => {
-    mount(<SomeLib {...props}/>)
+    cy.mount(<SomeLib {...props}/>)
   })
 })
 
@@ -124,7 +120,7 @@ describe(AnotherCmp.name, () => {
   })
 
   it('renders', () => {
-    mount(<AnotherCmp {...props}/>)
+    cy.mount(<AnotherCmp {...props}/>)
   })
 })
 
@@ -133,7 +129,6 @@ describe(AnotherCmp.name, () => {
 
 exports[`componentTestGenerator single component per file should handle default export 1`] = `
 "import * as React from 'react'
-import { mount } from 'cypress/react'
 import AnotherCmp, { AnotherCmpProps } from './some-lib'
 
 
@@ -150,7 +145,7 @@ describe(AnotherCmp.name, () => {
   })
 
   it('renders', () => {
-    mount(<AnotherCmp {...props}/>)
+    cy.mount(<AnotherCmp {...props}/>)
   })
 })
 
@@ -159,7 +154,6 @@ describe(AnotherCmp.name, () => {
 
 exports[`componentTestGenerator single component per file should handle named exports 1`] = `
 "import * as React from 'react'
-import { mount } from 'cypress/react'
 import { AnotherCmpProps, AnotherCmp } from './some-lib'
 
 
@@ -176,7 +170,7 @@ describe(AnotherCmp.name, () => {
   })
 
   it('renders', () => {
-    mount(<AnotherCmp {...props}/>)
+    cy.mount(<AnotherCmp {...props}/>)
   })
 })
 
@@ -185,7 +179,6 @@ describe(AnotherCmp.name, () => {
 
 exports[`componentTestGenerator single component per file should handle no props 1`] = `
 "import * as React from 'react'
-import { mount } from 'cypress/react'
 import SomeLib, { SomeLibProps } from './some-lib'
 
 
@@ -198,7 +191,7 @@ describe(SomeLib.name, () => {
   })
 
   it('renders', () => {
-    mount(<SomeLib {...props}/>)
+    cy.mount(<SomeLib {...props}/>)
   })
 })
 
@@ -207,7 +200,6 @@ describe(SomeLib.name, () => {
 
 exports[`componentTestGenerator single component per file should handle props 1`] = `
 "import * as React from 'react'
-import { mount } from 'cypress/react'
 import { AnotherCmpProps, AnotherCmp } from './some-lib'
 
 
@@ -224,7 +216,7 @@ describe(AnotherCmp.name, () => {
   })
 
   it('renders', () => {
-    mount(<AnotherCmp {...props}/>)
+    cy.mount(<AnotherCmp {...props}/>)
   })
 })
 

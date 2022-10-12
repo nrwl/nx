@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { mount } from 'cypress/react'
 <%- importStatement %>
 
 <% for (let cmp of components) { %>
@@ -13,10 +12,10 @@ describe(<%= cmp.name %>.name, () => {<% if (cmp.typeName) { %>
   })
 
   it('renders', () => {
-    mount(<<%= cmp.name %> {...props}/>)
+    cy.mount(<<%= cmp.name %> {...props}/>)
   })<% } else { %>
   it('renders', () => {
-    mount(<<%= cmp.name %> />)
+    cy.mount(<<%= cmp.name %> />)
   })<% } %>
 })
 <% } %>
