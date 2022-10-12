@@ -1,4 +1,4 @@
-# React Nx Tutorial - 5: Summary
+# React Nx Tutorial - Part 5: Summary
 
 In this tutorial you:
 
