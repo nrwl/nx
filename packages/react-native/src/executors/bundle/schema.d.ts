@@ -4,7 +4,7 @@ export interface ReactNativeBundleOptions {
   platform: string;
   transfrom?: string;
   dev: boolean; // default is true
-  minify?: boolean; // default is false
+  minify?: boolean; // default is false, if dev is false, then minify will become true
   bundleOutput: string;
   maxWorkers: number;
   sourcemapOutput?: string;

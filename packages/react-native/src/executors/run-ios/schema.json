@@ -32,8 +32,8 @@
     "simulator": {
       "type": "string",
       "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: `iPhone X (12.1)`.",
-      "default": "iPhone X",
-      "examples": ["iPhone X"]
+      "default": "iPhone 13",
+      "examples": ["iPhone 13", "iPhone X"]
     },
     "device": {
       "type": "string",
@@ -73,5 +73,6 @@
       "description": "Run packager server in interactive mode.",
       "default": true
     }
-  }
+  },
+  "examplesFile": "../../../docs/run-ios-examples.md"
 }

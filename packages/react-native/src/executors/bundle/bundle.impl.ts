@@ -64,7 +64,7 @@ function runCliBuild(
   });
 }
 
-function createBundleOptions(options) {
+function createBundleOptions(options: ReactNativeBundleOptions) {
   return Object.keys(options).reduce((acc, _k) => {
     const v = options[_k];
     const k = names(_k).fileName;
