@@ -4,7 +4,7 @@ This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) rep
 
 # React Nx Tutorial - Part 1: Code Generation
 
-In this tutorial you'll create a frontend-focused workspace with Nx.
+In this tutorial you'll create a backend-focused workspace with Nx.
 
 ## Contents
 
@@ -18,11 +18,11 @@ In this tutorial you'll create a frontend-focused workspace with Nx.
 
 For this tutorial, your objective is to create the initial architecture for a workspace with the following requirements:
 
-- it should contain two React applications: `store` and `admin`.
-- it should have a collection of common React components in a project called: `common-ui`
-- it should have a "not-React" library for business logic called: `products`
-- your `store` app should depend on `common-ui` and `products`
-- your `admin` app should only depend on `common-ui`
+- it should contain an api built with express called: `products-api`.
+- it should contain a node cli application called: `products-cli`.
+- it should contain a library for interacting with a data-source called: `products-data-client`.
+- your `products-api` app should depend on the `products-data-client` library.
+- your `products-cli` app should also depend on the `products-data-client` library.
 
 ![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
 
@@ -37,147 +37,94 @@ npx create-nx-workspace@latest
 When prompted, provide the following responses:
 
 ```bash
-Workspace name (e.g., org name)     myorg
-What to create in the new workspace react
-Application name                    store
-Default stylesheet format           CSS
+✔ Workspace name (e.g., org name)     · my-products
+✔ What to create in the new workspace · express
+✔ Application name                    · products-api
 ```
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}
 
-We can see that two projects were added to the workspace:
-
-- A React application located in `apps/store`.
-- A Project for Cypress e2e tests for our `store` application in `apps/store-e2e`.
-
-{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nrwl/cypress package page." url="/packages/cypress" /%}
+Once the script is complete, you can open up the `my-products` directory that was created, and see that your first project has been added to the workspace, located in `apps/products-api`.
 
 ## Adding Another Application to Your Workspace
 
-Initializing your workspace created your `store` application. Next you'll use [Nx generators](/plugin-features/use-code-generators) to generate the required `admin` application.
+Next you'll use [Nx generators](/plugin-features/use-code-generators) to generate the required `products-cli` application.
 
 The following syntax is used to run generators:
 
 ![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.png)
 
-You should use the `application` generator found in the `@nrwl/react` plugin. To run the generator and create the `admin` application, run the command `npx nx g @nrwl/react:app admin`:
+To run the node application generation to `products-cli` application, run the command `npx nx g @nrwl/node:app products-cli`:
 
 ```bash
-% npx nx g @nrwl/react:app admin
+% npx nx g @nrwl/node:app products-cli
 
->  NX  Generating @nrwl/react:application
+>  NX  Generating @nrwl/node:application
 
-CREATE apps/admin/.babelrc
-CREATE apps/admin/.browserslistrc
-CREATE apps/admin/src/app/app.spec.tsx
-CREATE apps/admin/src/app/nx-welcome.tsx
-CREATE apps/admin/src/assets/.gitkeep
-CREATE apps/admin/src/environments/environment.prod.ts
-CREATE apps/admin/src/environments/environment.ts
-CREATE apps/admin/src/favicon.ico
-CREATE apps/admin/src/index.html
-CREATE apps/admin/src/main.tsx
-CREATE apps/admin/src/polyfills.ts
-CREATE apps/admin/tsconfig.app.json
-CREATE apps/admin/tsconfig.json
-CREATE apps/admin/src/app/app.module.css
-CREATE apps/admin/src/app/app.tsx
-CREATE apps/admin/src/styles.css
-CREATE apps/admin/project.json
-CREATE apps/admin/.eslintrc.json
-CREATE apps/admin-e2e/cypress.config.ts
-CREATE apps/admin-e2e/src/e2e/app.cy.ts
-CREATE apps/admin-e2e/src/fixtures/example.json
-CREATE apps/admin-e2e/src/support/app.po.ts
-CREATE apps/admin-e2e/src/support/commands.ts
-CREATE apps/admin-e2e/src/support/e2e.ts
-CREATE apps/admin-e2e/tsconfig.json
-CREATE apps/admin-e2e/project.json
-CREATE apps/admin-e2e/.eslintrc.json
-CREATE apps/admin/jest.config.ts
-CREATE apps/admin/tsconfig.spec.json
+CREATE apps/products-cli/src/app/.gitkeep
+CREATE apps/products-cli/src/assets/.gitkeep
+CREATE apps/products-cli/src/environments/environment.prod.ts
+CREATE apps/products-cli/src/environments/environment.ts
+CREATE apps/products-cli/src/main.ts
+CREATE apps/products-cli/tsconfig.app.json
+CREATE apps/products-cli/tsconfig.json
+CREATE apps/products-cli/project.json
+CREATE apps/products-cli/.eslintrc.json
+CREATE apps/products-cli/jest.config.ts
+CREATE apps/products-cli/tsconfig.spec.json
 ```
 
-To see all options for the `application` generator, you can run the command `npx nx generate @nrwl/react:application --help`:
+To see all options for the `application` generator, you can run the command `npx nx generate @nrwl/node:application --help`:
 
 ```bash
-% npx nx generate @nrwl/react:application --help
+% npx nx generate @nrwl/node:application --help
 
->  NX   generate @nrwl/react:application [name] [options,...]
+>  NX   generate @nrwl/node:application [name] [options,...]
 
-From: @nrwl/react (v14.8.3)
-Name: application (aliases: app)
 
-Create a React application for Nx.
+From:  @nrwl/node (v14.8.4)
+Name:  application (aliases: app)
+
+
+  Nx Application Options Schema.
+
 
 Options:
---name The name of the application. [string]
---directory, -dir The directory of the new application. [string]
-.....
-
-Examples:
-nx g app myapp --directory=myorg Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`
-nx g app myapp --classComponent Use class components instead of functional components
-nx g app myapp --routing Set up React Router
-
-Find more information and examples at: https://nx.dev/packages/react/generators/application
-
+    --name             The name of the application.                  [string]
+    --directory        The directory of the new application.         [string]
+    --skipFormat       Skip formatting files                        [boolean]
+    --skipPackageJson  Do not add dependencies to `package.json`.   [boolean]
+    ...
 ```
 
 ## Generating Libraries
 
-To create the `common-ui` and `products` libraries, use the `@nrwl/react:lib` and `@nrwl/js:lib` generators respectively:
-
-{% side-by-side %}
+To create the `products-data-client` library, use the `@nrwl/js:lib` generator:
 
 ```bash
-% npx nx g @nrwl/react:lib common-ui
-
-> NX Generating @nrwl/react:library
-
-CREATE libs/common-ui/project.json
-CREATE libs/common-ui/.eslintrc.json
-CREATE libs/common-ui/.babelrc
-CREATE libs/common-ui/README.md
-CREATE libs/common-ui/src/index.ts
-CREATE libs/common-ui/tsconfig.json
-CREATE libs/common-ui/tsconfig.lib.json
-UPDATE tsconfig.base.json
-CREATE libs/common-ui/jest.config.ts
-CREATE libs/common-ui/tsconfig.spec.json
-CREATE libs/common-ui/src/lib/common-ui.module.css
-CREATE libs/common-ui/src/lib/common-ui.spec.tsx
-CREATE libs/common-ui/src/lib/common-ui.tsx
-```
-
-```bash
-% npx nx g @nrwl/js:lib products
+% npx nx g @nrwl/js:lib products-data-client
 
 >  NX  Generating @nrwl/js:library
 
-CREATE libs/products/README.md
-CREATE libs/products/package.json
-CREATE libs/products/src/index.ts
-CREATE libs/products/src/lib/products.spec.ts
-CREATE libs/products/src/lib/products.ts
-CREATE libs/products/tsconfig.json
-CREATE libs/products/tsconfig.lib.json
-CREATE libs/products/.babelrc
-CREATE libs/products/project.json
+CREATE libs/products-data-client/README.md
+CREATE libs/products-data-client/package.json
+CREATE libs/products-data-client/src/index.ts
+CREATE libs/products-data-client/src/lib/products-data-client.spec.ts
+CREATE libs/products-data-client/src/lib/products-data-client.ts
+CREATE libs/products-data-client/tsconfig.json
+CREATE libs/products-data-client/tsconfig.lib.json
+CREATE libs/products-data-client/project.json
 UPDATE tsconfig.base.json
-CREATE libs/products/.eslintrc.json
-CREATE libs/products/jest.config.ts
-CREATE libs/products/tsconfig.spec.json
+CREATE libs/products-data-client/.eslintrc.json
+CREATE libs/products-data-client/jest.config.ts
+CREATE libs/products-data-client/tsconfig.spec.json
 ```
 
-{% /side-by-side %}
+You have now created all three required projects:
 
-We should now be able to see all four required projects:
-
-- `store` in `apps/store`
-- `admin` in `apps/admin`
-- `products` in `libs/products`
-- `common-ui` in `libs/common-ui`
+- `products-api` in `apps/products-api`
+- `products-cli` in `apps/products-cli`
+- `products-data-client` in `libs/products-data-client`
 
 ## What's Next
 

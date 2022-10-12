@@ -4,7 +4,7 @@ Run the command: `npx nx graph`. A browser should open up with the following con
 
 ![Initial Nx Graph](/shared/node-tutorial/initial-project-graph.png)
 
-Notice how this is still different from the architectural design that we laid out at the start of Part 1:
+Notice how this is still different from the architectural design requirements given in Part 1:
 
 ![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
 
@@ -12,104 +12,100 @@ In Nx, your graph is primarily descriptive in nature, rather than prescriptive. 
 
 To reflect the intended architecture, make the following adjustments to your existing projects:
 
-### `common-ui`
+### `products-data-client`
 
-Run the `@nrwl/react:component` generator to create a `banner` component using the command: `npx nx g @nrwl/react:component banner --project=common-ui --export`
+Update the contents of the generated `products-data-client.ts` file to export a `Product` interface and a way to create a `ProductsDataClient` object:
 
-```bash
-% npx nx g @nrwl/react:component banner --project=common-ui --export
-
->  NX  Generating @nrwl/react:component
-
-CREATE libs/common-ui/src/lib/banner/banner.module.css
-CREATE libs/common-ui/src/lib/banner/banner.spec.tsx
-CREATE libs/common-ui/src/lib/banner/banner.tsx
-UPDATE libs/common-ui/src/index.ts
-```
-
-Next create a simple banner component in your generated file:
-
-```javascript {% fileName="libs/common-ui/src/lib/banner/banner.tsx" %}
-export interface BannerProps {
-  text: string;
-}
-
-export function Banner(props: BannerProps) {
-  return <header>{props.text}</header>;
-}
-
-export default Banner;
-```
-
-### `admin`
-
-Add the banner component to the admin app:
-
-```javascript {% fileName="apps/admin/src/app/app.tsx" %}
-import { Banner } from '@myorg/common-ui';
-
-export function App() {
-  return (
-    <>
-      <Banner text="Welcome to our admin app." />
-      <div />
-    </>
-  );
-}
-
-export default App;
-```
-
-### `products`
-
-Export a `Product` TS interface and some example products from this lib by making the following change:
-
-```javascript {% fileName="libs/products/src/lib/products.ts" %}
+```typescript {% fileName="libs/products-data-client/src/lib/products-data-client.ts" %}
 export interface Product {
   id: string;
   name: string;
   price: number;
 }
 
-export const exampleProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Product 1',
-    price: 100,
-  },
-  {
-    id: '2',
-    name: 'Product 2',
-    price: 200,
-  },
-];
-```
-
-### `store`
-
-Import and use both the `Banner` component from your `common-ui` lib, and the `exampleProducts` from your `products` lib:
-
-```javascript {% fileName="apps/store/src/app/app.tsx" %}
-import { Banner } from '@myorg/common-ui';
-import { exampleProducts } from '@myorg/products';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function App() {
-  return (
-    <>
-      <Banner text="Welcome to the store!" />
-      <ul>
-        {exampleProducts.map((product) => (
-          <li key={product.id}>
-            <strong>{product.name}</strong> Price: {product.price}
-          </li>
-        ))}
-      </ul>
-    </>
-  );
+export interface ProductsDataClient {
+  getProducts(): Promise<Product[]>;
+  getProductById(id: string): Promise<Product | undefined>;
 }
 
-export default App;
+export const exampleProducts: Record<string, Product> = {
+  '1': { id: '1', name: 'Product 1', price: 100 },
+  '2': { id: '2', name: 'Product 2', price: 200 },
+};
+
+export function createProductsDataClient(): ProductsDataClient {
+  return {
+    getProducts() {
+      return Promise.resolve(Object.values(exampleProducts));
+    },
+    getProductById(id) {
+      return Promise.resolve(exampleProducts[id]);
+    },
+  };
+}
+```
+
+### `products-cli`
+
+Update the generated `main.ts` file of this project to import the `createProductsDataClient()` function. Then use the data client to print the product matching the id provided at the command-line. If no id was provided, print all products as an array.
+
+```typescript {% fileName="apps/products-cli/src/main.ts" %}
+import { createProductsDataClient } from '@my-products/products-data-client';
+
+main();
+
+async function main() {
+  const productsDataClient = createProductsDataClient();
+  const id = getProvidedId();
+  if (id != null) {
+    const product = await productsDataClient.getProductById(id);
+    console.log(JSON.stringify(product, null, 2));
+  } else {
+    const products = await productsDataClient.getProducts();
+    console.log(JSON.stringify(products, null, 2));
+  }
+}
+
+function getProvidedId() {
+  return process.argv[2];
+}
+```
+
+### `products-api`
+
+Update this generated `main.ts` file of this project to also import the `createProductsDataClient()` function. Then use the data client and the express api to create an express app with 2 GET request handlers:
+
+```javascript {% fileName="apps/products-api/src/main.ts" %}
+/**
+ * This is not a production server yet!
+ * This is only a minimal backend to get started.
+ */
+import * as express from 'express';
+import { createProductsDataClient } from '@my-products/products-data-client';
+
+const app = express();
+const productsDataClient = createProductsDataClient();
+
+app.get('/products', async (_req, res) => {
+  const products = await productsDataClient.getProducts();
+  res.send(products);
+});
+
+app.get('/products/:id', async (req, res) => {
+  const id = req.params.id;
+  const product = await productsDataClient.getProductById(id);
+  if (product == null) {
+    res.status(404).send();
+    return;
+  }
+  res.send(product);
+});
+
+const port = process.env.port || 3333;
+const server = app.listen(port, () => {
+  console.log(`Listening at http://localhost:${port}`);
+});
+server.on('error', console.error);
 ```
 
 Now run `npx nx graph` again:

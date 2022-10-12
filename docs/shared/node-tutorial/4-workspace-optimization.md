@@ -12,25 +12,67 @@ To see this in action, run the command:
 git add . && git commit -m "commiting to test affected"
 ```
 
-Then make a change to the styles of your `common-ui` project:
+Then make a change to your example products in your `products-data-client` project:
 
-```css {% fileName="libs/common-ui/src/lib/common-ui.module.css" %}
-.container {
-  color: 'blue;';
-}
+```typescript {% fileName="libs/products-data-client/src/lib/products-data-client.ts" %}
+export const exampleProducts: Record<string, Product> = {
+  '1': { id: '1', name: 'Product 1', price: 100 },
+  '2': { id: '2', name: 'Product 2', price: 400 }, // changed here
+};
 ```
 
-We can visualize how our workspace is affected by this change using the command:
+Run the following command to visualize how our workspace is affected by this change:
 
 ```bash
 npx nx affected:graph
 ```
 
-![Nx Graph with Affected](/shared/node-tutorial/nx-graph-with-affected.png)
+![Nx Graph with All Affected](/shared/node-tutorial/nx-graph-with-all-affected.png)
 
-The change made to the `common-ui` project is also affecting the `admin` and `store` projects. This can be leveraged run tasks only on the projects that were affected by this commit.
+The change made to the `products-data-client` project is also affecting the `products-api` and `products-cli` projects, since both of those projects import from the `products-data-client` project.
 
-To run the `test` targets only for affected projects, run the command:
+Next, stash your changes since the commit:
+
+```bash
+git stash
+```
+
+And then make a minor adjustment to the `products-cli` project:
+
+```typescript {% fileName="apps/products-clit/src/main.ts" %}
+import { createProductsDataClient } from '@my-products/products-data-client';
+
+main();
+
+async function main() {
+  const productsDataClient = createProductsDataClient();
+  const id = getProvidedId();
+  if (id != null) {
+    const product = await productsDataClient.getProductById(id);
+    if (!product) {
+      throw new Error(`Product with id ${id} not found`);
+    }
+    console.log(JSON.stringify(product, null, 2));
+  } else {
+    const products = await productsDataClient.getProducts();
+    console.log(JSON.stringify(products, null, 2));
+  }
+}
+
+function getProvidedId() {
+  return process.argv[2];
+}
+```
+
+Now run the command to visualize the affected graph again:
+
+```bash
+npx nx affected:graph
+```
+
+![Nx Graph with One Affected](/shared/node-tutorial/nx-graph-with-one-affected.png)
+
+This can be leveraged run tasks only on the projects that were affected by this commit. For example, to run the `test` targets only for affected projects, run the command:
 
 ```bash
 npx nx affected --target=test
@@ -67,35 +109,35 @@ Outputs of the cache include the terminal output created by the task, as well as
 
 Outputs are defined for every target in your workspace (this was also mentioned in [3 - Task Running](/node-tutorial/3-task-running)):
 
-```json {% fileName="libs/products/project.json" %}
+```json {% fileName="libs/products-data-client/project.json" %}
 {
-  "name": "products",
+  "name": "products-data-client",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/products/src",
+  "sourceRoot": "libs/products-data-client/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/products",
-        "main": "libs/products/src/index.ts",
-        "tsConfig": "libs/products/tsconfig.lib.json",
-        "assets": ["libs/products/*.md"]
+        "outputPath": "dist/libs/products-data-client",
+        "main": "libs/products-data-client/src/index.ts",
+        "tsConfig": "libs/products-data-client/tsconfig.lib.json",
+        "assets": ["libs/products-data-client/*.md"]
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/products/**/*.ts"]
+        "lintFilePatterns": ["libs/products-data-client/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/products"],
+      "outputs": ["coverage/libs/products-data-client"],
       "options": {
-        "jestConfig": "libs/products/jest.config.ts",
+        "jestConfig": "libs/products-data-client/jest.config.ts",
         "passWithNoTests": true
       }
     }
@@ -108,103 +150,70 @@ Outputs are stored in the cache so that terminal output can be replayed, and any
 
 ### Example
 
-To see caching in action, run the command `npx nx build admin`:
+To see caching in action, first clear your `dist` directory:
 
 ```bash
-% npx nx build admin
-
-> nx run admin:build:production
-
-Entrypoint main 139 KiB = runtime.54e36ebee261465d.js 1.19 KiB main.623d91691bdb6754.css 42 bytes main.303fe7c1dcf5306b.js 137 KiB
-Entrypoint polyfills 93.5 KiB = runtime.54e36ebee261465d.js 1.19 KiB polyfills.bd0d0abec287a28e.js 92.3 KiB
-Entrypoint styles 1.19 KiB = runtime.54e36ebee261465d.js 1.19 KiB styles.ef46db3751d8e999.css 0 bytes
-chunk (runtime: runtime) main.623d91691bdb6754.css, main.303fe7c1dcf5306b.js (main) 144 KiB (javascript) 50 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) polyfills.bd0d0abec287a28e.js (polyfills) 301 KiB [initial] [rendered]
-chunk (runtime: runtime) styles.ef46db3751d8e999.css (styles) 50 bytes (javascript) 80 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) runtime.54e36ebee261465d.js (runtime) 3.23 KiB [entry] [rendered]
-webpack compiled successfully (0c0df3e6c70c6b7b)
-
- ———————————————————————————————————————————————————————————————————————————————————————————————————
-
- >  NX   Successfully ran target build for project admin (4s)
+rm -rf dist/
 ```
 
-Since you have not run the `build` target before for the `admin` project, Nx runs the `build`, and populates the results in `dist/apps/admin` as specified in the `admin` project's `project.json` file for the `build` target.
-
-Next, remove your dist directory:
+And run the command `npx nx build products-data-client`. (Recall that you had already run this target in [3- Task Running](/node-tutorial/3-task-running), and that you had then changed and then stashed that change earlier in this lesson)
 
 ```bash
-rm -rf dist
-```
+% npx nx build products-data-client
 
-And run the command again:
+> nx run products-data-client:build  [local cache]
 
-```bash
-`npx nx build admin`
+Compiling TypeScript files for project "products-data-client"...
+Done compiling TypeScript files for project "products-data-client".
 
-> nx run admin:build:production  [local cache]
+ ———————————————————————————————————————————————————————————————————————————————————————————————
 
-Entrypoint main 139 KiB = runtime.54e36ebee261465d.js 1.19 KiB main.623d91691bdb6754.css 42 bytes main.303fe7c1dcf5306b.js 137 KiB
-Entrypoint polyfills 93.5 KiB = runtime.54e36ebee261465d.js 1.19 KiB polyfills.bd0d0abec287a28e.js 92.3 KiB
-Entrypoint styles 1.19 KiB = runtime.54e36ebee261465d.js 1.19 KiB styles.ef46db3751d8e999.css 0 bytes
-chunk (runtime: runtime) main.623d91691bdb6754.css, main.303fe7c1dcf5306b.js (main) 144 KiB (javascript) 50 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) polyfills.bd0d0abec287a28e.js (polyfills) 301 KiB [initial] [rendered]
-chunk (runtime: runtime) styles.ef46db3751d8e999.css (styles) 50 bytes (javascript) 80 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) runtime.54e36ebee261465d.js (runtime) 3.23 KiB [entry] [rendered]
-webpack compiled successfully (0c0df3e6c70c6b7b)
-
- ———————————————————————————————————————————————————————————————————————————————————————————————————
-
- >  NX   Successfully ran target build for project admin (59ms)
+ >  NX   Successfully ran target build for project products-data-client (32ms)
 
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
-Notice that the output is annotated to show that this task's result was cached in your `[local cache]`, and that this time the command only took 59ms to run.
+Notice that the output is annotated to show that this task's result was cached in your `[local cache]`, and that this time the command only took 32ms to run.
 
-Also notice that the result of your build has been added back to the `dist/apps/admin` directory.
+Also notice that the result of your build has been added back to the `dist/libs/products-data-client` directory.
 
 {% card title="More Task Caching Details" description="See the documentation for more information on caching." url="/core-features/cache-task-results" /%}
 
 ## The Task Graph
 
-Next, run the command `npx nx build store`:
+Next, run the command `npx nx build products-cli`:
 
 ```bash
-> npx nx build store
+% npx nx build products-cli
 
-   ✔    1/1 dependent project tasks succeeded [0 read from cache]
+   ✔    1/1 dependent project tasks succeeded [1 read from cache]
 
    Hint: you can run the command with --verbose to see the full dependent project outputs
 
- ———————————————————————————————————————————————————————————————————————————————————————————————————
+ ———————————————————————————————————————————————————————————————————————————————————————————————
 
 
-> nx run store:build:production
+> nx run products-cli:build
 
-Entrypoint main 139 KiB = runtime.54e36ebee261465d.js 1.19 KiB main.623d91691bdb6754.css 42 bytes main.94f9a4a3cec4f056.js 138 KiB
-Entrypoint polyfills 93.5 KiB = runtime.54e36ebee261465d.js 1.19 KiB polyfills.bd0d0abec287a28e.js 92.3 KiB
-Entrypoint styles 1.19 KiB = runtime.54e36ebee261465d.js 1.19 KiB styles.ef46db3751d8e999.css 0 bytes
-chunk (runtime: runtime) main.623d91691bdb6754.css, main.94f9a4a3cec4f056.js (main) 145 KiB (javascript) 50 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) polyfills.bd0d0abec287a28e.js (polyfills) 301 KiB [initial] [rendered]
-chunk (runtime: runtime) styles.ef46db3751d8e999.css (styles) 50 bytes (javascript) 80 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) runtime.54e36ebee261465d.js (runtime) 3.23 KiB [entry] [rendered]
-webpack compiled successfully (06e95dfdacea84c7)
+chunk (runtime: main) main.js (main) 1.71 KiB [entry] [rendered]
+webpack compiled successfully (bafa37be9890ecb2)
 
- ———————————————————————————————————————————————————————————————————————————————————————————————————
+ ———————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project store and 1 task(s) it depends on (5s)
+ >  NX   Successfully ran target build for project products-cli and 1 task(s) it depends on (2s)
+
+   Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
 ```
 
 Notice the line here:
 
 ```bash
-   ✔    1/1 dependent project tasks succeeded [0 read from cache]
+   ✔    1/1 dependent project tasks succeeded [1 read from cache]
 ```
 
-This is because your `store` project depends on your `products` project, which also has a `build` target. By default Nx is configured to run the `build` target for any dependencies that have a `build` target, before running the `build` on the original project.
+This is because your `products-cli` project depends on your `products-data-client` project, which also has a `build` target. By default Nx is configured to run (or read from cache) the `build` target for any dependencies that have a `build` target, before running the `build` on the original project.
 
-This feature allow the Nx graph to dynamically maintain task dependencies, rather than having to manually maintain those task dependencies as your workspace continues to grow.
+This feature allows the Nx graph to dynamically maintain task dependencies, rather than having to manually maintain those task dependencies as your workspace continues to grow.
 
 {% card title="More On The Task Pipeline Configuration" description="The the Task Pipeline Configuration guids for more details on how to configure your Task Graph." url="/concepts/task-pipeline-configuration" /%}
 
