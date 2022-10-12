@@ -24,6 +24,6 @@ Here's a deep dive on [Integrated Repos vs. Package-Based Repos](/concepts/integ
 
 If you want to use Nx plugins to really level up your productivity, pick one of the following tutorials:
 
-- [Nx and Node](/node-tutorial/01-create-application)
+- [Nx and Node](/node-tutorial/1-code-generation)
 - [Nx and React](/react-tutorial/01-create-application)
 - [Nx and Angular](/angular-tutorial/01-create-application)

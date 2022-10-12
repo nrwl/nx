@@ -48,7 +48,7 @@ You can see that two targets are defined here: `test` and `lint`.
 The properties inside each of these these targets is defined as follows:
 
 - `executor` - which Nx executor to run. The syntax here is: `<plugin name>:<executor name>`
-- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Workspace Optimizations](/react-tutorial/4-workspace-optimization)).
+- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Workspace Optimizations](/node-tutorial/4-workspace-optimization)).
 - `options` - this is an object defining which executor options to use for the given target. Every Nx executor allows for options as a way to parameterize it's functionality.
 
 These targets are sufficient for your `common-ui` project, but if more targets were required in the future, you could create more targets by defining them here.
@@ -57,7 +57,7 @@ These targets are sufficient for your `common-ui` project, but if more targets w
 
 Running a target in Nx uses the following syntax:
 
-![Syntax for Running Tasks in Nx](/shared/react-tutorial/run-target-syntax.png)
+![Syntax for Running Tasks in Nx](/shared/node-tutorial/run-target-syntax.png)
 
 Run the `test` target for our `common-ui` project now, by running the command `npx nx test common-ui`:
 
@@ -100,4 +100,4 @@ All files pass linting.
 
 ## What's Next
 
-- Continue to [4: Workspace Optimization](/react-tutorial/4-workspace-optimization)
+- Continue to [4: Workspace Optimization](/node-tutorial/4-workspace-optimization)

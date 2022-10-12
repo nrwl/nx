@@ -1041,11 +1041,11 @@ function pointToTutorialAndCourse(preset: Preset) {
         bodyLines: [`https://nx.dev/angular-tutorial/01-create-application`],
       });
       break;
-    case Preset.Nest:
+    case Preset.Express:
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/node-tutorial/01-create-application`],
+        bodyLines: [`https://nx.dev/node-tutorial/1-code-generation`],
       });
       break;
   }
