@@ -181,4 +181,4 @@ We should now be able to see all four required projects:
 
 ## What's Next
 
-- Continue to [2: Project Graph](/react-tutorial/2-nx-graph)
+- Continue to [2: Nx Graph](/react-tutorial/2-nx-graph)

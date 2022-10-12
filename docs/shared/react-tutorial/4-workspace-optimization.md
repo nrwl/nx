@@ -171,7 +171,7 @@ Also notice that the result of your build has been added back to the `dist/apps/
 Next, run the command `npx nx build store`:
 
 ```bash
-> npx nx build store
+% npx nx build store
 
    ✔    1/1 dependent project tasks succeeded [0 read from cache]
 
