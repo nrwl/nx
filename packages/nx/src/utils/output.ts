@@ -267,6 +267,16 @@ class CLIOutput {
 
     this.addNewline();
   }
+
+  drain(): Promise<void> {
+    return new Promise((resolve) => {
+      if (process.stdout.writableNeedDrain) {
+        process.stdout.once('drain', resolve);
+      } else {
+        resolve();
+      }
+    });
+  }
 }
 
 export const output = new CLIOutput();

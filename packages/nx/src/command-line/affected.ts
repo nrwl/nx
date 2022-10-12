@@ -130,6 +130,7 @@ export async function affected(
         break;
       }
     }
+    await output.drain();
   } catch (e) {
     printError(e, args.verbose);
     process.exit(1);
