@@ -40,8 +40,8 @@ Cards allow to show content in a grid system with a title, a description, a type
 
 ```markdown
 {% cards %}
-{% card title="string" description="string" type="documentation|external|video" url="string" %}
-{% card title="string" description="string" type="documentation|external|video" url="string" %}
+{% card title="string" description="string" type="documentation|external|video" url="string" /%}
+{% card title="string" description="string" type="documentation|external|video" url="string" /%}
 // as many as cards you want
 {% /cards %}
 ```
