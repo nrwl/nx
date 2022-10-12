@@ -23,9 +23,9 @@ describe('tscExecutor', () => {
       targetName: 'build',
     };
     testOptions = {
-      main: 'libs/ui/src/index.ts',
-      outputPath: 'dist/libs/ui',
-      tsConfig: 'libs/ui/tsconfig.json',
+      main: 'libs/example/src/index.ts',
+      outputPath: 'dist/libs/example',
+      tsConfig: 'libs/example/tsconfig.json',
       assets: [],
       transformers: [],
       watch: false,
@@ -39,18 +39,18 @@ describe('tscExecutor', () => {
         normalizeOptions(
           testOptions,
           '/root',
-          '/root/libs/ui/src',
-          '/root/libs/ui'
+          '/root/libs/example/src',
+          '/root/libs/example'
         ),
         context
       );
 
       expect(result).toMatchObject({
-        outputPath: '/root/dist/libs/ui',
+        outputPath: '/root/dist/libs/example',
         projectName: 'example',
-        projectRoot: '/root/libs/ui',
-        rootDir: '/root/libs/ui',
-        tsConfig: '/root/libs/ui/tsconfig.json',
+        projectRoot: '/root/libs/example',
+        rootDir: '/root/libs/example',
+        tsConfig: '/root/libs/example/tsconfig.json',
         watch: false,
         deleteOutputPath: true,
       });
@@ -59,16 +59,16 @@ describe('tscExecutor', () => {
     it('should handle custom rootDir', () => {
       const result = createTypeScriptCompilationOptions(
         normalizeOptions(
-          { ...testOptions, rootDir: 'libs/ui/src' },
+          { ...testOptions, rootDir: 'libs/example/src' },
           '/root',
-          '/root/libs/ui/src',
-          '/root/libs/ui'
+          '/root/libs/example/src',
+          '/root/libs/example'
         ),
         context
       );
 
       expect(result).toMatchObject({
-        rootDir: '/root/libs/ui/src',
+        rootDir: '/root/libs/example/src',
       });
     });
   });

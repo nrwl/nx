@@ -53,6 +53,7 @@ export interface NormalizedExecutorOptions extends ExecutorOptions {
   root?: string;
   sourceRoot?: string;
   projectRoot: string;
+  rootDir: string;
   mainOutputPath: string;
   files: Array<FileInputOutput>;
 }

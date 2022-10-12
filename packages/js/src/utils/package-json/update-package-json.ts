@@ -13,12 +13,12 @@ import { basename, dirname, join, parse, relative } from 'path';
 import { fileExists } from 'nx/src/utils/fileutils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
-function getMainFileDirRelativeToProjectRoot(
+function getMainFileDirRelativeToRootDir(
   main: string,
-  projectRoot: string
+  rootDir: string
 ): string {
   const mainFileDir = dirname(main);
-  const relativeDir = normalizePath(relative(projectRoot, mainFileDir));
+  const relativeDir = normalizePath(relative(rootDir, mainFileDir));
   return relativeDir === '' ? `./` : `./${relativeDir}/`;
 }
 
@@ -26,6 +26,7 @@ export type SupportedFormat = 'cjs' | 'esm';
 
 export interface UpdatePackageJsonOption {
   projectRoot: string;
+  rootDir: string;
   main: string;
   format?: SupportedFormat[];
   outputPath: string;
@@ -83,9 +84,9 @@ export function getUpdatedPackageJsonContent(
   const hasEsmFormat = options.format?.includes('esm');
 
   const mainFile = basename(options.main).replace(/\.[tj]s$/, '');
-  const relativeMainFileDir = getMainFileDirRelativeToProjectRoot(
+  const relativeMainFileDir = getMainFileDirRelativeToRootDir(
     options.main,
-    options.projectRoot
+    options.rootDir
   );
   const typingsFile = `${relativeMainFileDir}${mainFile}.d.ts`;
   const exports = {

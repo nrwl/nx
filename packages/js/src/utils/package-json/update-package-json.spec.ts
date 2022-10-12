@@ -1,18 +1,28 @@
-import { getUpdatedPackageJsonContent } from './update-package-json';
+import {
+  getUpdatedPackageJsonContent,
+  UpdatePackageJsonOption,
+} from './update-package-json';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 describe('getUpdatedPackageJsonContent', () => {
+  let packageJson: PackageJson;
+  let testOptions: UpdatePackageJsonOption;
+
+  beforeEach(async () => {
+    packageJson = {
+      name: 'test',
+      version: '0.0.1',
+    };
+    testOptions = {
+      main: 'proj/src/index.ts',
+      outputPath: 'dist/proj',
+      projectRoot: 'proj',
+      rootDir: 'proj',
+    };
+  });
+
   it('should update fields for commonjs only (default)', () => {
-    const json = getUpdatedPackageJsonContent(
-      {
-        name: 'test',
-        version: '0.0.1',
-      },
-      {
-        main: 'proj/src/index.ts',
-        outputPath: 'dist/proj',
-        projectRoot: 'proj',
-      }
-    );
+    const json = getUpdatedPackageJsonContent(packageJson, testOptions);
 
     expect(json).toEqual({
       name: 'test',
@@ -22,21 +32,27 @@ describe('getUpdatedPackageJsonContent', () => {
     });
   });
 
-  it('should update fields for esm only', () => {
-    const json = getUpdatedPackageJsonContent(
-      {
-        name: 'test',
-        version: '0.0.1',
-      },
-      {
-        main: 'proj/src/index.ts',
-        outputPath: 'dist/proj',
-        projectRoot: 'proj',
-        format: ['esm'],
-      }
-    );
+  it('should support custom rootDir', () => {
+    const json = getUpdatedPackageJsonContent(packageJson, {
+      ...testOptions,
+      rootDir: 'proj/src',
+    });
 
     expect(json).toEqual({
+      name: 'test',
+      main: './index.js',
+      types: './index.d.ts',
+      version: '0.0.1',
+    });
+  });
+
+  it('should update fields for esm only', () => {
+    const json = getUpdatedPackageJsonContent(packageJson, {
+      ...testOptions,
+      format: ['esm'],
+    });
+
+    expect(json).toMatchObject({
       name: 'test',
       type: 'module',
       module: './src/index.js',
@@ -47,18 +63,10 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should update fields for commonjs + esm', () => {
-    const json = getUpdatedPackageJsonContent(
-      {
-        name: 'test',
-        version: '0.0.1',
-      },
-      {
-        main: 'proj/src/index.ts',
-        outputPath: 'dist/proj',
-        projectRoot: 'proj',
-        format: ['esm', 'cjs'],
-      }
-    );
+    const json = getUpdatedPackageJsonContent(packageJson, {
+      ...testOptions,
+      format: ['esm', 'cjs'],
+    });
 
     expect(json).toEqual({
       name: 'test',
@@ -70,18 +78,10 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should support skipping types', () => {
-    const json = getUpdatedPackageJsonContent(
-      {
-        name: 'test',
-        version: '0.0.1',
-      },
-      {
-        main: 'proj/src/index.ts',
-        outputPath: 'dist/proj',
-        projectRoot: 'proj',
-        skipTypings: true,
-      }
-    );
+    const json = getUpdatedPackageJsonContent(packageJson, {
+      ...testOptions,
+      skipTypings: true,
+    });
 
     expect(json).toEqual({
       name: 'test',
@@ -91,19 +91,11 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should support generated exports field', () => {
-    const json = getUpdatedPackageJsonContent(
-      {
-        name: 'test',
-        version: '0.0.1',
-      },
-      {
-        main: 'proj/src/index.ts',
-        outputPath: 'dist/proj',
-        projectRoot: 'proj',
-        format: ['esm'],
-        generateExportsField: true,
-      }
-    );
+    const json = getUpdatedPackageJsonContent(packageJson, {
+      ...testOptions,
+      format: ['esm'],
+      generateExportsField: true,
+    });
 
     expect(json).toEqual({
       name: 'test',
@@ -119,20 +111,12 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should support different CJS file extension', () => {
-    const json = getUpdatedPackageJsonContent(
-      {
-        name: 'test',
-        version: '0.0.1',
-      },
-      {
-        main: 'proj/src/index.ts',
-        outputPath: 'dist/proj',
-        projectRoot: 'proj',
-        format: ['esm', 'cjs'],
-        outputFileExtensionForCjs: '.cjs',
-        generateExportsField: true,
-      }
-    );
+    const json = getUpdatedPackageJsonContent(packageJson, {
+      ...testOptions,
+      format: ['esm', 'cjs'],
+      outputFileExtensionForCjs: '.cjs',
+      generateExportsField: true,
+    });
 
     expect(json).toEqual({
       name: 'test',
@@ -147,18 +131,10 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should not set types when { skipTypings: true }', () => {
-    const json = getUpdatedPackageJsonContent(
-      {
-        name: 'test',
-        version: '0.0.1',
-      },
-      {
-        main: 'proj/src/index.ts',
-        outputPath: 'dist/proj',
-        projectRoot: 'proj',
-        skipTypings: true,
-      }
-    );
+    const json = getUpdatedPackageJsonContent(packageJson, {
+      ...testOptions,
+      skipTypings: true,
+    });
 
     expect(json).toEqual({
       name: 'test',

@@ -8,7 +8,7 @@ import { updatePackageJson } from './update-package-json';
 import { checkDependencies } from '../check-dependencies';
 
 export interface CopyPackageJsonOptions
-  extends Omit<UpdatePackageJsonOption, 'projectRoot'> {
+  extends Omit<UpdatePackageJsonOption, 'projectRoot' | 'rootDir'> {
   watch?: boolean;
   extraDependencies?: DependentBuildableProjectNode[];
 }
@@ -32,7 +32,7 @@ export async function copyPackageJson(
     context,
     context.target.options.tsConfig
   );
-  const options = { ..._options, projectRoot };
+  const options = { ..._options, projectRoot, rootDir: projectRoot };
   if (options.extraDependencies?.length) {
     dependencies.push(...options.extraDependencies);
   }
