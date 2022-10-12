@@ -248,7 +248,7 @@
     "path": "generated/packages/node.json",
     "schemas": {
       "executors": ["webpack", "node"],
-      "generators": ["init", "application"]
+      "generators": ["init", "application", "library"]
     }
   },
   {
