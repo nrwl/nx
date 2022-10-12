@@ -1,3 +1,8 @@
+---
+title: Node Nx Tutorial - Part 1: Code Generation
+description: In this tutorial you'll create a backend-focused workspace with Nx.
+---
+
 {% callout type="check" title="Integrated Repo" %}
 This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) repo. If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Core Tutorial](/getting-started/core-tutorial).
 {% /callout %}
