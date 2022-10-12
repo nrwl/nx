@@ -35,7 +35,7 @@ export function Header(): JSX.Element {
     {
       name: 'Recipes',
       description: 'Follow instructions to do common specific tasks.',
-      href: '/recipes/all',
+      href: '/recipes',
     },
     {
       name: 'VSCode integration',

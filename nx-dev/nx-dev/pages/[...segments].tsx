@@ -16,6 +16,8 @@ import {
   nxCloudMenuApi,
   nxDocumentsApi,
   nxMenuApi,
+  nxRecipesApi,
+  nxRecipesMenuApi,
   packagesApi,
 } from '../lib/api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
@@ -136,6 +138,10 @@ export const getStaticProps: GetStaticProps = async ({
     documentsApi = nxCloudDocumentsApi;
     menuApi = nxCloudMenuApi;
   }
+  if (params.segments[0] === 'recipes') {
+    documentsApi = nxRecipesApi;
+    menuApi = nxRecipesMenuApi;
+  }
 
   const menu = menuApi.getMenu();
 
@@ -217,6 +223,7 @@ export const getStaticPaths: GetStaticPaths = () => {
     paths: [
       ...packagesApi.getStaticPackagePaths(),
       ...nxDocumentsApi.getStaticDocumentPaths(),
+      ...nxRecipesApi.getStaticDocumentPaths(),
       ...nxCloudDocumentsApi.getStaticDocumentPaths(),
     ],
     fallback: 'blocking',

@@ -45,6 +45,22 @@ export function getBasicSection(items: MenuItem[]): MenuSection {
   };
 }
 
+export function getBasicRecipesSection(items: MenuItem[]): MenuSection {
+  return {
+    id: 'basic',
+    name: 'Basic',
+    hideSectionHeader: true,
+    itemList: items
+      // .filter((m) => m.id === 'getting-started')
+      .map((m) => {
+        return {
+          ...m,
+          disableCollapsible: true,
+        };
+      }),
+  };
+}
+
 export function getDeepDiveSection(items: MenuItem[]): MenuSection {
   return {
     id: 'deep-dive',

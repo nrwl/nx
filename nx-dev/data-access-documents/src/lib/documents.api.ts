@@ -249,7 +249,7 @@ export class DocumentsApi {
         if (
           curr.tags &&
           tags.some((tag) => curr.tags.includes(tag)) &&
-          acc.includes('recipe')
+          acc.includes('recipes')
         ) {
           curr.path = [...acc, curr.id].join('/');
           relatedRecipes.push(curr);

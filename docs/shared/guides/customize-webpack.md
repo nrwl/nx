@@ -69,7 +69,7 @@ module.exports = (config, context) => {
 
 ## Module Federation
 
-If you use the [Module Federation](/recipe/faster-builds) support from `@nrwl/angular` or `@nrwl/react` then
+If you use the [Module Federation](/recipes/module-federation/faster-builds) support from `@nrwl/angular` or `@nrwl/react` then
 you can customize your webpack configuration as follows.
 
 ```typescript

@@ -8,7 +8,7 @@ You can either use a CLI tool to migrate your app automatically, or you can foll
 This guide has been updated for Nx 13 and may not work for earlier versions of Nx.
 {% /callout %}
 
-If you have a monorepo (more than one project in the same repo), follow the [Adding Nx to Lerna/Yarn/PNPM/NPM Workspace](/recipe/adding-to-monorepo) guide instead.
+If you have a monorepo (more than one project in the same repo), follow the [Adding Nx to Lerna/Yarn/PNPM/NPM Workspace](/recipes/adopting-nx/adding-to-monorepo) guide instead.
 
 ## Using a tool that will do it for you
 
@@ -21,7 +21,7 @@ npx cra-to-nx
 ```
 
 Then just sit back and wait. After a while, take advantage of the [full magic of Nx](/getting-started/intro).
-Start from [the commands mentioned in this article](/recipe/migration-cra#try-nx).
+Start from [the commands mentioned in this article](/recipes/adopting-nx/migration-cra#try-nx).
 
 {% callout type="caution" title="Commit your changes" %}
 The command will fail if you try to execute it, and you have uncommitted changes in your repository. Commit any local changes, and then try to run the command.

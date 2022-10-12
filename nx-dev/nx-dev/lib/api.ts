@@ -6,6 +6,7 @@ import {
   getBasicNxCloudSection,
   getBasicSection,
   getDeepDiveNxCloudSection,
+  getBasicRecipesSection,
 } from '../../data-access-menu/src/lib/menu.utils';
 
 // Imports JSON directly, so they can be bundled into the app and functions.
@@ -17,7 +18,6 @@ export const packagesApi = new PackagesApi({
   publicPackagesRoot: 'nx-dev/nx-dev/public/documentation',
   packagesIndex: packages,
 });
-
 export const nxDocumentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
   documentSources: [
@@ -26,7 +26,13 @@ export const nxDocumentsApi = new DocumentsApi({
   ].filter((x) => !!x) as DocumentMetadata[],
   addAncestor: null,
 });
-
+export const nxRecipesApi = new DocumentsApi({
+  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+  documentSources: [documents.find((x) => x.id === 'nx-recipes')].filter(
+    (x) => !!x
+  ) as DocumentMetadata[],
+  addAncestor: { id: 'recipes', name: 'Recipes' },
+});
 export const nxCloudDocumentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
   documentSources: [
@@ -40,7 +46,11 @@ export const nxMenuApi = new MenuApi(
   packagesApi.getPackageDocuments().itemList as DocumentMetadata[],
   [getBasicSection]
 );
-
+export const nxRecipesMenuApi = new MenuApi(
+  nxRecipesApi.getDocuments(),
+  [],
+  [getBasicRecipesSection]
+);
 export const nxCloudMenuApi = new MenuApi(
   nxCloudDocumentsApi.getDocuments(),
   [],
