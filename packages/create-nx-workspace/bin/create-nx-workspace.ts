@@ -322,6 +322,11 @@ async function getConfiguration(
   try {
     let name, appName, style, preset;
 
+    output.log({
+      title:
+        "Let's create a new workspace [https://nx.dev/getting-started/intro]",
+    });
+
     const thirdPartyPreset = await determineThirdPartyPackage(argv);
     if (thirdPartyPreset) {
       preset = thirdPartyPreset;
@@ -402,18 +407,18 @@ function determineMonorepoStyle(): Promise<string> {
     .prompt([
       {
         name: 'MonorepoStyle',
-        message: `Package-based or integrated monorepo?`,
+        message: `Choose your style                    `,
         type: 'select',
         choices: [
           {
             name: 'package-based',
             message:
-              'Create a package-based monorepo with Yarn, NPM or PNPM. Nx makes it fast, but stays out of your way.',
+              'Package-based: Craft your own setup. Nx makes it fast, but lets you run things your way.',
           },
           {
             name: 'integrated',
             message:
-              'Create an integrated monorepo using Nx’s plugin system. Focus on shipping code, not fixing your tooling.',
+              'Integrated:    Get a pre-configured setup. Nx configures your favorite frameworks and lets you focus on shipping features.',
           },
         ],
       },
