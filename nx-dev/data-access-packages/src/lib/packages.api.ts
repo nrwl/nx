@@ -1,4 +1,7 @@
-import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import {
+  createDocumentMetadata,
+  DocumentMetadata,
+} from '@nrwl/nx-dev/models-document';
 import { PackageMetadata, SchemaMetadata } from '@nrwl/nx-dev/models-package';
 import { readFileSync } from 'fs';
 
@@ -81,43 +84,46 @@ export class PackagesApi {
     // For production build, the packages files are missing so need this try-catch.
     // TODO(jack): Look at handling this without try-catch.
     try {
-      return {
+      return createDocumentMetadata({
         id: 'packages',
         name: 'packages',
-        itemList: this.options.packagesIndex.map((p) => ({
-          id: p.name,
-          name: p.name.replace(/-/gi, ' '),
-          description: p.description,
-          packageName: p.packageName,
-          path: `/packages/${p.name}`,
-          itemList: this.getPackage(p.name)
-            .documentation.map((d) => ({
-              id: d.id,
-              name: d.name,
-              path: d.path,
-            }))
-            .concat(
-              p.schemas.executors.map((e) => ({
-                id: e,
-                name: e,
-                path: `/packages/${p.name}/executors/${e}`,
+        itemList: this.options.packagesIndex.map((p) =>
+          createDocumentMetadata({
+            id: p.name,
+            name: p.name.replace(/-/gi, ' '),
+            description: p.description,
+            packageName: p.packageName,
+            path: `/packages/${p.name}`,
+            itemList: this.getPackage(p.name)
+              .documentation.map((d) => ({
+                id: d.id,
+                name: d.name,
+                path: d.path,
               }))
-            )
-            .concat(
-              p.schemas.generators.map((g) => ({
-                id: g,
-                name: g,
-                path: `/packages/${p.name}/generators/${g}`,
-              }))
-            ),
-        })),
-      };
+              .concat(
+                p.schemas.executors.map((e) => ({
+                  id: e,
+                  name: e,
+                  path: `/packages/${p.name}/executors/${e}`,
+                }))
+              )
+              .concat(
+                p.schemas.generators.map((g) => ({
+                  id: g,
+                  name: g,
+                  path: `/packages/${p.name}/generators/${g}`,
+                }))
+              )
+              .map((x) => createDocumentMetadata(x)),
+          })
+        ),
+      });
     } catch {
-      return {
+      return createDocumentMetadata({
         id: 'packages',
         name: 'packages',
         itemList: [],
-      };
+      });
     }
   }
 

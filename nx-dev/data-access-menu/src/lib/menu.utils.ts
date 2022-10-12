@@ -16,7 +16,10 @@ export function createMenuItems(root: DocumentMetadata): MenuItem[] {
       );
     }
 
-    return pathData;
+    return {
+      ...pathData,
+      disableCollapsible: false,
+    } as MenuItem;
   };
   return items?.map((item) => createPathMetadata(item)) ?? [];
 }
@@ -49,6 +52,7 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
   return {
     id: 'deep-dive',
     name: 'Deep Dive',
+    hideSectionHeader: false,
     itemList: items
       .filter(
         (m) =>
@@ -88,6 +92,7 @@ export function getPackageApiSection(items: MenuItem[]): MenuSection {
   return {
     id: 'official-packages',
     name: 'Reference',
+    hideSectionHeader: false,
     itemList: items
       .filter(
         (m) =>
@@ -100,6 +105,7 @@ export function getPackageApiSection(items: MenuItem[]): MenuSection {
       )
       .map((m) => ({
         ...m,
+        disableCollapsible: true,
         itemList: [
           {
             id: m.id + '-guides',
@@ -143,6 +149,7 @@ export function getDeepDiveNxCloudSection(items: MenuItem[]): MenuSection {
   return {
     id: 'deep-dive',
     name: 'Deep Dive',
+    hideSectionHeader: false,
     itemList: items
       .filter((m) => m.id === 'private-cloud' || m.id === 'reference')
       .map((m) => ({

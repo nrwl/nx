@@ -97,6 +97,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
           if (isActiveLink && collapsed) {
             handleCollapseToggle();
           }
+
           return (
             <li
               key={subItem.id + '-' + index}

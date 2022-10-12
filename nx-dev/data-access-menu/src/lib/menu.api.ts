@@ -46,6 +46,12 @@ export class MenuApi {
       id: 'packages',
       name: 'Packages',
       itemList: packageDocuments,
+      path: '',
+      packageName: '',
+      isExternal: false,
+      description: '',
+      file: '',
+      tags: [],
     };
 
     const items = createMenuItems(documents);

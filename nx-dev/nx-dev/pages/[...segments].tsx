@@ -5,7 +5,7 @@ import {
 import { sortCorePackagesFirst } from '@nrwl/nx-dev/data-access-packages';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import { DocumentData } from '@nrwl/nx-dev/models-document';
-import { Menu, MenuItem } from '@nrwl/nx-dev/models-menu';
+import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
 import { PackageMetadata } from '@nrwl/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
 import type { GetStaticPaths, GetStaticProps } from 'next';
@@ -63,7 +63,7 @@ export default function DocumentationPage(
 
   const { menu, document, pkg, schemaRequest } = props;
 
-  const vm: { entryComponent: JSX.Element; menu: { sections: MenuItem[] } } = {
+  const vm: { entryComponent: JSX.Element; menu: Menu } = {
     entryComponent: <DocViewer document={document || ({} as any)} toc={null} />,
     menu: {
       sections: menu.sections.filter((x) => x.id !== 'official-packages'),
@@ -71,23 +71,17 @@ export default function DocumentationPage(
   };
 
   if (!!pkg) {
+    const reference: MenuSection | null =
+      menu.sections.find((x) => x.id === 'official-packages') ?? null;
+    if (!reference)
+      throw new Error('Could not find menu section for "official-packages".');
     vm.menu = {
-      sections: sortCorePackagesFirst<MenuItem>(
-        menu.sections.filter((x) => x.id === 'official-packages')[0]?.itemList
+      sections: sortCorePackagesFirst<MenuItem>(reference.itemList).map(
+        (x) => ({ ...x, hideSectionHeader: false })
       ),
     };
-    vm.entryComponent = (
-      <PackageSchemaList navIsOpen={navIsOpen} menu={vm.menu} pkg={pkg} />
-    );
-  }
 
-  if (!!pkg && !!schemaRequest) {
-    vm.menu = {
-      sections: sortCorePackagesFirst<MenuItem>(
-        menu.sections.filter((x) => x.id === 'official-packages')[0]?.itemList
-      ),
-    };
-    vm.entryComponent = (
+    vm.entryComponent = !!schemaRequest ? (
       <PackageSchemaViewer
         menu={vm.menu}
         schemaRequest={{
@@ -95,6 +89,8 @@ export default function DocumentationPage(
           pkg,
         }}
       />
+    ) : (
+      <PackageSchemaList navIsOpen={navIsOpen} menu={vm.menu} pkg={pkg} />
     );
   }
 
