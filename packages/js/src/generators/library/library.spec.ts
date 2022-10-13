@@ -847,7 +847,7 @@ describe('lib', () => {
             command:
               'node tools/scripts/publish.mjs my-lib {args.ver} {args.tag}',
           },
-          dependsOn: [{ projects: 'self', target: 'build' }],
+          dependsOn: ['build'],
         });
       });
 
