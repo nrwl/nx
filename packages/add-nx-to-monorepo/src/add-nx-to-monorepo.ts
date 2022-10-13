@@ -314,7 +314,7 @@ function printFinalMessage() {
       `- Run "${
         getPackageManagerCommand().exec
       } nx graph" to see the structure of the monorepo.`,
-      `- Learn more at https://nx.dev/recipe/adding-to-monorepo`,
+      `- Learn more at https://nx.dev/recipes/adopting-nx/adding-to-monorepo`,
     ],
   });
 }

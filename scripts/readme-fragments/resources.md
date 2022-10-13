@@ -3,7 +3,7 @@
 A few links to help you get started:
 
 - [Nx.Dev: Documentation, Guides, Interactive Tutorials](https://nx.dev)
-- [Tutorial: Adding Nx to an Existing Monorepo](/recipe/adding-to-monorepo)
+- [Tutorial: Adding Nx to an Existing Monorepo](/recipes/adopting-nx/adding-to-monorepo)
 - [Official Nx YouTube Channel](https://www.youtube.com/c/Nrwl_io)
 - [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
 

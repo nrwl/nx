@@ -18,11 +18,11 @@ Get a pre-configured setup. Nx configures your favorite frameworks and lets you 
 
 {% /persona %}
 
-{% persona type="lerna" title="Add to an Existing Monorepo" url="/recipe/adding-to-monorepo" %}
+{% persona type="lerna" title="Add to an Existing Monorepo" url="/recipes/adopting-nx/adding-to-monorepo" %}
 
 Incrementally add Nx to your repo and enjoy faster CI runs and local development. All without modifying your existing setup.
 
-- [Add Nx to an Existing Monorepo](/recipe/adding-to-monorepo)
+- [Add Nx to an Existing Monorepo](/recipes/adopting-nx/adding-to-monorepo)
 
 {% /persona %}
 
