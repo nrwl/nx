@@ -64,6 +64,6 @@ safari 12
 
 Alternatively, if your support config is short you can just add it as a string param on the CLI:
 
-```bash
+```shell
 npx browserslist '> 0.5%, not IE 11'
 ```

@@ -15,7 +15,7 @@ Let’s see how we can implement this solution:
 
 According to the framework you are using, use the corresponding generator to generate a new library. Let’s suppose that you are using React and all your stories are using `@storybook/react`:
 
-```bash
+```shell
 nx g @nrwl/react:library storybook-host
 ```
 
@@ -25,7 +25,7 @@ Now, you have a new library, which will act as a shell/host for all your stories
 
 Now let’s configure our new library to use Storybook, using the [`@nrwl/storybook:configuration` generator](/packages/storybook/generators/configuration). Run:
 
-```bash
+```shell
 nx g @nrwl/storybook:configuration storybook-host
 ```
 
@@ -84,13 +84,13 @@ Notice how in the `include` array we are specifying the paths to our stories, us
 
 Now you can serve or build your Storybook as you would, normally. And then you can publish the bundled app!
 
-```bash
+```shell
 nx storybook storybook-host
 ```
 
 or
 
-```bash
+```shell
 nx build-storybook storybook-host
 ```
 

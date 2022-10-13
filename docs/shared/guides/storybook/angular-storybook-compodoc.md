@@ -52,13 +52,13 @@ This guide assumes that you have an Angular project with Storybook configured in
 
 First we need to install the necessary packages:
 
-```bash
+```shell
 yarn add -D @compodoc/compodoc
 ```
 
 or
 
-```bash
+```shell
 npm install --save-dev @compodoc/compodoc
 ```
 
@@ -145,12 +145,12 @@ setCompodocJson(docJson);
 
 Now you can run Storybook or build Storybook, and documentation will be included. Just check the Docs tab!
 
-```bash
+```shell
 nx storybook web
 ```
 
 and
 
-```bash
+```shell
 nx build-storybook web
 ```

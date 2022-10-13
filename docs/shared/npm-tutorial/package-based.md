@@ -4,7 +4,7 @@
 
 Start by creating a new workspace. We can use the following command that will help us set it up.
 
-```bash
+```shell
 npx create-nx-workspace@latest package-based --preset=npm
 ```
 
@@ -30,7 +30,7 @@ packages/
 
 Before proceeding, make sure you install TypeScript as we're going to use it to build our package. While we could install TypeScript at the package-level, it is more convenient to have it globally for the entire monorepo. Run the following command at the root of your workspace.
 
-```bash
+```shell
 npm i typescript -D -W
 ```
 
@@ -65,7 +65,7 @@ Update the `.gitignore` file to make sure you have a `dist` entry (without a lea
 
 Note, the `build` uses TypeScript to compile the `index.ts` file into a project-level `./dist` folder. To run it use:
 
-```bash
+```shell
 npx nx build is-even
 ```
 
@@ -122,7 +122,7 @@ The `workspaces` property in the root-level `package.json` tells NPM (and it sim
 
 At the root of your workspace run
 
-```bash
+```shell
 npm install
 ```
 
@@ -149,7 +149,7 @@ This tells Nx to run the `build` target of all the dependent projects first, bef
 
 Remove any existing `dist` folder and run:
 
-```bash
+```shell
 npx nx build is-odd
 ```
 
@@ -159,7 +159,7 @@ It will automatically first run `npx nx build is-even` and then the build for `i
 
 To build the `is-even` package run:
 
-```bash
+```shell
 npx nx build is-even
 ```
 
@@ -181,7 +181,7 @@ Run the same command a second time and you'll see the build cache is being used:
 
 To run the `build` target for all the packages in the workspace, use:
 
-```bash
+```shell
 npx nx run-many --target=build
 ```
 
@@ -202,7 +202,7 @@ Note how on the `is-even:build` it didn't run the build but rather pulled it out
 
 You can also only run tasks on packages that got changed by using
 
-```bash
+```shell
 npx nx affected --target=build
 ```
 

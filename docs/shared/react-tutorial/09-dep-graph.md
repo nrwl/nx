@@ -13,7 +13,7 @@ With Nx, you can do better than that.
 
 Run
 
-```bash
+```shell
 npx nx graph
 ```
 

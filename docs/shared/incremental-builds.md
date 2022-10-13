@@ -3,7 +3,7 @@
 As your applications are getting bigger, one of the main ways to scale your development is to build them in an incremental fashion.
 Right now, for instance, say we generate an application and a library as follows:
 
-```bash
+```shell
 nx g @nrwl/react:app myapp
 nx g @nrwl/react:lib mylib
 ```
@@ -17,13 +17,13 @@ This provides the best dev experience for small and medium-size applications, be
 
 Nx has **publishable libraries**. As the name suggests, such libraries are meant to be built and published to some package registry s.t. they can be consumed also from outside the Nx workspace. The executor for building a publishable library does more than just building. It makes sure the output is properly compressed and might even produce more bundles s.t. the package can be consumed in a variety of ways (e.g. also produces UMD bundles).
 
-```bash
+```shell
 nx g @nrwl/react:lib mylib --publishable --importPath=@myorg/mylib
 ```
 
 On the other hand, the executor of a **buildable library**, performs a subset of the operations compared to the publishable library's executor. That's because buildable libraries are not intended to be published and thus only produce the minimum necessary output for the incremental build scenario to work. For example, no UMD bundles or minification is being done. The main goal of the executor is to perform the build as fast as possible.
 
-```bash
+```shell
 nx g @nrwl/react:lib mylib --buildable
 ```
 

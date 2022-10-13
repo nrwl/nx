@@ -66,7 +66,7 @@ export class UiModule {}
 
 **Add a component to the newly created ui library by running:**
 
-```bash
+```shell
 npx nx g component todos --project=ui --export
 ```
 
@@ -160,11 +160,11 @@ export class AppModule {}
 
 Restart the api and application in separate terminal windows
 
-```bash
+```shell
 npx nx serve api
 ```
 
-```bash
+```shell
 npx nx serve todos
 ```
 

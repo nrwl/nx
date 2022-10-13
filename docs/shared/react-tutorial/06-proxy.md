@@ -53,7 +53,7 @@ Every target uses an executor which actually runs this target. So targets are an
 
 There are a lot of advantages to providing additional metadata to the build tool. For instance, you can introspect targets. `npx nx serve todos --help` results in:
 
-```bash
+```shell
 nx run todos:serve [options,...]
 
 Options:

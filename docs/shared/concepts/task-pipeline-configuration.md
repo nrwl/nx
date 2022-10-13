@@ -7,7 +7,7 @@ Nx runs tasks in the most efficient way possible. The `nx.json` file is the plac
 If you want to increase the number of processes running tasks to, say, 5 (by default, it is 3), pass the
 following:
 
-```bash
+```shell
 npx nx build myapp --parallel=5
 ```
 

@@ -94,13 +94,13 @@ Setting up Storybook on Nx reflects - and takes advantage of - the [mental model
 
 In the process of setting up Storybook in your Nx workspace that we described above, you end up with one Storybook instance per project. That way, you can use your project’s Storybook targets to serve and build Storybook:
 
-```bash
+```shell
 nx storybook my-project
 ```
 
 and
 
-```bash
+```shell
 nx build-storybook my-project
 ```
 

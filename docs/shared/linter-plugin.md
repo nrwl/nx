@@ -6,11 +6,11 @@ The Linter plugin contains executors, generator, plugin and utilities used for l
 
 In any Nx workspace, you can install `@nrwl/linter` by running the following commands if `@nrwl/linter` package is not installed:
 
-```bash
+```shell
 npm i --save-dev @nrwl/linter
 ```
 
-```bash
+```shell
 yarn add --dev @nrwl/linter
 ```
 
@@ -18,11 +18,11 @@ yarn add --dev @nrwl/linter
 
 You can lint an application or a library with the following command:
 
-```bash
+```shell
 nx lint my-app
 ```
 
-```bash
+```shell
 nx lint my-lib
 ```
 

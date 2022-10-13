@@ -30,13 +30,13 @@ This tutorial sets up an [integrated repo](/concepts/integrated-vs-package-based
 
 **Start by creating a new workspace.**
 
-```bash
+```shell
 npx create-nx-workspace@latest
 ```
 
 You then receive the following prompts in your command line:
 
-```bash
+```shell
 Workspace name (e.g., org name)     myorg
 What to create in the new workspace angular
 Application name                    todos
@@ -105,7 +105,7 @@ The generate command added two projects to our workspace:
 
 Now that the application is set up, run it locally via:
 
-```bash
+```shell
 npx nx serve todos
 ```
 
@@ -113,7 +113,7 @@ npx nx serve todos
 
 If you would prefer to run using a global installation of Nx, you can run:
 
-```bash
+```shell
 nx serve todos
 ```
 
@@ -124,14 +124,14 @@ To fix it, you can either install the `nx` cli globally by running:
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn global add nx
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npm install -g nx
 ```
 
@@ -143,14 +143,14 @@ Alternatively, you can run the local installation of Nx by prepending every comm
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn nx serve todos
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npx nx serve todos
 ```
 

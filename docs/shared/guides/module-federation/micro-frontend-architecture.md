@@ -45,7 +45,7 @@ Keeping the applications independent allows them to be deployed on different cad
 The generator for MFEs is the same as with basic Module Federation. You can use `nx g host` to create a new host
 application, and `nx g remote` for remote applications.
 
-```bash
+```shell
 # React
 nx g @nrwl/react:host shell --remotes=shop,cart
 nx g @nrwl/react:remote about --host=shell

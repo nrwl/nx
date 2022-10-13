@@ -8,7 +8,7 @@ do the following.
 
 First, install `@types/node` so we can use `process.env` in our code.
 
-```bash
+```shell
 npm install --save-dev @types/node
 
 # Or with yarn

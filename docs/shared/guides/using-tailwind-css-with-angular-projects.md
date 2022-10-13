@@ -71,7 +71,7 @@ In the above, you are invoking the `createGlobPatternsForDependencies` utility f
 
 To generate an Angular application with Tailwind CSS configured by default, you can use the following command:
 
-```bash
+```shell
 npx nx g @nrwl/angular:app my-app --add-tailwind
 ```
 
@@ -79,7 +79,7 @@ npx nx g @nrwl/angular:app my-app --add-tailwind
 
 To generate an Angular buildable library with Tailwind CSS configured by default, you can use the following command:
 
-```bash
+```shell
 npx nx g @nrwl/angular:lib my-lib --buildable --add-tailwind
 ```
 
@@ -87,7 +87,7 @@ npx nx g @nrwl/angular:lib my-lib --buildable --add-tailwind
 
 To generate an Angular publishable library with Tailwind CSS configured by default, you can use the following command:
 
-```bash
+```shell
 npx nx g @nrwl/angular:lib my-lib --publishable --importPath=@my-org/my-lib --add-tailwind
 ```
 
@@ -95,7 +95,7 @@ npx nx g @nrwl/angular:lib my-lib --publishable --importPath=@my-org/my-lib --ad
 
 To add Tailwind CSS to an existing Angular application, buildable library or publishable library, you can use the following command:
 
-```bash
+```shell
 npx nx g @nrwl/angular:setup-tailwind my-project
 ```
 

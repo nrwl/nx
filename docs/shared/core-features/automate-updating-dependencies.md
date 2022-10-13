@@ -16,13 +16,13 @@ Migration happens in three steps:
 
 First, run the `migrate` command:
 
-```bash
+```shell
 nx migrate latest # same as nx migrate @nrwl/workspace@latest
 ```
 
 You can also specify the name of the package and the version:
 
-```bash
+```shell
 nx migrate @nrwl/workspace@version # you can also specify version
 ```
 
@@ -47,7 +47,7 @@ Each Nx plugin is able to provide a set of migrations which are relevant to part
 
 The common case is that you will simply apply all migrations from the generated JSON file, exactly as they were generated in the previous step, by running:
 
-```bash
+```shell
 nx migrate --run-migrations
 ```
 

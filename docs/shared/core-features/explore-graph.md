@@ -4,7 +4,7 @@ For Nx to run tasks quickly and correctly, it creates a graph of the dependencie
 
 To launch the project graph visualization run:
 
-```bash
+```shell
 nx graph
 ```
 

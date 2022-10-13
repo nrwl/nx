@@ -12,12 +12,12 @@ To create a new Nx workspace with Next.js, run `npx create-nx-workspace@latest -
 
 To add Next.js to an existing Nx workspace, install the `@nrwl/next` package. Make sure to install the version that matches your `@nrwl/workspace` version.
 
-```bash
+```shell
 #yarn
 yarn add --dev @nrwl/next
 ```
 
-```bash
+```shell
 #npm
 npm install --save-dev @nrwl/next
 ```
@@ -26,7 +26,7 @@ npm install --save-dev @nrwl/next
 
 You can add a new application with the following:
 
-```bash
+```shell
 nx g @nrwl/next:app my-new-app
 ```
 
@@ -43,7 +43,7 @@ and [Library Types](/more-concepts/library-types).
 
 To generate a new library run:
 
-```bash
+```shell
 nx g @nrwl/next:lib my-new-lib
 ```
 
@@ -51,7 +51,7 @@ nx g @nrwl/next:lib my-new-lib
 
 Nx also provides commands to quickly generate new pages and components for your application.
 
-```bash
+```shell
 nx g @nrwl/next:page my-new-page --project=my-new-app
 
 nx g @nrwl/next:component my-new-component --project=my-new-app
@@ -69,7 +69,7 @@ You can run `nx serve my-new-app` to serve a Next.js application called `my-new-
 
 To serve a Next.js application for production, add the `--prod` flag to the serve command:
 
-```bash
+```shell
 nx serve my-new-app --prod
 ```
 
@@ -97,7 +97,7 @@ There is no need to build the library prior to using it. When you update your li
 
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
-```bash
+```shell
 nx g @nrwl/next:lib my-new-lib --publishable --importPath=@happynrwl/ui-components
 ```
 
@@ -105,7 +105,7 @@ nx g @nrwl/next:lib my-new-lib --publishable --importPath=@happynrwl/ui-componen
 
 You can run unit tests with:
 
-```bash
+```shell
 nx test my-new-app
 nx test my-new-lib
 ```
@@ -114,7 +114,7 @@ Replace `my-new-app` and `my-new-lib` with the name or the project you want to t
 
 You can also run E2E tests for applications:
 
-```bash
+```shell
 nx e2e my-new-app-e2e
 ```
 
@@ -124,7 +124,7 @@ Replace `my-new-app-e2e` with the name or your project with -e2e appended.
 
 You can lint projects with:
 
-```bash
+```shell
 nx lint my-new-app
 nx lint my-new-lib
 ```
@@ -135,13 +135,13 @@ Replace `my-new-app` and `my-new-lib` with the name or the project you want to t
 
 Next.js applications can be build with:
 
-```bash
+```shell
 nx build my-new-app
 ```
 
 And if you generated a library with --buildable, then you can build a library as well:
 
-```bash
+```shell
 nx build my-new-lib
 ```
 
@@ -153,7 +153,7 @@ The library in `dist` is publishable to npm or a private registry.
 
 Next.js applications can be statically exported with:
 
-```bash
+```shell
 nx export my-new-app
 ```
 

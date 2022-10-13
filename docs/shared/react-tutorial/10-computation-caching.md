@@ -9,7 +9,7 @@ Nx has built-in computation caching, which helps drastically improve the perform
 
 **To see it in action, run `npx nx build todos`:**
 
-```bash
+```shell
 > npx nx run todos:build
 
 Starting type checking service...
@@ -27,7 +27,7 @@ chunk    {3} styles.3ff695c00d717f2d2a11.css (styles) 147 bytes ={0}= [initial] 
 
 **Now, run `npx nx build todos` again, and you see the results appearing instantly:**
 
-```bash
+```shell
 > npx nx run todos:build
 
 >  NX   NOTE  Cached Output:
@@ -51,7 +51,7 @@ Based on the state of the source code and the environment, Nx figured out that i
 
 **Now, run `npx nx run-many --target=build --projects=todos,api` to rebuild the two applications:**
 
-```bash
+```shell
 Nx read the output from the cache instead of running the command for 1 out of 2 projects.
 ```
 

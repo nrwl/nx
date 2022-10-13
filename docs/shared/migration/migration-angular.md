@@ -15,7 +15,7 @@ width="100%" /%}
 
 To use the Nx CLI in an existing Angular CLI workspace while keeping your existing file structure in place, use the `ng add` command with the `--preserve-angular-cli-layout` option:
 
-```bash
+```shell
 ng add @nrwl/angular --preserve-angular-cli-layout
 ```
 
@@ -59,7 +59,7 @@ To fully take advantage of all the features provided by Nx and the Nx Angular pl
 
 To transform an Angular CLI workspace to an Nx workspace, run the following command:
 
-```bash
+```shell
 ng add @nrwl/angular
 ```
 
@@ -187,19 +187,19 @@ To start, run the command to generate an Nx workspace with an Angular applicatio
 
 **Using `npx`**
 
-```bash
+```shell
 npx create-nx-workspace myorg --preset=angular
 ```
 
 **Using `npm init`**
 
-```bash
+```shell
 npm init nx-workspace myorg --preset=angular
 ```
 
 **Using `yarn create`**
 
-```bash
+```shell
 yarn create nx-workspace myorg --preset=angular
 ```
 
@@ -260,7 +260,7 @@ Your application code is self-contained within the `src` folder of your Angular 
 
 Verify your application runs correctly by running:
 
-```bash
+```shell
 ng serve <app name>
 ```
 
@@ -270,7 +270,7 @@ Nx uses Jest by default. If you have any custom Jest configuration, you need to 
 
 Verify your tests run correctly by running:
 
-```bash
+```shell
 ng test <app name>
 ```
 
@@ -325,7 +325,7 @@ If you are using `Karma` for unit testing:
 
 Verify your tests run correctly by running:
 
-```bash
+```shell
 ng test <app name>
 ```
 
@@ -333,7 +333,7 @@ ng test <app name>
 
 Nx uses Cypress by default. If you are already using Cypress, copy your E2E setup files into the `apps/<app name>-e2e` folder and verify your tests still run correctly by running:
 
-```bash
+```shell
 ng e2e <app name>-e2e
 ```
 
@@ -404,7 +404,7 @@ Update the `apps/<app name>/tsconfig.json` to extend the root `tsconfig.json`:
 
 Verify your E2E tests run correctly by running:
 
-```bash
+```shell
 ng e2e <app name>-e2e
 ```
 
@@ -416,13 +416,13 @@ For lint rules, migrate your existing rules into the root `tslint.json` file.
 
 Verify your lint checks run correctly by running:
 
-```bash
+```shell
 npm run lint
 ```
 
 OR
 
-```bash
+```shell
 yarn lint
 ```
 

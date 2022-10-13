@@ -9,7 +9,7 @@ Nx has built-in computation caching, which drastically improves the performance 
 
 **To see it in action, run `nx build todos`:**
 
-```bash
+```shell
 > nx run todos:build
 Starting type checking service...
 Using 14 workers with 2048MB memory limit
@@ -21,7 +21,7 @@ chunk {main} main.js, main.js.map (main) 4.17 KiB [entry] [rendered]
 
 **Now, run `nx build todos` again, and you will see the results appearing instantly:**
 
-```bash
+```shell
 > nx run todos:build
 
 >  NX   NOTE  Cached Output:

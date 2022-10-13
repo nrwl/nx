@@ -9,14 +9,14 @@ In any Nx workspace, you can install `@nrwl/js` by running the following command
 {% tabs %}
 {%tab label="npm"%}
 
-```bash
+```shell
 npm i --save-dev @nrwl/js
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
-```bash
+```shell
 yarn add --dev @nrwl/js
 ```
 
@@ -30,14 +30,14 @@ When initializing a new Nx workspace, specifying `--preset=ts` will generate a w
 {% tabs %}
 {%tab label="npm"%}
 
-```bash
+```shell
 npx create-nx-workspace my-org --preset=ts
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
-```bash
+```shell
 yarn create nx-workspace my-org --preset=ts
 ```
 

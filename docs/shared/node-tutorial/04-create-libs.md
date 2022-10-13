@@ -17,7 +17,7 @@ To illustrate how useful libraries can be, create a new Auth library with a cont
 
 Run
 
-```bash
+```shell
 nx g @nrwl/nest:lib auth --controller
 ```
 

@@ -35,7 +35,7 @@ To enable incremental builds you need to use buildable libraries.
 
 You can generate a new buildable library with:
 
-```bash
+```shell
 nx g @nrwl/angular:lib my-lib --buildable
 ```
 
@@ -116,13 +116,13 @@ executor to `@nrwl/web:file-server` as shown below:
 
 To build an application incrementally use the following command:
 
-```bash
+```shell
 nx build my-app --parallel
 ```
 
 To serve an application incrementally use this command:
 
-```bash
+```shell
 nx serve my-app --parallel
 ```
 

@@ -2,7 +2,7 @@
 
 If you prefer to analyze the underlying data of the project graph with a script or some other tool, you can run:
 
-```bash
+```shell
 nx graph --file=output.json
 ```
 

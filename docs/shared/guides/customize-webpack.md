@@ -44,7 +44,7 @@ module.exports = async (config, context) => {
 
 To add the `css-loader` to your config, install it and add the rule.
 
-```bash
+```shell
 npm install -save-dev css-loader
 ```
 

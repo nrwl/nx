@@ -10,7 +10,7 @@ Check the [nx-plugin guide](/packages/nx-plugin) for information on creating a n
 
 - If you don't already have a local plugin, use Nx to generate one:
 
-```bash
+```shell
 # replace `latest` with the version that matches your Nx version
 npm install @nrwl/nx-plugin@latest
 nx g @nrwl/nx-plugin:plugin my-plugin
@@ -18,7 +18,7 @@ nx g @nrwl/nx-plugin:plugin my-plugin
 
 - Use the Nx CLI to generate the initial files needed for your generator. Replace `my-generator` with the name of your workspace generator.
 
-```bash
+```shell
 nx generate @nrwl/nx-plugin:generator my-generator --project=my-plugin
 ```
 
@@ -26,6 +26,6 @@ nx generate @nrwl/nx-plugin:generator my-generator --project=my-plugin
 
 - Now you can run the generator like this:
 
-```bash
+```shell
 nx g my-generator
 ```

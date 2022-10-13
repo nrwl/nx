@@ -11,7 +11,7 @@ Adding Nx is a low impact operation that does not require any particular change 
 packages and scripts are organized. Whatever setup you have still works the same way but faster and with better dev
 ergonomics. You could manually configure Nx, but it is way easier by running the following command:
 
-```bash
+```shell
 npx add-nx-to-monorepo
 ```
 

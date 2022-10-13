@@ -11,7 +11,7 @@ The requests fail because the API has not been created yet. Using Nx you can dev
 
 Nx is an extensible framework with plugins for many modern tools and frameworks. **To see some plugins, run `nx list`:**
 
-```bash
+```shell
 >  NX  Installed plugins:
 
   @angular-devkit/build-angular (builders)
@@ -47,14 +47,14 @@ Nx is an extensible framework with plugins for many modern tools and frameworks.
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn add --dev @nrwl/nest
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npm install --save-dev @nrwl/nest
 ```
 
@@ -69,7 +69,7 @@ When installing `@nrwl/nest`, it also automatically added `@nrwl/node` for you. 
 
 **Run the following to generate a new Nest application:**
 
-```bash
+```shell
 npx nx g @nrwl/nest:app api --frontendProject=todos
 ```
 
@@ -188,7 +188,7 @@ export class AppController {
 
 In a new terminal window, serve the API.
 
-```bash
+```shell
 npx nx serve api
 ```
 

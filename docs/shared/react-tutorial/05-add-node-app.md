@@ -11,7 +11,7 @@ The requests fail because the API has not been created yet. Using Nx you develop
 
 Nx is an open platform with plugins for many modern tools and frameworks. **To see some plugins, run `npx nx list`:**
 
-```bash
+```shell
 >  NX   Installed plugins:
 
   @nrwl/cypress (executors,generators)
@@ -46,14 +46,14 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn add --dev @nrwl/express
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npm install --save-dev @nrwl/express
 ```
 
@@ -68,7 +68,7 @@ When installing `@nrwl/express`, it also automatically added `@nrwl/node` for yo
 
 **Run the following to generate a new Express application:**
 
-```bash
+```shell
 npx nx g @nrwl/express:app api --frontendProject=todos
 ```
 

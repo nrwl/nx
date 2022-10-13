@@ -6,7 +6,7 @@ In Nx 13.10+, local nx plugins can contain executors that are used in the worksp
 
 - If you don't already have a local plugin, use Nx to generate one:
 
-```bash
+```shell
 # replace `latest` with the version that matches your Nx version
 npm install @nrwl/nx-plugin@latest
 nx g @nrwl/nx-plugin:plugin my-plugin
@@ -14,7 +14,7 @@ nx g @nrwl/nx-plugin:plugin my-plugin
 
 - Use the Nx CLI to generate the initial files needed for your executor. Replace `my-executor` with the name of your workspace executor.
 
-```bash
+```shell
 nx generate @nrwl/nx-plugin:executor my-executor --project=my-plugin
 ```
 

@@ -58,28 +58,28 @@ Each executor definition has an `executor` property and, optionally, an `options
 
 The [`nx run`](/nx/run) cli command (or the shorthand versions) can be used to run executors.
 
-```bash
+```shell
 nx run [project]:[command]
 nx run cart:build
 ```
 
 As long as your command name doesn't conflict with an existing nx cli command, you can use this short hand:
 
-```bash
+```shell
 nx [command] [project]
 nx build cart
 ```
 
 You can also use a specific configuration preset like this:
 
-```bash
+```shell
 nx [command] [project] --configuration=[configuration]
 nx build cart --configuration=production
 ```
 
 Or you can overwrite individual executor options like this:
 
-```bash
+```shell
 nx [command] [project] --[optionNameInCamelCase]=[value]
 nx build cart --outputPath=some/other/path
 ```

@@ -71,7 +71,7 @@ projects ([read more here](https://dev.to/nrwl/more-time-saved-for-free-with-nx-
 
 You can connect your workspace to Nx Cloud by running:
 
-```bash
+```shell
 npx nx connect-to-nx-cloud
 ```
 

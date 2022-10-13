@@ -57,7 +57,7 @@ This library is exporting a single `message` string.
 
 Install the `cowsay` npm package at the root of the workspace.
 
-```bash
+```shell
 yarn add -W cowsay@1.5.0
 ```
 
@@ -90,7 +90,7 @@ console.log(
 
 Now if you run `nx serve cow`, you'll see this:
 
-```bash
+```shell
 $ node index.js
  ______________________________________________________
 < Welcome to the Restaurant at the End of the Universe >

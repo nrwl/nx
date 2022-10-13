@@ -32,12 +32,12 @@ To achieve the aims, we will do the following:
 
 To start with, we need to create a new Nx Workspace. We can do this easily with:
 
-```bash
+```shell
 # Npm
 npx create-nx-workspace ng-mf
 ```
 
-```bash
+```shell
 # Yarn
 yarn create nx-workspace ng-mf --packageManager=yarn
 ```
@@ -54,12 +54,12 @@ To add Angular-related features to our newly created monorepo we need to install
 Check that you are now at the root of your monorepo in your terminal. If not, run `cd ng-mf`.
 {% /callout %}
 
-```bash
+```shell
 # Npm
 npm install --save-dev @nrwl/angular
 ```
 
-```bash
+```shell
 # Yarn
 yarn add -D @nrwl/angular
 ```
@@ -72,12 +72,12 @@ We need to generate two applications that support Module Federation.
 
 We'll start with the Admin Dashboard application which will act as a host application for the Micro-Frontends (_MFEs_):
 
-```bash
+```shell
 # Npm
 npx nx g @nrwl/angular:host dashboard
 ```
 
-```bash
+```shell
 # Yarn
 yarn nx g @nrwl/angular:host dashboard
 ```
@@ -86,12 +86,12 @@ The application generator will create and modify the files needed to set up the 
 
 Now, let's generate the Login application as a remote application.
 
-```bash
+```shell
 # Npm
 npx nx g @nrwl/angular:remote login --host=dashboard
 ```
 
-```bash
+```shell
 # Yarn
 yarn nx g @nrwl/angular:remote login --host=dashboard
 ```
@@ -168,7 +168,7 @@ We'll start by building the Login application, which will consist of a login for
 
 Let's create a user data-access library that will be shared between the host application and the remote application. This will be used to determine if there is an authenticated user as well as providing logic for authenticating the user.
 
-```bash
+```shell
 nx g @nrwl/angular:lib shared/data-access-user
 ```
 
@@ -176,7 +176,7 @@ This will scaffold a new library for us to use.
 
 We need an Angular Service that we will use to hold state:
 
-```bash
+```shell
 nx g @nrwl/angular:service user --project=shared-data-access-user
 ```
 
@@ -309,7 +309,7 @@ RouterModule.forRoot(
 
 Now let's serve the application and view it in a browser to check that the form renders correctly.
 
-```bash
+```shell
 nx run login:serve
 ```
 
@@ -371,7 +371,7 @@ export class AppComponent implements OnInit {
 
 We can run both the dashboard application and the login application and you can try it out using:
 
-```bash
+```shell
 nx serve dashboard --devRemotes=login
 ```
 
@@ -477,7 +477,7 @@ That’s all the changes required to replace Static Module Federation with Dynam
 
 Running:
 
-```bash
+```shell
 nx serve dashboard --devRemotes=login
 ```
 
@@ -497,7 +497,7 @@ To showcase this, let’s create a new Host application that will use our previo
 
 Run the following command to generate a new Host application that is preconfigured for Dynamic Federation and add specify the Login Remote application we want to add:
 
-```bash
+```shell
 nx g @nrwl/angular:host employee --remotes=login --dynamic
 ```
 
@@ -515,7 +515,7 @@ You should take a look at the files generated and see how the Login Remote appli
 
 We’re going to demonstrate how when specifying a dynamic Host when adding a new Remote application, the Remote application will be added to the Host’s Micro Frontend Manifest file correctly.
 
-```bash
+```shell
 nx g @nrwl/angular:remote todo --host=employee
 ```
 

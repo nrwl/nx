@@ -13,7 +13,7 @@ The target configuration for each project is now stored in individual `project.j
 
 To remove `workspace.json` in favor of `project.json` files, run:
 
-```bash
+```shell
 nx g @nrwl/workspace:convert-to-nx-project --all
 ```
 

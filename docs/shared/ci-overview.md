@@ -27,19 +27,19 @@ Nx Cloud allows this cache to be shared across your entire organization, meaning
 In order to use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
 We enable agents to listen for Nx commands using:
 
-```bash
+```shell
 npx nx-cloud start-agent
 ```
 
 and notify Nx Cloud of the upcoming Nx commands using:
 
-```bash
+```shell
 npx nx-cloud start-ci-run
 ```
 
 Once all tasks are finished, we must not forget to cleanup used agents:
 
-```bash
+```shell
 npx nx-cloud stop-all-agents
 ```
 

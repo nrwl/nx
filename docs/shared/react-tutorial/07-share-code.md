@@ -9,7 +9,7 @@ Awesome! The application is working end to end! However, there is a problem. Bot
 
 **Run the following generator to create a library:**
 
-```bash
+```shell
 npx nx g @nrwl/workspace:lib data
 ```
 

@@ -26,13 +26,13 @@ This tutorial sets up an [integrated repo](/concepts/integrated-vs-package-based
 
 **Start by creating a new workspace.**
 
-```bash
+```shell
 npx create-nx-workspace@latest
 ```
 
 You then receive the following prompts in your command line:
 
-```bash
+```shell
 Workspace name (e.g., org name)         myorg
 What to create in the new workspace     nest
 Application name                        todos
@@ -86,14 +86,14 @@ To fix it, you can either install the `nx` cli globally by running:
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn global add nx
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npm install -g nx
 ```
 
@@ -105,14 +105,14 @@ Or you can prepend every command with `npm run`:
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn nx serve todos
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npx nx serve todos
 ```
 
@@ -129,7 +129,7 @@ Every target uses an executor which actually runs this target. So targets are an
 
 There are a lot of advantages to providing additional metadata to the build tool. For instance, you can introspect targets. `nx serve todos --help` results in:
 
-```bash
+```shell
 nx run todos:serve [options,...]
 
 Options:
@@ -152,7 +152,7 @@ But, most importantly, it provides a holistic dev experience regardless of the t
 
 Now that the application is set up, run it locally via:
 
-```bash
+```shell
 nx serve todos
 ```
 

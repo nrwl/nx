@@ -9,7 +9,7 @@ Nx has built-in computation caching, which helps drastically improve the perform
 
 **To see it in action, run `npx nx build todos`:**
 
-```bash
+```shell
 ❯ nx build todos
 
 > nx run todos:build:production
@@ -34,7 +34,7 @@ Build at: 2022-01-21T20:36:14.528Z - Hash: 795c96ce5e48a766 - Time: 11596ms
 
 **Now, run `npx nx build todos` again, and you will see the results appearing instantly:**
 
-```bash
+```shell
 ❯ nx build todos
 
 > nx run todos:build:production [existing outputs match the cache, left as is]
@@ -72,7 +72,7 @@ npx nx run-many --target=build --projects=todos,api
 
 And notice the output:
 
-```bash
+```shell
 Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
 ```
 

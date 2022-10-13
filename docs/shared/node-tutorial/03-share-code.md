@@ -11,7 +11,7 @@ Next, work on refactoring a bit. The next work to do is move the `Todo` type to 
 
 **Run the following generator to create a library:**
 
-```bash
+```shell
 nx g @nrwl/workspace:lib data
 ```
 

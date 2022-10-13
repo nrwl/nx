@@ -9,7 +9,7 @@ Awesome! The application is working end to end! However, there is a problem. Bot
 
 **Run the following command to create a library:**
 
-```bash
+```shell
 npx nx g @nrwl/workspace:lib data
 ```
 
@@ -116,11 +116,11 @@ export class AppComponent {
 
 Restart the api and application in separate terminal windows
 
-```bash
+```shell
 npx nx serve api
 ```
 
-```bash
+```shell
 npx nx serve todos
 ```
 

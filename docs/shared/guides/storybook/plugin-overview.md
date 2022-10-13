@@ -6,7 +6,7 @@ This guide will briefly walk you through using Storybook within an Nx workspace.
 
 ### Add the Storybook plugin
 
-```bash
+```shell
 yarn add --dev @nrwl/storybook
 ```
 
@@ -16,7 +16,7 @@ yarn add --dev @nrwl/storybook
 
 You can generate Storybook configuration for an individual project with this command:
 
-```bash
+```shell
 nx g @nrwl/storybook:configuration project-name
 ```
 
@@ -47,7 +47,7 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 You can choose to configure your project using TypeScript instead of JavaScript. To do that, just add the `--tsConfiguration=true` flag to the above command, like this:
 
-```bash
+```shell
 nx g @nrwl/storybook:configuration project-name --tsConfiguration=true
 ```
 
@@ -57,13 +57,13 @@ nx g @nrwl/storybook:configuration project-name --tsConfiguration=true
 
 Serve Storybook using this command:
 
-```bash
+```shell
 nx run project-name:storybook
 ```
 
 or
 
-```bash
+```shell
 nx storybook project-name
 ```
 
@@ -71,13 +71,13 @@ nx storybook project-name
 
 Build Storybook using this command:
 
-```bash
+```shell
 nx run project-name:build-storybook
 ```
 
 or
 
-```bash
+```shell
 nx build-storybook project-name
 ```
 
