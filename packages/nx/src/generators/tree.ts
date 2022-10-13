@@ -7,7 +7,7 @@ import {
   removeSync,
   chmodSync,
 } from 'fs-extra';
-import { visitNotIgnoredFiles } from '@nrwl/devkit';
+import { visitNotIgnoredFiles } from '../../../devkit';
 import type { Mode } from 'fs';
 import { logger } from '../utils/logger';
 import { dirname, join, relative, sep } from 'path';
