@@ -7,7 +7,7 @@ import {
 export function updateTasksRunner(host: Tree) {
   const config = readWorkspaceConfiguration(host);
   if (
-    config?.tasksRunnerOptions['default'] &&
+    config?.tasksRunnerOptions?.['default'] &&
     config?.tasksRunnerOptions['default'].runner ==
       '@nrwl/workspace/tasks-runners/default'
   ) {
