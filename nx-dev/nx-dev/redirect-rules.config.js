@@ -314,6 +314,12 @@ const cliUrls = {
   '/cli/connect-to-nx-cloud': '/nx/connect-to-nx-cloud',
   '/cli/reset': '/nx/reset',
 };
+/**
+ * Recipes
+ */
+const recipesUrls = {
+  '/recipe/adding-to-monorepo': '/recipes/adopting-nx/adding-to-monorepo',
+};
 
 /**
  * Public export API
@@ -323,5 +329,6 @@ module.exports = {
   diataxis,
   guideUrls,
   overviewUrls,
+  recipesUrls,
   schemaUrls,
 };

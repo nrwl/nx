@@ -171,6 +171,14 @@ module.exports = withNx({
         permanent: true,
       });
     }
+    // Recipes doc restructure
+    for (let s of Object.keys(redirectRules.recipesUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.recipesUrls[s],
+        permanent: true,
+      });
+    }
 
     // Landing pages
     rules.push({
