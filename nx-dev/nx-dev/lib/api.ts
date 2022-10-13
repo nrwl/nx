@@ -1,7 +1,10 @@
 import { DocumentsApi } from '@nrwl/nx-dev/data-access-documents/node-only';
 import { MenuApi } from '@nrwl/nx-dev/data-access-menu';
 import { PackagesApi } from '@nrwl/nx-dev/data-access-packages/node-only';
-import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import {
+  convertToDocumentMetadata,
+  DocumentMetadata,
+} from '@nrwl/nx-dev/models-document';
 import {
   getBasicNxCloudSection,
   getBasicSection,
@@ -21,9 +24,15 @@ export const packagesApi = new PackagesApi({
 export const nxDocumentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
   documentSources: [
-    documents.find((x) => x.id === 'nx-documentation'),
-    documents.find((x) => x.id === 'additional-api-references'),
-  ].filter((x) => !!x) as DocumentMetadata[],
+    documents.find(
+      (x) => x.id === 'nx-documentation'
+    ) as Partial<DocumentMetadata>,
+    documents.find(
+      (x) => x.id === 'additional-api-references'
+    ) as Partial<DocumentMetadata>,
+  ]
+    .filter((x) => !!x)
+    .map((x) => convertToDocumentMetadata(x)),
   addAncestor: null,
 });
 export const nxRecipesApi = new DocumentsApi({
@@ -36,14 +45,18 @@ export const nxRecipesApi = new DocumentsApi({
 export const nxCloudDocumentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
   documentSources: [
-    documents.find((x) => x.id === 'nx-cloud-documentation'),
-  ].filter((x) => !!x) as DocumentMetadata[],
+    documents.find(
+      (x) => x.id === 'nx-cloud-documentation'
+    ) as Partial<DocumentMetadata>,
+  ]
+    .filter((x) => !!x)
+    .map((x) => convertToDocumentMetadata(x)),
   addAncestor: { id: 'nx-cloud', name: 'Nx Cloud' },
 });
 
 export const nxMenuApi = new MenuApi(
   nxDocumentsApi.getDocuments(),
-  packagesApi.getPackageDocuments().itemList as DocumentMetadata[],
+  packagesApi.getPackageDocuments().itemList,
   [getBasicSection]
 );
 export const nxRecipesMenuApi = new MenuApi(

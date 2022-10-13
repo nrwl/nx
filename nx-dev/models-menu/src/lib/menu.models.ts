@@ -8,11 +8,11 @@ export interface MenuSection {
   id: string;
   name: string;
   itemList: MenuItem[];
-  hideSectionHeader?: boolean;
+  hideSectionHeader: boolean;
 }
 
 export interface MenuItem extends DocumentMetadata {
-  path?: string;
-  itemList?: MenuItem[];
-  disableCollapsible?: boolean;
+  path: string;
+  itemList: MenuItem[];
+  disableCollapsible: boolean;
 }

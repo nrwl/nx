@@ -1,4 +1,8 @@
-import { DocumentData, DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import {
+  createDocumentMetadata,
+  DocumentData,
+  DocumentMetadata,
+} from '@nrwl/nx-dev/models-document';
 import { MenuItem } from '@nrwl/nx-dev/models-menu';
 import { parseMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import { readFileSync } from 'fs';
@@ -30,19 +34,19 @@ export class DocumentsApi {
       (x) => x.itemList
     ) as DocumentMetadata[];
 
-    this.documents = {
+    this.documents = createDocumentMetadata({
       id: 'documents',
       name: 'documents',
       itemList: !!this.options.addAncestor
         ? [
-            {
+            createDocumentMetadata({
               id: this.options.addAncestor.id,
               name: this.options.addAncestor.name,
               itemList,
-            },
+            }),
           ]
         : itemList,
-    };
+    });
     // this.allDocuments = options.allDocuments;
   }
 

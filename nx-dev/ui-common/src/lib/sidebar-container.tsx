@@ -1,6 +1,13 @@
+import { Menu } from '@nrwl/nx-dev/models-menu';
 import { Sidebar, SidebarMobile } from '@nrwl/nx-dev/ui-common';
 
-export function SidebarContainer({ menu, navIsOpen }: any): JSX.Element {
+export function SidebarContainer({
+  menu,
+  navIsOpen,
+}: {
+  menu: Menu;
+  navIsOpen: boolean;
+}): JSX.Element {
   return (
     <div id="sidebar" data-testid="sidebar">
       <SidebarMobile menu={menu} navIsOpen={navIsOpen} />
