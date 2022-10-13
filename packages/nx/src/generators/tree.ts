@@ -7,6 +7,7 @@ import {
   removeSync,
   chmodSync,
 } from 'fs-extra';
+import { visitNotIgnoredFiles } from '@nrwl/devkit';
 import type { Mode } from 'fs';
 import { logger } from '../utils/logger';
 import { dirname, join, relative, sep } from 'path';
@@ -255,19 +256,10 @@ export class FsTree implements Tree {
     let res: string[] = [];
 
     if (recursive) {
-      const readDir = (dir: string) => {
-        let files = this.fsReadDir(dir);
-        files = [...files, ...this.directChildrenOfDir(this.rp(dir))];
-        files.forEach((file) => {
-          const fileAbsolutePath = join(dir, file);
-          if (this.fsIsDirectory(fileAbsolutePath)) {
-            readDir(fileAbsolutePath);
-            return;
-          }
-          res.push(relative(dirPath, fileAbsolutePath));
-        });
-      };
-      readDir(dirPath);
+      const tree: Tree = this;
+      visitNotIgnoredFiles(tree, dirPath, (file) => {
+        res.push(relative(dirPath, file));
+      });
     } else {
       res = this.fsReadDir(dirPath);
       res = [...res, ...this.directChildrenOfDir(this.rp(dirPath))];

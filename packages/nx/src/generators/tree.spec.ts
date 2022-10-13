@@ -363,15 +363,16 @@ describe('tree', () => {
           'parent/parent-file-with-write-options.txt',
           'parent/parent-file.txt',
           'parent/renamed-child/renamed-child-file.txt',
+          'root-file.txt',
         ]);
       });
       describe('at the root', () => {
         it('should return a list of children', () => {
           expect(tree.children('')).toEqual(['parent', 'root-file.txt']);
           expect(tree.children('', true)).toEqual([
+            'parent/child/child-file.txt',
             'parent/parent-file-with-write-options.txt',
             'parent/parent-file.txt',
-            'parent/renamed-child/renamed-child-file.txt',
             'root-file.txt',
           ]);
         });
@@ -383,9 +384,9 @@ describe('tree', () => {
             'root-file2.txt',
           ]);
           expect(tree.children('', true)).toEqual([
+            'parent/child/child-file.txt',
             'parent/parent-file-with-write-options.txt',
             'parent/parent-file.txt',
-            'parent/renamed-child/renamed-child-file.txt',
             'root-file.txt',
             'root-file2.txt',
           ]);
