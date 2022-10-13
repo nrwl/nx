@@ -15,7 +15,6 @@ export interface NormalizedSchema {
     importPath?: string;
     standaloneConfig?: boolean;
     spec?: boolean;
-    flat?: boolean;
     commonModule?: boolean;
     routing?: boolean;
     lazy?: boolean;
@@ -53,5 +52,6 @@ export interface NormalizedSchema {
     skipTests?: boolean;
     selector?: string;
     skipSelector?: boolean;
+    flat?: boolean;
   };
 }

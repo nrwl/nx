@@ -1,5 +1,119 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`lib --standalone should generate a library with a standalone component and have it flat 1`] = `"export * from \\"./lib/my-lib.component\\";"`;
+
+exports[`lib --standalone should generate a library with a standalone component and have it flat 2`] = `
+"import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'proj-my-lib',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './my-lib.component.html',
+  styleUrls: ['./my-lib.component.css']
+})
+export class MyLibComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+"
+`;
+
+exports[`lib --standalone should generate a library with a standalone component and have it flat 3`] = `
+"import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { MyLibComponent } from './my-lib.component';
+
+describe('MyLibComponent', () => {
+  let component: MyLibComponent;
+  let fixture: ComponentFixture<MyLibComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ MyLibComponent ]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(MyLibComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+"
+`;
+
+exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 1`] = `
+"export * from \\"./lib/my-lib.component\\";
+        export * from './lib/lib.routes'"
+`;
+
+exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 2`] = `
+"import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'proj-my-lib',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './my-lib.component.html',
+  styleUrls: ['./my-lib.component.css']
+})
+export class MyLibComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+  }
+
+}
+"
+`;
+
+exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 3`] = `
+"import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { MyLibComponent } from './my-lib.component';
+
+describe('MyLibComponent', () => {
+  let component: MyLibComponent;
+  let fixture: ComponentFixture<MyLibComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ MyLibComponent ]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(MyLibComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+"
+`;
+
+exports[`lib --standalone should generate a library with a standalone component and have it flat with routing setup 4`] = `
+"import { Route } from '@angular/router';
+    import { MyLibComponent } from './my-lib.component';
+    
+        export const myLibRoutes: Route[] = [
+          {path: '', component: MyLibComponent}
+        ];"
+`;
+
 exports[`lib --standalone should generate a library with a standalone component as entry point 1`] = `"export * from \\"./lib/my-lib/my-lib.component\\";"`;
 
 exports[`lib --standalone should generate a library with a standalone component as entry point 2`] = `

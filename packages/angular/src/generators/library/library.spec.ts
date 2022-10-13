@@ -1456,6 +1456,52 @@ describe('lib', () => {
       ).toMatchSnapshot();
     });
 
+    it('should generate a library with a standalone component and have it flat', async () => {
+      await runLibraryGeneratorWithOpts({ standalone: true, flat: true });
+
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component and have it flat with routing setup', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        flat: true,
+        routing: true,
+      });
+
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/lib.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.children('libs/my-lib/src/lib')).toMatchInlineSnapshot(`
+        Array [
+          "my-lib.component.spec.ts",
+          "my-lib.component.ts",
+          "my-lib.component.css",
+          "my-lib.component.html",
+          "lib.routes.ts",
+        ]
+      `);
+      expect(tree.children('libs/my-lib/src')).toMatchInlineSnapshot(`
+        Array [
+          "index.ts",
+          "test-setup.ts",
+        ]
+      `);
+    });
+
     it('should generate a library with a standalone component as entry point with routing setup', async () => {
       await runLibraryGeneratorWithOpts({ standalone: true, routing: true });
 
