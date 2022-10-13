@@ -19,7 +19,6 @@ import {
 } from '../../utils/versions';
 import { readFileSync } from 'fs';
 import { join, join as pathJoin } from 'path';
-import { reformattedWorkspaceJsonOrNull } from 'nx/src/config/workspaces';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
 
@@ -42,6 +41,7 @@ function setPresetProperty(tree: Tree, options: Schema) {
       delete json.targetDefaults;
       delete json.targetDependencies;
       delete json.workspaceLayout;
+      delete json.npmScope;
     }
     return json;
   });
@@ -86,6 +86,9 @@ function createNxJson(
     },
   };
 
+  if (defaultBase === 'main') {
+    delete nxJson.affected;
+  }
   if (
     preset !== Preset.Core &&
     preset !== Preset.NPM &&
@@ -204,6 +207,7 @@ export async function workspaceGenerator(host: Tree, options: Schema) {
   setPresetProperty(host, options);
   addNpmScripts(host, options);
   createAppsAndLibsFolders(host, options);
+  setUpWorkspacesInPackageJson(host, options);
 
   await formatFiles(host);
 }
@@ -228,4 +232,22 @@ function normalizeOptions(options: Schema) {
     ...options,
     defaultBase,
   };
+}
+
+function setUpWorkspacesInPackageJson(tree: Tree, options: Schema) {
+  if (options.preset === Preset.NPM || options.preset === Preset.Core) {
+    if (options.packageManager === 'pnpm') {
+      tree.write(
+        join(options.directory, 'pnpm-workspace.yaml'),
+        `packages:
+  - 'packages/*'
+`
+      );
+    } else {
+      updateJson(tree, join(options.directory, 'package.json'), (json) => {
+        json.workspaces = ['packages/*'];
+        return json;
+      });
+    }
+  }
 }

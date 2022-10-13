@@ -72,7 +72,7 @@ describe('cache', () => {
     // --------------------------------------------
     updateFile(`nx.json`, (c) => {
       const r = JSON.parse(c);
-      r.affected.defaultBase = 'different';
+      r.affected = { defaultBase: 'different' };
       return JSON.stringify(r);
     });
     const outputWithNoBuildCached = runCLI(`affected:build ${files}`);

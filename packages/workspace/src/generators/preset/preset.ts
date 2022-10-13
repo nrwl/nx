@@ -176,8 +176,6 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
       e2eTestRunner: 'detox',
     });
-  } else if (options.preset === Preset.Core || options.preset === Preset.NPM) {
-    setupPackageManagerWorkspaces(tree, options);
   } else if (options.preset === Preset.TS) {
     const c = readWorkspaceConfiguration(tree);
     c.workspaceLayout = {
@@ -187,17 +185,6 @@ async function createPreset(tree: Tree, options: Schema) {
     updateWorkspaceConfiguration(tree, c);
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
-  }
-}
-
-function setupPackageManagerWorkspaces(tree: Tree, options: Schema) {
-  if (options.packageManager === 'pnpm') {
-    generateFiles(tree, join(__dirname, './files/pnpm-workspace'), '.', {});
-  } else {
-    updateJson(tree, 'package.json', (json) => {
-      json.workspaces = ['packages/*'];
-      return json;
-    });
   }
 }
 
