@@ -145,7 +145,7 @@ export function getOutputsForTargetAndConfiguration(
       validateOutputs(targetConfiguration.outputs);
     } catch (error) {
       if (error instanceof InvalidOutputsError) {
-        logger.warn(error.message);
+        // TODO(v16): start warning for invalid outputs
         targetConfiguration.outputs = transformLegacyOutputs(
           node.data.root,
           error
