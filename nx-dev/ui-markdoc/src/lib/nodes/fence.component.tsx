@@ -1,4 +1,7 @@
-import { ClipboardDocumentIcon } from '@heroicons/react/24/outline';
+import {
+  ClipboardDocumentCheckIcon,
+  ClipboardDocumentIcon,
+} from '@heroicons/react/24/outline';
 import React, { ReactNode, useEffect, useState } from 'react';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
@@ -61,7 +64,7 @@ export function Fence({
     };
   }, [copied]);
   return (
-    <div className="w-full">
+    <div className="my-8 w-full">
       <div className="code-block group relative inline-flex w-auto min-w-[50%] max-w-full">
         <CopyToClipboard
           text={children}
@@ -71,10 +74,13 @@ export function Fence({
         >
           <button
             type="button"
-            className="not-prose absolute top-7 right-2 z-10 flex opacity-0 transition-opacity group-hover:opacity-100"
+            className="not-prose absolute top-0 right-0 z-10 flex rounded-tr-lg border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800"
           >
-            <ClipboardDocumentIcon className="h-4 w-4" />
-            <span className="ml-1 text-xs">{copied ? 'Copied!' : 'Copy'}</span>
+            {copied ? (
+              <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-sky-500" />
+            ) : (
+              <ClipboardDocumentIcon className="h-5 w-5" />
+            )}
           </button>
         </CopyToClipboard>
         <SyntaxHighlighter
