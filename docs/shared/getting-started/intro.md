@@ -26,10 +26,10 @@ Incrementally add Nx to your repo and enjoy faster CI runs and local development
 
 {% /persona %}
 
-{% persona type="angular" title="Enter Modern Angular" url="/recipe/migration-angular" %}
+{% persona type="angular" title="Enter Modern Angular" url="/recipes/adopting-nx/migration-angular" %}
 Enhance your Angular development experience by leveraging its advanced generators and integrations with modern tooling.
 
-- [Switch from the Angular CLI to Nx](/recipe/migration-angular)
+- [Switch from the Angular CLI to Nx](/recipes/adopting-nx/migration-angular)
 
 {% /persona %}
 {% /personas %}
