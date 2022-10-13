@@ -21,10 +21,15 @@ function resolveLanguage(lang: string) {
 function CodeWrapper(options: {
   fileName: string;
   command: string;
+  path: string;
 }): ({ children }: { children: ReactNode }) => JSX.Element {
   return ({ children }: { children: ReactNode }) =>
     options.command ? (
-      <TerminalOutput content={children} command={options.command} />
+      <TerminalOutput
+        content={children}
+        command={options.command}
+        path={options.path}
+      />
     ) : (
       <CodeOutput content={children} fileName={options.fileName} />
     );
@@ -33,11 +38,13 @@ function CodeWrapper(options: {
 export function Fence({
   children,
   command,
+  path,
   fileName,
   language,
 }: {
   children: string;
   command: string;
+  path: string;
   fileName: string;
   language: string;
 }) {
@@ -74,7 +81,7 @@ export function Fence({
           useInlineStyles={false}
           language={resolveLanguage(language)}
           children={children}
-          PreTag={CodeWrapper({ fileName, command })}
+          PreTag={CodeWrapper({ fileName, command, path })}
         />
       </div>
     </div>
