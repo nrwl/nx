@@ -8,9 +8,9 @@ import {
   parseJson,
   ProjectGraphExternalNode,
   joinPathFragments,
+  workspaceRoot,
 } from '@nrwl/devkit';
 import { join } from 'path';
-import { workspaceRoot } from './app-root';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
