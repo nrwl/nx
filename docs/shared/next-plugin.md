@@ -77,8 +77,7 @@ nx serve my-new-app --prod
 
 You can import a library called `my-new-lib` in your application as follows.
 
-```typescript jsx
-// apps/my-next-app/pages/index.tsx
+```typescript jsx {% fileName="apps/my-next-app/pages/index.tsx" %}
 import { MyNewLib } from '@<your nx workspace name>/my-new-lib';
 
 export function Index() {

@@ -61,7 +61,7 @@ The `@nrwl/nx/enforce-module-boundaries` ESLint rule enables you to define stric
 
 You can use `enforce-module-boundaries` rule by adding it to your ESLint rules configuration:
 
-```json
+```jsonc
 {
   // ... more ESLint config here
   "overrides": [

@@ -39,7 +39,7 @@ Now it’s time to import the stories of our other projects in our new library's
 
 Here is a sample `libs/storybook-host/.storybook/main.js` file:
 
-```javascript
+```javascript {% fileName="libs/storybook-host/.storybook/main.js" %}
 const rootMain = require('../../../.storybook/main');
 module.exports = {
   ...rootMain,
@@ -54,10 +54,11 @@ Notice how we only link the stories matching that pattern. According to your wor
 For example:
 
 ```javascript
-stories: ['../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-          '../../**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-          etc.
-         ],
+stories: [
+  '../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+  '../../**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+  // etc...
+];
 ```
 
 ### Import the stories in Storybook’s tsconfig.json
@@ -66,7 +67,7 @@ If you are using Angular, do not forget to import the stories in the TypeScript 
 
 Here is a sample `libs/storybook-host-angular/.storybook/tsconfig.json` file:
 
-```json
+```json {% fileName="libs/storybook-host-angular/.storybook/tsconfig.json" %}
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -109,7 +110,7 @@ Your new Storybook host, essentially, depends on all the projects from which it 
 
 For example, `libs/storybook-host/project.json`:
 
-```json
+```json {% fileName="libs/storybook-host/project.json" %}
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/storybook-host/src",

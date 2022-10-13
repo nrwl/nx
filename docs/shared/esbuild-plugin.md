@@ -68,7 +68,7 @@ Replace `mylib` with the name or your project. This command works for both appli
 
 Assets are non-JS and non-TS files, such as images, CSS, etc. You can add them to the project configuration as follows.
 
-```json
+```jsonc
 "build": {
  "executor": "@nrwl/esbuild:esbuild",
   "options": {
@@ -85,7 +85,7 @@ Assets are non-JS and non-TS files, such as images, CSS, etc. You can add them t
 
 Running `nx build mylib` outputs something like this.
 
-```treeview
+```text
 dist/libs/mylib/
 ├── README.md
 ├── docs
@@ -106,7 +106,7 @@ nx build mylib --metafile
 
 This command will generate a `meta.json` file in the output directory.
 
-```treeview
+```text
 dist/libs/mylib/
 ├── README.md
 ├── index.js
@@ -118,7 +118,7 @@ dist/libs/mylib/
 
 Extra API options for esbuild can be passed in the `esbuildOptions` object for your project configuration.
 
-```json
+```jsonc
 "build": {
   "executor": "@nrwl/esbuild:esbuild",
   "options": {

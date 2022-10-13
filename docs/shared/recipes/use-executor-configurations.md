@@ -2,7 +2,7 @@
 
 The `configurations` property provides extra sets of values that will be merged into the options map.
 
-```json
+```json {% fileName="project.json" %}
 {
   "build": {
     "executor": "@nrwl/js:tsc",

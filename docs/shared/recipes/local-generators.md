@@ -22,7 +22,7 @@ nx generate @nrwl/nx-plugin:generator my-generator --project=my-plugin
 
 After the command is finished, the generator is created in the plugin `generators` folder.
 
-```treeview
+```text
 happynrwl/
 ├── apps/
 ├── libs/
@@ -59,9 +59,9 @@ export default async function (tree: Tree, schema: any) {
 
 To invoke other generators, import the entry point function and run it against the tree. `async/await` can be used to make code with Promises read like procedural code. The generator function may return a callback function that is executed after changes to the file system have been applied.
 
-In the schema.json file for your generator, the `name` is provided as a default option. The `cli` property is set to `nx` to signal that this is a generator that uses `@nrwl/devkit` and not `@angular-devkit`.
+In the `schema.json` file for your generator, the `name` is provided as a default option. The `cli` property is set to `nx` to signal that this is a generator that uses `@nrwl/devkit` and not `@angular-devkit`.
 
-```json
+```json {% fileName="schema.json" %}
 {
   "cli": "nx",
   "id": "test",
@@ -99,7 +99,7 @@ nx generate @myorg/my-plugin:my-generator mylib
 2. Set breakpoints in your code
 3. Run `nx g my-generator` in the debug terminal.
 
-![](/shared/vscode-schematics-debug.png)
+![vscode-schematics-debug](/shared/vscode-schematics-debug.png)
 
 ## Generator Utilities
 

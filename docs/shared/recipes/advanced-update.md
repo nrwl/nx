@@ -14,7 +14,7 @@ nx migrate --run-migrations --create-commits
 
 Your git history will then look something like the following:
 
-```bash
+```{% command="nx migrate --run-migrations --create-commits" %}
 git log
 
 commit 8c862c780106ab8736985c01de1477309a403548
@@ -38,9 +38,7 @@ By default, nx will apply the prefix of `chore: [nx migration] ` to each commit 
 nx migrate --run-migrations --create-commits --commit-prefix="chore(core): AUTOMATED - "
 ```
 
-```bash
-git log
-
+```{% command='git log' %}
 commit 8c862c780106ab8736985c01de1477309a403548
 Author: YOUR_GIT_USERNAME <your_git_email@example.com>
 Date:   Thu Apr 14 18:35:44 2022 +0400

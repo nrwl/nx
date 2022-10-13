@@ -22,7 +22,7 @@ nx generate @nrwl/nx-plugin:executor echo --project=my-plugin
 
 After the command is finished, the executor is created in the plugin `executors` folder.
 
-```treeview
+```text
 happynrwl/
 ├── apps/
 ├── libs/
@@ -96,7 +96,7 @@ export default async function echoExecutor(
 
 Our last step is to add this executor to a given project’s `targets` object in your project's `project.json` file:
 
-```json
+```jsonc {% fileName="project.json" %}
 {
   //...
   "targets": {
@@ -127,8 +127,7 @@ nx run my-project:echo
 
 To which we'll see the console output:
 
-```bash
-> nx run my-project:echo
+```{% command="nx run my-project:echo" %}
 Executing "echo"...
 Options: {
   "textToEcho": "Hello World"
@@ -185,7 +184,7 @@ Executors can provide a custom hasher that Nx uses when determining if a target 
 
 If you want to add a custom hasher manually, create a new file beside your executor's implementation. We will use `hasher.ts` as an example here. You'll also need to update `executors.json`, so that it resembles something like this:
 
-```json
+```json {% fileName="executors.json" %}
 {
   "executors": {
     "echo": {

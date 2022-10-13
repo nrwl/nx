@@ -17,7 +17,7 @@ export default async function (
 
 This only works when you know what executor you want to invoke. Sometimes, however, you need to invoke a target. For instance, the e2e target is often configured like this:
 
-```json
+```json {% fileName="project.json" %}
 {
   "e2e": {
     "builder": "@nrwl/cypress:cypress",
