@@ -43,6 +43,7 @@
     "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
+    "@phenomnomnominal/tsquery": "4.1.1",
     "@svgr/webpack": "^6.1.2",
     "chalk": "4.1.0",
     "css-loader": "^6.4.0",
