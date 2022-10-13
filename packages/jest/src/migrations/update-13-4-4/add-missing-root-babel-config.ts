@@ -5,8 +5,8 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { JestExecutorOptions } from '../../executors/jest/schema';
 import { jestConfigObject } from '../../utils/config/functions';
 import { nxVersion } from '../../utils/versions';
 

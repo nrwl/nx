@@ -1,7 +1,8 @@
 import * as depcheck from 'depcheck';
+import { join, relative } from 'path';
 
 // Ignore packages that are defined here per package
-const IGNORE_MATCHES = {
+const IGNORE_MATCHES_IN_PACKAGE = {
   '*': ['nx', '@nrwl/cli', '@nrwl/workspace', 'prettier', 'typescript', 'rxjs'],
   angular: [
     '@angular-devkit/architect',
@@ -130,6 +131,15 @@ const IGNORE_MATCHES = {
   'make-angular-cli-faster': ['@angular/core'],
 };
 
+const IGNORE_MATCHES_BY_FILE: Record<string, string[]> = {
+  '@storybook/core': [
+    join(
+      __dirname,
+      '../../packages/angular/src/migrations/update-12-3-0/update-storybook.ts'
+    ),
+  ],
+};
+
 export default async function getMissingDependencies(
   name: string,
   path: string,
@@ -169,7 +179,6 @@ export default async function getMissingDependencies(
       '.eslintrc.json',
       '*.spec*',
       'src/schematics/**/files/**',
-      'src/migrations/**',
     ],
   };
   let { missing } = await depcheck(path, {
@@ -179,8 +188,11 @@ export default async function getMissingDependencies(
 
   const packagesMissing = Object.keys(missing).filter(
     (m) =>
-      !IGNORE_MATCHES['*'].includes(m) &&
-      !(IGNORE_MATCHES[name] || []).includes(m)
+      !IGNORE_MATCHES_IN_PACKAGE['*'].includes(m) &&
+      !(IGNORE_MATCHES_IN_PACKAGE[name] || []).includes(m) &&
+      missing[m].filter(
+        (occurence) => !IGNORE_MATCHES_BY_FILE[m]?.includes(occurence)
+      ).length
   );
 
   if (verbose) {
