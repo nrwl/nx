@@ -9,7 +9,7 @@
         "jestConfig": "packages/webpack/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/webpack"]
+      "outputs": ["{workspaceRoot}/coverage/packages/webpack"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +57,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/webpack"],
+      "outputs": ["{workspaceRoot}/build/packages/webpack"],
       "options": {
         "command": "node ./scripts/copy-readme.js webpack"
       }

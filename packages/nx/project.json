@@ -57,7 +57,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/nx"],
+      "outputs": ["{workspaceRoot}/build/packages/nx"],
       "options": {
         "commands": [
           {
@@ -103,7 +103,7 @@
         "jestConfig": "packages/nx/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/nx"]
+      "outputs": ["{workspaceRoot}/coverage/packages/nx"]
     }
   }
 }

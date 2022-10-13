@@ -30,14 +30,14 @@
     },
     "sync-documentation": {
       "executor": "nx:run-commands",
-      "outputs": ["nx-dev/nx-dev/public/documentation"],
+      "outputs": ["{projectRoot}/public/documentation"],
       "options": {
         "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts"
       }
     },
     "generate-og-images": {
       "executor": "nx:run-commands",
-      "outputs": ["nx-dev/nx-dev/public/images/open-graph"],
+      "outputs": ["{projectRoot}/public/images/open-graph"],
       "options": {
         "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/open-graph/generate-images.ts"
       }
@@ -76,7 +76,7 @@
     },
     "deploy-build": {
       "executor": "nx:run-commands",
-      "outputs": ["nx-dev/nx-dev/public/documentation"],
+      "outputs": ["{projectRoot}/public/documentation"],
       "options": {
         "commands": [
           {
@@ -107,7 +107,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/nx-dev"],
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/nx-dev"],
       "options": {
         "jestConfig": "nx-dev/nx-dev/jest.config.ts",
         "passWithNoTests": true

@@ -9,7 +9,7 @@
         "jestConfig": "packages/tao/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/tao"]
+      "outputs": ["{workspaceRoot}/coverage/packages/tao"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +57,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/tao"],
+      "outputs": ["{workspaceRoot}/build/packages/tao"],
       "options": {
         "commands": [
           {

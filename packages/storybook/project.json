@@ -9,7 +9,7 @@
         "jestConfig": "packages/storybook/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/storybook"]
+      "outputs": ["{workspaceRoot}/coverage/packages/storybook"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -72,7 +72,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/storybook"],
+      "outputs": ["{workspaceRoot}/build/packages/storybook"],
       "options": {
         "command": "node ./scripts/copy-readme.js storybook"
       }

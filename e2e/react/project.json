@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/react"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/react"]
     }
   },
   "implicitDependencies": ["react"]

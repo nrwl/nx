@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/expo"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/expo"]
     }
   },
   "implicitDependencies": ["expo"]

@@ -12,7 +12,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/feature-search"],
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/feature-search"],
       "options": {
         "jestConfig": "nx-dev/feature-search/jest.config.ts",
         "passWithNoTests": true

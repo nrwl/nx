@@ -13,7 +13,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/ui-commands"],
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-commands"],
       "options": {
         "jestConfig": "nx-dev/ui-commands/jest.config.ts",
         "passWithNoTests": true

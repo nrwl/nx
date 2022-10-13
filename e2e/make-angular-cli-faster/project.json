@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/make-angular-cli-faster"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/make-angular-cli-faster"]
     }
   },
   "implicitDependencies": ["make-angular-cli-faster"]

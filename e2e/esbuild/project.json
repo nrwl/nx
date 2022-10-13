@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/esbuild"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/esbuild"]
     }
   },
   "implicitDependencies": ["esbuild"]

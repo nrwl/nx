@@ -12,7 +12,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/data-access-menu"],
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/data-access-menu"],
       "options": {
         "jestConfig": "nx-dev/data-access-menu/jest.config.ts",
         "passWithNoTests": true
