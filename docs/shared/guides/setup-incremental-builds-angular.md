@@ -13,7 +13,7 @@ It’s required that you run the Angular compatibility compiler (`ngcc`) after e
 enabled. This comes configured by default in every Nx workspace. The incremental build relies on the fact that `ngcc`
 must have already been run. You can check your `package.json` and make sure you have the following:
 
-```json
+```jsonc {% fileName="package.json" %}
 {
   ...
   "scripts": {
@@ -42,7 +42,7 @@ nx g @nrwl/angular:lib my-lib --buildable
 The generated buildable library uses the `@nrwl/angular:ng-packagr-lite` executor which is optimized for the incremental
 builds scenario:
 
-```json
+```jsonc
 {
   "projectType": "library",
   ...
@@ -77,7 +77,7 @@ The `@nrwl/angular:package` executor also supports incremental builds. It is use
 Change your Angular application’s "build" target executor to `@nrwl/angular:webpack-browser` and the "serve" target
 executor to `@nrwl/web:file-server` as shown below:
 
-```json
+```jsonc
 {
   "projectType": "application",
   ...
@@ -131,7 +131,7 @@ You can specify the `--parallel` flags as part of the options property on the fi
 your `project.json` file. The file-server executor will pass those to the `nx build` command it invokes.
 {% /callout %}
 
-```json
+```jsonc
 {
   "projectType": "application",
   ...
@@ -178,7 +178,7 @@ targets), you need to make sure the build target name of all the relevant projec
 
 Say you have the same application above with a configuration as follows:
 
-```json
+```jsonc
 {
   "projectType": "application",
   ...
@@ -247,7 +247,7 @@ And the `targetDefaults` configured in the `nx.json` as:
 The build target name of the application is `build-base`. Therefore, the build target name of the buildable libraries it
 depends on must also be `build-base`:
 
-```json
+```jsonc
 {
   "projectType": "library",
   ...

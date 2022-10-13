@@ -68,7 +68,7 @@ Before doing the above steps to actually compose our Storybook instances under t
 Take a look in your `project.json` file of each one of your projects (eg. for the `main-host` project, you can find it in the path `apps/main-host/project.json`).
 In your project's targets, in the `storybook` target, you will notice that the default port that Nx assigns to your projects' Storybook is always `4400`:
 
-```json
+```jsonc {% fileName="project.json" %}
 {
   ...
   "targets": {
@@ -101,7 +101,7 @@ of our projects runs on which port. The problem that this creates is that we wil
 
 Now, we need to add to our host project's `main.js` file (the path of which would be `apps/main-host/.storybook/main.js`) a `refs` object, to configure our composition. An example of such a configuration looks like this:
 
-```javascript
+```javascript {% fileName="apps/main-host/.storybook/main.js" %}
 module.exports = {
   ...,
   refs: {
@@ -127,7 +127,7 @@ If you want to take advantage of the [`run-commands`](https://nx.dev/packages/wo
 
 The objective is to end up with a new target in your `main-host`'s `project.json` file (`apps/main-host/project.json`) that looks like this:
 
-```json
+```jsonc {% fileName="apps/main-host/project.json" %}
     "storybook-composition": {
       "executor": "nx:run-commands",
       "options": {
@@ -161,7 +161,7 @@ nx generate nx:run-commands storybook-composition --command='nx storybook one-co
 
 This will create a new `target` in your `apps/main-host/project.json`:
 
-```json
+```jsonc {% fileName="apps/main-host/project.json" %}
     "storybook-composition": {
       "executor": "nx:run-commands",
       "outputs": [],
@@ -173,7 +173,7 @@ This will create a new `target` in your `apps/main-host/project.json`:
 
 Now, change the `command` option to be `commands`, add the `"parallel": true` option, and add all the other "composed" Storybook commands:
 
-```json
+```jsonc {% fileName="apps/main-host/project.json" %}
     "storybook-composition": {
       "executor": "nx:run-commands",
       "options": {

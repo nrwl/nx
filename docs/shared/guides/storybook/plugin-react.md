@@ -32,7 +32,7 @@ module.exports = {
 
 The `@nrwl/react:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library.
 
-```treeview
+```text
 <some-folder>/
 ├── my.component.ts
 └── my.component.stories.ts
@@ -56,7 +56,7 @@ nx g @nrwl/react:stories feature-ui
 
 and the result would be the following:
 
-```treeview
+```text
 <workspace name>/
 ├── .storybook/
 ├── apps/

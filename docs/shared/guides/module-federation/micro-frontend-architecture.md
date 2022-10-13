@@ -87,9 +87,7 @@ between applications.
 
 For example, you can create a base configuration file that only shares core libraries that _have_ to be shared.
 
-```javascript
-// module-federation.config.js
-
+```javascript {% fileName="module-federation.config.js" %}
 // Core libraries such as react, angular, redux, ngrx, etc. must be
 // singletons. Otherwise the applications will not work together.
 const coreLibraries = new Set([
@@ -116,8 +114,7 @@ module.exports = {
 
 Then, in the `shell` and remote applications, you can extend from the base configuration.
 
-```javascript
-// apps/shell/module-federation.config.js
+```javascript {% fileName="apps/shell/module-federation.config.js" %}
 const baseConfig = require('../../module-federation.config');
 
 module.exports = {

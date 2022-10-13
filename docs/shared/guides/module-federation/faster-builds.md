@@ -258,18 +258,16 @@ In this section, we'll examine how to set up your production build and simulate 
 
 First, make sure you have implicit dependencies from `host` to each remote. In case you didn't already set this up, add the following line to the `host`'s project configuration.
 
-```text
-// apps/host/project.json
+```jsonc {% fileName="apps/host/project.json" %}
 {
   //...
   "implicitDependencies": ["about", "shop", "cart"]
 }
 ```
 
-Next, open up the production webpack configuration file and update the remote URLs to their own subfolder under `http://localhost:3000`.
+Next, open up the production webpack configuration file and update the remote URLs to their own sub-folder under `http://localhost:3000`.
 
-```javascript
-// apps/host/webpack.config.prod.js
+```javascript {% fileName="apps/host/webpack.config.prod.js" %}
 const withModuleFederation = require('@nrwl/react/module-federation');
 const moduleFederationConfig = require('./module-federation.config');
 
@@ -291,7 +289,7 @@ Again, if you don't use [Nx Cloud's Distributed Tasks Execution](/concepts/dte) 
 
 After running that command you'll see the following artifacts in `dist` folder.
 
-```treeview
+```text
 dist/apps
 ├── about
 ├── cart
@@ -310,7 +308,7 @@ deploy \
 
 You can then run `nx deploy host` to see the application running on `http://localhost:3000`. If you inspect the `production` folder you'll see the following files.
 
-```treeview
+```text
 production/
 ├── about
 │   ├── remoteEntry.js

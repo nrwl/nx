@@ -90,7 +90,7 @@ When running the Nx Storybook generator, it'll configure the Nx workspace to be 
 
 The **global** Storybook configuration allows to set addon-ons or custom webpack configuration at a global level that applies to all Storybook's within the Nx workspace. You can find that folder at `.storybook/` at the root of the workspace.
 
-```treeview
+```text
 <workspace name>/
 ├── .storybook/
 │   ├── main.js
@@ -105,7 +105,7 @@ The **global** Storybook configuration allows to set addon-ons or custom webpack
 
 The project-specific Storybook configuration is pretty much similar what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
 
-```treeview
+```text
 <project root>/
 ├── .storybook/
 │   ├── main.js
@@ -122,7 +122,7 @@ The project-specific Storybook configuration is pretty much similar what you wou
 To register a [Storybook addon](https://storybook.js.org/addons/) for all storybook instances in your workspace:
 
 1. In `/.storybook/main.js`, in the `addons` array of the `module.exports` object, add the new addon:
-   ```typescript
+   ```typescript {% fileName="/.storybook/main.js" %}
    module.exports = {
    stories: [...],
    ...,
@@ -131,7 +131,7 @@ To register a [Storybook addon](https://storybook.js.org/addons/) for all storyb
    ```
 2. If a decorator is required, in each project's `<project-path>/.storybook/preview.js`, you can export an array called `decorators`.
 
-   ```typescript
+   ```typescript {% fileName="<project-path>/.storybook/preview.js" %}
    import someDecorator from 'some-storybook-addon';
    export const decorators = [someDecorator];
    ```

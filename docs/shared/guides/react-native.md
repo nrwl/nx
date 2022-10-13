@@ -26,7 +26,7 @@ npx create-nx-workspace happynrwl
 
 Once the command completes, the workspace will look as follows:
 
-```treeview
+```text
 happynrwl/
 ├── apps/
 │   ├── mobile/
@@ -165,7 +165,7 @@ npx nx g @nrwl/react-native:lib shared-ui-layout
 
 And you will see the following:
 
-```treeview
+```text
 happynrwl/
 ├── apps/
 │   └── mobile/
@@ -221,8 +221,7 @@ happynrwl/
 
 You can import the `shared-ui-layout` library in your application as follows.
 
-```typescript jsx
-// apps/mobile/src/app/App.tsx
+```typescript jsx {% fileName="apps/mobile/src/app/App.tsx" %}
 import React from 'react';
 import { SafeAreaView } from 'react-native';
 
@@ -252,7 +251,7 @@ npx nx g @nrwl/react-native:component layout --project=shared-ui-layout --export
 
 Run `npx nx build shared-ui-layout` to build the library. It will generate the following:
 
-```treeview
+```text
 dist/libs/shared-ui-layout/
 ├── README.md
 ├── index.d.ts

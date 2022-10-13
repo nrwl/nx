@@ -2,7 +2,7 @@
 
 Nx can be added to any workspace, so there is no fixed folder structure. However, if you use one of the existing presets, you will likely see something like this:
 
-```treeview
+```text
 myorg/
 ├── apps/
 ├── libs/
