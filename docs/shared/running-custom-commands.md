@@ -23,7 +23,7 @@ hello:
 
 For each project for which you want to enable `make`, add a target in its `project.json`:
 
-```json
+```jsonc {% fileName="project.json" %}
 // ...
 "targets": {
     "make": {

@@ -123,7 +123,7 @@ Sometimes you might want to include some assets with the plugin. This might be a
 
 To make sure that assets are copied to the dist folder, open the plugin's `project.json` file. Inside the `build` property, add additional assets. By default, all `.md` files in the root, all non-ts files in folders, and the `generators.json` and `executors.json` files are included.
 
-```json
+```jsonc {% fileName="project.json" %}
 "build": {
   "executor": "@nrwl/node:package",
   "options": {
@@ -212,7 +212,7 @@ The word `preset` is required for the name of this generator
 
 You should have a similar structure to this:
 
-```treeview
+```text
 happynrwl/
 	├── e2e
 	├── jest.config.js

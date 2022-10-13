@@ -47,9 +47,9 @@ Now it’s important to change the Storybook ports in the `storybook-host-angula
 
 ### Add the `refs` to the main.js of the host library
 
-Create the composition in `libs/storybook-host/.storybook/main.js`:
+Create the composition in ``:
 
-```javascript
+```javascript {% fileName="libs/storybook-host/.storybook/main.js" %}
 const rootMain = require('../../../.storybook/main');
 module.exports = {
   ...rootMain,

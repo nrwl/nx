@@ -9,7 +9,7 @@ The following configuration creates `build` and `test` targets for Nx.
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "scripts": {
@@ -22,7 +22,7 @@ The following configuration creates `build` and `test` targets for Nx.
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
+```jsonc {% fileName="project.json" %}
 {
   "root": "libs/mylib/",
   "targets": {
@@ -52,7 +52,7 @@ You can add Nx-specific configuration as follows:
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "scripts": {
@@ -87,7 +87,7 @@ You can add Nx-specific configuration as follows:
 {% /tab %}
 {% tab label="project.json" %}
 
-```json
+```json {% fileName="project.json" %}
 {
   "root": "libs/mylib/",
   "sourceRoot": "libs/mylib/src",
@@ -308,7 +308,7 @@ You can annotate your projects with `tags` as follows:
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "nx": {
@@ -320,7 +320,7 @@ You can annotate your projects with `tags` as follows:
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
+```jsonc {% fileName="project.json" %}
 {
   "root": "/libs/mylib",
   "tags": ["scope:myteam"]
@@ -341,7 +341,7 @@ statically, so you can set them manually like this:
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "nx": {
@@ -353,7 +353,7 @@ statically, so you can set them manually like this:
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
+```jsonc {% fileName="project.json" %}
 {
   "root": "/libs/mylib",
   "implicitDependencies": ["anotherlib"]
@@ -368,7 +368,7 @@ You can also remove a dependency as follows:
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "nx": {
@@ -380,7 +380,7 @@ You can also remove a dependency as follows:
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
+```jsonc {% fileName="project.json" %}
 {
   "root": "/libs/mylib",
   "implicitDependencies": ["!anotherlib"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
@@ -395,7 +395,7 @@ You can also remove a dependency as follows:
 Nx will add every project with a `package.json` file in it to its project graph. If you want to ignore a particular
 project, add the following to its `package.json`:
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "nx": {

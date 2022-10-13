@@ -2,7 +2,7 @@
 
 If you want to disable detecting dependencies from source code and want to only use the dependencies as defined in `package.json` (the same way yarn does), you can add the following configuration to your `nx.json` file:
 
-```json
+```json {% fileName="nx.json" %}
 {
   "pluginsConfig": {
     "@nrwl/js": {

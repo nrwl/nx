@@ -1,6 +1,6 @@
 # Library Types
 
-There are many different types of libraries in a workspace. In order to maintain a certain sense of order, we recommend having a small number of types, such as the below four (4) types of libraries.
+There are many types of libraries in a workspace. In order to maintain a certain sense of order, we recommend having a small number of types, such as the below four (4) types of libraries.
 
 **Feature libraries:**
 

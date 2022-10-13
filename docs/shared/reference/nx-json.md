@@ -4,7 +4,7 @@ The `nx.json` file configures the Nx CLI and project defaults.
 
 The following is an expanded version showing all options. Your `nx.json` will likely be much shorter.
 
-```json
+```json {% fileName="nx.json" %}
 {
   "npmScope": "happyorg",
   "affected": {
@@ -128,7 +128,7 @@ like this (which applies to every project):
 
 And projects can define their `production` fileset, without having to redefine the inputs for the `test` target.
 
-```json title="project.json"
+```json {% fileName="project.json" %}
 {
   "namedInputs": {
     "production": ["default", "!{projectRoot}/**/*.test.js"]
@@ -152,7 +152,7 @@ individual target.
 Often the same `dependsOn` configuration has to be defined for every project in the repo, and that's when
 defining `targetDefaults` in `nx.json` is helpful.
 
-```json
+```json {% fileName="nx.json" %}
 {
   "targetDefaults": {
     "build": {
@@ -171,7 +171,7 @@ For full documentation of the `dependsOn` property, see the [project configurati
 
 Another target default you can configure is `outputs`:
 
-```json
+```json {% fileName="nx.json" %}
 {
   "targetDefaults": {
     "build": {
@@ -186,7 +186,7 @@ Another target default you can configure is `outputs`:
 Default generator options are configured in `nx.json` as well. For instance, the following tells Nx to always
 pass `--buildable=true` when creating new libraries.
 
-```json
+```json {% fileName="nx.json" %}
 {
   "generators": {
     "@nrwl/js:library": {

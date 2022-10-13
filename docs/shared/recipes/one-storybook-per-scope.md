@@ -13,7 +13,7 @@ In this case, you can have one Storybook instance per scope. If you follow the f
 
 Say, for example, that you have a client app, an admin app, and a number of UI libraries, organized under the name of each app. So you would have a folder structure that looks like this:
 
-```treeview
+```text
 happynrwl/
 ├── .storybook/
 ├── apps/
@@ -111,7 +111,7 @@ Thanks to our folder structure, we can easily configure Storybook to import all 
 
 For example, `libs/storybook-host-admin/.storybook/main.js`:
 
-```javascript
+```javascript {% fileName="libs/storybook-host-admin/.storybook/main.js" %}
 const rootMain = require('../../../.storybook/main');
 module.exports = {
   ...rootMain,
@@ -123,7 +123,7 @@ module.exports = {
 
 And don't forget the `libs/storybook-host-admin/.storybook/tsconfig.json`:
 
-```json
+```json {% fileName="libs/storybook-host-admin/.storybook/tsconfig.json" %}
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
