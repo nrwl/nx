@@ -20,7 +20,7 @@ export function MonorepoStyles(): JSX.Element {
           <div className="mt-8 flex gap-16 font-normal">
             <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
               Choose your style! Have a monorepo already?{' '}
-              <Link href="/recipe/adding-to-monorepo">
+              <Link href="/recipes/adopting-nx/adding-to-monorepo">
                 <a
                   title="Install VSCode's native extension for Nx"
                   className="font-medium text-blue-500 dark:text-sky-500"
