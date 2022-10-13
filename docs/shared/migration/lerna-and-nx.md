@@ -42,7 +42,7 @@ To enable Nx support (and thus speed up task running) go through the following s
 
 **1. Install Nx**
 
-```bash
+```shell
 npm i nx --save-dev
 ```
 
@@ -89,7 +89,7 @@ This does not include distributed caching or distributed task execution powered 
 
 Nx can be added to an existing Lerna monorepo by running the following command:
 
-```bash
+```shell
 npx add-nx-to-monorepo
 ```
 
@@ -101,7 +101,7 @@ This will
 
 You can then run your package's npm scripts by simply invoking
 
-```bash
+```shell
 nx <command> <package-name>
 ```
 

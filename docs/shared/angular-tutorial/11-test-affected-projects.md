@@ -9,7 +9,7 @@ Because Nx understands the project graph of your workspace, Nx is efficient at r
 
 **Commit all the changes in the repo**:
 
-```bash
+```shell
 git add .
 git commit -am 'init'
 git checkout -b testbranch
@@ -51,7 +51,7 @@ npx nx affected:test
 
 You will see the following:
 
-```bash
+```shell
 >  NX  Running target test for projects:
 
   - ui
@@ -73,7 +73,7 @@ Simply, re-run the command to retest the failed projects. The already successful
 
 You can run any target against the affected projects in the graph like this:
 
-```bash
+```shell
 # The following are equivalent
 npx nx affected --target=build
 npx nx affected:build

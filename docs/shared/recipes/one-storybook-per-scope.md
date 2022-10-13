@@ -87,7 +87,7 @@ Let's assume in this case that all our libraries are using Angular.
 
 Let's generate three Angular libraries, one for each scope, and let's call them `storybook-host-client`, `storybook-host-admin`, and `storybook-host-shared`. We can do this by running the following commands:
 
-```bash
+```shell
 nx g @nrwl/angular:lib storybook-host-client
 nx g @nrwl/angular:lib storybook-host-admin
 nx g @nrwl/angular:lib storybook-host-shared
@@ -97,7 +97,7 @@ nx g @nrwl/angular:lib storybook-host-shared
 
 Now, we need to generate Storybook configuration for all these new libraries. We don't want to generate `stories` or a new Cypress project for these libraries, so we can run the following commands:
 
-```bash
+```shell
 nx g @nrwl/storybook:configuration storybook-host-client --uiFramework=@storybook/angular
 nx g @nrwl/storybook:configuration storybook-host-admin --uiFramework=@storybook/angular
 nx g @nrwl/storybook:configuration storybook-host-shared --uiFramework=@storybook/angular

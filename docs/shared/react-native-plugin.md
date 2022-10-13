@@ -12,7 +12,7 @@ The Nx Plugin for React Native contains generators for managing React Native app
 
 The easiest way to create your workspace is via `npx`.
 
-```bash
+```shell
 npx create-nx-workspace your-workspace-name \
 --preset=react-native \
 --appName=your-app-name
@@ -22,7 +22,7 @@ npx create-nx-workspace your-workspace-name \
 You can also run the command without arguments to go through the interactive prompts.
 {% /callout %}
 
-```bash
+```shell
 npx create-nx-workspace your-workspace-name
 ```
 
@@ -30,7 +30,7 @@ npx create-nx-workspace your-workspace-name
 
 For existing Nx workspaces, install the `@nrwl/react-native` package to add React Native capabilities to it.
 
-```bash
+```shell
 npm install @nrwl/react-native --save-dev
 
 # Or with yarn
@@ -41,7 +41,7 @@ yarn add @nrwl/react-native --dev
 
 To create additional React Native apps run:
 
-```bash
+```shell
 nx g @nrwl/react-native:app your-app-name
 ```
 
@@ -49,7 +49,7 @@ nx g @nrwl/react-native:app your-app-name
 
 To generate a new library run:
 
-```bash
+```shell
 npx nx g @nrwl/react-native:lib your-lib-name
 ```
 
@@ -57,7 +57,7 @@ npx nx g @nrwl/react-native:lib your-lib-name
 
 To generate a new component inside library run:
 
-```bash
+```shell
 npx nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export
 ```
 

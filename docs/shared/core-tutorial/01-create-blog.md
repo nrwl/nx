@@ -19,13 +19,13 @@ This tutorial sets up a [package-based repo](/concepts/integrated-vs-package-bas
 
 **Start by creating a new workspace.**
 
-```bash
+```shell
 npx create-nx-workspace@latest
 ```
 
 You then receive the following prompts in your command line:
 
-```bash
+```shell
 Workspace name (e.g., org name)         myorg
 What to create in the new workspace     npm
 ```
@@ -63,14 +63,14 @@ To install Eleventy run:
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn add -D -W @11ty/eleventy@1.0.0
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npm install -D @11ty/eleventy@1.0.0
 ```
 
@@ -113,7 +113,7 @@ If you have a `workspace.json` file in the root, delete it.
 
 Now that we have the bare minimum set up for Eleventy, you can run:
 
-```bash
+```shell
 nx serve blog
 ```
 
@@ -121,7 +121,7 @@ And you can see `Hello, Eleventy` at `http://localhost:8080`.
 
 Also, if you run:
 
-```bash
+```shell
 nx build blog
 ```
 

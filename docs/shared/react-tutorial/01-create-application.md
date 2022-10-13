@@ -34,13 +34,13 @@ This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) rep
 
 Start by creating a new workspace.
 
-```bash
+```shell
 npx create-nx-workspace@latest
 ```
 
 You then receive the following prompts in your command line:
 
-```bash
+```shell
 Workspace name (e.g., org name)     myorg
 What to create in the new workspace react
 Application name                    todos
@@ -108,7 +108,7 @@ Two projects were added to the workspace:
 
 Now that the application is set up, run it locally via:
 
-```bash
+```shell
 npx nx serve todos
 ```
 
@@ -116,7 +116,7 @@ npx nx serve todos
 
 If you prefer to run using a global installation of Nx, you can run:
 
-```bash
+```shell
 nx serve todos
 ```
 
@@ -127,14 +127,14 @@ To fix it, you can either install the `nx` cli globally by running:
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn global add nx
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npm install -g nx
 ```
 
@@ -146,14 +146,14 @@ Alternatively, you can run the local installation of Nx by prepending every comm
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn nx serve todos
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npx nx serve todos
 ```
 

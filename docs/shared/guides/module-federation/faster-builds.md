@@ -51,7 +51,7 @@ These examples have fully functioning [CI](https://github.com/nrwl/react-module-
 
 Now, let's continue by creating an empty Nx workspace.
 
-```bash
+```shell
 # Replace acme with desired scope
 npx create-nx-workspace acme --preset=empty
 cd acme
@@ -63,7 +63,7 @@ You will be prompted to enable Nx Cloud in the workspace. For the best experienc
 
 Then, for React users, install the `@nrwl/react` plugin; and for Angular users, install the `@nrwl/angular` plugin.
 
-```bash
+```shell
 # If you use React
 npm install --save-dev @nrwl/react
 
@@ -77,7 +77,7 @@ yarn add --dev @nrwl/angular
 
 Next, generate the host and remote applications.
 
-```bash
+```shell
 # React
 nx g @nrwl/react:host host --remotes=shop,cart,about
 
@@ -91,7 +91,7 @@ You can leave off the `--remotes` option and add them later with `nx g @nrwl/rea
 
 Now, serve `host` to view it in your browser.
 
-```bash
+```shell
 nx serve host --open
 ```
 
@@ -99,7 +99,7 @@ The above command serves `host` in development mode, whereas the remotes are bui
 
 To run one or more remotes in development mode, use the `--devRemotes` option.
 
-```bash
+```shell
 nx serve host --open --devRemotes=shop,cart
 ```
 
@@ -205,7 +205,7 @@ If you have any feedback regarding this feature, we'd love to hear from you--che
 
 To use Module Federation well, we recommend that you enable [Nx Cloud](https://nx.app). If you haven't enabled it yet when using `create-nx-workspace`, you can do the following.
 
-```bash
+```shell
 nx connect-to-nx-cloud
 ```
 
@@ -213,7 +213,7 @@ With Nx Cloud enabled, a large set of builds can be skipped entirely when runnin
 
 You can see this behavior locally if you serve the `host` twice.
 
-```bash
+```shell
 nx serve host
 
 # (kill server)
@@ -225,7 +225,7 @@ The second serve starts up much faster, because the three remotes (`shop`, `cart
 
 If you inspect the terminal output, you'll see something like this, even if you are on different machines.
 
-```bash
+```shell
 > nx run about:build:development  [existing outputs match the cache, left as is]
 
  (snip)
@@ -299,7 +299,7 @@ dist/apps
 
 Now, we can add a simple deploy command to simulate deploying this folder to production.
 
-```bash
+```shell
 nx g @nrwl/workspace:run-commands \
 deploy \
 --project=host \

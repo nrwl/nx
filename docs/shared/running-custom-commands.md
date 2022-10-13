@@ -8,13 +8,13 @@ This recipe will show how to run any terminal command within the nx build-chain.
 
 The command we want to run for each project is:
 
-```bash
+```shell
 make hello
 ```
 
 With this `Makefile` in the root of the project:
 
-```bash
+```shell
 hello:
   echo "Hello, world!"
 ```
@@ -46,13 +46,13 @@ For more information, see the [run-commands api doc](/packages/nx/executors/run-
 
 To run the executor for a single project:
 
-```bash
+```shell
 nx run my-app:make
 ```
 
 To run the executor for all affected projects:
 
-```bash
+```shell
 nx affected --target=make
 ```
 

@@ -24,7 +24,7 @@ The RealWorld app is a great example of an AngularJS app, but it probably doesn�
 
 To start migrating the Real World app, create an Nx workspace:
 
-```bash
+```shell
 npx create-nx-workspace@latest nx-migrate-angularjs
 ```
 
@@ -32,7 +32,7 @@ When prompted choose the `apps` preset. The other presets use certain recommende
 
 At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or not. By using Nx Cloud, you’ll be able to share the computation cache of operations like build, test or even your own commands with everyone working on the same project. Whether you choose to use it or not, the outcome of the migration won’t be affected and you can always change your choice later.
 
-```bash
+```shell
 ? What to create in the new workspace empty             [an empty workspace with a layout that works best for building apps]
 ? Set up distributed caching using Nx Cloud (It's free and doesn't require registration.) Yes [Faster builds, run details, GitHub integration. Learn more at https://nx.app]
 ```
@@ -41,7 +41,7 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 
 Your new workspace won’t have much in it because of the `apps` preset. You’ll need to generate an application to have some structure created. Add the Angular plugin to your workspace:
 
-```bash
+```shell
 npm install -D @nrwl/angular
 ```
 
@@ -53,13 +53,13 @@ Codebases with existing unit and e2e tests should continue to use whatever runne
 
 With the Angular capability added, generate your application:
 
-```bash
+```shell
 nx generate @nrwl/angular:application --name=realworld --unitTestRunner=karma --e2eTestRunner=protractor
 ```
 
 Accept the default options for each prompt:
 
-```bash
+```shell
 ? Which stylesheet format would you like to use? CSS
 ? Would you like to configure routing for this application? No
 ```
@@ -345,7 +345,7 @@ You need to point your `build` and `serve` tasks at this gulp build process. Typ
 
 This sets up the `build` and `serve` commands to use the locally installed version of gulp to run `build` and `serve`. To see the RealWorld app working, run:
 
-```bash
+```shell
 nx serve realworld
 ```
 
@@ -361,7 +361,7 @@ So far, you’ve mostly gotten already existing code and processes to work. This
 
 But migrating AngularJS code means we need to switch some of our tools to a more modern tool stack. Specifically, using webpack and babel is going to allow us to take advantage of Nx more easily. Becoming an expert in these build tools is outside the scope of this article, but I’ll address some AngularJS specific concerns. To get started, install these new dependencies:
 
-```bash
+```shell
 npm install -D @nrwl/web babel-plugin-angularjs-annotate
 ```
 
@@ -558,7 +558,7 @@ angular.bootstrap(document, ['app'], {
 
 Run the application the same way as before:
 
-```bash
+```shell
 nx serve realworld
 ```
 
@@ -568,7 +568,7 @@ Unit testing can be an important part of any code migration. If you migrate your
 
 You need a few dependencies for AngularJS unit testing that Nx doesn’t provide by default:
 
-```bash
+```shell
 npm install -D angular-mocks@1.5.11 karma-webpack
 ```
 
@@ -676,7 +676,7 @@ This unit test does a check to make sure the component compiles and that it sets
 
 To run the unit tests:
 
-```bash
+```shell
 nx test
 ```
 
@@ -757,7 +757,7 @@ You also need to modify the project configuration of the `realworld-e2e` app at 
 
 To run e2e tests, use the `e2e` command:
 
-```bash
+```shell
 nx e2e realworld-e2e
 ```
 

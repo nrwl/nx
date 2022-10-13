@@ -58,18 +58,18 @@ In Unix systems, we need to set the environment variables before calling a comma
 
 Let's say that we want to define an API URL for the application to use:
 
-```bash
+```shell
 NX_API_URL=http://localhost:3333 nx build myapp
 ```
 
 **Windows (cmd.exe)**
 
-```bash
+```shell
 set "NX_API_URL=http://localhost:3333" && nx build myapp
 ```
 
 **Windows (Powershell)**
 
-```bash
+```shell
 ($env:NX_API_URL = "http://localhost:3333") -and (nx build myapp)
 ```

@@ -9,7 +9,7 @@ Runs an Architect target with an optional custom builder configuration defined i
 
 ## Usage
 
-```bash
+```shell
 nx run <target> [options]
 ```
 
@@ -19,13 +19,13 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Run the `build` target for the `myapp` :
 
-```bash
+```shell
 nx run myapp:build
 ```
 
 Run the `build` target for the `myapp` project with a `production` configuration:
 
-```bash
+```shell
 nx run myapp:build:production
 ```
 

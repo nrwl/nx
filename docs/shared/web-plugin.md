@@ -10,7 +10,7 @@ To create a new workspace with web, run `npx create-nx-workspace@latest --preset
 
 To add the web plugin to an existing workspace, run one of the following:
 
-```bash
+```shell
 # For npm users
 npm install -D @nrwl/web
 
@@ -22,7 +22,7 @@ yarn add -D @nrwl/web
 
 You can add a new application with the following:
 
-```bash
+```shell
 nx g @nrwl/web:app my-new-app
 ```
 
@@ -38,7 +38,7 @@ If you are looking to add a React application, check out the [React plugin](/pac
 
 To create a generic TypeScript library (i.e. non-framework specific), use the [`@nrwl/js`](/packages/js) plugin.
 
-```bash
+```shell
 nx g @nrwl/js:lib my-new-lib
 
 # If you want the library to be buildable or publishable to npm
@@ -54,7 +54,7 @@ nx g @nrwl/web:lib my-new-lib \
 
 You can run unit tests with:
 
-```bash
+```shell
 nx test my-new-app
 nx test my-new-lib
 ```
@@ -63,7 +63,7 @@ Replace `my-new-app` with the name or your project. This command works for both 
 
 You can also run E2E tests for applications:
 
-```bash
+```shell
 nx e2e my-new-app-e2e
 ```
 
@@ -73,13 +73,13 @@ Replace `my-new-app-e2e` with the name or your project with `-e2e` appended.
 
 React applications can be build with:
 
-```bash
+```shell
 nx build my-new-app
 ```
 
 And if you generated a library with `--buildable`, then you can build a library as well:
 
-```bash
+```shell
 nx build my-new-lib
 ```
 
@@ -87,7 +87,7 @@ The output is in the `dist` folder. You can customize the output folder by setti
 
 The application in `dist` is deployable, and you can try it out locally with:
 
-```bash
+```shell
 npx http-server dist/apps/my-new-app
 ```
 

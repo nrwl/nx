@@ -4,7 +4,7 @@
 
 Start by creating a new workspace. We can use the following command that will help us set it up.
 
-```bash
+```shell
 npx create-nx-workspace@latest myorg --preset=ts
 ```
 
@@ -24,7 +24,7 @@ myorg/
 
 Nx comes with generators that can help with scaffolding applications. Run this generator to make a new library named `is-even`:
 
-```bash
+```shell
 npx nx generate @nrwl/js:library is-even --publishable --importPath @myorg/is-even
 ```
 
@@ -95,7 +95,7 @@ The local linking of packages in an integrated monorepo style is handled by Nx a
 
 To illustrate that, let's create another package `is-odd`. We can again run the generator for that:
 
-```bash
+```shell
 npx nx generate @nrwl/js:library is-odd --publishable --importPath @myorg/is-odd
 ```
 
@@ -152,7 +152,7 @@ This tells Nx to run the `build` target of all the dependent projects first, bef
 
 Remove any existing `dist` folder at the root of the workspace and run:
 
-```bash
+```shell
 npx nx build is-odd
 ```
 
@@ -162,7 +162,7 @@ It will automatically first run `npx nx build is-even`, so you should end up wit
 
 To build the `is-even` package run:
 
-```bash
+```shell
 npx nx build is-even
 ```
 
@@ -183,7 +183,7 @@ Done compiling TypeScript files for project "is-even".
 
 To run the `build` target for all the packages in the workspace, use:
 
-```bash
+```shell
 npx nx run-many --target=build
 ```
 
@@ -204,7 +204,7 @@ Note how on the `is-even:build` it didn't run the build but rather pulled it out
 
 You can also only run tasks on packages that got changed by using
 
-```bash
+```shell
 npx nx affected --target=build
 ```
 

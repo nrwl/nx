@@ -9,7 +9,7 @@ In addition to supporting computation caching, Nx scales your development by doi
 
 **Commit all the changes you have made so far**:
 
-```bash
+```shell
 git add .
 git commit -am 'init'
 git checkout -b testbranch
@@ -50,7 +50,7 @@ Printing the affected projects can be handy, but usually you want to do somethin
 
 As you can see, since we updated the code, without updating the tests, the unit tests failed.
 
-```bash
+```shell
 >  NX  Running target test for projects:
 
   - ui
@@ -70,7 +70,7 @@ Note that Nx only tried to retest `ui` and `todos`. It didn't retest `api` or `d
 
 You can run any target against the affected projects in the graph like this:
 
-```bash
+```shell
 # The following are equivalent
 npx nx affected --target=build
 npx nx affected:build

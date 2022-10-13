@@ -8,7 +8,7 @@ This guide shows you how to create, run, and customize executors within your Nx 
 
 If you don't already have a local plugin, use Nx to generate one:
 
-```bash
+```shell
 # replace `latest` with the version that matches your Nx version
 npm install @nrwl/nx-plugin@latest
 nx g @nrwl/nx-plugin:plugin my-plugin
@@ -16,7 +16,7 @@ nx g @nrwl/nx-plugin:plugin my-plugin
 
 Use the Nx CLI to generate the initial files needed for your executor.
 
-```bash
+```shell
 nx generate @nrwl/nx-plugin:executor echo --project=my-plugin
 ```
 
@@ -121,7 +121,7 @@ Our last step is to add this executor to a given project’s `targets` object in
 
 Finally, you run the executor via the CLI as follows:
 
-```bash
+```shell
 nx run my-project:echo
 ```
 

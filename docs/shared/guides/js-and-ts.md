@@ -4,7 +4,7 @@ Nx is a general-purpose build system and a general-purpose CLI. It works with Ja
 
 TypeScript is a great choice for many teams, but not for everyone. If you want to use Nx with JavaScript, simply pass `--js` to all generate commands, as follows:
 
-```bash
+```shell
 nx g @nrwl/react:app myapp --js
 nx g @nrwl/react:component mycmp --project=myapp --js
 ```

@@ -16,7 +16,7 @@ You can use the [`cra-to-nx`](https://www.npmjs.com/package/cra-to-nx) tool, tha
 
 Just `cd` into your Create-React-App (CRA) project and run the following command:
 
-```bash
+```shell
 npx cra-to-nx
 ```
 
@@ -53,7 +53,7 @@ There is also a [repo](https://github.com/nrwl/cra-to-nx-migration) that shows t
 
 To start migrating your app, create an Nx workspace:
 
-```bash
+```shell
 npx create-nx-workspace@latest acme --appName=webapp --preset=react --style=css --nx-cloud
 ```
 
@@ -68,7 +68,7 @@ We'll need to add a few dependencies to the Nx workspace that are needed to allo
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn add --dev react-scripts @testing-library/jest-dom eslint-config-react-app @craco/craco
 yarn add web-vitals
 ```
@@ -76,7 +76,7 @@ yarn add web-vitals
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npm install --force --save-dev react-scripts @testing-library/jest-dom eslint-config-react-app @craco/craco
 npm install --save web-vitals
 ```
@@ -92,7 +92,7 @@ The `@craco/craco` package allows us to customize the webpack and jest config wi
 
 The source code for each app in an Nx workspace should be contained within the folder of a generated app. The `create-nx-workspace` command from step 1 created an app folder at `apps/webapp` that we can use to contain the CRA app. Delete the existing contents and copy over the CRA app code.
 
-```bash
+```shell
 cd apps/webapp
 ls -A . | grep -v 'project.json' | xargs  rm -rf
 cd -
@@ -247,7 +247,7 @@ Modify `apps/webapp/tsconfig.json` to extend the root `tsconfig.base.json`. This
 
 It's helpful to have separate `tsconfig.json` files for testing and linting. In this instance, the actual typescript settings are identical to the base config, so these tsconfig files will extend the base without modifying any values.
 
-```bash
+```shell
 echo '{ "extends": "./tsconfig.json" }' > apps/webapp/tsconfig.app.json
 echo '{ "extends": "./tsconfig.json" }' > apps/webapp/tsconfig.spec.json
 ```
@@ -256,7 +256,7 @@ echo '{ "extends": "./tsconfig.json" }' > apps/webapp/tsconfig.spec.json
 
 CRA checks to make sure there are no incompatible dependencies before any scripts run, but the `@nrwl/react` plugin serves the same purpose and requires slightly different versions in order to function correctly in an Nx workspace. Setting this environment variable disables CRA's check.
 
-```bash
+```shell
 echo "SKIP_PREFLIGHT_CHECK=true" > .env
 ```
 
@@ -264,7 +264,7 @@ echo "SKIP_PREFLIGHT_CHECK=true" > .env
 
 An `apps/webapp/node_modules` folder will be generated to hold some cache values when a build is run. This cache shouldn't be committed to git, so we tell git to ignore any `node_modules` folder.
 
-```bash
+```shell
 echo "node_modules" >> .gitignore
 ```
 
@@ -274,7 +274,7 @@ echo "node_modules" >> .gitignore
 
 The following commands are now available for you to try.
 
-```bash
+```shell
 npx nx serve webapp
 npx nx build webapp
 npx nx test webapp
@@ -290,7 +290,7 @@ The `serve` command will automatically update when code changes, but needs to be
 
 Nx makes it very easy to create isolated collections of reusable code in libraries. Running this script will create a library named `ui-button`.
 
-```bash
+```shell
 nx generate lib ui-button
 ```
 
@@ -314,7 +314,7 @@ The `@acme/ui-button` path alias is defined in the root `tsconfig.base.json` fil
 
 Now serve the app again to see the result:
 
-```bash
+```shell
 nx serve webapp
 ```
 

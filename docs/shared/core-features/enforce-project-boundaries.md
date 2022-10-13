@@ -10,7 +10,7 @@ Nx provides an `enforce-module-boundaries` eslint rule that enforces the public 
 
 To set up the lint rule, install these dependencies:
 
-```bash
+```shell
 npm i @nrwl/eslint-plugin-nx @nrwl/devkit
 ```
 
@@ -142,7 +142,7 @@ Projects without any tags cannot depend on any other projects. If you add the fo
 
 If you try to violate the constraints, you will get an error when linting:
 
-```bash
+```shell
 A project tagged with "scope:admin" can only depend on projects
 tagged with "scoped:shared" or "scope:admin".
 ```

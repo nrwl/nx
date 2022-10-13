@@ -4,7 +4,7 @@ Nx scales your development by doing code change analysis to see what apps or lib
 
 **Commit all the changes in the repo**:
 
-```bash
+```shell
 git add .
 git commit -am 'init'
 git checkout -b testbranch
@@ -38,7 +38,7 @@ func main() {
 
 **Now revert those changes**
 
-```bash
+```shell
 git checkout .
 ```
 
@@ -46,7 +46,7 @@ git checkout .
 
 Update `packages/ascii/assets/cow.txt`:
 
-```bash
+```shell
  _____
 < Hi! >
  -----
@@ -65,7 +65,7 @@ Printing the affected projects can be handy, but usually you want to do somethin
 
 **Run `nx affected --target=build` to rebuild only the projects affected by the change.**
 
-```bash
+```shell
     ✔  nx run blog:build (1s)
     ✔  nx run cli:build (2s)
 
@@ -82,7 +82,7 @@ Note that Nx only built `blog` and `cli`. It didn't build `ascii` because there 
 
 You can run any target against the affected projects in the graph like this:
 
-```bash
+```shell
 nx affected --target=test
 ```
 

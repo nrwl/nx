@@ -12,13 +12,13 @@ To merge in another project, we'll essentially use the standard `git merge` comm
 
 To start we'll add a remote repository url for where the standalone app is located:
 
-```bash
+```shell
 git remote add my-standalone-app <repository url>
 ```
 
 Assuming that our main branch on this repo is called 'master', then we'll run
 
-```bash
+```shell
 git merge my-standalone-app/master --allow-unrelated-histories
 ```
 

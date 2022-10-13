@@ -13,11 +13,11 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 
 If the `@nrwl/cypress` package is not installed, install the version that matches your `nx` package version.
 
-```bash
+```shell
 yarn add --dev @nrwl/cypress
 ```
 
-```bash
+```shell
 npm install --save-dev @nrwl/cypress
 ```
 
@@ -25,7 +25,7 @@ npm install --save-dev @nrwl/cypress
 
 By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.
 
-```bash
+```shell
 nx g @nrwl/web:app frontend
 ```
 
@@ -33,13 +33,13 @@ nx g @nrwl/web:app frontend
 
 To generate an E2E project based on an existing project, run the following generator
 
-```bash
+```shell
 nx g @nrwl/cypress:cypress-project your-app-name-e2e --project=your-app-name
 ```
 
 Optionally, you can use the `--baseUrl` option if you don't want cypress plugin to serve `your-app-name`.
 
-```bash
+```shell
 nx g @nrwl/cypress:cypress-project your-app-name-e2e --baseUrl=http://localhost:4200
 ```
 
@@ -51,7 +51,7 @@ Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
 You can run your e2e test against a production build by using the `production` [configuration](https://nx.dev/recipe/use-executor-configurations#use-executor-configurations)
 
-```bash
+```shell
 nx e2e frontend-e2e --configuration=production
 ```
 
@@ -65,7 +65,7 @@ With, `nx e2e frontend-e2e --watch` Cypress will start in headed mode where you 
 Running Cypress with `--watch` is a great way to enhance dev workflow - you can build up test files with the application
 running and Cypress will re-run those tests as you enhance and add to the suite.
 
-```bash
+```shell
 nx e2e frontend-e2e --watch
 ```
 
@@ -73,7 +73,7 @@ nx e2e frontend-e2e --watch
 
 The `baseUrl` property provides you the ability to test an application hosted on a specific domain.
 
-```bash
+```shell
 nx e2e frontend-e2e --baseUrl=https://frontend.com
 ```
 
@@ -104,6 +104,6 @@ Optionally, you can pass environment variables via the commandline with the `--e
 When using the `--env` flag, this will not be merged with any values used in the `env` executor option.
 {% /callout %}
 
-```bash
+```shell
 nx e2e frontend-e2e --env.API_URL="https://api.my-nx-website.com" --env.API_KEY="abc-123"
 ```

@@ -56,7 +56,7 @@ Each project has the `test` and `build` targets defined. Tasks can be defined as
 
 To run the `test` target on the `header` project run this command:
 
-```bash
+```shell
 npx nx test header
 ```
 
@@ -64,7 +64,7 @@ npx nx test header
 
 To run the `build` target for all projects in the repo, run:
 
-```bash
+```shell
 npx nx run-many --target=build
 ```
 
@@ -87,7 +87,7 @@ the name of the target.
 
 You can also run a command for all the projects affected in your PR like this:
 
-```bash
+```shell
 npx nx affected --target=test
 ```
 

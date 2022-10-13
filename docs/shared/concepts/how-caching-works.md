@@ -105,7 +105,7 @@ results.
 Note, only the flags passed to the npm scripts itself affect results of the computation. For instance, the following
 commands are identical from the caching perspective.
 
-```bash
+```shell
 npx nx build remixapp
 npx nx run-many --target=build --projects=remixapp
 ```
@@ -116,13 +116,13 @@ If you build/test/lint… multiple projects, each individual build has its own h
 from
 cache or run. This means that from the caching point of view, the following command:
 
-```bash
+```shell
 npx nx run-many --target=build --projects=header,footer
 ```
 
 is identical to the following two commands:
 
-```bash
+```shell
 npx nx build header
 npx nx build footer
 ```
@@ -177,7 +177,7 @@ If neither is defined, Nx defaults to caching `dist` and `build` at the root of 
 Sometimes you want to skip the cache. If, for example, you are measuring the performance of a command, you can use
 the `--skip-nx-cache` flag to skip checking the computation cache.
 
-```bash
+```shell
 npx nx run build --skip-nx-cache
 npx nx run test --skip-nx-cache
 ```

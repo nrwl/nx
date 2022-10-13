@@ -17,11 +17,11 @@ You can easily and mostly **automatically migrate from an Angular CLI** project 
 
 Adding the Angular plugin to an existing Nx workspace can be done with the following:
 
-```bash
+```shell
 yarn add -D @nrwl/angular
 ```
 
-```bash
+```shell
 npm install -D @nrwl/angular
 ```
 
@@ -31,7 +31,7 @@ npm install -D @nrwl/angular
 
 It's straightforward to generate an Angular application:
 
-```bash
+```shell
 nx g @nrwl/angular:app appName
 ```
 
@@ -43,7 +43,7 @@ By default, the application will be generated with:
 
 We can then serve, build, test, lint, and run e2e tests on the application with the following commands:
 
-```bash
+```shell
 nx serve appName
 nx build appName
 nx test appName
@@ -55,7 +55,7 @@ nx e2e appName
 
 Generating an Angular library is very similar to generating an application:
 
-```bash
+```shell
 nx g @nrwl/angular:lib libName
 ```
 
@@ -66,7 +66,7 @@ By default, the library will be generated with:
 
 We can then test and lint the library with the following commands:
 
-```bash
+```shell
 nx test libName
 nx lint libName
 ```

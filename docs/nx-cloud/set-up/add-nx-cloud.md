@@ -4,7 +4,7 @@
 
 You can enable Nx Cloud when creating a new workspace with `npx create-nx-workspace`. Just reply with `Yes` to the prompt that asks about adding Nx Cloud to your workspace.
 
-```bash
+```shell
 ? Enable distributed caching to make your CI faster
   (Use arrow keys)
 ❯ Yes I want faster builds
@@ -18,7 +18,7 @@ This will connect your workspace to Nx Cloud, so you can start testing it out ri
 If you are on the latest version of Nx, you can **connect your existing Nx workspace** to Nx Cloud by
 running:
 
-```bash
+```shell
 npx nx connect-to-nx-cloud
 ```
 
@@ -29,7 +29,7 @@ package to your workspace and running `nx g @nrwl/nx-cloud:init`.
 
 After you have enabled Nx Cloud in your workspace, you will see the following:
 
-```bash
+```shell
 >  NX   NOTE  Nx Cloud has been enabled
 
   Your workspace is currently public. Anybody with code access

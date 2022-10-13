@@ -10,7 +10,7 @@ You first need to set up Storybook for your Nx workspace, if you haven't already
 
 You can generate Storybook configuration for an individual React project with this command:
 
-```bash
+```shell
 nx g @nrwl/react:storybook-configuration project-name
 ```
 
@@ -40,7 +40,7 @@ The `@nrwl/react:storybook-configuration` generator has the option to automatica
 
 You can re-run it at a later point using the following command:
 
-```bash
+```shell
 nx g @nrwl/react:stories <project-name>
 ```
 
@@ -50,7 +50,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 
 The command to generate stories for that library would be:
 
-```bash
+```shell
 nx g @nrwl/react:stories feature-ui
 ```
 
@@ -90,7 +90,7 @@ The `storybook-configuration` generator gives the option to set up an e2e Cypres
 
 To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
 
-```bash
+```shell
 nx run project-name-e2e:e2e
 ```
 

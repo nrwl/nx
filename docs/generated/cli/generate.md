@@ -9,11 +9,11 @@ Runs a generator that creates and/or modifies files based on a generator from a 
 
 ## Usage
 
-```bash
+```shell
 nx generate <collection:generator>
 ```
 
-```bash
+```shell
 nx g <generator>
 ```
 
@@ -23,43 +23,43 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Generate a new Angular application:
 
-```bash
+```shell
 nx generate @nrwl/angular:app myapp
 ```
 
 Generate a new React application:
 
-```bash
+```shell
 nx generate @nrwl/react:app myapp
 ```
 
 Generate a new web component application:
 
-```bash
+```shell
 nx generate @nrwl/web:app myapp
 ```
 
 Generate a new Node application:
 
-```bash
+```shell
 nx generate @nrwl/node:app myapp
 ```
 
 Generate a new Angular library application:
 
-```bash
+```shell
 nx generate @nrwl/angular:library mylibrary
 ```
 
 Generate a new React library application:
 
-```bash
+```shell
 nx generate @nrwl/react:library mylibrary
 ```
 
 Generate a new Node library application:
 
-```bash
+```shell
 nx generate @nrwl/node:library mylibrary
 ```
 

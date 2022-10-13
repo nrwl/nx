@@ -15,7 +15,7 @@ With Nx, you have the ability to scaffold out new code for your application. Cre
 
 **Run `nx generate @nrwl/nest:service todo --project todos --directory app` to generate our new service**
 
-```bash
+```shell
 $ nx generate @nrwl/nest:service todos --project todos --directory app
 CREATE apps/todos/src/app/todos/todos.service.spec.ts (453 bytes)
 CREATE apps/todos/src/app/todos/todos.service.ts (89 bytes)
@@ -62,14 +62,14 @@ In order to render some views, you need to install a template engine:
 {% tabs %}
 {% tab label="yarn" %}
 
-```bash
+```shell
 yarn add hbs
 ```
 
 {% /tab %}
 {% tab label="npm" %}
 
-```bash
+```shell
 npm install --save hbs
 ```
 

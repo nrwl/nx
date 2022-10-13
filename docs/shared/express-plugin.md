@@ -16,14 +16,14 @@ Install the express plugin
 {% tabs %}
 {%tab label="npm"%}
 
-```bash
+```shell
 npm i --save-dev @nrwl/express
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
-```bash
+```shell
 yarn add --dev @nrwl/express
 ```
 

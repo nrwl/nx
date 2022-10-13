@@ -8,11 +8,11 @@ Nx supports running commands across multiple machines. You can either set it up 
 
 To distribute your task execution, you need to (1) connect to Nx Cloud and (2) enable DTE in your CI workflow. Each of these steps can be enabled with a single command:
 
-```bash title="1. Connect to Nx Cloud"
+```shell title="1. Connect to Nx Cloud"
 nx connect-to-nx-cloud
 ```
 
-```bash title="2. Enable DTE in CI"
+```shell title="2. Enable DTE in CI"
 nx generate @nrwl/workspace:ci-workflow --ci=github
 ```
 

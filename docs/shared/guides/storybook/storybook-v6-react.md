@@ -40,7 +40,7 @@ The `@nrwl/react:storybook-migrate-defaults-5-to-6` generator will not exactly d
 
 That way, you can have working Storybook instances for all your projects just by running
 
-```bash
+```shell
 nx g @nrwl/react:storybook-migrate-defaults-5-to-6
 ```
 
@@ -94,7 +94,7 @@ Check your `package.json` file for all `@storybook` packages. Install the latest
 
 For example:
 
-```bash
+```shell
 yarn add --dev @storybook/react@latest
 ```
 

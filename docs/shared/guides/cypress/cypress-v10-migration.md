@@ -6,7 +6,7 @@ Before continuing, make sure you have all your changes committed and have a clea
 
 You can migrate an E2E project to v10 by running the following command:
 
-```bash
+```shell
 nx g @nrwl/cypress:migrate-to-cypress-10
 ```
 

@@ -67,7 +67,7 @@ Next, run the generator:
 Use the `-d` or `--dry-run` flag to see your changes without applying them. This will let you see what the command will do to your workspace.
 {% /callout %}
 
-```bash
+```shell
 nx generate my-generator mylib
 ```
 

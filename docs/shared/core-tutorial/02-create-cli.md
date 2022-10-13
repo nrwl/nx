@@ -10,7 +10,7 @@ Make sure you have Go installed locally by following [these instructions](https:
 
 You can verify that Go is installed correctly by running:
 
-```bash
+```shell
 go version
 ```
 
@@ -101,7 +101,7 @@ func main() {
 
 `packages/cli/src/cow.txt`:
 
-```bash
+```shell
  _____
 < moo >
  -----
@@ -116,7 +116,7 @@ func main() {
 
 Now if you run `nx serve cli`, you'll see a friendly message:
 
-```bash
+```shell
 ❯ nx serve cli
 
 > nx run cli:serve

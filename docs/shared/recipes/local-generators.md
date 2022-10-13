@@ -8,7 +8,7 @@ Nx provides tooling around creating, and running custom generators from within y
 
 If you don't already have a local plugin, use Nx to generate one:
 
-```bash
+```shell
 # replace `latest` with the version that matches your Nx version
 npm install @nrwl/nx-plugin@latest
 nx g @nrwl/nx-plugin:plugin my-plugin
@@ -16,7 +16,7 @@ nx g @nrwl/nx-plugin:plugin my-plugin
 
 Use the Nx CLI to generate the initial files needed for your generator.
 
-```bash
+```shell
 nx generate @nrwl/nx-plugin:generator my-generator --project=my-plugin
 ```
 
@@ -86,7 +86,7 @@ The `$default` object is used to read arguments from the command-line that are p
 
 To run a generator, invoke the `nx generate` command with the name of the generator.
 
-```bash
+```shell
 nx generate @myorg/my-plugin:my-generator mylib
 ```
 

@@ -8,7 +8,7 @@ For more in-depth look on this topic, be sure to check out our blog post on [Set
 
 The easiest way to set up Tailwind is using the `@nrwl/react:setup-tailwind` generator.
 
-```bash
+```shell
 nx g @nrwl/react:setup-tailwind --project=<your app here>
 ```
 
@@ -30,7 +30,7 @@ These manual steps are not required if you use the generator from the previous s
 
 ### Step 1: Install Tailwind Dependencies
 
-```bash
+```shell
 npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
 
 # or with yarn
@@ -43,7 +43,7 @@ This installs the requisite tailwind dependencies.
 
 The simplest way to initialize Tailwind is to use their CLI.
 
-```bash
+```shell
 cd apps/{your app here}
 npx tailwindcss init -p
 ```

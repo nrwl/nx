@@ -15,7 +15,7 @@ width="100%" /%}
 
 To get started with building a Nx Plugin, run the following command:
 
-```bash
+```shell
 npx create-nx-plugin my-org --pluginName my-plugin
 ```
 
@@ -196,13 +196,13 @@ width="100%" /%}
 At its core a preset is a generator, which we can create inside of a plugin.
 If you **don't** have an existing plugin you can create one by running
 
-```bash
+```shell
   npx create-nx-plugin my-org --pluginName my-plugin
 ```
 
 To create our preset inside of our plugin we can run
 
-```bash
+```shell
   nx generate @nrwl/nx-plugin:generator --name=preset --project=happynrwl
 ```
 
@@ -267,6 +267,6 @@ Before you are able to use your newly created preset you must package and publis
 
 After you have published your plugin to a registry you can now use your preset when creating a new workspace
 
-```bash
+```shell
 npx create-nx-workspace my-workspace --preset=my-plugin-name
 ```

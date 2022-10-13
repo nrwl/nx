@@ -17,7 +17,7 @@ To illustrate how useful libraries can be, create a library of React components.
 
 Run
 
-```bash
+```shell
 npx nx g @nrwl/react:lib ui
 ```
 
@@ -74,7 +74,7 @@ Here, you can either change the UI component or generate a new one.
 
 **Add a component to the newly created ui library by running:**
 
-```bash
+```shell
 npx nx g @nrwl/react:component todos --project=ui --export
 ```
 

@@ -51,13 +51,13 @@ In order to get get it working for you, you need to two two things:
 
 1. Make sure your "composed" Storybook instances are running. For that you can do:
 
-```bash
+```shell
 nx run-many --target=storybook --projects=one-composed,two-composed,three-composed --parallel=3
 ```
 
 2. Start your host Storybook in another tab of your terminal:
 
-```bash
+```shell
 nx storybook main-host
 ```
 
@@ -143,7 +143,7 @@ The objective is to end up with a new target in your `main-host`'s `project.json
 
 which you can then invoke like this:
 
-```bash
+```shell
 nx run main-host:storybook-composition
 ```
 
@@ -155,7 +155,7 @@ Let's first generate a new `target` called `storybook-composition` for our `main
 
 Run the following command:
 
-```bash
+```shell
 nx generate nx:run-commands storybook-composition --command='nx storybook one-composed' --project=main-host
 ```
 
@@ -189,13 +189,13 @@ Now, change the `command` option to be `commands`, add the `"parallel": true` op
 
 Now, you can start all your "composed" Storybook instances by running:
 
-```bash
+```shell
 nx run main-host:storybook-composition
 ```
 
 **After** all of your "composed" Storybook instances have started, you can run in a new terminal:
 
-```bash
+```shell
 nx storybook main-host
 ```
 

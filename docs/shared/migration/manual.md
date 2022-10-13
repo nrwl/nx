@@ -12,7 +12,7 @@ To get started, you’ll need an Nx workspace. While Nx offers several preset co
 
 To create an empty workspace:
 
-```bash
+```shell
 npx create-nx-workspace@latest
 ```
 
@@ -34,7 +34,7 @@ The `apps` directory is the place where your top-level applications will be stor
 {% tabs %}
 {% tab label="Angular" %}
 
-```bash
+```shell
 npm install --save-dev @nrwl/angular
 # then
 nx generate @nrwl/angular:application my-application
@@ -43,7 +43,7 @@ nx generate @nrwl/angular:application my-application
 {% /tab %}
 {% tab label="React" %}
 
-```bash
+```shell
 npm install --save-dev @nrwl/react
 # then
 nx generate @nrwl/react:application my-application
@@ -97,7 +97,7 @@ Now that your code is present, it’s time to tackle building and testing it.
 
 Each generated application has a build process defined by Nx. This uses the Angular CLI for Angular, and webpack is used for all other projects. See if this build process works out of the box for you by running
 
-```bash
+```shell
 nx serve my-application
 ```
 
@@ -107,7 +107,7 @@ If this doesn’t work for you, you may need to add or modify some configuration
 
 Each application will have a unit test process defined by your choices (Jest or Karma) during the creation of the application. To run tests for your application:
 
-```bash
+```shell
 nx test my-application
 ```
 
@@ -119,7 +119,7 @@ Testing configuration files can be found in the root of your application as well
 
 Each application will have an e2e configuration created as a separate application, appended with `-e2e`. In our example, you’ll see `my-application-e2e`. This `e2e` task uses the test runner you chose during generation, Protractor or Cypress. Your application’s e2e tests should be migrated to this directory. There will be an e2e test scaffolded for you to make sure everything works before you start adding your own. To run the e2e tests:
 
-```bash
+```shell
 nx e2e my-application-e2e
 ```
 
@@ -131,13 +131,13 @@ Nx uses ESLint for linting. Nx also has its own lint process to make sure your N
 
 To run the `lint` task for your workspace
 
-```bash
+```shell
 nx lint
 ```
 
 To run the `lint` task for a particular application:
 
-```bash
+```shell
 nx lint my-application
 ```
 
@@ -147,7 +147,7 @@ Global configuration files for linting will be at the root of your workspace. Ea
 
 Nx uses Prettier to ensure standard formatting across your codebase. Prettier configuration files are located in the root of the workspace. To format your workspace run:
 
-```bash
+```shell
 nx format:write
 ```
 
@@ -174,14 +174,14 @@ If your code is divided into libraries, you should also generate libraries for y
 {% tabs %}
 {% tab label="Angular" %}
 
-```bash
+```shell
 nx generate @nrwl/angular:library
 ```
 
 {% /tab %}
 {% tab label="React" %}
 
-```bash
+```shell
 nx generate @nrwl/react:library
 ```
 
