@@ -5,7 +5,6 @@ import { workspaceGenerator } from './workspace';
 import { createTree } from '@nrwl/devkit/testing';
 import { Preset } from '../utils/presets';
 import * as nxSchema from '../../../../nx/schemas/nx-schema.json';
-import * as workspaceSchema from '../../../../nx/schemas/workspace-schema.json';
 
 describe('@nrwl/workspace:workspace', () => {
   let tree: Tree;
@@ -39,26 +38,32 @@ describe('@nrwl/workspace:workspace', () => {
       defaultBase: 'main',
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
-    expect(nxJson).toEqual({
-      $schema: './node_modules/nx/schemas/nx-schema.json',
-      npmScope: 'proj',
-      affected: {
-        defaultBase: 'main',
-      },
-      tasksRunnerOptions: {
-        default: {
-          runner: 'nx/tasks-runners/default',
-          options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+    expect(nxJson).toMatchInlineSnapshot(`
+      Object {
+        "$schema": "./node_modules/nx/schemas/nx-schema.json",
+        "npmScope": "proj",
+        "targetDefaults": Object {
+          "build": Object {
+            "dependsOn": Array [
+              "^build",
+            ],
           },
         },
-      },
-      targetDefaults: {
-        build: {
-          dependsOn: ['^build'],
+        "tasksRunnerOptions": Object {
+          "default": Object {
+            "options": Object {
+              "cacheableOperations": Array [
+                "build",
+                "lint",
+                "test",
+                "e2e",
+              ],
+            },
+            "runner": "nx/tasks-runners/default",
+          },
         },
-      },
-    });
+      }
+    `);
     const validateNxJson = ajv.compile(nxSchema);
     expect(validateNxJson(nxJson)).toEqual(true);
   });
@@ -72,32 +77,46 @@ describe('@nrwl/workspace:workspace', () => {
       defaultBase: 'main',
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
-    expect(nxJson).toEqual({
-      $schema: './node_modules/nx/schemas/nx-schema.json',
-      npmScope: 'proj',
-      affected: {
-        defaultBase: 'main',
-      },
-      tasksRunnerOptions: {
-        default: {
-          runner: 'nx/tasks-runners/default',
-          options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+    expect(nxJson).toMatchInlineSnapshot(`
+      Object {
+        "$schema": "./node_modules/nx/schemas/nx-schema.json",
+        "namedInputs": Object {
+          "default": Array [
+            "{projectRoot}/**/*",
+            "sharedGlobals",
+          ],
+          "production": Array [
+            "default",
+          ],
+          "sharedGlobals": Array [],
+        },
+        "npmScope": "proj",
+        "targetDefaults": Object {
+          "build": Object {
+            "dependsOn": Array [
+              "^build",
+            ],
+            "inputs": Array [
+              "production",
+              "^production",
+            ],
           },
         },
-      },
-      namedInputs: {
-        default: ['{projectRoot}/**/*', 'sharedGlobals'],
-        production: ['default'],
-        sharedGlobals: [],
-      },
-      targetDefaults: {
-        build: {
-          dependsOn: ['^build'],
-          inputs: ['production', '^production'],
+        "tasksRunnerOptions": Object {
+          "default": Object {
+            "options": Object {
+              "cacheableOperations": Array [
+                "build",
+                "lint",
+                "test",
+                "e2e",
+              ],
+            },
+            "runner": "nx/tasks-runners/default",
+          },
         },
-      },
-    });
+      }
+    `);
   });
 
   it('should create a prettierrc file', async () => {
@@ -155,14 +174,14 @@ describe('@nrwl/workspace:workspace', () => {
 
     const { scripts } = readJson(tree, '/proj/package.json');
     expect(scripts).toMatchInlineSnapshot(`
-Object {
-  "build": "nx build",
-  "ng": "nx",
-  "postinstall": "node ./decorate-angular-cli.js",
-  "start": "nx serve",
-  "test": "nx test",
-}
-`);
+      Object {
+        "build": "nx build",
+        "ng": "nx",
+        "postinstall": "node ./decorate-angular-cli.js",
+        "start": "nx serve",
+        "test": "nx test",
+      }
+    `);
   });
 
   it('should not add decorate-angular-cli when used with nx cli', async () => {
@@ -177,29 +196,94 @@ Object {
 
     const { scripts } = readJson(tree, '/proj/package.json');
     expect(scripts).toMatchInlineSnapshot(`
-Object {
-  "build": "nx build",
-  "start": "nx serve",
-  "test": "nx test",
-}
-`);
+      Object {
+        "build": "nx build",
+        "start": "nx serve",
+        "test": "nx test",
+      }
+    `);
   });
 
-  it('should create a workspace using package layout', async () => {
+  it('should create a workspace using NPM preset (npm package manager)', async () => {
+    tree.write('/proj/package.json', JSON.stringify({}));
     await workspaceGenerator(tree, {
       name: 'proj',
       directory: 'proj',
       cli: 'nx',
       preset: Preset.NPM,
       defaultBase: 'main',
+      packageManager: 'npm',
     });
     expect(tree.exists('/proj/packages/.gitkeep')).toBe(true);
     expect(tree.exists('/proj/apps/.gitkeep')).toBe(false);
     expect(tree.exists('/proj/libs/.gitkeep')).toBe(false);
     const nx = readJson(tree, '/proj/nx.json');
-    expect(nx.extends).toEqual('nx/presets/npm.json');
+    expect(nx).toMatchInlineSnapshot(`
+      Object {
+        "$schema": "./node_modules/nx/schemas/nx-schema.json",
+        "extends": "nx/presets/npm.json",
+        "tasksRunnerOptions": Object {
+          "default": Object {
+            "options": Object {
+              "cacheableOperations": Array [
+                "build",
+                "lint",
+                "test",
+                "e2e",
+              ],
+            },
+            "runner": "nx/tasks-runners/default",
+          },
+        },
+      }
+    `);
 
-    const { scripts } = readJson(tree, '/proj/package.json');
-    expect(scripts).toMatchInlineSnapshot(`Object {}`);
+    const packageJson = readJson(tree, '/proj/package.json');
+    expect(packageJson).toMatchInlineSnapshot(`
+      Object {
+        "dependencies": Object {},
+        "devDependencies": Object {
+          "nx": "0.0.1",
+          "prettier": "^2.6.2",
+        },
+        "license": "MIT",
+        "name": "proj",
+        "private": true,
+        "scripts": Object {},
+        "version": "0.0.0",
+        "workspaces": Array [
+          "packages/*",
+        ],
+      }
+    `);
+  });
+
+  it('should create a workspace using NPM preset (pnpm package manager)', async () => {
+    tree.write('/proj/package.json', JSON.stringify({}));
+    await workspaceGenerator(tree, {
+      name: 'proj',
+      directory: 'proj',
+      cli: 'nx',
+      preset: Preset.NPM,
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+    });
+    const packageJson = readJson(tree, '/proj/package.json');
+    expect(packageJson).toMatchInlineSnapshot(`
+      Object {
+        "dependencies": Object {},
+        "devDependencies": Object {
+          "nx": "0.0.1",
+          "prettier": "^2.6.2",
+        },
+        "license": "MIT",
+        "name": "proj",
+        "private": true,
+        "scripts": Object {},
+        "version": "0.0.0",
+      }
+    `);
+    const pnpm = tree.read('/proj/pnpm-workspace.yaml').toString();
+    expect(pnpm).toContain('packages/*');
   });
 });
