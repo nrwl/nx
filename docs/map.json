@@ -90,8 +90,8 @@
           },
           {
             "name": "2 - Project Graph",
-            "id": "2-nx-graph",
-            "file": "shared/react-tutorial/2-nx-graph"
+            "id": "2-project-graph",
+            "file": "shared/react-tutorial/2-project-graph"
           },
           {
             "name": "3 - Task Running",
@@ -188,9 +188,9 @@
             "file": "shared/node-tutorial/1-code-generation"
           },
           {
-            "name": "2 - Nx Graph",
-            "id": "2-nx-graph",
-            "file": "shared/node-tutorial/2-nx-graph"
+            "name": "2 - Project Graph",
+            "id": "2-project-graph",
+            "file": "shared/node-tutorial/2-project-graph"
           },
           {
             "name": "3 - Task Running",

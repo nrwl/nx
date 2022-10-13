@@ -1,8 +1,8 @@
-# Node Nx Tutorial - Part 2: Nx Graph
+# Node Nx Tutorial - Part 2: Project Graph
 
 Run the command: `npx nx graph`. A browser should open up with the following contents:
 
-![Initial Nx Graph](/shared/node-tutorial/initial-project-graph.png)
+![Initial Project Graph](/shared/node-tutorial/initial-project-graph.png)
 
 Notice how this is still different from the architectural design requirements given in Part 1:
 
@@ -118,7 +118,7 @@ Now run `npx nx graph` again:
 
 You can confirm that your graph now matches your required structure.
 
-The Nx Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/node-tutorial/4-workspace-optimization).
+The Project Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/node-tutorial/4-workspace-optimization).
 
 ## What's Next
 

@@ -14,7 +14,7 @@ In this tutorial you'll create a backend-focused workspace with Nx.
 ## Contents
 
 - [1 - Code Generation](/node-tutorial/1-code-generation)
-- [2 - Nx Graph](/node-tutorial/2-nx-graph)
+- [2 - Project Graph](/node-tutorial/2-project-graph)
 - [3 - Task Running](/node-tutorial/3-task-running)
 - [4 - Workspace Optimization](/node-tutorial/4-workspace-optimization)
 - [5 - Summary](/node-tutorial/5-summary)
@@ -133,4 +133,4 @@ You have now created all three required projects:
 
 ## What's Next
 
-- Continue to [2: Nx Graph](/node-tutorial/2-nx-graph)
+- Continue to [2: Project Graph](/node-tutorial/2-project-graph)

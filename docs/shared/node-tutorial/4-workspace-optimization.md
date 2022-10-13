@@ -27,7 +27,7 @@ Run the following command to visualize how our workspace is affected by this cha
 npx nx affected:graph
 ```
 
-![Nx Graph with All Affected](/shared/node-tutorial/nx-graph-with-all-affected.png)
+![Project Graph with All Affected](/shared/node-tutorial/project-graph-with-all-affected.png)
 
 The change made to the `products-data-client` project is also affecting the `products-api` and `products-cli` projects, since both of those projects import from the `products-data-client` project.
 
@@ -70,7 +70,7 @@ Now run the command to visualize the affected graph again:
 npx nx affected:graph
 ```
 
-![Nx Graph with One Affected](/shared/node-tutorial/nx-graph-with-one-affected.png)
+![Project Graph with One Affected](/shared/node-tutorial/project-graph-with-one-affected.png)
 
 This can be leveraged to run tasks only on the projects that were affected by this commit. For example, to run the `test` targets only for affected projects, run the command:
 

@@ -14,7 +14,7 @@ In this tutorial you'll create a frontend-focused workspace with Nx.
 ## Contents
 
 - [1 - Code Generation](/react-tutorial/1-code-generation)
-- [2 - Nx Graph](/react-tutorial/2-nx-graph)
+- [2 - Project Graph](/react-tutorial/2-project-graph)
 - [3 - Task Running](/react-tutorial/3-task-running)
 - [4 - Workspace Optimization](/react-tutorial/4-workspace-optimization)
 - [5 - Summary](/react-tutorial/5-summary)
@@ -186,4 +186,4 @@ We should now be able to see all four required projects:
 
 ## What's Next
 
-- Continue to [2: Nx Graph](/react-tutorial/2-nx-graph)
+- Continue to [2: Project Graph](/react-tutorial/2-project-graph)

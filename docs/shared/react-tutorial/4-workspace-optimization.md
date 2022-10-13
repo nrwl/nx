@@ -26,7 +26,7 @@ We can visualize how our workspace is affected by this change using the command:
 npx nx affected:graph
 ```
 
-![Nx Graph with Affected](/shared/react-tutorial/nx-graph-with-affected.png)
+![Project Graph with Affected](/shared/react-tutorial/project-graph-with-affected.png)
 
 The change made to the `common-ui` project is also affecting the `admin` and `store` projects. This can be leveraged run tasks only on the projects that were affected by this commit.
 
