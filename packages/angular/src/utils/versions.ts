@@ -9,6 +9,8 @@ export const zoneJsVersion = '~0.11.4';
 export const angularJsVersion = '1.7.9';
 export const tsLibVersion = '^2.3.0';
 
+export const ngUniversalVersion = '~14.2.0';
+
 export const angularEslintVersion = '~14.0.4';
 export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';

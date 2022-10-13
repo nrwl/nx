@@ -46,6 +46,7 @@
         "scam-directive",
         "scam-pipe",
         "setup-mf",
+        "setup-ssr",
         "setup-tailwind",
         "stories",
         "storybook-configuration",

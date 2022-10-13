@@ -20,6 +20,7 @@ export * from './src/generators/scam-pipe/scam-pipe';
 export * from './src/generators/scam-to-standalone/scam-to-standalone';
 export * from './src/generators/scam/scam';
 export * from './src/generators/setup-mf/setup-mf';
+export * from './src/generators/setup-ssr/setup-ssr';
 export * from './src/generators/setup-tailwind/setup-tailwind';
 export * from './src/generators/stories/stories';
 export * from './src/generators/storybook-configuration/storybook-configuration';
