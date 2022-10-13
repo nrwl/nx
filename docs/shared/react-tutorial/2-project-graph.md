@@ -4,19 +4,19 @@ Run the command: `npx nx graph`. A browser should open up with the following con
 
 ![Initial Project Graph](/shared/react-tutorial/initial-project-graph.png)
 
-Notice how this is still different from the architectural design that we laid out at the start of Part 1:
+This is still different than the design from the start of Part 1:
 
 ![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
 
-In Nx, your graph is primarily descriptive in nature, rather than prescriptive. Edges connecting nodes are created based on your projects' source code.
+The Project Graph is primarily descriptive in nature, rather than prescriptive. Edges connecting nodes are created based on your projects' source code.
 
-To reflect the intended architecture, make the following adjustments to your existing projects:
+Make the following adjustments to your existing projects, so that our Project Graph will match the design:
 
 ### `common-ui`
 
-Run the `@nrwl/react:component` generator to create a `banner` component using the command: `npx nx g @nrwl/react:component banner --project=common-ui --export`
+Run the `@nrwl/react:component` generator with the command:
 
-```bash
+```console
 % npx nx g @nrwl/react:component banner --project=common-ui --export
 
 >  NX  Generating @nrwl/react:component
@@ -27,7 +27,7 @@ CREATE libs/common-ui/src/lib/banner/banner.tsx
 UPDATE libs/common-ui/src/index.ts
 ```
 
-Next create a simple banner component in your generated file:
+Then create a simple `Banner` component in the generated file:
 
 ```javascript {% fileName="libs/common-ui/src/lib/banner/banner.tsx" %}
 export interface BannerProps {
@@ -43,7 +43,7 @@ export default Banner;
 
 ### `admin`
 
-Add the banner component to the admin app:
+Add the `Banner` component to the admin app:
 
 ```javascript {% fileName="apps/admin/src/app/app.tsx" %}
 import { Banner } from '@myorg/common-ui';
@@ -62,7 +62,7 @@ export default App;
 
 ### `products`
 
-Export a `Product` TS interface and some example products from this lib by making the following change:
+Export a `Product` TS interface and some example products:
 
 ```javascript {% fileName="libs/products/src/lib/products.ts" %}
 export interface Product {
@@ -87,7 +87,7 @@ export const exampleProducts: Product[] = [
 
 ### `store`
 
-Import and use both the `Banner` component from your `common-ui` lib, and the `exampleProducts` from your `products` lib:
+Use both the `Banner` component from your `common-ui` lib, and the `exampleProducts` from your `products` lib:
 
 ```javascript {% fileName="apps/store/src/app/app.tsx" %}
 import { Banner } from '@myorg/common-ui';
@@ -120,7 +120,7 @@ Now run `npx nx graph` again:
 ![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
 {% /side-by-side %}
 
-You can confirm that your graph now matches your required structure.
+Your graph now matches the original design.
 
 The Project Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/react-tutorial/4-workspace-optimization).
 

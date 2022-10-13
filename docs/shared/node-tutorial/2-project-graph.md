@@ -4,17 +4,17 @@ Run the command: `npx nx graph`. A browser should open up with the following con
 
 ![Initial Project Graph](/shared/node-tutorial/initial-project-graph.png)
 
-Notice how this is still different from the architectural design requirements given in Part 1:
+This is still different from the design from the start of Part 1:
 
 ![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
 
-In Nx, your graph is primarily descriptive in nature, rather than prescriptive. Edges connecting nodes are created based on your projects' source code.
+The Project Graph is primarily descriptive in nature, rather than prescriptive. Edges connecting nodes are created based on your projects' source code.
 
-To reflect the intended architecture, make the following adjustments to your existing projects:
+Make the following adjustments to your existing projects, so that our Project Graph will match the design:
 
 ### `products-data-client`
 
-Update the contents of the generated `products-data-client.ts` file to export a `Product` interface and a way to create a `ProductsDataClient` object:
+Update the contents of the generated `products-data-client.ts` file:
 
 ```typescript {% fileName="libs/products-data-client/src/lib/products-data-client.ts" %}
 export interface Product {
@@ -47,7 +47,9 @@ export function createProductsDataClient(): ProductsDataClient {
 
 ### `products-cli`
 
-Update the generated `main.ts` file of this project to import the `createProductsDataClient()` function. Then use the data client to print the product matching the id provided at the command-line. If no id was provided, print all products as an array.
+Update the generated `main.ts` file of this project to import the `createProductsDataClient()` function.
+
+Use the data client to print the product matching the id provided at the command-line. If no id was provided, print all products as an array:
 
 ```typescript {% fileName="apps/products-cli/src/main.ts" %}
 import { createProductsDataClient } from '@my-products/products-data-client';
@@ -73,7 +75,9 @@ function getProvidedId() {
 
 ### `products-api`
 
-Update the generated `main.ts` file of this project to also import the `createProductsDataClient()` function. Then use the data client and the express api to create an express app with 2 GET request handlers:
+Update the generated `main.ts` file of this project to also import the `createProductsDataClient()` function.
+
+Use the data client and Express to create an Express app with 2 GET request handlers:
 
 ```javascript {% fileName="apps/products-api/src/main.ts" %}
 /**
@@ -116,7 +120,7 @@ Now run `npx nx graph` again:
 ![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
 {% /side-by-side %}
 
-You can confirm that your graph now matches your required structure.
+Your graph now matches the original design.
 
 The Project Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/node-tutorial/4-workspace-optimization).
 

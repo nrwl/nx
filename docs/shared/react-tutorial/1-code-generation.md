@@ -3,13 +3,13 @@ title: 'React Tutorial - Part 1: Code Generation'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 ---
 
-{% callout type="check" title="Integrated Repo" %}
-This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) repo. If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Core Tutorial](/getting-started/core-tutorial).
+{% callout type="check" title="Two Styles of Repo" %}
+There are two styles of repos: integrated and package-based. This tutorial used the integrated style.
+
+You can find more information on the difference between the two in [our introduction](/getting-started/intro).
 {% /callout %}
 
 # React Tutorial - Part 1: Code Generation
-
-In this tutorial you'll create a frontend-focused workspace with Nx.
 
 ## Contents
 
@@ -21,27 +21,21 @@ In this tutorial you'll create a frontend-focused workspace with Nx.
 
 ## Your Objective
 
-For this tutorial, your objective is to create the initial architecture for a workspace with the following requirements:
-
-- it should contain two React applications: `store` and `admin`.
-- it should have a collection of common React components in a project called: `common-ui`
-- it should have a "not-React" library for business logic called: `products`
-- your `store` app should depend on `common-ui` and `products`
-- your `admin` app should only depend on `common-ui`
+For this tutorial, you'll create two React applications, a React lib for your common components, and a library for your business logic as follows:
 
 ![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
 
 ## Creating an Nx Workspace
 
-To generate your Nx Workspace, use the [`create-nx-workspace` script from npm](https://www.npmjs.com/package/create-nx-workspace):
+Run the command:
 
-```bash
-npx create-nx-workspace@latest
+```console
+$ npx create-nx-workspace@latest
 ```
 
 When prompted, provide the following responses:
 
-```bash
+```console
 Workspace name (e.g., org name)     myorg
 What to create in the new workspace react
 Application name                    store
@@ -50,7 +44,7 @@ Default stylesheet format           CSS
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}
 
-We can see that two projects were added to the workspace:
+Once the command completes, notice two projects were added to the workspace:
 
 - A React application located in `apps/store`.
 - A Project for Cypress e2e tests for our `store` application in `apps/store-e2e`.
@@ -59,16 +53,10 @@ We can see that two projects were added to the workspace:
 
 ## Adding Another Application to Your Workspace
 
-Initializing your workspace created your `store` application. Next you'll use [Nx generators](/plugin-features/use-code-generators) to generate the required `admin` application.
+Run this command to create your `admin` app:
 
-The following syntax is used to run generators:
-
-![Nx Generator Syntax](/shared/react-tutorial/generator-syntax.png)
-
-You should use the `application` generator found in the `@nrwl/react` plugin. To run the generator and create the `admin` application, run the command `npx nx g @nrwl/react:app admin`:
-
-```bash
-% npx nx g @nrwl/react:app admin
+```console
+$ npx nx g @nrwl/react:app admin
 
 >  NX  Generating @nrwl/react:application
 
@@ -103,31 +91,7 @@ CREATE apps/admin/jest.config.ts
 CREATE apps/admin/tsconfig.spec.json
 ```
 
-To see all options for the `application` generator, you can run the command `npx nx generate @nrwl/react:application --help`:
-
-```bash
-% npx nx generate @nrwl/react:application --help
-
->  NX   generate @nrwl/react:application [name] [options,...]
-
-From: @nrwl/react (v14.8.3)
-Name: application (aliases: app)
-
-Create a React application for Nx.
-
-Options:
---name The name of the application. [string]
---directory, -dir The directory of the new application. [string]
-.....
-
-Examples:
-nx g app myapp --directory=myorg Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`
-nx g app myapp --classComponent Use class components instead of functional components
-nx g app myapp --routing Set up React Router
-
-Find more information and examples at: https://nx.dev/packages/react/generators/application
-
-```
+![Nx Generator Syntax](/shared/react-tutorial/generator-syntax.png)
 
 ## Generating Libraries
 
@@ -135,7 +99,7 @@ To create the `common-ui` and `products` libraries, use the `@nrwl/react:lib` an
 
 {% side-by-side %}
 
-```bash
+```console
 % npx nx g @nrwl/react:lib common-ui
 
 > NX Generating @nrwl/react:library
@@ -155,7 +119,7 @@ CREATE libs/common-ui/src/lib/common-ui.spec.tsx
 CREATE libs/common-ui/src/lib/common-ui.tsx
 ```
 
-```bash
+```console
 % npx nx g @nrwl/js:lib products
 
 >  NX  Generating @nrwl/js:library
@@ -177,7 +141,7 @@ CREATE libs/products/tsconfig.spec.json
 
 {% /side-by-side %}
 
-We should now be able to see all four required projects:
+You should now be able to see all four projects of our design:
 
 - `store` in `apps/store`
 - `admin` in `apps/admin`

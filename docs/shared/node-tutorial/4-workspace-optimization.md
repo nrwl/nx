@@ -1,14 +1,12 @@
 # Node Tutorial - Part 4: Workspace Optimization
 
-In this step of the tutorial, you will learn about the tools available to optimize your Nx Workspace.
-
 ## The Affected Command
 
-`affected` is an Nx mechanism that relies on your git metadata to determine the projects in your Nx workspace that were affected by a given commit.
+`affected` is a mechanism that relies on your git metadata to determine the projects in your workspace that were affected by a given commit.
 
-To see this in action, run the command:
+Run the command:
 
-```bash
+```console
 git add . && git commit -m "commiting to test affected"
 ```
 
@@ -23,7 +21,7 @@ export const exampleProducts: Record<string, Product> = {
 
 Run the following command to visualize how our workspace is affected by this change:
 
-```bash
+```console
 npx nx affected:graph
 ```
 
@@ -33,7 +31,7 @@ The change made to the `products-data-client` project is also affecting the `pro
 
 Next, stash your changes since the commit:
 
-```bash
+```console
 git stash
 ```
 
@@ -66,22 +64,19 @@ function getProvidedId() {
 
 Now run the command to visualize the affected graph again:
 
-```bash
+```console
 npx nx affected:graph
 ```
 
 ![Project Graph with One Affected](/shared/node-tutorial/project-graph-with-one-affected.png)
 
-This can be leveraged to run tasks only on the projects that were affected by this commit. For example, to run the `test` targets only for affected projects, run the command:
+This can be leveraged to run tasks only on the projects that were affected by this commit.
 
-```bash
+To run the `test` targets only for affected projects, run the command:
+
+```console
 npx nx affected --target=test
 ```
-
-This will run the `test` target for all projects that:
-
-1. are affected by our change, and
-2. have a `test` target in their `project.json` file.
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
 
@@ -89,11 +84,9 @@ This can be particularly helpful in CI pipelines for larger repos, where most co
 
 ## Task Caching
 
-Task Caching is another mechanism to optimize your workspace.
-
 `affected` allows you to "skip" tasks that couldn't possibly be affected by your changes. Task Caching allows you to "replay" tasks that have already been run.
 
-Also, while `affected` is informed by your git metadata, Task Caching is informed by "inputs" and "outputs":
+Task Caching is informed by "inputs" and "outputs":
 
 ### Inputs
 
@@ -107,7 +100,7 @@ If this index does not exist, Nx will run the command and if the command succeed
 
 Outputs of the cache include the terminal output created by the task, as well as any files created by the task - for example: the artifact created by running a `build` task.
 
-Outputs are defined for every target in your workspace (this was also mentioned in [3 - Task Running](/node-tutorial/3-task-running)):
+Outputs are defined for every target in your workspace:
 
 ```json {% fileName="libs/products-data-client/project.json" %}
 {
@@ -152,13 +145,13 @@ Outputs are stored in the cache so that terminal output can be replayed, and any
 
 To see caching in action, first clear your `dist` directory:
 
-```bash
+```console
 rm -rf dist/
 ```
 
-And run the command `npx nx build products-data-client`. (Recall that you had already run this target in [3- Task Running](/node-tutorial/3-task-running), and that you had then changed and then stashed that change earlier in this lesson)
+And run the command `npx nx build products-data-client`. (Recall that you had already run this target in [3- Task Running](/node-tutorial/3-task-running))
 
-```bash
+```console
 % npx nx build products-data-client
 
 > nx run products-data-client:build  [local cache]
@@ -173,7 +166,7 @@ Done compiling TypeScript files for project "products-data-client".
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
-Notice that the output is annotated to show that this task's result was cached in your `[local cache]`, and that this time the command only took 32ms to run.
+Notice that `[local cache]` is mentioned in the terminal output, and that this time the command only took 32ms to run.
 
 Also notice that the result of your build has been added back to the `dist/libs/products-data-client` directory.
 
@@ -183,7 +176,7 @@ Also notice that the result of your build has been added back to the `dist/libs/
 
 Next, run the command `npx nx build products-cli`:
 
-```bash
+```console
 % npx nx build products-cli
 
    ✔    1/1 dependent project tasks succeeded [1 read from cache]
@@ -207,7 +200,7 @@ webpack compiled successfully (bafa37be9890ecb2)
 
 Notice the line here:
 
-```bash
+```console
    ✔    1/1 dependent project tasks succeeded [1 read from cache]
 ```
 
@@ -215,7 +208,7 @@ This is because your `products-cli` project depends on your `products-data-clien
 
 This feature allows the Nx graph to dynamically maintain task dependencies, rather than having to manually maintain those task dependencies as your workspace continues to grow.
 
-{% card title="More On The Task Pipeline Configuration" description="The the Task Pipeline Configuration guids for more details on how to configure your Task Graph." url="/concepts/task-pipeline-configuration" /%}
+{% card title="More On The Task Pipeline Configuration" description="See the Task Pipeline Configuration Guide for more details on how to configure your Task Graph." url="/concepts/task-pipeline-configuration" /%}
 
 ## What's Next
 

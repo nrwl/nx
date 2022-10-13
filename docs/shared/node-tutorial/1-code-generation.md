@@ -3,8 +3,10 @@ title: 'Node Tutorial - Part 1: Code Generation'
 description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
-{% callout type="check" title="Integrated Repo" %}
-This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) repo. If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Core Tutorial](/getting-started/core-tutorial).
+{% callout type="check" title="Two Styles of Repo" %}
+There are two styles of repos: integrated and package-based. This tutorial used the integrated style.
+
+You can find more information on the difference between the two in [our introduction](/getting-started/intro).
 {% /callout %}
 
 # Node Tutorial - Part 1: Code Generation
@@ -21,27 +23,21 @@ In this tutorial you'll create a backend-focused workspace with Nx.
 
 ## Your Objective
 
-For this tutorial, your objective is to create the initial architecture for a workspace with the following requirements:
-
-- it should contain an api built with express called: `products-api`.
-- it should contain a node cli application called: `products-cli`.
-- it should contain a library for interacting with a data-source called: `products-data-client`.
-- your `products-api` app should depend on the `products-data-client` library.
-- your `products-cli` app should also depend on the `products-data-client` library.
+For this tutorial, you'll create an Express API application, a CLI (command-line interface) application, and a library for a data client that these two applications will use to interact with a data-source.
 
 ![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
 
 ## Creating an Nx Workspace
 
-To generate your Nx Workspace, use the [`create-nx-workspace` script from npm](https://www.npmjs.com/package/create-nx-workspace):
+Run the command:
 
-```bash
+```console
 npx create-nx-workspace@latest
 ```
 
 When prompted, provide the following responses:
 
-```bash
+```console
 ✔ Workspace name (e.g., org name)     · my-products
 ✔ What to create in the new workspace · express
 ✔ Application name                    · products-api
@@ -49,19 +45,13 @@ When prompted, provide the following responses:
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}
 
-Once the script is complete, you can open up the `my-products` directory that was created, and see that your first project has been added to the workspace, located in `apps/products-api`.
+Once the command complete, you can find your Express API application in `apps/products-api`.
 
 ## Adding Another Application to Your Workspace
 
-Next you'll use [Nx generators](/plugin-features/use-code-generators) to generate the required `products-cli` application.
+Run this command to create your `products-cli` app:
 
-The following syntax is used to run generators:
-
-![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.png)
-
-To run the node application generator and create your `products-cli` application, run the command `npx nx g @nrwl/node:app products-cli`:
-
-```bash
+```console
 % npx nx g @nrwl/node:app products-cli
 
 >  NX  Generating @nrwl/node:application
@@ -79,34 +69,13 @@ CREATE apps/products-cli/jest.config.ts
 CREATE apps/products-cli/tsconfig.spec.json
 ```
 
-To see all options for the `application` generator, you can run the command `npx nx generate @nrwl/node:application --help`:
-
-```bash
-% npx nx generate @nrwl/node:application --help
-
->  NX   generate @nrwl/node:application [name] [options,...]
-
-
-From:  @nrwl/node (v14.8.4)
-Name:  application (aliases: app)
-
-
-  Nx Application Options Schema.
-
-
-Options:
-    --name             The name of the application.                  [string]
-    --directory        The directory of the new application.         [string]
-    --skipFormat       Skip formatting files                        [boolean]
-    --skipPackageJson  Do not add dependencies to `package.json`.   [boolean]
-    ...
-```
+![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.png)
 
 ## Generating Libraries
 
 To create the `products-data-client` library, use the `@nrwl/js:lib` generator:
 
-```bash
+```console
 % npx nx g @nrwl/js:lib products-data-client
 
 >  NX  Generating @nrwl/js:library
@@ -125,7 +94,7 @@ CREATE libs/products-data-client/jest.config.ts
 CREATE libs/products-data-client/tsconfig.spec.json
 ```
 
-You have now created all three required projects:
+You have now created all three projects from the design:
 
 - `products-api` in `apps/products-api`
 - `products-cli` in `apps/products-cli`

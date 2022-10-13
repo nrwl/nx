@@ -1,15 +1,13 @@
 # Node Tutorial - Part 3: Task-Running
 
-Now that you've created your projects in your Nx workspace, it's time to address how to run tasks in your workspace.
-
-Common tasks for projects include:
+Common tasks include:
 
 - Building a distributable
 - Serving an application locally for development purposes
 - Running your unit tests
 - Linting your code
 
-When you ran your Nx generators in the first step of this tutorial, you actually already set up these more common tasks for each project.
+When you ran your generators in Part 1, you already set up these more common tasks for each project.
 
 ## Defining Targets
 
@@ -60,15 +58,11 @@ The properties inside each of these these targets is defined as follows:
 - `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Workspace Optimizations](/node-tutorial/4-workspace-optimization)).
 - `options` - this is an object defining which executor options to use for the given target. Every Nx executor allows for options as a way to parameterize it's functionality.
 
-These targets are sufficient for your `products-data-client` project, but if more targets were required in the future, you could create more targets by defining them here.
-
-## Running Tasks in Nx
-
-Running a target in Nx uses the following syntax:
+## Running Tasks
 
 ![Syntax for Running Tasks in Nx](/shared/node-tutorial/run-target-syntax.png)
 
-Run the `build` target for our `products-data-client` project now, by running the command `npx nx test products-data-client`:
+Run the `build` target for your `products-data-client` project:
 
 ```bash
 % npx nx build products-data-client
@@ -85,7 +79,7 @@ Done compiling TypeScript files for project "products-data-client".
 
 You can now find your built `products-data-client` distributable in your `dist/libs/products-data-client` directory, as specified in the `outputPath` property of the `build` target options in your `project.json` file.
 
-Next, run a lint check on your `products-data-client` project by running the command: `npx nx lint products-data-client`:
+Next, run a lint check on `products-data-client`:
 
 ```bash
 % npx nx lint products-data-client
@@ -126,7 +120,7 @@ describe('productsDataClient', () => {
 });
 ```
 
-And then run your `test` target by running the command: `npx nx test products-data-client`:
+And then run your `test` target:
 
 ```bash
 % npx nx test products-data-client
