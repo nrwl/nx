@@ -8,7 +8,7 @@ Angular supports including extra entry-point files for styles. Also, in case you
 
 Your Storybook targets in your `project.json` will look like this:
 
-```json
+```jsonc {% fileName="project.json" %}
     "storybook": {
       "executor": "@storybook/angular:start-storybook",
       "options": {
@@ -38,7 +38,7 @@ Your Storybook targets in your `project.json` will look like this:
 
 Chances are, you will most probably need the same `styles` and `stylePreprocessorOptions` for your `storybook` and your `build-storybook` targets. Since you're using `browserTarget`, that means that Storybook will use the `options` of `build` or `build-storybook` when executing the `storybook` task (when compiling your Storybook). In that case, as explained, you _only_ need to add the `styles` or `stylePreprocessorOptions` to the corresponding target (`build` or `build-storybook`) that the `browserTarget` is pointing to. In that case, for example, the configuration shown above would look like this:
 
-```json
+```jsonc {% fileName="project.json" %}
     "storybook": {
       "executor": "@storybook/angular:start-storybook",
       "options": {

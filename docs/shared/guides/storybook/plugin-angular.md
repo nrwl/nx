@@ -18,7 +18,7 @@ nx g @nrwl/angular:storybook-configuration project-name
 
 The `@nrwl/angular:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library.
 
-```treeview
+```text
 <some-folder>/
 ├── my.component.ts
 └── my.component.stories.ts
@@ -42,7 +42,7 @@ nx g @nrwl/angular:stories feature-ui
 
 and the result would be the following:
 
-```treeview
+```text
 <workspace name>/
 ├── .storybook/
 ├── apps/
@@ -92,9 +92,7 @@ Changing args in the url query parameters allows your Cypress tests to test diff
 
 ## Example Files
 
-**\*.component.stories.ts file**
-
-```typescript
+```typescript {% fileName="*.component.stories.ts" %}
 import { moduleMetadata, Story, Meta } from '@storybook/angular';
 import { ButtonComponent } from './button.component';
 

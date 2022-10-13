@@ -87,7 +87,7 @@ Use the `--facade` option to generate an injectable Facade class along with the 
 
 The following files are created, or updated:
 
-```treeview
+```text
 myorg/
 ├── apps/
 └── libs/

@@ -180,9 +180,9 @@ We need an Angular Service that we will use to hold state:
 nx g @nrwl/angular:service user --project=shared-data-access-user
 ```
 
-This will create a file `user.service.ts` under the `shared/data-access-user` library. Change it's contents to match:
+This will create a file `user.service.ts` under the `shared/data-access-user` library. Change its contents to match:
 
-```ts
+```ts {% fileName="shared/data-access-user/user.service.ts" %}
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 @Injectable({
@@ -209,7 +209,7 @@ Add a new export to the shared/data-access-user's `index.ts` file:
 
 First, add `FormsModule` to the `imports` array in your `remote-entry/entry.module.ts` file:
 
-```ts
+```ts {% fileName="remote-entry/entry.module.ts" %}
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -234,7 +234,7 @@ export class RemoteEntryModule {}
 
 Next we want to set up our `entry.component.ts` file so that it renders a login and has injected our `UserService` to allow us to sign the user in:
 
-```ts
+```ts {% fileName="entry.component.ts" %}
 import { Component } from '@angular/core';
 import { UserService } from '@ng-mf/shared/data-access-user';
 @Component({
@@ -294,7 +294,7 @@ This could be improved with error handling etc. but for the purposes of this tut
 Let's add a route to our Login application so that we can render the `RemoteEntryComponent`.  
 Open `app.module.ts` and add the following route to the `RouterMoodule.forRoot(...)` declaration.
 
-```ts
+```ts {% fileName="app.module.ts" %}
 RouterModule.forRoot(
   [
     {
@@ -334,7 +334,7 @@ Now, let's delete the `app.component.html` and `app.component.css` files in the 
 
 Finally, let's add our logic to `app.component.ts`. Change it to match the following:
 
-```ts
+```ts {% fileName="app.component.ts" %}
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { distinctUntilChanged } from 'rxjs/operators';
@@ -411,7 +411,7 @@ We’ll start by creating this file. Add a `module-federation.manifest.json` fil
 
 Next, open `main.ts` under the `src/`folder and replace it with the following:
 
-```typescript
+```typescript {% fileName="src/main.ts" %}
 import { setRemoteDefinitions } from '@nrwl/angular/mf';
 
 fetch('/assets/module-federation.manifest.json')

@@ -15,7 +15,7 @@ Nx supports interpolating environment variables into your `index.html` file for 
 
 To interpolate an environment variable named `NX_DOMAIN_NAME` into your `index.html`, surround it with `%` symbols like so:
 
-```html
+```html {% fileName="index.html" %}
 <html>
   <body>
     <p>The domain name is %NX_DOMAIN_NAME%.</p>

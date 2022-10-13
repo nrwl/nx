@@ -70,7 +70,7 @@ In the Storybook case, Storybook has the `--tsconfig` option [prefilled](https:/
 
 In your project's `.storybook/tsconfig.json` file, in the `include` array, add the path to the component files (eg. `"../src/**/*.component.ts"`). For example, if you have an application called `web`, the file `apps/web/.storybook/tsconfig.json` will look like this:
 
-```json
+```json {% fileName=".storybook/tsconfig.json" %}
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -118,7 +118,7 @@ In your project's `project.json` file (eg. `apps/web/project.json`), find the `s
 
 Let's see the result for our `web` app `storybook` target, for example (in `apps/web/project.json`):
 
-```json
+```jsonc {% fileName="project.json" %}
     "storybook": {
       "executor": "@storybook/angular:start-storybook",
       "options": {
@@ -135,7 +135,7 @@ Let's see the result for our `web` app `storybook` target, for example (in `apps
 
 In your project's `.storybook/preview.js` file (for example for your `web` app the path would be `apps/web/.storybook/preview.js`), add the following:
 
-```js
+```js {% fileName=".storybook/preview.js" %}
 import { setCompodocJson } from '@storybook/addon-docs/angular';
 import docJson from '../documentation.json';
 setCompodocJson(docJson);

@@ -54,7 +54,7 @@ This creates the required files with a general boilerplate implementation.
 
 Next, adjust the `postcss.config.js` as follows:
 
-```javascript
+```javascript {% fileName="postcss.config.js" %}
 const { join } = require('path');
 
 module.exports = {
@@ -77,8 +77,7 @@ Nx has a utility function that can be used to construct the glob representation 
 
 The function receives a directory path that is used to identify the project for which the dependencies are going to be identified (therefore it needs to be a directory path within a project). It can also receive an optional glob pattern to append to each dependency source root path to conform the final glob pattern. If the glob pattern is not provided, it will default to `/**/!(*.stories|*.spec).{ts,html}`.
 
-```javascript
-// apps/app1/tailwind.config.js
+```javascript {% fileName="apps/app1/tailwind.config.js" %}
 const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');
 const { join } = require('path');
 
@@ -122,7 +121,7 @@ Lastly, let's update the application's project configuration to point to the `po
 
 Open up the `apps/{your app here}/project.json` file and add the following to the build target.
 
-```json lines
+```json lines {% fileName="apps/{your app here}/project.json" %}
 {
   // ...
   "targets": {

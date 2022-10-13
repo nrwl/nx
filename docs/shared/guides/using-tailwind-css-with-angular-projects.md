@@ -40,8 +40,7 @@ The function receives a directory path that is used to identify the project for 
 
 The following is an example of it being used in an application called `app1`:
 
-```javascript
-// apps/app1/tailwind.config.js
+```javascript {% fileName="apps/app1/tailwind.config.js" %}
 const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
 const { join } = require('path');
 
@@ -118,8 +117,7 @@ To do so, we recommend using a [Tailwind CSS preset](https://tailwindcss.com/doc
 
 Create a new folder `libs/tailwind-preset` with a `tailwind.config.js` file in it with your shared configuration:
 
-```javascript
-// libs/tailwind-preset/tailwind.config.js
+```javascript {% fileName="libs/tailwind-preset/tailwind.config.js" %}
 module.exports = {
   theme: {
     colors: {
@@ -155,8 +153,7 @@ Add the project configuration for the project:
 
 If using the workspace configuration v2:
 
-```json
-// angular.json or project.json
+```jsonc {% fileName="angular.json or project.json" %}
 {
   "version": 2,
   "projects": {
@@ -166,8 +163,7 @@ If using the workspace configuration v2:
 }
 ```
 
-```json
-// libs/tailwind-preset/project.json
+```jsonc {% fileName="libs/tailwind-preset/project.json" %}
 {
   "projectType": "library",
   "root": "libs/tailwind-preset",
@@ -179,8 +175,7 @@ If using the workspace configuration v2:
 
 If using the workspace configuration v1:
 
-```json
-// angular.json
+```jsonc {% fileName="angular.json" %}
 {
   "version": 1,
   "projects": {
@@ -198,8 +193,7 @@ If using the workspace configuration v1:
 
 Adjust the application's `tailwind.config.js` file to use the preset and remove the configuration that's already included in the preset:
 
-```javascript
-// apps/app1/tailwind.config.js
+```javascript {% fileName="apps/app1/tailwind.config.js" %}
 const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
 const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
@@ -215,8 +209,7 @@ module.exports = {
 
 Do the same with any buildable or publishable library `tailwind.config.js` file:
 
-```javascript
-// libs/lib1/tailwind.config.js
+```javascript {% fileName="libs/lib1/tailwind.config.js" %}
 const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
 const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
@@ -252,8 +245,7 @@ As explained in [this section](#configure-tailwind-css-for-an-application-with-n
 
 Create a new folder `libs/tailwind-preset` with a `tailwind.config.js` file in it with your shared configuration:
 
-```javascript
-// libs/tailwind-preset/tailwind.config.js
+```javascript {% fileName="libs/tailwind-preset/tailwind.config.js" %}
 module.exports = {
   theme: {
     colors: {
@@ -287,8 +279,7 @@ Add the project configuration for the project:
 
 If using the workspace configuration v2:
 
-```json
-// angular.json or project.json
+```jsonc {% fileName="project.json" %}
 {
   "version": 2,
   "projects": {
@@ -298,8 +289,7 @@ If using the workspace configuration v2:
 }
 ```
 
-```json
-// libs/tailwind-preset/project.json
+```json {% fileName="libs/tailwind-preset/project.json" %}
 {
   "projectType": "library",
   "root": "libs/tailwind-preset",
@@ -311,8 +301,7 @@ If using the workspace configuration v2:
 
 If using the workspace configuration v1:
 
-```json
-// angular.json
+```jsonc {% fileName="angular.json" %}
 {
   "version": 1,
   "projects": {
@@ -330,7 +319,7 @@ If using the workspace configuration v1:
 
 Adjust the `tailwind.config.js` file of the different applications to use the preset and remove the configuration that's already included in the preset:
 
-```javascript
+```javascript {% fileName="tailwind.config.js" %}
 // apps/app1/tailwind.config.js
 // apps/app2/tailwind.config.js
 const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
@@ -348,7 +337,7 @@ module.exports = {
 
 Do the same with any shared buildable or publishable library `tailwind.config.js` file:
 
-```javascript
+```javascript {% fileName="tailwind.config.js" %}
 // libs/lib1/tailwind.config.js
 const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
 const { join } = require('path');
@@ -365,8 +354,7 @@ module.exports = {
 
 Add the CSS variable values to the different application styles entry point:
 
-```css
-/* apps/app1/src/styles.css */
+```css {% fileName="apps/app1/src/styles.css" %}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -390,8 +378,7 @@ Add the CSS variable values to the different application styles entry point:
 }
 ```
 
-```css
-/* apps/app2/src/styles.css */
+```css {% fileName="apps/app2/src/styles.css" %}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -423,8 +410,7 @@ The purpose of publishable libraries is to distribute them outside of the worksp
 
 To build and share a theme, you can create a theme file in the library like the following:
 
-```css
-/* libs/lib1/src/styles/my-theme.css */
+```css {% fileName="libs/lib1/src/styles/my-theme.css" %}
 @tailwind components;
 @tailwind utilities;
 
@@ -454,7 +440,7 @@ This section assume you've already followed one of the previous sections setup a
 
 Next, you need to configure your project to build the theme when you build the library. Edit the project configuration to have the following targets:
 
-```json
+```jsonc {% fileName="project.json" %}
 ...
 "build-angular": {
   "executor": "@nrwl/angular:package",
@@ -524,7 +510,7 @@ You can have more themes and simply add them to be built in the `build-lib` targ
 
 Update the `libs/lib1/ng-package.json` file to set the `deleteDestPath` property to `false`:
 
-```json
+```jsonc {% fileName="libs/lib1/ng-package.json" %}
 {
   ...
   "deleteDestPath": false

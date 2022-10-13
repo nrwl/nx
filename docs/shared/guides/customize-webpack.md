@@ -15,9 +15,7 @@ i.e. `apps/my-app/custom-webpack.config.js`
 The custom webpack file contains a function that takes as input the existing webpack config and then returns a modified
 config object. `context` includes all the options specified for the executor.
 
-`apps/my-app/custom-webpack.config.js`:
-
-```typescript
+```typescript {% fileName="apps/my-app/custom-webpack.config.js" %}
 // Helper for combining webpack config objects
 const { merge } = require('webpack-merge');
 
@@ -30,7 +28,7 @@ module.exports = (config, context) => {
 
 Also supports async functions
 
-```typescript
+```typescript {% fileName="apps/my-app/custom-webpack.config.js" %}
 // Utility function for sleeping
 const sleep = (n) => new Promise((resolve) => setTimeout(resolve, n));
 
@@ -95,7 +93,7 @@ config object.
 
 Next.js supports webpack customization in the `next.config.js` file.
 
-```js
+```js {% fileName="next.config.js" %}
 const { withNx } = require('@nrwl/next/plugins/with-nx');
 
 const nextConfig = {

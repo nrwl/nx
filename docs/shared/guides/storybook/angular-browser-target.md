@@ -13,7 +13,7 @@ You can read more about the `browserTarget` in the [official Angular documentati
 
 Your Storybook targets in your `project.json` will look like this:
 
-```json
+```jsonc {% fileName="project.json" %}
     "storybook": {
       "executor": "@storybook/angular:start-storybook",
       "options": {
@@ -45,7 +45,7 @@ If you're using Nx version `>=13.4.6` either in a new Nx workspace, or you migra
 
 Your Storybook targets in your `project.json` will look like this:
 
-```json
+```jsonc {% fileName="project.json" %}
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {

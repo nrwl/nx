@@ -110,7 +110,7 @@ If you have not changed the content of the files which the `storybook-configurat
 
 - In the root `./storybook` directory, create a new file named `main.js` with the following content:
 
-```typescript
+```typescript {% fileName="main.js" %}
 module.exports = {
   stories: [],
   addons: ['@storybook/addon-essentials'],
@@ -125,7 +125,7 @@ module.exports = {
 
 - In the library `./storybook` directory, create a new file named `main.js` with the following content:
 
-```typescript
+```typescript {% fileName="main.js" %}
 const lib_main_module = require('../../.storybook/main');
 
 lib_main_module.stories.push('../src/lib/**/*.stories.mdx');
@@ -137,7 +137,7 @@ Please take extra care making sure that the path to the root `./storybook` direc
 
 - If you have any addons in the `addons.js` file, add them in the `addons` array in the `main.js` file. You can add any addons in the `addons` module array using the following syntax:
 
-```typescript
+```typescript {% fileName="main.js" %}
 lib_main_module.addons.push('<YOUR_ADDON_HERE>');
 ```
 
@@ -145,15 +145,15 @@ After you add any addons in the `main.js` file, you can safely delete the `addon
 
 - Rename the file `config.js` to `preview.js` and remove the last line where your stories paths are configured. Now, the contents of the `preview.js` file will look like this:
 
-```typescript
+```typescript {% fileName="preview.js" %}
 import { addDecorator } from '@storybook/react';
 
 addDecorator(<YourDecorator>);
 ```
 
-- Modify the contents of `webpack.config.js`. Remove the following lines, which are the TypeScript configuration, which is not needed by Storybook any more:
+- Modify the contents of `webpack.config.js`. Remove the following lines, which are the TypeScript configuration, which is not needed by Storybook anymore:
 
-```typescript
+```typescript {% fileName="webpack.config.js" %}
 config.resolve.extensions.push('.ts', '.tsx');
 config.module.rules.push({
   test: /\.(ts|tsx)$/,
