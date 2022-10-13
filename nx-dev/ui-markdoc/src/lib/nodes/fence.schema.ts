@@ -7,6 +7,7 @@ export const fence: Schema = {
     language: { type: 'String' },
     fileName: { type: 'String', default: '' },
     command: { type: 'String', default: '' },
+    path: { type: 'String', default: '~/workspace' },
     process: { type: 'Boolean', render: false, default: true },
   },
   transform(node, config) {

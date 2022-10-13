@@ -62,7 +62,15 @@ You can display your terminal output with a dedicated component the same way you
 
 ````
 ‎``` {% command="node index.js" %}
-‎ My terminal ouptput here!
+‎ My terminal output here!
+‎```
+````
+
+You can optionally also pass a `path` like
+
+````
+‎``` {% command="node index.js" path="~/myorg" %}
+‎ My terminal output here!
 ‎```
 ````
 
