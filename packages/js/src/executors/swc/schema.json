@@ -134,5 +134,6 @@
         }
       ]
     }
-  }
+  },
+  "examplesFile": "../../../docs/swc-examples.md"
 }
