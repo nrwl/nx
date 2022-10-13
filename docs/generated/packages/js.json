@@ -25,12 +25,6 @@
         "title": "Create a TypeScript Library",
         "description": "Create a TypeScript Library.",
         "type": "object",
-        "examples": [
-          {
-            "command": "nx g lib mylib --directory=myapp",
-            "description": "Generate libs/myapp/mylib"
-          }
-        ],
         "properties": {
           "name": {
             "type": "string",
@@ -138,6 +132,7 @@
           }
         },
         "required": ["name"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Using directory flag\" %}\n\nGenerate a library named `mylib` and put it under a directory named `myapp` (`libs/myapp/mylib`)\n\n```shell\nnpx nx g lib mylib --directory=myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Use SWC compiler\" %}\n\nGenerate a library using [SWC](https://swc.rs) as the compiler\n\n```shell\nnpx nx g lib mylib --compiler=swc\n```\n\n{% /tab %}\n\n{% tab label=\"Minimal publishing target\" %}\n\nGenerate a **publishable** library with a minimal publishing target\n\n```shell\nnpx nx g lib mylib --publishable\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["lib"],
