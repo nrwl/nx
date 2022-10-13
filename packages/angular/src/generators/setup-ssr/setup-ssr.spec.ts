@@ -1,4 +1,7 @@
+import { readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { PackageJson } from 'nx/src/utils/package-json';
+import { angularVersion, ngUniversalVersion } from '../../utils/versions';
 
 import applicationGenerator from '../application/application';
 import setupSsr from './setup-ssr';
@@ -16,7 +19,9 @@ describe('setupSSR', () => {
     await setupSsr(tree, { project: 'app1' });
 
     // ASSERT
-    expect(tree.read('apps/app1/project.json', 'utf-8')).toMatchSnapshot();
+    expect(
+      readProjectConfiguration(tree, 'app1').targets.server
+    ).toMatchSnapshot();
     expect(tree.read('apps/app1/server.ts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('apps/app1/src/main.server.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -120,6 +125,19 @@ describe('setupSSR', () => {
       })
       export class AppModule { }"
     `);
-    expect(tree.read('package.json', 'utf-8')).toMatchSnapshot();
+    const packageJson = readJson<PackageJson>(tree, 'package.json');
+    const dependencies = {
+      '@nguniversal/express-engine': ngUniversalVersion,
+      '@angular/platform-server': angularVersion,
+    };
+    for (const [dep, version] of Object.entries(dependencies)) {
+      expect(packageJson.dependencies[dep]).toEqual(version);
+    }
+    const devDeps = {
+      '@nguniversal/builders': ngUniversalVersion,
+    };
+    for (const [dep, version] of Object.entries(devDeps)) {
+      expect(packageJson.devDependencies[dep]).toEqual(version);
+    }
   });
 });

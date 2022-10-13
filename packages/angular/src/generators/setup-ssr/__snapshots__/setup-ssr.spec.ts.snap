@@ -1,164 +1,31 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`setupSSR should create the files correctly for ssr 1`] = `
-"{
-  \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
-  \\"projectType\\": \\"application\\",
-  \\"sourceRoot\\": \\"apps/app1/src\\",
-  \\"prefix\\": \\"proj\\",
-  \\"targets\\": {
-    \\"build\\": {
-      \\"executor\\": \\"@angular-devkit/build-angular:browser\\",
-      \\"outputs\\": [
-        \\"{options.outputPath}\\"
+Object {
+  "configurations": Object {
+    "development": Object {
+      "extractLicenses": false,
+      "optimization": false,
+      "sourceMap": true,
+    },
+    "production": Object {
+      "fileReplacements": Array [
+        Object {
+          "replace": "apps/app1/src/environments/environment.ts",
+          "with": "apps/app1/src/environments/environment.prod.ts",
+        },
       ],
-      \\"options\\": {
-        \\"outputPath\\": \\"dist/apps/app1/browser\\",
-        \\"index\\": \\"apps/app1/src/index.html\\",
-        \\"main\\": \\"apps/app1/src/main.ts\\",
-        \\"polyfills\\": \\"apps/app1/src/polyfills.ts\\",
-        \\"tsConfig\\": \\"apps/app1/tsconfig.app.json\\",
-        \\"assets\\": [
-          \\"apps/app1/src/favicon.ico\\",
-          \\"apps/app1/src/assets\\"
-        ],
-        \\"styles\\": [
-          \\"apps/app1/src/styles.css\\"
-        ],
-        \\"scripts\\": []
-      },
-      \\"configurations\\": {
-        \\"production\\": {
-          \\"budgets\\": [
-            {
-              \\"type\\": \\"initial\\",
-              \\"maximumWarning\\": \\"500kb\\",
-              \\"maximumError\\": \\"1mb\\"
-            },
-            {
-              \\"type\\": \\"anyComponentStyle\\",
-              \\"maximumWarning\\": \\"2kb\\",
-              \\"maximumError\\": \\"4kb\\"
-            }
-          ],
-          \\"fileReplacements\\": [
-            {
-              \\"replace\\": \\"apps/app1/src/environments/environment.ts\\",
-              \\"with\\": \\"apps/app1/src/environments/environment.prod.ts\\"
-            }
-          ],
-          \\"outputHashing\\": \\"all\\"
-        },
-        \\"development\\": {
-          \\"buildOptimizer\\": false,
-          \\"optimization\\": false,
-          \\"vendorChunk\\": true,
-          \\"extractLicenses\\": false,
-          \\"sourceMap\\": true,
-          \\"namedChunks\\": true
-        }
-      },
-      \\"defaultConfiguration\\": \\"production\\"
+      "outputHashing": "media",
     },
-    \\"serve\\": {
-      \\"executor\\": \\"@angular-devkit/build-angular:dev-server\\",
-      \\"configurations\\": {
-        \\"production\\": {
-          \\"browserTarget\\": \\"app1:build:production\\"
-        },
-        \\"development\\": {
-          \\"browserTarget\\": \\"app1:build:development\\"
-        }
-      },
-      \\"defaultConfiguration\\": \\"development\\"
-    },
-    \\"extract-i18n\\": {
-      \\"executor\\": \\"@angular-devkit/build-angular:extract-i18n\\",
-      \\"options\\": {
-        \\"browserTarget\\": \\"app1:build\\"
-      }
-    },
-    \\"lint\\": {
-      \\"executor\\": \\"@nrwl/linter:eslint\\",
-      \\"options\\": {
-        \\"lintFilePatterns\\": [
-          \\"apps/app1/**/*.ts\\",
-          \\"apps/app1/**/*.html\\"
-        ]
-      }
-    },
-    \\"test\\": {
-      \\"executor\\": \\"@nrwl/jest:jest\\",
-      \\"outputs\\": [
-        \\"coverage/apps/app1\\"
-      ],
-      \\"options\\": {
-        \\"jestConfig\\": \\"apps/app1/jest.config.ts\\",
-        \\"passWithNoTests\\": true
-      }
-    },
-    \\"server\\": {
-      \\"executor\\": \\"@angular-devkit/build-angular:server\\",
-      \\"options\\": {
-        \\"outputPath\\": \\"dist/apps/apps/app1/server\\",
-        \\"main\\": \\"apps/app1/server.ts\\",
-        \\"tsConfig\\": \\"apps/app1/tsconfig.server.json\\"
-      },
-      \\"configurations\\": {
-        \\"production\\": {
-          \\"outputHashing\\": \\"media\\",
-          \\"fileReplacements\\": [
-            {
-              \\"replace\\": \\"apps/app1/src/environments/environment.ts\\",
-              \\"with\\": \\"apps/app1/src/environments/environment.prod.ts\\"
-            }
-          ]
-        },
-        \\"development\\": {
-          \\"optimization\\": false,
-          \\"sourceMap\\": true,
-          \\"extractLicenses\\": false
-        }
-      },
-      \\"defaultConfiguration\\": \\"production\\"
-    },
-    \\"serve-ssr\\": {
-      \\"executor\\": \\"@nguniversal/builders:ssr-dev-server\\",
-      \\"configurations\\": {
-        \\"development\\": {
-          \\"browserTarget\\": \\"app1:build:development\\",
-          \\"serverTarget\\": \\"app1:server:development\\"
-        },
-        \\"production\\": {
-          \\"browserTarget\\": \\"app1:build:production\\",
-          \\"serverTarget\\": \\"app1:server:production\\"
-        }
-      },
-      \\"defaultConfiguration\\": \\"development\\"
-    },
-    \\"prerender\\": {
-      \\"executor\\": \\"@nguniversal/builders:prerender\\",
-      \\"options\\": {
-        \\"routes\\": [
-          \\"/\\"
-        ]
-      },
-      \\"configurations\\": {
-        \\"development\\": {
-          \\"browserTarget\\": \\"app1:build:development\\",
-          \\"serverTarget\\": \\"app1:server:development\\"
-        },
-        \\"production\\": {
-          \\"browserTarget\\": \\"app1:build:production\\",
-          \\"serverTarget\\": \\"app1:server:production\\"
-        }
-      },
-      \\"defaultConfiguration\\": \\"production\\"
-    }
   },
-  \\"tags\\": []
+  "defaultConfiguration": "production",
+  "executor": "@angular-devkit/build-angular:server",
+  "options": Object {
+    "main": "apps/app1/server.ts",
+    "outputPath": "dist/apps/apps/app1/server",
+    "tsConfig": "apps/app1/tsconfig.server.json",
+  },
 }
-"
 `;
 
 exports[`setupSSR should create the files correctly for ssr 2`] = `
@@ -222,57 +89,4 @@ if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
 }
 
 export * from './src/main.server';"
-`;
-
-exports[`setupSSR should create the files correctly for ssr 8`] = `
-"{
-  \\"name\\": \\"test-name\\",
-  \\"dependencies\\": {
-    \\"@angular/animations\\": \\"~14.2.0\\",
-    \\"@angular/common\\": \\"~14.2.0\\",
-    \\"@angular/compiler\\": \\"~14.2.0\\",
-    \\"@angular/core\\": \\"~14.2.0\\",
-    \\"@angular/forms\\": \\"~14.2.0\\",
-    \\"@angular/platform-browser\\": \\"~14.2.0\\",
-    \\"@angular/platform-browser-dynamic\\": \\"~14.2.0\\",
-    \\"@angular/platform-server\\": \\"~14.2.0\\",
-    \\"@angular/router\\": \\"~14.2.0\\",
-    \\"@nguniversal/express-engine\\": \\"~14.2.0\\",
-    \\"rxjs\\": \\"~7.5.0\\",
-    \\"tslib\\": \\"^2.3.0\\",
-    \\"zone.js\\": \\"~0.11.4\\"
-  },
-  \\"devDependencies\\": {
-    \\"@angular-devkit/build-angular\\": \\"~14.2.0\\",
-    \\"@angular-eslint/eslint-plugin\\": \\"~14.0.4\\",
-    \\"@angular-eslint/eslint-plugin-template\\": \\"~14.0.4\\",
-    \\"@angular-eslint/template-parser\\": \\"~14.0.4\\",
-    \\"@angular/cli\\": \\"~14.2.0\\",
-    \\"@angular/compiler-cli\\": \\"~14.2.0\\",
-    \\"@angular/language-service\\": \\"~14.2.0\\",
-    \\"@nguniversal/builders\\": \\"~14.2.0\\",
-    \\"@nrwl/cypress\\": \\"0.0.1\\",
-    \\"@nrwl/eslint-plugin-nx\\": \\"0.0.1\\",
-    \\"@nrwl/jest\\": \\"0.0.1\\",
-    \\"@nrwl/linter\\": \\"0.0.1\\",
-    \\"@types/jest\\": \\"28.1.1\\",
-    \\"@types/node\\": \\"16.11.7\\",
-    \\"@typescript-eslint/eslint-plugin\\": \\"^5.36.1\\",
-    \\"@typescript-eslint/parser\\": \\"^5.36.1\\",
-    \\"cypress\\": \\"^10.7.0\\",
-    \\"eslint\\": \\"~8.15.0\\",
-    \\"eslint-config-prettier\\": \\"8.1.0\\",
-    \\"eslint-plugin-cypress\\": \\"^2.10.3\\",
-    \\"jest\\": \\"28.1.1\\",
-    \\"jest-environment-jsdom\\": \\"28.1.1\\",
-    \\"jest-preset-angular\\": \\"~12.2.2\\",
-    \\"ts-jest\\": \\"28.0.5\\",
-    \\"ts-node\\": \\"10.9.1\\",
-    \\"typescript\\": \\"~4.7.2\\"
-  },
-  \\"scripts\\": {
-    \\"postinstall\\": \\"ngcc --properties es2020 browser module main\\"
-  }
-}
-"
 `;
