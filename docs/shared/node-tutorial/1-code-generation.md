@@ -1,5 +1,5 @@
 ---
-title: 'Node Nx Tutorial - Part 1: Code Generation'
+title: 'Node Tutorial - Part 1: Code Generation'
 description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
@@ -7,7 +7,7 @@ description: In this tutorial you'll create a backend-focused workspace with Nx.
 This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) repo. If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Core Tutorial](/getting-started/core-tutorial).
 {% /callout %}
 
-# Node Nx Tutorial - Part 1: Code Generation
+# Node Tutorial - Part 1: Code Generation
 
 In this tutorial you'll create a backend-focused workspace with Nx.
 

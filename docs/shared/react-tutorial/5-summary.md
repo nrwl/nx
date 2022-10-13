@@ -1,4 +1,4 @@
-# React Nx Tutorial - Part 5: Summary
+# React Tutorial - Part 5: Summary
 
 In this tutorial you:
 
@@ -7,7 +7,7 @@ In this tutorial you:
 - Learned how to configure and run tasks in your workspace
 - Learned how Nx's built-in optimizations work, and how to apply those to your own workspace
 
-## Learn more
+## Learn More
 
 {% cards %}
 

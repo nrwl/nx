@@ -1,5 +1,5 @@
 ---
-title: 'React Nx Tutorial - Part 1: Code Generation'
+title: 'React Tutorial - Part 1: Code Generation'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 ---
 
@@ -7,7 +7,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 This tutorial sets up an [integrated](/concepts/integrated-vs-package-based) repo. If you prefer a [package-based repo](/concepts/integrated-vs-package-based), check out the [Core Tutorial](/getting-started/core-tutorial).
 {% /callout %}
 
-# React Nx Tutorial - Part 1: Code Generation
+# React Tutorial - Part 1: Code Generation
 
 In this tutorial you'll create a frontend-focused workspace with Nx.
 

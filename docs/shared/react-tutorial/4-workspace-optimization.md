@@ -1,4 +1,4 @@
-# React Nx Tutorial - Part 4: Workspace Optimization
+# React Tutorial - Part 4: Workspace Optimization
 
 In this step of the tutorial, you will learn about the tools available to optimize your Nx Workspace.
 
