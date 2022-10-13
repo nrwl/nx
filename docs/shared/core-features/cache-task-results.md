@@ -31,18 +31,13 @@ the result of the test run.
 
 Now, run the following command twice. The second time the operation will be instant:
 
-```bash
-nx test header
-```
-
-```bash title="Terminal Output"
+```{% command="nx test header"%}
 > nx run header:test  [existing outputs match the cache, left as is]
-
 
 > header@0.0.0 test
 > jest
 
- PASS  src/Header.spec.tsx
+PASS  src/Header.spec.tsx
   ✓ renders header (14 ms)
 
 Test Suites: 1 passed, 1 total
@@ -51,11 +46,11 @@ Snapshots:   0 total
 Time:        0.528 s, estimated 2 s
 Ran all test suites.
 
- ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target test for project header (4ms)
+>  NX   Successfully ran target test for project header (4ms)
 
-   Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
 ## Advanced Caching

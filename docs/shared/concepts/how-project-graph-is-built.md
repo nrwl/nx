@@ -6,7 +6,7 @@ Nx creates a graph of all the dependencies between projects in your workspace us
 
    If the `myapp/package.json` file has this dependency:
 
-   ```jsonc
+   ```jsonc {% fileName="myapp/package.json"%}
    {
      "dependencies": {
        "@myorg/awesome-library": "*"
@@ -37,7 +37,7 @@ Nx creates a graph of all the dependencies between projects in your workspace us
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json"%}
 {
   "name": "myapp",
   "nx": {
@@ -49,7 +49,7 @@ Nx creates a graph of all the dependencies between projects in your workspace us
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
+```jsonc {% fileName="project.json"%}
 {
   "root": "/libs/myapp",
   "implicitDependencies": ["some-api"]
@@ -59,4 +59,4 @@ Nx creates a graph of all the dependencies between projects in your workspace us
 {% /tab %}
 {% /tabs %}
 
-Then `my-app` depends on `some-api`
+Then `my-app` depends on `some-api`.

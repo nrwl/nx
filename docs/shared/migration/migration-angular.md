@@ -89,7 +89,7 @@ This installs the `@nrwl/angular` (or `@nrwl/workspace`) package into your works
 
 After the changes are applied, your workspace file structure should look similar to the one below:
 
-```treeview
+```text
 <workspace name>/
 ├── apps/
 │   ├── <app name>/
@@ -207,7 +207,7 @@ When prompted for the `application name`, enter the _project name_ from your cur
 
 A new Nx workspace with your `org name` as the folder name, and your `application name` as the first application is generated.
 
-```treeview
+```text
 <workspace name>/
 ├── apps/
 │   ├── <app name>/
@@ -281,8 +281,7 @@ If you are using `Karma` for unit testing:
 - Copy the `test` target in your `architect` configuration from your Angular CLI `angular.json` file into the `targets` configuration in the `apps/<app name>/project.json` file in your Nx workspace.
 - Update the `test` target file paths to be relative to `apps/<app name>`.
 
-```json
-// apps/<app name>/project.json
+```jsonc {% fileName="apps/<app name>/project.json" %}
 {
   "projectType": "application",
   "sourceRoot": "apps/<app name>/src",
@@ -312,7 +311,7 @@ If you are using `Karma` for unit testing:
 
 - Update `test-setup.ts` to `test.ts` in the `files` array of the `apps/<app name>/tsconfig.spec.json` file.
 
-```json
+```json {% fileName="apps/<app name>/tsconfig.spec.json" %}
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -346,8 +345,7 @@ If you are using `Protractor` for E2E testing:
 - Create the project configuration file at `apps/<app name>-e2e/project.json`.
 - Copy the project configuration for `app name` from the Angular CLI workspace `angular.json` file to `apps/<app name>-e2e/project.json` and adjust the file paths to be relative to `apps/<app name>-e2e`.
 
-```json
-// apps/<app name>-e2e/project.json
+```json {% fileName="apps/<app name>-e2e/project.json" %}
 {
   "projectType": "application",
   "targets": {
@@ -381,7 +379,7 @@ If you are using `Protractor` for E2E testing:
 
 Create a `tsconfig.e2e.json` file under `apps/<app name>-e2e` folder:
 
-```json
+```json {% fileName="apps/<app name>-e2e/tsconfig.e2e.json" %}
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -392,7 +390,7 @@ Create a `tsconfig.e2e.json` file under `apps/<app name>-e2e` folder:
 
 Update the `apps/<app name>/tsconfig.json` to extend the root `tsconfig.json`:
 
-```json
+```json {% fileName="apps/<app name>/tsconfig.json" %}
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {

@@ -18,7 +18,7 @@ Each project has the `test` and `build` targets defined. Tasks can be defined as
 {% tabs %}
 {% tab label="package.json" %}
 
-```json
+```json {% fileName="package.json" %}
 {
   "scripts": {
     "build": "webpack -c webpack.conf.js",
@@ -30,7 +30,7 @@ Each project has the `test` and `build` targets defined. Tasks can be defined as
 {% /tab %}
 {% tab label="project.json" %}
 
-```json
+```json {% fileName="project.json" %}
 {
   "targets": {
     "build": {
@@ -70,14 +70,14 @@ npx nx run-many --target=build
 
 This will build the projects in the right order: `footer` and `header` and then `myapp`.
 
-```bash title="Terminal Output"
+```{% command="npx nx run-many --target=build" %}
     ✔  nx run header:build (501ms)
     ✔  nx run footer:build (503ms)
     ✔  nx run myapp:build (670ms)
 
- —————————————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for 3 projects (1s)
+>  NX   Successfully ran target build for 3 projects (1s)
 ```
 
 Note that Nx doesn't care what each of the build scripts does. The name `build` is also **not** special: it's simply

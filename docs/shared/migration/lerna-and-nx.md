@@ -52,8 +52,7 @@ npm i nx --save-dev
 
 Change your `lerna.json` by adding the following flag.
 
-```json
-// lerna.json
+```jsonc {% fileName="lerna.json" %}
 {
   ...
   "useNx": true
@@ -66,8 +65,7 @@ By default `useNx` will be set to `false`, so you have to explicitly opt-in.
 
 Nx works even without `nx.json` but to configure some more details such as the `cacheableOperations` of your monorepo in particular, create a `nx.json` at the root of the monorepo. Alternatively you can also just run `npx nx init` to have one generated. Specify the cacheable operations, usually something like `build`, `test`, `lint` etc, depending on your workspace setup:
 
-```json
-// nx.json
+```json {% fileName="nx.json" %}
 {
   "extends": "nx/presets/npm.json",
   "tasksRunnerOptions": {
@@ -165,7 +163,7 @@ Nx comes with a whole range of additional features such as:
 - **Interactive workspace visualization -** to interactively explore the underlying [project graph](/core-features/explore-graph) for understanding dependencies and find paths between nodes.
 - **Nx plugins -** for adding first-class support for React, Next.js, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and many more.
 - **Dedicated VSCode extension -** You can install [Nx Console](/core-features/integrate-with-editors) which is a dedicated VSCode extension to provide a visual interface for navigating your monorepo workspace in terms of launching commands as well as for generating code.
-- **GitHub integration -** Install the [Nx Cloud Github App](https://github.com/apps/nx-cloud) to get inline reporting on your CI jobs.
+- **GitHub integration -** Install the [Nx Cloud GitHub App](https://github.com/apps/nx-cloud) to get inline reporting on your CI jobs.
 - ...
 
 But take your time to explore.
