@@ -16,7 +16,7 @@ Make the following adjustments to your existing projects, so that our Project Gr
 
 Run the `@nrwl/react:component` generator with the command:
 
-```console
+```shell
 % npx nx g @nrwl/react:component banner --project=common-ui --export
 
 >  NX  Generating @nrwl/react:component

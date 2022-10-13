@@ -6,7 +6,7 @@
 
 Run the command:
 
-```console
+```shell
 git add . && git commit -m "commiting to test affected"
 ```
 
@@ -20,7 +20,7 @@ Then make a change to the styles of your `common-ui` project:
 
 You can visualize how our workspace is affected by this change using the command:
 
-```console
+```shell
 npx nx affected:graph
 ```
 
@@ -30,7 +30,7 @@ The change made to the `common-ui` project is also affecting the `admin` and `st
 
 To run the `test` targets only for affected projects, run the command:
 
-```console
+```shell
 npx nx affected --target=test
 ```
 
@@ -101,7 +101,7 @@ Outputs are stored in the cache so that terminal output can be replayed, and any
 
 To see caching in action, run the command:
 
-```console
+```shell
 % npx nx build admin
 
 > nx run admin:build:production
@@ -124,13 +124,13 @@ Since you have not run the `build` target before for the `admin` project, Nx run
 
 Next, remove your dist directory:
 
-```console
+```shell
 rm -rf dist
 ```
 
 And run the command again:
 
-```console
+```shell
 `npx nx build admin`
 
 > nx run admin:build:production  [local cache]
@@ -161,7 +161,7 @@ Also notice that the result of your build has been added back to the `dist/apps/
 
 Next, run the command `npx nx build store`:
 
-```console
+```shell
 % npx nx build store
 
    ✔    1/1 dependent project tasks succeeded [0 read from cache]
@@ -189,7 +189,7 @@ webpack compiled successfully (06e95dfdacea84c7)
 
 Notice the line here:
 
-```console
+```shell
    ✔    1/1 dependent project tasks succeeded [0 read from cache]
 ```
 

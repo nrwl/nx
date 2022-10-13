@@ -6,7 +6,7 @@
 
 Run the command:
 
-```console
+```shell
 git add . && git commit -m "commiting to test affected"
 ```
 
@@ -21,7 +21,7 @@ export const exampleProducts: Record<string, Product> = {
 
 Run the following command to visualize how our workspace is affected by this change:
 
-```console
+```shell
 npx nx affected:graph
 ```
 
@@ -31,7 +31,7 @@ The change made to the `products-data-client` project is also affecting the `pro
 
 Next, stash your changes since the commit:
 
-```console
+```shell
 git stash
 ```
 
@@ -64,7 +64,7 @@ function getProvidedId() {
 
 Now run the command to visualize the affected graph again:
 
-```console
+```shell
 npx nx affected:graph
 ```
 
@@ -74,7 +74,7 @@ This can be leveraged to run tasks only on the projects that were affected by th
 
 To run the `test` targets only for affected projects, run the command:
 
-```console
+```shell
 npx nx affected --target=test
 ```
 
@@ -145,13 +145,13 @@ Outputs are stored in the cache so that terminal output can be replayed, and any
 
 To see caching in action, first clear your `dist` directory:
 
-```console
+```shell
 rm -rf dist/
 ```
 
 And run the command `npx nx build products-data-client`. (Recall that you had already run this target in [3- Task Running](/node-tutorial/3-task-running))
 
-```console
+```shell
 % npx nx build products-data-client
 
 > nx run products-data-client:build  [local cache]
@@ -176,7 +176,7 @@ Also notice that the result of your build has been added back to the `dist/libs/
 
 Next, run the command `npx nx build products-cli`:
 
-```console
+```shell
 % npx nx build products-cli
 
    ✔    1/1 dependent project tasks succeeded [1 read from cache]
@@ -200,7 +200,7 @@ webpack compiled successfully (bafa37be9890ecb2)
 
 Notice the line here:
 
-```console
+```shell
    ✔    1/1 dependent project tasks succeeded [1 read from cache]
 ```
 

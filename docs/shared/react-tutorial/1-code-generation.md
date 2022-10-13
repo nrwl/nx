@@ -4,7 +4,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 ---
 
 {% callout type="check" title="Two Styles of Repo" %}
-There are two styles of repos: integrated and package-based. This tutorial used the integrated style.
+There are two styles of repos: integrated and package-based. This tutorial shows the integrated style.
 
 You can find more information on the difference between the two in [our introduction](/getting-started/intro).
 {% /callout %}
@@ -29,13 +29,13 @@ For this tutorial, you'll create two React applications, a React lib for your co
 
 Run the command:
 
-```console
+```shell
 $ npx create-nx-workspace@latest
 ```
 
 When prompted, provide the following responses:
 
-```console
+```shell
 Workspace name (e.g., org name)     myorg
 What to create in the new workspace react
 Application name                    store
@@ -55,7 +55,7 @@ Once the command completes, notice two projects were added to the workspace:
 
 Run this command to create your `admin` app:
 
-```console
+```shell
 $ npx nx g @nrwl/react:app admin
 
 >  NX  Generating @nrwl/react:application
@@ -99,7 +99,7 @@ To create the `common-ui` and `products` libraries, use the `@nrwl/react:lib` an
 
 {% side-by-side %}
 
-```console
+```shell
 % npx nx g @nrwl/react:lib common-ui
 
 > NX Generating @nrwl/react:library
@@ -119,7 +119,7 @@ CREATE libs/common-ui/src/lib/common-ui.spec.tsx
 CREATE libs/common-ui/src/lib/common-ui.tsx
 ```
 
-```console
+```shell
 % npx nx g @nrwl/js:lib products
 
 >  NX  Generating @nrwl/js:library

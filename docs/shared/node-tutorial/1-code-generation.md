@@ -4,7 +4,7 @@ description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
 {% callout type="check" title="Two Styles of Repo" %}
-There are two styles of repos: integrated and package-based. This tutorial used the integrated style.
+There are two styles of repos: integrated and package-based. This tutorial shows the integrated style.
 
 You can find more information on the difference between the two in [our introduction](/getting-started/intro).
 {% /callout %}
@@ -31,13 +31,13 @@ For this tutorial, you'll create an Express API application, a CLI (command-line
 
 Run the command:
 
-```console
+```shell
 npx create-nx-workspace@latest
 ```
 
 When prompted, provide the following responses:
 
-```console
+```shell
 ✔ Workspace name (e.g., org name)     · my-products
 ✔ What to create in the new workspace · express
 ✔ Application name                    · products-api
@@ -51,7 +51,7 @@ Once the command complete, you can find your Express API application in `apps/pr
 
 Run this command to create your `products-cli` app:
 
-```console
+```shell
 % npx nx g @nrwl/node:app products-cli
 
 >  NX  Generating @nrwl/node:application
@@ -75,7 +75,7 @@ CREATE apps/products-cli/tsconfig.spec.json
 
 To create the `products-data-client` library, use the `@nrwl/js:lib` generator:
 
-```console
+```shell
 % npx nx g @nrwl/js:lib products-data-client
 
 >  NX  Generating @nrwl/js:library
