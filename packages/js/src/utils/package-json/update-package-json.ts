@@ -123,7 +123,7 @@ export function getUpdatedPackageJsonContent(
   // Bundlers/Compilers like webpack, tsc, swc do not have different file extensions.
   if (hasCjsFormat) {
     const { dir, name } = parse(mainJsFile);
-    const cjsMain = `${dir}/${name}${
+    const cjsMain = `${dir ? dir : '.'}/${name}${
       options.outputFileExtensionForCjs ?? '.js'
     }`;
     packageJson.main ??= cjsMain;
