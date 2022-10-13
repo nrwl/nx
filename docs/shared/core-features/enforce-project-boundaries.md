@@ -98,7 +98,7 @@ Next you should update your root lint configuration:
 
 - If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `"@nrwl/nx/enforce-module-boundaries"` and you should update the `"depConstraints"`:
 
-```jsonc
+```jsonc {% fileName=".eslintrc.json" %}
 {
   // ... more ESLint config here
 

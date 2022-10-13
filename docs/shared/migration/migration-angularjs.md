@@ -74,7 +74,7 @@ Copy the dependencies from the RealWorld app’s `package.json` to the `package.
 
 Your `package.json` should now look like this:
 
-```json
+```json {% fileName="package.json" %}
 {
   "name": "nx-migrate-angularjs",
   "version": "0.0.0",
@@ -219,7 +219,7 @@ During migration, you should take a small step and confirm that things work befo
 
 Copy the `gulpfile.js` over from the RealWorld app and put it in `apps/realworld`. This is where all configuration files reside for the application. Make some adjustments to this file so that your build artifacts land in a different place. In an Nx workspace, all build artifacts should be sent to an app-specific folder in the `dist` folder at the root of your workspace. Your `gulpfile.js` should look like this:
 
-```javascript
+```javascript {% fileName="gulpfile.js" %}
 var gulp = require('gulp');
 var notify = require('gulp-notify');
 var source = require('vinyl-source-stream');
@@ -318,7 +318,7 @@ gulp.task('default', ['html', 'browserify'], function () {
 
 You need to point your `build` and `serve` tasks at this gulp build process. Typically, an Angular app is built using the Angular CLI, but the Angular CLI doesn’t know how to build AngularJS projects. All of your tasks are configured in the project configuration file `apps/realworld/project.json`. Find the `build` and `serve` tasks and replace them with this code block:
 
-```json
+```jsonc {% fileName="apps/realworld/project.json" %}
 ...
         "build": {
           "executor": "nx:run-commands",
@@ -404,7 +404,7 @@ This webpack configuration is deliberately simplified for this tutorial. A real 
 
 To use webpack instead of gulp, go back to your `apps/realworld/project.json` file and modify the `build` and `serve` commands again:
 
-```json
+```jsonc {% fileName="apps/realworld/project.json" %}
 ...
 "build": {
   "executor": "@nrwl/web:webpack",
@@ -509,7 +509,7 @@ In an example like this, it’s easy enough to make this kind of change by hand.
 
 We also need to modify the `app.js` and remove the import of `config/app.templates.js`. Modify it like this:
 
-```javascript
+```javascript {% fileName="config/app.templates.js" %}
 import angular from 'angular';
 
 // Import our app config files
@@ -627,7 +627,7 @@ module.exports = function (config) {
 
 Next, rename the existing `apps/realworld/src/test.ts` to `apps/realworld/src/test.js` and modify its content to match the following:
 
-```javascript
+```javascript {% fileName="apps/realworld/src/test.js" %}
 import 'angular';
 import 'angular-mocks';
 import 'angular-ui-router';
@@ -692,8 +692,7 @@ Nx created `realworld-e2e` for you when you generated your app. There is an exam
 
 You need to modify these files to account for the RealWorld app layout. Make the following modifications:
 
-```typescript
-//app.e2e-spec.ts
+```typescript {% fileName="app.e2e-spec.ts" %}
 import { AppPage } from './app.po';
 import { browser, logging } from 'protractor';
 
@@ -722,8 +721,7 @@ describe('workspace-project App', () => {
 });
 ```
 
-```typescript
-// app.po.ts
+```typescript {% fileName="app.po.ts" %}
 import { browser, by, element } from 'protractor';
 
 export class AppPage {
@@ -739,7 +737,7 @@ export class AppPage {
 
 You also need to modify the project configuration of the `realworld-e2e` app at `apps/realworld-e2e/project.json`. This will point your e2e process at the `development` configuration of the `realworld` app by default.
 
-```json
+```jsonc {% fileName="apps/realworld-e2e/project.json" %}
 {
   ...
       "e2e": {

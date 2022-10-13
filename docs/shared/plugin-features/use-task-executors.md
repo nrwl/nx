@@ -12,7 +12,7 @@ There are two main differences between an executor and a shell script or an npm 
 
 Executors are associated with specific targets in a project's `project.json` file.
 
-```json
+```jsonc {% fileName="project.json" %}
 {
   "root": "apps/cart",
   "sourceRoot": "apps/cart/src",

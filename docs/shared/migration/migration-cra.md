@@ -200,7 +200,7 @@ module.exports = {
 
 Update your app's `package.json` file (path: `apps/webapp/package.json`) to use `craco` instead of `react-scripts`.
 
-```text
+```text {% fileName="apps/webapp/package.json" %}
 {
   ...
   "scripts": {
@@ -223,7 +223,7 @@ Your new project will use the `craco` scripts we added in `apps/webapp/package.j
 
 In `apps/webapp/project.json` remove the `targets` object. The result will look like this:
 
-```text
+```json {% fileName="apps/webapp/project.json" %}
 {
   "root": "apps/webapp",
   "sourceRoot": "apps/webapp/src",
@@ -236,7 +236,7 @@ In `apps/webapp/project.json` remove the `targets` object. The result will look 
 
 Modify `apps/webapp/tsconfig.json` to extend the root `tsconfig.base.json`. This is primarily to pickup the typescript aliases from the root tsconfig file.
 
-```json
+```jsonc {% fileName="apps/webapp/tsconfig.json" %}
 {
   "extends": "../../tsconfig.base.json",
   ...
@@ -300,7 +300,7 @@ nx generate lib ui-button
 
 The new library can be used in your app like by adding this code to `App.tsx`:
 
-```typescriptx
+```typescriptx {% fileName="App.tsx" %}
 //...
 import { UiButton } from '@acme/ui-button';
 //...

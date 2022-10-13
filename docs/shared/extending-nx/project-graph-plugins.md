@@ -12,7 +12,7 @@ One of the best features of Nx the ability to construct the project graph automa
 
 You can register a plugin by adding it to the plugins array in `nx.json`:
 
-```json
+```jsonc {% fileName="nx.json" %}
 {
   ...,
   "plugins": [

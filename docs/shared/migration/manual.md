@@ -18,7 +18,7 @@ npx create-nx-workspace@latest
 
 Select `empty` when prompted:
 
-```bash
+```{% command="npx create-nx-workspace@latest" %}
 ? What to create in the new workspace (Use arrow keys)
 ❯ empty             [an empty workspace with a layout that works best for building apps]
 ```

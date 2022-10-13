@@ -33,7 +33,7 @@ Let's say we have a repo with two projects. There's a React app (`react-app`) th
 
 In the root `nx.json` file, we can set the following `namedInputs`:
 
-```jsonc
+```jsonc {% fileName="nx.json" %}
 {
   "namedInputs": {
     "sharedGlobals": ["{workspaceRoot}/babel.config.json"],
@@ -60,7 +60,7 @@ These names are not hard-coded. You can add your own `namedInputs` or rename the
 
 With these `namedInputs` in place, we can set default `inputs` for project targets in `nx.json`:
 
-```jsonc
+```jsonc {% fileName="nx.json" %}
 {
   "namedInputs": {
     "sharedGlobals": [
@@ -95,7 +95,7 @@ The `test` target cache is invalidated if test or production code is changed in 
 
 In the `ui-library` library, we have some `*.spec.tsx` files that we don't want to count as production files. We can modify the project configuration to account for this:
 
-```jsonc
+```jsonc {% command="ui-library/project.json" %}
 {
   "namedInputs": {
     "production": [
@@ -124,7 +124,7 @@ The `build` and `test` `inputs` do not need to be modified at the project level,
 
 ## Scenario 2: Generated Documentation Site
 
-Lets say you have a repo with two projects, a `docs-site` app that contains all the code for rendering a documentation site and a `content` library that contains markdown files that are used as the content of the site.
+Let's say you have a repo with two projects, a `docs-site` app that contains all the code for rendering a documentation site and a `content` library that contains markdown files that are used as the content of the site.
 
 The `content` library has a node script `.ts` file that is used to check through the markdown files for internal broken links. The `test` target looks like this:
 

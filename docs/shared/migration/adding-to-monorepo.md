@@ -83,7 +83,7 @@ third_party # nx will ignore everything in the third-party dir
 
 After running `add-nx-to-monorepo` Nx will only analyze `package.json` files in the same way Lerna or Turborepo do.
 
-```json
+```json {% fileName="package.json" %}
 {
   "pluginsConfig": {
     "@nrwl/js": {
@@ -112,7 +112,7 @@ and require statements in your JS/TS files when creating its project graph. If y
 property to the root `tsconfig.base.json` (if you don't have this file, create it), which will tell Nx how to resolve
 imports.
 
-```json
+```json {% fileName="tsconfig.base.json" %}
 {
   "compilerOptions": {
     "paths": {
