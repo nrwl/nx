@@ -13,7 +13,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/ui-member-card"],
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-member-card"],
       "options": {
         "jestConfig": "nx-dev/ui-member-card/jest.config.ts",
         "passWithNoTests": true

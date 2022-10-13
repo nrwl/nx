@@ -9,7 +9,7 @@
         "jestConfig": "packages/devkit/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/devkit"]
+      "outputs": ["{workspaceRoot}/coverage/packages/devkit"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +57,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/devkit"],
+      "outputs": ["{workspaceRoot}/build/packages/devkit"],
       "options": {
         "command": "node ./scripts/copy-readme.js devkit"
       }

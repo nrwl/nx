@@ -9,7 +9,7 @@
         "jestConfig": "packages/workspace/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/workspace"]
+      "outputs": ["{workspaceRoot}/coverage/packages/workspace"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -73,7 +73,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/workspace"],
+      "outputs": ["{workspaceRoot}/build/packages/workspace"],
       "options": {
         "commands": [
           {

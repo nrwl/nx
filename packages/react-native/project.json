@@ -29,7 +29,7 @@
         "jestConfig": "packages/react-native/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/react-native"]
+      "outputs": ["{workspaceRoot}/coverage/packages/react-native"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -82,7 +82,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/react-native"],
+      "outputs": ["{workspaceRoot}/build/packages/react-native"],
       "options": {
         "command": "node ./scripts/copy-readme.js react-native"
       }

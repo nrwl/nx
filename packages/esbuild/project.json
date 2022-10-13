@@ -9,7 +9,7 @@
         "jestConfig": "packages/esbuild/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/esbuild"]
+      "outputs": ["{workspaceRoot}/coverage/packages/esbuild"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +57,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/esbuild"],
+      "outputs": ["{workspaceRoot}/build/packages/esbuild"],
       "options": {
         "command": "node ./scripts/copy-readme.js esbuild"
       }

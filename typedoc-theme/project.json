@@ -29,7 +29,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/typedoc-theme"],
+      "outputs": ["{workspaceRoot}/coverage/typedoc-theme"],
       "options": {
         "jestConfig": "typedoc-theme/jest.config.ts",
         "passWithNoTests": true

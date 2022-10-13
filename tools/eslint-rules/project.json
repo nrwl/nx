@@ -4,7 +4,7 @@
   "targets": {
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/tools/eslint-rules"],
+      "outputs": ["{workspaceRoot}/coverage/tools/eslint-rules"],
       "options": {
         "jestConfig": "tools/eslint-rules/jest.config.ts",
         "passWithNoTests": true

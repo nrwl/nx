@@ -11,7 +11,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/cra-to-nx"],
+      "outputs": ["{workspaceRoot}/coverage/packages/cra-to-nx"],
       "options": {
         "jestConfig": "packages/cra-to-nx/jest.config.ts",
         "passWithNoTests": true
@@ -39,7 +39,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/cra-to-nx"],
+      "outputs": ["{workspaceRoot}/build/packages/cra-to-nx"],
       "options": {
         "commands": [
           {

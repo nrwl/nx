@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/detox"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/detox"]
     }
   },
   "implicitDependencies": ["detox"]

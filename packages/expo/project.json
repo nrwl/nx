@@ -23,7 +23,7 @@
         "jestConfig": "packages/expo/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/expo"]
+      "outputs": ["{workspaceRoot}/coverage/packages/expo"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -73,7 +73,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/expo"],
+      "outputs": ["{workspaceRoot}/build/packages/expo"],
       "options": {
         "command": "node ./scripts/copy-readme.js expo"
       }

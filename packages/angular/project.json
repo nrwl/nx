@@ -9,7 +9,7 @@
         "jestConfig": "packages/angular/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/angular"]
+      "outputs": ["{workspaceRoot}/coverage/packages/angular"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -62,7 +62,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/angular"],
+      "outputs": ["{workspaceRoot}/build/packages/angular"],
       "options": {
         "commands": [
           {

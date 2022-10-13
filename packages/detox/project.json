@@ -29,7 +29,7 @@
         "jestConfig": "packages/detox/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/detox"]
+      "outputs": ["{workspaceRoot}/coverage/packages/detox"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -76,7 +76,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/detox"],
+      "outputs": ["{workspaceRoot}/build/packages/detox"],
       "options": {
         "command": "node ./scripts/copy-readme.js detox"
       }
