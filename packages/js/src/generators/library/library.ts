@@ -136,7 +136,7 @@ function addProject(
         options: {
           command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
         },
-        dependsOn: [{ projects: 'self', target: 'build' }],
+        dependsOn: ['build'],
       };
     }
   }
