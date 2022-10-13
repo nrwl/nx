@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/workspace-create"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/workspace-create"]
     }
   },
   "implicitDependencies": ["create-nx-workspace"]

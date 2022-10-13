@@ -11,7 +11,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/add-nx-to-monorepo"],
+      "outputs": ["{workspaceRoot}/coverage/packages/add-nx-to-monorepo"],
       "options": {
         "jestConfig": "packages/add-nx-to-monorepo/jest.config.ts",
         "passWithNoTests": true
@@ -38,7 +38,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/add-nx-to-monorepo"],
+      "outputs": ["{workspaceRoot}/build/packages/add-nx-to-monorepo"],
       "options": {
         "commands": [
           {

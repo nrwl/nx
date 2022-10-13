@@ -9,7 +9,7 @@
         "jestConfig": "packages/nest/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/nest"]
+      "outputs": ["{workspaceRoot}/coverage/packages/nest"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +57,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/nest"],
+      "outputs": ["{workspaceRoot}/build/packages/nest"],
       "options": {
         "command": "node ./scripts/copy-readme.js nest"
       }

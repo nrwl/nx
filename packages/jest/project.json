@@ -9,7 +9,7 @@
         "jestConfig": "packages/jest/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/jest"]
+      "outputs": ["{workspaceRoot}/coverage/packages/jest"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +57,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/jest"],
+      "outputs": ["{workspaceRoot}/build/packages/jest"],
       "options": {
         "command": "node ./scripts/copy-readme.js jest"
       }

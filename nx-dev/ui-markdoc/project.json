@@ -13,7 +13,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/ui-markdoc"],
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-markdoc"],
       "options": {
         "jestConfig": "nx-dev/ui-markdoc/jest.config.ts",
         "passWithNoTests": true

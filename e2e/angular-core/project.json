@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/angular-core"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/angular-core"]
     }
   },
   "implicitDependencies": ["angular"]

@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/react-native"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/react-native"]
     }
   },
   "implicitDependencies": ["react-native"]

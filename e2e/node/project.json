@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/node"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/node"]
     }
   },
   "implicitDependencies": ["node", "nest"]

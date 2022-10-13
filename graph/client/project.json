@@ -131,7 +131,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/graph/client"],
+      "outputs": ["{workspaceRoot}/coverage/graph/client"],
       "options": {
         "jestConfig": "graph/client/jest.config.ts",
         "passWithNoTests": true

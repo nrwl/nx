@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/nx-misc"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/nx-misc"]
     }
   },
   "implicitDependencies": ["js"]

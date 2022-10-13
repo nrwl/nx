@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/nx-init"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/nx-init"]
     }
   },
   "implicitDependencies": ["nx"]

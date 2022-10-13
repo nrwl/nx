@@ -27,7 +27,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/jest"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/jest"]
     }
   },
   "implicitDependencies": ["jest"]
