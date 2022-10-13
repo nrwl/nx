@@ -6,6 +6,7 @@ export const fence: Schema = {
     content: { type: 'String', render: false, required: true },
     language: { type: 'String' },
     fileName: { type: 'String', default: '' },
+    command: { type: 'String', default: '' },
     process: { type: 'Boolean', render: false, default: true },
   },
   transform(node, config) {

@@ -4,6 +4,8 @@ import React, { ReactNode, useEffect, useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 // @ts-ignore
 import SyntaxHighlighter from 'react-syntax-highlighter';
+import { CodeOutput } from './fences/codeOutput.component';
+import { TerminalOutput } from './fences/terminal-output.component';
 
 function resolveLanguage(lang: string) {
   switch (lang) {
@@ -15,27 +17,27 @@ function resolveLanguage(lang: string) {
       return lang;
   }
 }
-function CodeWrapper(
-  fileName: string
-): ({ children }: { children: ReactNode }) => JSX.Element {
-  return ({ children }: { children: ReactNode }) => (
-    <div className="hljs not-prose my-4 w-full overflow-x-auto rounded-lg border border-slate-200 bg-slate-50/50 font-mono text-sm dark:border-slate-700 dark:bg-slate-800/60">
-      {!!fileName && (
-        <div className="flex border-b border-slate-100 bg-slate-50/60 px-4 py-2 italic text-slate-400 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-500">
-          {fileName}
-        </div>
-      )}
-      <div className="p-4">{children}</div>
-    </div>
-  );
+
+function CodeWrapper(options: {
+  fileName: string;
+  command: string;
+}): ({ children }: { children: ReactNode }) => JSX.Element {
+  return ({ children }: { children: ReactNode }) =>
+    options.command ? (
+      <TerminalOutput content={children} command={options.command} />
+    ) : (
+      <CodeOutput content={children} fileName={options.fileName} />
+    );
 }
 
 export function Fence({
   children,
+  command,
   fileName,
   language,
 }: {
   children: string;
+  command: string;
   fileName: string;
   language: string;
 }) {
@@ -51,7 +53,6 @@ export function Fence({
       t && clearTimeout(t);
     };
   }, [copied]);
-
   return (
     <div className="w-full">
       <div className="code-block group relative inline-flex w-auto min-w-[50%] max-w-full">
@@ -63,7 +64,7 @@ export function Fence({
         >
           <button
             type="button"
-            className="not-prose absolute top-7 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
+            className="not-prose absolute top-7 right-2 z-10 flex opacity-0 transition-opacity group-hover:opacity-100"
           >
             <ClipboardDocumentIcon className="h-4 w-4" />
             <span className="ml-1 text-xs">{copied ? 'Copied!' : 'Copy'}</span>
@@ -73,7 +74,7 @@ export function Fence({
           useInlineStyles={false}
           language={resolveLanguage(language)}
           children={children}
-          PreTag={CodeWrapper(fileName)}
+          PreTag={CodeWrapper({ fileName, command })}
         />
       </div>
     </div>
