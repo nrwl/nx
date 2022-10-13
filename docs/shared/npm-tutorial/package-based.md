@@ -165,17 +165,16 @@ npx nx build is-even
 
 Run the same command a second time and you'll see the build cache is being used:
 
-```bash
-> nx build is-even
-
+```{% command="npx nx build is-even" %}
 > nx run is-even:build
 
 > @package-based/is-even@0.0.0 build
 > tsc index.ts --outDir dist
 
- —————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project is-even (1s)
+> NX Successfully ran target build for project is-even (1s)
+
 ```
 
 ## Running Multiple Tasks
@@ -188,9 +187,7 @@ npx nx run-many --target=build
 
 What you would get is the following:
 
-```bash
-> npx nx run-many --target=build
-
+```{% command="npx nx run-many --target=build" %}
     ✔  nx run is-even:build  [existing outputs match the cache, left as is]
     ✔  nx run is-odd:build (906ms)
 
