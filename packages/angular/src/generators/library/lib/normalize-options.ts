@@ -98,6 +98,7 @@ export function normalizeOptions(
     skipTests,
     selector,
     skipSelector,
+    flat,
     ...libraryOptions
   } = allNormalizedOptions;
 
@@ -115,6 +116,7 @@ export function normalizeOptions(
       skipTests,
       selector,
       skipSelector,
+      flat,
     },
   };
 }

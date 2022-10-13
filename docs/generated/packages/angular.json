@@ -979,6 +979,11 @@
             "type": "boolean",
             "default": false,
             "description": "Specifies if the component should have a selector or not. Disclaimer: This option is only valid when `--standalone` is set to `true`."
+          },
+          "flat": {
+            "type": "boolean",
+            "default": false,
+            "description": "Ensure the generated standalone component is not placed in a subdirectory. Disclaimer: This option is only valid when `--standalone` is set to `true`."
           }
         },
         "additionalProperties": false,

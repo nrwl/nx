@@ -16,6 +16,7 @@ export async function addStandaloneComponent(
     standalone: true,
     export: true,
     project: libraryOptions.name,
+    flat: componentOptions.flat,
   });
 
   if (libraryOptions.routing) {
@@ -28,7 +29,7 @@ export async function addStandaloneComponent(
     import { ${
       libraryOptions.standaloneComponentName
     } } from './${joinPathFragments(
-      libraryOptions.fileName,
+      componentOptions.flat ? '' : libraryOptions.fileName,
       `${libraryOptions.fileName}.component`
     )}';
     
