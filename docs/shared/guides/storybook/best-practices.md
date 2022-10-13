@@ -132,9 +132,9 @@ Before moving on to the examples section, it could be useful to read the [Librar
 
 You can check out the following examples (recipes) to see publishing strategies for Storybook in Nx:
 
-- [One main Storybook instance for all projects](/recipe/one-storybook-for-all)
-- [One Storybook instance per scope](/recipe/one-storybook-per-scope)
-- [One main Storybook instance using Storybook Composition](/recipe/one-storybook-with-composition)
+- [One main Storybook instance for all projects](/recipes/storybook/one-storybook-for-all)
+- [One Storybook instance per scope](/recipes/storybook/one-storybook-per-scope)
+- [One main Storybook instance using Storybook Composition](/recipes/storybook/one-storybook-with-composition)
 
 ## Conclusion
 

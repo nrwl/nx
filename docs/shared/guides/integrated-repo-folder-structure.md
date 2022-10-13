@@ -16,7 +16,7 @@ myorg/
 
 `/libs/` contains the library projects. There are many kinds of libraries, and each library defines its own external API so that boundaries between libraries remain clear.
 
-`/tools/` contains scripts that act on your code base. This could be database scripts, [local executors](/recipe/creating-custom-executors), or [local generators](/recipe/local-generators).
+`/tools/` contains scripts that act on your code base. This could be database scripts, [local executors](/recipes/executors/creating-custom-executors), or [local generators](/recipes/generators/local-generators).
 
 `/nx.json` configures the Nx CLI itself. It tells Nx what needs to be cached, how to run tasks etc.
 

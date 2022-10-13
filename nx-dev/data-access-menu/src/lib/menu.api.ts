@@ -19,13 +19,12 @@ export class MenuApi {
     const items = createMenuItems(this.documents);
     if (!items) throw new Error(`Cannot find any documents`);
 
+    const isAncestor: boolean = Boolean(
+      items.length === 1 && items[0].itemList && items[0].itemList.length > 1
+    );
     menu = {
       sections: this.extractorFunctions.map((categorizer) =>
-        categorizer(
-          items.length === 1 && items[0].id === 'nx-cloud'
-            ? (items[0].itemList as MenuItem[])
-            : items
-        )
+        categorizer(isAncestor ? (items[0].itemList as MenuItem[]) : items)
       ),
     };
 

@@ -259,7 +259,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 }
 ```
 
-To get an in-depth guide on customizing/running or debugging your generator see [local generators](/recipe/local-generators).
+To get an in-depth guide on customizing/running or debugging your generator see [local generators](/recipes/generators/local-generators).
 
 #### Usage
 

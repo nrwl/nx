@@ -78,4 +78,4 @@ But there are other ways to make the build process incremental. One of them is u
 
 When using WebPack Module Federation, you split the application into multiple webpack builds. Imagine the application has 3 big sections, and they are built using 3 webpack builds: `W1`, `W2`, and `W3`. Each of them has to build shared code in addition to building the corresponding application section code. So the time it takes to build all of them (`W1` + `W2` + `W3`) will be greater than `W`. However, if you change only Section 1, you will only need to run `W1`. `W2` and `W3` will be retrieved from cache. In addition, `W1`, `W2`, and `W3` can run on separate machines. Because of that, both the CI time and the local serve time can be drastically reduced.
 
-Learn more: [Faster Builds with Module Federation](/recipe/faster-builds)
+Learn more: [Faster Builds with Module Federation](/recipes/module-federation/faster-builds)

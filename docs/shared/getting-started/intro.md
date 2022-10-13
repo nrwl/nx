@@ -19,7 +19,7 @@ Here's a deep dive on [Integrated Repos vs. Package-Based Repos](/concepts/integ
 ## Getting Started
 
 - [Nx core tutorial](/core-tutorial/01-create-blog) will help you understand the core of Nx.
-- [Adding Nx to an existing monorepo](/recipe/adding-to-monorepo) shows several paths to adopting Nx in your organization.
+- [Adding Nx to an existing monorepo](/recipes/adopting-nx/adding-to-monorepo) shows several paths to adopting Nx in your organization.
 - [Mental model](/concepts/mental-model) is a good starting point for those who like to understand things theoretically first.
 
 If you want to use Nx plugins to really level up your productivity, pick one of the following tutorials:

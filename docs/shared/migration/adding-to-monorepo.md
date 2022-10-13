@@ -1,7 +1,7 @@
 # Adding Nx to Lerna/Yarn/PNPM/NPM Workspace
 
 {% callout type="note" title="Migrating from Lerna?" %}
-Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This allows for a much better integration between the two. [Read more in our dedicated guide](/recipe/lerna-and-nx).
+Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This allows for a much better integration between the two. [Read more in our dedicated guide](/recipes/adopting-nx/lerna-and-nx).
 {% /callout %}
 
 **Short story:** you can use Nx easily together with your current Lerna/Yarn/PNPM/NPM monorepo setup. Why? To speed up
@@ -62,7 +62,7 @@ This sets up Nx core in your existing monorepo which comes with a series of inte
 
 ## Looking for integrating Lerna and Nx?
 
-Check out our dedicated guide: [Lerna and Nx](/recipe/lerna-and-nx)
+Check out our dedicated guide: [Lerna and Nx](/recipes/adopting-nx/lerna-and-nx)
 
 ## Further customizations
 

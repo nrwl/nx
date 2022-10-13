@@ -129,11 +129,11 @@ CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly.
 
 Read the guides for more information on how to configure them in CI.
 
-- [Overview](/recipes/ci-setup#distributed-ci-with-nx-cloud)
-- [Azure Pipelines](/recipe/monorepo-ci-azure#distributed-ci-with-nx-cloud)
-- [Circle CI](/recipe/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
-- [GitHub Actions](/recipe/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
-- [Jenkins](/recipe/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
+- [Overview](/recipes/ci/ci-setup#distributed-ci-with-nx-cloud)
+- [Azure Pipelines](/recipes/ci/monorepo-ci-azure#distributed-ci-with-nx-cloud)
+- [Circle CI](/recipes/ci/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
+- [GitHub Actions](/recipes/ci/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
+- [Jenkins](/recipes/ci/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
 
 Note that only cacheable operations can be distributed because they have to be replayed on the main job.
 

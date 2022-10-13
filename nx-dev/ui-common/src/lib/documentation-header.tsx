@@ -63,7 +63,7 @@ export function DocumentationHeader({
     },
     {
       name: 'Recipes',
-      href: '/recipes/all',
+      href: '/recipes',
       current: isRecipes,
     },
   ];

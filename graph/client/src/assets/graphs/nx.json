@@ -18139,15 +18139,15 @@
             "hash": "999f8854b2cf195f8a0a7b3026320a0a125174be"
           },
           {
-            "file": "docs/shared/recipes/advanced-update.md",
+            "file": "docs/shared/recipes/other/advanced-update.md",
             "hash": "6ad45fbb024118d6b3e6dbba0f9a8b910141331c"
           },
           {
-            "file": "docs/shared/recipes/ban-dependencies-with-tags.md",
+            "file": "docs/shared/recipes/other/ban-dependencies-with-tags.md",
             "hash": "c43e666d41fef0331bdc072f293a76d22eb9a607"
           },
           {
-            "file": "docs/shared/recipes/ban-external-imports.md",
+            "file": "docs/shared/recipes/other/ban-external-imports.md",
             "hash": "825cf907bf9aae69bbc97cc979b4b3edb5f71d9f"
           },
           {
@@ -18187,11 +18187,11 @@
             "hash": "c2113b3d68dfcb234ee225afe382b83847f21440"
           },
           {
-            "file": "docs/shared/recipes/tag-multiple-dimensions.md",
+            "file": "docs/shared/recipes/other/tag-multiple-dimensions.md",
             "hash": "70f7256551db65ad586d1c49f0e554acad993d19"
           },
           {
-            "file": "docs/shared/recipes/tags-allow-list.md",
+            "file": "docs/shared/recipes/other/tags-allow-list.md",
             "hash": "39262d8ac3bdc913d62f327f8c68f494c5d2e146"
           },
           {

@@ -99,7 +99,7 @@ make sure to also include
 
 for the components to be included in the TypeScript compilation as well.
 
-This applies in cases where, for example, you have [one single Storybook for your whole workspace](/recipe/one-storybook-for-all), where you import stories from all the projects. In that case, you need to import all the components as well!
+This applies in cases where, for example, you have [one single Storybook for your whole workspace](/recipes/storybook/one-storybook-for-all), where you import stories from all the projects. In that case, you need to import all the components as well!
 {% /callout %}
 
 ### 3. Enable `compodoc` and configure it
