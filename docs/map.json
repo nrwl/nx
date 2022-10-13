@@ -481,7 +481,7 @@
             "name": "CI Setup",
             "id": "ci-setup",
             "tags": ["distribute-task-execution"],
-            "path": "/recipes/ci-overview"
+            "path": "/recipes/ci/ci-setup"
           },
           {
             "name": "Adopting Nx",
