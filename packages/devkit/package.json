@@ -35,7 +35,7 @@
     "semver": "7.3.4"
   },
   "peerDependencies": {
-    "nx": ">= 13.10 <= 15"
+    "nx": ">= 14 <= 16"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
