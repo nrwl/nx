@@ -144,5 +144,6 @@
         }
       ]
     }
-  }
+  },
+  "examplesFile": "../../../docs/tsc-examples.md"
 }
