@@ -123,7 +123,7 @@ module.exports = {
 
 ### Optional: use `run-commands` and create a `storybook-composition` target
 
-If you want to take advantage of the [`run-commands`](https://nx.dev/packages/workspace/executors/run-commands) functionality of Nx, you can create a custom target that will invoke the `run-parallel` command for your "composed" Storybook instances.
+If you want to take advantage of the [`run-commands`](https://nx.dev/packages/nx/executors/run-commands) functionality of Nx, you can create a custom target that will invoke the `run-parallel` command for your "composed" Storybook instances.
 
 The objective is to end up with a new target in your `main-host`'s `project.json` file (`apps/main-host/project.json`) that looks like this:
 
