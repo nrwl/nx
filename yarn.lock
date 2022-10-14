@@ -1920,9 +1920,9 @@
   integrity sha512-LGp06SrGv7BMaIQlTs8s2G06moqkI0cb0b8stgq7KZ3xcHdH3qMP+cRyV7qe5x4XEW/IGY48BW4fLesD6NQLng==
 
 "@heroicons/react@^2.0.10":
-  version "2.0.11"
-  resolved "https://registry.yarnpkg.com/@heroicons/react/-/react-2.0.11.tgz#2c6cf4c66d81142ec87c102502407d8c353558bb"
-  integrity sha512-bASjOgSSaYj8HqXWsOqaBiB6ZLalE/g90WYGgZ5lPm4KCCG7wPXntY4kzHf5NrLh6UBAcnPwvbiw1Ne9GYfJtw==
+  version "2.0.12"
+  resolved "https://registry.yarnpkg.com/@heroicons/react/-/react-2.0.12.tgz#7e5a16c82512f89a30266dd36f8b8465b3e3e216"
+  integrity sha512-FZxKh3i9aKIDxyALTgIpSF2t6V6/eZfF5mRu41QlwkX3Oxzecdm1u6dpft6PQGxIBwO7TKYWaMAYYL8mp/EaOg==
 
 "@humanwhocodes/config-array@^0.9.2":
   version "0.9.5"
@@ -2998,10 +2998,10 @@
     npmlog "^6.0.2"
     write-file-atomic "^4.0.1"
 
-"@markdoc/markdoc@0.1.12":
-  version "0.1.12"
-  resolved "https://registry.yarnpkg.com/@markdoc/markdoc/-/markdoc-0.1.12.tgz#4665c9d34c99da264b80aea90d2b08496145ac6a"
-  integrity sha512-/TtQ12tMbPSTqeds62kGukgwmN+UeCURIRtEHC6ypU7XY9cW/+6IbHaekpmnXttOeoJV71eSVxbNABQOAoCYiA==
+"@markdoc/markdoc@0.1.13":
+  version "0.1.13"
+  resolved "https://registry.yarnpkg.com/@markdoc/markdoc/-/markdoc-0.1.13.tgz#358408d3b4edf5dae90b51c2d8d89d51743dbd18"
+  integrity sha512-zUdUpr2U3tf0uBQKr1aAiNDvwtZChAjCw3WPVv4PMKcPjYYlVHE0lizIS3NjChruRPJ2FvVQAI4ceyNpJWobiw==
 
 "@mdx-js/mdx@^1.6.22":
   version "1.6.22"
