@@ -51,7 +51,7 @@ The properties inside each of these these targets is defined as follows:
 
 ## Running Tasks
 
-![Syntax for Running Tasks in Nx](/shared/react-tutorial/run-target-syntax.png)
+![Syntax for Running Tasks in Nx](/shared/react-tutorial/run-target-syntax.svg)
 
 Run the `test` target for your `common-ui` project:
 

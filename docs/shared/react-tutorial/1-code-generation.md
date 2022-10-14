@@ -23,7 +23,7 @@ You can find more information on the difference between the two in [our introduc
 
 For this tutorial, you'll create two React applications, a React lib for your common components, and a library for your business logic as follows:
 
-![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
+![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.svg)
 
 ## Creating an Nx Workspace
 
@@ -87,7 +87,7 @@ CREATE apps/admin/jest.config.ts
 CREATE apps/admin/tsconfig.spec.json
 ```
 
-![Nx Generator Syntax](/shared/react-tutorial/generator-syntax.png)
+![Nx Generator Syntax](/shared/react-tutorial/generator-syntax.svg)
 
 ## Generating Libraries
 
