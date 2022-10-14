@@ -99,7 +99,7 @@ jobs:
           version: 7.1.0
 
       - name: Use Node.js ${{ matrix.node_version }}
-        uses: actions/setup-node@v2.4.0
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
           registry-url: http://localhost:4872
@@ -109,7 +109,7 @@ jobs:
         run: echo "::set-output name=dir::$(yarn cache dir)"
 
       - name: Cache yarn
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ matrix.os }}-node-${{ matrix.node_version }}-yarn-${{ hashFiles('yarn.lock') }}
