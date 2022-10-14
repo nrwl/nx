@@ -111,7 +111,7 @@ export async function runCommand(
   overrides: any,
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  extraOptions: { excludeTaskDependencies: boolean }
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
 ) {
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
@@ -183,6 +183,10 @@ export async function runCommand(
 
       if (process.env.NX_PROFILE) {
         lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
+      }
+
+      if (extraOptions.loadDotEnvFiles) {
+        process.env.NX_LOAD_DOT_ENV_FILES = 'true';
       }
 
       const promiseOrObservable = tasksRunner(
