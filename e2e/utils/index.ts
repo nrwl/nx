@@ -1,5 +1,4 @@
 import {
-  createProjectGraphAsync,
   joinPathFragments,
   parseJson,
   ProjectConfiguration,
@@ -399,7 +398,32 @@ export async function cleanupProject(opts?: RunCmdOpts) {
 }
 
 export function runCypressTests() {
-  return process.env.NX_E2E_RUN_CYPRESS === 'true';
+  if (process.env.NX_E2E_RUN_CYPRESS === 'true') {
+    let cypressVerified = true;
+    try {
+      const r = execSync('npx cypress verify', {
+        stdio: 'inherit',
+        encoding: 'utf-8',
+        cwd: tmpProjPath(),
+      });
+      if (r.indexOf('Verified Cypress!') === -1) {
+        cypressVerified = false;
+      }
+    } catch {
+      cypressVerified = false;
+    } finally {
+      if (!cypressVerified) {
+        e2eConsoleLogger('Cypress was not verified. Installing Cypress now.');
+        execSync('npx cypress install', {
+          stdio: 'inherit',
+          encoding: 'utf-8',
+          cwd: tmpProjPath(),
+        });
+      }
+    }
+    return true;
+  }
+  return false;
 }
 
 export function isNotWindows() {
