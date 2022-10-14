@@ -25,7 +25,7 @@ In this tutorial you'll create a backend-focused workspace with Nx.
 
 For this tutorial, you'll create an Express API application, a CLI (command-line interface) application, and a library for a data client that these two applications will use to interact with a data-source.
 
-![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
+![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.svg)
 
 ## Creating an Nx Workspace
 
@@ -64,7 +64,7 @@ CREATE apps/products-cli/jest.config.ts
 CREATE apps/products-cli/tsconfig.spec.json
 ```
 
-![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.png)
+![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.svg)
 
 ## Generating Libraries
 

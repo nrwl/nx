@@ -6,7 +6,7 @@ Run the command: `npx nx graph`. A browser should open up with the following con
 
 This is still different from the design from the start of Part 1:
 
-![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
+![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.svg)
 
 The Project Graph is derived from the source code of your workspace. Make the following adjustments to your existing projects, so that our Project Graph will match the design:
 
@@ -115,7 +115,7 @@ Now run `npx nx graph` again:
 {% side-by-side %}
 ![Matching Graph](/shared/node-tutorial/matching-graph.png)
 
-![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.png)
+![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.svg)
 {% /side-by-side %}
 
 Your graph now matches the original design.

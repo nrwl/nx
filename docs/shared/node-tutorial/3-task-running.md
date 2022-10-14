@@ -60,7 +60,7 @@ The properties inside each of these these targets is defined as follows:
 
 ## Running Tasks
 
-![Syntax for Running Tasks in Nx](/shared/node-tutorial/run-target-syntax.png)
+![Syntax for Running Tasks in Nx](/shared/node-tutorial/run-target-syntax.svg)
 
 Run the `build` target for your `products-data-client` project:
 
