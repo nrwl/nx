@@ -11,16 +11,12 @@ In this tutorial you:
 
 {% cards %}
 
-{% card title="Free Nx Course on YouTube" description="Follow up this tutorial with our free Nx Course." type="video" url="https://www.youtube.com/playlist?list=PLakNactNC1dH38AfqmwabvOszDmKriGco" /%}
+{% card title="Core Features" description="Read about the core features of Nx." url="/core-features" /%}
 
-{% card title="Free Nx Course From Egghead" type="external" description="Follow up this tutorial with a free course on React development with Nx we made in collaboration with Egghead." url="https://egghead.io/courses/scale-react-development-with-nx-4038" /%}
+{% card title="Plugin Features" description="Read about the plugin features of Nx." url="/plugin-features" /%}
 
-{% card title="Core Features" description="Learn more about the Core Features of Nx." url="/core-features" /%}
+{% card title="Mental Model" description="Get a deeper understanding of the mental model." url="/concepts/mental-model" /%}
 
-{% card title="The Nx Mental Model" description="Expand your Mental Model of Nx." url="/concepts/mental-model" /%}
-
-{% card title="Distributed Task Execution" description="Learn how to use Nx Cloud for Distributed Task Execution to speed up your CI times even more." url="/concepts/dte" /%}
-
-{% card title="Configure CI For Your Workspace" description="Learn how to create CI configuration for your workspace using our ci-workflow generator, or by creating your own workflow." url="/recipes/ci-setup" /%}
+{% card title="Adopting Nx" description="Learn how to add Nx to your existing repo." url="/recipes/adopting-nx" /%}
 
 {% /cards %}

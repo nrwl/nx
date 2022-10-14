@@ -210,6 +210,18 @@ npx nx affected --target=build
 
 ## Learn More
 
-- Read about the [core features](/core-features) and [plugin features](/plugin-features) of Nx
-- Get a deeper understanding of the [mental model](/concepts/mental-model) behind Nx.
-- [Adopt Nx](/recipes/adopting-nx) in your existing repo
+{% cards %}
+
+{% card title="Core Features" description="Read about the core features of Nx." url="/core-features" /%}
+
+{% card title="Mental Model" description="Get a deeper understanding of the mental model." url="/concepts/mental-model" /%}
+
+{% card title="Adopting Nx" description="Learn how to add Nx to your existing repo." url="/recipes/adopting-nx" /%}
+
+{% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="/concepts/integrated-vs-package-based" /%}
+
+{% card title="React Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with React applications sharing code." url="/getting-started/react-tutorial" /%}
+
+{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/getting-started/node-tutorial" /%}
+
+{% /cards %}
