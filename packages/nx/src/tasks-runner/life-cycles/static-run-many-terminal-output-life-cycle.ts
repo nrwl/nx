@@ -46,7 +46,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       bodyLines.push(`${output.dim('With additional flags:')}`);
       Object.entries(this.taskOverrides)
         .map(([flag, value]) => formatFlags('', flag, value))
-        .forEach((arg) => bodyLines.push(arg));
+        .forEach((arg) => bodyLines.push(...arg));
     }
 
     let title = `Running target ${output.bold(

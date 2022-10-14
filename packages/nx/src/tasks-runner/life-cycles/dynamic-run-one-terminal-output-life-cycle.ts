@@ -289,9 +289,11 @@ export async function createRunOneDynamicOutputRenderer({
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(leftPadding, flag, value))
+            formatFlags(leftPadding, flag, value).map((flag) =>
+              output.dim.green(flag)
+            )
           )
-          .forEach((arg) => taskOverridesLines.push(arg));
+          .forEach((arg) => taskOverridesLines.push(...arg));
       }
 
       const pinnedFooterLines = [
@@ -330,9 +332,11 @@ export async function createRunOneDynamicOutputRenderer({
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(leftPadding, flag, value))
+            formatFlags(leftPadding, flag, value).map((flag) =>
+              output.dim.red(flag)
+            )
           )
-          .forEach((arg) => taskOverridesLines.push(arg));
+          .forEach((arg) => taskOverridesLines.push(...arg));
       }
 
       renderLines(
