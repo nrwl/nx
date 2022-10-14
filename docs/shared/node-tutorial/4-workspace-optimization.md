@@ -1,6 +1,6 @@
 # Node Tutorial - Part 4: Workspace Optimization
 
-## The Affected Command
+## Testing Affected Projects
 
 `affected` is a mechanism that relies on your git metadata to determine the projects in your workspace that were affected by a given commit.
 
@@ -172,7 +172,7 @@ Also notice that the result of your build has been added back to the `dist/libs/
 
 {% card title="More Task Caching Details" description="See the documentation for more information on caching." url="/core-features/cache-task-results" /%}
 
-## The Task Graph
+## Configuring Task Pipelines
 
 Next, run the command `npx nx build products-cli`:
 

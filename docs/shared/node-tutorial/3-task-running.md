@@ -2,7 +2,7 @@
 
 Common tasks include:
 
-- Building a distributable
+- Building an application
 - Serving an application locally for development purposes
 - Running your unit tests
 - Linting your code

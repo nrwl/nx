@@ -36,10 +36,12 @@ $ npx create-nx-workspace@latest
 When prompted, provide the following responses:
 
 ```shell
-Workspace name (e.g., org name)     myorg
-What to create in the new workspace react
-Application name                    store
-Default stylesheet format           CSS
+✔ Choose your style                     · integrated
+✔ What to create in the new workspace   · react
+✔ Repository name                       · myorg
+✔ Application name                      · store
+✔ Default stylesheet format             · css
+✔ Enable distributed caching to make your CI faster · No
 ```
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}

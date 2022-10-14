@@ -8,9 +8,7 @@ This is still different than the design from the start of Part 1:
 
 ![Our Workspace Requirements](/shared/react-tutorial/requirements-diagram.png)
 
-The Project Graph is primarily descriptive in nature, rather than prescriptive. Edges connecting nodes are created based on your projects' source code.
-
-Make the following adjustments to your existing projects, so that our Project Graph will match the design:
+The Project Graph is derived from the source code of your workspace. Make the following adjustments to your existing projects, so that our Project Graph will match the design:
 
 ### `common-ui`
 
