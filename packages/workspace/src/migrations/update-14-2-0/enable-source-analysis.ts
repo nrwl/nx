@@ -1,28 +1,29 @@
 import {
   formatFiles,
-  readWorkspaceConfiguration,
+  NxJsonConfiguration,
   Tree,
-  updateWorkspaceConfiguration,
+  updateJson,
 } from '@nrwl/devkit';
 
 export async function enableSourceAnalysis(tree: Tree) {
-  const config = readWorkspaceConfiguration(tree);
-  if (
-    config.extends === 'nx/presets/core.json' ||
-    config.extends === 'nx/presets/npm.json'
-  ) {
-    const explicitlyDisabled =
-      config.pluginsConfig &&
-      config.pluginsConfig['@nrwl/js'] &&
-      (config.pluginsConfig['@nrwl/js'] as any).analyzeSourceFiles === false;
+  updateJson<NxJsonConfiguration>(tree, 'nx.json', (config) => {
+    if (
+      config.extends === 'nx/presets/core.json' ||
+      config.extends === 'nx/presets/npm.json'
+    ) {
+      const explicitlyDisabled =
+        config.pluginsConfig &&
+        config.pluginsConfig['@nrwl/js'] &&
+        (config.pluginsConfig['@nrwl/js'] as any).analyzeSourceFiles === false;
 
-    if (!explicitlyDisabled) {
-      config.pluginsConfig ||= {};
-      config.pluginsConfig['@nrwl/js'] ||= {};
-      (config.pluginsConfig['@nrwl/js'] as any).analyzeSourceFiles = true;
+      if (!explicitlyDisabled) {
+        config.pluginsConfig ||= {};
+        config.pluginsConfig['@nrwl/js'] ||= {};
+        (config.pluginsConfig['@nrwl/js'] as any).analyzeSourceFiles = true;
+      }
     }
-  }
-  updateWorkspaceConfiguration(tree, config);
+    return config;
+  });
   await formatFiles(tree);
 }
 
