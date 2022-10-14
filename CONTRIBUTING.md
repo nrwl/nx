@@ -66,7 +66,7 @@ Check out [this video for a live walkthrough](https://youtu.be/Tx257WpNsxc) or f
 
 If you have problems publishing, make sure you use Node 16 and NPM 6 or 8.
 
-**NOTE:** After you finish with local testing don't forget to stop the local registry (either closing the Terminal 1 or running `yarn local-registry stop`) and disabling the local registy using `yarn local-registry disable`. Keeping local registry enabled will change your lock file resolutions to `localhost:4873` on the next `yarn install`.
+**NOTE:** After you finish with local testing don't forget to stop the local registry (e.g. closing the Terminal 1) and disabling the local registy using `yarn local-registry disable`. Keeping local registry enabled will change your lock file resolutions to `localhost:4873` on the next `yarn install`. You can also run `yarn local-registry clear` to clean all packages in that local registry.
 
 ### Publishing for Yarn 2+ (Berry)
 
