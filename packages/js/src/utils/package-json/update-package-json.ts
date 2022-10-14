@@ -88,10 +88,14 @@ export function getUpdatedPackageJsonContent(
     options.projectRoot
   );
   const typingsFile = `${relativeMainFileDir}${mainFile}.d.ts`;
-  const exports = {
-    '.': {},
-    ...packageJson.exports,
-  };
+
+  const exports =
+    typeof packageJson.exports === 'string'
+      ? packageJson.exports
+      : {
+          '.': {},
+          ...packageJson.exports,
+        };
 
   const mainJsFile =
     options.outputFileName ?? `${relativeMainFileDir}${mainFile}.js`;
@@ -105,7 +109,13 @@ export function getUpdatedPackageJsonContent(
       packageJson.main ??= mainJsFile;
     }
 
-    exports['.']['import'] = mainJsFile;
+    if (typeof exports !== 'string') {
+      if (typeof exports['.'] !== 'string') {
+        exports['.']['import'] ??= mainJsFile;
+      } else if (!hasCjsFormat) {
+        exports['.'] ??= mainJsFile;
+      }
+    }
   }
 
   // CJS output may have .cjs or .js file extensions.
@@ -117,7 +127,13 @@ export function getUpdatedPackageJsonContent(
       options.outputFileExtensionForCjs ?? '.js'
     }`;
     packageJson.main ??= cjsMain;
-    exports['.']['require'] = cjsMain;
+    if (typeof exports !== 'string') {
+      if (typeof exports['.'] !== 'string') {
+        exports['.']['require'] ??= cjsMain;
+      } else if (!hasEsmFormat) {
+        exports['.'] ??= cjsMain;
+      }
+    }
   }
 
   if (options.generateExportsField) {

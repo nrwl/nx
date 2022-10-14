@@ -54,7 +54,7 @@ export function updatePackageJson(
   packageJson.types = types;
 
   // TODO(jack): remove this for Nx 16
-  if (options.generateExportsField) {
+  if (options.generateExportsField && typeof packageJson.exports !== 'string') {
     packageJson.exports = {
       ...packageJson.exports,
       ...exports,
