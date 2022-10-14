@@ -226,7 +226,7 @@ export function splitArgsIntoNxArgsAndOverrides(
           )} is not meant to be used for any sizable project or to be used in CI.`,
           '',
           `${output.dim(
-            'Learn more about checking only what is affected: https://nx.dev/cli/affected'
+            'Learn more about checking only what is affected: https://nx.dev/nx/affected'
           )}`,
         ],
       });

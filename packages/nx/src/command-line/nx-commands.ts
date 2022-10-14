@@ -929,7 +929,7 @@ function linkToNxDevAndExamples(yargs: yargs.Argv, command: string) {
   });
   return yargs.epilog(
     chalk.bold(
-      `Find more information and examples at https://nx.dev/cli/${command.replace(
+      `Find more information and examples at https://nx.dev/nx/${command.replace(
         ':',
         '-'
       )}`
