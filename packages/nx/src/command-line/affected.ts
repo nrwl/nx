@@ -125,7 +125,7 @@ export async function affected(
           overrides,
           null,
           extraTargetDependencies,
-          { excludeTaskDependencies: false }
+          { excludeTaskDependencies: false, loadDotEnvFiles: true }
         );
         break;
       }

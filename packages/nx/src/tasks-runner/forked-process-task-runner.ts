@@ -378,16 +378,20 @@ export class ForkedProcessTaskRunner {
   }
 
   private getDotenvVariablesForTask(task: Task) {
-    return {
-      ...this.getDotenvVariablesForForkedProcess(),
-      ...parseEnv(`.${task.target.target}.env`),
-      ...parseEnv(`.env.${task.target.target}`),
-      ...parseEnv(`${task.projectRoot}/.env`),
-      ...parseEnv(`${task.projectRoot}/.local.env`),
-      ...parseEnv(`${task.projectRoot}/.env.local`),
-      ...parseEnv(`${task.projectRoot}/.${task.target.target}.env`),
-      ...parseEnv(`${task.projectRoot}/.env.${task.target.target}`),
-    };
+    if (process.env.NX_LOAD_DOT_ENV_FILES == 'true') {
+      return {
+        ...this.getDotenvVariablesForForkedProcess(),
+        ...parseEnv(`.${task.target.target}.env`),
+        ...parseEnv(`.env.${task.target.target}`),
+        ...parseEnv(`${task.projectRoot}/.env`),
+        ...parseEnv(`${task.projectRoot}/.local.env`),
+        ...parseEnv(`${task.projectRoot}/.env.local`),
+        ...parseEnv(`${task.projectRoot}/.${task.target.target}.env`),
+        ...parseEnv(`${task.projectRoot}/.env.${task.target.target}`),
+      };
+    } else {
+      return {};
+    }
   }
 
   // endregion Environment Variables
