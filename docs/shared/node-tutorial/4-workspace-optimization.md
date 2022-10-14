@@ -6,8 +6,8 @@
 
 Run the command:
 
-```shell
-git add . && git commit -m "commiting to test affected"
+```{% command="git add . && git commit -m 'commiting to test affected'" path="~/my-products" %}
+
 ```
 
 Then make a change to your example products in your `products-data-client` project:
@@ -21,8 +21,8 @@ export const exampleProducts: Record<string, Product> = {
 
 Run the following command to visualize how our workspace is affected by this change:
 
-```shell
-npx nx affected:graph
+```{% command="npx nx affected:graph" path="~/my-products" %}
+
 ```
 
 ![Project Graph with All Affected](/shared/node-tutorial/project-graph-with-all-affected.png)
@@ -31,8 +31,8 @@ The change made to the `products-data-client` project is also affecting the `pro
 
 Next, stash your changes since the commit:
 
-```shell
-git stash
+```{% command="git stash" path="~/my-products" %}
+
 ```
 
 And then make a minor adjustment to the `products-cli` project:
@@ -64,8 +64,8 @@ function getProvidedId() {
 
 Now run the command to visualize the affected graph again:
 
-```shell
-npx nx affected:graph
+```{% command="npx nx affected:graph" path="~/my-products" %}
+
 ```
 
 ![Project Graph with One Affected](/shared/node-tutorial/project-graph-with-one-affected.png)
@@ -74,8 +74,8 @@ This can be leveraged to run tasks only on the projects that were affected by th
 
 To run the `test` targets only for affected projects, run the command:
 
-```shell
-npx nx affected --target=test
+```{% command="npx nx affected --target=test" path="~/my-products" %}
+
 ```
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
@@ -145,14 +145,13 @@ Outputs are stored in the cache so that terminal output can be replayed, and any
 
 To see caching in action, first clear your `dist` directory:
 
-```shell
-rm -rf dist/
+```{% command="rm -rf dist/" path="~/my-products" %}
+
 ```
 
 And run the command `npx nx build products-data-client`. (Recall that you had already run this target in [3- Task Running](/node-tutorial/3-task-running))
 
-```shell
-% npx nx build products-data-client
+```{% command="npx nx build products-data-client" path="~/my-products" %}
 
 > nx run products-data-client:build  [local cache]
 
@@ -176,8 +175,7 @@ Also notice that the result of your build has been added back to the `dist/libs/
 
 Next, run the command `npx nx build products-cli`:
 
-```shell
-% npx nx build products-cli
+```{% command="npx nx build products-cli" path="~/my-products" %}
 
    ✔    1/1 dependent project tasks succeeded [1 read from cache]
 
@@ -200,7 +198,7 @@ webpack compiled successfully (bafa37be9890ecb2)
 
 Notice the line here:
 
-```shell
+```plain
    ✔    1/1 dependent project tasks succeeded [1 read from cache]
 ```
 

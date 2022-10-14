@@ -55,8 +55,7 @@ The properties inside each of these these targets is defined as follows:
 
 Run the `test` target for your `common-ui` project:
 
-```shell
-% npx nx test common-ui
+```{% command="npx nx test common-ui" path="~/myorg" %}
 
 > nx run common-ui:test
 
@@ -76,8 +75,7 @@ Ran all test suites.
 
 Next, run a lint check on your `common-ui` project:
 
-```shell
-% npx nx lint common-ui
+```{% command="npx nx lint common-ui" path="~/myorg" %}
 
 > nx run common-ui:lint
 

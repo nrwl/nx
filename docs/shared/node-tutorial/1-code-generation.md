@@ -29,15 +29,9 @@ For this tutorial, you'll create an Express API application, a CLI (command-line
 
 ## Creating an Nx Workspace
 
-Run the command:
+Run the command `npx create-nx-workspace@latest` and when prompted, provide the following responses:
 
-```shell
-npx create-nx-workspace@latest
-```
-
-When prompted, provide the following responses:
-
-```shell
+```{% command="npx create-nx-workspace@latest" path="~" %}
 ✔ Choose your style                     · integrated
 ✔ What to create in the new workspace   · express
 ✔ Repository name                       · my-products
@@ -53,8 +47,7 @@ Once the command complete, you can find your Express API application in `apps/pr
 
 Run this command to create your `products-cli` app:
 
-```shell
-% npx nx g @nrwl/node:app products-cli
+```{% command="npx nx g @nrwl/node:app products-cli" path="~/my-products" %}
 
 >  NX  Generating @nrwl/node:application
 
@@ -77,8 +70,7 @@ CREATE apps/products-cli/tsconfig.spec.json
 
 To create the `products-data-client` library, use the `@nrwl/js:lib` generator:
 
-```shell
-% npx nx g @nrwl/js:lib products-data-client
+```{% command="npx nx g @nrwl/js:lib products-data-client" path="~/my-products" %}
 
 >  NX  Generating @nrwl/js:library
 

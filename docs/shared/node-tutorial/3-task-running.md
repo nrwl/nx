@@ -64,8 +64,7 @@ The properties inside each of these these targets is defined as follows:
 
 Run the `build` target for your `products-data-client` project:
 
-```shell
-% npx nx build products-data-client
+```{% command="npx nx build products-data-client" path="~/my-products" %}
 
 > nx run products-data-client:build
 
@@ -81,8 +80,7 @@ You can now find your built `products-data-client` distributable in your `dist/l
 
 Next, run a lint check on `products-data-client`:
 
-```shell
-% npx nx lint products-data-client
+```{% command="npx nx lint products-data-client" path="~/my-products" %}
 
 > nx run products-data-client:lint
 
@@ -122,8 +120,7 @@ describe('productsDataClient', () => {
 
 And then run your `test` target:
 
-```shell
-% npx nx test products-data-client
+```{% command="npx nx test products-data-client" path="~/my-products" %}
 
 > nx run products-data-client:test
 

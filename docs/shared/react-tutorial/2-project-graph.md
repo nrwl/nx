@@ -14,8 +14,7 @@ The Project Graph is derived from the source code of your workspace. Make the fo
 
 Run the `@nrwl/react:component` generator with the command:
 
-```shell
-% npx nx g @nrwl/react:component banner --project=common-ui --export
+```{% command="npx nx g @nrwl/react:component banner --project=common-ui --export" path="~/myorg" %}
 
 >  NX  Generating @nrwl/react:component
 

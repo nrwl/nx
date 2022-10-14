@@ -27,15 +27,10 @@ For this tutorial, you'll create two React applications, a React lib for your co
 
 ## Creating an Nx Workspace
 
-Run the command:
+Run the command `npx create-nx-workspace@latest` and when prompted, provide the following responses:
 
-```shell
-$ npx create-nx-workspace@latest
-```
+```{% command="npx create-nx-workspace@latest" path="~" %}
 
-When prompted, provide the following responses:
-
-```shell
 ✔ Choose your style                     · integrated
 ✔ What to create in the new workspace   · react
 ✔ Repository name                       · myorg
@@ -57,8 +52,7 @@ Once the command completes, notice two projects were added to the workspace:
 
 Run this command to create your `admin` app:
 
-```shell
-$ npx nx g @nrwl/react:app admin
+```{% command="npx nx g @nrwl/react:app admin" path="~/myorg" %}
 
 >  NX  Generating @nrwl/react:application
 
@@ -101,8 +95,7 @@ To create the `common-ui` and `products` libraries, use the `@nrwl/react:lib` an
 
 {% side-by-side %}
 
-```shell
-% npx nx g @nrwl/react:lib common-ui
+```{% command="npx nx g @nrwl/react:lib common-ui" path="~/myorg" %}
 
 > NX Generating @nrwl/react:library
 
@@ -121,8 +114,7 @@ CREATE libs/common-ui/src/lib/common-ui.spec.tsx
 CREATE libs/common-ui/src/lib/common-ui.tsx
 ```
 
-```shell
-% npx nx g @nrwl/js:lib products
+```{% command="npx nx g @nrwl/js:lib products" path="~/myorg" %}
 
 >  NX  Generating @nrwl/js:library
 

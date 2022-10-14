@@ -6,8 +6,8 @@
 
 Run the command:
 
-```shell
-git add . && git commit -m "commiting to test affected"
+```{% command="git add . && git commit -m 'commiting to test affected'" path="~/myorg" %}
+
 ```
 
 Then make a change to the styles of your `common-ui` project:
@@ -20,8 +20,8 @@ Then make a change to the styles of your `common-ui` project:
 
 You can visualize how our workspace is affected by this change using the command:
 
-```shell
-npx nx affected:graph
+```{% command="npx nx affected:graph" path="~/myorg" %}
+
 ```
 
 ![Project Graph with Affected](/shared/react-tutorial/project-graph-with-affected.png)
@@ -30,8 +30,8 @@ The change made to the `common-ui` project is also affecting the `admin` and `st
 
 To run the `test` targets only for affected projects, run the command:
 
-```shell
-npx nx affected --target=test
+```{% command="npx nx affected --target=test" path="~/myorg" %}
+
 ```
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
@@ -101,8 +101,7 @@ Outputs are stored in the cache so that terminal output can be replayed, and any
 
 To see caching in action, run the command:
 
-```shell
-% npx nx build admin
+```{% command="npx nx build admin" path="~/myorg" %}
 
 > nx run admin:build:production
 
@@ -124,14 +123,13 @@ Since you have not run the `build` target before for the `admin` project, Nx run
 
 Next, remove your dist directory:
 
-```shell
-rm -rf dist
+```{% command="rm -rf dist" path="~/myorg" %}
+
 ```
 
 And run the command again:
 
-```shell
-`npx nx build admin`
+```{% command="npx nx build admin" path="~/myorg" %}
 
 > nx run admin:build:production  [local cache]
 
@@ -161,8 +159,7 @@ Also notice that the result of your build has been added back to the `dist/apps/
 
 Next, run the command `npx nx build store`:
 
-```shell
-% npx nx build store
+```{% command="npx nx build store" path="~/myorg" %}
 
    ✔    1/1 dependent project tasks succeeded [0 read from cache]
 
@@ -189,7 +186,7 @@ webpack compiled successfully (06e95dfdacea84c7)
 
 Notice the line here:
 
-```shell
+```plain
    ✔    1/1 dependent project tasks succeeded [0 read from cache]
 ```
 
