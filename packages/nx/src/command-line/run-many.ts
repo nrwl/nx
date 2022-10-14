@@ -16,8 +16,9 @@ export async function runMany(
     string,
     (TargetDependencyConfig | string)[]
   > = {},
-  extraOptions = { excludeTaskDependencies: false } as {
+  extraOptions = { excludeTaskDependencies: false, loadDotEnvFiles: true } as {
     excludeTaskDependencies: boolean;
+    loadDotEnvFiles: boolean;
   }
 ) {
   performance.mark('command-execution-begins');
