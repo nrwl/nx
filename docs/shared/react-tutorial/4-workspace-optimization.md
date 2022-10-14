@@ -6,8 +6,8 @@
 
 Run the command:
 
-```{% command="git add . && git commit -m 'commiting to test affected'" path="~/myorg" %}
-
+```shell
+git add . && git commit -m "commiting to test affected"
 ```
 
 Then make a change to the styles of your `common-ui` project:
@@ -20,8 +20,8 @@ Then make a change to the styles of your `common-ui` project:
 
 You can visualize how our workspace is affected by this change using the command:
 
-```{% command="npx nx affected:graph" path="~/myorg" %}
-
+```shell
+npx nx affected:graph
 ```
 
 ![Project Graph with Affected](/shared/react-tutorial/project-graph-with-affected.png)
@@ -30,8 +30,8 @@ The change made to the `common-ui` project is also affecting the `admin` and `st
 
 To run the `test` targets only for affected projects, run the command:
 
-```{% command="npx nx affected --target=test" path="~/myorg" %}
-
+```shell
+npx nx affected --target=test
 ```
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
@@ -123,8 +123,8 @@ Since you have not run the `build` target before for the `admin` project, Nx run
 
 Next, remove your dist directory:
 
-```{% command="rm -rf dist" path="~/myorg" %}
-
+```shell
+rm -rf dist
 ```
 
 And run the command again:
@@ -186,7 +186,7 @@ webpack compiled successfully (06e95dfdacea84c7)
 
 Notice the line here:
 
-```plain
+```text
    ✔    1/1 dependent project tasks succeeded [0 read from cache]
 ```
 
