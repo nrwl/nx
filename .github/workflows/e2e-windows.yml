@@ -45,7 +45,7 @@ jobs:
         fetch-depth: 0
 
     - name: Use Node.js ${{ matrix.node_version }}
-      uses: actions/setup-node@v2.4.0
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node_version }}
         registry-url: http://localhost:4872
@@ -55,7 +55,7 @@ jobs:
       run: echo "::set-output name=dir::$(yarn cache dir)"
 
     - name: Cache yarn
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
         key: windows-node-${{ matrix.node_version }}-yarn-${{ hashFiles('yarn.lock') }}
@@ -63,13 +63,6 @@ jobs:
           windows-node-${{ matrix.node_version }}-yarn-
           windows-node-${{ matrix.node_version }}-
           windows-
-
-    - name: Cache Cypress Binary
-      id: cache-cypress-binary
-      uses: actions/cache@v2
-      with:
-        path: C:\Users\runneradmin\AppData\Local\Cypress\Cache
-        key: cypress-binary-${{ hashFiles('yarn.lock') }}
 
     - name: Install packages
       run: yarn install --prefer-offline --frozen-lockfile --non-interactive
