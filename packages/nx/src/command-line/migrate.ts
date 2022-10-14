@@ -873,7 +873,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         ...(migrations.length > 0
           ? [`- Run '${pmc.exec} nx migrate --run-migrations'`]
           : []),
-        `- To learn more go to https://nx.dev/using-nx/updating-nx`,
+        `- To learn more go to https://nx.dev/core-features/automate-updating-dependencies`,
         ...(showConnectToCloudMessage()
           ? [
               `- You may run '${pmc.run(

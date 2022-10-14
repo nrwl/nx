@@ -111,7 +111,7 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
                     href="https://nx.dev/core-features/automate-updating-dependencies"
                     className="ml-2 underline"
                   >
-                    https://nx.dev/using-nx/updating-nx
+                    https://nx.dev/core-features/automate-updating-dependencies
                   </a>
                 </p>
               </div>
