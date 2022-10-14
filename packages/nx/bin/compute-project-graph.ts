@@ -6,7 +6,7 @@ import { daemonClient } from '../src/daemon/client/client';
 
 (async () => {
   try {
-    if (fileExists(join(workspaceRoot, 'nx.json'))) {
+    if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
       try {
         await daemonClient.stop();
       } catch (e) {}
@@ -27,3 +27,11 @@ import { daemonClient } from '../src/daemon/client/client';
     }
   }
 })();
+
+function isMainNxPackage() {
+  const mainNxPath = require.resolve('nx', {
+    paths: [workspaceRoot],
+  });
+  const thisNxPath = require.resolve('nx');
+  return mainNxPath === thisNxPath;
+}
