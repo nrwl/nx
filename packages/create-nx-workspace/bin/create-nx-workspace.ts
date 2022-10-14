@@ -408,7 +408,7 @@ function determineMonorepoStyle(): Promise<string> {
       {
         name: 'MonorepoStyle',
         message: `Choose your style                    `,
-        type: 'select',
+        type: 'autocomplete',
         choices: [
           {
             name: 'package-based',
