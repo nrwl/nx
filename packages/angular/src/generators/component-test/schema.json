@@ -36,5 +36,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["project", "componentName", "componentDir", "componentFileName"]
+  "required": ["project", "componentName", "componentDir", "componentFileName"],
+  "examplesFile": "../../../docs/component-test-examples.md"
 }
