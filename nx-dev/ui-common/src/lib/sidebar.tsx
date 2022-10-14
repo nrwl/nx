@@ -179,12 +179,12 @@ export function SidebarMobile({
     },
     {
       name: 'Plugins',
-      href: '#',
+      href: '/community#plugin-directory',
       current: isPlugins,
     },
     {
       name: 'Recipes',
-      href: '#',
+      href: '/recipes',
       current: isRecipes,
     },
   ];
