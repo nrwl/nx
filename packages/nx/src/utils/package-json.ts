@@ -37,10 +37,12 @@ export interface PackageJson {
   main?: string;
   types?: string;
   module?: string;
-  exports?: Record<
-    string,
-    { types?: string; require?: string; import?: string }
-  >;
+  exports?:
+    | string
+    | Record<
+        string,
+        string | { types?: string; require?: string; import?: string }
+      >;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;

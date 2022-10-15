@@ -166,4 +166,96 @@ describe('getUpdatedPackageJsonContent', () => {
       version: '0.0.1',
     });
   });
+
+  it('should support different exports field shape', () => {
+    // exports: string
+    expect(
+      getUpdatedPackageJsonContent(
+        {
+          name: 'test',
+          version: '0.0.1',
+          exports: './custom.js',
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['esm', 'cjs'],
+          outputFileExtensionForCjs: '.cjs',
+          generateExportsField: true,
+        }
+      )
+    ).toEqual({
+      name: 'test',
+      main: './src/index.cjs',
+      module: './src/index.js',
+      types: './src/index.d.ts',
+      version: '0.0.1',
+      exports: './custom.js',
+    });
+
+    // exports: { '.': string }
+    expect(
+      getUpdatedPackageJsonContent(
+        {
+          name: 'test',
+          version: '0.0.1',
+          exports: {
+            '.': './custom.js',
+          },
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['esm', 'cjs'],
+          outputFileExtensionForCjs: '.cjs',
+          generateExportsField: true,
+        }
+      )
+    ).toEqual({
+      name: 'test',
+      main: './src/index.cjs',
+      module: './src/index.js',
+      types: './src/index.d.ts',
+      version: '0.0.1',
+      exports: {
+        '.': './custom.js',
+      },
+    });
+
+    // exports: { './custom': string }
+    expect(
+      getUpdatedPackageJsonContent(
+        {
+          name: 'test',
+          version: '0.0.1',
+          exports: {
+            './custom': './custom.js',
+          },
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['esm', 'cjs'],
+          outputFileExtensionForCjs: '.cjs',
+          generateExportsField: true,
+        }
+      )
+    ).toEqual({
+      name: 'test',
+      main: './src/index.cjs',
+      module: './src/index.js',
+      types: './src/index.d.ts',
+      version: '0.0.1',
+      exports: {
+        '.': {
+          import: './src/index.js',
+          require: './src/index.cjs',
+        },
+        './custom': './custom.js',
+      },
+    });
+  });
 });
