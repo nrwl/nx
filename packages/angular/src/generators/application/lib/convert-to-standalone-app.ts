@@ -49,7 +49,7 @@ const standaloneComponentMainContents = (
 import { bootstrapApplication } from '@angular/platform-browser';${
   routerModuleSetup
     ? `
-import { provideRouter, withNonEnabledBlockingInitialNavigation } from '@angular/router'`
+import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router'`
     : ``
 };
 import { AppComponent } from './app/app.component';
