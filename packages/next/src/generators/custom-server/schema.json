@@ -4,12 +4,6 @@
   "$id": "NxNextCustomServer",
   "title": "Add custom server",
   "description": "Add a custom server to existing Next.js application.",
-  "examples": [
-    {
-      "command": "nx g custom-server my-app",
-      "description": "Add a custom server to existing Next.js app."
-    }
-  ],
   "type": "object",
   "properties": {
     "project": {
@@ -30,5 +24,6 @@
       "description": "The compiler used to build the custom server."
     }
   },
-  "required": ["project"]
+  "required": ["project"],
+  "examplesFile": "../../../docs/custom-server-examples.md"
 }

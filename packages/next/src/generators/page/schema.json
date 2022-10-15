@@ -5,12 +5,6 @@
   "title": "Create a Page for Next",
   "description": "Create a Page for Next.",
   "type": "object",
-  "examples": [
-    {
-      "command": "nx g page my-new-page --project=my-app",
-      "description": "Generate a page in the my-app application"
-    }
-  ],
   "properties": {
     "project": {
       "type": "string",
@@ -98,5 +92,6 @@
       "default": false
     }
   },
-  "required": ["name", "project"]
+  "required": ["name", "project"],
+  "examplesFile": "../../../docs/page-examples.md"
 }

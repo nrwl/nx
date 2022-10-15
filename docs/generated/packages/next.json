@@ -67,12 +67,6 @@
         "$id": "NxNextApp",
         "title": "Create a Next.js Application for Nx",
         "description": "Create a Next.js Application for Nx.",
-        "examples": [
-          {
-            "command": "nx g app myapp --directory=myorg",
-            "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
-          }
-        ],
         "type": "object",
         "properties": {
           "name": {
@@ -187,6 +181,7 @@
           }
         },
         "required": [],
+        "examplesFile": "",
         "presets": []
       },
       "aliases": ["app"],
@@ -206,12 +201,6 @@
         "title": "Create a Page for Next",
         "description": "Create a Page for Next.",
         "type": "object",
-        "examples": [
-          {
-            "command": "nx g page my-new-page --project=my-app",
-            "description": "Generate a page in the my-app application"
-          }
-        ],
         "properties": {
           "project": {
             "type": "string",
@@ -292,6 +281,7 @@
           }
         },
         "required": ["name", "project"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create static page in an app\" %}\n\n```shell\nnx g page my-page --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create dynamic page in an app\" %}\n\nThe following creates a page under `apps/my-app/pages/products/[id].tsx`.\n\n```shell\nnx g page \"[id]\" --project=my-app --directory=products\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Create a page.",
@@ -310,16 +300,6 @@
         "title": "Create a React Component for Next",
         "description": "Create a React Component for Next.",
         "type": "object",
-        "examples": [
-          {
-            "command": "nx g component my-component --project=mylib",
-            "description": "Generate a component in the `mylib` library"
-          },
-          {
-            "command": "nx g component my-component --project=mylib --classComponent",
-            "description": "Generate a class component in the `mylib` library"
-          }
-        ],
         "properties": {
           "project": {
             "type": "string",
@@ -399,6 +379,7 @@
           }
         },
         "required": ["name", "project"],
+        "examplesFile": "",
         "presets": []
       },
       "description": "Create a component.",
@@ -417,16 +398,6 @@
         "title": "Create a React Library for Nx",
         "description": "Create a React Library for an Nx workspace.",
         "type": "object",
-        "examples": [
-          {
-            "command": "nx g lib mylib --directory=myapp",
-            "description": "Generate `libs/myapp/mylib`"
-          },
-          {
-            "command": "nx g lib mylib --appProject=myapp",
-            "description": "Generate a library with routes and add them to `myapp`"
-          }
-        ],
         "properties": {
           "name": {
             "type": "string",
@@ -564,6 +535,7 @@
           }
         },
         "required": ["name"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create a new lib\" %}\n\n```shell\nnx g lib my-lib\n```\n\n{% /tab %}\n{% tab label=\"Create a new lib under a directory\" %}\n\nThe following will create a library at `libs/shared/my-lib`.\n\n```shell\nnx g lib my-lib --directory=shared\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["lib"],
@@ -582,12 +554,6 @@
         "$id": "NxNextCustomServer",
         "title": "Add custom server",
         "description": "Add a custom server to existing Next.js application.",
-        "examples": [
-          {
-            "command": "nx g custom-server my-app",
-            "description": "Add a custom server to existing Next.js app."
-          }
-        ],
         "type": "object",
         "properties": {
           "project": {
@@ -606,6 +572,7 @@
           }
         },
         "required": ["project"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Add a custom server to existing app\" %}\n\n```shell\nnx g custom-server my-app\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Set up a custom server.",
