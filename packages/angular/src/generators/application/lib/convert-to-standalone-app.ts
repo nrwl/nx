@@ -63,7 +63,7 @@ if (environment.production) {
 bootstrapApplication(AppComponent${
   routerModuleSetup
     ? `, {
-  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+  providers: [provideRouter(appRoutes, withNonEnabledBlockingInitialNavigation())],
 }`
     : ''
 }).catch((err) => console.error(err));`;

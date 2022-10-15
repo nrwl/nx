@@ -13,7 +13,7 @@ if (environment.production) {
 }
 
 bootstrapApplication(AppComponent, {
-  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+  providers: [provideRouter(appRoutes, withNonEnabledBlockingInitialNavigation())],
 }).catch((err) => console.error(err));"
 `;
 
