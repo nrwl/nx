@@ -5,16 +5,6 @@
   "title": "Create a React Library for Nx",
   "description": "Create a React Library for an Nx workspace.",
   "type": "object",
-  "examples": [
-    {
-      "command": "nx g lib mylib --directory=myapp",
-      "description": "Generate `libs/myapp/mylib`"
-    },
-    {
-      "command": "nx g lib mylib --appProject=myapp",
-      "description": "Generate a library with routes and add them to `myapp`"
-    }
-  ],
   "properties": {
     "name": {
       "type": "string",
@@ -157,5 +147,6 @@
       "type": "boolean"
     }
   },
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/library-examples.md"
 }

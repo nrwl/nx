@@ -5,16 +5,6 @@
   "title": "Create a React Component for Next",
   "description": "Create a React Component for Next.",
   "type": "object",
-  "examples": [
-    {
-      "command": "nx g component my-component --project=mylib",
-      "description": "Generate a component in the `mylib` library"
-    },
-    {
-      "command": "nx g component my-component --project=mylib --classComponent",
-      "description": "Generate a class component in the `mylib` library"
-    }
-  ],
   "properties": {
     "project": {
       "type": "string",
@@ -98,5 +88,6 @@
       "default": false
     }
   },
-  "required": ["name", "project"]
+  "required": ["name", "project"],
+  "examplesFile": "../../../docs/application-examples.md"
 }
