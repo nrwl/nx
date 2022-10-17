@@ -1,4 +1,4 @@
-import { ProjectConfiguration } from '@nrwl/devkit';
+import type { ProjectConfiguration } from '@nrwl/devkit';
 
 export type MigrationProjectConfiguration = {
   config: ProjectConfiguration;

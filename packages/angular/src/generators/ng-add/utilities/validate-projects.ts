@@ -1,5 +1,6 @@
+// TODO(leo): this should probably move into a workspace-wide validator
 import * as chalk from 'chalk';
-import { ProjectMigrator } from './project.migrator';
+import type { ProjectMigrator } from '../migrators';
 import { ValidationError } from './types';
 import { workspaceMigrationErrorHeading } from './validation-logging';
 

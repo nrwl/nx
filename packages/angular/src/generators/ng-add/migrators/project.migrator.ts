@@ -1,24 +1,26 @@
+import type {
+  ProjectConfiguration,
+  TargetConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import {
   joinPathFragments,
   normalizePath,
   offsetFromRoot,
-  ProjectConfiguration,
   readWorkspaceConfiguration,
-  TargetConfiguration,
-  Tree,
   updateJson,
   updateWorkspaceConfiguration,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { basename, dirname } from 'path';
-import { GeneratorOptions } from '../schema';
-import { Logger } from './logger';
-import {
+import type { GeneratorOptions } from '../schema';
+import { Logger } from '../utilities/logger';
+import type {
   MigrationProjectConfiguration,
   Target,
   ValidationResult,
-} from './types';
-import { arrayToString } from './validation-logging';
+} from '../utilities/types';
+import { arrayToString } from '../utilities/validation-logging';
 
 export abstract class ProjectMigrator<TargetType extends string = any> {
   public get projectName(): string {

@@ -1,15 +1,17 @@
-import {
+import type {
   ProjectConfiguration,
+  TargetConfiguration,
+  Tree,
+} from '@nrwl/devkit';
+import {
   readJson,
   readProjectConfiguration,
   readWorkspaceConfiguration,
-  TargetConfiguration,
-  Tree,
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import type { MigrationProjectConfiguration } from '../utilities/types';
 import { AppMigrator } from './app.migrator';
-import { MigrationProjectConfiguration } from './types';
 
 type AngularCliProjectConfiguration = Omit<ProjectConfiguration, 'targets'> & {
   architect?: {

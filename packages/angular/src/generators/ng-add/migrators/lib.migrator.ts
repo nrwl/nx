@@ -1,8 +1,8 @@
+import type { Tree } from '@nrwl/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
-  Tree,
   updateJson,
   updateProjectConfiguration,
   writeJson,
@@ -12,14 +12,14 @@ import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { basename } from 'path';
 import { addBuildableLibrariesPostCssDependencies } from '../../utils/dependencies';
-import { GeneratorOptions } from '../schema';
-import { Logger } from './logger';
-import { ProjectMigrator } from './project.migrator';
-import {
+import type { GeneratorOptions } from '../schema';
+import type { Logger } from '../utilities/logger';
+import type {
   MigrationProjectConfiguration,
   Target,
   ValidationResult,
-} from './types';
+} from '../utilities/types';
+import { ProjectMigrator } from './project.migrator';
 
 type SupportedTargets = 'build' | 'test' | 'lint';
 const supportedTargets: Record<SupportedTargets, Target> = {

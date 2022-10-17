@@ -1,20 +1,19 @@
+import type { Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
   readJson,
   readWorkspaceConfiguration,
-  Tree,
   updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { nxVersion } from '../../utils/versions';
+import type { ProjectMigrator } from './migrators';
+import { AppMigrator, LibMigrator } from './migrators';
 import type { GeneratorOptions } from './schema';
-import { AppMigrator } from './utilities/app.migrator';
 import { getAllProjects } from './utilities/get-all-projects';
-import { LibMigrator } from './utilities/lib.migrator';
 import { normalizeOptions } from './utilities/normalize-options';
-import { ProjectMigrator } from './utilities/project.migrator';
 import { validateProjects } from './utilities/validate-projects';
 import {
   cleanupEsLintPackages,
