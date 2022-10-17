@@ -3,7 +3,7 @@
 exports[`app --standalone should generate a standalone app correctly with routing 1`] = `
 "import { enableProdMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter, withNonEnabledBlockingInitialNavigation } from '@angular/router';
+import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
 import { AppComponent } from './app/app.component';
 import { environment } from './environments/environment';
 import { appRoutes } from './app/app.routes';
