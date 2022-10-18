@@ -77,22 +77,20 @@ export class Workspaces {
       return this.cachedWorkspaceConfig;
     }
     const nxJson = this.readNxJson();
+    const workspace = buildWorkspaceConfigurationFromGlobs(
+      nxJson,
+      globForProjectFiles(this.root, nxJson, opts?._ignorePluginInference),
+      (path) => readJsonFile(join(this.root, path))
+    );
+
     const workspaceFile = workspaceConfigName(this.root);
-    const workspacePath = workspaceFile
-      ? path.join(this.root, workspaceFile)
-      : null;
-    const workspace =
-      workspacePath && existsSync(workspacePath)
-        ? this.readFromWorkspaceJson()
-        : buildWorkspaceConfigurationFromGlobs(
-            nxJson,
-            globForProjectFiles(
-              this.root,
-              nxJson,
-              opts?._ignorePluginInference
-            ),
-            (path) => readJsonFile(join(this.root, path))
-          );
+
+    if (workspaceFile) {
+      workspace.projects = {
+        ...workspace.projects,
+        ...this.readFromWorkspaceJson().projects,
+      };
+    }
 
     assertValidWorkspaceConfiguration(nxJson);
     this.cachedWorkspaceConfig = {

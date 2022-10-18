@@ -50,6 +50,9 @@ describe('Workspaces', () => {
       vol.fromJSON(
         {
           'libs/lib1/project.json': JSON.stringify(standaloneConfig),
+          'libs/lib2/package.json': JSON.stringify({}),
+          'libs/domain/lib3/package.json': JSON.stringify({}),
+          'libs/domain/lib4/project.json': JSON.stringify({}),
           'workspace.json': JSON.stringify(config),
         },
         '/root'
