@@ -2,7 +2,7 @@ import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 import { ensureDir, readFile, readJSONSync, writeFileSync } from 'fs-extra';
 import { resolve } from 'path';
 
-const mapJson = readJSONSync('./docs/map.json', 'utf8');
+const mapJson = readJSONSync('./docs/map.json', 'utf8').content;
 
 const documents: any[] = [
   ...mapJson.find((x) => x.id === 'nx-documentation')?.['itemList'],
