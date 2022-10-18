@@ -85,7 +85,6 @@ export default function DocumentationPage(
 
     vm.entryComponent = !!schemaRequest ? (
       <PackageSchemaViewer
-        menu={vm.menu}
         schemaRequest={{
           ...schemaRequest,
           pkg,
