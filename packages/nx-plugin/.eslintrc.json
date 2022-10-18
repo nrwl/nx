@@ -23,8 +23,7 @@
           "error",
           "@angular-devkit/architect",
           "@angular-devkit/core",
-          "@angular-devkit/schematics",
-          "@nx/workspace"
+          "@angular-devkit/schematics"
         ]
       }
     },

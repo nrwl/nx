@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "LocalPluginFromTools",
+  "title": "",
+  "type": "object",
+  "description": "Creates a local plugin project from existing workspace generators.",
+  "properties": {
+    "pluginName": {
+      "type": "string",
+      "description": "The name of the plugin created to contain the workspace generators.",
+      "default": "nx-plugin"
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The library name used to import it, like @myorg/my-awesome-lib."
+    },
+    "toolsProjectRoot": {
+      "type": "string",
+      "description": "Where the new file should be located. Defaults to tools/workspace-tools."
+    }
+  },
+  "required": ["pluginName"]
+}

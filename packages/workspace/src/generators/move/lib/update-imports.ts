@@ -110,7 +110,9 @@ export function updateImports(
 
     if (schema.updateImportPath) {
       tsConfig.compilerOptions.paths[projectRef.to] = updatedPath;
-      delete tsConfig.compilerOptions.paths[projectRef.from];
+      if (projectRef.from !== projectRef.to) {
+        delete tsConfig.compilerOptions.paths[projectRef.from];
+      }
     } else {
       tsConfig.compilerOptions.paths[projectRef.from] = updatedPath;
     }
