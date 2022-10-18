@@ -24,10 +24,10 @@ export const packagesApi = new PackagesApi({
 export const nxDocumentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
   documentSources: [
-    documents.find(
+    documents.content.find(
       (x) => x.id === 'nx-documentation'
     ) as Partial<DocumentMetadata>,
-    documents.find(
+    documents.content.find(
       (x) => x.id === 'additional-api-references'
     ) as Partial<DocumentMetadata>,
   ]
@@ -37,15 +37,15 @@ export const nxDocumentsApi = new DocumentsApi({
 });
 export const nxRecipesApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
-  documentSources: [documents.find((x) => x.id === 'nx-recipes')].filter(
-    (x) => !!x
-  ) as DocumentMetadata[],
+  documentSources: [
+    documents.content.find((x) => x.id === 'nx-recipes'),
+  ].filter((x) => !!x) as DocumentMetadata[],
   addAncestor: { id: 'recipes', name: 'Recipes' },
 });
 export const nxCloudDocumentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
   documentSources: [
-    documents.find(
+    documents.content.find(
       (x) => x.id === 'nx-cloud-documentation'
     ) as Partial<DocumentMetadata>,
   ]

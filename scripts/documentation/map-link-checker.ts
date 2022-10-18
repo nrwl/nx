@@ -37,7 +37,7 @@ function filePathExtractor(file: any): string[] {
 const mapPathList: string[] = readJsonSync(`${basePath}/map.json`, {
   encoding: 'utf8',
 })
-  .map((file: any) => filePathExtractor(file))
+  .content.map((file: any) => filePathExtractor(file))
   .flat();
 const readmeMissList = readmePathList.filter((x) => !mapPathList.includes(x));
 const mapMissList = mapPathList.filter((x) => !readmePathList.includes(x));
