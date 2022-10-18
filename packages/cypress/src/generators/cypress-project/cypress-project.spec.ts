@@ -11,9 +11,10 @@ import { cypressProjectGenerator } from './cypress-project';
 import { Schema } from './schema';
 import { Linter } from '@nrwl/linter';
 import { installedCypressVersion } from '../../utils/cypress-version';
+import { cypressInitGenerator } from '../init/init';
 
 jest.mock('../../utils/cypress-version');
-
+jest.mock('../init/init');
 describe('Cypress Project', () => {
   let tree: Tree;
   const defaultOptions: Omit<Schema, 'name' | 'project'> = {
@@ -23,6 +24,8 @@ describe('Cypress Project', () => {
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
+  let mockInitCypress: jest.Mock<ReturnType<typeof cypressInitGenerator>> =
+    cypressInitGenerator as never;
 
   beforeEach(() => {
     tree = createTreeWithEmptyV1Workspace();
@@ -54,6 +57,26 @@ describe('Cypress Project', () => {
     });
   });
   afterEach(() => jest.clearAllMocks());
+
+  it('should call init if cypress is not installed', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(null);
+    await cypressProjectGenerator(tree, {
+      ...defaultOptions,
+      name: 'my-app-e2e',
+      project: 'my-app',
+    });
+    expect(mockInitCypress).toHaveBeenCalled();
+  });
+
+  it('should call not init if cypress is installed', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+    await cypressProjectGenerator(tree, {
+      ...defaultOptions,
+      name: 'my-app-e2e',
+      project: 'my-app',
+    });
+    expect(mockInitCypress).not.toHaveBeenCalled();
+  });
 
   describe('> v10', () => {
     beforeEach(() => {
