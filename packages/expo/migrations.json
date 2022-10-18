@@ -23,6 +23,12 @@
       "cli": "nx",
       "description": "Add target update for expo projects in project.json",
       "factory": "./src/migrations/update-14-5-1/add-eas-update-target"
+    },
+    "change-jest-preset-15-0-1": {
+      "version": "15.0.1-beta.0",
+      "cli": "nx",
+      "description": "Change jest config preset tof expo projects",
+      "factory": "./src/migrations/update-15-0-1/change-jest-preset"
     }
   },
   "packageJsonUpdates": {
@@ -436,6 +442,19 @@
         },
         "react-native": {
           "version": "0.69.6",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.0.1": {
+      "version": "15.0.1-beta.0",
+      "packages": {
+        "@testing-library/react-native": {
+          "version": "11.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "5.0.0",
           "alwaysAddToPackageJson": false
         }
       }
