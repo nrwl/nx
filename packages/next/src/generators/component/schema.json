@@ -86,6 +86,18 @@
       "type": "boolean",
       "description": "Create component at the source root rather than its own directory.",
       "default": false
+    },
+    "pascalCaseFiles": {
+      "type": "boolean",
+      "description": "Use pascal case component file name (e.g. `App.tsx`).",
+      "alias": "P",
+      "default": false
+    },
+    "pascalCaseDirectory": {
+      "type": "boolean",
+      "description": "Use pascal case directory name (e.g. `App/App.tsx`).",
+      "alias": "R",
+      "default": false
     }
   },
   "required": ["name", "project"],
