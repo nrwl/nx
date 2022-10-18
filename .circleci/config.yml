@@ -108,7 +108,8 @@ commands:
             - run:
                 command: sudo apt-get install -y ca-certificates
       - node/install:
-          node-version: 'latest'
+          # Use LTS version
+          node-version: ''
       - run-yarn-install:
           os: << parameters.os >>
       - when:
