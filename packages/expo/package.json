@@ -44,7 +44,7 @@
     "tsconfig-paths-webpack-plugin": "^3.5.2"
   },
   "peerDependencies": {
-    "expo": "^46.0.10"
+    "expo": "^46.0.13"
   },
   "builders": "./executors.json",
   "ng-update": {
