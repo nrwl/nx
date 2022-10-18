@@ -10,6 +10,8 @@ interface Schema {
   style: SupportedStyles;
   directory?: string;
   flat?: boolean;
+  pascalCaseFiles?: boolean;
+  pascalCaseDirectory?: boolean;
 }
 
 function getDirectory(host: Tree, options: Schema) {
@@ -31,7 +33,6 @@ export async function componentGenerator(host: Tree, options: Schema) {
   const componentInstall = await reactComponentGenerator(host, {
     ...options,
     directory: getDirectory(host, options),
-    pascalCaseFiles: false,
     classComponent: false,
     routing: false,
   });
