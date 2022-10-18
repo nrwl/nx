@@ -4,6 +4,11 @@ Local plugin generators provide a way to automate many tasks you regularly perfo
 
 Nx provides tooling around creating, and running custom generators from within your workspace. This guide shows you how to create, run, and customize generators within your Nx workspace.
 
+{% youtube
+src="https://www.youtube.com/embed/ubgroK5T6cA"
+title="Create a Nx Generator in 100 seconds"
+width="100%" /%}
+
 ## Creating a generator
 
 If you don't already have a local plugin, use Nx to generate one:
