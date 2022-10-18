@@ -3,13 +3,13 @@ import type { ProjectGraphProjectNode } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 import { parseParentDirectoriesFromFilePath } from '../util';
 
-interface NodeDataDefinition extends cy.NodeDataDefinition {
+export interface NodeDataDefinition extends cy.NodeDataDefinition {
   id: string;
-  type: string;
+  type: 'app' | 'lib' | 'e2e';
   tags: string[];
 }
 
-interface Ancestor {
+export interface Ancestor {
   id: string;
   parentId: string;
   label: string;

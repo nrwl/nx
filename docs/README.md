@@ -150,3 +150,77 @@ src="https://www.youtube.com/embed/rNImFxo9gYs"
 title="Nx Console Run UI Form"
 width="100%" /%}
 ```
+
+#### Graph
+
+Embed an Nx Graph visualization that can be panned by the user.
+
+````markdown
+{% graph height="450px" %}
+
+```json
+{
+  "projects": [
+    {
+      "type": "app",
+      "name": "app-changed",
+      "data": {
+        "tags": ["scope:cart"]
+      }
+    },
+    {
+      "type": "lib",
+      "name": "lib",
+      "data": {
+        "tags": ["scope:cart"]
+      }
+    },
+    {
+      "type": "lib",
+      "name": "lib2",
+      "data": {
+        "tags": ["scope:cart"]
+      }
+    },
+    {
+      "type": "lib",
+      "name": "lib3",
+      "data": {
+        "tags": ["scope:cart"]
+      }
+    }
+  ],
+  "groupByFolder": false,
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "dependencies": {
+    "app-changed": [
+      {
+        "target": "lib",
+        "source": "app-changed",
+        "type": "direct"
+      }
+    ],
+    "lib": [
+      {
+        "target": "lib2",
+        "source": "lib",
+        "type": "implicit"
+      },
+      {
+        "target": "lib3",
+        "source": "lib",
+        "type": "direct"
+      }
+    ],
+    "lib2": [],
+    "lib3": []
+  },
+  "affectedProjectIds": []
+}
+```
+
+{% /graph %}
+````

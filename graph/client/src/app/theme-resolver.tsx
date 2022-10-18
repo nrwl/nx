@@ -36,7 +36,8 @@ export function themeResolver(theme: Theme) {
   }
 
   localStorage.setItem(localStorageThemeKey, theme);
-  getGraphService().evaluateStyles();
+
+  getGraphService().theme = currentTheme;
 }
 
 export function selectValueByThemeDynamic<T>(

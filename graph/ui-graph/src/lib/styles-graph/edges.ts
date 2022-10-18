@@ -1,45 +1,41 @@
-import { Stylesheet } from 'cytoscape';
-import { selectValueByThemeDynamic } from '../theme-resolver';
+import { EdgeSingular, Stylesheet } from 'cytoscape';
 import { NrwlPalette } from './palette';
+import { switchValueByDarkMode } from './dark-mode';
 
 const allEdges: Stylesheet = {
   selector: 'edge',
   style: {
     width: '1px',
-    'line-color': selectValueByThemeDynamic(
-      NrwlPalette.slate_400,
-      NrwlPalette.slate_500
-    ),
-    'text-outline-color': selectValueByThemeDynamic(
-      NrwlPalette.slate_400,
-      NrwlPalette.slate_500
-    ),
+    'line-color': (node) =>
+      switchValueByDarkMode(node, NrwlPalette.slate_400, NrwlPalette.slate_500),
+    'text-outline-color': (node: EdgeSingular) =>
+      switchValueByDarkMode(node, NrwlPalette.slate_400, NrwlPalette.slate_500),
     'text-outline-width': '0px',
-    color: selectValueByThemeDynamic(
-      NrwlPalette.slate_400,
-      NrwlPalette.slate_500
-    ),
+    color: (node: EdgeSingular) =>
+      switchValueByDarkMode(node, NrwlPalette.slate_400, NrwlPalette.slate_500),
     'curve-style': 'unbundled-bezier',
     'target-arrow-shape': 'triangle',
     'target-arrow-fill': 'filled',
-    'target-arrow-color': selectValueByThemeDynamic(
-      NrwlPalette.slate_400,
-      NrwlPalette.slate_500
-    ),
+    'target-arrow-color': (node) =>
+      switchValueByDarkMode(node, NrwlPalette.slate_400, NrwlPalette.slate_500),
   },
 };
 
 const affectedEdges: Stylesheet = {
   selector: 'edge.affected',
   style: {
-    'line-color': selectValueByThemeDynamic(
-      NrwlPalette.fuchsia_500,
-      NrwlPalette.pink_500
-    ),
-    'target-arrow-color': selectValueByThemeDynamic(
-      NrwlPalette.fuchsia_500,
-      NrwlPalette.pink_500
-    ),
+    'line-color': (node) =>
+      switchValueByDarkMode(
+        node,
+        NrwlPalette.fuchsia_500,
+        NrwlPalette.pink_500
+      ),
+    'target-arrow-color': (node) =>
+      switchValueByDarkMode(
+        node,
+        NrwlPalette.fuchsia_500,
+        NrwlPalette.pink_500
+      ),
     'curve-style': 'unbundled-bezier',
   },
 };
