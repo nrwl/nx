@@ -89,5 +89,5 @@
     }
   },
   "required": ["name", "project"],
-  "examplesFile": "../../../docs/application-examples.md"
+  "examplesFile": "../../../docs/component-examples.md"
 }
