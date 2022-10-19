@@ -12,6 +12,7 @@ import { join } from 'path';
 import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
 import { existsSync, readFileSync } from 'fs';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { MFRemotes } from '../../utils/mf/with-module-federation';
 
 function getDynamicRemotes(
   project: ProjectConfiguration,
@@ -84,7 +85,7 @@ function getStaticRemotes(
     'module-federation.config.js'
   );
 
-  let mfeConfig: { remotes: string[] };
+  let mfeConfig: { remotes: MFRemotes };
   try {
     mfeConfig = require(mfConfigPath);
   } catch {
@@ -93,7 +94,11 @@ function getStaticRemotes(
     );
   }
 
-  const staticRemotes = mfeConfig.remotes.length > 0 ? mfeConfig.remotes : [];
+  const remotesConfig = mfeConfig.remotes.length > 0 ? mfeConfig.remotes : [];
+  const staticRemotes = remotesConfig.map((remoteDefinition) =>
+    Array.isArray(remoteDefinition) ? remoteDefinition[0] : remoteDefinition
+  );
+
   const invalidStaticRemotes = staticRemotes.filter(
     (remote) => !workspaceProjects[remote]
   );
