@@ -7,6 +7,11 @@ execution of tasks, computation caching, and code generation. [Nx plugins](#nx-p
 Many organizations use Nx without any plugins. If you are mainly interested in making your workspace faster or enabling distributed task execution, then plugins aren't necessary.
 {% /callout %}
 
+{% cards %}
+{% card title="Create a Nx Generator in 100 seconds" description="Learn how to setup a new local generator in less than 2 minutes" type="video" url="https://www.youtube.com/watch?v=ubgroK5T6cA" /%}
+{% card title="Creating and Publishing Your Own Nx Plugin" description="Learn how to build your own Playwright" type="video" url="https://youtu.be/vVT7Al01VZc" /%}
+{% /cards %}
+
 ## Nx plugins
 
 Nx plugins are npm packages that contain generators and executors to extend the capabilities of an Nx workspace.
