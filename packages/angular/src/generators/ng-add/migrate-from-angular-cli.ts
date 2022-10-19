@@ -12,22 +12,22 @@ import { nxVersion } from '../../utils/versions';
 import type { ProjectMigrator } from './migrators';
 import { AppMigrator, LibMigrator } from './migrators';
 import type { GeneratorOptions } from './schema';
-import { getAllProjects } from './utilities/get-all-projects';
-import { normalizeOptions } from './utilities/normalize-options';
-import { validateProjects } from './utilities/validate-projects';
 import {
   cleanupEsLintPackages,
   createNxJson,
   createRootKarmaConfig,
   createWorkspaceFiles,
   decorateAngularCli,
+  getAllProjects,
   getWorkspaceCapabilities,
+  normalizeOptions,
   updatePackageJson,
   updateRootEsLintConfig,
   updateRootTsConfig,
   updateWorkspaceConfigDefaults,
+  validateProjects,
   validateWorkspace,
-} from './utilities/workspace';
+} from './utilities';
 
 export async function migrateFromAngularCli(
   tree: Tree,

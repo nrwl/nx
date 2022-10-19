@@ -10,7 +10,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import type { MigrationProjectConfiguration } from '../utilities/types';
+import type { MigrationProjectConfiguration } from '../../utilities';
 import { LibMigrator } from './lib.migrator';
 
 type AngularCliProjectConfiguration = Omit<ProjectConfiguration, 'targets'> & {
@@ -128,8 +128,8 @@ describe('lib migrator', () => {
       expect(result[0].messageGroup.messages).toStrictEqual([
         'The "build" target is using an unsupported builder "@not/supported:builder".',
       ]);
-      expect(result[0].hint).toBe(
-        'The supported builders for libraries are: "@angular-devkit/build-angular:ng-packagr", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint".'
+      expect(result[0].hint).toMatchInlineSnapshot(
+        `"The supported builders for libraries are: \\"@angular-devkit/build-angular:karma\\", \\"@angular-eslint/builder:lint\\" and \\"@angular-devkit/build-angular:ng-packagr\\"."`
       );
     });
 
@@ -151,8 +151,8 @@ describe('lib migrator', () => {
         'The "build" target is using an unsupported builder "@not/supported:builder".',
         'The "test" target is using an unsupported builder "@other/not-supported:builder".',
       ]);
-      expect(result[0].hint).toBe(
-        'The supported builders for libraries are: "@angular-devkit/build-angular:ng-packagr", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint".'
+      expect(result[0].hint).toMatchInlineSnapshot(
+        `"The supported builders for libraries are: \\"@angular-devkit/build-angular:karma\\", \\"@angular-eslint/builder:lint\\" and \\"@angular-devkit/build-angular:ng-packagr\\"."`
       );
     });
 
@@ -170,8 +170,8 @@ describe('lib migrator', () => {
       expect(result[0].messageGroup.messages).toStrictEqual([
         'The "my-build" target is using an unsupported builder "@not/supported:builder".',
       ]);
-      expect(result[0].hint).toBe(
-        'The supported builders for libraries are: "@angular-devkit/build-angular:ng-packagr", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint".'
+      expect(result[0].hint).toMatchInlineSnapshot(
+        `"The supported builders for libraries are: \\"@angular-devkit/build-angular:karma\\", \\"@angular-eslint/builder:lint\\" and \\"@angular-devkit/build-angular:ng-packagr\\"."`
       );
     });
 
@@ -212,16 +212,16 @@ describe('lib migrator', () => {
 
       expect(result).toHaveLength(2);
       expect(result[0].message).toBe(
-        'There is more than one target using a builder that is used to build the project ("build1" and "build2").'
-      );
-      expect(result[0].hint).toBe(
-        'Make sure the project only has one target with a builder that is used to build the project.'
-      );
-      expect(result[1].message).toBe(
         'There is more than one target using a builder that is used to lint the project ("lint1" and "lint2").'
       );
-      expect(result[1].hint).toBe(
+      expect(result[0].hint).toBe(
         'Make sure the project only has one target with a builder that is used to lint the project.'
+      );
+      expect(result[1].message).toBe(
+        'There is more than one target using a builder that is used to build the project ("build1" and "build2").'
+      );
+      expect(result[1].hint).toBe(
+        'Make sure the project only has one target with a builder that is used to build the project.'
       );
     });
 
@@ -276,7 +276,7 @@ describe('lib migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'There is no build target in the project configuration. This might not be an issue. Skipping updating the build configuration.'
+        'There is no target in the project configuration using the @angular-devkit/build-angular:ng-packagr builder. This might not be an issue. Skipping updating the build configuration.'
       );
     });
 

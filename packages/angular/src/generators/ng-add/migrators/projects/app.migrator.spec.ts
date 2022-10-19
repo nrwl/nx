@@ -10,7 +10,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import type { MigrationProjectConfiguration } from '../utilities/types';
+import type { MigrationProjectConfiguration } from '../../utilities/types';
 import { AppMigrator } from './app.migrator';
 
 type AngularCliProjectConfiguration = Omit<ProjectConfiguration, 'targets'> & {

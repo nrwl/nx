@@ -24,7 +24,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import type { MigrationProjectConfiguration } from '../utilities/types';
+import type { MigrationProjectConfiguration } from '../../utilities';
 import { E2eMigrator } from './e2e.migrator';
 
 type AngularCliProjectConfiguration = Omit<ProjectConfiguration, 'targets'> & {

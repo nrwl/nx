@@ -10,13 +10,13 @@ import { hasRulesRequiringTypeChecking } from '@nrwl/linter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { basename } from 'path';
-import type { GeneratorOptions } from '../schema';
-import type { Logger } from '../utilities/logger';
+import type { GeneratorOptions } from '../../schema';
 import type {
+  Logger,
   MigrationProjectConfiguration,
   Target,
   ValidationResult,
-} from '../utilities/types';
+} from '../../utilities';
 import { E2eMigrator } from './e2e.migrator';
 import { ProjectMigrator } from './project.migrator';
 
@@ -77,7 +77,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     }
   }
 
-  async migrate(): Promise<void> {
+  override async migrate(): Promise<void> {
     await this.e2eMigrator.migrate();
 
     this.moveProjectFiles();

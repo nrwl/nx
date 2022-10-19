@@ -1,4 +1,2 @@
-export * from './app.migrator';
-export * from './e2e.migrator';
-export * from './lib.migrator';
-export * from './project.migrator';
+export * from './builders';
+export * from './projects';

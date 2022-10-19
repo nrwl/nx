@@ -10,6 +10,14 @@ export type WorkspaceProjects = {
   libs: MigrationProjectConfiguration[];
 };
 
+export type ProjectMigrationInfo = {
+  name: string;
+  oldRoot: string;
+  oldSourceRoot: string;
+  newRoot: string;
+  newSourceRoot: string;
+};
+
 export type WorkspaceCapabilities = {
   karma: boolean;
   eslint: boolean;

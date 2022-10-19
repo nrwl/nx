@@ -37,14 +37,14 @@ import {
   isTemplateExpression,
   SyntaxKind,
 } from 'typescript';
-import type { GeneratorOptions } from '../schema';
-import { FileChangeRecorder } from '../utilities/file-change-recorder';
-import type { Logger } from '../utilities/logger';
+import type { GeneratorOptions } from '../../schema';
 import type {
+  Logger,
   MigrationProjectConfiguration,
   Target,
   ValidationResult,
-} from '../utilities/types';
+} from '../../utilities';
+import { FileChangeRecorder } from '../../utilities';
 import { ProjectMigrator } from './project.migrator';
 
 type SupportedTargets = 'e2e';
@@ -105,7 +105,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     this.initialize();
   }
 
-  async migrate(): Promise<void> {
+  override async migrate(): Promise<void> {
     if (!this.targetNames.e2e) {
       this.logger.info(
         'No e2e project was migrated because there was no "e2e" target declared in the "angular.json".'
