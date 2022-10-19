@@ -24,5 +24,6 @@
       "x-prompt": "What is the path to the component?"
     }
   },
-  "required": ["project", "componentPath"]
+  "required": ["project", "componentPath"],
+  "examplesFile": "../../../docs/component-test-examples.md"
 }
