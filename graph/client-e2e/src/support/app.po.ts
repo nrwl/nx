@@ -32,3 +32,6 @@ export const getImageDownloadButton = () =>
 
 export const getFocusButtonForProject = (projectName: string) =>
   cy.get(`[data-cy="focus-button-${projectName}"]`);
+
+export const getToggleAllButtonForFolder = (folderName: string) =>
+  cy.get(`[data-cy="toggle-folder-visibility-button-${folderName}"]`);

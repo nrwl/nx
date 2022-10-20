@@ -187,12 +187,41 @@ function SubProjectList({
     }
   }
 
+  function toggleAllProjects(currentlySelected: boolean) {
+    if (currentlySelected) {
+      projects.forEach((project) =>
+        deselectProject(project.projectGraphNode.name)
+      );
+    } else {
+      projects.forEach((project) =>
+        selectProject(project.projectGraphNode.name)
+      );
+    }
+  }
+
+  const someProjectsSelected = projects.some((project) => project.isSelected);
+
   return (
     <>
       {headerText !== '' ? (
-        <h3 className="mt-4 cursor-text py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs">
-          {headerText}
-        </h3>
+        <div className="relative mt-4 flex justify-between py-2 text-slate-800 dark:text-slate-200">
+          <h3 className="cursor-text text-sm font-semibold uppercase tracking-wide lg:text-xs">
+            {headerText}
+          </h3>
+
+          <span
+            title={
+              someProjectsSelected
+                ? `Hide all ${headerText} projects`
+                : `Show all ${headerText} projects`
+            }
+            className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-sm font-semibold uppercase tracking-wide lg:text-xs"
+            data-cy={`toggle-folder-visibility-button-${headerText}`}
+            onClick={() => toggleAllProjects(someProjectsSelected)}
+          >
+            <EyeIcon className="h-5 w-5"></EyeIcon>
+          </span>
+        </div>
       ) : null}
       <ul className="mt-2 -ml-3">
         {sortedProjects.map((project) => {
