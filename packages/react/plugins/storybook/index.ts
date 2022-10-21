@@ -9,6 +9,7 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { getBaseWebpackPartial } from '@nrwl/webpack/src/utils/config';
+import { NormalizedWebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
 import { getStylesPartial } from '@nrwl/webpack/src/executors/webpack/lib/get-webpack-config';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { join } from 'path';
@@ -100,7 +101,7 @@ export const webpack = async (
 
   const tsconfigPath = join(options.configDir, 'tsconfig.json');
 
-  const builderOptions: any = {
+  const builderOptions: NormalizedWebpackExecutorOptions = {
     ...options,
     root: options.configDir,
     sourceRoot: '',
@@ -115,6 +116,7 @@ export const webpack = async (
     optimization: {},
     tsConfig: tsconfigPath,
     extractCss: storybookWebpackConfig.mode === 'production',
+    target: 'web',
   };
 
   const esm = true;
