@@ -187,10 +187,10 @@ export function Header(): JSX.Element {
                 title="Check Nx conference"
                 className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
               >
-                <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />
-                  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />
-                </span>
+                {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
+                {/*  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />*/}
+                {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
+                {/*</span>*/}
                 Nx Conf
               </a>
             </Link>
