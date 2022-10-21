@@ -275,4 +275,37 @@ describe('addDependenciesToPackageJson', () => {
     });
     expect(installTask).toBeDefined();
   });
+
+  it('should not overwrite dependencies when they exist in devDependencies or vice versa and the new version is tilde', () => {
+    // ARRANGE
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        tslib: '2.4.0',
+      },
+      devDependencies: {
+        nx: '15.0.0',
+      },
+    });
+
+    // ACT
+    const installTask = addDependenciesToPackageJson(
+      tree,
+      {
+        tslib: '~2.3.0',
+      },
+      {
+        nx: '15.0.0',
+      }
+    );
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies).toEqual({
+      tslib: '2.4.0',
+    });
+    expect(devDependencies).toEqual({
+      nx: '15.0.0',
+    });
+    expect(installTask).toBeDefined();
+  });
 });
