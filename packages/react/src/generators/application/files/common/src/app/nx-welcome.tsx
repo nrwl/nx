@@ -565,7 +565,7 @@ export function NxWelcome({ title }: { title: string }) {
                 </svg>
               </a>
               <a
-                href="https://nx.dev/react-tutorial/01-create-application?utm_source=nx-project"
+                href="https://nx.dev/react-tutorial/1-code-generation?utm_source=nx-project"
                 target="_blank"
                 rel="noreferrer"
                 className="list-item-link"

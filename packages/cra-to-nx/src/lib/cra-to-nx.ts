@@ -172,7 +172,7 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
   output.note({
     title: 'First time using Nx? Check out this interactive Nx tutorial.',
     bodyLines: [
-      `https://nx.dev/react-tutorial/01-create-application`,
+      `https://nx.dev/react-tutorial/1-code-generation`,
       ` `,
       `Prefer watching videos? Check out this free Nx course on Egghead.io.`,
       `https://egghead.io/playlists/scale-react-development-with-nx-4038`,
