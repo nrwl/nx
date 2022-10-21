@@ -687,7 +687,7 @@ describe('react:component-story', () => {
     it('should properly set up the story', () => {
       expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
         .toContain(formatFile`
-        import { ComponentStory, ComponentMeta } from '@storybook/react';
+        import type { ComponentStory, ComponentMeta } from '@storybook/react';
         import { TestUiLib } from './test-ui-lib';
         
         const Story: ComponentMeta<typeof TestUiLib> = {
