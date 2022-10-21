@@ -1,12 +1,12 @@
 import 'dotenv/config';
 import { runCLI } from 'jest';
-import { readConfig } from 'jest-config';
+import { readConfig, readConfigs } from 'jest-config';
 import { utils as jestReporterUtils } from '@jest/reporters';
 import { makeEmptyAggregatedTestResult, addResult } from '@jest/test-result';
 import * as path from 'path';
 import { JestExecutorOptions } from './schema';
 import { Config } from '@jest/types';
-import { ExecutorContext, TaskGraph } from '@nrwl/devkit';
+import { ExecutorContext, TaskGraph, workspaceRoot } from '@nrwl/devkit';
 import { join } from 'path';
 import { getSummary } from './summary';
 
@@ -153,20 +153,26 @@ export async function batchJest(
   const configPaths = taskGraph.roots.map((root) =>
     path.resolve(context.root, inputs[root].jestConfig)
   );
+  // TODO(caleb): this is depends on the name of the project to also match the 'displayName' in the jest.config.ts
+  //  this can also be an issue if someone has the same project name in a config.
+  //  i.e. two projects will be run for only 1 provided name
+  //  when trying to use readConfigs before runCLI ts throws error about root jest.config.ts.
+  const selectedProjects = taskGraph.roots.map((task) => task.split(':')[0]);
+  const parsedConfigs = await jestConfigParser(overrides, context, true);
 
   const { globalConfig, results } = await runCLI(
-    await jestConfigParser(overrides, context, true),
-    [...configPaths]
+    {
+      ...parsedConfigs,
+      selectProjects: selectedProjects,
+    },
+    [workspaceRoot]
   );
 
+  const { configs } = await readConfigs({ $0: undefined, _: [] }, configPaths);
   const jestTaskExecutionResults: Record<
     string,
     { success: boolean; terminalOutput: string }
   > = {};
-
-  const configs = await Promise.all(
-    configPaths.map(async (path) => readConfig({ $0: '', _: undefined }, path))
-  );
 
   for (let i = 0; i < taskGraph.roots.length; i++) {
     let root = taskGraph.roots[i];
@@ -184,7 +190,7 @@ export async function batchJest(
           jestReporterUtils.getResultHeader(
             testResult,
             globalConfig as any,
-            configs[i].projectConfig as any
+            configs[i] as any
           );
       }
     }
