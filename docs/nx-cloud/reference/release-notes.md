@@ -92,6 +92,10 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 13-10-2022T16-45-30
+
+- Feat: Private Cloud now runs completely as Kubernetes cluster. See the [Helm example repo](https://github.com/nrwl/nx-cloud-helm) for more details
+
 ## 05-08-2022T15-42-20
 
 - Fix: issue with retrieving hashes during reads
