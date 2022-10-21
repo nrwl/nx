@@ -5,6 +5,7 @@ import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import { coerce, gt } from 'semver';
 
 const NON_SEMVER_TAGS = {
+  '*': 2,
   next: 1,
   latest: 0,
   previous: -1,
@@ -24,6 +25,27 @@ function filterExistingDependencies(
     .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
 }
 
+function isIncomingVersionGreater(
+  incomingVersion: string,
+  existingVersion: string
+) {
+  if (
+    incomingVersion in NON_SEMVER_TAGS &&
+    existingVersion in NON_SEMVER_TAGS
+  ) {
+    return NON_SEMVER_TAGS[incomingVersion] > NON_SEMVER_TAGS[existingVersion];
+  }
+
+  if (
+    incomingVersion in NON_SEMVER_TAGS ||
+    existingVersion in NON_SEMVER_TAGS
+  ) {
+    return true;
+  }
+
+  return gt(coerce(incomingVersion), coerce(existingVersion));
+}
+
 function updateExistingDependenciesVersion(
   dependencies: Record<string, string>,
   existingAltDependencies: Record<string, string>
@@ -37,23 +59,7 @@ function updateExistingDependenciesVersion(
       const incomingVersion = dependencies[d];
       const existingVersion = existingAltDependencies[d];
 
-      if (
-        incomingVersion in NON_SEMVER_TAGS &&
-        existingVersion in NON_SEMVER_TAGS
-      ) {
-        return (
-          NON_SEMVER_TAGS[incomingVersion] > NON_SEMVER_TAGS[existingVersion]
-        );
-      }
-
-      if (
-        incomingVersion in NON_SEMVER_TAGS ||
-        existingVersion in NON_SEMVER_TAGS
-      ) {
-        return true;
-      }
-
-      return gt(coerce(incomingVersion), coerce(existingVersion));
+      return isIncomingVersionGreater(incomingVersion, existingVersion);
     })
     .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
 }
@@ -205,21 +211,37 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
   packageJsonFile.devDependencies = packageJsonFile.devDependencies || {};
 
   if (Object.keys(deps).length > 0) {
-    needsDepsUpdate =
-      Object.keys(deps).some((entry) => !packageJsonFile.dependencies[entry]) ||
-      Object.keys(deps).some(
-        (entry) => !packageJsonFile.devDependencies[entry]
-      );
+    needsDepsUpdate = Object.keys(deps).some((entry) => {
+      const incomingVersion = deps[entry];
+      if (packageJsonFile.dependencies[entry]) {
+        const existingVersion = packageJsonFile.dependencies[entry];
+        return isIncomingVersionGreater(incomingVersion, existingVersion);
+      }
+
+      if (packageJsonFile.devDependencies[entry]) {
+        const existingVersion = packageJsonFile.devDependencies[entry];
+        return isIncomingVersionGreater(incomingVersion, existingVersion);
+      }
+
+      return true;
+    });
   }
 
   if (Object.keys(devDeps).length > 0) {
-    needsDevDepsUpdate =
-      Object.keys(devDeps).some(
-        (entry) => !packageJsonFile.devDependencies[entry]
-      ) ||
-      Object.keys(devDeps).some(
-        (entry) => !packageJsonFile.dependencies[entry]
-      );
+    needsDevDepsUpdate = Object.keys(devDeps).some((entry) => {
+      const incomingVersion = devDeps[entry];
+      if (packageJsonFile.devDependencies[entry]) {
+        const existingVersion = packageJsonFile.devDependencies[entry];
+        return isIncomingVersionGreater(incomingVersion, existingVersion);
+      }
+      if (packageJsonFile.dependencies[entry]) {
+        const existingVersion = packageJsonFile.dependencies[entry];
+
+        return isIncomingVersionGreater(incomingVersion, existingVersion);
+      }
+
+      return true;
+    });
   }
 
   return needsDepsUpdate || needsDevDepsUpdate;
