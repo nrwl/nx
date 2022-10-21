@@ -49,3 +49,5 @@ export function componentTestGenerator(
     );
   }
 }
+
+export default componentTestGenerator;
