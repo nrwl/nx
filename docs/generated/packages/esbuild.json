@@ -250,16 +250,16 @@
             "description": "Skip type-checking via TypeScript. Skipping type-checking speeds up the build but type errors are not caught.",
             "default": false
           },
-          "updateBuildableProjectDepsInPackageJson": {
+          "thirdParty": {
             "type": "boolean",
-            "description": "Update buildable project dependencies in `package.json`.",
+            "description": "Includes third-party packages in the bundle (i.e. npm packages).",
             "default": true
           },
-          "buildableProjectDepsInPackageJsonType": {
+          "dependenciesFieldType": {
             "type": "string",
-            "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+            "description": "When `bundleInternalProjectsOnly` is true, this option determines whether external packages should be in 'dependencies' or 'peerDependencies' field in the generated package.json file.",
             "enum": ["dependencies", "peerDependencies"],
-            "default": "peerDependencies"
+            "default": "dependencies"
           },
           "esbuildOptions": {
             "type": "object",

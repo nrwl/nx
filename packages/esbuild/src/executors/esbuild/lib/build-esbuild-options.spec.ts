@@ -35,6 +35,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           outputFileName: 'index.js',
           singleEntry: true,
+          external: [],
         },
         context
       )
@@ -49,6 +50,7 @@ describe('buildEsbuildOptions', () => {
       platform: 'browser',
       outfile: 'dist/apps/myapp/index.js',
       tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: [],
       outExtension: {
         '.js': '.js',
       },
@@ -69,6 +71,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           outputFileName: 'index.js',
           singleEntry: false,
+          external: [],
         },
         context
       )
@@ -83,6 +86,7 @@ describe('buildEsbuildOptions', () => {
       platform: 'browser',
       outdir: 'dist/apps/myapp',
       tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: [],
       outExtension: {
         '.js': '.js',
       },
@@ -102,6 +106,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           outputFileName: 'index.js',
           singleEntry: true,
+          external: [],
         },
         context
       )
@@ -116,6 +121,7 @@ describe('buildEsbuildOptions', () => {
       platform: 'browser',
       outfile: 'dist/apps/myapp/index.cjs',
       tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: [],
       outExtension: {
         '.js': '.cjs',
       },
@@ -135,6 +141,7 @@ describe('buildEsbuildOptions', () => {
           assets: [],
           outputFileName: 'index.js',
           singleEntry: true,
+          external: [],
         },
         context
       )
@@ -146,6 +153,7 @@ describe('buildEsbuildOptions', () => {
       platform: 'node',
       outfile: 'dist/apps/myapp/index.cjs',
       tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: [],
       outExtension: {
         '.js': '.cjs',
       },

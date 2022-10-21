@@ -7,6 +7,7 @@ export interface EsBuildExecutorOptions {
   assets: AssetGlob[];
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   deleteOutputPath?: boolean;
+  dependenciesFieldType?: boolean;
   esbuildOptions?: Record<string, any>;
   external?: string[];
   format?: Array<'esm' | 'cjs'>;
@@ -20,12 +21,13 @@ export interface EsBuildExecutorOptions {
   project: string;
   skipTypeCheck?: boolean;
   target?: string;
+  thirdParty?: boolean;
   tsConfig: string;
-  updateBuildableProjectDepsInPackageJson?: boolean;
   watch?: boolean;
 }
 
 export interface NormalizedEsBuildExecutorOptions
   extends EsBuildExecutorOptions {
   singleEntry: boolean;
+  external: string[];
 }

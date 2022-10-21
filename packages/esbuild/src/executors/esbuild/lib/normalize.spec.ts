@@ -18,6 +18,7 @@ describe('normalizeOptions', () => {
       assets: [],
       outputFileName: 'index.js',
       singleEntry: true,
+      external: [],
     });
   });
 
@@ -39,6 +40,7 @@ describe('normalizeOptions', () => {
       assets: [],
       additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
       singleEntry: false,
+      external: [],
     });
   });
 
@@ -60,6 +62,7 @@ describe('normalizeOptions', () => {
       assets: [],
       outputFileName: 'test.js',
       singleEntry: true,
+      external: [],
     });
   });
 
