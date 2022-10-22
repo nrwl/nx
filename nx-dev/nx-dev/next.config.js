@@ -44,7 +44,7 @@ module.exports = withNx({
 
     // Tutorials
     rules.push({
-      source: '/(l|latest)/(r|react)/tutorial/01-create-application',
+      source: '/(l|latest)/(r|react)/tutorial/1-code-generation',
       destination: '/react-tutorial/1-code-generation',
       permanent: true,
     });
