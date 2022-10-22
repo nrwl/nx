@@ -322,6 +322,48 @@ const recipesUrls = {
 };
 
 /**
+ * Tutorial Updates
+ */
+const oldReactTutorialPaths = [
+  '/react-tutori23al/01-create-application',
+  '/react-tutorial/02-add-e2e-test',
+  '/react-tutorial/03-display-todos',
+  '/react-tutorial/04-connect-to-api',
+  '/react-tutorial/05-add-node-app',
+  '/react-tutorial/06-proxy',
+  '/react-tutorial/07-share-code',
+  '/react-tutorial/08-create-libs',
+  '/react-tutorial/09-dep-graph',
+  '/react-tutorial/10-computation-caching',
+  '/react-tutorial/11-test-affected-projects',
+  '/react-tutorial/12-summary',
+];
+const reactRedirectDestination = '/react-tutorial/1-code-generation';
+const reactTutorialRedirects = oldReactTutorialPaths.reduce((acc, path) => {
+  acc[path] = reactRedirectDestination;
+  return acc;
+}, {});
+const oldNodeTutorialPaths = [
+  '/node-tutorial/01-create-application',
+  '/node-tutorial/02-display-todos',
+  '/node-tutorial/03-share-code',
+  '/node-tutorial/04-create-libs',
+  '/node-tutorial/05-dep-graph',
+  '/node-tutorial/06-computation-caching',
+  '/node-tutorial/07-test-affected-projects',
+  '/node-tutorial/08-summary',
+];
+const nodeRedirectDestination = '/node-tutorial/1-code-generation';
+const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
+  acc[path] = nodeRedirectDestination;
+  return acc;
+}, {});
+const tutorialRedirects = Object.assign(
+  reactTutorialRedirects,
+  nodeTutorialRedirects
+);
+
+/**
  * Public export API
  */
 module.exports = {
@@ -331,4 +373,5 @@ module.exports = {
   overviewUrls,
   recipesUrls,
   schemaUrls,
+  tutorialRedirects,
 };

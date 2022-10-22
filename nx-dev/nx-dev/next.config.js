@@ -49,16 +49,6 @@ module.exports = withNx({
       permanent: true,
     });
     rules.push({
-      source: '/react-tutorial/:slug(0.*)', // 0.* is regex for "anything starting with 0"
-      destination: '/react-tutorial/1-code-generation',
-      permanent: true,
-    });
-    rules.push({
-      source: '/react-tutorial/:slug(1[0|1|2]-.*)', // 1[0|1|2]-.* is regex for "anything starting with '10-', '11-', or '12-'"
-      destination: '/react-tutorial/1-code-generation',
-      permanent: true,
-    });
-    rules.push({
       source: '/(l|latest)/(a|angular)/tutorial/01-create-application',
       destination: '/angular-tutorial/01-create-application',
       permanent: true,
@@ -68,16 +58,15 @@ module.exports = withNx({
       destination: '/node-tutorial/1-code-generation',
       permanent: true,
     });
-    rules.push({
-      source: '/node-tutorial/:slug(0.*)', // 0.* is regex for "anything starting with 0"
-      destination: '/node-tutorial/1-code-generation', // 1[0|1|2]-.* is regex for "anything starting with '10-', '11-', or '12-'"
-      permanent: true,
-    });
-    rules.push({
-      source: '/node-tutorial/:slug(1[0|1|2]-.*)', // 1[0|1|2].* is regex for "
-      destination: '/node-tutorial/1-code-generation', // 1[0|1|2]-.* is regex for "anything starting with '10-', '11-', or '12-'"
-      permanent: true,
-    });
+    for (const [source, destination] of Object.entries(
+      redirectRules.tutorialRedirects
+    )) {
+      rules.push({
+        source,
+        destination,
+        permanent: true,
+      });
+    }
 
     // Storybook
     rules.push({
