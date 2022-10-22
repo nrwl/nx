@@ -325,7 +325,7 @@ const recipesUrls = {
  * Tutorial Updates
  */
 const oldReactTutorialPaths = [
-  '/react-tutori23al/01-create-application',
+  '/react-tutorial/01-create-application',
   '/react-tutorial/02-add-e2e-test',
   '/react-tutorial/03-display-todos',
   '/react-tutorial/04-connect-to-api',
