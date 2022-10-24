@@ -27,7 +27,7 @@ export function Breadcrumbs({ path }: { path: string }): JSX.Element {
       <nav className="flex" aria-labelledby="breadcrumb">
         <ol role="list" className="flex items-center space-x-4">
           {pages.map((page, index) => (
-            <li key={page.name}>
+            <li key={page.name.concat('-', index.toString())}>
               <div className="flex items-center">
                 {!!index && (
                   <ChevronRightIcon
