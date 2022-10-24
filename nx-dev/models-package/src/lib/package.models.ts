@@ -18,8 +18,8 @@ export interface PackageMetadata {
   }[];
   root: string;
   source: string;
-  generators: SchemaMetadata[];
   executors: SchemaMetadata[];
+  generators: SchemaMetadata[];
 }
 
 export interface SchemaMetadata {

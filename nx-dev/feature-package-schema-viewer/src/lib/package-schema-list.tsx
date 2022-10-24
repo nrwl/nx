@@ -1,5 +1,5 @@
-import { Menu } from '@nrwl/nx-dev/models-menu';
-import { PackageMetadata } from '@nrwl/nx-dev/models-package';
+import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
+import { PackageMetadata, SchemaMetadata } from '@nrwl/nx-dev/models-package';
 import { Breadcrumbs, Footer } from '@nrwl/nx-dev/ui-common';
 import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import { NextSeo } from 'next-seo';
@@ -18,18 +18,27 @@ export function PackageSchemaList({
 }): JSX.Element {
   const router = useRouter();
 
+  function getGuides(id: string, sections: MenuSection[]): MenuItem | null {
+    const target = sections.find((x) => x.id === id);
+    if (!target) return null;
+    return target.itemList.find((y) => y.id === id + '-guides') || null;
+  }
+
   const vm: {
-    pkg: {
+    package: {
       name: string;
       description: string;
       githubUrl: string;
       id: string;
       readme: { content: string; filePath: string };
+      guides: MenuItem | null;
+      executors: SchemaMetadata[];
+      generators: SchemaMetadata[];
     };
     seo: { title: string; description: string; url: string; imageUrl: string };
     markdown: ReactNode;
   } = {
-    pkg: {
+    package: {
       name: pkg.packageName,
       description: pkg.description,
       githubUrl: pkg.githubRoot + pkg.root,
@@ -43,6 +52,9 @@ export function PackageSchemaList({
             }
           : { content: '', filePath: '' };
       },
+      guides: getGuides(pkg.name, menu.sections),
+      executors: pkg.executors,
+      generators: pkg.generators,
     },
     seo: {
       title: `${pkg.packageName} | Nx`,
@@ -54,8 +66,8 @@ export function PackageSchemaList({
     },
     get markdown(): ReactNode {
       return renderMarkdown({
-        content: this.pkg.readme.content || this.pkg.description,
-        filePath: this.pkg.readme.filePath,
+        content: this.package.readme.content || this.package.description,
+        filePath: this.package.readme.filePath,
         data: {},
       });
     },
@@ -99,7 +111,7 @@ export function PackageSchemaList({
             </div>
             <div className="relative z-0 inline-flex flex-shrink-0">
               <a
-                href={vm.pkg.githubUrl}
+                href={vm.package.githubUrl}
                 target="_blank"
                 rel="noreferrer"
                 aria-hidden="true"
@@ -116,24 +128,22 @@ export function PackageSchemaList({
                     d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
                   ></path>
                 </svg>
-                {vm.pkg.name}
+                {vm.package.name}
               </a>
             </div>
           </div>
 
-          <Heading1 title={vm.pkg.name} />
+          <Heading1 title={vm.package.name} />
 
           <div className="prose dark:prose-invert mb-16 max-w-none">
             {vm.markdown}
           </div>
 
           <PackageReference
-            name={vm.pkg.id}
-            guides={menu.sections
-              .find((x) => x.id === vm.pkg.id)
-              ?.itemList.find((y) => y.id === vm.pkg.id + '-guides')}
-            executors={pkg.executors}
-            generators={pkg.generators}
+            name={vm.package.id}
+            guides={vm.package.guides}
+            executors={vm.package.executors}
+            generators={vm.package.generators}
           />
         </div>
       </div>
