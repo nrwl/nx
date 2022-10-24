@@ -648,7 +648,8 @@ export function globForProjectFiles(
 
   const globsToExclude = globPatternsFromPackageManagerWorkspaces
     .filter((glob) => glob.startsWith('!'))
-    .map((glob) => glob.substring(1));
+    .map((glob) => glob.substring(1))
+    .map((glob) => (glob.startsWith('/') ? glob.substring(1) : glob));
 
   const projectGlobPatterns: string[] = [
     'project.json',
@@ -675,9 +676,9 @@ export function globForProjectFiles(
    */
 
   const ALWAYS_IGNORE = [
-    '/node_modules',
+    'node_modules',
     '**/node_modules',
-    '/dist',
+    'dist',
     ...globsToExclude,
   ];
 
