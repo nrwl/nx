@@ -136,10 +136,6 @@ export async function createProjectGraphAsync(
       }
       return await daemonClient.getProjectGraph();
     } catch (e) {
-      if (!e.internalDaemonError) {
-        handleProjectGraphError(opts, e);
-      }
-
       if (e.message.indexOf('inotify_add_watch') > -1) {
         // common errors with the daemon due to OS settings (cannot watch all the files available)
         output.note({
@@ -149,7 +145,11 @@ export async function createProjectGraphAsync(
             'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
-      } else {
+        markDaemonAsDisabled();
+        return buildProjectGraphWithoutDaemon();
+      }
+
+      if (e.internalDaemonError) {
         const errorLogFile = writeDaemonLogs(e.message);
         output.warn({
           title: `Nx Daemon was not able to compute the project graph.`,
@@ -159,9 +159,11 @@ export async function createProjectGraphAsync(
             'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
+        markDaemonAsDisabled();
+        return buildProjectGraphWithoutDaemon();
       }
-      markDaemonAsDisabled();
-      return buildProjectGraphWithoutDaemon();
+
+      handleProjectGraphError(opts, e);
     }
   }
 }

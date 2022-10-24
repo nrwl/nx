@@ -323,7 +323,7 @@ export async function startServer(): Promise<Server> {
 
           return resolve(server);
         } catch (err) {
-          reject(err);
+          await handleWorkspaceChanges(err, []);
         }
       });
     } catch (err) {
