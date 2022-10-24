@@ -1,3 +1,4 @@
+import { HandRaisedIcon } from '@heroicons/react/24/outline';
 import { XCircleIcon } from '@heroicons/react/24/solid';
 import { getSchemaFromReference } from '@nrwl/nx-dev/data-access-packages';
 import { JsonSchema1, NxSchema } from '@nrwl/nx-dev/models-package';
@@ -94,7 +95,7 @@ export function Content({
   return (
     <div className="min-w-0 flex-auto pt-8 pb-24 lg:pb-16">
       <div className="mb-8 flex w-full items-center space-x-2">
-        <div className="w-full flex-grow">
+        <div className="w-full flex-grow space-x-4">
           <div
             aria-hidden="true"
             data-tooltip="Schema type"
@@ -102,6 +103,15 @@ export function Content({
           >
             {schemaViewModel.type}
           </div>
+          {schemaViewModel.hidden && (
+            <div
+              aria-hidden="true"
+              data-tooltip="Nx internal use only"
+              className="relative inline-flex rounded-md border border-red-100 bg-red-50 px-4 py-2 text-xs font-medium uppercase text-red-600 dark:border-red-900 dark:bg-red-900/30 dark:text-red-400"
+            >
+              Internal
+            </div>
+          )}
         </div>
         <div className="relative z-0 inline-flex flex-shrink-0 rounded-md shadow-sm">
           <Link href={schemaViewModel.packageUrl}>
@@ -137,6 +147,25 @@ export function Content({
       {/* We remove the top description on sub property lookup */}
       {!schemaViewModel.subReference && (
         <>
+          <div className="my-6 block rounded-md bg-red-50 p-4 ring-1 ring-red-100 dark:bg-red-900/30 dark:ring-red-900">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <HandRaisedIcon
+                  className="h-5 w-5 text-red-500"
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="ml-3">
+                <div className="mt-0 block text-sm font-medium text-red-600 dark:text-red-400">
+                  Schema for internal use only
+                </div>
+                <p className="prose-sm mt-2 block text-red-700 dark:text-red-600">
+                  Please do not extend this schema as it is part of Nx internal
+                  usage.
+                </p>
+              </div>
+            </div>
+          </div>
           <div className="prose prose-slate dark:prose-invert max-w-none">
             {vm.markdown}
           </div>
