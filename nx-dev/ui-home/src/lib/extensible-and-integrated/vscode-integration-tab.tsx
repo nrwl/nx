@@ -17,7 +17,7 @@ export function VscodeIntegrationTab(): JSX.Element {
       icon: <CogIcon className="h-5 w-5" />,
       description:
         'No need to remember the commands and options available. See everything at a glance. Great for exploring.',
-      link: '/recipe/console-generate-command',
+      link: '/recipes/nx-console/console-generate-command',
     },
     {
       connectionWidth: 'w-[668px]',
@@ -25,7 +25,7 @@ export function VscodeIntegrationTab(): JSX.Element {
       icon: <CommandLineIcon className="h-5 w-5" />,
       description:
         'Easy access to your projects and scripts from the context menu, command palette and augmented config files. Perfectly integrated into your flow.',
-      link: '/recipe/console-run-command',
+      link: '/recipes/nx-console/console-run-command',
     },
     {
       connectionWidth: 'w-48',
