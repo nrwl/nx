@@ -125,6 +125,7 @@ export function findDefaultExportDeclaration(
   }
 }
 
+// this is broken somehow, it is finding not exported stff
 export function findExportDeclarationsForJsx(
   source: ts.SourceFile
 ): Array<

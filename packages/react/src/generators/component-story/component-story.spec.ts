@@ -52,7 +52,7 @@ describe('react:component-story', () => {
       it('should properly set up the story', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-          import { ComponentStory, ComponentMeta } from '@storybook/react';
+          import type { ComponentStory, ComponentMeta } from '@storybook/react';
           import { TestUiLib } from './test-ui-lib';
           
           const Story: ComponentMeta<typeof TestUiLib> = {
@@ -150,7 +150,7 @@ describe('react:component-story', () => {
       it('should create a story without controls', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-          import { ComponentStory, ComponentMeta } from '@storybook/react';
+          import type { ComponentStory, ComponentMeta } from '@storybook/react';
           import { Test } from './test-ui-lib';
           
           const Story: ComponentMeta<typeof Test> = {
@@ -201,7 +201,7 @@ describe('react:component-story', () => {
       it('should setup controls based on the component props', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-            import { ComponentStory, ComponentMeta } from '@storybook/react';
+            import type { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Test } from './test-ui-lib';
 
             const Story: ComponentMeta<typeof Test> = {
@@ -260,7 +260,7 @@ describe('react:component-story', () => {
       it('should setup controls based on the component props', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-            import { ComponentStory, ComponentMeta } from '@storybook/react';
+            import type { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Test } from './test-ui-lib';
 
             const Story: ComponentMeta<typeof Test> = {
@@ -424,7 +424,7 @@ describe('react:component-story', () => {
             it('should properly setup the controls based on the component props', () => {
               expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
                 .toContain(formatFile`
-            import { ComponentStory, ComponentMeta } from '@storybook/react';
+            import type { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Test } from './test-ui-lib';
 
             const Story: ComponentMeta<typeof Test> = {
@@ -557,7 +557,7 @@ describe('react:component-story', () => {
             it('should properly setup the controls based on the component props', () => {
               expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
                 .toContain(formatFile`
-              import { ComponentStory, ComponentMeta } from '@storybook/react';
+              import type { ComponentStory, ComponentMeta } from '@storybook/react';
               import { Test } from './test-ui-lib';
   
               const Story: ComponentMeta<typeof Test> = {
@@ -621,7 +621,7 @@ describe('react:component-story', () => {
 
           expect(formatFile`${appTree.read(storyFilePathOne, 'utf-8')}`)
             .toContain(formatFile`
-            import { ComponentStory, ComponentMeta } from '@storybook/react';
+            import type { ComponentStory, ComponentMeta } from '@storybook/react';
             import { One } from './test-ui-lib';
             
             const Story: ComponentMeta<typeof One> = {
@@ -638,7 +638,7 @@ describe('react:component-story', () => {
 
           expect(formatFile`${appTree.read(storyFilePathTwo, 'utf-8')}`)
             .toContain(formatFile`
-            import { ComponentStory, ComponentMeta } from '@storybook/react';
+            import type { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Two } from './test-ui-lib';
             
             const Story: ComponentMeta<typeof Two> = {
@@ -655,7 +655,7 @@ describe('react:component-story', () => {
 
           expect(formatFile`${appTree.read(storyFilePathThree, 'utf-8')}`)
             .toContain(formatFile`
-            import { ComponentStory, ComponentMeta } from '@storybook/react';
+            import type { ComponentStory, ComponentMeta } from '@storybook/react';
             import { Three } from './test-ui-lib';
             
             const Story: ComponentMeta<typeof Three> = {
