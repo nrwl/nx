@@ -64,7 +64,6 @@ describe('react:component-story', () => {
           const Template: ComponentStory<typeof TestUiLib> = (args) => <TestUiLib {...args} />;
           
           export const Primary = Template.bind({});
-
           Primary.args = {};
           `);
       });
