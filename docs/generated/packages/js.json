@@ -156,8 +156,8 @@
       "aliases": ["lib"],
       "x-type": "init",
       "description": "Init placeholder.",
+      "hidden": true,
       "implementation": "/packages/js/src/generators/init/init#initGenerator.ts",
-      "hidden": false,
       "path": "/packages/js/src/generators/init/schema.json"
     },
     {
