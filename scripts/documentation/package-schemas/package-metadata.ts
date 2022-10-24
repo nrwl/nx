@@ -54,10 +54,11 @@ function getSchemaList(
 ): SchemaMetadata[] {
   const targetPath = join(paths.absoluteRoot, paths.root, type + '.json');
   try {
-    return Object.entries(readJsonSync(targetPath, 'utf8')[type]).map(
-      ([name, schema]: [string, JsonSchema1]) =>
+    return Object.entries(readJsonSync(targetPath, 'utf8')[type])
+      .map(([name, schema]: [string, JsonSchema1]) =>
         createSchemaMetadata(name, schema, paths)
-    );
+      )
+      .filter((s) => !s.hidden); // Exclude any hidden schemas from the documentation
   } catch (e) {
     console.log(
       `SchemaMetadata "${paths.root

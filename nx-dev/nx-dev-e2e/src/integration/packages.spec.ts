@@ -8,24 +8,12 @@ describe('nx-dev: Packages Section', () => {
   (<{ title: string; path: string }[]>[
     { title: '@nrwl/angular', path: '/packages/angular' },
     {
-      title: '@nrwl/angular:add-linting',
-      path: '/packages/angular/generators/add-linting',
-    },
-    {
       title: '@nrwl/angular:application',
       path: '/packages/angular/generators/application',
     },
     {
       title: '@nrwl/angular:component',
       path: '/packages/angular/generators/component',
-    },
-    {
-      title: '@nrwl/angular:component-cypress-spec',
-      path: '/packages/angular/generators/component-cypress-spec',
-    },
-    {
-      title: '@nrwl/angular:component-story',
-      path: '/packages/angular/generators/component-story',
     },
     {
       title: '@nrwl/angular:convert-tslint-to-eslint',
@@ -35,7 +23,6 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/angular:downgrade-module',
       path: '/packages/angular/generators/downgrade-module',
     },
-    { title: '@nrwl/angular:init', path: '/packages/angular/generators/init' },
     {
       title: '@nrwl/angular:karma',
       path: '/packages/angular/generators/karma',
@@ -62,10 +49,6 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/angular/generators/convert-to-with-mf',
     },
     { title: '@nrwl/angular:host', path: '/packages/angular/generators/host' },
-    {
-      title: '@nrwl/angular:ng-add',
-      path: '/packages/angular/generators/ng-add',
-    },
     { title: '@nrwl/angular:ngrx', path: '/packages/angular/generators/ngrx' },
     { title: '@nrwl/angular:scam', path: '/packages/angular/generators/scam' },
     {
@@ -135,17 +118,11 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/create-nx-workspace',
     },
     { title: '@nrwl/cypress', path: '/packages/cypress' },
-    { title: '@nrwl/cypress:init', path: '/packages/cypress/generators/init' },
-    {
-      title: '@nrwl/cypress:cypress-project',
-      path: '/packages/cypress/generators/cypress-project',
-    },
     {
       title: '@nrwl/cypress:cypress',
       path: '/packages/cypress/executors/cypress',
     },
     { title: '@nrwl/detox', path: '/packages/detox' },
-    { title: '@nrwl/detox:init', path: '/packages/detox/generators/init' },
     {
       title: '@nrwl/detox:application',
       path: '/packages/detox/generators/application',
@@ -160,10 +137,6 @@ describe('nx-dev: Packages Section', () => {
     },
     { title: '@nrwl/eslint-plugin-nx', path: '/packages/eslint-plugin-nx' },
     { title: '@nrwl/expo', path: '/packages/expo' },
-    {
-      title: '@nrwl/expo:init',
-      path: '/packages/expo/generators/init',
-    },
     {
       title: '@nrwl/expo:application',
       path: '/packages/expo/generators/application',
@@ -189,17 +162,11 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/expo/executors/ensure-symlink',
     },
     { title: '@nrwl/express', path: '/packages/express' },
-    { title: '@nrwl/express:init', path: '/packages/express/generators/init' },
     {
       title: '@nrwl/express:application',
       path: '/packages/express/generators/application',
     },
     { title: '@nrwl/jest', path: '/packages/jest' },
-    { title: '@nrwl/jest:init', path: '/packages/jest/generators/init' },
-    {
-      title: '@nrwl/jest:jest-project',
-      path: '/packages/jest/generators/jest-project',
-    },
     { title: '@nrwl/jest', path: '/packages/jest/executors/jest' },
     { title: '@nrwl/js', path: '/packages/js' },
     { title: '@nrwl/js:library', path: '/packages/js/generators/library' },
@@ -211,10 +178,6 @@ describe('nx-dev: Packages Section', () => {
     { title: '@nrwl/js:tsc', path: '/packages/js/executors/tsc' },
     { title: '@nrwl/js:swc', path: '/packages/js/executors/swc' },
     { title: '@nrwl/linter', path: '/packages/linter' },
-    {
-      title: '@nrwl/linter:workspace-rules-project',
-      path: '/packages/linter/generators/workspace-rules-project',
-    },
     {
       title: '@nrwl/linter',
       path: '/packages/linter/generators/workspace-rule',
@@ -234,7 +197,6 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/nest:convert-tslint-to-eslint',
       path: '/packages/nest/generators/convert-tslint-to-eslint',
     },
-    { title: '@nrwl/nest:init', path: '/packages/nest/generators/init' },
     { title: '@nrwl/nest:library', path: '/packages/nest/generators/library' },
     { title: '@nrwl/nest:class', path: '/packages/nest/generators/class' },
     {
@@ -276,7 +238,6 @@ describe('nx-dev: Packages Section', () => {
     },
     { title: '@nrwl/nest:service', path: '/packages/nest/generators/service' },
     { title: '@nrwl/next', path: '/packages/next' },
-    { title: '@nrwl/next:init', path: '/packages/next/generators/init' },
     {
       title: '@nrwl/next:application',
       path: '/packages/next/generators/application',
@@ -291,7 +252,6 @@ describe('nx-dev: Packages Section', () => {
     { title: '@nrwl/next:server', path: '/packages/next/executors/server' },
     { title: '@nrwl/next:export', path: '/packages/next/executors/export' },
     { title: '@nrwl/node', path: '/packages/node' },
-    { title: '@nrwl/node:init', path: '/packages/node/generators/init' },
     {
       title: '@nrwl/node:application',
       path: '/packages/node/generators/application',
@@ -312,10 +272,6 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/nx-plugin/generators/plugin',
     },
     {
-      title: '@nrwl/nx-plugin:e2e-project',
-      path: '/packages/nx-plugin/generators/e2e-project',
-    },
-    {
       title: '@nrwl/nx-plugin:migration',
       path: '/packages/nx-plugin/generators/migration',
     },
@@ -329,7 +285,6 @@ describe('nx-dev: Packages Section', () => {
     },
     { title: '@nrwl/nx-plugin:e2e', path: '/packages/nx-plugin/executors/e2e' },
     { title: '@nrwl/react', path: '/packages/react' },
-    { title: '@nrwl/react:init', path: '/packages/react/generators/init' },
     {
       title: '@nrwl/react:application',
       path: '/packages/react/generators/application',
@@ -367,10 +322,6 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/react/executors/module-federation-dev-server',
     },
     { title: '@nrwl/react-native', path: '/packages/react-native' },
-    {
-      title: '@nrwl/react-native:init',
-      path: '/packages/react-native/generators/init',
-    },
     {
       title: '@nrwl/react-native:application',
       path: '/packages/react-native/generators/application',
@@ -433,10 +384,6 @@ describe('nx-dev: Packages Section', () => {
     },
     { title: '@nrwl/storybook', path: '/packages/storybook' },
     {
-      title: '@nrwl/storybook:init',
-      path: '/packages/storybook/generators/init',
-    },
-    {
       title: '@nrwl/storybook:configuration',
       path: '/packages/storybook/generators/configuration',
     },
@@ -454,7 +401,6 @@ describe('nx-dev: Packages Section', () => {
     },
     { title: '@nrwl/tao', path: '/packages/tao' },
     { title: '@nrwl/web', path: '/packages/web' },
-    { title: '@nrwl/web:init', path: '/packages/web/generators/init' },
     {
       title: '@nrwl/web:application',
       path: '/packages/web/generators/application',
@@ -471,24 +417,12 @@ describe('nx-dev: Packages Section', () => {
     },
     { title: '@nrwl/workspace', path: '/packages/workspace' },
     {
-      title: '@nrwl/workspace:workspace',
-      path: '/packages/workspace/generators/workspace',
-    },
-    {
-      title: '@nrwl/workspace:preset',
-      path: '/packages/workspace/generators/preset',
-    },
-    {
       title: '@nrwl/workspace:move',
       path: '/packages/workspace/generators/move',
     },
     {
       title: '@nrwl/workspace:remove',
       path: '/packages/workspace/generators/remove',
-    },
-    {
-      title: '@nrwl/workspace:new',
-      path: '/packages/workspace/generators/new',
     },
     {
       title: '@nrwl/workspace:library',
@@ -517,10 +451,6 @@ describe('nx-dev: Packages Section', () => {
     {
       title: '@nrwl/workspace:run-commands',
       path: '/packages/workspace/executors/run-commands',
-    },
-    {
-      title: '@nrwl/workspace:counter',
-      path: '/packages/workspace/executors/counter',
     },
     {
       title: '@nrwl/workspace:run-script',
