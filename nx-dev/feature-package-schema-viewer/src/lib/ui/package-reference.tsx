@@ -19,7 +19,7 @@ export function PackageReference({
 }: {
   executors: SchemaMetadata[];
   generators: SchemaMetadata[];
-  guides: MenuItem;
+  guides: MenuItem | null;
   name: string;
 }): JSX.Element {
   return (
