@@ -150,6 +150,11 @@ export function DocumentationHeader({
               {sections.find((x) => x.current)?.name}
             </span>
           </button>
+
+          {/*SEARCH*/}
+          <div className="mx-4 w-full">
+            <AlgoliaSearch />
+          </div>
         </div>
         {/*LOGO*/}
         <div className="flex items-center">

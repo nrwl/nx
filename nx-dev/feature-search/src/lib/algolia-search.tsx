@@ -90,12 +90,12 @@ export function AlgoliaSearch({
           className="flex w-full items-center rounded-md bg-white py-1.5 px-2 text-sm leading-4 ring-1 ring-slate-300 transition dark:bg-slate-700 dark:ring-slate-900"
         >
           <MagnifyingGlassIcon className="h-4 w-4 flex-none" />
-          <span className="mx-3 text-slate-300 dark:text-slate-400 lg:inline-flex">
-            Search Documentation...
+          <span className="mx-3 text-xs text-slate-300 dark:text-slate-400 md:text-sm lg:inline-flex">
+            Search <span className="hidden md:inline">Documentation ...</span>
           </span>
           <span
             style={{ opacity: browserDetected ? '1' : '0' }}
-            className="ml-auto block flex-none rounded-md border border-slate-200 bg-slate-50 px-1 py-0.5 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800/60"
+            className="ml-auto hidden flex-none rounded-md border border-slate-200 bg-slate-50 px-1 py-0.5 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 md:block"
           >
             <span className="sr-only">Press </span>
             <kbd className="font-sans">

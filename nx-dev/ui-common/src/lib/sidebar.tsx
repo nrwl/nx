@@ -202,12 +202,8 @@ export function SidebarMobile({
             leaveTo="-translate-x-full"
           >
             <Dialog.Panel className="relative flex w-full flex-col overflow-y-auto bg-white p-4 dark:bg-slate-900">
-              {/*SEARCH*/}
-              <div className="mb-8 w-full">
-                <AlgoliaSearch />
-              </div>
               {/*SECTIONS*/}
-              <div className="mb-8 flex w-full shrink-0 items-center justify-between overflow-x-scroll">
+              <div className="mb-8 grid w-full shrink-0 grid-cols-3 items-center justify-between">
                 {sections.map((section) => (
                   <Link key={section.name} href={section.href} passHref>
                     <a
@@ -215,7 +211,7 @@ export function SidebarMobile({
                         section.current
                           ? 'text-blue-600 dark:text-sky-500'
                           : 'hover:text-slate-900 dark:hover:text-sky-400',
-                        'whitespace-nowrap p-4 text-sm font-medium'
+                        'whitespace-nowrap p-4 text-center text-sm font-medium'
                       )}
                       aria-current={section.current ? 'page' : undefined}
                     >
