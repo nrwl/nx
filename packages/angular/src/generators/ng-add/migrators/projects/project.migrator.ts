@@ -1,50 +1,46 @@
+import type { TargetConfiguration, Tree } from '@nrwl/devkit';
 import {
   joinPathFragments,
   normalizePath,
   offsetFromRoot,
-  ProjectConfiguration,
-  readWorkspaceConfiguration,
-  TargetConfiguration,
-  Tree,
-  updateJson,
-  updateWorkspaceConfiguration,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { basename, dirname } from 'path';
-import { GeneratorOptions } from '../schema';
-import { Logger } from './logger';
-import {
+import type { GeneratorOptions } from '../../schema';
+import type {
   MigrationProjectConfiguration,
   Target,
+  ValidationError,
   ValidationResult,
-} from './types';
-import { arrayToString } from './validation-logging';
+} from '../../utilities';
+import { arrayToString, Logger } from '../../utilities';
+import type { BuilderMigratorClassType } from '../builders';
+import { BuilderMigrator } from '../builders';
+import { Migrator } from '../migrator';
 
-export abstract class ProjectMigrator<TargetType extends string = any> {
+export abstract class ProjectMigrator<
+  TargetType extends string = string
+> extends Migrator {
   public get projectName(): string {
     return this.project.name;
   }
 
-  protected projectConfig: ProjectConfiguration;
-  protected project: {
-    name: string;
-    oldRoot: string;
-    oldSourceRoot: string;
-    newRoot: string;
-    newSourceRoot: string;
-  };
-  protected logger: Logger;
+  protected builderMigrators: BuilderMigrator[];
   protected readonly targetNames: Partial<Record<TargetType, string>> = {};
 
   constructor(
-    protected readonly tree: Tree,
+    tree: Tree,
     protected readonly options: GeneratorOptions,
     protected readonly targets: Record<TargetType, Target>,
     project: MigrationProjectConfiguration,
     rootDir: string,
-    logger?: Logger
+    logger?: Logger,
+    // TODO(leo): this will replace `targets` and become required once the full
+    // refactor is done.
+    supportedBuilderMigrators?: BuilderMigratorClassType[]
   ) {
-    this.projectConfig = project.config;
+    super(tree, project.config, logger ?? new Logger(project.name));
+
     this.project = {
       name: project.name,
       oldRoot: this.projectConfig.root ?? '',
@@ -55,22 +51,19 @@ export abstract class ProjectMigrator<TargetType extends string = any> {
       newSourceRoot: `${rootDir}/${project.name}/src`,
     };
 
-    this.logger = logger ?? new Logger(this.project.name);
-
     this.collectTargetNames();
+    this.createBuilderMigrators(supportedBuilderMigrators);
   }
 
-  abstract migrate(): Promise<void>;
-
-  validate(): ValidationResult {
-    const result: ValidationResult = [];
+  override validate(): ValidationResult {
+    const errors: ValidationError[] = [];
 
     // check project root
     if (
       this.projectConfig.root === undefined ||
       this.projectConfig.root === null
     ) {
-      result.push({
+      errors.push({
         message:
           'The project root is not defined in the project configuration.',
         hint:
@@ -81,7 +74,7 @@ export abstract class ProjectMigrator<TargetType extends string = any> {
       this.projectConfig.root !== '' &&
       !this.tree.exists(this.projectConfig.root)
     ) {
-      result.push({
+      errors.push({
         message: `The project root "${this.project.oldRoot}" could not be found.`,
         hint:
           `Make sure the value for "projects.${this.project.name}.root" is correct ` +
@@ -94,7 +87,7 @@ export abstract class ProjectMigrator<TargetType extends string = any> {
       this.projectConfig.sourceRoot &&
       !this.tree.exists(this.projectConfig.sourceRoot)
     ) {
-      result.push({
+      errors.push({
         message: `The project source root "${this.project.oldSourceRoot}" could not be found.`,
         hint:
           `Make sure the value for "projects.${this.project.name}.sourceRoot" is correct ` +
@@ -108,6 +101,9 @@ export abstract class ProjectMigrator<TargetType extends string = any> {
         .map((x) => x.builders)
         .flat(),
     ];
+    allSupportedBuilders.push(
+      ...this.builderMigrators.map((migrator) => migrator.builderName)
+    );
     const unsupportedBuilders: [target: string, builder: string][] = [];
 
     Object.entries(this.projectConfig.targets ?? {}).forEach(
@@ -119,7 +115,7 @@ export abstract class ProjectMigrator<TargetType extends string = any> {
     );
 
     if (unsupportedBuilders.length) {
-      result.push({
+      errors.push({
         messageGroup: {
           title: 'Unsupported builders',
           messages: unsupportedBuilders.map(
@@ -163,7 +159,7 @@ export abstract class ProjectMigrator<TargetType extends string = any> {
         return;
       }
 
-      result.push({
+      errors.push({
         message: `There is more than one target using a builder that is used to ${targetType} the project (${arrayToString(
           targetsByType[targetType]
         )}).`,
@@ -171,7 +167,7 @@ export abstract class ProjectMigrator<TargetType extends string = any> {
       });
     });
 
-    return result.length ? result : null;
+    return errors.length ? errors : null;
   }
 
   protected convertAsset(asset: string | any): string | any {
@@ -310,41 +306,6 @@ export abstract class ProjectMigrator<TargetType extends string = any> {
     }
   }
 
-  protected updateCacheableOperations(targetNames: string[]): void {
-    if (!targetNames.length) {
-      return;
-    }
-
-    const workspaceConfig = readWorkspaceConfiguration(this.tree);
-
-    Object.keys(workspaceConfig.tasksRunnerOptions ?? {}).forEach(
-      (taskRunnerName) => {
-        const taskRunner = workspaceConfig.tasksRunnerOptions[taskRunnerName];
-        taskRunner.options.cacheableOperations = Array.from(
-          new Set([
-            ...(taskRunner.options.cacheableOperations ?? []),
-            ...targetNames,
-          ])
-        );
-      }
-    );
-
-    updateWorkspaceConfiguration(this.tree, workspaceConfig);
-  }
-
-  protected updateTsConfigFile(
-    tsConfigPath: string,
-    rootTsConfigFile: string,
-    projectOffsetFromRoot: string
-  ): void {
-    updateJson(this.tree, tsConfigPath, (json) => {
-      json.extends = `${projectOffsetFromRoot}${rootTsConfigFile}`;
-      json.compilerOptions = json.compilerOptions ?? {};
-      json.compilerOptions.outDir = `${projectOffsetFromRoot}dist/out-tsc`;
-      return json;
-    });
-  }
-
   private collectTargetNames(): void {
     const targetTypes = Object.keys(this.targets) as TargetType[];
 
@@ -359,6 +320,25 @@ export abstract class ProjectMigrator<TargetType extends string = any> {
           }
         });
       }
+    );
+  }
+
+  private createBuilderMigrators(
+    supportedBuilderMigrators?: BuilderMigratorClassType[]
+  ): void {
+    if (!supportedBuilderMigrators) {
+      this.builderMigrators = [];
+      return;
+    }
+
+    this.builderMigrators = supportedBuilderMigrators.map(
+      (migratorClass) =>
+        new migratorClass(
+          this.tree,
+          this.project,
+          this.projectConfig,
+          this.logger
+        )
     );
   }
 }

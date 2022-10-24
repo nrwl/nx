@@ -1,9 +1,8 @@
+import type { TargetConfiguration, Tree } from '@nrwl/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
-  TargetConfiguration,
-  Tree,
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
@@ -11,15 +10,15 @@ import { hasRulesRequiringTypeChecking } from '@nrwl/linter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { basename } from 'path';
-import { GeneratorOptions } from '../schema';
-import { E2eMigrator } from './e2e.migrator';
-import { Logger } from './logger';
-import { ProjectMigrator } from './project.migrator';
-import {
+import type { GeneratorOptions } from '../../schema';
+import type {
+  Logger,
   MigrationProjectConfiguration,
   Target,
   ValidationResult,
-} from './types';
+} from '../../utilities';
+import { E2eMigrator } from './e2e.migrator';
+import { ProjectMigrator } from './project.migrator';
 
 type SupportedTargets =
   | 'build'
@@ -78,7 +77,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     }
   }
 
-  async migrate(): Promise<void> {
+  override async migrate(): Promise<void> {
     await this.e2eMigrator.migrate();
 
     this.moveProjectFiles();

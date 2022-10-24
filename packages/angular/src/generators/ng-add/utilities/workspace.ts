@@ -1,10 +1,9 @@
+import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
 import {
   generateFiles,
   joinPathFragments,
-  NxJsonConfiguration,
   readJson,
   readWorkspaceConfiguration,
-  Tree,
   updateJson,
   updateWorkspaceConfiguration,
   writeJson,
@@ -19,8 +18,8 @@ import { readFileSync } from 'fs';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { dirname, join } from 'path';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
-import { GeneratorOptions } from '../schema';
-import { WorkspaceCapabilities, WorkspaceProjects } from './types';
+import type { GeneratorOptions } from '../schema';
+import type { WorkspaceCapabilities, WorkspaceProjects } from './types';
 import { workspaceMigrationErrorHeading } from './validation-logging';
 
 export function validateWorkspace(tree: Tree): void {

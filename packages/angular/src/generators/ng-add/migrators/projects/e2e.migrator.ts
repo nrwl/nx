@@ -1,18 +1,20 @@
 import { cypressProjectGenerator } from '@nrwl/cypress';
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import type {
+  ProjectConfiguration,
+  TargetConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import {
   addProjectConfiguration,
   joinPathFragments,
   names,
   offsetFromRoot,
-  ProjectConfiguration,
   readJson,
   readProjectConfiguration,
   removeProjectConfiguration,
   stripIndents,
-  TargetConfiguration,
-  Tree,
   updateJson,
   updateProjectConfiguration,
   visitNotIgnoredFiles,
@@ -23,25 +25,27 @@ import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { basename, relative } from 'path';
+import type {
+  Node,
+  ObjectLiteralExpression,
+  PropertyAssignment,
+} from 'typescript';
 import {
   isObjectLiteralExpression,
   isPropertyAssignment,
   isStringLiteralLike,
   isTemplateExpression,
-  Node,
-  ObjectLiteralExpression,
-  PropertyAssignment,
   SyntaxKind,
 } from 'typescript';
-import { GeneratorOptions } from '../schema';
-import { FileChangeRecorder } from './file-change-recorder';
-import { Logger } from './logger';
-import { ProjectMigrator } from './project.migrator';
-import {
+import type { GeneratorOptions } from '../../schema';
+import type {
+  Logger,
   MigrationProjectConfiguration,
   Target,
   ValidationResult,
-} from './types';
+} from '../../utilities';
+import { FileChangeRecorder } from '../../utilities';
+import { ProjectMigrator } from './project.migrator';
 
 type SupportedTargets = 'e2e';
 const supportedTargets: Record<SupportedTargets, Target> = {
@@ -101,7 +105,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     this.initialize();
   }
 
-  async migrate(): Promise<void> {
+  override async migrate(): Promise<void> {
     if (!this.targetNames.e2e) {
       this.logger.info(
         'No e2e project was migrated because there was no "e2e" target declared in the "angular.json".'

@@ -1,7 +1,7 @@
+import type { Tree } from '@nrwl/devkit';
 import {
   readJson,
   readProjectConfiguration,
-  Tree,
   updateJson,
   writeJson,
 } from '@nrwl/devkit';

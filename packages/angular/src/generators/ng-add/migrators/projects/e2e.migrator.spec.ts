@@ -9,21 +9,23 @@ jest.mock('fs', () => {
     })),
   };
 });
+
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import type {
+  ProjectConfiguration,
+  TargetConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
-  ProjectConfiguration,
   readJson,
   readProjectConfiguration,
-  TargetConfiguration,
-  Tree,
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import { lstatSync } from 'fs';
+import type { MigrationProjectConfiguration } from '../../utilities';
 import { E2eMigrator } from './e2e.migrator';
-import { MigrationProjectConfiguration } from './types';
 
 type AngularCliProjectConfiguration = Omit<ProjectConfiguration, 'targets'> & {
   architect?: {

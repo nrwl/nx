@@ -1,32 +1,36 @@
+import type { Tree } from '@nrwl/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
-  Tree,
   updateJson,
   updateProjectConfiguration,
-  writeJson,
 } from '@nrwl/devkit';
 import { hasRulesRequiringTypeChecking } from '@nrwl/linter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { basename } from 'path';
-import { addBuildableLibrariesPostCssDependencies } from '../../utils/dependencies';
-import { GeneratorOptions } from '../schema';
-import { Logger } from './logger';
-import { ProjectMigrator } from './project.migrator';
-import {
+import type { GeneratorOptions } from '../../schema';
+import type {
+  Logger,
   MigrationProjectConfiguration,
   Target,
+  ValidationError,
   ValidationResult,
-} from './types';
+} from '../../utilities';
+import type { BuilderMigratorClassType } from '../builders';
+import { AngularDevkitNgPackagrMigrator } from '../builders';
+import { ProjectMigrator } from './project.migrator';
 
-type SupportedTargets = 'build' | 'test' | 'lint';
+type SupportedTargets = 'test' | 'lint';
 const supportedTargets: Record<SupportedTargets, Target> = {
-  build: { builders: ['@angular-devkit/build-angular:ng-packagr'] },
   test: { builders: ['@angular-devkit/build-angular:karma'] },
   lint: { builders: ['@angular-eslint/builder:lint'] },
 };
+// TODO(leo): this will replace `supportedTargets` once the full refactor is done.
+const supportedBuilderMigrators: BuilderMigratorClassType[] = [
+  AngularDevkitNgPackagrMigrator,
+];
 
 export class LibMigrator extends ProjectMigrator<SupportedTargets> {
   private oldEsLintConfigPath: string;
@@ -38,7 +42,15 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
     project: MigrationProjectConfiguration,
     logger?: Logger
   ) {
-    super(tree, options, supportedTargets, project, 'libs', logger);
+    super(
+      tree,
+      options,
+      supportedTargets,
+      project,
+      'libs',
+      logger,
+      supportedBuilderMigrators
+    );
 
     if (this.targetNames.lint) {
       this.oldEsLintConfigPath =
@@ -49,24 +61,29 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
     }
   }
 
-  async migrate(): Promise<void> {
+  override async migrate(): Promise<void> {
     await this.updateProjectConfiguration();
     this.moveProjectFiles();
-    this.updateNgPackageJson();
+
+    for (const builderMigrator of this.builderMigrators ?? []) {
+      await builderMigrator.migrate();
+    }
+
     this.updateTsConfigs();
     this.updateEsLintConfig();
     this.updateCacheableOperations(
-      [
-        this.targetNames.build,
-        this.targetNames.lint,
-        this.targetNames.test,
-      ].filter(Boolean)
+      [this.targetNames.lint, this.targetNames.test].filter(Boolean)
     );
-    addBuildableLibrariesPostCssDependencies(this.tree);
   }
 
   override validate(): ValidationResult {
-    return super.validate();
+    const errors: ValidationError[] = [...(super.validate() ?? [])];
+
+    for (const builderMigrator of this.builderMigrators) {
+      errors.push(...(builderMigrator.validate() ?? []));
+    }
+
+    return errors.length ? errors : null;
   }
 
   private moveProjectFiles(): void {
@@ -85,7 +102,6 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
         'The project does not have any targets configured. This might not be an issue. Skipping updating targets.'
       );
     } else {
-      this.updateBuildTargetConfiguration();
       this.updateLintTargetConfiguration();
       this.updateTestTargetConfiguration();
     }
@@ -100,33 +116,10 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
     });
   }
 
-  private updateNgPackageJson(): void {
-    const buildTarget = this.projectConfig.targets?.[this.targetNames.build];
-    if (
-      !buildTarget?.options?.project ||
-      !this.tree.exists(buildTarget.options.project)
-    ) {
-      // we already logged a warning for these cases, so just return
-      return;
-    }
-
-    const ngPackageJson = readJson(this.tree, buildTarget.options.project);
-    const offset = offsetFromRoot(this.project.newRoot);
-    ngPackageJson.$schema =
-      ngPackageJson.$schema &&
-      `${offset}node_modules/ng-packagr/ng-package.schema.json`;
-    ngPackageJson.dest = `${offset}dist/${this.project.name}`;
-    writeJson(this.tree, buildTarget.options.project, ngPackageJson);
-  }
-
   private updateTsConfigs(): void {
     const rootTsConfigFile = getRootTsConfigPathInTree(this.tree);
     const projectOffsetFromRoot = offsetFromRoot(this.projectConfig.root);
 
-    this.updateTsConfigFileUsedByBuildTarget(
-      rootTsConfigFile,
-      projectOffsetFromRoot
-    );
     this.updateTsConfigFileUsedByTestTarget(
       rootTsConfigFile,
       projectOffsetFromRoot
@@ -173,72 +166,6 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
       });
 
       return json;
-    });
-  }
-
-  private updateBuildTargetConfiguration(): void {
-    if (!this.targetNames.build) {
-      this.logger.warn(
-        'There is no build target in the project configuration. This might not be an issue. Skipping updating the build configuration.'
-      );
-      return;
-    }
-
-    const buildTarget = this.projectConfig.targets[this.targetNames.build];
-    buildTarget.executor = '@nrwl/angular:package';
-
-    if (
-      !buildTarget.options &&
-      (!buildTarget.configurations ||
-        !Object.keys(buildTarget.configurations).length)
-    ) {
-      this.logger.warn(
-        `The target "${this.targetNames.build}" is not specifying any options or configurations. Skipping updating the target configuration.`
-      );
-      return;
-    }
-
-    const buildDevTsConfig =
-      buildTarget.options?.tsConfig ??
-      buildTarget.configurations?.development?.tsConfig;
-    if (!buildDevTsConfig) {
-      this.logger.warn(
-        `The "${this.targetNames.build}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
-      );
-    } else if (!this.tree.exists(buildDevTsConfig)) {
-      this.logger.warn(
-        `The tsConfig file "${buildDevTsConfig}" specified in the "${this.targetNames.build}" target could not be found. Skipping updating the tsConfig file.`
-      );
-    }
-
-    if (!buildTarget.options?.project) {
-      this.logger.warn(
-        `The "${this.targetNames.build}" target does not have the "project" option configured. Skipping updating the ng-packagr project file ("ng-package.json").`
-      );
-    } else if (!this.tree.exists(buildTarget.options.project)) {
-      this.logger.warn(
-        `The ng-packagr project file "${buildTarget.options.project}" specified in the "${this.targetNames.build}" target could not be found. Skipping updating the ng-packagr project file.`
-      );
-    }
-
-    ['project', 'tsConfig'].forEach((option) => {
-      if (buildTarget.options?.[option]) {
-        buildTarget.options[option] = joinPathFragments(
-          this.project.newRoot,
-          basename(buildTarget.options[option])
-        );
-      }
-
-      for (const configuration of Object.values(
-        buildTarget.configurations ?? {}
-      )) {
-        configuration[option] =
-          configuration[option] &&
-          joinPathFragments(
-            this.project.newRoot,
-            basename(configuration[option])
-          );
-      }
     });
   }
 
@@ -351,39 +278,6 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
     testOptions.scripts =
       testOptions.scripts &&
       testOptions.scripts.map((script) => this.convertAsset(script));
-  }
-
-  private updateTsConfigFileUsedByBuildTarget(
-    rootTsConfigFile: string,
-    projectOffsetFromRoot: string
-  ): void {
-    if (!this.targetNames.build) {
-      return;
-    }
-
-    const tsConfigPath =
-      this.projectConfig.targets[this.targetNames.build].options?.tsConfig ??
-      this.projectConfig.targets[this.targetNames.build].configurations
-        ?.development?.tsConfig;
-
-    if (!tsConfigPath || !this.tree.exists(tsConfigPath)) {
-      // we already logged a warning for these cases, so just return
-      return;
-    }
-
-    this.updateTsConfigFile(
-      tsConfigPath,
-      rootTsConfigFile,
-      projectOffsetFromRoot
-    );
-
-    updateJson(this.tree, tsConfigPath, (json) => {
-      if (!json.include?.length && !json.files?.length) {
-        json.include = ['**/*.ts'];
-      }
-
-      return json;
-    });
   }
 
   private updateTsConfigFileUsedByTestTarget(

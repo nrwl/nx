@@ -1,4 +1,4 @@
-import { ProjectConfiguration } from '@nrwl/devkit';
+import type { ProjectConfiguration } from '@nrwl/devkit';
 
 export type MigrationProjectConfiguration = {
   config: ProjectConfiguration;
@@ -8,6 +8,14 @@ export type MigrationProjectConfiguration = {
 export type WorkspaceProjects = {
   apps: MigrationProjectConfiguration[];
   libs: MigrationProjectConfiguration[];
+};
+
+export type ProjectMigrationInfo = {
+  name: string;
+  oldRoot: string;
+  oldSourceRoot: string;
+  newRoot: string;
+  newSourceRoot: string;
 };
 
 export type WorkspaceCapabilities = {

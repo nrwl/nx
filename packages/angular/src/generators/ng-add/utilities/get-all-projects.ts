@@ -1,5 +1,5 @@
 import { getProjects, Tree } from '@nrwl/devkit';
-import { MigrationProjectConfiguration, WorkspaceProjects } from './types';
+import type { MigrationProjectConfiguration, WorkspaceProjects } from './types';
 
 export function getAllProjects(tree: Tree): WorkspaceProjects {
   const projects = getProjects(tree);

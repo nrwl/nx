@@ -1,12 +1,12 @@
+import type { Tree } from '@nrwl/devkit';
 import {
   detectWorkspaceScope,
   joinPathFragments,
   names,
   readJson,
-  Tree,
 } from '@nrwl/devkit';
-import { GeneratorOptions } from '../schema';
-import { WorkspaceProjects } from './types';
+import type { GeneratorOptions } from '../schema';
+import type { WorkspaceProjects } from './types';
 
 export function normalizeOptions(
   tree: Tree,
