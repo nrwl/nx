@@ -144,28 +144,31 @@ export function Content({
         </div>
       </div>
 
+      {!schemaViewModel.subReference && schemaViewModel.hidden && (
+        <div className="my-6 block rounded-md bg-red-50 p-4 ring-1 ring-red-100 dark:bg-red-900/30 dark:ring-red-900">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <HandRaisedIcon
+                className="h-5 w-5 text-red-500"
+                aria-hidden="true"
+              />
+            </div>
+            <div className="ml-3">
+              <div className="mt-0 block text-sm font-medium text-red-600 dark:text-red-400">
+                Schema for internal use only
+              </div>
+              <p className="prose-sm mt-2 block text-red-700 dark:text-red-600">
+                Please do not extend this schema as it is part of Nx internal
+                usage.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* We remove the top description on sub property lookup */}
       {!schemaViewModel.subReference && (
         <>
-          <div className="my-6 block rounded-md bg-red-50 p-4 ring-1 ring-red-100 dark:bg-red-900/30 dark:ring-red-900">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <HandRaisedIcon
-                  className="h-5 w-5 text-red-500"
-                  aria-hidden="true"
-                />
-              </div>
-              <div className="ml-3">
-                <div className="mt-0 block text-sm font-medium text-red-600 dark:text-red-400">
-                  Schema for internal use only
-                </div>
-                <p className="prose-sm mt-2 block text-red-700 dark:text-red-600">
-                  Please do not extend this schema as it is part of Nx internal
-                  usage.
-                </p>
-              </div>
-            </div>
-          </div>
           <div className="prose prose-slate dark:prose-invert max-w-none">
             {vm.markdown}
           </div>
