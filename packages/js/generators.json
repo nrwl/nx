@@ -14,7 +14,8 @@
       "schema": "./src/generators/init/schema.json",
       "aliases": ["lib"],
       "x-type": "init",
-      "description": "Init placeholder."
+      "description": "Init placeholder.",
+      "hidden": true
     },
     "convert-to-swc": {
       "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcSchematic",
@@ -37,7 +38,8 @@
       "schema": "./src/generators/init/schema.json",
       "aliases": ["lib"],
       "x-type": "init",
-      "description": "Init placeholder."
+      "description": "Init placeholder.",
+      "hidden": true
     },
     "convert-to-swc": {
       "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcGenerator",
