@@ -2,12 +2,12 @@ import 'dotenv/config';
 import { runCLI } from 'jest';
 import { readConfig, readConfigs } from 'jest-config';
 import { utils as jestReporterUtils } from '@jest/reporters';
-import { makeEmptyAggregatedTestResult, addResult } from '@jest/test-result';
+import { addResult, makeEmptyAggregatedTestResult } from '@jest/test-result';
 import * as path from 'path';
+import { join } from 'path';
 import { JestExecutorOptions } from './schema';
 import { Config } from '@jest/types';
 import { ExecutorContext, TaskGraph, workspaceRoot } from '@nrwl/devkit';
-import { join } from 'path';
 import { getSummary } from './summary';
 
 process.env.NODE_ENV ??= 'test';
@@ -150,14 +150,18 @@ export async function batchJest(
   overrides: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<Record<string, { success: boolean; terminalOutput: string }>> {
-  const configPaths = taskGraph.roots.map((root) =>
-    path.resolve(context.root, inputs[root].jestConfig)
-  );
-  // TODO(caleb): this is depends on the name of the project to also match the 'displayName' in the jest.config.ts
-  //  this can also be an issue if someone has the same project name in a config.
-  //  i.e. two projects will be run for only 1 provided name
-  //  when trying to use readConfigs before runCLI ts throws error about root jest.config.ts.
-  const selectedProjects = taskGraph.roots.map((task) => task.split(':')[0]);
+  let configPaths: string[] = [];
+  let selectedProjects: string[] = [];
+  for (const task of taskGraph.roots) {
+    configPaths.push(path.resolve(context.root, inputs[task].jestConfig));
+
+    // TODO(caleb): this is depends on the name of the project to also match the 'displayName' in the jest.config.ts
+    //  this can also be an issue if someone has the same project name in a config.
+    //  i.e. two projects will be run for only 1 provided name
+    //  when trying to use readConfigs before runCLI ts throws error about root jest.config.ts.
+    selectedProjects.push(task.split(':')[0]);
+  }
+
   const parsedConfigs = await jestConfigParser(overrides, context, true);
 
   const { globalConfig, results } = await runCLI(
