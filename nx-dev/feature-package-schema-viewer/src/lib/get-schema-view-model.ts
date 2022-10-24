@@ -27,6 +27,7 @@ export interface SchemaViewModel {
   currentSchema: NxSchema | null;
   currentSchemaExamples: Example | Errors;
   type: 'executors' | 'generators';
+  hidden: boolean;
 }
 
 export function getSchemaViewModel(
@@ -64,5 +65,6 @@ export function getSchemaViewModel(
       );
     },
     type: schemaRequest.type,
+    hidden: schemaMetadata.hidden,
   };
 }

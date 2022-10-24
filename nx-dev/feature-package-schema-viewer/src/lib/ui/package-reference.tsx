@@ -126,6 +126,12 @@ function SchemaListItem({
               {schema.name}
             </a>
           </Link>
+
+          {schema.hidden && (
+            <span className="ml-4 inline-flex rounded-md border border-red-100 bg-red-50 px-2 py-1 text-xs font-medium uppercase text-red-600 dark:border-red-900 dark:bg-red-900/30 dark:text-red-400">
+              Internal
+            </span>
+          )}
         </p>
         <div className="prose prose-slate dark:prose-invert prose-sm">
           {renderMarkdown({
