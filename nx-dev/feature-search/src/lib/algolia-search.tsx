@@ -91,7 +91,8 @@ export function AlgoliaSearch({
         >
           <MagnifyingGlassIcon className="h-4 w-4 flex-none" />
           <span className="mx-3 text-xs text-slate-300 dark:text-slate-400 md:text-sm lg:inline-flex">
-            Search <span className="hidden md:inline">Documentation ...</span>
+            Search{' '}
+            <span className="ml-2 hidden md:inline">Documentation ...</span>
           </span>
           <span
             style={{ opacity: browserDetected ? '1' : '0' }}
