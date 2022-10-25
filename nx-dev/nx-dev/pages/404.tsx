@@ -1,8 +1,19 @@
+import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 export function FourOhFour(): JSX.Element {
+  const router = useRouter();
+  useEffect(() => {
+    const handleRouteChange = (url: URL) =>
+      sendCustomEvent('custom_page_hit', '404', url.toString());
+    router.events.on('routeChangeStart', (url) => handleRouteChange(url));
+    return () => router.events.off('routeChangeStart', handleRouteChange);
+  }, [router]);
+
   return (
     <>
       <NextSeo title="Page not found" noindex={true} />
@@ -47,7 +58,7 @@ export function FourOhFour(): JSX.Element {
           </article>
         </div>
       </main>
-      <Footer useDarkBackground={false} />
+      <Footer />
     </>
   );
 }
