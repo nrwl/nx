@@ -9,17 +9,14 @@ import {
   mergePluginTargetsWithNxTargets,
 } from '../utils/nx-plugin';
 import { Task, TaskGraph } from '../config/task-graph';
-import { getPackageManagerCommand } from '../utils/package-manager';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { joinPathFragments } from '../utils/path';
-import { logger } from '../utils/logger';
 import { isRelativePath } from 'nx/src/utils/fileutils';
 
-export function getCommandAsString(task: Task) {
-  const execCommand = getPackageManagerCommand().exec;
+export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
   return [execCommand, 'nx', ...args].join(' ').trim();
 }
