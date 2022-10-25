@@ -31,7 +31,7 @@
     "@nrwl/jest": "file:../jest",
     "@nrwl/linter": "file:../linter",
     "@nrwl/react": "file:../react",
-    "@nrwl/web": "file:../web",
+    "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",
     "@svgr/webpack": "^6.1.2",
     "chalk": "^4.1.0",
@@ -44,7 +44,7 @@
     "tsconfig-paths-webpack-plugin": "^3.5.2"
   },
   "peerDependencies": {
-    "expo": "^46.0.10"
+    "expo": "^46.0.16"
   },
   "builders": "./executors.json",
   "ng-update": {

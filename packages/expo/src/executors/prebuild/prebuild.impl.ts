@@ -1,33 +1,37 @@
-import * as chalk from 'chalk';
-import { ExecutorContext, logger, names } from '@nrwl/devkit';
+import { ExecutorContext, names } from '@nrwl/devkit';
 import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
-import { ExpoStartOptions } from './schema';
+import { podInstall } from '../../utils/pod-install-task';
+import { installAsync } from '../install/install.impl';
+import { ExpoPrebuildOptions } from './schema';
 
-export interface ExpoStartOutput {
-  baseUrl?: string;
+export interface ExpoPrebuildOutput {
   success: boolean;
 }
 
 let childProcess: ChildProcess;
 
-export default async function* startExecutor(
-  options: ExpoStartOptions,
+export default async function* prebuildExecutor(
+  options: ExpoPrebuildOptions,
   context: ExecutorContext
-): AsyncGenerator<ExpoStartOutput> {
+): AsyncGenerator<ExpoPrebuildOutput> {
   const projectRoot = context.workspace.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
-    const baseUrl = `http://localhost:${options.port}`;
-    logger.info(chalk.cyan(`Packager is ready at ${baseUrl}`));
+    await prebuildAsync(context.root, projectRoot, options);
 
-    await startAsync(context.root, projectRoot, options);
+    if (options.install) {
+      await installAsync(context.root, {
+        check: true,
+        fix: false,
+      });
+      await podInstall(join(context.root, projectRoot, 'ios'));
+    }
 
     yield {
-      baseUrl,
       success: true,
     };
   } finally {
@@ -37,15 +41,15 @@ export default async function* startExecutor(
   }
 }
 
-function startAsync(
+function prebuildAsync(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExpoStartOptions
+  options: ExpoPrebuildOptions
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
       join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
-      ['start', ...createStartOptions(options)],
+      ['prebuild', ...createPrebuildOptions(options), '--no-install'],
       { cwd: join(workspaceRoot, projectRoot) }
     );
 
@@ -66,23 +70,13 @@ function startAsync(
   });
 }
 
-// options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/start/index.ts
-function createStartOptions(options: ExpoStartOptions) {
+const nxOptions = ['install'];
+// options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/prebuild/index.ts
+function createPrebuildOptions(options: ExpoPrebuildOptions) {
   return Object.keys(options).reduce((acc, k) => {
-    const v = options[k];
-    if (k === 'dev') {
-      if (v === false) {
-        acc.push(`--no-dev`);
-      }
-    } else {
-      if (typeof v === 'boolean') {
-        if (v === true) {
-          // when true, does not need to pass the value true, just need to pass the flag in kebob case
-          acc.push(`--${names(k).fileName}`);
-        }
-      } else {
-        acc.push(`--${names(k).fileName}`, v);
-      }
+    if (!nxOptions.includes(k)) {
+      const v = options[k];
+      acc.push(`--${names(k).fileName}`, v);
     }
     return acc;
   }, []);

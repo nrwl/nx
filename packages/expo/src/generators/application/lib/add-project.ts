@@ -1,5 +1,6 @@
 import {
   addProjectConfiguration,
+  offsetFromRoot,
   ProjectConfiguration,
   readWorkspaceConfiguration,
   TargetConfiguration,
@@ -43,14 +44,6 @@ function getTargets(options: NormalizedSchema) {
     },
   };
 
-  architect.web = {
-    executor: '@nrwl/expo:start',
-    options: {
-      port: 8081,
-      webpack: true,
-    },
-  };
-
   architect.serve = {
     executor: 'nx:run-commands',
     options: {
@@ -89,21 +82,25 @@ function getTargets(options: NormalizedSchema) {
     },
   };
 
+  // @deprecated, no longer supported in @expo/cli
   architect['build-ios'] = {
     executor: '@nrwl/expo:build-ios',
     options: {},
   };
 
+  // @deprecated, no longer supported in @expo/cli
   architect['build-android'] = {
     executor: '@nrwl/expo:build-android',
     options: {},
   };
 
+  // @deprecated, no longer supported in @expo/cli
   architect['build-web'] = {
     executor: '@nrwl/expo:build-web',
     options: {},
   };
 
+  // @deprecated, no longer supported in @expo/cli
   architect['build-status'] = {
     executor: '@nrwl/expo:build-web',
     options: {},
@@ -119,24 +116,62 @@ function getTargets(options: NormalizedSchema) {
     options: {},
   };
 
+  // @deprecated, no longer supported in @expo/cli
   architect['publish'] = {
     executor: '@nrwl/expo:publish',
     options: {},
   };
 
+  // @deprecated, no longer supported in @expo/cli
   architect['publish-set'] = {
     executor: '@nrwl/expo:publish-set',
     options: {},
   };
 
+  // @deprecated, no longer supported in @expo/cli
   architect['rollback'] = {
     executor: '@nrwl/expo:rollback',
     options: {},
   };
 
-  architect['eject'] = {
-    executor: '@nrwl/expo:eject',
+  architect['prebuild'] = {
+    executor: '@nrwl/expo:prebuild',
     options: {},
+  };
+
+  // @deprecated, no longer supported in @expo/cli
+  architect['eject'] = {
+    executor: 'nx:run-commands',
+    options: {
+      command: `nx prebuild ${options.name}`,
+    },
+  };
+
+  architect['install'] = {
+    executor: '@nrwl/expo:install',
+    options: {},
+  };
+
+  architect['update'] = {
+    executor: '@nrwl/expo:update',
+    options: {},
+  };
+
+  architect['export'] = {
+    executor: '@nrwl/expo:export',
+    options: {
+      platform: 'all',
+      outputDir: `${offsetFromRoot(options.appProjectRoot)}dist/${
+        options.appProjectRoot
+      }`,
+    },
+  };
+
+  architect['export-web'] = {
+    executor: '@nrwl/expo:export',
+    options: {
+      bundler: 'webpack',
+    },
   };
 
   return architect;

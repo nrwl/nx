@@ -2,6 +2,7 @@
 // options from https://github.com/expo/eas-cli/blob/main/packages/eas-cli/src/commands/build/list.ts
 export interface ExpoEasBuildListOptions {
   platform: 'ios' | 'android' | 'all';
+  nonInteractive?: boolean;
   json?: boolean;
   // status and distribution enum from https://github.com/expo/eas-cli/blob/main/packages/eas-cli/src/build/types.ts
   status?:
