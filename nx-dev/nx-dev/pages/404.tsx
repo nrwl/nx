@@ -9,7 +9,7 @@ export function FourOhFour(): JSX.Element {
   const router = useRouter();
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
-      sendCustomEvent('custom_page_hit', '404', url.toString());
+      sendCustomEvent('custom_page_view', '404', url.toString());
     router.events.on('routeChangeStart', (url) => handleRouteChange(url));
     return () => router.events.off('routeChangeStart', handleRouteChange);
   }, [router]);
