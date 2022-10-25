@@ -507,6 +507,9 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     };
     const projects: [string, any][] = Object.entries(configToWrite.projects);
     for (const [project, projectConfig] of projects) {
+      if (!workspaceFileName) {
+        projectConfig.configFilePath ??= `${projectConfig.root}/project.json`
+      }
       if (projectConfig.configFilePath) {
         if (workspaceFileName && !isNewFormat) {
           throw new Error(
