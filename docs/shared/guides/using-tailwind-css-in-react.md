@@ -50,6 +50,8 @@ npx tailwindcss init -p
 
 This creates the required files with a general boilerplate implementation.
 
+**Note**: For package based monorepos your apps are located in `packages/*`
+
 #### Pointing PostCSS to Tailwind Config
 
 Next, adjust the `postcss.config.js` as follows:
