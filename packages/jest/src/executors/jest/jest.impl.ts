@@ -158,6 +158,7 @@ export async function batchJest(
 ): Promise<Record<string, { success: boolean; terminalOutput: string }>> {
   let configPaths: string[] = [];
   let selectedProjects: string[] = [];
+  let projectsWithNoName: [string, string][] = [];
   for (const task of taskGraph.roots) {
     let configPath = path.resolve(context.root, inputs[task].jestConfig);
     configPaths.push(configPath);
@@ -172,9 +173,7 @@ export async function batchJest(
     );
     const fileContents = readFileSync(configPath, { encoding: 'utf-8' });
     if (!displayNameValueRegex.test(fileContents)) {
-      console.warn(stripIndents`Could not find "displayName" in ${configPath}. 
-      Please add a "displayName" to the Jest Config File.
-      Skipping this project (${task.split(':')[0]})...`);
+      projectsWithNoName.push([task.split(':')[0], configPath]);
       continue;
     }
 
@@ -183,6 +182,16 @@ export async function batchJest(
       .map((value) => value.substring(1, value.length - 1))[0];
     selectedProjects.push(displayName);
   }
+
+  throw new Error(
+    stripIndents`Some projects do not have a "displayName" property. Jest Batch Mode requires this to be set. Please ensure this value is set. 
+
+      Projects missing "displayName":
+      ${projectsWithNoName.map(
+        ([project, configPath]) => ` - ${project} - ${configPath}\r\n`
+      )}
+      You can learn more about this requirement from Jest here: https://jestjs.io/docs/cli#--selectprojects-project1--projectn`
+  );
 
   const parsedConfigs = await jestConfigParser(overrides, context, true);
 
