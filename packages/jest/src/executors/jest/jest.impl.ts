@@ -7,8 +7,14 @@ import * as path from 'path';
 import { join } from 'path';
 import { JestExecutorOptions } from './schema';
 import { Config } from '@jest/types';
-import { ExecutorContext, TaskGraph, workspaceRoot } from '@nrwl/devkit';
+import {
+  ExecutorContext,
+  stripIndents,
+  TaskGraph,
+  workspaceRoot,
+} from '@nrwl/devkit';
 import { getSummary } from './summary';
+import { readFileSync } from 'fs';
 
 process.env.NODE_ENV ??= 'test';
 
@@ -153,13 +159,29 @@ export async function batchJest(
   let configPaths: string[] = [];
   let selectedProjects: string[] = [];
   for (const task of taskGraph.roots) {
-    configPaths.push(path.resolve(context.root, inputs[task].jestConfig));
+    let configPath = path.resolve(context.root, inputs[task].jestConfig);
+    configPaths.push(configPath);
 
-    // TODO(caleb): this is depends on the name of the project to also match the 'displayName' in the jest.config.ts
-    //  this can also be an issue if someone has the same project name in a config.
-    //  i.e. two projects will be run for only 1 provided name
-    //  when trying to use readConfigs before runCLI ts throws error about root jest.config.ts.
-    selectedProjects.push(task.split(':')[0]);
+    /* The display name in the jest.config.js is the correct project name jest
+     * uses to determine projects. It is usually the same as the Nx projectName
+     * but it can be changed. The safest method is to extract the displayName
+     * from the config file, but skip the project if it does not exist. */
+    const displayNameValueRegex = new RegExp(
+      /(['"]+.*['"])(?<=displayName+.*)/,
+      'g'
+    );
+    const fileContents = readFileSync(configPath, { encoding: 'utf-8' });
+    if (!displayNameValueRegex.test(fileContents)) {
+      console.warn(stripIndents`Could not find "displayName" in ${configPath}. 
+      Please add a "displayName" to the Jest Config File.
+      Skipping this project (${task.split(':')[0]})...`);
+      continue;
+    }
+
+    const displayName = fileContents
+      .match(displayNameValueRegex)
+      .map((value) => value.substring(1, value.length - 1))[0];
+    selectedProjects.push(displayName);
   }
 
   const parsedConfigs = await jestConfigParser(overrides, context, true);
