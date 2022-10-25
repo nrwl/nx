@@ -13,7 +13,7 @@ If you are using [VSCode](https://code.visualstudio.com/), you can install the [
 - [Install from the VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
 - [Contribute on GitHub](https://github.com/nrwl/nx-console)
 
-![Nx Console screenshot](/shared/nx-console-screenshot.png)
+![Nx Console screenshot](/shared/images/nx-console/nx-console-screenshot.webp)
 
 ### WebStorm
 

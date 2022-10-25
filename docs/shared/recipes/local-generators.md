@@ -104,7 +104,7 @@ nx generate @myorg/my-plugin:my-generator mylib
 2. Set breakpoints in your code
 3. Run `nx g my-generator` in the debug terminal.
 
-![vscode-schematics-debug](/shared/vscode-schematics-debug.png)
+![vscode-schematics-debug](/shared/images/nx-console/vscode-schematics-debug.png)
 
 ## Generator Utilities
 

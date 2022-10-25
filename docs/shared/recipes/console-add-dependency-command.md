@@ -8,4 +8,4 @@ There are multiple ways to execute the command:
 - via the `Common Nx Commands` view
 - via a CodeLens on the root `package.json` (see below)
 
-![Codelens](../nx-console-add-dependency-codelens.png)
+![Codelens](../images/nx-console/nx-console-add-dependency-codelens.png)
