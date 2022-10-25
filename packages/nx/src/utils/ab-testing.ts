@@ -11,14 +11,6 @@ export class PromptMessages {
     ],
     nxCloudMigration: [
       {
-        code: 'we-noticed',
-        message: `We noticed you are migrating to a new major version, but are not taking advantage of Nx Cloud. Nx Cloud can make your CI up to 10 times faster. Learn more about it here: nx.app. Would you like to add it?`,
-      },
-      {
-        code: 'not-leveraging-caching',
-        message: `You're not leveraging distributed caching yet. Do you want to enable it and speed up your CI?`,
-      },
-      {
         code: 'make-ci-faster',
         message: `Enable distributed caching to make your CI faster?`,
       },
