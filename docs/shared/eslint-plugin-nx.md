@@ -9,10 +9,9 @@ In any Nx workspace, you can install `@nrwl/eslint-plugin-nx` by running the fol
 {% tabs %}
 {%tab label="npm"%}
 
-````shell
 ```shell
 npm i --save-dev @nrwl/eslint-plugin-nx
-````
+```
 
 {% /tab %}
 {%tab label="yarn"%}
