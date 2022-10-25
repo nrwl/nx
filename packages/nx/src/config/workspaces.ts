@@ -86,10 +86,10 @@ export class Workspaces {
     const workspaceFile = workspaceConfigName(this.root);
 
     if (workspaceFile) {
-      workspace.projects = {
-        ...workspace.projects,
-        ...this.readFromWorkspaceJson().projects,
-      };
+      workspace.projects = this.mergeWorkspaceJsonAndGlobProjects(
+        this.readFromWorkspaceJson().projects,
+        workspace.projects
+      );
     }
 
     assertValidWorkspaceConfiguration(nxJson);
@@ -98,6 +98,24 @@ export class Workspaces {
       ...nxJson,
     };
     return this.cachedWorkspaceConfig;
+  }
+
+  private mergeWorkspaceJsonAndGlobProjects(
+    workspaceJsonProjects: { [name: string]: any },
+    globProjects: { [name: string]: any }
+  ) {
+    const res = workspaceJsonProjects;
+    const folders = new Set();
+    for (let k of Object.keys(res)) {
+      folders.add(res[k].root);
+    }
+
+    for (let k of Object.keys(globProjects)) {
+      if (!folders.has(globProjects[k].root)) {
+        res[k] = globProjects[k];
+      }
+    }
+    return res;
   }
 
   private mergeTargetDefaultsIntoProjectDescriptions(

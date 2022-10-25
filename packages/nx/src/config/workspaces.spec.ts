@@ -79,13 +79,18 @@ describe('Workspaces', () => {
           }),
           'libs/domain/lib4/project.json': JSON.stringify(domainLibConfig),
           'libs/domain/lib4/package.json': JSON.stringify({}),
+          'workspace.json': JSON.stringify({
+            projects: { 'lib1-workspace': 'libs/lib1' },
+          }),
         },
         '/root'
       );
 
       const workspaces = new Workspaces('/root');
       const { projects } = workspaces.readWorkspaceConfiguration();
-      expect(projects.lib1).toEqual(lib1Config);
+      // projects got deduped so the workspace one remained
+      expect(projects['lib1-workspace']).toEqual(lib1Config);
+      expect(projects['lib1']).toBeUndefined();
       expect(projects.lib2).toEqual(lib2Config);
       expect(projects['domain-lib3']).toEqual(domainPackageConfig);
       expect(projects['domain-lib4']).toEqual(domainLibConfig);
