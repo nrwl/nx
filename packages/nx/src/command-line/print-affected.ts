@@ -9,6 +9,7 @@ import { Workspaces } from '../config/workspaces';
 import { Hasher } from '../hasher/hasher';
 import { hashTask } from '../hasher/hash-task';
 import { workspaceRoot } from '../utils/workspace-root';
+import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 
 export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
@@ -51,6 +52,7 @@ async function createTasks(
 ) {
   const workspaces = new Workspaces(workspaceRoot);
   const hasher = new Hasher(projectGraph, nxJson, {});
+  const execCommand = getPackageManagerCommand().exec;
 
   const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
     (affectedProject) => {
@@ -79,7 +81,7 @@ async function createTasks(
     overrides,
     target: task.target,
     hash: task.hash,
-    command: getCommandAsString(task),
+    command: getCommandAsString(execCommand, task),
     outputs: getOutputs(projectGraph.nodes, task),
   }));
 }
