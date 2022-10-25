@@ -43,8 +43,8 @@ export function projectRootPath(config: ProjectConfiguration): string {
       projectDir = 'app';
     }
   } else if (config.projectType == 'library') {
-    // libs/test-lib/src/lib
-    projectDir = 'lib';
+    // libs/test-lib/src/*
+    projectDir = '';
   }
   return joinPathFragments(config.sourceRoot, projectDir);
 }
