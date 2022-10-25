@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import * as chalk from 'chalk';
+import { resolve } from 'node:path';
 import type { ExecutorContext } from '@nrwl/devkit';
 import { cacheDir, joinPathFragments, logger } from '@nrwl/devkit';
 import {
@@ -89,7 +90,7 @@ export async function* esbuildExecutor(
 
               next({
                 success: true,
-                outfile: esbuildOptions.outfile,
+                outfile: resolve(context.root, esbuildOptions.outfile),
               });
 
               return result;
