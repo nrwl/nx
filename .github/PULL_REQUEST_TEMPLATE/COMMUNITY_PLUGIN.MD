@@ -1,3 +1,4 @@
+<!-- 
 _[Please make sure you have read the submission guidelines before posting an PR](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md#submit-pr)_
 
 # Community Plugin Submission
@@ -21,3 +22,14 @@ Example:
 ```
 
 Once merged, your will plugin will be available when running the `nx list` command, and will also be available in the Plugin browser on [nx.dev](https://nx.dev)
+-->
+
+# Community Plugin Submission
+
+## {replace with plugin's name}
+
+<!-- 
+Describe what is your plugin *extensively* and what is its goal or issues it addresses.
+Is it focused on a technology, tooling or behaviour? Does the plugin provide generators, executors and graph support?
+Do you know who is already using the plugin? Mention who is the author of the plugin.
+-->
