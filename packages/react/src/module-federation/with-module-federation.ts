@@ -261,7 +261,6 @@ export async function withModuleFederation(options: ModuleFederationConfig) {
 
     config.optimization = {
       runtimeChunk: false,
-      minimize: false,
     };
 
     config.experiments = {
