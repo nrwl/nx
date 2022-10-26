@@ -62,6 +62,7 @@
     "@nrwl/next": "15.0.0-rc1",
     "@nrwl/nx-cloud": "14.7.0",
     "@nrwl/react": "15.0.0-rc1",
+    "@nrwl/storybook": "15.0.0-rc1",
     "@nrwl/web": "15.0.0-rc1",
     "@parcel/watcher": "2.0.4",
     "@phenomnomnominal/tsquery": "4.1.1",
@@ -75,10 +76,8 @@
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@schematics/angular": "~14.2.0",
     "@storybook/addon-essentials": "~6.5.9",
-    "@storybook/addon-knobs": "~6.3.0",
-    "@storybook/angular": "~6.5.9",
+    "@storybook/angular": "^6.5.12",
     "@storybook/builder-webpack5": "~6.5.9",
-    "@storybook/core": "~6.5.9",
     "@storybook/core-server": "~6.5.9",
     "@storybook/manager-webpack5": "~6.5.9",
     "@storybook/react": "~6.5.9",
@@ -248,8 +247,7 @@
     "webpack-subresource-integrity": "^5.1.0",
     "xstate": "^4.25.0",
     "yargs": "^17.4.0",
-    "yargs-parser": "21.0.1",
-    "@nrwl/storybook": "15.0.0-rc1"
+    "yargs-parser": "21.0.1"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -307,4 +305,3 @@
     "underscore": "^1.12.1"
   }
 }
-
