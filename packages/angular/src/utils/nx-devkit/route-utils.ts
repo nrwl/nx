@@ -42,7 +42,7 @@ export function addRoute(
   const ast = tsquery.ast(routesFileContents);
 
   const ROUTES_ARRAY_SELECTOR =
-    'VariableDeclaration:has(ArrayType > TypeReference > Identifier[name=Route]) > ArrayLiteralExpression';
+    'VariableDeclaration:has(ArrayType > TypeReference > Identifier[name=Route], Identifier[name=Routes]) > ArrayLiteralExpression';
 
   const routesArrayNodes = tsquery(ast, ROUTES_ARRAY_SELECTOR, {
     visitAllChildren: true,
