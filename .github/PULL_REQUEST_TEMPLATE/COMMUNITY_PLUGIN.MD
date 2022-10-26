@@ -29,7 +29,7 @@ Once merged, your will plugin will be available when running the `nx list` comma
 ## {replace with plugin's name}
 
 <!-- 
-Describe what is your plugin *extensively* and what is its goal or issues it addresses.
-Is it focused on a technology, tooling or behaviour? Does the plugin provide generators, executors and graph support?
+Describe what your plugin is and what is its goal or issues it addresses.  If you don't provide a description, we will not merge your PR.
+Is it focused on a technology, tooling or behaviour? Does the plugin provide generators, executors or graph support?
 Do you know who is already using the plugin? Mention who is the author of the plugin.
 -->
