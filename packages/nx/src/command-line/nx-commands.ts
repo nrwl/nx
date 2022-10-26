@@ -810,31 +810,30 @@ async function withCustomGeneratorOptions(
   const options = [];
   const positionals = [];
 
-  if (schema.properties) {
-    Object.entries(schema.properties as WorkspaceGeneratorProperties).forEach(
-      ([name, prop]) => {
-        options.push({
-          name,
-          definition: {
-            describe: prop.description,
-            type: prop.type,
-            default: prop.default,
-            choices: prop.enum,
-          },
-        });
-        if (isPositionalProperty(prop)) {
-          positionals.push({
-            name,
-            definition: {
-              describe: prop.description,
-              type: prop.type,
-              choices: prop.enum,
-            },
-          });
-        }
-      }
-    );
-  }
+  Object.entries(
+    (schema.properties ?? {}) as WorkspaceGeneratorProperties
+  ).forEach(([name, prop]) => {
+    options.push({
+      name,
+      definition: {
+        describe: prop.description,
+        type: prop.type,
+        default: prop.default,
+        choices: prop.enum,
+      },
+    });
+    if (isPositionalProperty(prop)) {
+      positionals.push({
+        name,
+        definition: {
+          describe: prop.description,
+          type: prop.type,
+          choices: prop.enum,
+        },
+      });
+    }
+  });
+
   let command = generatorName;
   positionals.forEach(({ name }) => {
     command += ` [${name}]`;
