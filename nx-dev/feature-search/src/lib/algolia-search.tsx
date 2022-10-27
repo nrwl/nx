@@ -139,6 +139,7 @@ export function AlgoliaSearch({
             searchParameters={{
               facetFilters: ['language:en'],
               hitsPerPage: 100,
+              distinct: true,
             }}
             initialQuery={initialQuery}
             placeholder="Search documentation"
@@ -158,7 +159,6 @@ export function AlgoliaSearch({
               return items.map((item, index) => {
                 const a = document.createElement('a');
                 a.href = item.url;
-
                 const hash = a.hash === '#content-wrapper' ? '' : a.hash;
 
                 if (item.hierarchy?.lvl0) {
