@@ -182,17 +182,17 @@ export async function batchJest(
       .map((value) => value.substring(1, value.length - 1))[0];
     selectedProjects.push(displayName);
   }
-
-  throw new Error(
-    stripIndents`Some projects do not have a "displayName" property. Jest Batch Mode requires this to be set. Please ensure this value is set. 
+  if (projectsWithNoName.length > 0) {
+    throw new Error(
+      stripIndents`Some projects do not have a "displayName" property. Jest Batch Mode requires this to be set. Please ensure this value is set. 
 
       Projects missing "displayName":
       ${projectsWithNoName.map(
         ([project, configPath]) => ` - ${project} - ${configPath}\r\n`
       )}
       You can learn more about this requirement from Jest here: https://jestjs.io/docs/cli#--selectprojects-project1--projectn`
-  );
-
+    );
+  }
   const parsedConfigs = await jestConfigParser(overrides, context, true);
 
   const { globalConfig, results } = await runCLI(
