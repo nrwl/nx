@@ -135,7 +135,7 @@ export class ProcessTasks {
                 newTask,
                 newTask.target.project,
                 configuration,
-                taskOverrides
+                overrides
               );
             }
           } else {
@@ -175,7 +175,7 @@ export class ProcessTasks {
               newTask,
               newTask.target.project,
               configuration,
-              taskOverrides
+              overrides
             );
           }
         }
