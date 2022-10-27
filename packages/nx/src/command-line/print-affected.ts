@@ -12,25 +12,25 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 
 export async function printAffected(
-  affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
   affectedProjects: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
   { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
-  const projectNames = affectedProjects
-    .filter((p) => (nxArgs.type ? p.type === nxArgs.type : true))
-    .map((p) => p.name);
-  const tasksJson = await createTasks(
-    affectedProjectsWithTargetAndConfig.filter((p) =>
-      nxArgs.type ? p.type === nxArgs.type : true
-    ),
-    projectGraph,
-    nxArgs,
-    nxJson,
-    overrides
+  const projectsForType = affectedProjects.filter((p) =>
+    nxArgs.type ? p.type === nxArgs.type : true
   );
+  const projectNames = projectsForType.map((p) => p.name);
+  const tasksJson = nxArgs.target
+    ? await createTasks(
+        projectsForType,
+        projectGraph,
+        nxArgs,
+        nxJson,
+        overrides
+      )
+    : [];
   const result = {
     tasks: tasksJson,
     projects: projectNames,

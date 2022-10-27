@@ -333,7 +333,7 @@ describe('Nx Affected and Graph Tests', () => {
         command: `${runNx} run ${myapp}:test`,
         outputs: [`coverage/apps/${myapp}`],
       });
-      compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
+      compareTwoArrays(resWithTarget.projects, [myapp]);
 
       const resWithTargetWithSelect1 = (
         await runCLIAsync(
@@ -341,10 +341,7 @@ describe('Nx Affected and Graph Tests', () => {
           { silent: true }
         )
       ).stdout.trim();
-      compareTwoSerializedArrays(
-        resWithTargetWithSelect1,
-        `${myapp}-e2e, ${myapp}`
-      );
+      compareTwoSerializedArrays(resWithTargetWithSelect1, myapp);
 
       const resWithTargetWithSelect2 = (
         await runCLIAsync(
@@ -352,7 +349,7 @@ describe('Nx Affected and Graph Tests', () => {
           { silent: true }
         )
       ).stdout.trim();
-      compareTwoSerializedArrays(resWithTargetWithSelect2, `${myapp}`);
+      compareTwoSerializedArrays(resWithTargetWithSelect2, myapp);
     }, 120000);
 
     function compareTwoSerializedArrays(a: string, b: string) {
