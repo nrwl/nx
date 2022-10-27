@@ -1,15 +1,19 @@
-import { serializeSingleOverride } from 'nx/src/utils/serialize-overrides-into-command-line';
-
 export function formatFlags(
   leftPadding: string,
   flag: string,
   value: any
-): string[] {
-  if (flag === '_') {
-    return [`${leftPadding}  ${(value as string[]).join(' ')}`];
-  }
+): string {
+  return flag == '_'
+    ? `${leftPadding}  ${(value as string[]).join(' ')}`
+    : `${leftPadding}  --${flag}=${formatValue(value)}`;
+}
 
-  return serializeSingleOverride(flag, value).map(
-    (s) => `${leftPadding}  ${s}`
-  );
+function formatValue(value: any) {
+  if (Array.isArray(value)) {
+    return `[${value.join(',')}]`;
+  } else if (typeof value === 'object') {
+    return JSON.stringify(value);
+  } else {
+    return value;
+  }
 }

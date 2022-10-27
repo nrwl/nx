@@ -93,42 +93,13 @@ describe('splitArgs', () => {
     });
   });
 
-  it('should split non nx specific arguments into target args (with boolean args)', () => {
+  it('should split non nx specific arguments into target args', () => {
     expect(
       splitArgsIntoNxArgsAndOverrides(
         {
           files: [''],
-          firstNotNxArg: true,
-          secondNotNxArg: false,
-          __positional_overrides__: [],
-          $0: '',
-        },
-        'affected',
-        {} as any,
-        {} as any
-      ).overrides
-    ).toEqual({
-      __overrides_unparsed__: ['--firstNotNxArg', '--no-secondNotNxArg'],
-      firstNotNxArg: true,
-      secondNotNxArg: false,
-    });
-  });
-
-  it('should split non nx specific arguments into target args (with object args)', () => {
-    expect(
-      splitArgsIntoNxArgsAndOverrides(
-        {
-          files: [''],
-          firstNotNxArgObject: { firstKey: 'first', secondKey: 'second' },
-          secondNotNxArgObject: {
-            firstObjectKey: {
-              firstNestedKey: 'nested value',
-            },
-            secondObjectKey: {
-              secondNestedKey: 'nested value2',
-            },
-          },
-          notNxArgArray: ['item1', 'item2'],
+          notNxArg: true,
+          notNxArgObject: { objectKey: 'my value' },
           __positional_overrides__: [],
           $0: '',
         },
@@ -138,23 +109,11 @@ describe('splitArgs', () => {
       ).overrides
     ).toEqual({
       __overrides_unparsed__: [
-        '--firstNotNxArgObject.firstKey=first',
-        '--firstNotNxArgObject.secondKey=second',
-        '--secondNotNxArgObject.firstObjectKey.firstNestedKey="nested value"',
-        '--secondNotNxArgObject.secondObjectKey.secondNestedKey="nested value2"',
-        '--notNxArgArray=item1',
-        '--notNxArgArray=item2',
+        '--notNxArg=true',
+        '--notNxArgObject={"objectKey":"my value"}',
       ],
-      firstNotNxArgObject: { firstKey: 'first', secondKey: 'second' },
-      secondNotNxArgObject: {
-        firstObjectKey: {
-          firstNestedKey: 'nested value',
-        },
-        secondObjectKey: {
-          secondNestedKey: 'nested value2',
-        },
-      },
-      notNxArgArray: ['item1', 'item2'],
+      notNxArg: true,
+      notNxArgObject: { objectKey: 'my value' },
     });
   });
 
@@ -173,7 +132,7 @@ describe('splitArgs', () => {
       ).overrides
     ).toEqual({
       _: ['positional'],
-      __overrides_unparsed__: ['positional', '--notNxArg'],
+      __overrides_unparsed__: ['positional', '--notNxArg=true'],
       notNxArg: true,
     });
   });

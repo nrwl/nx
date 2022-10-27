@@ -278,11 +278,9 @@ export async function createRunManyDynamicOutputRenderer({
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            formatFlags(leftPadding, flag, value).map((flag) =>
-              output.dim.cyan(flag)
-            )
+            output.dim.cyan(formatFlags(leftPadding, flag, value))
           )
-          .forEach((arg) => taskOverridesRows.push(...arg));
+          .forEach((arg) => taskOverridesRows.push(arg));
       }
 
       const pinnedFooterLines = [
@@ -342,11 +340,9 @@ export async function createRunManyDynamicOutputRenderer({
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            formatFlags(leftPadding, flag, value).map((flag) =>
-              output.dim.green(flag)
-            )
+            output.dim.green(formatFlags(leftPadding, flag, value))
           )
-          .forEach((arg) => taskOverridesRows.push(...arg));
+          .forEach((arg) => taskOverridesRows.push(arg));
       }
 
       const pinnedFooterLines = [
@@ -383,11 +379,9 @@ export async function createRunManyDynamicOutputRenderer({
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            formatFlags(leftPadding, flag, value).map((flag) =>
-              output.dim.red(flag)
-            )
+            output.dim.red(formatFlags(leftPadding, flag, value))
           )
-          .forEach((arg) => taskOverridesRows.push(...arg));
+          .forEach((arg) => taskOverridesRows.push(arg));
       }
 
       const numFailedToPrint = 5;
