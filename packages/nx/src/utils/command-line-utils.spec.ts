@@ -107,7 +107,7 @@ describe('splitArgs', () => {
         {} as any
       ).overrides
     ).toEqual({
-      __overrides_unparsed__: ['--notNxArg=true'],
+      __overrides_unparsed__: ['--notNxArg'],
       notNxArg: true,
     });
   });
@@ -127,7 +127,7 @@ describe('splitArgs', () => {
       ).overrides
     ).toEqual({
       _: ['positional'],
-      __overrides_unparsed__: ['positional', '--notNxArg=true'],
+      __overrides_unparsed__: ['positional', '--notNxArg'],
       notNxArg: true,
     });
   });
