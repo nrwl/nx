@@ -7,9 +7,7 @@ export function serializeOverridesIntoCommandLine(args: {
       r.push(
         typeof args[a] === 'string' && args[a].includes(' ')
           ? `--${a}="${args[a].replace(/"/g, '"')}"`
-          : `--${a}=${
-              typeof args[a] === 'object' ? JSON.stringify(args[a]) : args[a]
-            }`
+          : `--${a}=${args[a]}`
       );
     }
   });
