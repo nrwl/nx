@@ -4,9 +4,9 @@ The Nx CLI provides the `migrate` command to help you stay up to date with the l
 
 Not only does `nx migrate` update you to the latest version of Nx, but it also updates the versions of dependencies that we support and test such as Jest and Cypress. You can also use the `migrate` command to update any Nx plugin.
 
-## Migrating to the latest Nx version
+## Update to the latest Nx version
 
-Migration happens in three steps:
+Updating happens in three steps:
 
 - The installed dependencies are updated including the `package.json` (and `node_modules`).
 - The source code in the repo is updated to match the new versions of packages in `package.json`.
