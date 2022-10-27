@@ -6,6 +6,7 @@ import {
   Tree,
   updateJson,
   visitNotIgnoredFiles,
+  normalizePath,
 } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { basename, dirname, extname, relative } from 'path';
@@ -36,15 +37,20 @@ export function findCypressConfigs(
 } {
   const cypressConfigPathJson =
     projectConfig.targets[target]?.configurations?.[config]?.cypressConfig ||
-    // make sure it's a json file, since it could have been updated to ts file from previous configuration migration
-    (projectConfig.targets[target]?.options?.cypressConfig.endsWith('json')
-      ? projectConfig.targets[target]?.options?.cypressConfig
-      : joinPathFragments(projectConfig.root, 'cypress.json'));
+    projectConfig.targets[target]?.options?.cypressConfig;
+
+  // make sure it's a json file, since it could have been updated to ts file from previous configuration migration
+  if (!cypressConfigPathJson || extname(cypressConfigPathJson) !== '.json') {
+    return {
+      cypressConfigPathJson: null,
+      cypressConfigPathTs: null,
+    };
+  }
 
   const cypressConfigPathTs = joinPathFragments(
-    projectConfig.root,
+    dirname(cypressConfigPathJson),
     // create matching ts config for custom cypress config if present
-    cypressConfigPathJson.endsWith('cypress.json')
+    cypressConfigPathJson?.endsWith('cypress.json')
       ? 'cypress.config.ts' //default
       : `${basename(
           cypressConfigPathJson,
@@ -230,17 +236,21 @@ export function updateProjectPaths(
   // tree.rename doesn't work on directories must update each file within
   // the directory to the new directory
   visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (path) => {
-    if (!path.includes(oldIntegrationFolder)) {
+    const normalizedPath = normalizePath(path);
+    if (!normalizedPath.includes(oldIntegrationFolder)) {
       return;
     }
-    const fileName = basename(path);
-    let newPath = path.replace(oldIntegrationFolder, newIntegrationFolder);
+    const fileName = basename(normalizedPath);
+    let newPath = normalizedPath.replace(
+      oldIntegrationFolder,
+      newIntegrationFolder
+    );
 
     if (fileName.includes('.spec.')) {
       newPath = newPath.replace('.spec.', '.cy.');
     }
-    if (newPath !== path && tree.exists(path)) {
-      tree.rename(path, newPath);
+    if (newPath !== normalizedPath && tree.exists(normalizedPath)) {
+      tree.rename(normalizedPath, newPath);
     }
     // if they weren't using the supportFile then there is no need to update the imports.
     if (
