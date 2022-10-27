@@ -65,10 +65,12 @@ function findAllNpmDeps(
   if (node) {
     list[node.data.packageName] = node.data.version;
     recursivelyCollectPeerDependencies(node.name, graph, list);
+  } else {
+    // we are not interested in the dependencies of external projects
+    graph.dependencies[projectName]?.forEach((dep) => {
+      findAllNpmDeps(dep.target, graph, list, seen);
+    });
   }
-  graph.dependencies[projectName]?.forEach((dep) => {
-    findAllNpmDeps(dep.target, graph, list, seen);
-  });
 
   return list;
 }
