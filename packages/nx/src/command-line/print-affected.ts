@@ -21,13 +21,15 @@ export async function printAffected(
     nxArgs.type ? p.type === nxArgs.type : true
   );
   const projectNames = projectsForType.map((p) => p.name);
-  const tasksJson = await createTasks(
-    projectsForType,
-    projectGraph,
-    nxArgs,
-    nxJson,
-    overrides
-  );
+  const tasksJson = nxArgs.target
+    ? await createTasks(
+        projectsForType,
+        projectGraph,
+        nxArgs,
+        nxJson,
+        overrides
+      )
+    : [];
   const result = {
     tasks: tasksJson,
     projects: projectNames,
