@@ -211,11 +211,21 @@ function normalizeBuildTargetOptions(
         ? joinPathFragments(offset, script)
         : { ...script, input: joinPathFragments(offset, script.input) };
     });
+    if (buildOptions.stylePreprocessorOptions?.includePaths.length > 0) {
+      buildOptions.stylePreprocessorOptions = {
+        includePaths: buildOptions.stylePreprocessorOptions.includePaths.map(
+          (path) => {
+            return joinPathFragments(offset, path);
+          }
+        ),
+      };
+    }
   } else {
     const stylePath = getTempStylesForTailwind(ctContext);
     buildOptions.styles = stylePath ? [stylePath] : [];
     buildOptions.assets = [];
     buildOptions.scripts = [];
+    buildOptions.stylePreprocessorOptions = { includePaths: [] };
   }
   const { root, sourceRoot } =
     buildContext.projectGraph.nodes[buildContext.projectName].data;
