@@ -66,7 +66,7 @@ Update the `.gitignore` file to make sure you have a `dist` entry (without a lea
 Note, the `build` uses TypeScript to compile the `index.ts` file into a project-level `./dist` folder. To run it use:
 
 ```shell
-npx nx build is-even
+npx nx build @package-based/is-even
 ```
 
 ## Local Linking of Packages
@@ -150,7 +150,7 @@ This tells Nx to run the `build` target of all the dependent projects first, bef
 Remove any existing `dist` folder and run:
 
 ```shell
-npx nx build is-odd
+npx nx build @package-based/is-odd
 ```
 
 It will automatically first run `npx nx build is-even` and then the build for `is-odd`. Note that if `is-even` has been built before, it would just be restored out of the cache.
@@ -160,7 +160,7 @@ It will automatically first run `npx nx build is-even` and then the build for `i
 To build the `is-even` package run:
 
 ```shell
-npx nx build is-even
+npx nx build @package-based/is-even
 ```
 
 Run the same command a second time and you'll see the build cache is being used:
