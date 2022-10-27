@@ -135,16 +135,11 @@ export class ProcessTasks {
                 newTask,
                 newTask.target.project,
                 configuration,
-                taskOverrides
+                overrides
               );
             }
           } else {
-            this.processTask(
-              task,
-              depProject.name,
-              configuration,
-              taskOverrides
-            );
+            this.processTask(task, depProject.name, configuration, overrides);
           }
         }
       } else {
@@ -180,7 +175,7 @@ export class ProcessTasks {
               newTask,
               newTask.target.project,
               configuration,
-              taskOverrides
+              overrides
             );
           }
         }

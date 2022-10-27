@@ -486,6 +486,154 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should handle-mix of targets', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            files: [],
+            targets: {
+              build: {},
+            },
+          },
+        },
+        app2: {
+          name: 'app2',
+          type: 'app',
+          data: {
+            root: 'app2-root',
+            files: [],
+            targets: {
+              build: {},
+            },
+          },
+        },
+        infra1: {
+          name: 'infra1',
+          type: 'app',
+          data: {
+            root: 'infra1-root',
+            files: [],
+            targets: {
+              apply: {},
+            },
+          },
+        },
+        infra2: {
+          name: 'infra2',
+          type: 'app',
+          data: {
+            root: 'infra2-root',
+            files: [],
+            targets: {
+              apply: {},
+            },
+          },
+        },
+        coreInfra: {
+          name: 'coreInfra',
+          type: 'app',
+          data: {
+            root: 'infra3-root',
+            files: [],
+            targets: {
+              apply: {},
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+        app2: [],
+        // Scenario is app 1 depends on app 2, so this extends to the infrastructure projects
+        infra1: [
+          { source: 'infra1', target: 'coreInfra', type: 'implicit' },
+          { source: 'infra1', target: 'infra2', type: 'implicit' },
+          { source: 'infra1', target: 'app1', type: 'implicit' },
+        ],
+        infra2: [
+          { source: 'infra2', target: 'coreInfra', type: 'implicit' },
+          { source: 'infra1', target: 'app2', type: 'implicit' },
+        ],
+        coreInfra: [],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {
+        build: ['^build'],
+        apply: [
+          { projects: 'dependencies', target: 'build' },
+          {
+            projects: 'dependencies',
+            target: 'apply',
+            params: 'forward',
+          },
+        ],
+      },
+      ['infra1'],
+      ['apply'],
+      'development',
+      {
+        myFlag: 'flag value',
+      }
+    );
+
+    // prebuild should also be in here
+    expect(taskGraph).toEqual({
+      roots: ['app2:build', 'coreInfra:apply', 'app1:build'],
+      tasks: {
+        'infra1:apply': {
+          id: 'infra1:apply',
+          target: { project: 'infra1', target: 'apply' },
+          projectRoot: 'infra1-root',
+          overrides: { myFlag: 'flag value' },
+        },
+        'app2:build': {
+          id: 'app2:build',
+          target: { project: 'app2', target: 'build' },
+          projectRoot: 'app2-root',
+          overrides: { __overrides_unparsed__: [] },
+        },
+        'coreInfra:apply': {
+          id: 'coreInfra:apply',
+          target: { project: 'coreInfra', target: 'apply' },
+          projectRoot: 'infra3-root',
+          overrides: { myFlag: 'flag value' },
+        },
+        'app1:build': {
+          id: 'app1:build',
+          target: { project: 'app1', target: 'build' },
+          projectRoot: 'app1-root',
+          overrides: { __overrides_unparsed__: [] },
+        },
+        'infra2:apply': {
+          id: 'infra2:apply',
+          target: { project: 'infra2', target: 'apply' },
+          projectRoot: 'infra2-root',
+          overrides: { myFlag: 'flag value' },
+        },
+      },
+      dependencies: {
+        'infra1:apply': [
+          'app2:build',
+          'coreInfra:apply',
+          'app1:build',
+          'coreInfra:apply',
+          'infra2:apply',
+        ],
+        'app2:build': [],
+        'coreInfra:apply': [],
+        'app1:build': [],
+        'infra2:apply': ['app2:build', 'coreInfra:apply'],
+      },
+    });
+  });
+
   it('should handle cycles within the same project', () => {
     projectGraph = {
       nodes: {
