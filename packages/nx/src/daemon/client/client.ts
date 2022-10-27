@@ -307,11 +307,13 @@ export class DaemonClient {
         if (await this.isServerAvailable()) {
           clearInterval(id);
           resolve(backgroundProcess.pid);
-        } else if (attempts > 200) {
+        } else if (attempts > 1000) {
           // daemon fails to start, the process probably exited
           // we print the logs and exit the client
           reject(
-            daemonProcessException('Failed to start the Nx Daemon process.')
+            daemonProcessException(
+              'Failed to start or connect to the Nx Daemon process.'
+            )
           );
         } else {
           attempts++;
