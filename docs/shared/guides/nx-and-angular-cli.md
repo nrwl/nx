@@ -60,3 +60,15 @@ The Nx core team have gained a lot of experience migrating large workspaces over
 **Starting with Nx 11, you can migrate workspaces only using `nx migrate`**. To reiterate: `nx migrate` runs the migrations written by the Angular CLI team the same way `ng update` runs them. So everything should still work. You just get more control over how it works.
 
 If you still want to run `ng update`, you can do it as follows: `FORCE_NG_UPDATE=true nx update mypackage`.
+
+### 'ng add'
+
+`ng add` is not natively supported by Nx. We want to have a consistent package install experience for developers who are working with Angular or non-Angular packages.
+
+Instead, we recommend running:
+
+```shell
+npm install [package] && nx g [package]:ng-add
+```
+
+Replace `[package]` with the name of the package you're trying to add.
