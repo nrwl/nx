@@ -66,6 +66,7 @@ export type MessageIds =
   | 'nestedBannedExternalImportsViolation'
   | 'noTransitiveDependencies'
   | 'onlyTagsConstraintViolation'
+  | 'emptyOnlyTagsConstraintViolation'
   | 'notTagsConstraintViolation';
 export const RULE_NAME = 'enforce-module-boundaries';
 
@@ -117,6 +118,8 @@ export default createESLintRule<Options, MessageIds>({
       nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package. Nested import found at {{childProjectName}}`,
       noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
       onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
+      emptyOnlyTagsConstraintViolation:
+        'A project tagged with "{{sourceTag}}" cannot depend on any libs with tags',
       notTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can not depend on libs tagged with {{tags}}\n\nViolation detected in:\n{{projects}}`,
     },
   },
@@ -512,6 +515,20 @@ export default createESLintRule<Options, MessageIds>({
               data: {
                 sourceTag: constraint.sourceTag,
                 tags: stringifyTags(constraint.onlyDependOnLibsWithTags),
+              },
+            });
+            return;
+          }
+          if (
+            constraint.onlyDependOnLibsWithTags &&
+            constraint.onlyDependOnLibsWithTags.length === 0 &&
+            targetProject.data.tags.length !== 0
+          ) {
+            context.report({
+              node,
+              messageId: 'emptyOnlyTagsConstraintViolation',
+              data: {
+                sourceTag: constraint.sourceTag,
               },
             });
             return;
