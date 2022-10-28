@@ -581,7 +581,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check building project
     let output = runCLI(`build ${project} --outputHashing none`);
     expect(output).toContain(
-      `> nx run ${project}:build:production --outputHashing=none`
+      `> nx run ${project}:build:production --outputHashing none`
     );
     expect(output).toContain(
       `Successfully ran target build for project ${project}`
@@ -590,7 +590,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     output = runCLI(`build ${project} --outputHashing none`);
     expect(output).toContain(
-      `> nx run ${project}:build:production --outputHashing=none  [local cache]`
+      `> nx run ${project}:build:production --outputHashing none  [local cache]`
     );
     expect(output).toContain(
       `Successfully ran target build for project ${project}`
@@ -599,7 +599,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check building app1
     output = runCLI(`build ${app1} --outputHashing none`);
     expect(output).toContain(
-      `> nx run ${app1}:build:production --outputHashing=none`
+      `> nx run ${app1}:build:production --outputHashing none`
     );
     expect(output).toContain(
       `Successfully ran target build for project ${app1}`
@@ -608,7 +608,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     output = runCLI(`build ${app1} --outputHashing none`);
     expect(output).toContain(
-      `> nx run ${app1}:build:production --outputHashing=none  [local cache]`
+      `> nx run ${app1}:build:production --outputHashing none  [local cache]`
     );
     expect(output).toContain(
       `Successfully ran target build for project ${app1}`
@@ -638,7 +638,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check building an app
     let output = runCLI(`build ${project} --outputHashing none`);
     expect(output).toContain(
-      `> nx run ${project}:build:production --outputHashing=none`
+      `> nx run ${project}:build:production --outputHashing none`
     );
     expect(output).toContain(
       `Successfully ran target build for project ${project}`
@@ -647,7 +647,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     output = runCLI(`build ${project} --outputHashing none`);
     expect(output).toContain(
-      `> nx run ${project}:build:production --outputHashing=none  [local cache]`
+      `> nx run ${project}:build:production --outputHashing none  [local cache]`
     );
     expect(output).toContain(
       `Successfully ran target build for project ${project}`
