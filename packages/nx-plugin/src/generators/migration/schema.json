@@ -31,8 +31,7 @@
     },
     "description": {
       "type": "string",
-      "description": "Migration description.",
-      "alias": "d"
+      "description": "Migration description."
     },
     "packageVersion": {
       "type": "string",
