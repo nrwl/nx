@@ -1,8 +1,14 @@
 # Distribute Task Execution (DTE)
 
-Nx supports running commands across multiple machines. You can either set it up by hand (by using batching or binning) or use Nx Cloud.
+Typically, when developers try to optimize their CI performance, they try to parallelize their tasks on multiple machines using a binning approach that ends up looking something like this:
 
-[Read the comparison of the two approaches.](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953?source=friends_link&sk=5120b7ff982730854ed22becfe7a640a)
+![CI using binning](../images/dte/binning.svg)
+
+When you set up Nx's distributed task execution, your task graph will look more like this:
+
+![CI using DTE](../images/dte/3agents.svg)
+
+And not only will CI finish faster, but the debugging experience is the same as if you ran all of your CI on a single machine. That's because Nx uses distributed caching to recreate all of the logs and build artifacts on the main process.
 
 ## Set up
 

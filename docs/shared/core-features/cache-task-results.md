@@ -53,6 +53,12 @@ Ran all test suites.
 Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
+## Replaying from Cache
+
+When Nx determines that the inputs for a task have not changed, it recreates the outputs of that task as if it actually ran on your machine - but much faster. The outputs of a cached task include both the terminal output and the files created in the defined `output` directories for that task.
+
+For each task, you can [customize the inputs](/more-concepts/customizing-inputs) and [define the output folder(s)](/reference/project-configuration#outputs).
+
 ## Advanced Caching
 
 For a more in-depth understanding of the caching implementation and to fine-tune the caching for your repo, read [How Caching Works](/concepts/how-caching-works).
@@ -73,6 +79,12 @@ You can connect your workspace to Nx Cloud by running:
 
 ```shell
 npx nx connect-to-nx-cloud
+```
+
+To see the remote cache in action, run:
+
+```shell
+nx test header && nx reset && nx test header
 ```
 
 ## See Also:
