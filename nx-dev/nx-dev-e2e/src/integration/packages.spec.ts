@@ -219,7 +219,6 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/linter',
       path: '/packages/linter/generators/workspace-rule',
     },
-    { title: '@nrwl/linter', path: '/packages/linter/executors/lint' },
     { title: '@nrwl/linter', path: '/packages/linter/executors/eslint' },
     {
       title: 'make-angular-cli-faster',
