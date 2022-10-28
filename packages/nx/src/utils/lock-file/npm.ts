@@ -21,6 +21,12 @@ type NpmDependency = {
   optional?: boolean;
 };
 
+/**
+ * Lock file version differences:
+ * - v1 has only dependencies
+ * - v2 has dependencies and packages for backwards compatibility
+ * - v3 has only packages
+ */
 type NpmLockFile = {
   name?: string;
   lockfileVersion: number;
@@ -40,7 +46,7 @@ export function parseNpmLockFile(lockFile: string): LockFileData {
     lockFile
   ) as NpmLockFile;
   return {
-    dependencies: mapPackages(dependencies, packages),
+    dependencies: mapPackages(dependencies, packages, metadata.lockfileVersion),
     lockFileMetadata: {
       metadata,
       ...(packages && { rootPackage: packages[''] }),
@@ -52,87 +58,150 @@ export function parseNpmLockFile(lockFile: string): LockFileData {
 // Maps /node_modules/@abc/def with version 1.2.3 => @abc/def > @abc/dev@1.2.3
 function mapPackages(
   dependencies: Record<string, NpmDependency>,
-  packages: Dependencies
+  packages: Dependencies,
+  lockfileVersion: number
 ): LockFileData['dependencies'] {
   const mappedPackages: LockFileData['dependencies'] = {};
 
-  Object.entries(dependencies).forEach(([packageName, value]) => {
-    mappedPackages[packageName] = mappedPackages[packageName] || {};
-    const packagePath = `node_modules/${packageName}`;
-    const newKey = packageName + '@' + value.version;
-    mappedPackages[packageName][newKey] = mapDependency(
-      packagePath,
-      value,
-      true,
-      packages && { packageData: packages[packagePath] }
-    );
-    mapPackageDependencies(
-      mappedPackages,
-      packages,
-      value.dependencies,
-      packagePath
-    );
-  });
+  if (lockfileVersion === 1) {
+    Object.entries(dependencies).forEach(([packageName, value]) => {
+      const { newKey, packagePath } = prepareDependency(
+        packageName,
+        value.version,
+        mappedPackages
+      );
+
+      mapPackageDependency(
+        mappedPackages,
+        packageName,
+        newKey,
+        packagePath,
+        value,
+        lockfileVersion,
+        true
+      );
+      // we need to map the nested dependencies recursively
+      mapPackageDependencies(
+        mappedPackages,
+        value.dependencies,
+        packagePath,
+        lockfileVersion
+      );
+    });
+  } else {
+    Object.entries(packages).forEach(([packagePath, value]) => {
+      // we parse root package.json separately
+      if (packagePath !== '') {
+        const packageName = packagePath.split('node_modules/').pop();
+        const { newKey } = prepareDependency(
+          packageName,
+          value.version,
+          mappedPackages,
+          undefined,
+          packagePath
+        );
+
+        mapPackageDependency(
+          mappedPackages,
+          packageName,
+          newKey,
+          packagePath,
+          value,
+          lockfileVersion
+        );
+      }
+    });
+  }
 
   return mappedPackages;
 }
 
-function mapDependency(
+function prepareDependency(
+  packageName: string,
+  version: string,
+  mappedPackages: LockFileData['dependencies'],
+  pathPrefix: string = '',
+  path?: string
+) {
+  mappedPackages[packageName] = mappedPackages[packageName] || {};
+  const newKey = packageName + '@' + version;
+  const packagePath =
+    path || pathPrefix
+      ? `${pathPrefix}/node_modules/${packageName}`
+      : `node_modules/${packageName}`;
+  return { newKey, packagePath };
+}
+
+function mapPackageDependency(
+  mappedPackages: LockFileData['dependencies'],
+  packageName: string,
+  key: string,
   packagePath: string,
-  { dev, optional, ...value }: NpmDependency,
-  rootVersion: boolean,
-  packageData?: { packageData: Omit<PackageDependency, 'packageMeta'> }
-): PackageDependency {
+  value: NpmDependency | Omit<PackageDependency, 'packageMeta'>,
+  lockfileVersion: number,
+  isRootVersion?: boolean
+) {
   const packageMeta = {
     path: packagePath,
-    dev,
-    optional,
-    ...packageData,
+    dev: value.dev,
+    optional: value.optional,
   };
-  return {
-    ...value,
-    // invert those two fields to match other package managers
-    requires: value.dependencies,
-    dependencies: value.requires,
-    packageMeta: [packageMeta],
-    rootVersion,
-  };
+  if (!mappedPackages[packageName][key]) {
+    // const packageDependencies = lockfileVersion === 1 ? requires : dependencies;
+    const rootVersion =
+      isRootVersion ?? packagePath.split('/node_modules/').length === 1;
+
+    if (lockfileVersion === 1) {
+      const { requires, ...rest } = value;
+      if (requires) {
+        rest.dependencies = requires;
+      }
+      value = rest;
+    }
+
+    mappedPackages[packageName][key] = {
+      ...(value as Omit<PackageDependency, 'packageMeta'>),
+      packageMeta: [],
+      rootVersion,
+    };
+  }
+
+  mappedPackages[packageName][key].packageMeta.push(packageMeta);
 }
 
 function mapPackageDependencies(
   mappedPackages: LockFileData['dependencies'],
-  packages: Dependencies,
   dependencies: Record<string, NpmDependency>,
-  parentPath: string
+  parentPath: string,
+  lockfileVersion: number
 ): void {
   if (!dependencies) {
     return;
   }
 
   Object.entries(dependencies).forEach(([packageName, value]) => {
-    mappedPackages[packageName] = mappedPackages[packageName] || {};
-    const packagePath = `${parentPath}/node_modules/${packageName}`;
-    const newKey = packageName + '@' + value.version;
-    if (mappedPackages[packageName][newKey]) {
-      mappedPackages[packageName][newKey].packageMeta.push({
-        path: packagePath,
-        dev: value.dev,
-        optional: value.optional,
-        ...(packages && { packageData: packages[packagePath] }),
-      });
-    } else {
-      mappedPackages[packageName][newKey] = mapDependency(
-        packagePath,
-        value,
-        false,
-        packages && { packageData: packages[packagePath] }
-      );
-    }
+    const { newKey, packagePath } = prepareDependency(
+      packageName,
+      value.version,
+      mappedPackages,
+      parentPath
+    );
+
+    mapPackageDependency(
+      mappedPackages,
+      packageName,
+      newKey,
+      packagePath,
+      value,
+      lockfileVersion,
+      false
+    );
+
     mapPackageDependencies(
       mappedPackages,
-      packages,
       value.dependencies,
-      packagePath
+      packagePath,
+      lockfileVersion
     );
   });
 }
@@ -144,10 +213,13 @@ function mapPackageDependencies(
  * @returns
  */
 export function stringifyNpmLockFile(lockFileData: LockFileData): string {
+  const notV1 = lockFileData.lockFileMetadata.metadata.lockfileVersion > 1;
+  const notV3 = lockFileData.lockFileMetadata.metadata.lockfileVersion < 3;
+
+  // initialize the lockfile collections
   const dependencies = {};
-  const isV2 = lockFileData.lockFileMetadata.metadata.lockfileVersion > 1;
   const packages: Dependencies = {
-    ...(isV2 && { '': lockFileData.lockFileMetadata.rootPackage }),
+    ...(notV1 && { '': lockFileData.lockFileMetadata.rootPackage }),
   };
 
   const keys = Object.keys(lockFileData.dependencies);
@@ -157,38 +229,51 @@ export function stringifyNpmLockFile(lockFileData: LockFileData): string {
     const values = Object.values(packageVersions);
 
     values.forEach((value) => {
-      if (isV2) {
+      if (notV1) {
         unmapPackage(packages, value);
       }
-      unmapPackageDependencies(dependencies, packageName, value);
+      if (notV3) {
+        unmapDependencies(dependencies, packageName, value);
+      }
     });
   }
 
   // generate package lock JSON
   const lockFileJson: NpmLockFile = {
     ...lockFileData.lockFileMetadata.metadata,
-    ...(isV2 && { packages: sortObject(packages) }),
-    dependencies: sortDependencies(dependencies),
+    ...(notV1 && {
+      packages: sortObject(
+        packages,
+        (value) => value,
+        false,
+        (a, b) => a.localeCompare(b)
+      ),
+    }),
+    ...(notV3 && { dependencies: sortDependencies(dependencies) }),
   };
 
   return JSON.stringify(lockFileJson, null, 2) + '\n';
 }
 
 // remapping the package back to package-lock format
-function unmapPackage(
-  packages: Dependencies,
-  { packageMeta }: PackageDependency
-) {
+function unmapPackage(packages: Dependencies, dependency: PackageDependency) {
+  const { packageMeta, rootVersion, version, resolved, integrity, ...value } =
+    dependency;
   // we need to decompose value, to achieve particular field ordering
 
   for (let i = 0; i < packageMeta.length; i++) {
-    const { path, packageData } = packageMeta[i];
+    const { path } = packageMeta[i];
     // we are sorting the properties to get as close as possible to the original package-lock.json
-    packages[path] = packageData;
+    packages[path] = {
+      version,
+      resolved,
+      integrity,
+      ...value,
+    };
   }
 }
 
-function unmapPackageDependencies(
+function unmapDependencies(
   dependencies: Record<string, NpmDependency>,
   packageName: string,
   { packageMeta, ...value }: PackageDependency & { packageMeta: PackageMeta[] }
@@ -199,11 +284,11 @@ function unmapPackageDependencies(
     const { path, dev, optional } = packageMeta[i];
     const projectPath = path.split('node_modules/').slice(1);
 
+    const requires = unmapDependencyRequires(value);
     const innerDeps = getProjectNodeAndEnsureParentHierarchy(
       projectPath,
       dependencies
     );
-    const requires = unmapDependencyRequires(value);
 
     // sorting fields to match package-lock structure
     innerDeps[packageName] = {
@@ -249,7 +334,9 @@ function unmapDependencyRequires(
     ...(value.dependencies || {}),
     ...(value.optionalDependencies || {}),
   };
-  const sortedKeys = Object.keys(dependencies).sort();
+  const sortedKeys = Object.keys(dependencies).sort((a, b) =>
+    a.localeCompare(b)
+  );
   const result = {};
   for (let i = 0; i < sortedKeys.length; i++) {
     const key = sortedKeys[i];
@@ -263,7 +350,9 @@ function sortDependencies(
   unsortedDependencies: Record<string, NpmDependency>
 ): Record<string, NpmDependency> {
   const dependencies = {};
-  const sortedKeys = Object.keys(unsortedDependencies).sort();
+  const sortedKeys = Object.keys(unsortedDependencies).sort((a, b) =>
+    a.localeCompare(b)
+  );
 
   for (let i = 0; i < sortedKeys.length; i++) {
     const value = unsortedDependencies[sortedKeys[i]];

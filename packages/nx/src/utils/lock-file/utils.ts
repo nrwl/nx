@@ -17,13 +17,14 @@ import {
 export function sortObject<T = string>(
   obj: Record<string, T>,
   valueTransformator: (value: T) => any = (value) => value,
-  descending = false
+  descending = false,
+  sortFunction?: (a: string, b: string) => number
 ): Record<string, T> | undefined {
   const keys = Object.keys(obj);
   if (keys.length === 0) {
     return;
   }
-  keys.sort();
+  keys.sort(sortFunction);
   if (descending) {
     keys.reverse();
   }
