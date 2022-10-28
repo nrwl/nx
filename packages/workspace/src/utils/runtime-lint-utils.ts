@@ -333,7 +333,8 @@ export function isDirectDependency(target: ProjectGraphExternalNode): boolean {
  * @returns
  */
 function parseImportWildcards(importDefinition: string): RegExp {
-  const mappedWildcards = importDefinition.split('*').join('.*');
+  // we replace all instances of `*`, `**..*` and `.*` with `.*`
+  const mappedWildcards = importDefinition.split(/(?:\.\*)|\*+/).join('.*');
   return new RegExp(`^${new RegExp(mappedWildcards).source}$`);
 }
 
