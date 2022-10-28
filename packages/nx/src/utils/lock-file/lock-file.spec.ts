@@ -3,9 +3,11 @@ import { parseNpmLockFile } from './npm';
 import { parsePnpmLockFile } from './pnpm';
 import { parseYarnLockFile } from './yarn';
 import {
-  lockFileYargsOnly as npmLockFileYargsOnly,
+  lockFileV3YargsOnly as npmLockFileV3YargsOnly,
+  lockFileV2YargsOnly as npmLockFileV2YargsOnly,
   lockFileV1YargsOnly as npmLockFileV1YargsOnly,
-  lockFile as npmLockFile,
+  lockFileV3 as npmLockFileV3,
+  lockFileV2 as npmLockFileV2,
   lockFileV1 as npmLockFileV1,
 } from './__fixtures__/npm.lock';
 import {
@@ -13,88 +15,112 @@ import {
   lockFile as pnpmLockFile,
 } from './__fixtures__/pnpm.lock';
 import {
-  lockFileDevkitAndYargs,
+  lockFileDevkitAndYargs as yarnLockFileDevkitAndYargs,
   lockFile as yarnLockFile,
 } from './__fixtures__/yarn.lock';
 
 describe('lock-file', () => {
   describe('mapLockFileDataToExternalNodes', () => {
-    it('should map yarn lock file data to external nodes', () => {
-      const lockFileData = parseYarnLockFile(lockFileDevkitAndYargs);
+    describe('yarn', () => {
+      it('should map lock file data to external nodes', () => {
+        const lockFileData = parseYarnLockFile(yarnLockFileDevkitAndYargs);
 
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+        const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
 
-      expect(partialGraph.externalNodes['npm:yargs']).toMatchSnapshot();
-      expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
+        expect(partialGraph.externalNodes['npm:yargs']).toMatchSnapshot();
+        expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
+      });
+
+      it('should map successfully complex lock file', () => {
+        const lockFileData = parseYarnLockFile(yarnLockFile);
+
+        const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+
+        expect(partialGraph.externalNodes['npm:nx']).toMatchSnapshot();
+        expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
+      });
     });
 
-    it('should map successfully complex yarn lock file', () => {
-      const lockFileData = parseYarnLockFile(yarnLockFile);
+    describe('npm', () => {
+      it('should map lock file v3 data to external nodes', () => {
+        const lockFileData = parseNpmLockFile(npmLockFileV3YargsOnly);
 
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+        const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
 
-      expect(partialGraph.externalNodes['npm:nx']).toMatchSnapshot();
-      expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
+        expect(partialGraph.externalNodes['npm:yargs']).toMatchSnapshot();
+        expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
+      });
+
+      it('should map lock file v2 data to external nodes', () => {
+        const lockFileData = parseNpmLockFile(npmLockFileV2YargsOnly);
+
+        const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+
+        expect(partialGraph.externalNodes['npm:yargs']).toMatchSnapshot();
+        expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
+      });
+
+      it('should map lock file v1 data to external nodes', () => {
+        const lockFileData = parseNpmLockFile(npmLockFileV1YargsOnly);
+
+        const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+
+        expect(partialGraph.externalNodes['npm:yargs']).toMatchSnapshot();
+        expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
+      });
+
+      it('should map successfully complex lock file v3', () => {
+        const lockFileData = parseNpmLockFile(npmLockFileV3);
+
+        const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+
+        expect(partialGraph.externalNodes['npm:nx']).toMatchSnapshot();
+        expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
+      });
+
+      it('should map successfully complex lock file v2', () => {
+        const lockFileData = parseNpmLockFile(npmLockFileV2);
+
+        const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+
+        expect(partialGraph.externalNodes['npm:nx']).toMatchSnapshot();
+        expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
+      });
+
+      it('should map successfully complex npm lock file v1', () => {
+        const lockFileData = parseNpmLockFile(npmLockFileV1);
+
+        const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+
+        expect(partialGraph.externalNodes['npm:nx']).toMatchSnapshot();
+        expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
+      });
     });
 
-    it('should map npm lock file data to external nodes', () => {
-      const lockFileData = parseNpmLockFile(npmLockFileYargsOnly);
+    describe('pnpm', () => {
+      it('should map lock file data to external nodes', () => {
+        const lockFileData = parsePnpmLockFile(pnpmLockFileYargsOnly);
 
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+        const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
 
-      expect(partialGraph.externalNodes['npm:yargs']).toMatchSnapshot();
-      expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
-    });
+        expect(partialGraph.externalNodes['npm:yargs']).toMatchSnapshot();
+        expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
+      });
 
-    it('should map npm lock file v1 data to external nodes', () => {
-      const lockFileData = parseNpmLockFile(npmLockFileV1YargsOnly);
+      it('should map successfully complex lock file', () => {
+        const lockFileData = parsePnpmLockFile(pnpmLockFile);
 
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
+        const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
 
-      expect(partialGraph.externalNodes['npm:yargs']).toMatchSnapshot();
-      expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
-    });
-
-    it('should map successfully complex npm lock file', () => {
-      const lockFileData = parseNpmLockFile(npmLockFile);
-
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
-
-      expect(partialGraph.externalNodes['npm:nx']).toMatchSnapshot();
-      expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
-    });
-
-    it('should map successfully complex npm v1 lock file', () => {
-      const lockFileData = parseNpmLockFile(npmLockFileV1);
-
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
-
-      expect(partialGraph.externalNodes['npm:nx']).toMatchSnapshot();
-      expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
-    });
-
-    it('should map pnpm lock file data to external nodes', () => {
-      const lockFileData = parsePnpmLockFile(pnpmLockFileYargsOnly);
-
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
-
-      expect(partialGraph.externalNodes['npm:yargs']).toMatchSnapshot();
-      expect(partialGraph.dependencies['npm:yargs']).toMatchSnapshot();
-    });
-
-    it('should map successfully complex pnpm lock file', () => {
-      const lockFileData = parsePnpmLockFile(pnpmLockFile);
-
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData);
-
-      expect(partialGraph.externalNodes['npm:nx']).toMatchSnapshot();
-      expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
-      expect(
-        partialGraph.externalNodes['npm:@phenomnomnominal/tsquery']
-      ).toMatchSnapshot();
-      expect(
-        partialGraph.dependencies['npm:@phenomnomnominal/tsquery']
-      ).toMatchSnapshot();
+        expect(partialGraph.externalNodes['npm:nx']).toMatchSnapshot();
+        expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
+        expect(
+          partialGraph.externalNodes['npm:@phenomnomnominal/tsquery']
+        ).toMatchSnapshot();
+        expect(
+          partialGraph.dependencies['npm:@phenomnomnominal/tsquery']
+        ).toMatchSnapshot();
+      });
     });
   });
 });

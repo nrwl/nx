@@ -21,6 +21,12 @@ type NpmDependency = {
   optional?: boolean;
 };
 
+/**
+ * Lock file version differences:
+ * - v1 has only dependencies
+ * - v2 has dependencies and packages for backwards compatibility
+ * - v3 has only packages
+ */
 type NpmLockFile = {
   name?: string;
   lockfileVersion: number;
