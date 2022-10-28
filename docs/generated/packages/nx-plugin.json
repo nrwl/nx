@@ -40,8 +40,7 @@
           },
           "directory": {
             "type": "string",
-            "description": "A directory where the plugin is placed.",
-            "alias": "d"
+            "description": "A directory where the plugin is placed."
           },
           "importPath": {
             "type": "string",
@@ -203,8 +202,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Migration description.",
-            "alias": "d"
+            "description": "Migration description."
           },
           "packageVersion": {
             "type": "string",
@@ -313,8 +311,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Executor description.",
-            "alias": "d"
+            "description": "Executor description."
           },
           "unitTestRunner": {
             "type": "string",

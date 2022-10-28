@@ -21,8 +21,7 @@
     }, 
     "directory": {
       "type": "string",
-      "description": "A directory where the project is placed",
-      "alias": "d"
+      "description": "A directory where the project is placed"
     }
   },
   "required": ["name"]

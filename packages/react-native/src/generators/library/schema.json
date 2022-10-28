@@ -24,8 +24,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the lib is placed.",
-      "alias": "d"
+      "description": "A directory where the lib is placed."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

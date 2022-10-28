@@ -23,8 +23,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the plugin is placed.",
-      "alias": "d"
+      "description": "A directory where the plugin is placed."
     },
     "importPath": {
       "type": "string",

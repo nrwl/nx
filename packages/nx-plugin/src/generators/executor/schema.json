@@ -32,8 +32,7 @@
     },
     "description": {
       "type": "string",
-      "description": "Executor description.",
-      "alias": "d"
+      "description": "Executor description."
     },
     "unitTestRunner": {
       "type": "string",
