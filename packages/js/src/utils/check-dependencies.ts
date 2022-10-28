@@ -19,8 +19,7 @@ export function checkDependencies(
     context.root,
     context.projectName,
     context.targetName,
-    context.configurationName,
-    true
+    context.configurationName
   );
   const projectRoot = target.data.root;
 
