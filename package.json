@@ -258,7 +258,7 @@
   },
   "dependencies": {
     "@builder.io/partytown": "^0.6.1",
-    "@docsearch/react": "^3.2.1",
+    "@docsearch/react": "^3.3.0",
     "@headlessui/react": "^1.7.3",
     "@heroicons/react": "^2.0.12",
     "@markdoc/markdoc": "0.1.13",
