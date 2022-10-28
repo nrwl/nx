@@ -19,18 +19,18 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ### help
 
-Type: boolean
+Type: `boolean`
 
 Show help
 
 ### verbose
 
-Type: boolean
+Type: `boolean`
 
 Prints additional information about the commands (e.g., stack traces)
 
 ### version
 
-Type: boolean
+Type: `boolean`
 
 Show version number
