@@ -11,7 +11,7 @@ description: 'Print applications affected by changes'
 
 ## Usage
 
-```bash
+```terminal
 nx affected:apps
 ```
 
@@ -21,14 +21,21 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Print the names of all the apps affected by changing the index.ts file:
 
-````bash
- nx affected:apps --files=libs/mylib/src/index.ts```
+```terminal
+ nx affected:apps --files=libs/mylib/src/index.ts
+```
+
 Print the names of all the apps affected by the changes between main and HEAD (e.g., PR):
-```bash
- nx affected:apps --base=main --head=HEAD```
+
+```terminal
+ nx affected:apps --base=main --head=HEAD
+```
+
 Print the names of all the apps affected by the last commit on main:
-```bash
- nx affected:apps --base=main~1 --head=main```
+
+```terminal
+ nx affected:apps --base=main~1 --head=main
+```
 
 ## Options
 
@@ -37,16 +44,19 @@ Print the names of all the apps affected by the last commit on main:
 Type: `boolean`
 
 All projects
+
 ### base
 
 Type: `string`
 
 Base of the current branch (usually main)
+
 ### configuration
 
 Type: `string`
 
 This is the configuration to use when performing tasks on projects
+
 ### exclude
 
 Type: `array`
@@ -54,21 +64,25 @@ Type: `array`
 Default: `[]`
 
 Exclude certain projects from being processed
+
 ### files
 
 Type: `array`
 
 Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
+
 ### head
 
 Type: `string`
 
 Latest commit of the current branch (usually HEAD)
+
 ### help
 
 Type: `boolean`
 
 Show help
+
 ### nx-bail
 
 Type: `boolean`
@@ -76,6 +90,7 @@ Type: `boolean`
 Default: `false`
 
 Stop command execution after the first failed task
+
 ### nx-ignore-cycles
 
 Type: `boolean`
@@ -83,14 +98,17 @@ Type: `boolean`
 Default: `false`
 
 Ignore cycles in the task graph
+
 ### plain
 
 Produces a plain output for affected:apps and affected:libs
+
 ### runner
 
 Type: `string`
 
 This is the name of the tasks runner configured in nx.json
+
 ### skip-nx-cache
 
 Type: `boolean`
@@ -98,16 +116,19 @@ Type: `boolean`
 Default: `false`
 
 Rerun the tasks even when the results are available in the cache
+
 ### uncommitted
 
 Type: `boolean`
 
 Uncommitted changes
+
 ### untracked
 
 Type: `boolean`
 
 Untracked changes
+
 ### verbose
 
 Type: `boolean`
@@ -115,9 +136,9 @@ Type: `boolean`
 Default: `false`
 
 Prints additional information about the commands (e.g., stack traces)
+
 ### version
 
 Type: `boolean`
 
 Show version number
-````

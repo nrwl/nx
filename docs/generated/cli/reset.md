@@ -9,7 +9,7 @@ Clears all the cached Nx artifacts and metadata about the workspace and shuts do
 
 ## Usage
 
-```bash
+```terminal
 nx reset
 ```
 
