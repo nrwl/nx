@@ -9,7 +9,7 @@ Check for un-formatted files
 
 ## Usage
 
-```bash
+```terminal
 nx format:check
 ```
 

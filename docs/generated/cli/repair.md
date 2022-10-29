@@ -9,7 +9,7 @@ Repair any configuration that is no longer supported by Nx.
 
 ## Usage
 
-```bash
+```terminal
 nx repair
 ```
 

@@ -9,7 +9,7 @@ Makes sure the workspace is connected to Nx Cloud
 
 ## Usage
 
-```bash
+```terminal
 nx connect-to-nx-cloud
 ```
 

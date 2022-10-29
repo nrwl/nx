@@ -9,7 +9,7 @@ Lint nx specific workspace files (nx.json, workspace.json)
 
 ## Usage
 
-```bash
+```terminal
 nx workspace-lint [files..]
 ```
 
