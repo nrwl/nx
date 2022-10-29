@@ -27,7 +27,7 @@ You can run your application with `nx serve my-new-app`, which starts it in watc
 Node libraries are a good way to separate features within your organization. To create a Node library run the following command:
 
 ```shell
-nx g @nrwl/js:node my-new-lib
+nx g @nrwl/node:lib my-new-lib
 
 # If you want the library to be buildable or publishable to npm
 nx g @nrwl/node:lib my-new-lib --buildable
