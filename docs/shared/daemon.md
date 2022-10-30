@@ -31,7 +31,7 @@ If you ever need to manually shut down the Nx Daemon, you can run `nx reset` wit
 
 As of v13.6.0, the Nx Daemon is enabled by default when running on your local machine. If you want to turn it off, simply set `useDaemonProcess: false` in the runners options in nx.json. You can also set the `NX_DAEMON` env variable to `false`.
 
-When using Nx in a CI environment, the Nx Daemon is disabled by default. Whether the process runs is determined by the following function: [https://github.com/nrwl/nx/blob/master/packages/nx/src/utils/is-ci.ts](https://github.com/nrwl/nx/blob/master/packages/nx/src/utils/is-ci.ts)
+When using Nx in a CI environment, the Nx Daemon is disabled by default. Whether the process runs is determined by the following function: [https://github.com/nrwl/nx/blob/master/packages/nx/src/utils/is-ci.ts](https://github.com/nrwl/nx/blob/master/packages/nx/src/utils/is-ci.ts). If environment `NX_DAEMON=true` in CI environment, the Nx Daemon process will run.
 
 ## Logs
 
