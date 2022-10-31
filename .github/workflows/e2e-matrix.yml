@@ -10,8 +10,11 @@ on:
         required: false
         default: false
 
+permissions: {}
 jobs:
   e2e:
+    permissions:
+      contents: read  #  to fetch code (actions/checkout)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
