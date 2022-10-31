@@ -9,9 +9,7 @@ import {
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
-  private npmProjects = this.externalNodes
-    ? Object.values(this.externalNodes)
-    : [];
+  private npmProjects = filterRootExternalDependencies(this.externalNodes);
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
@@ -179,6 +177,25 @@ export class TargetProjectLocator {
     const project = findMatchingProjectForPath(file, this.projectRootMappings);
     return this.nodes[project];
   }
+}
+
+// matches `npm:@scope/name`, `npm:name` but not `npm:@scope/name@version` and `npm:name@version`
+const ROOT_VERSION_PACKAGE_NAME_REGEX = /^npm:(?!.+@.+)/;
+
+function filterRootExternalDependencies(
+  externalNodes: Record<string, ProjectGraphExternalNode>
+): ProjectGraphExternalNode[] {
+  if (!externalNodes) {
+    return [];
+  }
+  const keys = Object.keys(externalNodes);
+  const nodes = [];
+  for (let i = 0; i < keys.length; i++) {
+    if (keys[i].match(ROOT_VERSION_PACKAGE_NAME_REGEX)) {
+      nodes.push(externalNodes[keys[i]]);
+    }
+  }
+  return nodes;
 }
 
 function createProjectRootMappings(
