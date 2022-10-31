@@ -34,7 +34,7 @@ The `pr` and `main` jobs implement the CI workflow. Setting `timeout-minutes` is
 
 > **Note**
 > 
-> If you're using this action in the context of a branch you may need to add `run: "git branch --track main origin/main"` before runing `nx affected` since `origin/main` won't exist.
+> If you're using this action in the context of a branch you may need to add `run: "git branch --track main origin/main"` before running `nx affected` since `origin/main` won't exist.
 
 {% nx-cloud-section %}
 
