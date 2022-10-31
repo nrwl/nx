@@ -1,17 +1,17 @@
-`workspace.json`:
+`project.json`:
 
 ```json
-//...
-"frontend": {
-    "targets": {
-        //...
-        "ls-project-root": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "ls apps/frontend/src"
-            }
-        }
+{
+  // ...
+  "targets": {
+    //...
+    "ls-project-root": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ls apps/frontend/src"
+      }
     }
+  }
 }
 ```
 
