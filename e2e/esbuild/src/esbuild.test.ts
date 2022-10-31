@@ -4,11 +4,13 @@ import {
   cleanupProject,
   newProject,
   readFile,
+  readJson,
   runCLI,
   runCommand,
   uniq,
   updateFile,
   updateProjectConfig,
+  packageInstall,
 } from '@nrwl/e2e/utils';
 
 describe('EsBuild Plugin', () => {
@@ -65,24 +67,54 @@ describe('EsBuild Plugin', () => {
     expect(runCommand(`node dist/libs/${myPkg}/index.js`)).toMatch(/Bye/);
   }, 300_000);
 
-  it('should bundle in workspace libs', async () => {
+  it('should support bundling everything or only workspace libs', async () => {
+    packageInstall('rambda', undefined, '~7.3.0', 'prod');
+    packageInstall('lodash', undefined, '~4.14.0', 'prod');
     const parentLib = uniq('parent-lib');
     const childLib = uniq('child-lib');
     runCLI(`generate @nrwl/js:lib ${parentLib} --bundler=esbuild`);
     runCLI(`generate @nrwl/js:lib ${childLib} --buildable=false`);
     updateFile(
       `libs/${parentLib}/src/index.ts`,
-      `import '@${proj}/${childLib}';`
+      `
+        // @ts-ignore
+        import _ from 'lodash';
+        import { greet } from '@${proj}/${childLib}';
+
+        console.log(_.upperFirst('hello world'));
+        console.log(greet());
+      `
     );
     updateFile(
       `libs/${childLib}/src/index.ts`,
-      `console.log('Hello from lib');\n`
+      `
+        import { always } from 'rambda';
+        export const greet = always('Hello from child lib');
+      `
     );
 
+    // Bundle child lib and third-party packages
     runCLI(`build ${parentLib}`);
 
-    expect(runCommand(`node dist/libs/${parentLib}/index.js`)).toMatch(
-      /Hello from lib/
-    );
+    expect(
+      readJson(`dist/libs/${parentLib}/package.json`).dependencies?.['dayjs']
+    ).not.toBeDefined();
+    let runResult = runCommand(`node dist/libs/${parentLib}/index.js`);
+    expect(runResult).toMatch(/Hello world/);
+    expect(runResult).toMatch(/Hello from child lib/);
+
+    // Bundle only child lib
+    runCLI(`build ${parentLib} --third-party=false`);
+
+    expect(
+      readJson(`dist/libs/${parentLib}/package.json`).dependencies
+    ).toEqual({
+      // Don't care about the versions, just that they exist
+      rambda: expect.any(String),
+      lodash: expect.any(String),
+    });
+    runResult = runCommand(`node dist/libs/${parentLib}/index.js`);
+    expect(runResult).toMatch(/Hello world/);
+    expect(runResult).toMatch(/Hello from child lib/);
   }, 300_000);
 });

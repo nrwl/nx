@@ -33,6 +33,7 @@ export interface UpdatePackageJsonOption {
   outputFileExtensionForCjs?: `.${string}`;
   skipTypings?: boolean;
   generateExportsField?: boolean;
+  excludeLibsInPackageJson?: boolean;
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
 }
@@ -52,6 +53,10 @@ export function updatePackageJson(
   const packageJson = fileExists(pathToPackageJson)
     ? readJsonFile(pathToPackageJson)
     : { name: context.projectName };
+
+  if (options.excludeLibsInPackageJson) {
+    dependencies = dependencies.filter((dep) => dep.node.type !== 'lib');
+  }
 
   writeJsonFile(
     `${options.outputPath}/package.json`,

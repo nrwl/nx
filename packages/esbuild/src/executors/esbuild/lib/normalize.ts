@@ -16,11 +16,13 @@ export function normalizeOptions(
     }
     return {
       ...rest,
+      external: options.external ?? [],
       singleEntry: false,
     };
   } else {
     return {
       ...options,
+      external: options.external ?? [],
       singleEntry: true,
       outputFileName:
         options.outputFileName ?? `${parse(options.main).name}.js`,
