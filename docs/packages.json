@@ -18,6 +18,7 @@
         "package",
         "webpack-browser",
         "webpack-dev-server",
+        "webpack-server",
         "module-federation-dev-server",
         "file-server"
       ],
