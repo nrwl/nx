@@ -6,7 +6,7 @@ export default function FiveOhOh(): JSX.Element {
   return (
     <>
       <NextSeo title="Internal Server Error" noindex={true} />
-      <Header useDarkBackground={false} />
+      <Header />
       <main id="main" role="main">
         <div className="w-full">
           <article
@@ -47,7 +47,7 @@ export default function FiveOhOh(): JSX.Element {
           </article>
         </div>
       </main>
-      <Footer useDarkBackground={false} />
+      <Footer />
     </>
   );
 }
