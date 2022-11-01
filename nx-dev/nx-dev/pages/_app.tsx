@@ -37,7 +37,8 @@ export default function CustomApp({
               type: 'image/jpeg',
             },
           ],
-          site_name: 'Nx',
+          siteName: 'Nx',
+          type: 'website',
         }}
         twitter={{
           handle: '@nrwl_io',

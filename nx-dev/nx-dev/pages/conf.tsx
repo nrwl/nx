@@ -32,7 +32,7 @@ export default function ConfPage(): JSX.Element {
               type: 'image/jpeg',
             },
           ],
-          site_name: 'NxDev',
+          siteName: 'NxDev',
           type: 'website',
         }}
       />
