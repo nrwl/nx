@@ -8,6 +8,7 @@ import type { TaskStatus } from '../tasks-runner';
 import { Task } from '../../config/task-graph';
 import { prettyTime } from './pretty-time';
 import { formatFlags } from './formatting-utils';
+import { viewLogsFooterRows } from './view-logs-utils';
 
 /**
  * The following function is responsible for creating a life cycle with dynamic
@@ -424,6 +425,8 @@ export async function createRunManyDynamicOutputRenderer({
           )
         );
       }
+
+      failureSummaryRows.push(...viewLogsFooterRows(failedTasks.size));
 
       renderPinnedFooter(failureSummaryRows, 'red');
     }

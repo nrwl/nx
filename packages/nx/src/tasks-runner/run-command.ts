@@ -24,10 +24,11 @@ import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
-import { Workspaces } from 'nx/src/config/workspaces';
-import { Hasher } from 'nx/src/hasher/hasher';
+import { Workspaces } from '../config/workspaces';
+import { Hasher } from '../hasher/hasher';
 import { hashDependsOnOtherTasks, hashTask } from 'nx/src/hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
+import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -175,7 +176,10 @@ export async function runCommand(
         overrides,
         runnerOptions
       );
-      const lifeCycles = [lifeCycle] as LifeCycle[];
+      const lifeCycles = [] as LifeCycle[];
+
+      lifeCycles.push(new StoreRunInformationLifeCycle());
+      lifeCycles.push(lifeCycle);
 
       if (process.env.NX_PERF_LOGGING) {
         lifeCycles.push(new TaskTimingsLifeCycle());

@@ -2,6 +2,7 @@ import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { execSync } from 'child_process';
 import { readNxJson } from '../config/configuration';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 
 export async function connectToNxCloudIfExplicitlyAsked(opts: {
   [k: string]: any;
@@ -30,11 +31,7 @@ export async function connectToNxCloudIfExplicitlyAsked(opts: {
 export async function connectToNxCloudCommand(
   promptOverride?: string
 ): Promise<boolean> {
-  const nxJson = readNxJson();
-  const nxCloudUsed = Object.values(nxJson.tasksRunnerOptions).find(
-    (r) => r.runner == '@nrwl/nx-cloud'
-  );
-  if (nxCloudUsed) {
+  if (isNxCloudUsed()) {
     output.log({
       title: 'This workspace is already connected to Nx Cloud.',
     });
