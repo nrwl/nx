@@ -393,3 +393,43 @@ describe('theme preferences', () => {
     });
   });
 });
+
+describe('graph layout direction preferences', () => {
+  let rankDir: string;
+  before(() => {
+    cy.visit('/');
+    rankDir = 'TB';
+  });
+
+  it('should initialize localstorage with default graph layout direction', () => {
+    expect(localStorage.getItem('nx-dep-graph-rankdir')).eq(rankDir);
+  });
+
+  describe('left-to-right graph layout direction is set as preferred', () => {
+    before(() => {
+      cy.get('[data-cy="lr-rankdir-button"]').click();
+    });
+
+    it('should set left-to-right graph layout direction', () => {
+      cy.log('Localstorage is: ', localStorage.getItem('nx-dep-graph-rankdir'));
+      expect(localStorage.getItem('nx-dep-graph-rankdir')).eq('LR');
+      cy.get('[data-cy="tb-rankdir-button"]').should(
+        (elem) => expect(elem).to.exist
+      );
+    });
+  });
+
+  describe('top-to-bottom graph layout direction is set as preferred', () => {
+    before(() => {
+      cy.get('[data-cy="tb-rankdir-button"]').click();
+    });
+
+    it('should set top-to-bottom graph layout direction', () => {
+      cy.log('Localstorage is: ', localStorage.getItem('nx-dep-graph-rankdir'));
+      expect(localStorage.getItem('nx-dep-graph-rankdir')).eq('TB');
+      cy.get('[data-cy="lr-rankdir-button"]').should(
+        (elem) => expect(elem).to.exist
+      );
+    });
+  });
+});

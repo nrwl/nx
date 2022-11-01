@@ -8,6 +8,7 @@ import cy from 'cytoscape';
 import cytoscapeDagre from 'cytoscape-dagre';
 import popper from 'cytoscape-popper';
 import { edgeStyles, nodeStyles } from '../styles-graph';
+import { selectValueByRankDirStatic } from '../rankdir-resolver';
 import { selectValueByThemeStatic } from '../theme-resolver';
 import { GraphTooltipService } from '../tooltip-service';
 import {
@@ -18,6 +19,15 @@ import {
 } from '../util-cytoscape';
 import { GraphPerfReport, GraphRenderEvents } from './interfaces';
 import { getEnvironmentConfig } from '../hooks/use-environment-config';
+
+const cytoscapeDagreConfig = {
+  name: 'dagre',
+  nodeDimensionsIncludeLabels: true,
+  rankSep: 75,
+  rankDir: 'TB',
+  edgeSep: 50,
+  ranker: 'network-simplex',
+} as CytoscapeDagreConfig;
 
 export class GraphService {
   private traversalGraph: cy.Core;
@@ -130,13 +140,9 @@ export class GraphService {
 
       elements
         .layout({
-          name: 'dagre',
-          nodeDimensionsIncludeLabels: true,
-          rankSep: 75,
-          rankDir: 'TB',
-          edgeSep: 50,
-          ranker: 'network-simplex',
-        } as CytoscapeDagreConfig)
+          ...cytoscapeDagreConfig,
+          ...{ rankDir: selectValueByRankDirStatic('TB', 'LR') },
+        })
         .run();
 
       if (this.collapseEdges) {
@@ -675,6 +681,18 @@ export class GraphService {
       this.renderGraph.unmount();
 
       this.renderGraph.mount(container);
+    }
+  }
+
+  setRankDir(rankDir: 'TB' | 'LR') {
+    if (this.renderGraph) {
+      const elements = this.renderGraph.elements();
+      elements
+        .layout({
+          ...cytoscapeDagreConfig,
+          ...{ rankDir: rankDir },
+        } as CytoscapeDagreConfig)
+        .run();
     }
   }
 }
