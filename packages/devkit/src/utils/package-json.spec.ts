@@ -30,6 +30,7 @@ describe('addDependenciesToPackageJson', () => {
       react: 'latest',
       'react-dom': 'latest',
     });
+
     expect(installTask).toBeDefined();
   });
 

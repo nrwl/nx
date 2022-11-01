@@ -330,26 +330,33 @@ export const commandsObject = yargs
       );
     },
   })
-  .command(
-    '_migrate [packageAndVersion]',
-    false,
-    (yargs) => withMigrationOptions(yargs),
-    async (args) =>
+  .command({
+    command: '_migrate [packageAndVersion]',
+    describe: false,
+    builder: (yargs) => withMigrationOptions(yargs),
+    handler: async (args) =>
       process.exit(
         await (await import('./migrate')).migrate(process.cwd(), args)
-      )
-  )
-  .command(
-    'repair',
-    'Repair any configuration that is no longer supported by Nx.',
-    (yargs) =>
+      ),
+  })
+  .command({
+    command: 'repair',
+    describe: 'Repair any configuration that is no longer supported by Nx.',
+    builder: (yargs) =>
       linkToNxDevAndExamples(yargs, 'repair').option('verbose', {
         type: 'boolean',
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
       }),
-    async (args) => process.exit(await (await import('./repair')).repair(args))
-  )
+    handler: async (args) =>
+      process.exit(await (await import('./repair')).repair(args)),
+  })
+  .command({
+    command: 'view-logs',
+    describe: false,
+    handler: async () =>
+      process.exit(await (await import('./view-logs')).viewLogs()),
+  })
   .help()
   .version(nxVersion);
 

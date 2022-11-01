@@ -19,7 +19,6 @@
           "sitemap",
           "build-storybook"
         ],
-        "useDaemonProcess": true,
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
         "url": "https://staging.nx.app"
