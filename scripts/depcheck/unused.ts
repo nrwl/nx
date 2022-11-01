@@ -25,6 +25,7 @@ const IGNORE_MATCHES = {
   web: ['http-server'],
   webpack: [
     // These are not being picked up because @babel/parser is failing on the files that import them.
+    'css-loader',
     'style-loader',
     'ts-loader',
     'webpack-merge',
