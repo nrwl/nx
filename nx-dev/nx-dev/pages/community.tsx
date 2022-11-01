@@ -83,7 +83,7 @@ export default function Community(props: CommunityProps): JSX.Element {
               type: 'image/jpeg',
             },
           ],
-          site_name: 'NxDev',
+          siteName: 'NxDev',
           type: 'website',
         }}
       />
