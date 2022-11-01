@@ -199,7 +199,7 @@ function SubProjectList({
     }
   }
 
-  const someProjectsSelected = projects.some((project) => project.isSelected);
+  const allProjectsSelected = projects.every((project) => project.isSelected);
 
   return (
     <>
@@ -211,13 +211,13 @@ function SubProjectList({
 
           <span
             title={
-              someProjectsSelected
+              allProjectsSelected
                 ? `Hide all ${headerText} projects`
                 : `Show all ${headerText} projects`
             }
             className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-sm font-semibold uppercase tracking-wide lg:text-xs"
             data-cy={`toggle-folder-visibility-button-${headerText}`}
-            onClick={() => toggleAllProjects(someProjectsSelected)}
+            onClick={() => toggleAllProjects(allProjectsSelected)}
           >
             <EyeIcon className="h-5 w-5"></EyeIcon>
           </span>

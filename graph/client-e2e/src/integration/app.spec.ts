@@ -231,17 +231,24 @@ describe('graph-client', () => {
   });
 
   describe('toggle all projects in folder button', () => {
-    it('should uncheck all projects in folder if at least one project checked', () => {
+    it('should check all projects in folder if at least one project checked', () => {
       cy.contains('shared-product-state').scrollIntoView().should('be.visible');
       cy.get('[data-project="shared-product-state"]').should('be.visible');
       cy.get('[data-project="shared-product-state"]').click({ force: true });
       getToggleAllButtonForFolder('shared/product').click({ force: true });
-      getCheckedProjectItems().should('have.length', 0);
+      getCheckedProjectItems().should('have.length', 4);
     });
 
     it('should check all projects in folder if no projects checked yet', () => {
       getToggleAllButtonForFolder('shared').click({ force: true });
       getCheckedProjectItems().should('have.length', 5);
+    });
+
+    it('should uncheck all projects in folder if all projects checked yet', () => {
+      getToggleAllButtonForFolder('shared').click({ force: true });
+      getCheckedProjectItems().should('have.length', 5);
+      getToggleAllButtonForFolder('shared').click({ force: true });
+      getCheckedProjectItems().should('have.length', 0);
     });
   });
 
