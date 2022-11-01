@@ -183,6 +183,7 @@ export async function parseCommand(
         type: builderOptionTypes[key],
         choices: builderOptionsChoices[key],
         deprecated: builderDeprecatedOptions[key],
+        hidden: builderOptions.hiddenOptions.includes(key),
       })) || null,
   };
 }
@@ -194,6 +195,7 @@ export function generateOptionsMarkdown(command): string {
 
     command.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .filter(({ hidden }) => !hidden)
       .forEach((option) => {
         response += `\n### ${
           option.deprecated ? `~~${option.name}~~` : option.name

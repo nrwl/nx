@@ -129,6 +129,12 @@ Default: `false`
 
 Rerun the tasks even when the results are available in the cache
 
+### target
+
+Type: `string`
+
+Task to run for affected projects
+
 ### type
 
 Type: `string`

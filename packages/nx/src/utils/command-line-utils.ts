@@ -1,103 +1,10 @@
 import * as yargsParser from 'yargs-parser';
-import * as yargs from 'yargs';
+import type { Arguments } from 'yargs';
 import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { execSync } from 'child_process';
-import { serializeOverridesIntoCommandLine } from './serialize-overrides-into-command-line';
 import { ProjectGraph } from '../config/project-graph';
-
-export function names(name: string): {
-  name: string;
-  className: string;
-  propertyName: string;
-  constantName: string;
-  fileName: string;
-} {
-  return {
-    name,
-    className: toClassName(name),
-    propertyName: toPropertyName(name),
-    constantName: toConstantName(name),
-    fileName: toFileName(name),
-  };
-}
-
-/**
- * Hyphenated to UpperCamelCase
- */
-function toClassName(str: string): string {
-  return toCapitalCase(toPropertyName(str));
-}
-
-/**
- * Hyphenated to lowerCamelCase
- */
-function toPropertyName(s: string): string {
-  return s
-    .replace(/([^a-zA-Z0-9])+(.)?/g, (_, __, chr) =>
-      chr ? chr.toUpperCase() : ''
-    )
-    .replace(/[^a-zA-Z\d]/g, '')
-    .replace(/^([A-Z])/, (m) => m.toLowerCase());
-}
-
-/**
- * Hyphenated to CONSTANT_CASE
- */
-function toConstantName(s: string): string {
-  return s.replace(/([^a-zA-Z0-9])/g, '_').toUpperCase();
-}
-
-/**
- * Upper camelCase to lowercase, hyphenated
- */
-function toFileName(s: string): string {
-  return s
-    .replace(/([a-z\d])([A-Z])/g, '$1_$2')
-    .toLowerCase()
-    .replace(/[ _]/g, '-');
-}
-
-/**
- * Capitalizes the first letter of a string
- */
-function toCapitalCase(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-const runOne: string[] = [
-  'target',
-  'configuration',
-  'prod',
-  'runner',
-  'parallel',
-  'maxParallel',
-  'exclude',
-  'help',
-  'skipNxCache',
-  'outputStyle',
-  'nxBail',
-  'nxIgnoreCycles',
-  'verbose',
-  'cloud',
-  'dte',
-];
-
-const runMany: string[] = [...runOne, 'projects', 'all'];
-
-const runAffected: string[] = [
-  ...runOne,
-  'untracked',
-  'uncommitted',
-  'all',
-  'base',
-  'head',
-  'files',
-  'plain',
-  'select',
-  'type',
-];
 
 export interface RawNxArgs extends NxArgs {
   prod?: boolean;
@@ -128,78 +35,39 @@ export interface NxArgs {
   type?: string;
 }
 
-const ignoreArgs = ['$0', '_'];
-
 export function splitArgsIntoNxArgsAndOverrides(
   args: { [k: string]: any },
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
   options = { printWarnings: true },
   nxJson: NxJsonConfiguration
-): { nxArgs: NxArgs; overrides: yargs.Arguments } {
-  if (!args.__overrides__ && args._) {
+): { nxArgs: NxArgs; overrides: Arguments } {
+  if (!args.__overrides_unparsed__ && args._) {
     // required for backwards compatibility
-    args.__overrides__ = args._;
+    args.__overrides_unparsed__ = args._;
+    delete args._;
+  }
+  // This handles the way Lerna passes in overrides
+  if (!args.__overrides_unparsed__ && args.__overrides__) {
+    // required for backwards compatibility
+    args.__overrides_unparsed__ = args.__overrides__;
     delete args._;
   }
 
-  const nxSpecific =
-    mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
-
-  let explicitOverrides;
-  if (args.__overrides__) {
-    explicitOverrides = yargsParser(args.__overrides__ as string[], {
-      configuration: {
-        'camel-case-expansion': false,
-        'dot-notation': false,
-      },
-    });
-    if (!explicitOverrides._ || explicitOverrides._.length === 0) {
-      delete explicitOverrides._;
-    }
-  }
-  const overridesFromMainArgs = {} as any;
-  if (
-    args['__positional_overrides__'] &&
-    args['__positional_overrides__'].length > 0
-  ) {
-    overridesFromMainArgs['_'] = args['__positional_overrides__'];
-  }
-  const nxArgs: RawNxArgs = {};
-  Object.entries(args).forEach(([key, value]) => {
-    const camelCased = names(key).propertyName;
-    if (nxSpecific.includes(camelCased) || camelCased.startsWith('nx')) {
-      if (value !== undefined) nxArgs[camelCased] = value;
-    } else if (
-      !ignoreArgs.includes(key) &&
-      key !== '__positional_overrides__' &&
-      key !== '__overrides__'
-    ) {
-      overridesFromMainArgs[key] = value;
-    }
+  const nxArgs: RawNxArgs = args;
+  let overrides = yargsParser(args.__overrides_unparsed__ as string[], {
+    configuration: {
+      'camel-case-expansion': false,
+      'dot-notation': true,
+    },
   });
 
-  let overrides;
-  if (explicitOverrides) {
-    overrides = explicitOverrides;
-    overrides['__overrides_unparsed__'] = args.__overrides__;
-    if (
-      Object.keys(overridesFromMainArgs).length > 0 &&
-      options.printWarnings
-    ) {
-      const s = Object.keys(overridesFromMainArgs).join(', ');
-      output.warn({
-        title: `Nx didn't recognize the following args: ${s}`,
-        bodyLines: [
-          "When using '--' all executor args have to be defined after '--'.",
-        ],
-      });
-    }
-  } else {
-    overrides = overridesFromMainArgs;
-    overrides['__overrides_unparsed__'] = serializeOverridesIntoCommandLine(
-      overridesFromMainArgs
-    );
+  if (!overrides._ || overrides._.length === 0) {
+    delete overrides._;
   }
+
+  overrides.__overrides_unparsed__ = args.__overrides_unparsed__;
+  delete (nxArgs as any).$0;
+  delete (nxArgs as any).__overrides_unparsed__;
 
   if (mode === 'run-many') {
     if (!nxArgs.projects) {
@@ -230,21 +98,6 @@ export function splitArgsIntoNxArgsAndOverrides(
           )}`,
         ],
       });
-    }
-
-    if (
-      !nxArgs.files &&
-      !nxArgs.uncommitted &&
-      !nxArgs.untracked &&
-      !nxArgs.base &&
-      !nxArgs.head &&
-      !nxArgs.all &&
-      overridesFromMainArgs._ &&
-      overridesFromMainArgs._.length >= 2
-    ) {
-      throw new Error(
-        `Nx no longer supports using positional arguments for base and head. Please use --base and --head instead.`
-      );
     }
 
     // Allow setting base and head via environment variables (lower priority then direct command arguments)
