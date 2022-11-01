@@ -362,4 +362,39 @@ describe('Angular Projects', () => {
     // ASSERT
     expect(buildOutput).toContain('Successfully ran target build');
   }, 300000);
+
+  it('Custom Webpack Config for SSR - should serve the app correctly', async () => {
+    // ARRANGE
+    const ssrApp = uniq('app');
+
+    runCLI(`generate @nrwl/angular:app ${ssrApp} --no-interactive`);
+    runCLI(`generate @nrwl/angular:setup-ssr ${ssrApp} --no-interactive`);
+
+    updateProjectConfig(ssrApp, (project) => {
+      project.targets.server.executor = '@nrwl/angular:webpack-server';
+      return project;
+    });
+
+    // ACT
+    let process: ChildProcess;
+
+    try {
+      process = await runCommandUntil(`serve-ssr ${ssrApp}`, (output) => {
+        return output.includes(
+          `Angular Universal Live Development Server is listening on http://localhost:4200`
+        );
+      });
+    } catch (err) {
+      console.error(err);
+    }
+
+    // port and process cleanup
+    try {
+      if (process && process.pid) {
+        await promisifiedTreeKill(process.pid, 'SIGKILL');
+      }
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  }, 300000);
 });
