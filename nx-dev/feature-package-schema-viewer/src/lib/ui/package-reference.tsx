@@ -78,7 +78,7 @@ function GuideListItem({ guide }: { guide: MenuItem }) {
   return (
     <li
       key={guide.name}
-      className="focus-within:ring-blue-nx-base relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+      className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60"
     >
       <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
         <DocumentIcon className="h-5 w-5" role="img" />
@@ -109,7 +109,7 @@ function SchemaListItem({
   return (
     <li
       key={schema.name}
-      className="focus-within:ring-blue-nx-base relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+      className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60"
     >
       <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
         {type === 'executors' ? (
@@ -151,7 +151,7 @@ function EmptyList({
   type: 'executor' | 'generator' | 'guides';
 }): JSX.Element {
   return (
-    <li className="focus-within:ring-blue-nx-base relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-offset-2 hover:bg-slate-50 dark:hover:bg-slate-800/60">
+    <li className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60">
       <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
         <InformationCircleIcon
           className="h-5 w-5 flex-shrink-0 rounded-md border-slate-100 bg-slate-50 dark:bg-slate-800 dark:bg-slate-700"
