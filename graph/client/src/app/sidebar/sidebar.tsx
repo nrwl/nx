@@ -135,7 +135,9 @@ export function Sidebar(): JSX.Element {
               </svg>
 
               <div className="align-right">
-                <RankDirPanel />
+                <ExperimentalFeature>
+                  <RankDirPanel />
+                </ExperimentalFeature>
                 <ThemePanel />
               </div>
             </div>
