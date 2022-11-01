@@ -6,18 +6,15 @@ import {
 import { executeBrowserBuilder } from '@angular-devkit/build-angular';
 import { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
 import { JsonObject } from '@angular-devkit/core';
-import { joinPathFragments } from '@nrwl/devkit';
-import { readCachedProjectGraph } from '@nrwl/devkit';
+import { joinPathFragments, readCachedProjectGraph } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { Observable, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { merge } from 'webpack-merge';
 import { resolveCustomWebpackConfig } from '../utilities/webpack';
 
@@ -111,25 +108,7 @@ export function executeWebpackBrowserBuilder(
     process.env.NX_TSCONFIG_PATH = options.tsConfig;
   }
 
-  return of(
-    !options.buildLibsFromSource
-      ? checkDependentProjectsHaveBeenBuilt(
-          context.workspaceRoot,
-          context.target.project,
-          context.target.target,
-          dependencies
-        )
-      : true
-  ).pipe(
-    switchMap((result) => {
-      if (result) {
-        return buildApp(options, context);
-      } else {
-        // just pass on the result
-        return of({ success: false });
-      }
-    })
-  );
+  return buildApp(options, context);
 }
 
 export default createBuilder<JsonObject & BrowserBuilderSchema>(
