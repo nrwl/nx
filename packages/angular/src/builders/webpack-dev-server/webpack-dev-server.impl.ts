@@ -4,24 +4,16 @@ import {
   executeDevServerBuilder,
 } from '@angular-devkit/build-angular';
 import { JsonObject } from '@angular-devkit/core';
-import {
-  joinPathFragments,
-  parseTargetString,
-  readCachedProjectGraph,
-} from '@nrwl/devkit';
+import { joinPathFragments, parseTargetString } from '@nrwl/devkit';
 import { WebpackNxBuildCoordinationPlugin } from '@nrwl/webpack/src/plugins/webpack-nx-build-coordination-plugin';
-import {
-  calculateProjectDependencies,
-  createTmpTsConfig,
-  DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { existsSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
-import { merge } from 'webpack-merge';
-import { resolveCustomWebpackConfig } from '../utilities/webpack';
+import { mergeCustomWebpackConfig } from '../utilities/webpack';
 import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 
 export function executeWebpackDevServerBuilder(
   rawOptions: Schema,
@@ -76,21 +68,9 @@ export function executeWebpackDevServerBuilder(
   if (!buildLibsFromSource) {
     const buildTargetTsConfigPath =
       buildTargetConfiguration?.tsConfig ?? buildTarget.options.tsConfig;
-    const result = calculateProjectDependencies(
-      readCachedProjectGraph(),
-      context.workspaceRoot,
-      context.target.project,
-      parsedBrowserTarget.target,
-      context.target.configuration
-    );
-    dependencies = result.dependencies;
-    const updatedTsConfig = createTmpTsConfig(
-      joinPathFragments(context.workspaceRoot, buildTargetTsConfigPath),
-      context.workspaceRoot,
-      result.target.data.root,
-      dependencies
-    );
-    process.env.NX_TSCONFIG_PATH = updatedTsConfig;
+    const { tsConfigPath, dependencies: foundDependencies } =
+      createTmpTsConfigForBuildableLibs(buildTargetTsConfigPath, context);
+    dependencies = foundDependencies;
 
     // We can't just pass the tsconfig path in memory to the angular builder
     // function because we can't pass the build target options to it, the build
@@ -101,7 +81,7 @@ export function executeWebpackDevServerBuilder(
     const originalGetTargetOptions = context.getTargetOptions;
     context.getTargetOptions = async (target) => {
       const options = await originalGetTargetOptions(target);
-      options.tsConfig = updatedTsConfig;
+      options.tsConfig = tsConfigPath;
       return options;
     };
   }
@@ -131,26 +111,12 @@ export function executeWebpackDevServerBuilder(
         return baseWebpackConfig;
       }
 
-      const customWebpackConfiguration = resolveCustomWebpackConfig(
+      return mergeCustomWebpackConfig(
+        baseWebpackConfig,
         pathToWebpackConfig,
-        buildTarget.options.tsConfig
+        buildTargetConfiguration,
+        context.target
       );
-      // The extra Webpack configuration file can also export a Promise, for instance:
-      // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
-      // then await will just resolve that object.
-      const config = await customWebpackConfiguration;
-
-      // The extra Webpack configuration file can export a synchronous or asynchronous function,
-      // for instance: `module.exports = async config => { ... }`.
-      if (typeof config === 'function') {
-        return config(
-          baseWebpackConfig,
-          buildTargetConfiguration,
-          context.target
-        );
-      }
-
-      return merge(baseWebpackConfig, config);
     },
   });
 }

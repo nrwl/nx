@@ -6,17 +6,11 @@ import {
 import { executeBrowserBuilder } from '@angular-devkit/build-angular';
 import { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
 import { JsonObject } from '@angular-devkit/core';
-import { joinPathFragments, readCachedProjectGraph } from '@nrwl/devkit';
-import {
-  calculateProjectDependencies,
-  createTmpTsConfig,
-  DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { joinPathFragments } from '@nrwl/devkit';
 import { existsSync } from 'fs';
-import { join } from 'path';
 import { Observable } from 'rxjs';
-import { merge } from 'webpack-merge';
-import { resolveCustomWebpackConfig } from '../utilities/webpack';
+import { mergeCustomWebpackConfig } from '../utilities/webpack';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 
 export type BrowserBuilderSchema = Schema & {
   customWebpackConfig?: {
@@ -61,24 +55,13 @@ function buildAppWithCustomWebpackConfiguration(
   pathToWebpackConfig: string
 ) {
   return executeBrowserBuilder(options, context as any, {
-    webpackConfiguration: async (baseWebpackConfig) => {
-      const customWebpackConfiguration = resolveCustomWebpackConfig(
+    webpackConfiguration: (baseWebpackConfig) =>
+      mergeCustomWebpackConfig(
+        baseWebpackConfig,
         pathToWebpackConfig,
-        options.tsConfig
-      );
-      // The extra Webpack configuration file can also export a Promise, for instance:
-      // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
-      // then await will just resolve that object.
-      const config = await customWebpackConfiguration;
-
-      // The extra Webpack configuration file can export a synchronous or asynchronous function,
-      // for instance: `module.exports = async config => { ... }`.
-      if (typeof config === 'function') {
-        return config(baseWebpackConfig, options, context.target);
-      } else {
-        return merge(baseWebpackConfig, config);
-      }
-    },
+        options,
+        context.target
+      ),
   });
 }
 
@@ -87,25 +70,13 @@ export function executeWebpackBrowserBuilder(
   context: BuilderContext
 ): Observable<BuilderOutput> {
   options.buildLibsFromSource ??= true;
-  let dependencies: DependentBuildableProjectNode[];
 
   if (!options.buildLibsFromSource) {
-    const result = calculateProjectDependencies(
-      readCachedProjectGraph(),
-      context.workspaceRoot,
-      context.target.project,
-      context.target.target,
-      context.target.configuration
+    const { tsConfigPath } = createTmpTsConfigForBuildableLibs(
+      options.tsConfig,
+      context
     );
-    dependencies = result.dependencies;
-
-    options.tsConfig = createTmpTsConfig(
-      join(context.workspaceRoot, options.tsConfig),
-      context.workspaceRoot,
-      result.target.data.root,
-      dependencies
-    );
-    process.env.NX_TSCONFIG_PATH = options.tsConfig;
+    options.tsConfig = tsConfigPath;
   }
 
   return buildApp(options, context);
