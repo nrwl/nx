@@ -1,7 +1,6 @@
 import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 import { useEffect } from 'react';
@@ -21,12 +20,6 @@ export default function CustomApp({
   }, [router]);
   return (
     <>
-      <Head>
-        <meta name="msapplication-TileColor" content="#da532c" />
-        <meta name="theme-color" content="#ffffff" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Nx: Smart, Fast and Extensible Build System</title>
-      </Head>
       <DefaultSeo
         title="Nx: Smart, Fast and Extensible Build System"
         description="Next generation build system with first class monorepo support and powerful integrations."
