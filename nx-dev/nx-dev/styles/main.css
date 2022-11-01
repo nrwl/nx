@@ -91,45 +91,6 @@ iframe[src*='youtube'] {
   font-weight: 600;
 }
 
-/*
-  Conf
- */
-.date-container-l,
-.date-container-r {
-  position: relative;
-}
-.date-container-l .bg-blue-nx-dark:before {
-  background: hsla(214, 61%, 11%, 1);
-  content: ' ';
-  height: 100%;
-  left: -100%;
-  position: absolute;
-  top: 0;
-  width: 100%;
-}
-.date-container-r .bg-blue-nx-dark:after {
-  background: hsla(214, 61%, 11%, 1);
-  content: ' ';
-  height: 100%;
-  right: -100%;
-  position: absolute;
-  top: 0;
-  width: 100%;
-}
-.workshop-border-r {
-  position: relative;
-}
-.workshop-border-r:after {
-  border-bottom: 1px solid rgb(75, 85, 99);
-  border-top: 1px solid rgb(75, 85, 99);
-  content: ' ';
-  height: 100%;
-  right: -100%;
-  position: absolute;
-  top: 0;
-  width: 100%;
-}
-
 /**
  * Only used for animated background on really big definition
  */
