@@ -67,6 +67,10 @@
       "type": "boolean",
       "description": "Redirect 404 errors to index.html (useful for SPA's)",
       "default": false
+    },
+    "staticFilePath": {
+      "type": "string",
+      "description": "Path where the build artifacts are located. If not provided then it will be infered from the buildTarget executor options as outputPath"
     }
   },
   "additionalProperties": false,
