@@ -1,35 +1,38 @@
 import dynamic from 'next/dynamic';
-import { ReactNode } from 'react';
+import { JSXElementConstructor, ReactElement } from 'react';
 import { useTheme } from '@nrwl/nx-dev/ui-theme';
-
-const wrapperClassNames =
-  'w-full place-content-center rounded-md my-6 ring-1 ring-slate-100 dark:ring-slate-700';
 
 export function Graph({
   height,
   children,
 }: {
   height: string;
-  children: ReactNode;
+  children: ReactElement;
 }): JSX.Element {
   const [theme] = useTheme();
 
-  if (!children || !children.hasOwnProperty('props')) {
+  if (
+    !children ||
+    !children.hasOwnProperty('props') ||
+    (children.type as JSXElementConstructor<any>).name !== 'Fence'
+  )
     return (
-      <div className={`${wrapperClassNames} p-4`}>
-        <p>No JSON provided for graph</p>
+      <div className="no-prose my-6 block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
+        <p className="mb-4">
+          No JSON provided for graph, use JSON code fence to embed data for the
+          graph.
+        </p>
       </div>
     );
-  }
 
   let parsedProps;
   try {
     parsedProps = JSON.parse(children?.props.children as any);
   } catch {
     return (
-      <div className={`${wrapperClassNames} p-4`}>
-        <p>Could not parse JSON for graph:</p>
-        <pre>{children?.props.children as any}</pre>
+      <div className="not-prose my-6 block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
+        <p className="mb-4">Could not parse JSON for graph:</p>
+        <pre className="p-4 text-sm">{children?.props.children as any}</pre>
       </div>
     );
   }
@@ -39,15 +42,23 @@ export function Graph({
     {
       ssr: false,
       loading: () => (
-        <div className={wrapperClassNames} style={{ height }}>
-          Loading...
+        <div
+          style={{ height }}
+          className="flex w-full items-center justify-center"
+        >
+          <div
+            className="spinner-border inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-100 border-r-slate-400 dark:border-slate-700 dark:border-r-slate-500"
+            role="status"
+          >
+            <span className="sr-only">Loading...</span>
+          </div>
         </div>
       ),
     }
   );
 
   return (
-    <div className={wrapperClassNames}>
+    <div className="my-6 w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-100 dark:ring-slate-700">
       <NxGraphViz
         height={height}
         groupByFolder={false}
@@ -56,7 +67,7 @@ export function Graph({
         workspaceLayout={parsedProps.workspaceLayout}
         dependencies={parsedProps.dependencies}
         affectedProjectIds={parsedProps.affectedProjectIds}
-      ></NxGraphViz>
+      />
     </div>
   );
 }
