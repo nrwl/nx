@@ -1,4 +1,3 @@
-/* This example requires Tailwind CSS v2.0+ */
 import { Listbox, Transition } from '@headlessui/react';
 import {
   ComputerDesktopIcon,
