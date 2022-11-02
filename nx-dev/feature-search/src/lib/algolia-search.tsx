@@ -20,11 +20,7 @@ function Hit({
   hit: InternalDocSearchHit | StoredDocSearchHit;
   children: ReactNode;
 }): JSX.Element {
-  return (
-    <Link href={hit.url}>
-      <a>{children}</a>
-    </Link>
-  );
+  return <Link href={hit.url}>{children}</Link>;
 }
 
 export function AlgoliaSearch({

@@ -25,25 +25,26 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             No need to browse the docs to find the right commands to run.{' '}
             <span className="font-medium">Stay in the flow!</span> Augment your
             editor with Nx Console, a dedicated extension available for{' '}
-            <Link href="/core-features/integrate-with-editors">
-              <a
-                title="Install VSCode's native extension for Nx"
-                className="font-medium text-blue-500 dark:text-sky-500"
-              >
-                VSCode
-              </a>
+            <Link
+              href="/core-features/integrate-with-editors"
+              title="Install VSCode's native extension for Nx"
+              className="font-medium text-blue-500 dark:text-sky-500"
+            >
+              VSCode
             </Link>{' '}
             ,{' '}
-            <Link href="/core-features/integrate-with-editors#neovim">
-              <a className="font-medium text-blue-500 dark:text-sky-500">
-                Neovim
-              </a>
+            <Link
+              href="/core-features/integrate-with-editors#neovim"
+              className="font-medium text-blue-500 dark:text-sky-500"
+            >
+              Neovim
             </Link>{' '}
             and{' '}
-            <Link href="/core-features/integrate-with-editors#webstorm">
-              <a className="font-medium text-blue-500 dark:text-sky-500">
-                Webstorm
-              </a>
+            <Link
+              href="/core-features/integrate-with-editors#webstorm"
+              className="font-medium text-blue-500 dark:text-sky-500"
+            >
+              Webstorm
             </Link>
             . Generating a new library, running e2e tests, building your app -
             everything just a click away.
@@ -56,15 +57,14 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             </span>
             . Most CI interfaces are a struggle to work with and they are not
             made for monorepos. The{' '}
-            <Link href="https://nx.app/?utm_source=nx.dev">
-              <a
-                title="Nx Cloud: Distributed Task execution & Caching"
-                className="font-medium text-blue-500 dark:text-sky-500"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Nx Cloud
-              </a>
+            <Link
+              href="https://nx.app/?utm_source=nx.dev"
+              title="Nx Cloud: Distributed Task execution & Caching"
+              className="font-medium text-blue-500 dark:text-sky-500"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Nx Cloud
             </Link>{' '}
             integration takes care of that, presenting what matters most in an
             awesome visual way.

@@ -114,13 +114,12 @@ export function Content({
           )}
         </div>
         <div className="relative z-0 inline-flex flex-shrink-0 rounded-md shadow-sm">
-          <Link href={schemaViewModel.packageUrl}>
-            <a
-              title="See package information"
-              className="relative inline-flex items-center rounded-l-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
-            >
-              {schemaViewModel.packageName}
-            </a>
+          <Link
+            href={schemaViewModel.packageUrl}
+            title="See package information"
+            className="relative inline-flex items-center rounded-l-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
+          >
+            {schemaViewModel.packageName}
           </Link>
           <a
             href={schemaViewModel.schemaGithubUrl}

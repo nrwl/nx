@@ -85,11 +85,9 @@ function GuideListItem({ guide }: { guide: MenuItem }) {
       </div>
       <div className="ml-3 py-2">
         <p className="text-sm font-bold">
-          <Link href={guide.path as string}>
-            <a className="focus:outline-none">
-              <span className="absolute inset-0" aria-hidden="true"></span>
-              {guide.name}
-            </a>
+          <Link href={guide.path as string} className="focus:outline-none">
+            <span className="absolute inset-0" aria-hidden="true"></span>
+            {guide.name}
           </Link>
         </p>
       </div>
@@ -120,11 +118,12 @@ function SchemaListItem({
       </div>
       <div className="ml-3 py-2">
         <p className="text-sm font-bold">
-          <Link href={`/packages/${packageName}/${type}/${schema.name}`}>
-            <a className="focus:outline-none">
-              <span className="absolute inset-0" aria-hidden="true"></span>
-              {schema.name}
-            </a>
+          <Link
+            href={`/packages/${packageName}/${type}/${schema.name}`}
+            className="focus:outline-none"
+          >
+            <span className="absolute inset-0" aria-hidden="true"></span>
+            {schema.name}
           </Link>
 
           {schema.hidden && (
@@ -160,11 +159,14 @@ function EmptyList({
       </div>
       <div className="ml-3 py-2">
         <p className="text-sm font-medium">
-          <Link href="https://github.com/nrwl/nx/discussions">
-            <a className="focus:outline-none" rel="noreferrer" target="_blank">
-              <span className="absolute inset-0" aria-hidden="true"></span>
-              No {type} available for this package yet!
-            </a>
+          <Link
+            href="https://github.com/nrwl/nx/discussions"
+            className="focus:outline-none"
+            rel="noreferrer"
+            target="_blank"
+          >
+            <span className="absolute inset-0" aria-hidden="true"></span>No
+            {type}available for this package yet!
           </Link>
         </p>
         <div className="prose prose-slate dark:prose-invert prose-sm">

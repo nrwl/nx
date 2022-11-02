@@ -95,12 +95,10 @@ export function VscodeIntegrationTab(): JSX.Element {
             <div className="mt-3 sm:mt-0 sm:ml-3">
               <h3 className="text-sm font-medium">{feature.name}</h3>
               <Link href={feature.link}>
-                <a>
-                  <span className="absolute inset-0" aria-hidden="true" />
-                  <p className="mt-2 text-sm text-gray-500">
-                    {feature.description}
-                  </p>
-                </a>
+                <span className="absolute inset-0" aria-hidden="true" />
+                <p className="mt-2 text-sm text-gray-500">
+                  {feature.description}
+                </p>
               </Link>
             </div>
           </div>

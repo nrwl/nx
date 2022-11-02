@@ -31,18 +31,27 @@ export function CreateNxPlugin(): JSX.Element {
 
         <ul className="mx-4 mt-8 list-disc">
           <li className="mt-2">
-            <Link href="/packages/nx-plugin#generating-a-plugin">
-              <a className="hover:underline">Create your Nx Plugin</a>
+            <Link
+              href="/packages/nx-plugin#generating-a-plugin"
+              className="hover:underline"
+            >
+              Create your Nx Plugin
             </Link>
           </li>
           <li className="mt-2">
-            <Link href="/packages/nx-plugin#testing-your-plugin">
-              <a className="hover:underline">Test your plugin</a>
+            <Link
+              href="/packages/nx-plugin#testing-your-plugin"
+              className="hover:underline"
+            >
+              Test your plugin
             </Link>
           </li>
           <li className="mt-2">
-            <Link href="/packages/nx-plugin#generating-a-plugin">
-              <a className="hover:underline">Publish your Nx Plugin</a>
+            <Link
+              href="/packages/nx-plugin#generating-a-plugin"
+              className="hover:underline"
+            >
+              Publish your Nx Plugin
             </Link>
           </li>
         </ul>
@@ -61,17 +70,18 @@ export function CreateNxPlugin(): JSX.Element {
             <div className="relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-800">
               <div className="flex w-full px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <Link href="/packages/nx-plugin#generating-a-plugin">
-                    <a className="focus:outline-none">
-                      <span className="absolute inset-0" aria-hidden="true" />
-                      <p className="text-md mb-1 font-bold text-slate-600 dark:text-slate-300">
-                        Create an Nx Plugin
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Follow this guide to generate an Nx plugin to fit your
-                        needs
-                      </p>
-                    </a>
+                  <Link
+                    href="/packages/nx-plugin#generating-a-plugin"
+                    className="focus:outline-none"
+                  >
+                    <span className="absolute inset-0" aria-hidden="true" />
+                    <p className="text-md mb-1 font-bold text-slate-600 dark:text-slate-300">
+                      Create an Nx Plugin
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Follow this guide to generate an Nx plugin to fit your
+                      needs
+                    </p>
                   </Link>
                 </div>
                 <div className="flex-shrink-0">
@@ -88,17 +98,17 @@ export function CreateNxPlugin(): JSX.Element {
             <div className="relative flex flex flex-col items-center items-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-800">
               <div className="flex w-full px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <Link href="/packages/nx-plugin#publishing-your-nx-plugin">
-                    <a className="focus:outline-none">
-                      <span className="absolute inset-0" aria-hidden="true" />
-                      <p className="text-md mb-1 font-bold text-slate-600 dark:text-slate-300">
-                        Publish an Nx Plugin
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Follow this guide to publish your new and shiny Nx
-                        plugin
-                      </p>
-                    </a>
+                  <Link
+                    href="/packages/nx-plugin#publishing-your-nx-plugin"
+                    className="focus:outline-none"
+                  >
+                    <span className="absolute inset-0" aria-hidden="true" />
+                    <p className="text-md mb-1 font-bold text-slate-600 dark:text-slate-300">
+                      Publish an Nx Plugin
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Follow this guide to publish your new and shiny Nx plugin
+                    </p>
                   </Link>
                 </div>
                 <div className="flex-shrink-0">
