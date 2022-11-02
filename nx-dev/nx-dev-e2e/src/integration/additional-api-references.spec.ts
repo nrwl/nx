@@ -24,7 +24,7 @@ describe('nx-dev: Additional API references section', () => {
     { title: 'list', path: '/cli/list' },
     { title: 'workspace-lint', path: '/cli/workspace-lint' },
     { title: 'workspace-generator', path: '/cli/workspace-generator' },
-    { title: 'connect-to-nx-cloud', path: '/cli/connect-to-nx-cloud' },
+    { title: 'connect', path: '/cli/connect-to-nx-cloud' },
     { title: 'reset', path: '/cli/reset' },
     { title: 'Storybook', path: '/storybook/overview-react' },
     { title: 'Storybook', path: '/storybook/overview-angular' },

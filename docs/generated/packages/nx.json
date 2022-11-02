@@ -133,8 +133,8 @@
       "name": "connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
       "tags": ["cache-task-results", "distribute-task-execution"],
-      "file": "generated/cli/connect-to-nx-cloud",
-      "content": "---\ntitle: 'connect-to-nx-cloud - CLI command'\ndescription: 'Makes sure the workspace is connected to Nx Cloud'\n---\n\n# connect-to-nx-cloud\n\nMakes sure the workspace is connected to Nx Cloud\n\n## Usage\n\n```terminal\nnx connect-to-nx-cloud\n```\n\nInstall `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.\n\n## Options\n\n### help\n\nType: `boolean`\n\nShow help\n\n### version\n\nType: `boolean`\n\nShow version number\n"
+      "file": "generated/cli/connect",
+      "content": "---\ntitle: 'connect - CLI command'\ndescription: 'Connect workspace to Nx Cloud'\n---\n\n# connect\n\nConnect workspace to Nx Cloud\n\n## Usage\n\n```terminal\nnx connect\n```\n\nInstall `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.\n\n## Options\n\n### help\n\nType: `boolean`\n\nShow help\n\n### version\n\nType: `boolean`\n\nShow version number\n"
     },
     {
       "name": "reset",

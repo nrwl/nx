@@ -1,16 +1,16 @@
 ---
-title: 'connect-to-nx-cloud - CLI command'
-description: 'Makes sure the workspace is connected to Nx Cloud'
+title: 'connect - CLI command'
+description: 'Connect workspace to Nx Cloud'
 ---
 
-# connect-to-nx-cloud
+# connect
 
-Makes sure the workspace is connected to Nx Cloud
+Connect workspace to Nx Cloud
 
 ## Usage
 
 ```terminal
-nx connect-to-nx-cloud
+nx connect
 ```
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
