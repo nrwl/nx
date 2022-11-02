@@ -75,15 +75,6 @@ iframe[src*='youtube'] {
 }
 
 /*
-  Code embed
- */
-.prose pre {
-  background: inherit !important;
-  color: inherit !important;
-  border: 1px solid #e1e4e8;
-}
-
-/*
   Headers
  */
 .prose h5,
