@@ -191,9 +191,7 @@ export const commandsObject = yargs
       'Prints information about the projects and targets affected by changes',
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(
-          withTargetOption(withPrintAffectedOptions(yargs), false)
-        ),
+        withAffectedOptions(withPrintAffectedOptions(yargs)),
         'print-affected'
       ),
     handler: async (args) => {
@@ -408,9 +406,9 @@ function withPlainOption(yargs: yargs.Argv): yargs.Argv {
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .parserConfiguration({
-      'strip-dashed': true,
-      'unknown-options-as-args': true,
-      'populate--': true,
+      'camel-case-expansion': false,
+      // allow parsing --env.SOME_ARG for cypress cli env args
+      'dot-notation': true,
     })
     .option('files', {
       describe:
@@ -475,12 +473,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
         'This is the configuration to use when performing tasks on projects',
       type: 'string',
     })
-    .option('prod', {
-      describe: 'Use the production configuration',
-      type: 'boolean',
-      default: false,
-      hidden: true,
-    })
     .option('verbose', {
       type: 'boolean',
       describe:
@@ -502,32 +494,15 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
       uncommitted: ['files', 'untracked', 'base', 'head', 'all'],
       all: ['files', 'untracked', 'uncommitted', 'base', 'head'],
-    })
-    .check((nxArgs) => {
-      if (
-        !nxArgs.files &&
-        !nxArgs.uncommitted &&
-        !nxArgs.untracked &&
-        !nxArgs.base &&
-        !nxArgs.head &&
-        !nxArgs.all &&
-        nxArgs._ &&
-        nxArgs._.length >= 3
-      ) {
-        throw new Error(
-          `Nx no longer supports using positional arguments for base and head. Please use --base and --head instead.`
-        );
-      }
-      return true;
     });
 }
 
 function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .parserConfiguration({
-      'strip-dashed': true,
-      'unknown-options-as-args': true,
-      'populate--': true,
+      'camel-case-expansion': false,
+      // allow parsing --env.SOME_ARG for cypress cli env args
+      'dot-notation': true,
     })
     .option('projects', {
       describe: 'Projects to run (comma delimited)',
@@ -537,12 +512,6 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       describe: '[deprecated] Run the target on all projects in the workspace',
       type: 'boolean',
       default: true,
-    })
-    .option('prod', {
-      describe: 'Use the production configuration',
-      type: 'boolean',
-      default: false,
-      hidden: true,
     })
     .options('runner', {
       describe: 'Override the tasks runner in `nx.json`',
@@ -627,12 +596,16 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withOverrides(args: any): any {
-  args.__overrides_unparsed__ = (args['--'] ?? args._.slice(1)).map((v) =>
-    v.toString()
-  );
-  delete args['--'];
-  delete args._;
-  return args;
+  const split = process.argv.indexOf('--');
+  if (split > -1) {
+    const overrides = process.argv.slice(split + 1);
+    delete args._;
+    return { ...args, __overrides__: overrides };
+  } else {
+    args['__positional_overrides__'] = args._.slice(1);
+    delete args._;
+    return args;
+  }
 }
 
 function withParallelOption(yargs: yargs.Argv): yargs.Argv {
@@ -650,12 +623,12 @@ function withOutputStyleOption(yargs: yargs.Argv): yargs.Argv {
   });
 }
 
-function withTargetOption(yargs: yargs.Argv, demandOption = true): yargs.Argv {
+function withTargetOption(yargs: yargs.Argv): yargs.Argv {
   return yargs.option('target', {
     describe: 'Task to run for affected projects',
     type: 'string',
     requiresArg: true,
-    demandOption,
+    demandOption: true,
     global: false,
   });
 }
@@ -714,11 +687,11 @@ function withRunOneOptions(yargs: yargs.Argv) {
   const executorShouldShowHelp = !(
     process.argv[2] === 'run' && process.argv[3] === '--help'
   );
-  const res = withOutputStyleOption(yargs)
+  const res = yargs
     .parserConfiguration({
-      'strip-dashed': true,
-      'unknown-options-as-args': true,
-      'populate--': true,
+      'camel-case-expansion': false,
+      // allow parsing --env.SOME_ARG for cypress cli env args
+      'dot-notation': true,
     })
     .option('prod', {
       describe: 'Use the production configuration',
