@@ -1,4 +1,4 @@
-Linter can be configured in multiple ways. The basic way is to provide only `lintFilePatterns`, which is mandatory property. This tells us where to look for files to lint.
+Linter can be configured in multiple ways. The basic way is to provide only `lintFilePatterns`, which is a mandatory property. This tells us where to look for files to lint.
 
 `project.json`:
 
@@ -16,7 +16,7 @@ Linter can be configured in multiple ways. The basic way is to provide only `lin
 {% tabs %}
 {% tab label="Fixing linter issues" %}
 
-Linter provides automated way of fixing known issues. To ensure that those changes are properly cached, we need to add also `outputs`. Skipping `outputs` would produce invalid cache record. Both of these properties are set by default when scaffolding the new project.
+Linter provides an automated way of fixing known issues. To ensure that those changes are properly cached, we need to add an `outputs` property to the `lint` target. Omitting the `outputs` property would produce an invalid cache record. Both of these properties are set by default when scaffolding a new project.
 
 ```json
 "lint": {
@@ -28,13 +28,13 @@ Linter provides automated way of fixing known issues. To ensure that those chang
 }
 ```
 
-We can now run the command with `--fix` flag:
+With these settings, we can run the command with a `--fix` flag:
 
 ```bash
 nx run frontend:lint --fix
 ```
 
-We can also set this command via project configuration to make a more permanent and not opt-in:
+We can also set this flag via project configuration to always fix files when running lint:
 
 ```json
 "lint": {
@@ -50,7 +50,7 @@ We can also set this command via project configuration to make a more permanent 
 {% /tab %}
 {% tab label="Custom output format" %}
 
-ESLint executor uses `stylish` output format by default. You can change this by specifying `format` property:
+ESLint executor uses the `stylish` output format by default. You can change this by specifying the `format` property:
 
 ```json
 "lint": {
@@ -88,7 +88,7 @@ We can also set this via project configuration as a default option.
 {% /tab %}
 {% tab label="ESLint config file" %}
 
-`ESLint` provides several ways of specifying the configuration. The default one is using `.eslintrc.json` but you can override it by setting `eslintConfig` flag:
+`ESLint` provides several ways of specifying the configuration. The default one is using `.eslintrc.json` but you can override it by setting the `eslintConfig` flag:
 
 ```json
 "lint": {
