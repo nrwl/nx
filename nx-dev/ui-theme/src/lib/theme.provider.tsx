@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useSyncExternalStore,
-} from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 export type Theme = 'light' | 'dark' | 'system';
 
