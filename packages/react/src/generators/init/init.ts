@@ -82,8 +82,10 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
 
   const initTask = await webInitGenerator(host, schema);
   tasks.push(initTask);
-  const installTask = updateDependencies(host);
-  tasks.push(installTask);
+  if (!schema.skipPackageJson) {
+    const installTask = updateDependencies(host);
+    tasks.push(installTask);
+  }
 
   return runTasksInSerial(...tasks);
 }

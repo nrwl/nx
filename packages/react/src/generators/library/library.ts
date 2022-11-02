@@ -120,15 +120,17 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     updateLibPackageNpmScope(host, options);
   }
 
-  const installTask = await addDependenciesToPackageJson(
-    host,
-    {
-      react: reactVersion,
-      'react-dom': reactDomVersion,
-    },
-    options.compiler === 'swc' ? { '@swc/core': swcCoreVersion } : {}
-  );
-  tasks.push(installTask);
+  if (!options.skipPackageJson) {
+    const installTask = await addDependenciesToPackageJson(
+      host,
+      {
+        react: reactVersion,
+        'react-dom': reactDomVersion,
+      },
+      options.compiler === 'swc' ? { '@swc/core': swcCoreVersion } : {}
+    );
+    tasks.push(installTask);
+  }
 
   const routeTask = updateAppRoutes(host, options);
   tasks.push(routeTask);
@@ -150,6 +152,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     unitTestRunner: options.unitTestRunner,
     eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
+    skipPackageJson: options.skipPackageJson,
   });
 
   const reactEslintJson = createReactEslintJson(
@@ -163,11 +166,14 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     () => reactEslintJson
   );
 
-  const installTask = await addDependenciesToPackageJson(
-    host,
-    extraEslintDependencies.dependencies,
-    extraEslintDependencies.devDependencies
-  );
+  let installTask = () => {};
+  if (!options.skipPackageJson) {
+    installTask = await addDependenciesToPackageJson(
+      host,
+      extraEslintDependencies.dependencies,
+      extraEslintDependencies.devDependencies
+    );
+  }
 
   return runTasksInSerial(lintTask, installTask);
 }
