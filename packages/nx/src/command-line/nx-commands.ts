@@ -718,6 +718,14 @@ function withRunOneOptions(yargs: yargs.Argv) {
   }
 }
 
+type OptionArgumentDefinition = {
+  type: yargs.Options['type'];
+  describe?: string;
+  default?: any;
+  choices?: yargs.Options['type'][];
+  demandOption?: boolean;
+};
+
 type WorkspaceGeneratorProperties = {
   [name: string]:
     | {
@@ -725,6 +733,7 @@ type WorkspaceGeneratorProperties = {
         description?: string;
         default?: any;
         enum?: yargs.Options['type'][];
+        demandOption?: boolean;
       }
     | {
         type: yargs.PositionalOptionsType;
@@ -786,7 +795,7 @@ async function withCustomGeneratorOptions(
 
   Object.entries(schema.properties as WorkspaceGeneratorProperties).forEach(
     ([name, prop]) => {
-      options.push({
+      const option: { name: string; definition: OptionArgumentDefinition } = {
         name,
         definition: {
           describe: prop.description,
@@ -794,7 +803,11 @@ async function withCustomGeneratorOptions(
           default: prop.default,
           choices: prop.enum,
         },
-      });
+      };
+      if (schema.required && schema.required.includes(name)) {
+        option.definition.demandOption = true;
+      }
+      options.push(option);
       if (isPositionalProperty(prop)) {
         positionals.push({
           name,
@@ -816,21 +829,23 @@ async function withCustomGeneratorOptions(
     command += ' (options)';
   }
 
-  yargs.command({
-    // this is the default and only command
-    command,
-    describe: schema.description || '',
-    builder: (y) => {
-      options.forEach(({ name, definition }) => {
-        y.option(name, definition);
-      });
-      positionals.forEach(({ name, definition }) => {
-        y.positional(name, definition);
-      });
-      return linkToNxDevAndExamples(y, 'workspace-generator');
-    },
-    handler: workspaceGeneratorHandler,
-  });
+  yargs
+    .command({
+      // this is the default and only command
+      command,
+      describe: schema.description || '',
+      builder: (y) => {
+        options.forEach(({ name, definition }) => {
+          y.option(name, definition);
+        });
+        positionals.forEach(({ name, definition }) => {
+          y.positional(name, definition);
+        });
+        return linkToNxDevAndExamples(y, 'workspace-generator');
+      },
+      handler: workspaceGeneratorHandler,
+    })
+    .fail(() => void 0); // no action is needed on failure as Nx will handle it based on schema validation
 
   return yargs;
 }
