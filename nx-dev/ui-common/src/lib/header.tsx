@@ -136,17 +136,19 @@ export function Header(): JSX.Element {
                       <div className="overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/5">
                         <div className="relative grid gap-6 p-6 xl:grid-cols-2">
                           {flyoutMenu.map((item) => (
-                            <Link key={item.name} href={item.href}>
-                              <a className="-m-3 flex items-start rounded-lg p-3 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                                <div className="ml-4">
-                                  <p className="text-base font-medium text-slate-900 dark:text-slate-200">
-                                    {item.name}
-                                  </p>
-                                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                    {item.description}
-                                  </p>
-                                </div>
-                              </a>
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              className="-m-3 flex items-start rounded-lg p-3 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                            >
+                              <div className="ml-4">
+                                <p className="text-base font-medium text-slate-900 dark:text-slate-200">
+                                  {item.name}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                  {item.description}
+                                </p>
+                              </div>
                             </Link>
                           ))}
                         </div>
@@ -156,43 +158,38 @@ export function Header(): JSX.Element {
                 </>
               )}
             </Popover>
-            <Link href="https://nx.app/enterprise?utm_source=nx.dev">
-              <a
-                title="Check Nx Enterprise"
-                target="_blank"
-                rel="noreferrer"
-                className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-              >
-                Enterprise
-              </a>
+            <Link
+              href="https://nx.app/enterprise?utm_source=nx.dev"
+              title="Check Nx Enterprise"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Enterprise
             </Link>
-            <Link href="/community">
-              <a
-                title="Nx Community: Join us!"
-                className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-              >
-                Community
-              </a>
+            <Link
+              href="/community"
+              title="Nx Community: Join us!"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Community
             </Link>
-            <Link href="/community#plugin-directory">
-              <a
-                title="Check Nx available plugins"
-                className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-              >
-                Plugins registry
-              </a>
+            <Link
+              href="/community#plugin-directory"
+              title="Check Nx available plugins"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Plugins registry
             </Link>
-            <Link href="/conf">
-              <a
-                title="Check Nx conference"
-                className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-              >
-                {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
-                {/*  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />*/}
-                {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
-                {/*</span>*/}
-                Nx Conf
-              </a>
+            <Link
+              href="/conf"
+              title="Check Nx conference"
+              className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
+              {/*  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />*/}
+              {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
+              {/*</span>*/}Nx Conf
             </Link>
           </nav>
         </div>
@@ -271,17 +268,19 @@ export function Header(): JSX.Element {
                       <div className="overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/5">
                         <nav className="relative grid gap-8 p-8 md:grid-cols-2">
                           {flyoutMobileMenu.map((item) => (
-                            <Link key={item.name} href={item.href}>
-                              <a className="-m-3 flex items-start rounded-lg p-3 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                                <div className="ml-4">
-                                  <p className="text-base font-medium text-slate-900 dark:text-slate-200">
-                                    {item.name}
-                                  </p>
-                                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                    {item.description}
-                                  </p>
-                                </div>
-                              </a>
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              className="-m-3 flex items-start rounded-lg p-3 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                            >
+                              <div className="ml-4">
+                                <p className="text-base font-medium text-slate-900 dark:text-slate-200">
+                                  {item.name}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                  {item.description}
+                                </p>
+                              </div>
                             </Link>
                           ))}
                         </nav>

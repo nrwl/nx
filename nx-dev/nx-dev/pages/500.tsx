@@ -22,24 +22,22 @@ export default function FiveOhOh(): JSX.Element {
               </p>
               <p className="mt-2 text-lg">
                 You can return to{' '}
-                <Link href="/">
-                  <a
-                    title="Go to the home page"
-                    className="font-semibold underline"
-                  >
-                    our front page
-                  </a>
+                <Link
+                  href="/"
+                  title="Go to the home page"
+                  className="font-semibold underline"
+                >
+                  our front page
                 </Link>
                 , or{' '}
-                <Link href="https://github.com/nrwl/nx/issues/new?assignees=&labels=type%3A+docs&template=3-documentation.md">
-                  <a
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-semibold underline"
-                    title="Create a Github issue"
-                  >
-                    drop us a line
-                  </a>
+                <Link
+                  href="https://github.com/nrwl/nx/issues/new?assignees=&labels=type%3A+docs&template=3-documentation.md"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold underline"
+                  title="Create a Github issue"
+                >
+                  drop us a line
                 </Link>{' '}
                 if you can't find what you're looking for.
               </p>

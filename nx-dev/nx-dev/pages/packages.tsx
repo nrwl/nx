@@ -91,20 +91,18 @@ export default function Packages(props: ReferencesProps): JSX.Element {
                       <Link
                         key={'ref-' + category.id}
                         href={category.path as string}
+                        className="group relative flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-4 text-sm capitalize shadow-sm transition hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
                       >
-                        <a className="group relative flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-4 text-sm capitalize shadow-sm transition hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800">
-                          <img
-                            className="h-5 w-5 object-cover opacity-75 dark:invert"
-                            loading="lazy"
-                            src={iconsMap[category.id]}
-                            alt={category.name + ' illustration'}
-                            aria-hidden="true"
-                          />
-
-                          <span className="text-base font-medium">
-                            {category.name}
-                          </span>
-                        </a>
+                        <img
+                          className="h-5 w-5 object-cover opacity-75 dark:invert"
+                          loading="lazy"
+                          src={iconsMap[category.id]}
+                          alt={category.name + ' illustration'}
+                          aria-hidden="true"
+                        />
+                        <span className="text-base font-medium">
+                          {category.name}
+                        </span>
                       </Link>
                     ))}
                   </nav>

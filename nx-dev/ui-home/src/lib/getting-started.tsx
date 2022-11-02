@@ -18,13 +18,12 @@ export function GettingStarted(): JSX.Element {
         </div>
         <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
           <div className="inline-flex rounded-md">
-            <Link href="/getting-started/intro">
-              <a
-                title="Start using Nx by creating a workspace"
-                className="w-full flex-none rounded-full border border-transparent bg-slate-100 py-3 px-6 text-lg font-semibold leading-6 transition hover:bg-slate-200 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 sm:w-auto"
-              >
-                Get started now!
-              </a>
+            <Link
+              href="/getting-started/intro"
+              title="Start using Nx by creating a workspace"
+              className="w-full flex-none rounded-full border border-transparent bg-slate-100 py-3 px-6 text-lg font-semibold leading-6 transition hover:bg-slate-200 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 sm:w-auto"
+            >
+              Get started now!
             </Link>
           </div>
         </div>

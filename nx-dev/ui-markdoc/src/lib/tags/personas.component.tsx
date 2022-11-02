@@ -125,9 +125,12 @@ export function Persona({
       <div className="ml-4">
         {title && <h5 className="mt-0 text-base font-medium">{title}</h5>}
         <div className="prose-sm dark:prose-invert mt-2">{children}</div>
-        <Link href={url}>
-          <a title={title} aria-hidden="true" className="absolute inset-0" />
-        </Link>
+        <Link
+          href={url}
+          title={title}
+          aria-hidden="true"
+          className="absolute inset-0"
+        ></Link>
       </div>
     </aside>
   );
