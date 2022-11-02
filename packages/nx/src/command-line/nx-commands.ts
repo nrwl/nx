@@ -58,9 +58,7 @@ export const commandsObject = yargs
     describe: 'Run target for multiple listed projects',
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withRunManyOptions(
-          withOutputStyleOption(withParallelOption(withTargetOption(yargs)))
-        ),
+        withRunManyOptions(withOutputStyleOption(withTargetOption(yargs))),
         'run-many'
       ),
     handler: async (args) =>
@@ -72,7 +70,7 @@ export const commandsObject = yargs
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(
-          withOutputStyleOption(withParallelOption(withTargetOption(yargs)))
+          withRunOptions(withOutputStyleOption(withTargetOption(yargs)))
         ),
         'affected'
       ),
@@ -84,7 +82,7 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
+        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -98,7 +96,7 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
+        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -112,7 +110,7 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
+        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -126,7 +124,7 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
+        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
         'affected'
       ),
     handler: async (args) =>
@@ -405,6 +403,55 @@ function withPlainOption(yargs: yargs.Argv): yargs.Argv {
   });
 }
 
+function withRunOptions(yargs: yargs.Argv): yargs.Argv {
+  return yargs
+    .option('parallel', {
+      describe: 'Max number of parallel processes [default is 3]',
+      type: 'string',
+    })
+    .option('maxParallel', {
+      type: 'number',
+      hidden: true,
+    })
+    .options('runner', {
+      describe: 'This is the name of the tasks runner configured in nx.json',
+      type: 'string',
+    })
+    .options('configuration', {
+      describe:
+        'This is the configuration to use when performing tasks on projects',
+      type: 'string',
+    })
+    .option('prod', {
+      describe: 'Use the production configuration',
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    })
+    .option('verbose', {
+      type: 'boolean',
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
+      default: false,
+    })
+    .option('nx-bail', {
+      describe: 'Stop command execution after the first failed task',
+      type: 'boolean',
+      default: false,
+    })
+    .option('nx-ignore-cycles', {
+      describe: 'Ignore cycles in the task graph',
+      type: 'boolean',
+      default: false,
+    })
+    .options('skip-nx-cache', {
+      describe:
+        'Rerun the tasks even when the results are available in the cache',
+      type: 'boolean',
+      default: false,
+    });
+}
+
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .parserConfiguration({
@@ -460,43 +507,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       coerce: parseCSV,
       default: [],
     })
-    .options('runner', {
-      describe: 'This is the name of the tasks runner configured in nx.json',
-      type: 'string',
-    })
-    .options('skip-nx-cache', {
-      describe:
-        'Rerun the tasks even when the results are available in the cache',
-      type: 'boolean',
-      default: false,
-    })
-    .options('configuration', {
-      describe:
-        'This is the configuration to use when performing tasks on projects',
-      type: 'string',
-    })
-    .option('prod', {
-      describe: 'Use the production configuration',
-      type: 'boolean',
-      default: false,
-      hidden: true,
-    })
-    .option('verbose', {
-      type: 'boolean',
-      describe:
-        'Prints additional information about the commands (e.g., stack traces)',
-      default: false,
-    })
-    .option('nx-bail', {
-      describe: 'Stop command execution after the first failed task',
-      type: 'boolean',
-      default: false,
-    })
-    .option('nx-ignore-cycles', {
-      describe: 'Ignore cycles in the task graph',
-      type: 'boolean',
-      default: false,
-    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
@@ -523,7 +533,7 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs
+  return withRunOptions(yargs)
     .parserConfiguration({
       'strip-dashed': true,
       'unknown-options-as-args': true,
@@ -538,48 +548,11 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: true,
     })
-    .option('prod', {
-      describe: 'Use the production configuration',
-      type: 'boolean',
-      default: false,
-      hidden: true,
-    })
-    .options('runner', {
-      describe: 'Override the tasks runner in `nx.json`',
-      type: 'string',
-    })
-    .options('skip-nx-cache', {
-      describe:
-        'Rerun the tasks even when the results are available in the cache',
-      type: 'boolean',
-      default: false,
-    })
-    .options('configuration', {
-      describe:
-        'This is the configuration to use when performing tasks on projects',
-      type: 'string',
-    })
     .option('exclude', {
       describe: 'Exclude certain projects from being processed',
       type: 'array',
       coerce: parseCSV,
       default: [],
-    })
-    .option('verbose', {
-      type: 'boolean',
-      describe:
-        'Prints additional information about the commands (e.g., stack traces)',
-      default: false,
-    })
-    .option('nx-bail', {
-      describe: 'Stop command execution after the first failed task',
-      type: 'boolean',
-      default: false,
-    })
-    .option('nx-ignore-cycles', {
-      describe: 'Ignore cycles in the task graph',
-      type: 'boolean',
-      default: false,
     });
 }
 
@@ -635,18 +608,14 @@ function withOverrides(args: any): any {
   return args;
 }
 
-function withParallelOption(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('parallel', {
-    describe: 'Max number of parallel processes [default is 3]',
-    type: 'string',
-  });
-}
-
-function withOutputStyleOption(yargs: yargs.Argv): yargs.Argv {
+function withOutputStyleOption(
+  yargs: yargs.Argv,
+  choices = ['dynamic', 'static', 'stream', 'stream-without-prefixes']
+): yargs.Argv {
   return yargs.option('output-style', {
     describe: 'Defines how Nx emits outputs tasks logs',
     type: 'string',
-    choices: ['dynamic', 'static', 'stream', 'stream-without-prefixes'],
+    choices,
   });
 }
 
@@ -714,52 +683,24 @@ function withRunOneOptions(yargs: yargs.Argv) {
   const executorShouldShowHelp = !(
     process.argv[2] === 'run' && process.argv[3] === '--help'
   );
-  const res = withOutputStyleOption(yargs)
+
+  const res = withRunOptions(
+    withOutputStyleOption(yargs, [
+      'dynamic',
+      'static',
+      'stream',
+      'stream-without-prefixes',
+      'compact',
+    ])
+  )
     .parserConfiguration({
       'strip-dashed': true,
       'unknown-options-as-args': true,
       'populate--': true,
     })
-    .option('prod', {
-      describe: 'Use the production configuration',
-      type: 'boolean',
-      default: false,
-    })
-    .option('configuration', {
-      describe: 'Target configuration',
-      alias: 'c',
-      type: 'string',
-    })
     .option('project', {
       describe: 'Target project',
       type: 'string',
-    })
-    .option('output-style', {
-      describe: 'Defines how Nx emits outputs tasks logs',
-      type: 'string',
-      choices: [
-        'dynamic',
-        'static',
-        'stream',
-        'stream-without-prefixes',
-        'compact',
-      ],
-    })
-    .option('nx-bail', {
-      describe: 'Stop command execution after the first failed task',
-      type: 'boolean',
-      default: false,
-    })
-    .option('nx-ignore-cycles', {
-      describe: 'Ignore cycles in the task graph',
-      type: 'boolean',
-      default: false,
-    })
-    .option('verbose', {
-      type: 'boolean',
-      describe:
-        'Prints additional information about the commands (e.g., stack traces)',
-      default: false,
     });
 
   if (executorShouldShowHelp) {
