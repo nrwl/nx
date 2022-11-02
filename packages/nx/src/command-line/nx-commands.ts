@@ -310,11 +310,12 @@ export const commandsObject = yargs
     handler: async () => (await import('./reset')).resetHandler(),
   })
   .command({
-    command: 'connect-to-nx-cloud',
-    describe: `Makes sure the workspace is connected to Nx Cloud`,
+    command: 'connect',
+    aliases: ['connect-to-nx-cloud'],
+    describe: `Connect workspace to Nx Cloud`,
     builder: (yargs) => linkToNxDevAndExamples(yargs, 'connect-to-nx-cloud'),
     handler: async () => {
-      await (await import('./connect-to-nx-cloud')).connectToNxCloudCommand();
+      await (await import('./connect')).connectToNxCloudCommand();
       process.exit(0);
     },
   })

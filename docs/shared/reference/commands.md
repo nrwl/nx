@@ -19,6 +19,6 @@
 - [list](/nx/list)
 - [workspace-lint](/nx/workspace-lint)
 - [workspace-generator](/nx/workspace-generator)
-- [connect-to-nx-cloud](/nx/connect-to-nx-cloud)
+- [connect](/nx/connect-to-nx-cloud)
 - [reset](/nx/reset)
 - [repair](/nx/repair)

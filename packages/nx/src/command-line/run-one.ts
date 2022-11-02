@@ -1,6 +1,6 @@
 import { runCommand } from '../tasks-runner/run-command';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
-import { connectToNxCloudIfExplicitlyAsked } from './connect-to-nx-cloud';
+import { connectToNxCloudIfExplicitlyAsked } from './connect';
 import { performance } from 'perf_hooks';
 import {
   createProjectGraphAsync,

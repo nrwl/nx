@@ -22,7 +22,7 @@ running:
 npx nx connect-to-nx-cloud
 ```
 
-If you are using an older version of Nx (`< 12.0.0`), you can connect your workspace by adding the `@nrwl/nx-cloud`
+If you are using an older version of Nx, you can connect your workspace by adding the `@nrwl/nx-cloud`
 package to your workspace and running `nx g @nrwl/nx-cloud:init`.
 
 ## Connecting Your Workspace to Your Nx Cloud Account

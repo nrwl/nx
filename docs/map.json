@@ -1270,7 +1270,7 @@
               "name": "connect-to-nx-cloud",
               "id": "connect-to-nx-cloud",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "file": "generated/cli/connect-to-nx-cloud"
+              "file": "generated/cli/connect"
             },
             {
               "name": "reset",
