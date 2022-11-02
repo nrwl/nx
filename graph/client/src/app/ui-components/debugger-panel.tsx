@@ -1,19 +1,19 @@
 import { memo } from 'react';
-import { ProjectGraphList } from './interfaces';
-import { GraphPerfReport } from './machines/interfaces';
-import Dropdown from './ui-components/dropdown';
+import { GraphListItem } from '../interfaces';
+import { GraphPerfReport } from '../machines/interfaces';
+import Dropdown from './dropdown';
 
 export interface DebuggerPanelProps {
-  projectGraphs: ProjectGraphList[];
-  selectedProjectGraph: string;
-  projectGraphChange: (projectName: string) => void;
+  projects: GraphListItem[];
+  selectedProject: string;
+  selectedProjectChange: (projectName: string) => void;
   lastPerfReport: GraphPerfReport;
 }
 
 export const DebuggerPanel = memo(function ({
-  projectGraphs,
-  selectedProjectGraph,
-  projectGraphChange,
+  projects,
+  selectedProject,
+  selectedProjectChange,
   lastPerfReport,
 }: DebuggerPanelProps) {
   return (
@@ -26,14 +26,14 @@ export const DebuggerPanel = memo(function ({
       </h4>
       <Dropdown
         data-cy="project-select"
-        onChange={(event) => projectGraphChange(event.currentTarget.value)}
+        onChange={(event) => selectedProjectChange(event.currentTarget.value)}
       >
-        {projectGraphs.map((projectGraph) => {
+        {projects.map((projectGraph) => {
           return (
             <option
               key={projectGraph.id}
               value={projectGraph.id}
-              selected={projectGraph.id === selectedProjectGraph}
+              selected={projectGraph.id === selectedProject}
             >
               {projectGraph.label}
             </option>

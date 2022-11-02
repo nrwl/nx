@@ -1,4 +1,4 @@
-import Tag from './ui-components/tag';
+import Tag from '../ui-components/tag';
 
 export interface EdgeNodeTooltipProps {
   type: string;

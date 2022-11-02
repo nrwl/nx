@@ -8,7 +8,7 @@ import {
   localStorageRankDirKey,
   RankDir,
   rankDirResolver,
-} from '../rankdir-resolver';
+} from '../../rankdir-resolver';
 
 export default function RankdirPanel(): JSX.Element {
   const [rankDir, setRankDir] = useState(

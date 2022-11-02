@@ -6,7 +6,11 @@ import {
 } from '@heroicons/react/24/outline';
 import classNames from 'classnames';
 import { Fragment, useEffect, useState } from 'react';
-import { localStorageThemeKey, Theme, themeResolver } from '../theme-resolver';
+import {
+  localStorageThemeKey,
+  Theme,
+  themeResolver,
+} from '../../theme-resolver';
 
 export default function ThemePanel(): JSX.Element {
   const [theme, setTheme] = useState(

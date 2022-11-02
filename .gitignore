@@ -15,7 +15,8 @@ jest.debug.config.js
 /.verdaccio/build/local-registry
 /graph/client/src/assets/environment.js
 /graph/client/src/assets/dev/environment.js
-/graph/client/src/assets/generated-graphs
+/graph/client/src/assets/generated-project-graphs
+/graph/client/src/assets/generated-task-graphs
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/images/open-graph
 # Lerna creates this

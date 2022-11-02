@@ -3,7 +3,7 @@ import { redirect } from 'react-router-dom';
 import ProjectsSidebar from './feature-projects/projects-sidebar';
 import TasksSidebar from './feature-tasks/tasks-sidebar';
 import { getEnvironmentConfig } from './hooks/use-environment-config';
-import { getDepGraphService } from './machines/dep-graph.service';
+import { getProjectGraphService } from './machines/get-services';
 // nx-ignore-next-line
 import { DepGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';

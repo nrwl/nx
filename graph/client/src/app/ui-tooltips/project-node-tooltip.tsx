@@ -1,10 +1,10 @@
-import { getDepGraphService } from './machines/dep-graph.service';
+import { getProjectGraphService } from '../machines/get-services';
 import {
   DocumentMagnifyingGlassIcon,
   FlagIcon,
   MapPinIcon,
 } from '@heroicons/react/24/solid';
-import Tag from './ui-components/tag';
+import Tag from '../ui-components/tag';
 
 export interface ProjectNodeToolTipProps {
   type: 'app' | 'lib' | 'e2e';
@@ -17,7 +17,7 @@ export function ProjectNodeToolTip({
   id,
   tags,
 }: ProjectNodeToolTipProps) {
-  const depGraphService = getDepGraphService();
+  const depGraphService = getProjectGraphService();
 
   function onFocus() {
     depGraphService.send({

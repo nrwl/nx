@@ -77,14 +77,15 @@ function buildEnvironmentJs(
   window.appConfig = {
     showDebugger: false,
     showExperimentalFeatures: false,
-    projectGraphs: [
+    projects: [
       {
         id: 'local',
         label: 'local',
-        url: 'project-graph.json',
+        projectGraphUrl: 'project-graph.json',
+        taskGraphUrl: 'task-graph.json'
       }
     ],
-    defaultProjectGraph: 'local',
+    defaultProject: 'local',
   };
   `;
 

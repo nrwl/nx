@@ -1,6 +1,6 @@
 describe('graph-client release', () => {
   beforeEach(() => {
-    cy.intercept('/assets/graphs/*').as('getGraph');
+    cy.intercept('/assets/project-graphs/*').as('getGraph');
 
     cy.visit('/');
 

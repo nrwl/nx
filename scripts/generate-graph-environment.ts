@@ -1,7 +1,6 @@
-import * as yargs from 'yargs';
 import { ensureDirSync } from 'fs-extra';
 import { join } from 'path';
-import { writeFileSync, readdirSync } from 'fs';
+import { readdirSync, writeFileSync } from 'fs';
 import { execSync } from 'child_process';
 
 function generateFileContent(
@@ -9,17 +8,16 @@ function generateFileContent(
 ) {
   return `
   window.exclude = [];
-window.watch = false;
-window.environment = 'dev';
-window.useXstateInspect = false;
-
-window.appConfig = {
-  showDebugger: true,
-  showExperimentalFeatures: true,
-  projectGraphs: ${JSON.stringify(projects)},
-  defaultProjectGraph: '${projects[0].id}',
-};
-
+  window.watch = false;
+  window.environment = 'dev';
+  window.useXstateInspect = false;
+  
+  window.appConfig = {
+    showDebugger: true,
+    showExperimentalFeatures: true,
+    projects: ${JSON.stringify(projects)},
+    defaultProject: '${projects[0].id}',
+  };
   `;
 }
 
@@ -27,13 +25,14 @@ function writeFile() {
   let generatedGraphs;
   try {
     generatedGraphs = readdirSync(
-      join(__dirname, '../graph/client/src/assets/generated-graphs')
+      join(__dirname, '../graph/client/src/assets/generated-project-graphs')
     ).map((filename) => {
       const id = filename.substring(0, filename.length - 5);
       return {
         id,
         label: id,
-        url: join('assets/generated-graphs/', filename),
+        projectGraphUrl: join('assets/generated-project-graphs/', filename),
+        taskGraphUrl: join('assets/generated-task-graphs/', filename),
       };
     });
   } catch {
@@ -43,13 +42,13 @@ function writeFile() {
   let pregeneratedGraphs;
   try {
     pregeneratedGraphs = readdirSync(
-      join(__dirname, '../graph/client/src/assets/graphs')
+      join(__dirname, '../graph/client/src/assets/project-graphs')
     ).map((filename) => {
       const id = filename.substring(0, filename.length - 5);
       return {
         id,
         label: id,
-        url: join('assets/graphs/', filename),
+        url: join('assets/project-graphs/', filename),
       };
     });
   } catch {

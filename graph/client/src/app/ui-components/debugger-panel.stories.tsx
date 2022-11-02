@@ -5,7 +5,7 @@ export default {
   component: DebuggerPanel,
   title: 'Shell/DebuggerPanel',
   argTypes: {
-    projectGraphChange: { action: 'projectGraphChange' },
+    selectedProjectChange: { action: 'projectGraphChange' },
   },
 } as ComponentMeta<typeof DebuggerPanel>;
 

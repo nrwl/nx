@@ -1,6 +1,6 @@
 import { DocumentMagnifyingGlassIcon } from '@heroicons/react/24/solid';
 // nx-ignore-next-line
-import type { ProjectGraphNode, Task } from '@nrwl/devkit';
+import type { ProjectGraphNode } from '@nrwl/devkit';
 import { parseParentDirectoriesFromFilePath } from '../util';
 import { WorkspaceLayout } from '../interfaces';
 import Tag from '../ui-components/tag';
@@ -55,6 +55,7 @@ function groupProjectsByDirectory(
 function ProjectListItem({
   project,
   selectTask,
+  selectedTaskId,
 }: {
   project: SidebarProjectWithTargets;
   selectTask: (
@@ -62,6 +63,7 @@ function ProjectListItem({
     targetName: string,
     configurationName: string
   ) => void;
+  selectedTaskId: string;
 }) {
   return (
     <li className="relative block cursor-default select-none py-1 pl-2 pr-6 text-xs text-slate-600 dark:text-slate-400">
@@ -73,6 +75,10 @@ function ProjectListItem({
           <br />
           {target.configurations.map((configuration) => (
             <div className="flex items-center">
+              {selectedTaskId ===
+              `${project.projectGraphNode.name}:${target.targetName}:${configuration.name}` ? (
+                <span>selected</span>
+              ) : null}
               <button
                 data-cy={`focus-button-${configuration.name}`}
                 type="button"
@@ -111,6 +117,7 @@ function SubProjectList({
   headerText = '',
   projects,
   selectTask,
+  selectedTaskId,
 }: {
   headerText: string;
   projects: SidebarProjectWithTargets[];
@@ -119,6 +126,7 @@ function SubProjectList({
     targetName: string,
     configurationName: string
   ) => void;
+  selectedTaskId: string;
 }) {
   let sortedProjects = [...projects];
   sortedProjects.sort((a, b) => {
@@ -139,6 +147,7 @@ function SubProjectList({
               key={project.projectGraphNode.name}
               project={project}
               selectTask={selectTask}
+              selectedTaskId={selectedTaskId}
             ></ProjectListItem>
           );
         })}
@@ -232,6 +241,7 @@ export function TaskList({
               mapToSidebarProjectWithTasks(project, selectedTask)
             )}
             selectTask={selectTask}
+            selectedTaskId={selectedTask}
           ></SubProjectList>
         );
       })}
@@ -249,6 +259,7 @@ export function TaskList({
               mapToSidebarProjectWithTasks(project, selectedTask)
             )}
             selectTask={selectTask}
+            selectedTaskId={selectedTask}
           ></SubProjectList>
         );
       })}
@@ -266,6 +277,7 @@ export function TaskList({
               mapToSidebarProjectWithTasks(project, selectedTask)
             )}
             selectTask={selectTask}
+            selectedTaskId={selectedTask}
           ></SubProjectList>
         );
       })}

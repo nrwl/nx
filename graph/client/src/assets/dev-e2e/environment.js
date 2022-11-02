@@ -6,17 +6,19 @@ window.useXstateInspect = false;
 window.appConfig = {
   showDebugger: true,
   showExperimentalFeatures: true,
-  projectGraphs: [
+  projects: [
     {
       id: 'e2e',
       label: 'e2e',
-      url: 'assets/graphs/e2e.json',
+      projectGraphUrl: 'assets/project-graphs/e2e.json',
+      taskGraphUrl: 'assets/task-graphs/e2e.json',
     },
     {
       id: 'affected',
       label: 'affected',
-      url: 'assets/graphs/affected.json',
+      projectGraphUrl: 'assets/project-graphs/affected.json',
+      taskGraphUrl: 'assets/task-graphs/affected.json',
     },
   ],
-  defaultProjectGraph: 'e2e',
+  defaultProject: 'e2e',
 };

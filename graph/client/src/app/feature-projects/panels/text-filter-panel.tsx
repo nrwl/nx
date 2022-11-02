@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { useDebounce } from '../hooks/use-debounce';
+import { useDebounce } from '../../hooks/use-debounce';
 import { BackspaceIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import DebouncedTextInput from '../ui-components/debounced-text-input';
+import DebouncedTextInput from '../../ui-components/debounced-text-input';
 
 export interface TextFilterPanelProps {
   textFilter: string;

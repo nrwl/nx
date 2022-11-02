@@ -62,8 +62,9 @@
         "dev": {
           "assets": [
             "graph/client/src/favicon.ico",
-            "graph/client/src/assets/graphs/",
-            "graph/client/src/assets/generated-graphs/",
+            "graph/client/src/assets/project-graphs/",
+            "graph/client/src/assets/generated-project-graphs/",
+            "graph/client/src/assets/generated-task-graphs/",
             {
               "input": "graph/client/src/assets/dev",
               "output": "/",
@@ -74,7 +75,7 @@
         "dev-e2e": {
           "assets": [
             "graph/client/src/favicon.ico",
-            "graph/client/src/assets/graphs/",
+            "graph/client/src/assets/project-graphs/",
             {
               "input": "graph/client/src/assets/dev-e2e",
               "output": "/",
@@ -86,8 +87,8 @@
           "assets": [
             "graph/client/src/favicon.ico",
             {
-              "input": "graph/client/src/assets/graphs",
-              "output": "/assets/graphs",
+              "input": "graph/client/src/assets/project-graphs",
+              "output": "/assets/project-graphs",
               "glob": "e2e.json"
             },
             {
@@ -101,8 +102,8 @@
           "assets": [
             "graph/client/src/favicon.ico",
             {
-              "input": "graph/client/src/assets/graphs",
-              "output": "/assets/graphs",
+              "input": "graph/client/src/assets/project-graphs",
+              "output": "/assets/project-graphs",
               "glob": "e2e.json"
             },
             {
@@ -129,7 +130,7 @@
           "assets": [
             "graph/client/src/favicon.ico",
             {
-              "input": "graph/client/src/assets/graphs",
+              "input": "graph/client/src/assets/project-graphs",
               "output": "/assets/graphs",
               "glob": "e2e.json"
             },
