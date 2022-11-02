@@ -18,6 +18,7 @@ import {
 } from '../support/app.po';
 
 import * as affectedJson from '../fixtures/affected.json';
+import { testProjectsRoutes } from '../support/routing-tests';
 import * as nxExamplesJson from '../fixtures/nx-examples.json';
 
 describe('graph-client', () => {
@@ -312,64 +313,9 @@ describe('loading graph client with url params', () => {
     );
   });
 
-  it('should focus projects', () => {
-    cy.visit('/?focus=cart');
-
-    // wait for first graph to finish loading
-    cy.wait('@getGraph');
-
-    const dependencies = nxExamplesJson.dependencies.cart;
-    const dependents = Object.keys(nxExamplesJson.dependencies).filter((key) =>
-      nxExamplesJson.dependencies[key]
-        .map((dependencies) => dependencies.target)
-        .includes('cart')
-    );
-    getCheckedProjectItems().should(
-      'have.length',
-      ['cart', ...dependencies, ...dependents].length
-    );
-  });
-
-  it('should focus projects with search depth', () => {
-    cy.visit('/?focus=cart&searchDepth=2');
-
-    // wait for first graph to finish loading
-    cy.wait('@getGraph');
-
-    getCheckedProjectItems().should('have.length', 10);
-    getSearchDepthCheckbox().should('exist');
-  });
-
-  it('should focus projects with search depth disabled', () => {
-    cy.visit('/?focus=cart&searchDepth=0');
-
-    // wait for first graph to finish loading
-    cy.wait('@getGraph');
-
-    getCheckedProjectItems().should('have.length', 12);
-    getSearchDepthCheckbox().should('exist');
-  });
-
-  it('should set group by folder', () => {
-    cy.visit('/?focus=nx-dev&searchDepth=1&groupByFolder=true');
-
-    // wait for first graph to finish loading
-    cy.wait('@getGraph');
-
-    getGroupByFolderCheckbox().should('be.checked');
-  });
-
-  it('should select all projects', () => {
-    cy.visit('/?select=all');
-
-    // wait for first graph to finish loading
-    cy.wait('@getGraph');
-
-    getCheckedProjectItems().should(
-      'have.length',
-      nxExamplesJson.projects.length
-    );
-  });
+  // check that params work from old base url of /
+  // and also new /projects route
+  testProjectsRoutes('browser', ['/', '/projects']);
 });
 
 describe('theme preferences', () => {

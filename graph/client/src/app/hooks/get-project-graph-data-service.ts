@@ -5,7 +5,7 @@ import { MockProjectGraphService } from '../mock-project-graph-service';
 
 let projectGraphService: ProjectGraphService;
 
-export function useProjectGraphDataService() {
+export function getProjectGraphDataService() {
   if (projectGraphService === undefined) {
     if (window.environment === 'dev' || window.environment === 'nx-console') {
       projectGraphService = new FetchProjectGraphService();
