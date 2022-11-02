@@ -403,8 +403,17 @@ function withPlainOption(yargs: yargs.Argv): yargs.Argv {
   });
 }
 
+function withExcludeOption(yargs: yargs.Argv): yargs.Argv {
+  return yargs.option('exclude', {
+    describe: 'Exclude certain projects from being processed',
+    type: 'array',
+    coerce: parseCSV,
+    default: [],
+  });
+}
+
 function withRunOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs
+  return withExcludeOption(yargs)
     .option('parallel', {
       describe: 'Max number of parallel processes [default is 3]',
       type: 'string',
@@ -449,11 +458,19 @@ function withRunOptions(yargs: yargs.Argv): yargs.Argv {
         'Rerun the tasks even when the results are available in the cache',
       type: 'boolean',
       default: false,
+    })
+    .options('cloud', {
+      type: 'boolean',
+      hidden: true,
+    })
+    .options('dte', {
+      type: 'boolean',
+      hidden: true,
     });
 }
 
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs
+  return withExcludeOption(yargs)
     .parserConfiguration({
       'strip-dashed': true,
       'unknown-options-as-args': true,
@@ -501,12 +518,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     )
     .group(['files', 'uncommitted', 'untracked'], 'or using:')
     .implies('head', 'base')
-    .option('exclude', {
-      describe: 'Exclude certain projects from being processed',
-      type: 'array',
-      coerce: parseCSV,
-      default: [],
-    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
@@ -547,12 +558,6 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       describe: '[deprecated] Run the target on all projects in the workspace',
       type: 'boolean',
       default: true,
-    })
-    .option('exclude', {
-      describe: 'Exclude certain projects from being processed',
-      type: 'array',
-      coerce: parseCSV,
-      default: [],
     });
 }
 
@@ -685,7 +690,7 @@ function withRunOneOptions(yargs: yargs.Argv) {
   );
 
   const res = withRunOptions(
-    withOutputStyleOption(yargs, [
+    withOutputStyleOption(withTargetOption(yargs, false), [
       'dynamic',
       'static',
       'stream',
