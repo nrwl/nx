@@ -7,18 +7,19 @@ import type { VirtualElement } from '@popperjs/core';
 import cy from 'cytoscape';
 import cytoscapeDagre from 'cytoscape-dagre';
 import popper from 'cytoscape-popper';
-import { edgeStyles, nodeStyles } from '../styles-graph';
-import { selectValueByRankDirStatic } from '../rankdir-resolver';
-import { selectValueByThemeStatic } from '../theme-resolver';
-import { GraphTooltipService } from '../tooltip-service';
+import { edgeStyles, nodeStyles } from './styles-graph';
 import {
   CytoscapeDagreConfig,
   ParentNode,
   ProjectEdge,
   ProjectNode,
-} from '../util-cytoscape';
+} from './util-cytoscape';
 import { GraphPerfReport, GraphRenderEvents } from './interfaces';
-import { getEnvironmentConfig } from '../hooks/use-environment-config';
+import {
+  darkModeScratchKey,
+  switchValueByDarkMode,
+} from './styles-graph/dark-mode';
+import { GraphInteractionEvents } from './graph-interaction-events';
 
 const cytoscapeDagreConfig = {
   name: 'dagre',
@@ -35,12 +36,72 @@ export class GraphService {
 
   private collapseEdges = false;
 
+  private listeners = new Map<
+    number,
+    (event: GraphInteractionEvents) => void
+  >();
+
+  private _theme: 'light' | 'dark';
+  private _rankDir: 'TB' | 'LR' = 'TB';
+
   constructor(
-    private tooltipService: GraphTooltipService,
-    private containerId: string
+    private container: string | HTMLElement,
+
+    theme: 'light' | 'dark',
+    private renderMode?: 'nx-console' | 'nx-docs',
+    rankDir: 'TB' | 'LR' = 'TB'
   ) {
     cy.use(cytoscapeDagre);
     cy.use(popper);
+
+    this._theme = theme;
+    this._rankDir = rankDir;
+  }
+
+  get activeContainer() {
+    return typeof this.container === 'string'
+      ? document.getElementById(this.container)
+      : this.container;
+  }
+
+  set theme(theme: 'light' | 'dark') {
+    this._theme = theme;
+
+    if (this.renderGraph) {
+      this.renderGraph.unmount();
+      const useDarkMode = theme === 'dark';
+
+      this.renderGraph.scratch(darkModeScratchKey, useDarkMode);
+      this.renderGraph.elements().scratch(darkModeScratchKey, useDarkMode);
+
+      this.renderGraph.mount(this.activeContainer);
+    }
+  }
+
+  set rankDir(rankDir: 'TB' | 'LR') {
+    this._rankDir = rankDir;
+    if (this.renderGraph) {
+      const elements = this.renderGraph.elements();
+      elements
+        .layout({
+          ...cytoscapeDagreConfig,
+          ...{ rankDir: rankDir },
+        } as CytoscapeDagreConfig)
+        .run();
+    }
+  }
+
+  listen(callback: (event: GraphInteractionEvents) => void) {
+    const listenerId = this.listeners.size + 1;
+    this.listeners.set(listenerId, callback);
+
+    return () => {
+      this.listeners.delete(listenerId);
+    };
+  }
+
+  broadcast(event: GraphInteractionEvents) {
+    this.listeners.forEach((callback) => callback(event));
   }
 
   handleEvent(event: GraphRenderEvents): {
@@ -51,9 +112,10 @@ export class GraphService {
 
     if (this.renderGraph && event.type !== 'notifyGraphUpdateGraph') {
       this.renderGraph.nodes('.focused').removeClass('focused');
+      this.renderGraph.unmount();
     }
 
-    this.tooltipService.hideAll();
+    this.broadcast({ type: 'GraphRegenerated' });
 
     switch (event.type) {
       case 'notifyGraphInitGraph':
@@ -141,7 +203,7 @@ export class GraphService {
       elements
         .layout({
           ...cytoscapeDagreConfig,
-          ...{ rankDir: selectValueByRankDirStatic('TB', 'LR') },
+          ...{ rankDir: this._rankDir },
         })
         .run();
 
@@ -219,9 +281,7 @@ export class GraphService {
         });
       }
 
-      const environmentConfig = getEnvironmentConfig();
-
-      if (environmentConfig.environment === 'nx-console') {
+      if (this.renderMode === 'nx-console') {
         // when in the nx-console environment, adjust graph width and position to be to right of floating panel
         // 175 is a magic number that represents the width of the floating panels divided in half plus some padding
         this.renderGraph
@@ -236,6 +296,13 @@ export class GraphService {
       selectedProjectNames = this.renderGraph
         .nodes('[type!="dir"]')
         .map((node) => node.id());
+
+      this.renderGraph.scratch(darkModeScratchKey, this._theme === 'dark');
+      this.renderGraph
+        .elements()
+        .scratch(darkModeScratchKey, this._theme === 'dark');
+
+      this.renderGraph.mount(this.activeContainer);
 
       const renderTime = Date.now() - time;
 
@@ -440,13 +507,14 @@ export class GraphService {
       this.renderGraph.destroy();
       delete this.renderGraph;
     }
-    const container = document.getElementById(this.containerId);
 
     this.renderGraph = cy({
-      container: container,
-      headless: !container,
+      headless: this.activeContainer === null,
+      container: this.activeContainer,
       boxSelectionEnabled: false,
       style: [...nodeStyles, ...edgeStyles],
+      panningEnabled: true,
+      userZoomingEnabled: this.renderMode !== 'nx-docs',
     });
 
     this.renderGraph.add(elements);
@@ -456,7 +524,7 @@ export class GraphService {
     }
 
     this.renderGraph.on('zoom pan', () => {
-      this.tooltipService.hideAll();
+      this.broadcast({ type: 'GraphRegenerated' });
     });
 
     this.listenForProjectNodeClicks();
@@ -504,7 +572,7 @@ export class GraphService {
     collapseEdges: boolean
   ) {
     this.collapseEdges = collapseEdges;
-    this.tooltipService.hideAll();
+    this.broadcast({ type: 'GraphRegenerated' });
 
     this.generateCytoscapeLayout(
       allProjects,
@@ -609,10 +677,16 @@ export class GraphService {
 
       let ref: VirtualElement = node.popperRef(); // used only for positioning
 
-      this.tooltipService.openProjectNodeToolTip(ref, {
+      this.broadcast({
+        type: 'NodeClick',
+        ref,
         id: node.id(),
-        type: node.data('type'),
-        tags: node.data('tags'),
+
+        data: {
+          id: node.id(),
+          type: node.data('type'),
+          tags: node.data('tags'),
+        },
       });
     });
   }
@@ -622,20 +696,31 @@ export class GraphService {
       const edge: cy.EdgeSingular = event.target;
       let ref: VirtualElement = edge.popperRef(); // used only for positioning
 
-      this.tooltipService.openEdgeToolTip(ref, {
-        type: edge.data('type'),
-        source: edge.source().id(),
-        target: edge.target().id(),
-        fileDependencies: edge
-          .source()
-          .data('files')
-          .filter((file) => file.deps && file.deps.includes(edge.target().id()))
-          .map((file) => {
-            return {
-              fileName: file.file.replace(`${edge.source().data('root')}/`, ''),
-              target: edge.target().id(),
-            };
-          }),
+      this.broadcast({
+        type: 'EdgeClick',
+        ref,
+        id: edge.id(),
+
+        data: {
+          type: edge.data('type'),
+          source: edge.source().id(),
+          target: edge.target().id(),
+          fileDependencies: edge
+            .source()
+            .data('files')
+            .filter(
+              (file) => file.deps && file.deps.includes(edge.target().id())
+            )
+            .map((file) => {
+              return {
+                fileName: file.file.replace(
+                  `${edge.source().data('root')}/`,
+                  ''
+                ),
+                target: edge.target().id(),
+              };
+            }),
+        },
       });
     });
   }
@@ -671,28 +756,7 @@ export class GraphService {
   }
 
   getImage() {
-    const bg = selectValueByThemeStatic('#0F172A', '#FFFFFF');
+    const bg = switchValueByDarkMode(this.renderGraph, '#0F172A', '#FFFFFF');
     return this.renderGraph.png({ bg, full: true });
-  }
-
-  evaluateStyles() {
-    if (this.renderGraph) {
-      const container = this.renderGraph.container();
-      this.renderGraph.unmount();
-
-      this.renderGraph.mount(container);
-    }
-  }
-
-  setRankDir(rankDir: 'TB' | 'LR') {
-    if (this.renderGraph) {
-      const elements = this.renderGraph.elements();
-      elements
-        .layout({
-          ...cytoscapeDagreConfig,
-          ...{ rankDir: rankDir },
-        } as CytoscapeDagreConfig)
-        .run();
-    }
   }
 }

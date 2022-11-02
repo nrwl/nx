@@ -44,6 +44,7 @@
     "expo": "packages/expo",
     "express": "packages/express",
     "graph-client": "graph/client",
+    "graph-ui-graph": "graph/ui-graph",
     "jest": "packages/jest",
     "js": "packages/js",
     "linter": "packages/linter",

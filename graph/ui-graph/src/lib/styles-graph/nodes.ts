@@ -1,8 +1,8 @@
-import { Stylesheet } from 'cytoscape';
-import { selectValueByThemeDynamic } from '../theme-resolver';
+import { NodeSingular, Stylesheet } from 'cytoscape';
 import { FONTS } from './fonts';
 import { NrwlPalette } from './palette';
 import { LabelWidthCalculator } from './label-width';
+import { switchValueByDarkMode } from './dark-mode';
 
 const labelWidthCalculator = new LabelWidthCalculator();
 
@@ -11,26 +11,19 @@ const allNodes: Stylesheet = {
   style: {
     'font-size': '32px',
     'font-family': FONTS,
-    backgroundColor: selectValueByThemeDynamic(
-      NrwlPalette.slate_600,
-      NrwlPalette.slate_200
-    ),
+    backgroundColor: (node) =>
+      switchValueByDarkMode(node, NrwlPalette.slate_600, NrwlPalette.slate_200),
     'border-style': 'solid',
-    'border-color': selectValueByThemeDynamic(
-      NrwlPalette.slate_700,
-      NrwlPalette.slate_300
-    ),
+    'border-color': (node) =>
+      switchValueByDarkMode(node, NrwlPalette.slate_700, NrwlPalette.slate_300),
     'border-width': '1px',
     'text-halign': 'center',
     'text-valign': 'center',
     'padding-left': '16px',
-    color: selectValueByThemeDynamic(
-      NrwlPalette.slate_200,
-      NrwlPalette.slate_600
-    ),
+    color: (node: NodeSingular) =>
+      switchValueByDarkMode(node, NrwlPalette.slate_200, NrwlPalette.slate_600),
     label: 'data(id)',
-    // width: (node) => node.data('id').length * 16,
-    width: (node) => labelWidthCalculator.calculateWidth(node),
+    width: (node: NodeSingular) => labelWidthCalculator.calculateWidth(node),
     'transition-property':
       'background-color, border-color, line-color, target-arrow-color',
     'transition-duration': 250,
@@ -43,14 +36,10 @@ const focusedNodes: Stylesheet = {
   selector: 'node.focused',
   style: {
     color: NrwlPalette.white,
-    'border-color': selectValueByThemeDynamic(
-      NrwlPalette.slate_700,
-      NrwlPalette.slate_200
-    ),
-    backgroundColor: selectValueByThemeDynamic(
-      NrwlPalette.sky_500,
-      NrwlPalette.blue_500
-    ),
+    'border-color': (node) =>
+      switchValueByDarkMode(node, NrwlPalette.slate_700, NrwlPalette.slate_200),
+    backgroundColor: (node) =>
+      switchValueByDarkMode(node, NrwlPalette.sky_500, NrwlPalette.blue_500),
   },
 };
 
@@ -58,29 +47,29 @@ const affectedNodes: Stylesheet = {
   selector: 'node.affected',
   style: {
     color: NrwlPalette.white,
-    'border-color': selectValueByThemeDynamic(
-      NrwlPalette.fuchsia_800,
-      NrwlPalette.pink_500
-    ),
-    backgroundColor: selectValueByThemeDynamic(
-      NrwlPalette.fuchsia_700,
-      NrwlPalette.pink_400
-    ),
+    'border-color': (node) =>
+      switchValueByDarkMode(
+        node,
+        NrwlPalette.fuchsia_800,
+        NrwlPalette.pink_500
+      ),
+    backgroundColor: (node) =>
+      switchValueByDarkMode(
+        node,
+        NrwlPalette.fuchsia_700,
+        NrwlPalette.pink_400
+      ),
   },
 };
 
 const parentNodes: Stylesheet = {
   selector: ':parent',
   style: {
-    'background-opacity': selectValueByThemeDynamic(0.5, 0.8),
-    backgroundColor: selectValueByThemeDynamic(
-      NrwlPalette.slate_700,
-      NrwlPalette.slate_50
-    ),
-    'border-color': selectValueByThemeDynamic(
-      NrwlPalette.slate_500,
-      NrwlPalette.slate_400
-    ),
+    'background-opacity': (node) => switchValueByDarkMode(node, 0.5, 0.8),
+    backgroundColor: (node) =>
+      switchValueByDarkMode(node, NrwlPalette.slate_700, NrwlPalette.slate_50),
+    'border-color': (node) =>
+      switchValueByDarkMode(node, NrwlPalette.slate_500, NrwlPalette.slate_400),
     'border-style': 'dashed',
     'border-width': 2,
     label: 'data(label)',
@@ -95,14 +84,10 @@ const highlightedNodes: Stylesheet = {
   selector: 'node.highlight',
   style: {
     color: NrwlPalette.white,
-    'border-color': selectValueByThemeDynamic(
-      NrwlPalette.sky_600,
-      NrwlPalette.blue_600
-    ),
-    backgroundColor: selectValueByThemeDynamic(
-      NrwlPalette.sky_500,
-      NrwlPalette.blue_500
-    ),
+    'border-color': (node) =>
+      switchValueByDarkMode(node, NrwlPalette.sky_600, NrwlPalette.blue_600),
+    backgroundColor: (node) =>
+      switchValueByDarkMode(node, NrwlPalette.sky_500, NrwlPalette.blue_500),
   },
 };
 

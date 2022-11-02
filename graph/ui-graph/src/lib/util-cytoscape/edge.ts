@@ -2,6 +2,13 @@
 import type { ProjectGraphDependency } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 
+export interface EdgeDataDefinition extends cy.NodeDataDefinition {
+  id: string;
+  source: string;
+  target: string;
+  type: 'static' | 'dynamic' | 'implicit';
+}
+
 export class ProjectEdge {
   affected = false;
 

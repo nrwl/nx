@@ -13,7 +13,7 @@ export function rankDirInit() {
 export function rankDirResolver(rankDir: RankDir) {
   currentRankDir = rankDir;
   localStorage.setItem(localStorageRankDirKey, rankDir);
-  getGraphService().setRankDir(currentRankDir);
+  getGraphService().rankDir = currentRankDir;
 }
 
 export function selectValueByRankDirDynamic<T>(
