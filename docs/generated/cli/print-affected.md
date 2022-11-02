@@ -61,12 +61,6 @@ Type: `string`
 
 Base of the current branch (usually main)
 
-### configuration
-
-Type: `string`
-
-This is the configuration to use when performing tasks on projects
-
 ### exclude
 
 Type: `array`
@@ -93,41 +87,11 @@ Type: `boolean`
 
 Show help
 
-### nx-bail
-
-Type: `boolean`
-
-Default: `false`
-
-Stop command execution after the first failed task
-
-### nx-ignore-cycles
-
-Type: `boolean`
-
-Default: `false`
-
-Ignore cycles in the task graph
-
-### runner
-
-Type: `string`
-
-This is the name of the tasks runner configured in nx.json
-
 ### select
 
 Type: `string`
 
 Select the subset of the returned json document (e.g., --select=projects)
-
-### skip-nx-cache
-
-Type: `boolean`
-
-Default: `false`
-
-Rerun the tasks even when the results are available in the cache
 
 ### target
 
@@ -154,14 +118,6 @@ Uncommitted changes
 Type: `boolean`
 
 Untracked changes
-
-### verbose
-
-Type: `boolean`
-
-Default: `false`
-
-Prints additional information about the commands (e.g., stack traces)
 
 ### version
 

@@ -105,7 +105,7 @@ Projects to run (comma delimited)
 
 Type: `string`
 
-Override the tasks runner in `nx.json`
+This is the name of the tasks runner configured in nx.json
 
 ### skip-nx-cache
 
