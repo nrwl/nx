@@ -239,7 +239,9 @@ export default createESLintRule<Options, MessageIds>({
                   return;
                 }
 
-                const imports = specifiers.map((s) => s.imported.name);
+                const imports = specifiers
+                  .filter((s) => s.type === 'ImportSpecifier')
+                  .map((s) => s.imported.name);
 
                 // process each potential entry point and try to find the imports
                 const importsToRemap = [];
@@ -313,7 +315,9 @@ export default createESLintRule<Options, MessageIds>({
                   return;
                 }
                 // imported JS functions to remap
-                const imports = specifiers.map((s) => s.imported.name);
+                const imports = specifiers
+                  .filter((s) => s.type === 'ImportSpecifier')
+                  .map((s) => s.imported.name);
 
                 // process each potential entry point and try to find the imports
                 const importsToRemap = [];
