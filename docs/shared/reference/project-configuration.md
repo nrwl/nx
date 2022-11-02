@@ -393,13 +393,4 @@ You can also remove a dependency as follows:
 ### Ignoring a project
 
 Nx will add every project with a `package.json` file in it to its project graph. If you want to ignore a particular
-project, add the following to its `package.json`:
-
-```jsonc {% fileName="package.json" %}
-{
-  "name": "mylib",
-  "nx": {
-    "ignore": true
-  }
-}
-```
+project, add the directory to your `.nxignore` file.
