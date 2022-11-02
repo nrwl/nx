@@ -248,7 +248,7 @@ export default createESLintRule<Options, MessageIds>({
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      entryPointPath.path,
+                      joinPathFragments(workspaceRoot, entryPointPath.path),
                       sourceProject.data.sourceRoot
                     );
                     // we cannot remap, so leave it as is
@@ -322,7 +322,7 @@ export default createESLintRule<Options, MessageIds>({
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      entryPointPath,
+                      joinPathFragments(workspaceRoot, entryPointPath),
                       sourceProject.data.sourceRoot
                     );
                     if (importPath) {
