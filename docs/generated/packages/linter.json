@@ -57,16 +57,6 @@
         "title": "Create a new Workspace Lint Rule",
         "description": "Create a new Workspace Lint Rule.",
         "type": "object",
-        "examples": [
-          {
-            "command": "nx g @nrwl/linter:workspace-rule my-custom-rule",
-            "description": "Create a new workspace lint rule called my-custom-rule"
-          },
-          {
-            "command": "nx g @nrwl/linter:workspace-rule --name=my-custom-rule --directory=a/b/c",
-            "description": "Create a new workspace lint rule located at `tools/eslint-rules/a/b/c/my-custom-rule.ts`"
-          }
-        ],
         "properties": {
           "name": {
             "type": "string",
@@ -81,6 +71,7 @@
           }
         },
         "required": ["name", "directory"],
+        "examplesFile": "{% tabs %}\n{% tab label=\"Create rule\" %}\n\nThis command will generate a new workspace lint rule called `my-custom-rule`. The new rule will be generated in `tools/eslint-rules/rules` folder:\n\n```shell\nnx g @nrwl/linter:workspace-rule my-custom-rule\n```\n\n{% /tab %}\n{% tab label=\"Custom sub-folder\" %}\n\nWe can change the default sub-folder from `rules` and specify a custom one:\n\n```shell\nnx g @nrwl/linter:workspace-rule --name=my-custom-rule --directory=my/custom/path\n```\n\nThe command above will generate the rule in `tools/eslint-rules/my/custom/path` folder.\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
         "presets": []
       },
       "description": "Create a new Workspace ESLint rule.",
