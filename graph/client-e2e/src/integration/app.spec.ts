@@ -12,12 +12,13 @@ import {
   getSelectProjectsMessage,
   getTextFilterInput,
   getTextFilterReset,
+  getToggleAllButtonForFolder,
   getUncheckedProjectItems,
   getUnfocusProjectButton,
 } from '../support/app.po';
 
-import * as nxExamplesJson from '../fixtures/nx-examples.json';
 import * as affectedJson from '../fixtures/affected.json';
+import * as nxExamplesJson from '../fixtures/nx-examples.json';
 
 describe('graph-client', () => {
   before(() => {
@@ -225,6 +226,28 @@ describe('graph-client', () => {
       getFocusButtonForProject('cart').click({ force: true });
       getUnfocusProjectButton().click();
 
+      getCheckedProjectItems().should('have.length', 0);
+    });
+  });
+
+  describe('toggle all projects in folder button', () => {
+    it('should check all projects in folder if at least one project checked', () => {
+      cy.contains('shared-product-state').scrollIntoView().should('be.visible');
+      cy.get('[data-project="shared-product-state"]').should('be.visible');
+      cy.get('[data-project="shared-product-state"]').click({ force: true });
+      getToggleAllButtonForFolder('shared/product').click({ force: true });
+      getCheckedProjectItems().should('have.length', 4);
+    });
+
+    it('should check all projects in folder if no projects checked yet', () => {
+      getToggleAllButtonForFolder('shared').click({ force: true });
+      getCheckedProjectItems().should('have.length', 5);
+    });
+
+    it('should uncheck all projects in folder if all projects checked yet', () => {
+      getToggleAllButtonForFolder('shared').click({ force: true });
+      getCheckedProjectItems().should('have.length', 5);
+      getToggleAllButtonForFolder('shared').click({ force: true });
       getCheckedProjectItems().should('have.length', 0);
     });
   });
