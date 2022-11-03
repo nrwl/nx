@@ -18,45 +18,12 @@ export const routes = [
         loader: async ({ request, params }) => {
           const { search } = new URL(request.url);
 
-          const { appConfig } = getEnvironmentConfig();
-          const selectedProjectId = appConfig.defaultProjectGraph;
-          const projectInfo = appConfig.projectGraphs.find(
-            (graph) => graph.id === selectedProjectId
-          );
-          const projectGraphService = getProjectGraphDataService();
-          const depGraphService = getDepGraphService();
-
-          const fetchProjectGraph = async () => {
-            const project: DepGraphClientResponse =
-              await projectGraphService.getProjectGraph(projectInfo.url);
-
-            const workspaceLayout = project?.layout;
-            depGraphService.send({
-              type: 'initGraph',
-              projects: project.projects,
-              dependencies: project.dependencies,
-              affectedProjects: project.affected,
-              workspaceLayout: workspaceLayout,
-            });
-          };
-          await fetchProjectGraph();
-
           return redirect(`/projects${search}`);
         },
       },
       {
         path: 'projects',
         element: <ProjectsSidebar />,
-        children: [
-          {
-            path: 'select/all',
-            loader: () => {
-              const depGraphService = getDepGraphService();
-
-              depGraphService.send('selectAll');
-            },
-          },
-        ],
       },
       {
         loader: ({ request, params }) => {
