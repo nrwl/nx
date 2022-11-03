@@ -31,6 +31,10 @@ the result of the test run.
 
 Now, run the following command twice. The second time the operation will be instant:
 
+```shell
+nx build header
+```
+
 ```{% command="nx build header"%}
 > nx run header:build  [local cache]
 
