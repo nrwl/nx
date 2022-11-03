@@ -79,7 +79,7 @@ export function withNx(
           rule.sideEffects === false && regexEqual(rule.test, /\.module\.css$/)
       );
       // Might not be found if Next.js webpack config changes in the future
-      if (nextCssLoader) {
+      if (nextCssLoader && nextCssLoader.issuer) {
         nextCssLoader.issuer.or = nextCssLoader.issuer.and
           ? nextCssLoader.issuer.and.concat(includes)
           : includes;
@@ -95,7 +95,7 @@ export function withNx(
           regexEqual(rule.test, /\.module\.(scss|sass)$/)
       );
       // Might not be found if Next.js webpack config changes in the future
-      if (nextSassLoader) {
+      if (nextSassLoader && nextSassLoader.issuer) {
         nextSassLoader.issuer.or = nextSassLoader.issuer.and
           ? nextSassLoader.issuer.and.concat(includes)
           : includes;
@@ -130,7 +130,7 @@ export function withNx(
         )
       );
       // Might not be found if Next.js webpack config changes in the future
-      if (nextGlobalCssLoader) {
+      if (nextGlobalCssLoader && nextGlobalCssLoader.issuer) {
         nextGlobalCssLoader.issuer.or = nextGlobalCssLoader.issuer.and
           ? nextGlobalCssLoader.issuer.and.concat(includes)
           : includes;
