@@ -39,7 +39,7 @@ Here's the `project.json` file for your `products-data-client` project:
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/products-data-client"],
+      "outputs": ["{workspaceRoot}/coverage/libs/products-data-client"],
       "options": {
         "jestConfig": "libs/products-data-client/jest.config.ts",
         "passWithNoTests": true

@@ -9,8 +9,8 @@
     "build-android": {
       "executor": "@nrwl/react-native:build-android",
       "outputs": [
-        "apps/mobile/android/app/build/outputs/bundle",
-        "apps/mobile/android/app/build/outputs/apk"
+        "{projectRoot}/build/outputs/bundle",
+        "{projectRoot}/build/outputs/apk"
       ],
       "options": {}
     }
@@ -32,8 +32,8 @@ The `gradleTask` option accepts any custom gradle task, such as `assembleDebug`,
     "build-android": {
       "executor": "@nrwl/react-native:build-android",
       "outputs": [
-        "apps/mobile/android/app/build/outputs/bundle",
-        "apps/mobile/android/app/build/outputs/apk"
+        "{projectRoot}/build/outputs/bundle",
+        "{projectRoot}/build/outputs/apk"
       ],
       "options": {
         "gradleTask": "assembleDebug"
@@ -50,8 +50,8 @@ The `apk` option allows you determine the format of android build. If set as tru
     "build-android": {
       "executor": "@nrwl/react-native:build-android",
       "outputs": [
-        "apps/mobile/android/app/build/outputs/bundle",
-        "apps/mobile/android/app/build/outputs/apk"
+        "{projectRoot}/build/outputs/bundle",
+        "{projectRoot}/build/outputs/apk"
       ],
       "options": {
         "apk": true
@@ -68,8 +68,8 @@ If set `debug` option as `true`, it will create a debug build; if set as `false`
     "build-android": {
       "executor": "@nrwl/react-native:build-android",
       "outputs": [
-        "apps/mobile/android/app/build/outputs/bundle",
-        "apps/mobile/android/app/build/outputs/apk"
+        "{projectRoot}/build/outputs/bundle",
+        "{projectRoot}/build/outputs/apk"
       ],
       "options": {
         "debug": true
