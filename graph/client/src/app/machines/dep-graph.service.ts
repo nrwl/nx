@@ -1,7 +1,7 @@
 import { interpret, InterpreterStatus } from 'xstate';
 import { depGraphMachine } from './dep-graph.machine';
 
-// TODO: figure out what happened to make the interprett return type get so weird
+// TODO: figure out what happened to make the interpret return type get so weird
 let depGraphService = interpret(depGraphMachine, {
   devTools: !!window.useXstateInspect,
 });
