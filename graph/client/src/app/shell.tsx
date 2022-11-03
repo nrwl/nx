@@ -80,7 +80,7 @@ export function Shell(): JSX.Element {
         await projectGraphService.getProjectGraph(projectInfo.url);
 
       const workspaceLayout = project?.layout;
-      console.log('shell');
+
       depGraphService.send({
         type: 'initGraph',
         projects: project.projects,
