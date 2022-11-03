@@ -1,14 +1,18 @@
 # Distribute Task Execution (DTE)
 
-Typically, when developers try to optimize their CI performance, they try to parallelize their tasks on multiple machines using a binning approach that ends up looking something like this:
+Nx speeds up your average CI time with [caching](/core-features/cache-task-results) and the [affected command](/concepts/affected). But neither of these features help with the worst case scenario. When something at the core of your repo has been modified and every task needs to be run in CI, the only way to improve the performance is by adding more agent jobs and efficiently parallelizing the tasks.
+
+The most obvious way to parallelize tasks is to split tasks up by type: running all tests on one job, all builds on another and all lint tasks on a third. This strategy is called binning. This can be made difficult if some test tasks have build tasks as prerequisites, but assuming you figure out some way to handle that, a typical set up can look like the diagram below. Here the test tasks are delayed until all necessary build artifacts are ready, but the build and lint tasks can start right away.
 
 ![CI using binning](../images/dte/binning.svg)
+
+The problem with the binning approach is you'll end up with some idle time on one or more jobs. Nx's distributed task execution reduces that idle time to the minimum possible by assigning each individual task to agent jobs based on the task's average run time. Nx also guarantees that tasks are executed in the correct order and uses distributed caching to make sure that build artifacts from previous tasks are present on every agent job that needs them.
 
 When you set up Nx's distributed task execution, your task graph will look more like this:
 
 ![CI using DTE](../images/dte/3agents.svg)
 
-And not only will CI finish faster, but the debugging experience is the same as if you ran all of your CI on a single machine. That's because Nx uses distributed caching to recreate all of the logs and build artifacts on the main process.
+And not only will CI finish faster, but the debugging experience is the same as if you ran all of your CI on a single job. That's because Nx uses distributed caching to recreate all of the logs and build artifacts on the main job.
 
 ## Set up
 
@@ -26,10 +30,10 @@ The `--ci` flag can be `github`, `circleci` or `azure`. For more details on sett
 
 ## CI Execution Flow
 
-There are two main parts to the CI set up:
+Distributed task execution can work on any CI provider. You are responsible for launching jobs in your CI system. Nx Cloud then coordinates the way those jobs work together. There are two different kinds of jobs that you'll need to create in your CI system.
 
-1. The main job that controls what is going to be executed
-2. The agent jobs that actually execute the tasks
+1. One main job that controls what is going to be executed
+2. Multiple agent jobs that actually execute the tasks
 
 The main job execution flow looks like this:
 

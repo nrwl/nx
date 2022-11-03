@@ -60,7 +60,7 @@ Let’s look at the test target relying on its dependencies.
 {
   "test": {
     "executor": "@nrwl/jest:jest",
-    "outputs": ["coverage/apps/app1"],
+    "outputs": ["{workspaceRoot}/coverage/apps/app1"],
     "dependsOn": ["^test"],
     "options": {
       "jestConfig": "apps/app1/jest.config.js",

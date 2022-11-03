@@ -85,7 +85,7 @@ the name of the target.
 
 ## Run Tasks Affected by a PR
 
-You can also run a command for all the projects affected in your PR like this:
+You can also run a command for all the projects affected by your PR like this:
 
 ```shell
 npx nx affected --target=test

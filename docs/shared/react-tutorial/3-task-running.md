@@ -31,7 +31,7 @@ Here's the `project.json` file for your `common-ui` project:
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/common-ui"],
+      "outputs": ["{workspaceRoot}/coverage/libs/common-ui"],
       "options": {
         "jestConfig": "libs/common-ui/jest.config.ts",
         "passWithNoTests": true

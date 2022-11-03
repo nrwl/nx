@@ -8,7 +8,7 @@
     //...
     "bundle-ios": {
       "executor": "@nrwl/react-native:bundle",
-      "outputs": ["apps/mobile/build"],
+      "outputs": ["{projectRoot}/build"],
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "ios",
