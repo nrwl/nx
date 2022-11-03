@@ -330,6 +330,7 @@ export function newProject({
         `@nrwl/rollup`,
         `@nrwl/react`,
         `@nrwl/storybook`,
+        `@nrwl/vite`,
         `@nrwl/web`,
         `@nrwl/webpack`,
         `@nrwl/react-native`,
