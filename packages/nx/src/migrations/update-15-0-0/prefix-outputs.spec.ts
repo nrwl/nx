@@ -6,9 +6,9 @@ import {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
 } from '../../generators/utils/project-configuration';
-import { writeJson } from '../../generators/utils/json';
+import { readJson, writeJson } from '../../generators/utils/json';
 import prefixOutputs from './prefix-outputs';
-import { validateOutputs } from 'nx/src/tasks-runner/utils';
+import { validateOutputs } from '../../tasks-runner/utils';
 
 describe('15.0.0 migration (prefix-outputs)', () => {
   let tree: Tree;
@@ -80,6 +80,29 @@ describe('15.0.0 migration (prefix-outputs)', () => {
         },
       }
     `);
+  });
+
+  it('should migrate package.json projects', async () => {
+    writeJson(tree, 'proj/package.json', {
+      name: 'proj',
+      scripts: {
+        build: 'echo',
+      },
+      nx: {
+        targets: {
+          build: {
+            outputs: ['dist/proj'],
+          },
+        },
+      },
+    });
+    tree.delete('workspace.json');
+
+    await prefixOutputs(tree);
+
+    expect(readJson(tree, 'proj/package.json').nx.targets.build).toEqual({
+      outputs: ['dist/proj'],
+    });
   });
 
   it('should not error for package.json projects', async () => {

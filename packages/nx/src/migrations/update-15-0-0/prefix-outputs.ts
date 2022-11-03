@@ -7,11 +7,13 @@ import {
   updateWorkspaceConfiguration,
 } from '../../generators/utils/project-configuration';
 import { joinPathFragments } from '../../utils/path';
-import { relative } from 'path';
+import { join, relative } from 'path';
 import {
   transformLegacyOutputs,
   validateOutputs,
 } from 'nx/src/tasks-runner/utils';
+import { updateJson } from '../../generators/utils/json';
+import { PackageJson } from '../../utils/package-json';
 
 export default async function (tree: Tree) {
   // If the workspace doesn't have a nx.json, don't make any changes
@@ -37,7 +39,20 @@ export default async function (tree: Tree) {
         target.outputs = transformLegacyOutputs(project.root, e);
       }
     }
-    updateProjectConfiguration(tree, projectName, project);
+    if (tree.exists(join(project.root, 'project.json'))) {
+      updateProjectConfiguration(tree, projectName, project);
+    } else if (tree.exists(join(project.root, 'package.json'))) {
+      updateJson<PackageJson>(
+        tree,
+        join(project.root, 'package.json'),
+        (json) => {
+          json.nx ??= {};
+          json.nx.targets ??= project.targets;
+
+          return json;
+        }
+      );
+    }
   }
 
   if (workspaceConfiguration.targetDefaults) {
