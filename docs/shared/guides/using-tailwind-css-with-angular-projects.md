@@ -444,7 +444,7 @@ Next, you need to configure your project to build the theme when you build the l
 ...
 "build-angular": {
   "executor": "@nrwl/angular:package",
-  "outputs": ["dist/libs/lib1"],
+  "outputs": ["{workspaceRoot}/dist/libs/lib1"],
   "options": {
     "project": "libs/lib1/ng-package.json",
     "tailwindConfig": "libs/lib1/tailwind.config.js"
@@ -461,7 +461,7 @@ Next, you need to configure your project to build the theme when you build the l
 },
 "build-lib": {
   "executor": "nx:run-commands",
-  "outputs": ["dist/libs/lib1"],
+  "outputs": ["{workspaceRoot}/dist/libs/lib1"],
   "configurations": {
     "production": {
       "commands": [
@@ -480,7 +480,7 @@ Next, you need to configure your project to build the theme when you build the l
 },
 "build": {
   "executor": "nx:run-commands",
-  "outputs": ["dist/libs/lib1"],
+  "outputs": ["{workspaceRoot}/dist/libs/lib1"],
   "configurations": {
     "production": {
       "commands": [
