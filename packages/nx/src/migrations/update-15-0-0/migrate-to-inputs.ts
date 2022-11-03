@@ -7,6 +7,9 @@ import {
   updateWorkspaceConfiguration,
 } from '../../generators/utils/project-configuration';
 import { joinPathFragments } from '../../utils/path';
+import { join } from 'path';
+import { updateJson } from '../../generators/utils/json';
+import { PackageJson } from '../../utils/package-json';
 
 const skippedFiles = [
   'package.json', // Not to be added to filesets
@@ -79,7 +82,23 @@ export default async function (tree: Tree) {
           project.namedInputs.projectSpecificFiles = Array.from(
             projectSpecificFileset
           );
-          updateProjectConfiguration(tree, dependent, project);
+
+          if (tree.exists(join(project.root, 'project.json'))) {
+            updateProjectConfiguration(tree, dependent, project);
+          } else if (tree.exists(join(project.root, 'package.json'))) {
+            updateJson<PackageJson>(
+              tree,
+              join(project.root, 'package.json'),
+              (json) => {
+                json.nx ??= {};
+                json.nx.namedInputs ??= {};
+                json.nx.namedInputs.projectSpecificFiles ??=
+                  project.namedInputs.projectSpecificFiles;
+
+                return json;
+              }
+            );
+          }
         }
       } else {
         workspaceConfiguration.namedInputs.sharedGlobals.push(
