@@ -75,90 +75,11 @@ iframe[src*='youtube'] {
 }
 
 /*
-  Code embed
- */
-.prose pre {
-  background: inherit !important;
-  color: inherit !important;
-  border: 1px solid #e1e4e8;
-}
-
-/*
   Headers
  */
 .prose h5,
 .prose h6 {
   font-weight: 600;
-}
-
-/*
-  Conf
- */
-.date-container-l,
-.date-container-r {
-  position: relative;
-}
-.date-container-l .bg-blue-nx-dark:before {
-  background: hsla(214, 61%, 11%, 1);
-  content: ' ';
-  height: 100%;
-  left: -100%;
-  position: absolute;
-  top: 0;
-  width: 100%;
-}
-.date-container-r .bg-blue-nx-dark:after {
-  background: hsla(214, 61%, 11%, 1);
-  content: ' ';
-  height: 100%;
-  right: -100%;
-  position: absolute;
-  top: 0;
-  width: 100%;
-}
-.workshop-border-r {
-  position: relative;
-}
-.workshop-border-r:after {
-  border-bottom: 1px solid rgb(75, 85, 99);
-  border-top: 1px solid rgb(75, 85, 99);
-  content: ' ';
-  height: 100%;
-  right: -100%;
-  position: absolute;
-  top: 0;
-  width: 100%;
-}
-
-/**
- * Only used for animated background on really big definition
- */
-@media (min-width: 2400px) {
-  div#animated-background {
-    background-size: cover !important;
-  }
-}
-
-/**
- * Sponsor carousel
- */
-#sponsors-carousel {
-  animation: scroll 80s linear infinite;
-  width: calc(192px * 18);
-}
-#sponsors-carousel div {
-  margin: 0 24px;
-  min-width: 144px;
-  width: 144px;
-}
-
-@keyframes scroll {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(calc(-192px * 18), 0, 0);
-  }
 }
 
 /**

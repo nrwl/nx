@@ -21,6 +21,37 @@ describe('Nx Running Tests', () => {
   afterAll(() => cleanupProject());
 
   describe('running targets', () => {
+    describe('(forwarding params)', () => {
+      let proj = uniq('proj');
+      beforeAll(() => {
+        runCLI(`generate @nrwl/workspace:lib ${proj}`);
+        updateProjectConfig(proj, (c) => {
+          c.targets['echo'] = {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo ECHO:',
+            },
+          };
+          return c;
+        });
+      });
+
+      it.each([
+        '--watch false',
+        '--watch=false',
+        '--arr=a,b,c',
+        '--arr=a --arr=b --arr=c',
+        'a',
+        '--a.b=1',
+        '--a.b 1',
+        '-- a b c --a --a.b=1',
+        '--ignored -- a b c --a --a.b=1',
+      ])('should forward %s properly', (args) => {
+        const output = runCLI(`echo ${proj} ${args}`);
+        expect(output).toContain(`ECHO: ${args.replace(/^.*-- /, '')}`);
+      });
+    });
+
     it('should execute long running tasks', async () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/web:app ${myapp}`);

@@ -9,7 +9,7 @@ Run target for multiple listed projects
 
 ## Usage
 
-```bash
+```terminal
 nx run-many
 ```
 
@@ -19,71 +19,71 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Test all projects:
 
-```bash
-nx run-many --target=test
+```terminal
+ nx run-many --target=test
 ```
 
 Test proj1 and proj2:
 
-```bash
-nx run-many --target=test --projects=proj1,proj2
+```terminal
+ nx run-many --target=test --projects=proj1,proj2
 ```
 
 Test proj1 and proj2 in parallel:
 
-```bash
-nx run-many --target=test --projects=proj1,proj2 --parallel=2
+```terminal
+ nx run-many --target=test --projects=proj1,proj2 --parallel=2
 ```
 
 ## Options
 
 ### all
 
-Type: boolean
+Type: `boolean`
 
-Default: true
+Default: `true`
 
 [deprecated] Run the target on all projects in the workspace
 
 ### configuration
 
-Type: string
+Type: `string`
 
 This is the configuration to use when performing tasks on projects
 
 ### exclude
 
-Type: array
+Type: `array`
 
-Default: []
+Default: `[]`
 
 Exclude certain projects from being processed
 
 ### help
 
-Type: boolean
+Type: `boolean`
 
 Show help
 
 ### nx-bail
 
-Type: boolean
+Type: `boolean`
 
-Default: false
+Default: `false`
 
 Stop command execution after the first failed task
 
 ### nx-ignore-cycles
 
-Type: boolean
+Type: `boolean`
 
-Default: false
+Default: `false`
 
 Ignore cycles in the task graph
 
 ### output-style
 
-Type: string
+Type: `string`
 
 Choices: [dynamic, static, stream, stream-without-prefixes]
 
@@ -91,46 +91,46 @@ Defines how Nx emits outputs tasks logs
 
 ### parallel
 
-Type: string
+Type: `string`
 
 Max number of parallel processes [default is 3]
 
 ### projects
 
-Type: string
+Type: `string`
 
 Projects to run (comma delimited)
 
 ### runner
 
-Type: string
+Type: `string`
 
-Override the tasks runner in `nx.json`
+This is the name of the tasks runner configured in nx.json
 
 ### skip-nx-cache
 
-Type: boolean
+Type: `boolean`
 
-Default: false
+Default: `false`
 
 Rerun the tasks even when the results are available in the cache
 
 ### target
 
-Type: string
+Type: `string`
 
 Task to run for affected projects
 
 ### verbose
 
-Type: boolean
+Type: `boolean`
 
-Default: false
+Default: `false`
 
 Prints additional information about the commands (e.g., stack traces)
 
 ### version
 
-Type: boolean
+Type: `boolean`
 
 Show version number

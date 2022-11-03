@@ -14,6 +14,8 @@ import { Card, Cards } from './lib/tags/cards.component';
 import { card, cards } from './lib/tags/cards.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
+import { Graph } from './lib/tags/graph.component';
+import { graph } from './lib/tags/graph.schema';
 import { Iframe } from './lib/tags/iframe.component';
 import { iframe } from './lib/tags/iframe.schema';
 import { NxCloudSection } from './lib/tags/nx-cloud-section.component';
@@ -44,6 +46,7 @@ export const getMarkdocCustomConfig = (
       card,
       cards,
       'github-repository': githubRepository,
+      graph,
       iframe,
       'install-nx-console': installNxConsole,
       'nx-cloud-section': nxCloudSection,
@@ -62,6 +65,7 @@ export const getMarkdocCustomConfig = (
     CustomLink,
     Fence,
     GithubRepository,
+    Graph,
     Heading,
     Iframe,
     InstallNxConsole,

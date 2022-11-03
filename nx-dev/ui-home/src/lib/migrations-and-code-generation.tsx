@@ -29,13 +29,12 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
             </p>
           </div>
           <div className="action mt-6 flex">
-            <Link href="/core-features/automate-updating-dependencies">
-              <a
-                title="Read more about affected command"
-                className="rounded-full border border-transparent bg-blue-500 py-1 px-3 font-semibold text-white transition hover:bg-blue-600 hover:text-slate-50 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:bg-sky-500 dark:hover:bg-sky-400"
-              >
-                Read about migrations
-              </a>
+            <Link
+              href="/core-features/automate-updating-dependencies"
+              title="Read more about affected command"
+              className="rounded-full border border-transparent bg-blue-500 py-1 px-3 font-semibold text-white transition hover:bg-blue-600 hover:text-slate-50 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:bg-sky-500 dark:hover:bg-sky-400"
+            >
+              Read about migrations
             </Link>
           </div>
         </div>

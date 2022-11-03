@@ -133,7 +133,10 @@ export async function updateJestConfigExt(tree: Tree) {
       for (const fileName of rootFiles) {
         if (fileName === 'tsconfig.json') {
           const filePath = joinPathFragments(projectConfig.root, fileName);
-          const tsConfig = readJson(tree, filePath);
+          const tsConfig = readJson(tree, filePath, {
+            allowTrailingComma: true,
+            disallowComments: false,
+          });
 
           if (tsConfig.references) {
             for (const { path } of tsConfig.references) {

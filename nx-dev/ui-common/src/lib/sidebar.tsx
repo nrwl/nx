@@ -82,8 +82,8 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         onClick={handleCollapseToggle}
       >
         {item.disableCollapsible ? (
-          <Link href={item.path as string} passHref>
-            <a className="hover:underline">{item.name}</a>
+          <Link href={item.path as string} passHref className="hover:underline">
+            {item.name}
           </Link>
         ) : (
           <>
@@ -103,21 +103,21 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
               key={subItem.id + '-' + index}
               data-testid={`section-li:${subItem.id}`}
             >
-              <Link href={subItem.path as string} passHref>
-                <a
-                  className={cx(
-                    'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
-                  )}
+              <Link
+                href={subItem.path as string}
+                passHref
+                className={cx(
+                  'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
+                )}
+              >
+                <span
+                  className={cx('relative', {
+                    'text-md font-medium text-blue-500 dark:text-sky-500':
+                      isActiveLink,
+                  })}
                 >
-                  <span
-                    className={cx('relative', {
-                      'text-md font-medium text-blue-500 dark:text-sky-500':
-                        isActiveLink,
-                    })}
-                  >
-                    {subItem.name}
-                  </span>
-                </a>
+                  {subItem.name}
+                </span>
               </Link>
             </li>
           );
@@ -205,18 +205,19 @@ export function SidebarMobile({
               {/*SECTIONS*/}
               <div className="mb-8 grid w-full shrink-0 grid-cols-3 items-center justify-between">
                 {sections.map((section) => (
-                  <Link key={section.name} href={section.href} passHref>
-                    <a
-                      className={cx(
-                        section.current
-                          ? 'text-blue-600 dark:text-sky-500'
-                          : 'hover:text-slate-900 dark:hover:text-sky-400',
-                        'whitespace-nowrap p-4 text-center text-sm font-medium'
-                      )}
-                      aria-current={section.current ? 'page' : undefined}
-                    >
-                      {section.name}
-                    </a>
+                  <Link
+                    key={section.name}
+                    href={section.href}
+                    passHref
+                    className={cx(
+                      section.current
+                        ? 'text-blue-600 dark:text-sky-500'
+                        : 'hover:text-slate-900 dark:hover:text-sky-400',
+                      'whitespace-nowrap p-4 text-center text-sm font-medium'
+                    )}
+                    aria-current={section.current ? 'page' : undefined}
+                  >
+                    {section.name}
                   </Link>
                 ))}
               </div>

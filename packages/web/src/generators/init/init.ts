@@ -65,15 +65,21 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
   let tasks: GeneratorCallback[] = [];
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(tree, {});
+    const jestTask = jestInitGenerator(tree, {
+      skipPackageJson: schema.skipPackageJson,
+    });
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    const cypressTask = cypressInitGenerator(tree, {});
+    const cypressTask = cypressInitGenerator(tree, {
+      skipPackageJson: schema.skipPackageJson,
+    });
     tasks.push(cypressTask);
   }
-  const installTask = updateDependencies(tree, schema);
-  tasks.push(installTask);
+  if (!schema.skipPackageJson) {
+    const installTask = updateDependencies(tree, schema);
+    tasks.push(installTask);
+  }
   initRootBabelConfig(tree);
   if (!schema.skipFormat) {
     await formatFiles(tree);

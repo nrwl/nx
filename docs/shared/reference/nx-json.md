@@ -175,7 +175,7 @@ Another target default you can configure is `outputs`:
 {
   "targetDefaults": {
     "build": {
-      "outputs": ["./custom-dist"]
+      "outputs": ["{projectRoot}/custom-dist"]
     }
   }
 }

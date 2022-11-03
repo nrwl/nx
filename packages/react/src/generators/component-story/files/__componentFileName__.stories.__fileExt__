@@ -1,4 +1,4 @@
-<% if ( !isPlainJs ) { %>import { ComponentStory, ComponentMeta } from '@storybook/react';<% } %>
+<% if ( !isPlainJs ) { %>import type { ComponentStory, ComponentMeta } from '@storybook/react';<% } %>
 import<% if ( !isPlainJs ) { %> { <% } %> <%= componentName %> <% if ( !isPlainJs ) { %> } <% } %> from './<%= componentImportFileName %>';
 
 <% if ( isPlainJs ) { %>

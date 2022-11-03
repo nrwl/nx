@@ -20,25 +20,23 @@ export function MonorepoStyles(): JSX.Element {
           <div className="mt-8 flex gap-16 font-normal">
             <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
               Choose your style! Have a monorepo already?{' '}
-              <Link href="/recipes/adopting-nx/adding-to-monorepo">
-                <a
-                  title="Install VSCode's native extension for Nx"
-                  className="font-medium text-blue-500 dark:text-sky-500"
-                >
-                  Add Nx on top!
-                </a>
+              <Link
+                href="/recipes/adopting-nx/adding-to-monorepo"
+                title="Install VSCode's native extension for Nx"
+                className="font-medium text-blue-500 dark:text-sky-500"
+              >
+                Add Nx on top!
               </Link>{' '}
               <span className="font-medium">You control everything</span>, Nx
               makes things fast. Or focus on what matters and{' '}
               <span className="font-medium">let Nx do the heavy lifting</span>{' '}
               with its set of{' '}
-              <Link href="/community#plugin-directory">
-                <a
-                  title="Install VSCode's native extension for Nx"
-                  className="font-medium text-blue-500 dark:text-sky-500"
-                >
-                  powerful plugins
-                </a>
+              <Link
+                href="/community#plugin-directory"
+                title="Install VSCode's native extension for Nx"
+                className="font-medium text-blue-500 dark:text-sky-500"
+              >
+                powerful plugins
               </Link>
               . Extend Nx by creating custom plugins that{' '}
               <span className="font-medium">work for your organization</span>,
@@ -46,13 +44,12 @@ export function MonorepoStyles(): JSX.Element {
             </p>
           </div>
           <div className="action mt-6 flex">
-            <Link href="/concepts/integrated-vs-package-based">
-              <a
-                title="Read more about affected command"
-                className="rounded-full border border-transparent bg-blue-500 py-1 px-3 font-semibold text-white transition hover:bg-blue-600 hover:text-slate-50 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:bg-sky-500 dark:hover:bg-sky-400"
-              >
-                Read about different monorepo styles
-              </a>
+            <Link
+              href="/concepts/integrated-vs-package-based"
+              title="Read more about affected command"
+              className="rounded-full border border-transparent bg-blue-500 py-1 px-3 font-semibold text-white transition hover:bg-blue-600 hover:text-slate-50 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:bg-sky-500 dark:hover:bg-sky-400"
+            >
+              Read about different monorepo styles
             </Link>
           </div>
         </div>

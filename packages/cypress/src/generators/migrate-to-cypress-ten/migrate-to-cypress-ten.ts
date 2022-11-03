@@ -12,8 +12,6 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
-import { tsquery } from '@phenomnomnominal/tsquery';
-import { extname } from 'path';
 import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
 import { cypressVersion } from '../../utils/versions';
 import {
@@ -27,6 +25,13 @@ import {
 
 export async function migrateCypressProject(tree: Tree) {
   assertMinimumCypressVersion(8);
+  // keep history of cypress configs as some workspaces share configs
+  // if we don't have the already migrated configs
+  // it prevents us from being able to rename files for those projects
+  const previousCypressConfigs = new Map<
+    string,
+    ReturnType<typeof createNewCypressConfig>
+  >();
 
   forEachExecutorOptions<CypressExecutorOptions>(
     tree,
@@ -38,6 +43,9 @@ export async function migrateCypressProject(tree: Tree) {
         const { cypressConfigPathJson, cypressConfigPathTs } =
           findCypressConfigs(tree, projectConfig, target, configuration);
 
+        if (!cypressConfigPathJson && !cypressConfigPathTs) {
+          return;
+        }
         // a matching cypress ts file hasn't been made yet. need to migrate.
         if (
           tree.exists(cypressConfigPathJson) &&
@@ -48,22 +56,14 @@ export async function migrateCypressProject(tree: Tree) {
             projectConfig,
             cypressConfigPathJson
           );
-
-          updateProjectPaths(tree, projectConfig, cypressConfigs);
           cypressConfigs = updatePluginFile(
             tree,
             projectConfig,
             cypressConfigs
           );
           writeNewConfig(tree, cypressConfigPathTs, cypressConfigs);
-          addConfigToTsConfig(
-            tree,
-            projectConfig.targets?.[target]?.configurations?.tsConfig ||
-              projectConfig.targets?.[target]?.options?.tsConfig ||
-              joinPathFragments(projectConfig.root, 'tsconfig.json'),
-            cypressConfigPathTs
-          );
 
+          previousCypressConfigs.set(cypressConfigPathJson, cypressConfigs);
           tree.delete(cypressConfigPathJson);
         }
         // ts file has been made and matching json file has been removed only need to update the project config
@@ -71,11 +71,34 @@ export async function migrateCypressProject(tree: Tree) {
           !tree.exists(cypressConfigPathJson) &&
           tree.exists(cypressConfigPathTs)
         ) {
-          projectConfig.targets[target].options = {
-            ...projectConfig.targets[target].options,
-            cypressConfig: cypressConfigPathTs,
-            testingType: 'e2e',
-          };
+          const cypressConfigs = previousCypressConfigs.get(
+            cypressConfigPathJson
+          );
+
+          updateProjectPaths(tree, projectConfig, cypressConfigs);
+          addConfigToTsConfig(
+            tree,
+            (configuration
+              ? projectConfig.targets?.[target]?.configurations?.[configuration]
+                  ?.tsConfig
+              : projectConfig.targets?.[target]?.options?.tsConfig) ||
+              joinPathFragments(projectConfig.root, 'tsconfig.json'),
+            cypressConfigPathTs
+          );
+
+          if (configuration) {
+            projectConfig.targets[target].configurations[configuration] = {
+              ...projectConfig.targets[target].configurations[configuration],
+              cypressConfig: cypressConfigPathTs,
+            };
+          } else {
+            projectConfig.targets[target].options = {
+              ...projectConfig.targets[target].options,
+              cypressConfig: cypressConfigPathTs,
+            };
+          }
+
+          projectConfig.targets[target].options.testingType = 'e2e';
 
           updateProjectConfiguration(tree, projectName, projectConfig);
         }
@@ -96,6 +119,15 @@ https://nx.dev/cypress/v10-migration-guide
   });
 
   await formatFiles(tree);
+
+  if (tree.exists('cypress.json')) {
+    logger.warn(stripIndents`A root cypress.json file was found. 
+    You should remove this file as it will cause an error when running Cypress.
+    If you want to share options between Cypress projects. 
+    You can create a root ts file and import it into each project's cypress config file.
+    More Info: https://github.com/nrwl/nx/issues/11512#issuecomment-1213420638
+    `);
+  }
   return () => {
     installPackagesTask(tree);
   };

@@ -56,22 +56,18 @@ You can add Nx-specific configuration as follows:
 {
   "name": "mylib",
   "scripts": {
-    "test: "jest",
+    "test": "jest",
     "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
   },
   "nx": {
     "namedInputs": {
-      "default": [
-        "{projectRoot}/**/*"
-      ],
-      "production": [
-        "!{projectRoot}/**/*.spec.tsx"
-      ]
+      "default": ["{projectRoot}/**/*"],
+      "production": ["!{projectRoot}/**/*.spec.tsx"]
     },
     "targets": {
       "build": {
         "inputs": ["production", "^production"],
-        "outputs": ["dist/libs/mylib"],
+        "outputs": ["{workspaceRoot}/dist/libs/mylib"],
         "dependsOn": ["^build"]
       },
       "test": {
@@ -107,7 +103,7 @@ You can add Nx-specific configuration as follows:
     "build": {
       "executor": "@nrwl/js:tsc",
       "inputs": ["production", "^production"],
-      "outputs": ["dist/libs/mylib"],
+      "outputs": ["{workspaceRoot}/dist/libs/mylib"],
       "dependsOn": ["^build"],
       "options": {}
     }
@@ -192,7 +188,7 @@ sources (non-test sources) of its dependencies. In other words, it treats test s
 
 ### outputs
 
-Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
+Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["{workspaceRoot}/dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the configuration above.
 
@@ -203,7 +199,10 @@ Usually, a target writes to a specific directory or a file. The following instru
 ```json
 {
   "build": {
-    "outputs": ["dist/libs/mylib", "build/libs/mylib/main.js"]
+    "outputs": [
+      "{workspaceRoot}/dist/libs/mylib",
+      "{workspaceRoot}/build/libs/mylib/main.js"
+    ]
   }
 }
 ```
@@ -215,10 +214,10 @@ Sometimes, multiple targets might write to the same directory. When possible it 
 ```json
 {
   "build-js": {
-    "outputs": ["dist/libs/mylib/js"]
+    "outputs": ["{workspaceRoot}/dist/libs/mylib/js"]
   },
   "build-css": {
-    "outputs": ["dist/libs/mylib/css"]
+    "outputs": ["{workspaceRoot}/dist/libs/mylib/css"]
   }
 }
 ```
@@ -228,10 +227,10 @@ But if the above is not possible, globs can be specified as outputs to only cach
 ```json
 {
   "build-js": {
-    "outputs": ["dist/libs/mylib/**/*.js"]
+    "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.js"]
   },
   "build-css": {
-    "outputs": ["dist/libs/mylib/**/*.css"]
+    "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.css"]
   }
 }
 ```
@@ -393,13 +392,4 @@ You can also remove a dependency as follows:
 ### Ignoring a project
 
 Nx will add every project with a `package.json` file in it to its project graph. If you want to ignore a particular
-project, add the following to its `package.json`:
-
-```jsonc {% fileName="package.json" %}
-{
-  "name": "mylib",
-  "nx": {
-    "ignore": true
-  }
-}
-```
+project, add the directory to your `.nxignore` file.

@@ -43,6 +43,11 @@
             "type": "boolean",
             "default": false
           },
+          "skipPackageJson": {
+            "description": "Do not add dependencies to `package.json`.",
+            "type": "boolean",
+            "default": false
+          },
           "js": {
             "type": "boolean",
             "default": false,
@@ -390,6 +395,11 @@
             "enum": ["babel", "swc"],
             "default": "babel",
             "description": "Which compiler to use."
+          },
+          "skipPackageJson": {
+            "description": "Do not add dependencies to `package.json`.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": ["name"],
@@ -855,8 +865,7 @@
           },
           "directory": {
             "type": "string",
-            "description": "Create the hook under this directory (can be nested).",
-            "alias": "d"
+            "description": "Create the hook under this directory (can be nested)."
           },
           "flat": {
             "type": "boolean",

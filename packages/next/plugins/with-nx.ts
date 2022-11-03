@@ -37,7 +37,7 @@ function getWithNxContext(): WithNxContext {
 export function withNx(
   nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
-) {
+): NextConfig {
   const userWebpack = nextConfig.webpack || ((x) => x);
   const { nx, ...validNextConfig } = nextConfig;
   return {

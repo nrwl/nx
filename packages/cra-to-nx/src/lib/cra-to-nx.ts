@@ -165,6 +165,7 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
   addDependency('@craco/craco', true);
   addDependency('web-vitals', true);
   addDependency('jest-watch-typeahead', true); // Only for ts apps?
+  addDependency('cross-env', true);
 
   output.log({
     title: '🎉 Done!',

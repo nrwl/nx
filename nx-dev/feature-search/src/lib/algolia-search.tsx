@@ -20,11 +20,7 @@ function Hit({
   hit: InternalDocSearchHit | StoredDocSearchHit;
   children: ReactNode;
 }): JSX.Element {
-  return (
-    <Link href={hit.url}>
-      <a>{children}</a>
-    </Link>
-  );
+  return <Link href={hit.url}>{children}</Link>;
 }
 
 export function AlgoliaSearch({
@@ -91,7 +87,8 @@ export function AlgoliaSearch({
         >
           <MagnifyingGlassIcon className="h-4 w-4 flex-none" />
           <span className="mx-3 text-xs text-slate-300 dark:text-slate-400 md:text-sm lg:inline-flex">
-            Search <span className="hidden md:inline">Documentation ...</span>
+            Search{' '}
+            <span className="ml-2 hidden md:inline">Documentation ...</span>
           </span>
           <span
             style={{ opacity: browserDetected ? '1' : '0' }}
@@ -138,6 +135,7 @@ export function AlgoliaSearch({
             searchParameters={{
               facetFilters: ['language:en'],
               hitsPerPage: 100,
+              distinct: true,
             }}
             initialQuery={initialQuery}
             placeholder="Search documentation"
@@ -157,7 +155,6 @@ export function AlgoliaSearch({
               return items.map((item, index) => {
                 const a = document.createElement('a');
                 a.href = item.url;
-
                 const hash = a.hash === '#content-wrapper' ? '' : a.hash;
 
                 if (item.hierarchy?.lvl0) {

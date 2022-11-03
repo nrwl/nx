@@ -1,3 +1,30 @@
+import type { Target } from '@angular-devkit/architect';
+import { merge } from 'webpack-merge';
+
+export async function mergeCustomWebpackConfig(
+  baseWebpackConfig: any,
+  pathToWebpackConfig: string,
+  options: { tsConfig: string; [k: string]: any },
+  target: Target
+) {
+  const customWebpackConfiguration = resolveCustomWebpackConfig(
+    pathToWebpackConfig,
+    options.tsConfig
+  );
+  // The extra Webpack configuration file can also export a Promise, for instance:
+  // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
+  // then await will just resolve that object.
+  const config = await customWebpackConfiguration;
+
+  // The extra Webpack configuration file can export a synchronous or asynchronous function,
+  // for instance: `module.exports = async config => { ... }`.
+  if (typeof config === 'function') {
+    return config(baseWebpackConfig, options, target);
+  } else {
+    return merge(baseWebpackConfig, config);
+  }
+}
+
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
   tsNodeRegister(path, tsConfig);
 

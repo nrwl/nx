@@ -9,17 +9,15 @@ import {
   mergePluginTargetsWithNxTargets,
 } from '../utils/nx-plugin';
 import { Task, TaskGraph } from '../config/task-graph';
-import { getPackageManagerCommand } from '../utils/package-manager';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { joinPathFragments } from '../utils/path';
-import { logger } from '../utils/logger';
 import { isRelativePath } from 'nx/src/utils/fileutils';
+import { serializeOverridesIntoCommandLine } from 'nx/src/utils/serialize-overrides-into-command-line';
 
-export function getCommandAsString(task: Task) {
-  const execCommand = getPackageManagerCommand().exec;
+export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
   return [execCommand, 'nx', ...args].join(' ').trim();
 }
@@ -365,42 +363,5 @@ function longRunningTask(task: Task) {
 
 // TODO: vsavkin remove when nx-cloud doesn't depend on it
 export function unparse(options: Object): string[] {
-  const unparsed = [];
-  for (const key of Object.keys(options)) {
-    const value = options[key];
-    unparseOption(key, value, unparsed);
-  }
-
-  return unparsed;
-}
-
-function unparseOption(key: string, value: any, unparsed: string[]) {
-  if (value === true) {
-    unparsed.push(`--${key}`);
-  } else if (value === false) {
-    unparsed.push(`--no-${key}`);
-  } else if (Array.isArray(value)) {
-    value.forEach((item) => unparseOption(key, item, unparsed));
-  } else if (Object.prototype.toString.call(value) === '[object Object]') {
-    const flattened = flatten<any, any>(value, { safe: true });
-    for (const flattenedKey in flattened) {
-      unparseOption(
-        `${key}.${flattenedKey}`,
-        flattened[flattenedKey],
-        unparsed
-      );
-    }
-  } else if (
-    typeof value === 'string' &&
-    stringShouldBeWrappedIntoQuotes(value)
-  ) {
-    const sanitized = value.replace(/"/g, String.raw`\"`);
-    unparsed.push(`--${key}="${sanitized}"`);
-  } else if (value != null) {
-    unparsed.push(`--${key}=${value}`);
-  }
-}
-
-function stringShouldBeWrappedIntoQuotes(str: string) {
-  return str.includes(' ') || str.includes('{') || str.includes('"');
+  return serializeOverridesIntoCommandLine(options);
 }

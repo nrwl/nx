@@ -244,7 +244,8 @@ export function runCreatePlugin(
 export function packageInstall(
   pkg: string,
   projName?: string,
-  version = getPublishedVersion()
+  version = getPublishedVersion(),
+  mode: 'dev' | 'prod' = 'dev'
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
@@ -252,13 +253,16 @@ export function packageInstall(
     .split(' ')
     .map((pgk) => `${pgk}@${version}`)
     .join(' ');
-  const install = execSync(`${pm.addDev} ${pkgsWithVersions}`, {
-    cwd,
-    // stdio: [0, 1, 2],
-    stdio: ['pipe', 'pipe', 'pipe'],
-    env: process.env,
-    encoding: 'utf-8',
-  });
+  const install = execSync(
+    `${mode === 'dev' ? pm.addDev : pm.addProd} ${pkgsWithVersions}`,
+    {
+      cwd,
+      // stdio: [0, 1, 2],
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: process.env,
+      encoding: 'utf-8',
+    }
+  );
   return install ? install.toString() : '';
 }
 
@@ -326,6 +330,7 @@ export function newProject({
         `@nrwl/rollup`,
         `@nrwl/react`,
         `@nrwl/storybook`,
+        `@nrwl/vite`,
         `@nrwl/web`,
         `@nrwl/webpack`,
         `@nrwl/react-native`,
@@ -853,6 +858,7 @@ export function getPackageManagerCommand({
   runNx: string;
   runNxSilent: string;
   runUninstalledPackage: string;
+  addProd: string;
   addDev: string;
   list: string;
 } {
@@ -868,6 +874,7 @@ export function getPackageManagerCommand({
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
       runUninstalledPackage: `npx --yes`,
+      addProd: `npm install --legacy-peer-deps`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
@@ -878,6 +885,7 @@ export function getPackageManagerCommand({
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       runUninstalledPackage: 'npx --yes',
+      addProd: `yarn add`,
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
@@ -888,6 +896,7 @@ export function getPackageManagerCommand({
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
       runUninstalledPackage: 'pnpm dlx',
+      addProd: `pnpm add`,
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },

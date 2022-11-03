@@ -33,7 +33,7 @@ module.exports = {
     }
 
     if (JS_SOURCE_EXTENSIONS.includes(path.extname(filename))) {
-      const transformer = getJsTransform();
+      const transformer = getJsTransform(options.config?.transform ?? []);
       if (transformer) return transformer.process(src, filename, options);
     }
 
@@ -44,15 +44,17 @@ module.exports = {
   },
 };
 
-function getJsTransform() {
+function getJsTransform(transformers?: [string, string, string?]) {
   try {
-    return require('babel-jest').default;
+    if (transformers?.[1]?.includes('@swc/jest')) {
+      return require('@swc/jest').createTransformer();
+    }
   } catch {
     // ignored
   }
 
   try {
-    return require('@swc/jest').createTransformer();
+    return require('babel-jest').default.createTransformer();
   } catch {
     // ignored
   }

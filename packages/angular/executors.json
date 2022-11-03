@@ -25,6 +25,11 @@
       "schema": "./src/builders/webpack-dev-server/schema.json",
       "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
     },
+    "webpack-server": {
+      "implementation": "./src/builders/webpack-server/webpack-server.impl",
+      "schema": "./src/builders/webpack-server/schema.json",
+      "description": "The `webpack-server` executor is very similar to the standard `server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR."
+    },
     "module-federation-dev-server": {
       "implementation": "./src/builders/module-federation-dev-server/module-federation-dev-server.impl",
       "schema": "./src/builders/module-federation-dev-server/schema.json",
@@ -61,6 +66,11 @@
       "implementation": "./src/builders/webpack-dev-server/webpack-dev-server.impl",
       "schema": "./src/builders/webpack-dev-server/schema.json",
       "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
+    },
+    "webpack-server": {
+      "implementation": "./src/builders/webpack-server/webpack-server.impl",
+      "schema": "./src/builders/webpack-server/schema.json",
+      "description": "The `webpack-server` executor is very similar to the standard `server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR."
     },
     "module-federation-dev-server": {
       "implementation": "./src/builders/module-federation-dev-server/module-federation-dev-server.impl",

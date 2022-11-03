@@ -25,7 +25,7 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/nx-dev/nx-dev/public",
-        "command": "yarn next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
+        "command": "yarn next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
       }
     },
     "sync-documentation": {

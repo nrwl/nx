@@ -12,7 +12,7 @@ export function PluginCard({
   isOfficial,
 }: PluginCardProps): JSX.Element {
   return (
-    <div className="focus-within:ring-blue-nx-base relative flex w-full overflow-hidden rounded-lg border border border-slate-200 bg-white shadow-sm transition hover:bg-slate-50 dark:border-slate-900 dark:bg-slate-800/60 dark:hover:bg-slate-800">
+    <div className="focus-within:ring-focus-within:ring-blue-500 relative flex w-full overflow-hidden rounded-lg border border border-slate-200 bg-white shadow-sm transition hover:bg-slate-50 dark:border-slate-900 dark:bg-slate-800/60 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800">
       <div className="flex w-full flex-col px-4 py-3">
         <h3 className="mb-4 flex items-center font-semibold leading-tight">
           <svg

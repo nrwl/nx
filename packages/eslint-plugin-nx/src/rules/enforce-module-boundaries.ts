@@ -66,6 +66,7 @@ export type MessageIds =
   | 'nestedBannedExternalImportsViolation'
   | 'noTransitiveDependencies'
   | 'onlyTagsConstraintViolation'
+  | 'emptyOnlyTagsConstraintViolation'
   | 'notTagsConstraintViolation';
 export const RULE_NAME = 'enforce-module-boundaries';
 
@@ -117,6 +118,8 @@ export default createESLintRule<Options, MessageIds>({
       nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package. Nested import found at {{childProjectName}}`,
       noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
       onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
+      emptyOnlyTagsConstraintViolation:
+        'A project tagged with "{{sourceTag}}" cannot depend on any libs with tags',
       notTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can not depend on libs tagged with {{tags}}\n\nViolation detected in:\n{{projects}}`,
     },
   },
@@ -236,7 +239,9 @@ export default createESLintRule<Options, MessageIds>({
                   return;
                 }
 
-                const imports = specifiers.map((s) => s.imported.name);
+                const imports = specifiers
+                  .filter((s) => s.type === 'ImportSpecifier')
+                  .map((s) => s.imported.name);
 
                 // process each potential entry point and try to find the imports
                 const importsToRemap = [];
@@ -245,7 +250,7 @@ export default createESLintRule<Options, MessageIds>({
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      entryPointPath.path,
+                      joinPathFragments(workspaceRoot, entryPointPath.path),
                       sourceProject.data.sourceRoot
                     );
                     // we cannot remap, so leave it as is
@@ -310,7 +315,9 @@ export default createESLintRule<Options, MessageIds>({
                   return;
                 }
                 // imported JS functions to remap
-                const imports = specifiers.map((s) => s.imported.name);
+                const imports = specifiers
+                  .filter((s) => s.type === 'ImportSpecifier')
+                  .map((s) => s.imported.name);
 
                 // process each potential entry point and try to find the imports
                 const importsToRemap = [];
@@ -319,7 +326,7 @@ export default createESLintRule<Options, MessageIds>({
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      entryPointPath,
+                      joinPathFragments(workspaceRoot, entryPointPath),
                       sourceProject.data.sourceRoot
                     );
                     if (importPath) {
@@ -512,6 +519,20 @@ export default createESLintRule<Options, MessageIds>({
               data: {
                 sourceTag: constraint.sourceTag,
                 tags: stringifyTags(constraint.onlyDependOnLibsWithTags),
+              },
+            });
+            return;
+          }
+          if (
+            constraint.onlyDependOnLibsWithTags &&
+            constraint.onlyDependOnLibsWithTags.length === 0 &&
+            targetProject.data.tags.length !== 0
+          ) {
+            context.report({
+              node,
+              messageId: 'emptyOnlyTagsConstraintViolation',
+              data: {
+                sourceTag: constraint.sourceTag,
               },
             });
             return;

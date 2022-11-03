@@ -7,8 +7,7 @@ import { findNodes } from '@nrwl/workspace/src/utilities/typescript';
 import { existsSync, readFileSync } from 'fs';
 import { dirname } from 'path';
 import ts = require('typescript');
-import { logger } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import { logger, workspaceRoot } from '@nrwl/devkit';
 
 function tryReadBaseJson() {
   try {
@@ -200,14 +199,12 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
       const modulePath = (exportDeclaration as any).moduleSpecifier.text;
 
       let moduleFilePath = joinPathFragments(
-        './',
         dirname(filePath),
         `${modulePath}.ts`
       );
       if (!existsSync(moduleFilePath)) {
         // might be a index.ts
         moduleFilePath = joinPathFragments(
-          './',
           dirname(filePath),
           `${modulePath}/index.ts`
         );

@@ -3,7 +3,7 @@ import { runCommand } from '../tasks-runner/run-command';
 import { output } from '../utils/output';
 import { generateGraph } from './dep-graph';
 import { printAffected } from './print-affected';
-import { connectToNxCloudIfExplicitlyAsked } from './connect-to-nx-cloud';
+import { connectToNxCloudIfExplicitlyAsked } from './connect';
 import type { NxArgs } from '../utils/command-line-utils';
 import {
   parseFiles,
@@ -94,10 +94,8 @@ export async function affected(
 
       case 'print-affected':
         if (nxArgs.target) {
-          const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
           await printAffected(
-            projectsWithTarget,
-            projects,
+            allProjectsWithTarget(projects, nxArgs),
             projectGraph,
             { nxJson },
             nxArgs,
@@ -105,7 +103,6 @@ export async function affected(
           );
         } else {
           await printAffected(
-            [],
             projects,
             projectGraph,
             { nxJson },

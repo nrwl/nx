@@ -9,7 +9,7 @@ Reports useful version numbers to copy into the Nx issue template
 
 ## Usage
 
-```bash
+```terminal
 nx report
 ```
 

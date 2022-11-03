@@ -137,7 +137,8 @@ function collectDependencies(
         return;
 
       acc.push({ name: dependency.target, isTopLevel: areTopLevelDeps });
-      if (!shallow) {
+      const isInternalTarget = projGraph.nodes[dependency.target];
+      if (!shallow && isInternalTarget) {
         collectDependencies(dependency.target, projGraph, acc, shallow, false);
       }
     }

@@ -1270,7 +1270,7 @@
               "name": "connect-to-nx-cloud",
               "id": "connect-to-nx-cloud",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "file": "generated/cli/connect-to-nx-cloud"
+              "file": "generated/cli/connect"
             },
             {
               "name": "reset",
@@ -1369,6 +1369,19 @@
               "id": "overview",
               "path": "/packages/esbuild",
               "file": "shared/esbuild-plugin"
+            }
+          ]
+        },
+        {
+          "name": "vite",
+          "id": "vite",
+          "description": "Vite package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/packages/vite",
+              "file": "shared/vite-plugin"
             }
           ]
         },

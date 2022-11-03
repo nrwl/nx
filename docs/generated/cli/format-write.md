@@ -9,7 +9,7 @@ Overwrite un-formatted files
 
 ## Usage
 
-```bash
+```terminal
 nx format:write
 ```
 
@@ -19,112 +19,68 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ### all
 
-Type: boolean
+Type: `boolean`
 
 All projects
 
 ### base
 
-Type: string
+Type: `string`
 
 Base of the current branch (usually main)
 
-### configuration
-
-Type: string
-
-This is the configuration to use when performing tasks on projects
-
 ### exclude
 
-Type: array
+Type: `array`
 
-Default: []
+Default: `[]`
 
 Exclude certain projects from being processed
 
 ### files
 
-Type: array
+Type: `array`
 
 Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
 
 ### head
 
-Type: string
+Type: `string`
 
 Latest commit of the current branch (usually HEAD)
 
 ### help
 
-Type: boolean
+Type: `boolean`
 
 Show help
 
 ### libs-and-apps
 
-Type: boolean
+Type: `boolean`
 
 Format only libraries and applications files.
 
-### nx-bail
-
-Type: boolean
-
-Default: false
-
-Stop command execution after the first failed task
-
-### nx-ignore-cycles
-
-Type: boolean
-
-Default: false
-
-Ignore cycles in the task graph
-
 ### projects
 
-Type: array
+Type: `array`
 
 Projects to format (comma delimited)
 
-### runner
-
-Type: string
-
-This is the name of the tasks runner configured in nx.json
-
-### skip-nx-cache
-
-Type: boolean
-
-Default: false
-
-Rerun the tasks even when the results are available in the cache
-
 ### uncommitted
 
-Type: boolean
+Type: `boolean`
 
 Uncommitted changes
 
 ### untracked
 
-Type: boolean
+Type: `boolean`
 
 Untracked changes
 
-### verbose
-
-Type: boolean
-
-Default: false
-
-Prints additional information about the commands (e.g., stack traces)
-
 ### version
 
-Type: boolean
+Type: `boolean`
 
 Show version number

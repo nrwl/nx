@@ -3,6 +3,8 @@ import * as chalk from 'chalk';
 import {
   ExecutorContext,
   joinPathFragments,
+  parseTargetString,
+  readTargetOptions,
   workspaceLayout,
 } from '@nrwl/devkit';
 import ignore from 'ignore';
@@ -57,14 +59,14 @@ function getBuildTargetCommand(options: Schema) {
 }
 
 function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
+  if (options.staticFilePath) {
+    return options.staticFilePath;
+  }
+
   let buildOptions;
   try {
-    const [project, target, config] = options.buildTarget.split(':');
-
-    const buildTarget = context.workspace.projects[project].targets[target];
-    buildOptions = config
-      ? { ...buildTarget.options, ...buildTarget.configurations[config] }
-      : buildTarget.options;
+    const target = parseTargetString(options.buildTarget);
+    buildOptions = readTargetOptions(target, context);
   } catch (e) {
     throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
   }
@@ -73,7 +75,7 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
   const outputPath = buildOptions.outputPath;
   if (!outputPath) {
     throw new Error(
-      `Invalid buildTarget: ${options.buildTarget}. The target must contain outputPath property.`
+      `Unable to get the outputPath from buildTarget ${options.buildTarget}. Make sure ${options.buildTarget} has an outputPath property or manually provide an staticFilePath property`
     );
   }
 

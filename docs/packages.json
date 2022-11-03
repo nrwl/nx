@@ -18,6 +18,7 @@
         "package",
         "webpack-browser",
         "webpack-dev-server",
+        "webpack-server",
         "module-federation-dev-server",
         "file-server"
       ],
@@ -186,7 +187,7 @@
     "description": "The Linter plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
     "path": "generated/packages/linter.json",
     "schemas": {
-      "executors": ["lint", "eslint"],
+      "executors": ["eslint"],
       "generators": ["workspace-rules-project", "workspace-rule"]
     }
   },
@@ -365,6 +366,13 @@
     "packageName": "tao",
     "description": "CLI for generating code and running commands",
     "path": "generated/packages/tao.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
+    "name": "vite",
+    "packageName": "vite",
+    "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
+    "path": "generated/packages/vite.json",
     "schemas": { "executors": [], "generators": [] }
   },
   {

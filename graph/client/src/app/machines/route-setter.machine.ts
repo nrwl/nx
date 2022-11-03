@@ -73,6 +73,7 @@ export const createRouteMachine = () => {
           const newParamString = reduceParamRecordToQueryString(ctx.params);
 
           history.push({
+            hash: history.location.hash,
             search: newParamString,
           });
 

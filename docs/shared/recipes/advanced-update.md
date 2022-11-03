@@ -1,5 +1,7 @@
 # Advanced update process
 
+This is an advanced version of the [standard update process](/core-features/automate-updating-dependencies).
+
 When you run into problems running the `nx migrate --run-migrations` command, here are some solutions to break the process down into manageable steps.
 
 ## Make changes easier to review by committing after each migration runs

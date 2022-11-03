@@ -5,6 +5,7 @@ import { cacheDir, joinPathFragments, logger } from '@nrwl/devkit';
 import {
   copyAssets,
   copyPackageJson,
+  CopyPackageJsonOptions,
   printDiagnostics,
   runTypeCheck as _runTypeCheck,
   TypeCheckOptions,
@@ -16,8 +17,10 @@ import { EsBuildExecutorOptions } from './schema';
 import { removeSync, writeJsonSync } from 'fs-extra';
 import { createAsyncIterable } from '@nrwl/js/src/utils/create-async-iterable/create-async-iteratable';
 import { buildEsbuildOptions } from './lib/build-esbuild-options';
+import { getExtraDependencies } from './lib/get-extra-dependencies';
+import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 
-const CJS_FILE_EXTENSION = '.cjs';
+const CJS_FILE_EXTENSION = '.cjs' as const;
 
 const BUILD_WATCH_FAILED = `[ ${chalk.red(
   'watch'
@@ -35,15 +38,48 @@ export async function* esbuildExecutor(
 
   const assetsResult = await copyAssets(options, context);
 
-  const packageJsonResult = await copyPackageJson(
-    {
-      ...options,
-      // TODO(jack): make types generate with esbuild
-      skipTypings: true,
-      outputFileExtensionForCjs: CJS_FILE_EXTENSION,
-    },
-    context
-  );
+  const externalDependencies: DependentBuildableProjectNode[] =
+    options.external.map((name) => {
+      const externalNode = context.projectGraph.externalNodes[`npm:${name}`];
+      if (!externalNode)
+        throw new Error(
+          `Cannot find external dependency ${name}. Check your package.json file.`
+        );
+      return {
+        name,
+        outputs: [],
+        node: externalNode,
+      };
+    });
+
+  if (!options.thirdParty) {
+    const thirdPartyDependencies = getExtraDependencies(
+      context.projectName,
+      context.projectGraph
+    );
+    for (const tpd of thirdPartyDependencies) {
+      options.external.push(tpd.node.data.packageName);
+      externalDependencies.push(tpd);
+    }
+  }
+
+  const cpjOptions: CopyPackageJsonOptions = {
+    ...options,
+    // TODO(jack): make types generate with esbuild
+    skipTypings: true,
+    outputFileExtensionForCjs: CJS_FILE_EXTENSION,
+    excludeLibsInPackageJson: !options.thirdParty,
+    updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
+  };
+
+  // If we're bundling third-party packages, then any extra deps from external should be the only deps in package.json
+  if (options.thirdParty && externalDependencies.length > 0) {
+    cpjOptions.overrideDependencies = externalDependencies;
+  } else {
+    cpjOptions.extraDependencies = externalDependencies;
+  }
+
+  const packageJsonResult = await copyPackageJson(cpjOptions, context);
 
   if (options.watch) {
     return yield* createAsyncIterable<{ success: boolean; outfile?: string }>(

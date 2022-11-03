@@ -23,6 +23,11 @@
       "type": "boolean",
       "default": false
     },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    },
     "js": {
       "type": "boolean",
       "default": false,

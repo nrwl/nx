@@ -50,7 +50,7 @@ builds scenario:
     "build": {
       "executor": "@nrwl/angular:ng-packagr-lite",
       "outputs": [
-        "dist/libs/my-lib"
+        "{workspaceRoot}/dist/libs/my-lib"
       ],
       "options": {
         ...
@@ -255,7 +255,7 @@ depends on must also be `build-base`:
     "build-base": {
       "executor": "@nrwl/angular:ng-packagr-lite",
       "outputs": [
-        "dist/libs/my-lib"
+        "{workspaceRoot}/dist/libs/my-lib"
       ],
       "options": {
         ...

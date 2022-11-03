@@ -198,8 +198,9 @@ function pruneDependencies(
 
   packages.forEach((packageName) => {
     if (dependencies[packageName]) {
-      // take the first version of the package as the default
-      const [key, value] = Object.entries(dependencies[packageName])[0];
+      const [key, value] = Object.entries(dependencies[packageName]).find(
+        ([, v]) => v.rootVersion
+      );
 
       result[packageName] = result[packageName] || {};
       result[packageName][key] = value;

@@ -6,7 +6,10 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
@@ -710,6 +713,24 @@ describe('lib', () => {
 
       expect(packageJson.devDependencies['@swc/core']).toEqual(
         expect.any(String)
+      );
+    });
+  });
+
+  describe('--skipPackageJson', () => {
+    it('should not add dependencies to package.json when true', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+      const packageJsonBeforeGenerator = tree.read('package.json', 'utf-8');
+      // ACT
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        skipPackageJson: true,
+      });
+
+      // ASSERT
+      expect(tree.read('package.json', 'utf-8')).toEqual(
+        packageJsonBeforeGenerator
       );
     });
   });

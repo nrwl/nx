@@ -34,7 +34,7 @@ export default function Index(): JSX.Element {
               type: 'image/jpeg',
             },
           ],
-          site_name: 'Nx',
+          siteName: 'Nx',
           type: 'website',
         }}
       />

@@ -3,7 +3,7 @@ import type { NxArgs } from '../utils/command-line-utils';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { output } from '../utils/output';
-import { connectToNxCloudIfExplicitlyAsked } from './connect-to-nx-cloud';
+import { connectToNxCloudIfExplicitlyAsked } from './connect';
 import { performance } from 'perf_hooks';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';

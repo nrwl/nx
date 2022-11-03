@@ -67,6 +67,72 @@ Object {
 }
 `;
 
+exports[`convertToCypressTen convertCypressProject should handle multiple configurations with no default cypressConfig option 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"videosFolder\\": \\"../../dist/cypress/apps/app-e2e/videos\\",
+\\"screenshotsFolder\\": \\"../../dist/cypress/apps/app-e2e/screenshots\\",
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+...cypressJsonConfig,
+
+}
+})"
+`;
+
+exports[`convertToCypressTen convertCypressProject should handle multiple configurations with no default cypressConfig option 2`] = `
+Object {
+  "configurations": Object {
+    "production": Object {
+      "cypressConfig": "apps/app-e2e/cypress.production.config.ts",
+      "devServerTarget": "target:serve:production",
+    },
+    "static": Object {
+      "baseUrl": "http://localhost:3000",
+      "cypressConfig": "apps/app-e2e/cypress.config.ts",
+    },
+  },
+  "executor": "@nrwl/cypress:cypress",
+  "options": Object {
+    "baseUrl": "http://localhost:4200",
+    "testingType": "e2e",
+  },
+}
+`;
+
+exports[`convertToCypressTen convertCypressProject should handle sharing the same config across projects 1`] = `
+"import { defineConfig } from 'cypress'
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+
+const cypressJsonConfig = {
+\\"fileServerFolder\\": \\".\\",
+\\"fixturesFolder\\": \\"./src/fixtures\\",
+\\"video\\": true,
+\\"chromeWebSecurity\\": false,
+\\"specPattern\\": \\"src/e2e/**/*.cy.{js,jsx,ts,tsx}\\",
+\\"supportFile\\": \\"src/support/e2e.ts\\"
+}
+export default defineConfig({
+e2e: {
+...nxE2EPreset(__dirname),
+...cypressJsonConfig,
+
+}
+})"
+`;
+
 exports[`convertToCypressTen convertCypressProject should infer targets with --all flag 1`] = `
 "import { defineConfig } from 'cypress'
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';

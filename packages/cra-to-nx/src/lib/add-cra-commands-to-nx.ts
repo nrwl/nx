@@ -6,7 +6,7 @@ export function addCRAcracoScriptsToPackageJson(appName: string) {
     ...packageJson.scripts,
     start: 'craco start',
     serve: 'npm start',
-    build: `BUILD_PATH=../../dist/apps/${appName} craco build`,
+    build: `cross-env BUILD_PATH=../../dist/apps/${appName} craco build`,
     test: 'craco test',
   };
   writeJsonSync(`apps/${appName}/package.json`, packageJson, { spaces: 2 });

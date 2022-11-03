@@ -1,7 +1,7 @@
 import Tag from './ui-components/tag';
 
 export interface EdgeNodeTooltipProps {
-  type: 'static' | 'dynamic' | 'implicit';
+  type: string;
   source: string;
   target: string;
   fileDependencies: Array<{ fileName: string }>;

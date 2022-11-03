@@ -333,7 +333,8 @@ export function isDirectDependency(target: ProjectGraphExternalNode): boolean {
  * @returns
  */
 function parseImportWildcards(importDefinition: string): RegExp {
-  const mappedWildcards = importDefinition.split('*').join('.*');
+  // we replace all instances of `*`, `**..*` and `.*` with `.*`
+  const mappedWildcards = importDefinition.split(/(?:\.\*)|\*+/).join('.*');
   return new RegExp(`^${new RegExp(mappedWildcards).source}$`);
 }
 
@@ -375,11 +376,13 @@ export function mapProjectGraphFiles<T>(
 }
 
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint$/;
+const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
 const NRWL_CLI_REGEX = /nx[\/\\]bin[\/\\]run-executor\.js$/;
 export function isTerminalRun(): boolean {
   return (
     process.argv.length > 1 &&
     (!!process.argv[1].match(NRWL_CLI_REGEX) ||
+      !!process.argv[1].match(JEST_REGEX) ||
       !!process.argv[1].match(ESLINT_REGEX))
   );
 }
@@ -434,7 +437,9 @@ export function isAngularSecondaryEntrypoint(
         // The `ng-packagr` defaults to the `src/public_api.ts` entry file to
         // the public API if the `lib.entryFile` is not specified explicitly.
         (file.endsWith('src/public_api.ts') || file.endsWith('src/index.ts')) &&
-        existsSync(joinPathFragments(file, '../../', 'ng-package.json'))
+        existsSync(
+          joinPathFragments(workspaceRoot, file, '../../', 'ng-package.json')
+        )
     )
   );
 }

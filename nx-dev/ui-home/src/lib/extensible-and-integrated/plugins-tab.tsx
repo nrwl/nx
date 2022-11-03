@@ -266,7 +266,7 @@ export function PluginsTab(): JSX.Element {
       </div>
       <div className="flex flex-col space-y-4">
         {pluginList.slice(0, 5).map((plugin) => (
-          <div className="focus-within:ring-blue-nx-base relative flex w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
+          <div className="relative flex w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:focus-within:ring-sky-500">
             <div className="flex w-full flex-col px-4 py-3">
               <h3 className="mb-4 flex text-lg font-semibold leading-tight dark:text-slate-300">
                 {plugin.logo}
@@ -303,7 +303,7 @@ export function PluginsTab(): JSX.Element {
       </div>
       <div className="hidden flex-col space-y-4 lg:flex">
         {pluginList.slice(5).map((plugin) => (
-          <div className="focus-within:ring-blue-nx-base relative flex w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-offset-2 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
+          <div className="relative flex w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:focus-within:ring-sky-500">
             <div className="flex w-full flex-col px-4 py-3">
               <h3 className="mb-4 flex text-lg font-semibold leading-tight dark:text-slate-300">
                 {plugin.logo}
