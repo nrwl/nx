@@ -61,8 +61,8 @@
     "tsconfig-paths": "^3.9.0",
     "tslib": "^2.3.0",
     "v8-compile-cache": "2.3.0",
-    "yargs": "^17.4.0",
-    "yargs-parser": "21.0.1",
+    "yargs": "^17.6.2",
+    "yargs-parser": "21.1.1",
     "js-yaml": "4.1.0",
     "axios": "^1.0.0"
   },
