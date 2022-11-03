@@ -165,8 +165,8 @@ function EmptyList({
             rel="noreferrer"
             target="_blank"
           >
-            <span className="absolute inset-0" aria-hidden="true"></span>No
-            {type}available for this package yet!
+            <span className="absolute inset-0" aria-hidden="true"></span>No{' '}
+            {type} available for this package yet!
           </Link>
         </p>
         <div className="prose prose-slate dark:prose-invert prose-sm">
