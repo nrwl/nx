@@ -159,7 +159,7 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex lock file v2 1`] = `
 Object {
   "data": Object {
-    "hash": "1e61b9db38c17534ce427d40ce84f9c03b4c439253f659e9a48513a10a52b465",
+    "hash": "ecac6bbf89900ce3bd43db55ef8e5d7a2d4269f14fedb014188feb8b3d1a7ae7",
     "packageName": "nx",
     "version": "14.7.5",
   },
@@ -310,23 +310,13 @@ Array [
     "target": "npm:v8-compile-cache",
     "type": "static",
   },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:yargs",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:yargs-parser",
-    "type": "static",
-  },
 ]
 `;
 
 exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex lock file v3 1`] = `
 Object {
   "data": Object {
-    "hash": "48388b2bf77ed12f2830273632c13c745854d63133c5c0466e229ef29ea074c0",
+    "hash": "93312a5932bdab5ba52dc9050100e6707373ca7e0758a37c6ee845da4f73a02c",
     "packageName": "nx",
     "version": "14.7.5",
   },
@@ -479,11 +469,6 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:yargs",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
     "target": "npm:yargs-parser",
     "type": "static",
   },
@@ -493,7 +478,7 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex npm lock file v1 1`] = `
 Object {
   "data": Object {
-    "hash": "3e63cd88ec8f5eb00f37559c24caf47da1f45f6a3f607d013f148da8593e3a26",
+    "hash": "3650c4630e4a600a438546292948b055559984dee6a8383ce228de32496ac6ae",
     "packageName": "nx",
     "version": "14.7.5",
   },
@@ -642,11 +627,6 @@ Array [
   Object {
     "source": "npm:nx",
     "target": "npm:v8-compile-cache",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:yargs",
     "type": "static",
   },
   Object {
@@ -958,7 +938,7 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes yarn should map successfully complex lock file 1`] = `
 Object {
   "data": Object {
-    "hash": "1e61b9db38c17534ce427d40ce84f9c03b4c439253f659e9a48513a10a52b465",
+    "hash": "d7246505ab873eb01cbe5be454842360a1fd9665a63035b9b5bd2cc6e0f6a649",
     "packageName": "nx",
     "version": "14.7.5",
   },

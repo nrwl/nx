@@ -1101,7 +1101,7 @@ export const lockFileV3 = `{
         "semver": "7.3.4",
         "tmp": "~0.2.1",
         "tslib": "^2.3.0",
-        "yargs": "^17.4.0",
+        "yargs": "^17.6.2",
         "yargs-parser": "21.0.1"
       },
       "peerDependencies": {
@@ -3615,7 +3615,7 @@ export const lockFileV3 = `{
         "tsconfig-paths": "^3.9.0",
         "tslib": "^2.3.0",
         "v8-compile-cache": "2.3.0",
-        "yargs": "^17.4.0",
+        "yargs": "^17.6.2",
         "yargs-parser": "21.0.1"
       },
       "bin": {
@@ -5725,7 +5725,7 @@ export const lockFileV2 = `{
         "semver": "7.3.4",
         "tmp": "~0.2.1",
         "tslib": "^2.3.0",
-        "yargs": "^17.4.0",
+        "yargs": "^17.6.2",
         "yargs-parser": "21.0.1"
       },
       "peerDependencies": {
@@ -8239,8 +8239,8 @@ export const lockFileV2 = `{
         "tsconfig-paths": "^3.9.0",
         "tslib": "^2.3.0",
         "v8-compile-cache": "2.3.0",
-        "yargs": "^17.4.0",
-        "yargs-parser": "21.0.1"
+        "yargs": "^17.6.2",
+        "yargs-parser": "21.1.1"
       },
       "bin": {
         "nx": "bin/nx.js"
@@ -10095,7 +10095,7 @@ export const lockFileV2 = `{
         "semver": "7.3.4",
         "tmp": "~0.2.1",
         "tslib": "^2.3.0",
-        "yargs": "^17.4.0",
+        "yargs": "^17.6.2",
         "yargs-parser": "21.0.1"
       }
     },
@@ -12042,7 +12042,7 @@ export const lockFileV2 = `{
         "tsconfig-paths": "^3.9.0",
         "tslib": "^2.3.0",
         "v8-compile-cache": "2.3.0",
-        "yargs": "^17.4.0",
+        "yargs": "^17.6.2",
         "yargs-parser": "21.0.1"
       },
       "dependencies": {
@@ -13626,7 +13626,7 @@ export const lockFileV1 = `{
         "semver": "7.3.4",
         "tmp": "~0.2.1",
         "tslib": "^2.3.0",
-        "yargs": "^17.4.0",
+        "yargs": "^17.6.2",
         "yargs-parser": "21.0.1"
       }
     },
@@ -15593,7 +15593,7 @@ export const lockFileV1 = `{
         "tsconfig-paths": "^3.9.0",
         "tslib": "^2.3.0",
         "v8-compile-cache": "2.3.0",
-        "yargs": "^17.4.0",
+        "yargs": "^17.6.2",
         "yargs-parser": "21.0.1"
       }
     },
