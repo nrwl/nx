@@ -369,6 +369,13 @@
     "schemas": { "executors": [], "generators": [] }
   },
   {
+    "name": "vite",
+    "packageName": "vite",
+    "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
+    "path": "generated/packages/vite.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
     "name": "web",
     "packageName": "web",
     "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",

@@ -1373,6 +1373,19 @@
           ]
         },
         {
+          "name": "vite",
+          "id": "vite",
+          "description": "Vite package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/packages/vite",
+              "file": "shared/vite-plugin"
+            }
+          ]
+        },
+        {
           "name": "angular",
           "id": "angular",
           "description": "Angular package.",

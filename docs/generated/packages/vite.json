@@ -1,0 +1,19 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "vite",
+  "packageName": "@nrwl/vite",
+  "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
+  "root": "/packages/vite",
+  "source": "/packages/vite/src",
+  "documentation": [
+    {
+      "name": "Overview",
+      "id": "overview",
+      "path": "/packages/vite",
+      "file": "shared/vite-plugin",
+      "content": "The Nx plugin for [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/).\n\n{% callout type=\"warning\" title=\"Early release plugin\" %}\nThis Nx plugin is in active development and may not be ready for real-world use. The planned release date for the stable plugin is December, 2022.\n{% /callout %}\n\nWhy should you use this plugin?\n\n- Instant dev server start\n- Lightning fast Hot-Module Reloading\n- _Fast_ builds using Vite.\n- Vite-powered tests with smart and instant watch mode\n\n## Setting up Vite\n\nTo create a new workspace, run `npx create-nx-workspace@latest --preset=npm`.\n\nTo add the Vite plugin to an existing workspace, run the following:\n\n{% tabs %}\n{% tab label=\"npm\" %}\n\n```shell\nnpm install -D @nrwl/vite\n```\n\n{% /tab %}\n{% tab label=\"yarn\" %}\n\n```shell\nyarn add -D @nrwl/vite\n```\n\n{% /tab %}\n{% tab label=\"pnpm\" %}\n\n```shell\npnpm install -D @nrwl/vite\n```\n\n{% /tab %}\n{% /tabs %}\n"
+    }
+  ],
+  "generators": [],
+  "executors": []
+}
