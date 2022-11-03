@@ -12,8 +12,9 @@
       ],
       "executor": "@nrwl/cypress:cypress",
       "options": {
-        "cypressConfig": "nx-dev/nx-dev-e2e/cypress.json",
-        "devServerTarget": "nx-dev:serve:production"
+        "cypressConfig": "nx-dev/nx-dev-e2e/cypress.config.ts",
+        "devServerTarget": "nx-dev:serve:production",
+        "testingType": "e2e"
       }
     },
     "lint": {
