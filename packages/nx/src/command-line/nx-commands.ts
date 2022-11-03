@@ -800,32 +800,32 @@ async function withCustomGeneratorOptions(
   const options = [];
   const positionals = [];
 
-  Object.entries(schema.properties as WorkspaceGeneratorProperties).forEach(
-    ([name, prop]) => {
-      const option: { name: string; definition: OptionArgumentDefinition } = {
+  Object.entries(
+    (schema.properties ?? {}) as WorkspaceGeneratorProperties
+  ).forEach(([name, prop]) => {
+    const option: { name: string; definition: OptionArgumentDefinition } = {
+      name,
+      definition: {
+        describe: prop.description,
+        type: prop.type,
+        choices: prop.enum,
+      },
+    };
+    if (schema.required && schema.required.includes(name)) {
+      option.definition.demandOption = true;
+    }
+    options.push(option);
+    if (isPositionalProperty(prop)) {
+      positionals.push({
         name,
         definition: {
           describe: prop.description,
           type: prop.type,
           choices: prop.enum,
         },
-      };
-      if (schema.required && schema.required.includes(name)) {
-        option.definition.demandOption = true;
-      }
-      options.push(option);
-      if (isPositionalProperty(prop)) {
-        positionals.push({
-          name,
-          definition: {
-            describe: prop.description,
-            type: prop.type,
-            choices: prop.enum,
-          },
-        });
-      }
+      });
     }
-  );
+  });
 
   let command = generatorName;
   positionals.forEach(({ name }) => {
