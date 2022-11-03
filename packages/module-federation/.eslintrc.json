@@ -1,0 +1,14 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {},
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nrwl/nx/nx-plugin-checks": "error"
+      }
+    }
+  ]
+}

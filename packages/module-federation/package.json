@@ -1,0 +1,34 @@
+{
+  "name": "@nrwl/module-federation",
+  "version": "0.0.1",
+  "private": true,
+  "description": "The Module Federation plugin for Nx contains a Webpack Plugin and helpers to enable Module Federation for your Angular and React apps in your Nx Workspace. ",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/module-federation"
+  },
+  "keywords": [
+    "Monorepo",
+    "Web",
+    "Node",
+    "Webpack",
+    "Module Federation",
+    "CLI"
+  ],
+  "main": "src/index.js",
+  "typings": "src/index.d.ts",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}

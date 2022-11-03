@@ -199,6 +199,13 @@
     "schemas": { "executors": [], "generators": [] }
   },
   {
+    "name": "module-federation",
+    "packageName": "module-federation",
+    "description": "The Module Federation plugin for Nx contains a Webpack Plugin and helpers to enable Module Federation for your Angular and React apps in your Nx Workspace. ",
+    "path": "generated/packages/module-federation.json",
+    "schemas": { "executors": [], "generators": [] }
+  },
+  {
     "name": "nest",
     "packageName": "nest",
     "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
