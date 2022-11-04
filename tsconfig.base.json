@@ -36,6 +36,7 @@
       "@nrwl/js": ["packages/js/src"],
       "@nrwl/js/*": ["packages/js/*"],
       "@nrwl/linter": ["packages/linter"],
+      "@nrwl/module-federation": ["packages/module-federation"],
       "@nrwl/nest": ["packages/nest"],
       "@nrwl/next": ["packages/next"],
       "@nrwl/node": ["packages/node"],

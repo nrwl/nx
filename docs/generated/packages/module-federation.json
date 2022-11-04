@@ -1,0 +1,11 @@
+{
+  "githubRoot": "https://github.com/nrwl/nx/blob/master",
+  "name": "module-federation",
+  "packageName": "@nrwl/module-federation",
+  "description": "The Module Federation plugin for Nx contains a Webpack Plugin and helpers to enable Module Federation for your Angular and React apps in your Nx Workspace. ",
+  "root": "/packages/module-federation",
+  "source": "/packages/module-federation/src",
+  "documentation": [],
+  "generators": [],
+  "executors": []
+}
