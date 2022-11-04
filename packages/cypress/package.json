@@ -53,7 +53,7 @@
     "webpack-node-externals": "^3.0.0"
   },
   "peerDependencies": {
-    "cypress": ">= 3 < 11"
+    "cypress": ">= 3 < 12"
   },
   "peerDependenciesMeta": {
     "cypress": {

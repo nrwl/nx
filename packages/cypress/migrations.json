@@ -29,6 +29,12 @@
       "version": "15.0.0-beta.4",
       "description": "Update to using cy.mount in the commands.ts file instead of importing mount for each component test file",
       "factory": "./src/migrations/update-15-0-0/update-cy-mount-usage"
+    },
+    "update-to-cypress-11": {
+      "cli": "nx",
+      "version": "15.1.0-beta.0",
+      "description": "Update to Cypress v11. This migration will only update if the workspace is already on v10. https://www.cypress.io/blog/2022/11/04/upcoming-changes-to-component-testing/",
+      "factory": "./src/migrations/update-15-1-0/cypress-11"
     }
   },
   "packageJsonUpdates": {}
