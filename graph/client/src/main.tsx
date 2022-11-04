@@ -13,9 +13,19 @@ if (window.useXstateInspect === true) {
 
 window.externalApi = new ExternalApi();
 
-ReactDOM.render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-  document.getElementById('app')
-);
+if (!window.appConfig) {
+  ReactDOM.render(
+    <p>
+      No environment could be found. Please run{' '}
+      <pre>npx nx run graph-client:generate-dev-environment-js</pre>.
+    </p>,
+    document.getElementById('app')
+  );
+} else {
+  ReactDOM.render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+    document.getElementById('app')
+  );
+}

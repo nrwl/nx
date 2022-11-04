@@ -3,6 +3,32 @@
   "sourceRoot": "graph/client/src",
   "projectType": "application",
   "targets": {
+    "generate-dev-environment-js": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/generate-graph-environment.ts"
+        ]
+      }
+    },
+    "generate-graph-base": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/generate-graph.ts"
+        ]
+      }
+    },
+    "generate-graph": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx run graph-client:generate-graph-base",
+          "npx nx run graph-client:generate-dev-environment-js"
+        ],
+        "parallel": false
+      }
+    },
     "build-base": {
       "executor": "@nrwl/webpack:webpack",
       "options": {
@@ -36,8 +62,20 @@
           "assets": [
             "graph/client/src/favicon.ico",
             "graph/client/src/assets/graphs/",
+            "graph/client/src/assets/generated-graphs/",
             {
               "input": "graph/client/src/assets/dev",
+              "output": "/",
+              "glob": "environment.js"
+            }
+          ]
+        },
+        "dev-e2e": {
+          "assets": [
+            "graph/client/src/favicon.ico",
+            "graph/client/src/assets/graphs/",
+            {
+              "input": "graph/client/src/assets/dev-e2e",
               "output": "/",
               "glob": "environment.js"
             }
@@ -49,7 +87,7 @@
             {
               "input": "graph/client/src/assets/graphs",
               "output": "/assets/graphs",
-              "glob": "nx-examples.json"
+              "glob": "e2e.json"
             },
             {
               "input": "graph/client/src/assets/nx-console",
@@ -64,7 +102,7 @@
             {
               "input": "graph/client/src/assets/graphs",
               "output": "/assets/graphs",
-              "glob": "nx-examples.json"
+              "glob": "e2e.json"
             },
             {
               "input": "graph/client/src/assets/release",
@@ -92,7 +130,7 @@
             {
               "input": "graph/client/src/assets/graphs",
               "output": "/assets/graphs",
-              "glob": "nx-examples.json"
+              "glob": "e2e.json"
             },
             {
               "input": "graph/client/src/assets/release-static",
@@ -128,7 +166,7 @@
       "defaultConfiguration": "release",
       "outputs": ["{options.outputPath}"]
     },
-    "serve": {
+    "serve-base": {
       "executor": "@nrwl/webpack:dev-server",
       "configurations": {
         "dev": {
@@ -150,6 +188,39 @@
         "release-static": {
           "buildTarget": "graph-client:build-base:release-static",
           "port": 4205
+        },
+        "dev-e2e": {
+          "buildTarget": "graph-client:build-base:dev-e2e",
+          "port": 4206
+        }
+      },
+      "defaultConfiguration": "dev"
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "configurations": {
+        "dev": {
+          "commands": [
+            "npx nx run graph-client:generate-dev-environment-js",
+            "npx nx serve-base graph-client"
+          ],
+          "parallel": false
+        },
+        "release": {
+          "commands": ["npx nx serve-base graph-client --configuration release"]
+        },
+        "release-static": {
+          "commands": [
+            "npx nx serve-base graph-client --configuration release-static"
+          ]
+        },
+        "watch": {
+          "commands": ["npx nx serve-base graph-client --configuration watch"]
+        },
+        "nx-console": {
+          "commands": [
+            "npx nx serve-base graph-client --configuration nx-console"
+          ]
         }
       },
       "defaultConfiguration": "dev"
