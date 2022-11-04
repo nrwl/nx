@@ -524,23 +524,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
       uncommitted: ['files', 'untracked', 'base', 'head', 'all'],
       all: ['files', 'untracked', 'uncommitted', 'base', 'head'],
-    })
-    .check((nxArgs) => {
-      if (
-        !nxArgs.files &&
-        !nxArgs.uncommitted &&
-        !nxArgs.untracked &&
-        !nxArgs.base &&
-        !nxArgs.head &&
-        !nxArgs.all &&
-        nxArgs._ &&
-        nxArgs._.length >= 3
-      ) {
-        throw new Error(
-          `Nx no longer supports using positional arguments for base and head. Please use --base and --head instead.`
-        );
-      }
-      return true;
     });
 }
 
