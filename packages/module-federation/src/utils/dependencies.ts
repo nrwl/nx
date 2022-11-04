@@ -1,11 +1,6 @@
-import { ProjectGraph } from '@nrwl/devkit';
+import type { ProjectGraph } from '@nrwl/devkit';
+import type { WorkspaceLibrary } from '../models';
 import { readTsPathMappings } from './typescript';
-
-export type WorkspaceLibrary = {
-  name: string;
-  root: string;
-  importKey: string | undefined;
-};
 
 export function getDependentPackagesForProject(
   projectGraph: ProjectGraph,
