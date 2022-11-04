@@ -286,14 +286,7 @@ export function transitiveDependencyPnpmLookup(
     return version;
   }
 
-  // const nestedVersion = Object.values(versions).find((v) =>
-  //   v.packageMeta.some(p => p.path.indexOf(`${parentPackage}/node_modules/${packageName}`) !== -1));
-
-  // if (nestedVersion) {
-  //   return nestedVersion.version;
-  // }
-
-  // otherwise search for the matching version
+  // pnpm's dependencies always point to the exact version so this block is only for insurrance
   return Object.values(versions).find((v) => satisfies(v.version, version))
     ?.version;
 }
