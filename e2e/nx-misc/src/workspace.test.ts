@@ -15,6 +15,9 @@ import {
   tmpProjPath,
   readResolvedWorkspaceConfiguration,
   removeFile,
+  getPackageManagerCommand,
+  getSelectedPackageManager,
+  runCommand,
 } from '@nrwl/e2e/utils';
 
 let proj: string;
@@ -111,6 +114,18 @@ describe('Workspace Tests', () => {
       const npmPackage = uniq('npm-package');
 
       runCLI(`generate @nrwl/workspace:npm-package ${npmPackage}`);
+
+      updateFile('package.json', (content) => {
+        const json = JSON.parse(content);
+        json.workspaces = ['libs/*'];
+        return JSON.stringify(json);
+      });
+
+      const pmc = getPackageManagerCommand({
+        packageManager: getSelectedPackageManager(),
+      });
+
+      runCommand(pmc.install);
 
       const result = runCLI(`test ${npmPackage}`);
       expect(result).toContain('Hello World');

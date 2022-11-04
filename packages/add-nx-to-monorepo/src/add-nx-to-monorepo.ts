@@ -306,7 +306,7 @@ function printFinalMessage() {
   output.success({
     title: `🎉 Done!`,
     bodyLines: [
-      `- Enabled Computation caching!`,
+      `- Enabled computation caching!`,
       `- Run "${
         getPackageManagerCommand().exec
       } nx run-many --target=build" to run the build script for every project in the monorepo.`,

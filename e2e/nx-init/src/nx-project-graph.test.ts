@@ -13,23 +13,16 @@ describe('project graph creation', () => {
   afterEach(() => cleanupProject());
 
   it('should correctly build the nxdeps.json containing files for the project', () => {
-    // ARRANGE
     const libName = uniq('mylib');
-
     runCLI(`generate @nrwl/workspace:lib ${libName}`);
 
-    // ACT
-
     runCLI(`graph --file=graph.json`);
-
-    // ASSERT
     const { graph: graphJson } = readJson('graph.json');
 
     expect(graphJson.nodes[libName].data.files.length).toBeGreaterThan(0);
   });
 
   it("should correctly build the nxdeps.json containing files for the project when root is ''", () => {
-    // ARRANGE
     const libName = uniq('mylib');
 
     runCLI(`generate @nrwl/workspace:lib ${libName}`);
@@ -38,18 +31,13 @@ describe('project graph creation', () => {
       root: '',
     }));
 
-    // ACT
-
     runCLI(`graph --file=graph.json`);
-
-    // ASSERT
 
     const { graph: graphJson } = readJson('graph.json');
     expect(graphJson.nodes[libName].data.files.length).toBeGreaterThan(0);
   });
 
   it("should correctly build the graph.json containing files for the project when root is '' and for project that do not have root as ''", () => {
-    // ARRANGE
     const libName = uniq('mylib');
     const secondLibName = uniq('mysecondlib');
 
@@ -60,11 +48,7 @@ describe('project graph creation', () => {
       root: '',
     }));
 
-    // ACT
-
     runCLI(`graph --file=graph.json`);
-
-    // ASSERT
 
     const { graph: graphJson } = readJson('graph.json');
     expect(graphJson.nodes[libName].data.files.length).toBeGreaterThan(0);

@@ -189,7 +189,7 @@ describe('Extra Nx Misc Tests', () => {
       expect(resultArgs).toContain('camel: d');
     }, 120000);
 
-    it('ttt should fail when a process exits non-zero', async () => {
+    it('should fail when a process exits non-zero', async () => {
       updateProjectConfig(mylib, (config) => {
         config.targets.error = {
           executor: 'nx:run-commands',

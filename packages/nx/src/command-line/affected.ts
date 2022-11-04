@@ -57,7 +57,7 @@ export async function affected(
           if (apps.length) {
             output.warn({
               title:
-                'Deprecated: Use "nx print-affected --type=app --select=projects" instead. This command will be removed in v15.',
+                'Deprecated: Use "nx print-affected --type=app --select=projects" instead. This command will be removed in v16.',
             });
             output.log({
               title: 'Affected apps:',
@@ -77,7 +77,7 @@ export async function affected(
           if (libs.length) {
             output.warn({
               title:
-                'Deprecated: Use "nx print-affected --type=lib --select=projects" instead. This command will be removed in v15.',
+                'Deprecated: Use "nx print-affected --type=lib --select=projects" instead. This command will be removed in v16.',
             });
             output.log({
               title: 'Affected libs:',
