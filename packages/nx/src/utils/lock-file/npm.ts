@@ -1,4 +1,9 @@
-import { LockFileData, PackageDependency } from './lock-file-type';
+import { satisfies } from 'semver';
+import {
+  LockFileData,
+  PackageDependency,
+  PackageVersions,
+} from './lock-file-type';
 import { sortObject, hashString } from './utils';
 
 type PackageMeta = {
@@ -363,6 +368,34 @@ function sortDependencies(
   }
 
   return dependencies;
+}
+
+/**
+ * Returns matching version of the dependency
+ */
+export function transitiveDependencyNpmLookup(
+  packageName: string,
+  parentPackage: string,
+  versions: PackageVersions,
+  version: string
+): string {
+  if (versions[`${packageName}@${version}`]) {
+    return version;
+  }
+
+  const nestedVersion = Object.values(versions).find((v) =>
+    v.packageMeta.some(
+      (p) =>
+        p.path.indexOf(`${parentPackage}/node_modules/${packageName}`) !== -1
+    )
+  );
+
+  if (nestedVersion) {
+    return nestedVersion.version;
+  }
+
+  // otherwise search for the matching version
+  return Object.values(versions).find((v) => v.rootVersion).version;
 }
 
 /**

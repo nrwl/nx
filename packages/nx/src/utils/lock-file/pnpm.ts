@@ -1,6 +1,11 @@
-import { LockFileData, PackageDependency } from './lock-file-type';
+import {
+  LockFileData,
+  PackageDependency,
+  PackageVersions,
+} from './lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
 import { sortObject, hashString, isRootVersion } from './utils';
+import { satisfies } from 'semver';
 
 type PackageMeta = {
   key: string;
@@ -266,6 +271,31 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
     devDependencies: sortObject(devDependencies),
     packages: sortObject(packages),
   };
+}
+
+/**
+ * Returns matching version of the dependency
+ */
+export function transitiveDependencyPnpmLookup(
+  packageName: string,
+  parentPackage: string,
+  versions: PackageVersions,
+  version: string
+): string {
+  if (versions[`${packageName}@${version}`]) {
+    return version;
+  }
+
+  // const nestedVersion = Object.values(versions).find((v) =>
+  //   v.packageMeta.some(p => p.path.indexOf(`${parentPackage}/node_modules/${packageName}`) !== -1));
+
+  // if (nestedVersion) {
+  //   return nestedVersion.version;
+  // }
+
+  // otherwise search for the matching version
+  return Object.values(versions).find((v) => satisfies(v.version, version))
+    ?.version;
 }
 
 /**
