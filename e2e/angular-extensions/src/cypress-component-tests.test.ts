@@ -70,7 +70,15 @@ export class BtnStandaloneComponent {
 `
     );
     const btnModuleName = names(usedInAppLibName).className;
+    updateFile(
+      `apps/${appName}/src/app/app.component.scss`,
+      `
+@use 'styleguide' as *;
 
+h1 {
+  @include headline;
+}`
+    );
     updateFile(
       `apps/${appName}/src/app/app.module.ts`,
       `
@@ -135,7 +143,21 @@ import {CommonModule} from '@angular/common';
 
     // make sure assets from the workspace root work.
     createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
+    createFile(
+      'assets/styles/styleguide.scss',
+      `
+    @mixin headline {
+    font-weight: bold;
+    color: darkkhaki;
+    background: lightcoral;
+    font-weight: 24px;
+  }
+  `
+    );
     updateProjectConfig(appName, (config) => {
+      config.targets['build'].options.stylePreprocessorOptions = {
+        includePaths: ['assets/styles'],
+      };
       config.targets['build'].options.assets.push({
         glob: '**/*',
         input: 'libs/assets',
