@@ -92,7 +92,11 @@ export const depGraphMachine = Machine<
       },
       selectProject: {
         target: 'customSelected',
-        actions: ['notifyGraphShowProject'],
+        actions: ['notifyGraphShowProjects'],
+      },
+      selectProjects: {
+        target: 'customSelected',
+        actions: ['notifyGraphShowProjects'],
       },
       selectAll: {
         target: 'customSelected',
@@ -112,7 +116,17 @@ export const depGraphMachine = Machine<
         },
         {
           target: 'customSelected',
-          actions: ['notifyGraphHideProject'],
+          actions: ['notifyGraphHideProjects'],
+        },
+      ],
+      deselectProjects: [
+        {
+          target: 'unselected',
+          cond: 'deselectLastProject',
+        },
+        {
+          target: 'customSelected',
+          actions: ['notifyGraphHideProjects'],
         },
       ],
       deselectAll: {
@@ -298,27 +312,46 @@ export const depGraphMachine = Machine<
         }
       ),
 
-      notifyGraphShowProject: send(
+      notifyGraphShowProjects: send(
         (context, event) => {
-          if (event.type !== 'selectProject') return;
+          if (event.type !== 'selectProject' && event.type !== 'selectProjects')
+            return;
 
-          return {
-            type: 'notifyGraphShowProject',
-            projectName: event.projectName,
-          };
+          if (event.type === 'selectProject') {
+            return {
+              type: 'notifyGraphShowProjects',
+              projectNames: [event.projectName],
+            };
+          } else {
+            return {
+              type: 'notifyGraphShowProjects',
+              projectNames: event.projectNames,
+            };
+          }
         },
         {
           to: (context) => context.graphActor,
         }
       ),
-      notifyGraphHideProject: send(
+      notifyGraphHideProjects: send(
         (context, event) => {
-          if (event.type !== 'deselectProject') return;
+          if (
+            event.type !== 'deselectProject' &&
+            event.type !== 'deselectProjects'
+          )
+            return;
 
-          return {
-            type: 'notifyGraphHideProject',
-            projectName: event.projectName,
-          };
+          if (event.type === 'deselectProject') {
+            return {
+              type: 'notifyGraphHideProjects',
+              projectNames: [event.projectName],
+            };
+          } else {
+            return {
+              type: 'notifyGraphHideProjects',
+              projectNames: event.projectNames,
+            };
+          }
         },
         {
           to: (context) => context.graphActor,
