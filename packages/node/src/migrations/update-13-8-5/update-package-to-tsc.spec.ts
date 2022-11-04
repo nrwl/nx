@@ -67,4 +67,52 @@ describe('Migration: rename package to tsc', () => {
 
     expect(tasks).toBeUndefined();
   });
+
+  it('should migrate srcRootForCompilationRoot option to rootDir', async () => {
+    let tree = createTreeWithEmptyV1Workspace();
+
+    tree.write(
+      'workspace.json',
+      JSON.stringify({
+        version: 2,
+        projects: {
+          mylib: {
+            root: 'libs/mylib',
+            sourceRoot: 'libs/mylib/src',
+            projectType: 'library',
+            targets: {
+              build: {
+                executor: '@nrwl/node:package',
+                options: {
+                  srcRootForCompilationRoot: '.',
+                },
+              },
+            },
+          },
+        },
+      })
+    );
+
+    const tasks = await update(tree);
+
+    expect(tasks).toBeDefined();
+    expect(readJson(tree, 'workspace.json')).toEqual({
+      version: 2,
+      projects: {
+        mylib: {
+          root: 'libs/mylib',
+          sourceRoot: 'libs/mylib/src',
+          projectType: 'library',
+          targets: {
+            build: {
+              executor: '@nrwl/js:tsc',
+              options: {
+                rootDir: '.',
+              },
+            },
+          },
+        },
+      },
+    });
+  });
 });
