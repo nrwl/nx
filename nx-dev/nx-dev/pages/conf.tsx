@@ -103,9 +103,9 @@ export default function ConfPage(): JSX.Element {
                   about monorepos and making development faster, more scalable,
                   and more collaborative.
                 </p>
-                <p className="mb-6 sm:text-lg">
-                  Workshops will be available on Oct. 16, 18.
-                </p>
+                {/*<p className="mb-6 sm:text-lg">*/}
+                {/*  Workshops will be available on Oct. 16, 18.*/}
+                {/*</p>*/}
                 {/* <a
                 className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
                 href="https://ti.to/nx-conf/nx-conf-2022?utm_source=nxdev"
@@ -127,10 +127,14 @@ export default function ConfPage(): JSX.Element {
                 </svg>
               </a> */}
                 <a
+                  rel="noreferrer"
+                  target="_blank"
+                  href="https://www.youtube.com/watch?v=-g3NABhePJg&utm_source=nx.dev"
                   className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
-                  href="https://www.youtube.com/watch?v=-g3NABhePJg"
                 >
-                  <span className="group-hover:underline">Watch live now</span>
+                  <span className="group-hover:underline">
+                    Watch the live replay available
+                  </span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
