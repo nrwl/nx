@@ -68,14 +68,15 @@ export function assertWorkspaceValidity(
     return;
   }
 
-  let message = `The following implicitDependencies specified in project configurations are invalid:
-  `;
-  invalidImplicitDependencies.forEach((projectNames, key) => {
-    const str = `  ${key}
-    ${projectNames.map((projectName) => `    ${projectName}`).join('\n')}`;
-    message += str;
-  });
-
+  let message = `The following implicitDependencies specified in project configurations are invalid:\n`;
+  message += [...invalidImplicitDependencies.keys()]
+    .map((key) => {
+      const projectNames = invalidImplicitDependencies.get(key);
+      return `  ${key}\n${projectNames
+        .map((projectName) => `    ${projectName}`)
+        .join('\n')}`;
+    })
+    .join('\n\n');
   throw new Error(`Configuration Error\n${message}`);
 }
 

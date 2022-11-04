@@ -128,6 +128,7 @@ export function createNonNxProjectDirectory(name = uniq('proj')) {
     'package.json',
     JSON.stringify({
       name,
+      workspaces: ['packages/*'],
     })
   );
 }
@@ -857,6 +858,7 @@ export function getPackageManagerCommand({
   runNx: string;
   runNxSilent: string;
   runUninstalledPackage: string;
+  install: string;
   addProd: string;
   addDev: string;
   list: string;
@@ -873,6 +875,7 @@ export function getPackageManagerCommand({
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
       runUninstalledPackage: `npx --yes`,
+      install: 'npm install',
       addProd: `npm install --legacy-peer-deps`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
@@ -884,6 +887,7 @@ export function getPackageManagerCommand({
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       runUninstalledPackage: 'npx --yes',
+      install: 'yarn',
       addProd: `yarn add`,
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
@@ -895,6 +899,7 @@ export function getPackageManagerCommand({
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
       runUninstalledPackage: 'pnpm dlx',
+      install: 'pnpm i',
       addProd: `pnpm add`,
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',

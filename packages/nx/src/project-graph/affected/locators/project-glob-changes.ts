@@ -21,15 +21,15 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator<
     workspaceRoot
   );
   const workspacesGlobPatterns =
-    getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot);
+    getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot) || [];
 
   const patterns = [
     '**/project.json',
     ...pluginGlobPatterns,
     ...workspacesGlobPatterns,
   ];
-  const combinedGlobPattern = '{' + patterns.join(',') + '}';
-
+  const combinedGlobPattern =
+    patterns.length === 1 ? '**/project.json' : '{' + patterns.join(',') + '}';
   const touchedProjects = new Set<string>();
   for (const touchedFile of touchedFiles) {
     const isProjectFile = minimatch(touchedFile.file, combinedGlobPattern);
