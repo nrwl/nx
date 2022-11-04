@@ -1,5 +1,6 @@
 import {
   DocumentMagnifyingGlassIcon,
+  EyeIcon,
   FlagIcon,
   MapPinIcon,
 } from '@heroicons/react/24/outline';
@@ -16,7 +17,6 @@ import {
 import { parseParentDirectoriesFromFilePath } from '../util';
 import { TracingAlgorithmType } from '../machines/interfaces';
 import ExperimentalFeature from '../experimental-feature';
-import { EyeIcon } from '@heroicons/react/24/outline';
 
 function getProjectsByType(type: string, projects: ProjectGraphNode[]) {
   return projects
@@ -70,19 +70,33 @@ function groupProjectsByDirectory(
 
 function ProjectListItem({
   project,
-  toggleProject,
-  focusProject,
-  startTrace,
-  endTrace,
   tracingInfo,
 }: {
   project: SidebarProject;
-  toggleProject: (projectId: string, currentlySelected: boolean) => void;
-  focusProject: (projectId: string) => void;
-  startTrace: (projectId: string) => void;
-  endTrace: (projectId: string) => void;
   tracingInfo: TracingInfo;
 }) {
+  const depGraphService = useDepGraphService();
+
+  function startTrace(projectName: string) {
+    depGraphService.send({ type: 'setTracingStart', projectName });
+  }
+
+  function endTrace(projectName: string) {
+    depGraphService.send({ type: 'setTracingEnd', projectName });
+  }
+
+  function toggleProject(projectName: string, currentlySelected: boolean) {
+    if (currentlySelected) {
+      depGraphService.send({ type: 'deselectProject', projectName });
+    } else {
+      depGraphService.send({ type: 'selectProject', projectName });
+    }
+  }
+
+  function focusProject(projectName: string) {
+    depGraphService.send({ type: 'focusProject', projectName });
+  }
+
   return (
     <li className="relative block cursor-default select-none py-1 pl-2 pr-6 text-xs text-slate-600 dark:text-slate-400">
       <div className="flex items-center">
@@ -158,44 +172,27 @@ function ProjectListItem({
 function SubProjectList({
   headerText = '',
   projects,
-  selectProject,
-  deselectProject,
-  focusProject,
-  startTrace,
-  endTrace,
   tracingInfo,
 }: {
   headerText: string;
   projects: SidebarProject[];
-  selectProject: (projectName: string) => void;
-  deselectProject: (projectName: string) => void;
-  focusProject: (projectName: string) => void;
-  startTrace: (projectId: string) => void;
-  endTrace: (projectId: string) => void;
   tracingInfo: TracingInfo;
 }) {
+  const depGraphService = useDepGraphService();
+
   let sortedProjects = [...projects];
   sortedProjects.sort((a, b) => {
     return a.projectGraphNode.name.localeCompare(b.projectGraphNode.name);
   });
 
-  function toggleProject(projectName: string, currentlySelected: boolean) {
-    if (currentlySelected) {
-      deselectProject(projectName);
-    } else {
-      selectProject(projectName);
-    }
-  }
-
   function toggleAllProjects(currentlySelected: boolean) {
+    const projectNames = projects.map(
+      (project) => project.projectGraphNode.name
+    );
     if (currentlySelected) {
-      projects.forEach((project) =>
-        deselectProject(project.projectGraphNode.name)
-      );
+      depGraphService.send({ type: 'deselectProjects', projectNames });
     } else {
-      projects.forEach((project) =>
-        selectProject(project.projectGraphNode.name)
-      );
+      depGraphService.send({ type: 'selectProjects', projectNames });
     }
   }
 
@@ -229,10 +226,6 @@ function SubProjectList({
             <ProjectListItem
               key={project.projectGraphNode.name}
               project={project}
-              toggleProject={toggleProject}
-              focusProject={focusProject}
-              startTrace={startTrace}
-              endTrace={endTrace}
               tracingInfo={tracingInfo}
             ></ProjectListItem>
           );
@@ -243,28 +236,7 @@ function SubProjectList({
 }
 
 export function ProjectList() {
-  const depGraphService = useDepGraphService();
   const tracingInfo = useDepGraphSelector(getTracingInfo);
-
-  function deselectProject(projectName: string) {
-    depGraphService.send({ type: 'deselectProject', projectName });
-  }
-
-  function selectProject(projectName: string) {
-    depGraphService.send({ type: 'selectProject', projectName });
-  }
-
-  function focusProject(projectName: string) {
-    depGraphService.send({ type: 'focusProject', projectName });
-  }
-
-  function startTrace(projectName: string) {
-    depGraphService.send({ type: 'setTracingStart', projectName });
-  }
-
-  function endTrace(projectName: string) {
-    depGraphService.send({ type: 'setTracingEnd', projectName });
-  }
 
   const projects = useDepGraphSelector(allProjectsSelector);
   const workspaceLayout = useDepGraphSelector(workspaceLayoutSelector);
@@ -306,11 +278,6 @@ export function ProjectList() {
             key={'app-' + directoryName}
             headerText={directoryName}
             projects={appDirectoryGroups[directoryName]}
-            deselectProject={deselectProject}
-            selectProject={selectProject}
-            focusProject={focusProject}
-            startTrace={startTrace}
-            endTrace={endTrace}
             tracingInfo={tracingInfo}
           ></SubProjectList>
         );
@@ -326,11 +293,6 @@ export function ProjectList() {
             key={'e2e-' + directoryName}
             headerText={directoryName}
             projects={e2eDirectoryGroups[directoryName]}
-            deselectProject={deselectProject}
-            selectProject={selectProject}
-            focusProject={focusProject}
-            startTrace={startTrace}
-            endTrace={endTrace}
             tracingInfo={tracingInfo}
           ></SubProjectList>
         );
@@ -346,11 +308,6 @@ export function ProjectList() {
             key={'lib-' + directoryName}
             headerText={directoryName}
             projects={libDirectoryGroups[directoryName]}
-            deselectProject={deselectProject}
-            selectProject={selectProject}
-            focusProject={focusProject}
-            startTrace={startTrace}
-            endTrace={endTrace}
             tracingInfo={tracingInfo}
           ></SubProjectList>
         );

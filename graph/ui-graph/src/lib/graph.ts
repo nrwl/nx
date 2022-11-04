@@ -157,12 +157,12 @@ export class GraphService {
         );
         break;
 
-      case 'notifyGraphShowProject':
-        this.showProjects([event.projectName]);
+      case 'notifyGraphShowProjects':
+        this.showProjects(event.projectNames);
         break;
 
-      case 'notifyGraphHideProject':
-        this.hideProject(event.projectName);
+      case 'notifyGraphHideProjects':
+        this.hideProjects(event.projectNames);
         break;
 
       case 'notifyGraphShowAllProjects':
@@ -349,14 +349,18 @@ export class GraphService {
     this.transferToRenderGraph(nodesToRender.union(edgesToRender));
   }
 
-  hideProject(projectName: string) {
+  hideProjects(projectNames: string[]) {
     const currentNodes =
       this.renderGraph?.nodes() ?? this.traversalGraph.collection();
-    const nodeToHide = this.renderGraph.$id(projectName);
+    let nodesToHide = this.renderGraph.collection();
+
+    projectNames.forEach((projectName) => {
+      nodesToHide = nodesToHide.union(this.renderGraph.$id(projectName));
+    });
 
     const nodesToAdd = currentNodes
-      .difference(nodeToHide)
-      .difference(nodeToHide.ancestors());
+      .difference(nodesToHide)
+      .difference(nodesToHide.ancestors());
     const ancestorsToAdd = nodesToAdd.ancestors();
 
     let nodesToRender = nodesToAdd.union(ancestorsToAdd);
