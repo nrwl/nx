@@ -34,6 +34,8 @@ export type DepGraphUIEvents =
     }
   | { type: 'selectProject'; projectName: string }
   | { type: 'deselectProject'; projectName: string }
+  | { type: 'selectProjects'; projectNames: string[] }
+  | { type: 'deselectProjects'; projectNames: string[] }
   | { type: 'selectAll' }
   | { type: 'deselectAll' }
   | { type: 'selectAffected' }
@@ -103,12 +105,12 @@ export type GraphRenderEvents =
       searchDepth: number;
     }
   | {
-      type: 'notifyGraphShowProject';
-      projectName: string;
+      type: 'notifyGraphShowProjects';
+      projectNames: string[];
     }
   | {
-      type: 'notifyGraphHideProject';
-      projectName: string;
+      type: 'notifyGraphHideProjects';
+      projectNames: string[];
     }
   | {
       type: 'notifyGraphShowAllProjects';
