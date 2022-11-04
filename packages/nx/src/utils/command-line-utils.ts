@@ -100,6 +100,21 @@ export function splitArgsIntoNxArgsAndOverrides(
       });
     }
 
+    if (
+      !nxArgs.files &&
+      !nxArgs.uncommitted &&
+      !nxArgs.untracked &&
+      !nxArgs.base &&
+      !nxArgs.head &&
+      !nxArgs.all &&
+      overrides._ &&
+      overrides._.length >= 2
+    ) {
+      throw new Error(
+        `Nx no longer supports using positional arguments for base and head. Please use --base and --head instead.`
+      );
+    }
+
     // Allow setting base and head via environment variables (lower priority then direct command arguments)
     if (!nxArgs.base && process.env.NX_BASE) {
       nxArgs.base = process.env.NX_BASE;
