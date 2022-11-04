@@ -18,8 +18,33 @@ import {
   lockFileDevkitAndYargs as yarnLockFileDevkitAndYargs,
   lockFile as yarnLockFile,
 } from './__fixtures__/yarn.lock';
+import { vol } from 'memfs';
+
+jest.mock('fs', () => require('memfs').fs);
+
+jest.mock('@nrwl/devkit', () => ({
+  ...jest.requireActual<any>('@nrwl/devkit'),
+  workspaceRoot: '/root',
+}));
+
+jest.mock('nx/src/utils/workspace-root', () => ({
+  workspaceRoot: '/root',
+}));
 
 describe('lock-file', () => {
+  const fileSys = {
+    'node_modules/chalk/package.json': '{"version": "4.1.0"}',
+    'node_modules/glob/package.json': '{"version": "7.1.4"}',
+    'node_modules/js-yaml/package.json': '{"version": "4.1.0"}',
+    'node_modules/minimatch/package.json': '{"version": "3.0.5"}',
+    'node_modules/semver/package.json': '{"version": "7.3.4"}',
+    'node_modules/tslib/package.json': '{"version": "2.4.0"}',
+    'node_modules/yargs-parser/package.json': '{"version": "21.0.1"}',
+  };
+  beforeEach(() => {
+    vol.fromJSON(fileSys, '/root');
+  });
+
   describe('mapLockFileDataToExternalNodes', () => {
     describe('yarn', () => {
       it('should map lock file data to external nodes', () => {
