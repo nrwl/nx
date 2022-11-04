@@ -13,9 +13,7 @@ import {
 
 describe('yarn LockFile utility', () => {
   describe('classic', () => {
-    console.time('before');
     const parsedLockFile = parseYarnLockFile(lockFile);
-    console.timeEnd('before');
 
     it('should parse lockfile correctly', () => {
       expect(parsedLockFile.lockFileMetadata).toBeUndefined();
