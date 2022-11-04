@@ -58,6 +58,7 @@ export async function findBuildConfig(
     // attempt to find any projects with the valid config in the graph that consumes this project
     return await findInGraph(tree, graph, options);
   } catch (e) {
+    logger.error(e);
     throw new Error(stripIndents`Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
     Provided project? ${options.project}
     Provided build target? ${options.buildTarget}
@@ -74,6 +75,27 @@ function findInTarget(
     options.buildTarget
   );
   const projectConfig = readProjectConfiguration(tree, project);
+  const executorName = projectConfig?.targets?.[target]?.executor;
+  if (!options.validExecutorNames.has(executorName)) {
+    logger.error(stripIndents`NX The provided build target, ${
+      options.buildTarget
+    }, uses the '${executorName}' executor.
+But only the follow executors are allowed
+${Array.from(options.validExecutorNames)
+  .map((ve) => ` - ${ve}`)
+  .join('\n')}
+
+This is most likely because the provided --build-target is not a build target for an application.
+For example, the provide build target, '${options.buildTarget}' is:
+ - the build target for a buildable/publishable library instead of an app.
+ - using a different framework than expected like react library using an angular app build target.
+
+If you do not have an app in the workspace to you can make a new app with 'nx g app' and use it just for component testing
+`);
+    throw new Error(
+      'The provided --build-target does not use an executor in the allow list of executors defined.'
+    );
+  }
   const foundConfig =
     configuration || projectConfig?.targets?.[target]?.defaultConfiguration;
 
