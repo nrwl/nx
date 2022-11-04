@@ -175,12 +175,14 @@ function mapTransitiveDependencies(
     if (versionCache[key]) {
       result.push(versionCache[key]);
     } else {
-      const version = transitiveLookupFn(
-        packageName,
-        parentPackage,
-        packages[packageName],
-        cleanVersion
-      );
+      const version = packages[packageName][`${packageName}@${cleanVersion}`]
+        ? cleanVersion
+        : transitiveLookupFn(
+            packageName,
+            parentPackage,
+            packages[packageName],
+            cleanVersion
+          );
       // for some peer dependencies, we won't find installed version so we'll just ignore these
       if (version) {
         const nodeName = getNodeName(

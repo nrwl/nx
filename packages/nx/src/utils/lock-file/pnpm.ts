@@ -282,10 +282,6 @@ export function transitiveDependencyPnpmLookup(
   versions: PackageVersions,
   version: string
 ): string {
-  if (versions[`${packageName}@${version}`]) {
-    return version;
-  }
-
   // pnpm's dependencies always point to the exact version so this block is only for insurrance
   return Object.values(versions).find((v) => satisfies(v.version, version))
     ?.version;
