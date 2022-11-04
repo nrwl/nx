@@ -958,7 +958,7 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes yarn should map successfully complex lock file 1`] = `
 Object {
   "data": Object {
-    "hash": "1e61b9db38c17534ce427d40ce84f9c03b4c439253f659e9a48513a10a52b465",
+    "hash": "6562d56c136e9e359c74fb6843da8deb66890de8e61e49ee766ad9cee2be6878",
     "packageName": "nx",
     "version": "14.7.5",
   },

@@ -165,16 +165,9 @@ export function transitiveDependencyYarnLookup(
     return version;
   }
 
-  // const nestedVersion = Object.values(versions).find((v) =>
-  //   v.packageMeta.some(p => p.path.indexOf(`${parentPackage}/node_modules/${packageName}`) !== -1));
-
-  // if (nestedVersion) {
-  //   return nestedVersion.version;
-  // }
-
-  // otherwise search for the matching version
-  return Object.values(versions).find((v) => satisfies(v.version, version))
-    ?.version;
+  return Object.values(versions).find((v) =>
+    v.packageMeta.some((p) => p === `${packageName}@${version}`)
+  ).version;
 }
 
 /**
