@@ -16,8 +16,8 @@
     "Module Federation",
     "CLI"
   ],
-  "main": "src/index.js",
-  "typings": "src/index.d.ts",
+  "main": "index.js",
+  "typings": "index.d.ts",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
@@ -27,7 +27,11 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/workspace": "file:../workspace",
+    "webpack": "^5.58.1"
+  },
   "publishConfig": {
     "access": "public"
   }
