@@ -438,6 +438,7 @@ function withRunOptions(yargs: yargs.Argv): yargs.Argv {
       describe:
         'This is the configuration to use when performing tasks on projects',
       type: 'string',
+      alias: 'c',
     })
     .option('prod', {
       describe: 'Use the production configuration',
