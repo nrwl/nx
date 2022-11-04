@@ -80,6 +80,7 @@ function mapPackages(
       const rootVersionKey = versionKeys.find((v) =>
         isRootVersion(packageName, versions[v].version)
       );
+
       // this should never happen, but just in case
       if (rootVersionKey) {
         versions[rootVersionKey].rootVersion = true;

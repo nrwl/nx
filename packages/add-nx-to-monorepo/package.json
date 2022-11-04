@@ -33,7 +33,7 @@
     "enquirer": "~2.3.6",
     "ignore": "^5.0.4",
     "nx": "file:../nx",
-    "yargs-parser": "21.0.1"
+    "yargs-parser": "21.1.1"
   },
   "publishConfig": {
     "access": "public"

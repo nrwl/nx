@@ -34,7 +34,7 @@
     "fs-extra": "^10.1.0",
     "nx": "file:../nx",
     "tmp": "~0.2.1",
-    "yargs-parser": "21.0.1"
+    "yargs-parser": "21.1.1"
   },
   "publishConfig": {
     "access": "public"
