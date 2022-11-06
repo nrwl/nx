@@ -154,30 +154,37 @@ async function* startDevServer(
     return;
   }
 
-  const { project, target, configuration } = parseTargetString(
-    opts.devServerTarget
-  );
-  const devServerTargetOpts = readTargetOptions(
-    { project, target, configuration },
-    context
-  );
-  const targetSupportsWatchOpt =
-    Object.keys(devServerTargetOpts).includes('watch');
+  const devServerTargets = opts.devServerTarget.split(/\s*,\s*/);
+  for (let i = 0; i < devServerTargets.length; i++) {
+    const { project, target, configuration } = parseTargetString(
+      devServerTargets[i]
+    );
 
-  for await (const output of await runExecutor<{
-    success: boolean;
-    baseUrl?: string;
-  }>(
-    { project, target, configuration },
-    // @NOTE: Do not forward watch option if not supported by the target dev server,
-    // this is relevant for running Cypress against dev server target that does not support this option,
-    // for instance @nguniversal/builders:ssr-dev-server.
-    targetSupportsWatchOpt ? { watch: opts.watch } : {},
-    context
-  )) {
-    if (!output.success && !opts.watch)
-      throw new Error('Could not compile application files');
-    yield opts.baseUrl || (output.baseUrl as string);
+    const devServerTargetOpts = readTargetOptions(
+      { project, target, configuration },
+      context
+    );
+
+    const targetSupportsWatchOpt =
+      Object.keys(devServerTargetOpts).includes('watch');
+
+    for await (const output of await runExecutor<{
+      success: boolean;
+      baseUrl?: string;
+    }>(
+      { project, target, configuration },
+      // @NOTE: Do not forward watch option if not supported by the target dev server,
+      // this is relevant for running Cypress against dev server target that does not support this option,
+      // for instance @nguniversal/builders:ssr-dev-server.
+      targetSupportsWatchOpt ? { watch: opts.watch } : {},
+      context
+    )) {
+      if (!output.success && !opts.watch)
+        throw new Error('Could not compile application files');
+      if (i === devServerTargets.length - 1)
+        yield opts.baseUrl || (output.baseUrl as string);
+      else break;
+    }
   }
 }
 

@@ -39,7 +39,7 @@
     },
     "devServerTarget": {
       "type": "string",
-      "description": "Dev server target to run tests against."
+      "description": "Dev server target(s) to run tests against. Multiple dev server targets can be specified with comma separated values, e.g: 'app1:target1:config1, app2:target2:config2', of which last dev server target yielded baseUrl will be passed over to Cypress."
     },
     "headed": {
       "type": "boolean",
