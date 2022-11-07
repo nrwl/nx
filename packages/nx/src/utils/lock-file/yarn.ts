@@ -163,7 +163,7 @@ export function transitiveDependencyYarnLookup(
 ): string {
   return Object.values(versions).find((v) =>
     v.packageMeta.some((p) => p === `${packageName}@${version}`)
-  ).version;
+  )?.version;
 }
 
 /**

@@ -391,7 +391,7 @@ export function transitiveDependencyNpmLookup(
   }
 
   // otherwise search for the matching version
-  return Object.values(versions).find((v) => v.rootVersion).version;
+  return Object.values(versions).find((v) => v.rootVersion)?.version;
 }
 
 /**
