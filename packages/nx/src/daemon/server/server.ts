@@ -40,6 +40,7 @@ import {
   disableOutputsTracking,
   processFileChangesInOutputs,
 } from './outputs-tracking';
+import { handleRequestShutdown } from './handle-request-shutdown';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -130,6 +131,11 @@ async function handleMessage(socket, data: string) {
     await handleResult(socket, await handleRecordOutputsHash(payload));
   } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
     await handleResult(socket, await handleOutputsHashesMatch(payload));
+  } else if (payload.type === 'REQUEST_SHUTDOWN') {
+    await handleResult(
+      socket,
+      await handleRequestShutdown(server, numberOfOpenConnections)
+    );
   } else {
     await respondWithErrorAndExit(
       socket,
