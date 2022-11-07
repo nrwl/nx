@@ -36,5 +36,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    "./package.json": {
+      "require": "./package.json"
+    }
   }
 }
