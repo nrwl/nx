@@ -99,7 +99,14 @@ export class TasksSchedule {
       [taskId]
     );
     this.options.lifeCycle.scheduleTask(task);
-    this.scheduledTasks.push(taskId);
+    this.scheduledTasks = this.scheduledTasks
+      .concat(taskId)
+      // NOTE: sort task by most dependent on first
+      .sort(
+        (taskId1, taskId2) =>
+          this.reverseTaskDeps[taskId2].length -
+          this.reverseTaskDeps[taskId1].length
+      );
   }
 
   private scheduleBatches() {
