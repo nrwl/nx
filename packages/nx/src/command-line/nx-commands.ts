@@ -792,6 +792,7 @@ async function withCustomGeneratorOptions(
       definition: {
         describe: prop.description,
         type: prop.type,
+        default: prop.default,
         choices: prop.enum,
       },
     };
