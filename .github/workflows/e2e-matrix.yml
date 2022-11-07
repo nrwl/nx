@@ -97,7 +97,7 @@ jobs:
 
       - name: Install PNPM
         if: ${{ matrix.package_manager == 'pnpm' }}
-        uses: pnpm/action-setup@v2.2.1
+        uses: pnpm/action-setup@v2
         with:
           version: 7.1.0
 
