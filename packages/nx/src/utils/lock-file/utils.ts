@@ -1,6 +1,10 @@
 import { satisfies } from 'semver';
 import { defaultHashing } from '../../hasher/hashing-impl';
-import { LockFileData, PackageVersions } from './lock-file-type';
+import {
+  LockFileData,
+  PackageDependency,
+  PackageVersions,
+} from './lock-file-type';
 import { workspaceRoot } from '../workspace-root';
 import { existsSync, readFileSync } from 'fs';
 import {
@@ -84,7 +88,7 @@ type TransitiveLookupFunction = (
   parentPackage: string,
   versions: PackageVersions,
   version: string
-) => string;
+) => PackageDependency;
 
 export function mapExternalNodes(
   lockFileData: LockFileData,
@@ -182,7 +186,7 @@ function mapTransitiveDependencies(
             parentPackage,
             packages[packageName],
             cleanVersion
-          );
+          )?.version;
       // for some peer dependencies, we won't find installed version so we'll just ignore these
       if (version) {
         const nodeName = getNodeName(
