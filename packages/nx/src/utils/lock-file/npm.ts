@@ -378,7 +378,7 @@ export function transitiveDependencyNpmLookup(
   parentPackage: string,
   versions: PackageVersions,
   version: string
-): string {
+): PackageDependency {
   const nestedVersion = Object.values(versions).find((v) =>
     v.packageMeta.some(
       (p) =>
@@ -387,11 +387,11 @@ export function transitiveDependencyNpmLookup(
   );
 
   if (nestedVersion) {
-    return nestedVersion.version;
+    return nestedVersion;
   }
 
   // otherwise search for the matching version
-  return Object.values(versions).find((v) => v.rootVersion)?.version;
+  return Object.values(versions).find((v) => v.rootVersion);
 }
 
 /**
