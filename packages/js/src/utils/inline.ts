@@ -1,5 +1,5 @@
 import type { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
-import { readJsonFile } from '@nrwl/devkit';
+import { readJsonFile, normalizePath } from '@nrwl/devkit';
 import {
   copySync,
   readdirSync,
@@ -285,7 +285,11 @@ function recursiveUpdateImport(
       const fileContent = readFileSync(filePath, 'utf-8');
       const updatedContent = fileContent.replace(importRegex, (matched) => {
         const result = matched.replace(/['"]/g, '');
-        return `"${relative(dirPath, inlinedDepsDestOutputRecord[result])}"`;
+        const importPath = `"${relative(
+          dirPath,
+          inlinedDepsDestOutputRecord[result]
+        )}"`;
+        return normalizePath(importPath);
       });
       writeFileSync(filePath, updatedContent);
     } else if (file.isDirectory()) {
