@@ -697,6 +697,7 @@ export function globForProjectFiles(
     'node_modules',
     '**/node_modules',
     'dist',
+    '.git',
     ...globsToExclude,
   ];
 
@@ -717,6 +718,7 @@ export function globForProjectFiles(
     absolute: false,
     cwd: root,
     dot: true,
+    suppressErrors: true,
   });
   projectGlobCache = deduplicateProjectFiles(globResults, ig);
   performance.mark('finish-glob-for-projects');
