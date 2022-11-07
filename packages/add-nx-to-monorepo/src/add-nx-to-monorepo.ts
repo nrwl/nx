@@ -60,7 +60,7 @@ export async function addNxToMonorepo() {
           type: 'multiselect',
           name: 'targetDefaults',
           message:
-            'Which of the following scripts need to be run in deterministic/topoglogical order?',
+            'Which of the following scripts need to be run in deterministic/topological order?',
           choices: scripts,
         },
       ])) as any
