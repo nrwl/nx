@@ -70,7 +70,7 @@ Object {
 
 exports[`npm LockFile utility v2 should parse lockfile correctly 2`] = `
 Object {
-  "typescript@4.8.3": Object {
+  "typescript@4.8.4": Object {
     "bin": Object {
       "tsc": "bin/tsc",
       "tsserver": "bin/tsserver",
@@ -79,7 +79,7 @@ Object {
     "engines": Object {
       "node": ">=4.2.0",
     },
-    "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
+    "integrity": "sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==",
     "packageMeta": Array [
       Object {
         "dev": true,
@@ -87,9 +87,9 @@ Object {
         "path": "node_modules/typescript",
       },
     ],
-    "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.8.3.tgz",
+    "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.8.4.tgz",
     "rootVersion": true,
-    "version": "4.8.3",
+    "version": "4.8.4",
   },
 }
 `;

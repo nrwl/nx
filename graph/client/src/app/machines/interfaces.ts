@@ -34,6 +34,8 @@ export type DepGraphUIEvents =
     }
   | { type: 'selectProject'; projectName: string }
   | { type: 'deselectProject'; projectName: string }
+  | { type: 'selectProjects'; projectNames: string[] }
+  | { type: 'deselectProjects'; projectNames: string[] }
   | { type: 'selectAll' }
   | { type: 'deselectAll' }
   | { type: 'selectAffected' }

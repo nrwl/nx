@@ -2,16 +2,15 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import * as cp from 'child_process';
 import { execSync } from 'child_process';
 import * as enquirer from 'enquirer';
+import { joinPathFragments } from 'nx/src/utils/path';
 import {
   getPackageManagerCommand,
-  joinPathFragments,
-  output,
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/devkit';
+  PackageManagerCommands,
+} from 'nx/src/utils/package-manager';
+import { output } from 'nx/src/utils/output';
+import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 import ignore from 'ignore';
 import * as yargsParser from 'yargs-parser';
 
@@ -27,7 +26,7 @@ addNxToMonorepo().catch((e) => {
   process.exit(1);
 });
 
-export async function addNxToMonorepo() {
+async function addNxToMonorepo() {
   const repoRoot = process.cwd();
 
   if (!fs.existsSync(joinPathFragments(repoRoot, 'package.json'))) {
@@ -37,17 +36,16 @@ export async function addNxToMonorepo() {
     process.exit(1);
   }
 
-  output.log({
-    title: `🐳 Nx initialization`,
-  });
+  output.log({ title: `🐳 Nx initialization` });
 
+  const pmc = getPackageManagerCommand();
   const packageJsonFiles = allProjectPackageJsonFiles(repoRoot);
   const scripts = combineAllScriptNames(repoRoot, packageJsonFiles);
 
   let targetDefaults: string[];
   let cacheableOperations: string[];
   let scriptOutputs = {};
-  let useCloud;
+  let useCloud: boolean;
 
   if (parsedArgs.yes !== true) {
     output.log({
@@ -60,7 +58,7 @@ export async function addNxToMonorepo() {
           type: 'multiselect',
           name: 'targetDefaults',
           message:
-            'Which of the following scripts need to be run in deterministic/topoglogical order?',
+            'Which of the following scripts need to be run in deterministic/topological order?',
           choices: scripts,
         },
       ])) as any
@@ -106,16 +104,16 @@ export async function addNxToMonorepo() {
   addDepsToPackageJson(repoRoot, useCloud);
 
   output.log({ title: `📦 Installing dependencies` });
-  runInstall(repoRoot);
+  runInstall(repoRoot, pmc);
 
   if (useCloud) {
-    initCloud(repoRoot);
+    initCloud(repoRoot, pmc);
   }
 
-  printFinalMessage();
+  printFinalMessage(pmc);
 }
 
-async function askAboutNxCloud() {
+function askAboutNxCloud() {
   return enquirer
     .prompt([
       {
@@ -170,10 +168,10 @@ function allPackageJsonFiles(repoRoot: string, dirName: string) {
           res = [...res, ...allPackageJsonFiles(repoRoot, child)];
         }
         // eslint-disable-next-line no-empty
-      } catch (e) {}
+      } catch {}
     });
     // eslint-disable-next-line no-empty
-  } catch (e) {}
+  } catch {}
   return res;
 }
 
@@ -182,7 +180,7 @@ function getIgnoredGlobs(repoRoot: string) {
   try {
     ig.add(fs.readFileSync(`${repoRoot}/.gitignore`).toString());
     // eslint-disable-next-line no-empty
-  } catch (e) {}
+  } catch {}
   return ig;
 }
 
@@ -213,17 +211,15 @@ function createNxJsonFile(
     // eslint-disable-next-line no-empty
   } catch {}
 
-  nxJson.tasksRunnerOptions = nxJson.tasksRunnerOptions || {};
-  nxJson.tasksRunnerOptions.default = nxJson.tasksRunnerOptions.default || {};
-  nxJson.tasksRunnerOptions.default.runner =
-    nxJson.tasksRunnerOptions.default.runner || 'nx/tasks-runners/default';
-  nxJson.tasksRunnerOptions.default.options =
-    nxJson.tasksRunnerOptions.default.options || {};
+  nxJson.tasksRunnerOptions ||= {};
+  nxJson.tasksRunnerOptions.default ||= {};
+  nxJson.tasksRunnerOptions.default.runner ||= 'nx/tasks-runners/default';
+  nxJson.tasksRunnerOptions.default.options ||= {};
   nxJson.tasksRunnerOptions.default.options.cacheableOperations =
     cacheableOperations;
-  nxJson.targetDefaults = nxJson.targetDefaults || {};
+  nxJson.targetDefaults ||= {};
   for (const scriptName of targetDefaults) {
-    nxJson.targetDefaults[scriptName] = nxJson.targetDefaults[scriptName] || {};
+    nxJson.targetDefaults[scriptName] ||= {};
     nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
   }
   for (const [scriptName, scriptAnswerData] of Object.entries(scriptOutputs)) {
@@ -231,7 +227,7 @@ function createNxJsonFile(
       // eslint-disable-next-line no-continue
       continue;
     }
-    nxJson.targetDefaults[scriptName] = nxJson.targetDefaults[scriptName] || {};
+    nxJson.targetDefaults[scriptName] ||= {};
     nxJson.targetDefaults[scriptName].outputs = [
       `{projectRoot}/${scriptAnswerData[scriptName]}`,
     ];
@@ -283,18 +279,13 @@ function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
   writeJsonFile(`package.json`, json);
 }
 
-function runInstall(repoRoot: string) {
-  cp.execSync(getPackageManagerCommand().install, {
-    stdio: [0, 1, 2],
-    cwd: repoRoot,
-  });
+function runInstall(repoRoot: string, pmc: PackageManagerCommands) {
+  execSync(pmc.install, { stdio: [0, 1, 2], cwd: repoRoot });
 }
 
-function initCloud(repoRoot: string) {
+function initCloud(repoRoot: string, pmc: PackageManagerCommands) {
   execSync(
-    `${
-      getPackageManagerCommand().exec
-    } nx g @nrwl/nx-cloud:init --installationSource=add-nx-to-monorepo`,
+    `${pmc.exec} nx g @nrwl/nx-cloud:init --installationSource=add-nx-to-monorepo`,
     {
       stdio: [0, 1, 2],
       cwd: repoRoot,
@@ -302,18 +293,14 @@ function initCloud(repoRoot: string) {
   );
 }
 
-function printFinalMessage() {
+function printFinalMessage(pmc: PackageManagerCommands) {
   output.success({
     title: `🎉 Done!`,
     bodyLines: [
-      `- Enabled Computation caching!`,
-      `- Run "${
-        getPackageManagerCommand().exec
-      } nx run-many --target=build" to run the build script for every project in the monorepo.`,
+      `- Enabled computation caching!`,
+      `- Run "${pmc.exec} nx run-many --target=build" to run the build script for every project in the monorepo.`,
       `- Run it again to replay the cached computation.`,
-      `- Run "${
-        getPackageManagerCommand().exec
-      } nx graph" to see the structure of the monorepo.`,
+      `- Run "${pmc.exec} nx graph" to see the structure of the monorepo.`,
       `- Learn more at https://nx.dev/recipes/adopting-nx/adding-to-monorepo`,
     ],
   });

@@ -60,13 +60,15 @@ Check out [this video for a live walkthrough](https://youtu.be/Tx257WpNsxc) or f
 - Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to
   be logged in. You can use test/test/test@test.io.)
 - Run `yarn local-registry enable` in Terminal 2
-- Run `yarn nx-release 15.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
+- Run `yarn nx-release 16.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
 - Run `cd ./tmp` in Terminal 2
-- Run `npx create-nx-workspace@15.0.0` in Terminal 2
+- Run `npx create-nx-workspace@16.0.0` in Terminal 2
 
 If you have problems publishing, make sure you use Node 16 and NPM 6 or 8.
 
 **NOTE:** After you finish with local testing don't forget to stop the local registry (e.g. closing the Terminal 1) and disabling the local registy using `yarn local-registry disable`. Keeping local registry enabled will change your lock file resolutions to `localhost:4873` on the next `yarn install`. You can also run `yarn local-registry clear` to clean all packages in that local registry.
+
+**NOTE:** To use this newly published local version, you need to make a new workspace or change all of your target packages to this new version, eg: `"@nrwl/cli": "^16.0.0",` and re-run `yarn install` in your testing project.
 
 ### Publishing for Yarn 2+ (Berry)
 

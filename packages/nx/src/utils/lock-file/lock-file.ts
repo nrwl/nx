@@ -4,26 +4,24 @@ import {
   parseYarnLockFile,
   pruneYarnLockFile,
   stringifyYarnLockFile,
+  transitiveDependencyYarnLookup,
 } from './yarn';
 import {
   parseNpmLockFile,
   pruneNpmLockFile,
   stringifyNpmLockFile,
+  transitiveDependencyNpmLookup,
 } from './npm';
 import {
   parsePnpmLockFile,
   prunePnpmLockFile,
   stringifyPnpmLockFile,
+  transitiveDependencyPnpmLookup,
 } from './pnpm';
 import { LockFileData } from './lock-file-type';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
-import {
-  getNodeName,
-  hashExternalNodes,
-  hashString,
-  mapExternalNodeDependencies,
-} from './utils';
+import { hashExternalNodes, hashString, mapExternalNodes } from './utils';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -104,48 +102,34 @@ export function parseLockFile(
  * @returns
  */
 export function mapLockFileDataToPartialGraph(
-  lockFileData: LockFileData
+  lockFileData: LockFileData,
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): ProjectGraph {
-  const result: ProjectGraph = {
-    dependencies: {},
-    externalNodes: {},
-    nodes: {},
-  };
-  const versionCache: Record<string, string> = {};
+  let externalNodes;
 
-  Object.keys(lockFileData.dependencies).forEach((dep) => {
-    const versions = lockFileData.dependencies[dep];
-    Object.keys(versions).forEach((nameVersion) => {
-      const packageVersion = versions[nameVersion];
-
-      // save external node
-      const nodeName = getNodeName(
-        dep,
-        packageVersion.version,
-        packageVersion.rootVersion
-      );
-      result.externalNodes[nodeName] = {
-        type: 'npm',
-        name: nodeName,
-        data: {
-          version: packageVersion.version,
-          packageName: dep,
-        },
-      };
-
-      const dependencies = mapExternalNodeDependencies(
-        nodeName,
-        packageVersion,
-        lockFileData.dependencies,
-        versionCache
-      );
-      if (dependencies.length) {
-        result.dependencies[nodeName] = dependencies;
-      }
-    });
-  });
-  hashExternalNodes(result);
-  return result;
+  if (packageManager === 'yarn') {
+    externalNodes = mapExternalNodes(
+      lockFileData,
+      transitiveDependencyYarnLookup
+    );
+  }
+  if (packageManager === 'pnpm') {
+    externalNodes = mapExternalNodes(
+      lockFileData,
+      transitiveDependencyPnpmLookup
+    );
+  }
+  if (packageManager === 'npm') {
+    externalNodes = mapExternalNodes(
+      lockFileData,
+      transitiveDependencyNpmLookup
+    );
+  }
+  if (externalNodes) {
+    hashExternalNodes(externalNodes);
+    return externalNodes;
+  }
+  throw Error(`Unknown package manager: ${packageManager}`);
 }
 
 /**

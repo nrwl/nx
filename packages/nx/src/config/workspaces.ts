@@ -26,7 +26,8 @@ import {
   TaskGraphExecutor,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
-import { sortObjectByKeys } from 'nx/src/utils/object-sort';
+import { sortObjectByKeys } from '../utils/object-sort';
+import { output } from '../utils/output';
 
 export function workspaceConfigName(
   root: string
@@ -567,19 +568,9 @@ function inlineProjectConfigurations(w: any, root: string = workspaceRoot) {
  * Pulled from toFileName in names from @nrwl/devkit.
  * Todo: Should refactor, not duplicate.
  */
-export function toProjectName(
-  fileName: string,
-  nxJson: NxJsonConfiguration
-): string {
-  const directory = dirname(fileName);
-  let { appsDir, libsDir } = nxJson?.workspaceLayout || {};
-  appsDir ??= 'apps';
-  libsDir ??= 'libs';
-  const parts = directory.split(/[\/\\]/g);
-  if ([appsDir, libsDir].includes(parts[0])) {
-    parts.splice(0, 1);
-  }
-  return parts.join('-').toLowerCase();
+export function toProjectName(fileName: string): string {
+  const parts = dirname(fileName).split(/[\/\\]/g);
+  return parts[parts.length - 1].toLowerCase();
 }
 
 let projectGlobCache: string[];
@@ -614,22 +605,25 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
   try {
     try {
       const obj = yaml.load(readFileSync(join(root, 'pnpm-workspace.yaml')));
-      return normalizePatterns(obj.packages);
+      return normalizePatterns(obj.packages || []);
     } catch {
       const { workspaces } = readJsonFile<PackageJson>(
         join(root, 'package.json')
       );
-      return normalizePatterns(
-        Array.isArray(workspaces) ? workspaces : workspaces?.packages
+      const res = normalizePatterns(
+        Array.isArray(workspaces) ? workspaces : workspaces?.packages ?? []
       );
+      if (res.length > 0) return res;
+
+      const { packages } = readJsonFile<any>(join(root, 'lerna.json'));
+      return packages.length > 0 ? normalizePatterns(packages) : ['packages/*'];
     }
   } catch {
-    return ['**/package.json'];
+    return undefined;
   }
 }
 
 function normalizePatterns(patterns: string[]): string[] {
-  if (patterns === undefined) return ['**/package.json'];
   return patterns.map((pattern) =>
     removeRelativePath(
       pattern.endsWith('/package.json') ? pattern : `${pattern}/package.json`
@@ -657,8 +651,11 @@ export function globForProjectFiles(
   }
   projectGlobCacheKey = cacheKey;
 
-  const globPatternsFromPackageManagerWorkspaces =
+  const _globPatternsFromPackageManagerWorkspaces =
     getGlobPatternsFromPackageManagerWorkspaces(root);
+
+  const globPatternsFromPackageManagerWorkspaces =
+    _globPatternsFromPackageManagerWorkspaces ?? [];
 
   const globsToInclude = globPatternsFromPackageManagerWorkspaces.filter(
     (glob) => !glob.startsWith('!')
@@ -697,6 +694,7 @@ export function globForProjectFiles(
     'node_modules',
     '**/node_modules',
     'dist',
+    '.git',
     ...globsToExclude,
   ];
 
@@ -717,8 +715,23 @@ export function globForProjectFiles(
     absolute: false,
     cwd: root,
     dot: true,
+    suppressErrors: true,
   });
+
   projectGlobCache = deduplicateProjectFiles(globResults, ig);
+
+  // TODO @vsavkin remove after Nx 16
+  if (
+    projectGlobCache.length === 0 &&
+    _globPatternsFromPackageManagerWorkspaces === undefined &&
+    nxJson.extends === 'nx/presets/npm.json'
+  ) {
+    output.warn({
+      title:
+        'Nx could not find any projects. Check if you need to configure workspaces in package.json or pnpm-workspace.yaml',
+    });
+  }
+
   performance.mark('finish-glob-for-projects');
   performance.measure(
     'glob-for-project-files',
@@ -728,22 +741,20 @@ export function globForProjectFiles(
   return projectGlobCache;
 }
 
-export function deduplicateProjectFiles(files: string[], ig?: Ignore) {
+export function deduplicateProjectFiles(
+  files: string[],
+  ig?: Ignore
+): string[] {
   const filtered = new Map();
   files.forEach((file) => {
     const projectFolder = dirname(file);
     const projectFile = basename(file);
-    if (
-      ig?.ignores(file) || // file is in .gitignore or .nxignore
-      file === 'package.json' || // file is workspace root package json
-      // project.json or equivallent inferred project file has been found
-      (filtered.has(projectFolder) && projectFile !== 'project.json')
-    ) {
-      return;
-    }
-
+    if (ig?.ignores(file)) return; // file is in .gitignore or .nxignoreb
+    if (file === 'package.json') return; // file is workspace root package json
+    if (filtered.has(projectFolder) && projectFile !== 'project.json') return;
     filtered.set(projectFolder, projectFile);
   });
+
   return Array.from(filtered.entries()).map(([folder, file]) =>
     join(folder, file)
   );
@@ -754,8 +765,9 @@ function buildProjectConfigurationFromPackageJson(
   packageJson: { name: string },
   nxJson: NxJsonConfiguration
 ): ProjectConfiguration & { name: string } {
-  const directory = dirname(path).split('\\').join('/');
-  let name = packageJson.name ?? toProjectName(directory, nxJson);
+  const normalizedPath = path.split('\\').join('/');
+  const directory = dirname(normalizedPath);
+  let name = packageJson.name ?? toProjectName(normalizedPath);
   if (nxJson?.npmScope) {
     const npmPrefix = `@${nxJson.npmScope}/`;
     if (name.startsWith(npmPrefix)) {
@@ -783,7 +795,7 @@ export function inferProjectFromNonStandardFile(
   const directory = dirname(file).split('\\').join('/');
 
   return {
-    name: toProjectName(file, nxJson),
+    name: toProjectName(file),
     root: directory,
   };
 }
@@ -809,7 +821,7 @@ export function buildWorkspaceConfigurationFromGlobs(
 
       let name = configuration.name;
       if (!configuration.name) {
-        name = toProjectName(file, nxJson);
+        name = toProjectName(file);
       }
       if (!projects[name]) {
         projects[name] = configuration;

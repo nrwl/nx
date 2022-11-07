@@ -42,29 +42,7 @@ npx create-nx-workspace ng-mf
 yarn create nx-workspace ng-mf --packageManager=yarn
 ```
 
-You'll be prompted for a preset. We recommend selecting `empty` as it will allow you finer control over your workspace configuration.
-
-You'll also be prompted if you would like to setup Nx Cloud. For this tutorial select `No`, however, I highly recommend that you read more about it [here](https://nx.app/).
-
-### Add the Angular Plugin
-
-To add Angular-related features to our newly created monorepo we need to install the Angular Plugin. Again, this is pretty easy to do:
-
-{% callout type="warning" title="Be at the root" %}
-Check that you are now at the root of your monorepo in your terminal. If not, run `cd ng-mf`.
-{% /callout %}
-
-```shell
-# Npm
-npm install --save-dev @nrwl/angular
-```
-
-```shell
-# Yarn
-yarn add -D @nrwl/angular
-```
-
-Simple! You are now able to use Nx Generators to scaffold Angular applications and libraries.
+You'll be prompted for a preset. Select `"Angular"`.
 
 ### Creating our applications
 

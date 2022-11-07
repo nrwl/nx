@@ -22,4 +22,5 @@ documented.
 - [GitHub Auth](/nx-cloud/private-cloud/auth-github)
 - [GitLab Auth](/nx-cloud/private-cloud/auth-gitlab)
 - [BitBucket Auth](/nx-cloud/private-cloud/auth-bitbucket)
+- [SAML Auth](/nx-cloud/private-cloud/auth-saml)
 - [Advanced Configuration](/nx-cloud/private-cloud/advanced-config)

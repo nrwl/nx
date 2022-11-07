@@ -4,9 +4,14 @@ import {
   ProjectGraph,
   readJson,
   readProjectConfiguration,
+  readTargetOptions,
   Tree,
+  updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { applicationGenerator } from '../application/application';
 import { componentGenerator } from '../component/component';
@@ -16,6 +21,7 @@ import { cypressComponentConfigGenerator } from './cypress-component-configurati
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/devkit', () => ({
   ...jest.requireActual<any>('@nrwl/devkit'),
+  readTargetOptions: jest.fn().mockImplementation(() => ({})),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),
@@ -27,7 +33,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     ReturnType<typeof assertMinimumCypressVersion>
   > = assertMinimumCypressVersion as never;
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace();
   });
   it('should generate cypress component test config with --build-target', async () => {
     mockedAssertCypressVersion.mockReturnValue();
@@ -270,5 +276,58 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(
       tree.exists('libs/some-lib/src/lib/another-cmp/another-cmp.spec.cy.js')
     ).toBeFalsy();
+  });
+  it('should throw error when an invalid --build-target is provided', async () => {
+    mockedAssertCypressVersion.mockReturnValue();
+    await applicationGenerator(tree, {
+      e2eTestRunner: 'none',
+      linter: Linter.EsLint,
+      skipFormat: true,
+      style: 'scss',
+      unitTestRunner: 'none',
+      name: 'my-app',
+    });
+    await libraryGenerator(tree, {
+      name: 'some-lib',
+      style: 'scss',
+      unitTestRunner: 'none',
+      linter: Linter.None,
+      skipFormat: false,
+      skipTsConfig: false,
+    });
+    const appConfig = readProjectConfiguration(tree, 'my-app');
+    appConfig.targets['build'].executor = 'something/else';
+    updateProjectConfiguration(tree, 'my-app', appConfig);
+    projectGraph = {
+      nodes: {
+        'my-app': {
+          name: 'my-app',
+          type: 'app',
+          data: {
+            ...appConfig,
+          },
+        },
+        'some-lib': {
+          name: 'some-lib',
+          type: 'lib',
+          data: {
+            ...readProjectConfiguration(tree, 'some-lib'),
+          },
+        },
+      },
+      dependencies: {},
+    };
+    await expect(async () => {
+      await cypressComponentConfigGenerator(tree, {
+        project: 'some-lib',
+        generateTests: true,
+        buildTarget: 'my-app:build',
+      });
+    }).rejects.toThrowErrorMatchingInlineSnapshot(`
+      "Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
+      Provided project? some-lib
+      Provided build target? my-app:build
+      Provided Executors? @nrwl/webpack:webpack"
+    `);
   });
 });

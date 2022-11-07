@@ -10,9 +10,9 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('nx init', () => {
-  const packageManagerCommand = getPackageManagerCommand({
+  const pmc = getPackageManagerCommand({
     packageManager: getSelectedPackageManager(),
-  }).runUninstalledPackage;
+  });
 
   afterEach(() => cleanupProject());
 
@@ -28,8 +28,10 @@ describe('nx init', () => {
       })
     );
 
-    const output = runCommand(`${packageManagerCommand} nx init -y`);
-    expect(output).toContain('Done!');
+    runCommand(pmc.install);
+
+    const output = runCommand(`${pmc.runUninstalledPackage} nx init -y`);
+    expect(output).toContain('Enabled computation caching');
 
     expect(runCLI('run package:echo')).toContain('123');
     renameFile('nx.json', 'nx.json.old');

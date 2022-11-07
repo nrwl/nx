@@ -10,8 +10,11 @@ on:
         required: false
         default: false
 
+permissions: {}
 jobs:
   e2e:
+    permissions:
+      contents: read  #  to fetch code (actions/checkout)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -94,7 +97,7 @@ jobs:
 
       - name: Install PNPM
         if: ${{ matrix.package_manager == 'pnpm' }}
-        uses: pnpm/action-setup@v2.2.1
+        uses: pnpm/action-setup@v2
         with:
           version: 7.1.0
 
@@ -139,7 +142,7 @@ jobs:
 
       - name: Cache Homebrew
         if: ${{ matrix.os == 'macos-latest' }}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
           key: brew-${{ matrix.node_version }}

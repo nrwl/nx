@@ -19,7 +19,7 @@ export async function updateProjectConfig(
     validExecutorNames: new Set<string>(['@nrwl/webpack:webpack']),
   });
 
-  assetValidConfig(found.config);
+  assetValidConfig(found?.config);
 
   const projectConfig = readProjectConfiguration(tree, options.project);
   projectConfig.targets['component-test'].options = {

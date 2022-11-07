@@ -20,7 +20,7 @@ There are a number of other options available. Let's take a look at some example
 ### Ignore certain paths when generating stories
 
 ```bash
-nx g @nrwl/react:stories ui --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*
+nx g @nrwl/react:stories --name=ui --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*
 ```
 
 This will generate stories for all the components in the `ui` project, except for the ones in the `libs/ui/src/not-stories` directory, and also for components that their file name is of the pattern `*.other.*`.
@@ -30,7 +30,7 @@ This is useful if you have a project that contains components that are not meant
 ### Generate stories using JavaScript instead of TypeScript
 
 ```bash
-nx g @nrwl/react:stories ui --js=true
+nx g @nrwl/react:stories --name=ui --js=true
 ```
 
 This will generate stories for all the components in the `ui` project using JavaScript instead of TypeScript. So, you will have `.stories.js` files next to your components.

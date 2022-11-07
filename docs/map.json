@@ -1120,6 +1120,11 @@
               "file": "nx-cloud/private/auth-bitbucket"
             },
             {
+              "name": "Authenticate via SAML",
+              "id": "auth-saml",
+              "file": "nx-cloud/private/auth-saml"
+            },
+            {
               "name": "Advanced Configuration",
               "id": "advanced-config",
               "file": "nx-cloud/private/advanced-config"

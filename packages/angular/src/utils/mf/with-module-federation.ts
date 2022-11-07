@@ -6,12 +6,13 @@ import {
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { extname } from 'path';
 import {
+  getDependentPackagesForProject,
   getNpmPackageSharedConfig,
+  readRootPackageJson,
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from './mf-webpack';
-import { getDependentPackagesForProject, readRootPackageJson } from './utils';
+} from '@nrwl/module-federation';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 export type MFRemotes = string[] | [remoteName: string, remoteUrl: string][];
