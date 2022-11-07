@@ -139,7 +139,7 @@ jobs:
 
       - name: Cache Homebrew
         if: ${{ matrix.os == 'macos-latest' }}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
           key: brew-${{ matrix.node_version }}
