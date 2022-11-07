@@ -1,8 +1,9 @@
-import { getPackageManagerCommand, output } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { lt, lte, major, satisfies } from 'semver';
+import { output } from 'nx/src/utils/output';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
+import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 import { resolvePackageVersion } from './package-manager';
 import { MigrationDefinition } from './types';
 
@@ -83,7 +84,10 @@ export async function determineMigration(
   };
 }
 
-export function migrateWorkspace(migration: MigrationDefinition): void {
+export function migrateWorkspace(
+  migration: MigrationDefinition,
+  pmc: PackageManagerCommands
+): void {
   const preserveAngularCliLayoutFlag = lte(
     migration.version,
     latestVersionWithOldFlag
@@ -91,9 +95,7 @@ export function migrateWorkspace(migration: MigrationDefinition): void {
     ? '--preserveAngularCLILayout'
     : '--preserve-angular-cli-layout';
   execSync(
-    `${getPackageManagerCommand().exec} nx g ${
-      migration.packageName
-    }:ng-add ${preserveAngularCliLayoutFlag}`,
+    `${pmc.exec} nx g ${migration.packageName}:ng-add ${preserveAngularCliLayoutFlag}`,
     { stdio: [0, 1, 2] }
   );
 }
