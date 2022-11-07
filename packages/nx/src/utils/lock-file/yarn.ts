@@ -6,6 +6,7 @@ import {
   PackageVersions,
 } from './lock-file-type';
 import { sortObject, hashString, isRootVersion } from './utils';
+import { satisfies } from 'semver';
 
 type LockFileDependencies = Record<
   string,
@@ -149,6 +150,20 @@ function unmapPackages(
     });
   });
   return packages;
+}
+
+/**
+ * Returns matching version of the dependency
+ */
+export function transitiveDependencyYarnLookup(
+  packageName: string,
+  parentPackage: string,
+  versions: PackageVersions,
+  version: string
+): string {
+  return Object.values(versions).find((v) =>
+    v.packageMeta.some((p) => p === `${packageName}@${version}`)
+  )?.version;
 }
 
 /**

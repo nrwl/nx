@@ -160,7 +160,7 @@ describe('npm LockFile utility', () => {
 
     it('should map optional field', () => {
       const tsDependency =
-        parsedLockFile.dependencies['typescript']['typescript@4.8.3'];
+        parsedLockFile.dependencies['typescript']['typescript@4.8.4'];
       expect((tsDependency.packageMeta[0] as any).optional).toBeFalsy();
       const fsEventsDependency =
         parsedLockFile.dependencies['fsevents']['fsevents@2.3.2'];
