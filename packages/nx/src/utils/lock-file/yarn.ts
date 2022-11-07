@@ -160,10 +160,14 @@ export function transitiveDependencyYarnLookup(
   parentPackage: string,
   versions: PackageVersions,
   version: string
-): string {
+): PackageDependency {
   return Object.values(versions).find((v) =>
-    v.packageMeta.some((p) => p === `${packageName}@${version}`)
-  )?.version;
+    v.packageMeta.some(
+      (p) =>
+        p === `${packageName}@${version}` ||
+        p === `${packageName}@npm:${version}`
+    )
+  );
 }
 
 /**
