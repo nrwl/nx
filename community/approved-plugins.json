@@ -1,5 +1,10 @@
 [
   {
+    "name": "@nxkit/playwright",
+    "description": "The Playwright plugin allows your workspace to use the power of Playwright end-to-end testing",
+    "url": "https://github.com/nxkit/nxkit"
+  },
+  {
     "name": "nx-plugins",
     "description": "Nx plugin integrations with ESBuild / Vite / Snowpack / Prisma, with derived ESBuild / Snowpack / ... plugins.",
     "url": "https://nx-plugins.netlify.app/"
