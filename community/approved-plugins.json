@@ -297,7 +297,7 @@
   {
     "name": "@diogovcs/graphql-mesh",
     "description": "Nx plugin to add GraphQL Mesh integration to Nx Workspace.",
-    "url": "https://github.com/DiogoVCS/nx-graphql-mesh"
+    "url": "https://github.com/DiogoVCS/nx-workspace-plugins"
   },
   {
     "name": "@computas/nx-yarn",
@@ -328,5 +328,10 @@
     "name": "@mands/nx-playwright",
     "description": "The Playwright plugin allows your workspace to use the power of Playwright end-to-end testing using a native runner.",
     "url": "https://github.com/marksandspencer/nx-plugins/tree/main/packages/nx-playwright"
+  },
+  {
+    "name": "@diogovcs/stryker-mutator",
+    "description": "Nx plugin to add Stryker Mutator mutation tests to the Nx Workspace.",
+    "url": "https://github.com/DiogoVCS/nx-workspace-plugins"
   }
 ]
