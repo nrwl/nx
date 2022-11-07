@@ -93,6 +93,10 @@ export class DaemonClient {
     this._connected = false;
   }
 
+  async requestShutdown(): Promise<void> {
+    return this.sendToDaemonViaQueue({ type: 'REQUEST_SHUTDOWN' });
+  }
+
   async getProjectGraph(): Promise<ProjectGraph> {
     return (await this.sendToDaemonViaQueue({ type: 'REQUEST_PROJECT_GRAPH' }))
       .projectGraph;
