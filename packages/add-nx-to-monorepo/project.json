@@ -1,4 +1,5 @@
 {
+  "name": "add-nx-to-monorepo",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/add-nx-to-monorepo/src",
   "projectType": "library",

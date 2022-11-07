@@ -1,4 +1,5 @@
 {
+  "name": "e2e-make-angular-cli-faster",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/make-angular-cli-faster",
   "projectType": "application",

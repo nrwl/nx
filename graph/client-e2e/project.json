@@ -1,4 +1,5 @@
 {
+  "name": "e2e-graph-client",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "graph/client-e2e/src",
   "projectType": "application",

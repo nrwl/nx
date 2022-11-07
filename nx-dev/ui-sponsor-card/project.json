@@ -1,4 +1,5 @@
 {
+  "name": "nx-dev-ui-sponsor-card",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/ui-sponsor-card/src",
   "projectType": "library",

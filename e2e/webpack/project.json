@@ -1,4 +1,5 @@
 {
+  "name": "e2e-webpack",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/webpack",
   "projectType": "application",

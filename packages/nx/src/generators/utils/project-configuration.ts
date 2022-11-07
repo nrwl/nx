@@ -353,18 +353,18 @@ function addProjectToWorkspaceJson(
     );
   }
 
-  const configFile =
+  const projectConfigFile =
     (mode === 'create' && standalone) || !workspaceConfigPath
       ? joinPathFragments(project.root, 'project.json')
       : getProjectFileLocation(tree, projectName);
   const jsonSchema =
-    configFile && mode === 'create'
+    projectConfigFile && mode === 'create'
       ? { $schema: getRelativeProjectJsonSchemaPath(tree, project) }
       : {};
 
-  if (configFile) {
+  if (projectConfigFile) {
     if (mode === 'delete') {
-      tree.delete(configFile);
+      tree.delete(projectConfigFile);
       delete workspaceJson.projects[projectName];
     } else {
       // keep real workspace up to date
@@ -373,9 +373,9 @@ function addProjectToWorkspaceJson(
       }
 
       // update the project.json file
-      writeJson(tree, configFile, {
+      writeJson(tree, projectConfigFile, {
         ...jsonSchema,
-        name: mode === 'create' ? projectName : project.name,
+        name: mode === 'create' ? projectName : project.name ?? projectName,
         ...project,
         root: undefined,
       });

@@ -1,4 +1,5 @@
 {
+  "name": "nest",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/nest",
   "projectType": "library",

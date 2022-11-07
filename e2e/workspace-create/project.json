@@ -1,4 +1,5 @@
 {
+  "name": "e2e-workspace-create",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/workspace-create",
   "projectType": "application",
