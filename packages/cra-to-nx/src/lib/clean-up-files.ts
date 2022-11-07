@@ -1,15 +1,11 @@
 import { removeSync } from 'fs-extra';
-import * as fs from 'fs';
+import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 
 export function cleanUpFiles(appName: string) {
   // Delete targets from project since we delegate to npm scripts.
-  const data = fs.readFileSync(`apps/${appName}/project.json`);
-  const json = JSON.parse(data.toString());
+  const json = readJsonFile(`apps/${appName}/project.json`);
   delete json.targets;
-  fs.writeFileSync(
-    `apps/${appName}/project.json`,
-    JSON.stringify(json, null, 2)
-  );
+  writeJsonFile(`apps/${appName}/project.json`, json);
 
   removeSync('temp-workspace');
 }

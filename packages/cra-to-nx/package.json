@@ -23,8 +23,6 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/workspace": "file:../workspace",
     "fs-extra": "^10.1.0",
     "nx": "file:../nx",
     "tslib": "^2.3.0",
