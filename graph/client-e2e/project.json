@@ -12,22 +12,22 @@
       "configurations": {
         "dev": {
           "cypressConfig": "graph/client-e2e/cypress.config.ts",
-          "devServerTarget": "graph-client:serve",
-          "baseUrl": "http://localhost:4201"
+          "devServerTarget": "graph-client:serve-base:dev-e2e",
+          "baseUrl": "http://localhost:4206"
         },
         "watch": {
           "cypressConfig": "graph/client-e2e/cypress-watch-mode.config.ts",
-          "devServerTarget": "graph-client:serve:watch",
+          "devServerTarget": "graph-client:serve-base:watch",
           "baseUrl": "http://localhost:4204"
         },
         "release": {
           "cypressConfig": "graph/client-e2e/cypress-release.config.ts",
-          "devServerTarget": "graph-client:serve:release",
+          "devServerTarget": "graph-client:serve-base:release",
           "baseUrl": "http://localhost:4203"
         },
         "release-static": {
           "cypressConfig": "graph/client-e2e/cypress-release-static.config.ts",
-          "devServerTarget": "graph-client:serve:release-static",
+          "devServerTarget": "graph-client:serve-base:release-static",
           "baseUrl": "http://localhost:4205"
         }
       },
@@ -38,10 +38,10 @@
       "outputs": [],
       "options": {
         "commands": [
-          "npx nx e2e-base e2e-graph-client -c dev",
-          "npx nx e2e-base e2e-graph-client -c watch",
-          "npx nx e2e-base e2e-graph-client -c release",
-          "npx nx e2e-base e2e-graph-client -c release-static"
+          "npx nx e2e-base e2e-graph-client --configuration dev",
+          "npx nx e2e-base e2e-graph-client --configuration watch",
+          "npx nx e2e-base e2e-graph-client --configuration release",
+          "npx nx e2e-base e2e-graph-client --configuration release-static"
         ],
         "parallel": false
       }

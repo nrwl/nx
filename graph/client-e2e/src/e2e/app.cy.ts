@@ -23,7 +23,7 @@ import * as nxExamplesJson from '../fixtures/nx-examples.json';
 
 describe('graph-client', () => {
   before(() => {
-    cy.intercept('/assets/graphs/nx.json', { fixture: 'nx-examples.json' }).as(
+    cy.intercept('/assets/graphs/e2e.json', { fixture: 'nx-examples.json' }).as(
       'getGraph'
     );
     cy.visit('/');
@@ -144,7 +144,7 @@ describe('graph-client', () => {
         fixture: 'affected.json',
       }).as('getAffectedGraph');
 
-      cy.get('[data-cy=project-select]').select('Affected', { force: true });
+      cy.get('[data-cy=project-select]').select('affected', { force: true });
 
       cy.wait('@getAffectedGraph');
       getSelectAffectedButton().click();
@@ -155,10 +155,10 @@ describe('graph-client', () => {
       );
 
       // switch back to Nx Examples graph before proceeding
-      cy.intercept('/assets/graphs/nx-examples.json', {
+      cy.intercept('/assets/graphs/e2e.json', {
         fixture: 'nx-examples.json',
       }).as('getGraph');
-      cy.get('[data-cy=project-select]').select('Nx Examples', { force: true });
+      cy.get('[data-cy=project-select]').select('e2e', { force: true });
       cy.wait('@getGraph');
     });
   });

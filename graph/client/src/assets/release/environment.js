@@ -10,7 +10,7 @@ window.appConfig = {
     {
       id: 'local',
       label: 'local',
-      url: 'assets/graphs/nx-examples.json',
+      url: 'assets/graphs/e2e.json',
     },
   ],
   defaultProjectGraph: 'local',
