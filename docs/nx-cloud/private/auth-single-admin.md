@@ -36,6 +36,7 @@ For instructions on how to set up third-party auth providers please refer to the
 - [GitHub Auth](/nx-cloud/private-cloud/auth-github)
 - [GitLab Auth](/nx-cloud/private-cloud/auth-gitlab)
 - [BitBucket Auth](/nx-cloud/private-cloud/auth-bitbucket)
+- [SAML Auth](/nx-cloud/private-cloud/auth-saml)
 
 ## Inviting users
 

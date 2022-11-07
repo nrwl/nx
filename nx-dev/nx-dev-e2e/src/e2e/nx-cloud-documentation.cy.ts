@@ -72,6 +72,10 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/private-cloud/auth-bitbucket',
     },
     {
+      title: 'SAML Auth',
+      path: '/nx-cloud/private-cloud/auth-saml',
+    },
+    {
       title: 'Advanced Configuration',
       path: '/nx-cloud/private-cloud/advanced-config',
     },
