@@ -154,7 +154,7 @@ export function getBaseWebpackPartial(
     webpackConfig.node = false;
 
     // could be an object { scripts: boolean; styles: boolean }
-    if (options.optimization === true) {
+    if (internalOptions.isScriptOptimizeOn) {
       webpackConfig.optimization = {
         minimize: true,
         minimizer: [
