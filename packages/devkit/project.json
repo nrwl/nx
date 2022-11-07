@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/devkit"],
       "options": {
-        "command": "node ./scripts/copy-readme.js devkit"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js devkit"
+          },
+          {
+            "command": "node ./scripts/add-engines.js devkit"
+          }
+        ]
       }
     },
     "lint": {

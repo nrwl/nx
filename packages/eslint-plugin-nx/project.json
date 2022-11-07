@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/eslint-plugin-nx"],
       "options": {
-        "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
+          },
+          {
+            "command": "node ./scripts/add-engines.js eslint-plugin-nx"
+          }
+        ]
       }
     },
     "lint": {

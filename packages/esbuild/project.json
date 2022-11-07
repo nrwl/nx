@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/esbuild"],
       "options": {
-        "command": "node ./scripts/copy-readme.js esbuild"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js esbuild"
+          },
+          {
+            "command": "node ./scripts/add-engines.js esbuild"
+          }
+        ]
       }
     },
     "lint": {

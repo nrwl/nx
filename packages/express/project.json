@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/express"],
       "options": {
-        "command": "node ./scripts/copy-readme.js express"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js express"
+          },
+          {
+            "command": "node ./scripts/add-engines.js express"
+          }
+        ]
       }
     },
     "lint": {

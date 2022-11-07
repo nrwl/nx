@@ -69,7 +69,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/react"],
       "options": {
-        "command": "node ./scripts/copy-readme.js react"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js react"
+          },
+          {
+            "command": "node ./scripts/add-engines.js react"
+          }
+        ]
       }
     },
     "lint": {

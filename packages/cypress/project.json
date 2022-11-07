@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/cypress"],
       "options": {
-        "command": "node ./scripts/copy-readme.js cypress"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js cypress"
+          },
+          {
+            "command": "node ./scripts/add-engines.js cypress"
+          }
+        ]
       }
     },
     "lint": {

@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/nx-plugin"],
       "options": {
-        "command": "node ./scripts/copy-readme.js nx-plugin"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js nx-plugin"
+          },
+          {
+            "command": "node ./scripts/add-engines.js nx-plugin"
+          }
+        ]
       }
     },
     "lint": {

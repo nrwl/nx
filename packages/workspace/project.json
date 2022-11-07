@@ -93,6 +93,9 @@
           },
           {
             "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/linter"
+          },
+          {
+            "command": "node ./scripts/add-engines.js workspace"
           }
         ],
         "parallel": false

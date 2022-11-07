@@ -74,6 +74,9 @@
           },
           {
             "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
+          },
+          {
+            "command": "node ./scripts/add-engines.js nx"
           }
         ],
         "parallel": false

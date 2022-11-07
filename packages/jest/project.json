@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/jest"],
       "options": {
-        "command": "node ./scripts/copy-readme.js jest"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js jest"
+          },
+          {
+            "command": "node ./scripts/add-engines.js jest"
+          }
+        ]
       }
     },
     "lint": {

@@ -46,6 +46,9 @@
           },
           {
             "command": "node ./scripts/copy-readme.js add-nx-to-monorepo"
+          },
+          {
+            "command": "node ./scripts/add-engines.js add-nx-to-monorepo"
           }
         ],
         "parallel": false

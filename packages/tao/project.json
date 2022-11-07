@@ -65,6 +65,9 @@
           },
           {
             "command": "node ./scripts/copy-readme.js tao"
+          },
+          {
+            "command": "node ./scripts/add-engines.js tao"
           }
         ],
         "parallel": false

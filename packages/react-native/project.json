@@ -84,7 +84,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/react-native"],
       "options": {
-        "command": "node ./scripts/copy-readme.js react-native"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js react-native"
+          },
+          {
+            "command": "node ./scripts/add-engines.js react-native"
+          }
+        ]
       }
     }
   }

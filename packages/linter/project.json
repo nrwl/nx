@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/linter"],
       "options": {
-        "command": "node ./scripts/copy-readme.js linter"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js linter"
+          },
+          {
+            "command": "node ./scripts/add-engines.js linter"
+          }
+        ]
       }
     },
     "lint": {

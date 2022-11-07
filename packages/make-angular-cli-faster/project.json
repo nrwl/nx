@@ -34,6 +34,9 @@
           },
           {
             "command": "node ./scripts/copy-readme.js make-angular-cli-faster"
+          },
+          {
+            "command": "node ./scripts/add-engines.js make-angular-cli-faster"
           }
         ],
         "parallel": false

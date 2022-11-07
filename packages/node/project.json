@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/node"],
       "options": {
-        "command": "node ./scripts/copy-readme.js node"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js node"
+          },
+          {
+            "command": "node ./scripts/add-engines.js node"
+          }
+        ]
       }
     },
     "lint": {

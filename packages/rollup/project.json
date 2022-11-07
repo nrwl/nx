@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/rollup"],
       "options": {
-        "command": "node ./scripts/copy-readme.js rollup"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js rollup"
+          },
+          {
+            "command": "node ./scripts/add-engines.js rollup"
+          }
+        ]
       }
     },
     "lint": {

@@ -64,7 +64,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/next"],
       "options": {
-        "command": "node ./scripts/copy-readme.js next"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js next"
+          },
+          {
+            "command": "node ./scripts/add-engines.js next"
+          }
+        ]
       }
     },
     "lint": {

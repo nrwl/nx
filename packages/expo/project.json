@@ -75,7 +75,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/expo"],
       "options": {
-        "command": "node ./scripts/copy-readme.js expo"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js expo"
+          },
+          {
+            "command": "node ./scripts/add-engines.js expo"
+          }
+        ]
       }
     }
   },

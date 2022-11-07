@@ -68,6 +68,9 @@
           },
           {
             "command": "node ./scripts/replace-versions.js build/packages/create-nx-workspace/bin/create-nx-workspace.js"
+          },
+          {
+            "command": "node ./scripts/add-engines.js create-nx-workspace"
           }
         ],
         "parallel": false

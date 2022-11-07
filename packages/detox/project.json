@@ -78,7 +78,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/detox"],
       "options": {
-        "command": "node ./scripts/copy-readme.js detox"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js detox"
+          },
+          {
+            "command": "node ./scripts/add-engines.js detox"
+          }
+        ]
       }
     }
   }

@@ -68,6 +68,9 @@
           },
           {
             "command": "node ./scripts/replace-versions.js build/packages/create-nx-plugin/bin/create-nx-plugin.js"
+          },
+          {
+            "command": "node ./scripts/add-engines.js create-nx-plugin"
           }
         ],
         "parallel": false

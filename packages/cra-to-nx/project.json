@@ -47,6 +47,9 @@
           },
           {
             "command": "node ./scripts/copy-readme.js cra-to-nx"
+          },
+          {
+            "command": "node ./scripts/add-engines.js cra-to-nx"
           }
         ],
         "parallel": false

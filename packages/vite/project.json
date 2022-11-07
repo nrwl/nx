@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/vite"],
       "options": {
-        "command": "node ./scripts/copy-readme.js vite"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js vite"
+          },
+          {
+            "command": "node ./scripts/add-engines.js vite"
+          }
+        ]
       }
     },
     "lint": {

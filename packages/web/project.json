@@ -64,7 +64,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/web"],
       "options": {
-        "command": "node ./scripts/copy-readme.js web"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js web"
+          },
+          {
+            "command": "node ./scripts/add-engines.js web"
+          }
+        ]
       }
     },
     "lint": {

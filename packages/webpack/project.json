@@ -59,7 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/webpack"],
       "options": {
-        "command": "node ./scripts/copy-readme.js webpack"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js webpack"
+          },
+          {
+            "command": "node ./scripts/add-engines.js webpack"
+          }
+        ]
       }
     },
     "lint": {

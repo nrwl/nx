@@ -70,7 +70,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/module-federation"],
       "options": {
-        "command": "node ./scripts/copy-readme.js module-federation"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js module-federation"
+          },
+          {
+            "command": "node ./scripts/add-engines.js module-federation"
+          }
+        ]
       }
     }
   },

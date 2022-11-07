@@ -74,7 +74,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/storybook"],
       "options": {
-        "command": "node ./scripts/copy-readme.js storybook"
+        "commands": [
+          {
+            "command": "node ./scripts/copy-readme.js storybook"
+          },
+          {
+            "command": "node ./scripts/add-engines.js storybook"
+          }
+        ]
       }
     },
     "lint": {

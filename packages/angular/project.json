@@ -70,6 +70,9 @@
           },
           {
             "command": "node ./scripts/copy-readme.js angular"
+          },
+          {
+            "command": "node ./scripts/add-engines.js angular"
           }
         ],
         "parallel": false
