@@ -131,6 +131,16 @@ Let's see the result for our `web` app `storybook` target, for example (in `apps
     },
 ```
 
+{% callout type="warning" title="Check the version!" %}
+Make sure you are on Nx version `>=14.1.8` and your `storybook` target is using `@storybook/angular:start-storybook` as the `executor` (like the example above).
+
+If you are using an older version of Nx, you can use [`nx migrate`](/nx/migrate) to migrate your codebase to a later version. Using `nx migrate` will also make sure to update your `storybook` and `build-storybook` targets to match the new format.
+
+If you **are** on Nx `>=14.1.8` and you are still using the old executor (`@nrwl/storybook:storybook`), you can use the [`change-storybook-targets` generator](/packages/storybook/generators/change-storybook-targets) which will take care of changing your `storybook` and `build-storybook` targets across your workspace for your Angular projects using Storybook.
+
+You can read more about the `storybook` and `build-storybook` targets for Angular projects in the [Information about the `storybook` targets](/storybook/angular-storybook-targets) page.
+{% /callout %}
+
 ### 4. Let Storybook know of the `documentation.json` file
 
 In your project's `.storybook/preview.js` file (for example for your `web` app the path would be `apps/web/.storybook/preview.js`), add the following:
