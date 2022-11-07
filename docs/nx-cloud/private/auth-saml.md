@@ -78,46 +78,46 @@ if you are interested.
 
 1. Create a new Okta App Integration:
 
-   ![Okta 1](/nx-cloud/private/images/saml/azure_12.png)
+   ![Okta 1](/nx-cloud/private/images/saml/okta_1.png)
 
-   ![Okta 2](/nx-cloud/private/images/saml/azure_2.png)
+   ![Okta 2](/nx-cloud/private/images/saml/okta_2.png)
 
 2. Give it a name:
 
-   ![Okta 3](/nx-cloud/private/images/saml/azure_3.png)
+   ![Okta 3](/nx-cloud/private/images/saml/okta_3.png)
 
 3. On the Next page, configure it as below:
 
    1. The Single Sign On URL needs to point to your NxCloud instance URL and ends with `/auth/saml/callback`
    2. The Audience should be `nx-private-cloud`
 
-   ![Okta 4](/nx-cloud/private/images/saml/azure_4.png)
+   ![Okta 4](/nx-cloud/private/images/saml/okta_4.png)
 
 4. Scroll down to attribute statements and configure them as per below:
 
-   ![Okta 5](/nx-cloud/private/images/saml/azure_5.png)
+   ![Okta 5](/nx-cloud/private/images/saml/okta_5.png)
 
 5. Click “Next”, and select the first option on the next screen.
 6. Go to the assignments tab and assign the users that can login to the NxCloud WebApp:
 
    1. **Note:** This just gives them permission to use the NxCloud web app with their own workspace. Users will still need to be invited manually through the web app to your main workspace.
 
-   ![Okta 6](/nx-cloud/private/images/saml/azure_6.png)
+   ![Okta 6](/nx-cloud/private/images/saml/okta_6.png)
 
 7. Then in the Sign-On tab scroll down:
 
-   ![Okta 7](/nx-cloud/private/images/saml/azure_7.png)
+   ![Okta 7](/nx-cloud/private/images/saml/okta_7.png)
 
 8. Scroll down and from the list of certificates, download the one with the “Active” status:
 
-   ![Okta 8](/nx-cloud/private/images/saml/azure_8.png)
+   ![Okta 8](/nx-cloud/private/images/saml/okta_8.png)
 
 9. Extract the downloaded certificate value as a one-line string:
    1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' okta.cert`
    2. We will use this in a bit to initialize and environment variable
 10. Then view the ldP metadata:
 
-    ![Okta 9](/nx-cloud/private/images/saml/azure_9.png)
+    ![Okta 9](/nx-cloud/private/images/saml/okta_9.png)
 
 11. Then find the row similar to the below, and copy the highlighted URL (see screenshot as well):
 
@@ -128,7 +128,7 @@ if you are interested.
        />
        ```
 
-    ![Okta 10](/nx-cloud/private/images/saml/azure_10.png)
+    ![Okta 10](/nx-cloud/private/images/saml/okta_10.png)
 
 12. Then add these two env vars to your secrets (see [Helm config](#helm-config) below):
     1. `SAML_CERT=<your-cert-string-from-above>`
