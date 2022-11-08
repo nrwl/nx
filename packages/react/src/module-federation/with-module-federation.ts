@@ -3,18 +3,17 @@ import {
   createProjectGraphAsync,
   getDependentPackagesForProject,
   getNpmPackageSharedConfig,
+  mapRemotes,
   ModuleFederationConfig,
   ProjectConfiguration,
   ProjectGraph,
   readCachedProjectGraph,
   readRootPackageJson,
-  Remotes,
   SharedFunction,
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
 } from '@nrwl/devkit';
-import { extname } from 'path';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 function determineRemoteUrl(remote: string, projectGraph: ProjectGraph) {
@@ -33,28 +32,6 @@ function determineRemoteUrl(remote: string, projectGraph: ProjectGraph) {
   return `${
     host.endsWith('/') ? host.slice(0, -1) : host
   }:${port}/remoteEntry.js`;
-}
-
-function mapRemotes(remotes: Remotes, projectGraph: ProjectGraph) {
-  const mappedRemotes = {};
-
-  for (const remote of remotes) {
-    if (Array.isArray(remote)) {
-      let [remoteName, remoteLocation] = remote;
-      const remoteLocationExt = extname(remoteLocation);
-      mappedRemotes[remoteName] = ['.js', '.mjs'].includes(remoteLocationExt)
-        ? remoteLocation
-        : `${
-            remoteLocation.endsWith('/')
-              ? remoteLocation.slice(0, -1)
-              : remoteLocation
-          }/remoteEntry.js`;
-    } else if (typeof remote === 'string') {
-      mappedRemotes[remote] = determineRemoteUrl(remote, projectGraph);
-    }
-  }
-
-  return mappedRemotes;
 }
 
 function applySharedFunction(
@@ -182,7 +159,7 @@ export async function withModuleFederation(options: ModuleFederationConfig) {
     const mappedRemotes =
       !options.remotes || options.remotes.length === 0
         ? {}
-        : mapRemotes(options.remotes, projectGraph);
+        : mapRemotes(options.remotes, 'js', determineRemoteUrl);
 
     config.plugins.push(
       new ModuleFederationPlugin({
