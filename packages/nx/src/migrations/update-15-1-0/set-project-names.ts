@@ -10,6 +10,7 @@ export default async function (tree: Tree) {
   // This looks like it does nothing, but this will actually effectively migrate over all the configs that need to be moved over, but won't touch configs that don't need to be moved
   for (const [projName, projConfig] of getProjects(tree)) {
     if (tree.exists(join(projConfig.root, 'project.json'))) {
+      projConfig.name ??= projName;
       updateProjectConfiguration(tree, projName, projConfig);
     }
   }

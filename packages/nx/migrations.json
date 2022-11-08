@@ -44,7 +44,7 @@
     },
     "15.1.0-set-project-names": {
       "cli": "nx",
-      "version": "15.0.0-beta.1",
+      "version": "15.0.12-beta.1",
       "description": "Set project names in project.json files",
       "implementation": "./src/migrations/update-15-1-0/set-project-names"
     }
