@@ -14,8 +14,8 @@ import { join } from 'path';
 describe('react native', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
-  afterEach(() => cleanupProject());
+  beforeAll(() => (proj = newProject()));
+  afterAll(() => cleanupProject());
 
   it('should test, create ios and android JS bundles', async () => {
     const appName = uniq('my-app');
