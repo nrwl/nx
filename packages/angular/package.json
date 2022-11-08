@@ -47,7 +47,6 @@
     "@nrwl/storybook": "file:../storybook",
     "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",
-    "@nrwl/module-federation": "file:../module-federation",
     "@phenomnomnominal/tsquery": "4.1.1",
     "@schematics/angular": "~14.2.0",
     "chalk": "4.1.0",
