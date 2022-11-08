@@ -107,6 +107,7 @@
     "@types/semver": "^7.3.8",
     "@types/tar-stream": "^2.2.2",
     "@types/tmp": "^0.2.0",
+    "@types/yaml": "^1.9.7",
     "@types/yargs": "^17.0.10",
     "@types/yarnpkg__lockfile": "^1.1.5",
     "@typescript-eslint/eslint-plugin": "5.38.1",
@@ -306,4 +307,3 @@
     "underscore": "^1.12.1"
   }
 }
-
