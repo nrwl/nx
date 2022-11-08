@@ -1,19 +1,19 @@
 import {
-  AdditionalSharedConfig,
   createProjectGraphAsync,
   getDependentPackagesForProject,
-  getNpmPackageSharedConfig,
   mapRemotes,
   ModuleFederationConfig,
   ProjectGraph,
   readCachedProjectGraph,
-  readRootPackageJson,
-  SharedFunction,
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
 } from '@nrwl/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import {
+  applyAdditionalShared,
+  applySharedFunction,
+} from '@nrwl/devkit/src/utils/module-federation';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 function determineRemoteUrl(remote: string) {
@@ -30,75 +30,6 @@ function determineRemoteUrl(remote: string) {
   return `${
     publicHost.endsWith('/') ? publicHost.slice(0, -1) : publicHost
   }/remoteEntry.mjs`;
-}
-
-function applySharedFunction(
-  sharedConfig: Record<string, SharedLibraryConfig>,
-  sharedFn: SharedFunction | undefined
-): void {
-  if (!sharedFn) {
-    return;
-  }
-
-  for (const [libraryName, library] of Object.entries(sharedConfig)) {
-    const mappedDependency = sharedFn(libraryName, library);
-    if (mappedDependency === false) {
-      delete sharedConfig[libraryName];
-      continue;
-    } else if (!mappedDependency) {
-      continue;
-    }
-
-    sharedConfig[libraryName] = mappedDependency;
-  }
-}
-
-function addStringDependencyToSharedConfig(
-  sharedConfig: Record<string, SharedLibraryConfig>,
-  dependency: string,
-  projectGraph: ProjectGraph
-): void {
-  if (projectGraph.nodes[dependency]) {
-    sharedConfig[dependency] = { requiredVersion: false };
-  } else if (projectGraph.externalNodes?.[`npm:${dependency}`]) {
-    const pkgJson = readRootPackageJson();
-    const config = getNpmPackageSharedConfig(
-      dependency,
-      pkgJson.dependencies?.[dependency] ??
-        pkgJson.devDependencies?.[dependency]
-    );
-
-    if (!config) {
-      return;
-    }
-
-    sharedConfig[dependency] = config;
-  } else {
-    throw new Error(
-      `The specified dependency "${dependency}" in the additionalShared configuration does not exist in the project graph. ` +
-        `Please check your additionalShared configuration and make sure you are including valid workspace projects or npm packages.`
-    );
-  }
-}
-
-function applyAdditionalShared(
-  sharedConfig: Record<string, SharedLibraryConfig>,
-  additionalShared: AdditionalSharedConfig | undefined,
-  projectGraph: ProjectGraph
-): void {
-  if (!additionalShared) {
-    return;
-  }
-
-  for (const shared of additionalShared) {
-    if (typeof shared === 'string') {
-      addStringDependencyToSharedConfig(sharedConfig, shared, projectGraph);
-    } else if (Array.isArray(shared)) {
-      sharedConfig[shared[0]] = shared[1];
-    } else if (typeof shared === 'object') {
-      sharedConfig[shared.libraryName] = shared.sharedConfig;
-    }
-  }
 }
 
 function applyDefaultEagerPackages(
