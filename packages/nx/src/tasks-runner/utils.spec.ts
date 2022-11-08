@@ -40,15 +40,20 @@ describe('utils', () => {
         )
       ).toEqual([]);
     });
-    it('should interpolate {workspaceRoot} and {projectRoot}', () => {
+
+    it('should interpolate {workspaceRoot}, {projectRoot} and {projectName}', () => {
       expect(
         getOutputsForTargetAndConfiguration(
           task,
           getNode({
-            outputs: ['{workspaceRoot}/one', '{projectRoot}/two'],
+            outputs: [
+              '{workspaceRoot}/one',
+              '{projectRoot}/two',
+              '{projectName}/three',
+            ],
           })
         )
-      ).toEqual(['one', 'myapp/two']);
+      ).toEqual(['one', 'myapp/two', 'myapp/three']);
     });
 
     it('should interpolate {projectRoot} when it is not in front', () => {
