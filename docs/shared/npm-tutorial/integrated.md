@@ -1,5 +1,12 @@
 # Getting Started with Integrated Repos
 
+{% youtube
+src="https://www.youtube.com/embed/weZ7NAzB7PM"
+title="Tutorial: Getting Started with Integrated Repos"
+width="100%" /%}
+
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/integrated" /%}
+
 ## Create a New Workspace
 
 Start by creating a new workspace. We can use the following command that will help us set it up.

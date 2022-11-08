@@ -5,6 +5,12 @@ There are two styles of monorepos that you can build with Nx: integrated repos a
 - Package-based repos focus on flexibility and ease of adoption.
 - Integrated repos focus on efficiency and ease of maintenance.
 
+{% cards %}
+{% card title="Packaged based vs Integrated Style - Use Nx however it works best for you" description="Choose your style and what works best for you!" type="video" url="https://youtu.be/ArmERpNvC8Y" /%}
+{% card title="Getting Started with Package-Based Repos" description="Walkthrough for creating a package-based monorepo with Nx" type="video" url="https://youtu.be/hzTMKuE3CDw" /%}
+{% card title="Getting Started with Integrated Repos" description="Walkthrough for creating an integrated monorepo with Nx" type="video" url="https://youtu.be/weZ7NAzB7PM" /%}
+{% /cards %}
+
 ## Package-Based Repos
 
 A package-based repo is a collection of packages that depend on each other via `package.json` files and nested `node_modules`. With this set up, you typically have a different set of dependencies for each project. Build tools like Jest and Webpack work as usual, since everything is resolved as if each package was in a separate repo and all of its dependencies were published to npm. It's very easy to move an existing package into a package-based repo, since you generally leave that package's existing build tooling untouched. Creating a new package inside the repo is just as difficult as spinning up a new repo, since you have to create all the build tooling from scratch.
