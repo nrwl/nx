@@ -54,6 +54,8 @@ export type HandlerResult = {
 
 let numberOfOpenConnections = 0;
 
+const fileWatcherSockets = new Set<Socket>();
+
 const server = createServer(async (socket) => {
   numberOfOpenConnections += 1;
   serverLogger.log(
@@ -85,6 +87,7 @@ const server = createServer(async (socket) => {
     serverLogger.log(
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
     );
+    fileWatcherSockets.delete(socket);
   });
 });
 
@@ -136,6 +139,18 @@ async function handleMessage(socket, data: string) {
       socket,
       await handleRequestShutdown(server, numberOfOpenConnections)
     );
+  } else if (payload.type === 'REGISTER_FILE_WATCHER') {
+    fileWatcherSockets.add(socket);
+
+    const interval = setInterval(async () => {
+      if (!fileWatcherSockets.has(socket)) {
+        return clearInterval(interval);
+      }
+      await handleResult(socket, {
+        description: 'File watch changed',
+        response: JSON.stringify(payload.data),
+      });
+    }, 5000);
   } else {
     await respondWithErrorAndExit(
       socket,
