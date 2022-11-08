@@ -15,15 +15,20 @@ export const getTouchedProjects: TouchedProjectLocator = (
     )
     .map(([name]) => name);
 
-  return touchedFiles
-    .map((f) => {
-      return projectNames.find((projectName) => {
-        const p = projectGraphNodes[projectName].data;
-        const projectRoot = p.root.endsWith('/') ? p.root : `${p.root}/`;
-        return f.file.startsWith(projectRoot);
-      });
-    })
-    .filter(Boolean);
+  return touchedFiles.reduce((affected, f) => {
+    const projects = projectNames.filter((projectName) => {
+      const p = projectGraphNodes[projectName].data;
+      const projectRoot = p.root.endsWith('/') ? p.root : `${p.root}/`;
+      return f.file.startsWith(projectRoot);
+    });
+    const mostSpecificProject = projects.sort(
+      (a, b) =>
+        projectGraphNodes[b].data.root.length -
+        projectGraphNodes[a].data.root.length
+    )[0];
+    affected.push(mostSpecificProject);
+    return affected;
+  }, []);
 };
 
 export const getImplicitlyTouchedProjects: TouchedProjectLocator = (

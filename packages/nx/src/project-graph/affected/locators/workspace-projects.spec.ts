@@ -65,6 +65,17 @@ describe('getTouchedProjects', () => {
       getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
     ).toEqual(['ab']);
   });
+
+  it('should not return parent project if nested project is touched', () => {
+    const fileChanges = getFileChanges(['libs/a/b/index.ts']);
+    const projects = {
+      a: { root: 'libs/a' },
+      b: { root: 'libs/a/b' },
+    };
+    expect(
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+    ).toEqual(['b']);
+  })
 });
 
 describe('getImplicitlyTouchedProjects', () => {
