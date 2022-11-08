@@ -50,7 +50,6 @@
     "js": "packages/js",
     "linter": "packages/linter",
     "make-angular-cli-faster": "packages/make-angular-cli-faster",
-    "module-federation": "packages/module-federation",
     "nest": "packages/nest",
     "next": "packages/next",
     "node": "packages/node",

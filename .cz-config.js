@@ -27,10 +27,6 @@ module.exports = {
     { name: 'js', description: 'anything TS->JS specific' },
     { name: 'linter', description: 'anything Linter specific' },
     { name: 'misc', description: 'misc stuff' },
-    {
-      name: 'module-federation',
-      description: 'anything related to the Module Federation package',
-    },
     { name: 'nest', description: 'anything Nest specific' },
     { name: 'nextjs', description: 'anything Next specific' },
     { name: 'node', description: 'anything Node specific' },
