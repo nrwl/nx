@@ -72,6 +72,13 @@ export const e2eRoot = isCI
   ? dirSync({ prefix: 'nx-e2e-' }).name
   : '/tmp/nx-e2e';
 
+function isVerbose() {
+  return (
+    process.env.NX_VERBOSE_LOGGING === 'true' ||
+    process.argv.includes('--verbose')
+  );
+}
+
 export const e2eCwd = `${e2eRoot}/${currentCli()}`;
 ensureDirSync(e2eCwd);
 
@@ -190,7 +197,6 @@ export function runCreateWorkspace(
 
   const create = execSync(command, {
     cwd,
-    // stdio: [0, 1, 2],
     stdio: ['pipe', 'pipe', 'pipe'],
     env: { CI: 'true', ...process.env },
     encoding: 'utf-8',
@@ -234,7 +240,6 @@ export function runCreatePlugin(
 
   const create = execSync(command, {
     cwd: e2eCwd,
-    //stdio: [0, 1, 2],
     stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
@@ -258,7 +263,6 @@ export function packageInstall(
     `${mode === 'dev' ? pm.addDev : pm.addProd} ${pkgsWithVersions}`,
     {
       cwd,
-      // stdio: [0, 1, 2],
       stdio: ['pipe', 'pipe', 'pipe'],
       env: process.env,
       encoding: 'utf-8',
@@ -280,6 +284,7 @@ export function runNgNew(
 
   return execSync(command, {
     cwd: e2eCwd,
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   }).toString();
@@ -341,7 +346,10 @@ export function newProject({
 
       if (useBackupProject) {
         // stop the daemon
-        execSync('nx reset', { cwd: `${e2eCwd}/proj` });
+        execSync('nx reset', {
+          cwd: `${e2eCwd}/proj`,
+          stdio: isVerbose() ? 'inherit' : 'pipe',
+        });
 
         moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
       }
@@ -415,7 +423,7 @@ export function ensureCypressInstallation() {
   let cypressVerified = true;
   try {
     const r = execSync('npx cypress verify', {
-      stdio: 'inherit',
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       encoding: 'utf-8',
       cwd: tmpProjPath(),
     });
@@ -428,7 +436,7 @@ export function ensureCypressInstallation() {
     if (!cypressVerified) {
       e2eConsoleLogger('Cypress was not verified. Installing Cypress now.');
       execSync('npx cypress install', {
-        stdio: 'inherit',
+        stdio: isVerbose() ? 'inherit' : 'pipe',
         encoding: 'utf-8',
         cwd: tmpProjPath(),
       });
@@ -553,6 +561,7 @@ export function runNgAdd(
     packageInstall(packageName, undefined, version);
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       env: { ...(opts.env || process.env) },
       encoding: 'utf-8',
     })
@@ -588,12 +597,10 @@ export function runCLI(
         cwd: opts.cwd || tmpProjPath(),
         env: { CI: 'true', ...(opts.env || process.env) },
         encoding: 'utf-8',
+        stdio: isVerbose() ? 'inherit' : 'pipe',
         maxBuffer: 50 * 1024 * 1024,
       })
     );
-    if (process.env.NX_VERBOSE_LOGGING) {
-      logInfo(`result of running: ${command}`, r);
-    }
 
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
     if (needsMaxWorkers.test(command)) {
