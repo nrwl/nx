@@ -311,90 +311,187 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
     );
   });
 
-  it('when devServerTarget AND baseUrl options are both present, baseUrl should take precedence', async () => {
-    const { success } = await cypressExecutor(
-      {
-        ...cypressOptions,
-        baseUrl: 'test-url-from-options',
-      },
-      mockContext
-    );
-    expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        config: {
+  it.each(['app:serve', 'api:serve, app:serve'])(
+    'when devServerTarget AND baseUrl options are both present, baseUrl should take precedence',
+    async (devServerTarget) => {
+      const { success } = await cypressExecutor(
+        {
+          ...cypressOptions,
+          devServerTarget,
           baseUrl: 'test-url-from-options',
         },
-      })
-    );
-  });
+        mockContext
+      );
+      expect(success).toEqual(true);
+      expect(cypressRun).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          config: {
+            baseUrl: 'test-url-from-options',
+          },
+        })
+      );
+    }
+  );
 
-  it('when devServerTarget option present and baseUrl option is absent, baseUrl should come from devServerTarget', async () => {
-    const { success } = await cypressExecutor(cypressOptions, mockContext);
-    expect(success).toEqual(true);
-    expect(cypressRun).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        config: {
-          baseUrl: 'http://localhost:4200',
+  it.each(['app:serve', 'api:serve, app:serve'])(
+    'when devServerTarget option present and baseUrl option is absent, baseUrl should come from devServerTarget',
+    async (devServerTarget) => {
+      const { success } = await cypressExecutor(
+        {
+          ...cypressOptions,
+          devServerTarget,
         },
-      })
-    );
-  });
+        mockContext
+      );
+      expect(success).toEqual(true);
+      expect(cypressRun).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          config: {
+            baseUrl: 'http://localhost:4200',
+          },
+        })
+      );
+    }
+  );
 
-  it('should call `Cypress.run` without serving the app', async () => {
-    const { success } = await cypressExecutor(
-      {
-        ...cypressOptions,
-        skipServe: true,
-        baseUrl: 'http://my-distant-host.com',
-      },
-      mockContext
-    );
-    expect(success).toEqual(true);
-    expect(runExecutor).not.toHaveBeenCalled();
-    expect(cypressRun).toHaveBeenCalledWith(
-      expect.objectContaining({
-        config: {
+  it.each(['app:serve', 'api:serve, app:serve'])(
+    'should call `Cypress.run` without serving the app',
+    async (devServerTarget) => {
+      const { success } = await cypressExecutor(
+        {
+          ...cypressOptions,
+          devServerTarget,
+          skipServe: true,
           baseUrl: 'http://my-distant-host.com',
         },
-      })
-    );
-  });
+        mockContext
+      );
+      expect(success).toEqual(true);
+      expect(runExecutor).not.toHaveBeenCalled();
+      expect(cypressRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: {
+            baseUrl: 'http://my-distant-host.com',
+          },
+        })
+      );
+    }
+  );
 
-  it('should not forward watch option to devServerTarget when not supported', async () => {
-    // Simulate a dev server target that does not support watch option.
-    (devkit as any).readTargetOptions = jest.fn().mockReturnValue({});
+  it.each([
+    ['app:serve', [{ project: 'app', target: 'serve' }]],
+    [
+      'api:serve, app:serve',
+      [
+        { project: 'api', target: 'serve' },
+        { project: 'app', target: 'serve' },
+      ],
+    ],
+  ])(
+    'should not forward watch option to devServerTarget when not supported',
+    async (devServerTarget, expectedOptions) => {
+      // Simulate a dev server target that does not support watch option.
+      (devkit as any).readTargetOptions = jest.fn().mockReturnValue({});
 
-    const { success } = await cypressExecutor(cypressOptions, mockContext);
+      const { success } = await cypressExecutor(
+        {
+          ...cypressOptions,
+          devServerTarget,
+        },
+        mockContext
+      );
 
-    expect(success).toEqual(true);
-    expect((devkit as any).readTargetOptions.mock.calls[0][0]).toEqual(
-      expect.objectContaining({
-        project: 'my-app',
-        target: 'serve',
-      })
-    );
-    expect(Object.keys(runExecutor.mock.calls[0][1])).not.toContain('watch');
-  });
+      expect(success).toEqual(true);
+      for (let i = 0; i < expectedOptions.length; i++) {
+        expect((devkit as any).readTargetOptions.mock.calls[i][0]).toEqual(
+          expect.objectContaining({
+            project: expectedOptions[i].project,
+            target: expectedOptions[i].target,
+          })
+        );
+        expect(Object.keys(runExecutor.mock.calls[i][1])).not.toContain(
+          'watch'
+        );
+      }
+    }
+  );
 
-  it('should forward watch option to devServerTarget when supported', async () => {
-    // Simulate a dev server target that support watch option.
-    (devkit as any).readTargetOptions = jest
-      .fn()
-      .mockReturnValue({ watch: true });
+  it.each([
+    ['app:serve', [{ project: 'app', target: 'serve' }]],
+    [
+      'api:serve, app:serve',
+      [
+        { project: 'api', target: 'serve' },
+        { project: 'app', target: 'serve' },
+      ],
+    ],
+  ])(
+    'should forward watch option to devServerTarget when supported',
+    async (devServerTarget, expectedOptions) => {
+      // Simulate a dev server target that support watch option.
+      (devkit as any).readTargetOptions = jest
+        .fn()
+        .mockReturnValue({ watch: true });
 
-    const { success } = await cypressExecutor(cypressOptions, mockContext);
+      const { success } = await cypressExecutor(
+        {
+          ...cypressOptions,
+          devServerTarget,
+        },
+        mockContext
+      );
 
-    expect(success).toEqual(true);
-    expect((devkit as any).readTargetOptions.mock.calls[0][0]).toEqual(
-      expect.objectContaining({
-        project: 'my-app',
-        target: 'serve',
-      })
-    );
-    expect(Object.keys(runExecutor.mock.calls[0][1])).toContain('watch');
-  });
+      expect(success).toEqual(true);
 
+      for (let i = 0; i < expectedOptions.length; i++) {
+        expect((devkit as any).readTargetOptions.mock.calls[i][0]).toEqual(
+          expect.objectContaining({
+            project: expectedOptions[i].project,
+            target: expectedOptions[i].target,
+          })
+        );
+        expect(Object.keys(runExecutor.mock.calls[i][1])).toContain('watch');
+      }
+    }
+  );
+
+  it.each([
+    ['app:serve', ['http://localhost:4200']],
+    [
+      'app1:serve, app2:serve',
+      ['http://localhost:4200', 'http://localhost:4201'],
+    ],
+  ])(
+    'should only yield last baseUrl from devServerTarget',
+    async (devServerTarget, baseUrls) => {
+      devkit.runExecutor = jest.fn();
+      for (const baseUrl of baseUrls) {
+        devkit.runExecutor.mockReturnValueOnce([
+          {
+            success: true,
+            baseUrl,
+          },
+        ]);
+      }
+
+      const { success } = await cypressExecutor(
+        {
+          ...cypressOptions,
+          devServerTarget,
+        },
+        mockContext
+      );
+
+      expect(success).toEqual(true);
+      expect(cypressRun).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          config: {
+            baseUrl: baseUrls[baseUrls.length - 1],
+          },
+        })
+      );
+    }
+  );
   it('should forward headed', async () => {
     const { success } = await cypressExecutor(
       {
