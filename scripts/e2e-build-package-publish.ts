@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { remove } from 'fs-extra';
 import { existsSync } from 'fs';
-import { stripIndent } from 'nx/src/utils/logger';
+import { stripIndent, NX_PREFIX } from 'nx/src/utils/logger';
 
 process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
@@ -42,9 +42,19 @@ async function buildPackagePublishAndCleanPorts() {
 }
 
 async function updateVersionsAndPublishPackages() {
-  execSync(`yarn nx-release major --local`, {
-    stdio: 'inherit',
+  console.log(`\n${NX_PREFIX} 📦 Publishing packages\n`);
+  const isVerbose =
+    process.env.NX_VERBOSE_LOGGING === 'true' ||
+    process.argv.includes('--verbose');
+  const response = execSync(`yarn nx-release major --local`, {
+    stdio: isVerbose ? 'inherit' : 'pipe',
+    encoding: 'utf8',
   });
+  // extract published version
+  if (!isVerbose) {
+    const value = response.match(/Successfully published:\s+ - .+@(.*)/);
+    console.log(`${NX_PREFIX} ✅ Published local version: ${value?.[1]}\n`);
+  }
 }
 
 (async () => {
