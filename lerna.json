@@ -1,6 +1,6 @@
 {
   "packages": ["build/packages/*"],
-  "version": "15.0.11",
+  "version": "15.0.12",
   "granularPathspec": false,
   "command": {
     "publish": {
