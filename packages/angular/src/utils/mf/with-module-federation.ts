@@ -1,38 +1,21 @@
 import {
+  AdditionalSharedConfig,
   createProjectGraphAsync,
+  getDependentPackagesForProject,
+  getNpmPackageSharedConfig,
+  ModuleFederationConfig,
   ProjectGraph,
   readCachedProjectGraph,
-} from '@nrwl/devkit';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
-import { extname } from 'path';
-import {
-  getNpmPackageSharedConfig,
+  readRootPackageJson,
+  Remotes,
+  SharedFunction,
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from './mf-webpack';
-import { getDependentPackagesForProject, readRootPackageJson } from './utils';
+} from '@nrwl/devkit';
+import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { extname } from 'path';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
-
-export type MFRemotes = string[] | [remoteName: string, remoteUrl: string][];
-
-type SharedFunction = (
-  libraryName: string,
-  sharedConfig: SharedLibraryConfig
-) => SharedLibraryConfig | false;
-type AdditionalSharedConfig = Array<
-  | string
-  | [libraryName: string, sharedConfig: SharedLibraryConfig]
-  | { libraryName: string; sharedConfig: SharedLibraryConfig }
->;
-
-export interface MFConfig {
-  name: string;
-  remotes?: MFRemotes;
-  exposes?: Record<string, string>;
-  shared?: SharedFunction;
-  additionalShared?: AdditionalSharedConfig;
-}
 
 function determineRemoteUrl(remote: string) {
   const remoteProjectConfiguration = readCachedProjectConfiguration(remote);
@@ -50,7 +33,7 @@ function determineRemoteUrl(remote: string) {
   }/remoteEntry.mjs`;
 }
 
-function mapRemotes(remotes: MFRemotes) {
+function mapRemotes(remotes: Remotes) {
   const mappedRemotes = {};
 
   for (const remote of remotes) {
@@ -157,7 +140,7 @@ function applyDefaultEagerPackages(
   }
 }
 
-export async function withModuleFederation(options: MFConfig) {
+export async function withModuleFederation(options: ModuleFederationConfig) {
   const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mf'];
   const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
     '@angular/animations',
