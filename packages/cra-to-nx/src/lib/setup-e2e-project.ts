@@ -1,9 +1,12 @@
-import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
-import * as fs from 'fs';
+import {
+  fileExists,
+  readJsonFile,
+  writeJsonFile,
+} from 'nx/src/utils/fileutils';
+import { writeFileSync } from 'fs';
 
 export function setupE2eProject(appName: string) {
-  const data = fs.readFileSync(`apps/${appName}-e2e/project.json`);
-  const json = JSON.parse(data.toString());
+  const json = readJsonFile(`apps/${appName}-e2e/project.json`);
   json.targets.e2e = {
     executor: 'nx:run-commands',
     options: {
@@ -25,10 +28,7 @@ export function setupE2eProject(appName: string) {
       readyWhen: 'can now view',
     },
   };
-  fs.writeFileSync(
-    `apps/${appName}-e2e/project.json`,
-    JSON.stringify(json, null, 2)
-  );
+  writeJsonFile(`apps/${appName}-e2e/project.json`, json);
 
   if (fileExists(`apps/${appName}-e2e/src/integration/app.spec.ts`)) {
     const integrationE2eTest = `
@@ -38,7 +38,7 @@ export function setupE2eProject(appName: string) {
           cy.get('body').should('exist');
         });
       });`;
-    fs.writeFileSync(
+    writeFileSync(
       `apps/${appName}-e2e/src/integration/app.spec.ts`,
       integrationE2eTest
     );

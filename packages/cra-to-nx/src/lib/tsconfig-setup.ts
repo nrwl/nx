@@ -1,5 +1,8 @@
-import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
-import * as fs from 'fs';
+import {
+  fileExists,
+  readJsonFile,
+  writeJsonFile,
+} from 'nx/src/utils/fileutils';
 
 const defaultTsConfig = {
   extends: '../../tsconfig.base.json',
@@ -57,8 +60,7 @@ const defaultTsConfigSpec = {
 
 export function setupTsConfig(appName: string) {
   if (fileExists(`apps/${appName}/tsconfig.json`)) {
-    const data = fs.readFileSync(`apps/${appName}/tsconfig.json`);
-    const json = JSON.parse(data.toString());
+    const json = readJsonFile(`apps/${appName}/tsconfig.json`);
     json.extends = '../../tsconfig.base.json';
     if (json.compilerOptions) {
       json.compilerOptions.jsx = 'react';
@@ -70,44 +72,24 @@ export function setupTsConfig(appName: string) {
         allowSyntheticDefaultImports: true,
       };
     }
-    fs.writeFileSync(
-      `apps/${appName}/tsconfig.json`,
-      JSON.stringify(json, null, 2)
-    );
+    writeJsonFile(`apps/${appName}/tsconfig.json`, json);
   } else {
-    fs.writeFileSync(
-      `apps/${appName}/tsconfig.json`,
-      JSON.stringify(defaultTsConfig, null, 2)
-    );
+    writeJsonFile(`apps/${appName}/tsconfig.json`, defaultTsConfig);
   }
 
   if (fileExists(`apps/${appName}/tsconfig.app.json`)) {
-    const data = fs.readFileSync(`apps/${appName}/tsconfig.app.json`);
-    const json = JSON.parse(data.toString());
+    const json = readJsonFile(`apps/${appName}/tsconfig.app.json`);
     json.extends = './tsconfig.json';
-    fs.writeFileSync(
-      `apps/${appName}/tsconfig.app.json`,
-      JSON.stringify(json, null, 2)
-    );
+    writeJsonFile(`apps/${appName}/tsconfig.app.json`, json);
   } else {
-    fs.writeFileSync(
-      `apps/${appName}/tsconfig.app.json`,
-      JSON.stringify(defaultTsConfigApp, null, 2)
-    );
+    writeJsonFile(`apps/${appName}/tsconfig.app.json`, defaultTsConfigApp);
   }
 
   if (fileExists(`apps/${appName}/tsconfig.spec.json`)) {
-    const data = fs.readFileSync(`apps/${appName}/tsconfig.spec.json`);
-    const json = JSON.parse(data.toString());
+    const json = readJsonFile(`apps/${appName}/tsconfig.spec.json`);
     json.extends = './tsconfig.json';
-    fs.writeFileSync(
-      `apps/${appName}/tsconfig.spec.json`,
-      JSON.stringify(json, null, 2)
-    );
+    writeJsonFile(`apps/${appName}/tsconfig.spec.json`, json);
   } else {
-    fs.writeFileSync(
-      `apps/${appName}/tsconfig.spec.json`,
-      JSON.stringify(defaultTsConfigSpec, null, 2)
-    );
+    writeJsonFile(`apps/${appName}/tsconfig.spec.json`, defaultTsConfigSpec);
   }
 }

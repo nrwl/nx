@@ -1,7 +1,7 @@
-import { readJsonSync, writeJsonSync } from 'fs-extra';
+import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 
 export function addCRAcracoScriptsToPackageJson(appName: string) {
-  const packageJson = readJsonSync(`apps/${appName}/package.json`);
+  const packageJson = readJsonFile(`apps/${appName}/package.json`);
   packageJson.scripts = {
     ...packageJson.scripts,
     start: 'craco start',
@@ -9,5 +9,5 @@ export function addCRAcracoScriptsToPackageJson(appName: string) {
     build: `cross-env BUILD_PATH=../../dist/apps/${appName} craco build`,
     test: 'craco test',
   };
-  writeJsonSync(`apps/${appName}/package.json`, packageJson, { spaces: 2 });
+  writeJsonFile(`apps/${appName}/package.json`, packageJson);
 }

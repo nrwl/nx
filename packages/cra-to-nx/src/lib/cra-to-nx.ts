@@ -1,15 +1,13 @@
-#!/usr/bin/env node
-import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
 import { execSync } from 'child_process';
+import { copySync, moveSync, removeSync, readdirSync } from 'fs-extra';
+
+import { fileExists, readJsonFile } from 'nx/src/utils/fileutils';
+import { output } from 'nx/src/utils/output';
 import {
-  copySync,
-  existsSync,
-  moveSync,
-  readJsonSync,
-  removeSync,
-  readdirSync,
-} from 'fs-extra';
-import { output } from '@nrwl/devkit';
+  detectPackageManager,
+  getPackageManagerCommand,
+  PackageManagerCommands,
+} from 'nx/src/utils/package-manager';
 
 import { addCRAcracoScriptsToPackageJson } from './add-cra-commands-to-nx';
 import { checkForUncommittedChanges } from './check-for-uncommitted-changes';
@@ -19,31 +17,15 @@ import { setupTsConfig } from './tsconfig-setup';
 import { writeCracoConfig } from './write-craco-config';
 import { cleanUpFiles } from './clean-up-files';
 
-let packageManager: string;
-function checkPackageManager() {
-  packageManager = existsSync('yarn.lock')
-    ? 'yarn'
-    : existsSync('pnpm-lock.yaml')
-    ? 'pnpm'
-    : 'npm';
-}
-
-function addDependency(dep: string, dev?: boolean) {
+function addDependency(pmc: PackageManagerCommands, dep: string) {
   output.log({ title: `📦 Adding dependency: ${dep}` });
-  if (packageManager === 'yarn') {
-    execSync(`yarn add ${dev ? '-D ' : ''}${dep}`, { stdio: [0, 1, 2] });
-  } else if (packageManager === 'pnpm') {
-    execSync(`pnpm i ${dev ? '--save-dev ' : ''}${dep}`, { stdio: [0, 1, 2] });
-  } else {
-    execSync(`npm i --force ${dev ? '--save-dev ' : ''}${dep}`, {
-      stdio: [0, 1, 2],
-    });
-  }
+  execSync(`${pmc.addDev} ${dep}`, { stdio: [0, 1, 2] });
 }
 
 export async function createNxWorkspaceForReact(options: Record<string, any>) {
   checkForUncommittedChanges();
-  checkPackageManager();
+  const packageManager = detectPackageManager();
+  const pmc = getPackageManagerCommand(packageManager);
 
   output.log({ title: '🐳 Nx initialization' });
 
@@ -54,7 +36,7 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
   }
 
   const reactAppName = readNameFromPackageJson();
-  const packageJson = readJsonSync('package.json');
+  const packageJson = readJsonFile('package.json');
   const deps = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
@@ -159,17 +141,15 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
     title: '🧶 Adding npm packages to your new Nx workspace to support CRA',
   });
 
-  addDependency('react-scripts', true);
-  addDependency('@testing-library/jest-dom', true);
-  addDependency('eslint-config-react-app', true);
-  addDependency('@craco/craco', true);
-  addDependency('web-vitals', true);
-  addDependency('jest-watch-typeahead', true); // Only for ts apps?
-  addDependency('cross-env', true);
+  addDependency(pmc, 'react-scripts');
+  addDependency(pmc, '@testing-library/jest-dom');
+  addDependency(pmc, 'eslint-config-react-app');
+  addDependency(pmc, '@craco/craco');
+  addDependency(pmc, 'web-vitals');
+  addDependency(pmc, 'jest-watch-typeahead'); // Only for ts apps?
+  addDependency(pmc, 'cross-env');
 
-  output.log({
-    title: '🎉 Done!',
-  });
+  output.log({ title: '🎉 Done!' });
   output.note({
     title: 'First time using Nx? Check out this interactive Nx tutorial.',
     bodyLines: [
