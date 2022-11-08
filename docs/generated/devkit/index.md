@@ -138,7 +138,9 @@ It only uses language primitives and immutable objects
 
 - [addDependenciesToPackageJson](../../devkit/index#adddependenciestopackagejson)
 - [addProjectConfiguration](../../devkit/index#addprojectconfiguration)
+- [applyAdditionalShared](../../devkit/index#applyadditionalshared)
 - [applyChangesToString](../../devkit/index#applychangestostring)
+- [applySharedFunction](../../devkit/index#applysharedfunction)
 - [convertNxExecutor](../../devkit/index#convertnxexecutor)
 - [convertNxGenerator](../../devkit/index#convertnxgenerator)
 - [createProjectGraphAsync](../../devkit/index#createprojectgraphasync)
@@ -159,6 +161,7 @@ It only uses language primitives and immutable objects
 - [installPackagesTask](../../devkit/index#installpackagestask)
 - [isStandaloneProject](../../devkit/index#isstandaloneproject)
 - [joinPathFragments](../../devkit/index#joinpathfragments)
+- [mapRemotes](../../devkit/index#mapremotes)
 - [moveFilesToNewDirectory](../../devkit/index#movefilestonewdirectory)
 - [names](../../devkit/index#names)
 - [normalizePath](../../devkit/index#normalizepath)
@@ -895,6 +898,31 @@ The utility will update either files.
 
 ---
 
+### applyAdditionalShared
+
+▸ **applyAdditionalShared**(`sharedConfig`, `additionalShared`, `projectGraph`): `void`
+
+Add additional dependencies to the shared package that may not have been
+discovered by the project graph.
+
+This can be useful for applications that use a Dependency Injection system
+that expects certain Singleton values to be present in the shared injection
+hierarchy.
+
+#### Parameters
+
+| Name               | Type                                                                                 | Description                        |
+| :----------------- | :----------------------------------------------------------------------------------- | :--------------------------------- |
+| `sharedConfig`     | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> | The original Shared Config         |
+| `additionalShared` | [`AdditionalSharedConfig`](../../devkit/index#additionalsharedconfig)                | The additional dependencies to add |
+| `projectGraph`     | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\>                            | The Nx project graph               |
+
+#### Returns
+
+`void`
+
+---
+
 ### applyChangesToString
 
 ▸ **applyChangesToString**(`text`, `changes`): `string`
@@ -939,6 +967,26 @@ bootstrap({
 #### Returns
 
 `string`
+
+---
+
+### applySharedFunction
+
+▸ **applySharedFunction**(`sharedConfig`, `sharedFn`): `void`
+
+Apply a custom function provided by the user that will modify the Shared Config
+of the dependencies for the Module Federation build.
+
+#### Parameters
+
+| Name           | Type                                                                                 | Description                               |
+| :------------- | :----------------------------------------------------------------------------------- | :---------------------------------------- |
+| `sharedConfig` | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> | The original Shared Config to be modified |
+| `sharedFn`     | [`SharedFunction`](../../devkit/index#sharedfunction)                                | The custom function to run                |
+
+#### Returns
+
+`void`
 
 ---
 
@@ -1423,6 +1471,27 @@ Normalized path fragments and joins them
 #### Returns
 
 `string`
+
+---
+
+### mapRemotes
+
+▸ **mapRemotes**(`remotes`, `remoteEntryExt`, `determineRemoteUrl`): `Record`<`string`, `string`\>
+
+Map remote names to a format that can be understood and used by Module
+Federation.
+
+#### Parameters
+
+| Name                 | Type                                    | Description                                              |
+| :------------------- | :-------------------------------------- | :------------------------------------------------------- |
+| `remotes`            | [`Remotes`](../../devkit/index#remotes) | The remotes to map                                       |
+| `remoteEntryExt`     | `"js"` \| `"mjs"`                       | The file extension of the remoteEntry file               |
+| `determineRemoteUrl` | (`remote`: `string`) => `string`        | The function used to lookup the URL of the served remote |
+
+#### Returns
+
+`Record`<`string`, `string`\>
 
 ---
 

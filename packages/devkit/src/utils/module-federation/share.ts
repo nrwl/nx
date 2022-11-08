@@ -149,6 +149,13 @@ export function sharePackages(
   }, {} as Record<string, SharedLibraryConfig>);
 }
 
+/**
+ * Apply a custom function provided by the user that will modify the Shared Config
+ * of the dependencies for the Module Federation build.
+ *
+ * @param sharedConfig - The original Shared Config to be modified
+ * @param sharedFn - The custom function to run
+ */
 export function applySharedFunction(
   sharedConfig: Record<string, SharedLibraryConfig>,
   sharedFn: SharedFunction | undefined
@@ -170,6 +177,18 @@ export function applySharedFunction(
   }
 }
 
+/**
+ * Add additional dependencies to the shared package that may not have been
+ * discovered by the project graph.
+ *
+ * This can be useful for applications that use a Dependency Injection system
+ * that expects certain Singleton values to be present in the shared injection
+ * hierarchy.
+ *
+ * @param sharedConfig - The original Shared Config
+ * @param additionalShared - The additional dependencies to add
+ * @param projectGraph - The Nx project graph
+ */
 export function applyAdditionalShared(
   sharedConfig: Record<string, SharedLibraryConfig>,
   additionalShared: AdditionalSharedConfig | undefined,

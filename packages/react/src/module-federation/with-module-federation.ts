@@ -1,25 +1,21 @@
 import {
-  AdditionalSharedConfig,
+  applyAdditionalShared,
+  applySharedFunction,
   createProjectGraphAsync,
   getDependentPackagesForProject,
-  getNpmPackageSharedConfig,
   mapRemotes,
   ModuleFederationConfig,
   ProjectConfiguration,
   ProjectGraph,
   readCachedProjectGraph,
-  readRootPackageJson,
-  SharedFunction,
-  SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-  applyAdditionalShared,
-  applySharedFunction
 } from '@nrwl/devkit';
+import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
-function determineRemoteUrl(remote: string, projectGraph: ProjectGraph) {
-  const remoteConfiguration = projectGraph.nodes[remote].data;
+function determineRemoteUrl(remote: string) {
+  const remoteConfiguration = readCachedProjectConfiguration(remote);
   const serveTarget = remoteConfiguration?.targets?.serve;
 
   if (!serveTarget) {

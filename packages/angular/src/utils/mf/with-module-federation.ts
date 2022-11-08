@@ -1,4 +1,6 @@
 import {
+  applyAdditionalShared,
+  applySharedFunction,
   createProjectGraphAsync,
   getDependentPackagesForProject,
   mapRemotes,
@@ -10,10 +12,6 @@ import {
   shareWorkspaceLibraries,
 } from '@nrwl/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
-import {
-  applyAdditionalShared,
-  applySharedFunction,
-} from '@nrwl/devkit/src/utils/module-federation';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 function determineRemoteUrl(remote: string) {

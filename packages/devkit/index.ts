@@ -302,6 +302,8 @@ export {
   SharedLibraryConfig,
   SharedWorkspaceLibraryConfig,
   AdditionalSharedConfig,
+  applySharedFunction,
+  applyAdditionalShared,
   mapRemotes,
   getNpmPackageSharedConfig,
   shareWorkspaceLibraries,
