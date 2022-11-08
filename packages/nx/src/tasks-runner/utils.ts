@@ -157,8 +157,8 @@ export function getOutputsForTargetAndConfiguration(
       .map((output: string) => {
         return interpolate(output, {
           projectRoot: node.data.root,
-          projectName: node.data.name,
-          project: { ...node.data, name: node.data.name }, // this is legacy
+          projectName: node.name,
+          project: { ...node.data, name: node.name }, // this is legacy
           options,
         });
       })
