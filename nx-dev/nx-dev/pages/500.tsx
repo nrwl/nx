@@ -14,7 +14,7 @@ export default function FiveOhOh(): JSX.Element {
             className="relative py-16 sm:pt-24 lg:py-32"
           >
             <div className="mx-auto px-4 sm:px-6 lg:px-8 xl:max-w-7xl">
-              <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-gray-800 sm:text-6xl">
+              <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl">
                 500 - Internal Server Error!
               </h1>
               <p className="mt-8 text-lg">
