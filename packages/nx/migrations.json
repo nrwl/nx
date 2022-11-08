@@ -41,6 +41,12 @@
       "version": "15.0.0-beta.1",
       "description": "Prefix outputs with {workspaceRoot}/{projectRoot} if needed",
       "implementation": "./src/migrations/update-15-0-0/prefix-outputs"
+    },
+    "15.1.0-set-project-names": {
+      "cli": "nx",
+      "version": "15.0.0-beta.1",
+      "description": "Set project names in project.json files",
+      "implementation": "./src/migrations/update-15-1-0/set-project-names"
     }
   }
 }
