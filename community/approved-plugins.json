@@ -338,5 +338,10 @@
     "name": "@diogovcs/stryker-mutator",
     "description": "Nx plugin to add Stryker Mutator mutation tests to the Nx Workspace.",
     "url": "https://github.com/DiogoVCS/nx-workspace-plugins"
+  },
+  {
+    "name": "@spaceribs/nx-web-ext",
+    "description": "Nx plugin that allows you to build, test and deploy web extensions.",
+    "url": "https://github.com/spaceribs/spaceribs/tree/main/packages/nx-web-ext"
   }
 ]
