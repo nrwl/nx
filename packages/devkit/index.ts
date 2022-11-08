@@ -295,6 +295,26 @@ export {
  */
 export { moveFilesToNewDirectory } from './src/utils/move-dir';
 
+/**
+ * @category Utils
+ */
+export {
+  SharedLibraryConfig,
+  SharedWorkspaceLibraryConfig,
+  AdditionalSharedConfig,
+  getNpmPackageSharedConfig,
+  shareWorkspaceLibraries,
+  sharePackages,
+  getDependentPackagesForProject,
+  ModuleFederationConfig,
+  ModuleFederationLibrary,
+  readRootPackageJson,
+  WorkspaceLibrary,
+  SharedFunction,
+  WorkspaceLibrarySecondaryEntryPoint,
+  Remotes,
+} from './src/utils/module-federation';
+
 // TODO(v16): Change this to export from 'nx/src/utils/workspace-root'
 /**
  * @category Utils

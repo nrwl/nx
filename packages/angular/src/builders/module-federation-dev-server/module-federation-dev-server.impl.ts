@@ -2,6 +2,7 @@ import type { Schema } from './schema';
 import {
   ProjectConfiguration,
   readCachedProjectGraph,
+  Remotes,
   workspaceRoot,
   Workspaces,
 } from '@nrwl/devkit';
@@ -12,7 +13,6 @@ import { join } from 'path';
 import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
 import { existsSync, readFileSync } from 'fs';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { MFRemotes } from '../../utils/mf/with-module-federation';
 
 function getDynamicRemotes(
   project: ProjectConfiguration,
@@ -85,7 +85,7 @@ function getStaticRemotes(
     'module-federation.config.js'
   );
 
-  let mfeConfig: { remotes: MFRemotes };
+  let mfeConfig: { remotes: Remotes };
   try {
     mfeConfig = require(mfConfigPath);
   } catch {
