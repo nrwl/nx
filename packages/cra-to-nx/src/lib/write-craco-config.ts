@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import { writeFileSync } from 'fs';
 
 export function writeCracoConfig(appName: string, isCRA5: boolean) {
   const configOverride = `
@@ -57,5 +57,5 @@ export function writeCracoConfig(appName: string, isCRA5: boolean) {
     },
   };
   `;
-  fs.writeFileSync(`apps/${appName}/craco.config.js`, configOverride);
+  writeFileSync(`apps/${appName}/craco.config.js`, configOverride);
 }
