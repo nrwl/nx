@@ -1,5 +1,5 @@
 import * as depcheck from 'depcheck';
-import { join, relative } from 'path';
+import { join } from 'path';
 
 // Ignore packages that are defined here per package
 const IGNORE_MATCHES_IN_PACKAGE = {
@@ -39,7 +39,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
   ],
   cli: ['nx'],
   cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
-  devkit: ['@angular-devkit/architect', 'rxjs'],
+  devkit: ['@angular-devkit/architect', 'rxjs', 'webpack'],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
   jest: [
     'jest',
