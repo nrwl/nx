@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { copySync, moveSync, removeSync, readdirSync } from 'fs-extra';
+import { copySync, moveSync, readdirSync, removeSync } from 'fs-extra';
 
 import { fileExists, readJsonFile } from 'nx/src/utils/fileutils';
 import { output } from 'nx/src/utils/output';
@@ -9,17 +9,20 @@ import {
   PackageManagerCommands,
 } from 'nx/src/utils/package-manager';
 
-import { addCRAcracoScriptsToPackageJson } from './add-cra-commands-to-nx';
 import { checkForUncommittedChanges } from './check-for-uncommitted-changes';
 import { setupE2eProject } from './setup-e2e-project';
 import { readNameFromPackageJson } from './read-name-from-package-json';
 import { setupTsConfig } from './tsconfig-setup';
 import { writeCracoConfig } from './write-craco-config';
 import { cleanUpFiles } from './clean-up-files';
+import { writeViteConfig } from './write-vite-config';
+import { renameJsToJsx } from './rename-js-to-jsx';
+import { writeViteIndexHtml } from './write-vite-index-html';
 
-function addDependency(pmc: PackageManagerCommands, dep: string) {
-  output.log({ title: `📦 Adding dependency: ${dep}` });
-  execSync(`${pmc.addDev} ${dep}`, { stdio: [0, 1, 2] });
+function addDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
+  const depsArg = deps.join(' ');
+  output.log({ title: `📦 Adding dependencies: ${depsArg}` });
+  execSync(`${pmc.addDev} ${depsArg}`, { stdio: [0, 1, 2] });
 }
 
 export async function createNxWorkspaceForReact(options: Record<string, any>) {
@@ -27,7 +30,7 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
   const packageManager = detectPackageManager();
   const pmc = getPackageManagerCommand(packageManager);
 
-  output.log({ title: '🐳 Nx initialization' });
+  output.log({ title: '✨ Nx initialization' });
 
   let appIsJs = true;
 
@@ -45,11 +48,12 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
   const npmVersion = execSync('npm -v').toString();
   // Should remove this check 04/2023 once Node 14 & npm 6 reach EOL
   const npxYesFlagNeeded = !npmVersion.startsWith('6'); // npm 7 added -y flag to npx
+  const isVite = options.vite || options.bundler === 'vite';
 
   execSync(
     `npx ${
       npxYesFlagNeeded ? '-y' : ''
-    } create-nx-workspace@latest temp-workspace --appName=${reactAppName} --preset=react --style=css --packageManager=${packageManager}`,
+    } create-nx-workspace@latest temp-workspace --appName=${reactAppName} --preset=react --style=css --packageManager=${packageManager} --nx-cloud`,
     { stdio: [0, 1, 2] }
   );
 
@@ -94,21 +98,32 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
 
   process.chdir('temp-workspace/');
 
-  output.log({ title: '🤹 Add CRA craco scripts to package.json' });
+  if (isVite) {
+    output.log({ title: '🧑‍🔧  Setting up Vite' });
+    const { addViteCommandsToPackageScripts } = await import(
+      './add-vite-commands-to-package-scripts'
+    );
+    addViteCommandsToPackageScripts(reactAppName);
+    writeViteConfig(reactAppName);
+    writeViteIndexHtml(reactAppName);
+    renameJsToJsx(reactAppName);
+  } else {
+    output.log({ title: '🧑‍🔧  Setting up craco + Webpack' });
+    const { addCracoCommandsToPackageScripts } = await import(
+      './add-craco-commands-to-package-scripts'
+    );
+    addCracoCommandsToPackageScripts(reactAppName);
 
-  addCRAcracoScriptsToPackageJson(reactAppName);
+    writeCracoConfig(reactAppName, isCRA5);
 
-  output.log({ title: '🧑‍🔧 Customize webpack ' + deps['react-scripts'] });
+    output.log({
+      title: '🛬 Skip CRA preflight check since Nx manages the monorepo',
+    });
 
-  writeCracoConfig(reactAppName, isCRA5);
+    execSync(`echo "SKIP_PREFLIGHT_CHECK=true" > .env`, { stdio: [0, 1, 2] });
+  }
 
-  output.log({
-    title: '🛬 Skip CRA preflight check since Nx manages the monorepo',
-  });
-
-  execSync(`echo "SKIP_PREFLIGHT_CHECK=true" > .env`, { stdio: [0, 1, 2] });
-
-  output.log({ title: '🧶 Add all node_modules to .gitignore' });
+  output.log({ title: '🧶  Add all node_modules to .gitignore' });
 
   execSync(`echo "node_modules" >> .gitignore`, { stdio: [0, 1, 2] });
 
@@ -120,7 +135,7 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
     moveSync(`temp-workspace/${f}`, `./${f}`, { overwrite: true });
   });
 
-  output.log({ title: '🧹 Cleaning up.' });
+  output.log({ title: '🧹  Cleaning up.' });
 
   cleanUpFiles(reactAppName);
 
@@ -133,21 +148,28 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
     setupE2eProject(reactAppName);
   } else {
     removeSync(`apps/${reactAppName}-e2e`);
+    execSync(`${pmc.rm} @nrwl/cypress eslint-plugin-cypress`);
   }
 
   output.log({ title: '🙂 Please be patient, one final step remaining!' });
 
   output.log({
-    title: '🧶 Adding npm packages to your new Nx workspace to support CRA',
+    title: '🧶  Adding npm packages to your new Nx workspace',
   });
 
-  addDependency(pmc, 'react-scripts');
-  addDependency(pmc, '@testing-library/jest-dom');
-  addDependency(pmc, 'eslint-config-react-app');
-  addDependency(pmc, '@craco/craco');
-  addDependency(pmc, 'web-vitals');
-  addDependency(pmc, 'jest-watch-typeahead'); // Only for ts apps?
-  addDependency(pmc, 'cross-env');
+  addDependencies(
+    pmc,
+    '@testing-library/jest-dom',
+    'eslint-config-react-app',
+    'web-vitals',
+    'jest-watch-typeahead'
+  );
+
+  if (isVite) {
+    addDependencies(pmc, 'vite', 'vitest', '@vitejs/plugin-react');
+  } else {
+    addDependencies(pmc, '@craco/craco', 'cross-env', 'react-scripts');
+  }
 
   output.log({ title: '🎉 Done!' });
   output.note({

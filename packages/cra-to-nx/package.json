@@ -24,9 +24,10 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "fs-extra": "^10.1.0",
+    "glob": "7.1.4",
     "nx": "file:../nx",
     "tslib": "^2.3.0",
-    "yargs-parser": "21.1.1"
+    "yargs": "^17.6.2"
   },
   "publishConfig": {
     "access": "public"
