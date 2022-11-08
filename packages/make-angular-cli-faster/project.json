@@ -1,4 +1,5 @@
 {
+  "name": "make-angular-cli-faster",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/make-angular-cli-faster/src",
   "projectType": "library",

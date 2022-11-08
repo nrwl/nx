@@ -1,4 +1,5 @@
 {
+  "name": "typedoc-theme",
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "typedoc-theme/src",
   "projectType": "library",

@@ -339,6 +339,7 @@ describe('project configuration', () => {
         updateProjectConfiguration(tree, 'test', expectedProjectConfig);
 
         expect(readJson(tree, 'libs/test/project.json')).toEqual({
+          name: 'test',
           ...expectedProjectConfig,
           root: undefined,
         });
@@ -589,6 +590,7 @@ describe('project configuration', () => {
         updateProjectConfiguration(tree, 'test', expectedProjectConfig);
 
         expect(readJson(tree, 'libs/test/project.json')).toEqual({
+          name: 'test',
           ...expectedProjectConfig,
           root: undefined,
         });

@@ -1,4 +1,5 @@
 {
+  "name": "e2e-storybook-angular",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/storybook-angular",
   "projectType": "application",
