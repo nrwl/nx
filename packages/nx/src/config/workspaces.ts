@@ -602,48 +602,51 @@ export function getGlobPatternsFromPlugins(
 export function getGlobPatternsFromPackageManagerWorkspaces(
   root: string
 ): string[] {
-  const packageJson = readJsonFile<PackageJson>(join(root, 'package.json'));
+  try {
+    const patterns: string[][] = [];
+    const packageJson = readJsonFile<PackageJson>(join(root, 'package.json'));
 
-  const patterns: string[][] = [];
+    patterns.push(
+      normalizePatterns(
+        Array.isArray(packageJson.workspaces)
+          ? packageJson.workspaces
+          : packageJson.workspaces?.packages ?? []
+      )
+    );
 
-  patterns.push(
-    normalizePatterns(
-      Array.isArray(packageJson.workspaces)
-        ? packageJson.workspaces
-        : packageJson.workspaces?.packages ?? []
-    )
-  );
-
-  if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
-    try {
-      const obj = yaml.load(readFileSync(join(root, 'pnpm-workspace.yaml')));
-      patterns.push(normalizePatterns(obj.packages || []));
-    } catch (e: unknown) {
-      output.warn({
-        title: `${NX_PREFIX} Unable to parse pnpm-workspace.yaml`,
-        bodyLines: [e.toString()],
-      });
+    if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
+      try {
+        const obj = yaml.load(readFileSync(join(root, 'pnpm-workspace.yaml')));
+        patterns.push(normalizePatterns(obj.packages || []));
+      } catch (e: unknown) {
+        output.warn({
+          title: `${NX_PREFIX} Unable to parse pnpm-workspace.yaml`,
+          bodyLines: [e.toString()],
+        });
+      }
     }
-  }
 
-  if (existsSync(join(root, 'lerna.json'))) {
-    try {
-      const { packages } = readJsonFile<any>(join(root, 'lerna.json'));
-      patterns.push(packages?.length > 0 ? normalizePatterns(packages) : []);
-    } catch (e: unknown) {
-      output.warn({
-        title: `${NX_PREFIX} Unable to parse lerna.json`,
-        bodyLines: [e.toString()],
-      });
+    if (existsSync(join(root, 'lerna.json'))) {
+      try {
+        const { packages } = readJsonFile<any>(join(root, 'lerna.json'));
+        patterns.push(packages?.length > 0 ? normalizePatterns(packages) : []);
+      } catch (e: unknown) {
+        output.warn({
+          title: `${NX_PREFIX} Unable to parse lerna.json`,
+          bodyLines: [e.toString()],
+        });
+      }
     }
-  }
 
-  // Merge patterns from workspaces definitions
-  const flat = patterns.flat();
-  // Default option if no patterns
-  const res = flat.length ? flat : ['packages/*/package.json'];
-  // Include the root project
-  return res.concat('package.json');
+    // Merge patterns from workspaces definitions
+    const flat = patterns.flat();
+    // Default option if no patterns
+    const res = flat.length ? flat : ['packages/*/package.json'];
+    // Include the root project
+    return process.env.NX_INCLUDE_ROOT_SCRIPTS
+      ? res.concat('package.json')
+      : res;
+  } catch {}
 }
 
 function normalizePatterns(patterns: string[]): string[] {

@@ -433,6 +433,9 @@ function inlineProjectConfigurationsWithTree(
  * the same devkit generator run show up when
  * there is no workspace.json file, as `glob`
  * cannot find them.
+ *
+ * We exclude the root `package.json` from this list, since it wouldn't be
+ * considered a project during workspace generation
  */
 function findCreatedProjects(tree: Tree) {
   const files = tree
@@ -441,7 +444,8 @@ function findCreatedProjects(tree: Tree) {
       const fileName = basename(f.path);
       return (
         f.type === 'CREATE' &&
-        (fileName === 'project.json' || fileName === 'package.json')
+        (fileName === 'project.json' || fileName === 'package.json') &&
+        f.path !== 'package.json'
       );
     })
     .map((x) => x.path);

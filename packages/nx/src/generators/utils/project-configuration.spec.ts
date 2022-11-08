@@ -484,6 +484,7 @@ describe('project configuration', () => {
 
         const projects = getProjects(tree);
 
+        console.log(projects);
         expect(projects.size).toEqual(1);
         expect(projects.get('proj')).toEqual({
           $schema: '../node_modules/nx/schemas/project-schema.json',

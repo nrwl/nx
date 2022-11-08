@@ -26,7 +26,9 @@ export const getTouchedProjects: TouchedProjectLocator = (
         projectGraphNodes[b].data.root.length -
         projectGraphNodes[a].data.root.length
     )[0];
-    affected.push(mostSpecificProject);
+    if (mostSpecificProject) {
+      affected.push(mostSpecificProject);
+    }
     return affected;
   }, []);
 };

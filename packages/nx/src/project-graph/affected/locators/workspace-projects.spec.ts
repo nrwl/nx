@@ -75,7 +75,7 @@ describe('getTouchedProjects', () => {
     expect(
       getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
     ).toEqual(['b']);
-  })
+  });
 });
 
 describe('getImplicitlyTouchedProjects', () => {
