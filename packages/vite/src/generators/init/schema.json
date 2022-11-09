@@ -1,0 +1,16 @@
+{
+  "cli": "nx",
+  "title": "Add Vite Configuration to the workspace",
+  "description": "Add Vite Configuration to the workspace.",
+  "$id": "init-vite-plugin",
+  "type": "object",
+  "properties": {
+    "uiFramework": {
+      "type": "string",
+      "description": "UI Framework to use for Vite.",
+      "enum": ["react", "vue3", "vue3-jsx"],
+      "default": "react",
+      "x-prompt": "What UI framework plugin should Vite use?"
+    }
+  }
+}

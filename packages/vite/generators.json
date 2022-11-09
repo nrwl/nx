@@ -1,6 +1,22 @@
 {
   "name": "Nx Vite",
   "version": "0.1",
-  "schematics": {},
-  "generators": {}
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#initSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add Storybook configuration to the workspace.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add Vite configuration to the workspace.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    }
+  }
 }

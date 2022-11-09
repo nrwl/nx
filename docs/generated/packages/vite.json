@@ -14,6 +14,33 @@
       "content": "The Nx plugin for [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/).\n\n{% callout type=\"warning\" title=\"Early release plugin\" %}\nThis Nx plugin is in active development and may not be ready for real-world use. The planned release date for the stable plugin is December, 2022.\n{% /callout %}\n\nWhy should you use this plugin?\n\n- Instant dev server start\n- Lightning fast Hot-Module Reloading\n- _Fast_ builds using Vite.\n- Vite-powered tests with smart and instant watch mode\n\n## Setting up Vite\n\nTo create a new workspace, run `npx create-nx-workspace@latest --preset=npm`.\n\nTo add the Vite plugin to an existing workspace, run the following:\n\n{% tabs %}\n{% tab label=\"npm\" %}\n\n```shell\nnpm install -D @nrwl/vite\n```\n\n{% /tab %}\n{% tab label=\"yarn\" %}\n\n```shell\nyarn add -D @nrwl/vite\n```\n\n{% /tab %}\n{% tab label=\"pnpm\" %}\n\n```shell\npnpm install -D @nrwl/vite\n```\n\n{% /tab %}\n{% /tabs %}\n"
     }
   ],
-  "generators": [],
+  "generators": [
+    {
+      "name": "init",
+      "factory": "./src/generators/init/init",
+      "schema": {
+        "cli": "nx",
+        "title": "Add Vite Configuration to the workspace",
+        "description": "Add Vite Configuration to the workspace.",
+        "$id": "init-vite-plugin",
+        "type": "object",
+        "properties": {
+          "uiFramework": {
+            "type": "string",
+            "description": "UI Framework to use for Vite.",
+            "enum": ["react", "vue3", "vue3-jsx"],
+            "default": "react",
+            "x-prompt": "What UI framework plugin should Vite use?"
+          }
+        },
+        "presets": []
+      },
+      "description": "Add Vite configuration to the workspace.",
+      "aliases": ["ng-add"],
+      "hidden": true,
+      "implementation": "/packages/vite/src/generators/init/init.ts",
+      "path": "/packages/vite/src/generators/init/schema.json"
+    }
+  ],
   "executors": []
 }
