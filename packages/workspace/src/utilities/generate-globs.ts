@@ -54,13 +54,16 @@ export function createGlobPatternsForDependencies(
 
     const dirsToUse = [];
     const recursiveScanDirs = (dirPath) => {
-      const children = readdirSync(dirPath);
+      const children = readdirSync(resolve(workspaceRoot, dirPath));
       for (const child of children) {
         const childPath = join(dirPath, child);
-        if (ig?.ignores(childPath) || !lstatSync(childPath).isDirectory()) {
+        if (
+          ig?.ignores(childPath) ||
+          !lstatSync(resolve(workspaceRoot, childPath)).isDirectory()
+        ) {
           continue;
         }
-        if (existsSync(join(childPath, 'ng-package.json'))) {
+        if (existsSync(join(workspaceRoot, childPath, 'ng-package.json'))) {
           dirsToUse.push(childPath);
         } else {
           recursiveScanDirs(childPath);
