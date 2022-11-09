@@ -603,11 +603,11 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
   root: string
 ): string[] {
   try {
-    const patterns: string[][] = [];
+    const patterns: string[] = [];
     const packageJson = readJsonFile<PackageJson>(join(root, 'package.json'));
 
     patterns.push(
-      normalizePatterns(
+      ...normalizePatterns(
         Array.isArray(packageJson.workspaces)
           ? packageJson.workspaces
           : packageJson.workspaces?.packages ?? []
@@ -616,8 +616,10 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 
     if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
       try {
-        const obj = yaml.load(readFileSync(join(root, 'pnpm-workspace.yaml')));
-        patterns.push(normalizePatterns(obj.packages || []));
+        const obj = yaml.load(
+          readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf-8')
+        ) as { packages: string[] };
+        patterns.push(...normalizePatterns(obj.packages || []));
       } catch (e: unknown) {
         output.warn({
           title: `${NX_PREFIX} Unable to parse pnpm-workspace.yaml`,
@@ -629,7 +631,9 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
     if (existsSync(join(root, 'lerna.json'))) {
       try {
         const { packages } = readJsonFile<any>(join(root, 'lerna.json'));
-        patterns.push(packages?.length > 0 ? normalizePatterns(packages) : []);
+        patterns.push(
+          ...normalizePatterns(packages?.length > 0 ? packages : ['packages/*'])
+        );
       } catch (e: unknown) {
         output.warn({
           title: `${NX_PREFIX} Unable to parse lerna.json`,
@@ -639,13 +643,11 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
     }
 
     // Merge patterns from workspaces definitions
-    const flat = patterns.flat();
-    // Default option if no patterns
-    const res = flat.length ? flat : ['packages/*/package.json'];
+    // TODO(@AgentEnder): update logic after better way to determine root project inclusion
     // Include the root project
     return process.env.NX_INCLUDE_ROOT_SCRIPTS
-      ? res.concat('package.json')
-      : res;
+      ? patterns.concat('package.json')
+      : patterns;
   } catch {}
 }
 

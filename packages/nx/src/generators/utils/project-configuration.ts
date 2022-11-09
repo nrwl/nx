@@ -434,7 +434,8 @@ function inlineProjectConfigurationsWithTree(
  * there is no workspace.json file, as `glob`
  * cannot find them.
  *
- * We exclude the root `package.json` from this list, since it wouldn't be
+ * We exclude the root `package.json` from this list unless
+ * NX_INCLUDE_ROOT_SCRIPTS is set, since it wouldn't be
  * considered a project during workspace generation
  */
 function findCreatedProjects(tree: Tree) {
@@ -445,7 +446,9 @@ function findCreatedProjects(tree: Tree) {
       return (
         f.type === 'CREATE' &&
         (fileName === 'project.json' || fileName === 'package.json') &&
-        f.path !== 'package.json'
+        // TODO(@AgentEnder): Update after root scripts logic is nicer
+        (process.env.NX_INCLUDE_ROOT_SCRIPTS === 'true' ||
+          f.path !== 'package.json')
       );
     })
     .map((x) => x.path);
