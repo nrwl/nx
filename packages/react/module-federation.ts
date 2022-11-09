@@ -1,6 +1,5 @@
 import { withModuleFederation } from './src/module-federation/with-module-federation';
-export * from './src/module-federation/models';
-export * from './src/module-federation/webpack-utils';
+
 export { withModuleFederation };
 
 // Support for older generated code: `const withModuleFederation = require('@nrwl/react/module-federation')`
