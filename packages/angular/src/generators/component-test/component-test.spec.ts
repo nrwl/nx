@@ -177,19 +177,24 @@ export class MyLibComponent implements OnInit {
 
     await componentGenerator(tree, { name: 'my-lib', project: 'my-lib' });
 
-    const expected = `import { MountConfig } from 'cypress/angular';
+    const expected = `import { TestBed } from '@angular/core/testing';
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
-  const config: MountConfig<MyLibComponent> = {
-    declarations: [],
-    imports: [],
-    providers: []
-  }
+
+  beforeEach(() => {
+    TestBed.overrideComponent(MyLibComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
 
   it('renders', () => {
-     cy.mount(MyLibComponent, config);
+     cy.mount(MyLibComponent,);
   })
+
 })
 `;
 
