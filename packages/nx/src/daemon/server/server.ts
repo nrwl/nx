@@ -41,10 +41,6 @@ import {
   processFileChangesInOutputs,
 } from './outputs-tracking';
 import { handleRequestShutdown } from './handle-request-shutdown';
-import {
-  handleRegisterFileWatcher,
-  RegisteredFileWatcherNotifier,
-} from './handle-register-file-watcher';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
