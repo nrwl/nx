@@ -147,7 +147,10 @@ export function executeModuleFederationDevServerBuilder(
 
   const staticRemotes = getStaticRemotes(project, context, workspaceProjects);
   const dynamicRemotes = getDynamicRemotes(project, context, workspaceProjects);
-  const remotes = [...staticRemotes, ...dynamicRemotes];
+  const remotesToSkip = new Set(options.skipRemotes ?? []);
+  const remotes = [...staticRemotes, ...dynamicRemotes].filter(
+    (r) => !remotesToSkip.has(r)
+  );
 
   const devServeRemotes = !options.devRemotes
     ? []
