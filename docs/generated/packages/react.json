@@ -1380,6 +1380,11 @@
             "items": { "type": "string" },
             "description": "List of remote applications to run in development mode (i.e. using serve target)."
           },
+          "skipRemotes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
+          },
           "buildTarget": {
             "type": "string",
             "description": "Target which builds the application."

@@ -10,6 +10,7 @@ import {
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
+  skipRemotes?: string[];
 };
 
 export default async function* moduleFederationDevServer(
@@ -35,7 +36,10 @@ export default async function* moduleFederationDevServer(
     );
   }
 
-  const knownRemotes = moduleFederationConfig.remotes ?? [];
+  const remotesToSkip = new Set(options.skipRemotes ?? []);
+  const knownRemotes = (moduleFederationConfig.remotes ?? []).filter(
+    (r) => !remotesToSkip.has(r)
+  );
 
   const devServeApps = !options.devRemotes
     ? []
