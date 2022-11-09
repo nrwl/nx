@@ -3,6 +3,7 @@ import type {
   SharedWorkspaceLibraryConfig,
   WorkspaceLibrary,
 } from './models';
+import { AdditionalSharedConfig, SharedFunction } from './models';
 import { dirname, join, normalize } from 'path';
 import { readRootPackageJson } from './package-json';
 import { readTsPathMappings } from './typescript';
@@ -13,6 +14,7 @@ import {
 import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { logger } from 'nx/src/utils/logger';
 import { getRootTsConfigPath } from 'nx/src/utils/typescript';
+import { ProjectGraph } from 'nx/src/config/project-graph';
 
 /**
  * Build an object of functions to be used with the ModuleFederationPlugin to
@@ -145,6 +147,94 @@ export function sharePackages(
 
     return shared;
   }, {} as Record<string, SharedLibraryConfig>);
+}
+
+/**
+ * Apply a custom function provided by the user that will modify the Shared Config
+ * of the dependencies for the Module Federation build.
+ *
+ * @param sharedConfig - The original Shared Config to be modified
+ * @param sharedFn - The custom function to run
+ */
+export function applySharedFunction(
+  sharedConfig: Record<string, SharedLibraryConfig>,
+  sharedFn: SharedFunction | undefined
+): void {
+  if (!sharedFn) {
+    return;
+  }
+
+  for (const [libraryName, library] of Object.entries(sharedConfig)) {
+    const mappedDependency = sharedFn(libraryName, library);
+    if (mappedDependency === false) {
+      delete sharedConfig[libraryName];
+      continue;
+    } else if (!mappedDependency) {
+      continue;
+    }
+
+    sharedConfig[libraryName] = mappedDependency;
+  }
+}
+
+/**
+ * Add additional dependencies to the shared package that may not have been
+ * discovered by the project graph.
+ *
+ * This can be useful for applications that use a Dependency Injection system
+ * that expects certain Singleton values to be present in the shared injection
+ * hierarchy.
+ *
+ * @param sharedConfig - The original Shared Config
+ * @param additionalShared - The additional dependencies to add
+ * @param projectGraph - The Nx project graph
+ */
+export function applyAdditionalShared(
+  sharedConfig: Record<string, SharedLibraryConfig>,
+  additionalShared: AdditionalSharedConfig | undefined,
+  projectGraph: ProjectGraph
+): void {
+  if (!additionalShared) {
+    return;
+  }
+
+  for (const shared of additionalShared) {
+    if (typeof shared === 'string') {
+      addStringDependencyToSharedConfig(sharedConfig, shared, projectGraph);
+    } else if (Array.isArray(shared)) {
+      sharedConfig[shared[0]] = shared[1];
+    } else if (typeof shared === 'object') {
+      sharedConfig[shared.libraryName] = shared.sharedConfig;
+    }
+  }
+}
+
+function addStringDependencyToSharedConfig(
+  sharedConfig: Record<string, SharedLibraryConfig>,
+  dependency: string,
+  projectGraph: ProjectGraph
+): void {
+  if (projectGraph.nodes[dependency]) {
+    sharedConfig[dependency] = { requiredVersion: false };
+  } else if (projectGraph.externalNodes?.[`npm:${dependency}`]) {
+    const pkgJson = readRootPackageJson();
+    const config = getNpmPackageSharedConfig(
+      dependency,
+      pkgJson.dependencies?.[dependency] ??
+        pkgJson.devDependencies?.[dependency]
+    );
+
+    if (!config) {
+      return;
+    }
+
+    sharedConfig[dependency] = config;
+  } else {
+    throw new Error(
+      `The specified dependency "${dependency}" in the additionalShared configuration does not exist in the project graph. ` +
+        `Please check your additionalShared configuration and make sure you are including valid workspace projects or npm packages.`
+    );
+  }
 }
 
 function getEmptySharedLibrariesConfig() {

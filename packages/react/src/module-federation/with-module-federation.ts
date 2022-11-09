@@ -1,24 +1,21 @@
 import {
-  AdditionalSharedConfig,
+  applyAdditionalShared,
+  applySharedFunction,
   createProjectGraphAsync,
   getDependentPackagesForProject,
-  getNpmPackageSharedConfig,
+  mapRemotes,
   ModuleFederationConfig,
   ProjectConfiguration,
   ProjectGraph,
   readCachedProjectGraph,
-  readRootPackageJson,
-  Remotes,
-  SharedFunction,
-  SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
 } from '@nrwl/devkit';
-import { extname } from 'path';
+import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
-function determineRemoteUrl(remote: string, projectGraph: ProjectGraph) {
-  const remoteConfiguration = projectGraph.nodes[remote].data;
+function determineRemoteUrl(remote: string) {
+  const remoteConfiguration = readCachedProjectConfiguration(remote);
   const serveTarget = remoteConfiguration?.targets?.serve;
 
   if (!serveTarget) {
@@ -33,97 +30,6 @@ function determineRemoteUrl(remote: string, projectGraph: ProjectGraph) {
   return `${
     host.endsWith('/') ? host.slice(0, -1) : host
   }:${port}/remoteEntry.js`;
-}
-
-function mapRemotes(remotes: Remotes, projectGraph: ProjectGraph) {
-  const mappedRemotes = {};
-
-  for (const remote of remotes) {
-    if (Array.isArray(remote)) {
-      let [remoteName, remoteLocation] = remote;
-      const remoteLocationExt = extname(remoteLocation);
-      mappedRemotes[remoteName] = ['.js', '.mjs'].includes(remoteLocationExt)
-        ? remoteLocation
-        : `${
-            remoteLocation.endsWith('/')
-              ? remoteLocation.slice(0, -1)
-              : remoteLocation
-          }/remoteEntry.js`;
-    } else if (typeof remote === 'string') {
-      mappedRemotes[remote] = determineRemoteUrl(remote, projectGraph);
-    }
-  }
-
-  return mappedRemotes;
-}
-
-function applySharedFunction(
-  sharedConfig: Record<string, SharedLibraryConfig>,
-  sharedFn: SharedFunction | undefined
-): void {
-  if (!sharedFn) {
-    return;
-  }
-
-  for (const [libraryName, library] of Object.entries(sharedConfig)) {
-    const mappedDependency = sharedFn(libraryName, library);
-    if (mappedDependency === false) {
-      delete sharedConfig[libraryName];
-      continue;
-    } else if (!mappedDependency) {
-      continue;
-    }
-
-    sharedConfig[libraryName] = mappedDependency;
-  }
-}
-
-function addStringDependencyToSharedConfig(
-  sharedConfig: Record<string, SharedLibraryConfig>,
-  dependency: string,
-  projectGraph: ProjectGraph
-): void {
-  if (projectGraph.nodes[dependency]) {
-    sharedConfig[dependency] = { requiredVersion: false };
-  } else if (projectGraph.externalNodes?.[`npm:${dependency}`]) {
-    const pkgJson = readRootPackageJson();
-    const config = getNpmPackageSharedConfig(
-      dependency,
-      pkgJson.dependencies?.[dependency] ??
-        pkgJson.devDependencies?.[dependency]
-    );
-
-    if (!config) {
-      return;
-    }
-
-    sharedConfig[dependency] = config;
-  } else {
-    throw new Error(
-      `The specified dependency "${dependency}" in the additionalShared configuration does not exist in the project graph. ` +
-        `Please check your additionalShared configuration and make sure you are including valid workspace projects or npm packages.`
-    );
-  }
-}
-
-function applyAdditionalShared(
-  sharedConfig: Record<string, SharedLibraryConfig>,
-  additionalShared: AdditionalSharedConfig | undefined,
-  projectGraph: ProjectGraph
-): void {
-  if (!additionalShared) {
-    return;
-  }
-
-  for (const shared of additionalShared) {
-    if (typeof shared === 'string') {
-      addStringDependencyToSharedConfig(sharedConfig, shared, projectGraph);
-    } else if (Array.isArray(shared)) {
-      sharedConfig[shared[0]] = shared[1];
-    } else if (typeof shared === 'object') {
-      sharedConfig[shared.libraryName] = shared.sharedConfig;
-    }
-  }
 }
 
 export async function withModuleFederation(options: ModuleFederationConfig) {
@@ -182,7 +88,7 @@ export async function withModuleFederation(options: ModuleFederationConfig) {
     const mappedRemotes =
       !options.remotes || options.remotes.length === 0
         ? {}
-        : mapRemotes(options.remotes, projectGraph);
+        : mapRemotes(options.remotes, 'js', determineRemoteUrl);
 
     config.plugins.push(
       new ModuleFederationPlugin({
