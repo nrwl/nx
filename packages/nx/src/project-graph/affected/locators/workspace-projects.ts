@@ -2,28 +2,24 @@ import * as minimatch from 'minimatch';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
+import {
+  createProjectRootMappings,
+  findMatchingProjectForPath,
+} from '../../../utils/target-project-locator';
 
 export const getTouchedProjects: TouchedProjectLocator = (
   touchedFiles,
   projectGraphNodes
 ): string[] => {
-  // sort project names with the most nested first,
-  // e.g. ['libs/a/b/c', 'libs/a/b', 'libs/a']
-  const projectNames = Object.entries(projectGraphNodes)
-    .sort(([name1, p1], [name2, p2]) =>
-      p1.data.root.length > p2.data.root.length ? -1 : 1
-    )
-    .map(([name]) => name);
+  const projectRootMap = createProjectRootMappings(projectGraphNodes);
 
-  return touchedFiles
-    .map((f) => {
-      return projectNames.find((projectName) => {
-        const p = projectGraphNodes[projectName].data;
-        const projectRoot = p.root.endsWith('/') ? p.root : `${p.root}/`;
-        return f.file.startsWith(projectRoot);
-      });
-    })
-    .filter(Boolean);
+  return touchedFiles.reduce((affected, f) => {
+    const matchingProject = findMatchingProjectForPath(f.file, projectRootMap);
+    if (matchingProject) {
+      affected.push(matchingProject);
+    }
+    return affected;
+  }, []);
 };
 
 export const getImplicitlyTouchedProjects: TouchedProjectLocator = (

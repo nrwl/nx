@@ -198,7 +198,7 @@ function filterRootExternalDependencies(
   return nodes;
 }
 
-function createProjectRootMappings(
+export function createProjectRootMappings(
   nodes: Record<string, ProjectGraphProjectNode>
 ) {
   const projectRootMappings = new Map<string, string>();
@@ -220,7 +220,7 @@ function createProjectRootMappings(
 export function findMatchingProjectForPath(
   filePath: string,
   projectRootMap: Map<string, string>
-) {
+): string | null {
   for (
     let currentPath = filePath;
     currentPath != dirname(currentPath);
