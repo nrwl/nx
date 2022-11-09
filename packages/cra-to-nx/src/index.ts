@@ -17,6 +17,11 @@ export const commandsObject = yargs
     describe: 'Use Vite and Vitest (instead of Webpack and Jest)',
     default: false,
   })
+  .option('nxCloud', {
+    type: 'boolean',
+    describe: 'Setup Nx Cloud',
+    default: true,
+  })
   .help();
 
 createNxWorkspaceForReact(commandsObject.argv).catch((e) => {

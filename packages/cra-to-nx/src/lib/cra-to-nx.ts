@@ -53,7 +53,9 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
   execSync(
     `npx ${
       npxYesFlagNeeded ? '-y' : ''
-    } create-nx-workspace@latest temp-workspace --appName=${reactAppName} --preset=react --style=css --packageManager=${packageManager} --nx-cloud`,
+    } create-nx-workspace@latest temp-workspace --appName=${reactAppName} --preset=react --style=css --packageManager=${packageManager} ${
+      options.nxCloud ? '--nxCloud' : '--nxCloud=false'
+    }`,
     { stdio: [0, 1, 2] }
   );
 
@@ -181,6 +183,12 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
       `https://egghead.io/playlists/scale-react-development-with-nx-4038`,
     ],
   });
+
+  if (isVite) {
+    output.note({
+      title: `A new apps/${reactAppName}/index.html has been created. Compare it to the previous apps/${reactAppName}/public/index.html file and make any changes needed, then delete the previous file.`,
+    });
+  }
 
   output.note({
     title: 'Or, you can try the commands!',
