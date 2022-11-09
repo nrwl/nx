@@ -1,13 +1,25 @@
 #!/usr/bin/env node
 
+import * as yargs from 'yargs';
 import { createNxWorkspaceForReact } from './lib/cra-to-nx';
-import * as yargsParser from 'yargs-parser';
 
 export * from './lib/cra-to-nx';
 
-const args = yargsParser(process.argv);
+export const commandsObject = yargs
+  .parserConfiguration({ 'strip-dashed': true })
+  .option('e2e', {
+    type: 'boolean',
+    describe: 'Generate end-to-end tests with Cypress',
+    default: false,
+  })
+  .option('vite', {
+    type: 'boolean',
+    describe: 'Use Vite and Vitest (instead of Webpack and Jest)',
+    default: false,
+  })
+  .help();
 
-createNxWorkspaceForReact(args).catch((e) => {
+createNxWorkspaceForReact(commandsObject.argv).catch((e) => {
   console.log(e);
   process.exit(1);
 });

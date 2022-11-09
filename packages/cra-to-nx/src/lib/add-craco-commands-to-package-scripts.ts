@@ -1,6 +1,6 @@
 import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 
-export function addCRAcracoScriptsToPackageJson(appName: string) {
+export function addCracoCommandsToPackageScripts(appName: string) {
   const packageJson = readJsonFile(`apps/${appName}/package.json`);
   packageJson.scripts = {
     ...packageJson.scripts,
