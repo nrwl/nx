@@ -109,32 +109,27 @@ export class DaemonClient {
     callback: (error: Error | null, data: any | null) => void
   ): Promise<UnregisterCallback> {
     await this.sendToDaemonViaQueue({ type: 'PING' });
-    let resolveCallback;
     let messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH));
-    new Promise((resolve, reject) => {
-      messenger.listen(
-        (message) => {
-          try {
-            const parsedMessage = JSON.parse(message);
-            callback(null, parsedMessage);
-          } catch (e) {
-            callback(e, null);
-          }
-        },
-        () => {
-          reject('Connection to the daemon has been closed');
-        },
-        (err) => callback(err, null)
-      );
-      this.queue.sendToQueue(() =>
-        messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', data })
-      );
-      resolveCallback = resolve;
-    });
+    messenger.listen(
+      (message) => {
+        try {
+          const parsedMessage = JSON.parse(message);
+          callback(null, parsedMessage);
+        } catch (e) {
+          callback(e, null);
+        }
+      },
+      () => {
+        callback(new Error('connection closed'), null);
+      },
+      (err) => callback(err, null)
+    );
+    this.queue.sendToQueue(() =>
+      messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', data })
+    );
 
     return () => {
       messenger.close();
-      resolveCallback(null);
     };
   }
 
