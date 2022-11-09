@@ -182,7 +182,11 @@ export function getOutputsForTargetAndConfiguration(
   }
 }
 
-export function interpolate(template: string, data: any): string {
+export function interpolate(
+  template: string,
+  data: any,
+  replaceAsUndefinedIfNotFound: boolean = true
+): string {
   return template
     .replace('{workspaceRoot}/', '')
     .replace(/{([\s\S]+?)}/g, (match: string) => {
@@ -190,7 +194,7 @@ export function interpolate(template: string, data: any): string {
       let path = match.slice(1, -1).trim().split('.');
       for (let idx = 0; idx < path.length; idx++) {
         if (!value[path[idx]]) {
-          return;
+          return replaceAsUndefinedIfNotFound ? undefined : match;
         }
         value = value[path[idx]];
       }
