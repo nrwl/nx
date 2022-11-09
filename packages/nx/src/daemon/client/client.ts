@@ -32,6 +32,8 @@ const DAEMON_ENV_SETTINGS = {
   NX_CACHE_WORKSPACE_CONFIG: 'false',
 };
 
+export type UnregisterCallback = () => void;
+
 export class DaemonClient {
   constructor(private readonly nxJson: NxJsonConfiguration) {
     this.reset();
@@ -102,29 +104,38 @@ export class DaemonClient {
       .projectGraph;
   }
 
-  registerFileWatcher(
+  async registerFileWatcher(
     data: any,
-    callback: { data(message): void; error?(err): void }
-  ): void {
-    this.sendToDaemonViaQueue({ type: 'PING' }).then(() => {
-      try {
-        const messenger = new SocketMessenger(
-          connect(FULL_OS_SOCKET_PATH)
-        ).listen((message) => {
+    callback: (error: Error | null, data: any | null) => void
+  ): Promise<UnregisterCallback> {
+    await this.sendToDaemonViaQueue({ type: 'PING' });
+    let resolveCallback;
+    let messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH));
+    new Promise((resolve, reject) => {
+      messenger.listen(
+        (message) => {
           try {
             const parsedMessage = JSON.parse(message);
-            callback.data(parsedMessage);
+            callback(null, parsedMessage);
           } catch (e) {
-            callback.error?.(e);
+            callback(e, null);
           }
-        });
-        this.queue.sendToQueue(() =>
-          messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', data })
-        );
-      } catch (e) {
-        console.log(e);
-      }
+        },
+        () => {
+          reject('Connection to the daemon has been closed');
+        },
+        (err) => callback(err, null)
+      );
+      this.queue.sendToQueue(() =>
+        messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', data })
+      );
+      resolveCallback = resolve;
     });
+
+    return () => {
+      messenger.close();
+      resolveCallback(null);
+    };
   }
 
   processInBackground(requirePath: string, data: any): Promise<any> {

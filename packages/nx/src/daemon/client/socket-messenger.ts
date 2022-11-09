@@ -34,4 +34,8 @@ export class SocketMessenger {
 
     return this;
   }
+
+  close() {
+    this.socket.destroy();
+  }
 }
