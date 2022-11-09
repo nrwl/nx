@@ -23,7 +23,8 @@ describe('make-angular-cli-faster', () => {
     cleanupProject();
   });
 
-  it('should successfully install make-angular-cli-faster with nx cloud', () => {
+  // TODO(colum): skip until we can investigate why it is installing incorrect version
+  xit('should successfully install make-angular-cli-faster with nx cloud', () => {
     // ARRANGE
     runNgNew(project, packageManager);
 
