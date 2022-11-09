@@ -162,7 +162,7 @@ export function getOutputsForTargetAndConfiguration(
           options,
         });
       })
-      .filter((output) => !!output && !output.match(/{.*}/)); // && !!output.match(/{.*}/)
+      .filter((output) => !!output && !output.match(/{.*}/));
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist
