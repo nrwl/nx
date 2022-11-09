@@ -2,13 +2,12 @@ import { stripIndents } from '@nrwl/devkit';
 import {
   checkFilesExist,
   cleanupProject,
-  getSelectedPackageManager,
   killPort,
   newProject,
   readProjectConfig,
   runCLI,
   runCLIAsync,
-  runCommand,
+  runCypressTests,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
@@ -93,17 +92,18 @@ describe('React Module Federation', () => {
         });
       `
     );
-
-    const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
-    expect(e2eResults).toContain('All specs passed!');
-    expect(
-      await killPorts([
-        readPort(shell),
-        readPort(remote1),
-        readPort(remote2),
-        readPort(remote3),
-      ])
-    ).toBeTruthy();
+    if (runCypressTests()) {
+      const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
+      expect(e2eResults).toContain('All specs passed!');
+      expect(
+        await killPorts([
+          readPort(shell),
+          readPort(remote1),
+          readPort(remote2),
+          readPort(remote3),
+        ])
+      ).toBeTruthy();
+    }
   }, 500_000);
 
   function readPort(appName: string): number {
