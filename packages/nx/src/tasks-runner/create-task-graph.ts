@@ -261,16 +261,12 @@ function interpolateOverrides<T = any>(
   Object.entries(interpolatedArgs).forEach(([name, value]) => {
     interpolatedArgs[name] =
       typeof value === 'string'
-        ? interpolate(
-            value,
-            {
-              workspaceRoot: '',
-              projectRoot: project.root,
-              projectName: project.name,
-              project: { ...project, name: projectName }, // this is legacy
-            },
-            false
-          )
+        ? interpolate(value, {
+            workspaceRoot: '',
+            projectRoot: project.root,
+            projectName: project.name,
+            project: { ...project, name: projectName }, // this is legacy
+          })
         : value;
   });
   return interpolatedArgs;

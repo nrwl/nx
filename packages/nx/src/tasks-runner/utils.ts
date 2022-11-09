@@ -162,7 +162,7 @@ export function getOutputsForTargetAndConfiguration(
           options,
         });
       })
-      .filter((output) => !!output && output !== 'undefined');
+      .filter((output) => !!output && !output.match(/{.*}/)); // && !!output.match(/{.*}/)
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist
@@ -182,11 +182,7 @@ export function getOutputsForTargetAndConfiguration(
   }
 }
 
-export function interpolate(
-  template: string,
-  data: any,
-  replaceAsUndefinedIfNotFound: boolean = true
-): string {
+export function interpolate(template: string, data: any): string {
   return template
     .replace('{workspaceRoot}/', '')
     .replace(/{([\s\S]+?)}/g, (match: string) => {
@@ -194,7 +190,7 @@ export function interpolate(
       let path = match.slice(1, -1).trim().split('.');
       for (let idx = 0; idx < path.length; idx++) {
         if (!value[path[idx]]) {
-          return replaceAsUndefinedIfNotFound ? undefined : match;
+          return match;
         }
         value = value[path[idx]];
       }
