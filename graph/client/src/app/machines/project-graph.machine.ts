@@ -1,19 +1,19 @@
 import { assign } from '@xstate/immer';
-import { Machine, send, spawn } from 'xstate';
+import { createMachine, Machine, send, spawn } from 'xstate';
 import { customSelectedStateConfig } from './custom-selected.state';
 import { focusedStateConfig } from './focused.state';
 import { graphActor } from './graph.actor';
 import {
-  DepGraphContext,
-  DepGraphSchema,
-  DepGraphUIEvents,
+  ProjectGraphContext,
+  ProjectGraphSchema,
+  ProjectGraphEvents,
 } from './interfaces';
 import { createRouteMachine } from './route-setter.machine';
 import { textFilteredStateConfig } from './text-filtered.state';
 import { tracingStateConfig } from './tracing.state';
 import { unselectedStateConfig } from './unselected.state';
 
-export const initialContext: DepGraphContext = {
+export const initialContext: ProjectGraphContext = {
   projects: [],
   dependencies: {},
   affectedProjects: [],
@@ -44,12 +44,12 @@ export const initialContext: DepGraphContext = {
   },
 };
 
-export const depGraphMachine = Machine<
-  DepGraphContext,
-  DepGraphSchema,
-  DepGraphUIEvents
+export const projectGraphMachine = createMachine<
+  ProjectGraphContext,
+  ProjectGraphEvents
 >(
   {
+    predictableActionArguments: true,
     id: 'DepGraph',
     initial: 'idle',
     context: initialContext,
@@ -62,7 +62,7 @@ export const depGraphMachine = Machine<
       tracing: tracingStateConfig,
     },
     on: {
-      initGraph: {
+      notifyProjectGraphSetProjects: {
         target: 'unselected',
         actions: [
           'setGraph',
@@ -284,7 +284,11 @@ export const depGraphMachine = Machine<
         ctx.includePath = event.includeProjectsByPath;
       }),
       setGraph: assign((ctx, event) => {
-        if (event.type !== 'initGraph' && event.type !== 'updateGraph') return;
+        if (
+          event.type !== 'notifyProjectGraphSetProjects' &&
+          event.type !== 'updateGraph'
+        )
+          return;
 
         ctx.projects = event.projects;
         ctx.dependencies = event.dependencies;
@@ -293,7 +297,7 @@ export const depGraphMachine = Machine<
           name: 'route',
         });
 
-        if (event.type === 'initGraph') {
+        if (event.type === 'notifyProjectGraphSetProjects') {
           ctx.workspaceLayout = event.workspaceLayout;
           ctx.affectedProjects = event.affectedProjects;
         }

@@ -1,6 +1,6 @@
 import {
-  ArrowLeftCircleIcon,
   ArrowDownTrayIcon,
+  ArrowLeftCircleIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import Tippy from '@tippyjs/react';
@@ -10,8 +10,7 @@ import type { DepGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { useEffect, useState } from 'react';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
-import DebuggerPanel from './debugger-panel';
-import { useDepGraphService } from './hooks/use-dep-graph';
+import DebuggerPanel from './ui-components/debugger-panel';
 import { useDepGraphSelector } from './hooks/use-dep-graph-selector';
 import { useEnvironmentConfig } from './hooks/use-environment-config';
 import { useIntervalWhen } from './hooks/use-interval-when';
@@ -21,27 +20,19 @@ import {
   lastPerfReportSelector,
   projectIsSelectedSelector,
 } from './machines/selectors';
-import ProjectsSidebar from './feature-projects/projects-sidebar';
 import { selectValueByThemeStatic } from './theme-resolver';
-import { getTooltipService } from './tooltip-service';
-import ProjectNodeToolTip from './project-node-tooltip';
-import EdgeNodeTooltip from './edge-tooltip';
 import { Outlet, useNavigate } from 'react-router-dom';
-import ThemePanel from './sidebar/theme-panel';
+import ThemePanel from './feature-projects/panels/theme-panel';
 import Dropdown from './ui-components/dropdown';
 import { useCurrentPath } from './hooks/use-current-path';
 import ExperimentalFeature from './experimental-feature';
-import RankdirPanel from './sidebar/rankdir-panel';
-
-const tooltipService = getTooltipService();
+import RankdirPanel from './feature-projects/panels/rankdir-panel';
+import { getAppService, getProjectGraphService } from './machines/get-services';
+import TooltipDisplay from './ui-tooltips/graph-tooltip-display';
 
 export function Shell(): JSX.Element {
-  const depGraphService = useDepGraphService();
-
-  const currentTooltip = useSyncExternalStore(
-    (callback) => tooltipService.subscribe(callback),
-    () => tooltipService.currentTooltip
-  );
+  const appService = getAppService();
+  const depGraphService = getProjectGraphService();
 
   const projectGraphService = getProjectGraphDataService();
   const environment = useEnvironmentConfig();
@@ -50,7 +41,7 @@ export function Shell(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>(
-    environment.appConfig.defaultProjectGraph
+    environment.appConfig.defaultProject
   );
 
   const navigate = useNavigate();
@@ -71,36 +62,54 @@ export function Shell(): JSX.Element {
   useEffect(() => {
     const { appConfig } = environment;
 
-    const projectInfo = appConfig.projectGraphs.find(
+    const projectInfo = appConfig.projects.find(
       (graph) => graph.id === selectedProjectId
     );
 
     const fetchProjectGraph = async () => {
-      const project: DepGraphClientResponse =
-        await projectGraphService.getProjectGraph(projectInfo.url);
+      const projectGraph: DepGraphClientResponse =
+        await projectGraphService.getProjectGraph(projectInfo.projectGraphUrl);
 
-      const workspaceLayout = project?.layout;
+      const workspaceLayout = projectGraph?.layout;
 
-      depGraphService.send({
-        type: 'initGraph',
-        projects: project.projects,
-        dependencies: project.dependencies,
-        affectedProjects: project.affected,
+      appService.send({
+        type: 'setProjects',
+        projects: projectGraph.projects,
+        dependencies: projectGraph.dependencies,
+        affectedProjects: projectGraph.affected,
         workspaceLayout: workspaceLayout,
       });
     };
+
+    const fetchTaskGraphs = async () => {
+      const taskGraphs = await projectGraphService.getTaskGraph(
+        projectInfo.taskGraphUrl
+      );
+
+      appService.send({
+        type: 'setTaskGraphs',
+        taskGraphs: taskGraphs.dependencies,
+      });
+    };
+
     fetchProjectGraph();
-  }, [selectedProjectId, environment, depGraphService, projectGraphService]);
+
+    if (currentRoute === '/tasks') {
+      fetchTaskGraphs();
+    }
+  }, [selectedProjectId, environment, appService, projectGraphService]);
 
   useIntervalWhen(
     () => {
-      const projectInfo = environment.appConfig.projectGraphs.find(
+      const projectInfo = environment.appConfig.projects.find(
         (graph) => graph.id === selectedProjectId
       );
 
       const fetchProjectGraph = async () => {
         const project: DepGraphClientResponse =
-          await projectGraphService.getProjectGraph(projectInfo.url);
+          await projectGraphService.getProjectGraph(
+            projectInfo.projectGraphUrl
+          );
 
         depGraphService.send({
           type: 'updateGraph',
@@ -205,10 +214,10 @@ export function Shell(): JSX.Element {
       >
         {environment.appConfig.showDebugger ? (
           <DebuggerPanel
-            projectGraphs={environment.appConfig.projectGraphs}
-            selectedProjectGraph={selectedProjectId}
+            projects={environment.appConfig.projects}
+            selectedProject={selectedProjectId}
             lastPerfReport={lastPerfReport}
-            projectGraphChange={projectChange}
+            selectedProjectChange={projectChange}
           ></DebuggerPanel>
         ) : null}
 
@@ -223,25 +232,7 @@ export function Shell(): JSX.Element {
         ) : null}
         <div id="graph-container">
           <div id="cytoscape-graph"></div>
-          {currentTooltip ? (
-            <Tippy
-              content={
-                currentTooltip.type === 'node' ? (
-                  <ProjectNodeToolTip
-                    {...currentTooltip.props}
-                  ></ProjectNodeToolTip>
-                ) : (
-                  <EdgeNodeTooltip {...currentTooltip.props}></EdgeNodeTooltip>
-                )
-              }
-              visible={true}
-              getReferenceClientRect={currentTooltip.ref.getBoundingClientRect}
-              theme={selectValueByThemeStatic('dark-nx', 'nx')}
-              interactive={true}
-              appendTo={document.body}
-              maxWidth="none"
-            ></Tippy>
-          ) : null}
+          <TooltipDisplay></TooltipDisplay>
 
           <Tippy
             content="Download Graph as PNG"

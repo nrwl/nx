@@ -7,14 +7,15 @@ window.localMode = 'build';
 window.appConfig = {
   showDebugger: false,
   showExperimentalFeatures: false,
-  projectGraphs: [
+  projects: [
     {
       id: 'local',
       label: 'local',
-      url: 'assets/graphs/e2e.json',
+      projectGraphUrl: 'assets/project-graphs/e2e.json',
+      taskGraphUrl: 'assets/task-graphs/e2e.json',
     },
   ],
-  defaultProjectGraph: 'local',
+  defaultProject: 'local',
 };
 
 window.projectGraphResponse = {

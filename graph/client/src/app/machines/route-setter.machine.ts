@@ -1,7 +1,11 @@
 import { assign } from '@xstate/immer';
 import { createBrowserHistory } from 'history';
-import { Machine } from 'xstate';
-import { RouteEvents } from './interfaces';
+import { createMachine, Machine } from 'xstate';
+import {
+  ProjectGraphContext,
+  ProjectGraphEvents,
+  RouteEvents,
+} from './interfaces';
 
 type ParamKeys =
   | 'focus'
@@ -26,6 +30,11 @@ function reduceParamRecordToQueryString(params: ParamRecord): string {
   return new URLSearchParams(newParams).toString();
 }
 
+export interface RouteSetterContext {
+  currentParamString: string;
+  params: Record<ParamKeys, string | null>;
+}
+
 export const createRouteMachine = () => {
   const history = createBrowserHistory();
 
@@ -41,17 +50,14 @@ export const createRouteMachine = () => {
     traceAlgorithm: params.get('traceAlgorithm'),
   };
 
-  const initialContext = {
+  const initialContext: RouteSetterContext = {
     currentParamString: reduceParamRecordToQueryString(paramRecord),
     params: paramRecord,
   };
 
-  return Machine<
-    { currentParamString: string; params: Record<ParamKeys, string | null> },
-    {},
-    RouteEvents
-  >(
+  return createMachine<RouteSetterContext, RouteEvents>(
     {
+      predictableActionArguments: true,
       id: 'route',
       context: {
         currentParamString: '',

@@ -28,17 +28,33 @@ async function generateGraph(directory: string, name: string) {
     /window.projectGraphResponse = (.*?);/
   );
 
+  const taskGraphResponse = environmentJs.match(
+    /window.taskGraphResponse = (.*?);/
+  );
+
   ensureDirSync(
-    join(__dirname, '../graph/client/src/assets/generated-graphs/')
+    join(__dirname, '../graph/client/src/assets/generated-project-graphs/')
+  );
+  ensureDirSync(
+    join(__dirname, '../graph/client/src/assets/generated-task-graphs/')
   );
 
   writeFileSync(
     join(
       __dirname,
-      '../graph/client/src/assets/generated-graphs/',
+      '../graph/client/src/assets/generated-project-graphs/',
       `${name}.json`
     ),
     projectGraphResponse[1]
+  );
+
+  writeFileSync(
+    join(
+      __dirname,
+      '../graph/client/src/assets/generated-task-graphs/',
+      `${name}.json`
+    ),
+    taskGraphResponse[1]
   );
 }
 
@@ -49,8 +65,7 @@ async function generateGraph(directory: string, name: string) {
     .option('name', {
       type: 'string',
       requiresArg: true,
-      description:
-        'The version to publish. This does not need to be passed and can be inferred.',
+      description: 'The snake-case name of the file created',
     })
     .option('directory', {
       type: 'string',
@@ -59,5 +74,5 @@ async function generateGraph(directory: string, name: string) {
     })
     .parseSync();
 
-  generateGraph(parsedArgs.directory, parsedArgs.name);
+  await generateGraph(parsedArgs.directory, parsedArgs.name);
 })();

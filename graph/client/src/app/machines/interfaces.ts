@@ -4,9 +4,10 @@ import type {
   ProjectGraphProjectNode,
 } from '@nrwl/devkit';
 import { ActionObject, ActorRef, State, StateNodeConfig } from 'xstate';
+import { TaskGraphContext, TaskGraphEvents } from './task-graph.machine';
 
 // The hierarchical (recursive) schema for the states
-export interface DepGraphSchema {
+export interface ProjectGraphSchema {
   states: {
     idle: {};
     unselected: {};
@@ -26,7 +27,7 @@ export interface GraphPerfReport {
 export type TracingAlgorithmType = 'shortest' | 'all';
 // The events that the machine handles
 
-export type DepGraphUIEvents =
+export type ProjectGraphEvents =
   | {
       type: 'setSelectedProjectsFromGraph';
       selectedProjectNames: string[];
@@ -56,7 +57,7 @@ export type DepGraphUIEvents =
   | { type: 'filterByText'; search: string }
   | { type: 'clearTextFilter' }
   | {
-      type: 'initGraph';
+      type: 'notifyProjectGraphSetProjects';
       projects: ProjectGraphProjectNode[];
       dependencies: Record<string, ProjectGraphDependency[]>;
       affectedProjects: string[];
@@ -169,10 +170,8 @@ export type RouteEvents =
       algorithm: TracingAlgorithmType;
     };
 
-export type AllEvents = DepGraphUIEvents | GraphRenderEvents | RouteEvents;
-
 // The context (extended state) of the machine
-export interface DepGraphContext {
+export interface ProjectGraphContext {
   projects: ProjectGraphProjectNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
   affectedProjects: string[];
@@ -190,7 +189,7 @@ export interface DepGraphContext {
   };
   graphActor: ActorRef<GraphRenderEvents>;
   routeSetterActor: ActorRef<RouteEvents>;
-  routeListenerActor: ActorRef<DepGraphUIEvents>;
+  routeListenerActor: ActorRef<ProjectGraphEvents>;
   lastPerfReport: GraphPerfReport;
   tracing: {
     start: string;
@@ -200,22 +199,32 @@ export interface DepGraphContext {
 }
 
 export type DepGraphStateNodeConfig = StateNodeConfig<
-  DepGraphContext,
+  ProjectGraphContext,
   {},
-  DepGraphUIEvents,
-  ActionObject<DepGraphContext, DepGraphUIEvents>
+  ProjectGraphEvents,
+  ActionObject<ProjectGraphContext, ProjectGraphEvents>
 >;
 
 export type DepGraphSend = (
-  event: DepGraphUIEvents | DepGraphUIEvents[]
+  event: ProjectGraphEvents | ProjectGraphEvents[]
 ) => void;
 
 export type DepGraphState = State<
-  DepGraphContext,
-  DepGraphUIEvents,
+  ProjectGraphContext,
+  ProjectGraphEvents,
   any,
   {
     value: any;
-    context: DepGraphContext;
+    context: ProjectGraphContext;
+  }
+>;
+
+export type TaskGraphState = State<
+  TaskGraphContext,
+  TaskGraphEvents,
+  any,
+  {
+    value: any;
+    context: TaskGraphContext;
   }
 >;

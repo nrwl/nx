@@ -1,9 +1,9 @@
 import { createBrowserHistory } from 'history';
 import { InvokeCallback } from 'xstate';
-import { DepGraphUIEvents } from './interfaces';
+import { ProjectGraphEvents } from './interfaces';
 
-function parseSearchParamsToEvents(searchParams: string): DepGraphUIEvents[] {
-  const events: DepGraphUIEvents[] = [];
+function parseSearchParamsToEvents(searchParams: string): ProjectGraphEvents[] {
+  const events: ProjectGraphEvents[] = [];
   const params = new URLSearchParams(searchParams);
 
   params.forEach((value, key) => {
@@ -60,8 +60,8 @@ function parseSearchParamsToEvents(searchParams: string): DepGraphUIEvents[] {
 }
 
 export const routeListener: InvokeCallback<
-  DepGraphUIEvents,
-  DepGraphUIEvents
+  ProjectGraphEvents,
+  ProjectGraphEvents
 > = (callback) => {
   const history = createBrowserHistory();
 

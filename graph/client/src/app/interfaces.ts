@@ -1,10 +1,14 @@
 // nx-ignore-next-line
-import type { DepGraphClientResponse } from 'nx/src/command-line/dep-graph';
+import type {
+  DepGraphClientResponse,
+  TaskGraphClientResponse,
+} from 'nx/src/command-line/dep-graph';
 
-export interface ProjectGraphList {
+export interface GraphListItem {
   id: string;
   label: string;
-  url: string;
+  projectGraphUrl: string;
+  taskGraphUrl: string;
 }
 
 export interface WorkspaceLayout {
@@ -15,6 +19,7 @@ export interface WorkspaceLayout {
 export interface ProjectGraphService {
   getHash: () => Promise<string>;
   getProjectGraph: (url: string) => Promise<DepGraphClientResponse>;
+  getTaskGraph: (url: string) => Promise<TaskGraphClientResponse>;
 }
 export interface Environment {
   environment: 'dev' | 'watch' | 'release';
@@ -23,6 +28,6 @@ export interface Environment {
 export interface AppConfig {
   showDebugger: boolean;
   showExperimentalFeatures: boolean;
-  projectGraphs: ProjectGraphList[];
-  defaultProjectGraph: string;
+  projects: GraphListItem[];
+  defaultProject: string;
 }

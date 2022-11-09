@@ -1,9 +1,12 @@
 // nx-ignore-next-line
-import type { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
+import type {
+  ProjectGraphDependency,
+  ProjectGraphProjectNode,
+} from '@nrwl/devkit';
 import { interpret } from 'xstate';
-import { depGraphMachine } from './dep-graph.machine';
+import { projectGraphMachine } from './project-graph.machine';
 
-export const mockProjects: ProjectGraphNode[] = [
+export const mockProjects: ProjectGraphProjectNode[] = [
   {
     name: 'app1',
     type: 'app',
@@ -94,13 +97,16 @@ export const mockDependencies: Record<string, ProjectGraphDependency[]> = {
 describe('dep-graph machine', () => {
   describe('initGraph', () => {
     it('should set projects, dependencies, and workspaceLayout', () => {
-      const result = depGraphMachine.transition(depGraphMachine.initialState, {
-        type: 'initGraph',
-        projects: mockProjects,
-        dependencies: mockDependencies,
-        affectedProjects: [],
-        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-      });
+      const result = projectGraphMachine.transition(
+        projectGraphMachine.initialState,
+        {
+          type: 'notifyProjectGraphSetProjects',
+          projects: mockProjects,
+          dependencies: mockDependencies,
+          affectedProjects: [],
+          workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+        }
+      );
       expect(result.context.projects).toEqual(mockProjects);
       expect(result.context.dependencies).toEqual(mockDependencies);
       expect(result.context.workspaceLayout).toEqual({
@@ -110,13 +116,16 @@ describe('dep-graph machine', () => {
     });
 
     it('should start with no projects selected', () => {
-      const result = depGraphMachine.transition(depGraphMachine.initialState, {
-        type: 'initGraph',
-        projects: mockProjects,
-        dependencies: mockDependencies,
-        affectedProjects: [],
-        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-      });
+      const result = projectGraphMachine.transition(
+        projectGraphMachine.initialState,
+        {
+          type: 'notifyProjectGraphSetProjects',
+          projects: mockProjects,
+          dependencies: mockDependencies,
+          affectedProjects: [],
+          workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+        }
+      );
 
       expect(result.value).toEqual('unselected');
       expect(result.context.selectedProjects).toEqual([]);
@@ -125,7 +134,7 @@ describe('dep-graph machine', () => {
 
   describe('selecting projects', () => {
     it('should select projects', (done) => {
-      let service = interpret(depGraphMachine).onTransition((state) => {
+      let service = interpret(projectGraphMachine).onTransition((state) => {
         if (
           state.matches('customSelected') &&
           state.context.selectedProjects.includes('app1') &&
@@ -138,7 +147,7 @@ describe('dep-graph machine', () => {
       service.start();
 
       service.send({
-        type: 'initGraph',
+        type: 'notifyProjectGraphSetProjects',
         projects: mockProjects,
         dependencies: mockDependencies,
         affectedProjects: [],
@@ -159,7 +168,7 @@ describe('dep-graph machine', () => {
 
   describe('deselecting projects', () => {
     it('should deselect projects', (done) => {
-      let service = interpret(depGraphMachine).onTransition((state) => {
+      let service = interpret(projectGraphMachine).onTransition((state) => {
         if (
           state.matches('customSelected') &&
           !state.context.selectedProjects.includes('app1') &&
@@ -172,7 +181,7 @@ describe('dep-graph machine', () => {
       service.start();
 
       service.send({
-        type: 'initGraph',
+        type: 'notifyProjectGraphSetProjects',
         projects: mockProjects,
         dependencies: mockDependencies,
         affectedProjects: [],
@@ -196,30 +205,33 @@ describe('dep-graph machine', () => {
     });
 
     it('should go to unselected when last project is deselected', () => {
-      let result = depGraphMachine.transition(depGraphMachine.initialState, {
-        type: 'initGraph',
-        projects: mockProjects,
-        dependencies: mockDependencies,
-        affectedProjects: [],
-        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-      });
+      let result = projectGraphMachine.transition(
+        projectGraphMachine.initialState,
+        {
+          type: 'notifyProjectGraphSetProjects',
+          projects: mockProjects,
+          dependencies: mockDependencies,
+          affectedProjects: [],
+          workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+        }
+      );
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'selectProject',
         projectName: 'app1',
       });
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'selectProject',
         projectName: 'app2',
       });
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'deselectProject',
         projectName: 'app1',
       });
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'deselectProject',
         projectName: 'app2',
       });
@@ -231,15 +243,18 @@ describe('dep-graph machine', () => {
 
   describe('focusing projects', () => {
     it('should set the focused project', () => {
-      let result = depGraphMachine.transition(depGraphMachine.initialState, {
-        type: 'initGraph',
-        projects: mockProjects,
-        dependencies: mockDependencies,
-        affectedProjects: [],
-        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-      });
+      let result = projectGraphMachine.transition(
+        projectGraphMachine.initialState,
+        {
+          type: 'notifyProjectGraphSetProjects',
+          projects: mockProjects,
+          dependencies: mockDependencies,
+          affectedProjects: [],
+          workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+        }
+      );
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'focusProject',
         projectName: 'app1',
       });
@@ -249,7 +264,7 @@ describe('dep-graph machine', () => {
     });
 
     it('should select the projects by the focused project', (done) => {
-      let service = interpret(depGraphMachine).onTransition((state) => {
+      let service = interpret(projectGraphMachine).onTransition((state) => {
         if (
           state.matches('focused') &&
           state.context.selectedProjects.includes('app1') &&
@@ -264,7 +279,7 @@ describe('dep-graph machine', () => {
       service.start();
 
       service.send({
-        type: 'initGraph',
+        type: 'notifyProjectGraphSetProjects',
         projects: mockProjects,
         dependencies: mockDependencies,
         affectedProjects: [],
@@ -278,20 +293,23 @@ describe('dep-graph machine', () => {
     });
 
     it('should select no projects on unfocus', () => {
-      let result = depGraphMachine.transition(depGraphMachine.initialState, {
-        type: 'initGraph',
-        projects: mockProjects,
-        dependencies: mockDependencies,
-        affectedProjects: [],
-        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-      });
+      let result = projectGraphMachine.transition(
+        projectGraphMachine.initialState,
+        {
+          type: 'notifyProjectGraphSetProjects',
+          projects: mockProjects,
+          dependencies: mockDependencies,
+          affectedProjects: [],
+          workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+        }
+      );
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'focusProject',
         projectName: 'app1',
       });
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'unfocusProject',
       });
 
@@ -302,60 +320,63 @@ describe('dep-graph machine', () => {
 
   describe('search depth', () => {
     it('should not decrement search depth below 1', () => {
-      let result = depGraphMachine.transition(depGraphMachine.initialState, {
-        type: 'initGraph',
-        projects: mockProjects,
-        dependencies: mockDependencies,
-        affectedProjects: [],
-        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-      });
+      let result = projectGraphMachine.transition(
+        projectGraphMachine.initialState,
+        {
+          type: 'notifyProjectGraphSetProjects',
+          projects: mockProjects,
+          dependencies: mockDependencies,
+          affectedProjects: [],
+          workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+        }
+      );
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'filterByText',
         search: 'app1',
       });
 
       expect(result.context.searchDepth).toEqual(1);
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'incrementSearchDepth',
       });
 
       expect(result.context.searchDepth).toEqual(2);
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'incrementSearchDepth',
       });
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'incrementSearchDepth',
       });
 
       expect(result.context.searchDepth).toEqual(4);
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'decrementSearchDepth',
       });
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'decrementSearchDepth',
       });
 
       expect(result.context.searchDepth).toEqual(2);
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'decrementSearchDepth',
       });
 
       expect(result.context.searchDepth).toEqual(1);
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'decrementSearchDepth',
       });
 
       expect(result.context.searchDepth).toEqual(1);
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'decrementSearchDepth',
       });
 
@@ -363,35 +384,38 @@ describe('dep-graph machine', () => {
     });
 
     it('should activate search depth if incremented or decremented', () => {
-      let result = depGraphMachine.transition(depGraphMachine.initialState, {
-        type: 'initGraph',
-        projects: mockProjects,
-        dependencies: mockDependencies,
-        affectedProjects: [],
-        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-      });
+      let result = projectGraphMachine.transition(
+        projectGraphMachine.initialState,
+        {
+          type: 'notifyProjectGraphSetProjects',
+          projects: mockProjects,
+          dependencies: mockDependencies,
+          affectedProjects: [],
+          workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+        }
+      );
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'setSearchDepthEnabled',
         searchDepthEnabled: false,
       });
 
       expect(result.context.searchDepthEnabled).toBe(false);
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'incrementSearchDepth',
       });
 
       expect(result.context.searchDepthEnabled).toBe(true);
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'setSearchDepthEnabled',
         searchDepthEnabled: false,
       });
 
       expect(result.context.searchDepthEnabled).toBe(false);
 
-      result = depGraphMachine.transition(result, {
+      result = projectGraphMachine.transition(result, {
         type: 'decrementSearchDepth',
       });
 

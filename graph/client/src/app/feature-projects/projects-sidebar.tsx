@@ -13,14 +13,14 @@ import {
   searchDepthSelector,
   textFilterSelector,
 } from '../machines/selectors';
-import CollapseEdgesPanel from '../sidebar/collapse-edges-panel';
-import FocusedProjectPanel from '../sidebar/focused-project-panel';
-import GroupByFolderPanel from '../sidebar/group-by-folder-panel';
-import ProjectList from '../sidebar/project-list';
-import SearchDepth from '../sidebar/search-depth';
-import ShowHideProjects from '../sidebar/show-hide-projects';
-import TextFilterPanel from '../sidebar/text-filter-panel';
-import TracingPanel from '../sidebar/tracing-panel';
+import CollapseEdgesPanel from './panels/collapse-edges-panel';
+import FocusedProjectPanel from './panels/focused-project-panel';
+import GroupByFolderPanel from './panels/group-by-folder-panel';
+import ProjectList from './project-list';
+import SearchDepth from './panels/search-depth';
+import ShowHideProjects from './panels/show-hide-projects';
+import TextFilterPanel from './panels/text-filter-panel';
+import TracingPanel from './panels/tracing-panel';
 import { TracingAlgorithmType } from '../machines/interfaces';
 import { useEnvironmentConfig } from '../hooks/use-environment-config';
 

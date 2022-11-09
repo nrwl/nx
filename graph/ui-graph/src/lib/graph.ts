@@ -1,94 +1,42 @@
 // nx-ignore-next-line
-import type {
-  ProjectGraphDependency,
-  ProjectGraphProjectNode,
-} from '@nrwl/devkit';
-import type { VirtualElement } from '@popperjs/core';
-import cy from 'cytoscape';
+import { CollectionReturnValue, use } from 'cytoscape';
 import cytoscapeDagre from 'cytoscape-dagre';
 import popper from 'cytoscape-popper';
-import { edgeStyles, nodeStyles } from './styles-graph';
-import {
-  CytoscapeDagreConfig,
-  ParentNode,
-  ProjectEdge,
-  ProjectNode,
-} from './util-cytoscape';
 import { GraphPerfReport, GraphRenderEvents } from './interfaces';
-import {
-  darkModeScratchKey,
-  switchValueByDarkMode,
-} from './styles-graph/dark-mode';
 import { GraphInteractionEvents } from './graph-interaction-events';
-
-const cytoscapeDagreConfig = {
-  name: 'dagre',
-  nodeDimensionsIncludeLabels: true,
-  rankSep: 75,
-  rankDir: 'TB',
-  edgeSep: 50,
-  ranker: 'network-simplex',
-} as CytoscapeDagreConfig;
+import { RenderGraph } from './util-cytoscape/render-graph';
+import { ProjectTraversalGraph } from './util-cytoscape/project-traversal-graph';
 
 export class GraphService {
-  private traversalGraph: cy.Core;
-  private renderGraph: cy.Core;
-
-  private collapseEdges = false;
+  private traversalGraph: ProjectTraversalGraph;
+  private renderGraph: RenderGraph;
 
   private listeners = new Map<
     number,
     (event: GraphInteractionEvents) => void
   >();
 
-  private _theme: 'light' | 'dark';
-  private _rankDir: 'TB' | 'LR' = 'TB';
-
   constructor(
-    private container: string | HTMLElement,
-
+    container: string | HTMLElement,
     theme: 'light' | 'dark',
-    private renderMode?: 'nx-console' | 'nx-docs',
+    renderMode?: 'nx-console' | 'nx-docs',
     rankDir: 'TB' | 'LR' = 'TB'
   ) {
-    cy.use(cytoscapeDagre);
-    cy.use(popper);
+    use(cytoscapeDagre);
+    use(popper);
 
-    this._theme = theme;
-    this._rankDir = rankDir;
-  }
+    this.renderGraph = new RenderGraph(container, theme, renderMode, rankDir);
 
-  get activeContainer() {
-    return typeof this.container === 'string'
-      ? document.getElementById(this.container)
-      : this.container;
+    this.renderGraph.listen((event) => this.broadcast(event));
+    this.traversalGraph = new ProjectTraversalGraph();
   }
 
   set theme(theme: 'light' | 'dark') {
-    this._theme = theme;
-
-    if (this.renderGraph) {
-      this.renderGraph.unmount();
-      const useDarkMode = theme === 'dark';
-
-      this.renderGraph.scratch(darkModeScratchKey, useDarkMode);
-      this.renderGraph.elements().scratch(darkModeScratchKey, useDarkMode);
-
-      this.renderGraph.mount(this.activeContainer);
-    }
+    this.renderGraph.theme = theme;
   }
 
   set rankDir(rankDir: 'TB' | 'LR') {
-    this._rankDir = rankDir;
-    if (this.renderGraph) {
-      const elements = this.renderGraph.elements();
-      elements
-        .layout({
-          ...cytoscapeDagreConfig,
-          ...{ rankDir: rankDir },
-        } as CytoscapeDagreConfig)
-        .run();
-    }
+    this.renderGraph.rankDir = rankDir;
   }
 
   listen(callback: (event: GraphInteractionEvents) => void) {
@@ -110,16 +58,19 @@ export class GraphService {
   } {
     const time = Date.now();
 
-    if (this.renderGraph && event.type !== 'notifyGraphUpdateGraph') {
-      this.renderGraph.nodes('.focused').removeClass('focused');
-      this.renderGraph.unmount();
+    if (event.type !== 'notifyGraphUpdateGraph') {
+      this.renderGraph.clearFocussedElement();
     }
 
     this.broadcast({ type: 'GraphRegenerated' });
 
+    let elementsToSendToRender: CollectionReturnValue;
+
     switch (event.type) {
       case 'notifyGraphInitGraph':
-        this.initGraph(
+        this.renderGraph.collapseEdges = event.collapseEdges;
+        this.broadcast({ type: 'GraphRegenerated' });
+        this.traversalGraph.initGraph(
           event.projects,
           event.groupByFolder,
           event.workspaceLayout,
@@ -130,7 +81,9 @@ export class GraphService {
         break;
 
       case 'notifyGraphUpdateGraph':
-        this.initGraph(
+        this.renderGraph.collapseEdges = event.collapseEdges;
+        this.broadcast({ type: 'GraphRegenerated' });
+        this.traversalGraph.initGraph(
           event.projects,
           event.groupByFolder,
           event.workspaceLayout,
@@ -138,19 +91,23 @@ export class GraphService {
           event.affectedProjects,
           event.collapseEdges
         );
-        this.setShownProjects(
+        elementsToSendToRender = this.traversalGraph.setShownProjects(
           event.selectedProjects.length > 0
             ? event.selectedProjects
-            : this.renderGraph.nodes(':childless').map((node) => node.id())
+            : this.renderGraph.getCurrentlyShownProjectIds()
         );
         break;
 
       case 'notifyGraphFocusProject':
-        this.focusProject(event.projectName, event.searchDepth);
+        elementsToSendToRender = this.traversalGraph.focusProject(
+          event.projectName,
+          event.searchDepth
+        );
+
         break;
 
       case 'notifyGraphFilterProjectsByText':
-        this.filterProjectsByText(
+        elementsToSendToRender = this.traversalGraph.filterProjectsByText(
           event.search,
           event.includeProjectsByPath,
           event.searchDepth
@@ -158,31 +115,43 @@ export class GraphService {
         break;
 
       case 'notifyGraphShowProjects':
-        this.showProjects(event.projectNames);
+        elementsToSendToRender = this.traversalGraph.showProjects(
+          event.projectNames,
+          this.renderGraph.getCurrentlyShownProjectIds()
+        );
         break;
 
       case 'notifyGraphHideProjects':
-        this.hideProjects(event.projectNames);
+        elementsToSendToRender = this.traversalGraph.hideProjects(
+          event.projectNames,
+          this.renderGraph.getCurrentlyShownProjectIds()
+        );
         break;
 
       case 'notifyGraphShowAllProjects':
-        this.showAllProjects();
+        elementsToSendToRender = this.traversalGraph.showAllProjects();
         break;
 
       case 'notifyGraphHideAllProjects':
-        this.hideAllProjects();
+        elementsToSendToRender = this.traversalGraph.hideAllProjects();
         break;
 
       case 'notifyGraphShowAffectedProjects':
-        this.showAffectedProjects();
+        elementsToSendToRender = this.traversalGraph.showAffectedProjects();
         break;
 
       case 'notifyGraphTracing':
         if (event.start && event.end) {
           if (event.algorithm === 'shortest') {
-            this.traceProjects(event.start, event.end);
+            elementsToSendToRender = this.traversalGraph.traceProjects(
+              event.start,
+              event.end
+            );
           } else {
-            this.traceAllProjects(event.start, event.end);
+            elementsToSendToRender = this.traversalGraph.traceAllProjects(
+              event.start,
+              event.end
+            );
           }
         }
         break;
@@ -195,572 +164,32 @@ export class GraphService {
       renderTime: 0,
     };
 
-    if (this.renderGraph) {
-      const elements = this.renderGraph.elements().sort((a, b) => {
-        return a.id().localeCompare(b.id());
-      });
+    if (this.renderGraph && elementsToSendToRender) {
+      this.renderGraph.setElements(elementsToSendToRender);
 
-      elements
-        .layout({
-          ...cytoscapeDagreConfig,
-          ...{ rankDir: this._rankDir },
-        })
-        .run();
-
-      if (this.collapseEdges) {
-        this.renderGraph.remove(this.renderGraph.edges());
-
-        elements.edges().forEach((edge) => {
-          const sourceNode = edge.source();
-          const targetNode = edge.target();
-
-          if (
-            sourceNode.parent().first().id() ===
-            targetNode.parent().first().id()
-          ) {
-            this.renderGraph.add(edge);
-          } else {
-            let sourceAncestors, targetAncestors;
-            const commonAncestors = edge.connectedNodes().commonAncestors();
-
-            if (commonAncestors.length > 0) {
-              sourceAncestors = sourceNode
-                .ancestors()
-                .filter((anc) => !commonAncestors.contains(anc));
-              targetAncestors = targetNode
-                .ancestors()
-                .filter((anc) => !commonAncestors.contains(anc));
-            } else {
-              sourceAncestors = sourceNode.ancestors();
-              targetAncestors = targetNode.ancestors();
-            }
-
-            let sourceId, targetId;
-
-            if (sourceAncestors.length > 0 && targetAncestors.length === 0) {
-              sourceId = sourceAncestors.last().id();
-              targetId = targetNode.id();
-            } else if (
-              targetAncestors.length > 0 &&
-              sourceAncestors.length === 0
-            ) {
-              sourceId = sourceNode.id();
-              targetId = targetAncestors.last().id();
-            } else {
-              sourceId = sourceAncestors.last().id();
-              targetId = targetAncestors.last().id();
-            }
-
-            if (sourceId !== undefined && targetId !== undefined) {
-              const edgeId = `${sourceId}|${targetId}`;
-
-              if (this.renderGraph.$id(edgeId).length === 0) {
-                const ancestorEdge: cy.EdgeDefinition = {
-                  group: 'edges',
-                  data: {
-                    id: edgeId,
-                    source: sourceId,
-                    target: targetId,
-                  },
-                };
-
-                this.renderGraph.add(ancestorEdge);
-              }
-            } else {
-              console.log(`Couldn't figure out how to draw edge ${edge.id()}`);
-              console.log(
-                'source ancestors',
-                sourceAncestors.map((anc) => anc.id())
-              );
-              console.log(
-                'target ancestors',
-                targetAncestors.map((anc) => anc.id())
-              );
-            }
-          }
-        });
+      if (event.type === 'notifyGraphFocusProject') {
+        this.renderGraph.setFocussedElement(event.projectName);
       }
 
-      if (this.renderMode === 'nx-console') {
-        // when in the nx-console environment, adjust graph width and position to be to right of floating panel
-        // 175 is a magic number that represents the width of the floating panels divided in half plus some padding
-        this.renderGraph
-          .fit(this.renderGraph.elements(), 175)
-          .center()
-          .resize()
-          .panBy({ x: 150, y: 0 });
-      } else {
-        this.renderGraph.fit(this.renderGraph.elements(), 25).center().resize();
-      }
+      const { numEdges, numNodes } = this.renderGraph.render();
 
-      selectedProjectNames = this.renderGraph
-        .nodes('[type!="dir"]')
-        .map((node) => node.id());
-
-      this.renderGraph.scratch(darkModeScratchKey, this._theme === 'dark');
-      this.renderGraph
-        .elements()
-        .scratch(darkModeScratchKey, this._theme === 'dark');
-
-      this.renderGraph.mount(this.activeContainer);
+      selectedProjectNames = (
+        elementsToSendToRender.nodes('[type!="dir"]') ?? []
+      ).map((node) => node.id());
 
       const renderTime = Date.now() - time;
 
       perfReport = {
         renderTime,
-        numNodes: this.renderGraph.nodes().length,
-        numEdges: this.renderGraph.edges().length,
+        numNodes,
+        numEdges,
       };
     }
 
     return { selectedProjectNames, perfReport };
   }
 
-  setShownProjects(selectedProjectNames: string[]) {
-    let nodesToAdd = this.traversalGraph.collection();
-
-    selectedProjectNames.forEach((name) => {
-      nodesToAdd = nodesToAdd.union(this.traversalGraph.$id(name));
-    });
-
-    const ancestorsToAdd = nodesToAdd.ancestors();
-
-    const nodesToRender = nodesToAdd.union(ancestorsToAdd);
-    const edgesToRender = nodesToRender.edgesTo(nodesToRender);
-
-    this.transferToRenderGraph(nodesToRender.union(edgesToRender));
-  }
-
-  showProjects(selectedProjectNames: string[]) {
-    const currentNodes =
-      this.renderGraph?.nodes() ?? this.traversalGraph.collection();
-
-    let nodesToAdd = this.traversalGraph.collection();
-
-    selectedProjectNames.forEach((name) => {
-      nodesToAdd = nodesToAdd.union(this.traversalGraph.$id(name));
-    });
-
-    const ancestorsToAdd = nodesToAdd.ancestors();
-
-    const nodesToRender = currentNodes.union(nodesToAdd).union(ancestorsToAdd);
-    const edgesToRender = nodesToRender.edgesTo(nodesToRender);
-
-    this.transferToRenderGraph(nodesToRender.union(edgesToRender));
-  }
-
-  hideProjects(projectNames: string[]) {
-    const currentNodes =
-      this.renderGraph?.nodes() ?? this.traversalGraph.collection();
-    let nodesToHide = this.renderGraph.collection();
-
-    projectNames.forEach((projectName) => {
-      nodesToHide = nodesToHide.union(this.renderGraph.$id(projectName));
-    });
-
-    const nodesToAdd = currentNodes
-      .difference(nodesToHide)
-      .difference(nodesToHide.ancestors());
-    const ancestorsToAdd = nodesToAdd.ancestors();
-
-    let nodesToRender = nodesToAdd.union(ancestorsToAdd);
-
-    const edgesToRender = nodesToRender.edgesTo(nodesToRender);
-
-    this.transferToRenderGraph(nodesToRender.union(edgesToRender));
-  }
-
-  showAffectedProjects() {
-    const affectedProjects = this.traversalGraph.nodes('.affected');
-    const affectedAncestors = affectedProjects.ancestors();
-
-    const affectedNodes = affectedProjects.union(affectedAncestors);
-    const affectedEdges = affectedNodes.edgesTo(affectedNodes);
-
-    this.transferToRenderGraph(affectedNodes.union(affectedEdges));
-  }
-
-  focusProject(focusedProjectName: string, searchDepth: number = 1) {
-    const focusedProject = this.traversalGraph.$id(focusedProjectName);
-
-    const includedProjects = this.includeProjectsByDepth(
-      focusedProject,
-      searchDepth
-    );
-
-    const includedNodes = focusedProject.union(includedProjects);
-
-    const includedAncestors = includedNodes.ancestors();
-
-    const nodesToRender = includedNodes.union(includedAncestors);
-    const edgesToRender = nodesToRender.edgesTo(nodesToRender);
-
-    this.transferToRenderGraph(nodesToRender.union(edgesToRender));
-
-    this.renderGraph.$id(focusedProjectName).addClass('focused');
-  }
-
-  showAllProjects() {
-    this.transferToRenderGraph(this.traversalGraph.elements());
-  }
-
-  hideAllProjects() {
-    this.transferToRenderGraph(this.traversalGraph.collection());
-  }
-
-  filterProjectsByText(
-    search: string,
-    includePath: boolean,
-    searchDepth: number = -1
-  ) {
-    if (search === '') {
-      this.transferToRenderGraph(this.traversalGraph.collection());
-    } else {
-      const split = search.split(',');
-
-      let filteredProjects = this.traversalGraph.nodes().filter((node) => {
-        return (
-          split.findIndex((splitItem) => node.id().includes(splitItem)) > -1
-        );
-      });
-
-      if (includePath) {
-        filteredProjects = filteredProjects.union(
-          this.includeProjectsByDepth(filteredProjects, searchDepth)
-        );
-      }
-
-      filteredProjects = filteredProjects.union(filteredProjects.ancestors());
-      const edgesToRender = filteredProjects.edgesTo(filteredProjects);
-
-      this.transferToRenderGraph(filteredProjects.union(edgesToRender));
-    }
-  }
-
-  traceProjects(start: string, end: string) {
-    const dijkstra = this.traversalGraph
-      .elements()
-      .dijkstra({ root: `[id = "${start}"]`, directed: true });
-
-    const path = dijkstra.pathTo(this.traversalGraph.$(`[id = "${end}"]`));
-
-    this.transferToRenderGraph(path.union(path.ancestors()));
-  }
-
-  traceAllProjects(start: string, end: string) {
-    const startNode = this.traversalGraph.$id(start).nodes().first();
-
-    const queue: cy.NodeSingular[][] = [[startNode]];
-
-    const paths: cy.NodeSingular[][] = [];
-    let iterations = 0;
-
-    while (queue.length > 0 && iterations <= 1000) {
-      const currentPath = queue.pop();
-
-      const nodeToTest = currentPath[currentPath.length - 1];
-
-      const outgoers = nodeToTest.outgoers('node');
-
-      if (outgoers.length > 0) {
-        outgoers.forEach((outgoer) => {
-          const newPath = [...currentPath, outgoer];
-          if (outgoer.id() === end) {
-            paths.push(newPath);
-          } else {
-            queue.push(newPath);
-          }
-        });
-      }
-
-      iterations++;
-    }
-
-    if (iterations >= 1000) {
-      console.log('failsafe triggered!');
-    }
-
-    let finalCollection = this.traversalGraph.collection();
-
-    paths.forEach((path) => {
-      for (let i = 0; i < path.length; i++) {
-        finalCollection = finalCollection.union(path[i]);
-
-        const nextIndex = i + 1;
-        if (nextIndex < path.length) {
-          finalCollection = finalCollection.union(
-            path[i].edgesTo(path[nextIndex])
-          );
-        }
-      }
-    });
-
-    finalCollection.union(finalCollection.ancestors());
-    this.transferToRenderGraph(
-      finalCollection.union(finalCollection.ancestors())
-    );
-  }
-
-  private transferToRenderGraph(elements: cy.Collection) {
-    let currentFocusedProjectName;
-    if (this.renderGraph) {
-      currentFocusedProjectName = this.renderGraph
-        .nodes('.focused')
-        .first()
-        .id();
-      this.renderGraph.destroy();
-      delete this.renderGraph;
-    }
-
-    this.renderGraph = cy({
-      headless: this.activeContainer === null,
-      container: this.activeContainer,
-      boxSelectionEnabled: false,
-      style: [...nodeStyles, ...edgeStyles],
-      panningEnabled: true,
-      userZoomingEnabled: this.renderMode !== 'nx-docs',
-    });
-
-    this.renderGraph.add(elements);
-
-    if (!!currentFocusedProjectName) {
-      this.renderGraph.$id(currentFocusedProjectName).addClass('focused');
-    }
-
-    this.renderGraph.on('zoom pan', () => {
-      this.broadcast({ type: 'GraphRegenerated' });
-    });
-
-    this.listenForProjectNodeClicks();
-    this.listenForEdgeNodeClicks();
-    this.listenForProjectNodeHovers();
-  }
-
-  private includeProjectsByDepth(
-    projects: cy.NodeCollection | cy.NodeSingular,
-    depth: number = -1
-  ) {
-    let predecessors = this.traversalGraph.collection();
-
-    if (depth === -1) {
-      predecessors = projects.predecessors();
-    } else {
-      predecessors = projects.incomers();
-
-      for (let i = 1; i < depth; i++) {
-        predecessors = predecessors.union(predecessors.incomers());
-      }
-    }
-
-    let successors = this.traversalGraph.collection();
-
-    if (depth === -1) {
-      successors = projects.successors();
-    } else {
-      successors = projects.outgoers();
-
-      for (let i = 1; i < depth; i++) {
-        successors = successors.union(successors.outgoers());
-      }
-    }
-
-    return projects.union(predecessors).union(successors);
-  }
-
-  initGraph(
-    allProjects: ProjectGraphProjectNode[],
-    groupByFolder: boolean,
-    workspaceLayout,
-    dependencies: Record<string, ProjectGraphDependency[]>,
-    affectedProjectIds: string[],
-    collapseEdges: boolean
-  ) {
-    this.collapseEdges = collapseEdges;
-    this.broadcast({ type: 'GraphRegenerated' });
-
-    this.generateCytoscapeLayout(
-      allProjects,
-      groupByFolder,
-      workspaceLayout,
-      dependencies,
-      affectedProjectIds
-    );
-  }
-
-  private generateCytoscapeLayout(
-    allProjects: ProjectGraphProjectNode[],
-    groupByFolder: boolean,
-    workspaceLayout,
-    dependencies: Record<string, ProjectGraphDependency[]>,
-    affectedProjectIds: string[]
-  ) {
-    const elements = this.createElements(
-      allProjects,
-      groupByFolder,
-      workspaceLayout,
-      dependencies,
-      affectedProjectIds
-    );
-
-    this.traversalGraph = cy({
-      headless: true,
-      elements: [...elements],
-      boxSelectionEnabled: false,
-      style: [...nodeStyles, ...edgeStyles],
-    });
-  }
-
-  private createElements(
-    projects: ProjectGraphProjectNode[],
-    groupByFolder: boolean,
-    workspaceLayout: {
-      appsDir: string;
-      libsDir: string;
-    },
-    dependencies: Record<string, ProjectGraphDependency[]>,
-    affectedProjectIds: string[]
-  ) {
-    let elements: cy.ElementDefinition[] = [];
-    const filteredProjectNames = projects.map((project) => project.name);
-
-    const projectNodes: ProjectNode[] = [];
-    const edgeNodes: ProjectEdge[] = [];
-    const parents: Record<
-      string,
-      { id: string; parentId: string; label: string }
-    > = {};
-
-    projects.forEach((project) => {
-      const workspaceRoot =
-        project.type === 'app' || project.type === 'e2e'
-          ? workspaceLayout.appsDir
-          : workspaceLayout.libsDir;
-
-      const projectNode = new ProjectNode(project, workspaceRoot);
-
-      projectNode.affected = affectedProjectIds.includes(project.name);
-
-      projectNodes.push(projectNode);
-
-      dependencies[project.name].forEach((dep) => {
-        if (filteredProjectNames.includes(dep.target)) {
-          const edge = new ProjectEdge(dep);
-          edgeNodes.push(edge);
-        }
-      });
-
-      if (groupByFolder) {
-        const ancestors = projectNode.getAncestors();
-        ancestors.forEach((ancestor) => (parents[ancestor.id] = ancestor));
-      }
-    });
-
-    const projectElements = projectNodes.map((projectNode) =>
-      projectNode.getCytoscapeNodeDef(groupByFolder)
-    );
-
-    const edgeElements = edgeNodes.map((edgeNode) =>
-      edgeNode.getCytosacpeNodeDef()
-    );
-
-    elements = projectElements.concat(edgeElements);
-
-    if (groupByFolder) {
-      const parentElements = Object.keys(parents).map((id) =>
-        new ParentNode(parents[id]).getCytoscapeNodeDef()
-      );
-      elements = parentElements.concat(elements);
-    }
-
-    return elements;
-  }
-
-  listenForProjectNodeClicks() {
-    this.renderGraph.$('node:childless').on('click', (event) => {
-      const node = event.target;
-
-      let ref: VirtualElement = node.popperRef(); // used only for positioning
-
-      this.broadcast({
-        type: 'NodeClick',
-        ref,
-        id: node.id(),
-
-        data: {
-          id: node.id(),
-          type: node.data('type'),
-          tags: node.data('tags'),
-        },
-      });
-    });
-  }
-
-  listenForEdgeNodeClicks() {
-    this.renderGraph.$('edge').on('click', (event) => {
-      const edge: cy.EdgeSingular = event.target;
-      let ref: VirtualElement = edge.popperRef(); // used only for positioning
-
-      this.broadcast({
-        type: 'EdgeClick',
-        ref,
-        id: edge.id(),
-
-        data: {
-          type: edge.data('type'),
-          source: edge.source().id(),
-          target: edge.target().id(),
-          fileDependencies: edge
-            .source()
-            .data('files')
-            .filter(
-              (file) => file.deps && file.deps.includes(edge.target().id())
-            )
-            .map((file) => {
-              return {
-                fileName: file.file.replace(
-                  `${edge.source().data('root')}/`,
-                  ''
-                ),
-                target: edge.target().id(),
-              };
-            }),
-        },
-      });
-    });
-  }
-
-  listenForProjectNodeHovers(): void {
-    this.renderGraph.on('mouseover', (event) => {
-      const node = event.target;
-      if (!node.isNode || !node.isNode() || node.isParent()) return;
-
-      this.renderGraph
-        .elements()
-        .difference(node.outgoers().union(node.incomers()))
-        .not(node)
-        .addClass('transparent');
-      node
-        .addClass('highlight')
-        .outgoers()
-        .union(node.incomers())
-        .addClass('highlight');
-    });
-
-    this.renderGraph.on('mouseout', (event) => {
-      const node = event.target;
-      if (!node.isNode || !node.isNode() || node.isParent()) return;
-
-      this.renderGraph.elements().removeClass('transparent');
-      node
-        .removeClass('highlight')
-        .outgoers()
-        .union(node.incomers())
-        .removeClass('highlight');
-    });
-  }
-
   getImage() {
-    const bg = switchValueByDarkMode(this.renderGraph, '#0F172A', '#FFFFFF');
-    return this.renderGraph.png({ bg, full: true });
+    return this.renderGraph.getImage();
   }
 }

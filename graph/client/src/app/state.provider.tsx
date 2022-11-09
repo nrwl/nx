@@ -1,14 +1,14 @@
 import { createContext } from 'react';
 import { InterpreterFrom } from 'xstate';
-import { depGraphMachine } from './machines/dep-graph.machine';
-import { getDepGraphService } from './machines/dep-graph.service';
+import { projectGraphMachine } from './machines/project-graph.machine';
+import { getProjectGraphService } from './machines/get-services';
 
 export const GlobalStateContext = createContext<
-  InterpreterFrom<typeof depGraphMachine>
->({} as InterpreterFrom<typeof depGraphMachine>);
+  InterpreterFrom<typeof projectGraphMachine>
+>({} as InterpreterFrom<typeof projectGraphMachine>);
 
 export const GlobalStateProvider = (props) => {
-  const depGraphService = getDepGraphService();
+  const depGraphService = getProjectGraphService();
 
   return (
     <GlobalStateContext.Provider value={depGraphService as any}>

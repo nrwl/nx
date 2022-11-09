@@ -23,9 +23,9 @@ import * as nxExamplesJson from '../fixtures/nx-examples.json';
 
 describe('graph-client', () => {
   before(() => {
-    cy.intercept('/assets/graphs/e2e.json', { fixture: 'nx-examples.json' }).as(
-      'getGraph'
-    );
+    cy.intercept('/assets/project-graphs/e2e.json', {
+      fixture: 'nx-examples.json',
+    }).as('getGraph');
     cy.visit('/');
 
     // wait for initial graph to finish loading
@@ -140,7 +140,7 @@ describe('graph-client', () => {
     });
 
     it('should check all affected project items', () => {
-      cy.intercept('/assets/graphs/affected.json', {
+      cy.intercept('/assets/project-graphs/affected.json', {
         fixture: 'affected.json',
       }).as('getAffectedGraph');
 
@@ -155,7 +155,7 @@ describe('graph-client', () => {
       );
 
       // switch back to Nx Examples graph before proceeding
-      cy.intercept('/assets/graphs/e2e.json', {
+      cy.intercept('/assets/project-graphs/e2e.json', {
         fixture: 'nx-examples.json',
       }).as('getGraph');
       cy.get('[data-cy=project-select]').select('e2e', { force: true });
@@ -308,9 +308,9 @@ describe('graph-client', () => {
 
 describe('loading graph client with url params', () => {
   beforeEach(() => {
-    cy.intercept('/assets/graphs/*', { fixture: 'nx-examples.json' }).as(
-      'getGraph'
-    );
+    cy.intercept('/assets/project-graphs/*', {
+      fixture: 'nx-examples.json',
+    }).as('getGraph');
   });
 
   // check that params work from old base url of /

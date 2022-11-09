@@ -1,4 +1,4 @@
-import { getGraphService } from './machines/graph.service';
+import { getGraphService } from '../machines/graph.service';
 
 import { VirtualElement } from '@popperjs/core';
 import { ProjectNodeToolTipProps } from './project-node-tooltip';
