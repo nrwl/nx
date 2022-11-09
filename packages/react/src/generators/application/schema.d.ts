@@ -27,6 +27,7 @@ export interface Schema {
   remotes?: string[];
   devServerPort?: number;
   skipDefaultProject?: boolean;
+  skipPackageJson?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
