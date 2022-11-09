@@ -105,14 +105,16 @@ export class DaemonClient {
   }
 
   async registerFileWatcher(
-    data: {
-      fileChanges: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[];
-    },
-    callback: (error: Error | null, data: any | null) => void
+    data: any,
+    callback: (
+      error: Error | null | 'closed',
+      data: {
+        fileChanges: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[];
+      } | null
+    ) => void
   ): Promise<UnregisterCallback> {
     await this.sendToDaemonViaQueue({ type: 'PING' });
-    let messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH));
-    messenger.listen(
+    let messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH)).listen(
       (message) => {
         try {
           const parsedMessage = JSON.parse(message);
@@ -122,11 +124,12 @@ export class DaemonClient {
         }
       },
       () => {
-        callback(new Error('connection closed'), null);
+        callback('closed', null);
       },
       (err) => callback(err, null)
     );
-    this.queue.sendToQueue(() =>
+
+    await this.queue.sendToQueue(() =>
       messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', data })
     );
 

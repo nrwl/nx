@@ -58,7 +58,7 @@ export type HandlerResult = {
 
 let numberOfOpenConnections = 0;
 
-const registeredFileWatchers = new Map<Socket, RegisteredFileWatcherNotifier>();
+let registeredFileWatchersSockets: { socket: Socket; filter: any }[] = [];
 
 const server = createServer(async (socket) => {
   numberOfOpenConnections += 1;
@@ -91,8 +91,10 @@ const server = createServer(async (socket) => {
     serverLogger.log(
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
     );
-    registeredFileWatchers.get(socket)?.unsubscribe();
-    registeredFileWatchers.delete(socket);
+
+    registeredFileWatchersSockets = registeredFileWatchersSockets.filter(
+      (watcher) => watcher.socket !== socket
+    );
   });
 });
 
@@ -145,14 +147,7 @@ async function handleMessage(socket, data: string) {
       await handleRequestShutdown(server, numberOfOpenConnections)
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
-    const registeredFileWatcherHandler = handleRegisterFileWatcher();
-    registeredFileWatchers.set(socket, registeredFileWatcherHandler);
-    registeredFileWatcherHandler.subscribe(async (changes) => {
-      await handleResult(socket, {
-        description: 'File watch changed',
-        response: JSON.stringify(changes),
-      });
-    });
+    registeredFileWatchersSockets.push({ socket, filter: payload.data });
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -290,11 +285,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       }
     }
 
-    for (const [, handler] of registeredFileWatchers) {
-      handler.notify({
-        fileChanges: changedFiles,
-      });
-    }
+    await notifyFileWatchersSockets(changedFiles);
 
     addUpdatedAndDeletedFiles(filesToHash, deletedFiles);
   } catch (err) {
@@ -389,4 +380,15 @@ export async function stopServer(): Promise<void> {
       return resolve();
     });
   });
+}
+
+async function notifyFileWatchersSockets(
+  changedFiles: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[]
+) {
+  for (const { socket } of registeredFileWatchersSockets) {
+    await handleResult(socket, {
+      description: 'File watch changed',
+      response: JSON.stringify(changedFiles),
+    });
+  }
 }
