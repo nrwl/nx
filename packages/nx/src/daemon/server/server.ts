@@ -41,6 +41,10 @@ import {
   processFileChangesInOutputs,
 } from './outputs-tracking';
 import { handleRequestShutdown } from './handle-request-shutdown';
+import {
+  handleRegisterFileWatcher,
+  RegisteredFileWatcherNotifier,
+} from './handle-register-file-watcher';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -54,7 +58,7 @@ export type HandlerResult = {
 
 let numberOfOpenConnections = 0;
 
-const fileWatcherSockets = new Set<Socket>();
+const registeredFileWatchers = new Map<Socket, RegisteredFileWatcherNotifier>();
 
 const server = createServer(async (socket) => {
   numberOfOpenConnections += 1;
@@ -87,7 +91,8 @@ const server = createServer(async (socket) => {
     serverLogger.log(
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
     );
-    fileWatcherSockets.delete(socket);
+    registeredFileWatchers.get(socket)?.unsubscribe();
+    registeredFileWatchers.delete(socket);
   });
 });
 
@@ -140,17 +145,14 @@ async function handleMessage(socket, data: string) {
       await handleRequestShutdown(server, numberOfOpenConnections)
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
-    fileWatcherSockets.add(socket);
-
-    const interval = setInterval(async () => {
-      if (!fileWatcherSockets.has(socket)) {
-        return clearInterval(interval);
-      }
+    const registeredFileWatcherHandler = handleRegisterFileWatcher();
+    registeredFileWatchers.set(socket, registeredFileWatcherHandler);
+    registeredFileWatcherHandler.subscribe(async (changes) => {
       await handleResult(socket, {
         description: 'File watch changed',
-        response: JSON.stringify(payload.data),
+        response: JSON.stringify(changes),
       });
-    }, 5000);
+    });
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -264,20 +266,36 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 
     const filesToHash = [];
     const deletedFiles = [];
+    const changedFiles = [];
     for (const event of changeEvents) {
       if (event.type === 'delete') {
         deletedFiles.push(event.path);
+        changedFiles.push({
+          path: event.path,
+          type: 'DELETE',
+        });
       } else {
         try {
           const s = statSync(join(workspaceRoot, event.path));
           if (!s.isDirectory()) {
             filesToHash.push(event.path);
+            changedFiles.push({
+              path: event.path,
+              type: event.type.toUpperCase(),
+            });
           }
         } catch (e) {
           // this can happen when the update file was deleted right after
         }
       }
     }
+
+    for (const [, handler] of registeredFileWatchers) {
+      handler.notify({
+        fileChanges: changedFiles,
+      });
+    }
+
     addUpdatedAndDeletedFiles(filesToHash, deletedFiles);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);

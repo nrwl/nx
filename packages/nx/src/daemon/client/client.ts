@@ -105,7 +105,9 @@ export class DaemonClient {
   }
 
   async registerFileWatcher(
-    data: any,
+    data: {
+      fileChanges: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[];
+    },
     callback: (error: Error | null, data: any | null) => void
   ): Promise<UnregisterCallback> {
     await this.sendToDaemonViaQueue({ type: 'PING' });
