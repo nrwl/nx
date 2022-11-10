@@ -54,7 +54,7 @@ export type HandlerResult = {
 
 let numberOfOpenConnections = 0;
 
-let registeredFileWatchersSockets: { socket: Socket; filter: any }[] = [];
+let registeredFileWatcherSockets: { socket: Socket; filter: any }[] = [];
 
 const server = createServer(async (socket) => {
   numberOfOpenConnections += 1;
@@ -88,7 +88,7 @@ const server = createServer(async (socket) => {
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
     );
 
-    registeredFileWatchersSockets = registeredFileWatchersSockets.filter(
+    registeredFileWatcherSockets = registeredFileWatcherSockets.filter(
       (watcher) => watcher.socket !== socket
     );
   });
@@ -143,7 +143,7 @@ async function handleMessage(socket, data: string) {
       await handleRequestShutdown(server, numberOfOpenConnections)
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
-    registeredFileWatchersSockets.push({ socket, filter: payload.data });
+    registeredFileWatcherSockets.push({ socket, filter: payload.data });
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -281,7 +281,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       }
     }
 
-    await notifyFileWatchersSockets(changedFiles);
+    await notifyFileWatcherSockets(changedFiles);
 
     addUpdatedAndDeletedFiles(filesToHash, deletedFiles);
   } catch (err) {
@@ -378,10 +378,10 @@ export async function stopServer(): Promise<void> {
   });
 }
 
-async function notifyFileWatchersSockets(
+async function notifyFileWatcherSockets(
   changedFiles: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[]
 ) {
-  for (const { socket } of registeredFileWatchersSockets) {
+  for (const { socket } of registeredFileWatcherSockets) {
     await handleResult(socket, {
       description: 'File watch changed',
       response: JSON.stringify(changedFiles),
