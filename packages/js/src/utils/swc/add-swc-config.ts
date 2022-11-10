@@ -1,6 +1,6 @@
 // TODO(chau): change back to 2015 when https://github.com/swc-project/swc/issues/1108 is solved
 // target: 'es2015'
-import { logger, readJson, Tree, updateJson } from '@nrwl/devkit';
+import { Tree } from '@nrwl/devkit';
 import { join } from 'path';
 
 export const defaultExclude = [
@@ -37,8 +37,12 @@ const swcOptionsString = () => `{
   "exclude": ${JSON.stringify(defaultExclude)}
 }`;
 
-export function addSwcConfig(tree: Tree, projectDir: string) {
+export function addSwcConfig(
+  tree: Tree,
+  projectDir: string,
+  swcOptions = swcOptionsString()
+) {
   const swcrcPath = join(projectDir, '.lib.swcrc');
   if (tree.exists(swcrcPath)) return;
-  tree.write(swcrcPath, swcOptionsString());
+  tree.write(swcrcPath, swcOptions);
 }

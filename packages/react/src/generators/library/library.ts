@@ -16,8 +16,8 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { getImportPath } from 'nx/src/utils/path';
 import { jestProjectGenerator } from '@nrwl/jest';
+import { addSwcConfig } from '@nrwl/js/src/utils/swc/add-swc-config';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
@@ -25,6 +25,7 @@ import {
   getRelativePathToRootTsConfig,
   getRootTsConfigPathInTree,
 } from '@nrwl/workspace/src/utilities/typescript';
+import { getImportPath } from 'nx/src/utils/path';
 import * as ts from 'typescript';
 import { assertValidStyle } from '../../utils/assertion';
 import {
@@ -57,6 +58,33 @@ export interface NormalizedSchema extends Schema {
   appMain?: string;
   appSourceRoot?: string;
 }
+
+export const swcOptionsString = () => `{
+  "jsc": {
+    "target": "es2017",
+    "parser": {
+      "syntax": "typescript",
+      "jsx": true
+    },
+    "transform": {
+      "react": {
+        "runtime": "automatic"
+      }
+    },
+    "loose": true,
+    "minify": {
+      "compress": true,
+      "mangle": true
+    }
+  },
+  "module": {
+    "type": "commonjs",
+    "strict": true,
+    "noInterop": true
+  },
+  "sourceMaps": true,
+  "minify": true
+}`;
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -132,6 +160,10 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     tasks.push(installTask);
   }
 
+  if (options.compiler === 'swc') {
+    addSwcConfig(host, options.projectRoot, swcOptionsString());
+  }
+
   const routeTask = updateAppRoutes(host, options);
   tasks.push(routeTask);
 
@@ -202,6 +234,10 @@ function addProject(host: Tree, options: NormalizedSchema) {
         external,
         rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
         compiler: options.compiler ?? 'babel',
+        swcrc:
+          options.compiler === 'swc'
+            ? `${options.projectRoot}/.lib.swcrc`
+            : undefined,
         assets: [
           {
             glob: `${options.projectRoot}/README.md`,
