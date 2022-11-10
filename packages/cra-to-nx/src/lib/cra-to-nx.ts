@@ -18,6 +18,7 @@ import { cleanUpFiles } from './clean-up-files';
 import { writeViteConfig } from './write-vite-config';
 import { renameJsToJsx } from './rename-js-to-jsx';
 import { writeViteIndexHtml } from './write-vite-index-html';
+import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup';
 
 function addDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
   const depsArg = deps.join(' ');
@@ -26,7 +27,10 @@ function addDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
 }
 
 export async function createNxWorkspaceForReact(options: Record<string, any>) {
-  checkForUncommittedChanges();
+  if (!options.force) {
+    checkForUncommittedChanges();
+    checkForCustomWebpackSetup();
+  }
   const packageManager = detectPackageManager();
   const pmc = getPackageManagerCommand(packageManager);
 
