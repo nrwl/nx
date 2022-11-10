@@ -168,6 +168,36 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should not interpolate non-existing options and leave those untouched', () => {
+    const oneTask = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['test'],
+      'development',
+      {
+        a: '--base-href=/{projectRoot}${deploymentId}',
+      }
+    );
+    expect(oneTask).toEqual({
+      roots: ['app1:test'],
+      tasks: {
+        'app1:test': {
+          id: 'app1:test',
+          target: {
+            project: 'app1',
+            target: 'test',
+          },
+          overrides: { a: '--base-href=/app1-root${deploymentId}' },
+          projectRoot: 'app1-root',
+        },
+      },
+      dependencies: {
+        'app1:test': [],
+      },
+    });
+  });
+
   it('should forward args when configured', () => {
     projectGraph = {
       nodes: {

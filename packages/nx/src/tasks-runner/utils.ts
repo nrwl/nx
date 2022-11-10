@@ -162,7 +162,7 @@ export function getOutputsForTargetAndConfiguration(
           options,
         });
       })
-      .filter((output) => !!output && output !== 'undefined');
+      .filter((output) => !!output && !output.match(/{.*}/));
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist
@@ -190,7 +190,7 @@ export function interpolate(template: string, data: any): string {
       let path = match.slice(1, -1).trim().split('.');
       for (let idx = 0; idx < path.length; idx++) {
         if (!value[path[idx]]) {
-          return;
+          return match;
         }
         value = value[path[idx]];
       }
