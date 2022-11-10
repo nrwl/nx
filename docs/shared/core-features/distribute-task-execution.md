@@ -41,9 +41,7 @@ The main job execution flow looks like this:
 # Coordinate the agents to run the tasks
 - npx nx-cloud start-ci-run
 # Run any commands you want here
-- nx affected --target=lint
-- nx affected --target=test
-- nx affected --target=build
+- nx affected --target=lint & nx affected --target=test & nx affected --target=build
 # Stop any run away agents
 - npx nx-cloud stop-all-agents
 ```

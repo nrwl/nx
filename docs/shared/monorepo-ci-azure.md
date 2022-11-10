@@ -86,9 +86,7 @@ jobs:
 
       - script: npx nx-cloud record -- npx nx workspace-lint
       - script: npx nx-cloud record -- npx nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --ci --code-coverage
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3 & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --ci --code-coverage & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
 ```
 
 You can also use our [ci-workflow generator](/packages/workspace/generators/ci-workflow) to generate the pipeline file.
