@@ -77,11 +77,6 @@ export const swcOptionsString = () => `{
       "mangle": true
     }
   },
-  "module": {
-    "type": "commonjs",
-    "strict": true,
-    "noInterop": true
-  },
   "sourceMaps": true,
   "minify": true
 }`;
