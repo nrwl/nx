@@ -84,9 +84,6 @@ export class WorkspaceIntegrityChecks {
 
   misalignedPackages(): CLIErrorMessageConfig[] {
     const bodyLines: CLIErrorMessageConfig['bodyLines'] = [];
-    const packageJson = readJsonFile<PackageJson>(
-      joinPathFragments(workspaceRoot, 'package.json')
-    );
 
     let migrateTarget = this.nxPackageJson.version;
 
@@ -95,8 +92,8 @@ export class WorkspaceIntegrityChecks {
       if (typeof pkg === 'string' || pkg.version === '*') {
         // should be aligned
         const installedVersion =
-          packageJson.dependencies?.[packageName] ??
-          packageJson.devDependencies?.[packageName];
+          this.projectGraph.externalNodes['npm:' + packageName]?.data?.version;
+
         if (
           installedVersion &&
           installedVersion !== this.nxPackageJson.version

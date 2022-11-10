@@ -18,10 +18,6 @@ describe('WorkspaceIntegrityChecks', () => {
             packageGroup: [],
           },
         } as PackageJson),
-        [joinPathFragments(workspaceRoot, 'package.json')]: JSON.stringify({
-          name: 'nx-workspace',
-          version: '0.0.1',
-        } as PackageJson),
       });
     });
 
@@ -38,6 +34,16 @@ describe('WorkspaceIntegrityChecks', () => {
                 implicitDependencies: [],
                 architect: {},
                 files: [createFile('libs/project1/src/index.ts')],
+              },
+            },
+          },
+          externalNodes: {
+            'npm:@nrwl/workspace': {
+              type: 'npm',
+              name: 'npm:@nrwl/worrkspace',
+              data: {
+                packageName: '@nrwl/workspace',
+                version: '1.0.0',
               },
             },
           },
@@ -141,26 +147,67 @@ describe('WorkspaceIntegrityChecks', () => {
             ],
           },
         } as PackageJson),
-        [joinPathFragments(workspaceRoot, 'package.json')]: JSON.stringify({
-          name: 'nx-workspace',
-          version: '0.0.1',
-          dependencies: {
-            '@nrwl/dependency': '1.0.1',
-          },
-          devDependencies: {
-            '@nrwl/dev-dependency': '0.9.1',
-            '@nrwl/may-not-be-aligned': '1.0.15',
-            '@nrwl/correct': '1.0.0',
-            '@nrwl/not-in-pkg-group': '0.9.1',
-            '@nrwl/installed-higher': '2.0.0',
-            nx: '1.0.0',
-          },
-        } as PackageJson),
       });
     });
 
     it('should pick up expected errors', () => {
-      const integrity = new WorkspaceIntegrityChecks(null, null);
+      const integrity = new WorkspaceIntegrityChecks(
+        {
+          nodes: {},
+          dependencies: {},
+          externalNodes: {
+            'npm:@nrwl/dependency': {
+              type: 'npm',
+              name: 'npm:@nrwl/dev-dependency',
+              data: {
+                packageName: '@nrwl/dev-dependency',
+                version: '1.0.1',
+              },
+            },
+            'npm:@nrwl/dev-dependency': {
+              type: 'npm',
+              name: 'npm:@nrwl/dev-dependency',
+              data: {
+                packageName: '@nrwl/dev-dependency',
+                version: '0.9.1',
+              },
+            },
+            'npm:@nrwl/may-not-be-aligned': {
+              type: 'npm',
+              name: 'npm:@nrwl/may-not-be-aligned',
+              data: {
+                packageName: '@nrwl/may-not-be-aligned',
+                version: '1.0.15',
+              },
+            },
+            'npm:@nrwl/correct': {
+              type: 'npm',
+              name: 'npm:@nrwl/correct',
+              data: {
+                packageName: '@nrwl/correct',
+                version: '1.0.0',
+              },
+            },
+            'npm:@nrwl/not-in-pkg-group': {
+              type: 'npm',
+              name: 'npm:@nrwl/not-in-pkg-group',
+              data: {
+                packageName: '@nrwl/not-in-pkg-group',
+                version: '1.0.0',
+              },
+            },
+            'npm:@nrwl/installed-higher': {
+              type: 'npm',
+              name: 'npm:@nrwl/installed-higher',
+              data: {
+                packageName: '@nrwl/installed-higher',
+                version: '2.0.0',
+              },
+            },
+          },
+        },
+        null
+      );
       const errors = integrity.misalignedPackages();
       // All errors are in 1 message
       expect(errors.length).toEqual(1);
