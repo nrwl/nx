@@ -1,17 +1,18 @@
-import type { TargetConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import {
   joinPathFragments,
   normalizePath,
   offsetFromRoot,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
-import { basename, dirname } from 'path';
+import { dirname } from 'path';
 import type { GeneratorOptions } from '../../schema';
 import type {
   MigrationProjectConfiguration,
   Target,
   ValidationError,
   ValidationResult,
+  WorkspaceRootFileTypesInfo,
 } from '../../utilities';
 import { arrayToString, Logger } from '../../utilities';
 import type { BuilderMigratorClassType } from '../builders';
@@ -53,6 +54,20 @@ export abstract class ProjectMigrator<
 
     this.collectTargetNames();
     this.createBuilderMigrators(supportedBuilderMigrators);
+  }
+
+  getWorkspaceRootFileTypesInfo(): WorkspaceRootFileTypesInfo {
+    const workspaceRootFileTypesInfo: WorkspaceRootFileTypesInfo = {
+      eslint:
+        Boolean(this.projectConfig.targets?.lint) ||
+        this.tree.exists(`${this.projectConfig.root}/.eslintrc.json`),
+      karma: this.builderMigrators.some(
+        (migrator) =>
+          migrator.rootFileType === 'karma' && migrator.isBuilderUsed()
+      ),
+    };
+
+    return workspaceRootFileTypesInfo;
   }
 
   override validate(): ValidationResult {
@@ -170,14 +185,6 @@ export abstract class ProjectMigrator<
     return errors.length ? errors : null;
   }
 
-  protected convertAsset(asset: string | any): string | any {
-    if (typeof asset === 'string') {
-      return this.convertSourceRootPath(asset);
-    } else {
-      return { ...asset, input: this.convertSourceRootPath(asset.input) };
-    }
-  }
-
   protected convertEsLintConfigExtendToNewPath(
     eslintConfigPath: string,
     extendPath: string
@@ -194,15 +201,6 @@ export abstract class ProjectMigrator<
       dirname(eslintConfigPath),
       extendPath
     );
-  }
-
-  protected convertSourceRootPath(originalPath: string): string {
-    return originalPath?.startsWith(this.project.oldSourceRoot)
-      ? joinPathFragments(
-          this.project.newSourceRoot,
-          originalPath.replace(this.project.oldSourceRoot, '')
-        )
-      : originalPath;
   }
 
   protected convertRootPath(originalPath: string): string {
@@ -232,78 +230,10 @@ export abstract class ProjectMigrator<
     return originalPath;
   }
 
-  protected getTargetValuesForOption(
-    target: TargetConfiguration,
-    optionPath: string
-  ): any[] {
-    const values = new Set();
-    const value = this.getValueForOption(target.options, optionPath);
-    if (value) {
-      values.add(value);
-    }
-
-    for (const configuration of Object.values(target.configurations ?? {})) {
-      const value = this.getValueForOption(configuration, optionPath);
-      if (value) {
-        values.add(value);
-      }
-    }
-
-    return Array.from(values);
-  }
-
-  protected getValueForOption(
-    options: Record<string, any> | undefined,
-    optionPath: string
-  ): any {
-    if (!options) {
-      return null;
-    }
-
-    const segments = optionPath.split('.');
-    let value = options;
-    for (const segment of segments) {
-      if (value && value[segment]) {
-        value = value[segment];
-      } else {
-        return null;
-      }
-    }
-
-    return value;
-  }
-
-  protected moveProjectRootFile(filePath: string, isRequired = true): void {
-    if (!filePath) {
-      return;
-    }
-
-    const filename = !!filePath ? basename(filePath) : '';
-    const from = filePath;
-    const to = joinPathFragments(this.project.newRoot, filename);
-    this.moveFile(from, to, isRequired);
-  }
-
   protected moveDir(from: string, to: string): void {
     visitNotIgnoredFiles(this.tree, from, (file) => {
       this.moveFile(file, normalizePath(file).replace(from, to), true);
     });
-  }
-
-  protected moveFile(from: string, to: string, required: boolean = true): void {
-    if (!this.tree.exists(from)) {
-      if (required) {
-        this.logger.warn(`The path "${from}" does not exist. Skipping.`);
-      }
-    } else if (this.tree.exists(to)) {
-      if (required) {
-        this.logger.warn(`The path "${to}" already exists. Skipping.`);
-      }
-    } else {
-      const contents = this.tree.read(from);
-      this.tree.write(to, contents);
-      this.tree.delete(from);
-    }
   }
 
   private collectTargetNames(): void {

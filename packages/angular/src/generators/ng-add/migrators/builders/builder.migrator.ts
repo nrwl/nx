@@ -3,7 +3,11 @@ import type {
   TargetConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import type { Logger, ProjectMigrationInfo } from '../../utilities';
+import type {
+  Logger,
+  ProjectMigrationInfo,
+  WorkspaceRootFileType,
+} from '../../utilities';
 import { Migrator } from '../migrator';
 
 export abstract class BuilderMigrator extends Migrator {
@@ -12,6 +16,7 @@ export abstract class BuilderMigrator extends Migrator {
   constructor(
     tree: Tree,
     public readonly builderName: string,
+    public readonly rootFileType: WorkspaceRootFileType | undefined,
     project: ProjectMigrationInfo,
     projectConfig: ProjectConfiguration,
     logger: Logger
@@ -22,6 +27,10 @@ export abstract class BuilderMigrator extends Migrator {
     this.projectConfig = projectConfig;
 
     this.collectBuilderTargets();
+  }
+
+  isBuilderUsed(): boolean {
+    return this.targets.size > 0;
   }
 
   protected collectBuilderTargets(): void {

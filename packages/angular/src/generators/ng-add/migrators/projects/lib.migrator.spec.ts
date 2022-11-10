@@ -129,7 +129,7 @@ describe('lib migrator', () => {
         'The "build" target is using an unsupported builder "@not/supported:builder".',
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"The supported builders for libraries are: \\"@angular-devkit/build-angular:karma\\", \\"@angular-eslint/builder:lint\\" and \\"@angular-devkit/build-angular:ng-packagr\\"."`
+        `"The supported builders for libraries are: \\"@angular-eslint/builder:lint\\", \\"@angular-devkit/build-angular:ng-packagr\\" and \\"@angular-devkit/build-angular:karma\\"."`
       );
     });
 
@@ -152,7 +152,7 @@ describe('lib migrator', () => {
         'The "test" target is using an unsupported builder "@other/not-supported:builder".',
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"The supported builders for libraries are: \\"@angular-devkit/build-angular:karma\\", \\"@angular-eslint/builder:lint\\" and \\"@angular-devkit/build-angular:ng-packagr\\"."`
+        `"The supported builders for libraries are: \\"@angular-eslint/builder:lint\\", \\"@angular-devkit/build-angular:ng-packagr\\" and \\"@angular-devkit/build-angular:karma\\"."`
       );
     });
 
@@ -171,7 +171,7 @@ describe('lib migrator', () => {
         'The "my-build" target is using an unsupported builder "@not/supported:builder".',
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"The supported builders for libraries are: \\"@angular-devkit/build-angular:karma\\", \\"@angular-eslint/builder:lint\\" and \\"@angular-devkit/build-angular:ng-packagr\\"."`
+        `"The supported builders for libraries are: \\"@angular-eslint/builder:lint\\", \\"@angular-devkit/build-angular:ng-packagr\\" and \\"@angular-devkit/build-angular:karma\\"."`
       );
     });
 
@@ -1284,8 +1284,8 @@ describe('lib migrator', () => {
         'test',
         'e2e',
         'myCustomBuild',
-        'myCustomLint',
         'myCustomTest',
+        'myCustomLint',
       ]);
     });
 

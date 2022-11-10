@@ -1,9 +1,15 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type {
+  ProjectConfiguration,
+  TargetConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import {
+  joinPathFragments,
   readWorkspaceConfiguration,
   updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
+import { basename } from 'path';
 import type { Logger } from '../utilities/logger';
 import type {
   ProjectMigrationInfo,
@@ -26,6 +32,52 @@ export abstract class Migrator {
 
   abstract migrate(): Promise<void> | void;
   abstract validate(): ValidationResult;
+
+  protected convertAsset(asset: string | any): string | any {
+    if (typeof asset === 'string') {
+      return this.convertSourceRootPath(asset);
+    } else {
+      return { ...asset, input: this.convertSourceRootPath(asset.input) };
+    }
+  }
+
+  protected moveFile(from: string, to: string, required: boolean = true): void {
+    if (!this.tree.exists(from)) {
+      if (required) {
+        this.logger.warn(`The path "${from}" does not exist. Skipping.`);
+      }
+    } else if (this.tree.exists(to)) {
+      if (required) {
+        this.logger.warn(`The path "${to}" already exists. Skipping.`);
+      }
+    } else {
+      const contents = this.tree.read(from);
+      this.tree.write(to, contents);
+      this.tree.delete(from);
+    }
+  }
+
+  protected moveFilePathsFromTargetToProjectRoot(
+    target: TargetConfiguration,
+    options: string[]
+  ) {
+    options.forEach((option) => {
+      this.getTargetValuesForOption(target, option).forEach((path) => {
+        this.moveProjectRootFile(path);
+      });
+    });
+  }
+
+  protected moveProjectRootFile(filePath: string, isRequired = true): void {
+    if (!filePath) {
+      return;
+    }
+
+    const filename = !!filePath ? basename(filePath) : '';
+    const from = filePath;
+    const to = joinPathFragments(this.project.newRoot, filename);
+    this.moveFile(from, to, isRequired);
+  }
 
   // TODO(leo): This should be moved to BuilderMigrator once everything is split into builder migrators.
   protected updateCacheableOperations(targetNames: string[]): void {
@@ -62,5 +114,55 @@ export abstract class Migrator {
       json.compilerOptions.outDir = `${projectOffsetFromRoot}dist/out-tsc`;
       return json;
     });
+  }
+
+  private convertSourceRootPath(originalPath: string): string {
+    return originalPath?.startsWith(this.project.oldSourceRoot)
+      ? joinPathFragments(
+          this.project.newSourceRoot,
+          originalPath.replace(this.project.oldSourceRoot, '')
+        )
+      : originalPath;
+  }
+
+  private getTargetValuesForOption(
+    target: TargetConfiguration,
+    optionPath: string
+  ): any[] {
+    const values = new Set();
+    const value = this.getValueForOption(target.options, optionPath);
+    if (value) {
+      values.add(value);
+    }
+
+    for (const configuration of Object.values(target.configurations ?? {})) {
+      const value = this.getValueForOption(configuration, optionPath);
+      if (value) {
+        values.add(value);
+      }
+    }
+
+    return Array.from(values);
+  }
+
+  private getValueForOption(
+    options: Record<string, any> | undefined,
+    optionPath: string
+  ): any {
+    if (!options) {
+      return null;
+    }
+
+    const segments = optionPath.split('.');
+    let value = options;
+    for (const segment of segments) {
+      if (value && value[segment]) {
+        value = value[segment];
+      } else {
+        return null;
+      }
+    }
+
+    return value;
   }
 }

@@ -17,6 +17,8 @@ import type {
   Target,
   ValidationResult,
 } from '../../utilities';
+import type { BuilderMigratorClassType } from '../builders';
+import { AngularDevkitKarmaMigrator } from '../builders';
 import { E2eMigrator } from './e2e.migrator';
 import { ProjectMigrator } from './project.migrator';
 
@@ -28,8 +30,7 @@ type SupportedTargets =
   | 'prerender'
   | 'serve'
   | 'server'
-  | 'serveSsr'
-  | 'test';
+  | 'serveSsr';
 const supportedTargets: Record<SupportedTargets, Target> = {
   build: { builders: ['@angular-devkit/build-angular:browser'] },
   e2e: {
@@ -45,8 +46,12 @@ const supportedTargets: Record<SupportedTargets, Target> = {
   serve: { builders: ['@angular-devkit/build-angular:dev-server'] },
   server: { builders: ['@angular-devkit/build-angular:server'] },
   serveSsr: { builders: ['@nguniversal/builders:ssr-dev-server'] },
-  test: { builders: ['@angular-devkit/build-angular:karma'] },
 };
+
+// TODO(leo): this will replace `supportedTargets` once the full refactor is done.
+const supportedBuilderMigrators: BuilderMigratorClassType[] = [
+  AngularDevkitKarmaMigrator,
+];
 
 export class AppMigrator extends ProjectMigrator<SupportedTargets> {
   private e2eMigrator: E2eMigrator;
@@ -59,7 +64,15 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     project: MigrationProjectConfiguration,
     logger?: Logger
   ) {
-    super(tree, options, supportedTargets, project, 'apps', logger);
+    super(
+      tree,
+      options,
+      supportedTargets,
+      project,
+      'apps',
+      logger,
+      supportedBuilderMigrators
+    );
 
     this.e2eMigrator = new E2eMigrator(
       tree,
@@ -82,25 +95,33 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
 
     this.moveProjectFiles();
     await this.updateProjectConfiguration();
+
+    for (const builderMigrator of this.builderMigrators ?? []) {
+      await builderMigrator.migrate();
+    }
+
     this.updateTsConfigs();
     this.updateEsLintConfig();
     this.updateCacheableOperations(
       [
         this.targetNames.build,
         this.targetNames.lint,
-        this.targetNames.test,
         this.targetNames.e2e,
       ].filter(Boolean)
     );
   }
 
   override validate(): ValidationResult {
-    const result: ValidationResult = [
+    const errors: ValidationResult = [
       ...(super.validate() ?? []),
       ...(this.e2eMigrator.validate() ?? []),
     ];
 
-    return result.length ? result : null;
+    for (const builderMigrator of this.builderMigrators) {
+      errors.push(...(builderMigrator.validate() ?? []));
+    }
+
+    return errors.length ? errors : null;
   }
 
   private moveProjectFiles(): void {
@@ -121,23 +142,6 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
         this.projectConfig.targets[this.targetNames.build],
         ['tsConfig', 'webWorkerTsConfig', 'ngswConfigPath']
       );
-    }
-
-    if (this.targetNames.test) {
-      this.moveFilePathsFromTargetToProjectRoot(
-        this.projectConfig.targets[this.targetNames.test],
-        ['karmaConfig', 'tsConfig', 'webWorkerTsConfig']
-      );
-    } else {
-      // there could still be a karma.conf.js file in the root
-      // so move to new location
-      const karmaConfig = 'karma.conf.js';
-      if (this.tree.exists(karmaConfig)) {
-        this.logger.info(
-          'No "test" target was found, but a root Karma config file was found in the project root. The file will be moved to the new location.'
-        );
-        this.moveProjectRootFile(karmaConfig);
-      }
     }
 
     if (this.targetNames.server) {
@@ -178,7 +182,6 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     } else {
       this.updateBuildTargetConfiguration();
       this.updateLintTargetConfiguration();
-      this.updateTestTargetConfiguration();
       this.updateServerTargetConfiguration();
       this.updatePrerenderTargetConfiguration();
       this.updateServeSsrTargetConfiguration();
@@ -199,10 +202,6 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     const projectOffsetFromRoot = offsetFromRoot(this.projectConfig.root);
 
     this.updateTsConfigFileUsedByBuildTarget(
-      rootTsConfigFile,
-      projectOffsetFromRoot
-    );
-    this.updateTsConfigFileUsedByTestTarget(
       rootTsConfigFile,
       projectOffsetFromRoot
     );
@@ -301,17 +300,6 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
         replace: this.convertAsset(replacement.replace),
         with: this.convertAsset(replacement.with),
       }));
-  }
-
-  private moveFilePathsFromTargetToProjectRoot(
-    target: TargetConfiguration,
-    options: string[]
-  ) {
-    options.forEach((option) => {
-      this.getTargetValuesForOption(target, option).forEach((path) => {
-        this.moveProjectRootFile(path);
-      });
-    });
   }
 
   private updateBuildTargetConfiguration(): void {
@@ -521,56 +509,6 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     });
   }
 
-  private updateTestTargetConfiguration(): void {
-    if (!this.targetNames.test) {
-      return;
-    }
-
-    const testOptions =
-      this.projectConfig.targets[this.targetNames.test].options;
-    if (!testOptions) {
-      this.logger.warn(
-        `The target "${this.targetNames.test}" is not specifying any options. Skipping updating the target configuration.`
-      );
-      return;
-    }
-
-    if (!testOptions.tsConfig) {
-      this.logger.warn(
-        `The "${this.targetNames.test}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
-      );
-    } else {
-      const newTestTsConfig = this.convertPath(testOptions.tsConfig);
-      if (!this.tree.exists(newTestTsConfig)) {
-        this.logger.warn(
-          `The tsConfig file "${testOptions.tsConfig}" specified in the "${this.targetNames.test}" target could not be found. Skipping updating the tsConfig file.`
-        );
-      }
-    }
-
-    testOptions.main = testOptions.main && this.convertAsset(testOptions.main);
-    testOptions.polyfills =
-      testOptions.polyfills && this.convertAsset(testOptions.polyfills);
-    testOptions.tsConfig =
-      testOptions.tsConfig &&
-      joinPathFragments(this.project.newRoot, basename(testOptions.tsConfig));
-    testOptions.karmaConfig =
-      testOptions.karmaConfig &&
-      joinPathFragments(
-        this.project.newRoot,
-        basename(testOptions.karmaConfig)
-      );
-    testOptions.assets =
-      testOptions.assets &&
-      testOptions.assets.map((asset) => this.convertAsset(asset));
-    testOptions.styles =
-      testOptions.styles &&
-      testOptions.styles.map((style) => this.convertAsset(style));
-    testOptions.scripts =
-      testOptions.scripts &&
-      testOptions.scripts.map((script) => this.convertAsset(script));
-  }
-
   private updateTsConfigFileUsedByBuildTarget(
     rootTsConfigFile: string,
     projectOffsetFromRoot: string
@@ -618,23 +556,5 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       json.compilerOptions.outDir = `${projectOffsetFromRoot}dist/out-tsc`;
       return json;
     });
-  }
-
-  private updateTsConfigFileUsedByTestTarget(
-    rootTsConfigFile: string,
-    projectOffsetFromRoot: string
-  ): void {
-    if (!this.targetNames.test) {
-      return;
-    }
-
-    const tsConfig =
-      this.projectConfig.targets[this.targetNames.test].options?.tsConfig;
-    if (!tsConfig || !this.tree.exists(tsConfig)) {
-      // we already logged a warning for these cases, so just return
-      return;
-    }
-
-    this.updateTsConfigFile(tsConfig, rootTsConfigFile, projectOffsetFromRoot);
   }
 }
