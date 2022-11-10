@@ -139,6 +139,7 @@ async function addUnitTestRunner(
       supportTsx: false,
       skipSerializers: false,
       skipFormat: true,
+      skipPackageJson: options.skipPackageJson,
     });
   } else if (options.unitTestRunner === 'karma') {
     await karmaProjectGenerator(host, {
@@ -182,6 +183,7 @@ async function addLinting(
     unitTestRunner: options.unitTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
+    skipPackageJson: options.skipPackageJson,
   });
 }
 
