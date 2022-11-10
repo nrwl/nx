@@ -18,8 +18,9 @@ import { readFileSync } from 'fs';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { dirname, join } from 'path';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
+import type { ProjectMigrator } from '../migrators';
 import type { GeneratorOptions } from '../schema';
-import type { WorkspaceCapabilities, WorkspaceProjects } from './types';
+import type { WorkspaceRootFileTypesInfo } from './types';
 import { workspaceMigrationErrorHeading } from './validation-logging';
 
 export function validateWorkspace(tree: Tree): void {
@@ -257,45 +258,39 @@ export function createRootKarmaConfig(tree: Tree): void {
   );
 }
 
-export function getWorkspaceCapabilities(
+export function getWorkspaceRootFileTypesInfo(
   tree: Tree,
-  projects: WorkspaceProjects
-): WorkspaceCapabilities {
-  const capabilities: WorkspaceCapabilities = { eslint: false, karma: false };
+  migrators: ProjectMigrator[]
+): WorkspaceRootFileTypesInfo {
+  const workspaceRootFileTypesInfo: WorkspaceRootFileTypesInfo = {
+    eslint: false,
+    karma: false,
+  };
 
   if (tree.exists('.eslintrc.json')) {
-    capabilities.eslint = true;
+    workspaceRootFileTypesInfo.eslint = true;
   }
   if (tree.exists('karma.conf.js')) {
-    capabilities.karma = true;
+    workspaceRootFileTypesInfo.karma = true;
   }
 
-  if (capabilities.eslint && capabilities.karma) {
-    return capabilities;
+  if (workspaceRootFileTypesInfo.eslint && workspaceRootFileTypesInfo.karma) {
+    return workspaceRootFileTypesInfo;
   }
 
-  for (const project of [...projects.apps, ...projects.libs]) {
-    if (
-      !capabilities.eslint &&
-      (project.config.targets?.lint ||
-        tree.exists(`${project.config.root}/.eslintrc.json`))
-    ) {
-      capabilities.eslint = true;
-    }
-    if (
-      !capabilities.karma &&
-      (project.config.targets?.test ||
-        tree.exists(`${project.config.root}/karma.conf.js`))
-    ) {
-      capabilities.karma = true;
-    }
+  for (const migrator of migrators) {
+    const projectInfo = migrator.getWorkspaceRootFileTypesInfo();
+    workspaceRootFileTypesInfo.eslint =
+      workspaceRootFileTypesInfo.eslint || projectInfo.eslint;
+    workspaceRootFileTypesInfo.karma =
+      workspaceRootFileTypesInfo.karma || projectInfo.karma;
 
-    if (capabilities.eslint && capabilities.karma) {
-      return capabilities;
+    if (workspaceRootFileTypesInfo.eslint && workspaceRootFileTypesInfo.karma) {
+      return workspaceRootFileTypesInfo;
     }
   }
 
-  return capabilities;
+  return workspaceRootFileTypesInfo;
 }
 
 function updateVsCodeRecommendedExtensions(tree: Tree): void {

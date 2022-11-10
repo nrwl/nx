@@ -8,8 +8,6 @@ import {
 } from '@nrwl/devkit';
 import { hasRulesRequiringTypeChecking } from '@nrwl/linter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
-import { basename } from 'path';
 import type { GeneratorOptions } from '../../schema';
 import type {
   Logger,
@@ -19,17 +17,20 @@ import type {
   ValidationResult,
 } from '../../utilities';
 import type { BuilderMigratorClassType } from '../builders';
-import { AngularDevkitNgPackagrMigrator } from '../builders';
+import {
+  AngularDevkitKarmaMigrator,
+  AngularDevkitNgPackagrMigrator,
+} from '../builders';
 import { ProjectMigrator } from './project.migrator';
 
-type SupportedTargets = 'test' | 'lint';
+type SupportedTargets = 'lint';
 const supportedTargets: Record<SupportedTargets, Target> = {
-  test: { builders: ['@angular-devkit/build-angular:karma'] },
   lint: { builders: ['@angular-eslint/builder:lint'] },
 };
 // TODO(leo): this will replace `supportedTargets` once the full refactor is done.
 const supportedBuilderMigrators: BuilderMigratorClassType[] = [
   AngularDevkitNgPackagrMigrator,
+  AngularDevkitKarmaMigrator,
 ];
 
 export class LibMigrator extends ProjectMigrator<SupportedTargets> {
@@ -69,11 +70,8 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
       await builderMigrator.migrate();
     }
 
-    this.updateTsConfigs();
     this.updateEsLintConfig();
-    this.updateCacheableOperations(
-      [this.targetNames.lint, this.targetNames.test].filter(Boolean)
-    );
+    this.updateCacheableOperations([this.targetNames.lint].filter(Boolean));
   }
 
   override validate(): ValidationResult {
@@ -103,7 +101,6 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
       );
     } else {
       this.updateLintTargetConfiguration();
-      this.updateTestTargetConfiguration();
     }
 
     updateProjectConfiguration(this.tree, this.project.name, {
@@ -114,16 +111,6 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
       project: this.project.name,
       skipFormat: true,
     });
-  }
-
-  private updateTsConfigs(): void {
-    const rootTsConfigFile = getRootTsConfigPathInTree(this.tree);
-    const projectOffsetFromRoot = offsetFromRoot(this.projectConfig.root);
-
-    this.updateTsConfigFileUsedByTestTarget(
-      rootTsConfigFile,
-      projectOffsetFromRoot
-    );
   }
 
   private updateEsLintConfig(): void {
@@ -231,74 +218,5 @@ export class LibMigrator extends ProjectMigrator<SupportedTargets> {
     if (hasRulesRequiringTypeChecking(eslintConfig)) {
       lintOptions.hasTypeAwareRules = true;
     }
-  }
-
-  private updateTestTargetConfiguration(): void {
-    if (!this.targetNames.test) {
-      return;
-    }
-
-    const testOptions =
-      this.projectConfig.targets[this.targetNames.test].options;
-    if (!testOptions) {
-      this.logger.warn(
-        `The target "${this.targetNames.test}" is not specifying any options. Skipping updating the target configuration.`
-      );
-      return;
-    }
-
-    if (!testOptions.tsConfig) {
-      this.logger.warn(
-        `The "${this.targetNames.test}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
-      );
-    } else if (!this.tree.exists(testOptions.tsConfig)) {
-      this.logger.warn(
-        `The tsConfig file "${testOptions.tsConfig}" specified in the "${this.targetNames.test}" target could not be found. Skipping updating the tsConfig file.`
-      );
-    }
-
-    testOptions.main = testOptions.main && this.convertAsset(testOptions.main);
-    testOptions.polyfills =
-      testOptions.polyfills && this.convertAsset(testOptions.polyfills);
-    testOptions.tsConfig =
-      testOptions.tsConfig &&
-      joinPathFragments(this.project.newRoot, basename(testOptions.tsConfig));
-    testOptions.karmaConfig =
-      testOptions.karmaConfig &&
-      joinPathFragments(
-        this.project.newRoot,
-        basename(testOptions.karmaConfig)
-      );
-    testOptions.assets =
-      testOptions.assets &&
-      testOptions.assets.map((asset) => this.convertAsset(asset));
-    testOptions.styles =
-      testOptions.styles &&
-      testOptions.styles.map((style) => this.convertAsset(style));
-    testOptions.scripts =
-      testOptions.scripts &&
-      testOptions.scripts.map((script) => this.convertAsset(script));
-  }
-
-  private updateTsConfigFileUsedByTestTarget(
-    rootTsConfigFile: string,
-    projectOffsetFromRoot: string
-  ): void {
-    if (!this.targetNames.test) {
-      return;
-    }
-
-    const tsConfig =
-      this.projectConfig.targets[this.targetNames.test].options?.tsConfig;
-    if (!tsConfig || !this.tree.exists(tsConfig)) {
-      // we already logged a warning for these cases, so just return
-      return;
-    }
-
-    this.updateTsConfigFile(
-      this.projectConfig.targets[this.targetNames.test].options.tsConfig,
-      rootTsConfigFile,
-      projectOffsetFromRoot
-    );
   }
 }

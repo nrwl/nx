@@ -1577,9 +1577,9 @@ describe('app migrator', () => {
         'lint',
         'test',
         'e2e',
+        'myCustomTest',
         'myCustomBuild',
         'myCustomLint',
-        'myCustomTest',
       ]);
     });
 

@@ -18,10 +18,8 @@ export type ProjectMigrationInfo = {
   newSourceRoot: string;
 };
 
-export type WorkspaceCapabilities = {
-  karma: boolean;
-  eslint: boolean;
-};
+export type WorkspaceRootFileType = 'karma' | 'eslint';
+export type WorkspaceRootFileTypesInfo = Record<WorkspaceRootFileType, boolean>;
 
 export type ValidationError = {
   message?: string;

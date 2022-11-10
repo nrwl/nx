@@ -19,7 +19,7 @@ import {
   createWorkspaceFiles,
   decorateAngularCli,
   getAllProjects,
-  getWorkspaceCapabilities,
+  getWorkspaceRootFileTypesInfo,
   normalizeOptions,
   updatePackageJson,
   updateRootEsLintConfig,
@@ -59,7 +59,10 @@ export async function migrateFromAngularCli(
     // validate all projects
     validateProjects(migrators);
 
-    const workspaceCapabilities = getWorkspaceCapabilities(tree, projects);
+    const workspaceRootFileTypesInfo = getWorkspaceRootFileTypesInfo(
+      tree,
+      migrators
+    );
 
     /**
      * Keep a copy of the root eslint config to restore it later. We need to
@@ -68,7 +71,7 @@ export async function migrateFromAngularCli(
      * the app migration.
      */
     let eslintConfig =
-      workspaceCapabilities.eslint && tree.exists('.eslintrc.json')
+      workspaceRootFileTypesInfo.eslint && tree.exists('.eslintrc.json')
         ? readJson(tree, '.eslintrc.json')
         : undefined;
 
@@ -95,10 +98,10 @@ export async function migrateFromAngularCli(
      * these files in the root for the root application, so we wait until
      * those root config files are moved when the projects are migrated.
      */
-    if (workspaceCapabilities.karma) {
+    if (workspaceRootFileTypesInfo.karma) {
       createRootKarmaConfig(tree);
     }
-    if (workspaceCapabilities.eslint) {
+    if (workspaceRootFileTypesInfo.eslint) {
       updateRootEsLintConfig(tree, eslintConfig, options.unitTestRunner);
       cleanupEsLintPackages(tree);
     }
