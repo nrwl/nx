@@ -105,10 +105,14 @@ export class DaemonClient {
   }
 
   async registerFileWatcher(
-    data: any,
+    config: {
+      includeProjects: string[] | 'all';
+      includeGlobalWorkspaceFiles: boolean;
+    },
     callback: (
       error: Error | null | 'closed',
       data: {
+        projectChanges: string[];
         fileChanges: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[];
       } | null
     ) => void
@@ -130,7 +134,7 @@ export class DaemonClient {
     );
 
     await this.queue.sendToQueue(() =>
-      messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', data })
+      messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', config })
     );
 
     return () => {
