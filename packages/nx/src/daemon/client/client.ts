@@ -106,8 +106,8 @@ export class DaemonClient {
 
   async registerFileWatcher(
     config: {
-      includeProjects: string[] | 'all';
-      includeGlobalWorkspaceFiles: boolean;
+      watchProjects: string[] | 'all';
+      watchGlobalWorkspaceFiles: boolean;
     },
     callback: (
       error: Error | null | 'closed',
