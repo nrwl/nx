@@ -1,12 +1,12 @@
 # Nx and the Angular CLI
 
 {% callout type="check" title="Nx and AngularCLI commands are interchangeable" %}
-If you add Nx to an Angular CLI project, `ng` and `nx` are interchangeable (they invoke the same command). So anywhere you see `"nx build"` or `"nx affected"`, you can also use `"ng build"` or `"ng affected"`.
+If you add Nx to an Angular CLI project, `ng` and `nx` are interchangeable (they invoke the same command, which is `nx`). So anywhere you see `"nx build"` or `"nx affected"`, you can also use `"ng build"` or `"ng affected"`.
 {% /callout %}
 
 Nx integrates well with the Angular CLI:
 
-- It decorates the Angular CLI. After adding Nx to your workspace, running `ng` will run the wrapped Angular CLI that goes through Nx. Everything will work the same way but a lot faster.
+- It decorates the Angular CLI. After adding Nx to your workspace, running `ng` will run the wrapped Angular CLI that goes through Nx. Almost everything will work the same way but a lot faster. There are some differences and they are explained below.
 - It supports all Angular Devkit builders and schematics.
 - It supports using `angular.json` to configure projects and their targets.
 - Nx Console works with Angular CLI projects.
@@ -72,3 +72,7 @@ npm install [package] && nx g [package]:ng-add
 ```
 
 Replace `[package]` with the name of the package you're trying to add.
+
+## More Info
+
+If you'd like a better understanding of the similarities, differences and trade-offs, we have a detailed comparison of the two tools here: [Angular CLI and Nx - Why?](https://blog.nrwl.io/angular-cli-and-nx-why-df160946888f)
