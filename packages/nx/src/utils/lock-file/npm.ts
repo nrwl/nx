@@ -22,6 +22,7 @@ type NpmDependency = {
   requires?: Record<string, string>;
   dependencies?: Record<string, NpmDependency>;
   dev?: boolean;
+  peer?: boolean;
   devOptional?: boolean;
   optional?: boolean;
 };
@@ -146,10 +147,12 @@ function mapPackageDependency(
   lockfileVersion: number,
   isRootVersion?: boolean
 ) {
+  const { dev, peer, optional } = value;
   const packageMeta = {
     path: packagePath,
-    dev: value.dev,
-    optional: value.optional,
+    dev,
+    peer,
+    optional,
   };
   if (!mappedPackages[packageName][key]) {
     // const packageDependencies = lockfileVersion === 1 ? requires : dependencies;
@@ -286,7 +289,7 @@ function unmapDependencies(
   const { version, resolved, integrity, devOptional } = value;
 
   for (let i = 0; i < packageMeta.length; i++) {
-    const { path, dev, optional } = packageMeta[i];
+    const { path, dev, optional, peer } = packageMeta[i];
     const projectPath = path.split('node_modules/').slice(1);
 
     const requires = unmapDependencyRequires(value);
@@ -303,6 +306,7 @@ function unmapDependencies(
       dev,
       devOptional,
       optional,
+      peer,
       requires,
       ...innerDeps[packageName],
     };
@@ -375,23 +379,60 @@ function sortDependencies(
  */
 export function transitiveDependencyNpmLookup(
   packageName: string,
-  parentPackage: string,
+  parentPackages: string[],
   versions: PackageVersions,
   version: string
 ): PackageDependency {
-  const nestedVersion = Object.values(versions).find((v) =>
-    v.packageMeta.some(
-      (p) =>
-        p.path.indexOf(`${parentPackage}/node_modules/${packageName}`) !== -1
-    )
-  );
+  const packageDependencies = Object.values(versions);
 
-  if (nestedVersion) {
-    return nestedVersion;
+  if (packageName === 'fsevents') {
+    console.log(
+      packageName,
+      version,
+      parentPackages,
+      JSON.stringify(packageDependencies, null, 2)
+    );
   }
 
-  // otherwise search for the matching version
+  for (let i = 0; i < packageDependencies.length; i++) {
+    if (satisfies(packageDependencies[i].version, version)) {
+      const packageMeta = packageDependencies[i].packageMeta.find((p) =>
+        isPathMatching(p.path, packageName, parentPackages)
+      );
+      if (packageMeta) {
+        return {
+          ...packageDependencies[i],
+          packageMeta: [packageMeta],
+        };
+      }
+    }
+  }
+
+  // otherwise return the root version
   return Object.values(versions).find((v) => v.rootVersion);
+}
+
+function isPathMatching(
+  path: string,
+  packageName: string,
+  parentPackages: string[]
+): boolean {
+  const packages = path.split(/\/?node_modules\//).slice(1);
+  if (packages[packages.length - 1] !== packageName) {
+    return false;
+  }
+  const locations = parentPackages
+    .map((p) => packages.indexOf(p))
+    .filter((p) => p !== -1);
+  if (locations.length === 0) {
+    return false;
+  }
+  for (let i = 0; i < locations.length - 2; i++) {
+    if (locations[i] > locations[i + 1]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -402,11 +443,122 @@ export function transitiveDependencyNpmLookup(
  */
 export function pruneNpmLockFile(
   lockFileData: LockFileData,
-  packages: string[]
+  packages: string[],
+  projectName?: string
 ): LockFileData {
-  // todo(meeroslav): This functionality has not been implemented yet
-  console.warn(
-    'Pruning package-lock.json is not yet implemented. Returning entire lock file'
-  );
-  return lockFileData;
+  const dependencies = pruneDependencies(lockFileData.dependencies, packages);
+  const lockFileMetadata = {
+    ...lockFileData.lockFileMetadata,
+    ...pruneRootPackage(lockFileData, packages, projectName),
+  };
+  let prunedLockFileData: LockFileData;
+  prunedLockFileData = { dependencies, lockFileMetadata, hash: '' };
+  return prunedLockFileData;
+}
+
+function pruneRootPackage(
+  lockFileData: LockFileData,
+  packages: string[],
+  projectName?: string
+): Record<string, any> {
+  if (lockFileData.lockFileMetadata.metadata.lockfileVersion === 1) {
+    return undefined;
+  }
+  const rootPackage = {
+    name: projectName || lockFileData.lockFileMetadata.rootPackage.name,
+    version: lockFileData.lockFileMetadata.rootPackage.version,
+    ...(lockFileData.lockFileMetadata.rootPackage.license && {
+      license: lockFileData.lockFileMetadata.rootPackage.license,
+    }),
+    dependencies: {} as Record<string, string>,
+  };
+  for (const packageName of packages) {
+    const version = Object.values(lockFileData.dependencies[packageName]).find(
+      (v) => v.rootVersion
+    ).version;
+    rootPackage.dependencies[packageName] = version;
+  }
+  rootPackage.dependencies = sortObject(rootPackage.dependencies);
+
+  return { rootPackage };
+}
+
+// iterate over packages to collect the affected tree of dependencies
+function pruneDependencies(
+  dependencies: LockFileData['dependencies'],
+  packages: string[]
+): LockFileData['dependencies'] {
+  const result: LockFileData['dependencies'] = {};
+
+  packages.forEach((packageName) => {
+    if (dependencies[packageName]) {
+      const [key, value] = Object.entries(dependencies[packageName]).find(
+        ([_, v]) => v.rootVersion
+      );
+
+      result[packageName] = result[packageName] || {};
+      result[packageName][key] = value;
+      pruneTransitiveDependencies([packageName], dependencies, result, value);
+    } else {
+      console.warn(
+        `Could not find ${packageName} in the lock file. Skipping...`
+      );
+    }
+  });
+
+  return result;
+}
+
+// find all transitive dependencies of already pruned packages
+// and adds them to the collection
+// recursively prune their dependencies
+function pruneTransitiveDependencies(
+  parentPackages: string[],
+  dependencies: LockFileData['dependencies'],
+  prunedDeps: LockFileData['dependencies'],
+  value: PackageDependency
+): void {
+  if (!value.dependencies && !value.peerDependencies) {
+    return;
+  }
+
+  Object.entries({
+    ...value.dependencies,
+    ...value.peerDependencies,
+    ...value.optionalDependencies,
+  }).forEach(([packageName, versionRange]: [string, string]) => {
+    if (dependencies[packageName]) {
+      // TODO: if A -> B -> C => path can also be node_modules/A/node_modules/C or node_modules/C
+      const dependency = transitiveDependencyNpmLookup(
+        packageName,
+        parentPackages,
+        dependencies[packageName],
+        versionRange
+      );
+      if (dependency) {
+        if (!prunedDeps[packageName]) {
+          prunedDeps[packageName] = {};
+        }
+        if (prunedDeps[packageName][dependency.version]) {
+          const currentMeta =
+            prunedDeps[packageName][dependency.version].packageMeta;
+          if (
+            !currentMeta.find((p) => p.path === dependency.packageMeta[0].path)
+          ) {
+            currentMeta.push(dependency.packageMeta[0]);
+            currentMeta.sort();
+          }
+        } else {
+          prunedDeps[packageName][dependency.version] = dependency;
+          // recurively collect dependencies
+          pruneTransitiveDependencies(
+            [...parentPackages, packageName],
+            dependencies,
+            prunedDeps,
+            prunedDeps[packageName][dependency.version]
+          );
+        }
+      }
+    }
+  });
 }

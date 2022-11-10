@@ -164,16 +164,23 @@ export function writeLockFile(
 export function pruneLockFile(
   lockFile: LockFileData,
   packages: string[],
+  projectName?: string,
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): LockFileData {
   if (packageManager === 'yarn') {
-    return pruneYarnLockFile(lockFile, packages);
+    return pruneYarnLockFile(lockFile, packages, projectName);
   }
   if (packageManager === 'pnpm') {
-    return prunePnpmLockFile(lockFile, packages);
+    return prunePnpmLockFile(lockFile, packages, projectName);
   }
   if (packageManager === 'npm') {
-    return pruneNpmLockFile(lockFile, packages);
+    if (lockFile.lockFileMetadata.metadata.lockfileVersion === 1) {
+      // TODO: for v1 generate package.json and run `npm i --package-lock-only --lockfile-version 1`
+      throw new Error(
+        `npm v7 is required to prune lockfile. Please upgrade to npm v7.`
+      );
+    }
+    return pruneNpmLockFile(lockFile, packages, projectName);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
 }

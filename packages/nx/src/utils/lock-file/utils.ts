@@ -85,7 +85,7 @@ export function getNodeName(
 
 type TransitiveLookupFunction = (
   packageName: string,
-  parentPackage: string,
+  parentPackages: string[],
   versions: PackageVersions,
   version: string
 ) => PackageDependency;
@@ -127,7 +127,7 @@ export function mapExternalNodes(
           if (combinedDependencies) {
             const nodeDependencies = [];
             const transitiveDeps = mapTransitiveDependencies(
-              packageName,
+              [packageName],
               lockFileData.dependencies,
               combinedDependencies,
               versionCache,
@@ -152,7 +152,7 @@ export function mapExternalNodes(
 // Finds the maching version of each dependency of the package and
 // maps each {package}:{versionRange} pair to "npm:{package}@{version}" (when transitive) or "npm:{package}" (when root)
 function mapTransitiveDependencies(
-  parentPackage: string,
+  parentPackages: string[],
   packages: Record<string, PackageVersions>,
   dependencies: Record<string, string>,
   versionCache: Record<string, string>,
@@ -183,10 +183,11 @@ function mapTransitiveDependencies(
         ? cleanVersion
         : transitiveLookupFn(
             packageName,
-            parentPackage,
+            parentPackages,
             packages[packageName],
             cleanVersion
           )?.version;
+
       // for some peer dependencies, we won't find installed version so we'll just ignore these
       if (version) {
         const nodeName = getNodeName(

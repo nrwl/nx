@@ -131,7 +131,7 @@ describe('lock-file', () => {
         expect(partialGraph.dependencies['npm:nx']).toMatchSnapshot();
       });
 
-      it('should map successfully complex npm lock file v1', () => {
+      it('should map successfully complex lock file v1', () => {
         const lockFileData = parseNpmLockFile(npmLockFileV1);
 
         const partialGraph = mapLockFileDataToPartialGraph(lockFileData, 'npm');

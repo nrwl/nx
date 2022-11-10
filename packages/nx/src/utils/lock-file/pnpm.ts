@@ -278,7 +278,7 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
  */
 export function transitiveDependencyPnpmLookup(
   packageName: string,
-  parentPackage: string,
+  parentPackages: string[],
   versions: PackageVersions,
   version: string
 ): PackageDependency {
@@ -294,7 +294,8 @@ export function transitiveDependencyPnpmLookup(
  */
 export function prunePnpmLockFile(
   lockFileData: LockFileData,
-  packages: string[]
+  packages: string[],
+  projectName?: string
 ): LockFileData {
   // todo(meeroslav): This functionality has not been implemented yet
   console.warn(
