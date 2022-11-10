@@ -39,6 +39,9 @@
     "chalk": "4.1.0",
     "dotenv": "~10.0.0"
   },
+  "peerDependencies": {
+    "vitest": "^0.25.1"
+  },
   "publishConfig": {
     "access": "public"
   },

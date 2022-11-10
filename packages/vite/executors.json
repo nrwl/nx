@@ -21,6 +21,11 @@
       "implementation": "./src/executors/build/build.impl",
       "schema": "./src/executors/build/schema.json",
       "description": "Build with Vite."
+    },
+    "test": {
+      "implementation": "./src/executors/test/vitest.impl",
+      "schema": "./src/executors/test/schema.json",
+      "description": "Test with Vitest"
     }
   }
 }

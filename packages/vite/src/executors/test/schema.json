@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "version": 2,
+  "cli": "nx",
+  "title": "Test executor",
+  "description": "",
+  "type": "object",
+  "properties": {
+    "vitestConfig": {
+      "type": "string",
+      "description": "The path to the local vitest config",
+      "x-completion-type": "file",
+      "x-completion-glob": "@(vitest|vite).config@(.js|.ts)"
+    },
+    "passWithNoTests": {
+      "type": "boolean",
+      "default": true,
+      "description": "Pass the test even if no tests are found"
+    },
+    "testNamePattern": {
+      "type": "string",
+      "description": "Run tests with full names matching the pattern"
+    },
+    "vitestMode": {
+      "type": "string",
+      "enum": ["test", "benchmark", "typecheck"],
+      "default": "test"
+    },
+    "watch": {
+      "type": "boolean",
+      "default": false
+    },
+    "reporters": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": ["vitestConfig"]
+}
