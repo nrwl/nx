@@ -735,9 +735,9 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes pnpm should map lock file data to external nodes 1`] = `
 Object {
   "data": Object {
-    "hash": "c22918aa52c9fdce78bf82451d8114e00b6d4375a8e5b1d1d96c6cf4755dbe1a",
+    "hash": "abdb9ef454702b3fae2f8002be40a8c2903514143b45592292ac8920e35cb60a",
     "packageName": "yargs",
-    "version": "17.5.1",
+    "version": "17.6.2",
   },
   "name": "npm:yargs",
   "type": "npm",
@@ -787,9 +787,9 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes pnpm should map successfully complex lock file 1`] = `
 Object {
   "data": Object {
-    "hash": "1e61b9db38c17534ce427d40ce84f9c03b4c439253f659e9a48513a10a52b465",
+    "hash": "21f7648b65146104c6644fcde7073e2edc7e707731b2a38db83cd2882cb274df",
     "packageName": "nx",
-    "version": "14.7.5",
+    "version": "15.0.13",
   },
   "name": "npm:nx",
   "type": "npm",
@@ -815,6 +815,26 @@ Array [
   },
   Object {
     "source": "npm:nx",
+    "target": "npm:@yarnpkg/lockfile",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@yarnpkg/parsers",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@zkochan/js-yaml",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:axios",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
     "target": "npm:chalk",
     "type": "static",
   },
@@ -835,7 +855,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:cliui",
+    "target": "npm:cliui@7.0.4",
     "type": "static",
   },
   Object {
@@ -915,6 +935,11 @@ Array [
   },
   Object {
     "source": "npm:nx",
+    "target": "npm:strong-log-transformer",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
     "target": "npm:tar-stream",
     "type": "static",
   },
@@ -930,7 +955,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:tslib",
+    "target": "npm:tslib@2.4.1",
     "type": "static",
   },
   Object {
@@ -954,7 +979,7 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes pnpm should map successfully complex lock file 3`] = `
 Object {
   "data": Object {
-    "hash": "6c5961e1a6ab89174727587860e480508f945407ce4c2cc7c9f1e46f181e6468",
+    "hash": "601ac9f28fb76d7e6d1d15600097ca3d8f636990b659c73cf44d3e4030e68c56",
     "packageName": "@phenomnomnominal/tsquery",
     "version": "4.1.1",
   },

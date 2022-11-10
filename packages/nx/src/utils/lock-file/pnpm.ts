@@ -297,9 +297,51 @@ export function prunePnpmLockFile(
   packages: string[],
   projectName?: string
 ): LockFileData {
-  // todo(meeroslav): This functionality has not been implemented yet
-  console.warn(
-    'Pruning pnpm-lock.yaml is not yet implemented. Returning entire lock file'
+  const dependencies = pruneDependencies(
+    lockFileData.dependencies,
+    packages,
+    projectName
   );
-  return lockFileData;
+  const prunedLockFileData = {
+    lockFileMetadata: lockFileData.lockFileMetadata,
+    dependencies,
+    hash: '',
+  };
+  return prunedLockFileData;
 }
+
+// iterate over packages to collect the affected tree of dependencies
+function pruneDependencies(
+  dependencies: LockFileData['dependencies'],
+  packages: string[],
+  projectName?: string
+): LockFileData['dependencies'] {
+  const result: LockFileData['dependencies'] = {};
+
+  packages.forEach((packageName) => {
+    if (dependencies[packageName]) {
+      const [key, value] = Object.entries(dependencies[packageName]).find(
+        ([_, v]) => v.rootVersion
+      );
+      result[packageName] = result[packageName] || {};
+      result[packageName][key] = value;
+      pruneTransitiveDependencies([packageName], dependencies, result, value);
+    } else {
+      console.warn(
+        `Could not find ${packageName} in the lock file. Skipping...`
+      );
+    }
+  });
+
+  return result;
+}
+
+// find all transitive dependencies of already pruned packages
+// and adds them to the collection
+// recursively prune their dependencies
+function pruneTransitiveDependencies(
+  parentPackages: string[],
+  dependencies: LockFileData['dependencies'],
+  prunedDeps: LockFileData['dependencies'],
+  value: PackageDependency
+): void {}

@@ -5,7 +5,7 @@ Object {
   "@ampproject/remapping@2.2.0": Object {
     "dependencies": Object {
       "@jridgewell/gen-mapping": "0.1.1",
-      "@jridgewell/trace-mapping": "0.3.15",
+      "@jridgewell/trace-mapping": "0.3.17",
     },
     "dev": true,
     "engines": Object {
@@ -16,7 +16,7 @@ Object {
         "dependencyDetails": Object {
           "dependencies": Object {
             "@jridgewell/gen-mapping": "0.1.1",
-            "@jridgewell/trace-mapping": "0.3.15",
+            "@jridgewell/trace-mapping": "0.3.17",
           },
         },
         "isDependency": false,
@@ -36,7 +36,7 @@ Object {
 
 exports[`pnpm LockFile utility lock file with inline specifiers should parse lockfile (IS) 2`] = `
 Object {
-  "typescript@4.8.3": Object {
+  "typescript@4.8.4": Object {
     "dev": true,
     "engines": Object {
       "node": ">=4.2.0",
@@ -47,15 +47,15 @@ Object {
         "dependencyDetails": Object {},
         "isDependency": false,
         "isDevDependency": true,
-        "key": "/typescript/4.8.3",
+        "key": "/typescript/4.8.4",
         "specifier": "~4.8.2",
       },
     ],
     "resolution": Object {
-      "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
+      "integrity": "sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==",
     },
     "rootVersion": true,
-    "version": "4.8.3",
+    "version": "4.8.4",
   },
 }
 `;
@@ -65,7 +65,7 @@ Object {
   "@ampproject/remapping@2.2.0": Object {
     "dependencies": Object {
       "@jridgewell/gen-mapping": "0.1.1",
-      "@jridgewell/trace-mapping": "0.3.15",
+      "@jridgewell/trace-mapping": "0.3.17",
     },
     "dev": true,
     "engines": Object {
@@ -76,7 +76,7 @@ Object {
         "dependencyDetails": Object {
           "dependencies": Object {
             "@jridgewell/gen-mapping": "0.1.1",
-            "@jridgewell/trace-mapping": "0.3.15",
+            "@jridgewell/trace-mapping": "0.3.17",
           },
         },
         "isDependency": false,
@@ -96,7 +96,7 @@ Object {
 
 exports[`pnpm LockFile utility standard lock file should parse lockfile correctly 2`] = `
 Object {
-  "typescript@4.8.3": Object {
+  "typescript@4.8.4": Object {
     "dev": true,
     "engines": Object {
       "node": ">=4.2.0",
@@ -107,15 +107,15 @@ Object {
         "dependencyDetails": Object {},
         "isDependency": false,
         "isDevDependency": true,
-        "key": "/typescript/4.8.3",
+        "key": "/typescript/4.8.4",
         "specifier": "~4.8.2",
       },
     ],
     "resolution": Object {
-      "integrity": "sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==",
+      "integrity": "sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==",
     },
     "rootVersion": true,
-    "version": "4.8.3",
+    "version": "4.8.4",
   },
 }
 `;

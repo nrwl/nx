@@ -11,7 +11,7 @@ import {
   lockFileV1 as npmLockFileV1,
 } from './__fixtures__/npm.lock';
 import {
-  lockFileYargsOnly as pnpmLockFileYargsOnly,
+  lockFileYargsAndDevkit as pnpmLockFileYargsAndDevkit,
   lockFile as pnpmLockFile,
 } from './__fixtures__/pnpm.lock';
 import {
@@ -156,7 +156,7 @@ describe('lock-file', () => {
       });
 
       it('should map lock file data to external nodes', () => {
-        const lockFileData = parsePnpmLockFile(pnpmLockFileYargsOnly);
+        const lockFileData = parsePnpmLockFile(pnpmLockFileYargsAndDevkit);
 
         const partialGraph = mapLockFileDataToPartialGraph(
           lockFileData,
