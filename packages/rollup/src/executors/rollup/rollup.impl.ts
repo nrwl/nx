@@ -1,33 +1,33 @@
-import 'dotenv/config';
-import * as ts from 'typescript';
-import * as rollup from 'rollup';
-import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
-import { getBabelInputPlugin } from '@rollup/plugin-babel';
-import { dirname, join, parse } from 'path';
-import { from, Observable, of } from 'rxjs';
-import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
-import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
-import * as autoprefixer from 'autoprefixer';
 import type { ExecutorContext } from '@nrwl/devkit';
 import { joinPathFragments, logger, names, readJsonFile } from '@nrwl/devkit';
+import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import {
   calculateProjectDependencies,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
+import * as autoprefixer from 'autoprefixer';
+import 'dotenv/config';
+import { dirname, join, parse } from 'path';
+import * as rollup from 'rollup';
+import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
+import { from, Observable, of } from 'rxjs';
+import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
+import * as ts from 'typescript';
 
-import { AssetGlobPattern, RollupExecutorOptions } from './schema';
-import { runRollup } from './lib/run-rollup';
+import { deleteOutputDir } from '../../utils/fs';
+import { analyze } from './lib/analyze-plugin';
 import {
   NormalizedRollupExecutorOptions,
   normalizeRollupExecutorOptions,
 } from './lib/normalize';
-import { analyze } from './lib/analyze-plugin';
-import { deleteOutputDir } from '../../utils/fs';
+import { runRollup } from './lib/run-rollup';
 import { swc } from './lib/swc-plugin';
-import { validateTypes } from './lib/validate-types';
 import { updatePackageJson } from './lib/update-package-json';
+import { validateTypes } from './lib/validate-types';
+import { AssetGlobPattern, RollupExecutorOptions } from './schema';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
@@ -235,7 +235,7 @@ export function createRollupOptions(
         preferBuiltins: true,
         extensions: fileExtensions,
       }),
-      useSwc && swc(),
+      useSwc && swc(options.swcrc),
       useBabel &&
         getBabelInputPlugin({
           // Let's `@nrwl/web/babel` preset know that we are packaging.

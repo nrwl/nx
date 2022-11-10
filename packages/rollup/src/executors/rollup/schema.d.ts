@@ -28,6 +28,7 @@ export interface RollupExecutorOptions {
   deleteOutputPath?: boolean;
   format?: string[];
   compiler?: 'babel' | 'tsc' | 'swc';
+  swcrc?: string;
   javascriptEnabled?: boolean;
   // TODO(jack): remove this for Nx 16
   skipTypeField?: boolean;

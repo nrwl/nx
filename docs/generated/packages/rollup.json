@@ -239,6 +239,12 @@
             "default": "babel",
             "description": "Which compiler to use."
           },
+          "swcrc": {
+            "type": "string",
+            "description": "The path to the SWC configuration file. Default: .lib.swcrc",
+            "x-completion-type": "file",
+            "x-completion-glob": ".swcrc"
+          },
           "javascriptEnabled": {
             "type": "boolean",
             "description": "Sets `javascriptEnabled` option for less loader",

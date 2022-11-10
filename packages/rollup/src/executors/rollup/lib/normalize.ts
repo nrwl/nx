@@ -1,6 +1,6 @@
-import { basename, dirname, relative, resolve } from 'path';
-import { statSync } from 'fs';
 import { normalizePath } from '@nrwl/devkit';
+import { statSync } from 'fs';
+import { basename, dirname, relative, resolve } from 'path';
 
 import type { AssetGlobPattern, RollupExecutorOptions } from '../schema';
 
@@ -34,6 +34,7 @@ export function normalizeRollupExecutorOptions(
       .concat(options.rollupConfig)
       .filter(Boolean)
       .map((p) => normalizePluginPath(p, root)),
+    swcrc: normalizePluginPath(options.swcrc, root),
     assets: options.assets
       ? normalizeAssets(options.assets, root, sourceRoot)
       : undefined,
