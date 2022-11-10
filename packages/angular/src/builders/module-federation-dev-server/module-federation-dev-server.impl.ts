@@ -17,7 +17,8 @@ import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/
 function getDynamicRemotes(
   project: ProjectConfiguration,
   context: BuilderContext,
-  workspaceProjects: Record<string, ProjectConfiguration>
+  workspaceProjects: Record<string, ProjectConfiguration>,
+  remotesToSkip: Set<string>
 ): string[] {
   // check for dynamic remotes
   // we should only check for dynamic based on what we generate
@@ -55,9 +56,9 @@ function getDynamicRemotes(
     return [];
   }
 
-  const dynamicRemotes = Object.entries(parsedManifest).map(
-    ([remoteName]) => remoteName
-  );
+  const dynamicRemotes = Object.entries(parsedManifest)
+    .map(([remoteName]) => remoteName)
+    .filter((r) => !remotesToSkip.has(r));
   const invalidDynamicRemotes = dynamicRemotes.filter(
     (remote) => !workspaceProjects[remote]
   );
@@ -77,7 +78,8 @@ function getDynamicRemotes(
 function getStaticRemotes(
   project: ProjectConfiguration,
   context: BuilderContext,
-  workspaceProjects: Record<string, ProjectConfiguration>
+  workspaceProjects: Record<string, ProjectConfiguration>,
+  remotesToSkip: Set<string>
 ): string[] {
   const mfConfigPath = join(
     context.workspaceRoot,
@@ -95,9 +97,11 @@ function getStaticRemotes(
   }
 
   const remotesConfig = mfeConfig.remotes.length > 0 ? mfeConfig.remotes : [];
-  const staticRemotes = remotesConfig.map((remoteDefinition) =>
-    Array.isArray(remoteDefinition) ? remoteDefinition[0] : remoteDefinition
-  );
+  const staticRemotes = remotesConfig
+    .map((remoteDefinition) =>
+      Array.isArray(remoteDefinition) ? remoteDefinition[0] : remoteDefinition
+    )
+    .filter((r) => !remotesToSkip.has(r));
 
   const invalidStaticRemotes = staticRemotes.filter(
     (remote) => !workspaceProjects[remote]
@@ -145,12 +149,20 @@ export function executeModuleFederationDevServerBuilder(
 
   validateDevRemotes(options, workspaceProjects);
 
-  const staticRemotes = getStaticRemotes(project, context, workspaceProjects);
-  const dynamicRemotes = getDynamicRemotes(project, context, workspaceProjects);
   const remotesToSkip = new Set(options.skipRemotes ?? []);
-  const remotes = [...staticRemotes, ...dynamicRemotes].filter(
-    (r) => !remotesToSkip.has(r)
+  const staticRemotes = getStaticRemotes(
+    project,
+    context,
+    workspaceProjects,
+    remotesToSkip
   );
+  const dynamicRemotes = getDynamicRemotes(
+    project,
+    context,
+    workspaceProjects,
+    remotesToSkip
+  );
+  const remotes = [...staticRemotes, ...dynamicRemotes];
 
   const devServeRemotes = !options.devRemotes
     ? []
