@@ -1,33 +1,33 @@
+import 'dotenv/config';
+import * as ts from 'typescript';
+import * as rollup from 'rollup';
+import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
+import { getBabelInputPlugin } from '@rollup/plugin-babel';
+import { dirname, join, parse } from 'path';
+import { from, Observable, of } from 'rxjs';
+import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
+import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
+import * as autoprefixer from 'autoprefixer';
 import type { ExecutorContext } from '@nrwl/devkit';
 import { joinPathFragments, logger, names, readJsonFile } from '@nrwl/devkit';
-import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import {
   calculateProjectDependencies,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
-import * as autoprefixer from 'autoprefixer';
-import 'dotenv/config';
-import { dirname, join, parse } from 'path';
-import * as rollup from 'rollup';
-import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
-import { from, Observable, of } from 'rxjs';
-import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
-import * as ts from 'typescript';
 
-import { deleteOutputDir } from '../../utils/fs';
-import { analyze } from './lib/analyze-plugin';
+import { AssetGlobPattern, RollupExecutorOptions } from './schema';
+import { runRollup } from './lib/run-rollup';
 import {
   NormalizedRollupExecutorOptions,
   normalizeRollupExecutorOptions,
 } from './lib/normalize';
-import { runRollup } from './lib/run-rollup';
+import { analyze } from './lib/analyze-plugin';
+import { deleteOutputDir } from '../../utils/fs';
 import { swc } from './lib/swc-plugin';
-import { updatePackageJson } from './lib/update-package-json';
 import { validateTypes } from './lib/validate-types';
-import { AssetGlobPattern, RollupExecutorOptions } from './schema';
+import { updatePackageJson } from './lib/update-package-json';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
