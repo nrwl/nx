@@ -1,5 +1,5 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { SearchDepth, SearchDepthProps } from './search-depth';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { SearchDepth } from './search-depth';
 
 export default {
   component: SearchDepth,

@@ -1,9 +1,5 @@
 import { getProjectGraphService } from '../machines/get-services';
-import {
-  DocumentMagnifyingGlassIcon,
-  FlagIcon,
-  MapPinIcon,
-} from '@heroicons/react/24/solid';
+import { FlagIcon, MapPinIcon } from '@heroicons/react/24/solid';
 import Tag from '../ui-components/tag';
 
 export interface ProjectNodeToolTipProps {
@@ -17,31 +13,31 @@ export function ProjectNodeToolTip({
   id,
   tags,
 }: ProjectNodeToolTipProps) {
-  const depGraphService = getProjectGraphService();
+  const projectGraphService = getProjectGraphService();
 
   function onFocus() {
-    depGraphService.send({
+    projectGraphService.send({
       type: 'focusProject',
       projectName: id,
     });
   }
 
   function onExclude() {
-    depGraphService.send({
+    projectGraphService.send({
       type: 'deselectProject',
       projectName: id,
     });
   }
 
   function onStartTrace() {
-    depGraphService.send({
+    projectGraphService.send({
       type: 'setTracingStart',
       projectName: id,
     });
   }
 
   function onEndTrace() {
-    depGraphService.send({
+    projectGraphService.send({
       type: 'setTracingEnd',
       projectName: id,
     });
@@ -50,7 +46,7 @@ export function ProjectNodeToolTip({
   return (
     <div>
       <h4>
-        <Tag>{type}</Tag>
+        <Tag className="mr-3">{type}</Tag>
         {id}
       </h4>
       {tags.length > 0 ? (

@@ -13,7 +13,7 @@ import {
 } from 'nx/src/config/project-graph';
 import { edgeStyles, nodeStyles } from '../styles-graph';
 import { ProjectNode } from './project-node';
-import { ProjectEdge } from './edge';
+import { ProjectEdge } from './project-edge';
 import { ParentNode } from './parent-node';
 
 export class ProjectTraversalGraph {
@@ -269,7 +269,6 @@ export class ProjectTraversalGraph {
       headless: true,
       elements: [...elements],
       boxSelectionEnabled: false,
-      style: [...nodeStyles, ...edgeStyles],
     });
   }
 

@@ -1,5 +1,5 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { DebuggerPanel, DebuggerPanelProps } from './debugger-panel';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { DebuggerPanel } from './debugger-panel';
 
 export default {
   component: DebuggerPanel,

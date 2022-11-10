@@ -1,8 +1,8 @@
 import { assign } from '@xstate/immer';
 import { send } from 'xstate';
-import { DepGraphStateNodeConfig } from './interfaces';
+import { ProjectGraphStateNodeConfig } from './interfaces';
 
-export const focusedStateConfig: DepGraphStateNodeConfig = {
+export const focusedStateConfig: ProjectGraphStateNodeConfig = {
   entry: [
     assign((ctx, event) => {
       if (event.type !== 'focusProject') return;

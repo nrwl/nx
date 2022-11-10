@@ -1,7 +1,5 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { EdgeNodeTooltip, EdgeNodeTooltipProps } from './edge-tooltip';
-import ProjectNodeToolTip from './project-node-tooltip';
-import { selectValueByThemeStatic } from '../theme-resolver';
 import Tippy from '@tippyjs/react';
 
 export default {

@@ -1,9 +1,8 @@
 import { useSelector } from '@xstate/react';
-import { DepGraphState, TaskGraphState } from '../machines/interfaces';
-import { useDepGraphService } from './use-dep-graph';
-import { getTaskGraphService } from '../machines/get-services';
+import { getTaskGraphService } from '../../machines/get-services';
+import { TaskGraphState } from '../machines/interfaces';
 
-export type TaskGraphSelector<T> = (depGraphState: TaskGraphState) => T;
+export type TaskGraphSelector<T> = (taskGraphState: TaskGraphState) => T;
 
 export function useTaskGraphSelector<T>(selectorFunc: TaskGraphSelector<T>): T {
   const taskGraphMachine = getTaskGraphService();

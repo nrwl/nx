@@ -1,9 +1,11 @@
 import { createBrowserHistory } from 'history';
 import { InvokeCallback } from 'xstate';
-import { ProjectGraphEvents } from './interfaces';
+import { ProjectGraphMachineEvents } from '../feature-projects/machines/interfaces';
 
-function parseSearchParamsToEvents(searchParams: string): ProjectGraphEvents[] {
-  const events: ProjectGraphEvents[] = [];
+function parseSearchParamsToEvents(
+  searchParams: string
+): ProjectGraphMachineEvents[] {
+  const events: ProjectGraphMachineEvents[] = [];
   const params = new URLSearchParams(searchParams);
 
   params.forEach((value, key) => {
@@ -60,8 +62,8 @@ function parseSearchParamsToEvents(searchParams: string): ProjectGraphEvents[] {
 }
 
 export const routeListener: InvokeCallback<
-  ProjectGraphEvents,
-  ProjectGraphEvents
+  ProjectGraphMachineEvents,
+  ProjectGraphMachineEvents
 > = (callback) => {
   const history = createBrowserHistory();
 

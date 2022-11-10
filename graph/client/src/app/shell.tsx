@@ -6,12 +6,11 @@ import {
 import Tippy from '@tippyjs/react';
 import classNames from 'classnames';
 // nx-ignore-next-line
-import type { DepGraphClientResponse } from 'nx/src/command-line/dep-graph';
+import type { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { useEffect, useState } from 'react';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
 import DebuggerPanel from './ui-components/debugger-panel';
-import { useDepGraphSelector } from './hooks/use-dep-graph-selector';
+import { useProjectGraphSelector } from './feature-projects/hooks/use-project-graph-selector';
 import { useEnvironmentConfig } from './hooks/use-environment-config';
 import { useIntervalWhen } from './hooks/use-interval-when';
 import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';
@@ -19,25 +18,29 @@ import { getGraphService } from './machines/graph.service';
 import {
   lastPerfReportSelector,
   projectIsSelectedSelector,
-} from './machines/selectors';
+} from './feature-projects/machines/selectors';
 import { selectValueByThemeStatic } from './theme-resolver';
 import { Outlet, useNavigate } from 'react-router-dom';
 import ThemePanel from './feature-projects/panels/theme-panel';
 import Dropdown from './ui-components/dropdown';
 import { useCurrentPath } from './hooks/use-current-path';
-import ExperimentalFeature from './experimental-feature';
+import ExperimentalFeature from './ui-components/experimental-feature';
 import RankdirPanel from './feature-projects/panels/rankdir-panel';
 import { getAppService, getProjectGraphService } from './machines/get-services';
 import TooltipDisplay from './ui-tooltips/graph-tooltip-display';
+import { useTaskGraphSelector } from './feature-tasks/hooks/use-task-graph-selector';
 
 export function Shell(): JSX.Element {
   const appService = getAppService();
-  const depGraphService = getProjectGraphService();
+  const projectGraphService = getProjectGraphService();
 
-  const projectGraphService = getProjectGraphDataService();
+  const projectGraphDataService = getProjectGraphDataService();
   const environment = useEnvironmentConfig();
-  const lastPerfReport = useDepGraphSelector(lastPerfReportSelector);
-  const projectIsSelected = useDepGraphSelector(projectIsSelectedSelector);
+  const lastPerfReport = useProjectGraphSelector(lastPerfReportSelector);
+  const projectIsSelected = useProjectGraphSelector(projectIsSelectedSelector);
+  const taskIsSelected = useTaskGraphSelector(
+    (state) => state.context.selectedTaskId
+  );
   const environmentConfig = useEnvironmentConfig();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>(
@@ -67,8 +70,10 @@ export function Shell(): JSX.Element {
     );
 
     const fetchProjectGraph = async () => {
-      const projectGraph: DepGraphClientResponse =
-        await projectGraphService.getProjectGraph(projectInfo.projectGraphUrl);
+      const projectGraph: ProjectGraphClientResponse =
+        await projectGraphDataService.getProjectGraph(
+          projectInfo.projectGraphUrl
+        );
 
       const workspaceLayout = projectGraph?.layout;
 
@@ -82,13 +87,13 @@ export function Shell(): JSX.Element {
     };
 
     const fetchTaskGraphs = async () => {
-      const taskGraphs = await projectGraphService.getTaskGraph(
+      const { taskGraphs } = await projectGraphDataService.getTaskGraph(
         projectInfo.taskGraphUrl
       );
 
       appService.send({
         type: 'setTaskGraphs',
-        taskGraphs: taskGraphs.dependencies,
+        taskGraphs: taskGraphs,
       });
     };
 
@@ -97,7 +102,7 @@ export function Shell(): JSX.Element {
     if (currentRoute === '/tasks') {
       fetchTaskGraphs();
     }
-  }, [selectedProjectId, environment, appService, projectGraphService]);
+  }, [currentRoute, selectedProjectId]);
 
   useIntervalWhen(
     () => {
@@ -106,12 +111,12 @@ export function Shell(): JSX.Element {
       );
 
       const fetchProjectGraph = async () => {
-        const project: DepGraphClientResponse =
-          await projectGraphService.getProjectGraph(
+        const project: ProjectGraphClientResponse =
+          await projectGraphDataService.getProjectGraph(
             projectInfo.projectGraphUrl
           );
 
-        depGraphService.send({
+        projectGraphService.send({
           type: 'updateGraph',
           projects: project.projects,
           dependencies: project.dependencies,
@@ -169,7 +174,7 @@ export function Shell(): JSX.Element {
                     data-cy="project-select"
                     defaultValue={currentRoute}
                     onChange={(event) => {
-                      depGraphService.send('deselectAll');
+                      projectGraphService.send('deselectAll');
                       navigate(event.currentTarget.value);
                     }}
                   >
@@ -221,15 +226,26 @@ export function Shell(): JSX.Element {
           ></DebuggerPanel>
         ) : null}
 
-        {!projectIsSelected ? (
+        {currentRoute === '/projects' && !projectIsSelected ? (
           <div
-            id="no-projects-chosen"
-            className="flex text-slate-700 dark:text-slate-400"
+            data-cy="no-projects-selected"
+            className="flex h-full w-full items-center justify-center text-slate-700 dark:text-slate-400"
           >
             <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
             <h4>Please select projects in the sidebar.</h4>
           </div>
         ) : null}
+
+        {currentRoute === '/tasks' && !taskIsSelected ? (
+          <div
+            data-cy="no-tasks-selected"
+            className="flex h-full w-full items-center justify-center text-slate-700 dark:text-slate-400"
+          >
+            <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
+            <h4>Please select a task in the sidebar.</h4>
+          </div>
+        ) : null}
+
         <div id="graph-container">
           <div id="cytoscape-graph"></div>
           <TooltipDisplay></TooltipDisplay>

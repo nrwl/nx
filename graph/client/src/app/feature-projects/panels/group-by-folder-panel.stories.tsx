@@ -1,8 +1,5 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import {
-  DisplayOptionsPanelProps,
-  GroupByFolderPanel,
-} from './group-by-folder-panel';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { GroupByFolderPanel } from './group-by-folder-panel';
 
 export default {
   component: GroupByFolderPanel,

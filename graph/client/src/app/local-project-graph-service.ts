@@ -1,6 +1,6 @@
 // nx-ignore-next-line
 import type {
-  DepGraphClientResponse,
+  ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/dep-graph';
 import { ProjectGraphService } from './interfaces';
@@ -10,7 +10,7 @@ export class LocalProjectGraphService implements ProjectGraphService {
     return new Promise((resolve) => resolve('some-hash'));
   }
 
-  async getProjectGraph(url: string): Promise<DepGraphClientResponse> {
+  async getProjectGraph(url: string): Promise<ProjectGraphClientResponse> {
     return new Promise((resolve) => resolve(window.projectGraphResponse));
   }
 

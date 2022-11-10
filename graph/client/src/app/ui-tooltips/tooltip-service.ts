@@ -3,7 +3,7 @@ import { getGraphService } from '../machines/graph.service';
 import { VirtualElement } from '@popperjs/core';
 import { ProjectNodeToolTipProps } from './project-node-tooltip';
 import { EdgeNodeTooltipProps } from './edge-tooltip';
-import { GraphInteractionEvents, GraphService } from '@nrwl/graph/ui-graph';
+import { GraphService } from '@nrwl/graph/ui-graph';
 
 export class GraphTooltipService {
   private subscribers: Set<Function> = new Set();

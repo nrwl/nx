@@ -7,7 +7,8 @@ import { ReactElement } from 'react';
  * in the top level of the module for preloading to work, similar to React.lazy.
  */
 const NxGraphViz = dynamic(
-  () => import('@nrwl/graph/ui-graph').then((module) => module.NxGraphViz),
+  () =>
+    import('@nrwl/graph/ui-graph').then((module) => module.NxProjectGraphViz),
   {
     ssr: false,
     loading: () => (
