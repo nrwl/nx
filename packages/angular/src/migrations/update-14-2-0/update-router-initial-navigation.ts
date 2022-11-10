@@ -93,8 +93,12 @@ async function getProjectsWithAngularRouter(
   const projectGraph = await createProjectGraphAsync();
 
   return Object.entries(projectGraph.dependencies)
-    .filter(([, dep]) =>
-      dep.some(({ target }) => target === 'npm:@angular/router')
+    .filter(([node, dep]) =>
+      dep.some(
+        ({ target }) =>
+          target === 'npm:@angular/router' &&
+          !projectGraph.externalNodes?.[node]
+      )
     )
     .map(([projectName]) => readProjectConfiguration(tree, projectName));
 }
