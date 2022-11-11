@@ -118,7 +118,7 @@ export class DaemonClient {
     ) => void
   ): Promise<UnregisterCallback> {
     await this.sendToDaemonViaQueue({ type: 'PING' });
-    let messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH)).listen(
+    const messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH)).listen(
       (message) => {
         try {
           const parsedMessage = JSON.parse(message);

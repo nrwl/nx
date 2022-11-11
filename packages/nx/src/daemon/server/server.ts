@@ -268,7 +268,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       } else {
         try {
           const s = statSync(join(workspaceRoot, event.path));
-          if (!s.isDirectory()) {
+          if (s.isFile()) {
             filesToHash.push(event.path);
             changedFiles.push({
               path: event.path,
@@ -381,10 +381,12 @@ export async function stopServer(): Promise<void> {
 async function notifyFileWatcherSockets(
   changedFiles: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[]
 ) {
-  for (const { socket } of registeredFileWatcherSockets) {
-    await handleResult(socket, {
-      description: 'File watch changed',
-      response: JSON.stringify(changedFiles),
-    });
-  }
+  await Promise.all(
+    registeredFileWatcherSockets.map(({ socket, filter }) =>
+      handleResult(socket, {
+        description: 'File watch changed',
+        response: JSON.stringify(changedFiles),
+      })
+    )
+  );
 }
