@@ -414,14 +414,15 @@ function createContext(
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap
 ): ProjectGraphProcessorContext {
-  const projects: Record<string, ProjectConfiguration> = Object.keys(
-    projectsConfigurations.projects
-  ).reduce((map, projectName) => {
-    map[projectName] = {
-      ...projectsConfigurations.projects[projectName],
-    };
-    return map;
-  }, {});
+  const projects = Object.keys(projectsConfigurations.projects).reduce(
+    (map, projectName) => {
+      map[projectName] = {
+        ...projectsConfigurations.projects[projectName],
+      };
+      return map;
+    },
+    {} as Record<string, ProjectConfiguration>
+  );
   return {
     workspace: {
       ...projectsConfigurations,
