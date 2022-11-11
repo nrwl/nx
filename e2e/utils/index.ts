@@ -592,15 +592,18 @@ export function runCLI(
 ): string {
   try {
     const pm = getPackageManagerCommand();
-    let r = stripConsoleColors(
-      execSync(`${pm.runNx} ${command}`, {
-        cwd: opts.cwd || tmpProjPath(),
-        env: { CI: 'true', ...(opts.env || process.env) },
-        encoding: 'utf-8',
-        stdio: isVerbose() ? 'inherit' : 'pipe',
-        maxBuffer: 50 * 1024 * 1024,
-      })
-    );
+    const logs = execSync(`${pm.runNx} ${command}`, {
+      cwd: opts.cwd || tmpProjPath(),
+      env: { CI: 'true', ...(opts.env || process.env) },
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      maxBuffer: 50 * 1024 * 1024,
+    });
+    const r = stripConsoleColors(logs);
+
+    if (isVerbose()) {
+      console.log(logs);
+    }
 
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
     if (needsMaxWorkers.test(command)) {
