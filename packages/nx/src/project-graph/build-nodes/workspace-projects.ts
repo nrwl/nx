@@ -42,10 +42,7 @@ export function buildWorkspaceProjectNodes(
       }
     }
 
-    p.targets = mergeNxDefaultTargetsWithNxTargets(
-      p.targets,
-      nxJson.targetDefaults
-    );
+    p.targets = normalizeProjectTargets(p.targets, nxJson.targetDefaults);
 
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,
@@ -91,7 +88,10 @@ export function buildWorkspaceProjectNodes(
   });
 }
 
-function mergeNxDefaultTargetsWithNxTargets(
+/**
+ * Apply target defaults and normalization
+ */
+function normalizeProjectTargets(
   targets: Record<string, TargetConfiguration>,
   defaultTargets: NxJsonConfiguration['targetDefaults']
 ) {
@@ -108,6 +108,18 @@ function mergeNxDefaultTargetsWithNxTargets(
     }
     if (defaultTargets[targetName].outputs && !target.outputs) {
       target.outputs = defaultTargets[targetName].outputs;
+    }
+  }
+  for (const target in targets) {
+    const config = targets[target];
+    if (config.command && !config.executor) {
+      targets[target] = {
+        ...targets[target],
+        executor: 'nx:run-commands',
+        options: {
+          command: config.command,
+        },
+      };
     }
   }
   return targets;
