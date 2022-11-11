@@ -54,6 +54,8 @@ export type HandlerResult = {
 
 let numberOfOpenConnections = 0;
 
+let registeredFileWatcherSockets: { socket: Socket; filter: any }[] = [];
+
 const server = createServer(async (socket) => {
   numberOfOpenConnections += 1;
   serverLogger.log(
@@ -84,6 +86,10 @@ const server = createServer(async (socket) => {
     numberOfOpenConnections -= 1;
     serverLogger.log(
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
+    );
+
+    registeredFileWatcherSockets = registeredFileWatcherSockets.filter(
+      (watcher) => watcher.socket !== socket
     );
   });
 });
@@ -136,6 +142,8 @@ async function handleMessage(socket, data: string) {
       socket,
       await handleRequestShutdown(server, numberOfOpenConnections)
     );
+  } else if (payload.type === 'REGISTER_FILE_WATCHER') {
+    registeredFileWatcherSockets.push({ socket, filter: payload.config });
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -249,20 +257,32 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 
     const filesToHash = [];
     const deletedFiles = [];
+    const changedFiles = [];
     for (const event of changeEvents) {
       if (event.type === 'delete') {
         deletedFiles.push(event.path);
+        changedFiles.push({
+          path: event.path,
+          type: 'DELETE',
+        });
       } else {
         try {
           const s = statSync(join(workspaceRoot, event.path));
-          if (!s.isDirectory()) {
+          if (s.isFile()) {
             filesToHash.push(event.path);
+            changedFiles.push({
+              path: event.path,
+              type: event.type.toUpperCase(),
+            });
           }
         } catch (e) {
           // this can happen when the update file was deleted right after
         }
       }
     }
+
+    await notifyFileWatcherSockets(changedFiles);
+
     addUpdatedAndDeletedFiles(filesToHash, deletedFiles);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
@@ -356,4 +376,20 @@ export async function stopServer(): Promise<void> {
       return resolve();
     });
   });
+}
+
+async function notifyFileWatcherSockets(
+  changedFiles: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[]
+) {
+  await Promise.all(
+    registeredFileWatcherSockets.map(({ socket, filter }) =>
+      handleResult(socket, {
+        description: 'File watch changed',
+        response: JSON.stringify({
+          changedProjects: [],
+          changedFiles,
+        }),
+      })
+    )
+  );
 }
