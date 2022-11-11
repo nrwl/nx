@@ -5,6 +5,11 @@
     "url": "https://github.com/nxkit/nxkit"
   },
   {
+    "name": "@nxkit/style-dictionary",
+    "description": "Nx plugin to generate and build Style Dictionary projects inside your Nx workspace",
+    "url": "https://github.com/nxkit/nxkit"
+  },
+  {
     "name": "nx-plugins",
     "description": "Nx plugin integrations with ESBuild / Vite / Snowpack / Prisma, with derived ESBuild / Snowpack / ... plugins.",
     "url": "https://nx-plugins.netlify.app/"
