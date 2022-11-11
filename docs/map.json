@@ -959,6 +959,12 @@
             },
 
             {
+              "name": "Troubleshoot Cache Misses",
+              "id": "troubleshoot-cache-misses",
+              "tags": ["cache-task-results"],
+              "file": "shared/recipes/troubleshoot-cache-misses"
+            },
+            {
               "name": "Ban Dependencies with Certain Tags",
               "id": "ban-dependencies-with-tags",
               "tags": ["enforce-project-boundaries"],
