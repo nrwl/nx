@@ -21,6 +21,20 @@ describe('create-nx-workspace', () => {
 
   afterEach(() => cleanupProject());
 
+  it('should create a workspace with a single react app', () => {
+    const wsName = uniq('react');
+    const appName = uniq('app');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-experimental',
+      appName,
+      style: 'css',
+      packageManager,
+    });
+
+    checkFilesExist('package.json');
+  });
+
   it('should be able to create an empty workspace built for apps', () => {
     const wsName = uniq('apps');
     runCreateWorkspace(wsName, {

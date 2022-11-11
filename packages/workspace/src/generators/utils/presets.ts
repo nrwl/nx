@@ -8,6 +8,7 @@ export enum Preset {
   Angular = 'angular',
   AngularWithNest = 'angular-nest',
   React = 'react',
+  ReactExperimental = 'react-experimental',
   ReactWithExpress = 'react-express',
   ReactNative = 'react-native',
   Expo = 'expo',

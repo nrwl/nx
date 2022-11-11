@@ -19,10 +19,14 @@ export function normalizeOptions(
 ): NormalizedSchema {
   const appDirectory = normalizeDirectory(options);
   const appProjectName = normalizeProjectName(options);
-  const e2eProjectName = `${appProjectName}-e2e`;
+  const e2eProjectName = options.rootProject
+    ? 'e2e'
+    : `${names(options.name).fileName}-e2e`;
 
   const { appsDir } = getWorkspaceLayout(host);
-  const appProjectRoot = normalizePath(`${appsDir}/${appDirectory}`);
+  const appProjectRoot = options.rootProject
+    ? '.'
+    : normalizePath(`${appsDir}/${appDirectory}`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

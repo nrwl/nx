@@ -82,7 +82,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint"],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     },
     "routing": {
@@ -169,6 +169,12 @@
       "description": "Do not add dependencies to `package.json`.",
       "type": "boolean",
       "default": false
+    },
+    "rootProject": {
+      "description": "Create a application at the root of the workspace",
+      "type": "boolean",
+      "default": false,
+      "hidden": true
     }
   },
   "required": []

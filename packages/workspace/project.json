@@ -38,6 +38,11 @@
           },
           {
             "input": "packages/workspace",
+            "glob": "**/files-root-app/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
             "glob": "**/files-npm/**/.gitkeep",
             "output": "/"
           },

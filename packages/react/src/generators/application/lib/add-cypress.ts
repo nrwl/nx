@@ -9,7 +9,7 @@ export async function addCypress(host: Tree, options: NormalizedSchema) {
 
   return await cypressProjectGenerator(host, {
     ...options,
-    name: `${options.name}-e2e`,
+    name: options.e2eProjectName,
     directory: options.directory,
     project: options.projectName,
   });
