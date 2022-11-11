@@ -51,7 +51,8 @@
         "outputCapture": "direct-nodejs",
         "title": "Vite Dev Server",
         "cli": "nx",
-        "description": "Dev server for Vite.",
+        "title": "Test executor",
+        "description": "",
         "type": "object",
         "presets": [{ "name": "Default minimum setup", "keys": [] }],
         "properties": {
@@ -154,106 +155,11 @@
           },
           "configFile": {
             "type": "string",
-            "description": "The name of the Vite.js configuration file.",
-            "x-completion-type": "file"
+            "enum": ["test", "benchmark", "typecheck"],
+            "default": "test"
           },
-          "assets": {
-            "type": "array",
-            "description": "List of static application assets.",
-            "default": [],
-            "items": {
-              "oneOf": [
-                {
-                  "type": "object",
-                  "properties": {
-                    "glob": {
-                      "type": "string",
-                      "description": "The pattern to match."
-                    },
-                    "input": {
-                      "type": "string",
-                      "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
-                    },
-                    "ignore": {
-                      "description": "An array of globs to ignore.",
-                      "type": "array",
-                      "items": { "type": "string" }
-                    },
-                    "output": {
-                      "type": "string",
-                      "description": "Absolute path within the output."
-                    }
-                  },
-                  "additionalProperties": false,
-                  "required": ["glob", "input", "output"]
-                },
-                { "type": "string" }
-              ]
-            }
-          },
-          "fileReplacements": {
-            "description": "Replace files with other files in the build.",
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "replace": {
-                  "type": "string",
-                  "description": "The file to be replaced.",
-                  "x-completion-type": "file"
-                },
-                "with": {
-                  "type": "string",
-                  "description": "The file to replace with.",
-                  "x-completion-type": "file"
-                }
-              },
-              "additionalProperties": false,
-              "required": ["replace", "with"]
-            },
-            "default": []
-          },
-          "sourcemap": {
-            "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
-            "default": true,
-            "oneOf": [{ "type": "boolean" }, { "type": "string" }]
-          },
-          "hmr": {
-            "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",
-            "default": false,
-            "type": "boolean"
-          }
-        },
-        "definitions": {
-          "assetPattern": {
-            "oneOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "glob": {
-                    "type": "string",
-                    "description": "The pattern to match."
-                  },
-                  "input": {
-                    "type": "string",
-                    "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
-                  },
-                  "ignore": {
-                    "description": "An array of globs to ignore.",
-                    "type": "array",
-                    "items": { "type": "string" }
-                  },
-                  "output": {
-                    "type": "string",
-                    "description": "Absolute path within the output."
-                  }
-                },
-                "additionalProperties": false,
-                "required": ["glob", "input", "output"]
-              },
-              { "type": "string" }
-            ]
-          }
+          "watch": { "type": "boolean", "default": false },
+          "reporters": { "type": "array", "items": { "type": "string" } }
         },
         "required": [],
         "examplesFile": "`project.json`:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"build\": {\n            \"executor\": \"@nrwl/vite:build\",\n            //...\n            //...\n            \"options\": {\n                \"outputPath\": \"dist/apps/my-app\"\n            },\n                //...\n            }\n        },\n    }\n}\n```\n\n```bash\nnx serve my-app\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Set a custom path for vite.config.ts\" %}\n\nNx will automatically look in the root of your application for a `vite.config.ts` (or a `vite.config.js`) file. If you want to use a different path, you can set it in your `project.json` file, in the `build` target options:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"build\": {\n            \"executor\": \"@nrwl/vite:build\",\n            //...\n            \"options\": {\n                \"outputPath\": \"dist/apps/my-app\",\n                \"configFile\": \"apps/my-app/vite.config.other-path.ts\"\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\nor even\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"build\": {\n            \"executor\": \"@nrwl/vite:build\",\n            //...\n            \"options\": {\n                \"outputPath\": \"dist/apps/my-app\",\n                \"configFile\": \"vite.config.base.ts\"\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Adding assets\" %}\n\nAssets are non-JS and non-TS files, such as images, CSS, etc. You can add them to the project configuration as follows.\n\n```jsonc\n\"serve\": {\n \"executor\": \"@nrwl/vite:build\",\n  \"options\": {\n    //...\n    \"assets\": [\n      { \"input\": \"apps/my-app\", \"glob\": \"README.md\", \"output\": \"/\" },\n      { \"input\": \"apps/my-app\", \"glob\": \"logo.png\", \"output\": \"/\" },\n      { \"input\": \"apps/my-app\", \"glob\": \"docs/**/*.md\", \"output\": \"/docs\" },\n      //...\n    ]\n }\n}\n```\n\nRunning `nx build my-app` outputs something like this.\n\n```text\ndist/apps/my-app/\n├── README.md\n├── docs\n│   ├── CONTRIBUTING.md\n│   └── TESTING.md\n├── index.js\n├── logo.png\n└── package.json\n```\n\n{% /tab %}\n\n{% /tabs %}\n"

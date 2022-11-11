@@ -2,8 +2,8 @@
   "$schema": "http://json-schema.org/schema",
   "version": 2,
   "cli": "nx",
-  "title": "Test executor",
-  "description": "",
+  "title": "Vitest executor",
+  "description": "Test using Vitest.",
   "type": "object",
   "properties": {
     "vitestConfig": {
@@ -24,17 +24,20 @@
     "vitestMode": {
       "type": "string",
       "enum": ["test", "benchmark", "typecheck"],
-      "default": "test"
+      "default": "test",
+      "description": "The mode that vitest will run on"
     },
     "watch": {
       "type": "boolean",
-      "default": false
+      "default": false,
+      "description": "Enable watch mode"
     },
     "reporters": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "An array of reporters to pass to vitest"
     }
   },
   "required": ["vitestConfig"]
