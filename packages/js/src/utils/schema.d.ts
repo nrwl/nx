@@ -1,5 +1,4 @@
-// nx-ignore-next-line
-const { Linter } = require('@nrwl/linter');
+import type { Linter } from '@nrwl/linter';
 import type {
   AssetGlob,
   FileInputOutput,
