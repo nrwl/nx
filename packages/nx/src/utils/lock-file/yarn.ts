@@ -5,7 +5,12 @@ import {
   PackageDependency,
   PackageVersions,
 } from './lock-file-type';
-import { sortObject, hashString, isRootVersion } from './utils';
+import {
+  sortObject,
+  hashString,
+  isRootVersion,
+  TransitiveLookupFunctionInput,
+} from './utils';
 
 type LockFileDependencies = Record<
   string,
@@ -154,12 +159,11 @@ function unmapPackages(
 /**
  * Returns matching version of the dependency
  */
-export function transitiveDependencyYarnLookup(
-  packageName: string,
-  parentPackages: string[],
-  versions: PackageVersions,
-  version: string
-): PackageDependency {
+export function transitiveDependencyYarnLookup({
+  packageName,
+  versions,
+  version,
+}: TransitiveLookupFunctionInput): PackageDependency {
   return Object.values(versions).find((v) =>
     v.packageMeta.some(
       (p) =>

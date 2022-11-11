@@ -4,7 +4,12 @@ import {
   PackageVersions,
 } from './lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
-import { sortObject, hashString, isRootVersion } from './utils';
+import {
+  sortObject,
+  hashString,
+  isRootVersion,
+  TransitiveLookupFunctionInput,
+} from './utils';
 import { satisfies } from 'semver';
 
 type PackageMeta = {
@@ -276,12 +281,10 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
 /**
  * Returns matching version of the dependency
  */
-export function transitiveDependencyPnpmLookup(
-  packageName: string,
-  parentPackages: string[],
-  versions: PackageVersions,
-  version: string
-): PackageDependency {
+export function transitiveDependencyPnpmLookup({
+  versions,
+  version,
+}: TransitiveLookupFunctionInput): PackageDependency {
   // pnpm's dependencies always point to the exact version so this block is only for insurrance
   return Object.values(versions).find((v) => satisfies(v.version, version));
 }

@@ -1,10 +1,6 @@
 import { satisfies } from 'semver';
-import {
-  LockFileData,
-  PackageDependency,
-  PackageVersions,
-} from './lock-file-type';
-import { sortObject, hashString } from './utils';
+import { LockFileData, PackageDependency } from './lock-file-type';
+import { sortObject, hashString, TransitiveLookupFunctionInput } from './utils';
 
 type PackageMeta = {
   path: string;
@@ -377,12 +373,12 @@ function sortDependencies(
 /**
  * Returns matching version of the dependency
  */
-export function transitiveDependencyNpmLookup(
-  packageName: string,
-  parentPackages: string[],
-  versions: PackageVersions,
-  version: string
-): PackageDependency {
+export function transitiveDependencyNpmLookup({
+  packageName,
+  parentPackages,
+  versions,
+  version,
+}: TransitiveLookupFunctionInput): PackageDependency {
   const packageDependencies = Object.values(versions);
 
   if (packageName === 'fsevents') {
@@ -526,15 +522,15 @@ function pruneTransitiveDependencies(
     ...value.dependencies,
     ...value.peerDependencies,
     ...value.optionalDependencies,
-  }).forEach(([packageName, versionRange]: [string, string]) => {
-    if (dependencies[packageName]) {
-      // TODO: if A -> B -> C => path can also be node_modules/A/node_modules/C or node_modules/C
-      const dependency = transitiveDependencyNpmLookup(
+  }).forEach(([packageName, version]: [string, string]) => {
+    const versions = dependencies[packageName];
+    if (versions) {
+      const dependency = transitiveDependencyNpmLookup({
         packageName,
         parentPackages,
-        dependencies[packageName],
-        versionRange
-      );
+        versions,
+        version,
+      });
       if (dependency) {
         if (!prunedDeps[packageName]) {
           prunedDeps[packageName] = {};
