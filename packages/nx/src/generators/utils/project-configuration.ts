@@ -12,6 +12,7 @@ import {
   reformattedWorkspaceJsonOrNull,
   toNewFormat,
 } from '../../config/workspaces';
+import { PackageJson } from '../../utils/package-json';
 import { joinPathFragments, normalizePath } from '../../utils/path';
 
 import type { Tree } from '../tree';
@@ -435,24 +436,34 @@ function inlineProjectConfigurationsWithTree(
  * cannot find them.
  *
  * We exclude the root `package.json` from this list unless
- * NX_INCLUDE_ROOT_SCRIPTS is set, since it wouldn't be
  * considered a project during workspace generation
  */
 function findCreatedProjects(tree: Tree) {
-  const files = tree
-    .listChanges()
-    .filter((f) => {
-      const fileName = basename(f.path);
-      return (
-        f.type === 'CREATE' &&
-        (fileName === 'project.json' || fileName === 'package.json') &&
-        // TODO(@AgentEnder): Update after root scripts logic is nicer
-        (process.env.NX_INCLUDE_ROOT_SCRIPTS === 'true' ||
-          f.path !== 'package.json')
-      );
-    })
-    .map((x) => x.path);
-  return deduplicateProjectFiles(files);
+  const createdProjectFiles = [];
+
+  for (const change of tree.listChanges()) {
+    if (change.type === 'CREATE') {
+      const fileName = basename(change.path);
+      // all created project json files are created projects
+      if (fileName === 'project.json') {
+        createdProjectFiles.push(change.path);
+      } else if (fileName === 'package.json') {
+        // created package.json files are projects by default *unless* they are at the root
+        const includedByDefault = change.path === 'package.json' ? false : true;
+        // If the file should be included by default
+        if (includedByDefault) {
+          createdProjectFiles.push(change.path);
+        } else {
+          const contents: PackageJson = JSON.parse(change.content.toString());
+          // if the file should be included by the Nx property
+          if (contents.nx) {
+            createdProjectFiles.push(change.path);
+          }
+        }
+      }
+    }
+  }
+  return deduplicateProjectFiles(createdProjectFiles);
 }
 
 /**
