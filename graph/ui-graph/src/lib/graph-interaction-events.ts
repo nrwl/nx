@@ -1,6 +1,6 @@
 import { VirtualElement } from '@popperjs/core';
 import { NodeDataDefinition } from './util-cytoscape/project-node';
-import { EdgeDataDefinition } from './util-cytoscape/edge';
+import { EdgeDataDefinition } from './util-cytoscape/project-edge';
 
 interface NodeClickEvent {
   type: 'NodeClick';

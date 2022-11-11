@@ -1,6 +1,5 @@
 import { memo } from 'react';
-import { GraphListItem } from '../interfaces';
-import { GraphPerfReport } from '../machines/interfaces';
+import { GraphListItem, GraphPerfReport } from '../interfaces';
 import Dropdown from './dropdown';
 
 export interface DebuggerPanelProps {

@@ -25,7 +25,7 @@ import { createTaskGraph } from 'nx/src/tasks-runner/create-task-graph';
 import { TargetDefaults, TargetDependencies } from 'nx/src/config/nx-json';
 import { TaskGraph } from 'nx/src/config/task-graph';
 
-export interface DepGraphClientResponse {
+export interface ProjectGraphClientResponse {
   hash: string;
   projects: ProjectGraphProjectNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
@@ -36,12 +36,8 @@ export interface DepGraphClientResponse {
   exclude: string[];
 }
 
-export type TaskGraphDependencies = Record<
-  string,
-  Record<string, Record<string, TaskGraph>>
->;
 export interface TaskGraphClientResponse {
-  dependencies: TaskGraphDependencies;
+  taskGraphs: Record<string, TaskGraph>;
 }
 
 // maps file extention to MIME types
@@ -66,7 +62,7 @@ function buildEnvironmentJs(
   exclude: string[],
   watchMode: boolean,
   localMode: 'build' | 'serve',
-  depGraphClientResponse?: DepGraphClientResponse,
+  depGraphClientResponse?: ProjectGraphClientResponse,
   taskGraphClientResponse?: TaskGraphClientResponse
 ) {
   let environmentJs = `window.exclude = ${JSON.stringify(exclude)};
@@ -416,7 +412,7 @@ async function startServer(
   }
 }
 
-let currentDepGraphClientResponse: DepGraphClientResponse = {
+let currentDepGraphClientResponse: ProjectGraphClientResponse = {
   hash: null,
   projects: [],
   dependencies: {},
@@ -495,7 +491,7 @@ function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
 
 async function createDepGraphClientResponse(
   affected: string[] = []
-): Promise<DepGraphClientResponse> {
+): Promise<ProjectGraphClientResponse> {
   performance.mark('project graph watch calculation:start');
   await defaultFileHasher.init();
 
@@ -558,7 +554,7 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
 
   performance.mark('task graph generation:start');
 
-  const tasks = getAllTaskGraphsForWorkspace(graph);
+  const taskGraphs = getAllTaskGraphsForWorkspace(graph);
 
   performance.mark('task graph generation:end');
 
@@ -569,53 +565,51 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
   );
 
   return {
-    dependencies: tasks,
+    taskGraphs,
   };
 }
 
 function getAllTaskGraphsForWorkspace(
   projectGraph: ProjectGraph
-): TaskGraphDependencies {
+): Record<string, TaskGraph> {
   const nxJson = readNxJson();
 
   const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
     nxJson.targetDefaults
   );
 
-  const taskGraphs: TaskGraphDependencies = {};
+  const taskGraphs: Record<string, TaskGraph> = {};
 
   for (const projectName in projectGraph.nodes) {
     const project = projectGraph.nodes[projectName];
     const targets = Object.keys(project.data.targets);
 
-    taskGraphs[projectName] = {};
-
     targets.forEach((target) => {
-      taskGraphs[projectName][target] = {};
+      taskGraphs[createTaskId(projectName, target)] = createTaskGraph(
+        projectGraph,
+        defaultDependencyConfigs,
+        [projectName],
+        [target],
+        undefined,
+        {}
+      );
 
       const configurations = Object.keys(
         project.data.targets[target]?.configurations || {}
       );
+
       if (configurations.length > 0) {
         configurations.forEach((configuration) => {
-          taskGraphs[projectName][target][configuration] = createTaskGraph(
-            projectGraph,
-            defaultDependencyConfigs,
-            [projectName],
-            [target],
-            configuration,
-            {}
-          );
+          taskGraphs[createTaskId(projectName, target, configuration)] =
+            createTaskGraph(
+              projectGraph,
+              defaultDependencyConfigs,
+              [projectName],
+              [target],
+              configuration,
+              {}
+            );
         });
-      } else {
-        taskGraphs[projectName][target]['no-configurations'] = createTaskGraph(
-          projectGraph,
-          defaultDependencyConfigs,
-          [projectName],
-          [target],
-          undefined,
-          {}
-        );
       }
     });
   }
@@ -632,4 +626,16 @@ function mapTargetDefaultsToDependencies(
   });
 
   return res;
+}
+
+function createTaskId(
+  projectId: string,
+  targetId: string,
+  configurationId?: string
+) {
+  if (configurationId) {
+    return `${projectId}:${targetId}:${configurationId}`;
+  } else {
+    return `${projectId}:${targetId}`;
+  }
 }

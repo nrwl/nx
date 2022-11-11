@@ -5,13 +5,13 @@ import type {
 } from '@nrwl/devkit';
 // nx-ignore-next-line
 import type {
-  DepGraphClientResponse,
+  ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/dep-graph';
 import { ProjectGraphService } from '../app/interfaces';
 
 export class MockProjectGraphService implements ProjectGraphService {
-  private projectGraphsResponse: DepGraphClientResponse = {
+  private projectGraphsResponse: ProjectGraphClientResponse = {
     hash: '79054025255fb1a26e4bc422aef54eb4',
     layout: {
       appsDir: 'apps',
@@ -59,7 +59,7 @@ export class MockProjectGraphService implements ProjectGraphService {
     groupByFolder: false,
   };
 
-  private taskGraphsResponse: TaskGraphClientResponse = { dependencies: {} };
+  private taskGraphsResponse: TaskGraphClientResponse = { taskGraphs: {} };
 
   constructor(updateFrequency: number = 5000) {
     setInterval(() => this.updateResponse(), updateFrequency);
@@ -69,7 +69,7 @@ export class MockProjectGraphService implements ProjectGraphService {
     return new Promise((resolve) => resolve(this.projectGraphsResponse.hash));
   }
 
-  getProjectGraph(url: string): Promise<DepGraphClientResponse> {
+  getProjectGraph(url: string): Promise<ProjectGraphClientResponse> {
     return new Promise((resolve) => resolve(this.projectGraphsResponse));
   }
 

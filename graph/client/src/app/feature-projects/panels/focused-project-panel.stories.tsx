@@ -1,8 +1,5 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import {
-  FocusedProjectPanel,
-  FocusedProjectPanelProps,
-} from './focused-project-panel';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { FocusedProjectPanel } from './focused-project-panel';
 
 export default {
   component: FocusedProjectPanel,

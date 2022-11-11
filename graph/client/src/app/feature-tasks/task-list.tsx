@@ -58,11 +58,7 @@ function ProjectListItem({
   selectedTaskId,
 }: {
   project: SidebarProjectWithTargets;
-  selectTask: (
-    projectName: string,
-    targetName: string,
-    configurationName: string
-  ) => void;
+  selectTask: (taskId: string) => void;
   selectedTaskId: string;
 }) {
   return (
@@ -71,24 +67,40 @@ function ProjectListItem({
       <br />
       {project.targets.map((target) => (
         <>
-          <strong>{target.targetName}</strong>
-          <br />
+          <div className="flex items-center">
+            <button
+              data-cy={`focus-button-${project.projectGraphNode.name}:${target.targetName}`}
+              type="button"
+              className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
+              title="Focus on this library"
+              onClick={() =>
+                selectTask(
+                  `${project.projectGraphNode.name}:${target.targetName}`
+                )
+              }
+            >
+              <DocumentMagnifyingGlassIcon className="h-5 w-5" />
+            </button>
+
+            <label
+              className="ml-2 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
+              // data-project={configuration.name}
+              // title={configuration.name}
+              // data-active={configuration.isSelected.toString()}
+            >
+              {target.targetName}{' '}
+            </label>
+          </div>
           {target.configurations.map((configuration) => (
             <div className="flex items-center">
-              {selectedTaskId ===
-              `${project.projectGraphNode.name}:${target.targetName}:${configuration.name}` ? (
-                <span>selected</span>
-              ) : null}
               <button
-                data-cy={`focus-button-${configuration.name}`}
+                data-cy={`focus-button-${project.projectGraphNode.name}:${target.targetName}:${configuration.name}`}
                 type="button"
                 className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
                 title="Focus on this library"
                 onClick={() =>
                   selectTask(
-                    project.projectGraphNode.name,
-                    target.targetName,
-                    configuration.name
+                    `${project.projectGraphNode.name}:${target.targetName}:${configuration.name}`
                   )
                 }
               >
@@ -96,7 +108,7 @@ function ProjectListItem({
               </button>
 
               <label
-                className="ml-2 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
+                className="ml-4 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
                 data-project={configuration.name}
                 title={configuration.name}
                 data-active={configuration.isSelected.toString()}
@@ -121,11 +133,7 @@ function SubProjectList({
 }: {
   headerText: string;
   projects: SidebarProjectWithTargets[];
-  selectTask: (
-    projectName: string,
-    targetName: string,
-    configurationName: string
-  ) => void;
+  selectTask: (taskId: string) => void;
   selectedTaskId: string;
 }) {
   let sortedProjects = [...projects];
@@ -192,11 +200,7 @@ export interface TaskListProps {
   projects: ProjectGraphNode[];
   workspaceLayout: WorkspaceLayout;
   selectedTask: string;
-  selectTask: (
-    projectName: string,
-    targetName: string,
-    configurationName: string
-  ) => void;
+  selectTask: (taskId: string) => void;
 }
 
 export function TaskList({

@@ -1,4 +1,5 @@
-export const getSelectProjectsMessage = () => cy.get('#no-projects-chosen');
+export const getSelectProjectsMessage = () =>
+  cy.get('[data-cy=no-projects-selected]');
 export const getGraph = () => cy.get('#graph-container');
 export const getSelectAllButton = () => cy.get('[data-cy=selectAllButton]');
 export const getDeselectAllButton = () => cy.get('[data-cy=deselectAllButton]');

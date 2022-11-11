@@ -1,11 +1,7 @@
 import { assign } from '@xstate/immer';
 import { createBrowserHistory } from 'history';
-import { createMachine, Machine } from 'xstate';
-import {
-  ProjectGraphContext,
-  ProjectGraphEvents,
-  RouteEvents,
-} from './interfaces';
+import { createMachine } from 'xstate';
+import { RouteEvents } from './interfaces';
 
 type ParamKeys =
   | 'focus'

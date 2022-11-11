@@ -1,7 +1,7 @@
 import { assign } from '@xstate/immer';
-import { DepGraphStateNodeConfig } from './interfaces';
+import { ProjectGraphStateNodeConfig } from './interfaces';
 
-export const tracingStateConfig: DepGraphStateNodeConfig = {
+export const tracingStateConfig: ProjectGraphStateNodeConfig = {
   entry: [
     assign((ctx, event) => {
       if (event.type === 'setTracingStart') {

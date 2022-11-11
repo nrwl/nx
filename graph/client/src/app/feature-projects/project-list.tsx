@@ -6,17 +6,17 @@ import {
 } from '@heroicons/react/24/outline';
 // nx-ignore-next-line
 import type { ProjectGraphNode } from '@nrwl/devkit';
-import { useDepGraphService } from '../hooks/use-dep-graph';
-import { useDepGraphSelector } from '../hooks/use-dep-graph-selector';
+import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
   allProjectsSelector,
   getTracingInfo,
   selectedProjectNamesSelector,
   workspaceLayoutSelector,
-} from '../machines/selectors';
+} from './machines/selectors';
 import { parseParentDirectoriesFromFilePath } from '../util';
-import { TracingAlgorithmType } from '../machines/interfaces';
-import ExperimentalFeature from '../experimental-feature';
+import ExperimentalFeature from '../ui-components/experimental-feature';
+import { TracingAlgorithmType } from './machines/interfaces';
+import { getProjectGraphService } from '../machines/get-services';
 
 function getProjectsByType(type: string, projects: ProjectGraphNode[]) {
   return projects
@@ -75,26 +75,26 @@ function ProjectListItem({
   project: SidebarProject;
   tracingInfo: TracingInfo;
 }) {
-  const depGraphService = useDepGraphService();
+  const projectGraphService = getProjectGraphService();
 
   function startTrace(projectName: string) {
-    depGraphService.send({ type: 'setTracingStart', projectName });
+    projectGraphService.send({ type: 'setTracingStart', projectName });
   }
 
   function endTrace(projectName: string) {
-    depGraphService.send({ type: 'setTracingEnd', projectName });
+    projectGraphService.send({ type: 'setTracingEnd', projectName });
   }
 
   function toggleProject(projectName: string, currentlySelected: boolean) {
     if (currentlySelected) {
-      depGraphService.send({ type: 'deselectProject', projectName });
+      projectGraphService.send({ type: 'deselectProject', projectName });
     } else {
-      depGraphService.send({ type: 'selectProject', projectName });
+      projectGraphService.send({ type: 'selectProject', projectName });
     }
   }
 
   function focusProject(projectName: string) {
-    depGraphService.send({ type: 'focusProject', projectName });
+    projectGraphService.send({ type: 'focusProject', projectName });
   }
 
   return (
@@ -178,7 +178,7 @@ function SubProjectList({
   projects: SidebarProject[];
   tracingInfo: TracingInfo;
 }) {
-  const depGraphService = useDepGraphService();
+  const projectGraphService = getProjectGraphService();
 
   let sortedProjects = [...projects];
   sortedProjects.sort((a, b) => {
@@ -190,9 +190,9 @@ function SubProjectList({
       (project) => project.projectGraphNode.name
     );
     if (currentlySelected) {
-      depGraphService.send({ type: 'deselectProjects', projectNames });
+      projectGraphService.send({ type: 'deselectProjects', projectNames });
     } else {
-      depGraphService.send({ type: 'selectProjects', projectNames });
+      projectGraphService.send({ type: 'selectProjects', projectNames });
     }
   }
 
@@ -236,11 +236,13 @@ function SubProjectList({
 }
 
 export function ProjectList() {
-  const tracingInfo = useDepGraphSelector(getTracingInfo);
+  const tracingInfo = useProjectGraphSelector(getTracingInfo);
 
-  const projects = useDepGraphSelector(allProjectsSelector);
-  const workspaceLayout = useDepGraphSelector(workspaceLayoutSelector);
-  const selectedProjects = useDepGraphSelector(selectedProjectNamesSelector);
+  const projects = useProjectGraphSelector(allProjectsSelector);
+  const workspaceLayout = useProjectGraphSelector(workspaceLayoutSelector);
+  const selectedProjects = useProjectGraphSelector(
+    selectedProjectNamesSelector
+  );
 
   const appProjects = getProjectsByType('app', projects);
   const libProjects = getProjectsByType('lib', projects);

@@ -16,7 +16,7 @@ export function EdgeNodeTooltip({
   return (
     <div>
       <h4 className={type !== 'implicit' ? 'mb-3' : ''}>
-        <Tag>{type ?? 'unknown'}</Tag>
+        <Tag className="mr-3">{type ?? 'unknown'}</Tag>
         {source} &rarr; {target}
       </h4>
       {type !== 'implicit' ? (

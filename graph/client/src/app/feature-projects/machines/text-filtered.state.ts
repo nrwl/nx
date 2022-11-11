@@ -1,8 +1,8 @@
 import { assign } from '@xstate/immer';
 import { send } from 'xstate';
-import { DepGraphStateNodeConfig } from './interfaces';
+import { ProjectGraphStateNodeConfig } from './interfaces';
 
-export const textFilteredStateConfig: DepGraphStateNodeConfig = {
+export const textFilteredStateConfig: ProjectGraphStateNodeConfig = {
   entry: [
     assign((ctx, event) => {
       if (event.type !== 'filterByText') return;

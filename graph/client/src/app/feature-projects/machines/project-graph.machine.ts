@@ -1,17 +1,13 @@
 import { assign } from '@xstate/immer';
-import { createMachine, Machine, send, spawn } from 'xstate';
+import { createMachine, send, spawn } from 'xstate';
 import { customSelectedStateConfig } from './custom-selected.state';
 import { focusedStateConfig } from './focused.state';
 import { graphActor } from './graph.actor';
-import {
-  ProjectGraphContext,
-  ProjectGraphSchema,
-  ProjectGraphEvents,
-} from './interfaces';
-import { createRouteMachine } from './route-setter.machine';
+import { createRouteMachine } from '../../machines/route-setter.machine';
 import { textFilteredStateConfig } from './text-filtered.state';
 import { tracingStateConfig } from './tracing.state';
 import { unselectedStateConfig } from './unselected.state';
+import { ProjectGraphContext, ProjectGraphMachineEvents } from './interfaces';
 
 export const initialContext: ProjectGraphContext = {
   projects: [],
@@ -46,11 +42,11 @@ export const initialContext: ProjectGraphContext = {
 
 export const projectGraphMachine = createMachine<
   ProjectGraphContext,
-  ProjectGraphEvents
+  ProjectGraphMachineEvents
 >(
   {
     predictableActionArguments: true,
-    id: 'DepGraph',
+    id: 'project-graph',
     initial: 'idle',
     context: initialContext,
     states: {

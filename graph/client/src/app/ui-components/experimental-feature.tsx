@@ -1,4 +1,4 @@
-import { useEnvironmentConfig } from './hooks/use-environment-config';
+import { useEnvironmentConfig } from '../hooks/use-environment-config';
 import { Children, cloneElement } from 'react';
 
 function ExperimentalFeature(props) {

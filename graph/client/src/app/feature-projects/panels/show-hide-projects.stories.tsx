@@ -1,8 +1,5 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import {
-  ShowHideAllProjects,
-  ShowHideAllProjectsProps,
-} from './show-hide-projects';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { ShowHideAllProjects } from './show-hide-projects';
 
 export default {
   component: ShowHideAllProjects,
