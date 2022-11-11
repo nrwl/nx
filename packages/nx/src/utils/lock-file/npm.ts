@@ -381,15 +381,6 @@ export function transitiveDependencyNpmLookup({
 }: TransitiveLookupFunctionInput): PackageDependency {
   const packageDependencies = Object.values(versions);
 
-  if (packageName === 'fsevents') {
-    console.log(
-      packageName,
-      version,
-      parentPackages,
-      JSON.stringify(packageDependencies, null, 2)
-    );
-  }
-
   for (let i = 0; i < packageDependencies.length; i++) {
     if (satisfies(packageDependencies[i].version, version)) {
       const packageMeta = packageDependencies[i].packageMeta.find((p) =>
