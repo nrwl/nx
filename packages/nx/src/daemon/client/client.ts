@@ -112,8 +112,8 @@ export class DaemonClient {
     callback: (
       error: Error | null | 'closed',
       data: {
-        projectChanges: string[];
-        fileChanges: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[];
+        changedProjects: string[];
+        changedFiles: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[];
       } | null
     ) => void
   ): Promise<UnregisterCallback> {
@@ -327,6 +327,7 @@ export class DaemonClient {
       }
     );
     backgroundProcess.unref();
+    //
 
     // Persist metadata about the background process so that it can be cleaned up later if needed
     await writeDaemonJsonProcessCache({

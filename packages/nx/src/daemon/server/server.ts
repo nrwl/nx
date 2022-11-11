@@ -143,7 +143,7 @@ async function handleMessage(socket, data: string) {
       await handleRequestShutdown(server, numberOfOpenConnections)
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
-    registeredFileWatcherSockets.push({ socket, filter: payload.data });
+    registeredFileWatcherSockets.push({ socket, filter: payload.config });
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -385,7 +385,10 @@ async function notifyFileWatcherSockets(
     registeredFileWatcherSockets.map(({ socket, filter }) =>
       handleResult(socket, {
         description: 'File watch changed',
-        response: JSON.stringify(changedFiles),
+        response: JSON.stringify({
+          changedProjects: [],
+          changedFiles,
+        }),
       })
     )
   );
