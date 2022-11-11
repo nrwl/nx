@@ -54,6 +54,7 @@ enum Preset {
   Angular = 'angular',
   AngularWithNest = 'angular-nest',
   React = 'react',
+  ReactExperimental = 'react-experimental',
   ReactWithExpress = 'react-express',
   ReactNative = 'react-native',
   Expo = 'expo',
@@ -674,7 +675,14 @@ async function determineStyle(
     });
   }
 
-  if ([Preset.ReactWithExpress, Preset.React, Preset.NextJs].includes(preset)) {
+  if (
+    [
+      Preset.ReactWithExpress,
+      Preset.React,
+      Preset.ReactExperimental,
+      Preset.NextJs,
+    ].includes(preset)
+  ) {
     choices.push(
       {
         name: 'styled-components',
@@ -1030,6 +1038,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       break;
 
     case Preset.React:
+    case Preset.ReactExperimental:
     case Preset.ReactWithExpress:
     case Preset.NextJs:
       output.addVerticalSeparator();

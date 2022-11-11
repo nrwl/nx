@@ -28,6 +28,7 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
       ...prev,
       application: {
         style: options.style,
+        unitTestRunner: options.unitTestRunner,
         linter: options.linter,
         ...prev.application,
       },
@@ -37,6 +38,7 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
       },
       library: {
         style: options.style,
+        unitTestRunner: options.unitTestRunner,
         linter: options.linter,
         ...prev.library,
       },

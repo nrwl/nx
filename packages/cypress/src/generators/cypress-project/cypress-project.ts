@@ -268,16 +268,23 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
 
 function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
   const { appsDir } = getWorkspaceLayout(host);
-  const projectName = filePathPrefix(
-    options.directory ? `${options.directory}-${options.name}` : options.name
-  );
-  const projectRoot = options.directory
-    ? joinPathFragments(
-        appsDir,
-        names(options.directory).fileName,
-        options.name
-      )
-    : joinPathFragments(appsDir, options.name);
+  let projectName, projectRoot;
+
+  if (options.rootProject) {
+    projectName = options.name;
+    projectRoot = options.name;
+  } else {
+    projectName = filePathPrefix(
+      options.directory ? `${options.directory}-${options.name}` : options.name
+    );
+    projectRoot = options.directory
+      ? joinPathFragments(
+          appsDir,
+          names(options.directory).fileName,
+          options.name
+        )
+      : joinPathFragments(appsDir, options.name);
+  }
 
   options.linter = options.linter || Linter.EsLint;
   return {

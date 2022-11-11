@@ -194,6 +194,9 @@ function getPresetDependencies(preset: string, version?: string) {
     case Preset.React:
       return { dependencies: {}, dev: { '@nrwl/react': nxVersion } };
 
+    case Preset.ReactExperimental:
+      return { dependencies: {}, dev: { '@nrwl/react': nxVersion } };
+
     case Preset.ReactWithExpress:
       return {
         dependencies: {},

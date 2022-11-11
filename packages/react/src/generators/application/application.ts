@@ -23,47 +23,48 @@ import {
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import reactInitGenerator from '../init/init';
-import { lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { swcLoaderVersion } from '@nrwl/webpack/src/utils/versions';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.projectName,
-    tsConfigPaths: [
-      joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    ],
-    unitTestRunner: options.unitTestRunner,
-    eslintFilePatterns: [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
-    skipFormat: true,
-  });
-  tasks.push(lintTask);
+  if (options.linter === Linter.EsLint) {
+    const lintTask = await lintProjectGenerator(host, {
+      linter: options.linter,
+      project: options.projectName,
+      tsConfigPaths: [
+        joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      eslintFilePatterns: [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
+      skipFormat: true,
+    });
+    tasks.push(lintTask);
 
-  const reactEslintJson = createReactEslintJson(
-    options.appProjectRoot,
-    options.setParserOptionsProject
-  );
+    const reactEslintJson = createReactEslintJson(
+      options.appProjectRoot,
+      options.setParserOptionsProject
+    );
 
-  updateJson(
-    host,
-    joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-    () => reactEslintJson
-  );
+    updateJson(
+      host,
+      joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
+      () => reactEslintJson
+    );
 
-  const installTask = await addDependenciesToPackageJson(
-    host,
-    extraEslintDependencies.dependencies,
-    {
-      ...extraEslintDependencies.devDependencies,
-      ...(options.compiler === 'swc'
-        ? { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
-        : {}),
-    }
-  );
-  tasks.push(installTask);
-
+    const installTask = await addDependenciesToPackageJson(
+      host,
+      extraEslintDependencies.dependencies,
+      {
+        ...extraEslintDependencies.devDependencies,
+        ...(options.compiler === 'swc'
+          ? { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
+          : {}),
+      }
+    );
+    tasks.push(installTask);
+  }
   return runTasksInSerial(...tasks);
 }
 
