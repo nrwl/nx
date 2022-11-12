@@ -28,7 +28,7 @@ describe('npm LockFile utility', () => {
           version: '0.0.0',
         },
         rootPackage: {
-          dependencies: {
+          devDependencies: {
             '@nrwl/cli': '15.0.13',
             '@nrwl/workspace': '15.0.13',
             nx: '15.0.13',
@@ -141,7 +141,7 @@ describe('npm LockFile utility', () => {
           version: '0.0.0',
         },
         rootPackage: {
-          dependencies: {
+          devDependencies: {
             '@nrwl/cli': '15.0.13',
             '@nrwl/workspace': '15.0.13',
             nx: '15.0.13',

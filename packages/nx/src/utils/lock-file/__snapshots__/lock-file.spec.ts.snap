@@ -351,7 +351,7 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex lock file v2 1`] = `
 Object {
   "data": Object {
-    "hash": "778f5ace0cd5f8702f7b1556ad58fe3ef1d93f5641556be4a0bc69113834b9ea",
+    "hash": "64ba4128469ecb7d465d8dbed1ccd86be85c38177e85406f2cd6055f303758fa",
     "packageName": "nx",
     "version": "15.0.13",
   },
@@ -474,7 +474,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:minimatch@3.0.5",
+    "target": "npm:minimatch",
     "type": "static",
   },
   Object {
@@ -543,7 +543,7 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex lock file v3 1`] = `
 Object {
   "data": Object {
-    "hash": "778f5ace0cd5f8702f7b1556ad58fe3ef1d93f5641556be4a0bc69113834b9ea",
+    "hash": "b661da6137e80c92cb5fa75b96780e12868eb81969dddaee67113a99f4ffd159",
     "packageName": "nx",
     "version": "15.0.13",
   },
@@ -591,7 +591,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:chalk",
+    "target": "npm:chalk@4.1.0",
     "type": "static",
   },
   Object {
@@ -656,7 +656,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:js-yaml@4.1.0",
+    "target": "npm:js-yaml",
     "type": "static",
   },
   Object {
