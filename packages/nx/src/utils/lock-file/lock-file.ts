@@ -174,13 +174,6 @@ export function pruneLockFile(
     return prunePnpmLockFile(lockFile, packages, projectName);
   }
   if (packageManager === 'npm') {
-    if (lockFile.lockFileMetadata.metadata.lockfileVersion === 1) {
-      // TODO: for v1 generate package.json and run `npm i --package-lock-only --lockfile-version 1`
-      console.warn(
-        'npm v7 is required to prune lockfile. Please upgrade to npm v7. Returning entire lock file'
-      );
-      return lockFile;
-    }
     return pruneNpmLockFile(lockFile, packages, projectName);
   }
   throw Error(`Unknown package manager: ${packageManager}`);

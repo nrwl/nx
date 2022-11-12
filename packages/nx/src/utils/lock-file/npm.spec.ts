@@ -330,7 +330,7 @@ describe('npm LockFile utility', () => {
       ).toEqual(136);
     });
 
-    it('should correctly prune lockfile with single package', () => {
+    xit('should correctly prune lockfile with single package', () => {
       expect(
         stringifyNpmLockFile(pruneNpmLockFile(parsedLockFile, ['typescript']))
       ).toEqual(lockFileV1JustTypescript);

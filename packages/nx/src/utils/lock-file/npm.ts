@@ -445,6 +445,13 @@ export function pruneNpmLockFile(
   packages: string[],
   projectName?: string
 ): LockFileData {
+  if (lockFileData.lockFileMetadata.metadata.lockfileVersion === 1) {
+    // TODO: for v1 generate package.json and run `npm i --package-lock-only --lockfile-version 1`
+    console.warn(
+      'npm v7 is required to prune lockfile. Please upgrade to npm v7. Returning entire lock file'
+    );
+    return lockFileData;
+  }
   const dependencies = pruneDependencies(lockFileData.dependencies, packages);
   const lockFileMetadata = {
     ...lockFileData.lockFileMetadata,
