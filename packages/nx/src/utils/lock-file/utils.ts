@@ -83,11 +83,15 @@ export function getNodeName(
   return rootVersion ? `npm:${dep}` : `npm:${dep}@${version}`;
 }
 
+export type TransitiveLookupFunctionInput = {
+  packageName: string;
+  parentPackages: string[];
+  versions: PackageVersions;
+  version: string;
+};
+
 type TransitiveLookupFunction = (
-  packageName: string,
-  parentPackage: string,
-  versions: PackageVersions,
-  version: string
+  data: TransitiveLookupFunctionInput
 ) => PackageDependency;
 
 export function mapExternalNodes(
@@ -127,7 +131,7 @@ export function mapExternalNodes(
           if (combinedDependencies) {
             const nodeDependencies = [];
             const transitiveDeps = mapTransitiveDependencies(
-              packageName,
+              [packageName],
               lockFileData.dependencies,
               combinedDependencies,
               versionCache,
@@ -152,7 +156,7 @@ export function mapExternalNodes(
 // Finds the maching version of each dependency of the package and
 // maps each {package}:{versionRange} pair to "npm:{package}@{version}" (when transitive) or "npm:{package}" (when root)
 function mapTransitiveDependencies(
-  parentPackage: string,
+  parentPackages: string[],
   packages: Record<string, PackageVersions>,
   dependencies: Record<string, string>,
   versionCache: Record<string, string>,
@@ -164,35 +168,37 @@ function mapTransitiveDependencies(
   const result: string[] = [];
 
   Object.keys(dependencies).forEach((packageName) => {
+    const versions = packages[packageName];
     // some of the peer dependencies might not be installed,
     // we don't have them as nodes in externalNodes
     // so there's no need to map them as dependencies
-    if (!packages[packageName]) {
+    if (!versions) {
       return;
     }
 
     // fix for pnpm versions that might have suffixes - `1.2.3_@babel+core@4.5.6`
-    const cleanVersion = dependencies[packageName].split('_')[0];
-    const key = `${packageName}@${cleanVersion}`;
+    const version = dependencies[packageName].split('_')[0];
+    const key = `${packageName}@${version}`;
 
     // if we already processed this dependency, use the version from the cache
     if (versionCache[key]) {
       result.push(versionCache[key]);
     } else {
-      const version = packages[packageName][`${packageName}@${cleanVersion}`]
-        ? cleanVersion
-        : transitiveLookupFn(
+      const matchedVersion = versions[`${packageName}@${version}`]
+        ? version
+        : transitiveLookupFn({
             packageName,
-            parentPackage,
-            packages[packageName],
-            cleanVersion
-          )?.version;
+            parentPackages,
+            versions,
+            version,
+          })?.version;
+
       // for some peer dependencies, we won't find installed version so we'll just ignore these
-      if (version) {
+      if (matchedVersion) {
         const nodeName = getNodeName(
           packageName,
-          version,
-          packages[packageName][`${packageName}@${version}`]?.rootVersion
+          matchedVersion,
+          versions[`${packageName}@${matchedVersion}`]?.rootVersion
         );
         result.push(nodeName);
         versionCache[key] = nodeName;

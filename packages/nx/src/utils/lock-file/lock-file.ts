@@ -164,16 +164,17 @@ export function writeLockFile(
 export function pruneLockFile(
   lockFile: LockFileData,
   packages: string[],
+  projectName?: string,
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): LockFileData {
   if (packageManager === 'yarn') {
-    return pruneYarnLockFile(lockFile, packages);
+    return pruneYarnLockFile(lockFile, packages, projectName);
   }
   if (packageManager === 'pnpm') {
-    return prunePnpmLockFile(lockFile, packages);
+    return prunePnpmLockFile(lockFile, packages, projectName);
   }
   if (packageManager === 'npm') {
-    return pruneNpmLockFile(lockFile, packages);
+    return pruneNpmLockFile(lockFile, packages, projectName);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
 }

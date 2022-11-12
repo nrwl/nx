@@ -10,7 +10,7 @@ describe('pnpm LockFile utility', () => {
 
     it('should parse lockfile correctly', () => {
       expect(parsedLockFile.lockFileMetadata).toEqual({ lockfileVersion: 5.4 });
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(324);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(339);
       expect(
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
@@ -78,7 +78,7 @@ describe('pnpm LockFile utility', () => {
       ).toBeUndefined();
       expect(
         (
-          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+          parsedLockFile.dependencies['typescript']['typescript@4.8.4']
             .packageMeta[0] as any
         ).specifier
       ).toEqual('~4.8.2');
@@ -94,7 +94,7 @@ describe('pnpm LockFile utility', () => {
       ).toEqual(false);
       expect(
         (
-          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+          parsedLockFile.dependencies['typescript']['typescript@4.8.4']
             .packageMeta[0] as any
         ).isDevDependency
       ).toEqual(true);
@@ -112,7 +112,7 @@ describe('pnpm LockFile utility', () => {
       expect(parsedLockFile.lockFileMetadata).toEqual({
         lockfileVersion: '5.4-inlineSpecifiers',
       });
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(324);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(339);
       expect(
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
@@ -170,7 +170,7 @@ describe('pnpm LockFile utility', () => {
       ).toBeUndefined();
       expect(
         (
-          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+          parsedLockFile.dependencies['typescript']['typescript@4.8.4']
             .packageMeta[0] as any
         ).specifier
       ).toEqual('~4.8.2');
@@ -186,7 +186,7 @@ describe('pnpm LockFile utility', () => {
       ).toEqual(false);
       expect(
         (
-          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+          parsedLockFile.dependencies['typescript']['typescript@4.8.4']
             .packageMeta[0] as any
         ).isDevDependency
       ).toEqual(true);

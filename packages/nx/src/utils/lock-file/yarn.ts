@@ -5,8 +5,12 @@ import {
   PackageDependency,
   PackageVersions,
 } from './lock-file-type';
-import { sortObject, hashString, isRootVersion } from './utils';
-import { satisfies } from 'semver';
+import {
+  sortObject,
+  hashString,
+  isRootVersion,
+  TransitiveLookupFunctionInput,
+} from './utils';
 
 type LockFileDependencies = Record<
   string,
@@ -155,12 +159,11 @@ function unmapPackages(
 /**
  * Returns matching version of the dependency
  */
-export function transitiveDependencyYarnLookup(
-  packageName: string,
-  parentPackage: string,
-  versions: PackageVersions,
-  version: string
-): PackageDependency {
+export function transitiveDependencyYarnLookup({
+  packageName,
+  versions,
+  version,
+}: TransitiveLookupFunctionInput): PackageDependency {
   return Object.values(versions).find((v) =>
     v.packageMeta.some(
       (p) =>
@@ -178,7 +181,8 @@ export function transitiveDependencyYarnLookup(
  */
 export function pruneYarnLockFile(
   lockFileData: LockFileData,
-  packages: string[]
+  packages: string[],
+  projectName?: string
 ): LockFileData {
   const isBerry = !!lockFileData.lockFileMetadata?.__metadata;
   const prunedDependencies = pruneDependencies(
@@ -195,7 +199,8 @@ export function pruneYarnLockFile(
         workspacePackages: pruneWorkspacePackages(
           workspacePackages,
           prunedDependencies,
-          packages
+          packages,
+          projectName
         ),
       },
       dependencies: prunedDependencies,
@@ -257,7 +262,8 @@ function pruneTransitiveDependencies(
         version
       );
       if (dependencyTriplet) {
-        const [key, { packageMeta, ...value }, metaVersion] = dependencyTriplet;
+        const [key, { packageMeta, ...depValue }, metaVersion] =
+          dependencyTriplet;
         if (!prunedDeps[packageName]) {
           prunedDeps[packageName] = {};
         }
@@ -270,7 +276,7 @@ function pruneTransitiveDependencies(
           }
         } else {
           prunedDeps[packageName][key] = {
-            ...value,
+            ...depValue,
             packageMeta: [metaVersion],
           };
           // recurively collect dependencies
@@ -289,7 +295,8 @@ function pruneTransitiveDependencies(
 function pruneWorkspacePackages(
   workspacePackages: LockFileDependencies,
   prunedDependencies: LockFileData['dependencies'],
-  packages: string[]
+  packages: string[],
+  projectName?: string
 ): LockFileDependencies {
   const result: LockFileDependencies = {};
 
