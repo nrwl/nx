@@ -300,17 +300,22 @@ export function prunePnpmLockFile(
   packages: string[],
   projectName?: string
 ): LockFileData {
-  const dependencies = pruneDependencies(
-    lockFileData.dependencies,
-    packages,
-    projectName
+  console.warn(
+    `Pruning pnpm is not yet supported.
+Returning entire lock file.`
   );
-  const prunedLockFileData = {
-    lockFileMetadata: lockFileData.lockFileMetadata,
-    dependencies,
-    hash: '',
-  };
-  return prunedLockFileData;
+  return lockFileData;
+  // const dependencies = pruneDependencies(
+  //   lockFileData.dependencies,
+  //   packages,
+  //   projectName
+  // );
+  // const prunedLockFileData = {
+  //   lockFileMetadata: lockFileData.lockFileMetadata,
+  //   dependencies,
+  //   hash: '',
+  // };
+  // return prunedLockFileData;
 }
 
 // iterate over packages to collect the affected tree of dependencies

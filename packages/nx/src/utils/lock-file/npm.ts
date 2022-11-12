@@ -445,10 +445,12 @@ export function pruneNpmLockFile(
   packages: string[],
   projectName?: string
 ): LockFileData {
+  // NPM V1 does not track full dependency list in the lock file,
+  // so we can't reuse the lock file to generate a new one
   if (lockFileData.lockFileMetadata.metadata.lockfileVersion === 1) {
-    // TODO: for v1 generate package.json and run `npm i --package-lock-only --lockfile-version 1`
     console.warn(
-      'npm v7 is required to prune lockfile. Please upgrade to npm v7. Returning entire lock file'
+      `npm v7 is required to prune lockfile. Please upgrade to npm v7 or run "npm i --package-lock-only" to generate pruned lockfile.
+Returning entire lock file.`
     );
     return lockFileData;
   }
