@@ -1,5 +1,7 @@
-import { interpret, InterpreterStatus } from 'xstate';
+import { interpret, InterpreterFrom, InterpreterStatus } from 'xstate';
 import { appMachine } from './app.machine';
+import { projectGraphMachine } from '../feature-projects/machines/project-graph.machine';
+import { taskGraphMachine } from '../feature-tasks/machines/task-graph.machine';
 
 let appService = interpret(appMachine, {
   devTools: !!window.useXstateInspect,
@@ -12,14 +14,16 @@ export function getAppService() {
 
   return appService;
 }
+
 export function getProjectGraphService() {
   const appService = getAppService();
-  const depGraphService = appService.getSnapshot().context.projectGraphActor;
-  return depGraphService;
+  const projectGraphService =
+    appService.getSnapshot().context.projectGraphActor;
+  return projectGraphService as InterpreterFrom<typeof projectGraphMachine>;
 }
 
 export function getTaskGraphService() {
   const appService = getAppService();
   const taskGraph = appService.getSnapshot().context.taskGraphActor;
-  return taskGraph;
+  return taskGraph as InterpreterFrom<typeof taskGraphMachine>;
 }

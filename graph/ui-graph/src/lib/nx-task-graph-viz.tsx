@@ -1,18 +1,15 @@
 /* nx-ignore-next-line */
-import type {
-  ProjectGraphProjectNode,
-  ProjectGraphDependency,
-} from 'nx/src/config/project-graph';
+import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import { useEffect, useRef, useState } from 'react';
 import { GraphService } from './graph';
+import { TaskGraphRecord } from './interfaces';
 
 type Theme = 'light' | 'dark' | 'system';
-export interface GraphUiGraphProps {
+
+export interface TaskGraphUiGraphProps {
   projects: ProjectGraphProjectNode[];
-  groupByFolder: boolean;
-  workspaceLayout: { appsDir: string; libsDir: string };
-  dependencies: Record<string, ProjectGraphDependency[]>;
-  affectedProjectIds: string[];
+  taskGraphs: TaskGraphRecord;
+  taskId: string;
   theme: Theme;
   height: string;
 }
@@ -25,15 +22,14 @@ function resolveTheme(theme: Theme): 'dark' | 'light' {
     return darkMedia.matches ? 'dark' : 'light';
   }
 }
-export function NxGraphViz({
+
+export function NxTaskGraphViz({
   projects,
-  groupByFolder,
-  workspaceLayout,
-  dependencies,
-  affectedProjectIds,
+  taskId,
+  taskGraphs,
   theme,
   height,
-}: GraphUiGraphProps) {
+}: TaskGraphUiGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [graph, setGraph] = useState<GraphService>(null);
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>();
@@ -58,16 +54,15 @@ export function NxGraphViz({
             'nx-docs',
             'TB'
           );
-          graph.handleEvent({
-            type: 'notifyGraphInitGraph',
+          graph.handleTaskEvent({
+            type: 'notifiyTaskGraphSetProjects',
             projects,
-            groupByFolder,
-            workspaceLayout,
-            dependencies,
-            affectedProjects: affectedProjectIds,
-            collapseEdges: false,
+            taskGraphs,
           });
-          graph.handleEvent({ type: 'notifyGraphShowAllProjects' });
+          graph.handleTaskEvent({
+            type: 'notifyTaskGraphTaskSelected',
+            taskId,
+          });
           setGraph(graph);
         });
     }
@@ -82,4 +77,4 @@ export function NxGraphViz({
   );
 }
 
-export default NxGraphViz;
+export default NxTaskGraphViz;

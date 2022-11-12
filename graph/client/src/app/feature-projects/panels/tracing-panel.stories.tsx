@@ -1,5 +1,5 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { TracingPanel, TracingPanelProps } from './tracing-panel';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { TracingPanel } from './tracing-panel';
 
 export default {
   component: TracingPanel,

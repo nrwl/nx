@@ -1,8 +1,5 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import {
-  CollapseEdgesPanel,
-  CollapseEdgesPanelProps,
-} from './collapse-edges-panel';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { CollapseEdgesPanel } from './collapse-edges-panel';
 
 export default {
   component: CollapseEdgesPanel,

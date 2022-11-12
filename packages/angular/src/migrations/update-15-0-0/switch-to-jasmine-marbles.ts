@@ -28,8 +28,11 @@ async function replaceJasmineMarbleUsagesInFiles(tree: Tree) {
   })();
 
   const dirsToTraverse = Object.entries(projectGraph.dependencies)
-    .filter(([, dep]) =>
-      dep.some(({ target }) => target === 'npm:@nrwl/angular')
+    .filter(([node, dep]) =>
+      dep.some(
+        ({ target }) =>
+          target === 'npm:@nrwl/angular' && !projectGraph.externalNodes?.[node]
+      )
     )
     .map(([projectName]) => readProjectConfiguration(tree, projectName).root);
 

@@ -1,8 +1,6 @@
-import { InformationCircleIcon } from '@heroicons/react/24/outline';
 import { useCallback } from 'react';
-import ExperimentalFeature from '../experimental-feature';
-import { useDepGraphService } from '../hooks/use-dep-graph';
-import { useDepGraphSelector } from '../hooks/use-dep-graph-selector';
+import ExperimentalFeature from '../ui-components/experimental-feature';
+import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
   collapseEdgesSelector,
   focusedProjectNameSelector,
@@ -12,7 +10,7 @@ import {
   includePathSelector,
   searchDepthSelector,
   textFilterSelector,
-} from '../machines/selectors';
+} from './machines/selectors';
 import CollapseEdgesPanel from './panels/collapse-edges-panel';
 import FocusedProjectPanel from './panels/focused-project-panel';
 import GroupByFolderPanel from './panels/group-by-folder-panel';
@@ -21,92 +19,102 @@ import SearchDepth from './panels/search-depth';
 import ShowHideProjects from './panels/show-hide-projects';
 import TextFilterPanel from './panels/text-filter-panel';
 import TracingPanel from './panels/tracing-panel';
-import { TracingAlgorithmType } from '../machines/interfaces';
 import { useEnvironmentConfig } from '../hooks/use-environment-config';
+import { TracingAlgorithmType } from './machines/interfaces';
+import { getProjectGraphService } from '../machines/get-services';
 
 export function ProjectsSidebar(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
-  const depGraphService = useDepGraphService();
-  const focusedProject = useDepGraphSelector(focusedProjectNameSelector);
-  const searchDepthInfo = useDepGraphSelector(searchDepthSelector);
-  const includePath = useDepGraphSelector(includePathSelector);
-  const textFilter = useDepGraphSelector(textFilterSelector);
-  const hasAffectedProjects = useDepGraphSelector(hasAffectedProjectsSelector);
-  const groupByFolder = useDepGraphSelector(groupByFolderSelector);
-  const collapseEdges = useDepGraphSelector(collapseEdgesSelector);
+  const projectGraphService = getProjectGraphService();
+  const focusedProject = useProjectGraphSelector(focusedProjectNameSelector);
+  const searchDepthInfo = useProjectGraphSelector(searchDepthSelector);
+  const includePath = useProjectGraphSelector(includePathSelector);
+  const textFilter = useProjectGraphSelector(textFilterSelector);
+  const hasAffectedProjects = useProjectGraphSelector(
+    hasAffectedProjectsSelector
+  );
+  const groupByFolder = useProjectGraphSelector(groupByFolderSelector);
+  const collapseEdges = useProjectGraphSelector(collapseEdgesSelector);
 
-  const isTracing = depGraphService.state.matches('tracing');
-
-  // const isTracing = depGraphService.state.matches('tracing');
-  const tracingInfo = useDepGraphSelector(getTracingInfo);
+  const isTracing = projectGraphService.state.matches('tracing');
+  const tracingInfo = useProjectGraphSelector(getTracingInfo);
 
   function resetFocus() {
-    depGraphService.send({ type: 'unfocusProject' });
+    projectGraphService.send({ type: 'unfocusProject' });
   }
 
   function showAllProjects() {
-    depGraphService.send({ type: 'selectAll' });
+    projectGraphService.send({ type: 'selectAll' });
   }
 
   function hideAllProjects() {
-    depGraphService.send({ type: 'deselectAll' });
+    projectGraphService.send({ type: 'deselectAll' });
   }
 
   function showAffectedProjects() {
-    depGraphService.send({ type: 'selectAffected' });
+    projectGraphService.send({ type: 'selectAffected' });
   }
 
   function searchDepthFilterEnabledChange(checked: boolean) {
-    depGraphService.send({
+    projectGraphService.send({
       type: 'setSearchDepthEnabled',
       searchDepthEnabled: checked,
     });
   }
 
   function groupByFolderChanged(checked: boolean) {
-    depGraphService.send({ type: 'setGroupByFolder', groupByFolder: checked });
+    projectGraphService.send({
+      type: 'setGroupByFolder',
+      groupByFolder: checked,
+    });
   }
 
   function collapseEdgesChanged(checked: boolean) {
-    depGraphService.send({ type: 'setCollapseEdges', collapseEdges: checked });
+    projectGraphService.send({
+      type: 'setCollapseEdges',
+      collapseEdges: checked,
+    });
   }
 
   function incrementDepthFilter() {
-    depGraphService.send({ type: 'incrementSearchDepth' });
+    projectGraphService.send({ type: 'incrementSearchDepth' });
   }
 
   function decrementDepthFilter() {
-    depGraphService.send({ type: 'decrementSearchDepth' });
+    projectGraphService.send({ type: 'decrementSearchDepth' });
   }
 
   function resetTextFilter() {
-    depGraphService.send({ type: 'clearTextFilter' });
+    projectGraphService.send({ type: 'clearTextFilter' });
   }
 
   function includeLibsInPathChange() {
-    depGraphService.send({
+    projectGraphService.send({
       type: 'setIncludeProjectsByPath',
       includeProjectsByPath: !includePath,
     });
   }
 
   function resetTraceStart() {
-    depGraphService.send({ type: 'clearTraceStart' });
+    projectGraphService.send({ type: 'clearTraceStart' });
   }
 
   function resetTraceEnd() {
-    depGraphService.send({ type: 'clearTraceEnd' });
+    projectGraphService.send({ type: 'clearTraceEnd' });
   }
 
   function setAlgorithm(algorithm: TracingAlgorithmType) {
-    depGraphService.send({ type: 'setTracingAlgorithm', algorithm: algorithm });
+    projectGraphService.send({
+      type: 'setTracingAlgorithm',
+      algorithm: algorithm,
+    });
   }
 
   const updateTextFilter = useCallback(
     (textFilter: string) => {
-      depGraphService.send({ type: 'filterByText', search: textFilter });
+      projectGraphService.send({ type: 'filterByText', search: textFilter });
     },
-    [depGraphService]
+    [projectGraphService]
   );
 
   return (

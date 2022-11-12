@@ -1,17 +1,16 @@
 import { assign } from '@xstate/immer';
-import { ActorRef, createMachine, Machine, send, spawn } from 'xstate';
-import {
-  ProjectGraphContext,
-  ProjectGraphEvents,
-  GraphPerfReport,
-} from './interfaces';
+import { ActorRef, createMachine, send, spawn } from 'xstate';
 // nx-ignore-next-line
 import {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from 'nx/src/config/project-graph';
-import { projectGraphMachine } from './project-graph.machine';
-import { taskGraphMachine, TaskGraphRecord } from './task-graph.machine';
+import { projectGraphMachine } from '../feature-projects/machines/project-graph.machine';
+import {
+  taskGraphMachine,
+  TaskGraphRecord,
+} from '../feature-tasks/machines/task-graph.machine';
+import { GraphPerfReport } from '../interfaces';
 
 export interface AppContext {
   projects: ProjectGraphProjectNode[];
@@ -105,16 +104,6 @@ export const appMachine = createMachine<AppContext, AppEvents>(
               to: (context) => context.projectGraphActor,
             }
           ),
-          send(
-            (ctx, event) => ({
-              type: 'notifyTaskGraphSetProjects',
-              projects: ctx.projects,
-              taskGraphs: ctx.taskGraphs,
-            }),
-            {
-              to: (context) => context.taskGraphActor,
-            }
-          ),
         ],
       },
       setTaskGraphs: {
@@ -123,7 +112,7 @@ export const appMachine = createMachine<AppContext, AppEvents>(
           'setTaskGraphs',
           send(
             (ctx, event) => ({
-              type: 'notifyTaskGraphSetTaskGraphs',
+              type: 'notifyTaskGraphSetProjects',
               projects: ctx.projects,
               taskGraphs: ctx.taskGraphs,
             }),

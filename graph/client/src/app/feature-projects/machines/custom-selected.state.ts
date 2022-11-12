@@ -1,18 +1,14 @@
 import { assign } from '@xstate/immer';
-import { send, spawn } from 'xstate';
-import { DepGraphStateNodeConfig } from './interfaces';
-import { routeListener } from './route-listener.actor';
+import { actions, send } from 'xstate';
+import { ProjectGraphStateNodeConfig } from './interfaces';
 
-export const unselectedStateConfig: DepGraphStateNodeConfig = {
-  entry: [
-    'notifyGraphHideAllProjects',
-    assign((ctx, event) => {
-      if (ctx.routeListenerActor === null) {
-        ctx.routeListenerActor = spawn(routeListener, 'routeListener');
-      }
-    }),
-    'notifyRouteClearSelect',
-  ],
+export const customSelectedStateConfig: ProjectGraphStateNodeConfig = {
+  entry: actions.choose([
+    {
+      cond: 'selectActionCannotBePersistedToRoute',
+      actions: ['notifyRouteClearSelect'],
+    },
+  ]),
   on: {
     updateGraph: {
       target: 'customSelected',
@@ -25,7 +21,6 @@ export const unselectedStateConfig: DepGraphStateNodeConfig = {
           const newSelectedProjects = newProjectNames.filter(
             (projectName) => !existingProjectNames.includes(projectName)
           );
-
           ctx.selectedProjects = [
             ...ctx.selectedProjects,
             ...newSelectedProjects,

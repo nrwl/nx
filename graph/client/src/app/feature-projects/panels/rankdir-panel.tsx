@@ -1,7 +1,6 @@
-import { Menu } from '@headlessui/react';
 import {
-  ArrowsUpDownIcon,
   ArrowsRightLeftIcon,
+  ArrowsUpDownIcon,
 } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
 import {

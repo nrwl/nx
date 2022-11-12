@@ -1,4 +1,4 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { TaskList, TaskListProps } from './task-list';
 
 const Story: ComponentMeta<typeof TaskList> = {
