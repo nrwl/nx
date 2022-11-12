@@ -12,7 +12,7 @@ export function readTargetOptions<T = any>(
   { project, target, configuration }: Target,
   context: ExecutorContext
 ): T {
-  const projectConfiguration = context.workspace.projects[project];
+  const projectConfiguration = context.projectGraph.nodes[project].data;
   const targetConfiguration = projectConfiguration.targets[target];
 
   const ws = new Workspaces(context.root);
