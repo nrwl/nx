@@ -43,7 +43,7 @@ Once all tasks are finished, we must not forget to cleanup used agents:
 npx nx-cloud stop-all-agents
 ```
 
-Learn more about configuring your CI environment using Nx Cloud with [Distributed Caching](/nx-cloud/set-up/set-up-caching) and [Distributed Task Execution](/nx-cloud/set-up/set-up-dte) in the Nx Cloud docs.
+Learn more about configuring your CI environment using Nx Cloud with [Distributed Caching](/core-features/share-your-cache) and [Distributed Task Execution](/core-features/distribute-task-execution).
 
 {% /nx-cloud-section %}
 

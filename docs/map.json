@@ -231,6 +231,12 @@
               "file": "shared/core-features/cache-task-results"
             },
             {
+              "name": "Share Your Cache",
+              "id": "share-your-cache",
+              "tags": ["share-your-cache"],
+              "file": "shared/core-features/share-your-cache"
+            },
+            {
               "name": "Explore the Graph",
               "id": "explore-graph",
               "tags": ["explore-graph"],
@@ -1027,21 +1033,6 @@
           "description": "Learn how to set up Nx Cloud for your workspace.",
           "itemList": [
             {
-              "name": "Adding Nx Cloud to an Nx Workspace",
-              "id": "add-nx-cloud",
-              "file": "nx-cloud/set-up/add-nx-cloud"
-            },
-            {
-              "name": "Set Up Distributed Caching",
-              "id": "set-up-caching",
-              "file": "nx-cloud/set-up/set-up-caching"
-            },
-            {
-              "name": "Set Up Distributed Task Execution",
-              "id": "set-up-dte",
-              "file": "nx-cloud/set-up/set-up-dte"
-            },
-            {
               "name": "Record Non-Nx Commands",
               "id": "record-commands",
               "file": "nx-cloud/set-up/record-commands"
@@ -1151,6 +1142,11 @@
               "name": "Configuration Options",
               "id": "config",
               "file": "nx-cloud/reference/config"
+            },
+            {
+              "name": "nx-cloud CLI",
+              "id": "nx-cloud-cli",
+              "file": "nx-cloud/reference/nx-cloud-cli"
             },
             {
               "name": "Environment Variables",

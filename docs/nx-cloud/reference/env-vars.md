@@ -32,6 +32,12 @@ Setting `NX_CLOUD_ENV_NAME` will prefix all your commands so you can easily dist
 
 By default, Nx Cloud requests will time out after 10 seconds. `NX_CLOUD_NO_TIMEOUTS` disables the timeout.
 
+### NX_RUN_GROUP
+
+- The `@nrwl/nx-cloud` requires the `NX_RUN_GROUP` environment variables to be set. For many CI providers (e.g., GitHub
+  Actions), the runner is able to set it automatically. For others, the variable will have to be set manually. If you set
+  it manually, note that `NX_RUN_GROUP` has to be a unique value associated with a CI run.
+
 ### NX_VERBOSE_LOGGING
 
 Setting `NX_VERBOSE_LOGGING` to true will output the debug information about agents communicating with the main job. This can be useful for debugging unexpected cache misses and issues with on-prem setups.

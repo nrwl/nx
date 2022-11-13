@@ -188,6 +188,14 @@ module.exports = withNx({
         permanent: true,
       });
     }
+    // Nx Cloud restructure
+    for (let s of Object.keys(redirectRules.nxCloudUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.nxCloudUrls[s],
+        permanent: true,
+      });
+    }
 
     // Landing pages
     rules.push({

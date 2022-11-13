@@ -322,6 +322,15 @@ const recipesUrls = {
 };
 
 /**
+ * Nx Cloud
+ */
+const nxCloudUrls = {
+  '/nx-cloud/set-up/add-nx-cloud': '/core-features/share-your-cache',
+  '/nx-cloud/set-up/set-up-caching': '/core-features/share-your-cache',
+  '/nx-cloud/set-up/set-up-dte': '/core-features/distribute-task-execution',
+};
+
+/**
  * Tutorial Updates
  */
 const oldReactTutorialPaths = [
@@ -372,6 +381,7 @@ module.exports = {
   guideUrls,
   overviewUrls,
   recipesUrls,
+  nxCloudUrls,
   schemaUrls,
   tutorialRedirects,
 };
