@@ -315,7 +315,7 @@ describe('loading graph client with url params', () => {
 
   // check that params work from old base url of /
   // and also new /projects route
-  testProjectsRoutes('browser', ['/', '/projects']);
+  testProjectsRoutes('browser', ['/', '/e2e/projects']);
 });
 
 describe('theme preferences', () => {

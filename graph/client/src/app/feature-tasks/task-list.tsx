@@ -1,15 +1,9 @@
 import { DocumentMagnifyingGlassIcon } from '@heroicons/react/24/solid';
 // nx-ignore-next-line
 import type { ProjectGraphNode } from '@nrwl/devkit';
-import { parseParentDirectoriesFromFilePath } from '../util';
+import { getProjectsByType, groupProjectsByDirectory } from '../util';
 import { WorkspaceLayout } from '../interfaces';
 import Tag from '../ui-components/tag';
-
-function getProjectsByType(type: string, projects: ProjectGraphNode[]) {
-  return projects
-    .filter((project) => project.type === type)
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
 
 interface SidebarTarget {
   targetName: string;
@@ -25,31 +19,16 @@ interface SidebarProjectWithTargets {
   targets: SidebarTarget[];
 }
 
-function groupProjectsByDirectory(
-  projects: ProjectGraphNode[],
-  workspaceLayout: { appsDir: string; libsDir: string }
-): Record<string, ProjectGraphNode[]> {
-  let groups: Record<string, ProjectGraphNode[]> = {};
-
-  projects.forEach((project) => {
-    const workspaceRoot =
-      project.type === 'app' || project.type === 'e2e'
-        ? workspaceLayout.appsDir
-        : workspaceLayout.libsDir;
-    const directories = parseParentDirectoriesFromFilePath(
-      project.data.root,
-      workspaceRoot
-    );
-
-    const directory = directories.join('/');
-
-    if (!groups.hasOwnProperty(directory)) {
-      groups[directory] = [];
-    }
-    groups[directory].push(project);
-  });
-
-  return groups;
+function createTaskName(
+  project: string,
+  target: string,
+  configuration?: string
+) {
+  if (configuration) {
+    return `${project}:${target}:${configuration}`;
+  } else {
+    return `${project}:${target}`;
+  }
 }
 
 function ProjectListItem({
@@ -69,13 +48,19 @@ function ProjectListItem({
         <>
           <div className="flex items-center">
             <button
-              data-cy={`focus-button-${project.projectGraphNode.name}:${target.targetName}`}
+              data-cy={`focus-button-${createTaskName(
+                project.projectGraphNode.name,
+                target.targetName
+              )}`}
               type="button"
               className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
-              title="Focus on this library"
+              title="Focus on this task"
               onClick={() =>
                 selectTask(
-                  `${project.projectGraphNode.name}:${target.targetName}`
+                  `${createTaskName(
+                    project.projectGraphNode.name,
+                    target.targetName
+                  )}`
                 )
               }
             >
@@ -83,10 +68,15 @@ function ProjectListItem({
             </button>
 
             <label
-              className="ml-2 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
-              // data-project={configuration.name}
-              // title={configuration.name}
-              // data-active={configuration.isSelected.toString()}
+              className="ml-2 block w-full truncate rounded-md p-2 font-mono font-normal"
+              title={createTaskName(
+                project.projectGraphNode.name,
+                target.targetName
+              )}
+              data-active={
+                selectedTaskId ===
+                createTaskName(project.projectGraphNode.name, target.targetName)
+              }
             >
               {target.targetName}{' '}
             </label>
@@ -94,10 +84,14 @@ function ProjectListItem({
           {target.configurations.map((configuration) => (
             <div className="flex items-center">
               <button
-                data-cy={`focus-button-${project.projectGraphNode.name}:${target.targetName}:${configuration.name}`}
+                data-cy={`focus-button-${createTaskName(
+                  project.projectGraphNode.name,
+                  target.targetName,
+                  configuration.name
+                )}`}
                 type="button"
                 className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
-                title="Focus on this library"
+                title="Focus on this task"
                 onClick={() =>
                   selectTask(
                     `${project.projectGraphNode.name}:${target.targetName}:${configuration.name}`
@@ -111,7 +105,14 @@ function ProjectListItem({
                 className="ml-4 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
                 data-project={configuration.name}
                 title={configuration.name}
-                data-active={configuration.isSelected.toString()}
+                data-active={
+                  selectedTaskId ===
+                  createTaskName(
+                    project.projectGraphNode.name,
+                    target.targetName,
+                    configuration.name
+                  )
+                }
               >
                 {configuration.name}
               </label>

@@ -24,12 +24,20 @@ export class TaskTraversalGraph {
     return this.cy.elements();
   }
 
+  deselectTask() {
+    this.cy = cytoscape({
+      headless: true,
+      elements: [],
+    });
+
+    return this.cy.elements();
+  }
+
   private createElements(taskId: string) {
     const [projectName, target, configuration] = taskId.split(':');
     const taskGraph = this.taskGraphs[taskId];
 
     if (taskGraph === undefined) {
-      console.log(this.taskGraphs);
       throw new Error(`Could not find task graph for ${taskId}`);
     }
 
