@@ -1,4 +1,6 @@
+import { ExecutorContext } from '@nrwl/devkit';
 import { File, Reporter } from 'vitest';
+import { normalizeConfigFilePath } from '../../utils/helper-functions';
 import { VitestExecutorSchema } from './schema';
 
 class NxReporter implements Reporter {
@@ -36,14 +38,20 @@ class NxReporter implements Reporter {
   }
 }
 
-export default async function* runExecutor(options: VitestExecutorSchema) {
+export default async function* runExecutor(
+  options: VitestExecutorSchema,
+  context: ExecutorContext
+) {
   const { startVitest } = await (Function(
     'return import("vitest/node")'
   )() as Promise<typeof import('vitest/node')>);
 
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
+
   const nxReporter = new NxReporter(options.watch);
   const ctx = await startVitest(options.mode, [], {
     ...options,
+    root: projectRoot,
     reporters: [...(options.reporters ?? []), 'default', nxReporter],
   });
 

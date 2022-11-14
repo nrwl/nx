@@ -46,6 +46,7 @@ describe('Vite Plugin', () => {
     createFile(
       `apps/${myApp}/vite.config.ts`,
       `
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import plugin from 'vite-tsconfig-paths';

@@ -44,8 +44,13 @@
       "default": false,
       "alias": "u",
       "description": "Update snapshots"
+    },
+    "coverage": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable coverage report"
     }
   },
-  "required": ["config"],
+  "required": [],
   "examplesFile": "../../../docs/test-examples.md"
 }
