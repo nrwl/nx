@@ -125,6 +125,11 @@
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
   },
   {
+    "name": "@enio.ai/typedoc",
+    "description": "typedoc is a transparent wrapper plugin for Nx workspaces to quickly setup documentation automation on your projects using typedoc.",
+    "url": "https://github.com/enio-ireland/enio/tree/develop/packages/typedoc#readme"
+  },
+  {
     "name": "@nxext/svelte",
     "description": "Nx plugin to use Svelte within nx workspaces",
     "url": "https://github.com/nxext/nx-extensions/tree/master/packages/svelte"
