@@ -1,0 +1,125 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Vite Prod Builder",
+  "cli": "nx",
+  "description": "Build using Vite.",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Default minimum setup",
+      "keys": []
+    }
+  ],
+  "properties": {
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory"
+    },
+    "baseHref": {
+      "type": "string",
+      "description": "Base url for the application being built."
+    },
+    "proxyConfig": {
+      "type": "string",
+      "description": "Path to the proxy configuration file.",
+      "x-completion-type": "file"
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The name of the Typescript configuration file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
+    },
+    "configFile": {
+      "type": "string",
+      "description": "The name of the Vite.js configuration file.",
+      "x-completion-type": "file"
+    },
+    "assets": {
+      "type": "array",
+      "description": "List of static application assets.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/assetPattern"
+      }
+    },
+    "fileReplacements": {
+      "description": "Replace files with other files in the build.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "replace": {
+            "type": "string",
+            "description": "The file to be replaced.",
+            "x-completion-type": "file"
+          },
+          "with": {
+            "type": "string",
+            "description": "The file to replace with.",
+            "x-completion-type": "file"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["replace", "with"]
+      },
+      "default": []
+    },
+    "sourcemap": {
+      "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+      "default": true,
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "hmr": {
+      "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",
+      "default": false,
+      "type": "boolean"
+    }
+  },
+  "definitions": {
+    "assetPattern": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "glob": {
+              "type": "string",
+              "description": "The pattern to match."
+            },
+            "input": {
+              "type": "string",
+              "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+            },
+            "ignore": {
+              "description": "An array of globs to ignore.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "output": {
+              "type": "string",
+              "description": "Absolute path within the output."
+            }
+          },
+          "additionalProperties": false,
+          "required": ["glob", "input", "output"]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "required": [],
+  "examplesFile": "../../../docs/build-examples.md"
+}

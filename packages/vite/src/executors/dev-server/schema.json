@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Vite Dev Server",
+  "cli": "nx",
+  "description": "Dev server for Vite.",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Default minimum setup",
+      "keys": []
+    }
+  ],
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application."
+    },
+    "baseHref": {
+      "type": "string",
+      "description": "Base url for the application being built."
+    },
+    "proxyConfig": {
+      "type": "string",
+      "description": "Path to the proxy configuration file.",
+      "x-completion-type": "file"
+    },
+    "fileReplacements": {
+      "description": "Replace files with other files in the build.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "replace": {
+            "type": "string",
+            "description": "The file to be replaced.",
+            "x-completion-type": "file"
+          },
+          "with": {
+            "type": "string",
+            "description": "The file to replace with.",
+            "x-completion-type": "file"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["replace", "with"]
+      },
+      "default": []
+    },
+
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 4200
+    },
+    "host": {
+      "description": "Specify which IP addresses the server should listen on.",
+      "default": "localhost",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "https": {
+      "type": "boolean",
+      "description": "Serve using HTTPS.",
+      "default": false
+    },
+    "hmr": {
+      "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",
+      "default": false,
+      "type": "boolean"
+    }
+  },
+  "definitions": {},
+  "required": [],
+  "examplesFile": "../../../docs/dev-server-examples.md"
+}
