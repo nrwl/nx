@@ -129,7 +129,7 @@ describe('lib migrator', () => {
         'The "build" target is using an unsupported builder "@not/supported:builder".',
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"The supported builders for libraries are: \\"@angular-eslint/builder:lint\\", \\"@angular-devkit/build-angular:ng-packagr\\" and \\"@angular-devkit/build-angular:karma\\"."`
+        `"The supported builders for libraries are: \\"@angular-devkit/build-angular:ng-packagr\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"."`
       );
     });
 
@@ -152,7 +152,7 @@ describe('lib migrator', () => {
         'The "test" target is using an unsupported builder "@other/not-supported:builder".',
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"The supported builders for libraries are: \\"@angular-eslint/builder:lint\\", \\"@angular-devkit/build-angular:ng-packagr\\" and \\"@angular-devkit/build-angular:karma\\"."`
+        `"The supported builders for libraries are: \\"@angular-devkit/build-angular:ng-packagr\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"."`
       );
     });
 
@@ -171,7 +171,7 @@ describe('lib migrator', () => {
         'The "my-build" target is using an unsupported builder "@not/supported:builder".',
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"The supported builders for libraries are: \\"@angular-eslint/builder:lint\\", \\"@angular-devkit/build-angular:ng-packagr\\" and \\"@angular-devkit/build-angular:karma\\"."`
+        `"The supported builders for libraries are: \\"@angular-devkit/build-angular:ng-packagr\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"."`
       );
     });
 
@@ -212,16 +212,16 @@ describe('lib migrator', () => {
 
       expect(result).toHaveLength(2);
       expect(result[0].message).toBe(
-        'There is more than one target using a builder that is used to lint the project ("lint1" and "lint2").'
-      );
-      expect(result[0].hint).toBe(
-        'Make sure the project only has one target with a builder that is used to lint the project.'
-      );
-      expect(result[1].message).toBe(
         'There is more than one target using a builder that is used to build the project ("build1" and "build2").'
       );
-      expect(result[1].hint).toBe(
+      expect(result[0].hint).toBe(
         'Make sure the project only has one target with a builder that is used to build the project.'
+      );
+      expect(result[1].message).toBe(
+        'There is more than one target using a builder that is used to lint the project ("lint1" and "lint2").'
+      );
+      expect(result[1].hint).toBe(
+        'Make sure the project only has one target with a builder that is used to lint the project.'
       );
     });
 

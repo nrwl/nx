@@ -41,6 +41,15 @@ export abstract class Migrator {
     }
   }
 
+  protected convertRootPath(originalPath: string): string {
+    return originalPath?.startsWith(this.project.oldRoot)
+      ? joinPathFragments(
+          this.project.newRoot,
+          originalPath.replace(this.project.oldRoot, '')
+        )
+      : originalPath;
+  }
+
   protected moveFile(from: string, to: string, required: boolean = true): void {
     if (!this.tree.exists(from)) {
       if (required) {

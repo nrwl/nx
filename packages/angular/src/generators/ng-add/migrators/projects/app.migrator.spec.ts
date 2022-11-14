@@ -125,8 +125,8 @@ describe('app migrator', () => {
       expect(result[0].messageGroup.messages).toStrictEqual([
         'The "build" target is using an unsupported builder "@not/supported:builder".',
       ]);
-      expect(result[0].hint).toBe(
-        'The supported builders for applications are: "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@angular-eslint/builder:lint", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server" and "@angular-devkit/build-angular:karma".'
+      expect(result[0].hint).toMatchInlineSnapshot(
+        `"The supported builders for applications are: \\"@angular-devkit/build-angular:browser\\", \\"@angular-devkit/build-angular:protractor\\", \\"@cypress/schematic:cypress\\", \\"@angular-devkit/build-angular:extract-i18n\\", \\"@nguniversal/builders:prerender\\", \\"@angular-devkit/build-angular:dev-server\\", \\"@angular-devkit/build-angular:server\\", \\"@nguniversal/builders:ssr-dev-server\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"."`
       );
     });
 
@@ -148,8 +148,8 @@ describe('app migrator', () => {
         'The "build" target is using an unsupported builder "@not/supported:builder".',
         'The "test" target is using an unsupported builder "@other/not-supported:builder".',
       ]);
-      expect(result[0].hint).toBe(
-        'The supported builders for applications are: "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@angular-eslint/builder:lint", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server" and "@angular-devkit/build-angular:karma".'
+      expect(result[0].hint).toMatchInlineSnapshot(
+        `"The supported builders for applications are: \\"@angular-devkit/build-angular:browser\\", \\"@angular-devkit/build-angular:protractor\\", \\"@cypress/schematic:cypress\\", \\"@angular-devkit/build-angular:extract-i18n\\", \\"@nguniversal/builders:prerender\\", \\"@angular-devkit/build-angular:dev-server\\", \\"@angular-devkit/build-angular:server\\", \\"@nguniversal/builders:ssr-dev-server\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"."`
       );
     });
 
@@ -167,8 +167,8 @@ describe('app migrator', () => {
       expect(result[0].messageGroup.messages).toStrictEqual([
         'The "my-build" target is using an unsupported builder "@not/supported:builder".',
       ]);
-      expect(result[0].hint).toBe(
-        'The supported builders for applications are: "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@angular-eslint/builder:lint", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server" and "@angular-devkit/build-angular:karma".'
+      expect(result[0].hint).toMatchInlineSnapshot(
+        `"The supported builders for applications are: \\"@angular-devkit/build-angular:browser\\", \\"@angular-devkit/build-angular:protractor\\", \\"@cypress/schematic:cypress\\", \\"@angular-devkit/build-angular:extract-i18n\\", \\"@nguniversal/builders:prerender\\", \\"@angular-devkit/build-angular:dev-server\\", \\"@angular-devkit/build-angular:server\\", \\"@nguniversal/builders:ssr-dev-server\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"."`
       );
     });
 
@@ -1578,8 +1578,8 @@ describe('app migrator', () => {
         'test',
         'e2e',
         'myCustomTest',
-        'myCustomBuild',
         'myCustomLint',
+        'myCustomBuild',
       ]);
     });
 
