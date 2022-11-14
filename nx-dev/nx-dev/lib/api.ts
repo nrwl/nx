@@ -30,6 +30,21 @@ export const nxDocumentsApi = new DocumentsApi({
     documents.content.find(
       (x) => x.id === 'additional-api-references'
     ) as Partial<DocumentMetadata>,
+    {
+      id: 'nx-recipes',
+      name: 'wrapper',
+      itemList: [
+        {
+          id: 'recipes',
+          name: 'Recipes',
+          itemList: (
+            documents.content.find(
+              (x) => x.id === 'nx-recipes'
+            ) as Partial<DocumentMetadata>
+          ).itemList,
+        },
+      ],
+    },
   ]
     .filter((x) => !!x)
     .map((x) => convertToDocumentMetadata(x)),
