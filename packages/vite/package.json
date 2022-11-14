@@ -28,11 +28,16 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
+  "peerDependencies": {
+    "vite": "^3.2.3"
+  },
   "dependencies": {
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/workspace": "file:../workspace",
+    "@nrwl/js": "file:../js",
     "@swc/helpers": "^0.4.11",
-    "chalk": "4.1.0"
+    "chalk": "4.1.0",
+    "dotenv": "~10.0.0"
   },
   "publishConfig": {
     "access": "public"

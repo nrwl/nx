@@ -6,3 +6,4 @@ export const vitestUiVersion = '^0.9.3';
 export const vitePluginReactVersion = '^2.2.0';
 export const vitePluginVueVersion = '^3.2.0';
 export const vitePluginVueJsxVersion = '^2.1.1';
+export const viteTsConfigPathsVersion = '^3.5.2';

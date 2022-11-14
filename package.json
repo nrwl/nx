@@ -240,6 +240,7 @@
     "unzipper": "^0.10.11",
     "url-loader": "^4.1.1",
     "verdaccio": "^5.0.4",
+    "vite": "^3.2.3",
     "webpack": "^5.58.1",
     "webpack-dev-server": "^4.9.3",
     "webpack-merge": "^5.8.0",

@@ -1,4 +1,26 @@
 {
-  "builders": {},
-  "executors": {}
+  "builders": {
+    "dev-server": {
+      "implementation": "./src/executors/dev-server/compat",
+      "schema": "./src/executors/dev-server/schema.json",
+      "description": "Vite dev server."
+    },
+    "build": {
+      "implementation": "./src/executors/build/compat",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Build with Vite."
+    }
+  },
+  "executors": {
+    "dev-server": {
+      "implementation": "./src/executors/dev-server/dev-server.impl",
+      "schema": "./src/executors/dev-server/schema.json",
+      "description": "Vite dev server."
+    },
+    "build": {
+      "implementation": "./src/executors/build/build.impl",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Build with Vite."
+    }
+  }
 }
