@@ -6,6 +6,7 @@ import {
   readFile,
   rmDist,
   runCLI,
+  runCLIAsync,
   runCommandUntil,
   uniq,
   updateFile,
@@ -57,6 +58,10 @@ describe('Vite Plugin', () => {
           projects: ['tsconfig.base.json'],
         }),
       ],
+      test: {
+        globals: true,
+        environment: 'jsdom',
+      }
     });`
     );
 
@@ -100,6 +105,7 @@ describe('Vite Plugin', () => {
     updateProjectConfig(myApp, (config) => {
       config.targets.build.executor = '@nrwl/vite:build';
       config.targets.serve.executor = '@nrwl/vite:dev-server';
+      config.targets.test.executor = '@nrwl/vite:test';
 
       config.targets.build.options = {
         outputPath: `dist/apps/${myApp}`,
@@ -107,6 +113,10 @@ describe('Vite Plugin', () => {
 
       config.targets.serve.options = {
         buildTarget: `${myApp}:build`,
+      };
+
+      config.targets.serve.options = {
+        vitestConfig: `apps/${myApp}/vite.config.ts`,
       };
 
       return config;
@@ -131,5 +141,8 @@ describe('Vite Plugin', () => {
     }, 200000);
   });
 
-  xit('should test applications', () => {});
+  it('should test applications', async () => {
+    const result = await runCLIAsync(`test ${myApp}`);
+    expect(result.combinedOutput).toContain('Test Files  1 passed (1)');
+  });
 });
