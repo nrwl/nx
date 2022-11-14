@@ -7,7 +7,6 @@ Object {
       "@jridgewell/gen-mapping": "0.1.1",
       "@jridgewell/trace-mapping": "0.3.17",
     },
-    "dev": true,
     "engines": Object {
       "node": ">=6.0.0",
     },
@@ -19,6 +18,7 @@ Object {
             "@jridgewell/trace-mapping": "0.3.17",
           },
         },
+        "dev": true,
         "isDependency": false,
         "isDevDependency": false,
         "key": "/@ampproject/remapping/2.2.0",
@@ -37,7 +37,6 @@ Object {
 exports[`pnpm LockFile utility lock file with inline specifiers should parse lockfile (IS) 2`] = `
 Object {
   "typescript@4.8.4": Object {
-    "dev": true,
     "engines": Object {
       "node": ">=4.2.0",
     },
@@ -45,6 +44,7 @@ Object {
     "packageMeta": Array [
       Object {
         "dependencyDetails": Object {},
+        "dev": true,
         "isDependency": false,
         "isDevDependency": true,
         "key": "/typescript/4.8.4",
@@ -67,7 +67,6 @@ Object {
       "@jridgewell/gen-mapping": "0.1.1",
       "@jridgewell/trace-mapping": "0.3.17",
     },
-    "dev": true,
     "engines": Object {
       "node": ">=6.0.0",
     },
@@ -79,6 +78,7 @@ Object {
             "@jridgewell/trace-mapping": "0.3.17",
           },
         },
+        "dev": true,
         "isDependency": false,
         "isDevDependency": false,
         "key": "/@ampproject/remapping/2.2.0",
@@ -97,7 +97,6 @@ Object {
 exports[`pnpm LockFile utility standard lock file should parse lockfile correctly 2`] = `
 Object {
   "typescript@4.8.4": Object {
-    "dev": true,
     "engines": Object {
       "node": ">=4.2.0",
     },
@@ -105,6 +104,7 @@ Object {
     "packageMeta": Array [
       Object {
         "dependencyDetails": Object {},
+        "dev": true,
         "isDependency": false,
         "isDevDependency": true,
         "key": "/typescript/4.8.4",

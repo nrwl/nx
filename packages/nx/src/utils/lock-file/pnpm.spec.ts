@@ -1,7 +1,13 @@
-import { parsePnpmLockFile, stringifyPnpmLockFile } from './pnpm';
+import {
+  parsePnpmLockFile,
+  prunePnpmLockFile,
+  stringifyPnpmLockFile,
+} from './pnpm';
 import {
   lockFile,
+  lockFileJustTypescript,
   lockFileWithInlineSpecifiers,
+  lockFileYargsAndDevkit,
 } from './__fixtures__/pnpm.lock';
 
 describe('pnpm LockFile utility', () => {
@@ -102,6 +108,34 @@ describe('pnpm LockFile utility', () => {
 
     it('should match the original file on stringification', () => {
       expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(lockFile);
+    });
+
+    it('should prune the lock file', () => {
+      expect(
+        Object.keys(
+          prunePnpmLockFile(parsedLockFile, ['typescript']).dependencies
+        ).length
+      ).toEqual(1);
+      expect(
+        Object.keys(
+          prunePnpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+            .dependencies
+        ).length
+      ).toEqual(136);
+    });
+
+    it('should correctly prune lockfile with single package', () => {
+      expect(
+        stringifyPnpmLockFile(prunePnpmLockFile(parsedLockFile, ['typescript']))
+      ).toEqual(lockFileJustTypescript);
+    });
+
+    it('should correctly prune lockfile with multiple packages', () => {
+      expect(
+        stringifyPnpmLockFile(
+          prunePnpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+        )
+      ).toEqual(lockFileYargsAndDevkit);
     });
   });
 

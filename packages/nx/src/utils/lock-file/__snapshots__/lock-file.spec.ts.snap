@@ -748,7 +748,7 @@ exports[`lock-file mapLockFileDataToExternalNodes pnpm should map lock file data
 Array [
   Object {
     "source": "npm:yargs",
-    "target": "npm:cliui",
+    "target": "npm:cliui@8.0.1",
     "type": "static",
   },
   Object {
