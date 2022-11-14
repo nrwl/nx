@@ -91,7 +91,7 @@
   },
   {
     "name": "@nx-tools/nx-docker",
-    "description": "Nx plugin to build docker images of your affected apps",
+    "description": "Nx plugin to build docker images of your affected apps. Deprecated, please use @nx-tools/nx-container",
     "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-docker"
   },
   {
@@ -343,5 +343,10 @@
     "name": "@spaceribs/nx-web-ext",
     "description": "Nx plugin that allows you to build, test and deploy web extensions.",
     "url": "https://github.com/spaceribs/spaceribs/tree/main/packages/nx-web-ext"
+  },
+  {
+    "name": "@nx-tools/nx-container",
+    "description": "Nx plugin to build container images of your affected apps",
+    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-container"
   }
 ]
