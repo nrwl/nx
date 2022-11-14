@@ -11,7 +11,7 @@ import type {
 import { Migrator } from '../migrator';
 
 export abstract class BuilderMigrator extends Migrator {
-  protected targets: Map<string, TargetConfiguration> = new Map();
+  targets: Map<string, TargetConfiguration> = new Map();
 
   constructor(
     tree: Tree,
