@@ -143,6 +143,8 @@ describe('Vite Plugin', () => {
 
   it('should test applications', async () => {
     const result = await runCLIAsync(`test ${myApp}`);
-    expect(result.combinedOutput).toContain('Test Files  1 passed (1)');
+    expect(result.combinedOutput).toContain(
+      `Successfully ran target test for project ${myApp}`
+    );
   });
 });
