@@ -13,7 +13,7 @@ Object {
     "vite": "^3.0.5",
     "vite-plugin-eslint": "^1.6.0",
     "vite-tsconfig-paths": "^3.5.2",
-    "vitest": "^0.19.1",
+    "vitest": "^0.25.1",
   },
   "name": "test-name",
 }
