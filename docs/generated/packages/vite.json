@@ -275,7 +275,7 @@
         "description": "Test using Vitest.",
         "type": "object",
         "properties": {
-          "vitestConfig": {
+          "config": {
             "type": "string",
             "description": "The path to the local vitest config",
             "x-completion-type": "file",
@@ -290,7 +290,7 @@
             "type": "string",
             "description": "Run tests with full names matching the pattern"
           },
-          "vitestMode": {
+          "mode": {
             "type": "string",
             "enum": ["test", "benchmark", "typecheck"],
             "default": "test",
@@ -305,6 +305,12 @@
             "type": "array",
             "items": { "type": "string" },
             "description": "An array of reporters to pass to vitest"
+          },
+          "update": {
+            "type": "boolean",
+            "default": false,
+            "alias": "u",
+            "description": "Update snapshots"
           }
         },
         "required": ["vitestConfig"],

@@ -1,8 +1,9 @@
 export interface VitestExecutorSchema {
-  vitestConfig: string;
+  config: string;
   passWithNoTests: boolean;
   testNamePattern?: string;
-  vitestMode: 'test' | 'benchmark' | 'typecheck';
+  mode: 'test' | 'benchmark' | 'typecheck';
   reporters?: string[];
   watch: boolean;
+  update: boolean;
 }

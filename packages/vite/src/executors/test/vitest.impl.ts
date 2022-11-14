@@ -42,11 +42,8 @@ export default async function* runExecutor(options: VitestExecutorSchema) {
   )() as Promise<typeof import('vitest/node')>);
 
   const nxReporter = new NxReporter(options.watch);
-  const ctx = await startVitest(options.vitestMode, [], {
-    config: options.vitestConfig,
-    passWithNoTests: options.passWithNoTests,
-    testNamePattern: options.testNamePattern,
-    watch: options.watch,
+  const ctx = await startVitest(options.mode, [], {
+    ...options,
     reporters: [...(options.reporters ?? []), 'default', nxReporter],
   });
 
