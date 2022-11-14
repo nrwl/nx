@@ -1,7 +1,9 @@
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import {
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
 } from '../config/nx-json';
+import { findMatchingProjects } from './find-matching-projects';
 import { stripIndents } from './strip-indents';
 
 export function assertWorkspaceValidity(
@@ -44,7 +46,12 @@ export function assertWorkspaceValidity(
       return acc;
     }, [])
     .reduce((map, [filename, projectNames]: [string, string[]]) => {
-      detectAndSetInvalidProjectValues(map, filename, projectNames, projects);
+      detectAndSetInvalidProjectGlobValues(
+        map,
+        filename,
+        projectNames,
+        projects
+      );
       return map;
     }, invalidImplicitDependencies);
 
@@ -55,7 +62,7 @@ export function assertWorkspaceValidity(
     })
     .reduce((map, projectName) => {
       const project = projects[projectName];
-      detectAndSetInvalidProjectValues(
+      detectAndSetInvalidProjectGlobValues(
         map,
         projectName,
         project.implicitDependencies,
@@ -80,20 +87,25 @@ export function assertWorkspaceValidity(
   throw new Error(`Configuration Error\n${message}`);
 }
 
-function detectAndSetInvalidProjectValues(
+function detectAndSetInvalidProjectGlobValues(
   map: Map<string, string[]>,
   sourceName: string,
   desiredImplicitDeps: string[],
-  validProjects: any
+  validProjects: ProjectsConfigurations['projects']
 ) {
-  const invalidProjects = desiredImplicitDeps.filter((implicit) => {
+  const validProjectNames = Object.keys(validProjects);
+  const invalidProjectsOrGlobs = desiredImplicitDeps.filter((implicit) => {
     const projectName = implicit.startsWith('!')
       ? implicit.substring(1)
       : implicit;
-    return !validProjects[projectName];
+
+    return !(
+      validProjects[projectName] ||
+      findMatchingProjects([implicit], validProjectNames).length
+    );
   });
 
-  if (invalidProjects.length > 0) {
-    map.set(sourceName, invalidProjects);
+  if (invalidProjectsOrGlobs.length > 0) {
+    map.set(sourceName, invalidProjectsOrGlobs);
   }
 }

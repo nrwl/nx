@@ -10,6 +10,7 @@ import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { output } from '../utils/output';
+import { findMatchingProjects } from '../utils/find-matching-projects';
 
 export async function runMany(
   args: { [k: string]: any },
@@ -66,30 +67,16 @@ export function projectsToRun(
       selectedProjects.set(projectName, projectGraph.nodes[projectName]);
     }
   } else {
-    for (const nameOrGlob of nxArgs.projects) {
-      if (validProjects.has(nameOrGlob)) {
-        selectedProjects.set(nameOrGlob, projectGraph.nodes[nameOrGlob]);
-        continue;
-      } else if (projectGraph.nodes[nameOrGlob]) {
-        invalidProjects.push(nameOrGlob);
-        continue;
+    const matchingProjects = findMatchingProjects(
+      nxArgs.projects,
+      Object.keys(projectGraph.nodes)
+    );
+    for (const project of matchingProjects) {
+      if (!validProjects.has(project)) {
+        invalidProjects.push(project);
+      } else {
+        selectedProjects.set(project, projectGraph.nodes[project]);
       }
-
-      const matchedProjectNames = minimatch.match(
-        validProjectNames,
-        nameOrGlob
-      );
-
-      if (matchedProjectNames.length === 0) {
-        throw new Error(`No projects matching: ${nameOrGlob}`);
-      }
-
-      matchedProjectNames.forEach((matchedProjectName) => {
-        selectedProjects.set(
-          matchedProjectName,
-          projectGraph.nodes[matchedProjectName]
-        );
-      });
     }
 
     if (invalidProjects.length > 0) {
@@ -100,21 +87,21 @@ export function projectsToRun(
     }
   }
 
-  for (const nameOrGlob of nxArgs.exclude ?? []) {
-    const project = selectedProjects.has(nameOrGlob);
+  if (selectedProjects.size === 0) {
+    throw new Error(`No projects found for project patterns`);
+  }
+
+  const excludedProjects = findMatchingProjects(
+    nxArgs.exclude ?? [],
+    Array.from(selectedProjects.keys())
+  );
+
+  for (const excludedProject of excludedProjects) {
+    const project = selectedProjects.has(excludedProject);
+
     if (project) {
-      selectedProjects.delete(nameOrGlob);
-      continue;
+      selectedProjects.delete(excludedProject);
     }
-
-    const matchedProjects = minimatch.match(
-      Array.from(selectedProjects.keys()),
-      nameOrGlob
-    );
-
-    matchedProjects.forEach((matchedProjectName) => {
-      selectedProjects.delete(matchedProjectName);
-    });
   }
 
   return Array.from(selectedProjects.values());

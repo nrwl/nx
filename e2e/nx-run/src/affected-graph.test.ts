@@ -5,7 +5,6 @@ import {
   newProject,
   readFile,
   readJson,
-  readProjectConfig,
   cleanupProject,
   runCLI,
   runCLIAsync,
@@ -257,6 +256,30 @@ describe('Nx Affected and Graph Tests', () => {
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).toContain(myapp2);
       expect(runCLI('affected:libs')).not.toContain(mylib);
+    });
+
+    it('should detect changes to implicitly dependant projects', () => {
+      generateAll();
+      updateProjectConfig(myapp, (config) => ({
+        ...config,
+        implicitDependencies: ['*', `!${myapp2}`],
+      }));
+
+      runCommand('git commit -m "setup test"');
+      updateFile(`libs/${mylib}/index.html`, '<html></html>');
+
+      const affectedApps = runCLI('affected:apps');
+      const affectedLibs = runCLI('affected:libs');
+
+      expect(affectedApps).toContain(myapp);
+      expect(affectedApps).not.toContain(myapp2);
+      expect(affectedLibs).toContain(mylib);
+
+      // Clear implicit deps to not interfere with other tests.
+      updateProjectConfig(myapp, (config) => ({
+        ...config,
+        implicitDependencies: [],
+      }));
     });
   });
 

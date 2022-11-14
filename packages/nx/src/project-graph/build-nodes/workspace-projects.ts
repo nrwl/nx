@@ -11,7 +11,11 @@ import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { ProjectConfiguration, TargetConfiguration } from '../../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  TargetConfiguration,
+} from '../../config/workspace-json-project-json';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { NX_PREFIX } from '../../utils/logger';
 
 export function buildWorkspaceProjectNodes(
@@ -147,12 +151,10 @@ export function normalizeImplicitDependencies(
   implicitDependencies: ProjectConfiguration['implicitDependencies'],
   context: ProjectGraphProcessorContext
 ) {
-  return implicitDependencies?.flatMap((target) => {
-    if (target === '*') {
-      return Object.keys(context.workspace.projects).filter(
-        (projectName) => projectName !== source
-      );
-    }
-    return target;
-  });
+  return findMatchingProjects(
+    implicitDependencies || [],
+    Object.keys(context.workspace.projects).filter(
+      (projectName) => projectName !== source
+    )
+  );
 }

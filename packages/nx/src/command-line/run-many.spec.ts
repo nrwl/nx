@@ -80,7 +80,7 @@ describe('run-many', () => {
           },
           projectGraph
         ).map(({ name }) => name);
-      }).toThrowError('nomatch*');
+      }).toThrow();
     });
 
     it('should exclude projects', () => {
