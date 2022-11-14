@@ -645,9 +645,7 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
     // Merge patterns from workspaces definitions
     // TODO(@AgentEnder): update logic after better way to determine root project inclusion
     // Include the root project
-    return process.env.NX_INCLUDE_ROOT_SCRIPTS
-      ? patterns.concat('package.json')
-      : patterns;
+    return packageJson.nx ? patterns.concat('package.json') : patterns;
   } catch {}
 }
 
@@ -752,7 +750,7 @@ export function globForProjectFiles(
   if (
     projectGlobCache.length === 0 &&
     _globPatternsFromPackageManagerWorkspaces === undefined &&
-    nxJson.extends === 'nx/presets/npm.json'
+    nxJson?.extends === 'nx/presets/npm.json'
   ) {
     output.warn({
       title:
@@ -830,7 +828,8 @@ export function inferProjectFromNonStandardFile(
 export function buildWorkspaceConfigurationFromGlobs(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  readJson: (string) => any = readJsonFile // making this an arg allows us to reuse in devkit
+  readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
+    readJsonFile<T>(string) // making this an arg allows us to reuse in devkit
 ): ProjectsConfigurations {
   const projects: Record<string, ProjectConfiguration> = {};
 
@@ -842,7 +841,7 @@ export function buildWorkspaceConfigurationFromGlobs(
       //  Nx specific project configuration (`project.json` files) in the same
       // directory as a package.json should overwrite the inferred package.json
       // project configuration.
-      const configuration = readJson(file);
+      const configuration = readJson<ProjectConfiguration>(file);
 
       configuration.root = directory;
 
@@ -863,9 +862,10 @@ export function buildWorkspaceConfigurationFromGlobs(
       // this results in targets being inferred by Nx from package scripts,
       // and the root / sourceRoot both being the directory.
       if (fileName === 'package.json') {
+        const projectPackageJson = readJson<PackageJson>(file);
         const { name, ...config } = buildProjectConfigurationFromPackageJson(
           file,
-          readJson(file),
+          projectPackageJson,
           nxJson
         );
         if (!projects[name]) {
