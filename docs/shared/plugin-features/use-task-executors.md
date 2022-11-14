@@ -84,7 +84,7 @@ nx [command] [project] --[optionNameInCamelCase]=[value]
 nx build cart --outputPath=some/other/path
 ```
 
-## nx:run-commands shorthand
+## Running a single command
 
 If defining a new target that needs to run a single shell command, there is a shorthand for the `nx:run-commands` executor that can be used.
 

@@ -86,10 +86,7 @@
             "type": "object",
             "required": ["command"]
           }
-        ],
-        "messages": {
-          "oneOf": "'executor' and 'command' properties are mutually exclusive"
-        }
+        ]
       }
     },
     "tags": {

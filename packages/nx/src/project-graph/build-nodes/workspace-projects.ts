@@ -12,6 +12,7 @@ import { PackageJson } from 'nx/src/utils/package-json';
 import { readJsonFile } from 'nx/src/utils/fileutils';
 import { NxJsonConfiguration } from 'nx/src/config/nx-json';
 import { TargetConfiguration } from 'nx/src/config/workspace-json-project-json';
+import { NX_PREFIX } from 'nx/src/utils/logger';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
@@ -42,7 +43,7 @@ export function buildWorkspaceProjectNodes(
       }
     }
 
-    p.targets = normalizeProjectTargets(p.targets, nxJson.targetDefaults);
+    p.targets = normalizeProjectTargets(p.targets, nxJson.targetDefaults, key);
 
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,
@@ -93,7 +94,8 @@ export function buildWorkspaceProjectNodes(
  */
 function normalizeProjectTargets(
   targets: Record<string, TargetConfiguration>,
-  defaultTargets: NxJsonConfiguration['targetDefaults']
+  defaultTargets: NxJsonConfiguration['targetDefaults'],
+  projectName: string
 ) {
   for (const targetName in defaultTargets) {
     const target = targets?.[targetName];
@@ -112,14 +114,21 @@ function normalizeProjectTargets(
   }
   for (const target in targets) {
     const config = targets[target];
-    if (config.command && !config.executor) {
-      targets[target] = {
-        ...targets[target],
-        executor: 'nx:run-commands',
-        options: {
-          command: config.command,
-        },
-      };
+    if (config.command) {
+      if (config.executor) {
+        throw new Error(
+          `${NX_PREFIX} ${projectName}: ${target} should not have executor and command both configured.`
+        );
+      } else {
+        targets[target] = {
+          ...targets[target],
+          executor: 'nx:run-commands',
+          options: {
+            ...config.options,
+            command: config.command,
+          },
+        };
+      }
     }
   }
   return targets;

@@ -137,7 +137,7 @@ export interface TargetConfiguration<T = any> {
    *
    * Example: '@nrwl/web:rollup'
    */
-  executor: string;
+  executor?: string;
 
   /**
    * Used as a shorthand for nx:run-commands, a command to run.

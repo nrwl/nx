@@ -20,10 +20,7 @@ describe('Extra Nx Misc Tests', () => {
       runCLI(`generate @nrwl/web:app ${myapp}`);
       updateProjectConfig(myapp, (c) => {
         c.targets['inner'] = {
-          executor: 'nx:run-commands',
-          options: {
-            command: 'echo inner',
-          },
+          command: 'echo inner',
         };
         c.targets['echo'] = {
           executor: 'nx:run-commands',
@@ -140,9 +137,8 @@ describe('Extra Nx Misc Tests', () => {
     it('should pass options', async () => {
       updateProjectConfig(mylib, (config) => {
         config.targets.echo = {
-          executor: 'nx:run-commands',
+          command: 'echo --var1={args.var1}',
           options: {
-            command: 'echo --var1={args.var1}',
             var1: 'a',
           },
         };
