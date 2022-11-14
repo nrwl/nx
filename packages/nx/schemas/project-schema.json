@@ -71,7 +71,24 @@
                 }
               ]
             }
+          },
+          "command": {
+            "type": "string",
+            "description": "A shorthand for using the nx:run-commands executor"
           }
+        },
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["executor"]
+          },
+          {
+            "type": "object",
+            "required": ["command"]
+          }
+        ],
+        "messages": {
+          "oneOf": "'executor' and 'command' properties are mutually exclusive"
         }
       }
     },

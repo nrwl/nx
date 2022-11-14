@@ -83,3 +83,23 @@ Or you can overwrite individual executor options like this:
 nx [command] [project] --[optionNameInCamelCase]=[value]
 nx build cart --outputPath=some/other/path
 ```
+
+## nx:run-commands shorthand
+
+If defining a new target that needs to run a single shell command, there is a shorthand for the `nx:run-commands` executor that can be used.
+
+```jsonc {% fileName="project.json" %}
+{
+  "root": "apps/cart",
+  "sourceRoot": "apps/cart/src",
+  "projectType": "application",
+  "generators": {},
+  "targets": {
+    "echo": {
+      "command": "echo 'hello world'"
+    }
+  }
+}
+```
+
+For more info, see the [run-commands documentation](/packages/nx/executors/run-commands)
