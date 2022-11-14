@@ -313,7 +313,7 @@
             "description": "Update snapshots"
           }
         },
-        "required": ["vitestConfig"],
+        "required": ["config"],
         "presets": []
       },
       "description": "Test with Vitest",

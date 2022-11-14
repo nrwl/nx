@@ -46,5 +46,5 @@
       "description": "Update snapshots"
     }
   },
-  "required": ["vitestConfig"]
+  "required": ["config"]
 }

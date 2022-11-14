@@ -116,7 +116,7 @@ describe('Vite Plugin', () => {
       };
 
       config.targets.serve.options = {
-        vitestConfig: `apps/${myApp}/vite.config.ts`,
+        config: `apps/${myApp}/vite.config.ts`,
       };
 
       return config;
