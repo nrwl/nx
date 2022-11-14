@@ -373,7 +373,10 @@
     "packageName": "vite",
     "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
     "path": "generated/packages/vite.json",
-    "schemas": { "executors": [], "generators": ["init"] }
+    "schemas": {
+      "executors": ["dev-server", "build", "test"],
+      "generators": ["init"]
+    }
   },
   {
     "name": "web",
