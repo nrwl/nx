@@ -58,7 +58,7 @@ export const projectGraphMachine = createMachine<
       tracing: tracingStateConfig,
     },
     on: {
-      notifyProjectGraphSetProjects: {
+      setProjects: {
         target: 'unselected',
         actions: [
           'setGraph',
@@ -280,10 +280,7 @@ export const projectGraphMachine = createMachine<
         ctx.includePath = event.includeProjectsByPath;
       }),
       setGraph: assign((ctx, event) => {
-        if (
-          event.type !== 'notifyProjectGraphSetProjects' &&
-          event.type !== 'updateGraph'
-        )
+        if (event.type !== 'setProjects' && event.type !== 'updateGraph')
           return;
 
         ctx.projects = event.projects;
@@ -293,7 +290,7 @@ export const projectGraphMachine = createMachine<
           name: 'route',
         });
 
-        if (event.type === 'notifyProjectGraphSetProjects') {
+        if (event.type === 'setProjects') {
           ctx.workspaceLayout = event.workspaceLayout;
           ctx.affectedProjects = event.affectedProjects;
         }

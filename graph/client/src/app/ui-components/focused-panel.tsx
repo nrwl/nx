@@ -1,13 +1,13 @@
 import { ArrowRightCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { memo } from 'react';
 
-export interface FocusedProjectPanelProps {
-  focusedProject: string;
+export interface FocusedPanelProps {
+  focusedLabel: string;
   resetFocus: () => void;
 }
 
-export const FocusedProjectPanel = memo(
-  ({ focusedProject, resetFocus }: FocusedProjectPanelProps) => {
+export const FocusedPanel = memo(
+  ({ focusedLabel, resetFocus }: FocusedPanelProps) => {
     return (
       <div className="mt-10 px-4">
         <div
@@ -17,7 +17,7 @@ export const FocusedProjectPanel = memo(
         >
           <p className="truncate transition duration-200 ease-in-out group-hover:opacity-60">
             <ArrowRightCircleIcon className="-mt-1 mr-1 inline h-6 w-6" />
-            <span id="focused-project-name">Focused on {focusedProject}</span>
+            <span id="focused-project-name">Focused on {focusedLabel}</span>
           </p>
           <div className="absolute right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-500 transition-all duration-200 ease-in-out group-hover:translate-x-0 dark:bg-slate-800 dark:text-slate-300">
             Reset
@@ -31,4 +31,4 @@ export const FocusedProjectPanel = memo(
   }
 );
 
-export default FocusedProjectPanel;
+export default FocusedPanel;

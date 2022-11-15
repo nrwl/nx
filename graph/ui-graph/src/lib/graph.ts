@@ -214,6 +214,9 @@ export class GraphService {
           event.taskId
         );
         break;
+      case 'notifyTaskGraphDeselectTask':
+        elementsToSendToRender = this.taskTraversalGraph.deselectTask();
+        break;
     }
 
     let selectedProjectNames: string[] = [];

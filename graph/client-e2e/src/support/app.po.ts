@@ -7,7 +7,8 @@ export const getSelectAffectedButton = () => cy.get('[data-cy=affectedButton]');
 
 export const getUnfocusProjectButton = () => cy.get('[data-cy=unfocusButton]');
 
-export const getProjectItems = () => cy.get('[data-project]');
+export const getProjectItems = () =>
+  cy.get('[data-project]', { timeout: 6000 });
 
 export const getCheckedProjectItems = () => cy.get('[data-active="true"]');
 export const getUncheckedProjectItems = () => cy.get('[data-active="false"]');

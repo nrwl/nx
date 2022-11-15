@@ -13,16 +13,10 @@ import {
   selectedProjectNamesSelector,
   workspaceLayoutSelector,
 } from './machines/selectors';
-import { parseParentDirectoriesFromFilePath } from '../util';
+import { getProjectsByType, parseParentDirectoriesFromFilePath } from '../util';
 import ExperimentalFeature from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
-
-function getProjectsByType(type: string, projects: ProjectGraphNode[]) {
-  return projects
-    .filter((project) => project.type === type)
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphNode;

@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-import { ProjectGraphDependency } from '@nrwl/devkit';
+import { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
 
 export function trimBackSlash(value: string): string {
   return value.replace(/\/$/, '');
@@ -47,4 +47,37 @@ export function hasPath(
   }
 
   return false;
+}
+
+export function getProjectsByType(type: string, projects: ProjectGraphNode[]) {
+  return projects
+    .filter((project) => project.type === type)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function groupProjectsByDirectory(
+  projects: ProjectGraphNode[],
+  workspaceLayout: { appsDir: string; libsDir: string }
+): Record<string, ProjectGraphNode[]> {
+  let groups: Record<string, ProjectGraphNode[]> = {};
+
+  projects.forEach((project) => {
+    const workspaceRoot =
+      project.type === 'app' || project.type === 'e2e'
+        ? workspaceLayout.appsDir
+        : workspaceLayout.libsDir;
+    const directories = parseParentDirectoriesFromFilePath(
+      project.data.root,
+      workspaceRoot
+    );
+
+    const directory = directories.join('/');
+
+    if (!groups.hasOwnProperty(directory)) {
+      groups[directory] = [];
+    }
+    groups[directory].push(project);
+  });
+
+  return groups;
 }

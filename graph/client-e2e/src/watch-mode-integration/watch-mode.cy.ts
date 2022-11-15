@@ -2,53 +2,35 @@ import { getProjectItems } from '../support/app.po';
 
 describe('graph-client in watch mode', () => {
   beforeEach(() => {
-    cy.clock();
     cy.visit('/projects');
-    cy.tick(3000);
   });
 
   it('should auto-select new libs as they are created', () => {
     const excludedValues = ['existing-app-1', 'existing-lib-1'];
-
-    cy.tick(5000);
+    checkSelectedProjects(2, excludedValues);
     checkSelectedProjects(3, excludedValues);
-
-    cy.tick(5000);
     checkSelectedProjects(4, excludedValues);
-
-    cy.tick(5000);
-    checkSelectedProjects(5, excludedValues);
   });
 
-  // TODO: This test is getting flaky but was fixed by increasing the tick time between checks
-  // Figure out a better way to test this
   it('should retain selected projects as new libs are created', () => {
     cy.get('[data-project="existing-app-1"]').click();
     cy.get('[data-project="existing-lib-1"]').click();
 
-    cy.tick(5000);
-
     checkSelectedProjects(3, []);
-
-    cy.tick(5000);
     checkSelectedProjects(4, []);
-
-    cy.tick(5000);
     checkSelectedProjects(5, []);
   });
 
   it('should not re-add new libs if they were un-selected', () => {
-    cy.tick(5000);
-    cy.get('[data-project*="3"][data-active="true"]')
+    cy.get('[data-project*="3"][data-active="true"]', { timeout: 6000 })
       .should('exist')
       .click({ force: true });
 
-    cy.get('[data-project*="3"][data-active="false"]').should('exist');
+    cy.get('[data-project*="3"][data-active="false"]', {
+      timeout: 6000,
+    }).should('exist');
 
-    cy.tick(5000);
-    cy.tick(5000);
-
-    cy.get('[data-project*="3"]')
+    cy.get('[data-project*="3"]', { timeout: 6000 })
       .first()
       .should((project) => {
         expect(project.data('active')).to.be.false;

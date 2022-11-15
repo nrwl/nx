@@ -1,36 +1,80 @@
 import TaskList from './task-list';
-/* nx-ignore-next-line */
-import { useProjectGraphSelector } from '../feature-projects/hooks/use-project-graph-selector';
-import {
-  allProjectsSelector,
-  workspaceLayoutSelector,
-} from '../feature-projects/machines/selectors';
-import { useTaskGraphSelector } from './hooks/use-task-graph-selector';
-import { getTaskGraphService } from '../machines/get-services';
+import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
+// nx-ignore-next-line
+import type {
+  ProjectGraphClientResponse,
+  TaskGraphClientResponse,
+} from 'nx/src/command-line/dep-graph';
+import { getGraphService } from '../machines/graph.service';
+import { useEffect } from 'react';
+import FocusedPanel from '../ui-components/focused-panel';
 
-/* eslint-disable-next-line */
-export interface TasksSidebarProps {}
+export function TasksSidebar() {
+  const graphService = getGraphService();
+  const navigate = useNavigate();
+  const params = useParams();
 
-export function TasksSidebar(props: TasksSidebarProps) {
-  const projects = useProjectGraphSelector(allProjectsSelector);
-  const workspaceLayout = useProjectGraphSelector(workspaceLayoutSelector);
-  const taskGraph = getTaskGraphService();
+  const selectedProjectRouteData = useRouteLoaderData(
+    'SelectedProject'
+  ) as ProjectGraphClientResponse;
+  const projects = selectedProjectRouteData.projects;
+  const workspaceLayout = selectedProjectRouteData.layout;
 
-  const selectedTask = useTaskGraphSelector(
-    (state) => state.context.selectedTaskId
-  );
+  const routeData = useRouteLoaderData(
+    'selectedTask'
+  ) as TaskGraphClientResponse;
+  const { taskGraphs } = routeData;
+
+  const selectedTask = params['selectedTask'];
+
+  useEffect(() => {
+    graphService.handleTaskEvent({
+      type: 'notifyTaskGraphSetProjects',
+      projects: selectedProjectRouteData.projects,
+      taskGraphs,
+    });
+  }, [selectedProjectRouteData]);
+
+  useEffect(() => {
+    if (selectedTask) {
+      graphService.handleTaskEvent({
+        type: 'notifyTaskGraphTaskSelected',
+        taskId: selectedTask,
+      });
+    } else {
+      graphService.handleTaskEvent({
+        type: 'notifyTaskGraphDeselectTask',
+      });
+    }
+  }, [params]);
 
   function selectTask(taskId: string) {
-    taskGraph.send({ type: 'selectTask', taskId });
+    if (selectedTask) {
+      navigate(`../${taskId}`);
+    } else {
+      navigate(`./${taskId}`);
+    }
+  }
+
+  function resetFocus() {
+    navigate('..');
   }
 
   return (
-    <TaskList
-      projects={projects}
-      workspaceLayout={workspaceLayout}
-      selectedTask={selectedTask}
-      selectTask={selectTask}
-    />
+    <>
+      {selectedTask ? (
+        <FocusedPanel
+          focusedLabel={selectedTask}
+          resetFocus={resetFocus}
+        ></FocusedPanel>
+      ) : null}
+      <TaskList
+        projects={projects}
+        workspaceLayout={workspaceLayout}
+        selectedTask={selectedTask}
+        selectTask={selectTask}
+      />
+    </>
   );
 }
 
