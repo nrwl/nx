@@ -4,7 +4,7 @@ import type {
   TaskGraphClientResponse,
 } from 'nx/src/command-line/dep-graph';
 
-export interface GraphListItem {
+export interface WorkspaceData {
   id: string;
   label: string;
   projectGraphUrl: string;
@@ -29,8 +29,8 @@ export interface Environment {
 export interface AppConfig {
   showDebugger: boolean;
   showExperimentalFeatures: boolean;
-  projects: GraphListItem[];
-  defaultProject: string;
+  workspaces: WorkspaceData[];
+  defaultWorkspaceId: string;
 }
 
 export interface GraphPerfReport {

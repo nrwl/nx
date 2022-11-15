@@ -217,6 +217,12 @@ export class GraphService {
       case 'notifyTaskGraphDeselectTask':
         elementsToSendToRender = this.taskTraversalGraph.deselectTask();
         break;
+      case 'setGroupByProject':
+        elementsToSendToRender = this.taskTraversalGraph.setGroupByProject(
+          event.groupByProject
+        );
+
+        break;
     }
 
     let selectedProjectNames: string[] = [];

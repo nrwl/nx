@@ -20,7 +20,12 @@ import {
   projectIsSelectedSelector,
 } from './feature-projects/machines/selectors';
 import { selectValueByThemeStatic } from './theme-resolver';
-import { Outlet, useLoaderData, useNavigate } from 'react-router-dom';
+import {
+  Outlet,
+  useLoaderData,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 import ThemePanel from './feature-projects/panels/theme-panel';
 import Dropdown from './ui-components/dropdown';
 import { useCurrentPath } from './hooks/use-current-path';
@@ -32,20 +37,15 @@ import TooltipDisplay from './ui-tooltips/graph-tooltip-display';
 export function Shell(): JSX.Element {
   const projectGraphService = getProjectGraphService();
 
-  const projectGraphDataService = getProjectGraphDataService();
   const environment = useEnvironmentConfig();
   const lastPerfReport = useProjectGraphSelector(lastPerfReportSelector);
   const projectIsSelected = useProjectGraphSelector(projectIsSelectedSelector);
-  const taskIsSelected = true;
   const environmentConfig = useEnvironmentConfig();
-
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(
-    environment.appConfig.defaultProject
-  );
 
   const navigate = useNavigate();
   const currentPath = useCurrentPath();
-
+  const { selectedProjectId, selectedTaskId } = useParams();
+  const taskIsSelected = !!selectedTaskId;
   const currentRoute = currentPath.currentPath;
 
   const topLevelRoute = currentRoute.startsWith('/tasks')
@@ -67,40 +67,6 @@ export function Shell(): JSX.Element {
   }
 
   const routeData = useLoaderData() as ProjectGraphClientResponse;
-  useEffect(() => {
-    projectGraphService.send({
-      type: 'setProjects',
-      projects: routeData.projects,
-      dependencies: routeData.dependencies,
-      affectedProjects: routeData.affected,
-      workspaceLayout: routeData.layout,
-    });
-  }, [routeData]);
-
-  useIntervalWhen(
-    () => {
-      const projectInfo = environment.appConfig.projects.find(
-        (graph) => graph.id === selectedProjectId
-      );
-
-      const fetchProjectGraph = async () => {
-        const project: ProjectGraphClientResponse =
-          await projectGraphDataService.getProjectGraph(
-            projectInfo.projectGraphUrl
-          );
-
-        projectGraphService.send({
-          type: 'updateGraph',
-          projects: project.projects,
-          dependencies: project.dependencies,
-        });
-      };
-
-      fetchProjectGraph();
-    },
-    5000,
-    environment.watch
-  );
 
   function downloadImage() {
     const graph = getGraphService();
@@ -202,7 +168,7 @@ export function Shell(): JSX.Element {
       >
         {environment.appConfig.showDebugger ? (
           <DebuggerPanel
-            projects={environment.appConfig.projects}
+            projects={environment.appConfig.workspaces}
             selectedProject={selectedProjectId}
             lastPerfReport={lastPerfReport}
             selectedProjectChange={projectChange}

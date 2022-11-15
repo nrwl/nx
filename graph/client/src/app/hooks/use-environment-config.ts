@@ -24,7 +24,13 @@ export function getEnvironmentConfig() {
     localMode: window.localMode,
     projectGraphResponse: window.projectGraphResponse,
     environment: window.environment,
-    appConfig: window.appConfig,
+    appConfig: {
+      ...window.appConfig,
+      showExperimentalFeatures:
+        localStorage.getItem('showExperimentalFeatures') === 'true'
+          ? true
+          : window.appConfig.showExperimentalFeatures,
+    },
     useXstateInspect: window.useXstateInspect,
   };
 }

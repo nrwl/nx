@@ -91,6 +91,13 @@ const highlightedNodes: Stylesheet = {
   },
 };
 
+const taskNodes: Stylesheet = {
+  selector: 'node.task',
+  style: {
+    label: 'data(label)',
+  },
+};
+
 const transparentProjectNodes: Stylesheet = {
   selector: 'node.transparent:childless',
   style: { opacity: 0.5 },
@@ -113,4 +120,5 @@ export const nodeStyles = [
   highlightedNodes,
   transparentProjectNodes,
   transparentParentNodes,
+  taskNodes,
 ];

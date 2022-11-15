@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import ExperimentalFeature from '../ui-components/experimental-feature';
 import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
@@ -22,6 +22,11 @@ import TracingPanel from './panels/tracing-panel';
 import { useEnvironmentConfig } from '../hooks/use-environment-config';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
+import { useIntervalWhen } from '../hooks/use-interval-when';
+// nx-ignore-next-line
+import { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { getProjectGraphDataService } from '../hooks/get-project-graph-data-service';
 
 export function ProjectsSidebar(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
@@ -38,6 +43,12 @@ export function ProjectsSidebar(): JSX.Element {
 
   const isTracing = projectGraphService.state.matches('tracing');
   const tracingInfo = useProjectGraphSelector(getTracingInfo);
+  const projectGraphDataService = getProjectGraphDataService();
+
+  const selectedProjectRouteData = useRouteLoaderData(
+    'selectedWorkspace'
+  ) as ProjectGraphClientResponse;
+  const params = useParams();
 
   function resetFocus() {
     projectGraphService.send({ type: 'unfocusProject' });
@@ -109,6 +120,45 @@ export function ProjectsSidebar(): JSX.Element {
       algorithm: algorithm,
     });
   }
+
+  useEffect(() => {
+    projectGraphService.send({
+      type: 'setProjects',
+      projects: selectedProjectRouteData.projects,
+      dependencies: selectedProjectRouteData.dependencies,
+      affectedProjects: selectedProjectRouteData.affected,
+      workspaceLayout: selectedProjectRouteData.layout,
+    });
+  }, [selectedProjectRouteData]);
+
+  useIntervalWhen(
+    () => {
+      const selectedWorkspaceId =
+        params.selectedProjectId ??
+        environmentConfig.appConfig.defaultWorkspaceId;
+
+      const projectInfo = environmentConfig.appConfig.workspaces.find(
+        (graph) => graph.id === selectedWorkspaceId
+      );
+
+      const fetchProjectGraph = async () => {
+        const project: ProjectGraphClientResponse =
+          await projectGraphDataService.getProjectGraph(
+            projectInfo.projectGraphUrl
+          );
+
+        projectGraphService.send({
+          type: 'updateGraph',
+          projects: project.projects,
+          dependencies: project.dependencies,
+        });
+      };
+
+      fetchProjectGraph();
+    },
+    5000,
+    environmentConfig.watch
+  );
 
   const updateTextFilter = useCallback(
     (textFilter: string) => {
