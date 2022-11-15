@@ -126,8 +126,3 @@ For more details about how distributed task execution works, check out the [illu
 
 - [Nx: On how to make your CI 16 times faster with a small config change](https://github.com/vsavkin/interstellar)
 - ["Lerna & Distributed Task Execution" Example](https://github.com/vsavkin/lerna-dte)
-
-## See Also
-
-- [Nx Cloud Documentation](/nx-cloud/intro/what-is-nx-cloud)
-- [Nx Cloud Main Site](https://nx.app)
