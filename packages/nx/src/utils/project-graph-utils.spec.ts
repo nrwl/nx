@@ -259,5 +259,36 @@ describe('project graph utils', () => {
         },
       });
     });
+
+    it('should ignore scripts that are not in includedScripts', () => {
+      jsonFileOverrides['includedScriptsTest/package.json'] = {
+        name: 'included-scripts-test',
+        scripts: {
+          test: 'echo testing',
+          fail: 'exit 1',
+        },
+        nx: {
+          includedScripts: ['test'],
+        },
+      };
+
+      const result = mergeNpmScriptsWithTargets('includedScriptsTest', {
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo hi' },
+        },
+      });
+
+      expect(result).toEqual({
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo hi' },
+        },
+        test: {
+          executor: 'nx:run-script',
+          options: { script: 'test' },
+        },
+      });
+    });
   });
 });

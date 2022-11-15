@@ -40,7 +40,9 @@ export function mergeNpmScriptsWithTargets(
     const res: Record<string, TargetConfiguration> = {};
     // handle no scripts
     Object.keys(scripts || {}).forEach((script) => {
-      res[script] = buildTargetFromScript(script, nx);
+      if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
+        res[script] = buildTargetFromScript(script, nx);
+      }
     });
     return { ...res, ...(targets || {}) };
   } catch (e) {
