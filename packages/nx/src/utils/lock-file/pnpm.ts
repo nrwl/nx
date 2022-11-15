@@ -1,8 +1,4 @@
-import {
-  LockFileData,
-  PackageDependency,
-  PackageVersions,
-} from './lock-file-type';
+import { LockFileData, PackageDependency } from './lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
 import {
   sortObject,
@@ -18,6 +14,9 @@ type PackageMeta = {
   isDevDependency?: boolean;
   isDependency?: boolean;
   dependencyDetails: Record<string, Record<string, string>>;
+  dev?: boolean;
+  optional?: boolean;
+  peer?: boolean;
 };
 
 type Dependencies = Record<string, Omit<PackageDependency, 'packageMeta'>>;
@@ -102,8 +101,9 @@ function mapPackages(
     if (mappedPackages[packageName][newKey]) {
       mappedPackages[packageName][newKey].packageMeta.push(meta);
     } else {
+      const { dev, optional, peer, ...rest } = value;
       mappedPackages[packageName][newKey] = {
-        ...value,
+        ...rest,
         version,
         packageMeta: [meta],
       };
@@ -138,7 +138,12 @@ function mapMetaInformation(
   }: Omit<PnpmLockFile, 'lockfileVersion' | 'packages'>,
   hasInlineSpefiers,
   key: string,
-  dependencyDetails: Omit<PackageDependency, 'packageMeta'>
+  {
+    dev,
+    optional,
+    peer,
+    ...dependencyDetails
+  }: Omit<PackageDependency, 'packageMeta'>
 ): PackageMeta {
   const matchingVersion = key.split('/').pop();
   const packageName = key.slice(1, key.lastIndexOf('/'));
@@ -172,12 +177,22 @@ function mapMetaInformation(
     isDependency,
     isDevDependency,
     specifier,
+    ...(dev && { dev }),
+    ...(optional && { optional }),
+    ...(peer && { peer }),
     dependencyDetails: {
       ...(dependencyDetails.dependencies && {
         dependencies: dependencyDetails.dependencies,
       }),
       ...(dependencyDetails.peerDependencies && {
         peerDependencies: dependencyDetails.peerDependencies,
+      }),
+      ...(dependencyDetails.optionalDependencies && {
+        optionalDependencies: dependencyDetails.optionalDependencies,
+      }),
+      ...(dependencyDetails.transitivePeerDependencies && {
+        transitivePeerDependencies:
+          dependencyDetails.transitivePeerDependencies,
       }),
     },
   };
@@ -241,31 +256,46 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
     const versions = Object.values(lockFileData.dependencies[packageName]);
 
     versions.forEach(({ packageMeta, version: _, rootVersion, ...rest }) => {
-      (packageMeta as PackageMeta[]).forEach((meta) => {
-        const { key, specifier } = meta;
+      (packageMeta as PackageMeta[]).forEach(
+        ({
+          key,
+          specifier,
+          isDependency,
+          isDevDependency,
+          dependencyDetails,
+          dev,
+          optional,
+          peer,
+        }) => {
+          let version;
+          if (inlineSpecifiers) {
+            version = {
+              specifier,
+              version: key.slice(key.lastIndexOf('/') + 1),
+            };
+          } else {
+            version = key.slice(key.lastIndexOf('/') + 1);
 
-        let version;
-        if (inlineSpecifiers) {
-          version = { specifier, version: key.slice(key.lastIndexOf('/') + 1) };
-        } else {
-          version = key.slice(key.lastIndexOf('/') + 1);
-
-          if (specifier) {
-            specifiers[packageName] = specifier;
+            if (specifier) {
+              specifiers[packageName] = specifier;
+            }
           }
-        }
 
-        if (meta.isDependency) {
-          dependencies[packageName] = version;
+          if (isDependency) {
+            dependencies[packageName] = version;
+          }
+          if (isDevDependency) {
+            devDependencies[packageName] = version;
+          }
+          packages[key] = {
+            ...rest,
+            dev: !!dev,
+            ...(optional && { optional }),
+            ...(peer && { peer }),
+            ...dependencyDetails,
+          };
         }
-        if (meta.isDevDependency) {
-          devDependencies[packageName] = version;
-        }
-        packages[key] = {
-          ...rest,
-          ...meta.dependencyDetails,
-        };
-      });
+      );
     });
   }
 
@@ -282,9 +312,16 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
  * Returns matching version of the dependency
  */
 export function transitiveDependencyPnpmLookup({
+  packageName,
   versions,
   version,
 }: TransitiveLookupFunctionInput): PackageDependency {
+  const combinedDependency = Object.values(versions).find((v) =>
+    v.packageMeta.some((m) => m.key === `/${packageName}/${version}`)
+  );
+  if (combinedDependency) {
+    return combinedDependency;
+  }
   // pnpm's dependencies always point to the exact version so this block is only for insurrance
   return Object.values(versions).find((v) => satisfies(v.version, version));
 }
@@ -300,22 +337,17 @@ export function prunePnpmLockFile(
   packages: string[],
   projectName?: string
 ): LockFileData {
-  console.warn(
-    `Pruning pnpm is not yet supported.
-Returning entire lock file.`
+  const dependencies = pruneDependencies(
+    lockFileData.dependencies,
+    packages,
+    projectName
   );
-  return lockFileData;
-  // const dependencies = pruneDependencies(
-  //   lockFileData.dependencies,
-  //   packages,
-  //   projectName
-  // );
-  // const prunedLockFileData = {
-  //   lockFileMetadata: lockFileData.lockFileMetadata,
-  //   dependencies,
-  //   hash: '',
-  // };
-  // return prunedLockFileData;
+  const prunedLockFileData = {
+    lockFileMetadata: lockFileData.lockFileMetadata,
+    dependencies,
+    hash: '',
+  };
+  return prunedLockFileData;
 }
 
 // iterate over packages to collect the affected tree of dependencies
@@ -328,12 +360,30 @@ function pruneDependencies(
 
   packages.forEach((packageName) => {
     if (dependencies[packageName]) {
-      const [key, value] = Object.entries(dependencies[packageName]).find(
-        ([_, v]) => v.rootVersion
-      );
+      const [key, { packageMeta, ...value }] = Object.entries(
+        dependencies[packageName]
+      ).find(([_, v]) => v.rootVersion);
       result[packageName] = result[packageName] || {};
-      result[packageName][key] = value;
-      pruneTransitiveDependencies([packageName], dependencies, result, value);
+      const metaKey = `/${packageName}/${value.version}`;
+      const meta = packageMeta.find((m) => m.key.startsWith(metaKey));
+
+      result[packageName][key] = Object.assign(value, {
+        packageMeta: [
+          {
+            isDependency: true,
+            key: meta.key,
+            specifier: value.version,
+            dependencyDetails: meta.dependencyDetails,
+          },
+        ],
+      });
+
+      pruneTransitiveDependencies(
+        [packageName],
+        dependencies,
+        result,
+        result[packageName][key]
+      );
     } else {
       console.warn(
         `Could not find ${packageName} in the lock file. Skipping...`
@@ -351,5 +401,81 @@ function pruneTransitiveDependencies(
   parentPackages: string[],
   dependencies: LockFileData['dependencies'],
   prunedDeps: LockFileData['dependencies'],
-  value: PackageDependency
-): void {}
+  parent: PackageDependency
+): void {
+  Object.entries({
+    ...parent.dependencies,
+    ...parent.optionalDependencies,
+  }).forEach(([packageName, version]: [string, string]) => {
+    const versions = dependencies[packageName];
+    if (versions) {
+      const dependency = transitiveDependencyPnpmLookup({
+        packageName,
+        parentPackages,
+        versions,
+        version,
+      });
+      if (dependency) {
+        if (!prunedDeps[packageName]) {
+          prunedDeps[packageName] = {};
+        }
+        const { packageMeta, rootVersion, ...value } = dependency;
+        const key = `${packageName}@${value.version}`;
+        const meta = findPackageMeta(packageMeta, parentPackages);
+        if (prunedDeps[packageName][key]) {
+          // TODO not sure if this is important?
+        } else {
+          const packageMeta: PackageMeta = {
+            key: meta.key,
+            dependencyDetails: meta.dependencyDetails,
+          };
+          prunedDeps[packageName][key] = Object.assign(value, {
+            rootVersion: false,
+            packageMeta: [packageMeta],
+          });
+          if (parent.optionalDependencies?.[packageName]) {
+            packageMeta.optional = true;
+          }
+          pruneTransitiveDependencies(
+            [...parentPackages, packageName],
+            dependencies,
+            prunedDeps,
+            prunedDeps[packageName][key]
+          );
+        }
+      }
+    }
+  });
+}
+
+function findPackageMeta(
+  packageMeta: PackageMeta[],
+  parentPackages: string[]
+): PackageMeta {
+  const matchPackageVersionModifier =
+    (version: string) => (packageName: string) => {
+      const normalizedName = packageName.split('/').join('+');
+      if (version.includes(`_${normalizedName}@`)) {
+        return true;
+      }
+    };
+
+  const nestedDependency =
+    packageMeta.find((m) => {
+      const version = m.key.split('/').pop();
+      // it's modified by a single dependency
+      // e.g. /@org/my-package/1.0.0_@babel+core@1.2.3
+      return (
+        version.includes('_') &&
+        parentPackages.some(matchPackageVersionModifier(version))
+      );
+    }) ||
+    // it's not modified by a single dependency but a mix of them
+    // e.g. /@org/my-package/1.0.0_asfgasgasgasg
+    packageMeta.find((m) => m.key.split('/').pop().includes('_'));
+  if (nestedDependency) {
+    return nestedDependency;
+  }
+  // otherwise it's a root dependency
+  return packageMeta.find((m) => !m.key.split('/').pop().includes('_'));
+}
