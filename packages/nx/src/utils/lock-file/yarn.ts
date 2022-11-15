@@ -10,6 +10,7 @@ import {
   hashString,
   isRootVersion,
   TransitiveLookupFunctionInput,
+  generatePrunnedHash,
 } from './utils';
 
 type LockFileDependencies = Record<
@@ -204,10 +205,13 @@ export function pruneYarnLockFile(
         ),
       },
       dependencies: prunedDependencies,
-      hash: '',
+      hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
     };
   } else {
-    prunedLockFileData = { dependencies: prunedDependencies, hash: '' };
+    prunedLockFileData = {
+      dependencies: prunedDependencies,
+      hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
+    };
   }
 
   prunedLockFileData.hash = hashString(JSON.stringify(prunedLockFileData));
