@@ -291,6 +291,12 @@ export const examples: Record<string, Example[]> = {
       command: 'run-many --target=test --projects=proj1,proj2 --parallel=2',
       description: 'Test proj1 and proj2 in parallel',
     },
+    {
+      command:
+        'nx run-many --target=test --projects=*-app --exclude excluded-app',
+      description:
+        'Test all projects ending with `*-app` except `excluded-app`',
+    },
   ],
   migrate: [
     {
