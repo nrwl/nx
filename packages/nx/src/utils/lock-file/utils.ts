@@ -245,3 +245,15 @@ function traverseExternalNodesDependencies(
     }
   });
 }
+
+export function generatePrunnedHash(
+  originalHash: string,
+  packages: string[],
+  projectName?: string
+) {
+  const hashingInput = [originalHash, ...packages];
+  if (projectName) {
+    hashingInput.push(projectName);
+  }
+  return defaultHashing.hashArray(hashingInput);
+}

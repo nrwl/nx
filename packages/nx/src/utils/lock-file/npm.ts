@@ -1,6 +1,11 @@
 import { satisfies } from 'semver';
 import { LockFileData, PackageDependency } from './lock-file-type';
-import { sortObject, hashString, TransitiveLookupFunctionInput } from './utils';
+import {
+  sortObject,
+  hashString,
+  TransitiveLookupFunctionInput,
+  generatePrunnedHash,
+} from './utils';
 
 type PackageMeta = {
   path: string;
@@ -460,7 +465,11 @@ Returning entire lock file.`
     ...pruneRootPackage(lockFileData, packages, projectName),
   };
   let prunedLockFileData: LockFileData;
-  prunedLockFileData = { dependencies, lockFileMetadata, hash: '' };
+  prunedLockFileData = {
+    dependencies,
+    lockFileMetadata,
+    hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
+  };
   return prunedLockFileData;
 }
 

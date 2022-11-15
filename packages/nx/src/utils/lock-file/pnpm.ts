@@ -5,6 +5,7 @@ import {
   hashString,
   isRootVersion,
   TransitiveLookupFunctionInput,
+  generatePrunnedHash,
 } from './utils';
 import { satisfies } from 'semver';
 
@@ -345,7 +346,7 @@ export function prunePnpmLockFile(
   const prunedLockFileData = {
     lockFileMetadata: lockFileData.lockFileMetadata,
     dependencies,
-    hash: '',
+    hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
   };
   return prunedLockFileData;
 }
