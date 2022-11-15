@@ -12,7 +12,7 @@ import {
   textFilterSelector,
 } from './machines/selectors';
 import CollapseEdgesPanel from './panels/collapse-edges-panel';
-import FocusedProjectPanel from './panels/focused-project-panel';
+import FocusedPanel from '../ui-components/focused-panel';
 import GroupByFolderPanel from './panels/group-by-folder-panel';
 import ProjectList from './project-list';
 import SearchDepth from './panels/search-depth';
@@ -120,10 +120,10 @@ export function ProjectsSidebar(): JSX.Element {
   return (
     <>
       {focusedProject ? (
-        <FocusedProjectPanel
-          focusedProject={focusedProject}
+        <FocusedPanel
+          focusedLabel={focusedProject}
           resetFocus={resetFocus}
-        ></FocusedProjectPanel>
+        ></FocusedPanel>
       ) : null}
       {isTracing ? (
         <TracingPanel

@@ -20,27 +20,23 @@ import {
   projectIsSelectedSelector,
 } from './feature-projects/machines/selectors';
 import { selectValueByThemeStatic } from './theme-resolver';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLoaderData, useNavigate } from 'react-router-dom';
 import ThemePanel from './feature-projects/panels/theme-panel';
 import Dropdown from './ui-components/dropdown';
 import { useCurrentPath } from './hooks/use-current-path';
 import ExperimentalFeature from './ui-components/experimental-feature';
 import RankdirPanel from './feature-projects/panels/rankdir-panel';
-import { getAppService, getProjectGraphService } from './machines/get-services';
+import { getProjectGraphService } from './machines/get-services';
 import TooltipDisplay from './ui-tooltips/graph-tooltip-display';
-import { useTaskGraphSelector } from './feature-tasks/hooks/use-task-graph-selector';
 
 export function Shell(): JSX.Element {
-  const appService = getAppService();
   const projectGraphService = getProjectGraphService();
 
   const projectGraphDataService = getProjectGraphDataService();
   const environment = useEnvironmentConfig();
   const lastPerfReport = useProjectGraphSelector(lastPerfReportSelector);
   const projectIsSelected = useProjectGraphSelector(projectIsSelectedSelector);
-  const taskIsSelected = useTaskGraphSelector(
-    (state) => state.context.selectedTaskId
-  );
+  const taskIsSelected = true;
   const environmentConfig = useEnvironmentConfig();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>(
@@ -48,7 +44,13 @@ export function Shell(): JSX.Element {
   );
 
   const navigate = useNavigate();
-  const currentRoute = useCurrentPath();
+  const currentPath = useCurrentPath();
+
+  const currentRoute = currentPath.currentPath;
+
+  const topLevelRoute = currentRoute.startsWith('/tasks')
+    ? '/tasks'
+    : '/projects';
 
   const routes = [
     { route: '/projects', label: 'Projects' },
@@ -59,50 +61,21 @@ export function Shell(): JSX.Element {
   ];
 
   function projectChange(projectGraphId: string) {
-    setSelectedProjectId(projectGraphId);
+    // setSelectedProjectId(projectGraphId);
+
+    navigate(`/${projectGraphId}${topLevelRoute}`);
   }
 
+  const routeData = useLoaderData() as ProjectGraphClientResponse;
   useEffect(() => {
-    const { appConfig } = environment;
-
-    const projectInfo = appConfig.projects.find(
-      (graph) => graph.id === selectedProjectId
-    );
-
-    const fetchProjectGraph = async () => {
-      const projectGraph: ProjectGraphClientResponse =
-        await projectGraphDataService.getProjectGraph(
-          projectInfo.projectGraphUrl
-        );
-
-      const workspaceLayout = projectGraph?.layout;
-
-      appService.send({
-        type: 'setProjects',
-        projects: projectGraph.projects,
-        dependencies: projectGraph.dependencies,
-        affectedProjects: projectGraph.affected,
-        workspaceLayout: workspaceLayout,
-      });
-    };
-
-    const fetchTaskGraphs = async () => {
-      const { taskGraphs } = await projectGraphDataService.getTaskGraph(
-        projectInfo.taskGraphUrl
-      );
-
-      appService.send({
-        type: 'setTaskGraphs',
-        taskGraphs: taskGraphs,
-      });
-    };
-
-    fetchProjectGraph();
-
-    if (currentRoute === '/tasks') {
-      fetchTaskGraphs();
-    }
-  }, [currentRoute, selectedProjectId]);
+    projectGraphService.send({
+      type: 'setProjects',
+      projects: routeData.projects,
+      dependencies: routeData.dependencies,
+      affectedProjects: routeData.affected,
+      workspaceLayout: routeData.layout,
+    });
+  }, [routeData]);
 
   useIntervalWhen(
     () => {
@@ -172,10 +145,20 @@ export function Shell(): JSX.Element {
                 <ExperimentalFeature>
                   <Dropdown
                     data-cy="project-select"
-                    defaultValue={currentRoute}
+                    defaultValue={
+                      currentRoute.startsWith('/projects')
+                        ? '/projects'
+                        : '/tasks'
+                    }
                     onChange={(event) => {
                       projectGraphService.send('deselectAll');
-                      navigate(event.currentTarget.value);
+                      if (environment.environment === 'dev') {
+                        navigate(
+                          `/${currentPath.workspace}${event.currentTarget.value}`
+                        );
+                      } else {
+                        navigate(`${event.currentTarget.value}`);
+                      }
                     }}
                   >
                     {routes.map((route) => (
@@ -195,13 +178,13 @@ export function Shell(): JSX.Element {
             <a
               id="help"
               className="
-      mt-3
-      flex cursor-pointer
-      items-center
-      px-4
-      text-xs
-      hover:underline
-    "
+                mt-3
+                flex cursor-pointer
+                items-center
+                px-4
+                text-xs
+                hover:underline
+              "
               href="https://nx.dev/structure/dependency-graph"
               rel="noreferrer"
               target="_blank"
@@ -226,7 +209,7 @@ export function Shell(): JSX.Element {
           ></DebuggerPanel>
         ) : null}
 
-        {currentRoute === '/projects' && !projectIsSelected ? (
+        {currentRoute.startsWith('/projects') && !projectIsSelected ? (
           <div
             data-cy="no-projects-selected"
             className="flex h-full w-full items-center justify-center text-slate-700 dark:text-slate-400"
@@ -236,7 +219,7 @@ export function Shell(): JSX.Element {
           </div>
         ) : null}
 
-        {currentRoute === '/tasks' && !taskIsSelected ? (
+        {currentRoute.startsWith('/tasks') && !taskIsSelected ? (
           <div
             data-cy="no-tasks-selected"
             className="flex h-full w-full items-center justify-center text-slate-700 dark:text-slate-400"
@@ -246,8 +229,8 @@ export function Shell(): JSX.Element {
           </div>
         ) : null}
 
-        <div id="graph-container">
-          <div id="cytoscape-graph"></div>
+        <div className="h-full w-full">
+          <div className="h-full w-full" id="cytoscape-graph"></div>
           <TooltipDisplay></TooltipDisplay>
 
           <Tippy
