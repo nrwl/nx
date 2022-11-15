@@ -153,8 +153,3 @@ This library's `production` definition should look like this:
 ```
 
 This ensures that the `.md` files are included in the `production` file set, but the `check-for-broken-links.ts` script is not. Now changes to a markdown file in `content` will force a re-build of `docs-site`, even though changes to markdown files in `docs-site` will not force a re-build.
-
-## See Also
-
-- [nx.json reference: inputs and namedInputs](/reference/nx-json#inputs-&-namedinputs)
-- [Project Configuration reference: inputs and namedInputs](/reference/project-configuration#inputs-&-namedinputs)

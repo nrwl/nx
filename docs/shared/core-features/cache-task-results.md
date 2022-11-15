@@ -74,10 +74,3 @@ For a more in-depth understanding of the caching implementation and to fine-tune
 
 By default, Nx uses a local computation cache. Nx stores the cached values only for a week, after which they
 are deleted. To clear the cache run [`nx reset`](/nx/reset), and Nx will create a new one the next time it tries to access it.
-
-## See Also:
-
-- [Nx Cloud Documentation](/nx-cloud/intro/what-is-nx-cloud)
-- [Nx Cloud Main Site](https://nx.app)
-- [--skip-nx-cache flag](/nx/affected#skip-nx-cache)
-- [tasks-runner-options property](/reference/nx-json#tasks-runner-options)
