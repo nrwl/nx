@@ -87,7 +87,7 @@ export function nxComponentTestingPreset(
     );
     logger.warn(e);
     webpackConfig = buildBaseWebpackConfig({
-      tsConfigPath: 'tsconfig.cy.json',
+      tsConfigPath: 'cypress/tsconfig.cy.json',
       compiler: 'babel',
     });
   }
