@@ -1,3 +1,4 @@
+// nx-ignore-next-line
 import type { Linter } from '@nrwl/linter';
 import type {
   AssetGlob,

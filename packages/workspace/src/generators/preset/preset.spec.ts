@@ -4,6 +4,8 @@ import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapt
 import { presetGenerator } from './preset';
 import * as path from 'path';
 import { Preset } from '../utils/presets';
+// nx-ignore-next-line
+import { Linter } from '@nrwl/linter';
 
 describe('preset', () => {
   let tree: Tree;
@@ -47,7 +49,7 @@ describe('preset', () => {
       preset: Preset.Angular,
       cli: 'nx',
       style: 'css',
-      linter: 'eslint',
+      linter: Linter.EsLint,
       standaloneConfig: false,
     });
     expect(tree.children('apps/proj')).toMatchSnapshot();
@@ -70,7 +72,7 @@ describe('preset', () => {
       name: 'proj',
       preset: Preset.React,
       style: 'css',
-      linter: 'eslint',
+      linter: Linter.EsLint,
       cli: 'nx',
       standaloneConfig: false,
     });
@@ -82,7 +84,7 @@ describe('preset', () => {
       name: 'proj',
       preset: Preset.NextJs,
       style: 'css',
-      linter: 'eslint',
+      linter: Linter.EsLint,
       cli: 'nx',
       standaloneConfig: false,
     });
@@ -94,7 +96,7 @@ describe('preset', () => {
       name: 'proj',
       preset: Preset.AngularWithNest,
       style: 'css',
-      linter: 'eslint',
+      linter: Linter.EsLint,
       cli: 'nx',
       standaloneConfig: false,
     });
@@ -111,7 +113,7 @@ describe('preset', () => {
       name: 'proj',
       preset: Preset.ReactWithExpress,
       style: 'css',
-      linter: 'eslint',
+      linter: Linter.EsLint,
       cli: 'nx',
       standaloneConfig: false,
     });
@@ -129,7 +131,7 @@ describe('preset', () => {
     await presetGenerator(tree, {
       name: 'proj',
       preset: Preset.Express,
-      linter: 'eslint',
+      linter: Linter.EsLint,
       cli: 'nx',
       standaloneConfig: false,
     });
@@ -142,7 +144,7 @@ describe('preset', () => {
     await presetGenerator(tree, {
       name: 'proj',
       preset: Preset.ReactNative,
-      linter: 'eslint',
+      linter: Linter.EsLint,
       cli: 'nx',
       standaloneConfig: false,
     });

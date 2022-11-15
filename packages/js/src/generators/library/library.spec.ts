@@ -6,6 +6,8 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+// nx-ignore-next-line
+import { Linter } from '@nrwl/linter';
 import { LibraryGeneratorSchema } from '../../utils/schema';
 import libraryGenerator from './library';
 
@@ -16,7 +18,7 @@ describe('lib', () => {
     includeBabelRc: false,
     unitTestRunner: 'jest',
     skipFormat: false,
-    linter: 'eslint',
+    linter: Linter.EsLint,
     testEnvironment: 'jsdom',
     js: false,
     pascalCaseFiles: false,
