@@ -100,7 +100,6 @@
     "@types/jest": "28.1.7",
     "@types/js-yaml": "^4.0.5",
     "@types/marked": "^2.0.0",
-    "@types/micromatch": "^4.0.2",
     "@types/node": "18.7.18",
     "@types/prettier": "^2.6.2",
     "@types/react": "18.0.20",
