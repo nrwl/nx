@@ -92,7 +92,7 @@
   {
     "name": "@nx-tools/nx-docker",
     "description": "Nx plugin to build docker images of your affected apps. Deprecated, please migrate to @nx-tools/nx-container",
-    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-docker"
+    "url": "https://github.com/gperdomor/nx-tools/tree/v3/packages/nx-docker"
   },
   {
     "name": "@angular-custom-builders/lite-serve",
