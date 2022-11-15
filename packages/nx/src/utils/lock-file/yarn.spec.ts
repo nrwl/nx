@@ -182,6 +182,29 @@ describe('yarn LockFile utility', () => {
         removeComment(berryLockFileDevkitAndYargs)
       );
     });
+
+    it('shold correctly prune lockfile with multiple packages and custom name', () => {
+      const result = pruneYarnLockFile(
+        parsedLockFile,
+        ['yargs', '@nrwl/devkit', 'typescript'],
+        'custom-name'
+      );
+      expect(result.lockFileMetadata.workspacePackages).toMatchInlineSnapshot(`
+        Object {
+          "custom-name@workspace:^": Object {
+            "dependencies": Object {
+              "@nrwl/devkit": "14.7.5",
+              "typescript": "~4.8.2",
+              "yargs": "^17.4.0",
+            },
+            "languageName": "unknown",
+            "linkType": "soft",
+            "resolution": "custom-name@workspace:^",
+            "version": "0.0.0-use.local",
+          },
+        }
+      `);
+    });
   });
 });
 

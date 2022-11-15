@@ -304,6 +304,32 @@ function pruneWorkspacePackages(
 ): LockFileDependencies {
   const result: LockFileDependencies = {};
 
+  if (projectName) {
+    let workspaceProjKey = Object.keys(workspacePackages).find((key) =>
+      key.startsWith(`${projectName}@workspace:`)
+    );
+    let dependencies = {};
+    if (!workspaceProjKey) {
+      workspaceProjKey = `${projectName}@workspace:^`;
+    } else {
+      dependencies = workspacePackages[workspaceProjKey].dependencies;
+    }
+    const prunedWorkspaceDependencies = pruneWorkspacePackageDependencies(
+      dependencies,
+      packages,
+      prunedDependencies,
+      true
+    );
+    result[workspaceProjKey] = {
+      version: '0.0.0-use.local',
+      resolution: workspaceProjKey,
+      languageName: 'unknown',
+      linkType: 'soft',
+      dependencies: sortObject(prunedWorkspaceDependencies),
+    };
+    return result;
+  }
+
   Object.entries(workspacePackages).forEach(
     ([packageKey, { dependencies, ...value }]) => {
       const isRootPackage = packageKey.indexOf('@workspace:.') !== -1;
@@ -327,7 +353,7 @@ function pruneWorkspacePackageDependencies(
   dependencies: Record<string, string>,
   packages: string[],
   prunedDependencies: LockFileData['dependencies'],
-  isRoot: boolean
+  isMainPackage?: boolean
 ): Record<string, string> {
   const result: Record<string, string> = {};
 
@@ -345,7 +371,7 @@ function pruneWorkspacePackageDependencies(
     }
   );
   // add all missing deps to root workspace package
-  if (isRoot) {
+  if (isMainPackage) {
     packages.forEach((p) => {
       if (!result[p]) {
         // extract first version expression from package's structure
