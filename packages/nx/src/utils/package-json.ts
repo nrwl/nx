@@ -17,6 +17,7 @@ export interface NxProjectPackageJsonConfiguration {
   tags?: string[];
   namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
   targets?: Record<string, PackageJsonTargetConfiguration>;
+  includedScripts?: string[];
 }
 
 export type PackageGroup =
@@ -95,7 +96,7 @@ export function readNxMigrateConfig(
 export function buildTargetFromScript(
   script: string,
   nx: NxProjectPackageJsonConfiguration
-) {
+): TargetConfiguration {
   const nxTargetConfiguration = nx?.targets?.[script] || {};
 
   return {

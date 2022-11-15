@@ -114,7 +114,10 @@ function createImplicitTargetConfig(
     return null;
   }
   const { scripts, nx } = readJsonFile<PackageJson>(packageJsonPath);
-  if (!(targetName in (scripts || {}))) {
+  if (
+    !(targetName in (scripts || {})) ||
+    !(nx.includedScripts && nx.includedScripts.includes(targetName))
+  ) {
     return null;
   }
   return buildTargetFromScript(targetName, nx);
