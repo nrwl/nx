@@ -59,7 +59,7 @@ nx run my-app:test --watch
 ```
 
 {% /tab %}
-{% tab label="Updating snapshots %}
+{% tab label="Updating snapshots" %}
 Whenever a test fails because of an outdated snapshot, you can tell vitest to update them with the following:
 
 ```bash
