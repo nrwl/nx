@@ -8,7 +8,6 @@
   "dependencies": {
   },
   "devDependencies": {
-     <% if(cli === 'angular') { %>"@angular/cli": "<%= angularCliVersion %>",<% } %>
     "nx": "<%= nxVersion %>",
     "@nrwl/cli": "<%= nxVersion %>",
     "@nrwl/workspace": "<%= nxVersion %>",

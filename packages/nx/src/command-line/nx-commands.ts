@@ -325,7 +325,7 @@ export const commandsObject = yargs
       args._ = args._.slice(1);
       process.exit(
         await (
-          await import('./generate')
+          await import('./new')
         ).newWorkspace(args['nxWorkspaceRoot'] as string, args)
       );
     },

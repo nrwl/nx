@@ -2,20 +2,6 @@
   "name": "nx/workspace",
   "version": "0.1",
   "schematics": {
-    "workspace": {
-      "factory": "./src/generators/workspace/workspace#workspaceSchematic",
-      "schema": "./src/generators/workspace/schema.json",
-      "description": "Create an empty workspace.",
-      "hidden": true
-    },
-
-    "preset": {
-      "factory": "./src/generators/preset/preset#presetSchematic",
-      "schema": "./src/generators/preset/schema.json",
-      "description": "Create an application in an empty workspace.",
-      "hidden": true
-    },
-
     "move": {
       "factory": "./src/generators/move/move#moveSchematic",
       "schema": "./src/generators/move/schema.json",
@@ -28,13 +14,6 @@
       "schema": "./src/generators/remove/schema.json",
       "aliases": ["rm"],
       "description": "Remove an application or library."
-    },
-
-    "new": {
-      "factory": "./src/generators/new/new#newSchematic",
-      "schema": "./src/generators/new/schema.json",
-      "description": "Create a workspace.",
-      "hidden": true
     },
 
     "library": {
@@ -73,13 +52,6 @@
     }
   },
   "generators": {
-    "workspace": {
-      "factory": "./src/generators/workspace/workspace#workspaceGenerator",
-      "schema": "./src/generators/workspace/schema.json",
-      "description": "Create an empty workspace.",
-      "hidden": true
-    },
-
     "preset": {
       "factory": "./src/generators/preset/preset#presetGenerator",
       "schema": "./src/generators/preset/schema.json",

@@ -1,16 +1,14 @@
 import {
+  formatFiles,
   generateFiles,
+  getPackageManagerVersion,
+  names,
+  NxJsonConfiguration,
+  PackageManager,
   Tree,
   updateJson,
-  convertNxGenerator,
-  names,
   writeJson,
-  formatFiles,
-  getPackageManagerVersion,
-  PackageManager,
-  NxJsonConfiguration,
 } from '@nrwl/devkit';
-import { Schema } from './schema';
 import {
   angularCliVersion,
   nxVersion,
@@ -21,19 +19,50 @@ import { readFileSync } from 'fs';
 import { join, join as pathJoin } from 'path';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
+import { NormalizedSchema } from './new';
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
   singleQuote: true,
 };
 
-function decorateAngularClI(host: Tree, options: Schema) {
+export async function generateWorkspaceFiles(
+  host: Tree,
+  options: NormalizedSchema
+) {
+  if (!options.name) {
+    throw new Error(`Invalid options, "name" is required.`);
+  }
+  options = normalizeOptions(options);
+  createFiles(host, options);
+  createNxJson(host, options);
+  createPrettierrc(host, options);
+  if (options.preset === Preset.Angular) {
+    decorateAngularClI(host, options);
+  }
+  const [packageMajor] = getPackageManagerVersion(
+    options.packageManager as PackageManager
+  ).split('.');
+  if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
+    createNpmrc(host, options);
+  } else if (options.packageManager === 'yarn' && +packageMajor >= 2) {
+    createYarnrcYml(host, options);
+  }
+  setPresetProperty(host, options);
+  addNpmScripts(host, options);
+  createAppsAndLibsFolders(host, options);
+  setUpWorkspacesInPackageJson(host, options);
+
+  await formatFiles(host);
+}
+
+function decorateAngularClI(host: Tree, options: NormalizedSchema) {
   const decorateCli = readFileSync(
     pathJoin(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
   ).toString();
   host.write(join(options.directory, 'decorate-angular-cli.js'), decorateCli);
 }
 
-function setPresetProperty(tree: Tree, options: Schema) {
+function setPresetProperty(tree: Tree, options: NormalizedSchema) {
   updateJson(tree, join(options.directory, 'nx.json'), (json) => {
     if (options.preset === Preset.Core || options.preset === Preset.NPM) {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
@@ -47,7 +76,7 @@ function setPresetProperty(tree: Tree, options: Schema) {
   });
 }
 
-function createAppsAndLibsFolders(host: Tree, options: Schema) {
+function createAppsAndLibsFolders(host: Tree, options: NormalizedSchema) {
   if (
     options.preset === Preset.Core ||
     options.preset === Preset.TS ||
@@ -64,7 +93,7 @@ function createAppsAndLibsFolders(host: Tree, options: Schema) {
 
 function createNxJson(
   host: Tree,
-  { directory, npmScope, cli, packageManager, defaultBase, preset }: Schema
+  { directory, npmScope, packageManager, defaultBase, preset }: NormalizedSchema
 ) {
   const nxJson: NxJsonConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
@@ -104,29 +133,23 @@ function createNxJson(
     nxJson.targetDefaults.build.inputs = ['production', '^production'];
   }
 
-  if (packageManager && cli === 'angular') {
-    nxJson.cli = {
-      packageManager: packageManager,
-    };
-  }
-
   writeJson<NxJsonConfiguration>(host, join(directory, 'nx.json'), nxJson);
 }
 
-function createFiles(host: Tree, options: Schema) {
+function createFiles(host: Tree, options: NormalizedSchema) {
   const formattedNames = names(options.name);
   const filesDirName =
     options.preset === Preset.ReactExperimental
       ? './files-root-app'
       : options.preset === Preset.NPM || options.preset === Preset.Core
-      ? './files-npm'
-      : './files';
+      ? './files-package-based-repo'
+      : './files-integrated-repo';
   generateFiles(host, pathJoin(__dirname, filesDirName), options.directory, {
     formattedNames,
     dot: '.',
     tmpl: '',
-    workspaceFile: options.cli === 'angular' ? 'angular' : 'workspace',
-    cliCommand: options.cli === 'angular' ? 'ng' : 'nx',
+    workspaceFile: options.preset === Preset.Angular ? 'angular' : 'workspace',
+    cliCommand: options.preset === Preset.Angular ? 'ng' : 'nx',
     nxCli: false,
     typescriptVersion,
     prettierVersion,
@@ -138,32 +161,32 @@ function createFiles(host: Tree, options: Schema) {
   });
 }
 
-function createPrettierrc(host: Tree, options: Schema) {
+function createPrettierrc(host: Tree, options: NormalizedSchema) {
   writeJson(
     host,
     join(options.directory, '.prettierrc'),
     DEFAULT_NRWL_PRETTIER_CONFIG
   );
 }
-
 // ensure that pnpm install add all the missing peer deps
-function createNpmrc(host: Tree, options: Schema) {
+
+function createNpmrc(host: Tree, options: NormalizedSchema) {
   host.write(
     join(options.directory, '.npmrc'),
     'strict-peer-dependencies=false\nauto-install-peers=true\n'
   );
 }
-
 // ensure that yarn (berry) install uses classic node linker
-function createYarnrcYml(host: Tree, options: Schema) {
+
+function createYarnrcYml(host: Tree, options: NormalizedSchema) {
   host.write(
     join(options.directory, '.yarnrc.yml'),
     'nodeLinker: node-modules\n'
   );
 }
 
-function addNpmScripts(host: Tree, options: Schema) {
-  if (options.cli === 'angular') {
+function addNpmScripts(host: Tree, options: NormalizedSchema) {
+  if (options.preset === Preset.Angular) {
     updateJson(host, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {
         ng: 'nx',
@@ -189,35 +212,6 @@ function addNpmScripts(host: Tree, options: Schema) {
   }
 }
 
-export async function workspaceGenerator(host: Tree, options: Schema) {
-  if (!options.name) {
-    throw new Error(`Invalid options, "name" is required.`);
-  }
-  options = normalizeOptions(options);
-  createFiles(host, options);
-  createNxJson(host, options);
-  createPrettierrc(host, options);
-  if (options.cli === 'angular') {
-    decorateAngularClI(host, options);
-  }
-  const [packageMajor] = getPackageManagerVersion(
-    options.packageManager as PackageManager
-  ).split('.');
-  if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
-    createNpmrc(host, options);
-  } else if (options.packageManager === 'yarn' && +packageMajor >= 2) {
-    createYarnrcYml(host, options);
-  }
-  setPresetProperty(host, options);
-  addNpmScripts(host, options);
-  createAppsAndLibsFolders(host, options);
-  setUpWorkspacesInPackageJson(host, options);
-
-  await formatFiles(host);
-}
-
-export const workspaceSchematic = convertNxGenerator(workspaceGenerator);
-
 function addPropertyWithStableKeys(obj: any, key: string, value: string) {
   const copy = { ...obj };
   Object.keys(obj).forEach((k) => {
@@ -229,7 +223,7 @@ function addPropertyWithStableKeys(obj: any, key: string, value: string) {
   });
 }
 
-function normalizeOptions(options: Schema) {
+function normalizeOptions(options: NormalizedSchema) {
   let defaultBase = options.defaultBase || deduceDefaultBase();
   return {
     npmScope: options.name,
@@ -238,7 +232,7 @@ function normalizeOptions(options: Schema) {
   };
 }
 
-function setUpWorkspacesInPackageJson(tree: Tree, options: Schema) {
+function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
   if (options.preset === Preset.NPM || options.preset === Preset.Core) {
     if (options.packageManager === 'pnpm') {
       tree.write(

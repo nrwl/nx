@@ -51,7 +51,7 @@ describe('TasksSchedule', () => {
           },
           implementationFactory: jest.fn(),
           batchImplementationFactory: jest.fn(),
-        } as ExecutorConfig;
+        } as any;
       },
       readNxJson() {
         return {};

@@ -89,42 +89,6 @@ describe('preset', () => {
     expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
   });
 
-  it(`should create files (preset = ${Preset.AngularWithNest})`, async () => {
-    await presetGenerator(tree, {
-      name: 'proj',
-      preset: Preset.AngularWithNest,
-      style: 'css',
-      linter: 'eslint',
-      cli: 'nx',
-      standaloneConfig: false,
-    });
-
-    expect(tree.exists('/apps/proj/src/app/app.component.ts')).toBe(true);
-    expect(tree.exists('/apps/api/src/app/app.controller.ts')).toBe(true);
-    expect(tree.exists('/libs/api-interfaces/src/lib/api-interfaces.ts')).toBe(
-      true
-    );
-  });
-
-  it(`should create files (preset = ${Preset.ReactWithExpress})`, async () => {
-    await presetGenerator(tree, {
-      name: 'proj',
-      preset: Preset.ReactWithExpress,
-      style: 'css',
-      linter: 'eslint',
-      cli: 'nx',
-      standaloneConfig: false,
-    });
-
-    expect(tree.exists('/apps/proj/src/app/app.tsx')).toBe(true);
-    expect(tree.exists('/libs/api-interfaces/src/lib/api-interfaces.ts')).toBe(
-      true
-    );
-    expect(tree.exists('/apps/proj/.eslintrc.json')).toBe(true);
-    expect(tree.exists('/apps/api/.eslintrc.json')).toBe(true);
-    expect(tree.exists('/libs/api-interfaces/.eslintrc.json')).toBe(true);
-  });
-
   it(`should create files (preset = ${Preset.Express})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
