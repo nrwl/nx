@@ -305,6 +305,7 @@ export {
   applySharedFunction,
   applyAdditionalShared,
   mapRemotes,
+  mapRemotesForSSR,
   getNpmPackageSharedConfig,
   shareWorkspaceLibraries,
   sharePackages,

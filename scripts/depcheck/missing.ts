@@ -16,6 +16,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@ngrx/router-store',
     '@ngrx/store',
     '@storybook/angular',
+    '@module-federation/node',
     'rxjs',
     'semver',
     // installed dynamically by the library generator
