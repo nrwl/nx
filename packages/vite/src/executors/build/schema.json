@@ -35,7 +35,8 @@
     "configFile": {
       "type": "string",
       "description": "The name of the Vite.js configuration file.",
-      "x-completion-type": "file"
+      "x-completion-type": "file",
+      "x-completion-glob": "vite.config.@(js|ts)"
     },
     "assets": {
       "type": "array",
