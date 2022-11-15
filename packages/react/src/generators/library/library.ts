@@ -46,7 +46,7 @@ import {
 import componentGenerator from '../component/component';
 import init from '../init/init';
 import { Schema } from './schema';
-
+import { updateJestConfigContent } from '../../utils/jest-utils';
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
@@ -99,6 +99,16 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       compiler: options.compiler,
     });
     tasks.push(jestTask);
+    const jestConfigPath = joinPathFragments(
+      options.projectRoot,
+      options.js ? 'jest.config.js' : 'jest.config.ts'
+    );
+    if (options.compiler === 'babel' && host.exists(jestConfigPath)) {
+      const updatedContent = updateJestConfigContent(
+        host.read(jestConfigPath, 'utf-8')
+      );
+      host.write(jestConfigPath, updatedContent);
+    }
   }
 
   if (options.component) {
