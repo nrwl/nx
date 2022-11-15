@@ -57,7 +57,8 @@ You can add Nx-specific configuration as follows:
   "name": "mylib",
   "scripts": {
     "test": "jest",
-    "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
+    "build": "tsc -p tsconfig.lib.json", // the actual command here is arbitrary
+    "ignored": "exit 1"
   },
   "nx": {
     "namedInputs": {
@@ -75,7 +76,8 @@ You can add Nx-specific configuration as follows:
         "outputs": [],
         "dependsOn": ["build"]
       }
-    }
+    },
+    "includeScripts": ["test", "build"] // If you want to limit the scripts Nx sees, you can specify a list here.
   }
 }
 ```
@@ -393,3 +395,22 @@ You can also remove a dependency as follows:
 
 Nx will add every project with a `package.json` file in it to its project graph. If you want to ignore a particular
 project, add the directory to your `.nxignore` file.
+
+### Ignoring package.json scripts
+
+Nx merges scripts from package.json's with your targets that are defined in project.json. If using a package-based setup, the targets
+are built completely from the package.json. If you only wish for some scripts to be used as Nx targets, you can specify them in the `includeScripts` property of the project's package.json.
+
+```json {% filename="packages/my-library/package.json" }
+{
+  "name": "my-library",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc",
+    "postinstall": "node ./tasks/postinstall"
+  },
+  "nx": {
+    "includeScripts": ["build"]
+  }
+}
+```
