@@ -9,7 +9,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { Linter, lintInitGenerator } from '@nrwl/linter';
-import { DEFAULT_NRWL_PRETTIER_CONFIG } from '@nrwl/workspace/src/generators/workspace/workspace';
+import { DEFAULT_NRWL_PRETTIER_CONFIG } from '@nrwl/workspace/src/generators/new/generate-workspace-files';
 import { deduceDefaultBase } from '@nrwl/workspace/src/utilities/default-base';
 import { resolveUserExistingPrettierConfig } from '@nrwl/workspace/src/utilities/prettier';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';

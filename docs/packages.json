@@ -16,10 +16,6 @@
         "delegate-build",
         "ng-packagr-lite",
         "package",
-        "webpack-browser",
-        "webpack-dev-server",
-        "webpack-server",
-        "module-federation-dev-server",
         "file-server"
       ],
       "generators": [
@@ -403,7 +399,6 @@
     "schemas": {
       "executors": ["run-commands", "counter", "run-script"],
       "generators": [
-        "workspace",
         "preset",
         "move",
         "remove",

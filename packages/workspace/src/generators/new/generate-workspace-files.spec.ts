@@ -1,12 +1,12 @@
+import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
 import { readJson } from '@nrwl/devkit';
-import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
 import Ajv from 'ajv';
-import { workspaceGenerator } from './workspace';
+import { generateWorkspaceFiles } from './generate-workspace-files';
 import { createTree } from '@nrwl/devkit/testing';
 import { Preset } from '../utils/presets';
 import * as nxSchema from '../../../../nx/schemas/nx-schema.json';
 
-describe('@nrwl/workspace:workspace', () => {
+describe('@nrwl/workspace:generateWorkspaceFiles', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -14,10 +14,9 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should create files', async () => {
-    await workspaceGenerator(tree, {
+    await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      cli: 'nx',
       preset: Preset.Empty,
       defaultBase: 'main',
     });
@@ -30,10 +29,9 @@ describe('@nrwl/workspace:workspace', () => {
   it('should create nx.json', async () => {
     const ajv = new Ajv();
 
-    await workspaceGenerator(tree, {
+    await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      cli: 'nx',
       preset: Preset.Empty,
       defaultBase: 'main',
     });
@@ -69,10 +67,9 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should setup named inputs and target defaults for non-empty presets', async () => {
-    await workspaceGenerator(tree, {
+    await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      cli: 'nx',
       preset: Preset.React,
       defaultBase: 'main',
     });
@@ -120,10 +117,9 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should create a prettierrc file', async () => {
-    await workspaceGenerator(tree, {
+    await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      cli: 'nx',
       preset: Preset.Empty,
       defaultBase: 'main',
     });
@@ -131,10 +127,9 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should recommend vscode extensions', async () => {
-    await workspaceGenerator(tree, {
+    await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      cli: 'nx',
       preset: Preset.Empty,
       defaultBase: 'main',
     });
@@ -147,10 +142,9 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should recommend vscode extensions (angular)', async () => {
-    await workspaceGenerator(tree, {
+    await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      cli: 'angular',
       preset: Preset.Empty,
       defaultBase: 'main',
     });
@@ -163,11 +157,10 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should add decorate-angular-cli when used with angular cli', async () => {
-    await workspaceGenerator(tree, {
+    await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      cli: 'angular',
-      preset: Preset.Empty,
+      preset: Preset.Angular,
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(true);
@@ -185,10 +178,9 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should not add decorate-angular-cli when used with nx cli', async () => {
-    await workspaceGenerator(tree, {
+    await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      cli: 'nx',
       preset: Preset.Empty,
       defaultBase: 'main',
     });
@@ -206,10 +198,9 @@ describe('@nrwl/workspace:workspace', () => {
 
   it('should create a workspace using NPM preset (npm package manager)', async () => {
     tree.write('/proj/package.json', JSON.stringify({}));
-    await workspaceGenerator(tree, {
+    await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      cli: 'nx',
       preset: Preset.NPM,
       defaultBase: 'main',
       packageManager: 'npm',
@@ -260,10 +251,9 @@ describe('@nrwl/workspace:workspace', () => {
 
   it('should create a workspace using NPM preset (pnpm package manager)', async () => {
     tree.write('/proj/package.json', JSON.stringify({}));
-    await workspaceGenerator(tree, {
+    await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      cli: 'nx',
       preset: Preset.NPM,
       defaultBase: 'main',
       packageManager: 'pnpm',

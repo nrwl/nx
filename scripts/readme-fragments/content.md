@@ -34,7 +34,6 @@ The `create-nx-workspace` command will ask you to select a preset, which will co
   express           [a workspace with a single Express application]
   web components    [a workspace with a single app built using web components]
   react-native      [a workspace with a single React Native application]
-  react-express     [a workspace with a full stack application (React + Express)]
 ```
 
 Select the preset that works best for you

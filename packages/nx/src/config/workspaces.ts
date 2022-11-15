@@ -144,21 +144,20 @@ export class Workspaces {
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
-    const schema = this.readExecutor(nodeModule, executor).schema;
-    return schema['cli'] === 'nx';
+    return !this.readExecutor(nodeModule, executor).isNgCompat;
   }
 
   isNxGenerator(collectionName: string, generatorName: string) {
-    const schema = this.readGenerator(collectionName, generatorName).schema;
-    return schema['cli'] === 'nx';
+    return !this.readGenerator(collectionName, generatorName).isNgCompat;
   }
 
-  readExecutor(nodeModule: string, executor: string): ExecutorConfig {
+  readExecutor(
+    nodeModule: string,
+    executor: string
+  ): ExecutorConfig & { isNgCompat: boolean } {
     try {
-      const { executorsFilePath, executorConfig } = this.readExecutorsJson(
-        nodeModule,
-        executor
-      );
+      const { executorsFilePath, executorConfig, isNgCompat } =
+        this.readExecutorsJson(nodeModule, executor);
       const executorsDir = path.dirname(executorsFilePath);
       const schemaPath = path.join(executorsDir, executorConfig.schema || '');
       const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
@@ -187,6 +186,7 @@ export class Workspaces {
         implementationFactory,
         batchImplementationFactory,
         hasherFactory,
+        isNgCompat,
       };
     } catch (e) {
       throw new Error(
@@ -207,6 +207,7 @@ export class Workspaces {
       const generatorConfig =
         generatorsJson.generators?.[normalizedGeneratorName] ||
         generatorsJson.schematics?.[normalizedGeneratorName];
+      const isNgCompat = !generatorsJson.generators?.[normalizedGeneratorName];
       const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
       const schema = readJsonFile(schemaPath);
       if (!schema.properties || typeof schema.properties !== 'object') {
@@ -223,6 +224,7 @@ export class Workspaces {
         normalizedGeneratorName,
         schema,
         implementationFactory,
+        isNgCompat,
         aliases: generatorConfig.aliases || [],
       };
     } catch (e) {
@@ -331,7 +333,8 @@ export class Workspaces {
         `Cannot find executor '${executor}' in ${executorsFilePath}.`
       );
     }
-    return { executorsFilePath, executorConfig };
+    const isNgCompat = !executorsJson.executors?.[executor];
+    return { executorsFilePath, executorConfig, isNgCompat };
   }
 
   private readGeneratorsJson(

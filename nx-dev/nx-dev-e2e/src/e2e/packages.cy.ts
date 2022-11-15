@@ -113,18 +113,6 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/angular/executors/package',
     },
     {
-      title: '@nrwl/angular:webpack-browser',
-      path: '/packages/angular/executors/webpack-browser',
-    },
-    {
-      title: '@nrwl/angular:webpack-dev-server',
-      path: '/packages/angular/executors/webpack-dev-server',
-    },
-    {
-      title: '@nrwl/angular:module-federation-dev-server',
-      path: '/packages/angular/executors/module-federation-dev-server',
-    },
-    {
       title: '@nrwl/angular:file-server',
       path: '/packages/angular/executors/file-server',
     },
@@ -467,11 +455,6 @@ describe('nx-dev: Packages Section', () => {
     {
       title: '@nrwl/web:file-server',
       path: '/packages/web/executors/file-server',
-    },
-    { title: '@nrwl/workspace', path: '/packages/workspace' },
-    {
-      title: '@nrwl/workspace:workspace',
-      path: '/packages/workspace/generators/workspace',
     },
     {
       title: '@nrwl/workspace:preset',
