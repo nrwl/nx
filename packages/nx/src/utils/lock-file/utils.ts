@@ -246,6 +246,13 @@ function traverseExternalNodesDependencies(
   });
 }
 
+/**
+ * Generate new hash based on the original hash and pruning input parameters - packages and project name
+ * @param originalHash
+ * @param packages
+ * @param projectName
+ * @returns
+ */
 export function generatePrunnedHash(
   originalHash: string,
   packages: string[],
