@@ -398,8 +398,8 @@ project, add the directory to your `.nxignore` file.
 
 ### Ignoring package.json scripts
 
-Nx merges scripts from package.json's with your targets that are defined in project.json. If using a package-based setup, the targets
-are built completely from the package.json. If you only wish for some scripts to be used as Nx targets, you can specify them in the `includeScripts` property of the project's package.json.
+Nx merges package.json scripts with your targets that are defined in project.json.
+If you only wish for some scripts to be used as Nx targets, you can specify them in the `includeScripts` property of the project's package.json.
 
 ```json {% filename="packages/my-library/package.json" }
 {
