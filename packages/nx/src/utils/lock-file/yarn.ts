@@ -304,21 +304,24 @@ function pruneWorkspacePackages(
 ): LockFileDependencies {
   const result: LockFileDependencies = {};
 
+  let workspaceProjKey = '';
+
   if (projectName) {
-    let workspaceProjKey = Object.keys(workspacePackages).find((key) =>
-      key.startsWith(`${projectName}@workspace:`)
+    workspaceProjKey =
+      Object.keys(workspacePackages).find((key) =>
+        key.startsWith(`${projectName}@workspace:`)
+      ) || `${projectName}@workspace:^`;
+  } else {
+    workspaceProjKey = Object.keys(workspacePackages).find(
+      (key) => key.indexOf('@workspace:.') !== -1
     );
-    let dependencies = {};
-    if (!workspaceProjKey) {
-      workspaceProjKey = `${projectName}@workspace:^`;
-    } else {
-      dependencies = workspacePackages[workspaceProjKey].dependencies;
-    }
+  }
+
+  if (workspaceProjKey) {
     const prunedWorkspaceDependencies = pruneWorkspacePackageDependencies(
-      dependencies,
+      workspacePackages[workspaceProjKey]?.dependencies || {},
       packages,
-      prunedDependencies,
-      true
+      prunedDependencies
     );
     result[workspaceProjKey] = {
       version: '0.0.0-use.local',
@@ -327,24 +330,7 @@ function pruneWorkspacePackages(
       linkType: 'soft',
       dependencies: sortObject(prunedWorkspaceDependencies),
     };
-    return result;
   }
-
-  Object.entries(workspacePackages).forEach(
-    ([packageKey, { dependencies, ...value }]) => {
-      const isRootPackage = packageKey.indexOf('@workspace:.') !== -1;
-      const prunedWorkspaceDependencies = pruneWorkspacePackageDependencies(
-        dependencies,
-        packages,
-        prunedDependencies,
-        isRootPackage
-      );
-      result[packageKey] = {
-        ...value,
-        dependencies: sortObject(prunedWorkspaceDependencies),
-      };
-    }
-  );
 
   return result;
 }
@@ -352,8 +338,7 @@ function pruneWorkspacePackages(
 function pruneWorkspacePackageDependencies(
   dependencies: Record<string, string>,
   packages: string[],
-  prunedDependencies: LockFileData['dependencies'],
-  isMainPackage?: boolean
+  prunedDependencies: LockFileData['dependencies']
 ): Record<string, string> {
   const result: Record<string, string> = {};
 
@@ -371,16 +356,14 @@ function pruneWorkspacePackageDependencies(
     }
   );
   // add all missing deps to root workspace package
-  if (isMainPackage) {
-    packages.forEach((p) => {
-      if (!result[p]) {
-        // extract first version expression from package's structure
-        const metaVersion = Object.values(prunedDependencies[p])[0]
-          .packageMeta[0] as string;
-        result[p] = metaVersion.split('@npm:')[1];
-      }
-    });
-  }
+  packages.forEach((p) => {
+    if (!result[p]) {
+      // extract first version expression from package's structure
+      const metaVersion = Object.values(prunedDependencies[p])[0]
+        .packageMeta[0] as string;
+      result[p] = metaVersion.split('@npm:')[1];
+    }
+  });
 
   return result;
 }
