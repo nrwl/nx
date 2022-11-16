@@ -476,7 +476,7 @@ export function runCommandAsync(
         cwd: tmpProjPath(),
         env: {
           CI: 'true',
-          ...(opts.env || process.env),
+          ...(opts.env || getStrippedEnvironmentVariables()),
           FORCE_COLOR: 'false',
         },
         encoding: 'utf-8',
@@ -504,7 +504,7 @@ export function runCommandUntil(
     cwd: tmpProjPath(),
     env: {
       CI: 'true',
-      ...process.env,
+      ...getStrippedEnvironmentVariables(),
       FORCE_COLOR: 'false',
     },
     encoding: 'utf-8',
@@ -537,7 +537,7 @@ export function runCLIAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env,
+    env: getStrippedEnvironmentVariables(),
     silent: false,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
@@ -564,7 +564,7 @@ export function runNgAdd(
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
       stdio: isVerbose() ? 'inherit' : 'pipe',
-      env: { ...(opts.env || process.env) },
+      env: { ...(opts.env || getStrippedEnvironmentVariables()) },
       encoding: 'utf-8',
     })
       .toString()
@@ -596,7 +596,7 @@ export function runCLI(
     const pm = getPackageManagerCommand();
     const logs = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: { CI: 'true', ...(opts.env || process.env) },
+      env: { CI: 'true', ...(opts.env || getStrippedEnvironmentVariables()) },
       encoding: 'utf-8',
       stdio: 'pipe',
       maxBuffer: 50 * 1024 * 1024,
@@ -652,7 +652,7 @@ export function runCommand(
       cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
-        ...process.env,
+        ...getStrippedEnvironmentVariables(),
         FORCE_COLOR: 'false',
       },
       encoding: 'utf-8',
@@ -665,6 +665,7 @@ export function runCommand(
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
+    console.log('I THREW');
     return e.stdout?.toString() + e.stderr?.toString();
   }
 }
@@ -779,9 +780,9 @@ export function listFiles(dirName: string) {
   return readdirSync(tmpProjPath(dirName));
 }
 
-export function readJson(f: string): any {
+export function readJson<T extends Object = any>(f: string): T {
   const content = readFile(f);
-  return parseJson(content);
+  return parseJson<T>(content);
 }
 
 export function readFile(f: string) {
@@ -997,4 +998,13 @@ export async function expectJestTestsToPass(
 
   const results = await runCLIAsync(`test ${name}`);
   expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
+}
+
+function getStrippedEnvironmentVariables() {
+  const passthroughNxVars = new Set(['NX_VERBOSE_LOGGING']);
+  return Object.fromEntries(
+    Object.entries(process.env).filter(
+      ([key, value]) => passthroughNxVars.has(key) || !key.startsWith('NX_')
+    )
+  );
 }

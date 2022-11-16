@@ -155,7 +155,7 @@ function parseRunOneOptions(
   return res;
 }
 
-function calculateDefaultProjectName(
+export function calculateDefaultProjectName(
   cwd: string,
   root: string,
   workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration

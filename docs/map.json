@@ -1371,6 +1371,11 @@
               "name": "repair",
               "id": "repair",
               "file": "generated/cli/repair"
+            },
+            {
+              "name": "exec",
+              "id": "exec",
+              "file": "generated/cli/exec"
             }
           ]
         },

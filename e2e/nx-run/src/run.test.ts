@@ -1,6 +1,8 @@
 import {
   checkFilesExist,
   cleanupProject,
+  e2eCwd,
+  fileExists,
   isWindows,
   newProject,
   readFile,
@@ -10,11 +12,14 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  tmpProjPath,
   uniq,
   updateFile,
+  updateJson,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { PackageJson } from 'nx/src/utils/package-json';
+import * as path from 'path';
 
 describe('Nx Running Tests', () => {
   let proj: string;
@@ -444,5 +449,105 @@ describe('Nx Running Tests', () => {
       });
       expect(buildWithDaemon).toContain(`Successfully ran target build`);
     }, 1000000);
+  });
+
+  describe('exec', () => {
+    let pkg: string;
+    let pkgRoot: string;
+    let originalRootPackageJson: PackageJson;
+
+    beforeAll(() => {
+      originalRootPackageJson = readJson<PackageJson>('package.json');
+      pkg = uniq('package');
+      pkgRoot = tmpProjPath(path.join('libs', pkg));
+
+      updateJson<PackageJson>('package.json', (v) => {
+        v.workspaces = ['libs/*'];
+        return v;
+      });
+
+      updateFile(
+        `libs/${pkg}/package.json`,
+        JSON.stringify(<PackageJson>{
+          name: pkg,
+          version: '0.0.1',
+          scripts: {
+            build: 'nx exec -- echo HELLO',
+          },
+        })
+      );
+    });
+
+    afterAll(() => {
+      updateJson('package.json', () => originalRootPackageJson);
+    });
+
+    it('should work for npm scripts', () => {
+      const output = runCommand('npm run build', {
+        cwd: pkgRoot,
+      });
+      expect(output).toContain('HELLO');
+      expect(output).toContain(`nx run ${pkg}:build`);
+    });
+
+    it('should pass overrides', () => {
+      const output = runCommand('npm run build WORLD', {
+        cwd: pkgRoot,
+      });
+      expect(output).toContain('HELLO WORLD');
+    });
+
+    describe('caching', () => {
+      it('shoud cache subsequent calls', () => {
+        runCommand('npm run build', {
+          cwd: pkgRoot,
+        });
+        const output = runCommand('npm run build', {
+          cwd: pkgRoot,
+        });
+        expect(output).toContain('Nx read the output from the cache');
+      });
+
+      it('should read outputs', () => {
+        console.log(pkgRoot);
+        const nodeCommands = [
+          "const fs = require('fs')",
+          "fs.mkdirSync('../../tmp/exec-outputs-test', {recursive: true})",
+          "fs.writeFileSync('../../tmp/exec-outputs-test/file.txt', 'Outputs')",
+        ];
+        updateFile(
+          `libs/${pkg}/package.json`,
+          JSON.stringify(<PackageJson>{
+            name: pkg,
+            version: '0.0.1',
+            scripts: {
+              build: `nx exec -- node -e "${nodeCommands.join(';')}"`,
+            },
+            nx: {
+              targets: {
+                build: {
+                  outputs: ['{workspaceRoot}/tmp/exec-outputs-test'],
+                },
+              },
+            },
+          })
+        );
+        const out = runCommand('npm run build', {
+          cwd: pkgRoot,
+        });
+        console.log(out);
+        expect(
+          fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt'))
+        ).toBeTruthy();
+        removeFile('tmp');
+        const output = runCommand('npm run build', {
+          cwd: pkgRoot,
+        });
+        expect(output).toContain('[local cache]');
+        expect(
+          fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt'))
+        ).toBeTruthy();
+      });
+    });
   });
 });
