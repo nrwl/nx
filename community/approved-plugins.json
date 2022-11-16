@@ -95,11 +95,6 @@
     "url": "https://github.com/FabianGosebrink/nx-protractor-to-cypress"
   },
   {
-    "name": "@nx-tools/nx-docker",
-    "description": "Nx plugin to build docker images of your affected apps",
-    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-docker"
-  },
-  {
     "name": "@angular-custom-builders/lite-serve",
     "description": "Nx plugin to run the e2e test on an existing dist folder",
     "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
@@ -353,5 +348,10 @@
     "name": "@spaceribs/nx-web-ext",
     "description": "Nx plugin that allows you to build, test and deploy web extensions.",
     "url": "https://github.com/spaceribs/spaceribs/tree/main/packages/nx-web-ext"
+  },
+  {
+    "name": "@nx-tools/nx-container",
+    "description": "Nx plugin to build OCI containers with Docker, Podman or Kaniko.",
+    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-container"
   }
 ]
