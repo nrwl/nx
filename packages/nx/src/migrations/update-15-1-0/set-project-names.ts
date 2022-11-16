@@ -1,23 +1,22 @@
 import { Tree } from '../../generators/tree';
-import {
-  getProjects,
-  readNxJson,
-  updateProjectConfiguration,
-} from '../../generators/utils/project-configuration';
+import { readNxJson } from '../../generators/utils/project-configuration';
+import { globForProjectFiles } from '../../config/workspaces';
+import { dirname } from 'path';
+import { readJson, writeJson } from '../../generators/utils/json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { join } from 'path';
 
 export default async function (tree: Tree) {
-  // This looks like it does nothing, but this will actually effectively migrate over all the configs that need to be moved over, but won't touch configs that don't need to be moved
-  for (const [projName, projConfig] of getProjects(tree)) {
-    if (tree.exists(join(projConfig.root, 'project.json'))) {
-      if (!projConfig.name) {
-        projConfig.name = toProjectName(projConfig.root, readNxJson(tree));
-      }
-      updateProjectConfiguration(tree, projName, projConfig);
+  const nxJson = readNxJson(tree);
+  const projectFiles = globForProjectFiles(tree.root, nxJson);
+  const projectJsons = projectFiles.filter((f) => f.endsWith('project.json'));
+
+  for (let f of projectJsons) {
+    const projectJson = readJson(tree, f);
+    if (!projectJson.name) {
+      projectJson.name = toProjectName(dirname(f), nxJson);
+      writeJson(tree, f, projectJson);
     }
   }
-
   await formatChangedFilesWithPrettierIfAvailable(tree);
 }
 
