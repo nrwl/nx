@@ -3,6 +3,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { NxJsonConfiguration } from './nx-json';
 import { ProjectsConfigurations } from './workspace-json-project-json';
 
+// some change
 export function readNxJson(): NxJsonConfiguration {
   return new Workspaces(workspaceRoot).readNxJson();
 }
