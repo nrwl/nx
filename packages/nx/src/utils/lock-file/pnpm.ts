@@ -28,7 +28,7 @@ type VersionInfoWithInlineSpecifier = {
 };
 
 type PnpmLockFile = {
-  lockfileVersion: string;
+  lockfileVersion: number;
   specifiers?: Record<string, string>;
   dependencies?: Record<
     string,
@@ -38,7 +38,15 @@ type PnpmLockFile = {
     string,
     string | { version: string; specifier: string }
   >;
-  packages: Dependencies;
+  packages?: Dependencies;
+  importers?: Record<string, { specifiers: Record<string, string> }>;
+
+  time?: Record<string, string>; // e.g.   /@babel/core/7.19.6: '2022-10-20T09:03:36.074Z'
+  overrides?: Record<string, string>; // js-yaml@^4.0.0: npm:@zkochan/js-yaml@0.0.6
+  patchedDependencies?: Record<string, { path: string; hash: string }>; // e.g.  pkg@5.7.0: { path: 'patches/pkg@5.7.0.patch', hash: 'sha512-...' }
+  neverBuiltDependencies?: string[]; // e.g.  ['core-js', 'level']
+  onlyBuiltDependencies?: string[]; // e.g.  ['vite']
+  packageExtensionsChecksum?: string; // e.g.  'sha512-...' DO NOT COPY TO PRUNED LOCKFILE
 };
 
 const LOCKFILE_YAML_FORMAT = {
@@ -300,12 +308,18 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
     });
   }
 
+  const { time, ...lockFileMetatada } = lockFileData.lockFileMetadata as Omit<
+    PnpmLockFile,
+    'specifiers' | 'importers' | 'devDependencies' | 'dependencies' | 'packages'
+  >;
+
   return {
-    ...(lockFileData.lockFileMetadata as { lockfileVersion: string }),
+    ...(lockFileData.lockFileMetadata as { lockfileVersion: number }),
     specifiers: sortObject(specifiers),
     dependencies: sortObject(dependencies),
     devDependencies: sortObject(devDependencies),
     packages: sortObject(packages),
+    time,
   };
 }
 
