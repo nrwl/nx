@@ -161,21 +161,21 @@ export function calculateDefaultProjectName(
   workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
 ) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
-  if (relativeCwd) {
-    relativeCwd = relativeCwd.startsWith('/')
-      ? relativeCwd.substring(1)
-      : relativeCwd;
-    const matchingProject = Object.keys(workspaceConfiguration.projects).find(
-      (p) => {
-        const projectRoot = workspaceConfiguration.projects[p].root;
-        return (
-          relativeCwd == projectRoot ||
-          relativeCwd.startsWith(`${projectRoot}/`)
-        );
-      }
-    );
-    if (matchingProject) return matchingProject;
-  }
+
+  relativeCwd = relativeCwd.startsWith('/')
+    ? relativeCwd.substring(1)
+    : relativeCwd;
+  const matchingProject = Object.keys(workspaceConfiguration.projects).find(
+    (p) => {
+      const projectRoot = workspaceConfiguration.projects[p].root;
+      return (
+        relativeCwd == projectRoot ||
+        (relativeCwd == '' && projectRoot == '.') ||
+        relativeCwd.startsWith(`${projectRoot}/`)
+      );
+    }
+  );
+  if (matchingProject) return matchingProject;
   return (
     (workspaceConfiguration.cli as { defaultProjectName: string })
       ?.defaultProjectName || workspaceConfiguration.defaultProject
