@@ -59,11 +59,11 @@ nx g @nrwl/vite:init
 You will notice that the executor will ask you of the framework you are planning to use. This is just to make sure that the right dependencies are installed. You can always install manually any other dependencies you need.
 {% /callout %}
 
-## Using Vite.js in a React application
+## Using Vite.js in your applications
 
-You can use the `@nrwl/vite:dev-server` and the `@nrwl/vite:build` executors to serve and build your React applications using Vite.js. To do this, you need to make a few adjustments to your application.
+You can use the `@nrwl/vite:dev-server` and the `@nrwl/vite:build` executors to serve and build your applications using Vite.js. To do this, you need to make a few adjustments to your application.
 
-{% github-repository url="https://github.com/mandarini/nx-recipes/tree/feat/react-vite-recipe/react-vite" /%}
+{% github-repository url="https://github.com/mandarini/nx-recipes/tree/feat/react-vite-recipe/vite-example" /%}
 
 ### 1. Change the executors in your `project.json`
 
@@ -125,7 +125,17 @@ You can specify more options in the `vite.config.ts` file (see **Step 2** below)
 
 ### 2. Configure Vite.js
 
-Add a `vite.config.ts` file to the root of your app, and add the `'@vitejs/plugin-react'` plugin to it:
+#### TypeScript paths
+
+You need to use the [`vite-tsconfig-paths` plugin](https://www.npmjs.com/package/vite-tsconfig-paths) to make sure that your TypeScript paths are resolved correctly in your monorepo.
+
+#### React plugin
+
+If you are using React, you need to use the [`@vitejs/plugin-react` plugin](https://www.npmjs.com/package/@vitejs/plugin-react).
+
+#### How your `vite.config.ts` looks like
+
+Add a `vite.config.ts` file to the root of your app. If you are not using React, you can skip adding the `react` plugin, of course.
 
 ```ts
 // eg. apps/my-app/vite.config.ts
@@ -150,11 +160,48 @@ Make sure the `root` path in the `ViteTsConfigPathsPlugin` options is correct. I
 
 In that config file, you can configure Vite.js as you would normally do. For more information, see the [Vite.js documentation](https://vitejs.dev/config/).
 
+#### Creating a root `vite.config.ts` file
+
+You can create a `vite.config.ts` file to the root of your workspace, as well as at the root of each of your applications. This file is used to configure Vite. You can read more about the configuration options in the [Vite documentation](https://vitejs.dev/config/).
+
+The root `vite.config.ts` file can be used for all applications, and you can place in there general configurations that would apply for all your apps using Vite in your workspace. The application-specific `vite.config.ts` files can be used to override the root configuration, or, for example, import framework-specific plugins (eg. the `'@vitejs/plugin-react'` for React apps). The application-specific configuration files extend (using [`mergeConfig`](https://vitejs.dev/guide/api-javascript.html#mergeconfig)) the root configuration file. You can adjust this behavior to your needs.
+
+So, if you are using a root `vite.config.ts` file, you should adjust your code as follows:
+
+```ts
+// <workspace-root>vite.config.ts
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [],
+});
+```
+
+and then in your app's `vite.config.ts` file:
+
+```ts
+// eg. apps/my-app/vite.config.ts
+import { mergeConfig } from 'vite';
+import baseConfig from '../../vite.config';
+import react from '@vitejs/plugin-react';
+import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+
+export default mergeConfig(baseConfig, {
+  plugins: [
+    react(),
+    ViteTsConfigPathsPlugin({
+      root: '../../',
+      projects: ['tsconfig.base.json'],
+    }),
+  ],
+});
+```
+
 ### 3. Move `index.html` and point it to your app's entrypoint
 
 First of all, move your `index.html` file to the root of your app (eg. from `apps/my-app/src/index.html` to `apps/my-app/index.html`).
 
-Then, add a module `script` tag pointing to the `main.tsx` file of your app:
+Then, add a module `script` tag pointing to the `main.tsx` (or `main.ts`) file of your app:
 
 ```html
 ...
@@ -192,6 +239,8 @@ myorg/
 
 Change your app's `tsconfig.json` (eg. `apps/my-app/tsconfig.json`) `compilerOptions` to the following:
 
+#### For React apps
+
 ```json
 ...
   "compilerOptions": {
@@ -212,6 +261,31 @@ Change your app's `tsconfig.json` (eg. `apps/my-app/tsconfig.json`) `compilerOpt
     "types": ["vite/client"],
     "useDefineForClassFields": true
   },
+...
+```
+
+#### For Web apps
+
+```json
+...
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "moduleResolution": "Node",
+    "strict": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+    "types": ["vite/client"]
+  },
+  "include": ["src"],
 ...
 ```
 
