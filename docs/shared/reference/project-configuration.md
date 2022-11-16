@@ -393,8 +393,7 @@ You can also remove a dependency as follows:
 
 ### Ignoring a project
 
-Nx will add every project with a `package.json` file in it to its project graph. If you want to ignore a particular
-project, add the directory to your `.nxignore` file.
+Nx will add projects with a `package.json` file that are referenced (1) in the `workspaces` property of the root `package.json`, (2) in `pnpm-workspace.yml` or (3) in `lerna.json`. If you want to ignore a particular project that those tools reference, add the directory to your `.nxignore` file.
 
 ### Ignoring package.json scripts
 
