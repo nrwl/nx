@@ -20,15 +20,15 @@ Most organizations start their CI as a single job that is responsible for runnin
 
 This script will run all lint, test and build targets for projects that are affected by the current PR.
 
-### Pro: Simple Setup
+### 🎉 Pro: Simple Setup
 
 This approach is the simplest to setup of the three types. The execution flow is the exact same as if a developer were manually checking everything on their own machine.
 
-### Pro: Simple Debugging
+### 🎉 Pro: Simple Debugging
 
 Since all the tasks are executed on the same job, all the error logs and build artifacts are located in one place. This makes it easy to find and diagnose errors.
 
-### Con: Slow
+### ⛔️ Con: Slow
 
 This approach works fine for smaller repos, but as the repo grows and the tasks take longer to execute, CI takes longer and longer to run. Nx's affected and computation caching help improve the average CI time, but the worst case CI time will still grow significantly for each project that is added to the repo.
 
@@ -62,19 +62,19 @@ To improve the performance of the worst case CI time, you have to implement some
 Here's a visualization of how this approach works:
 ![CI using binning](../images/dte/binning.svg)
 
-### Pro: Faster
+### 🎉 Pro: Faster
 
 Because there are now three different jobs running the tasks, the worst case CI time is now only as long as the longest group of tasks. (For this scenario, the build tasks usually take the longest.)
 
-### Con: Complex Debugging
+### ⛔️ Con: Complex Debugging
 
 With tasks being run on multiple machines, it can be difficult to find where a particular task was run. Tracking down a specific error message or build artifact becomes more and more difficult the more agents are used and the more complex the planning script becomes.
 
-### Con: Difficult to Share Build Artifacts
+### ⛔️ Con: Difficult to Share Build Artifacts
 
 If one task needs the outputs file of another task, they either need to be run on the same agent job, or you need to create some mechanism to copy the build artifacts from one job to another. Also, the planning script needs to account for all of these task dependencies as it assigns tasks to each agent.
 
-### Con: Complex Setup
+### ⛔️ Con: Complex Setup
 
 This approach requires you to create extra jobs and maintain the script that assigns tasks to each agent job. You could certainly be smarter about assigning tasks to jobs so that you are more optimally dividing work across agent jobs, but that requires making the planning job more complex.
 
@@ -103,19 +103,19 @@ The setup looks like this:
 The visualization for distributed task execution looks like this:
 ![CI using DTE](../images/dte/3agents.svg)
 
-### Pro: Fastest
+### 🎉 Pro: Fastest
 
 This approach fully optimizes the binning strategy so that tasks are optimally distributed to however many agents are available.
 
-### Pro: Easy to Scale
+### 🎉 Pro: Easy to Scale
 
 If CI is taking too long, simply increase the number of agent jobs being started in your CI system and Nx will recognize the new agent jobs are available and distribute tasks accordingly. With this approach, your worst case CI time is only limited by your longest running individual task.
 
-### Pro: Build Artifacts
+### 🎉 Pro: Build Artifacts
 
 Nx uses the dependency graph to ensure that tasks are executed in the correct order. Nx Cloud then uses the distributed computation cache to make sure that build artifacts from prior tasks are always present for the current task, no matter which agent the tasks were run on. When developing your tasks, you can think of your CI as a single job, even though it is being distributed across an arbitrary number of agents.
 
-### Pro: Simple Debugging
+### 🎉 Pro: Simple Debugging
 
 Because Nx uses distributed computation caching to replay all the tasks back on the main job, every log and build artifact is present on that single job. No matter how many agents are used to speed up the CI time, all the debugging information can be found in a single place.
 
