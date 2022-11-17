@@ -8660,7 +8660,7 @@ packages:
  * save-workspace-protocol=rolling
  */
 
-export const lockFileWithWorkspaces = `lockfileVersion: 5.4
+export const lockFileWithWorkspacesAndTime = `lockfileVersion: 5.4
 
 importers:
 

@@ -1,4 +1,8 @@
-import { LockFileData, PackageDependency } from './lock-file-type';
+import {
+  LockFileData,
+  PackageDependency,
+  PackageVersions,
+} from './lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
 import {
   sortObject,
@@ -8,6 +12,7 @@ import {
   generatePrunnedHash,
 } from './utils';
 import { satisfies } from 'semver';
+import { dematerialize } from 'rxjs/operators';
 
 type PackageMeta = {
   key: string;
@@ -314,7 +319,7 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
   >;
 
   return {
-    ...(lockFileData.lockFileMetadata as { lockfileVersion: number }),
+    ...(lockFileMetatada as { lockfileVersion: number }),
     specifiers: sortObject(specifiers),
     dependencies: sortObject(dependencies),
     devDependencies: sortObject(devDependencies),
@@ -358,7 +363,10 @@ export function prunePnpmLockFile(
     projectName
   );
   const prunedLockFileData = {
-    lockFileMetadata: lockFileData.lockFileMetadata,
+    lockFileMetadata: pruneMetadata(
+      lockFileData.lockFileMetadata,
+      dependencies
+    ),
     dependencies,
     hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
   };
@@ -403,6 +411,40 @@ function pruneDependencies(
       console.warn(
         `Could not find ${packageName} in the lock file. Skipping...`
       );
+    }
+  });
+
+  return result;
+}
+
+function pruneMetadata(
+  lockFileMetadata: LockFileData['lockFileMetadata'],
+  prunedDependencies: Record<string, PackageVersions>
+): LockFileData['lockFileMetadata'] {
+  // These should be removed from the lock file metadata since we don't have them in the package.json
+  // overrides, patchedDependencies, neverBuiltDependencies, onlyBuiltDependencies, packageExtensionsChecksum
+  return {
+    lockfileVersion: lockFileMetadata.lockfileVersion,
+    ...(lockFileMetadata.time && {
+      time: pruneTime(lockFileMetadata.time, prunedDependencies),
+    }),
+  };
+}
+
+function pruneTime(
+  time: Record<string, string>,
+  prunedDependencies: Record<string, PackageVersions>
+): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  Object.entries(time).forEach(([key, value]) => {
+    const packageName = key.slice(1, key.lastIndexOf('/'));
+    const version = key.slice(key.lastIndexOf('/'));
+    if (
+      prunedDependencies[packageName] &&
+      prunedDependencies[packageName][`${packageName}@${version}`]
+    ) {
+      result[key] = value;
     }
   });
 
