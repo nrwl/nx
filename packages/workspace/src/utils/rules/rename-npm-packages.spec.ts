@@ -94,7 +94,7 @@ describe('renameNpmPackages Rule', () => {
     tree = await runSchematic('lib', { name: 'library-1' }, tree);
     tree = await runSchematic('lib', { name: 'library-2' }, tree);
     tree = await runExternalSchematic(
-      '@nrwl/angular',
+      '@nrwl/react',
       'application',
       { name: 'app-one' },
       tree

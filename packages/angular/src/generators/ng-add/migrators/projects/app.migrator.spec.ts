@@ -722,6 +722,56 @@ describe('app migrator', () => {
       });
     });
 
+    it('should update build target with array of polyfills', async () => {
+      const project = addProject('app1', {
+        root: '',
+        sourceRoot: 'src',
+        architect: {
+          build: {
+            builder: '@angular-devkit/build-angular:browser',
+            options: {
+              outputPath: 'dist/app1',
+              index: 'src/index.html',
+              main: 'src/main.ts',
+              polyfills: ['zone.js'],
+              tsConfig: 'tsconfig.app.json',
+              assets: ['src/favicon.ico', 'src/assets'],
+              styles: ['src/styles.css'],
+              scripts: [],
+            },
+            configurations: {
+              production: {},
+              development: {},
+            },
+            defaultConfiguration: 'production',
+          },
+        },
+      });
+      const migrator = new AppMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      const { targets } = readProjectConfiguration(tree, 'app1');
+      expect(targets.build).toStrictEqual({
+        executor: '@angular-devkit/build-angular:browser',
+        options: {
+          outputPath: 'dist/apps/app1',
+          index: 'apps/app1/src/index.html',
+          main: 'apps/app1/src/main.ts',
+          polyfills: ['zone.js'],
+          tsConfig: 'apps/app1/tsconfig.app.json',
+          assets: ['apps/app1/src/favicon.ico', 'apps/app1/src/assets'],
+          styles: ['apps/app1/src/styles.css'],
+          scripts: [],
+        },
+        configurations: {
+          production: {},
+          development: {},
+        },
+        defaultConfiguration: 'production',
+      });
+    });
+
     it('should update build target when using a target name different than "build"', async () => {
       const project = addProject('app1', {
         root: '',

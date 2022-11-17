@@ -1,11 +1,11 @@
 import {
   joinPathFragments,
+  offsetFromRoot,
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { offsetFromRoot } from '@nrwl/devkit';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { basename } from 'path';
 import type {
@@ -88,8 +88,9 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
 
     target.options.main =
       target.options.main && this.convertAsset(target.options.main);
-    target.options.polyfills =
-      target.options.polyfills && this.convertAsset(target.options.polyfills);
+    target.options.polyfills = Array.isArray(target.options.polyfills)
+      ? target.options.polyfills.map((p) => this.convertAsset(p))
+      : target.options.polyfills && this.convertAsset(target.options.polyfills);
     target.options.tsConfig =
       target.options.tsConfig &&
       joinPathFragments(

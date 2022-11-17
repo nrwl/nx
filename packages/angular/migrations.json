@@ -190,6 +190,42 @@
       "version": "15.0.0-beta.1",
       "description": "Stop hashing karma spec files and config files for build targets and dependent tasks",
       "factory": "./src/migrations/update-15-0-0/add-karma-inputs"
+    },
+    "update-angular-cli-version-15-0-0": {
+      "cli": "nx",
+      "version": "15.2.0-beta.0",
+      "description": "Update the @angular/cli package version to ~15.0.0.",
+      "factory": "./src/migrations/update-15-2-0/update-angular-cli"
+    },
+    "remove-browserlist-config": {
+      "cli": "nx",
+      "version": "15.2.0-beta.0",
+      "description": "Remove browserlist config as it's handled by build-angular",
+      "factory": "./src/migrations/update-15-2-0/remove-browserlist-config"
+    },
+    "update-typescript-target": {
+      "cli": "nx",
+      "version": "15.2.0-beta.0",
+      "description": "Update typescript target to ES2022",
+      "factory": "./src/migrations/update-15-2-0/update-typescript-target"
+    },
+    "update-workspace-config": {
+      "cli": "nx",
+      "version": "15.2.0-beta.0",
+      "description": "Remove bundleDependencies from server targets",
+      "factory": "./src/migrations/update-15-2-0/update-workspace-config"
+    },
+    "update-platform-server-exports": {
+      "cli": "ng",
+      "version": "15.2.0-beta.0",
+      "description": "Remove exported `@angular/platform-server` `renderModule` method. The `renderModule` method is now exported by the Angular CLI.",
+      "factory": "./src/migrations/update-15-2-0/remove-platform-server-exports"
+    },
+    "update-karma-main-file": {
+      "cli": "ng",
+      "version": "15.2.0-beta.0",
+      "description": "Remove no longer needed require calls in Karma builder main file.",
+      "factory": "./src/migrations/update-15-2-0/update-karma-main-file"
     }
   },
   "packageJsonUpdates": {
@@ -1554,6 +1590,63 @@
         },
         "@angular-eslint/template-parser": {
           "version": "~14.0.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.2.0": {
+      "version": "15.2.0-beta.0",
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1500.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1500.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/common": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/builders": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~15.0.0",
           "alwaysAddToPackageJson": false
         }
       }

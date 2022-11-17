@@ -48,7 +48,7 @@ describe('convertComponentToScam', () => {
       'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -56,12 +56,7 @@ describe('convertComponentToScam', () => {
         templateUrl: './example.component.html',
         styleUrls: ['./example.component.css']
       })
-      export class ExampleComponent implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class ExampleComponent {
 
       }
 
@@ -177,7 +172,7 @@ describe('convertComponentToScam', () => {
       'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -185,12 +180,7 @@ describe('convertComponentToScam', () => {
         templateUrl: './example.component.html',
         styleUrls: ['./example.component.css']
       })
-      export class ExampleComponent implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class ExampleComponent {
 
       }
 
@@ -310,7 +300,7 @@ describe('convertComponentToScam', () => {
       'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -318,12 +308,7 @@ describe('convertComponentToScam', () => {
         templateUrl: './example.random.html',
         styleUrls: ['./example.random.css']
       })
-      export class ExampleRandom implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class ExampleRandom {
 
       }
 
@@ -444,7 +429,7 @@ describe('convertComponentToScam', () => {
       'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -452,12 +437,7 @@ describe('convertComponentToScam', () => {
         templateUrl: './example.component.html',
         styleUrls: ['./example.component.css']
       })
-      export class ExampleComponent implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class ExampleComponent {
 
       }
 
@@ -517,7 +497,7 @@ describe('convertComponentToScam', () => {
       'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -525,12 +505,7 @@ describe('convertComponentToScam', () => {
         templateUrl: './example.component.html',
         styleUrls: ['./example.component.css']
       })
-      export class ExampleComponent implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class ExampleComponent {
 
       }
 
