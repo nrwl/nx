@@ -18,6 +18,7 @@ export class ProjectEdge {
     let edge: cy.EdgeDefinition;
     edge = {
       group: 'edges',
+      classes: 'projectEdge',
       data: {
         id: `${this.dep.source}|${this.dep.target}`,
         source: this.dep.source,

@@ -1,15 +1,18 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
-import { EdgeNodeTooltip, EdgeNodeTooltipProps } from './edge-tooltip';
+import {
+  ProjectEdgeNodeTooltip,
+  ProjectEdgeNodeTooltipProps,
+} from './project-edge-tooltip';
 import Tippy from '@tippyjs/react';
 
 export default {
-  component: EdgeNodeTooltip,
-  title: 'Tooltips/EdgeNodeTooltip',
-} as ComponentMeta<typeof EdgeNodeTooltip>;
+  component: ProjectEdgeNodeTooltip,
+  title: 'Tooltips/ProjectEdgeNodeTooltip',
+} as ComponentMeta<typeof ProjectEdgeNodeTooltip>;
 
-const Template: ComponentStory<typeof EdgeNodeTooltip> = (args) => (
+const Template: ComponentStory<typeof ProjectEdgeNodeTooltip> = (args) => (
   <Tippy
-    content={<EdgeNodeTooltip {...args} />}
+    content={<ProjectEdgeNodeTooltip {...args} />}
     visible={true}
     theme="nx"
     interactive={true}
@@ -25,4 +28,4 @@ Primary.args = {
   target: 'lib1',
   source: 'lib2',
   fileDependencies: [{ fileName: 'some/file.ts' }],
-} as EdgeNodeTooltipProps;
+} as ProjectEdgeNodeTooltipProps;

@@ -75,32 +75,8 @@ canvas {
   margin: 0.375rem;
 }
 
-.tippy-box[data-theme~='nx'] button {
-  background-color: rgba(249, 250, 251, 1);
-  border-color: $gray;
-  border-width: 1px;
-  border-radius: 0.375rem;
-  color: rgba(107, 114, 128, 1);
-  margin: 0.375rem;
-  padding: 0.5rem 1rem;
-
-  &:hover {
-    background-color: rgba(243, 244, 246, 1);
-  }
-}
-
 .tippy-box[data-theme~='dark-nx'] {
   @extend .tippy-box, [data-theme~='nx'];
   background-color: #0f172a;
   color: rgba(148, 163, 184, 1);
-
-  button {
-    background-color: #0f172a;
-    border-color: rgb(71, 85, 105, 1);
-    color: rgb(203, 213, 225, 1);
-  }
-
-  button:hover {
-    background-color: rgb(51, 65, 85, 1);
-  }
 }

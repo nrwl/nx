@@ -63,7 +63,7 @@ const affectedNodes: Stylesheet = {
 };
 
 const parentNodes: Stylesheet = {
-  selector: ':parent',
+  selector: 'node.parentNode',
   style: {
     'background-opacity': (node) => switchValueByDarkMode(node, 0.5, 0.8),
     backgroundColor: (node) =>
@@ -92,7 +92,7 @@ const highlightedNodes: Stylesheet = {
 };
 
 const taskNodes: Stylesheet = {
-  selector: 'node.task',
+  selector: 'node.taskNode',
   style: {
     label: 'data(label)',
   },
