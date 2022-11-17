@@ -168,9 +168,9 @@ It’s also worth noting that the backend of Nx Cloud is written in Kotlin. This
 
 ## Community
 
-Nx was released 5 years ago. Turborepo has just been open sourced (Dec 2021). Turborepo doesn't have a large community yet, but it probably will at some point.
+Nx was released in 2016. Turborepo was open sourced in December of 2021. Turborepo doesn't have a large community yet, but it probably will at some point.
 
-- There are about [2.5 million downloads per week](https://www.npmjs.com/package/@nrwl/tao).
+- There are about [3 million downloads per week](https://www.npmjs.com/package/@nrwl/tao).
 - There are about 1 million+ unique [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) (a plugin for VSCode) installations.
 - There is a rich ecosystem of [third-party plugins.](https://nx.dev/community)
 - There are 5500+ active users in [the community slack.](https://nrwlcommunity.slack.com/join/shared_invite/zt-jba969hz-e5zm1Ou_jiOP1J2h8UTu0w#/shared-invite/email)
