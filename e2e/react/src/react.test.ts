@@ -23,7 +23,7 @@ describe('React Applications', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should be able to generate a react app + lib', async () => {
+  it('should be able to generate a react app + lib (with CSR and SSR)', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
     const libWithNoComponents = uniq('lib');
@@ -58,6 +58,18 @@ describe('React Applications', () => {
       checkLinter: true,
       checkE2E: true,
     });
+
+    // Set up SSR and check app
+    runCLI(`generate @nrwl/react:setup-ssr ${appName}`);
+    checkFilesExist(`apps/${appName}/src/main.server.tsx`);
+    checkFilesExist(`apps/${appName}/server.ts`);
+
+    await testGeneratedApp(appName, {
+      checkSourceMap: false,
+      checkStyles: false,
+      checkLinter: false,
+      checkE2E: true,
+    });
   }, 500000);
 
   it('should generate app with legacy-ie support', async () => {
@@ -82,7 +94,7 @@ describe('React Applications', () => {
     checkFilesExist(...filesToCheck);
 
     expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
-      `<script src="main.js" type="module"></script><script src="main.es5.js" nomodule defer></script>`
+      '<script src="main.js" type="module"></script><script src="main.es5.js" nomodule defer></script>'
     );
   }, 250_000);
 
@@ -143,7 +155,7 @@ describe('React Applications', () => {
 
     if (opts.checkStyles) {
       expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
-        `<link rel="stylesheet" href="styles.css">`
+        '<link rel="stylesheet" href="styles.css">'
       );
     }
 

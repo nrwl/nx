@@ -3,10 +3,8 @@ import devServerExecutor from '@nrwl/webpack/src/executors/dev-server/dev-server
 import { WebDevServerOptions } from '@nrwl/webpack/src/executors/dev-server/schema';
 import { join } from 'path';
 import * as chalk from 'chalk';
-import {
-  combineAsyncIterators,
-  tapAsyncIterator,
-} from '../../utils/async-iterator';
+import { combineAsyncIterableIterators } from '@nrwl/js/src/utils/async-iterable/combine-async-iteratable-iterators';
+import { tapAsyncIterator } from '@nrwl/js/src/utils/async-iterable/tap-async-iteratable';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
@@ -50,7 +48,7 @@ export default async function* moduleFederationDevServer(
   for (const app of knownRemotes) {
     const [appName] = Array.isArray(app) ? app : [app];
     const isDev = devServeApps.includes(appName);
-    iter = combineAsyncIterators(
+    iter = combineAsyncIterableIterators(
       iter,
       await runExecutor(
         {

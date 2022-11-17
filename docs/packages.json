@@ -300,7 +300,8 @@
         "remote",
         "cypress-component-configuration",
         "component-test",
-        "setup-tailwind"
+        "setup-tailwind",
+        "setup-ssr"
       ]
     }
   },
@@ -390,7 +391,7 @@
     "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
     "path": "generated/packages/webpack.json",
     "schemas": {
-      "executors": ["webpack", "dev-server"],
+      "executors": ["webpack", "dev-server", "ssr-dev-server"],
       "generators": ["init", "webpack-project"]
     }
   },

@@ -1,4 +1,4 @@
-import { createAsyncIterable } from './create-async-iteratable';
+import { createAsyncIterable } from './create-async-iterable';
 
 describe(createAsyncIterable.name, () => {
   test('simple callback', async () => {
