@@ -135,9 +135,13 @@ describe('Vite Plugin', () => {
     afterEach(() => killPorts());
 
     it('should serve applications in dev mode', async () => {
-      const p = await runCommandUntil(`run ${myApp}:serve`, (output) => {
-        return output.includes('Local:');
-      });
+      const port = 4212;
+      const p = await runCommandUntil(
+        `run ${myApp}:serve --port=${port}`,
+        (output) => {
+          return output.includes('Local:');
+        }
+      );
       p.kill();
     }, 200000);
   });
