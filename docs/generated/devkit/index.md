@@ -1293,7 +1293,7 @@ Returns the list of outputs that will be cached.
 
 | Name   | Type                                                                            | Description                                               |
 | :----- | :------------------------------------------------------------------------------ | :-------------------------------------------------------- |
-| `task` | `Pick`<[`Task`](../../devkit/index#task), `"target"` \| `"overrides"`\>         | target + overrides                                        |
+| `task` | `Pick`<[`Task`](../../devkit/index#task), `"overrides"` \| `"target"`\>         | target + overrides                                        |
 | `node` | [`ProjectGraphProjectNode`](../../devkit/index#projectgraphprojectnode)<`any`\> | ProjectGraphProjectNode object that the task runs against |
 
 #### Returns

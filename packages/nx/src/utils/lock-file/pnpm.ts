@@ -1,4 +1,8 @@
-import { LockFileData, PackageDependency } from './lock-file-type';
+import {
+  LockFileData,
+  PackageDependency,
+  PackageVersions,
+} from './lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
 import {
   sortObject,
@@ -8,6 +12,7 @@ import {
   generatePrunnedHash,
 } from './utils';
 import { satisfies } from 'semver';
+import { dematerialize } from 'rxjs/operators';
 
 type PackageMeta = {
   key: string;
@@ -28,7 +33,7 @@ type VersionInfoWithInlineSpecifier = {
 };
 
 type PnpmLockFile = {
-  lockfileVersion: string;
+  lockfileVersion: number;
   specifiers?: Record<string, string>;
   dependencies?: Record<
     string,
@@ -38,7 +43,15 @@ type PnpmLockFile = {
     string,
     string | { version: string; specifier: string }
   >;
-  packages: Dependencies;
+  packages?: Dependencies;
+  importers?: Record<string, { specifiers: Record<string, string> }>;
+
+  time?: Record<string, string>; // e.g.   /@babel/core/7.19.6: '2022-10-20T09:03:36.074Z'
+  overrides?: Record<string, string>; // js-yaml@^4.0.0: npm:@zkochan/js-yaml@0.0.6
+  patchedDependencies?: Record<string, { path: string; hash: string }>; // e.g.  pkg@5.7.0: { path: 'patches/pkg@5.7.0.patch', hash: 'sha512-...' }
+  neverBuiltDependencies?: string[]; // e.g.  ['core-js', 'level']
+  onlyBuiltDependencies?: string[]; // e.g.  ['vite']
+  packageExtensionsChecksum?: string; // e.g.  'sha512-...' DO NOT COPY TO PRUNED LOCKFILE
 };
 
 const LOCKFILE_YAML_FORMAT = {
@@ -300,12 +313,18 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
     });
   }
 
+  const { time, ...lockFileMetatada } = lockFileData.lockFileMetadata as Omit<
+    PnpmLockFile,
+    'specifiers' | 'importers' | 'devDependencies' | 'dependencies' | 'packages'
+  >;
+
   return {
-    ...(lockFileData.lockFileMetadata as { lockfileVersion: string }),
+    ...(lockFileMetatada as { lockfileVersion: number }),
     specifiers: sortObject(specifiers),
     dependencies: sortObject(dependencies),
     devDependencies: sortObject(devDependencies),
     packages: sortObject(packages),
+    time,
   };
 }
 
@@ -344,7 +363,10 @@ export function prunePnpmLockFile(
     projectName
   );
   const prunedLockFileData = {
-    lockFileMetadata: lockFileData.lockFileMetadata,
+    lockFileMetadata: pruneMetadata(
+      lockFileData.lockFileMetadata,
+      dependencies
+    ),
     dependencies,
     hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
   };
@@ -389,6 +411,40 @@ function pruneDependencies(
       console.warn(
         `Could not find ${packageName} in the lock file. Skipping...`
       );
+    }
+  });
+
+  return result;
+}
+
+function pruneMetadata(
+  lockFileMetadata: LockFileData['lockFileMetadata'],
+  prunedDependencies: Record<string, PackageVersions>
+): LockFileData['lockFileMetadata'] {
+  // These should be removed from the lock file metadata since we don't have them in the package.json
+  // overrides, patchedDependencies, neverBuiltDependencies, onlyBuiltDependencies, packageExtensionsChecksum
+  return {
+    lockfileVersion: lockFileMetadata.lockfileVersion,
+    ...(lockFileMetadata.time && {
+      time: pruneTime(lockFileMetadata.time, prunedDependencies),
+    }),
+  };
+}
+
+function pruneTime(
+  time: Record<string, string>,
+  prunedDependencies: Record<string, PackageVersions>
+): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  Object.entries(time).forEach(([key, value]) => {
+    const packageName = key.slice(1, key.lastIndexOf('/'));
+    const version = key.slice(key.lastIndexOf('/'));
+    if (
+      prunedDependencies[packageName] &&
+      prunedDependencies[packageName][`${packageName}@${version}`]
+    ) {
+      result[key] = value;
     }
   });
 

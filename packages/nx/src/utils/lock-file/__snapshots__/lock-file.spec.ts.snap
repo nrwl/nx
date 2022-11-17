@@ -787,9 +787,9 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes pnpm should map successfully complex lock file 1`] = `
 Object {
   "data": Object {
-    "hash": "21f7648b65146104c6644fcde7073e2edc7e707731b2a38db83cd2882cb274df",
+    "hash": "94bc770238bff74b1b80368ad38fc1c0e3efb23e2bef72afb3c41703b3459a2f",
     "packageName": "nx",
-    "version": "15.0.13",
+    "version": "15.1.0",
   },
   "name": "npm:nx",
   "type": "npm",

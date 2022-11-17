@@ -7,6 +7,8 @@ import {
   lockFile,
   lockFileJustTypescript,
   lockFileWithInlineSpecifiers,
+  lockFileWithInlineSpecifiersAndWorkspaces,
+  lockFileWithWorkspacesAndTime,
   lockFileYargsAndDevkit,
 } from './__fixtures__/pnpm.lock';
 
@@ -53,15 +55,15 @@ describe('pnpm LockFile utility', () => {
     it('should map various instances of the same version', () => {
       const jestResolveDependency =
         parsedLockFile.dependencies['jest-pnp-resolver'][
-          'jest-pnp-resolver@1.2.2'
+          'jest-pnp-resolver@1.2.3'
         ];
 
       expect(jestResolveDependency.packageMeta.length).toEqual(2);
       expect((jestResolveDependency.packageMeta[0] as any).key).toEqual(
-        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.1'
+        '/jest-pnp-resolver/1.2.3_jest-resolve@28.1.1'
       );
       expect((jestResolveDependency.packageMeta[1] as any).key).toEqual(
-        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.3'
+        '/jest-pnp-resolver/1.2.3_jest-resolve@28.1.3'
       );
 
       expect(
@@ -139,6 +141,15 @@ describe('pnpm LockFile utility', () => {
     });
   });
 
+  it('should parse lockfile with time-based resolution and workspaces', () => {
+    const parsedLockFile = parsePnpmLockFile(lockFileWithWorkspacesAndTime);
+    expect(parsedLockFile.lockFileMetadata.time).toBeDefined();
+
+    expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
+      lockFileWithWorkspacesAndTime
+    );
+  });
+
   describe('lock file with inline specifiers', () => {
     const parsedLockFile = parsePnpmLockFile(lockFileWithInlineSpecifiers);
 
@@ -173,15 +184,15 @@ describe('pnpm LockFile utility', () => {
     it('should map various instances of the same version (IS)', () => {
       const jestResolveDependency =
         parsedLockFile.dependencies['jest-pnp-resolver'][
-          'jest-pnp-resolver@1.2.2'
+          'jest-pnp-resolver@1.2.3'
         ];
 
       expect(jestResolveDependency.packageMeta.length).toEqual(2);
       expect((jestResolveDependency.packageMeta[0] as any).key).toEqual(
-        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.1'
+        '/jest-pnp-resolver/1.2.3_jest-resolve@28.1.1'
       );
       expect((jestResolveDependency.packageMeta[1] as any).key).toEqual(
-        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.3'
+        '/jest-pnp-resolver/1.2.3_jest-resolve@28.1.3'
       );
 
       expect(
@@ -231,5 +242,14 @@ describe('pnpm LockFile utility', () => {
         lockFileWithInlineSpecifiers
       );
     });
+  });
+
+  it('should parse lockfile with inline specifiers and workspaces', () => {
+    const parsedLockFile = parsePnpmLockFile(
+      lockFileWithInlineSpecifiersAndWorkspaces
+    );
+    expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
+      lockFileWithInlineSpecifiersAndWorkspaces
+    );
   });
 });

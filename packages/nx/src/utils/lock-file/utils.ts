@@ -1,4 +1,3 @@
-import { satisfies } from 'semver';
 import { defaultHashing } from '../../hasher/hashing-impl';
 import {
   LockFileData,
@@ -45,21 +44,6 @@ export function sortObject<T = string>(
  */
 export function hashString(fileContent: string): string {
   return defaultHashing.hashArray([fileContent]);
-}
-
-export function findMatchingVersion(
-  packageName: string,
-  packageVersions: PackageVersions,
-  version: string
-): string {
-  // if it's fixed version, just return it
-  if (packageVersions[`${packageName}@${version}`]) {
-    return version;
-  }
-  // otherwise search for the matching version
-  return Object.values(packageVersions).find((v) =>
-    satisfies(v.version, version)
-  )?.version;
 }
 
 export function isRootVersion(packageName: string, version: string): boolean {
