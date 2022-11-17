@@ -107,7 +107,7 @@ export class DaemonClient {
   async registerFileWatcher(
     config: {
       watchProjects: string[] | 'all';
-      watchGlobalWorkspaceFiles: boolean;
+      includeGlobalWorkspaceFiles: boolean;
     },
     callback: (
       error: Error | null | 'closed',
@@ -117,7 +117,7 @@ export class DaemonClient {
       } | null
     ) => void
   ): Promise<UnregisterCallback> {
-    await this.sendToDaemonViaQueue({ type: 'PING' });
+    await this.getProjectGraph();
     const messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH)).listen(
       (message) => {
         try {

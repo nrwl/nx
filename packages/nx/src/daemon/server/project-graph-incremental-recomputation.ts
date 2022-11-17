@@ -20,7 +20,7 @@ let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
   serializedProjectGraph: string | null;
 }>;
-let projectFileMapWithFiles:
+export let projectFileMapWithFiles:
   | { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] }
   | undefined;
 let currentProjectGraphCache: ProjectGraphCache | undefined;
