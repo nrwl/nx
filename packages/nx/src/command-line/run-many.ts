@@ -9,6 +9,7 @@ import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
+import { output } from '../utils/output';
 
 export async function runMany(
   args: { [k: string]: any },
@@ -56,6 +57,8 @@ export function projectsToRun(
 ): ProjectGraphProjectNode[] {
   const selectedProjects = new Map<string, ProjectGraphProjectNode>();
   const validProjects = runnableForTarget(projectGraph.nodes, nxArgs.target);
+  const validProjectNames = Array.from(validProjects.keys());
+  const invalidProjects: string[] = [];
 
   // --all is default now, if --projects is provided, it'll override the --all
   if (nxArgs.all && nxArgs.projects.length === 0) {
@@ -64,14 +67,18 @@ export function projectsToRun(
     }
   } else {
     for (const nameOrGlob of nxArgs.projects) {
-      const project = projectGraph.nodes[nameOrGlob];
-
-      if (project) {
-        selectedProjects.set(project.name, project);
+      if (validProjects.has(nameOrGlob)) {
+        selectedProjects.set(nameOrGlob, projectGraph.nodes[nameOrGlob]);
+        continue;
+      } else if (projectGraph.nodes[nameOrGlob]) {
+        invalidProjects.push(nameOrGlob);
         continue;
       }
 
-      const matchedProjectNames = minimatch.match(validProjects, nameOrGlob);
+      const matchedProjectNames = minimatch.match(
+        validProjectNames,
+        nameOrGlob
+      );
 
       if (matchedProjectNames.length === 0) {
         throw new Error(`No projects matching: ${nameOrGlob}`);
@@ -82,6 +89,13 @@ export function projectsToRun(
           matchedProjectName,
           projectGraph.nodes[matchedProjectName]
         );
+      });
+    }
+
+    if (invalidProjects.length > 0) {
+      output.warn({
+        title: `the following do not have configuration for "${nxArgs.target}"`,
+        bodyLines: invalidProjects.map((name) => `- ${name}`),
       });
     }
   }
@@ -109,12 +123,12 @@ export function projectsToRun(
 function runnableForTarget(
   projects: Record<string, ProjectGraphProjectNode>,
   target: string
-): string[] {
-  const runnable: string[] = [];
+): Set<string> {
+  const runnable = new Set<string>();
   for (let projectName in projects) {
     const project = projects[projectName];
     if (projectHasTarget(project, target)) {
-      runnable.push(projectName);
+      runnable.add(projectName);
     }
   }
   return runnable;
