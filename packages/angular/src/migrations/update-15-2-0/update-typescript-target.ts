@@ -1,5 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
-import { getProjects, updateJson } from '@nrwl/devkit';
+import { formatFiles, getProjects, updateJson } from '@nrwl/devkit';
 import { Builders } from '@schematics/angular/utility/workspace-models';
 
 function updateTarget(tree: Tree, tsconfigPath: string) {
@@ -50,4 +50,6 @@ export default async function updateTypescriptTarget(tree: Tree) {
       }
     }
   }
+
+  await formatFiles(tree);
 }
