@@ -73,7 +73,7 @@ function buildEnvironmentJs(
   window.appConfig = {
     showDebugger: false,
     showExperimentalFeatures: false,
-    projects: [
+    workspaces: [
       {
         id: 'local',
         label: 'local',
@@ -81,7 +81,7 @@ function buildEnvironmentJs(
         taskGraphUrl: 'task-graph.json'
       }
     ],
-    defaultProject: 'local',
+    defaultWorkspaceId: 'local',
   };
   `;
 
@@ -408,7 +408,7 @@ async function startServer(
       params.append('groupByFolder', 'true');
     }
 
-    open(`${url}?${params.toString()}`);
+    open(`${url}/projects?${params.toString()}`);
   }
 }
 

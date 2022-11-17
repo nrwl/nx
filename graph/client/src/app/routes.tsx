@@ -6,7 +6,6 @@ import { getEnvironmentConfig } from './hooks/use-environment-config';
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';
-import { getProjectGraphService } from './machines/get-services';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -19,19 +18,21 @@ export function getRoutesForEnvironment() {
   }
 }
 
-const projectDataLoader = async (selectedProjectId: string) => {
-  const projectInfo = appConfig.projects.find(
-    (graph) => graph.id === selectedProjectId
+const workspaceDataLoader = async (selectedWorkspaceId: string) => {
+  const workspaceInfo = appConfig.workspaces.find(
+    (graph) => graph.id === selectedWorkspaceId
   );
 
   const projectGraph: ProjectGraphClientResponse =
-    await projectGraphDataService.getProjectGraph(projectInfo.projectGraphUrl);
+    await projectGraphDataService.getProjectGraph(
+      workspaceInfo.projectGraphUrl
+    );
 
   return projectGraph;
 };
 
 const taskDataLoader = async (selectedProjectId: string) => {
-  const projectInfo = appConfig.projects.find(
+  const projectInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedProjectId
   );
 
@@ -41,9 +42,7 @@ const taskDataLoader = async (selectedProjectId: string) => {
 const childRoutes: RouteObject[] = [
   {
     path: 'projects',
-    loader: () => {
-      getProjectGraphService().start();
-    },
+    loader: () => {},
     element: <ProjectsSidebar />,
   },
   {
@@ -54,10 +53,8 @@ const childRoutes: RouteObject[] = [
         return redirect(`/projects`);
       }
 
-      getProjectGraphService().stop();
-
       const selectedProjectId =
-        params.selectedProjectId ?? appConfig.defaultProject;
+        params.selectedProjectId ?? appConfig.defaultWorkspaceId;
       return taskDataLoader(selectedProjectId);
     },
     path: 'tasks',
@@ -68,7 +65,7 @@ const childRoutes: RouteObject[] = [
         element: <TasksSidebar />,
       },
       {
-        path: ':selectedTask',
+        path: ':selectedTaskId',
         element: <TasksSidebar />,
       },
     ],
@@ -84,17 +81,17 @@ export const devRoutes: RouteObject[] = [
         loader: async ({ request, params }) => {
           const { search } = new URL(request.url);
 
-          return redirect(`/${appConfig.defaultProject}/projects${search}`);
+          return redirect(`/${appConfig.defaultWorkspaceId}/projects${search}`);
         },
       },
       {
         path: ':selectedProjectId',
-        id: 'SelectedProject',
+        id: 'selectedWorkspace',
         element: <Shell />,
         loader: async ({ request, params }) => {
           const selectedProjectId =
-            params.selectedProjectId ?? appConfig.defaultProject;
-          return projectDataLoader(selectedProjectId);
+            params.selectedProjectId ?? appConfig.defaultWorkspaceId;
+          return workspaceDataLoader(selectedProjectId);
         },
         children: childRoutes,
       },
@@ -105,18 +102,19 @@ export const devRoutes: RouteObject[] = [
 export const releaseRoutes: RouteObject[] = [
   {
     path: '/',
-    id: 'SelectedProject',
+    id: 'selectedWorkspace',
     loader: async ({ request, params }) => {
-      const selectedProjectId =
-        params.selectedProjectId ?? appConfig.defaultProject;
-      return projectDataLoader(selectedProjectId);
+      const selectedWorkspaceId = appConfig.defaultWorkspaceId;
+      return workspaceDataLoader(selectedWorkspaceId);
     },
     element: <Shell />,
     children: [
       {
         index: true,
-        loader: () => {
-          return redirect(`/projects/`);
+        loader: ({ request }) => {
+          const { search } = new URL(request.url);
+
+          return redirect(`/projects${search}`);
         },
       },
       ...childRoutes,

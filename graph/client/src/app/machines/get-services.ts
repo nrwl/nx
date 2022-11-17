@@ -6,7 +6,8 @@ let projectGraphService = interpret(projectGraphMachine, {
 });
 
 export function getProjectGraphService() {
-  if (projectGraphService.status === InterpreterStatus.Stopped) {
+  if (projectGraphService.status === InterpreterStatus.NotStarted) {
+    projectGraphService.start();
   }
 
   return projectGraphService;

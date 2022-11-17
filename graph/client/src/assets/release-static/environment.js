@@ -7,7 +7,7 @@ window.localMode = 'build';
 window.appConfig = {
   showDebugger: false,
   showExperimentalFeatures: false,
-  projects: [
+  workspaces: [
     {
       id: 'local',
       label: 'local',
@@ -15,7 +15,7 @@ window.appConfig = {
       taskGraphUrl: 'assets/task-graphs/e2e.json',
     },
   ],
-  defaultProject: 'local',
+  defaultWorkspaceId: 'local',
 };
 
 window.projectGraphResponse = {
