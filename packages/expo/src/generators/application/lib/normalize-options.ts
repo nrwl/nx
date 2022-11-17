@@ -1,4 +1,5 @@
-import { names } from '@nrwl/devkit';
+import { getWorkspaceLayout, names, Tree } from '@nrwl/devkit';
+import { join } from 'path';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -9,8 +10,12 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
 }
 
-export function normalizeOptions(options: Schema): NormalizedSchema {
+export function normalizeOptions(
+  host: Tree,
+  options: Schema
+): NormalizedSchema {
   const { fileName, className } = names(options.name);
+  const { appsDir } = getWorkspaceLayout(host);
 
   const directoryName = options.directory
     ? names(options.directory).fileName
@@ -21,7 +26,7 @@ export function normalizeOptions(options: Schema): NormalizedSchema {
 
   const appProjectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
 
-  const appProjectRoot = `apps/${projectDirectory}`;
+  const appProjectRoot = join(appsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
