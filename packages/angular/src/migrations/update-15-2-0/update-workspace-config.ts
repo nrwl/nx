@@ -1,8 +1,12 @@
 import type { Tree } from '@nrwl/devkit';
-import { getProjects, updateProjectConfiguration } from '@nrwl/devkit';
+import {
+  formatFiles,
+  getProjects,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { Builders } from '@schematics/angular/utility/workspace-models';
 
-export default function updateWorkspaceConfigurations(tree: Tree) {
+export default async function updateWorkspaceConfigurations(tree: Tree) {
   const projects = getProjects(tree);
 
   const supportedExecutors: Set<string> = new Set([Builders.Server]);
@@ -25,4 +29,6 @@ export default function updateWorkspaceConfigurations(tree: Tree) {
       updateProjectConfiguration(tree, name, project);
     }
   }
+
+  await formatFiles(tree);
 }

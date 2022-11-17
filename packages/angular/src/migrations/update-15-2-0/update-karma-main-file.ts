@@ -6,18 +6,22 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-import { Rule, Tree } from '@angular-devkit/schematics';
+import { chain, Rule, Tree } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
 import { readWorkspace } from '@schematics/angular/utility';
 import { Builders } from '@schematics/angular/utility/workspace-models';
 import { allTargetOptions } from '@schematics/angular/utility/workspace';
+import { formatFiles } from '@nrwl/workspace';
 
 export default function (): Rule {
-  return async (host) => {
-    for (const file of await findTestMainFiles(host)) {
-      updateTestFile(host, file);
-    }
-  };
+  return chain([
+    async (host) => {
+      for (const file of await findTestMainFiles(host)) {
+        updateTestFile(host, file);
+      }
+    },
+    formatFiles(),
+  ]);
 }
 
 async function findTestMainFiles(host: Tree): Promise<Set<string>> {
