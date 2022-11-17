@@ -1,4 +1,9 @@
+import { existsSync } from 'fs';
 import { satisfies } from 'semver';
+import { readJsonFile } from '../fileutils';
+import { output } from '../output';
+import { joinPathFragments } from '../path';
+import { workspaceRoot } from '../workspace-root';
 import { LockFileData, PackageDependency } from './lock-file-type';
 import {
   sortObject,
@@ -450,16 +455,26 @@ export function pruneNpmLockFile(
   packages: string[],
   projectName?: string
 ): LockFileData {
+  let isV1;
+
   // NPM V1 does not track full dependency list in the lock file,
   // so we can't reuse the lock file to generate a new one
   if (lockFileData.lockFileMetadata.metadata.lockfileVersion === 1) {
-    console.warn(
-      `npm v7 is required to prune lockfile. Please upgrade to npm v7 or run "npm i --package-lock-only" to generate pruned lockfile.
-Returning entire lock file.`
-    );
-    return lockFileData;
+    output.warn({
+      title: 'Pruning v1 lock file',
+      bodyLines: [
+        `If your "node_modules" are not in sync with the lock file, you might get inaccurate results.`,
+        `Run "npm ci" to ensure your installed packages are synchronized or upgrade to NPM v7+ to benefit from the new lock file format`,
+      ],
+    });
+    isV1 = true;
   }
-  const dependencies = pruneDependencies(lockFileData.dependencies, packages);
+
+  const dependencies = pruneDependencies(
+    lockFileData.dependencies,
+    packages,
+    isV1
+  );
   const lockFileMetadata = {
     ...lockFileData.lockFileMetadata,
     ...pruneRootPackage(lockFileData, packages, projectName),
@@ -503,7 +518,8 @@ function pruneRootPackage(
 // iterate over packages to collect the affected tree of dependencies
 function pruneDependencies(
   dependencies: LockFileData['dependencies'],
-  packages: string[]
+  packages: string[],
+  isV1?: boolean
 ): LockFileData['dependencies'] {
   const result: LockFileData['dependencies'] = {};
 
@@ -523,7 +539,8 @@ function pruneDependencies(
         [packageName],
         dependencies,
         result,
-        result[packageName][key]
+        result[packageName][key],
+        isV1
       );
     } else {
       console.warn(
@@ -543,17 +560,34 @@ function pruneTransitiveDependencies(
   dependencies: LockFileData['dependencies'],
   prunedDeps: LockFileData['dependencies'],
   value: PackageDependency,
+  isV1?: boolean,
   modifier?: 'dev' | 'optional' | 'peer'
 ): void {
-  if (!value.dependencies && !value.peerDependencies) {
+  let packageJSON: PackageDependency;
+  if (isV1) {
+    const pathToPackageJSON = joinPathFragments(
+      workspaceRoot,
+      value.packageMeta[0].path,
+      'package.json'
+    );
+    // if node_modules are our of sync with lock file, we might not have the package.json
+    if (existsSync(pathToPackageJSON)) {
+      packageJSON = readJsonFile(pathToPackageJSON);
+    }
+  }
+  if (
+    !value.dependencies &&
+    !value.peerDependencies &&
+    !packageJSON?.peerDependencies
+  ) {
     return;
   }
 
   Object.entries({
     ...value.dependencies,
-    ...value.devDependencies,
     ...value.peerDependencies,
     ...value.optionalDependencies,
+    ...packageJSON?.peerDependencies,
   }).forEach(([packageName, version]: [string, string]) => {
     const versions = dependencies[packageName];
     if (versions) {
@@ -579,7 +613,7 @@ function pruneTransitiveDependencies(
             const packageMeta = setPackageMetaModifiers(
               packageName,
               dependency,
-              value,
+              packageJSON || value,
               modifier
             );
             currentMeta.push(packageMeta);
@@ -589,7 +623,7 @@ function pruneTransitiveDependencies(
           const packageMeta = setPackageMetaModifiers(
             packageName,
             dependency,
-            value,
+            packageJSON || value,
             modifier
           );
 
@@ -601,6 +635,7 @@ function pruneTransitiveDependencies(
             dependencies,
             prunedDeps,
             prunedDeps[packageName][key],
+            isV1,
             getModifier(packageMeta)
           );
         }
