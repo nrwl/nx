@@ -3,6 +3,7 @@ import {
   createFile,
   killPorts,
   newProject,
+  promisifiedTreeKill,
   readFile,
   rmDist,
   runCLI,
@@ -131,20 +132,21 @@ describe('Vite Plugin', () => {
     rmDist();
   }, 200000);
 
-  describe('serve using Vite', () => {
-    afterEach(() => killPorts());
-
-    it('should serve applications in dev mode', async () => {
-      const port = 4212;
-      const p = await runCommandUntil(
-        `run ${myApp}:serve --port=${port}`,
-        (output) => {
-          return output.includes('Local:');
-        }
-      );
-      p.kill();
-    }, 200000);
-  });
+  it('should serve applications in dev mode', async () => {
+    const port = 4212;
+    const p = await runCommandUntil(
+      `run ${myApp}:serve --port=${port}`,
+      (output) => {
+        return output.includes('Local:');
+      }
+    );
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      await killPorts(port);
+    } catch {
+      // ignore
+    }
+  }, 200000);
 
   it('should test applications', async () => {
     const result = await runCLIAsync(`test ${myApp}`);
