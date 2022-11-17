@@ -1076,6 +1076,12 @@
               "id": "resolve-circular-dependencies",
               "tags": ["explore-graph"],
               "file": "shared/recipes/resolve-circular-dependencies"
+            },
+            {
+              "name": "Include All package.json Files as Projects",
+              "id": "include-all-packagejson",
+              "tags": [],
+              "file": "shared/recipes/include-all-packagejson"
             }
           ]
         }

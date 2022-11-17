@@ -391,9 +391,11 @@ You can also remove a dependency as follows:
 {% /tab %}
 {% /tabs %}
 
-### Ignoring a project
+### Including package.json files as projects in the graph
 
-Nx will add projects with a `package.json` file that are referenced (1) in the `workspaces` property of the root `package.json`, (2) in `pnpm-workspace.yml` or (3) in `lerna.json`. If you want to ignore a particular project that those tools reference, add the directory to your `.nxignore` file.
+Any `package.json` file that is references by the `workspaces` property in the root `package.json` file will be included as a project in the graph. If you are using Lerna, projects defined in `lerna.json` will be included. If you are using pnpm, projects defined in `pnpm-workspace.yml` will be included.
+
+If you want to ignore a particular `package.json` file, exclude it from those tools. For example, you can add `!packages/myproject` to the `workspaces` property.
 
 ### Ignoring package.json scripts
 
