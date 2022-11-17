@@ -14,6 +14,8 @@ When you set up Nx's distributed task execution, your task graph will look more 
 
 And not only will CI finish faster, but the debugging experience is the same as if you ran all of your CI on a single job. That's because Nx uses distributed caching to recreate all of the logs and build artifacts on the main job.
 
+Find more information in this [detailed guide to improve your worst case CI times](/concepts/dte).
+
 ## Set up
 
 To distribute your task execution, you need to (1) connect to Nx Cloud and (2) enable DTE in your CI workflow. Each of these steps can be enabled with a single command:
@@ -115,12 +117,6 @@ Read the guides for more information on how to configure them in CI.
 - [Jenkins](/recipes/ci/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
 
 Note that only cacheable operations can be distributed because they have to be replayed on the main job.
-
-## Illustrated Guide
-
-For more details about how distributed task execution works, check out the [illustrated guide](/concepts/dte) by Nrwlian [Nicole Oliver](https://twitter.com/nixcodes).
-
-[![how does distributed task execution work in Nx Cloud?](../images/dte/how-does-dte-work.jpeg)](/concepts/dte)
 
 ## Relevant Repositories and Examples
 
