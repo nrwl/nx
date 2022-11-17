@@ -1,4 +1,7 @@
-import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
 import {
   addProjectConfiguration,
@@ -115,5 +118,50 @@ describe('15.0.0 migration (prefix-outputs)', () => {
     tree.delete('workspace.json');
 
     await prefixOutputs(tree);
+  });
+});
+
+describe('15.0.0 migration (prefix-outputs) (v1)', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    tree = createTreeWithEmptyV1Workspace();
+  });
+
+  it('should prefix project outputs', async () => {
+    addProjectConfiguration(tree, 'proj', {
+      root: 'proj',
+      targets: {
+        build: {
+          executor: 'nx:run-commands',
+          outputs: [
+            'dist',
+            'dist/{projectRoot}',
+            'dist/{projectRoot}/**/*.js',
+            'proj/coverage',
+            './test-results',
+            '{projectRoot}/build',
+            '{options.outputDirectory}',
+          ],
+          options: {},
+        },
+      },
+    });
+
+    await prefixOutputs(tree);
+
+    const updated = readProjectConfiguration(tree, 'proj');
+
+    expect(updated.targets.build.outputs).toEqual([
+      '{workspaceRoot}/dist',
+      '{workspaceRoot}/dist/{projectRoot}',
+      '{workspaceRoot}/dist/{projectRoot}/**/*.js',
+      '{projectRoot}/coverage',
+      '{projectRoot}/test-results',
+      '{projectRoot}/build',
+      '{options.outputDirectory}',
+    ]);
+
+    expect(() => validateOutputs(updated.targets.build.outputs)).not.toThrow();
   });
 });
