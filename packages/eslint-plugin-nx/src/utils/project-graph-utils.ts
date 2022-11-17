@@ -1,9 +1,10 @@
-import { readCachedProjectGraph, readNxJson } from '@nrwl/devkit';
 import {
-  isTerminalRun,
+  readCachedProjectGraph,
+  readNxJson,
   MappedProjectGraph,
   mapProjectGraphFiles,
-} from '@nrwl/workspace/src/utils/runtime-lint-utils';
+} from '@nrwl/devkit';
+import { isTerminalRun } from './runtime-lint-utils';
 import * as chalk from 'chalk';
 
 export function ensureGlobalProjectGraph(ruleName: string) {

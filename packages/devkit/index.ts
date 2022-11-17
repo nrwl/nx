@@ -360,3 +360,11 @@ export { Hash, Hasher } from 'nx/src/hasher/hasher';
  * @category Utils
  */
 export { cacheDir } from 'nx/src/utils/cache-directory';
+
+/**
+ * @category Utils
+ */
+export {
+  MappedProjectGraph,
+  mapProjectGraphFiles,
+} from './src/utils/mapped-graph';

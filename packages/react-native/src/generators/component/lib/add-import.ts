@@ -1,4 +1,4 @@
-import { findNodes } from '@nrwl/workspace/src/utilities/typescript';
+import { findNodes } from 'nx/src/utils/typescript';
 import * as ts from 'typescript';
 import { ChangeType, StringChange } from '@nrwl/devkit';
 

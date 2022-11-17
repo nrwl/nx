@@ -104,6 +104,7 @@ It only uses language primitives and immutable objects
 ### Utils Type aliases
 
 - [AdditionalSharedConfig](../../devkit/index#additionalsharedconfig)
+- [MappedProjectGraph](../../devkit/index#mappedprojectgraph)
 - [ModuleFederationLibrary](../../devkit/index#modulefederationlibrary)
 - [Remotes](../../devkit/index#remotes)
 - [SharedFunction](../../devkit/index#sharedfunction)
@@ -161,6 +162,7 @@ It only uses language primitives and immutable objects
 - [installPackagesTask](../../devkit/index#installpackagestask)
 - [isStandaloneProject](../../devkit/index#isstandaloneproject)
 - [joinPathFragments](../../devkit/index#joinpathfragments)
+- [mapProjectGraphFiles](../../devkit/index#mapprojectgraphfiles)
 - [mapRemotes](../../devkit/index#mapremotes)
 - [mapRemotesForSSR](../../devkit/index#mapremotesforssr)
 - [moveFilesToNewDirectory](../../devkit/index#movefilestonewdirectory)
@@ -555,6 +557,18 @@ A plugin for Nx
 ### AdditionalSharedConfig
 
 Ƭ **AdditionalSharedConfig**: (`string` \| [libraryName: string, sharedConfig: SharedLibraryConfig] \| { `libraryName`: `string` ; `sharedConfig`: [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) })[]
+
+---
+
+### MappedProjectGraph
+
+Ƭ **MappedProjectGraph**<`T`\>: [`ProjectGraph`](../../devkit/index#projectgraph)<`T`\> & { `allFiles`: `Record`<`string`, `string`\> }
+
+#### Type parameters
+
+| Name | Type  |
+| :--- | :---- |
+| `T`  | `any` |
 
 ---
 
@@ -1472,6 +1486,31 @@ Normalized path fragments and joins them
 #### Returns
 
 `string`
+
+---
+
+### mapProjectGraphFiles
+
+▸ **mapProjectGraphFiles**<`T`\>(`projectGraph`): [`MappedProjectGraph`](../../devkit/index#mappedprojectgraph) \| `null`
+
+Maps the project graph to a format that makes it easier to find the project
+based on the file path.
+
+#### Type parameters
+
+| Name |
+| :--- |
+| `T`  |
+
+#### Parameters
+
+| Name           | Type                                                    |
+| :------------- | :------------------------------------------------------ |
+| `projectGraph` | [`ProjectGraph`](../../devkit/index#projectgraph)<`T`\> |
+
+#### Returns
+
+[`MappedProjectGraph`](../../devkit/index#mappedprojectgraph) \| `null`
 
 ---
 
