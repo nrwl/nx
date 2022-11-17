@@ -28,6 +28,7 @@ import {
 import { PackageJson } from '../utils/package-json';
 import { sortObjectByKeys } from '../utils/object-sort';
 import { output } from '../utils/output';
+import { joinPathFragments } from '../utils/path';
 
 export function workspaceConfigName(
   root: string
@@ -655,7 +656,9 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 function normalizePatterns(patterns: string[]): string[] {
   return patterns.map((pattern) =>
     removeRelativePath(
-      pattern.endsWith('/package.json') ? pattern : `${pattern}/package.json`
+      pattern.endsWith('/package.json')
+        ? pattern
+        : joinPathFragments(pattern, 'package.json')
     )
   );
 }
