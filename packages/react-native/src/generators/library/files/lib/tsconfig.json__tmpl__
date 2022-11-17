@@ -1,7 +1,7 @@
 {
   "extends": "<%= rootTsConfigPath %>",
   "compilerOptions": {
-    "jsx": "react-jsx",
+    "jsx": "react-native",
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
