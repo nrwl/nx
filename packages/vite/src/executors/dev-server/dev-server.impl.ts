@@ -44,13 +44,11 @@ export default async function* viteDevServerExecutor(
 
   const server = await createServer(serverConfig);
 
-  await runViteDevServer(server, assetsResult);
+  const baseUrl = await runViteDevServer(server, assetsResult);
 
   yield {
     success: true,
-    baseUrl: `${mergedOptions.https ? 'https' : 'http'}://${
-      mergedOptions.host ?? 'localhost'
-    }:${mergedOptions.port ?? 4200}`,
+    baseUrl: baseUrl,
   };
 
   // This Promise intentionally never resolves, leaving the process running
@@ -60,7 +58,7 @@ export default async function* viteDevServerExecutor(
 async function runViteDevServer(
   server: ViteDevServer,
   assetsResult: CopyAssetsResult
-) {
+): Promise<string> {
   try {
     await server.listen();
     server.printUrls();
@@ -75,6 +73,9 @@ async function runViteDevServer(
     process.on('SIGINT', processOnExit);
     process.on('SIGTERM', processOnExit);
     process.on('exit', processOnExit);
+    return `${server.config?.server?.https ? 'https' : 'http'}://${
+      server.config?.server?.host
+    }:${server.config?.server?.port}`;
   } catch (err) {
     console.log(err);
   }
