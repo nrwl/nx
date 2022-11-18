@@ -63,6 +63,7 @@
           "assets": [
             "graph/client/src/favicon.ico",
             "graph/client/src/assets/project-graphs/",
+            "graph/client/src/assets/task-graphs/",
             "graph/client/src/assets/generated-project-graphs/",
             "graph/client/src/assets/generated-task-graphs/",
             {
@@ -76,6 +77,7 @@
           "assets": [
             "graph/client/src/favicon.ico",
             "graph/client/src/assets/project-graphs/",
+            "graph/client/src/assets/task-graphs/",
             {
               "input": "graph/client/src/assets/dev-e2e",
               "output": "/",

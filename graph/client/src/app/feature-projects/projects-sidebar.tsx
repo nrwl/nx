@@ -134,7 +134,7 @@ export function ProjectsSidebar(): JSX.Element {
   useIntervalWhen(
     () => {
       const selectedWorkspaceId =
-        params.selectedProjectId ??
+        params.selectedWorkspaceId ??
         environmentConfig.appConfig.defaultWorkspaceId;
 
       const projectInfo = environmentConfig.appConfig.workspaces.find(
