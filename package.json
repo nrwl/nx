@@ -309,7 +309,7 @@
     "underscore": "^1.12.1"
   },
   "nx": {
-    "includeScripts": [
+    "includedScripts": [
       "echo",
       "check-format",
       "check-imports",
