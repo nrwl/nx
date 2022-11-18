@@ -106,7 +106,7 @@ export async function notifyFileWatcherSockets() {
       }
     })
   );
-  //
+
   reset();
 }
 
