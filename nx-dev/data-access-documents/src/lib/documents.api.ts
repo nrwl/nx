@@ -21,6 +21,7 @@ export class DocumentsApi {
       publicDocsRoot: string;
       documentSources: DocumentMetadata[];
       addAncestor: { id: string; name: string } | null;
+      relatedSources?: DocumentsApi;
     }
   ) {
     if (!options.publicDocsRoot) {
@@ -78,7 +79,7 @@ export class DocumentsApi {
       ?.map((i) => ({
         title: i.name,
         description: i.description ?? '',
-        url: i.path ?? '/' + path.concat(i.id).join('/'),
+        url: '/' + (i.path ?? path.concat(i.id).join('/')),
       }))
       .map(
         (card) =>
@@ -110,7 +111,7 @@ export class DocumentsApi {
     const originalContent = readFileSync(filePath, 'utf8');
     const ast = parseMarkdown(originalContent);
     const frontmatter = ast.attributes.frontmatter
-      ? yamlLoad(ast.attributes.frontmatter)
+      ? (yamlLoad(ast.attributes.frontmatter) as Record<string, any>)
       : {};
 
     // Set default title if not provided in front-matter section.
@@ -280,6 +281,11 @@ export class DocumentsApi {
     this.documents.itemList!.forEach((item) => {
       recur(item, []);
     });
+    if (this.options.relatedSources) {
+      this.options.relatedSources.documents.itemList.forEach((item) => {
+        recur(item, []);
+      });
+    }
 
     if (
       relatedConcepts.length === 0 &&
