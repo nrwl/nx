@@ -44,7 +44,7 @@ This installs the requisite tailwind dependencies.
 The simplest way to initialize Tailwind is to use their CLI.
 
 ```shell
-cd apps/{your app here}
+cd {path to your app}
 npx tailwindcss init -p
 ```
 
