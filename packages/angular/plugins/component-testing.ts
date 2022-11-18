@@ -21,7 +21,7 @@ import {
   stripIndents,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { mapProjectGraphFiles } from 'nx/src/utils/target-project-locator';
+import { createProjectFileMappings } from 'nx/src/utils/target-project-locator';
 import { lstatSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative } from 'path';
 import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/webpack-browser.impl';
@@ -279,14 +279,16 @@ function withSchemaDefaults(options: any): BrowserBuilderSchema {
  * this file should get cleaned up via the cypress executor
  */
 function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
-  const mappedGraph = mapProjectGraphFiles(ctExecutorContext.projectGraph);
+  const mappedGraphFiles = createProjectFileMappings(
+    ctExecutorContext.projectGraph
+  );
   const ctProjectConfig = ctExecutorContext.projectGraph.nodes[
     ctExecutorContext.projectName
   ].data as ProjectConfiguration;
   // angular only supports `tailwind.config.{js,cjs}`
   const ctProjectTailwindConfig = join(ctProjectConfig.root, 'tailwind.config');
-  const isTailWindInCtProject = !!mappedGraph.allFiles[ctProjectTailwindConfig];
-  const isTailWindInRoot = !!mappedGraph.allFiles['tailwind.config'];
+  const isTailWindInCtProject = !!mappedGraphFiles[ctProjectTailwindConfig];
+  const isTailWindInRoot = !!mappedGraphFiles['tailwind.config'];
 
   if (isTailWindInRoot || isTailWindInCtProject) {
     const pathToStyle = getTempTailwindPath(ctExecutorContext);

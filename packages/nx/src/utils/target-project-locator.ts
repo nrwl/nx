@@ -206,7 +206,7 @@ function filterRootExternalDependencies(
  */
 export function createProjectRootMappings(
   nodes: Record<string, ProjectGraphProjectNode>
-) {
+): Map<string, string> {
   const projectRootMappings = new Map<string, string>();
   for (const projectName of Object.keys(nodes)) {
     const root = nodes[projectName].data.root;
@@ -217,10 +217,6 @@ export function createProjectRootMappings(
   }
   return projectRootMappings;
 }
-
-export type MappedProjectGraph<T = any> = ProjectGraph<T> & {
-  allFiles: Record<string, string>;
-};
 
 /**
  * Strips the file extension from the file path
@@ -237,26 +233,20 @@ export function removeExt(file: string): string {
  * @param projectGraph
  * @returns
  */
-export function mapProjectGraphFiles<T>(
-  projectGraph: ProjectGraph<T>
-): MappedProjectGraph | null {
-  if (!projectGraph) {
-    return null;
-  }
-  const allFiles: Record<string, string> = {};
+export function createProjectFileMappings(
+  projectGraph: ProjectGraph
+): Record<string, string> {
+  const result: Record<string, string> = {};
   Object.entries(
     projectGraph.nodes as Record<string, ProjectGraphProjectNode>
   ).forEach(([name, node]) => {
     node.data.files.forEach(({ file }) => {
       const fileName = removeExt(file);
-      allFiles[fileName] = name;
+      result[fileName] = name;
     });
   });
 
-  return {
-    ...projectGraph,
-    allFiles,
-  };
+  return result;
 }
 
 /**
