@@ -250,7 +250,7 @@ Please follow the following guidelines:
   - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
 - Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`nx affected --target=e2e`)
   - Target a specific e2e test with `nx e2e e2e-cypress`
-- Make sure you run `yarn format`
+- Make sure you run `nx format`
 - Update documentation with `yarn documentation`. For documentation, check for spelling and grammatical errors.
 - Update your commit message to follow the guidelines below (use `yarn commit` to automate compliance)
   - `yarn check-commit` will check to make sure your commit messages are formatted correctly

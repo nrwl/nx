@@ -35,24 +35,25 @@ In this case, you can mock it up.
 Example:
 
 ```typescript
-mockSchematicsForTesting({
-  'mycollection:myschematic': (tree, params) => {
-    tree.write('README.md');
-  },
-});
+  mockSchematicsForTesting({
+    'mycollection:myschematic': (tree, params) => {
+       tree.write('README.md');
+    }
+  });
+
 ```
 
 #### Parameters
 
-| Name         | Type     |
-| :----------- | :------- |
+| Name | Type |
+| :------ | :------ |
 | `schematics` | `Object` |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### overrideCollectionResolutionForTesting
 
@@ -67,38 +68,36 @@ This function can can be used to override the resolution behaviour.
 Example:
 
 ```typescript
-overrideCollectionResolutionForTesting({
-  '@nrwl/workspace': path.join(
-    __dirname,
-    '../../../../workspace/generators.json'
-  ),
-  '@nrwl/angular': path.join(__dirname, '../../../../angular/generators.json'),
-  '@nrwl/linter': path.join(__dirname, '../../../../linter/generators.json'),
-});
+  overrideCollectionResolutionForTesting({
+    '@nrwl/workspace': path.join(__dirname, '../../../../workspace/generators.json'),
+    '@nrwl/angular': path.join(__dirname, '../../../../angular/generators.json'),
+    '@nrwl/linter': path.join(__dirname, '../../../../linter/generators.json')
+  });
+
 ```
 
 #### Parameters
 
-| Name          | Type     |
-| :------------ | :------- |
+| Name | Type |
+| :------ | :------ |
 | `collections` | `Object` |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### wrapAngularDevkitSchematic
 
-▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../devkit/index#tree), `generatorOptions`: { [k: string]: `any`; }) => `Promise`<`any`\>
+▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../devkit/index#tree), `generatorOptions`: { [k: string]: `any`;  }) => `Promise`<`any`\>
 
 #### Parameters
 
-| Name             | Type     |
-| :--------------- | :------- |
+| Name | Type |
+| :------ | :------ |
 | `collectionName` | `string` |
-| `generatorName`  | `string` |
+| `generatorName` | `string` |
 
 #### Returns
 
@@ -108,10 +107,10 @@ overrideCollectionResolutionForTesting({
 
 ##### Parameters
 
-| Name               | Type                              |
-| :----------------- | :-------------------------------- |
-| `host`             | [`Tree`](../../devkit/index#tree) |
-| `generatorOptions` | `Object`                          |
+| Name | Type |
+| :------ | :------ |
+| `host` | [`Tree`](../../devkit/index#tree) |
+| `generatorOptions` | `Object` |
 
 ##### Returns
 
