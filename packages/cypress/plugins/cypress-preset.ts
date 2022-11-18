@@ -9,7 +9,7 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { mapProjectGraphFiles } from 'nx/src/utils/target-project-locator';
+import { createProjectFileMappings } from 'nx/src/utils/target-project-locator';
 import { dirname, extname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
@@ -90,9 +90,9 @@ export function getProjectConfigByPath(
       : configFileFromWorkspaceRoot
   );
 
-  const mappedGraph = mapProjectGraphFiles(graph);
+  const mappedGraphFiles = createProjectFileMappings(graph);
   const componentTestingProjectName =
-    mappedGraph.allFiles[normalizedPathFromWorkspaceRoot];
+    mappedGraphFiles[normalizedPathFromWorkspaceRoot];
   if (
     !componentTestingProjectName ||
     !graph.nodes[componentTestingProjectName]?.data
