@@ -21,18 +21,6 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
     configurations: {
       production: {
         outputHashing: 'media',
-        fileReplacements: [
-          {
-            replace: joinPathFragments(
-              projectConfig.sourceRoot,
-              'environments/environment.ts'
-            ),
-            with: joinPathFragments(
-              projectConfig.sourceRoot,
-              'environments/environment.prod.ts'
-            ),
-          },
-        ],
       },
       development: {
         optimization: false,

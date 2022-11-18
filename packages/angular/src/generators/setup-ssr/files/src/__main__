@@ -7,13 +7,5 @@
  */
 import '@angular/platform-server/init';
 
-import { enableProdMode } from '@angular/core';
-
-import { environment } from './environments/environment';
-
-if (environment.production) {
-  enableProdMode();
-}
-
 export { <%= rootModuleClassName %> } from './app/<%= rootModuleFileName.slice(0, -3) %>';
 export { renderModule } from '@angular/platform-server';
