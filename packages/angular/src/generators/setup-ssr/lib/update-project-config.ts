@@ -14,7 +14,7 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
   projectConfig.targets.server = {
     executor: '@angular-devkit/build-angular:server',
     options: {
-      outputPath: `dist/apps/${projectConfig.root}/server`,
+      outputPath: `dist/${projectConfig.root}/server`,
       main: joinPathFragments(projectConfig.root, schema.serverFileName),
       tsConfig: joinPathFragments(projectConfig.root, 'tsconfig.server.json'),
     },

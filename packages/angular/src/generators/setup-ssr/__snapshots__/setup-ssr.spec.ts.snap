@@ -22,7 +22,7 @@ Object {
   "executor": "@angular-devkit/build-angular:server",
   "options": Object {
     "main": "apps/app1/server.ts",
-    "outputPath": "dist/apps/apps/app1/server",
+    "outputPath": "dist/apps/app1/server",
     "tsConfig": "apps/app1/tsconfig.server.json",
   },
 }
