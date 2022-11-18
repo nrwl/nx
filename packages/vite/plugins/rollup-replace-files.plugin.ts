@@ -14,37 +14,14 @@ export default function replaceFiles(replacements: FileReplacement[]) {
   return {
     name: 'rollup-plugin-replace-files',
     enforce: 'pre',
-    async resolveId(source, importer, options) {
-      const resolved = await this.resolve(source, importer, {
-        ...options,
-        skipSelf: true,
+    async load(id) {
+      const foundReplace = replacements.find((replacement)=>{
+        return id.endsWith(replacement.replace)
       });
-
-      /**
-       * The reason we're using endsWith here is because the resolved id
-       * will be the absolute path to the file. We want to check if the
-       * file ends with the file we're trying to replace, which will be essentially
-       * the path from the root of our workspace.
-       */
-
-      const foundReplace = replacements.find((replacement) =>
-        resolved?.id?.endsWith(replacement.replace)
-      );
       if (foundReplace) {
-        console.info(
-          `replace "${foundReplace.replace}" with "${foundReplace.with}"`
-        );
-        try {
-          // return new file content
-          return {
-            id: foundReplace.with,
-          };
-        } catch (err) {
-          console.error(err);
-          return null;
-        }
+        return `export * from "${foundReplace.with}"; export { default } from "${foundReplace.with}";`;
       }
-      return null;
+      return null
     },
   };
 }
