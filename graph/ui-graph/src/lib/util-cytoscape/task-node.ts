@@ -14,7 +14,7 @@ export class TaskNode {
   getCytoscapeNodeDef(groupByProject: boolean): cy.NodeDefinition {
     return {
       group: 'nodes',
-      classes: 'task',
+      classes: 'taskNode',
       data: this.getData(groupByProject),
       selectable: false,
       grabbable: false,

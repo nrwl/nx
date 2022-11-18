@@ -1,9 +1,10 @@
 import Tippy from '@tippyjs/react';
 import ProjectNodeToolTip from './project-node-tooltip';
-import EdgeNodeTooltip from './edge-tooltip';
+import ProjectEdgeNodeTooltip from './project-edge-tooltip';
 import { selectValueByThemeStatic } from '../theme-resolver';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { getTooltipService } from './tooltip-service';
+import TaskNodeTooltip from './task-node-tooltip';
 
 const tooltipService = getTooltipService();
 
@@ -12,16 +13,24 @@ export function TooltipDisplay() {
     (callback) => tooltipService.subscribe(callback),
     () => tooltipService.currentTooltip
   );
+  let tooltipToRender;
+  if (currentTooltip) {
+    switch (currentTooltip.type) {
+      case 'projectNode':
+        tooltipToRender = <ProjectNodeToolTip {...currentTooltip.props} />;
+        break;
+      case 'projectEdge':
+        tooltipToRender = <ProjectEdgeNodeTooltip {...currentTooltip.props} />;
+        break;
+      case 'taskNode':
+        tooltipToRender = <TaskNodeTooltip {...currentTooltip.props} />;
+        break;
+    }
+  }
 
-  return currentTooltip ? (
+  return tooltipToRender ? (
     <Tippy
-      content={
-        currentTooltip.type === 'node' ? (
-          <ProjectNodeToolTip {...currentTooltip.props}></ProjectNodeToolTip>
-        ) : (
-          <EdgeNodeTooltip {...currentTooltip.props}></EdgeNodeTooltip>
-        )
-      }
+      content={tooltipToRender}
       visible={true}
       getReferenceClientRect={currentTooltip.ref.getBoundingClientRect}
       theme={selectValueByThemeStatic('dark-nx', 'nx')}

@@ -1,6 +1,7 @@
 import { getProjectGraphService } from '../machines/get-services';
 import { FlagIcon, MapPinIcon } from '@heroicons/react/24/solid';
 import Tag from '../ui-components/tag';
+import { TooltipButton } from './tooltip-button';
 
 export interface ProjectNodeToolTipProps {
   type: 'app' | 'lib' | 'e2e';
@@ -57,16 +58,22 @@ export function ProjectNodeToolTip({
         </p>
       ) : null}
       <div className="flex">
-        <button onClick={onFocus}>Focus</button>
-        <button onClick={onExclude}>Exclude</button>
-        <button className="flex flex-row items-center" onClick={onStartTrace}>
+        <TooltipButton onClick={onFocus}>Focus</TooltipButton>
+        <TooltipButton onClick={onExclude}>Exclude</TooltipButton>
+        <TooltipButton
+          className="flex flex-row items-center"
+          onClick={onStartTrace}
+        >
           <MapPinIcon className="mr-2 h-5 w-5 text-slate-500"></MapPinIcon>
           Start
-        </button>
-        <button className="flex flex-row items-center" onClick={onEndTrace}>
+        </TooltipButton>
+        <TooltipButton
+          className="flex flex-row items-center"
+          onClick={onEndTrace}
+        >
           <FlagIcon className="mr-2 h-5 w-5 text-slate-500"></FlagIcon>
           End
-        </button>
+        </TooltipButton>
       </div>
     </div>
   );

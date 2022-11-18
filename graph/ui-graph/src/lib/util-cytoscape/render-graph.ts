@@ -103,6 +103,7 @@ export class RenderGraph {
     this.listenForProjectNodeClicks();
     this.listenForEdgeNodeClicks();
     this.listenForProjectNodeHovers();
+    this.listenForTaskNodeClicks();
   }
 
   render(): { numEdges: number; numNodes: number } {
@@ -217,13 +218,13 @@ export class RenderGraph {
   }
 
   private listenForProjectNodeClicks() {
-    this.cy.$('node:childless').on('click', (event) => {
+    this.cy.$('node.projectNode').on('click', (event) => {
       const node = event.target;
 
       let ref: VirtualElement = node.popperRef(); // used only for positioning
 
       this.broadcast({
-        type: 'NodeClick',
+        type: 'ProjectNodeClick',
         ref,
         id: node.id(),
 
@@ -236,8 +237,28 @@ export class RenderGraph {
     });
   }
 
+  private listenForTaskNodeClicks() {
+    this.cy.$('node.taskNode').on('click', (event) => {
+      const node = event.target;
+
+      let ref: VirtualElement = node.popperRef(); // used only for positioning
+
+      this.broadcast({
+        type: 'TaskNodeClick',
+        ref,
+        id: node.id(),
+
+        data: {
+          id: node.id(),
+          label: node.data('label'),
+          executor: node.data('executor'),
+        },
+      });
+    });
+  }
+
   private listenForEdgeNodeClicks() {
-    this.cy.$('edge').on('click', (event) => {
+    this.cy.$('edge.projectEdge').on('click', (event) => {
       const edge: EdgeSingular = event.target;
       let ref: VirtualElement = edge.popperRef(); // used only for positioning
 
