@@ -12,7 +12,6 @@ import {
   ExecutorContext,
   joinPathFragments,
   logger,
-  mapProjectGraphFiles,
   offsetFromRoot,
   parseTargetString,
   ProjectConfiguration,
@@ -22,6 +21,7 @@ import {
   stripIndents,
   workspaceRoot,
 } from '@nrwl/devkit';
+import { mapProjectGraphFiles } from 'nx/src/utils/target-project-locator';
 import { lstatSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative } from 'path';
 import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/webpack-browser.impl';

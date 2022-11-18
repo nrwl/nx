@@ -1,6 +1,5 @@
 import {
   ExecutorContext,
-  mapProjectGraphFiles,
   normalizePath,
   ProjectConfiguration,
   ProjectGraph,
@@ -10,6 +9,7 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { mapProjectGraphFiles } from 'nx/src/utils/target-project-locator';
 import { dirname, extname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 

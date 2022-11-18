@@ -14,11 +14,11 @@ import { join } from 'path';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
-import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import {
+  TargetProjectLocator,
   MappedProjectGraph,
   removeExt,
-} from '@nrwl/devkit/src/utils/mapped-graph';
+} from 'nx/src/utils/target-project-locator';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {

@@ -1,9 +1,8 @@
+import { readCachedProjectGraph, readNxJson } from '@nrwl/devkit';
 import {
-  readCachedProjectGraph,
-  readNxJson,
-  MappedProjectGraph,
   mapProjectGraphFiles,
-} from '@nrwl/devkit';
+  MappedProjectGraph,
+} from 'nx/src/utils/target-project-locator';
 import { isTerminalRun } from './runtime-lint-utils';
 import * as chalk from 'chalk';
 
