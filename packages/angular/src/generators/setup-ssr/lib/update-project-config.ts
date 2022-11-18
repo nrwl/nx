@@ -11,6 +11,9 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
 
   projectConfig.targets.build.options.outputPath = `dist/apps/${schema.project}/browser`;
 
+  const buildTargetFileReplacements =
+    projectConfig.targets.build.configurations?.production?.fileReplacements;
+
   projectConfig.targets.server = {
     executor: '@angular-devkit/build-angular:server',
     options: {
@@ -21,6 +24,9 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
     configurations: {
       production: {
         outputHashing: 'media',
+        ...(buildTargetFileReplacements
+          ? { fileReplacements: buildTargetFileReplacements }
+          : {}),
       },
       development: {
         optimization: false,

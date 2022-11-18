@@ -1,4 +1,8 @@
-import { readJson, readProjectConfiguration } from '@nrwl/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { angularVersion, ngUniversalVersion } from '../../utils/versions';
@@ -125,5 +129,33 @@ describe('setupSSR', () => {
     for (const [dep, version] of Object.entries(devDeps)) {
       expect(packageJson.devDependencies[dep]).toEqual(version);
     }
+  });
+
+  it('should use fileReplacements if they already exist', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    await applicationGenerator(tree, {
+      name: 'app1',
+    });
+
+    tree.write('apps/app1/src/environments/environment.ts', '');
+    tree.write('apps/app1/src/environments/environment.prod.ts', '');
+    const project = readProjectConfiguration(tree, 'app1');
+    project.targets.build.configurations.production.fileReplacements = [
+      {
+        replace: 'apps/app1/src/environments/environment.ts',
+        with: 'apps/app1/src/environments/environment.prod.ts',
+      },
+    ];
+    updateProjectConfiguration(tree, 'app1', project);
+
+    // ACT
+    await setupSsr(tree, { project: 'app1' });
+
+    // ASSERT
+    expect(
+      readProjectConfiguration(tree, 'app1').targets.server
+    ).toMatchSnapshot();
   });
 });
