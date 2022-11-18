@@ -14,7 +14,7 @@ export default function replaceFiles(replacements: FileReplacement[]) {
   return {
     name: 'rollup-plugin-replace-files',
     enforce: 'pre',
-    async load(id) {
+    async transform(code, id) {
       /**
        * The reason we're using endsWith here is because the resolved id
        * will be the absolute path to the file. We want to check if the
@@ -22,15 +22,24 @@ export default function replaceFiles(replacements: FileReplacement[]) {
        * the path from the root of our workspace.
        */
       const foundReplace = replacements.find((replacement)=>{
-        return id.endsWith(replacement.replace)
+        return id.endsWith(replacement.replace);
       });
       if (foundReplace) {
         console.info(
           `replace "${foundReplace.replace}" with "${foundReplace.with}"`
         );
-        return `export * from "${foundReplace.with}"; export { default } from "${foundReplace.with}";`;
+        const { body } = this.parse(code)
+        const newCode = [];
+        if (body.find(({ type }) => type === 'ExportNamedDeclaration')) {
+            newCode.push(`export * from "${foundReplace.with}";`);
+        }
+        if (body.find(({ type }) => type === 'ExportDefaultDeclaration')) {
+            newCode.push(`export { default } from "${foundReplace.with}";`);
+        }
+        console.log(newCode.join('\n'));
+        return newCode.join('\n');
       }
-      return null
+      return code;
     },
   };
 }
