@@ -770,9 +770,10 @@ export function getPromptsForSchema(
         question.type = 'confirm';
       } else if (v['x-prompt'].items) {
         question.message = v['x-prompt'].message;
-        question.type = v['x-prompt'].multiselect
-          ? 'multiselect'
-          : 'autocomplete';
+        question.type =
+          v['x-prompt'].multiselect || v.type === 'array'
+            ? 'multiselect'
+            : 'autocomplete';
         question.choices =
           v['x-prompt'].items &&
           v['x-prompt'].items.map((item) => {
