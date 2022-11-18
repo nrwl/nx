@@ -24,17 +24,16 @@ export function hasRegisteredFileWatcherSockets() {
   return registeredFileWatcherSockets.length > 0;
 }
 
-export async function notifyFileWatcherSockets(
+export function notifyFileWatcherSockets(
   createdFiles: string[] | null,
   updatedFiles: string[],
-  deletedFiles: string[],
-  projectGraph: ProjectGraphCache
+  deletedFiles: string[]
 ) {
   if (!hasRegisteredFileWatcherSockets()) {
     return;
   }
 
-  await queue.sendToQueue(async () => {
+  queue.sendToQueue(async () => {
     const projectAndGlobalChanges = getProjectsAndGlobalChanges(
       createdFiles,
       updatedFiles,

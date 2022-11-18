@@ -21,8 +21,6 @@ export function getProjectsAndGlobalChanges(
 
   performance.mark('changed-projects:start');
 
-  const projectFileMap = projectFileMapWithFiles?.projectFileMap ?? {};
-
   const allChangedFiles: ChangedFile[] = [
     ...(createdFiles ?? []).map<ChangedFile>((c) => ({
       path: c,
@@ -38,24 +36,20 @@ export function getProjectsAndGlobalChanges(
     })),
   ];
 
-  for (const changedFile of allChangedFiles) {
-    const projects = Object.keys(projectFileMap);
-    let globalFile = false;
-    for (const project of projects) {
-      const hasFile = projectFileMap[project].some(
-        (f) => f.file === changedFile.path
-      );
-      if (hasFile) {
-        (projectAndGlobalChanges.projects[project] ??= []).push(changedFile);
-
-        globalFile = false;
-        // break this loop because a file can only belong to 1 project
-        break;
-      } else {
-        globalFile = true;
-      }
+  const fileToProjectMap: Record<string, string> = {};
+  for (const [projectName, projectFiles] of Object.entries(
+    projectFileMapWithFiles?.projectFileMap ?? {}
+  )) {
+    for (const projectFile of projectFiles) {
+      fileToProjectMap[projectFile.file] = projectName;
     }
-    if (globalFile) {
+  }
+
+  for (const changedFile of allChangedFiles) {
+    const project = fileToProjectMap[changedFile.path];
+    if (project) {
+      (projectAndGlobalChanges.projects[project] ??= []).push(changedFile);
+    } else {
       projectAndGlobalChanges.globalFiles.push(changedFile);
     }
   }

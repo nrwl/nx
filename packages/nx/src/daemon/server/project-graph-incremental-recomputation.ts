@@ -73,7 +73,9 @@ export function addUpdatedAndDeletedFiles(
     collectedDeletedFiles.add(f);
   }
 
-  notifyFileWatcherSockets(null, updatedFiles, deletedFiles);
+  if (updatedFiles.length > 0 || deletedFiles.length > 0) {
+    notifyFileWatcherSockets(null, updatedFiles, deletedFiles);
+  }
 
   if (createdFiles.length > 0) {
     waitPeriod = 100; // reset it to process the graph faster
@@ -90,7 +92,9 @@ export function addUpdatedAndDeletedFiles(
         processFilesAndCreateAndSerializeProjectGraph();
       await cachedSerializedProjectGraphPromise;
 
-      notifyFileWatcherSockets(createdFiles, null, null);
+      if (createdFiles.length > 0) {
+        notifyFileWatcherSockets(createdFiles, null, null);
+      }
     }, waitPeriod);
   }
 }
