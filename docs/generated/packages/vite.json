@@ -28,7 +28,7 @@
           "uiFramework": {
             "type": "string",
             "description": "UI Framework to use for Vite.",
-            "enum": ["react", "vue3", "vue3-jsx"],
+            "enum": ["react", "none"],
             "default": "react",
             "x-prompt": "What UI framework plugin should Vite use?"
           }
