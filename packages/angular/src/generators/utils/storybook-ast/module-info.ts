@@ -5,7 +5,7 @@ import {
   stripIndents,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
-import { findNodes } from '@nrwl/workspace/src/utilities/typescript';
+import { findNodes } from 'nx/src/utils/typescript';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { extname } from 'path';
 import type {

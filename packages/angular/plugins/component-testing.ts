@@ -21,7 +21,7 @@ import {
   stripIndents,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
+import { mapProjectGraphFiles } from 'nx/src/utils/target-project-locator';
 import { lstatSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative } from 'path';
 import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/webpack-browser.impl';
@@ -74,7 +74,7 @@ ${e.stack ? e.stack : e}`
   const buildTarget = getBuildableTarget(ctContext);
 
   if (!buildTarget.project && !graph.nodes?.[buildTarget.project]?.data) {
-    throw new Error(stripIndents`Unable to find project configuration for build target. 
+    throw new Error(stripIndents`Unable to find project configuration for build target.
     Project Name? ${buildTarget.project}
     Has project config? ${!!graph.nodes?.[buildTarget.project]?.data}`);
   }
