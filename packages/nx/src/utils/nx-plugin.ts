@@ -8,7 +8,6 @@ import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from '../utils/fileutils';
 import {
   PackageJson,
-  readModulePackageJson,
   readModulePackageJsonWithoutFallbacks,
 } from './package-json';
 import { registerTsProject } from './register';
