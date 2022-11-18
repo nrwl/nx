@@ -1,4 +1,5 @@
 import { Socket } from 'net';
+import { ProjectGraphCache } from '../../../project-graph/nx-deps-cache';
 import { PromisedBasedQueue } from '../../../utils/promised-based-queue';
 import { handleResult } from '../server';
 import { getProjectsAndGlobalChanges } from './changed-projects';
@@ -26,7 +27,8 @@ export function hasRegisteredFileWatcherSockets() {
 export async function notifyFileWatcherSockets(
   createdFiles: string[] | null,
   updatedFiles: string[],
-  deletedFiles: string[]
+  deletedFiles: string[],
+  projectGraph: ProjectGraphCache
 ) {
   if (!hasRegisteredFileWatcherSockets()) {
     return;
@@ -41,7 +43,7 @@ export async function notifyFileWatcherSockets(
 
     await Promise.all(
       registeredFileWatcherSockets.map(({ socket, config }) => {
-        let changedProjects = [];
+        const changedProjects = [];
         const changedFiles = [];
         if (config.watchProjects === 'all') {
           for (const [projectName, projectFiles] of Object.entries(
