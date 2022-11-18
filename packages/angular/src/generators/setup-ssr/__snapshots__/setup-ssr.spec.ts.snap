@@ -9,12 +9,6 @@ Object {
       "sourceMap": true,
     },
     "production": Object {
-      "fileReplacements": Array [
-        Object {
-          "replace": "apps/app1/src/environments/environment.ts",
-          "with": "apps/app1/src/environments/environment.prod.ts",
-        },
-      ],
       "outputHashing": "media",
     },
   },
