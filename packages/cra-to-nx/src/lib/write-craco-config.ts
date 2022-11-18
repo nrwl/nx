@@ -1,6 +1,10 @@
 import { writeFileSync } from 'fs';
 
-export function writeCracoConfig(appName: string, isCRA5: boolean) {
+export function writeCracoConfig(
+  appName: string,
+  isCRA5: boolean,
+  isNested: boolean
+) {
   const configOverride = `
   const path = require('path');
   const TsConfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
@@ -57,5 +61,8 @@ export function writeCracoConfig(appName: string, isCRA5: boolean) {
     },
   };
   `;
-  writeFileSync(`apps/${appName}/craco.config.js`, configOverride);
+  writeFileSync(
+    isNested ? 'craco.config.js' : `apps/${appName}/craco.config.js`,
+    configOverride
+  );
 }

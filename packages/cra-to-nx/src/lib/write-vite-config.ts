@@ -1,6 +1,10 @@
 import * as fs from 'fs';
 
-export function writeViteConfig(appName: string) {
+export function writeViteConfig(
+  appName: string,
+  isNested: boolean,
+  isJs: boolean
+) {
   let port = 4200;
 
   // Use PORT from .env file if it exists in project.
@@ -14,14 +18,14 @@ export function writeViteConfig(appName: string) {
   }
 
   fs.writeFileSync(
-    `apps/${appName}/vite.config.js`,
+    isNested ? 'vite.config.js' : `apps/${appName}/vite.config.js`,
     `import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    outDir: '../../dist/apps/${appName}'
+    outDir: ${isNested ? `'./dist'` : `'../../dist/apps/${appName}'`}
   },
   server: {
     port: ${port},
@@ -30,7 +34,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: 'src/setupTests.js',
+    setupFiles: 'src/setupTests.${isJs ? 'js' : 'ts'}',
     css: true,
   },
   plugins: [react()],
