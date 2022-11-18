@@ -21,7 +21,7 @@ export class DocumentsApi {
       publicDocsRoot: string;
       documentSources: DocumentMetadata[];
       addAncestor: { id: string; name: string } | null;
-      relatedSources?: DocumentsApi;
+      relatedSources?: DocumentsApi[];
     }
   ) {
     if (!options.publicDocsRoot) {
@@ -282,9 +282,11 @@ export class DocumentsApi {
       recur(item, []);
     });
     if (this.options.relatedSources) {
-      this.options.relatedSources.documents.itemList.forEach((item) => {
-        recur(item, []);
-      });
+      this.options.relatedSources.forEach((source) =>
+        source.documents.itemList.forEach((item) => {
+          recur(item, []);
+        })
+      );
     }
 
     if (

@@ -41,7 +41,7 @@ export const nxDocumentsApi = new DocumentsApi({
     .filter((x) => !!x)
     .map((x) => convertToDocumentMetadata(x)),
   addAncestor: null,
-  relatedSources: nxRecipesApi,
+  relatedSources: [nxRecipesApi],
 });
 export const nxCloudDocumentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
