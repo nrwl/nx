@@ -41,7 +41,11 @@ import {
   processFileChangesInOutputs,
 } from './outputs-tracking';
 import { handleRequestShutdown } from './handle-request-shutdown';
-import { ChangedFile, getProjectsAndGlobalChanges } from './changed-projects';
+import {
+  notifyFileWatcherSockets,
+  registeredFileWatcherSockets,
+  removeRegisteredFileWatcherSocket,
+} from './file-watching/file-watcher-sockets';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -54,14 +58,6 @@ export type HandlerResult = {
 };
 
 let numberOfOpenConnections = 0;
-
-let registeredFileWatcherSockets: {
-  socket: Socket;
-  config: {
-    watchProjects: string[] | 'all';
-    includeGlobalWorkspaceFiles: boolean;
-  };
-}[] = [];
 
 const server = createServer(async (socket) => {
   numberOfOpenConnections += 1;
@@ -95,9 +91,7 @@ const server = createServer(async (socket) => {
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
     );
 
-    registeredFileWatcherSockets = registeredFileWatcherSockets.filter(
-      (watcher) => watcher.socket !== socket
-    );
+    removeRegisteredFileWatcherSocket(socket);
   });
 });
 
@@ -160,7 +154,7 @@ async function handleMessage(socket, data: string) {
   }
 }
 
-async function handleResult(socket: Socket, hr: HandlerResult) {
+export async function handleResult(socket: Socket, hr: HandlerResult) {
   if (hr.error) {
     await respondWithErrorAndExit(socket, hr.description, hr.error);
   } else {
@@ -262,39 +256,34 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 
     serverLogger.watcherLog(convertChangeEventsToLogMessage(changeEvents));
 
-    const filesToHash = [];
+    const updatedFilesToHash = [];
+    const createdFilesToHash = [];
     const deletedFiles = [];
-    const changedFiles = [];
+
     for (const event of changeEvents) {
       if (event.type === 'delete') {
         deletedFiles.push(event.path);
-        changedFiles.push({
-          path: event.path,
-          type: 'DELETE',
-        });
       } else {
         try {
           const s = statSync(join(workspaceRoot, event.path));
           if (s.isFile()) {
-            filesToHash.push(event.path);
-            changedFiles.push({
-              path: event.path,
-              type: event.type.toUpperCase(),
-            });
+            if (event.type === 'update') {
+              updatedFilesToHash.push(event.path);
+            } else {
+              createdFilesToHash.push(event.path);
+            }
           }
         } catch (e) {
           // this can happen when the update file was deleted right after
         }
       }
     }
-    // TODO: need to handle this better, especially for created files
-    if (deletedFiles.length > 0) {
-      await notifyFileWatcherSockets(changedFiles);
-    }
-    addUpdatedAndDeletedFiles(filesToHash, deletedFiles);
-    if (deletedFiles.length == 0) {
-      await notifyFileWatcherSockets(changedFiles);
-    }
+
+    addUpdatedAndDeletedFiles(
+      createdFilesToHash,
+      updatedFilesToHash,
+      deletedFiles
+    );
   } catch (err) {
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);
@@ -387,40 +376,4 @@ export async function stopServer(): Promise<void> {
       return resolve();
     });
   });
-}
-
-async function notifyFileWatcherSockets(allChangedFiles: ChangedFile[]) {
-  const changes = getProjectsAndGlobalChanges(allChangedFiles);
-
-  await Promise.all(
-    registeredFileWatcherSockets.map(({ socket, config }) => {
-      let changedProjects = [];
-      const changedFiles = [];
-      if (config.watchProjects === 'all') {
-        for (const [projectName, projectFiles] of Object.entries(
-          changes.projects
-        )) {
-          changedProjects.push(projectName);
-          changedFiles.push(...projectFiles);
-        }
-      } else {
-        for (const watchedProject of config.watchProjects) {
-          if (!!changes.projects[watchedProject]) {
-            changedProjects.push(watchedProject);
-
-            changedFiles.push(...changes.projects[watchedProject]);
-          }
-        }
-      }
-      return handleResult(socket, {
-        description: 'File watch changed',
-        response: JSON.stringify({
-          changedProjects,
-          changedFiles: config.includeGlobalWorkspaceFiles
-            ? [...changedFiles, ...changes.globalFiles]
-            : changedFiles,
-        }),
-      });
-    })
-  );
 }

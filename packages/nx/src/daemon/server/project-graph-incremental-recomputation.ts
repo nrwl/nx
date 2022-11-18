@@ -15,6 +15,10 @@ import {
   updateProjectFileMap,
 } from '../../project-graph/file-map-utils';
 import { FileData, ProjectFileMap } from '../../config/project-graph';
+import {
+  notifyFileWatcherSockets,
+  trackChangedFilesForFileWatchers,
+} from './file-watching/file-watcher-sockets';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -58,10 +62,11 @@ export async function getCachedSerializedProjectGraphPromise() {
 }
 
 export function addUpdatedAndDeletedFiles(
+  createdFiles: string[],
   updatedFiles: string[],
   deletedFiles: string[]
 ) {
-  for (let f of updatedFiles) {
+  for (let f of [...createdFiles, ...updatedFiles]) {
     collectedDeletedFiles.delete(f);
     collectedUpdatedFiles.add(f);
   }
@@ -71,14 +76,21 @@ export function addUpdatedAndDeletedFiles(
     collectedDeletedFiles.add(f);
   }
 
+  trackChangedFilesForFileWatchers(undefined, updatedFiles, deletedFiles);
+
   if (!scheduledTimeoutId) {
-    scheduledTimeoutId = setTimeout(() => {
+    scheduledTimeoutId = setTimeout(async () => {
       scheduledTimeoutId = undefined;
       if (waitPeriod < 4000) {
         waitPeriod = waitPeriod * 2;
       }
+
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph();
+      await cachedSerializedProjectGraphPromise;
+
+      trackChangedFilesForFileWatchers(createdFiles);
+      await notifyFileWatcherSockets();
     }, waitPeriod);
   }
 }
