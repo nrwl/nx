@@ -34,27 +34,13 @@ describe('setupSSR', () => {
        */
       import '@angular/platform-server/init';
 
-      import { enableProdMode } from '@angular/core';
-
-      import { environment } from './environments/environment';
-
-      if (environment.production) {
-        enableProdMode();
-      }
-
       export { AppServerModule } from './app/app.server.module';
       export { renderModule } from '@angular/platform-server';"
     `);
     expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { enableProdMode } from '@angular/core';
-      import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
       import { AppModule } from './app/app.module';
-      import { environment } from './environments/environment';
-
-      if (environment.production) {
-        enableProdMode();
-      }
 
       function bootstrap() {
         platformBrowserDynamic()
