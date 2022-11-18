@@ -1,7 +1,7 @@
 import { Socket } from 'net';
 import { PromisedBasedQueue } from '../../../utils/promised-based-queue';
 import { handleResult } from '../server';
-import { setProjectsAndGlobalChanges } from './changed-projects';
+import { getProjectsAndGlobalChanges } from './changed-projects';
 
 const queue = new PromisedBasedQueue();
 
@@ -33,7 +33,7 @@ export async function notifyFileWatcherSockets(
   }
 
   await queue.sendToQueue(async () => {
-    const projectAndGlobalChanges = setProjectsAndGlobalChanges(
+    const projectAndGlobalChanges = getProjectsAndGlobalChanges(
       createdFiles,
       updatedFiles,
       deletedFiles

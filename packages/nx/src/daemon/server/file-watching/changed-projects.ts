@@ -6,7 +6,7 @@ export type ChangedFile = {
   type: 'CREATED' | 'UPDATED' | 'DELETED';
 };
 
-export function setProjectsAndGlobalChanges(
+export function getProjectsAndGlobalChanges(
   createdFiles: string[] | null,
   updatedFiles: string[] | null,
   deletedFiles: string[] | null
@@ -46,11 +46,8 @@ export function setProjectsAndGlobalChanges(
         (f) => f.file === changedFile.path
       );
       if (hasFile) {
-        const projectFiles = (projectAndGlobalChanges.projects[project] ??= []);
-        // Only push to the project files if the changed file doesnt already exist
-        if (!projectFiles.some((f) => f.path === changedFile.path)) {
-          projectFiles.push(changedFile);
-        }
+        (projectAndGlobalChanges.projects[project] ??= []).push(changedFile);
+
         globalFile = false;
         // break this loop because a file can only belong to 1 project
         break;
@@ -58,12 +55,7 @@ export function setProjectsAndGlobalChanges(
         globalFile = true;
       }
     }
-    if (
-      globalFile &&
-      !projectAndGlobalChanges.globalFiles.some(
-        (f) => f.path === changedFile.path
-      )
-    ) {
+    if (globalFile) {
       projectAndGlobalChanges.globalFiles.push(changedFile);
     }
   }
