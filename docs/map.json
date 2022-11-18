@@ -231,6 +231,12 @@
               "file": "shared/core-features/cache-task-results"
             },
             {
+              "name": "Share Your Cache",
+              "id": "share-your-cache",
+              "tags": ["share-your-cache"],
+              "file": "shared/core-features/share-your-cache"
+            },
+            {
               "name": "Explore the Graph",
               "id": "explore-graph",
               "tags": ["explore-graph"],
@@ -311,10 +317,10 @@
               "file": "shared/concepts/how-caching-works"
             },
             {
-              "name": "Distributed Task Execution Guide",
+              "name": "Improve Worst Case CI Times",
               "tags": ["distribute-task-execution"],
               "id": "dte",
-              "file": "shared/concepts/dte-guide"
+              "file": "shared/concepts/improve-worst-case-ci-times"
             },
             {
               "name": "Task Pipeline Configuration",
@@ -351,6 +357,12 @@
               "id": "incremental-builds",
               "tags": ["use-task-executors"],
               "file": "shared/incremental-builds"
+            },
+            {
+              "name": "Illustrated Distributed Task Execution",
+              "tags": ["distribute-task-execution"],
+              "id": "illustrated-dte",
+              "file": "shared/concepts/illustrated-dte-guide"
             },
             {
               "name": "Nx and Turborepo",
@@ -533,6 +545,77 @@
               "name": "runtimeCacheInputs",
               "id": "runtime-cache-inputs",
               "file": "shared/deprecated/runtime-cache-inputs"
+            }
+          ]
+        },
+        {
+          "name": "See Also",
+          "id": "see-also",
+          "description": "Links to other pieces of documentation",
+          "itemList": [
+            {
+              "name": "Nx Cloud Documentation",
+              "id": "nx-cloud-documentation",
+              "file": "",
+              "tags": ["cache-task-results", "distribute-task-execution"],
+              "path": "/nx-cloud/intro/what-is-nx-cloud",
+              "isExternal": true
+            },
+            {
+              "name": "Nx Cloud Main Site",
+              "id": "nx-cloud-main-site",
+              "file": "",
+              "tags": ["cache-task-results", "distribute-task-execution"],
+              "path": "https://nx.app",
+              "isExternal": true
+            },
+            {
+              "name": "--skip-nx-cache flag",
+              "id": "skip-nx-cache-flag",
+              "file": "",
+              "tags": ["cache-task-results"],
+              "path": "/nx/affected#skip-nx-cache",
+              "isExternal": true
+            },
+            {
+              "name": "tasks-runner-options property",
+              "id": "tasks-runner-options-property",
+              "file": "",
+              "tags": ["cache-task-results"],
+              "path": "/reference/nx-json#tasks-runner-options",
+              "isExternal": true
+            },
+            {
+              "name": "nx.json reference: inputs and namedInputs",
+              "id": "nxjson-inputs",
+              "file": "",
+              "tags": ["cache-task-results"],
+              "path": "/reference/nx-json#inputs-&-namedinputs",
+              "isExternal": true
+            },
+            {
+              "name": "Project Configuration reference: inputs and namedInputs",
+              "id": "project-config-inputs",
+              "file": "",
+              "tags": ["cache-task-results"],
+              "path": "/reference/project-configuration#inputs-&-namedinputs",
+              "isExternal": true
+            },
+            {
+              "name": "nx.json workspaceLayout property",
+              "id": "nxjson-workspaceLayout",
+              "file": "",
+              "tags": ["enforce-project-boundaries"],
+              "path": "/reference/nx-json#workspace-layout",
+              "isExternal": true
+            },
+            {
+              "name": "nx.json generator defaults",
+              "id": "nxjson-generator-defaults",
+              "file": "",
+              "tags": ["use-code-generators"],
+              "path": "/reference/nx-json#generators",
+              "isExternal": true
             }
           ]
         }
@@ -999,6 +1082,12 @@
               "id": "resolve-circular-dependencies",
               "tags": ["explore-graph"],
               "file": "shared/recipes/resolve-circular-dependencies"
+            },
+            {
+              "name": "Include All package.json Files as Projects",
+              "id": "include-all-packagejson",
+              "tags": [],
+              "file": "shared/recipes/include-all-packagejson"
             }
           ]
         }
@@ -1026,21 +1115,6 @@
           "id": "set-up",
           "description": "Learn how to set up Nx Cloud for your workspace.",
           "itemList": [
-            {
-              "name": "Adding Nx Cloud to an Nx Workspace",
-              "id": "add-nx-cloud",
-              "file": "nx-cloud/set-up/add-nx-cloud"
-            },
-            {
-              "name": "Set Up Distributed Caching",
-              "id": "set-up-caching",
-              "file": "nx-cloud/set-up/set-up-caching"
-            },
-            {
-              "name": "Set Up Distributed Task Execution",
-              "id": "set-up-dte",
-              "file": "nx-cloud/set-up/set-up-dte"
-            },
             {
               "name": "Record Non-Nx Commands",
               "id": "record-commands",
@@ -1151,6 +1225,11 @@
               "name": "Configuration Options",
               "id": "config",
               "file": "nx-cloud/reference/config"
+            },
+            {
+              "name": "nx-cloud CLI",
+              "id": "nx-cloud-cli",
+              "file": "nx-cloud/reference/nx-cloud-cli"
             },
             {
               "name": "Environment Variables",

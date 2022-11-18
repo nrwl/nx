@@ -1,15 +1,15 @@
 export const nxVersion = require('../../package.json').version;
 
-export const angularVersion = '~14.2.0';
-export const angularDevkitVersion = '~14.2.0';
-export const ngPackagrVersion = '~14.2.0';
-export const ngrxVersion = '~14.0.0';
+export const angularVersion = '~15.0.0';
+export const angularDevkitVersion = '~15.0.0';
+export const ngPackagrVersion = '~15.0.0';
+export const ngrxVersion = '~15.0.0-beta.0';
 export const rxjsVersion = '~7.5.0';
 export const zoneJsVersion = '~0.11.4';
 export const angularJsVersion = '1.7.9';
 export const tsLibVersion = '^2.3.0';
 
-export const ngUniversalVersion = '~14.2.0';
+export const ngUniversalVersion = '~15.0.0';
 
 export const angularEslintVersion = '~14.0.4';
 export const tailwindVersion = '^3.0.2';

@@ -234,6 +234,7 @@ export class DocumentsApi {
     let relatedConcepts: MenuItem[] = [];
     let relatedRecipes: MenuItem[] = [];
     let relatedReference: MenuItem[] = [];
+    let relatedSeeAlso: MenuItem[] = [];
     function recur(curr, acc) {
       if (curr.itemList) {
         curr.itemList.forEach((ii) => {
@@ -266,6 +267,14 @@ export class DocumentsApi {
           curr.path = [...acc, curr.id].join('/');
           relatedReference.push(curr);
         }
+        if (
+          curr.tags &&
+          tags.some((tag) => curr.tags.includes(tag)) &&
+          acc.includes('see-also')
+        ) {
+          curr.path = [...acc, curr.id].join('/');
+          relatedSeeAlso.push(curr);
+        }
       }
     }
     this.documents.itemList!.forEach((item) => {
@@ -275,7 +284,8 @@ export class DocumentsApi {
     if (
       relatedConcepts.length === 0 &&
       relatedRecipes.length === 0 &&
-      relatedReference.length === 0
+      relatedReference.length === 0 &&
+      relatedSeeAlso.length === 0
     ) {
       return '';
     }
@@ -297,6 +307,9 @@ export class DocumentsApi {
     }
     if (relatedReference.length > 0) {
       output += '### Reference\n' + listify(relatedReference) + '\n';
+    }
+    if (relatedSeeAlso.length > 0) {
+      output += '### See Also\n' + listify(relatedSeeAlso) + '\n';
     }
 
     return output;

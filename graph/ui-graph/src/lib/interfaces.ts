@@ -124,4 +124,8 @@ export type TaskGraphRenderEvents =
     }
   | {
       type: 'notifyTaskGraphDeselectTask';
+    }
+  | {
+      type: 'setGroupByProject';
+      groupByProject: boolean;
     };

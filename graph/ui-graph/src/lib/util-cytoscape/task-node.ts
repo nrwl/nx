@@ -4,26 +4,33 @@ import * as cy from 'cytoscape';
 
 export interface TaskNodeDataDefinition extends cy.NodeDataDefinition {
   id: string;
+  label: string;
   executor: string;
 }
 
 export class TaskNode {
   constructor(private task: Task, private project: ProjectGraphProjectNode) {}
 
-  getCytoscapeNodeDef(): cy.NodeDefinition {
+  getCytoscapeNodeDef(groupByProject: boolean): cy.NodeDefinition {
     return {
       group: 'nodes',
-      data: this.getData(),
+      classes: 'task',
+      data: this.getData(groupByProject),
       selectable: false,
       grabbable: false,
       pannable: true,
     };
   }
 
-  private getData(): TaskNodeDataDefinition {
+  private getData(groupByProject: boolean): TaskNodeDataDefinition {
+    const label = groupByProject
+      ? this.task.id.split(':').slice(1).join(':')
+      : this.task.id;
     return {
       id: this.task.id,
-      executor: 'placeholder',
+      label,
+      executor: this.project.data.targets[this.task.target.target].executor,
+      parent: groupByProject ? this.task.target.project : null,
     };
   }
 }

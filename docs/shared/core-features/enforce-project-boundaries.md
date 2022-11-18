@@ -146,7 +146,3 @@ If you try to violate the constraints, you will get an error when linting:
 A project tagged with "scope:admin" can only depend on projects
 tagged with "scoped:shared" or "scope:admin".
 ```
-
-## See Also
-
-- [nx.json workspaceLayout property](/reference/nx-json#workspace-layout)

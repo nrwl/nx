@@ -1,10 +1,16 @@
+import { existsSync } from 'fs';
 import { satisfies } from 'semver';
+import { readJsonFile } from '../fileutils';
+import { output } from '../output';
+import { joinPathFragments } from '../path';
+import { workspaceRoot } from '../workspace-root';
+import { LockFileData, PackageDependency } from './lock-file-type';
 import {
-  LockFileData,
-  PackageDependency,
-  PackageVersions,
-} from './lock-file-type';
-import { sortObject, hashString } from './utils';
+  sortObject,
+  hashString,
+  TransitiveLookupFunctionInput,
+  generatePrunnedHash,
+} from './utils';
 
 type PackageMeta = {
   path: string;
@@ -22,6 +28,7 @@ type NpmDependency = {
   requires?: Record<string, string>;
   dependencies?: Record<string, NpmDependency>;
   dev?: boolean;
+  peer?: boolean;
   devOptional?: boolean;
   optional?: boolean;
 };
@@ -146,10 +153,12 @@ function mapPackageDependency(
   lockfileVersion: number,
   isRootVersion?: boolean
 ) {
+  const { dev, peer, optional } = value;
   const packageMeta = {
     path: packagePath,
-    dev: value.dev,
-    optional: value.optional,
+    dev,
+    peer,
+    optional,
   };
   if (!mappedPackages[packageName][key]) {
     // const packageDependencies = lockfileVersion === 1 ? requires : dependencies;
@@ -262,17 +271,29 @@ export function stringifyNpmLockFile(lockFileData: LockFileData): string {
 
 // remapping the package back to package-lock format
 function unmapPackage(packages: Dependencies, dependency: PackageDependency) {
-  const { packageMeta, rootVersion, version, resolved, integrity, ...value } =
-    dependency;
+  const {
+    packageMeta,
+    rootVersion,
+    version,
+    resolved,
+    integrity,
+    dev,
+    peer,
+    optional,
+    ...value
+  } = dependency;
   // we need to decompose value, to achieve particular field ordering
 
   for (let i = 0; i < packageMeta.length; i++) {
-    const { path } = packageMeta[i];
+    const { path, dev, peer, optional } = packageMeta[i];
     // we are sorting the properties to get as close as possible to the original package-lock.json
     packages[path] = {
       version,
       resolved,
       integrity,
+      dev,
+      peer,
+      optional,
       ...value,
     };
   }
@@ -286,7 +307,7 @@ function unmapDependencies(
   const { version, resolved, integrity, devOptional } = value;
 
   for (let i = 0; i < packageMeta.length; i++) {
-    const { path, dev, optional } = packageMeta[i];
+    const { path, dev, optional, peer } = packageMeta[i];
     const projectPath = path.split('node_modules/').slice(1);
 
     const requires = unmapDependencyRequires(value);
@@ -303,6 +324,7 @@ function unmapDependencies(
       dev,
       devOptional,
       optional,
+      peer,
       requires,
       ...innerDeps[packageName],
     };
@@ -373,25 +395,53 @@ function sortDependencies(
 /**
  * Returns matching version of the dependency
  */
-export function transitiveDependencyNpmLookup(
-  packageName: string,
-  parentPackage: string,
-  versions: PackageVersions,
-  version: string
-): PackageDependency {
-  const nestedVersion = Object.values(versions).find((v) =>
-    v.packageMeta.some(
-      (p) =>
-        p.path.indexOf(`${parentPackage}/node_modules/${packageName}`) !== -1
-    )
-  );
+export function transitiveDependencyNpmLookup({
+  packageName,
+  parentPackages,
+  versions,
+  version,
+}: TransitiveLookupFunctionInput): PackageDependency {
+  const packageDependencies = Object.values(versions);
 
-  if (nestedVersion) {
-    return nestedVersion;
+  for (let i = 0; i < packageDependencies.length; i++) {
+    if (satisfies(packageDependencies[i].version, version)) {
+      const packageMeta = packageDependencies[i].packageMeta.find((p) =>
+        isPathMatching(p.path, packageName, parentPackages)
+      );
+      if (packageMeta) {
+        return {
+          ...packageDependencies[i],
+          packageMeta: [packageMeta],
+        };
+      }
+    }
   }
 
-  // otherwise search for the matching version
+  // otherwise return the root version
   return Object.values(versions).find((v) => v.rootVersion);
+}
+
+function isPathMatching(
+  path: string,
+  packageName: string,
+  parentPackages: string[]
+): boolean {
+  const packages = path.split(/\/?node_modules\//).slice(1);
+  if (packages[packages.length - 1] !== packageName) {
+    return false;
+  }
+  const locations = parentPackages
+    .map((p) => packages.indexOf(p))
+    .filter((p) => p !== -1);
+  if (locations.length === 0) {
+    return false;
+  }
+  for (let i = 0; i < locations.length - 2; i++) {
+    if (locations[i] > locations[i + 1]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -402,11 +452,233 @@ export function transitiveDependencyNpmLookup(
  */
 export function pruneNpmLockFile(
   lockFileData: LockFileData,
-  packages: string[]
+  packages: string[],
+  projectName?: string
 ): LockFileData {
-  // todo(meeroslav): This functionality has not been implemented yet
-  console.warn(
-    'Pruning package-lock.json is not yet implemented. Returning entire lock file'
+  let isV1;
+
+  // NPM V1 does not track full dependency list in the lock file,
+  // so we can't reuse the lock file to generate a new one
+  if (lockFileData.lockFileMetadata.metadata.lockfileVersion === 1) {
+    output.warn({
+      title: 'Pruning v1 lock file',
+      bodyLines: [
+        `If your "node_modules" are not in sync with the lock file, you might get inaccurate results.`,
+        `Run "npm ci" to ensure your installed packages are synchronized or upgrade to NPM v7+ to benefit from the new lock file format`,
+      ],
+    });
+    isV1 = true;
+  }
+
+  const dependencies = pruneDependencies(
+    lockFileData.dependencies,
+    packages,
+    isV1
   );
-  return lockFileData;
+  const lockFileMetadata = {
+    ...lockFileData.lockFileMetadata,
+    ...pruneRootPackage(lockFileData, packages, projectName),
+  };
+  let prunedLockFileData: LockFileData;
+  prunedLockFileData = {
+    dependencies,
+    lockFileMetadata,
+    hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
+  };
+  return prunedLockFileData;
+}
+
+function pruneRootPackage(
+  lockFileData: LockFileData,
+  packages: string[],
+  projectName?: string
+): Record<string, any> {
+  if (lockFileData.lockFileMetadata.metadata.lockfileVersion === 1) {
+    return undefined;
+  }
+  const rootPackage = {
+    name: projectName || lockFileData.lockFileMetadata.rootPackage.name,
+    version: lockFileData.lockFileMetadata.rootPackage.version,
+    ...(lockFileData.lockFileMetadata.rootPackage.license && {
+      license: lockFileData.lockFileMetadata.rootPackage.license,
+    }),
+    dependencies: {} as Record<string, string>,
+  };
+  for (const packageName of packages) {
+    const version = Object.values(lockFileData.dependencies[packageName]).find(
+      (v) => v.rootVersion
+    ).version;
+    rootPackage.dependencies[packageName] = version;
+  }
+  rootPackage.dependencies = sortObject(rootPackage.dependencies);
+
+  return { rootPackage };
+}
+
+// iterate over packages to collect the affected tree of dependencies
+function pruneDependencies(
+  dependencies: LockFileData['dependencies'],
+  packages: string[],
+  isV1?: boolean
+): LockFileData['dependencies'] {
+  const result: LockFileData['dependencies'] = {};
+
+  packages.forEach((packageName) => {
+    if (dependencies[packageName]) {
+      const [key, { packageMeta, dev, peer, optional, ...value }] =
+        Object.entries(dependencies[packageName]).find(
+          ([_, v]) => v.rootVersion
+        );
+
+      result[packageName] = result[packageName] || {};
+      result[packageName][key] = Object.assign(value, {
+        packageMeta: [{ path: `node_modules/${packageName}` }],
+      });
+
+      pruneTransitiveDependencies(
+        [packageName],
+        dependencies,
+        result,
+        result[packageName][key],
+        isV1
+      );
+    } else {
+      console.warn(
+        `Could not find ${packageName} in the lock file. Skipping...`
+      );
+    }
+  });
+
+  return result;
+}
+
+// find all transitive dependencies of already pruned packages
+// and adds them to the collection
+// recursively prune their dependencies
+function pruneTransitiveDependencies(
+  parentPackages: string[],
+  dependencies: LockFileData['dependencies'],
+  prunedDeps: LockFileData['dependencies'],
+  value: PackageDependency,
+  isV1?: boolean,
+  modifier?: 'dev' | 'optional' | 'peer'
+): void {
+  let packageJSON: PackageDependency;
+  if (isV1) {
+    const pathToPackageJSON = joinPathFragments(
+      workspaceRoot,
+      value.packageMeta[0].path,
+      'package.json'
+    );
+    // if node_modules are our of sync with lock file, we might not have the package.json
+    if (existsSync(pathToPackageJSON)) {
+      packageJSON = readJsonFile(pathToPackageJSON);
+    }
+  }
+  if (
+    !value.dependencies &&
+    !value.peerDependencies &&
+    !packageJSON?.peerDependencies
+  ) {
+    return;
+  }
+
+  Object.entries({
+    ...value.dependencies,
+    ...value.peerDependencies,
+    ...value.optionalDependencies,
+    ...packageJSON?.peerDependencies,
+  }).forEach(([packageName, version]: [string, string]) => {
+    const versions = dependencies[packageName];
+    if (versions) {
+      const dependency = transitiveDependencyNpmLookup({
+        packageName,
+        parentPackages,
+        versions,
+        version,
+      });
+      if (dependency) {
+        // dev/optional/peer dependencies can be changed during the pruning process
+        // so we need to update them
+        if (!prunedDeps[packageName]) {
+          prunedDeps[packageName] = {};
+        }
+        const key = `${packageName}@${dependency.version}`;
+        if (prunedDeps[packageName][key]) {
+          const currentMeta = prunedDeps[packageName][key].packageMeta;
+
+          if (
+            !currentMeta.find((p) => p.path === dependency.packageMeta[0].path)
+          ) {
+            const packageMeta = setPackageMetaModifiers(
+              packageName,
+              dependency,
+              packageJSON || value,
+              modifier
+            );
+            currentMeta.push(packageMeta);
+            currentMeta.sort();
+          }
+        } else {
+          const packageMeta = setPackageMetaModifiers(
+            packageName,
+            dependency,
+            packageJSON || value,
+            modifier
+          );
+
+          dependency.packageMeta = [packageMeta];
+          prunedDeps[packageName][key] = dependency;
+          // recurively collect dependencies
+          pruneTransitiveDependencies(
+            [...parentPackages, packageName],
+            dependencies,
+            prunedDeps,
+            prunedDeps[packageName][key],
+            isV1,
+            getModifier(packageMeta)
+          );
+        }
+      }
+    }
+  });
+}
+
+function getModifier(
+  packageMeta: PackageMeta
+): 'dev' | 'optional' | 'peer' | undefined {
+  if (packageMeta.dev) {
+    return 'dev';
+  } else if (packageMeta.optional) {
+    return 'optional';
+  } else if (packageMeta.peer) {
+    return 'peer';
+  }
+}
+
+function setPackageMetaModifiers(
+  packageName: string,
+  dependency: PackageDependency,
+  parent: PackageDependency,
+  modifier?: 'dev' | 'optional' | 'peer'
+): PackageMeta {
+  const packageMeta: PackageMeta = { path: dependency.packageMeta[0].path };
+
+  if (parent.devDependencies?.[packageName]) {
+    packageMeta.dev = true;
+  } else if (parent.optionalDependencies?.[packageName]) {
+    packageMeta.optional = true;
+  } else if (parent.peerDependencies?.[packageName]) {
+    packageMeta.peer = true;
+  } else if (modifier === 'dev') {
+    packageMeta.dev = true;
+  } else if (modifier === 'optional') {
+    packageMeta.optional = true;
+  }
+  // peer is carried over from the parent
+  if (modifier === 'peer') {
+    packageMeta.peer = true;
+  }
+
+  return packageMeta;
 }

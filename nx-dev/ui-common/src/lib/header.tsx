@@ -30,7 +30,7 @@ export function Header(): JSX.Element {
       name: 'Distributed cache & task execution',
       description:
         'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
-      href: '/core-features/distribute-task-execution',
+      href: '/nx-cloud/intro/what-is-nx-cloud',
     },
     {
       name: 'Recipes',

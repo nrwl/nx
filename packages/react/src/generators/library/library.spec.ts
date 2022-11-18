@@ -224,6 +224,12 @@ describe('lib', () => {
         }
       `);
     });
+    it('should update jest.config.ts for babel', async () => {
+      await libraryGenerator(appTree, { ...defaultSchema, compiler: 'babel' });
+      expect(appTree.read('libs/my-lib/jest.config.ts', 'utf-8')).toContain(
+        "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
+      );
+    });
   });
 
   describe('nested', () => {
@@ -270,6 +276,16 @@ describe('lib', () => {
       ).toBeTruthy();
     });
 
+    it('should update jest.config.ts for babel', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'myDir',
+        compiler: 'babel',
+      });
+      expect(
+        appTree.read('libs/my-dir/my-lib/jest.config.ts', 'utf-8')
+      ).toContain("['babel-jest', { presets: ['@nrwl/react/babel'] }]");
+    });
     it('should update workspace.json', async () => {
       await libraryGenerator(appTree, { ...defaultSchema, directory: 'myDir' });
       const workspaceJson = readJson(appTree, '/workspace.json');

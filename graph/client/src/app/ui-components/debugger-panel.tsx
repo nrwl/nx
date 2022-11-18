@@ -1,9 +1,9 @@
 import { memo } from 'react';
-import { GraphListItem, GraphPerfReport } from '../interfaces';
+import { WorkspaceData, GraphPerfReport } from '../interfaces';
 import Dropdown from './dropdown';
 
 export interface DebuggerPanelProps {
-  projects: GraphListItem[];
+  projects: WorkspaceData[];
   selectedProject: string;
   selectedProjectChange: (projectName: string) => void;
   lastPerfReport: GraphPerfReport;

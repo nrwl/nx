@@ -311,6 +311,14 @@ describe('app', () => {
     );
   });
 
+  it('should setup jest with babel-jest support', async () => {
+    await applicationGenerator(appTree, { ...schema, name: 'my-app' });
+
+    expect(appTree.read('apps/my-app/jest.config.ts').toString()).toContain(
+      "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
+    );
+  });
+
   it('should setup jest without serializers', async () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
@@ -823,6 +831,25 @@ describe('app', () => {
         '@swc/core': expect.any(String),
         'swc-loader': expect.any(String),
       });
+    });
+  });
+
+  describe('--root-project', () => {
+    it('should create files at the root', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        rootProject: true,
+      });
+      expect(appTree.read('/src/main.tsx')).toBeDefined();
+      expect(appTree.read('/e2e/cypress.config.ts')).toBeDefined();
+      expect(readJson(appTree, '/tsconfig.json').extends).toEqual(
+        './tsconfig.base.json'
+      );
+      expect(
+        readJson(appTree, '/workspace.json').projects['my-app'].architect[
+          'build'
+        ].options['outputPath']
+      ).toEqual('dist/my-app');
     });
   });
 });

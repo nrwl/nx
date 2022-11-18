@@ -52,7 +52,7 @@ export type ProjectGraphMachineEvents =
   | { type: 'filterByText'; search: string }
   | { type: 'clearTextFilter' }
   | {
-      type: 'notifyProjectGraphSetProjects';
+      type: 'setProjects';
       projects: ProjectGraphProjectNode[];
       dependencies: Record<string, ProjectGraphDependency[]>;
       affectedProjects: string[];

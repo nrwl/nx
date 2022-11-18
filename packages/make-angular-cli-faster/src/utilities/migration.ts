@@ -18,6 +18,7 @@ const latestVersionWithOldFlag = '13.8.3';
 const nxAngularVersionMap: Record<number, { range: string; max?: string }> = {
   13: { range: '>= 13.2.0 < 14.2.0', max: '~14.1.0' },
   14: { range: '>= 14.2.0' },
+  15: { range: '>= 15.0.0' },
 };
 // latest major version of Angular that is compatible with Nx, based on the map above
 const latestCompatibleAngularMajorVersion = Math.max(

@@ -20,4 +20,9 @@ describe('offsetFromRoot', () => {
     const result = offsetFromRoot('apps/dirname/appname/');
     expect(result).toBe('../../../');
   });
+
+  it('should work for root', () => {
+    const result = offsetFromRoot('.');
+    expect(result).toBe('./');
+  });
 });

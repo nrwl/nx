@@ -1,5 +1,32 @@
-import { parseNpmLockFile, stringifyNpmLockFile } from './npm';
-import { lockFileV2, lockFileV1, lockFileV3 } from './__fixtures__/npm.lock';
+import {
+  parseNpmLockFile,
+  pruneNpmLockFile,
+  stringifyNpmLockFile,
+} from './npm';
+import {
+  lockFileV2,
+  lockFileV1,
+  lockFileV3,
+  lockFileV3JustTypescript,
+  lockFileV3YargsAndDevkitOnly,
+  lockFileV2JustTypescript,
+  lockFileV1JustTypescript,
+  lockFileV1YargsAndDevkitOnly,
+  lockFileV2YargsAndDevkitOnly,
+} from './__fixtures__/npm.lock';
+import { vol } from 'memfs';
+import { readJsonFile } from '../fileutils';
+
+jest.mock('fs', () => require('memfs').fs);
+
+jest.mock('@nrwl/devkit', () => ({
+  ...jest.requireActual<any>('@nrwl/devkit'),
+  workspaceRoot: '/root',
+}));
+
+jest.mock('nx/src/utils/workspace-root', () => ({
+  workspaceRoot: '/root',
+}));
 
 describe('npm LockFile utility', () => {
   describe('v3', () => {
@@ -15,9 +42,9 @@ describe('npm LockFile utility', () => {
         },
         rootPackage: {
           devDependencies: {
-            '@nrwl/cli': '14.7.5',
-            '@nrwl/workspace': '14.7.5',
-            nx: '14.7.5',
+            '@nrwl/cli': '15.0.13',
+            '@nrwl/workspace': '15.0.13',
+            nx: '15.0.13',
             prettier: '^2.6.2',
             typescript: '~4.8.2',
           },
@@ -26,7 +53,7 @@ describe('npm LockFile utility', () => {
           version: '0.0.0',
         },
       });
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(324);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(339);
       expect(
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
@@ -85,6 +112,34 @@ describe('npm LockFile utility', () => {
     it('should match the original file on stringification', () => {
       expect(stringifyNpmLockFile(parsedLockFile)).toEqual(lockFileV3);
     });
+
+    it('should prune the lock file', () => {
+      expect(
+        Object.keys(
+          pruneNpmLockFile(parsedLockFile, ['typescript']).dependencies
+        ).length
+      ).toEqual(1);
+      expect(
+        Object.keys(
+          pruneNpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+            .dependencies
+        ).length
+      ).toEqual(136);
+    });
+
+    it('should correctly prune lockfile with single package', () => {
+      expect(
+        stringifyNpmLockFile(pruneNpmLockFile(parsedLockFile, ['typescript']))
+      ).toEqual(lockFileV3JustTypescript);
+    });
+
+    it('should correctly prune lockfile with multiple packages', () => {
+      expect(
+        stringifyNpmLockFile(
+          pruneNpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+        )
+      ).toEqual(lockFileV3YargsAndDevkitOnly);
+    });
   });
 
   describe('v2', () => {
@@ -100,9 +155,9 @@ describe('npm LockFile utility', () => {
         },
         rootPackage: {
           devDependencies: {
-            '@nrwl/cli': '14.7.5',
-            '@nrwl/workspace': '14.7.5',
-            nx: '14.7.5',
+            '@nrwl/cli': '15.0.13',
+            '@nrwl/workspace': '15.0.13',
+            nx: '15.0.13',
             prettier: '^2.6.2',
             typescript: '~4.8.2',
           },
@@ -111,7 +166,7 @@ describe('npm LockFile utility', () => {
           version: '0.0.0',
         },
       });
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(324);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(339);
       expect(
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
@@ -170,6 +225,36 @@ describe('npm LockFile utility', () => {
     it('should match the original file on stringification', () => {
       expect(stringifyNpmLockFile(parsedLockFile)).toEqual(lockFileV2);
     });
+
+    it('should prune the lock file', () => {
+      expect(
+        Object.keys(
+          pruneNpmLockFile(parsedLockFile, ['typescript']).dependencies
+        ).length
+      ).toEqual(1);
+      expect(
+        Object.keys(
+          pruneNpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+            .dependencies
+        ).length
+      ).toEqual(136);
+    });
+
+    it('should correctly prune lockfile with single package', () => {
+      expect(
+        stringifyNpmLockFile(pruneNpmLockFile(parsedLockFile, ['typescript']))
+      ).toEqual(lockFileV2JustTypescript);
+    });
+
+    it('should correctly prune lockfile with multiple packages', () => {
+      const pruned = pruneNpmLockFile(parsedLockFile, [
+        'yargs',
+        '@nrwl/devkit',
+      ]);
+      expect(stringifyNpmLockFile(pruned)).toEqual(
+        lockFileV2YargsAndDevkitOnly
+      );
+    });
   });
 
   describe('v1', () => {
@@ -184,7 +269,7 @@ describe('npm LockFile utility', () => {
           version: '0.0.0',
         },
       });
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(324);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(339);
       expect(
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
@@ -242,6 +327,50 @@ describe('npm LockFile utility', () => {
 
     it('should match the original file on stringification', () => {
       expect(stringifyNpmLockFile(parsedLockFile)).toEqual(lockFileV1);
+    });
+
+    describe('pruning', () => {
+      beforeAll(() => {
+        const v2packages = JSON.parse(lockFileV2).packages;
+        const fileSys = {};
+        // map all v2 packages to the file system
+        Object.keys(v2packages).forEach((key) => {
+          if (key) {
+            fileSys[`/root/${key}/package.json`] = JSON.stringify(
+              v2packages[key]
+            );
+          }
+        });
+        vol.fromJSON(fileSys, '/root');
+      });
+
+      it('should prune the lock file', () => {
+        expect(
+          Object.keys(
+            pruneNpmLockFile(parsedLockFile, ['typescript']).dependencies
+          ).length
+        ).toEqual(1);
+        expect(
+          Object.keys(
+            pruneNpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+              .dependencies
+          ).length
+        ).toEqual(136);
+      });
+
+      it('should correctly prune lockfile with single package', () => {
+        expect(
+          stringifyNpmLockFile(pruneNpmLockFile(parsedLockFile, ['typescript']))
+        ).toEqual(lockFileV1JustTypescript);
+      });
+
+      it('should correctly prune lockfile with multiple packages', () => {
+        expect(
+          stringifyNpmLockFile(
+            pruneNpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+          )
+        ).toEqual(lockFileV1YargsAndDevkitOnly);
+      });
     });
   });
 });

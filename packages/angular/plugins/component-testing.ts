@@ -167,7 +167,12 @@ function normalizeBuildTargetOptions(
   const buildOptions = withSchemaDefaults(options);
 
   // paths need to be unix paths for angular devkit
-  buildOptions.polyfills = joinPathFragments(offset, buildOptions.polyfills);
+  buildOptions.polyfills =
+    Array.isArray(buildOptions.polyfills) && buildOptions.polyfills.length > 0
+      ? (buildOptions.polyfills as string[]).map((p) =>
+          joinPathFragments(offset, p)
+        )
+      : joinPathFragments(offset, buildOptions.polyfills as string);
   buildOptions.main = joinPathFragments(offset, buildOptions.main);
   buildOptions.index =
     typeof buildOptions.index === 'string'

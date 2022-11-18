@@ -932,6 +932,13 @@ export async function executeMigrations(
   const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
 
   const migrationsWithNoChanges: typeof migrations = [];
+
+  let ngCliAdapter: typeof import('../adapter/ngcli-adapter');
+  if (migrations.some((m) => m.cli !== 'nx')) {
+    ngCliAdapter = await import('../adapter/ngcli-adapter');
+    require('../adapter/compat');
+  }
+
   for (const m of migrations) {
     try {
       if (m.cli === 'nx') {
@@ -947,9 +954,12 @@ export async function executeMigrations(
         logger.info(`  ${m.description}\n`);
         printChanges(changes, '  ');
       } else {
-        const { madeChanges, loggingQueue } = await (
-          await import('../adapter/ngcli-adapter')
-        ).runMigration(root, m.package, m.name, isVerbose);
+        const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
+          root,
+          m.package,
+          m.name,
+          isVerbose
+        );
 
         if (!madeChanges) {
           migrationsWithNoChanges.push(m);

@@ -1,9 +1,8 @@
 import { existsSync } from 'fs';
-import { ensureDirSync } from 'fs-extra';
+import { ensureDirSync, renameSync } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { projectGraphCacheDirectory } from '../utils/cache-directory';
-import { directoryExists, fileExists } from '../utils/fileutils';
+import { NxJsonConfiguration } from '../config/nx-json';
 import {
   FileData,
   ProjectFileMap,
@@ -12,9 +11,14 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphNode,
 } from '../config/project-graph';
-import { readJsonFile, writeJsonFile } from '../utils/fileutils';
-import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { projectGraphCacheDirectory } from '../utils/cache-directory';
+import {
+  directoryExists,
+  fileExists,
+  readJsonFile,
+  writeJsonFile,
+} from '../utils/fileutils';
 
 export interface ProjectGraphCache {
   version: string;
@@ -106,7 +110,34 @@ export function createCache(
 
 export function writeCache(cache: ProjectGraphCache): void {
   performance.mark('write cache:start');
-  writeJsonFile(nxDepsPath, cache);
+  let retry = 1;
+  let done = false;
+  do {
+    // write first to a unique temporary filename and then do a
+    // rename of the file to the correct filename
+    // this is to avoid any problems with half-written files
+    // in case of crash and/or partially written files due
+    // to multiple parallel processes reading and writing this file
+    const unique = (Math.random().toString(16) + '0000000').slice(2, 10);
+    const tmpDepsPath = `${nxDepsPath}~${unique}`;
+
+    try {
+      writeJsonFile(tmpDepsPath, cache);
+      renameSync(tmpDepsPath, nxDepsPath);
+      done = true;
+    } catch (err: any) {
+      if (err instanceof Error) {
+        console.log(
+          `ERROR (${retry}) when writing \n${err.message}\n${err.stack}`
+        );
+      } else {
+        console.log(
+          `ERROR  (${retry}) unknonw error when writing ${nxDepsPath}`
+        );
+      }
+      ++retry;
+    }
+  } while (!done && retry < 5);
   performance.mark('write cache:end');
   performance.measure('write cache', 'write cache:start', 'write cache:end');
 }

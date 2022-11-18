@@ -21,6 +21,20 @@ describe('create-nx-workspace', () => {
 
   afterEach(() => cleanupProject());
 
+  it('should create a workspace with a single react app', () => {
+    const wsName = uniq('react');
+    const appName = uniq('app');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-experimental',
+      appName,
+      style: 'css',
+      packageManager,
+    });
+
+    checkFilesExist('package.json');
+  });
+
   it('should be able to create an empty workspace built for apps', () => {
     const wsName = uniq('apps');
     runCreateWorkspace(wsName, {
@@ -133,31 +147,6 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
   });
 
-  it('should be able to create an angular + nest workspace', () => {
-    const wsName = uniq('angular-nest');
-    const appName = uniq('app');
-    runCreateWorkspace(wsName, {
-      preset: 'angular-nest',
-      style: 'css',
-      appName,
-      packageManager,
-    });
-  });
-
-  it('should be able to create an react + express workspace', () => {
-    const wsName = uniq('react-express');
-    const appName = uniq('app');
-    runCreateWorkspace(wsName, {
-      preset: 'react-express',
-      style: 'css',
-      appName,
-      packageManager,
-    });
-
-    expectNoAngularDevkit();
-    expectNoTsJestInJestConfig(appName);
-  });
-
   it('should be able to create an express workspace', () => {
     const wsName = uniq('express');
     const appName = uniq('app');
@@ -258,8 +247,6 @@ describe('create-nx-workspace', () => {
       cli: 'angular',
     });
 
-    const nxJson = readJson('nx.json');
-    expect(nxJson.cli.packageManager).toEqual('npm');
     checkFilesDoNotExist('yarn.lock');
     checkFilesExist('package-lock.json');
     process.env.SELECTED_PM = packageManager;

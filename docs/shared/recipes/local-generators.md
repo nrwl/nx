@@ -44,7 +44,7 @@ happynrwl/
 └── tsconfig.base.json
 ```
 
-The `index.ts` provides an entry point to the generator. The file contains a function that is called to perform manipulations on a tree that represents the file system.
+The `generator.ts` provides an entry point to the generator. The file contains a function that is called to perform manipulations on a tree that represents the file system.
 The `schema.json` provides a description of the generator, available options, validation information, and default values.
 
 The initial generator function creates a library.

@@ -4,6 +4,7 @@ import {
   ProjectConfiguration,
   ProjectsConfigurations,
   readJsonFile,
+  workspaceRoot,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
@@ -35,7 +36,8 @@ export function getPublishedVersion(): string {
   process.env.PUBLISHED_VERSION =
     process.env.PUBLISHED_VERSION ||
     // read version of built nx package
-    readJsonFile(`./build/packages/nx/package.json`).version ||
+    readJsonFile(join(workspaceRoot, `./build/packages/nx/package.json`))
+      .version ||
     // fallback to latest if built nx package is missing
     'latest';
   return process.env.PUBLISHED_VERSION as string;
@@ -197,7 +199,7 @@ export function runCreateWorkspace(
 
   const create = execSync(command, {
     cwd,
-    stdio: ['pipe', 'pipe', 'pipe'],
+    stdio: isVerbose() ? 'inherit' : 'pipe',
     env: { CI: 'true', ...process.env },
     encoding: 'utf-8',
   });

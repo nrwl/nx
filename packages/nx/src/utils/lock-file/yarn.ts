@@ -5,8 +5,13 @@ import {
   PackageDependency,
   PackageVersions,
 } from './lock-file-type';
-import { sortObject, hashString, isRootVersion } from './utils';
-import { satisfies } from 'semver';
+import {
+  sortObject,
+  hashString,
+  isRootVersion,
+  TransitiveLookupFunctionInput,
+  generatePrunnedHash,
+} from './utils';
 
 type LockFileDependencies = Record<
   string,
@@ -155,12 +160,11 @@ function unmapPackages(
 /**
  * Returns matching version of the dependency
  */
-export function transitiveDependencyYarnLookup(
-  packageName: string,
-  parentPackage: string,
-  versions: PackageVersions,
-  version: string
-): PackageDependency {
+export function transitiveDependencyYarnLookup({
+  packageName,
+  versions,
+  version,
+}: TransitiveLookupFunctionInput): PackageDependency {
   return Object.values(versions).find((v) =>
     v.packageMeta.some(
       (p) =>
@@ -178,7 +182,8 @@ export function transitiveDependencyYarnLookup(
  */
 export function pruneYarnLockFile(
   lockFileData: LockFileData,
-  packages: string[]
+  packages: string[],
+  projectName?: string
 ): LockFileData {
   const isBerry = !!lockFileData.lockFileMetadata?.__metadata;
   const prunedDependencies = pruneDependencies(
@@ -195,14 +200,18 @@ export function pruneYarnLockFile(
         workspacePackages: pruneWorkspacePackages(
           workspacePackages,
           prunedDependencies,
-          packages
+          packages,
+          projectName
         ),
       },
       dependencies: prunedDependencies,
-      hash: '',
+      hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
     };
   } else {
-    prunedLockFileData = { dependencies: prunedDependencies, hash: '' };
+    prunedLockFileData = {
+      dependencies: prunedDependencies,
+      hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
+    };
   }
 
   prunedLockFileData.hash = hashString(JSON.stringify(prunedLockFileData));
@@ -257,7 +266,8 @@ function pruneTransitiveDependencies(
         version
       );
       if (dependencyTriplet) {
-        const [key, { packageMeta, ...value }, metaVersion] = dependencyTriplet;
+        const [key, { packageMeta, ...depValue }, metaVersion] =
+          dependencyTriplet;
         if (!prunedDeps[packageName]) {
           prunedDeps[packageName] = {};
         }
@@ -270,7 +280,7 @@ function pruneTransitiveDependencies(
           }
         } else {
           prunedDeps[packageName][key] = {
-            ...value,
+            ...depValue,
             packageMeta: [metaVersion],
           };
           // recurively collect dependencies
@@ -289,25 +299,38 @@ function pruneTransitiveDependencies(
 function pruneWorkspacePackages(
   workspacePackages: LockFileDependencies,
   prunedDependencies: LockFileData['dependencies'],
-  packages: string[]
+  packages: string[],
+  projectName?: string
 ): LockFileDependencies {
   const result: LockFileDependencies = {};
 
-  Object.entries(workspacePackages).forEach(
-    ([packageKey, { dependencies, ...value }]) => {
-      const isRootPackage = packageKey.indexOf('@workspace:.') !== -1;
-      const prunedWorkspaceDependencies = pruneWorkspacePackageDependencies(
-        dependencies,
-        packages,
-        prunedDependencies,
-        isRootPackage
-      );
-      result[packageKey] = {
-        ...value,
-        dependencies: sortObject(prunedWorkspaceDependencies),
-      };
-    }
-  );
+  let workspaceProjKey = '';
+
+  if (projectName) {
+    workspaceProjKey =
+      Object.keys(workspacePackages).find((key) =>
+        key.startsWith(`${projectName}@workspace:`)
+      ) || `${projectName}@workspace:^`;
+  } else {
+    workspaceProjKey = Object.keys(workspacePackages).find(
+      (key) => key.indexOf('@workspace:.') !== -1
+    );
+  }
+
+  if (workspaceProjKey) {
+    const prunedWorkspaceDependencies = pruneWorkspacePackageDependencies(
+      workspacePackages[workspaceProjKey]?.dependencies || {},
+      packages,
+      prunedDependencies
+    );
+    result[workspaceProjKey] = {
+      version: '0.0.0-use.local',
+      resolution: workspaceProjKey,
+      languageName: 'unknown',
+      linkType: 'soft',
+      dependencies: sortObject(prunedWorkspaceDependencies),
+    };
+  }
 
   return result;
 }
@@ -315,8 +338,7 @@ function pruneWorkspacePackages(
 function pruneWorkspacePackageDependencies(
   dependencies: Record<string, string>,
   packages: string[],
-  prunedDependencies: LockFileData['dependencies'],
-  isRoot: boolean
+  prunedDependencies: LockFileData['dependencies']
 ): Record<string, string> {
   const result: Record<string, string> = {};
 
@@ -334,16 +356,14 @@ function pruneWorkspacePackageDependencies(
     }
   );
   // add all missing deps to root workspace package
-  if (isRoot) {
-    packages.forEach((p) => {
-      if (!result[p]) {
-        // extract first version expression from package's structure
-        const metaVersion = Object.values(prunedDependencies[p])[0]
-          .packageMeta[0] as string;
-        result[p] = metaVersion.split('@npm:')[1];
-      }
-    });
-  }
+  packages.forEach((p) => {
+    if (!result[p]) {
+      // extract first version expression from package's structure
+      const metaVersion = Object.values(prunedDependencies[p])[0]
+        .packageMeta[0] as string;
+      result[p] = metaVersion.split('@npm:')[1];
+    }
+  });
 
   return result;
 }

@@ -1,7 +1,15 @@
-import { parsePnpmLockFile, stringifyPnpmLockFile } from './pnpm';
+import {
+  parsePnpmLockFile,
+  prunePnpmLockFile,
+  stringifyPnpmLockFile,
+} from './pnpm';
 import {
   lockFile,
+  lockFileJustTypescript,
   lockFileWithInlineSpecifiers,
+  lockFileWithInlineSpecifiersAndWorkspaces,
+  lockFileWithWorkspacesAndTime,
+  lockFileYargsAndDevkit,
 } from './__fixtures__/pnpm.lock';
 
 describe('pnpm LockFile utility', () => {
@@ -10,7 +18,7 @@ describe('pnpm LockFile utility', () => {
 
     it('should parse lockfile correctly', () => {
       expect(parsedLockFile.lockFileMetadata).toEqual({ lockfileVersion: 5.4 });
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(324);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(339);
       expect(
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
@@ -47,15 +55,15 @@ describe('pnpm LockFile utility', () => {
     it('should map various instances of the same version', () => {
       const jestResolveDependency =
         parsedLockFile.dependencies['jest-pnp-resolver'][
-          'jest-pnp-resolver@1.2.2'
+          'jest-pnp-resolver@1.2.3'
         ];
 
       expect(jestResolveDependency.packageMeta.length).toEqual(2);
       expect((jestResolveDependency.packageMeta[0] as any).key).toEqual(
-        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.1'
+        '/jest-pnp-resolver/1.2.3_jest-resolve@28.1.1'
       );
       expect((jestResolveDependency.packageMeta[1] as any).key).toEqual(
-        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.3'
+        '/jest-pnp-resolver/1.2.3_jest-resolve@28.1.3'
       );
 
       expect(
@@ -78,7 +86,7 @@ describe('pnpm LockFile utility', () => {
       ).toBeUndefined();
       expect(
         (
-          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+          parsedLockFile.dependencies['typescript']['typescript@4.8.4']
             .packageMeta[0] as any
         ).specifier
       ).toEqual('~4.8.2');
@@ -94,7 +102,7 @@ describe('pnpm LockFile utility', () => {
       ).toEqual(false);
       expect(
         (
-          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+          parsedLockFile.dependencies['typescript']['typescript@4.8.4']
             .packageMeta[0] as any
         ).isDevDependency
       ).toEqual(true);
@@ -103,6 +111,43 @@ describe('pnpm LockFile utility', () => {
     it('should match the original file on stringification', () => {
       expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(lockFile);
     });
+
+    it('should prune the lock file', () => {
+      expect(
+        Object.keys(
+          prunePnpmLockFile(parsedLockFile, ['typescript']).dependencies
+        ).length
+      ).toEqual(1);
+      expect(
+        Object.keys(
+          prunePnpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+            .dependencies
+        ).length
+      ).toEqual(136);
+    });
+
+    it('should correctly prune lockfile with single package', () => {
+      expect(
+        stringifyPnpmLockFile(prunePnpmLockFile(parsedLockFile, ['typescript']))
+      ).toEqual(lockFileJustTypescript);
+    });
+
+    it('should correctly prune lockfile with multiple packages', () => {
+      expect(
+        stringifyPnpmLockFile(
+          prunePnpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+        )
+      ).toEqual(lockFileYargsAndDevkit);
+    });
+  });
+
+  it('should parse lockfile with time-based resolution and workspaces', () => {
+    const parsedLockFile = parsePnpmLockFile(lockFileWithWorkspacesAndTime);
+    expect(parsedLockFile.lockFileMetadata.time).toBeDefined();
+
+    expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
+      lockFileWithWorkspacesAndTime
+    );
   });
 
   describe('lock file with inline specifiers', () => {
@@ -112,7 +157,7 @@ describe('pnpm LockFile utility', () => {
       expect(parsedLockFile.lockFileMetadata).toEqual({
         lockfileVersion: '5.4-inlineSpecifiers',
       });
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(324);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(339);
       expect(
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
@@ -139,15 +184,15 @@ describe('pnpm LockFile utility', () => {
     it('should map various instances of the same version (IS)', () => {
       const jestResolveDependency =
         parsedLockFile.dependencies['jest-pnp-resolver'][
-          'jest-pnp-resolver@1.2.2'
+          'jest-pnp-resolver@1.2.3'
         ];
 
       expect(jestResolveDependency.packageMeta.length).toEqual(2);
       expect((jestResolveDependency.packageMeta[0] as any).key).toEqual(
-        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.1'
+        '/jest-pnp-resolver/1.2.3_jest-resolve@28.1.1'
       );
       expect((jestResolveDependency.packageMeta[1] as any).key).toEqual(
-        '/jest-pnp-resolver/1.2.2_jest-resolve@28.1.3'
+        '/jest-pnp-resolver/1.2.3_jest-resolve@28.1.3'
       );
 
       expect(
@@ -170,7 +215,7 @@ describe('pnpm LockFile utility', () => {
       ).toBeUndefined();
       expect(
         (
-          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+          parsedLockFile.dependencies['typescript']['typescript@4.8.4']
             .packageMeta[0] as any
         ).specifier
       ).toEqual('~4.8.2');
@@ -186,7 +231,7 @@ describe('pnpm LockFile utility', () => {
       ).toEqual(false);
       expect(
         (
-          parsedLockFile.dependencies['typescript']['typescript@4.8.3']
+          parsedLockFile.dependencies['typescript']['typescript@4.8.4']
             .packageMeta[0] as any
         ).isDevDependency
       ).toEqual(true);
@@ -197,5 +242,14 @@ describe('pnpm LockFile utility', () => {
         lockFileWithInlineSpecifiers
       );
     });
+  });
+
+  it('should parse lockfile with inline specifiers and workspaces', () => {
+    const parsedLockFile = parsePnpmLockFile(
+      lockFileWithInlineSpecifiersAndWorkspaces
+    );
+    expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
+      lockFileWithInlineSpecifiersAndWorkspaces
+    );
   });
 });

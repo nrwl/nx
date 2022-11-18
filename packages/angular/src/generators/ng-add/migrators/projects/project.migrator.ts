@@ -185,33 +185,6 @@ export abstract class ProjectMigrator<
     return errors.length ? errors : null;
   }
 
-  protected convertEsLintConfigExtendToNewPath(
-    eslintConfigPath: string,
-    extendPath: string
-  ): string {
-    if (!extendPath.startsWith('..')) {
-      // we only need to adjust paths that are on a different directory, files
-      // in the same directory are moved together so their relative paths are
-      // not changed
-      return extendPath;
-    }
-
-    return joinPathFragments(
-      offsetFromRoot(this.project.newRoot),
-      dirname(eslintConfigPath),
-      extendPath
-    );
-  }
-
-  protected convertRootPath(originalPath: string): string {
-    return originalPath?.startsWith(this.project.oldRoot)
-      ? joinPathFragments(
-          this.project.newRoot,
-          originalPath.replace(this.project.oldRoot, '')
-        )
-      : originalPath;
-  }
-
   protected convertPath(originalPath: string): string {
     if (originalPath?.startsWith(this.project.oldSourceRoot)) {
       return joinPathFragments(

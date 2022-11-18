@@ -1,9 +1,8 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
-import { readJsonFile } from 'nx/src/utils/fileutils';
+import { readJsonFile } from '../utils/fileutils';
 
 import { readNxJson } from '../config/configuration';
-import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { Workspaces } from '../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../generators/tree';
@@ -21,6 +20,7 @@ import {
 import { getLocalWorkspacePlugins } from '../utils/plugins/local-plugins';
 import { printHelp } from '../utils/print-help';
 import { workspaceRoot } from '../utils/workspace-root';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -244,7 +244,6 @@ function throwInvalidInvocation(availableGenerators: string[]) {
 function readDefaultCollection(nxConfig: NxJsonConfiguration) {
   return nxConfig.cli ? nxConfig.cli.defaultCollection : null;
 }
-
 export function printGenHelp(
   opts: GenerateOptions,
   schema: Schema,
@@ -264,58 +263,6 @@ export function printGenHelp(
       aliases,
     }
   );
-}
-
-export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
-  const ws = new Workspaces(null);
-
-  return handleErrors(false, async () => {
-    const opts = await convertToGenerateOptions(args, ws, null, 'new');
-    const { normalizedGeneratorName, schema, implementationFactory } =
-      ws.readGenerator(opts.collectionName, opts.generatorName);
-
-    logger.info(
-      `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
-    );
-
-    const combinedOpts = await combineOptionsForGenerator(
-      opts.generatorOptions,
-      opts.collectionName,
-      normalizedGeneratorName,
-      null,
-      schema,
-      opts.interactive,
-      null,
-      null,
-      false
-    );
-
-    if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
-      const host = new FsTree(cwd, false);
-      const implementation = implementationFactory();
-      const task = await implementation(host, combinedOpts);
-      const changes = host.listChanges();
-
-      printChanges(changes);
-      if (!opts.dryRun) {
-        flushChanges(cwd, changes);
-        if (task) {
-          await task();
-        }
-      } else {
-        logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
-      }
-    } else {
-      return (await import('../adapter/ngcli-adapter')).generate(
-        cwd,
-        {
-          ...opts,
-          generatorOptions: combinedOpts,
-        },
-        false
-      );
-    }
-  });
 }
 
 export async function generate(cwd: string, args: { [k: string]: any }) {

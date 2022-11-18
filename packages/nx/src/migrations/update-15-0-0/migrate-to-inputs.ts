@@ -83,21 +83,23 @@ export default async function (tree: Tree) {
             projectSpecificFileset
           );
 
-          if (tree.exists(join(project.root, 'project.json'))) {
+          try {
             updateProjectConfiguration(tree, dependent, project);
-          } else if (tree.exists(join(project.root, 'package.json'))) {
-            updateJson<PackageJson>(
-              tree,
-              join(project.root, 'package.json'),
-              (json) => {
-                json.nx ??= {};
-                json.nx.namedInputs ??= {};
-                json.nx.namedInputs.projectSpecificFiles ??=
-                  project.namedInputs.projectSpecificFiles;
+          } catch {
+            if (tree.exists(join(project.root, 'package.json'))) {
+              updateJson<PackageJson>(
+                tree,
+                join(project.root, 'package.json'),
+                (json) => {
+                  json.nx ??= {};
+                  json.nx.namedInputs ??= {};
+                  json.nx.namedInputs.projectSpecificFiles ??=
+                    project.namedInputs.projectSpecificFiles;
 
-                return json;
-              }
-            );
+                  return json;
+                }
+              );
+            }
           }
         }
       } else {

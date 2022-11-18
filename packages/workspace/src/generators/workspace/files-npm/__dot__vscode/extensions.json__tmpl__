@@ -1,9 +1,0 @@
-{
-  "recommendations": [
-    <% if(cli === 'angular') { %>
-    "angular.ng-template",<% }
-    %>
-    "nrwl.angular-console",
-    "esbenp.prettier-vscode"
-  ]
-}

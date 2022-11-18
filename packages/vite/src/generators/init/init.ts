@@ -13,6 +13,7 @@ import {
   viteVersion,
   vitestUiVersion,
   vitestVersion,
+  viteTsConfigPathsVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -27,6 +28,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   devDependencies['@nrwl/vite'] = nxVersion;
   devDependencies['vite'] = viteVersion;
   devDependencies['vite-plugin-eslint'] = vitePluginEslintVersion;
+  devDependencies['vite-tsconfig-paths'] = viteTsConfigPathsVersion;
   devDependencies['vitest'] = vitestVersion;
   devDependencies['@vitest/ui'] = vitestUiVersion;
 

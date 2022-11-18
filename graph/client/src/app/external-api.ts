@@ -8,6 +8,12 @@ export class ExternalApi {
   }
 
   enableExperimentalFeatures() {
+    localStorage.setItem('showExperimentalFeatures', 'true');
     window.appConfig.showExperimentalFeatures = true;
+  }
+
+  disableExperimentalFeatures() {
+    localStorage.setItem('showExperimentalFeatures', 'false');
+    window.appConfig.showExperimentalFeatures = false;
   }
 }

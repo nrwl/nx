@@ -1,36 +1,133 @@
 import TaskList from './task-list';
-/* nx-ignore-next-line */
-import { useProjectGraphSelector } from '../feature-projects/hooks/use-project-graph-selector';
 import {
-  allProjectsSelector,
-  workspaceLayoutSelector,
-} from '../feature-projects/machines/selectors';
-import { useTaskGraphSelector } from './hooks/use-task-graph-selector';
-import { getTaskGraphService } from '../machines/get-services';
+  useNavigate,
+  useParams,
+  useRouteLoaderData,
+  useSearchParams,
+} from 'react-router-dom';
+// nx-ignore-next-line
+import type {
+  ProjectGraphClientResponse,
+  TaskGraphClientResponse,
+} from 'nx/src/command-line/dep-graph';
+import { getGraphService } from '../machines/graph.service';
+import { useEffect } from 'react';
+import FocusedPanel from '../ui-components/focused-panel';
+import CheckboxPanel from '../ui-components/checkbox-panel';
 
-/* eslint-disable-next-line */
-export interface TasksSidebarProps {}
+export function TasksSidebar() {
+  const graphService = getGraphService();
+  const navigate = useNavigate();
+  const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-export function TasksSidebar(props: TasksSidebarProps) {
-  const projects = useProjectGraphSelector(allProjectsSelector);
-  const workspaceLayout = useProjectGraphSelector(workspaceLayoutSelector);
-  const taskGraph = getTaskGraphService();
+  const selectedProjectRouteData = useRouteLoaderData(
+    'selectedWorkspace'
+  ) as ProjectGraphClientResponse;
+  const workspaceLayout = selectedProjectRouteData.layout;
 
-  const selectedTask = useTaskGraphSelector(
-    (state) => state.context.selectedTaskId
-  );
+  const routeData = useRouteLoaderData(
+    'selectedTask'
+  ) as TaskGraphClientResponse;
+  const { taskGraphs } = routeData;
+  const projects = selectedProjectRouteData.projects;
+  // const projects = selectedProjectRouteData.projects.filter((project) => {
+  //   return (
+  //     Object.keys(project.data.targets).filter((target) => {
+  //       const taskName = `${project.name}:${target}`;
+  //       return (
+  //         taskGraphs[taskName]?.dependencies[taskName]?.length > 0
+  //       );
+  //     }).length > 0
+  //   );
+  // });
+  const selectedTask = params['selectedTaskId'];
+
+  useEffect(() => {
+    graphService.handleTaskEvent({
+      type: 'notifyTaskGraphSetProjects',
+      projects: selectedProjectRouteData.projects,
+      taskGraphs,
+    });
+  }, [selectedProjectRouteData]);
+
+  useEffect(() => {
+    if (selectedTask) {
+      graphService.handleTaskEvent({
+        type: 'notifyTaskGraphTaskSelected',
+        taskId: selectedTask,
+      });
+    } else {
+      graphService.handleTaskEvent({
+        type: 'notifyTaskGraphDeselectTask',
+      });
+    }
+  }, [params]);
+
+  const groupByProject = searchParams.get('groupByProject') === 'true';
+
+  useEffect(() => {
+    if (groupByProject) {
+      graphService.handleTaskEvent({
+        type: 'setGroupByProject',
+        groupByProject: true,
+      });
+    } else {
+      graphService.handleTaskEvent({
+        type: 'setGroupByProject',
+        groupByProject: false,
+      });
+    }
+  }, [searchParams]);
 
   function selectTask(taskId: string) {
-    taskGraph.send({ type: 'selectTask', taskId });
+    if (selectedTask) {
+      navigate(`../${taskId}`);
+    } else {
+      navigate(`./${taskId}`);
+    }
+  }
+
+  function resetFocus() {
+    navigate('..');
+  }
+
+  function groupByProjectChanged(checked) {
+    setSearchParams((currentSearchParams) => {
+      if (checked) {
+        currentSearchParams.set('groupByProject', 'true');
+      } else {
+        currentSearchParams.delete('groupByProject');
+      }
+
+      return currentSearchParams;
+    });
   }
 
   return (
-    <TaskList
-      projects={projects}
-      workspaceLayout={workspaceLayout}
-      selectedTask={selectedTask}
-      selectTask={selectTask}
-    />
+    <>
+      {selectedTask ? (
+        <FocusedPanel
+          focusedLabel={selectedTask}
+          resetFocus={resetFocus}
+        ></FocusedPanel>
+      ) : null}
+
+      <CheckboxPanel
+        checked={groupByProject}
+        checkChanged={groupByProjectChanged}
+        name={'groupByProject'}
+        label={'Group by project'}
+        description={'Visually arrange tasks by project.'}
+      />
+
+      <TaskList
+        projects={projects}
+        workspaceLayout={workspaceLayout}
+        selectedTask={selectedTask}
+        selectTask={selectTask}
+      />
+    </>
   );
 }
 

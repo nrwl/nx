@@ -46,29 +46,12 @@ export class RenderGraph {
 
   set theme(theme: 'light' | 'dark') {
     this._theme = theme;
-
-    if (this.cy) {
-      this.cy.unmount();
-      const useDarkMode = theme === 'dark';
-
-      this.cy.scratch(darkModeScratchKey, useDarkMode);
-      this.cy.elements().scratch(darkModeScratchKey, useDarkMode);
-
-      this.cy.mount(this.activeContainer);
-    }
+    this.render();
   }
 
   set rankDir(rankDir: 'LR' | 'TB') {
     this._rankDir = rankDir;
-    if (this.cy) {
-      const elements = this.cy.elements();
-      elements
-        .layout({
-          ...cytoscapeDagreConfig,
-          ...{ rankDir: rankDir },
-        } as CytoscapeDagreConfig)
-        .run();
-    }
+    this.render();
   }
 
   get activeContainer() {

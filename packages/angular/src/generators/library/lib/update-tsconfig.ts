@@ -54,7 +54,11 @@ function updateProjectConfig(
   // tsconfig.json
   updateJson(host, `${options.projectRoot}/tsconfig.json`, (json) => ({
     ...json,
-    compilerOptions: { ...json.compilerOptions, target: 'es2020' },
+    compilerOptions: {
+      ...json.compilerOptions,
+      target: 'es2022',
+      useDefineForClassFields: false,
+    },
   }));
 }
 

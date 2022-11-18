@@ -14,6 +14,7 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { PackageJson } from 'nx/src/utils/package-json';
 
 describe('Nx Running Tests', () => {
   let proj: string;
@@ -85,9 +86,13 @@ describe('Nx Running Tests', () => {
 
       updateFile(
         `libs/${mylib}/package.json`,
-        JSON.stringify({
+        JSON.stringify(<PackageJson>{
           name: 'mylib1',
-          scripts: { 'echo:dev': `echo ECHOED` },
+          version: '1.0.0',
+          scripts: { 'echo:dev': `echo ECHOED`, 'echo:fail': 'should not run' },
+          nx: {
+            includedScripts: ['echo:dev'],
+          },
         })
       );
 
@@ -102,6 +107,10 @@ describe('Nx Running Tests', () => {
       } else {
         expect(stdout).toMatch(/ECHOED positional --a=123 --no-b/);
       }
+
+      expect(runCLI(`echo:fail ${mylib}`, { silenceError: true })).toContain(
+        `Cannot find configuration for task ${mylib}:echo:fail`
+      );
 
       updateProjectConfig(mylib, (c) => original);
     }, 1000000);

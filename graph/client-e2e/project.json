@@ -34,13 +34,25 @@
       },
       "defaultConfiguration": "dev"
     },
-    "e2e": {
+    "e2e-local": {
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
         "commands": [
           "npx nx e2e-base e2e-graph-client --configuration dev",
           "npx nx e2e-base e2e-graph-client --configuration watch",
+          "npx nx e2e-base e2e-graph-client --configuration release",
+          "npx nx e2e-base e2e-graph-client --configuration release-static"
+        ],
+        "parallel": false
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "commands": [
+          "npx nx e2e-base e2e-graph-client --configuration dev",
           "npx nx e2e-base e2e-graph-client --configuration release",
           "npx nx e2e-base e2e-graph-client --configuration release-static"
         ],

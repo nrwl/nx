@@ -3,9 +3,9 @@
 exports[`lock-file mapLockFileDataToExternalNodes npm should map lock file v1 data to external nodes 1`] = `
 Object {
   "data": Object {
-    "hash": "c22918aa52c9fdce78bf82451d8114e00b6d4375a8e5b1d1d96c6cf4755dbe1a",
+    "hash": "abdb9ef454702b3fae2f8002be40a8c2903514143b45592292ac8920e35cb60a",
     "packageName": "yargs",
-    "version": "17.5.1",
+    "version": "17.6.2",
   },
   "name": "npm:yargs",
   "type": "npm",
@@ -16,7 +16,7 @@ exports[`lock-file mapLockFileDataToExternalNodes npm should map lock file v1 da
 Array [
   Object {
     "source": "npm:yargs",
-    "target": "npm:cliui",
+    "target": "npm:cliui@8.0.1",
     "type": "static",
   },
   Object {
@@ -55,9 +55,9 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes npm should map lock file v2 data to external nodes 1`] = `
 Object {
   "data": Object {
-    "hash": "c22918aa52c9fdce78bf82451d8114e00b6d4375a8e5b1d1d96c6cf4755dbe1a",
+    "hash": "abdb9ef454702b3fae2f8002be40a8c2903514143b45592292ac8920e35cb60a",
     "packageName": "yargs",
-    "version": "17.5.1",
+    "version": "17.6.2",
   },
   "name": "npm:yargs",
   "type": "npm",
@@ -68,7 +68,7 @@ exports[`lock-file mapLockFileDataToExternalNodes npm should map lock file v2 da
 Array [
   Object {
     "source": "npm:yargs",
-    "target": "npm:cliui",
+    "target": "npm:cliui@8.0.1",
     "type": "static",
   },
   Object {
@@ -107,9 +107,9 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes npm should map lock file v3 data to external nodes 1`] = `
 Object {
   "data": Object {
-    "hash": "c22918aa52c9fdce78bf82451d8114e00b6d4375a8e5b1d1d96c6cf4755dbe1a",
+    "hash": "abdb9ef454702b3fae2f8002be40a8c2903514143b45592292ac8920e35cb60a",
     "packageName": "yargs",
-    "version": "17.5.1",
+    "version": "17.6.2",
   },
   "name": "npm:yargs",
   "type": "npm",
@@ -120,7 +120,7 @@ exports[`lock-file mapLockFileDataToExternalNodes npm should map lock file v3 da
 Array [
   Object {
     "source": "npm:yargs",
-    "target": "npm:cliui",
+    "target": "npm:cliui@8.0.1",
     "type": "static",
   },
   Object {
@@ -156,12 +156,204 @@ Array [
 ]
 `;
 
+exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex lock file v1 1`] = `
+Object {
+  "data": Object {
+    "hash": "0e69266e94bbe89cb6c7555e1ab56fb9d4c0e4fe2cbb674b92fc1ee200053526",
+    "packageName": "nx",
+    "version": "15.0.13",
+  },
+  "name": "npm:nx",
+  "type": "npm",
+}
+`;
+
+exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex lock file v1 2`] = `
+Array [
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@nrwl/cli",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@nrwl/tao",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@parcel/watcher",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@yarnpkg/lockfile",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@yarnpkg/parsers",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@zkochan/js-yaml",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:axios",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:chalk",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:chokidar",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cli-cursor",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cli-spinners",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:cliui",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:dotenv",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:enquirer",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:fast-glob",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:figures",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:flat",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:fs-extra",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:glob",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:ignore",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:js-yaml@4.1.0",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:jsonc-parser",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:minimatch@3.0.5",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:npm-run-path",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:open",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:semver",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:string-width",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:strong-log-transformer",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tar-stream",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tmp",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tsconfig-paths",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:tslib",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:v8-compile-cache",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:yargs",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:yargs-parser",
+    "type": "static",
+  },
+]
+`;
+
 exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex lock file v2 1`] = `
 Object {
   "data": Object {
-    "hash": "8da365ef8d327d868461fda5c863f779c2f75acfe6a591e733b31a2882763af3",
+    "hash": "64ba4128469ecb7d465d8dbed1ccd86be85c38177e85406f2cd6055f303758fa",
     "packageName": "nx",
-    "version": "14.7.5",
+    "version": "15.0.13",
   },
   "name": "npm:nx",
   "type": "npm",
@@ -187,7 +379,27 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:chalk@4.1.0",
+    "target": "npm:@yarnpkg/lockfile",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@yarnpkg/parsers",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@zkochan/js-yaml",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:axios",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:chalk",
     "type": "static",
   },
   Object {
@@ -252,7 +464,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:js-yaml",
+    "target": "npm:js-yaml@4.1.0",
     "type": "static",
   },
   Object {
@@ -262,7 +474,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:minimatch@3.0.5",
+    "target": "npm:minimatch",
     "type": "static",
   },
   Object {
@@ -283,6 +495,11 @@ Array [
   Object {
     "source": "npm:nx",
     "target": "npm:string-width",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:strong-log-transformer",
     "type": "static",
   },
   Object {
@@ -317,7 +534,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:yargs-parser@21.0.1",
+    "target": "npm:yargs-parser",
     "type": "static",
   },
 ]
@@ -326,9 +543,9 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex lock file v3 1`] = `
 Object {
   "data": Object {
-    "hash": "8da365ef8d327d868461fda5c863f779c2f75acfe6a591e733b31a2882763af3",
+    "hash": "b661da6137e80c92cb5fa75b96780e12868eb81969dddaee67113a99f4ffd159",
     "packageName": "nx",
-    "version": "14.7.5",
+    "version": "15.0.13",
   },
   "name": "npm:nx",
   "type": "npm",
@@ -354,169 +571,22 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:chalk@4.1.0",
+    "target": "npm:@yarnpkg/lockfile",
     "type": "static",
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:chokidar",
+    "target": "npm:@yarnpkg/parsers",
     "type": "static",
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:cli-cursor",
+    "target": "npm:@zkochan/js-yaml",
     "type": "static",
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:cli-spinners",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:cliui",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:dotenv",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:enquirer",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:fast-glob",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:figures",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:flat",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:fs-extra",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:glob",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:ignore",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:js-yaml",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:jsonc-parser",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:minimatch@3.0.5",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:npm-run-path",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:open",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:semver",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:string-width",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:tar-stream",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:tmp",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:tsconfig-paths",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:tslib",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:v8-compile-cache",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:yargs",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:yargs-parser@21.0.1",
-    "type": "static",
-  },
-]
-`;
-
-exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex npm lock file v1 1`] = `
-Object {
-  "data": Object {
-    "hash": "62016caa192e50e3af6e4730fa1427455ad431a0e11ad807215c56bee04a8c8e",
-    "packageName": "nx",
-    "version": "14.7.5",
-  },
-  "name": "npm:nx",
-  "type": "npm",
-}
-`;
-
-exports[`lock-file mapLockFileDataToExternalNodes npm should map successfully complex npm lock file v1 2`] = `
-Array [
-  Object {
-    "source": "npm:nx",
-    "target": "npm:@nrwl/cli",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:@nrwl/tao",
-    "type": "static",
-  },
-  Object {
-    "source": "npm:nx",
-    "target": "npm:@parcel/watcher",
+    "target": "npm:axios",
     "type": "static",
   },
   Object {
@@ -621,6 +691,11 @@ Array [
   },
   Object {
     "source": "npm:nx",
+    "target": "npm:strong-log-transformer",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
     "target": "npm:tar-stream",
     "type": "static",
   },
@@ -651,7 +726,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:yargs-parser@21.0.1",
+    "target": "npm:yargs-parser",
     "type": "static",
   },
 ]
@@ -660,9 +735,9 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes pnpm should map lock file data to external nodes 1`] = `
 Object {
   "data": Object {
-    "hash": "c22918aa52c9fdce78bf82451d8114e00b6d4375a8e5b1d1d96c6cf4755dbe1a",
+    "hash": "abdb9ef454702b3fae2f8002be40a8c2903514143b45592292ac8920e35cb60a",
     "packageName": "yargs",
-    "version": "17.5.1",
+    "version": "17.6.2",
   },
   "name": "npm:yargs",
   "type": "npm",
@@ -673,7 +748,7 @@ exports[`lock-file mapLockFileDataToExternalNodes pnpm should map lock file data
 Array [
   Object {
     "source": "npm:yargs",
-    "target": "npm:cliui",
+    "target": "npm:cliui@8.0.1",
     "type": "static",
   },
   Object {
@@ -712,9 +787,9 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes pnpm should map successfully complex lock file 1`] = `
 Object {
   "data": Object {
-    "hash": "1e61b9db38c17534ce427d40ce84f9c03b4c439253f659e9a48513a10a52b465",
+    "hash": "94bc770238bff74b1b80368ad38fc1c0e3efb23e2bef72afb3c41703b3459a2f",
     "packageName": "nx",
-    "version": "14.7.5",
+    "version": "15.1.0",
   },
   "name": "npm:nx",
   "type": "npm",
@@ -740,6 +815,26 @@ Array [
   },
   Object {
     "source": "npm:nx",
+    "target": "npm:@yarnpkg/lockfile",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@yarnpkg/parsers",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@zkochan/js-yaml",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:axios",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
     "target": "npm:chalk",
     "type": "static",
   },
@@ -760,7 +855,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:cliui",
+    "target": "npm:cliui@7.0.4",
     "type": "static",
   },
   Object {
@@ -840,6 +935,11 @@ Array [
   },
   Object {
     "source": "npm:nx",
+    "target": "npm:strong-log-transformer",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
     "target": "npm:tar-stream",
     "type": "static",
   },
@@ -855,7 +955,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:tslib",
+    "target": "npm:tslib@2.4.1",
     "type": "static",
   },
   Object {
@@ -879,7 +979,7 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes pnpm should map successfully complex lock file 3`] = `
 Object {
   "data": Object {
-    "hash": "6c5961e1a6ab89174727587860e480508f945407ce4c2cc7c9f1e46f181e6468",
+    "hash": "601ac9f28fb76d7e6d1d15600097ca3d8f636990b659c73cf44d3e4030e68c56",
     "packageName": "@phenomnomnominal/tsquery",
     "version": "4.1.1",
   },

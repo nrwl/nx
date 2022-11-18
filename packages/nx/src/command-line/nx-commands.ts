@@ -325,7 +325,7 @@ export const commandsObject = yargs
       args._ = args._.slice(1);
       process.exit(
         await (
-          await import('./generate')
+          await import('./new')
         ).newWorkspace(args['nxWorkspaceRoot'] as string, args)
       );
     },
@@ -543,7 +543,8 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       'populate--': true,
     })
     .option('projects', {
-      describe: 'Projects to run (comma delimited)',
+      describe:
+        'Projects to run. (comma delimited project names and/or patterns)',
       type: 'string',
     })
     .option('all', {

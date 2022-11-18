@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/vite",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
   "repository": {
     "type": "git",
@@ -31,8 +31,14 @@
   "dependencies": {
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/workspace": "file:../workspace",
+    "@nrwl/js": "file:../js",
     "@swc/helpers": "^0.4.11",
-    "chalk": "4.1.0"
+    "chalk": "4.1.0",
+    "dotenv": "~10.0.0"
+  },
+  "peerDependencies": {
+    "vite": "^3.2.3",
+    "vitest": "^0.25.1"
   },
   "publishConfig": {
     "access": "public"

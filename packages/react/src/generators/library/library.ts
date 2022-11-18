@@ -19,7 +19,7 @@ import {
 import { getImportPath } from 'nx/src/utils/path';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-import { lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
   getRelativePathToRootTsConfig,
@@ -46,7 +46,7 @@ import {
 import componentGenerator from '../component/component';
 import init from '../init/init';
 import { Schema } from './schema';
-
+import { updateJestConfigContent } from '../../utils/jest-utils';
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
@@ -99,6 +99,16 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       compiler: options.compiler,
     });
     tasks.push(jestTask);
+    const jestConfigPath = joinPathFragments(
+      options.projectRoot,
+      options.js ? 'jest.config.js' : 'jest.config.ts'
+    );
+    if (options.compiler === 'babel' && host.exists(jestConfigPath)) {
+      const updatedContent = updateJestConfigContent(
+        host.read(jestConfigPath, 'utf-8')
+      );
+      host.write(jestConfigPath, updatedContent);
+    }
   }
 
   if (options.component) {
@@ -143,39 +153,43 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 }
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.name,
-    tsConfigPaths: [
-      joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
-    ],
-    unitTestRunner: options.unitTestRunner,
-    eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
-    skipFormat: true,
-    skipPackageJson: options.skipPackageJson,
-  });
+  if (options.linter === Linter.EsLint) {
+    const lintTask = await lintProjectGenerator(host, {
+      linter: options.linter,
+      project: options.name,
+      tsConfigPaths: [
+        joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
+      skipFormat: true,
+      skipPackageJson: options.skipPackageJson,
+    });
 
-  const reactEslintJson = createReactEslintJson(
-    options.projectRoot,
-    options.setParserOptionsProject
-  );
-
-  updateJson(
-    host,
-    joinPathFragments(options.projectRoot, '.eslintrc.json'),
-    () => reactEslintJson
-  );
-
-  let installTask = () => {};
-  if (!options.skipPackageJson) {
-    installTask = await addDependenciesToPackageJson(
-      host,
-      extraEslintDependencies.dependencies,
-      extraEslintDependencies.devDependencies
+    const reactEslintJson = createReactEslintJson(
+      options.projectRoot,
+      options.setParserOptionsProject
     );
-  }
 
-  return runTasksInSerial(lintTask, installTask);
+    updateJson(
+      host,
+      joinPathFragments(options.projectRoot, '.eslintrc.json'),
+      () => reactEslintJson
+    );
+
+    let installTask = () => {};
+    if (!options.skipPackageJson) {
+      installTask = await addDependenciesToPackageJson(
+        host,
+        extraEslintDependencies.dependencies,
+        extraEslintDependencies.devDependencies
+      );
+    }
+
+    return runTasksInSerial(lintTask, installTask);
+  } else {
+    return () => {};
+  }
 }
 
 function addProject(host: Tree, options: NormalizedSchema) {
@@ -192,7 +206,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
     }
 
     targets.build = {
-      builder: '@nrwl/web:rollup',
+      executor: '@nrwl/web:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `dist/${libsDir}/${options.projectDirectory}`,

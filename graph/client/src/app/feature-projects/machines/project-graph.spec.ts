@@ -100,7 +100,7 @@ describe('dep-graph machine', () => {
       const result = projectGraphMachine.transition(
         projectGraphMachine.initialState,
         {
-          type: 'notifyProjectGraphSetProjects',
+          type: 'setProjects',
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
@@ -119,7 +119,7 @@ describe('dep-graph machine', () => {
       const result = projectGraphMachine.transition(
         projectGraphMachine.initialState,
         {
-          type: 'notifyProjectGraphSetProjects',
+          type: 'setProjects',
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
@@ -147,7 +147,7 @@ describe('dep-graph machine', () => {
       service.start();
 
       service.send({
-        type: 'notifyProjectGraphSetProjects',
+        type: 'setProjects',
         projects: mockProjects,
         dependencies: mockDependencies,
         affectedProjects: [],
@@ -181,7 +181,7 @@ describe('dep-graph machine', () => {
       service.start();
 
       service.send({
-        type: 'notifyProjectGraphSetProjects',
+        type: 'setProjects',
         projects: mockProjects,
         dependencies: mockDependencies,
         affectedProjects: [],
@@ -208,7 +208,7 @@ describe('dep-graph machine', () => {
       let result = projectGraphMachine.transition(
         projectGraphMachine.initialState,
         {
-          type: 'notifyProjectGraphSetProjects',
+          type: 'setProjects',
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
@@ -246,7 +246,7 @@ describe('dep-graph machine', () => {
       let result = projectGraphMachine.transition(
         projectGraphMachine.initialState,
         {
-          type: 'notifyProjectGraphSetProjects',
+          type: 'setProjects',
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
@@ -279,7 +279,7 @@ describe('dep-graph machine', () => {
       service.start();
 
       service.send({
-        type: 'notifyProjectGraphSetProjects',
+        type: 'setProjects',
         projects: mockProjects,
         dependencies: mockDependencies,
         affectedProjects: [],
@@ -296,7 +296,7 @@ describe('dep-graph machine', () => {
       let result = projectGraphMachine.transition(
         projectGraphMachine.initialState,
         {
-          type: 'notifyProjectGraphSetProjects',
+          type: 'setProjects',
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
@@ -323,7 +323,7 @@ describe('dep-graph machine', () => {
       let result = projectGraphMachine.transition(
         projectGraphMachine.initialState,
         {
-          type: 'notifyProjectGraphSetProjects',
+          type: 'setProjects',
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],
@@ -387,7 +387,7 @@ describe('dep-graph machine', () => {
       let result = projectGraphMachine.transition(
         projectGraphMachine.initialState,
         {
-          type: 'notifyProjectGraphSetProjects',
+          type: 'setProjects',
           projects: mockProjects,
           dependencies: mockDependencies,
           affectedProjects: [],

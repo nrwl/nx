@@ -52,9 +52,8 @@ enum Preset {
   TS = 'ts',
   WebComponents = 'web-components',
   Angular = 'angular',
-  AngularWithNest = 'angular-nest',
   React = 'react',
-  ReactWithExpress = 'react-express',
+  ReactExperimental = 'react-experimental',
   ReactNative = 'react-native',
   Expo = 'expo',
   NextJs = 'next',
@@ -109,16 +108,6 @@ const presetOptions: { name: Preset; message: string }[] = [
   {
     name: Preset.Expo,
     message: 'expo              [a workspace with a single Expo application]',
-  },
-  {
-    name: Preset.ReactWithExpress,
-    message:
-      'react-express     [a workspace with a full stack application (React + Express)]',
-  },
-  {
-    name: Preset.AngularWithNest,
-    message:
-      'angular-nest      [a workspace with a full stack application (Angular + Nest)]',
   },
 ];
 
@@ -624,8 +613,7 @@ async function determineCli(
   }
 
   switch (preset) {
-    case Preset.Angular:
-    case Preset.AngularWithNest: {
+    case Preset.Angular: {
       return Promise.resolve('angular');
     }
     default: {
@@ -667,14 +655,16 @@ async function determineStyle(
     },
   ];
 
-  if (![Preset.Angular, Preset.AngularWithNest].includes(preset)) {
+  if (![Preset.Angular].includes(preset)) {
     choices.push({
       name: 'styl',
       message: 'Stylus(.styl)     [ http://stylus-lang.com ]',
     });
   }
 
-  if ([Preset.ReactWithExpress, Preset.React, Preset.NextJs].includes(preset)) {
+  if (
+    [Preset.React, Preset.ReactExperimental, Preset.NextJs].includes(preset)
+  ) {
     choices.push(
       {
         name: 'styled-components',
@@ -860,7 +850,7 @@ async function createApp(
 
   const pmc = getPackageManagerCommand(packageManager);
 
-  const command = `new ${name} ${args} --collection=@nrwl/workspace/generators.json --cli=${cli}`;
+  const command = `new ${name} ${args}`;
 
   const workingDir = process.cwd().replace(/\\/g, '/');
   let nxWorkspaceRoot = `"${workingDir}"`;
@@ -1030,7 +1020,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       break;
 
     case Preset.React:
-    case Preset.ReactWithExpress:
+    case Preset.ReactExperimental:
     case Preset.NextJs:
       output.addVerticalSeparator();
       output.note({
@@ -1039,7 +1029,6 @@ function pointToTutorialAndCourse(preset: Preset) {
       });
       break;
     case Preset.Angular:
-    case Preset.AngularWithNest:
       output.addVerticalSeparator();
       output.note({
         title,

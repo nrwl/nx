@@ -17,6 +17,8 @@ Object {
   "private": true,
   "scripts": Object {
     "build": "nx build",
+    "ng": "nx",
+    "postinstall": "node ./decorate-angular-cli.js",
     "start": "nx serve",
     "test": "nx test",
   },
