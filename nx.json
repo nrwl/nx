@@ -3,7 +3,6 @@
   "affected": {
     "defaultBase": "master"
   },
-  "npmScope": "nrwl",
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",
@@ -24,10 +23,6 @@
         "url": "https://staging.nx.app"
       }
     }
-  },
-  "workspaceLayout": {
-    "libsDir": "",
-    "appsDir": ""
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
@@ -86,11 +81,5 @@
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }
   },
-  "generators": {
-    "@nrwl/react": {
-      "application": {
-        "babel": true
-      }
-    }
-  }
+  "defaultProject": "@nrwl/nx-source"
 }
