@@ -63,7 +63,6 @@ export function trackChangedFilesForFileWatchers(
   );
 }
 
-//
 export async function notifyFileWatcherSockets() {
   if (!hasRegisteredFileWatcherSockets()) {
     return;
@@ -91,18 +90,23 @@ export async function notifyFileWatcherSockets() {
           }
         }
       }
-      return handleResult(socket, {
-        description: 'File watch changed',
-        response: JSON.stringify({
-          changedProjects,
-          changedFiles: config.includeGlobalWorkspaceFiles
-            ? [...changedFiles, ...projectAndGlobalChanges.globalFiles]
-            : changedFiles,
-        }),
-      });
+
+      if (config.includeGlobalWorkspaceFiles) {
+        changedFiles.push(...projectAndGlobalChanges.globalFiles);
+      }
+
+      if (changedProjects.length > 0 || changedFiles.length > 0) {
+        return handleResult(socket, {
+          description: 'File watch changed',
+          response: JSON.stringify({
+            changedProjects,
+            changedFiles,
+          }),
+        });
+      }
     })
   );
-
+  //
   reset();
 }
 
