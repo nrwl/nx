@@ -9,14 +9,15 @@
     "ci": {
       "type": "string",
       "description": "CI provider.",
-      "enum": ["github", "circleci", "azure"],
+      "enum": ["github", "circleci", "azure", "bitbucket-pipelines"],
       "x-prompt": {
         "message": "What is your target CI provider?",
         "type": "list",
         "items": [
           { "value": "github", "label": "Github Actions" },
           { "value": "circleci", "label": "Circle CI" },
-          { "value": "azure", "label": "Azure DevOps" }
+          { "value": "azure", "label": "Azure DevOps" },
+          { "value": "bitbucket-pipelines", "label": "BitBucket Pipelines" }
         ]
       }
     },
