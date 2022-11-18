@@ -36,7 +36,6 @@ export default function replaceFiles(replacements: FileReplacement[]) {
         if (body.find(({ type }) => type === 'ExportDefaultDeclaration')) {
             newCode.push(`export { default } from "${foundReplace.with}";`);
         }
-        console.log(newCode.join('\n'));
         return newCode.join('\n');
       }
       return code;
