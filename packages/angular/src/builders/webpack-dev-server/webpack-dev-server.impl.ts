@@ -84,6 +84,12 @@ export function executeWebpackDevServerBuilder(
       options.tsConfig = tsConfigPath;
       return options;
     };
+
+    // The buildTargetConfiguration also needs to use the generated tsconfig path
+    // otherwise the build will fail if customWebpack function/file is referencing
+    // local libs. This synchronize the behavior with webpack-browser and
+    // webpack-server implementation.
+    buildTargetConfiguration.tsConfig = tsConfigPath;
   }
 
   return executeDevServerBuilder(options as DevServerBuilderOptions, context, {
