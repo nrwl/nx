@@ -1,5 +1,7 @@
 // source: https://github.com/Myrmod/vitejs-theming/blob/master/build-plugins/rollup/replace-files.js
 
+import { resolve } from 'path';
+
 /**
  * @function replaceFiles
  * @param {FileReplacement[]} replacements
@@ -12,10 +14,21 @@ export default function replaceFiles(replacements: FileReplacement[]) {
   return {
     name: 'rollup-plugin-replace-files',
     enforce: 'pre',
-    async resolveId(source, importer) {
-      const resolved = await this.resolve(source, importer, { skipSelf: true });
-      const foundReplace = replacements.find(
-        (replacement) => replacement.replace === resolved?.id
+    async resolveId(source, importer, options) {
+      const resolved = await this.resolve(source, importer, {
+        ...options,
+        skipSelf: true,
+      });
+
+      /**
+       * The reason we're using endsWith here is because the resolved id
+       * will be the absolute path to the file. We want to check if the
+       * file ends with the file we're trying to replace, which will be essentially
+       * the path from the root of our workspace.
+       */
+
+      const foundReplace = replacements.find((replacement) =>
+        resolved?.id?.endsWith(replacement.replace)
       );
       if (foundReplace) {
         console.info(

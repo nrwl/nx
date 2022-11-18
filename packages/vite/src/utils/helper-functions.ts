@@ -41,6 +41,7 @@ export async function getBuildConfig(
       context.root,
       projectRoot
     ),
+    plugins: [replaceFiles(options.fileReplacements)],
     build: getViteBuildOptions(
       options as ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
       projectRoot
@@ -143,9 +144,6 @@ export function getViteBuildOptions(
     target: 'esnext',
     commonjsOptions: {
       transformMixedEsModules: true,
-    },
-    rollupOptions: {
-      plugins: [replaceFiles(options.fileReplacements)],
     },
   };
 
