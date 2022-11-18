@@ -249,7 +249,7 @@ export class DocumentsApi {
           tags.some((tag) => curr.tags.includes(tag)) &&
           ['concepts', 'more-concepts'].some((id) => acc.includes(id))
         ) {
-          curr.path = [...acc, curr.id].join('/');
+          curr.path = curr.path || [...acc, curr.id].join('/');
           relatedConcepts.push(curr);
         }
         if (
@@ -257,7 +257,7 @@ export class DocumentsApi {
           tags.some((tag) => curr.tags.includes(tag)) &&
           acc.includes('recipes')
         ) {
-          curr.path = [...acc, curr.id].join('/');
+          curr.path = curr.path || [...acc, curr.id].join('/');
           relatedRecipes.push(curr);
         }
         if (
@@ -265,7 +265,7 @@ export class DocumentsApi {
           tags.some((tag) => curr.tags.includes(tag)) &&
           ['nx', 'workspace'].some((id) => acc.includes(id))
         ) {
-          curr.path = [...acc, curr.id].join('/');
+          curr.path = curr.path || [...acc, curr.id].join('/');
           relatedReference.push(curr);
         }
         if (
@@ -273,7 +273,7 @@ export class DocumentsApi {
           tags.some((tag) => curr.tags.includes(tag)) &&
           acc.includes('see-also')
         ) {
-          curr.path = [...acc, curr.id].join('/');
+          curr.path = curr.path || [...acc, curr.id].join('/');
           relatedSeeAlso.push(curr);
         }
       }
