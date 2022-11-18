@@ -1,24 +1,21 @@
 import { performance } from 'perf_hooks';
 import { readAllWorkspaceConfiguration } from '../../config/configuration';
+import { FileData, ProjectFileMap } from '../../config/project-graph';
 import { defaultFileHasher } from '../../hasher/file-hasher';
-import { serverLogger } from './logger';
+import { HashingImpl } from '../../hasher/hashing-impl';
 import { buildProjectGraphUsingProjectFileMap } from '../../project-graph/build-project-graph';
+import {
+  createProjectFileMap,
+  updateProjectFileMap,
+} from '../../project-graph/file-map-utils';
 import {
   nxDepsPath,
   ProjectGraphCache,
   readCache,
 } from '../../project-graph/nx-deps-cache';
 import { fileExists } from '../../utils/fileutils';
-import { HashingImpl } from '../../hasher/hashing-impl';
-import {
-  createProjectFileMap,
-  updateProjectFileMap,
-} from '../../project-graph/file-map-utils';
-import { FileData, ProjectFileMap } from '../../config/project-graph';
-import {
-  notifyFileWatcherSockets,
-  trackChangedFilesForFileWatchers,
-} from './file-watching/file-watcher-sockets';
+import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
+import { serverLogger } from './logger';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -76,7 +73,11 @@ export function addUpdatedAndDeletedFiles(
     collectedDeletedFiles.add(f);
   }
 
-  trackChangedFilesForFileWatchers(undefined, updatedFiles, deletedFiles);
+  notifyFileWatcherSockets(null, updatedFiles, deletedFiles);
+
+  if (createdFiles.length > 0) {
+    waitPeriod = 100; // reset it to process the graph faster
+  }
 
   if (!scheduledTimeoutId) {
     scheduledTimeoutId = setTimeout(async () => {
@@ -89,8 +90,7 @@ export function addUpdatedAndDeletedFiles(
         processFilesAndCreateAndSerializeProjectGraph();
       await cachedSerializedProjectGraphPromise;
 
-      trackChangedFilesForFileWatchers(createdFiles);
-      await notifyFileWatcherSockets();
+      notifyFileWatcherSockets(createdFiles, null, null);
     }, waitPeriod);
   }
 }

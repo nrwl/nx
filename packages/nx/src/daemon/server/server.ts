@@ -42,7 +42,6 @@ import {
 } from './outputs-tracking';
 import { handleRequestShutdown } from './handle-request-shutdown';
 import {
-  notifyFileWatcherSockets,
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';

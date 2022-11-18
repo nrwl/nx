@@ -6,33 +6,33 @@ export type ChangedFile = {
   type: 'CREATED' | 'UPDATED' | 'DELETED';
 };
 
-export let projectAndGlobalChanges: {
-  projects: { [changedProject: string]: ChangedFile[] };
-  globalFiles: ChangedFile[];
-} = {
-  projects: {},
-  globalFiles: [],
-};
-
 export function setProjectsAndGlobalChanges(
-  createdFiles: Set<string> | undefined,
-  updatedFiles?: Set<string>,
-  deletedFiles?: Set<string>
+  createdFiles: string[] | null,
+  updatedFiles: string[] | null,
+  deletedFiles: string[] | null
 ) {
+  const projectAndGlobalChanges: {
+    projects: { [changedProject: string]: ChangedFile[] };
+    globalFiles: ChangedFile[];
+  } = {
+    projects: {},
+    globalFiles: [],
+  };
+
   performance.mark('changed-projects:start');
 
   const projectFileMap = projectFileMapWithFiles?.projectFileMap ?? {};
 
   const allChangedFiles: ChangedFile[] = [
-    ...Array.from(createdFiles ?? []).map<ChangedFile>((c) => ({
+    ...(createdFiles ?? []).map<ChangedFile>((c) => ({
       path: c,
       type: 'CREATED',
     })),
-    ...Array.from(updatedFiles ?? []).map<ChangedFile>((c) => ({
+    ...(updatedFiles ?? []).map<ChangedFile>((c) => ({
       path: c,
       type: 'UPDATED',
     })),
-    ...Array.from(deletedFiles ?? []).map<ChangedFile>((c) => ({
+    ...(deletedFiles ?? []).map<ChangedFile>((c) => ({
       path: c,
       type: 'DELETED',
     })),
@@ -68,19 +68,12 @@ export function setProjectsAndGlobalChanges(
     }
   }
 
-  //
-
   performance.mark('changed-projects:end');
   performance.measure(
     'changed-projects',
     'changed-projects:start',
     'changed-projects:end'
   );
-}
 
-export function resetProjectAndGlobalChanges() {
-  projectAndGlobalChanges = {
-    projects: {},
-    globalFiles: [],
-  };
+  return projectAndGlobalChanges;
 }
