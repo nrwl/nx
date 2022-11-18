@@ -1,9 +1,9 @@
 import { existsSync } from 'fs';
 import { satisfies } from 'semver';
-import { readJsonFile } from '../fileutils';
-import { output } from '../output';
-import { joinPathFragments } from '../path';
-import { workspaceRoot } from '../workspace-root';
+import { readJsonFile } from '../utils/fileutils';
+import { output } from '../utils/output';
+import { joinPathFragments } from '../utils/path';
+import { workspaceRoot } from '../utils/workspace-root';
 import { LockFileData, PackageDependency } from './lock-file-type';
 import {
   sortObject,
